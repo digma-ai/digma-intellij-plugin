@@ -7,11 +7,6 @@
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.java</depends>
 
-    <projectListeners>
-        <listener class="org.digma.jetbrains.plugin.listener.EditorListener"
-                  topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
-    </projectListeners>
-
 
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow id="Digma" secondary="true" icon="AllIcons.General.Modified" anchor="left"

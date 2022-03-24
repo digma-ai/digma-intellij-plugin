@@ -6,8 +6,10 @@ TBD
 ## testing
 
 - load the project into IntelliJ IDEA 2021.3.2</br>
-- open gradle tool window and execute task intellij.runIde</br>
 - setup jdk 11 for the project</br>
+- open gradle tool window and execute task intellij.runIde</br>
+- when the test ide starts load the sample project from sample-projects/simple-idea-java-project</br>
+- setup jdk 11 for the sample project</br>
 - play with the plugin</br>
 
 

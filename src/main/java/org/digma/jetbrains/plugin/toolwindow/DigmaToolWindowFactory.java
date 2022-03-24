@@ -17,10 +17,9 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
         EditorInteractionService editorInteractionService = EditorInteractionService.getInstance(project);
         ToolWindowContent toolWindowContent = new ToolWindowContent();
-        editorInteractionService.setToolWindowContent(toolWindowContent);
-        editorInteractionService.setProject(project);
         ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
         Content content = contentFactory.createContent(toolWindowContent.getContent(), "DigmaContent", false);
         toolWindow.getContentManager().addContent(content);
+        editorInteractionService.init(toolWindowContent,project);
     }
 }

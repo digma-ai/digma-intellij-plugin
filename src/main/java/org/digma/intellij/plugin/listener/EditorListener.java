@@ -1,4 +1,4 @@
-package org.digma.jetbrains.plugin.listener;
+package org.digma.intellij.plugin.listener;
 
 import com.intellij.openapi.*;
 import com.intellij.openapi.diagnostic.*;
@@ -10,8 +10,8 @@ import com.intellij.openapi.util.*;
 import com.intellij.openapi.vfs.*;
 import com.intellij.psi.*;
 import com.intellij.util.messages.*;
-import org.digma.jetbrains.plugin.log.*;
-import org.digma.jetbrains.plugin.service.*;
+import org.digma.intellij.plugin.log.*;
+import org.digma.intellij.plugin.service.*;
 import org.jetbrains.annotations.*;
 
 import java.util.*;

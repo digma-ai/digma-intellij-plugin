@@ -1,13 +1,13 @@
-package org.digma.jetbrains.plugin.service;
+package org.digma.intellij.plugin.service;
 
 import com.intellij.openapi.*;
 import com.intellij.openapi.diagnostic.*;
 import com.intellij.openapi.project.*;
 import com.intellij.psi.*;
-import org.digma.jetbrains.plugin.listener.*;
-import org.digma.jetbrains.plugin.log.*;
-import org.digma.jetbrains.plugin.psi.*;
-import org.digma.jetbrains.plugin.toolwindow.*;
+import org.digma.intellij.plugin.listener.*;
+import org.digma.intellij.plugin.log.*;
+import org.digma.intellij.plugin.psi.*;
+import org.digma.intellij.plugin.toolwindow.*;
 
 /**
  * A service to implement the interactions between listeners and UI components.

@@ -3,14 +3,26 @@
 TBD
 
 
+## build
+The project must be built with jdk 11 or later as the gradle jdk.
+
+./gradlew buildPlugin -Porg.gradle.java.home=<PATH TO JDK 11>
+
 ## testing
 
-- load the project into IntelliJ IDEA 2021.3.2</br>
+### pycharm
+
+- load the project into IntelliJ IDEA community 2021.3.3</br>
 - setup jdk 11 for the project</br>
 - open gradle tool window and execute task intellij.runIde</br>
-- when the test ide starts load the sample project from sample-projects/simple-idea-java-project</br>
-- setup jdk 11 for the sample project</br>
+- when the test ide starts load example-fastapi-app</br>
 - play with the plugin</br>
+
+for pycharm professional change in gradle.properties:</br>
+platformType = PY</br>
+platformPlugins = Pythonid</br>
+
+### idea
 
 
 

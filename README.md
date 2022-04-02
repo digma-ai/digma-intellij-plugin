@@ -6,7 +6,7 @@ TBD
 ## build
 The project must be built with jdk 11 or later as the gradle jdk.
 
-./gradlew buildPlugin
+./gradlew buildPlugin -Porg.gradle.java.home=<PATH TO JDK 11>
 
 ## testing
 

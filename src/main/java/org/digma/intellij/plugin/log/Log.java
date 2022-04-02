@@ -1,4 +1,4 @@
-package org.digma.jetbrains.plugin.log;
+package org.digma.intellij.plugin.log;
 
 import java.util.function.*;
 

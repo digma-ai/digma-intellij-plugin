@@ -1,1 +1,1 @@
-rootProject.name = "digma-jetbrains-plugin"
+rootProject.name = "digma-intellij-plugin"

@@ -1,4 +1,4 @@
-package org.digma.jetbrains.plugin.toolwindow;
+package org.digma.intellij.plugin.toolwindow;
 
 import com.intellij.psi.*;
 

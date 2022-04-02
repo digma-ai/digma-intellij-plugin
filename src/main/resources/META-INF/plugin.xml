@@ -1,17 +1,19 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
-    <id>org.digma.digmajetbrainsplugin</id>
+
+    <id>org.digma.intellij.plugin</id>
+
     <name>Digma</name>
-    <vendor>Digma</vendor>
+    <vendor>Digma inc todo:full vendor name</vendor>
 
     <depends>com.intellij.modules.platform</depends>
-    <depends>com.intellij.java</depends>
+    <depends>com.intellij.modules.python</depends>
 
 
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow id="Digma" secondary="true" icon="AllIcons.General.Modified" anchor="left"
-                    factoryClass="org.digma.jetbrains.plugin.toolwindow.DigmaToolWindowFactory"/>
-        <projectService serviceImplementation="org.digma.jetbrains.plugin.service.EditorInteractionService"/>
+                    factoryClass="org.digma.intellij.plugin.toolwindow.DigmaToolWindowFactory"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.service.EditorInteractionService"/>
     </extensions>
 
 

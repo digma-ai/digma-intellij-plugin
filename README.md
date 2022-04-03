@@ -10,19 +10,26 @@ The project must be built with jdk 11 or later as the gradle jdk.
 
 ## testing
 
-### pycharm
-
 - load the project into IntelliJ IDEA community 2021.3.3</br>
 - setup jdk 11 for the project</br>
-- open gradle tool window and execute task intellij.runIde</br>
-- when the test ide starts load example-fastapi-app</br>
-- play with the plugin</br>
 
-for pycharm professional change in gradle.properties:</br>
-platformType = PY</br>
-platformPlugins = Pythonid</br>
 
 ### idea
+
+- open gradle tool window and execute task intellij.runIde</br>
+- on the idea IC that loads install the python community plugin</br> 
+- load example-fastapi-app</br>
+- play with the plugin</br>
+- load sample-projects/simple-idea-java-project into the same window</br>
+- play with the plugin</br>
+
+### pycharm
+
+- install pycharm on your machine</br>
+- build the plugin: ./gradlew buildPlugin -Porg.gradle.java.home=<PATH TO JDK 11></br>
+- copy or link build/libs/digma-intellij-plugin-0.0.1.jar into PYCHARM_HOME/plugins and rename to Digma.jar</br>
+- run pycharm and load example-fastapi-app
+- play with the plugin</br>
 
 
 

@@ -1,13 +1,19 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
 
-    <id>org.digma.intellij.plugin</id>
+    <id>org.digma.intellij</id>
 
     <name>Digma</name>
     <vendor>Digma inc todo:full vendor name</vendor>
 
     <depends>com.intellij.modules.platform</depends>
-    <depends>com.intellij.modules.python</depends>
+
+    <depends
+            optional="true"
+            config-file="org.digma.intellij-with-python.xml">com.intellij.modules.python</depends>
+    <depends
+            optional="true"
+            config-file="org.digma.intellij-with-java.xml">com.intellij.modules.java</depends>
 
 
     <extensions defaultExtensionNs="com.intellij">

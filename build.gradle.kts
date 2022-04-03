@@ -35,7 +35,6 @@ intellij {
     version.set(properties("platformVersion"))
     type.set(properties("platformType"))
     plugins.set(properties("platformPlugins").split(',').map(String::trim).filter(String::isNotEmpty))
-//    downloadSources.set(false)
 }
 
 // Configure Gradle Changelog Plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin

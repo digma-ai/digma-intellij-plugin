@@ -6,6 +6,9 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.digma.intellij.plugin.psi.LanguageService;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
 
 public class JavaLanguageService implements LanguageService {
 
@@ -16,7 +19,13 @@ public class JavaLanguageService implements LanguageService {
     }
 
     @Override
-    public PsiElement getMethod(PsiElement psiElement) {
+    public PsiElement findParentMethodIfAny(PsiElement psiElement) {
         return PsiTreeUtil.getParentOfType(psiElement, PsiMethod.class);
+    }
+
+    @Override
+    @NotNull
+    public PsiElement getParentMethod(PsiElement psiElement) {
+        return Objects.requireNonNull(PsiTreeUtil.getParentOfType(psiElement, PsiMethod.class), "getParentMethod must find a parent method or we have a bug!");
     }
 }

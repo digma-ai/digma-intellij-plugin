@@ -23,4 +23,11 @@
     </extensions>
 
 
+    <applicationListeners>
+        <listener
+                class="org.digma.intellij.plugin.listener.ProjectsListener"
+                topic="com.intellij.openapi.project.ProjectManagerListener"/>
+    </applicationListeners>
+
+
 </idea-plugin>

@@ -1,13 +1,14 @@
 package org.digma.intellij.plugin.service;
 
-import com.intellij.openapi.*;
-import com.intellij.openapi.diagnostic.*;
-import com.intellij.openapi.project.*;
-import com.intellij.psi.*;
-import org.digma.intellij.plugin.listener.*;
-import org.digma.intellij.plugin.log.*;
-import org.digma.intellij.plugin.psi.*;
-import org.digma.intellij.plugin.toolwindow.*;
+import com.intellij.openapi.Disposable;
+import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiElement;
+import org.digma.intellij.plugin.listener.EditorListener;
+import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.psi.PsiNavigator;
+import org.digma.intellij.plugin.toolwindow.ToolWindowContent;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A service to implement the interactions between listeners and UI components.
@@ -30,7 +31,7 @@ public class EditorInteractionService implements Disposable {
             if (psiNavigator.isInMethod(psiElement)) {
                 Log.log(LOGGER::debug, "got psi method for element {}", psiElement);
                 toolWindowContent.update(psiNavigator.getMethod(psiElement));
-            }else{
+            } else {
                 Log.log(LOGGER::debug, "psi element {} is not in a method , emptying tool window", psiElement);
                 toolWindowContent.empty();
             }
@@ -38,18 +39,20 @@ public class EditorInteractionService implements Disposable {
     }
 
 
-
-
     @Override
     public void dispose() {
-        Log.log(LOGGER::debug,"disposing..");
+        Log.log(LOGGER::debug, "disposing..");
         editorListener.stop();
     }
 
 
-    public void init(ToolWindowContent toolWindowContent, Project project) {
+    public void setToolWindowContent(@NotNull ToolWindowContent toolWindowContent) {
         this.toolWindowContent = toolWindowContent;
-        this.editorListener = new EditorListener(project,this);
+    }
+
+    public void start(@NotNull Project project) {
+        Log.log(LOGGER::debug, "starting..");
+        this.editorListener = new EditorListener(project, this);
         editorListener.start();
         psiNavigator = new PsiNavigator(project);
     }

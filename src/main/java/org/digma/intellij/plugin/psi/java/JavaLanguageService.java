@@ -2,8 +2,7 @@ package org.digma.intellij.plugin.psi.java;
 
 import com.intellij.lang.Language;
 import com.intellij.lang.java.JavaLanguage;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiMethod;
+import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.jetbrains.annotations.NotNull;

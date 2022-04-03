@@ -8,9 +8,7 @@ import org.digma.intellij.plugin.psi.java.JavaLanguageService;
 import org.digma.intellij.plugin.psi.python.PythonLanguageService;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Query and navigate PSI elements.

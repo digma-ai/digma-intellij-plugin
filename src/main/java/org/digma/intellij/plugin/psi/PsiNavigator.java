@@ -2,7 +2,8 @@ package org.digma.intellij.plugin.psi;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.PsiElement;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.*;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.psi.java.JavaLanguageService;
 import org.digma.intellij.plugin.psi.python.PythonLanguageService;
@@ -32,7 +33,7 @@ public class PsiNavigator {
     }
 
     private static final Logger LOGGER = Logger.getInstance(PsiNavigator.class);
-    private final Map<Language, LanguageService> languageServices = new HashMap<>();
+    private final EnumMap<Language, LanguageService> languageServices = new EnumMap<>(Language.class);
     private final NoOpLanguageService noOpLanguageService = new NoOpLanguageService();
 
     public PsiNavigator(Project project) {
@@ -85,6 +86,12 @@ public class PsiNavigator {
     }
 
 
+    public boolean isSupportedFile(Project project, VirtualFile newFile) {
+        PsiFile psiFile = PsiManager.getInstance(project).findFile(newFile);
+        return languageServices.values().stream().anyMatch(t -> psiFile != null && t.accept(psiFile.getLanguage()));
+    }
+
+
     private static class NoOpLanguageService implements LanguageService {
 
         @Override
@@ -99,7 +106,7 @@ public class PsiNavigator {
 
         @Override
         public PsiElement getParentMethod(PsiElement psiElement) {
-            return null;
+            throw new UnsupportedOperationException("we shouldn't be here with NoOp");
         }
     }
 }

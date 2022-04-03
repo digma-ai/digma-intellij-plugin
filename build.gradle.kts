@@ -25,6 +25,15 @@ version = properties("pluginVersion")
 //    }
 //}
 
+configurations {
+    all {
+        // Allows using project dependencies instead of IDE dependencies during compilation and test running
+        resolutionStrategy {
+            sortArtifacts(ResolutionStrategy.SortOrder.DEPENDENCY_FIRST)
+        }
+    }
+}
+
 repositories {
     mavenCentral()
 }
@@ -124,6 +133,6 @@ tasks {
     }
 
     runIde {
-        jvmArgs("-Xmx2000m")
+        maxHeapSize = "2g"
     }
 }

@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.service;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import org.digma.intellij.plugin.listener.EditorListener;
 import org.digma.intellij.plugin.log.Log;
@@ -21,6 +22,7 @@ public class EditorInteractionService implements Disposable {
     private EditorListener editorListener;
     private ToolWindowContent toolWindowContent;
     private PsiNavigator psiNavigator;
+    private Project project;
 
     public static EditorInteractionService getInstance(Project project) {
         return project.getService(EditorInteractionService.class);
@@ -33,11 +35,16 @@ public class EditorInteractionService implements Disposable {
                 toolWindowContent.update(psiNavigator.getMethod(psiElement));
             } else {
                 Log.log(LOGGER::debug, "psi element {} is not in a method , emptying tool window", psiElement);
-                toolWindowContent.empty();
+                clearViewContent();
             }
         }
     }
 
+    public void clearViewContent() {
+        if (toolWindowContent != null) {
+            toolWindowContent.empty();
+        }
+    }
 
     @Override
     public void dispose() {
@@ -46,14 +53,16 @@ public class EditorInteractionService implements Disposable {
     }
 
 
-    public void setToolWindowContent(@NotNull ToolWindowContent toolWindowContent) {
+    public void start(@NotNull Project project, ToolWindowContent toolWindowContent) {
+        Log.log(LOGGER::debug, "starting..");
+        this.project = project;
+        psiNavigator = new PsiNavigator(project);
         this.toolWindowContent = toolWindowContent;
+        editorListener = new EditorListener(project, this);
+        editorListener.start();
     }
 
-    public void start(@NotNull Project project) {
-        Log.log(LOGGER::debug, "starting..");
-        this.editorListener = new EditorListener(project, this);
-        editorListener.start();
-        psiNavigator = new PsiNavigator(project);
+    public boolean isSupportedFile(VirtualFile newFile) {
+        return psiNavigator.isSupportedFile(project, newFile);
     }
 }

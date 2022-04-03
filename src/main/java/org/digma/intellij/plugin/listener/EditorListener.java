@@ -39,7 +39,7 @@ public class EditorListener implements FileEditorManagerListener {
     private final Map<VirtualFile, Disposable> disposables = new HashMap<>();
 
 
-    public EditorListener(Project project, EditorInteractionService editorInteractionService) {
+    public EditorListener(@NotNull Project project, @NotNull EditorInteractionService editorInteractionService) {
         this.project = project;
         this.editorInteractionService = editorInteractionService;
     }
@@ -69,22 +69,28 @@ public class EditorListener implements FileEditorManagerListener {
 
         var newFile = editorManagerEvent.getNewFile();
 
-        var editor = fileEditorManager.getSelectedTextEditor();
-        if (editor != null && !disposables.containsKey(newFile)) {
-            addCaretListener(editor, newFile);
-        }
+        //ignore non supported files. newFile may be null when the last editor is closed.
+        if (newFile != null && editorInteractionService.isSupportedFile(newFile)) {
+            var editor = fileEditorManager.getSelectedTextEditor();
+            if (editor != null && !disposables.containsKey(newFile)) {
+                addCaretListener(editor, newFile);
+            }
 
-        if (editor != null) {
-            Log.log(LOGGER::debug, "selectionChanged: updating with file:{}", newFile);
-            updateCurrentElement(editor.getCaretModel().getOffset(), newFile);
+            if (editor != null) {
+                Log.log(LOGGER::debug, "selectionChanged: updating with file:{}", newFile);
+                updateCurrentElement(editor.getCaretModel().getOffset(), newFile);
+            }
+        } else {
+            editorInteractionService.clearViewContent();
         }
     }
 
 
-    //todo: don't install listener on non code files. check language and clean content when they are selected.
-    private void addCaretListener(Editor editor, VirtualFile newFile) {
-        if (editor == null || editor.isDisposed()) {
-            Log.log(LOGGER::debug, "not installing listener for {} because its is either null or disposed", editor);
+    //don't install listeners on non-supported files, this method shouldn't be called for unsupported files.
+    private void addCaretListener(@NotNull Editor editor, @NotNull VirtualFile newFile) {
+
+        if (editor.isDisposed()) {
+            Log.log(LOGGER::debug, "not installing listener for {} because it is disposed", editor);
             return;
         }
 
@@ -101,7 +107,6 @@ public class EditorListener implements FileEditorManagerListener {
                 }
             }
         }, parentDisposable);
-
     }
 
 
@@ -125,7 +130,26 @@ public class EditorListener implements FileEditorManagerListener {
         Log.log(LOGGER::debug, "starting");
         messageBusConnection = project.getMessageBus().connect(editorInteractionService);
         messageBusConnection.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, this);
+        installOnCurrentlyOpenedEditors();
         active = true;
+    }
+
+    /*
+    EditorListener is started only when the tool window is opened,not before that because we don't
+     want or need to listen to events before the window is opened.
+    at that stage there may be already opened editors that we didn't install a caret listener for them,
+     they will be caught in the following selectionChanged events. but we still want to update the content
+     with the currently opened file and install a listener for the editor.
+    this code assumes there is only one selected editor.
+     */
+    private void installOnCurrentlyOpenedEditors() {
+        var editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+        var fileEditor = FileEditorManager.getInstance(project).getSelectedEditor();
+        if (editor != null && fileEditor != null && fileEditor.getFile() != null &&
+                editorInteractionService.isSupportedFile(fileEditor.getFile())) {
+            addCaretListener(editor, fileEditor.getFile());
+            updateCurrentElement(editor.getCaretModel().getOffset(), fileEditor.getFile());
+        }
     }
 
 

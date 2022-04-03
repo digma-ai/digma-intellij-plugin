@@ -1,12 +1,12 @@
 package org.digma.intellij.plugin.toolwindow;
 
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.project.*;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.*;
-import com.intellij.ui.content.*;
+import com.intellij.ui.content.ContentFactory;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.service.*;
-import org.jetbrains.annotations.*;
+import org.digma.intellij.plugin.service.EditorInteractionService;
+import org.jetbrains.annotations.NotNull;
 
 
 /**
@@ -19,11 +19,10 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
         Log.log(LOGGER::debug, "createToolWindowContent for project  {}", project);
-        EditorInteractionService editorInteractionService = EditorInteractionService.getInstance(project);
-        ToolWindowContent toolWindowContent = new ToolWindowContent();
-        ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
-        Content content = contentFactory.createContent(toolWindowContent.getContent(), "DigmaContent", false);
+        var toolWindowContent = new ToolWindowContent();
+        var contentFactory = ContentFactory.SERVICE.getInstance();
+        var content = contentFactory.createContent(toolWindowContent.getContent(), "DigmaContent", false);
         toolWindow.getContentManager().addContent(content);
-        editorInteractionService.init(toolWindowContent,project);
+        EditorInteractionService.getInstance(project).setToolWindowContent(toolWindowContent);
     }
 }

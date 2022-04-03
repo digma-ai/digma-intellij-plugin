@@ -1,18 +1,18 @@
 package org.digma.intellij.plugin.listener;
 
-import com.intellij.openapi.*;
-import com.intellij.openapi.diagnostic.*;
-import com.intellij.openapi.editor.*;
+import com.intellij.openapi.Disposable;
+import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.event.*;
 import com.intellij.openapi.fileEditor.*;
-import com.intellij.openapi.project.*;
-import com.intellij.openapi.util.*;
-import com.intellij.openapi.vfs.*;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Disposer;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
-import com.intellij.util.messages.*;
-import org.digma.intellij.plugin.log.*;
-import org.digma.intellij.plugin.service.*;
-import org.jetbrains.annotations.*;
+import com.intellij.util.messages.MessageBusConnection;
+import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.service.EditorInteractionService;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -67,9 +67,9 @@ public class EditorListener implements FileEditorManagerListener {
         Log.log(LOGGER::debug, "selectionChanged: editor:{}, newFile:{}, oldFile:{}", fileEditorManager.getSelectedEditor(),
                 editorManagerEvent.getNewFile(), editorManagerEvent.getOldFile());
 
-        VirtualFile newFile = editorManagerEvent.getNewFile();
+        var newFile = editorManagerEvent.getNewFile();
 
-        Editor editor = fileEditorManager.getSelectedTextEditor();
+        var editor = fileEditorManager.getSelectedTextEditor();
         if (editor != null && !disposables.containsKey(newFile)) {
             addCaretListener(editor, newFile);
         }
@@ -118,35 +118,20 @@ public class EditorListener implements FileEditorManagerListener {
 
 
     public void start() {
-        if (active){
-            Log.log(LOGGER::error,"trying to start an already active listener");
+        if (active) {
+            Log.log(LOGGER::error, "trying to start an already active listener");
             return;
         }
-        Log.log(LOGGER::debug,"starting");
+        Log.log(LOGGER::debug, "starting");
         messageBusConnection = project.getMessageBus().connect(editorInteractionService);
         messageBusConnection.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, this);
         active = true;
-
-        doAlreadyOpened();
-    }
-
-
-    //todo: the listener starts a bit late, after some editors are opened. this code will compensate,
-    // but try to find a better timing to start the listener.
-    // declarative approach in plugin.xml is early enough but harder to stop before shutdown.
-    private void doAlreadyOpened() {
-        Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
-        FileEditor fileEditor = FileEditorManager.getInstance(project).getSelectedEditor();
-        if (editor == null || fileEditor == null){
-            return;
-        }
-        addCaretListener(editor,fileEditor.getFile());
     }
 
 
     public void stop() {
         if (active) {
-            Log.log(LOGGER::debug,"stopping");
+            Log.log(LOGGER::debug, "stopping...");
             messageBusConnection.disconnect();
             disposables.values().forEach(Disposer::dispose);
             active = false;

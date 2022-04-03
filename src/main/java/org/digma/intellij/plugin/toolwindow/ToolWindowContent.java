@@ -1,6 +1,6 @@
 package org.digma.intellij.plugin.toolwindow;
 
-import com.intellij.psi.*;
+import com.intellij.psi.PsiElement;
 
 import javax.swing.*;
 

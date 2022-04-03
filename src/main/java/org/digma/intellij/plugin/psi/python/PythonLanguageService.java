@@ -6,6 +6,9 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.jetbrains.python.PythonLanguage;
 import com.jetbrains.python.psi.PyFunction;
 import org.digma.intellij.plugin.psi.LanguageService;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
 
 public class PythonLanguageService implements LanguageService {
 
@@ -15,7 +18,13 @@ public class PythonLanguageService implements LanguageService {
     }
 
     @Override
-    public PsiElement getMethod(PsiElement psiElement) {
+    public PsiElement findParentMethodIfAny(PsiElement psiElement) {
         return PsiTreeUtil.getParentOfType(psiElement, PyFunction.class);
+    }
+
+    @Override
+    @NotNull
+    public PsiElement getParentMethod(PsiElement psiElement) {
+        return Objects.requireNonNull(PsiTreeUtil.getParentOfType(psiElement, PyFunction.class), "getParentMethod must find a parent method or we have a bug!");
     }
 }

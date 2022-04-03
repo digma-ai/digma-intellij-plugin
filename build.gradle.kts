@@ -34,10 +34,7 @@ intellij {
     pluginName.set(properties("pluginName"))
     version.set(properties("platformVersion"))
     type.set(properties("platformType"))
-
-    // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file.
     plugins.set(properties("platformPlugins").split(',').map(String::trim).filter(String::isNotEmpty))
-
     downloadSources.set(false)
 }
 
@@ -59,7 +56,7 @@ qodana {
 
 
 tasks {
-    // Set the JVM compatibility versions
+
     properties("javaVersion").let { javaVersion:String ->
         withType<JavaCompile> {
             options.release.set(javaVersion.toInt())
@@ -129,5 +126,6 @@ tasks {
 
     runIde {
         jvmArgs("-Xmx2000m")
+//        ideDir.set(file("/opt/idea/idea-IC-213.7172.25"))
     }
 }

@@ -19,6 +19,7 @@ public class EditorInteractionService implements Disposable {
 
     private EditorListener editorListener;
     private ToolWindowContent toolWindowContent;
+    private PsiNavigator psiNavigator;
 
     public static EditorInteractionService getInstance(Project project) {
         return project.getService(EditorInteractionService.class);
@@ -26,11 +27,11 @@ public class EditorInteractionService implements Disposable {
 
     public void updateViewContent(PsiElement psiElement) {
         if (toolWindowContent != null) {
-            if (PsiNavigator.isMethod(psiElement)) {
+            if (psiNavigator.isInMethod(psiElement)) {
                 Log.log(LOGGER::debug, "got psi method for element {}", psiElement);
-                toolWindowContent.update(PsiNavigator.getMethod(psiElement));
+                toolWindowContent.update(psiNavigator.getMethod(psiElement));
             }else{
-                Log.log(LOGGER::debug, "psi element {} is not a method , emptying tool window", psiElement);
+                Log.log(LOGGER::debug, "psi element {} is not in a method , emptying tool window", psiElement);
                 toolWindowContent.empty();
             }
         }
@@ -50,5 +51,6 @@ public class EditorInteractionService implements Disposable {
         this.toolWindowContent = toolWindowContent;
         this.editorListener = new EditorListener(project,this);
         editorListener.start();
+        psiNavigator = new PsiNavigator(project);
     }
 }

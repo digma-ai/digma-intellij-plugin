@@ -17,7 +17,6 @@ dependencies{
     implementation(project(":java"))
     implementation(project(":python"))
     implementation(project(":rider"))
-    implementation(project(":clion"))
 }
 
 // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin

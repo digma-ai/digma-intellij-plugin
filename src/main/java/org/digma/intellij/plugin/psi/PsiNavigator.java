@@ -1,12 +1,12 @@
 package org.digma.intellij.plugin.psi;
-
+import org.digma.intellij.plugin.psi.csharp.CSharpLanguageService;
+import org.digma.intellij.plugin.psi.python.PythonLanguageService;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.psi.java.JavaLanguageService;
-import org.digma.intellij.plugin.psi.python.PythonLanguageService;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -18,8 +18,11 @@ import java.util.*;
 public class PsiNavigator {
 
     enum Language {
+        //todo: services can be also discovered with java service loader.
+        // hard coded here has the advantage of clearly showing what we support.
         JAVA(JavaLanguageService.class),
-        PYTHON(PythonLanguageService.class);
+        PYTHON(PythonLanguageService.class),
+        CSHARP(CSharpLanguageService .class);
 
         private final Class<? extends LanguageService> serviceClass;
 

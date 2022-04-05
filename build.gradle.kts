@@ -1,41 +1,23 @@
 import org.jetbrains.changelog.markdownToHTML
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 fun properties(key: String) = project.findProperty(key).toString()
 
 plugins {
-    id("java")
-    id("org.jetbrains.intellij") version "1.5.2"
+    id("plugin-project")
     id("org.jetbrains.changelog") version "1.3.1"
     id("org.jetbrains.qodana") version "0.1.13"
     id("org.jetbrains.kotlin.jvm") version "1.6.10"
 }
 
-group = properties("pluginGroup")
-version = properties("pluginVersion")
 
 
-//todo: java toolchain forces a local installation or a downloaded one.
-// without toolchain and if running with jdk later then 11 the test will run with that jdk.
-// to make sure tests run with jdk 11 either add a java tool chain or configure java compiler for tests tasks
-//java {
-//    toolchain {
-//        languageVersion.set(JavaLanguageVersion.of(properties("javaVersion")))
-//        vendor.set(JvmVendorSpec.AMAZON)
-//    }
-//}
 
-configurations {
-    all {
-        // Allows using project dependencies instead of IDE dependencies during compilation and test running
-        resolutionStrategy {
-            sortArtifacts(ResolutionStrategy.SortOrder.DEPENDENCY_FIRST)
-        }
-    }
-}
-
-repositories {
-    mavenCentral()
+dependencies{
+    implementation(project(":common"))
+    implementation(project(":java"))
+    implementation(project(":python"))
+    implementation(project(":rider"))
+    implementation(project(":clion"))
 }
 
 // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
@@ -44,6 +26,11 @@ intellij {
     version.set(properties("platformVersion"))
     type.set(properties("platformType"))
     plugins.set(properties("platformPlugins").split(',').map(String::trim).filter(String::isNotEmpty))
+
+    pluginsRepositories {
+        marketplace()
+        maven("https://www.jetbrains.com/intellij-repository/releases")
+    }
 }
 
 // Configure Gradle Changelog Plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
@@ -64,15 +51,6 @@ qodana {
 
 
 tasks {
-
-    properties("javaVersion").let { javaVersion:String ->
-        withType<JavaCompile> {
-            options.release.set(javaVersion.toInt())
-        }
-        withType<KotlinCompile> {
-            kotlinOptions.jvmTarget = javaVersion
-        }
-    }
 
     wrapper {
         gradleVersion = properties("gradleVersion")

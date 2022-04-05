@@ -26,11 +26,11 @@ jobs:
     - name: Build with Gradle
       uses: gradle/gradle-build-action@0d13054264b0bb894ded474f08ebb30921341cee
       with:
-        cache-read-only: true
+        cache-disabled: true
         arguments: clean build buildPlugin
     - name: Build with Gradle release-nightly
       uses: gradle/gradle-build-action@0d13054264b0bb894ded474f08ebb30921341cee
       with:
-        cache-read-only: true
+        cache-disabled: true
         gradle-version: release-nightly
         arguments: clean build buildPlugin

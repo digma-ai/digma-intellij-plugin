@@ -21,7 +21,7 @@ java {
 }
 
 /*
-todo:
+todo: upgrade gradle to 7.5
 this warning can be ignored:
 'compileJava' task (current target is 11) and 'compileKotlin' task (current target is 1.8) jvm target compatibility should be set to the same Java version.
 gradle issue:
@@ -29,15 +29,6 @@ https://github.com/gradle/gradle/issues/18935
  */
 
 tasks {
-
-    withType<JavaCompile> {
-        options.release.set(11)
-    }
-    withType<KotlinCompile> {
-        kotlinOptions {
-            jvmTarget = "11"
-        }
-    }
 
 
     test {

@@ -17,30 +17,26 @@ dependencies {
 
 
 java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(11))
-    }
+    toolchain.languageVersion.set(JavaLanguageVersion.of(11))
 }
-//java {
-//    //some issue with KotlinCompile needs that, usually that's not necessary
-//    sourceCompatibility = JavaVersion.VERSION_11
-//    targetCompatibility = JavaVersion.VERSION_11
-//}
+
+/*
+todo:
+this warning can be ignored:
+'compileJava' task (current target is 11) and 'compileKotlin' task (current target is 1.8) jvm target compatibility should be set to the same Java version.
+gradle issue:
+https://github.com/gradle/gradle/issues/18935
+ */
 
 tasks {
 
-//    withType<JavaCompile> {
-//        options.release.set(11)
-//    }
-//    withType<KotlinCompile> {
-//        kotlinOptions {
-//            jvmTarget = "11"
-//        }
-//    }
-
-    jar {
-        //don't need the jar unless there is at least one gradlePlugin
-        enabled = false
+    withType<JavaCompile> {
+        options.release.set(11)
+    }
+    withType<KotlinCompile> {
+        kotlinOptions {
+            jvmTarget = "11"
+        }
     }
 
 

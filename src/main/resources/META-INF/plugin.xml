@@ -16,6 +16,10 @@
             optional="true"
             config-file="org.digma.intellij-with-java.xml">com.intellij.modules.java
     </depends>
+    <depends
+            optional="true"
+            config-file="org.digma.intellij-with-csharp.xml">com.intellij.modules.rider
+    </depends>
 
 
     <extensions defaultExtensionNs="com.intellij">

@@ -8,7 +8,7 @@ fun properties(key: String) = project.findProperty(key).toString()
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(properties("javaVersion")))
-        vendor.set(JvmVendorSpec.AMAZON)
+//        vendor.set(JvmVendorSpec.AMAZON)
     }
 }
 

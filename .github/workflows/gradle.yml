@@ -25,6 +25,11 @@ jobs:
       with:
         java-version: '11'
         distribution: 'temurin'
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: | 
+             6.0.102
     - name: Validate Gradle wrapper
       uses: gradle/wrapper-validation-action@e6e38bacfdf1a337459f332974bb2327a31aaf4b
     - name: Build with Gradle

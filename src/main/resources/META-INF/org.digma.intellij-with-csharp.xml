@@ -1,5 +1,6 @@
 <idea-plugin>
     <extensions defaultExtensionNs="com.intellij">
         <projectService serviceImplementation="org.digma.intellij.plugin.psi.csharp.CSharpLanguageService"/>
+        <projectService serviceImplementation="org.digma.rider.protocol.MethodInfoService"/>
     </extensions>
 </idea-plugin>

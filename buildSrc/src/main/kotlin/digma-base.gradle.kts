@@ -1,5 +1,6 @@
 plugins{
     `java`
+    id("com.dorongold.task-tree")
 }
 
 fun properties(key: String) = project.findProperty(key).toString()

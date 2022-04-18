@@ -1,33 +1,34 @@
 package org.digma.intellij.plugin.psi.csharp;
 
 import com.intellij.lang.Language;
-import com.intellij.psi.PsiElement;
+import com.intellij.openapi.project.Project;
+import com.intellij.psi.PsiFile;
 import com.jetbrains.rider.ideaInterop.fileTypes.csharp.CSharpLanguage;
-import org.digma.intellij.plugin.psi.LanguageService;
-import org.jetbrains.annotations.NotNull;
+import org.digma.intellij.plugin.psi.*;
+import org.digma.rider.protocol.*;
+import org.jetbrains.annotations.Nullable;
 
 public class CSharpLanguageService implements LanguageService {
+
+    private MethodInfoService methodInfoService;
+
+    public CSharpLanguageService(Project project) {
+        this.methodInfoService = project.getService(MethodInfoService.class);
+    }
+
     @Override
     public boolean accept(Language language) {
         return CSharpLanguage.INSTANCE.equals(language);
     }
 
     @Override
-    public PsiElement findParentMethodIfAny(PsiElement psiElement) {
-        //todo: temp impl. rider does not have full PSI support, need resharper
-        while (psiElement.getParent() != null){
-            if (psiElement.getText().contains("private ") || psiElement.getText().contains("public ")){
-                return psiElement;
-            }
-            psiElement = psiElement.getParent();
+    @Nullable
+    public MethodIdentifier detectMethodUnderCaret(Project project, PsiFile psiFile, int caretOffset) {
+        //rider does it differently, through resharper
+        MethodInfo methodInfo = methodInfoService.getMethodUnderCaret();
+        if (methodInfo.getFqn().isEmpty()) {
+            return null;
         }
-
-        return psiElement;
-    }
-
-    @Override
-    public @NotNull PsiElement getParentMethod(PsiElement psiElement) {
-        //todo: temp impl. rider does not have full PSI support, need resharper
-        return findParentMethodIfAny(psiElement);
+        return new MethodIdentifier(methodInfo.getFqn(), methodInfo.getFilePath());
     }
 }

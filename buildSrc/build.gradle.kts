@@ -13,6 +13,7 @@ repositories {
 
 dependencies {
     implementation("org.jetbrains.intellij.plugins:gradle-intellij-plugin:1.5.2")
+    implementation("com.dorongold.plugins:task-tree:2.1.0")
 }
 
 

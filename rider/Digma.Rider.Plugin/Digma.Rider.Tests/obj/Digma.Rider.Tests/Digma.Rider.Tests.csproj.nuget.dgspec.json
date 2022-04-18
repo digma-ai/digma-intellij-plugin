@@ -1,0 +1,112 @@
+{
+  "format": 1,
+  "restore": {
+    "/home/shalom/workspace/digma/digma-intellij-plugin/rider/Digma.Rider.Plugin/Digma.Rider.Tests/Digma.Rider.Tests.csproj": {}
+  },
+  "projects": {
+    "/home/shalom/workspace/digma/digma-intellij-plugin/rider/Digma.Rider.Plugin/Digma.Rider.Tests/Digma.Rider.Tests.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/shalom/workspace/digma/digma-intellij-plugin/rider/Digma.Rider.Plugin/Digma.Rider.Tests/Digma.Rider.Tests.csproj",
+        "projectName": "Digma.Rider.Tests",
+        "projectPath": "/home/shalom/workspace/digma/digma-intellij-plugin/rider/Digma.Rider.Plugin/Digma.Rider.Tests/Digma.Rider.Tests.csproj",
+        "packagesPath": "/home/shalom/.nuget/packages/",
+        "outputPath": "/home/shalom/workspace/digma/digma-intellij-plugin/rider/Digma.Rider.Plugin/Digma.Rider.Tests/obj/Digma.Rider.Tests/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/shalom/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net472"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net472": {
+            "targetAlias": "net472",
+            "projectReferences": {
+              "/home/shalom/workspace/digma/digma-intellij-plugin/rider/Digma.Rider.Plugin/Digma.Rider/Digma.Rider.csproj": {
+                "projectPath": "/home/shalom/workspace/digma/digma-intellij-plugin/rider/Digma.Rider.Plugin/Digma.Rider/Digma.Rider.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net472": {
+          "targetAlias": "net472",
+          "dependencies": {
+            "JetBrains.ReSharper.SDK.Tests": {
+              "target": "Package",
+              "version": "[2021.3.3, )"
+            },
+            "JetBrains.Rider.SDK.Tests": {
+              "target": "Package",
+              "version": "[2021.3.3, )"
+            },
+            "Microsoft.NETFramework.ReferenceAssemblies": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[1.0.0, )"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/6.0.201/RuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/shalom/workspace/digma/digma-intellij-plugin/rider/Digma.Rider.Plugin/Digma.Rider/Digma.Rider.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/shalom/workspace/digma/digma-intellij-plugin/rider/Digma.Rider.Plugin/Digma.Rider/Digma.Rider.csproj",
+        "projectName": "Digma.Rider",
+        "projectPath": "/home/shalom/workspace/digma/digma-intellij-plugin/rider/Digma.Rider.Plugin/Digma.Rider/Digma.Rider.csproj",
+        "packagesPath": "/home/shalom/.nuget/packages/",
+        "outputPath": "/home/shalom/workspace/digma/digma-intellij-plugin/rider/Digma.Rider.Plugin/Digma.Rider/obj/Digma.Rider/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/shalom/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net472"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net472": {
+            "targetAlias": "net472",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net472": {
+          "targetAlias": "net472",
+          "dependencies": {
+            "JetBrains.Rider.SDK": {
+              "target": "Package",
+              "version": "[2021.3.3, )"
+            },
+            "Microsoft.NETFramework.ReferenceAssemblies": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[1.0.0, )"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/6.0.201/RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

@@ -47,12 +47,29 @@ qodana {
 }
 
 
+project.afterEvaluate{
+    //the final plugin distribution is packaged from the sandbox.
+    //So,make all the sub projects buildPlugin task run before this project's buildPlugin.
+    //that will make sure that their prepareSandbox task runs before building the plugin coz
+    //maybe they contribute something to the sandbox.
+    //currently, only rider contributes the dotnet dll's to the sandbox.
+
+    //it can be written with task fqn like buildPlugin.dependsOn(":rider:buildPlugin")
+    //but this syntax is not favorite by the gradle developers becasue it will cause eager initialization of the task.
+    val buildPlugin = tasks.named("buildPlugin").get()
+    project(":java").afterEvaluate{ buildPlugin.dependsOn(tasks.getByName("buildPlugin"))   }
+    project(":python").afterEvaluate{ buildPlugin.dependsOn(tasks.getByName("buildPlugin"))   }
+    project(":rider").afterEvaluate{ buildPlugin.dependsOn(tasks.getByName("buildPlugin"))   }
+}
+
 
 
 tasks {
 
     wrapper {
         gradleVersion = properties("gradleVersion")
+        distributionType = Wrapper.DistributionType.ALL
+        distributionBase = Wrapper.PathBase.PROJECT
     }
 
     patchPluginXml {
@@ -109,7 +126,15 @@ tasks {
         enabled = false
     }
 
+
+    var deleteLog = create("deleteLogs", Delete::class.java) {
+        delete = setOf(project.layout.buildDirectory.dir("idea-sandbox/system/log"))
+    }
+
     runIde {
+        dependsOn(deleteLog)
+        //rider contributes to prepareSandbox, so it needs to run before runIde
+        dependsOn(":rider:prepareSandbox")
         maxHeapSize = "2g"
     }
 }

@@ -1,7 +1,5 @@
 package org.digma.intellij.plugin.toolwindow;
 
-import com.intellij.psi.PsiElement;
-
 import javax.swing.*;
 
 public class ToolWindowContent {
@@ -13,8 +11,8 @@ public class ToolWindowContent {
         return contentPanel;
     }
 
-    public void update(PsiElement psiElement) {
-        mainTextArea.setText(psiElement.getText());
+    public void update(String methodInfo) {
+        mainTextArea.setText(methodInfo);
     }
 
     public void empty() {

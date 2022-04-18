@@ -8,9 +8,9 @@ import com.intellij.openapi.fileEditor.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.*;
 import com.intellij.util.messages.MessageBusConnection;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.psi.*;
 import org.digma.intellij.plugin.service.EditorInteractionService;
 import org.jetbrains.annotations.NotNull;
 
@@ -28,6 +28,7 @@ public class EditorListener implements FileEditorManagerListener {
     private final Project project;
     private final EditorInteractionService editorInteractionService;
     private MessageBusConnection messageBusConnection;
+    private DigmaPsiManager digmaPsiManager;
 
     /**
      * EditorListener registers CaretListeners on editors, those listeners need to be removed from
@@ -42,6 +43,7 @@ public class EditorListener implements FileEditorManagerListener {
     public EditorListener(@NotNull Project project, @NotNull EditorInteractionService editorInteractionService) {
         this.project = project;
         this.editorInteractionService = editorInteractionService;
+        this.digmaPsiManager = new DigmaPsiManager(project);
     }
 
 
@@ -111,14 +113,8 @@ public class EditorListener implements FileEditorManagerListener {
 
 
     private void updateCurrentElement(int caretOffset, @NotNull VirtualFile file) {
-        PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
-        if (psiFile != null) {
-            PsiElement psiElement = psiFile.findElementAt(caretOffset);
-            if (psiElement != null) {
-                Log.log(LOGGER::debug, "got psi element {}", psiElement);
-                editorInteractionService.updateViewContent(psiElement);
-            }
-        }
+        MethodIdentifier methodIdentifier = digmaPsiManager.detectMethodUnderCaret(project,caretOffset,file);
+        editorInteractionService.updateViewContent(methodIdentifier);
     }
 
 

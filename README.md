@@ -28,9 +28,13 @@ gradlew.bat buildPlugin -Porg.gradle.java.home=<PATH TO JDK 11></br>
 and test python projects too)
 
 
+### Rider
+
+Rider implementation is in rider module. </br>
+The solution can be opened with rider or vscode - rider/Digma.Rider.Plugin</br>
+
+
 <!-- Plugin description -->
 [//]: # (satisfy gradle build with plugin description)
 <!-- Plugin description end -->
 
-  
-[template]: https://github.com/JetBrains/intellij-platform-plugin-template

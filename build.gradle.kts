@@ -57,9 +57,14 @@ project.afterEvaluate{
     //it can be written with task fqn like buildPlugin.dependsOn(":rider:buildPlugin")
     //but this syntax is not favorite by the gradle developers becasue it will cause eager initialization of the task.
     val buildPlugin = tasks.named("buildPlugin").get()
+    val classes = tasks.named("classes").get()
     project(":java").afterEvaluate{ buildPlugin.dependsOn(tasks.getByName("buildPlugin"))   }
     project(":python").afterEvaluate{ buildPlugin.dependsOn(tasks.getByName("buildPlugin"))   }
-    project(":rider").afterEvaluate{ buildPlugin.dependsOn(tasks.getByName("buildPlugin"))   }
+    project(":rider").afterEvaluate{
+        buildPlugin.dependsOn(tasks.getByName("buildPlugin"))
+        //see comment for copyKotlinModuleFile task
+        classes.finalizedBy(tasks.getByName("copyKotlinModuleFile"))
+    }
 }
 
 

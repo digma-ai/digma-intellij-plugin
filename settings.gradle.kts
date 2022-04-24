@@ -16,7 +16,7 @@ pluginManagement {
 }
 
 rootProject.name = "digma-intellij-plugin"
-include("common","java","python","rider")
+include("common","idea","pycharm","rider")
 include("rider:protocol")
 findProject(":rider:protocol")?.name = "protocol"
 

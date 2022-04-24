@@ -1,8 +1,7 @@
+using System;
 using JetBrains.Annotations;
 using JetBrains.Application.Threading;
 using JetBrains.Core;
-using JetBrains.DataFlow;
-using JetBrains.Diagnostics;
 using JetBrains.DocumentManagers;
 using JetBrains.DocumentManagers.Transactions;
 using JetBrains.Lifetimes;
@@ -16,6 +15,7 @@ using JetBrains.ReSharper.Resources.Shell;
 using JetBrains.RiderTutorials.Utils;
 using JetBrains.TextControl;
 using JetBrains.TextControl.CodeWithMe;
+using JetBrains.Threading;
 using JetBrains.Util;
 
 namespace Digma.Rider.Protocol
@@ -23,68 +23,89 @@ namespace Digma.Rider.Protocol
     [SolutionComponent]
     public class ElementUnderCaretHost
     {
+        private readonly ElementUnderCaretModel _model;
+        private readonly Lifetime _lifetime;
+        private readonly ISolution _solution;
         private readonly DocumentManager _documentManager;
-
-        private readonly ILogger _logger;
+        private readonly ITextControlManager _textControlManager;
+        private readonly IShellLocks _shellLocks;
+        private GroupingEvent _groupingEvent;
 
         public ElementUnderCaretHost(Lifetime lifetime, ISolution solution,
             DocumentManager documentManager,
             ITextControlManager textControlManager, IShellLocks shellLocks, ILogger logger)
         {
+            _lifetime = lifetime;
+            _solution = solution;
             _documentManager = documentManager;
-            _logger = logger;
+            _textControlManager = textControlManager;
+            _shellLocks = shellLocks;
+            _model = solution.GetProtocolSolution().GetElementUnderCaretModel();
 
-            ElementUnderCaretModel model = solution.GetProtocolSolution().GetElementUnderCaretModel();
 
-            //todo: does not catch non C# files like json
-            textControlManager.FocusedTextControlPerClient.ForEachValue_NotNull_AllClients(lifetime,
+            Register();
+        }
+
+        private void Register()
+        {
+            _textControlManager.FocusedTextControlPerClient.BeforeAddRemove.Advise(_lifetime, h =>
+                // _textControlManager.FocusedTextControl.Change.Advise(_lifetime, h =>
+            {
+                OnChange();
+            });
+
+            _textControlManager.FocusedTextControlPerClient.ForEachValue_NotNull_AllClients(_lifetime,
                 (lifetime1, textControl) =>
                 {
-                    OnCaretPositionChanged(textControl, lifetime1, model);
+                    _groupingEvent = _shellLocks.CreateGroupingEvent(_lifetime,
+                        "ElementUnderCaretHost::CaretPositionChanged", TimeSpan.FromMilliseconds(500),
+                        OnChange);
+                    textControl?.Caret.Position.Change.Advise(_lifetime, cph => { _groupingEvent.FireIncoming(); });
                 });
-            // textControlManager.FocusedTextControl.ForEachValue_NotNull(lifetime,
-            //     (lifetime1, textControl) => { OnCaretPositionChanged(textControl, lifetime1, model); });
         }
 
 
-        private void OnCaretPositionChanged(ITextControl textControl, Lifetime lifetime,
-            ElementUnderCaretModel model)
+        private void OnChange()
         {
-            textControl?.Caret.Position.Change.Advise(lifetime, cph =>
+            var textControl = _textControlManager.FocusedTextControlPerClient.ForCurrentClient();
+            if (textControl == null)
             {
-                ICSharpFunctionDeclaration declaration = GetMethodUnderCaret(textControl);
-                if (declaration != null)
-                {
-                    var namespaceName = declaration.DeclaredElement?.ContainingType?.GetContainingNamespace().QualifiedName;
-                    var className = declaration.DeclaredElement?.ContainingType?.ShortName;
-                    var methodName = declaration.DeclaredElement?.ShortName;
-                    var fqn = namespaceName + "/" + className + "/" + methodName;
-                    var fileName = declaration.GetSourceFile()?.DisplayName;
-                    if (fileName != null)
-                    {
-                        model.ElementUnderCaret.Value = new ElementUnderCaret(fqn, fileName);
-                        
-                    }
-                }
-                else
-                {
-                    model.ElementUnderCaret.Value = new ElementUnderCaret(string.Empty, string.Empty);
-                }
-                
-                model.Refresh.Fire(Unit.Instance);
-            });
+                EmptyModel();
+                return;
+            }
+
+            ICSharpFunctionDeclaration declaration = GetMethodUnderCaret(textControl);
+            if (declaration != null)
+            {
+                var namespaceName = declaration.DeclaredElement?.ContainingType?.GetContainingNamespace().QualifiedName;
+                var className = declaration.DeclaredElement?.ContainingType?.ShortName;
+                var methodName = declaration.DeclaredElement?.ShortName;
+                var fqn = namespaceName + "/" + className + "/" + methodName;
+                var fileName = declaration.GetSourceFile()?.DisplayName;
+                _model.ElementUnderCaret.Value = new ElementUnderCaret(fqn, fileName ?? string.Empty);
+                _model.Refresh.Fire(Unit.Instance);
+            }
+            else
+            {
+                EmptyModel();
+            }
         }
-       
-        
-        
+
+
+        private void EmptyModel()
+        {
+            _model.ElementUnderCaret.Value = new ElementUnderCaret(string.Empty, string.Empty);
+            _model.Refresh.Fire(Unit.Instance);
+        }
+
+
         [CanBeNull]
         private ICSharpFunctionDeclaration GetMethodUnderCaret(ITextControl textControl)
         {
             using (ReadLockCookie.Create())
             {
                 var node = GetTreeNodeUnderCaret(textControl);
-                var parentMethod = node?.GetParentOfType<ICSharpFunctionDeclaration>();
-                return parentMethod;
+                return node?.GetParentOfType<ICSharpFunctionDeclaration>();
             }
         }
 
@@ -92,16 +113,14 @@ namespace Digma.Rider.Protocol
         [CanBeNull]
         private ITreeNode GetTreeNodeUnderCaret(ITextControl textControl)
         {
-            var projectFile = _documentManager.TryGetProjectFile(textControl.Document);
-            if (projectFile == null)
-                return null;
+            var projectFile = _documentManager.GetProjectFile(textControl.Document);
 
             if (!projectFile.LanguageType.Is<CSharpProjectFileType>()) return null;
 
             var range = new TextRange(textControl.Caret.Offset());
-            var psiSourceFile = projectFile.ToSourceFile().NotNull("File is null");
             var documentRange = range.CreateDocumentRange(projectFile);
-            var file = psiSourceFile.GetPsiFile(psiSourceFile.PrimaryPsiLanguage, documentRange);
+            var psiSourceFile = projectFile.ToSourceFile();
+            var file = psiSourceFile?.GetPsiFile(psiSourceFile.PrimaryPsiLanguage, documentRange);
             var element = file?.FindNodeAt(documentRange);
             return element;
         }

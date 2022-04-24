@@ -1,0 +1,9 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <projectService serviceImplementation="org.digma.intellij.plugin.psi.csharp.CSharpLanguageService"
+                        serviceInterface="org.digma.intellij.plugin.psi.LanguageService"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.editor.RiderEditorEventsHandler"
+                        serviceInterface="org.digma.intellij.plugin.editor.EditorEventsHandler"/>
+        <projectService serviceImplementation="org.digma.rider.protocol.ElementUnderCaretService"/>
+    </extensions>
+</idea-plugin>

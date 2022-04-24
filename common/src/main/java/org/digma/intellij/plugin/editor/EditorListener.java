@@ -1,20 +1,22 @@
-package org.digma.intellij.plugin.listener;
+package org.digma.intellij.plugin.editor;
 
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.event.*;
-import com.intellij.openapi.fileEditor.*;
+import com.intellij.openapi.editor.event.CaretEvent;
+import com.intellij.openapi.editor.event.CaretListener;
+import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
+import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.messages.MessageBusConnection;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.psi.*;
-import org.digma.intellij.plugin.service.EditorInteractionService;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -26,9 +28,8 @@ public class EditorListener implements FileEditorManagerListener {
 
     private boolean active = false;
     private final Project project;
-    private final EditorInteractionService editorInteractionService;
+    private final LocalPsiEditorEventsHandler localPsiEditorEventsHandler;
     private MessageBusConnection messageBusConnection;
-    private DigmaPsiManager digmaPsiManager;
 
     /**
      * EditorListener registers CaretListeners on editors, those listeners need to be removed from
@@ -40,10 +41,9 @@ public class EditorListener implements FileEditorManagerListener {
     private final Map<VirtualFile, Disposable> disposables = new HashMap<>();
 
 
-    public EditorListener(@NotNull Project project, @NotNull EditorInteractionService editorInteractionService) {
+    public EditorListener(@NotNull Project project, @NotNull LocalPsiEditorEventsHandler editorEventsHandler) {
         this.project = project;
-        this.editorInteractionService = editorInteractionService;
-        this.digmaPsiManager = new DigmaPsiManager(project);
+        this.localPsiEditorEventsHandler = editorEventsHandler;
     }
 
 
@@ -72,7 +72,7 @@ public class EditorListener implements FileEditorManagerListener {
         var newFile = editorManagerEvent.getNewFile();
 
         //ignore non supported files. newFile may be null when the last editor is closed.
-        if (newFile != null && editorInteractionService.isSupportedFile(newFile)) {
+        if (newFile != null && localPsiEditorEventsHandler.isSupportedFile(newFile)) {
             var editor = fileEditorManager.getSelectedTextEditor();
             if (editor != null && !disposables.containsKey(newFile)) {
                 addCaretListener(editor, newFile);
@@ -83,7 +83,7 @@ public class EditorListener implements FileEditorManagerListener {
                 updateCurrentElement(editor.getCaretModel().getOffset(), newFile);
             }
         } else {
-            editorInteractionService.clearViewContent();
+            localPsiEditorEventsHandler.emptySelection();
         }
     }
 
@@ -113,8 +113,7 @@ public class EditorListener implements FileEditorManagerListener {
 
 
     private void updateCurrentElement(int caretOffset, @NotNull VirtualFile file) {
-        MethodIdentifier methodIdentifier = digmaPsiManager.detectMethodUnderCaret(project,caretOffset,file);
-        editorInteractionService.updateViewContent(methodIdentifier);
+        localPsiEditorEventsHandler.updateCurrentElement(caretOffset, file);
     }
 
 
@@ -124,7 +123,7 @@ public class EditorListener implements FileEditorManagerListener {
             return;
         }
         Log.log(LOGGER::debug, "starting");
-        messageBusConnection = project.getMessageBus().connect(editorInteractionService);
+        messageBusConnection = project.getMessageBus().connect(localPsiEditorEventsHandler);
         messageBusConnection.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, this);
         installOnCurrentlyOpenedEditors();
         active = true;
@@ -142,7 +141,7 @@ public class EditorListener implements FileEditorManagerListener {
         var editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
         var fileEditor = FileEditorManager.getInstance(project).getSelectedEditor();
         if (editor != null && fileEditor != null && fileEditor.getFile() != null &&
-                editorInteractionService.isSupportedFile(fileEditor.getFile())) {
+                localPsiEditorEventsHandler.isSupportedFile(fileEditor.getFile())) {
             addCaretListener(editor, fileEditor.getFile());
             updateCurrentElement(editor.getCaretModel().getOffset(), fileEditor.getFile());
         }

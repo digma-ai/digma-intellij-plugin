@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using JetBrains.Diagnostics;
@@ -20,6 +21,7 @@ namespace Digma.Rider.Protocol
 {
     [SolutionComponent]
     [SuppressMessage("ReSharper", "PrivateFieldCanBeConvertedToLocalVariable")]
+    [Obsolete("not used")]
     public class MethodUnderCaretDetector
     {
         private readonly DocumentManager _documentManager;

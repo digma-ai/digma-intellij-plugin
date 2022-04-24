@@ -1,21 +1,24 @@
 package org.digma.intellij.plugin.psi.python;
 
-import com.intellij.lang.Language;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.*;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.jetbrains.python.PythonLanguage;
 import com.jetbrains.python.psi.PyFunction;
-import org.digma.intellij.plugin.psi.*;
+import org.digma.intellij.plugin.psi.LanguageService;
+import org.digma.intellij.plugin.psi.MethodIdentifier;
 import org.jetbrains.annotations.Nullable;
 
 public class PythonLanguageService implements LanguageService {
 
-    @Override
-    public boolean accept(Language language) {
-        return PythonLanguage.INSTANCE.equals(language);
-    }
 
+    @Override
+    public boolean isSupportedFile(Project project, VirtualFile newFile) {
+        PsiFile psiFile = com.intellij.psi.PsiManager.getInstance(project).findFile(newFile);
+        return PythonLanguage.INSTANCE.equals(psiFile.getLanguage());
+    }
 
     @Override
     @Nullable

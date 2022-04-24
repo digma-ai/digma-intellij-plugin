@@ -10,15 +10,15 @@
 
     <depends
             optional="true"
-            config-file="org.digma.intellij-with-python.xml">com.intellij.modules.python
+            config-file="org.digma.intellij-with-pycharm.xml">com.intellij.modules.python
     </depends>
     <depends
             optional="true"
-            config-file="org.digma.intellij-with-java.xml">com.intellij.modules.java
+            config-file="org.digma.intellij-with-idea.xml">com.intellij.modules.java
     </depends>
     <depends
             optional="true"
-            config-file="org.digma.intellij-with-csharp.xml">com.intellij.modules.rider
+            config-file="org.digma.intellij-with-rider.xml">com.intellij.modules.rider
     </depends>
 
 

@@ -1,24 +1,23 @@
 package rider.model
 
 import com.jetbrains.rd.generator.nova.*
-import com.jetbrains.rd.generator.nova.PredefinedType.void
 import com.jetbrains.rd.generator.nova.csharp.CSharp50Generator
 import com.jetbrains.rd.generator.nova.kotlin.Kotlin11Generator
 import com.jetbrains.rider.model.nova.ide.SolutionModel
 
-@Deprecated("not used")
-object MethodInfoModel : Ext(SolutionModel.Solution) {
+class ElementUnderCaretModel : Ext(SolutionModel.Solution) {
 
-    private var MethodInfo = structdef {
+    val ElementUnderCaret = structdef {
         field("fqn", PredefinedType.string)
         field("filePath", PredefinedType.string)
     }
 
 
-    init{
+    init {
         setting(CSharp50Generator.Namespace, "Digma.Rider.Protocol")
         setting(Kotlin11Generator.Namespace, "org.digma.rider.protocol")
-        call ("getMethodUnderCaret", void, MethodInfo)
+        property("elementUnderCaret", ElementUnderCaret)
+        signal("refresh", PredefinedType.void)
     }
 
 }

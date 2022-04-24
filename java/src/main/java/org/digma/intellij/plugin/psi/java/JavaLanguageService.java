@@ -1,18 +1,23 @@
 package org.digma.intellij.plugin.psi.java;
 
-import com.intellij.lang.Language;
 import com.intellij.lang.java.JavaLanguage;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.*;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiMethod;
 import com.intellij.psi.util.PsiTreeUtil;
-import org.digma.intellij.plugin.psi.*;
+import org.digma.intellij.plugin.psi.LanguageService;
+import org.digma.intellij.plugin.psi.MethodIdentifier;
 import org.jetbrains.annotations.Nullable;
 
 public class JavaLanguageService implements LanguageService {
 
+
     @Override
-    public boolean accept(Language language) {
-        return JavaLanguage.INSTANCE.equals(language);
+    public boolean isSupportedFile(Project project, VirtualFile newFile) {
+        PsiFile psiFile = com.intellij.psi.PsiManager.getInstance(project).findFile(newFile);
+        return JavaLanguage.INSTANCE.equals(psiFile.getLanguage());
     }
 
     @Override

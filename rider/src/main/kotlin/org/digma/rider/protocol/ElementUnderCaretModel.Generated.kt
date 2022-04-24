@@ -5,7 +5,10 @@ import com.jetbrains.rd.framework.*
 import com.jetbrains.rd.framework.base.ISerializersOwner
 import com.jetbrains.rd.framework.base.RdExtBase
 import com.jetbrains.rd.framework.base.deepClonePolymorphic
-import com.jetbrains.rd.framework.impl.RdCall
+import com.jetbrains.rd.framework.impl.RdOptionalProperty
+import com.jetbrains.rd.framework.impl.RdSignal
+import com.jetbrains.rd.util.reactive.IOptProperty
+import com.jetbrains.rd.util.reactive.ISignal
 import com.jetbrains.rd.util.string.IPrintable
 import com.jetbrains.rd.util.string.PrettyPrinter
 import com.jetbrains.rd.util.string.print
@@ -13,84 +16,94 @@ import kotlin.reflect.KClass
 
 
 /**
- * #### Generated from [MethodInfoModel.kt:10]
+ * #### Generated from [ElementUnderCaretModel.kt:8]
  */
-class MethodInfoModel private constructor(
-    private val _getMethodUnderCaret: RdCall<Unit, MethodInfo>
+class ElementUnderCaretModel private constructor(
+    private val _elementUnderCaret: RdOptionalProperty<ElementUnderCaret>,
+    private val _refresh: RdSignal<Unit>
 ) : RdExtBase() {
     //companion
     
     companion object : ISerializersOwner {
         
         override fun registerSerializersCore(serializers: ISerializers)  {
-            serializers.register(MethodInfo)
+            serializers.register(ElementUnderCaret)
         }
         
         
         
         
-        const val serializationHash = 4524857110976482394L
+        const val serializationHash = 3452000726214409832L
         
     }
-    override val serializersOwner: ISerializersOwner get() = MethodInfoModel
-    override val serializationHash: Long get() = MethodInfoModel.serializationHash
+    override val serializersOwner: ISerializersOwner get() = ElementUnderCaretModel
+    override val serializationHash: Long get() = ElementUnderCaretModel.serializationHash
     
     //fields
-    val getMethodUnderCaret: IRdCall<Unit, MethodInfo> get() = _getMethodUnderCaret
+    val elementUnderCaret: IOptProperty<ElementUnderCaret> get() = _elementUnderCaret
+    val refresh: ISignal<Unit> get() = _refresh
     //methods
     //initializer
     init {
-        bindableChildren.add("getMethodUnderCaret" to _getMethodUnderCaret)
+        _elementUnderCaret.optimizeNested = true
+    }
+    
+    init {
+        bindableChildren.add("elementUnderCaret" to _elementUnderCaret)
+        bindableChildren.add("refresh" to _refresh)
     }
     
     //secondary constructor
     internal constructor(
     ) : this(
-        RdCall<Unit, MethodInfo>(FrameworkMarshallers.Void, MethodInfo)
+        RdOptionalProperty<ElementUnderCaret>(ElementUnderCaret),
+        RdSignal<Unit>(FrameworkMarshallers.Void)
     )
     
     //equals trait
     //hash code trait
     //pretty print
     override fun print(printer: PrettyPrinter)  {
-        printer.println("MethodInfoModel (")
+        printer.println("ElementUnderCaretModel (")
         printer.indent {
-            print("getMethodUnderCaret = "); _getMethodUnderCaret.print(printer); println()
+            print("elementUnderCaret = "); _elementUnderCaret.print(printer); println()
+            print("refresh = "); _refresh.print(printer); println()
         }
         printer.print(")")
     }
     //deepClone
-    override fun deepClone(): MethodInfoModel   {
-        return MethodInfoModel(
-            _getMethodUnderCaret.deepClonePolymorphic()
+    override fun deepClone(): ElementUnderCaretModel   {
+        return ElementUnderCaretModel(
+            _elementUnderCaret.deepClonePolymorphic(),
+            _refresh.deepClonePolymorphic()
         )
     }
     //contexts
 }
-val com.jetbrains.rd.ide.model.Solution.methodInfoModel get() = getOrCreateExtension("methodInfoModel", ::MethodInfoModel)
+val com.jetbrains.rd.ide.model.Solution.elementUnderCaretModel get() = getOrCreateExtension("elementUnderCaretModel", ::ElementUnderCaretModel)
 
 
 
 /**
- * #### Generated from [MethodInfoModel.kt:12]
+ * #### Generated from [ElementUnderCaretModel.kt:10]
  */
-data class MethodInfo (
+data class ElementUnderCaret (
     val fqn: String,
     val filePath: String
 ) : IPrintable {
     //companion
     
-    companion object : IMarshaller<MethodInfo> {
-        override val _type: KClass<MethodInfo> = MethodInfo::class
+    companion object : IMarshaller<ElementUnderCaret> {
+        override val _type: KClass<ElementUnderCaret> = ElementUnderCaret::class
         
         @Suppress("UNCHECKED_CAST")
-        override fun read(ctx: SerializationCtx, buffer: AbstractBuffer): MethodInfo  {
+        override fun read(ctx: SerializationCtx, buffer: AbstractBuffer): ElementUnderCaret  {
             val fqn = buffer.readString()
             val filePath = buffer.readString()
-            return MethodInfo(fqn, filePath)
+            return ElementUnderCaret(fqn, filePath)
         }
         
-        override fun write(ctx: SerializationCtx, buffer: AbstractBuffer, value: MethodInfo)  {
+        override fun write(ctx: SerializationCtx, buffer: AbstractBuffer, value: ElementUnderCaret)  {
             buffer.writeString(value.fqn)
             buffer.writeString(value.filePath)
         }
@@ -106,7 +119,7 @@ data class MethodInfo (
         if (this === other) return true
         if (other == null || other::class != this::class) return false
         
-        other as MethodInfo
+        other as ElementUnderCaret
         
         if (fqn != other.fqn) return false
         if (filePath != other.filePath) return false
@@ -122,7 +135,7 @@ data class MethodInfo (
     }
     //pretty print
     override fun print(printer: PrettyPrinter)  {
-        printer.println("MethodInfo (")
+        printer.println("ElementUnderCaret (")
         printer.indent {
             print("fqn = "); fqn.print(printer); println()
             print("filePath = "); filePath.print(printer); println()

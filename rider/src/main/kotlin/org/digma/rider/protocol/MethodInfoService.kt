@@ -4,6 +4,7 @@ import com.intellij.openapi.project.Project
 import com.jetbrains.rdclient.util.idea.callSynchronously
 import com.jetbrains.rider.projectView.solution
 
+@Deprecated("not used")
 class MethodInfoService(project: Project) {
     private val model = project.solution.methodInfoModel
 

@@ -36,38 +36,46 @@ namespace Digma.Rider.Protocol
   
   
   /// <summary>
-  /// <p>Generated from: MethodInfoModel.kt:10</p>
+  /// <p>Generated from: ElementUnderCaretModel.kt:8</p>
   /// </summary>
-  public class MethodInfoModel : RdExtBase
+  public class ElementUnderCaretModel : RdExtBase
   {
     //fields
     //public fields
-    [NotNull] public IRdEndpoint<Unit, MethodInfo> GetMethodUnderCaret => _GetMethodUnderCaret;
+    [NotNull] public IViewableProperty<Digma.Rider.Protocol.ElementUnderCaret> ElementUnderCaret => _ElementUnderCaret;
+    [NotNull] public ISignal<Unit> Refresh => _Refresh;
     
     //private fields
-    [NotNull] private readonly RdCall<Unit, MethodInfo> _GetMethodUnderCaret;
+    [NotNull] private readonly RdProperty<Digma.Rider.Protocol.ElementUnderCaret> _ElementUnderCaret;
+    [NotNull] private readonly RdSignal<Unit> _Refresh;
     
     //primary constructor
-    private MethodInfoModel(
-      [NotNull] RdCall<Unit, MethodInfo> getMethodUnderCaret
+    private ElementUnderCaretModel(
+      [NotNull] RdProperty<Digma.Rider.Protocol.ElementUnderCaret> elementUnderCaret,
+      [NotNull] RdSignal<Unit> refresh
     )
     {
-      if (getMethodUnderCaret == null) throw new ArgumentNullException("getMethodUnderCaret");
+      if (elementUnderCaret == null) throw new ArgumentNullException("elementUnderCaret");
+      if (refresh == null) throw new ArgumentNullException("refresh");
       
-      _GetMethodUnderCaret = getMethodUnderCaret;
-      BindableChildren.Add(new KeyValuePair<string, object>("getMethodUnderCaret", _GetMethodUnderCaret));
+      _ElementUnderCaret = elementUnderCaret;
+      _Refresh = refresh;
+      _ElementUnderCaret.OptimizeNested = true;
+      BindableChildren.Add(new KeyValuePair<string, object>("elementUnderCaret", _ElementUnderCaret));
+      BindableChildren.Add(new KeyValuePair<string, object>("refresh", _Refresh));
     }
     //secondary constructor
-    internal MethodInfoModel (
+    internal ElementUnderCaretModel (
     ) : this (
-      new RdCall<Unit, MethodInfo>(JetBrains.Rd.Impl.Serializers.ReadVoid, JetBrains.Rd.Impl.Serializers.WriteVoid, MethodInfo.Read, MethodInfo.Write)
+      new RdProperty<Digma.Rider.Protocol.ElementUnderCaret>(Digma.Rider.Protocol.ElementUnderCaret.Read, Digma.Rider.Protocol.ElementUnderCaret.Write),
+      new RdSignal<Unit>(JetBrains.Rd.Impl.Serializers.ReadVoid, JetBrains.Rd.Impl.Serializers.WriteVoid)
     ) {}
     //deconstruct trait
     //statics
     
     
     
-    protected override long SerializationHash => 4524857110976482394L;
+    protected override long SerializationHash => 3452000726214409832L;
     
     protected override Action<ISerializers> Register => RegisterDeclaredTypesSerializers;
     public static void RegisterDeclaredTypesSerializers(ISerializers serializers)
@@ -86,9 +94,10 @@ namespace Digma.Rider.Protocol
     //pretty print
     public override void Print(PrettyPrinter printer)
     {
-      printer.Println("MethodInfoModel (");
+      printer.Println("ElementUnderCaretModel (");
       using (printer.IndentCookie()) {
-        printer.Print("getMethodUnderCaret = "); _GetMethodUnderCaret.PrintEx(printer); printer.Println();
+        printer.Print("elementUnderCaret = "); _ElementUnderCaret.PrintEx(printer); printer.Println();
+        printer.Print("refresh = "); _Refresh.PrintEx(printer); printer.Println();
       }
       printer.Print(")");
     }
@@ -100,19 +109,19 @@ namespace Digma.Rider.Protocol
       return printer.ToString();
     }
   }
-  public static class SolutionMethodInfoModelEx
+  public static class SolutionElementUnderCaretModelEx
    {
-    public static MethodInfoModel GetMethodInfoModel(this JetBrains.Rider.Model.Solution solution)
+    public static ElementUnderCaretModel GetElementUnderCaretModel(this JetBrains.Rider.Model.Solution solution)
     {
-      return solution.GetOrCreateExtension("methodInfoModel", () => new MethodInfoModel());
+      return solution.GetOrCreateExtension("elementUnderCaretModel", () => new ElementUnderCaretModel());
     }
   }
   
   
   /// <summary>
-  /// <p>Generated from: MethodInfoModel.kt:12</p>
+  /// <p>Generated from: ElementUnderCaretModel.kt:10</p>
   /// </summary>
-  public sealed class MethodInfo : IPrintable, IEquatable<MethodInfo>
+  public sealed class ElementUnderCaret : IPrintable, IEquatable<ElementUnderCaret>
   {
     //fields
     //public fields
@@ -121,7 +130,7 @@ namespace Digma.Rider.Protocol
     
     //private fields
     //primary constructor
-    public MethodInfo(
+    public ElementUnderCaret(
       [NotNull] string fqn,
       [NotNull] string filePath
     )
@@ -141,15 +150,15 @@ namespace Digma.Rider.Protocol
     }
     //statics
     
-    public static CtxReadDelegate<MethodInfo> Read = (ctx, reader) => 
+    public static CtxReadDelegate<ElementUnderCaret> Read = (ctx, reader) => 
     {
       var fqn = reader.ReadString();
       var filePath = reader.ReadString();
-      var _result = new MethodInfo(fqn, filePath);
+      var _result = new ElementUnderCaret(fqn, filePath);
       return _result;
     };
     
-    public static CtxWriteDelegate<MethodInfo> Write = (ctx, writer, value) => 
+    public static CtxWriteDelegate<ElementUnderCaret> Write = (ctx, writer, value) => 
     {
       writer.Write(value.Fqn);
       writer.Write(value.FilePath);
@@ -165,9 +174,9 @@ namespace Digma.Rider.Protocol
       if (ReferenceEquals(null, obj)) return false;
       if (ReferenceEquals(this, obj)) return true;
       if (obj.GetType() != GetType()) return false;
-      return Equals((MethodInfo) obj);
+      return Equals((ElementUnderCaret) obj);
     }
-    public bool Equals(MethodInfo other)
+    public bool Equals(ElementUnderCaret other)
     {
       if (ReferenceEquals(null, other)) return false;
       if (ReferenceEquals(this, other)) return true;
@@ -186,7 +195,7 @@ namespace Digma.Rider.Protocol
     //pretty print
     public void Print(PrettyPrinter printer)
     {
-      printer.Println("MethodInfo (");
+      printer.Println("ElementUnderCaret (");
       using (printer.IndentCookie()) {
         printer.Print("fqn = "); Fqn.PrintEx(printer); printer.Println();
         printer.Print("filePath = "); FilePath.PrintEx(printer); printer.Println();

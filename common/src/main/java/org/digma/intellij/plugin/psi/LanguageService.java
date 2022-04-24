@@ -1,25 +1,25 @@
 package org.digma.intellij.plugin.psi;
 
-import com.intellij.lang.Language;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.*;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import org.digma.intellij.plugin.log.Log;
-import org.jetbrains.annotations.*;
+import org.jetbrains.annotations.Nullable;
 
 public interface LanguageService {
 
     Logger LOGGER = Logger.getInstance(LanguageService.class);
 
-    boolean accept(Language language);
 
-//    MethodIdentifier findParentMethodIfAny(PsiElement psiElement);
-//
-//    @NotNull
-//    MethodIdentifier getParentMethod(PsiElement psiElement);
+    boolean isSupportedFile(Project project, VirtualFile newFile);
+
 
     @Nullable
     MethodIdentifier detectMethodUnderCaret(Project project, PsiFile psiFile, int caretOffset);
+
+
 
     //for use by language services that have a psi impl, python, java, Not rider
     @Nullable
@@ -31,4 +31,5 @@ public interface LanguageService {
         }
         return null;
     }
+
 }

@@ -1,34 +1,26 @@
 package org.digma.intellij.plugin.psi.csharp;
 
-import com.intellij.lang.Language;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.jetbrains.rider.ideaInterop.fileTypes.csharp.CSharpLanguage;
-import org.digma.intellij.plugin.psi.*;
-import org.digma.rider.protocol.*;
+import org.digma.intellij.plugin.psi.LanguageService;
+import org.digma.intellij.plugin.psi.MethodIdentifier;
 import org.jetbrains.annotations.Nullable;
 
 public class CSharpLanguageService implements LanguageService {
 
-    private MethodInfoService methodInfoService;
 
-    public CSharpLanguageService(Project project) {
-        this.methodInfoService = project.getService(MethodInfoService.class);
+    //should not be called !!
+    @Override
+    public boolean isSupportedFile(Project project, VirtualFile newFile) {
+        PsiFile psiFile = com.intellij.psi.PsiManager.getInstance(project).findFile(newFile);
+        return CSharpLanguage.INSTANCE.equals(psiFile.getLanguage());
     }
 
     @Override
-    public boolean accept(Language language) {
-        return CSharpLanguage.INSTANCE.equals(language);
+    public @Nullable MethodIdentifier detectMethodUnderCaret(Project project, PsiFile psiFile, int caretOffset) {
+        throw new UnsupportedOperationException("should not be called");
     }
 
-    @Override
-    @Nullable
-    public MethodIdentifier detectMethodUnderCaret(Project project, PsiFile psiFile, int caretOffset) {
-        //rider does it differently, through resharper
-        MethodInfo methodInfo = methodInfoService.getMethodUnderCaret();
-        if (methodInfo.getFqn().isEmpty()) {
-            return null;
-        }
-        return new MethodIdentifier(methodInfo.getFqn(), methodInfo.getFilePath());
-    }
 }

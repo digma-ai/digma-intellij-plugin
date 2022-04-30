@@ -1,12 +1,14 @@
+import common.properties
+
 plugins {
     id("plugin-library")
 }
 
 dependencies{
-    compileOnly(project(":common"))
+    compileOnly(project(":ide-common"))
 }
 
 intellij {
-    version.set("PC-2021.3.3")
+    version.set("PC-"+ properties("platformVersion", project))
     plugins.set(listOf("PythonCore"))
 }

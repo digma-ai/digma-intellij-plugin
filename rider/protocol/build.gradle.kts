@@ -1,7 +1,10 @@
 import common.rider.rdLibDirectory
-
+@Suppress(
+    //see: https://youtrack.jetbrains.com/issue/KTIJ-19369
+    "DSL_SCOPE_VIOLATION"
+)
 plugins {
-    kotlin("jvm") version "1.6.10"
+    id("common-kotlin")
 }
 
 group = "org.digma.plugins.rider.protocol"
@@ -15,7 +18,7 @@ repositories {
 }
 
 dependencies {
-    implementation(kotlin("stdlib"))
+    compileOnly(libs.kotlin.stdlib.jdk8)
     implementation("com.jetbrains:rd-gen")
     implementation("com.jetbrains:rider-model")
 }

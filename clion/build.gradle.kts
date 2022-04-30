@@ -1,11 +1,13 @@
+import common.properties
+
 plugins {
     id("plugin-library")
 }
 
 dependencies{
-    compileOnly(project(":common"))
+    compileOnly(project(":ide-common"))
 }
 
 intellij {
-    version.set("CL-2021.3.3")
+    version.set("CL-"+ common.properties("platformVersion", project))
 }

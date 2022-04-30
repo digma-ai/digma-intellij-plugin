@@ -1,20 +1,20 @@
+import common.properties
+
 plugins{
     `java`
     id("com.dorongold.task-tree")
 }
 
-fun properties(key: String) = project.findProperty(key).toString()
-
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(properties("javaVersion")))
+        languageVersion.set(JavaLanguageVersion.of(properties("javaVersion",project)))
 //        vendor.set(JvmVendorSpec.AMAZON)
     }
 }
 
-group = properties("pluginGroup")
-version = properties("pluginVersion")
+group = properties("pluginGroup",project)
+version = properties("pluginVersion",project)
 
 repositories {
     mavenCentral()

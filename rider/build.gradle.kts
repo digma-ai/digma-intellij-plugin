@@ -3,22 +3,25 @@ import common.properties
 import common.rider.rdLibDirectory
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.io.ByteArrayOutputStream
-
+@Suppress(
+    //see: https://youtrack.jetbrains.com/issue/KTIJ-19369
+    "DSL_SCOPE_VIOLATION"
+)
 plugins {
     id("plugin-library")
-    kotlin("jvm") version "1.6.10"
+    id("common-kotlin")
     id("com.jetbrains.rdgen") version "2021.3.3"
 }
 
 
 dependencies {
-    compileOnly(project(":common"))
+    compileOnly(project(":ide-common"))
 }
 
 
 
 intellij {
-    version.set("RD-2021.3.3")
+    version.set("RD-"+ properties("platformVersion",project))
     plugins.set(listOf("rider-plugins-appender"))
     downloadSources.set(false) //there are no sources for rider
     instrumentCode.set(false) // why not??

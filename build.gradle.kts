@@ -1,19 +1,26 @@
+import common.properties
 import org.jetbrains.changelog.markdownToHTML
 
-fun properties(key: String) = project.findProperty(key).toString()
+fun properties(key: String) = properties(key,project)
 
+@Suppress(
+    //see: https://youtrack.jetbrains.com/issue/KTIJ-19369
+    "DSL_SCOPE_VIOLATION"
+)
 plugins {
     id("plugin-project")
     id("org.jetbrains.changelog") version "1.3.1"
     id("org.jetbrains.qodana") version "0.1.13"
-    id("org.jetbrains.kotlin.jvm") version "1.6.10"
+    id("common-kotlin")
 }
 
 
 
 
 dependencies{
-    implementation(project(":common"))
+    implementation(project(":model"))
+    implementation(project(":analytics-provider"))
+    implementation(project(":ide-common"))
     implementation(project(":idea"))
     implementation(project(":pycharm"))
     implementation(project(":rider"))

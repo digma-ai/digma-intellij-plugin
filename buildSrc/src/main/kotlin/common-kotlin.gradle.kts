@@ -22,5 +22,7 @@ plugins {
 kotlin {
     jvmToolchain {
         (this as JavaToolchainSpec).languageVersion.set(JavaLanguageVersion.of(properties("javaVersion",project)))
+        //to build with amazon corretto download it in the gradlew script. see resharper-unity
+        //vendor.set(JvmVendorSpec.AMAZON)
     }
 }

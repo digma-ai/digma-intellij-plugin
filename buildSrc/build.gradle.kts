@@ -1,4 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     `groovy-gradle-plugin`
@@ -20,6 +19,12 @@ dependencies {
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(11))
+}
+
+kotlin {
+    jvmToolchain {
+        (this as JavaToolchainSpec).languageVersion.set(JavaLanguageVersion.of("11"))
+    }
 }
 
 /*

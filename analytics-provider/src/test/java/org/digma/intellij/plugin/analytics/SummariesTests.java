@@ -4,7 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.ProcessingException;
 import okhttp3.mockwebserver.MockResponse;
-import org.digma.intellij.plugin.model.*;
+import org.digma.intellij.plugin.model.CodeObjectSummaryType;
+import org.digma.intellij.plugin.model.rest.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -14,6 +15,19 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class SummariesTests extends AbstractAnalyticsProviderTest {
+
+
+    @Test
+    public void getSummariesTemp(){
+        List<String> ids = new ArrayList<>();
+        ids.add("method:Sample.MoneyTransfer.API.Controllers.TransferController$_$TransferFunds");
+        ids.add("method:Sample.MoneyTransfer.API.Controllers.TransferController$_$DepositFunds");
+        CodeObjectSummaryRequest summaryRequest = new CodeObjectSummaryRequest("UNSET_ENV", ids);
+        AnalyticsProvider analyticsProvider = new RestAnalyticsProvider("http://localhost:5051");
+        List<CodeObjectSummary> summaries = analyticsProvider.getSummaries(summaryRequest);
+        System.out.println(summaries);
+    }
+
 
     @Test
     public void getSummaries() throws JsonProcessingException {
@@ -35,7 +49,7 @@ public class SummariesTests extends AbstractAnalyticsProviderTest {
         assertEquals(1, summariesResult.size());
         assertEquals(MethodCodeObjectSummary.class, summariesResult.get(0).getClass());
         MethodCodeObjectSummary methodCodeObjectSummary = (MethodCodeObjectSummary) summariesResult.get(0);
-        assertEquals(methodCodeObjectSummary.getType(), CodeObjectType.MethodSummary);
+        assertEquals(methodCodeObjectSummary.getType(), CodeObjectSummaryType.MethodSummary);
         assertTrue(expectedCodeObjectSummary.equals(methodCodeObjectSummary));
     }
 
@@ -65,11 +79,11 @@ public class SummariesTests extends AbstractAnalyticsProviderTest {
         assertEquals(MethodCodeObjectSummary.class, summariesResult.get(0).getClass());
         assertEquals(SpanCodeObjectSummary.class, summariesResult.get(1).getClass());
         MethodCodeObjectSummary methodCodeObjectSummary = (MethodCodeObjectSummary) summariesResult.get(0);
-        assertEquals(methodCodeObjectSummary.getType(), CodeObjectType.MethodSummary);
+        assertEquals(methodCodeObjectSummary.getType(), CodeObjectSummaryType.MethodSummary);
         assertTrue(expectedMethodCodeObjectSummary.equals(methodCodeObjectSummary));
 
         SpanCodeObjectSummary spanCodeObjectSummary = (SpanCodeObjectSummary) summariesResult.get(1);
-        assertEquals(spanCodeObjectSummary.getType(), CodeObjectType.SpanSummary);
+        assertEquals(spanCodeObjectSummary.getType(), CodeObjectSummaryType.SpanSummary);
         assertTrue(spanCodeObjectSummary.equals(expectedSpanCodeObjectSummary));
     }
 
@@ -131,7 +145,7 @@ public class SummariesTests extends AbstractAnalyticsProviderTest {
             restAnalyticsProvider.getSummaries(summaryRequest);
         });
 
-        assertTrue(exception.getMessage().contains("com.fasterxml.jackson.databind.exc.MismatchedInputException: Cannot deserialize value of type `java.util.ArrayList<org.digma.intellij.plugin.model.CodeObjectSummary>` from String value (token `JsonToken.VALUE_STRING`)"));
+        assertTrue(exception.getMessage().contains("com.fasterxml.jackson.databind.exc.MismatchedInputException: Cannot deserialize value of type `java.util.ArrayList<org.digma.intellij.plugin.model.rest.CodeObjectSummary>` from String value (token `JsonToken.VALUE_STRING`)"));
     }
 
 

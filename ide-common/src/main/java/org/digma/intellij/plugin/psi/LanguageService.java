@@ -15,6 +15,7 @@ public interface LanguageService {
 
     boolean isSupportedFile(Project project, VirtualFile newFile);
 
+    boolean isSupportedFile(Project project, PsiFile psiFile);
 
     @Nullable
     MethodIdentifier detectMethodUnderCaret(Project project, PsiFile psiFile, int caretOffset);
@@ -31,5 +32,6 @@ public interface LanguageService {
         }
         return null;
     }
+
 
 }

@@ -21,6 +21,11 @@ public class JavaLanguageService implements LanguageService {
     }
 
     @Override
+    public boolean isSupportedFile(Project project, PsiFile psiFile) {
+        return JavaLanguage.INSTANCE.equals(psiFile.getLanguage());
+    }
+
+    @Override
     @Nullable
     public MethodIdentifier detectMethodUnderCaret(Project project, PsiFile psiFile, int caretOffset) {
         PsiElement underCaret = findElementUnderCaret(project, psiFile, caretOffset);

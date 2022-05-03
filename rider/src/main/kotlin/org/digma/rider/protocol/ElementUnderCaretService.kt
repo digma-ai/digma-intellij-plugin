@@ -13,6 +13,9 @@ class ElementUnderCaretService(private val project: Project) {
 
     fun start(methodContextUpdated: MethodContextUpdater) {
 
+        //todo: check is elementUnderCaret has value and update tool window,
+        // same as org.digma.intellij.plugin.editor.EditorListener.installOnCurrentlyOpenedEditors
+
         model.refresh.advise(project.lifetime) {
             var elementUnderCaret = model.elementUnderCaret.valueOrNull
 

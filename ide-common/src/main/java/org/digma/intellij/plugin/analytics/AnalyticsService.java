@@ -4,8 +4,8 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.CodeObjectSummary;
-import org.digma.intellij.plugin.model.CodeObjectSummaryRequest;
+import org.digma.intellij.plugin.model.rest.CodeObjectSummary;
+import org.digma.intellij.plugin.model.rest.CodeObjectSummaryRequest;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -74,7 +74,21 @@ public class AnalyticsService implements AnalyticsProvider, Disposable {
         public Object invoke(Object proxy, Method method, Object[] args)
                 throws Throwable {
             try {
-                return method.invoke(analyticsProvider, args);
+                //fixme!! maybe replace the rest framework with one that works nice in intellij
+                // see:https://github.com/resteasy/resteasy/discussions/3096
+                //resteasy can't load ProxyBuilderImpl and fails on CNFE. intellij has its own PluginClassLoader ,
+                // but resteasy's code replaces intellij's PluginClassLoader with currentThread.getContextClassLoader()
+                // before loading ProxyBuilderImpl and the currentThread.getContextClassLoader() doesn't know how to load
+                // classes from a plugin zip.
+                ClassLoader current = Thread.currentThread().getContextClassLoader();
+                Thread.currentThread().setContextClassLoader(AnalyticsProvider.class.getClassLoader());
+
+                try {
+                    return method.invoke(analyticsProvider, args);
+                }finally {
+                    Thread.currentThread().setContextClassLoader(current);
+                }
+
             } catch (Exception e) {
                 Log.log(LOGGER::error, "error invoking {}, exception {}", method.getName(), e);
                 //todo: maybe return empty object

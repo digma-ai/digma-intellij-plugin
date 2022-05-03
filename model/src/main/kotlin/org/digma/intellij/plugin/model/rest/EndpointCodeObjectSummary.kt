@@ -1,6 +1,7 @@
-package org.digma.intellij.plugin.model
+package org.digma.intellij.plugin.model.rest
 
 import com.fasterxml.jackson.annotation.JsonCreator
+import org.digma.intellij.plugin.model.CodeObjectSummaryType
 import java.beans.ConstructorProperties
 
 data class EndpointCodeObjectSummary
@@ -15,5 +16,5 @@ constructor(
     val maxCallsIn1Min: Int = 0
 ) : CodeObjectSummary {
 
-    override val type: CodeObjectType = CodeObjectType.EndpointSummary
+    override val type: CodeObjectSummaryType = CodeObjectSummaryType.EndpointSummary
 }

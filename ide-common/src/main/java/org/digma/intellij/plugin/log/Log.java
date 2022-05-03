@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.log;
 
 import com.intellij.openapi.diagnostic.Logger;
+
 import java.util.function.Consumer;
 
 /**
@@ -17,7 +18,7 @@ public class Log {
         // so to temporarily bypass all loggers uncomment this line.
         //LOGGER.info(String.format(format.replace("{}", "%s"), args));
         //todo: change the test IDE logging level to DEBUG for runIde task before it runs.
-        consumer.accept(String.format(format.replace("{}", "%s"), args));
+        consumer.accept("Digma:"+String.format(format.replace("{}", "%s"), args));
     }
 
 }

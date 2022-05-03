@@ -19,6 +19,11 @@ public class CSharpLanguageService implements LanguageService {
     }
 
     @Override
+    public boolean isSupportedFile(Project project, PsiFile psiFile) {
+        return CSharpLanguage.INSTANCE.equals(psiFile.getLanguage());
+    }
+
+    @Override
     public @Nullable MethodIdentifier detectMethodUnderCaret(Project project, PsiFile psiFile, int caretOffset) {
         throw new UnsupportedOperationException("should not be called");
     }

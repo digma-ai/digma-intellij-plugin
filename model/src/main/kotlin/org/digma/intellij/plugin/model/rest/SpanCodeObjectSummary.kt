@@ -1,6 +1,7 @@
-package org.digma.intellij.plugin.model
+package org.digma.intellij.plugin.model.rest
 
 import com.fasterxml.jackson.annotation.JsonCreator
+import org.digma.intellij.plugin.model.CodeObjectSummaryType
 import java.beans.ConstructorProperties
 
 data class SpanCodeObjectSummary
@@ -12,5 +13,5 @@ constructor(
     override val errorsCount: Int = 0
 ) : CodeObjectSummary {
 
-    override val type: CodeObjectType = CodeObjectType.SpanSummary
+    override val type: CodeObjectSummaryType = CodeObjectSummaryType.SpanSummary
 }

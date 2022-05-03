@@ -1,6 +1,7 @@
-package org.digma.intellij.plugin.model
+package org.digma.intellij.plugin.model.rest
 
 import com.fasterxml.jackson.annotation.JsonCreator
+import org.digma.intellij.plugin.model.CodeObjectSummaryType
 import java.beans.ConstructorProperties
 
 data class MethodCodeObjectSummary
@@ -14,5 +15,5 @@ constructor(
     val executedCodes: List<ExecutedCodeSummary>
 ) : CodeObjectSummary {
 
-    override val type: CodeObjectType = CodeObjectType.MethodSummary
+    override val type: CodeObjectSummaryType = CodeObjectSummaryType.MethodSummary
 }

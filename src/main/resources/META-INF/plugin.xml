@@ -29,7 +29,18 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.analytics.AnalyticsService"
                         serviceInterface="org.digma.intellij.plugin.analytics.AnalyticsProvider"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.document.DocumentInfoService"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.document.CodeLensProvider"/>
     </extensions>
+
+
+    <projectListeners>
+        <listener
+                class="org.digma.intellij.plugin.project.ProjectOpenedListener"
+                topic="com.intellij.openapi.project.ProjectManagerListener"/>
+    </projectListeners>
+
 
 
 </idea-plugin>

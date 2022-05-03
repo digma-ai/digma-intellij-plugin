@@ -140,13 +140,17 @@ tasks {
 
 
     var deleteLog = create("deleteLogs", Delete::class.java) {
-        delete = setOf(project.layout.buildDirectory.dir("idea-sandbox/system/log"))
+        project.layout.buildDirectory.dir("idea-sandbox/system/log").get().asFile.walk().forEach {
+            if (it.name.endsWith(".log")){
+                delete(it)
+            }
+        }
     }
 
     runIde {
         dependsOn(deleteLog)
         //rider contributes to prepareSandbox, so it needs to run before runIde
         dependsOn(":rider:prepareSandbox")
-        maxHeapSize = "2g"
+        maxHeapSize = "4g"
     }
 }

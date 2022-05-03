@@ -21,6 +21,11 @@ public class PythonLanguageService implements LanguageService {
     }
 
     @Override
+    public boolean isSupportedFile(Project project, PsiFile psiFile) {
+        return PythonLanguage.INSTANCE.equals(psiFile.getLanguage());
+    }
+
+    @Override
     @Nullable
     public MethodIdentifier detectMethodUnderCaret(Project project, PsiFile psiFile, int caretOffset) {
         PsiElement underCaret = findElementUnderCaret(project, psiFile, caretOffset);

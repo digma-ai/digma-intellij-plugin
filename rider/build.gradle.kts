@@ -15,6 +15,7 @@ plugins {
 
 
 dependencies {
+    compileOnly(project(":model"))
     compileOnly(project(":ide-common"))
 }
 

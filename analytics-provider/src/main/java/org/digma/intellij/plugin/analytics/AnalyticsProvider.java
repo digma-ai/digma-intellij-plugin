@@ -2,8 +2,8 @@ package org.digma.intellij.plugin.analytics;
 
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
-import org.digma.intellij.plugin.model.CodeObjectSummary;
-import org.digma.intellij.plugin.model.CodeObjectSummaryRequest;
+import org.digma.intellij.plugin.model.rest.CodeObjectSummary;
+import org.digma.intellij.plugin.model.rest.CodeObjectSummaryRequest;
 
 import java.io.Closeable;
 import java.util.List;

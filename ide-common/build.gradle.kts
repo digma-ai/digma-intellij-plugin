@@ -1,9 +1,11 @@
+import common.properties
+
 plugins {
     id("plugin-library")
 }
 
 intellij {
-    version.set("IC-2021.3.3")
+    version.set("IC-"+ properties("platformVersion", project))
 }
 
 dependencies {

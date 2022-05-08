@@ -12,7 +12,6 @@ class CodeObjectsModel : Ext(SolutionModel.Solution) {
     private val RiderMethodInfo = structdef {
         field("id", PredefinedType.string)
         field("name", PredefinedType.string)
-        field("displayName", PredefinedType.string)
         field("containingClass", PredefinedType.string)
         field("containingNamespace", PredefinedType.string)
         field("containingFile", PredefinedType.string)

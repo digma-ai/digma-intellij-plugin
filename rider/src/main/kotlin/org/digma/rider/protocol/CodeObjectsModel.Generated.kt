@@ -3,14 +3,15 @@ package org.digma.rider.protocol
 
 import com.jetbrains.rd.framework.*
 import com.jetbrains.rd.framework.base.*
-import com.jetbrains.rd.framework.impl.RdMap
-import com.jetbrains.rd.framework.impl.RdSignal
-import com.jetbrains.rd.util.reactive.IMutableViewableMap
-import com.jetbrains.rd.util.reactive.ISignal
-import com.jetbrains.rd.util.string.IPrintable
-import com.jetbrains.rd.util.string.PrettyPrinter
-import com.jetbrains.rd.util.string.print
+import com.jetbrains.rd.framework.impl.*
+
+import com.jetbrains.rd.util.lifetime.*
+import com.jetbrains.rd.util.reactive.*
+import com.jetbrains.rd.util.string.*
+import com.jetbrains.rd.util.*
 import kotlin.reflect.KClass
+import kotlin.jvm.JvmStatic
+
 
 
 /**
@@ -35,7 +36,7 @@ class CodeObjectsModel private constructor(
         
         
         
-        const val serializationHash = 6684827722303623330L
+        const val serializationHash = -7811094522047829428L
         
     }
     override val serializersOwner: ISerializersOwner get() = CodeObjectsModel
@@ -97,7 +98,7 @@ val com.jetbrains.rd.ide.model.Solution.codeObjectsModel get() = getOrCreateExte
 
 
 /**
- * #### Generated from [CodeObjectsModel.kt:42]
+ * #### Generated from [CodeObjectsModel.kt:41]
  */
 class Document private constructor(
     val path: String,
@@ -167,7 +168,7 @@ class Document private constructor(
 
 
 /**
- * #### Generated from [CodeObjectsModel.kt:22]
+ * #### Generated from [CodeObjectsModel.kt:21]
  */
 data class RiderCodeLensInfo (
     val codeObjectId: String,
@@ -253,7 +254,6 @@ data class RiderCodeLensInfo (
 data class RiderMethodInfo (
     val id: String,
     val name: String,
-    val displayName: String,
     val containingClass: String,
     val containingNamespace: String,
     val containingFile: String
@@ -267,17 +267,15 @@ data class RiderMethodInfo (
         override fun read(ctx: SerializationCtx, buffer: AbstractBuffer): RiderMethodInfo  {
             val id = buffer.readString()
             val name = buffer.readString()
-            val displayName = buffer.readString()
             val containingClass = buffer.readString()
             val containingNamespace = buffer.readString()
             val containingFile = buffer.readString()
-            return RiderMethodInfo(id, name, displayName, containingClass, containingNamespace, containingFile)
+            return RiderMethodInfo(id, name, containingClass, containingNamespace, containingFile)
         }
         
         override fun write(ctx: SerializationCtx, buffer: AbstractBuffer, value: RiderMethodInfo)  {
             buffer.writeString(value.id)
             buffer.writeString(value.name)
-            buffer.writeString(value.displayName)
             buffer.writeString(value.containingClass)
             buffer.writeString(value.containingNamespace)
             buffer.writeString(value.containingFile)
@@ -298,7 +296,6 @@ data class RiderMethodInfo (
         
         if (id != other.id) return false
         if (name != other.name) return false
-        if (displayName != other.displayName) return false
         if (containingClass != other.containingClass) return false
         if (containingNamespace != other.containingNamespace) return false
         if (containingFile != other.containingFile) return false
@@ -310,7 +307,6 @@ data class RiderMethodInfo (
         var __r = 0
         __r = __r*31 + id.hashCode()
         __r = __r*31 + name.hashCode()
-        __r = __r*31 + displayName.hashCode()
         __r = __r*31 + containingClass.hashCode()
         __r = __r*31 + containingNamespace.hashCode()
         __r = __r*31 + containingFile.hashCode()
@@ -322,7 +318,6 @@ data class RiderMethodInfo (
         printer.indent {
             print("id = "); id.print(printer); println()
             print("name = "); name.print(printer); println()
-            print("displayName = "); displayName.print(printer); println()
             print("containingClass = "); containingClass.print(printer); println()
             print("containingNamespace = "); containingNamespace.print(printer); println()
             print("containingFile = "); containingFile.print(printer); println()

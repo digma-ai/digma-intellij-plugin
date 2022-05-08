@@ -89,7 +89,7 @@ namespace Digma.Rider.Protocol
     
     
     
-    protected override long SerializationHash => 6684827722303623330L;
+    protected override long SerializationHash => -7811094522047829428L;
     
     protected override Action<ISerializers> Register => RegisterDeclaredTypesSerializers;
     public static void RegisterDeclaredTypesSerializers(ISerializers serializers)
@@ -135,7 +135,7 @@ namespace Digma.Rider.Protocol
   
   
   /// <summary>
-  /// <p>Generated from: CodeObjectsModel.kt:42</p>
+  /// <p>Generated from: CodeObjectsModel.kt:41</p>
   /// </summary>
   public sealed class Document : RdBindableBase
   {
@@ -214,7 +214,7 @@ namespace Digma.Rider.Protocol
   
   
   /// <summary>
-  /// <p>Generated from: CodeObjectsModel.kt:22</p>
+  /// <p>Generated from: CodeObjectsModel.kt:21</p>
   /// </summary>
   public sealed class RiderCodeLensInfo : IPrintable, IEquatable<RiderCodeLensInfo>
   {
@@ -341,7 +341,6 @@ namespace Digma.Rider.Protocol
     //public fields
     [NotNull] public string Id {get; private set;}
     [NotNull] public string Name {get; private set;}
-    [NotNull] public string DisplayName {get; private set;}
     [NotNull] public string ContainingClass {get; private set;}
     [NotNull] public string ContainingNamespace {get; private set;}
     [NotNull] public string ContainingFile {get; private set;}
@@ -351,7 +350,6 @@ namespace Digma.Rider.Protocol
     public RiderMethodInfo(
       [NotNull] string id,
       [NotNull] string name,
-      [NotNull] string displayName,
       [NotNull] string containingClass,
       [NotNull] string containingNamespace,
       [NotNull] string containingFile
@@ -359,25 +357,22 @@ namespace Digma.Rider.Protocol
     {
       if (id == null) throw new ArgumentNullException("id");
       if (name == null) throw new ArgumentNullException("name");
-      if (displayName == null) throw new ArgumentNullException("displayName");
       if (containingClass == null) throw new ArgumentNullException("containingClass");
       if (containingNamespace == null) throw new ArgumentNullException("containingNamespace");
       if (containingFile == null) throw new ArgumentNullException("containingFile");
       
       Id = id;
       Name = name;
-      DisplayName = displayName;
       ContainingClass = containingClass;
       ContainingNamespace = containingNamespace;
       ContainingFile = containingFile;
     }
     //secondary constructor
     //deconstruct trait
-    public void Deconstruct([NotNull] out string id, [NotNull] out string name, [NotNull] out string displayName, [NotNull] out string containingClass, [NotNull] out string containingNamespace, [NotNull] out string containingFile)
+    public void Deconstruct([NotNull] out string id, [NotNull] out string name, [NotNull] out string containingClass, [NotNull] out string containingNamespace, [NotNull] out string containingFile)
     {
       id = Id;
       name = Name;
-      displayName = DisplayName;
       containingClass = ContainingClass;
       containingNamespace = ContainingNamespace;
       containingFile = ContainingFile;
@@ -388,11 +383,10 @@ namespace Digma.Rider.Protocol
     {
       var id = reader.ReadString();
       var name = reader.ReadString();
-      var displayName = reader.ReadString();
       var containingClass = reader.ReadString();
       var containingNamespace = reader.ReadString();
       var containingFile = reader.ReadString();
-      var _result = new RiderMethodInfo(id, name, displayName, containingClass, containingNamespace, containingFile);
+      var _result = new RiderMethodInfo(id, name, containingClass, containingNamespace, containingFile);
       return _result;
     };
     
@@ -400,7 +394,6 @@ namespace Digma.Rider.Protocol
     {
       writer.Write(value.Id);
       writer.Write(value.Name);
-      writer.Write(value.DisplayName);
       writer.Write(value.ContainingClass);
       writer.Write(value.ContainingNamespace);
       writer.Write(value.ContainingFile);
@@ -422,7 +415,7 @@ namespace Digma.Rider.Protocol
     {
       if (ReferenceEquals(null, other)) return false;
       if (ReferenceEquals(this, other)) return true;
-      return Id == other.Id && Name == other.Name && DisplayName == other.DisplayName && ContainingClass == other.ContainingClass && ContainingNamespace == other.ContainingNamespace && ContainingFile == other.ContainingFile;
+      return Id == other.Id && Name == other.Name && ContainingClass == other.ContainingClass && ContainingNamespace == other.ContainingNamespace && ContainingFile == other.ContainingFile;
     }
     //hash code trait
     public override int GetHashCode()
@@ -431,7 +424,6 @@ namespace Digma.Rider.Protocol
         var hash = 0;
         hash = hash * 31 + Id.GetHashCode();
         hash = hash * 31 + Name.GetHashCode();
-        hash = hash * 31 + DisplayName.GetHashCode();
         hash = hash * 31 + ContainingClass.GetHashCode();
         hash = hash * 31 + ContainingNamespace.GetHashCode();
         hash = hash * 31 + ContainingFile.GetHashCode();
@@ -445,7 +437,6 @@ namespace Digma.Rider.Protocol
       using (printer.IndentCookie()) {
         printer.Print("id = "); Id.PrintEx(printer); printer.Println();
         printer.Print("name = "); Name.PrintEx(printer); printer.Println();
-        printer.Print("displayName = "); DisplayName.PrintEx(printer); printer.Println();
         printer.Print("containingClass = "); ContainingClass.PrintEx(printer); printer.Println();
         printer.Print("containingNamespace = "); ContainingNamespace.PrintEx(printer); printer.Println();
         printer.Print("containingFile = "); ContainingFile.PrintEx(printer); printer.Println();

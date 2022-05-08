@@ -35,9 +35,10 @@ namespace Digma.Rider.Highlighting
         {
             switch (element)
             {
+                //visiting only IClassDeclaration effectively ignores interfaces
                 case ICSharpNamespaceDeclaration cSharpNamespaceDeclaration:
                 case INamespaceBody namespaceBody:
-                case ICSharpTypeDeclaration typeDeclaration:
+                case IClassDeclaration typeDeclaration:
                 case IClassBody classBody:
                     return true;
             }
@@ -49,21 +50,21 @@ namespace Digma.Rider.Highlighting
         {
             switch (element)
             {
-                case IMethodDeclaration methodDeclaration:
+                case ICSharpFunctionDeclaration functionDeclaration:
                 {
-                    var methodFqn = Identities.ComputeFqn(methodDeclaration);
+                    var methodFqn = Identities.ComputeFqn(functionDeclaration);
                     var riderCodeLensInfo = _codeObjectsHost.GetRiderCodeLensInfo(methodFqn);
                     if (riderCodeLensInfo != null)
                     {
                         Log(_logger, "Installing code lens for code object {0}", methodFqn);
                         _highlightingConsumer.AddHighlighting(
                             new CodeInsightsHighlighting(
-                                methodDeclaration.GetNameDocumentRange(),
+                                functionDeclaration.GetNameDocumentRange(),
                                 riderCodeLensInfo.LensText ?? throw new InvalidOperationException("LensText must not be null"),
                                 riderCodeLensInfo.LensTooltip ?? string.Empty, //todo: can be null
                                 riderCodeLensInfo.MoreText ?? string.Empty, //todo: can be null
                                 _methodInsightsProvider,
-                                methodDeclaration.DeclaredElement,null)
+                                functionDeclaration.DeclaredElement,null)
                         );
                     }
                     

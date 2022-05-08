@@ -55,7 +55,6 @@ class CodeObjectHost(project: Project) {
     private fun RiderMethodInfo.toMethodInfo() = MethodInfo(
         id = id,
         name = name,
-        displayName = displayName,
         containingClass = containingClass,
         containingNamespace = containingNamespace,
         containingFile = containingFile

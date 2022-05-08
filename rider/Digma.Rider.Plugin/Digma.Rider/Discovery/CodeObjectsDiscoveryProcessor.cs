@@ -21,9 +21,10 @@ namespace Digma.Rider.Discovery
         {
             switch (element)
             {
+                //visiting only IClassDeclaration effectively ignores interfaces
                 case ICSharpNamespaceDeclaration cSharpNamespaceDeclaration:
                 case INamespaceBody namespaceBody:
-                case ICSharpTypeDeclaration classDeclaration:
+                case IClassDeclaration classDeclaration:
                 case IClassBody classBody:
                     return true;
             }
@@ -40,18 +41,15 @@ namespace Digma.Rider.Discovery
         {
             switch (element)
             {
-                case IMethodDeclaration methodDeclaration:
+                case ICSharpFunctionDeclaration functionDeclaration:
                 {
-                    var methodFqn = Identities.ComputeFqn(methodDeclaration);
-                    var shortName = methodDeclaration.GetDeclaredShortName();
-                    var declaredName = methodDeclaration.DeclaredName;
-                    var containingClassName = PsiUtils.GetClassName(methodDeclaration);
-                    var containingNamespace = PsiUtils.GetNamespace(methodDeclaration);
-                    var containingFile = methodDeclaration.GetSourceFile().GetLocation().FullPath;
+                    var methodFqn = Identities.ComputeFqn(functionDeclaration);
+                    var declaredName = PsiUtils.GetDeclaredName(functionDeclaration);
+                    var containingClassName = PsiUtils.GetClassName(functionDeclaration);
+                    var containingNamespace = PsiUtils.GetNamespace(functionDeclaration);
+                    var containingFile = PsiUtils.GetContainingFile(functionDeclaration);
                     
-                    var methodInfo = new RiderMethodInfo(methodFqn,
-                        shortName,declaredName,containingClassName,containingNamespace,containingFile);
-
+                    var methodInfo = new RiderMethodInfo(methodFqn,declaredName,containingClassName,containingNamespace,containingFile);
                     _methodInfos.Add(methodInfo);
                     break;
                 }

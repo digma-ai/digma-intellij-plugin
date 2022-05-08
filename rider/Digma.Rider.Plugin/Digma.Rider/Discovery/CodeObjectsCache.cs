@@ -35,7 +35,7 @@ namespace Digma.Rider.Discovery
                 return null;
 
             var psiFiles = sourceFile.GetPsiFiles<CSharpLanguage>();
-            var docId = Identities.ComputeFilePath(sourceFile);
+            var docId = Identities.ComputeFileUri(sourceFile);
             var document = new Document(docId);
             foreach (var psiFile in psiFiles)
             {
@@ -52,7 +52,8 @@ namespace Digma.Rider.Discovery
                 }
             }
 
-            return document;
+            //don't keep cache for documents with no code objects, it could also be an interface which we ignore
+            return document.HasCodeObjects() ? document : null;
         }
 
         protected override bool IsApplicable(IPsiSourceFile sf)

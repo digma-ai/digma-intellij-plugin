@@ -1,8 +1,9 @@
 using System.Linq;
+using NuGet;
 
 namespace Digma.Rider.Protocol
 {
-    public static class ModelExtensions
+    public static class ProtocolModelExtensions
     {
         //Equals for Digma.Rider.Protocol.Document.
         // the RiderMethodInfo elements in Methods already have Equals.
@@ -19,6 +20,13 @@ namespace Digma.Rider.Protocol
             return document.Path.Equals(other.Path) &&
                    document.Methods.Count == other.Methods.Count &&
                    !document.Methods.Except(other.Methods).Any();
+        }
+        
+        
+        public static bool HasCodeObjects(this Document document)
+        {
+            return !document.Methods.IsEmpty();
+            //add more code objects checks
         }
     }
 }

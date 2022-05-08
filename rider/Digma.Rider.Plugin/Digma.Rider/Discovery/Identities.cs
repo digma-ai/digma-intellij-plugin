@@ -8,22 +8,20 @@ namespace Digma.Rider.Discovery
     public static class Identities
     {
 
-        [NotNull]
-        public static string ComputeFqn([NotNull] IMethodDeclaration methodDeclaration)
-        {
-            var namespaceName = PsiUtils.GetNamespace(methodDeclaration);
-            var className = PsiUtils.GetClassName(methodDeclaration);
-            var methodName = methodDeclaration.GetDeclaredShortName();
-            var fqn = namespaceName + "." + className + "$_$" + methodName;
-            return fqn;
-        }
-
-
 
         [NotNull]
-        public static string ComputeFilePath([NotNull] IPsiSourceFile sourceFile)
+        public static string ComputeFileUri([NotNull] IPsiSourceFile sourceFile)
         {
             return sourceFile.GetLocation().ToUri().ToString();
+        }
+
+        public static string ComputeFqn(ICSharpFunctionDeclaration functionDeclaration)
+        {
+            var namespaceName = PsiUtils.GetNamespace(functionDeclaration);
+            var className = PsiUtils.GetClassName(functionDeclaration);
+            var methodName = PsiUtils.GetDeclaredName(functionDeclaration);
+            var fqn = namespaceName + "." + className + "$_$" + methodName;
+            return fqn;
         }
     }
 }

@@ -20,6 +20,7 @@ using JetBrains.TextControl;
 using JetBrains.TextControl.CodeWithMe;
 using JetBrains.Threading;
 using JetBrains.Util;
+using static Digma.Rider.Logging.Logger;
 
 namespace Digma.Rider.Protocol
 {
@@ -51,19 +52,13 @@ namespace Digma.Rider.Protocol
 
         private void Register()
         {
-            _textControlManager.FocusedTextControlPerClient.AddRemove.Advise(_lifetime, h =>
-            {
-                Logger.Log(_logger,"Got AddRemove event for TextControl {0}",h.Value);
-                OnChange();
-            });
-
             _textControlManager.FocusedTextControlPerClient.ForEachValue_NotNull_AllClients(_lifetime,
                 (lifetime1, textControl) =>
                 {
                     _groupingEvent = _shellLocks.CreateGroupingEvent(textControl.Lifetime,
                         "ElementUnderCaretHost::CaretPositionChanged", TimeSpan.FromMilliseconds(500),
                         OnChange);
-                    textControl.Caret.Position.Change.Advise(_lifetime, cph =>
+                    textControl.Caret.Position.Change.Advise(textControl.Lifetime, cph =>
                     {
                         _groupingEvent.FireIncoming();
                     });
@@ -73,26 +68,28 @@ namespace Digma.Rider.Protocol
 
         private void OnChange()
         {
-            var textControl = _textControlManager.FocusedTextControlPerClient.ForCurrentClient();
+            var textControl = _textControlManager.LastFocusedTextControlPerClient.ForCurrentClient();
             if (textControl == null || textControl.Lifetime.IsNotAlive)
             {
+                Log(_logger,"OnChange TextControl is null");
                 EmptyModel();
                 return;
             }
 
-            Logger.Log(_logger,"Trying to discover method under caret for {0}",textControl.Document);
-            var methodDeclaration = GetMethodUnderCaret(textControl);
-            Logger.Log(_logger,"Got method under caret {0}",methodDeclaration);
-            if (methodDeclaration != null)
+            Log(_logger,"Trying to discover method under caret for {0}",textControl.Document);
+            var functionDeclaration = GetFunctionUnderCaret(textControl);
+            if (functionDeclaration != null)
             {
-                var methodFqn = Identities.ComputeFqn(methodDeclaration);
-                var className = PsiUtils.GetClassName(methodDeclaration); 
-                var filePath = methodDeclaration.GetSourceFile().GetLocation().FullPath;
+                Log(_logger,"Got function under caret: {0} for {1}",functionDeclaration,textControl.Document);
+                var methodFqn = Identities.ComputeFqn(functionDeclaration);
+                var className = PsiUtils.GetClassName(functionDeclaration); 
+                var filePath = PsiUtils.GetContainingFile(functionDeclaration);
                 _model.ElementUnderCaret.Value = new ElementUnderCaret(methodFqn,className, filePath);
                 _model.Refresh.Fire(Unit.Instance);
             }
             else
             {
+                Log(_logger,"No function under caret for {0}",textControl.Document);
                 EmptyModel();
             }
         }
@@ -106,12 +103,17 @@ namespace Digma.Rider.Protocol
 
 
         [CanBeNull]
-        private IMethodDeclaration GetMethodUnderCaret(ITextControl textControl)
+        private ICSharpFunctionDeclaration GetFunctionUnderCaret(ITextControl textControl)
         {
             using (ReadLockCookie.Create())
             {
                 var node = GetTreeNodeUnderCaret(textControl);
-                return node?.GetParentOfType<IMethodDeclaration>();
+                if (node?.GetParentOfType<IInterfaceDeclaration>() != null)
+                {
+                    //Ignore interfaces
+                    return null;
+                }
+                return node?.GetParentOfType<ICSharpFunctionDeclaration>();
             }
         }
 
@@ -122,7 +124,7 @@ namespace Digma.Rider.Protocol
             var psiSourceFile = _documentManager.GetProjectFile(textControl.Document).ToSourceFile();
             if (psiSourceFile == null || !psiSourceFile.GetPsiServices().Files.IsCommitted(psiSourceFile))
             {
-                Logger.Log(_logger,"PsiSourceFile {0} is null or not committed",psiSourceFile);
+                Log(_logger,"PsiSourceFile {0} is null or not committed",psiSourceFile);
                 return null;
             }
             var properties = psiSourceFile.Properties;
@@ -131,12 +133,11 @@ namespace Digma.Rider.Protocol
                                !properties.IsGeneratedFile &&
                                primaryPsiLanguage.Is<CSharpLanguage>() && 
                                properties.ShouldBuildPsi && 
-                               properties.ProvidesCodeModel && 
-                               properties.IsICacheParticipant;
+                               properties.ProvidesCodeModel;
 
             if (!isApplicable)
             {
-                Logger.Log(_logger,"PsiSourceFile {0} is no applicable for method under caret",psiSourceFile);
+                Log(_logger,"PsiSourceFile {0} is not applicable for method under caret",psiSourceFile);
                 return null;
             }
             

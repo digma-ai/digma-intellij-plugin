@@ -120,7 +120,7 @@ namespace Digma.Rider.Discovery
                 var document = _codeObjectsCache.Map.TryGetValue(psiSourceFile);
                 if (document == null)
                 {
-                    Log(_logger, "Document for PsiSourceFile {0} was not found in cache, probably a new document",
+                    Log(_logger, "Document for PsiSourceFile {0} was not found in cache. probably a new document or a document with no code objects.",
                         psiSourceFile);
                     return;
                 }

@@ -17,16 +17,16 @@ import static org.junit.jupiter.api.Assertions.*;
 public class SummariesTests extends AbstractAnalyticsProviderTest {
 
 
-    @Test
-    public void getSummariesTemp(){
-        List<String> ids = new ArrayList<>();
-        ids.add("method:Sample.MoneyTransfer.API.Controllers.TransferController$_$TransferFunds");
-        ids.add("method:Sample.MoneyTransfer.API.Controllers.TransferController$_$DepositFunds");
-        CodeObjectSummaryRequest summaryRequest = new CodeObjectSummaryRequest("UNSET_ENV", ids);
-        AnalyticsProvider analyticsProvider = new RestAnalyticsProvider("http://localhost:5051");
-        List<CodeObjectSummary> summaries = analyticsProvider.getSummaries(summaryRequest);
-        System.out.println(summaries);
-    }
+//    @Test
+//    public void getSummariesTemp(){
+//        List<String> ids = new ArrayList<>();
+//        ids.add("method:Sample.MoneyTransfer.API.Controllers.TransferController$_$TransferFunds");
+//        ids.add("method:Sample.MoneyTransfer.API.Controllers.TransferController$_$DepositFunds");
+//        CodeObjectSummaryRequest summaryRequest = new CodeObjectSummaryRequest("UNSET_ENV", ids);
+//        AnalyticsProvider analyticsProvider = new RestAnalyticsProvider("http://localhost:5051");
+//        List<CodeObjectSummary> summaries = analyticsProvider.getSummaries(summaryRequest);
+//        System.out.println(summaries);
+//    }
 
 
     @Test

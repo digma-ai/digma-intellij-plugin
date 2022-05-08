@@ -2,16 +2,17 @@
 package org.digma.rider.protocol
 
 import com.jetbrains.rd.framework.*
-import com.jetbrains.rd.framework.base.*
-import com.jetbrains.rd.framework.impl.*
-
-import com.jetbrains.rd.util.lifetime.*
-import com.jetbrains.rd.util.reactive.*
-import com.jetbrains.rd.util.string.*
-import com.jetbrains.rd.util.*
+import com.jetbrains.rd.framework.base.ISerializersOwner
+import com.jetbrains.rd.framework.base.RdExtBase
+import com.jetbrains.rd.framework.base.deepClonePolymorphic
+import com.jetbrains.rd.framework.impl.RdOptionalProperty
+import com.jetbrains.rd.framework.impl.RdSignal
+import com.jetbrains.rd.util.reactive.IOptProperty
+import com.jetbrains.rd.util.reactive.ISignal
+import com.jetbrains.rd.util.string.IPrintable
+import com.jetbrains.rd.util.string.PrettyPrinter
+import com.jetbrains.rd.util.string.print
 import kotlin.reflect.KClass
-import kotlin.jvm.JvmStatic
-
 
 
 /**
@@ -32,7 +33,7 @@ class ElementUnderCaretModel private constructor(
         
         
         
-        const val serializationHash = 3452000726214409832L
+        const val serializationHash = 6038035849872197704L
         
     }
     override val serializersOwner: ISerializersOwner get() = ElementUnderCaretModel
@@ -88,6 +89,7 @@ val com.jetbrains.rd.ide.model.Solution.elementUnderCaretModel get() = getOrCrea
  */
 data class ElementUnderCaret (
     val fqn: String,
+    val className: String,
     val filePath: String
 ) : IPrintable {
     //companion
@@ -98,12 +100,14 @@ data class ElementUnderCaret (
         @Suppress("UNCHECKED_CAST")
         override fun read(ctx: SerializationCtx, buffer: AbstractBuffer): ElementUnderCaret  {
             val fqn = buffer.readString()
+            val className = buffer.readString()
             val filePath = buffer.readString()
-            return ElementUnderCaret(fqn, filePath)
+            return ElementUnderCaret(fqn, className, filePath)
         }
         
         override fun write(ctx: SerializationCtx, buffer: AbstractBuffer, value: ElementUnderCaret)  {
             buffer.writeString(value.fqn)
+            buffer.writeString(value.className)
             buffer.writeString(value.filePath)
         }
         
@@ -121,6 +125,7 @@ data class ElementUnderCaret (
         other as ElementUnderCaret
         
         if (fqn != other.fqn) return false
+        if (className != other.className) return false
         if (filePath != other.filePath) return false
         
         return true
@@ -129,6 +134,7 @@ data class ElementUnderCaret (
     override fun hashCode(): Int  {
         var __r = 0
         __r = __r*31 + fqn.hashCode()
+        __r = __r*31 + className.hashCode()
         __r = __r*31 + filePath.hashCode()
         return __r
     }
@@ -137,6 +143,7 @@ data class ElementUnderCaret (
         printer.println("ElementUnderCaret (")
         printer.indent {
             print("fqn = "); fqn.print(printer); println()
+            print("className = "); className.print(printer); println()
             print("filePath = "); filePath.print(printer); println()
         }
         printer.print(")")

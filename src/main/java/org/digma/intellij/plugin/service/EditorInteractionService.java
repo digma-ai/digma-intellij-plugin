@@ -5,8 +5,8 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.editor.EditorEventsHandler;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.MethodUnderCaret;
 import org.digma.intellij.plugin.psi.LanguageService;
-import org.digma.intellij.plugin.psi.MethodIdentifier;
 import org.digma.intellij.plugin.toolwindow.ToolWindowContent;
 import org.digma.intellij.plugin.ui.MethodContextUpdater;
 import org.jetbrains.annotations.NotNull;
@@ -27,11 +27,11 @@ public class EditorInteractionService implements MethodContextUpdater, Disposabl
     }
 
     @Override
-    public void updateViewContent(MethodIdentifier methodIdentifier) {
+    public void updateViewContent(MethodUnderCaret methodUnderCaret) {
         if (toolWindowContent != null) {
-            if (methodIdentifier != null) {
-                Log.log(LOGGER::debug, "got method under caret {}", methodIdentifier.getName());
-                toolWindowContent.update(methodIdentifier.toString());
+            if (methodUnderCaret != null) {
+                Log.log(LOGGER::debug, "got method under caret {}", methodUnderCaret.getId());
+                toolWindowContent.update(methodUnderCaret.toString());
             } else {
                 clearViewContent();
             }

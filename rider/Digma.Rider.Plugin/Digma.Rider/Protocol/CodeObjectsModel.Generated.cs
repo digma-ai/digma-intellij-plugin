@@ -43,36 +43,36 @@ namespace Digma.Rider.Protocol
     //fields
     //public fields
     [NotNull] public ISignal<string> Reanalyze => _Reanalyze;
-    [NotNull] public ISignal<string> FileAnalyzed => _FileAnalyzed;
+    [NotNull] public ISignal<string> DocumentAnalyzed => _DocumentAnalyzed;
     [NotNull] public IViewableMap<string, Document> Documents => _Documents;
     [NotNull] public IViewableMap<string, RiderCodeLensInfo> CodeLens => _CodeLens;
     
     //private fields
     [NotNull] private readonly RdSignal<string> _Reanalyze;
-    [NotNull] private readonly RdSignal<string> _FileAnalyzed;
+    [NotNull] private readonly RdSignal<string> _DocumentAnalyzed;
     [NotNull] private readonly RdMap<string, Document> _Documents;
     [NotNull] private readonly RdMap<string, RiderCodeLensInfo> _CodeLens;
     
     //primary constructor
     private CodeObjectsModel(
       [NotNull] RdSignal<string> reanalyze,
-      [NotNull] RdSignal<string> fileAnalyzed,
+      [NotNull] RdSignal<string> documentAnalyzed,
       [NotNull] RdMap<string, Document> documents,
       [NotNull] RdMap<string, RiderCodeLensInfo> codeLens
     )
     {
       if (reanalyze == null) throw new ArgumentNullException("reanalyze");
-      if (fileAnalyzed == null) throw new ArgumentNullException("fileAnalyzed");
+      if (documentAnalyzed == null) throw new ArgumentNullException("documentAnalyzed");
       if (documents == null) throw new ArgumentNullException("documents");
       if (codeLens == null) throw new ArgumentNullException("codeLens");
       
       _Reanalyze = reanalyze;
-      _FileAnalyzed = fileAnalyzed;
+      _DocumentAnalyzed = documentAnalyzed;
       _Documents = documents;
       _CodeLens = codeLens;
       _CodeLens.OptimizeNested = true;
       BindableChildren.Add(new KeyValuePair<string, object>("reanalyze", _Reanalyze));
-      BindableChildren.Add(new KeyValuePair<string, object>("fileAnalyzed", _FileAnalyzed));
+      BindableChildren.Add(new KeyValuePair<string, object>("documentAnalyzed", _DocumentAnalyzed));
       BindableChildren.Add(new KeyValuePair<string, object>("documents", _Documents));
       BindableChildren.Add(new KeyValuePair<string, object>("codeLens", _CodeLens));
     }
@@ -89,7 +89,7 @@ namespace Digma.Rider.Protocol
     
     
     
-    protected override long SerializationHash => -3687301284060761471L;
+    protected override long SerializationHash => 6684827722303623330L;
     
     protected override Action<ISerializers> Register => RegisterDeclaredTypesSerializers;
     public static void RegisterDeclaredTypesSerializers(ISerializers serializers)
@@ -111,7 +111,7 @@ namespace Digma.Rider.Protocol
       printer.Println("CodeObjectsModel (");
       using (printer.IndentCookie()) {
         printer.Print("reanalyze = "); _Reanalyze.PrintEx(printer); printer.Println();
-        printer.Print("fileAnalyzed = "); _FileAnalyzed.PrintEx(printer); printer.Println();
+        printer.Print("documentAnalyzed = "); _DocumentAnalyzed.PrintEx(printer); printer.Println();
         printer.Print("documents = "); _Documents.PrintEx(printer); printer.Println();
         printer.Print("codeLens = "); _CodeLens.PrintEx(printer); printer.Println();
       }
@@ -135,12 +135,13 @@ namespace Digma.Rider.Protocol
   
   
   /// <summary>
-  /// <p>Generated from: CodeObjectsModel.kt:43</p>
+  /// <p>Generated from: CodeObjectsModel.kt:42</p>
   /// </summary>
   public sealed class Document : RdBindableBase
   {
     //fields
     //public fields
+    [NotNull] public string Path {get; private set;}
     [NotNull] public IViewableMap<string, RiderMethodInfo> Methods => _Methods;
     
     //private fields
@@ -148,18 +149,23 @@ namespace Digma.Rider.Protocol
     
     //primary constructor
     private Document(
+      [NotNull] string path,
       [NotNull] RdMap<string, RiderMethodInfo> methods
     )
     {
+      if (path == null) throw new ArgumentNullException("path");
       if (methods == null) throw new ArgumentNullException("methods");
       
+      Path = path;
       _Methods = methods;
       _Methods.OptimizeNested = true;
       BindableChildren.Add(new KeyValuePair<string, object>("methods", _Methods));
     }
     //secondary constructor
     public Document (
+      [NotNull] string path
     ) : this (
+      path,
       new RdMap<string, RiderMethodInfo>(JetBrains.Rd.Impl.Serializers.ReadString, JetBrains.Rd.Impl.Serializers.WriteString, RiderMethodInfo.Read, RiderMethodInfo.Write)
     ) {}
     //deconstruct trait
@@ -168,14 +174,16 @@ namespace Digma.Rider.Protocol
     public static CtxReadDelegate<Document> Read = (ctx, reader) => 
     {
       var _id = RdId.Read(reader);
+      var path = reader.ReadString();
       var methods = RdMap<string, RiderMethodInfo>.Read(ctx, reader, JetBrains.Rd.Impl.Serializers.ReadString, JetBrains.Rd.Impl.Serializers.WriteString, RiderMethodInfo.Read, RiderMethodInfo.Write);
-      var _result = new Document(methods).WithId(_id);
+      var _result = new Document(path, methods).WithId(_id);
       return _result;
     };
     
     public static CtxWriteDelegate<Document> Write = (ctx, writer, value) => 
     {
       value.RdId.Write(writer);
+      writer.Write(value.Path);
       RdMap<string, RiderMethodInfo>.Write(ctx, writer, value._Methods);
     };
     
@@ -190,6 +198,7 @@ namespace Digma.Rider.Protocol
     {
       printer.Println("Document (");
       using (printer.IndentCookie()) {
+        printer.Print("path = "); Path.PrintEx(printer); printer.Println();
         printer.Print("methods = "); _Methods.PrintEx(printer); printer.Println();
       }
       printer.Print(")");
@@ -205,7 +214,7 @@ namespace Digma.Rider.Protocol
   
   
   /// <summary>
-  /// <p>Generated from: CodeObjectsModel.kt:23</p>
+  /// <p>Generated from: CodeObjectsModel.kt:22</p>
   /// </summary>
   public sealed class RiderCodeLensInfo : IPrintable, IEquatable<RiderCodeLensInfo>
   {
@@ -336,7 +345,6 @@ namespace Digma.Rider.Protocol
     [NotNull] public string ContainingClass {get; private set;}
     [NotNull] public string ContainingNamespace {get; private set;}
     [NotNull] public string ContainingFile {get; private set;}
-    [NotNull] public string ContainingFileDisplayName {get; private set;}
     
     //private fields
     //primary constructor
@@ -346,8 +354,7 @@ namespace Digma.Rider.Protocol
       [NotNull] string displayName,
       [NotNull] string containingClass,
       [NotNull] string containingNamespace,
-      [NotNull] string containingFile,
-      [NotNull] string containingFileDisplayName
+      [NotNull] string containingFile
     )
     {
       if (id == null) throw new ArgumentNullException("id");
@@ -356,7 +363,6 @@ namespace Digma.Rider.Protocol
       if (containingClass == null) throw new ArgumentNullException("containingClass");
       if (containingNamespace == null) throw new ArgumentNullException("containingNamespace");
       if (containingFile == null) throw new ArgumentNullException("containingFile");
-      if (containingFileDisplayName == null) throw new ArgumentNullException("containingFileDisplayName");
       
       Id = id;
       Name = name;
@@ -364,11 +370,10 @@ namespace Digma.Rider.Protocol
       ContainingClass = containingClass;
       ContainingNamespace = containingNamespace;
       ContainingFile = containingFile;
-      ContainingFileDisplayName = containingFileDisplayName;
     }
     //secondary constructor
     //deconstruct trait
-    public void Deconstruct([NotNull] out string id, [NotNull] out string name, [NotNull] out string displayName, [NotNull] out string containingClass, [NotNull] out string containingNamespace, [NotNull] out string containingFile, [NotNull] out string containingFileDisplayName)
+    public void Deconstruct([NotNull] out string id, [NotNull] out string name, [NotNull] out string displayName, [NotNull] out string containingClass, [NotNull] out string containingNamespace, [NotNull] out string containingFile)
     {
       id = Id;
       name = Name;
@@ -376,7 +381,6 @@ namespace Digma.Rider.Protocol
       containingClass = ContainingClass;
       containingNamespace = ContainingNamespace;
       containingFile = ContainingFile;
-      containingFileDisplayName = ContainingFileDisplayName;
     }
     //statics
     
@@ -388,8 +392,7 @@ namespace Digma.Rider.Protocol
       var containingClass = reader.ReadString();
       var containingNamespace = reader.ReadString();
       var containingFile = reader.ReadString();
-      var containingFileDisplayName = reader.ReadString();
-      var _result = new RiderMethodInfo(id, name, displayName, containingClass, containingNamespace, containingFile, containingFileDisplayName);
+      var _result = new RiderMethodInfo(id, name, displayName, containingClass, containingNamespace, containingFile);
       return _result;
     };
     
@@ -401,7 +404,6 @@ namespace Digma.Rider.Protocol
       writer.Write(value.ContainingClass);
       writer.Write(value.ContainingNamespace);
       writer.Write(value.ContainingFile);
-      writer.Write(value.ContainingFileDisplayName);
     };
     
     //constants
@@ -420,7 +422,7 @@ namespace Digma.Rider.Protocol
     {
       if (ReferenceEquals(null, other)) return false;
       if (ReferenceEquals(this, other)) return true;
-      return Id == other.Id && Name == other.Name && DisplayName == other.DisplayName && ContainingClass == other.ContainingClass && ContainingNamespace == other.ContainingNamespace && ContainingFile == other.ContainingFile && ContainingFileDisplayName == other.ContainingFileDisplayName;
+      return Id == other.Id && Name == other.Name && DisplayName == other.DisplayName && ContainingClass == other.ContainingClass && ContainingNamespace == other.ContainingNamespace && ContainingFile == other.ContainingFile;
     }
     //hash code trait
     public override int GetHashCode()
@@ -433,7 +435,6 @@ namespace Digma.Rider.Protocol
         hash = hash * 31 + ContainingClass.GetHashCode();
         hash = hash * 31 + ContainingNamespace.GetHashCode();
         hash = hash * 31 + ContainingFile.GetHashCode();
-        hash = hash * 31 + ContainingFileDisplayName.GetHashCode();
         return hash;
       }
     }
@@ -448,7 +449,6 @@ namespace Digma.Rider.Protocol
         printer.Print("containingClass = "); ContainingClass.PrintEx(printer); printer.Println();
         printer.Print("containingNamespace = "); ContainingNamespace.PrintEx(printer); printer.Println();
         printer.Print("containingFile = "); ContainingFile.PrintEx(printer); printer.Println();
-        printer.Print("containingFileDisplayName = "); ContainingFileDisplayName.PrintEx(printer); printer.Println();
       }
       printer.Print(")");
     }

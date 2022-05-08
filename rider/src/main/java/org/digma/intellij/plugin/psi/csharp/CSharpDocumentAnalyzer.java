@@ -3,25 +3,34 @@ package org.digma.intellij.plugin.psi.csharp;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
 import org.digma.intellij.plugin.document.DocumentAnalyzer;
+import org.digma.intellij.plugin.document.DocumentCodeObjectsChanged;
 import org.digma.intellij.plugin.document.DocumentInfoService;
-import org.digma.intellij.plugin.model.MethodInfo;
-import org.digma.rider.protocol.CodeObjectAnalysisHost;
+import org.digma.intellij.plugin.model.DocumentInfo;
+import org.digma.rider.protocol.CodeObjectHost;
 
-import java.util.List;
+public class CSharpDocumentAnalyzer implements DocumentAnalyzer , DocumentCodeObjectsChanged {
 
-public class CSharpDocumentAnalyzer implements DocumentAnalyzer {
-
-    private final CodeObjectAnalysisHost codeObjectAnalysisHost;
+    private final CodeObjectHost codeObjectHost;
     private final DocumentInfoService documentInfoService;
+    private Project project;
 
     public CSharpDocumentAnalyzer(Project project) {
-        this.codeObjectAnalysisHost = project.getService(CodeObjectAnalysisHost.class);
+        this.project = project;
+        this.codeObjectHost = project.getService(CodeObjectHost.class);
         this.documentInfoService = project.getService(DocumentInfoService.class);
+
+        project.getMessageBus().connect().subscribe(DocumentCodeObjectsChanged.DOCUMENT_CODE_OBJECTS_CHANGED_TOPIC,this);
     }
 
     @Override
     public void fileOpened(PsiFile psiFile) {
-        List<MethodInfo> methodInfos = codeObjectAnalysisHost.getMethodsForFile(psiFile);
-        documentInfoService.addMethodInfos(psiFile,methodInfos);
+        DocumentInfo documentInfo = codeObjectHost.getDocument(psiFile);
+        documentInfoService.addCodeObjects(psiFile,documentInfo);
+    }
+
+    //this is the event for rider when a document is opened
+    @Override
+    public void documentCodeObjectsChanged(PsiFile psiFile) {
+       fileOpened(psiFile);
     }
 }

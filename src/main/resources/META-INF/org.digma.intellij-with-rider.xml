@@ -4,20 +4,20 @@
                         serviceInterface="org.digma.intellij.plugin.psi.LanguageService"/>
         <projectService serviceImplementation="org.digma.intellij.plugin.editor.RiderEditorEventsHandler"
                         serviceInterface="org.digma.intellij.plugin.editor.EditorEventsHandler"/>
-        <projectService serviceImplementation="org.digma.rider.protocol.ElementUnderCaretService"/>
-        <projectService serviceImplementation="org.digma.intellij.plugin.psi.csharp.CSharpDocumentAnalyzer"
-                        serviceInterface="org.digma.intellij.plugin.document.DocumentAnalyzer"/>
-        <projectService serviceImplementation="org.digma.rider.protocol.CodeObjectAnalysisHost"/>
+        <projectService serviceImplementation="org.digma.rider.protocol.ElementUnderCaretDetector"/>
+        <projectService serviceImplementation="org.digma.rider.protocol.CodeObjectHost"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.editor.RiderDocumentInfoConsumer"
                         serviceInterface="org.digma.intellij.plugin.document.DocumentInfoChanged"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.psi.csharp.CSharpDocumentAnalyzer"
+                        serviceInterface="org.digma.intellij.plugin.document.DocumentAnalyzer"/>
     </extensions>
 
 
     <projectListeners>
         <listener class="org.digma.rider.plugin.ServicesStarter"
                   topic="com.intellij.openapi.project.ProjectManagerListener"/>
-        <listener class="org.digma.rider.protocol.FileAnalyzedListener"
+        <listener class="org.digma.rider.protocol.DocumentCodeObjectsListener"
                   topic="com.intellij.openapi.project.ProjectManagerListener"/>
     </projectListeners>
 

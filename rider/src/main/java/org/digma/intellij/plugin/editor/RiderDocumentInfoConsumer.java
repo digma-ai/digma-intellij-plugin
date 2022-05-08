@@ -7,7 +7,7 @@ import org.digma.intellij.plugin.document.CodeLensProvider;
 import org.digma.intellij.plugin.document.DocumentInfoChanged;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.model.CodeLens;
-import org.digma.rider.protocol.CodeObjectAnalysisHost;
+import org.digma.rider.protocol.CodeObjectHost;
 
 import java.util.List;
 
@@ -15,25 +15,25 @@ public class RiderDocumentInfoConsumer implements DocumentInfoChanged , Disposab
 
     private final Project project;
 
-    private final CodeObjectAnalysisHost codeObjectAnalysisHost;
+    private final CodeObjectHost codeObjectHost;
     private final DocumentInfoService documentInfoService;
     private final CodeLensProvider codeLensProvider;
 
 
     public RiderDocumentInfoConsumer(Project project) {
         this.project = project;
-        codeObjectAnalysisHost = project.getService(CodeObjectAnalysisHost.class);
+        codeObjectHost = project.getService(CodeObjectHost.class);
         documentInfoService = project.getService(DocumentInfoService.class);
         codeLensProvider = project.getService(CodeLensProvider.class);
 
-        project.getMessageBus().connect().subscribe(DocumentInfoChanged.DOCUMENT_INFO_CHANGE_TOPIC,this);
+        project.getMessageBus().connect().subscribe(DocumentInfoChanged.DOCUMENT_INFO_CHANGED_TOPIC,this);
     }
 
 
     @Override
     public void documentInfoChanged(PsiFile psiFile) {
         List<CodeLens> codeLens = codeLensProvider.provideCodeLens(psiFile);
-        codeObjectAnalysisHost.installCodeLens(psiFile,codeLens);
+        codeObjectHost.installCodeLens(psiFile,codeLens);
     }
 
     @Override

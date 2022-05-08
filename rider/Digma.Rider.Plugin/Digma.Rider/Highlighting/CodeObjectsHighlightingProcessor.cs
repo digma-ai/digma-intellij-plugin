@@ -1,30 +1,33 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using Digma.Rider.Discovery;
 using Digma.Rider.Protocol;
 using JetBrains.ReSharper.Daemon.CodeInsights;
 using JetBrains.ReSharper.Feature.Services.Daemon;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.CSharp.Tree;
 using JetBrains.ReSharper.Psi.Tree;
+using JetBrains.Util;
+using static Digma.Rider.Logging.Logger;
 
-namespace Digma.Rider.Analysis
+namespace Digma.Rider.Highlighting
 {
     internal class CodeObjectsHighlightingProcessor : IRecursiveElementProcessor
     {
-        private readonly ICSharpFile _cSharpFile;
-        private readonly CodeObjectsAnalysisHost _codeObjectsAnalysisHost;
+        private readonly CodeObjectsHost _codeObjectsHost;
         private readonly IHighlightingConsumer _highlightingConsumer;
         private readonly MethodInsightsProvider _methodInsightsProvider;
+        private readonly ILogger _logger;
 
         public bool ProcessingIsFinished => false;
 
-        public CodeObjectsHighlightingProcessor(ICSharpFile element, CodeObjectsAnalysisHost codeObjectsAnalysisHost,
-            IHighlightingConsumer highlightingConsumer, MethodInsightsProvider methodInsightsProvider)
+        public CodeObjectsHighlightingProcessor(CodeObjectsHost codeObjectsHost,
+            IHighlightingConsumer highlightingConsumer, MethodInsightsProvider methodInsightsProvider, ILogger logger)
         {
-            _cSharpFile = element;
-            _codeObjectsAnalysisHost = codeObjectsAnalysisHost;
+            _codeObjectsHost = codeObjectsHost;
             _highlightingConsumer = highlightingConsumer;
             _methodInsightsProvider = methodInsightsProvider;
+            _logger = logger;
         }
 
         [SuppressMessage("ReSharper", "UnusedVariable")]
@@ -34,7 +37,7 @@ namespace Digma.Rider.Analysis
             {
                 case ICSharpNamespaceDeclaration cSharpNamespaceDeclaration:
                 case INamespaceBody namespaceBody:
-                case IClassDeclaration classDeclaration:
+                case ICSharpTypeDeclaration typeDeclaration:
                 case IClassBody classBody:
                     return true;
             }
@@ -48,14 +51,15 @@ namespace Digma.Rider.Analysis
             {
                 case IMethodDeclaration methodDeclaration:
                 {
-                    var fqn = Identities.ComputeFqn(methodDeclaration);
-                    RiderCodeLensInfo riderCodeLensInfo = _codeObjectsAnalysisHost.GetRiderCodeLensInfo(fqn);
+                    var methodFqn = Identities.ComputeFqn(methodDeclaration);
+                    var riderCodeLensInfo = _codeObjectsHost.GetRiderCodeLensInfo(methodFqn);
                     if (riderCodeLensInfo != null)
                     {
+                        Log(_logger, "Installing code lens for code object {0}", methodFqn);
                         _highlightingConsumer.AddHighlighting(
                             new CodeInsightsHighlighting(
                                 methodDeclaration.GetNameDocumentRange(),
-                                riderCodeLensInfo.LensText ?? throw new InvalidOperationException(),
+                                riderCodeLensInfo.LensText ?? throw new InvalidOperationException("LensText must not be null"),
                                 riderCodeLensInfo.LensTooltip ?? string.Empty, //todo: can be null
                                 riderCodeLensInfo.MoreText ?? string.Empty, //todo: can be null
                                 _methodInsightsProvider,

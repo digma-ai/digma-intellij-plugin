@@ -7,8 +7,8 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.jetbrains.python.PythonLanguage;
 import com.jetbrains.python.psi.PyFunction;
+import org.digma.intellij.plugin.model.MethodUnderCaret;
 import org.digma.intellij.plugin.psi.LanguageService;
-import org.digma.intellij.plugin.psi.MethodIdentifier;
 import org.jetbrains.annotations.Nullable;
 
 public class PythonLanguageService implements LanguageService {
@@ -27,11 +27,11 @@ public class PythonLanguageService implements LanguageService {
 
     @Override
     @Nullable
-    public MethodIdentifier detectMethodUnderCaret(Project project, PsiFile psiFile, int caretOffset) {
+    public MethodUnderCaret detectMethodUnderCaret(Project project, PsiFile psiFile, int caretOffset) {
         PsiElement underCaret = findElementUnderCaret(project, psiFile, caretOffset);
         PyFunction psiMethod = PsiTreeUtil.getParentOfType(underCaret, PyFunction.class);
         if (psiMethod != null) {
-            return new MethodIdentifier(psiMethod.getName(), psiFile.getVirtualFile().getPath());
+            return new MethodUnderCaret(psiMethod.getName(), psiMethod.getContainingClass().getName(),psiFile.getVirtualFile().getPath());
         }
         return null;
     }

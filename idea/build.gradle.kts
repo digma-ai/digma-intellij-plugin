@@ -7,6 +7,7 @@ plugins {
 
 dependencies{
     compileOnly(project(":ide-common"))
+    compileOnly(project(":model"))
 }
 
 intellij {

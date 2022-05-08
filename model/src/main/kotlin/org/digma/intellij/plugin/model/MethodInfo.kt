@@ -5,8 +5,7 @@ data class MethodInfo(override val id: String,
                       val displayName: String,
                       val containingClass: String,
                       val containingNamespace: String,
-                      val containingFile: String,
-                      val containingFileDisplayName: String): CodeObjectInfo {
+                      val containingFile: String): CodeObjectInfo {
 
     override fun idWithType():String {
         return "method:$id"

@@ -6,6 +6,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.MethodUnderCaret;
 import org.jetbrains.annotations.Nullable;
 
 public interface LanguageService {
@@ -18,7 +19,7 @@ public interface LanguageService {
     boolean isSupportedFile(Project project, PsiFile psiFile);
 
     @Nullable
-    MethodIdentifier detectMethodUnderCaret(Project project, PsiFile psiFile, int caretOffset);
+    MethodUnderCaret detectMethodUnderCaret(Project project, PsiFile psiFile, int caretOffset);
 
 
 

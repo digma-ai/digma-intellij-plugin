@@ -4,8 +4,8 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.jetbrains.rider.ideaInterop.fileTypes.csharp.CSharpLanguage;
+import org.digma.intellij.plugin.model.MethodUnderCaret;
 import org.digma.intellij.plugin.psi.LanguageService;
-import org.digma.intellij.plugin.psi.MethodIdentifier;
 import org.jetbrains.annotations.Nullable;
 
 public class CSharpLanguageService implements LanguageService {
@@ -24,7 +24,7 @@ public class CSharpLanguageService implements LanguageService {
     }
 
     @Override
-    public @Nullable MethodIdentifier detectMethodUnderCaret(Project project, PsiFile psiFile, int caretOffset) {
+    public @Nullable MethodUnderCaret detectMethodUnderCaret(Project project, PsiFile psiFile, int caretOffset) {
         throw new UnsupportedOperationException("should not be called");
     }
 

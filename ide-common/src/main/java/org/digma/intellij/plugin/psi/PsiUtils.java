@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
+import org.digma.intellij.plugin.model.MethodUnderCaret;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -16,7 +17,7 @@ public class PsiUtils {
     private static final Logger LOGGER = Logger.getInstance(PsiUtils.class);
 
     @Nullable
-    public static MethodIdentifier detectMethodUnderCaret(Project project, LanguageService languageService, int caretOffset, VirtualFile file) {
+    public static MethodUnderCaret detectMethodUnderCaret(Project project, LanguageService languageService, int caretOffset, VirtualFile file) {
         PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
         return languageService.detectMethodUnderCaret(project, psiFile, caretOffset);
     }

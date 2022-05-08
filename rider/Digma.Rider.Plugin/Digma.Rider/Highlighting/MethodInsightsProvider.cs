@@ -3,7 +3,7 @@ using JetBrains.ProjectModel;
 using JetBrains.ReSharper.Daemon.CodeInsights;
 using JetBrains.Rider.Model;
 
-namespace Digma.Rider.Analysis
+namespace Digma.Rider.Highlighting
 {
     [SolutionComponent]
     public class MethodInsightsProvider : ICodeInsightsProvider

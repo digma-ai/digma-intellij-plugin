@@ -75,7 +75,7 @@ namespace Digma.Rider.Protocol
     
     
     
-    protected override long SerializationHash => 3452000726214409832L;
+    protected override long SerializationHash => 6038035849872197704L;
     
     protected override Action<ISerializers> Register => RegisterDeclaredTypesSerializers;
     public static void RegisterDeclaredTypesSerializers(ISerializers serializers)
@@ -126,26 +126,31 @@ namespace Digma.Rider.Protocol
     //fields
     //public fields
     [NotNull] public string Fqn {get; private set;}
+    [NotNull] public string ClassName {get; private set;}
     [NotNull] public string FilePath {get; private set;}
     
     //private fields
     //primary constructor
     public ElementUnderCaret(
       [NotNull] string fqn,
+      [NotNull] string className,
       [NotNull] string filePath
     )
     {
       if (fqn == null) throw new ArgumentNullException("fqn");
+      if (className == null) throw new ArgumentNullException("className");
       if (filePath == null) throw new ArgumentNullException("filePath");
       
       Fqn = fqn;
+      ClassName = className;
       FilePath = filePath;
     }
     //secondary constructor
     //deconstruct trait
-    public void Deconstruct([NotNull] out string fqn, [NotNull] out string filePath)
+    public void Deconstruct([NotNull] out string fqn, [NotNull] out string className, [NotNull] out string filePath)
     {
       fqn = Fqn;
+      className = ClassName;
       filePath = FilePath;
     }
     //statics
@@ -153,14 +158,16 @@ namespace Digma.Rider.Protocol
     public static CtxReadDelegate<ElementUnderCaret> Read = (ctx, reader) => 
     {
       var fqn = reader.ReadString();
+      var className = reader.ReadString();
       var filePath = reader.ReadString();
-      var _result = new ElementUnderCaret(fqn, filePath);
+      var _result = new ElementUnderCaret(fqn, className, filePath);
       return _result;
     };
     
     public static CtxWriteDelegate<ElementUnderCaret> Write = (ctx, writer, value) => 
     {
       writer.Write(value.Fqn);
+      writer.Write(value.ClassName);
       writer.Write(value.FilePath);
     };
     
@@ -180,7 +187,7 @@ namespace Digma.Rider.Protocol
     {
       if (ReferenceEquals(null, other)) return false;
       if (ReferenceEquals(this, other)) return true;
-      return Fqn == other.Fqn && FilePath == other.FilePath;
+      return Fqn == other.Fqn && ClassName == other.ClassName && FilePath == other.FilePath;
     }
     //hash code trait
     public override int GetHashCode()
@@ -188,6 +195,7 @@ namespace Digma.Rider.Protocol
       unchecked {
         var hash = 0;
         hash = hash * 31 + Fqn.GetHashCode();
+        hash = hash * 31 + ClassName.GetHashCode();
         hash = hash * 31 + FilePath.GetHashCode();
         return hash;
       }
@@ -198,6 +206,7 @@ namespace Digma.Rider.Protocol
       printer.Println("ElementUnderCaret (");
       using (printer.IndentCookie()) {
         printer.Print("fqn = "); Fqn.PrintEx(printer); printer.Println();
+        printer.Print("className = "); ClassName.PrintEx(printer); printer.Println();
         printer.Print("filePath = "); FilePath.PrintEx(printer); printer.Println();
       }
       printer.Print(")");

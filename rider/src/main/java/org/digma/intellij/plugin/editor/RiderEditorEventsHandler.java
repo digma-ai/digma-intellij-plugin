@@ -3,7 +3,7 @@ package org.digma.intellij.plugin.editor;
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.ui.MethodContextUpdater;
-import org.digma.rider.protocol.ElementUnderCaretService;
+import org.digma.rider.protocol.ElementUnderCaretDetector;
 import org.jetbrains.annotations.NotNull;
 
 public class RiderEditorEventsHandler implements EditorEventsHandler{
@@ -16,7 +16,7 @@ public class RiderEditorEventsHandler implements EditorEventsHandler{
 
     @Override
     public void start(@NotNull Project project, MethodContextUpdater methodContextUpdated, LanguageService languageService) {
-        ElementUnderCaretService elementUnderCaretService = project.getService(ElementUnderCaretService.class);
+        ElementUnderCaretDetector elementUnderCaretService = project.getService(ElementUnderCaretDetector.class);
         elementUnderCaretService.start(methodContextUpdated);
     }
 }

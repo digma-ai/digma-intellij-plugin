@@ -3,15 +3,14 @@ package org.digma.rider.protocol
 
 import com.jetbrains.rd.framework.*
 import com.jetbrains.rd.framework.base.*
-import com.jetbrains.rd.framework.impl.*
-
-import com.jetbrains.rd.util.lifetime.*
-import com.jetbrains.rd.util.reactive.*
-import com.jetbrains.rd.util.string.*
-import com.jetbrains.rd.util.*
+import com.jetbrains.rd.framework.impl.RdMap
+import com.jetbrains.rd.framework.impl.RdSignal
+import com.jetbrains.rd.util.reactive.IMutableViewableMap
+import com.jetbrains.rd.util.reactive.ISignal
+import com.jetbrains.rd.util.string.IPrintable
+import com.jetbrains.rd.util.string.PrettyPrinter
+import com.jetbrains.rd.util.string.print
 import kotlin.reflect.KClass
-import kotlin.jvm.JvmStatic
-
 
 
 /**
@@ -19,7 +18,7 @@ import kotlin.jvm.JvmStatic
  */
 class CodeObjectsModel private constructor(
     private val _reanalyze: RdSignal<String>,
-    private val _fileAnalyzed: RdSignal<String>,
+    private val _documentAnalyzed: RdSignal<String>,
     private val _documents: RdMap<String, Document>,
     private val _codeLens: RdMap<String, RiderCodeLensInfo>
 ) : RdExtBase() {
@@ -36,7 +35,7 @@ class CodeObjectsModel private constructor(
         
         
         
-        const val serializationHash = -3687301284060761471L
+        const val serializationHash = 6684827722303623330L
         
     }
     override val serializersOwner: ISerializersOwner get() = CodeObjectsModel
@@ -44,7 +43,7 @@ class CodeObjectsModel private constructor(
     
     //fields
     val reanalyze: ISignal<String> get() = _reanalyze
-    val fileAnalyzed: ISignal<String> get() = _fileAnalyzed
+    val documentAnalyzed: ISignal<String> get() = _documentAnalyzed
     val documents: IMutableViewableMap<String, Document> get() = _documents
     val codeLens: IMutableViewableMap<String, RiderCodeLensInfo> get() = _codeLens
     //methods
@@ -55,7 +54,7 @@ class CodeObjectsModel private constructor(
     
     init {
         bindableChildren.add("reanalyze" to _reanalyze)
-        bindableChildren.add("fileAnalyzed" to _fileAnalyzed)
+        bindableChildren.add("documentAnalyzed" to _documentAnalyzed)
         bindableChildren.add("documents" to _documents)
         bindableChildren.add("codeLens" to _codeLens)
     }
@@ -76,7 +75,7 @@ class CodeObjectsModel private constructor(
         printer.println("CodeObjectsModel (")
         printer.indent {
             print("reanalyze = "); _reanalyze.print(printer); println()
-            print("fileAnalyzed = "); _fileAnalyzed.print(printer); println()
+            print("documentAnalyzed = "); _documentAnalyzed.print(printer); println()
             print("documents = "); _documents.print(printer); println()
             print("codeLens = "); _codeLens.print(printer); println()
         }
@@ -86,7 +85,7 @@ class CodeObjectsModel private constructor(
     override fun deepClone(): CodeObjectsModel   {
         return CodeObjectsModel(
             _reanalyze.deepClonePolymorphic(),
-            _fileAnalyzed.deepClonePolymorphic(),
+            _documentAnalyzed.deepClonePolymorphic(),
             _documents.deepClonePolymorphic(),
             _codeLens.deepClonePolymorphic()
         )
@@ -98,9 +97,10 @@ val com.jetbrains.rd.ide.model.Solution.codeObjectsModel get() = getOrCreateExte
 
 
 /**
- * #### Generated from [CodeObjectsModel.kt:43]
+ * #### Generated from [CodeObjectsModel.kt:42]
  */
 class Document private constructor(
+    val path: String,
     private val _methods: RdMap<String, RiderMethodInfo>
 ) : RdBindableBase() {
     //companion
@@ -111,12 +111,14 @@ class Document private constructor(
         @Suppress("UNCHECKED_CAST")
         override fun read(ctx: SerializationCtx, buffer: AbstractBuffer): Document  {
             val _id = RdId.read(buffer)
+            val path = buffer.readString()
             val _methods = RdMap.read(ctx, buffer, FrameworkMarshallers.String, RiderMethodInfo)
-            return Document(_methods).withId(_id)
+            return Document(path, _methods).withId(_id)
         }
         
         override fun write(ctx: SerializationCtx, buffer: AbstractBuffer, value: Document)  {
             value.rdid.write(buffer)
+            buffer.writeString(value.path)
             RdMap.write(ctx, buffer, value._methods)
         }
         
@@ -136,7 +138,9 @@ class Document private constructor(
     
     //secondary constructor
     constructor(
+        path: String
     ) : this(
+        path,
         RdMap<String, RiderMethodInfo>(FrameworkMarshallers.String, RiderMethodInfo)
     )
     
@@ -146,6 +150,7 @@ class Document private constructor(
     override fun print(printer: PrettyPrinter)  {
         printer.println("Document (")
         printer.indent {
+            print("path = "); path.print(printer); println()
             print("methods = "); _methods.print(printer); println()
         }
         printer.print(")")
@@ -153,6 +158,7 @@ class Document private constructor(
     //deepClone
     override fun deepClone(): Document   {
         return Document(
+            path,
             _methods.deepClonePolymorphic()
         )
     }
@@ -161,7 +167,7 @@ class Document private constructor(
 
 
 /**
- * #### Generated from [CodeObjectsModel.kt:23]
+ * #### Generated from [CodeObjectsModel.kt:22]
  */
 data class RiderCodeLensInfo (
     val codeObjectId: String,
@@ -250,8 +256,7 @@ data class RiderMethodInfo (
     val displayName: String,
     val containingClass: String,
     val containingNamespace: String,
-    val containingFile: String,
-    val containingFileDisplayName: String
+    val containingFile: String
 ) : IPrintable {
     //companion
     
@@ -266,8 +271,7 @@ data class RiderMethodInfo (
             val containingClass = buffer.readString()
             val containingNamespace = buffer.readString()
             val containingFile = buffer.readString()
-            val containingFileDisplayName = buffer.readString()
-            return RiderMethodInfo(id, name, displayName, containingClass, containingNamespace, containingFile, containingFileDisplayName)
+            return RiderMethodInfo(id, name, displayName, containingClass, containingNamespace, containingFile)
         }
         
         override fun write(ctx: SerializationCtx, buffer: AbstractBuffer, value: RiderMethodInfo)  {
@@ -277,7 +281,6 @@ data class RiderMethodInfo (
             buffer.writeString(value.containingClass)
             buffer.writeString(value.containingNamespace)
             buffer.writeString(value.containingFile)
-            buffer.writeString(value.containingFileDisplayName)
         }
         
         
@@ -299,7 +302,6 @@ data class RiderMethodInfo (
         if (containingClass != other.containingClass) return false
         if (containingNamespace != other.containingNamespace) return false
         if (containingFile != other.containingFile) return false
-        if (containingFileDisplayName != other.containingFileDisplayName) return false
         
         return true
     }
@@ -312,7 +314,6 @@ data class RiderMethodInfo (
         __r = __r*31 + containingClass.hashCode()
         __r = __r*31 + containingNamespace.hashCode()
         __r = __r*31 + containingFile.hashCode()
-        __r = __r*31 + containingFileDisplayName.hashCode()
         return __r
     }
     //pretty print
@@ -325,7 +326,6 @@ data class RiderMethodInfo (
             print("containingClass = "); containingClass.print(printer); println()
             print("containingNamespace = "); containingNamespace.print(printer); println()
             print("containingFile = "); containingFile.print(printer); println()
-            print("containingFileDisplayName = "); containingFileDisplayName.print(printer); println()
         }
         printer.print(")")
     }

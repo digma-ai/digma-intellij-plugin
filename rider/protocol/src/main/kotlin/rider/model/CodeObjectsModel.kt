@@ -16,7 +16,6 @@ class CodeObjectsModel : Ext(SolutionModel.Solution) {
         field("containingClass", PredefinedType.string)
         field("containingNamespace", PredefinedType.string)
         field("containingFile", PredefinedType.string)
-        field("containingFileDisplayName", PredefinedType.string)
     }
 
 
@@ -35,12 +34,13 @@ class CodeObjectsModel : Ext(SolutionModel.Solution) {
         setting(Kotlin11Generator.Namespace, "org.digma.rider.protocol")
         //todo: change to string and send the file to reanalyze
         signal("reanalyze", PredefinedType.string)
-        signal("fileAnalyzed", PredefinedType.string)
+        signal("documentAnalyzed", PredefinedType.string)
 
         //key: document path, value: Document
         map("documents",
             PredefinedType.string,
             classdef("Document") {
+                field("path",PredefinedType.string)
                 //map<codeObjectId,MethodInfo>
                 map("methods", PredefinedType.string, RiderMethodInfo)
             }

@@ -7,7 +7,8 @@ import org.digma.intellij.plugin.model.CodeObjectSummaryType
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes(
     JsonSubTypes.Type(value = MethodCodeObjectSummary::class, name = "MethodSummary"),
-    JsonSubTypes.Type(value = SpanCodeObjectSummary::class, name = "SpanSummary")
+    JsonSubTypes.Type(value = SpanCodeObjectSummary::class, name = "SpanSummary"),
+    JsonSubTypes.Type(value = EndpointCodeObjectSummary::class, name = "EndpointSummary")
 )
 interface CodeObjectSummary {
     val type: CodeObjectSummaryType

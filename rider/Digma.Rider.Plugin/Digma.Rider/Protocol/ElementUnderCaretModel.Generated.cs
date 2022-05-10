@@ -75,7 +75,7 @@ namespace Digma.Rider.Protocol
     
     
     
-    protected override long SerializationHash => 6038035849872197704L;
+    protected override long SerializationHash => 4784696159160401609L;
     
     protected override Action<ISerializers> Register => RegisterDeclaredTypesSerializers;
     public static void RegisterDeclaredTypesSerializers(ISerializers serializers)
@@ -126,49 +126,56 @@ namespace Digma.Rider.Protocol
     //fields
     //public fields
     [NotNull] public string Fqn {get; private set;}
+    [NotNull] public string Name {get; private set;}
     [NotNull] public string ClassName {get; private set;}
-    [NotNull] public string FilePath {get; private set;}
+    [NotNull] public string FileUri {get; private set;}
     
     //private fields
     //primary constructor
     public ElementUnderCaret(
       [NotNull] string fqn,
+      [NotNull] string name,
       [NotNull] string className,
-      [NotNull] string filePath
+      [NotNull] string fileUri
     )
     {
       if (fqn == null) throw new ArgumentNullException("fqn");
+      if (name == null) throw new ArgumentNullException("name");
       if (className == null) throw new ArgumentNullException("className");
-      if (filePath == null) throw new ArgumentNullException("filePath");
+      if (fileUri == null) throw new ArgumentNullException("fileUri");
       
       Fqn = fqn;
+      Name = name;
       ClassName = className;
-      FilePath = filePath;
+      FileUri = fileUri;
     }
     //secondary constructor
     //deconstruct trait
-    public void Deconstruct([NotNull] out string fqn, [NotNull] out string className, [NotNull] out string filePath)
+    public void Deconstruct([NotNull] out string fqn, [NotNull] out string name, [NotNull] out string className, [NotNull] out string fileUri)
     {
       fqn = Fqn;
+      name = Name;
       className = ClassName;
-      filePath = FilePath;
+      fileUri = FileUri;
     }
     //statics
     
     public static CtxReadDelegate<ElementUnderCaret> Read = (ctx, reader) => 
     {
       var fqn = reader.ReadString();
+      var name = reader.ReadString();
       var className = reader.ReadString();
-      var filePath = reader.ReadString();
-      var _result = new ElementUnderCaret(fqn, className, filePath);
+      var fileUri = reader.ReadString();
+      var _result = new ElementUnderCaret(fqn, name, className, fileUri);
       return _result;
     };
     
     public static CtxWriteDelegate<ElementUnderCaret> Write = (ctx, writer, value) => 
     {
       writer.Write(value.Fqn);
+      writer.Write(value.Name);
       writer.Write(value.ClassName);
-      writer.Write(value.FilePath);
+      writer.Write(value.FileUri);
     };
     
     //constants
@@ -187,7 +194,7 @@ namespace Digma.Rider.Protocol
     {
       if (ReferenceEquals(null, other)) return false;
       if (ReferenceEquals(this, other)) return true;
-      return Fqn == other.Fqn && ClassName == other.ClassName && FilePath == other.FilePath;
+      return Fqn == other.Fqn && Name == other.Name && ClassName == other.ClassName && FileUri == other.FileUri;
     }
     //hash code trait
     public override int GetHashCode()
@@ -195,8 +202,9 @@ namespace Digma.Rider.Protocol
       unchecked {
         var hash = 0;
         hash = hash * 31 + Fqn.GetHashCode();
+        hash = hash * 31 + Name.GetHashCode();
         hash = hash * 31 + ClassName.GetHashCode();
-        hash = hash * 31 + FilePath.GetHashCode();
+        hash = hash * 31 + FileUri.GetHashCode();
         return hash;
       }
     }
@@ -206,8 +214,9 @@ namespace Digma.Rider.Protocol
       printer.Println("ElementUnderCaret (");
       using (printer.IndentCookie()) {
         printer.Print("fqn = "); Fqn.PrintEx(printer); printer.Println();
+        printer.Print("name = "); Name.PrintEx(printer); printer.Println();
         printer.Print("className = "); ClassName.PrintEx(printer); printer.Println();
-        printer.Print("filePath = "); FilePath.PrintEx(printer); printer.Println();
+        printer.Print("fileUri = "); FileUri.PrintEx(printer); printer.Println();
       }
       printer.Print(")");
     }

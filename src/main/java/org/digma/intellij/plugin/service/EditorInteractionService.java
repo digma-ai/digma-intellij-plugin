@@ -3,12 +3,15 @@ package org.digma.intellij.plugin.service;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.editor.EditorEventsHandler;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.MethodUnderCaret;
+import org.digma.intellij.plugin.model.rest.MethodCodeObjectSummary;
 import org.digma.intellij.plugin.psi.LanguageService;
-import org.digma.intellij.plugin.toolwindow.ToolWindowContent;
 import org.digma.intellij.plugin.ui.MethodContextUpdater;
+import org.digma.intellij.plugin.ui.service.ErrorsService;
+import org.digma.intellij.plugin.ui.service.InsightsService;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -19,8 +22,18 @@ public class EditorInteractionService implements MethodContextUpdater, Disposabl
 
     private static final Logger LOGGER = Logger.getInstance(EditorInteractionService.class);
 
-    private ToolWindowContent toolWindowContent;
     private Project project;
+
+    private final InsightsService insightsService;
+    private final ErrorsService errorsService;
+    private final DocumentInfoService documentInfoService;
+
+    public EditorInteractionService(Project project) {
+        this.project = project;
+        insightsService = project.getService(InsightsService.class);
+        errorsService = project.getService(ErrorsService.class);
+        documentInfoService = project.getService(DocumentInfoService.class);
+    }
 
     public static EditorInteractionService getInstance(Project project) {
         return project.getService(EditorInteractionService.class);
@@ -28,21 +41,15 @@ public class EditorInteractionService implements MethodContextUpdater, Disposabl
 
     @Override
     public void updateViewContent(MethodUnderCaret methodUnderCaret) {
-        if (toolWindowContent != null) {
-            if (methodUnderCaret != null) {
-                Log.log(LOGGER::debug, "got method under caret {}", methodUnderCaret.getId());
-                toolWindowContent.update(methodUnderCaret.toString());
-            } else {
-                clearViewContent();
-            }
-        }
+
+        MethodCodeObjectSummary methodCodeObjectSummary = documentInfoService.getMethodSummaries(methodUnderCaret);
+        insightsService.updateSelectedMethod(methodUnderCaret,methodCodeObjectSummary);
+        //todo: errors
     }
 
     @Override
     public void clearViewContent() {
-        if (toolWindowContent != null) {
-            toolWindowContent.empty();
-        }
+        insightsService.empty();
     }
 
     @Override
@@ -51,13 +58,12 @@ public class EditorInteractionService implements MethodContextUpdater, Disposabl
     }
 
 
-    public void start(@NotNull Project project, ToolWindowContent toolWindowContent) {
+    public void start(@NotNull Project project) {
         Log.log(LOGGER::debug, "starting..");
         this.project = project;
-        this.toolWindowContent = toolWindowContent;
         EditorEventsHandler editorEventsHandler = project.getService(EditorEventsHandler.class);
         LanguageService languageService = project.getService(LanguageService.class);
-        editorEventsHandler.start(project,this,languageService);
+        editorEventsHandler.start(project, this, languageService);
     }
 
 }

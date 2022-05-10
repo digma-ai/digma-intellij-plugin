@@ -31,7 +31,7 @@ public class JavaLanguageService implements LanguageService {
         PsiElement underCaret = findElementUnderCaret(project, psiFile, caretOffset);
         PsiMethod psiMethod = PsiTreeUtil.getParentOfType(underCaret, PsiMethod.class);
         if (psiMethod != null) {
-            return new MethodUnderCaret(psiMethod.getName(),psiMethod.getContainingClass().getName(), psiFile.getVirtualFile().getPath());
+            return new MethodUnderCaret(psiMethod.getName(),psiMethod.getName(),psiMethod.getContainingClass().getName(), psiFile.getVirtualFile().getPath());
         }
         return null;
     }

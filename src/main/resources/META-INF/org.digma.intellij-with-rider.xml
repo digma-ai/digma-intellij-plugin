@@ -7,10 +7,12 @@
         <projectService serviceImplementation="org.digma.rider.protocol.ElementUnderCaretDetector"/>
         <projectService serviceImplementation="org.digma.rider.protocol.CodeObjectHost"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.editor.RiderDocumentInfoConsumer"
-                        serviceInterface="org.digma.intellij.plugin.document.DocumentInfoChanged"/>
         <projectService serviceImplementation="org.digma.intellij.plugin.psi.csharp.CSharpDocumentAnalyzer"
                         serviceInterface="org.digma.intellij.plugin.document.DocumentAnalyzer"/>
+
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.editor.RiderDocumentInfoConsumer"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.env.RiderEnvironmentChangedListener"/>
     </extensions>
 
 

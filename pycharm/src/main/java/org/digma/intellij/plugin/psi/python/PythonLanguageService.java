@@ -31,7 +31,7 @@ public class PythonLanguageService implements LanguageService {
         PsiElement underCaret = findElementUnderCaret(project, psiFile, caretOffset);
         PyFunction psiMethod = PsiTreeUtil.getParentOfType(underCaret, PyFunction.class);
         if (psiMethod != null) {
-            return new MethodUnderCaret(psiMethod.getName(), psiMethod.getContainingClass().getName(),psiFile.getVirtualFile().getPath());
+            return new MethodUnderCaret(psiMethod.getName(),psiMethod.getName(), psiMethod.getContainingClass().getName(),psiFile.getVirtualFile().getPath());
         }
         return null;
     }

@@ -6,6 +6,9 @@ import com.jetbrains.rd.platform.util.lifetime
 import com.jetbrains.rider.projectView.solution
 import org.digma.intellij.plugin.document.DocumentAnalyzer
 import org.digma.intellij.plugin.document.DocumentInfoChanged
+import org.digma.intellij.plugin.editor.RiderDocumentInfoConsumer
+import org.digma.intellij.plugin.env.RiderEnvironmentChangedListener
+import org.digma.intellij.plugin.psi.csharp.CSharpDocumentAnalyzer
 
 class ServicesStarter : ProjectManagerListener {
 
@@ -15,8 +18,9 @@ class ServicesStarter : ProjectManagerListener {
             //for example RiderDocumentInfoConsumer needs to start listening on a topic.
             //it's also possible to register them as listeners, but then they can't get the Project in the constructor.
             //anyway they do the subscription manually in their constructor.
-            project.getService(DocumentInfoChanged::class.java)
+            project.getService(RiderDocumentInfoConsumer::class.java)
             project.getService(DocumentAnalyzer::class.java)
+            project.getService(RiderEnvironmentChangedListener::class.java)
         }
     }
 }

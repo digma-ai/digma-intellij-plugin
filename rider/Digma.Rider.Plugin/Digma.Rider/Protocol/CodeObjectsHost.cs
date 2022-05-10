@@ -32,6 +32,16 @@ namespace Digma.Rider.Protocol
             _logger = logger;
             _codeObjectsModel = solution.GetProtocolSolution().GetCodeObjectsModel();
 
+
+            _codeObjectsModel.ReanalyzeAll.Advise(lifetime, filePath =>
+            {
+                using (ReadLockCookie.Create())
+                {
+                    Log(_logger, "Calling ReanalyzeAll");
+                    riderSolutionAnalysisService.ReanalyzeAll();
+                }
+            });
+            
             _codeObjectsModel.Reanalyze.Advise(lifetime, filePath =>
             {
                 using (ReadLockCookie.Create())
@@ -72,11 +82,6 @@ namespace Digma.Rider.Protocol
 
             var documentPath = document.Path;
 
-            if (document.Methods.IsEmpty())
-            {
-                return;
-            }
-            
             //todo: consider removing the document from the protocol when the frontend consumes it.
             // then avoid notifying the frontend of changes if the code objects didn't change by keeping
             // and checking last update timestamp, the cache keeps a timestamp of last update.

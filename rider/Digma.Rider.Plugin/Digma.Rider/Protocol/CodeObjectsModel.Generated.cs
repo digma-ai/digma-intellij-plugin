@@ -43,12 +43,14 @@ namespace Digma.Rider.Protocol
     //fields
     //public fields
     [NotNull] public ISignal<string> Reanalyze => _Reanalyze;
+    [NotNull] public ISignal<Unit> ReanalyzeAll => _ReanalyzeAll;
     [NotNull] public ISignal<string> DocumentAnalyzed => _DocumentAnalyzed;
     [NotNull] public IViewableMap<string, Document> Documents => _Documents;
     [NotNull] public IViewableMap<string, RiderCodeLensInfo> CodeLens => _CodeLens;
     
     //private fields
     [NotNull] private readonly RdSignal<string> _Reanalyze;
+    [NotNull] private readonly RdSignal<Unit> _ReanalyzeAll;
     [NotNull] private readonly RdSignal<string> _DocumentAnalyzed;
     [NotNull] private readonly RdMap<string, Document> _Documents;
     [NotNull] private readonly RdMap<string, RiderCodeLensInfo> _CodeLens;
@@ -56,22 +58,26 @@ namespace Digma.Rider.Protocol
     //primary constructor
     private CodeObjectsModel(
       [NotNull] RdSignal<string> reanalyze,
+      [NotNull] RdSignal<Unit> reanalyzeAll,
       [NotNull] RdSignal<string> documentAnalyzed,
       [NotNull] RdMap<string, Document> documents,
       [NotNull] RdMap<string, RiderCodeLensInfo> codeLens
     )
     {
       if (reanalyze == null) throw new ArgumentNullException("reanalyze");
+      if (reanalyzeAll == null) throw new ArgumentNullException("reanalyzeAll");
       if (documentAnalyzed == null) throw new ArgumentNullException("documentAnalyzed");
       if (documents == null) throw new ArgumentNullException("documents");
       if (codeLens == null) throw new ArgumentNullException("codeLens");
       
       _Reanalyze = reanalyze;
+      _ReanalyzeAll = reanalyzeAll;
       _DocumentAnalyzed = documentAnalyzed;
       _Documents = documents;
       _CodeLens = codeLens;
       _CodeLens.OptimizeNested = true;
       BindableChildren.Add(new KeyValuePair<string, object>("reanalyze", _Reanalyze));
+      BindableChildren.Add(new KeyValuePair<string, object>("reanalyzeAll", _ReanalyzeAll));
       BindableChildren.Add(new KeyValuePair<string, object>("documentAnalyzed", _DocumentAnalyzed));
       BindableChildren.Add(new KeyValuePair<string, object>("documents", _Documents));
       BindableChildren.Add(new KeyValuePair<string, object>("codeLens", _CodeLens));
@@ -80,6 +86,7 @@ namespace Digma.Rider.Protocol
     internal CodeObjectsModel (
     ) : this (
       new RdSignal<string>(JetBrains.Rd.Impl.Serializers.ReadString, JetBrains.Rd.Impl.Serializers.WriteString),
+      new RdSignal<Unit>(JetBrains.Rd.Impl.Serializers.ReadVoid, JetBrains.Rd.Impl.Serializers.WriteVoid),
       new RdSignal<string>(JetBrains.Rd.Impl.Serializers.ReadString, JetBrains.Rd.Impl.Serializers.WriteString),
       new RdMap<string, Document>(JetBrains.Rd.Impl.Serializers.ReadString, JetBrains.Rd.Impl.Serializers.WriteString, Document.Read, Document.Write),
       new RdMap<string, RiderCodeLensInfo>(JetBrains.Rd.Impl.Serializers.ReadString, JetBrains.Rd.Impl.Serializers.WriteString, RiderCodeLensInfo.Read, RiderCodeLensInfo.Write)
@@ -89,7 +96,7 @@ namespace Digma.Rider.Protocol
     
     
     
-    protected override long SerializationHash => -7811094522047829428L;
+    protected override long SerializationHash => -4511994912274114320L;
     
     protected override Action<ISerializers> Register => RegisterDeclaredTypesSerializers;
     public static void RegisterDeclaredTypesSerializers(ISerializers serializers)
@@ -111,6 +118,7 @@ namespace Digma.Rider.Protocol
       printer.Println("CodeObjectsModel (");
       using (printer.IndentCookie()) {
         printer.Print("reanalyze = "); _Reanalyze.PrintEx(printer); printer.Println();
+        printer.Print("reanalyzeAll = "); _ReanalyzeAll.PrintEx(printer); printer.Println();
         printer.Print("documentAnalyzed = "); _DocumentAnalyzed.PrintEx(printer); printer.Println();
         printer.Print("documents = "); _Documents.PrintEx(printer); printer.Println();
         printer.Print("codeLens = "); _CodeLens.PrintEx(printer); printer.Println();
@@ -135,7 +143,7 @@ namespace Digma.Rider.Protocol
   
   
   /// <summary>
-  /// <p>Generated from: CodeObjectsModel.kt:41</p>
+  /// <p>Generated from: CodeObjectsModel.kt:42</p>
   /// </summary>
   public sealed class Document : RdBindableBase
   {

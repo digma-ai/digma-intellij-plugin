@@ -9,8 +9,9 @@ class ElementUnderCaretModel : Ext(SolutionModel.Solution) {
 
     val ElementUnderCaret = structdef {
         field("fqn", PredefinedType.string)
+        field("name", PredefinedType.string)
         field("className", PredefinedType.string)
-        field("filePath", PredefinedType.string)
+        field("fileUri", PredefinedType.string)
     }
 
 

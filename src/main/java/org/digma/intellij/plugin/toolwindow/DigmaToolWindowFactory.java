@@ -7,6 +7,10 @@ import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.ContentFactory;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.service.EditorInteractionService;
+import org.digma.intellij.plugin.ui.errors.ErrorsPanelKt;
+import org.digma.intellij.plugin.ui.insights.InsightsPanelKt;
+import org.digma.intellij.plugin.ui.service.ErrorsService;
+import org.digma.intellij.plugin.ui.service.InsightsService;
 import org.jetbrains.annotations.NotNull;
 
 
@@ -27,10 +31,28 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
         Log.log(LOGGER::debug, "createToolWindowContent for project  {}", project);
-        var toolWindowContent = new ToolWindowContent();
+
         var contentFactory = ContentFactory.SERVICE.getInstance();
-        var content = contentFactory.createContent(toolWindowContent.getContent(), "DigmaContent", false);
-        toolWindow.getContentManager().addContent(content);
-        EditorInteractionService.getInstance(project).start(project, toolWindowContent);
+
+        {
+            var insightsPanel = InsightsPanelKt.insightsPanel(project);
+            var insightsService = project.getService(InsightsService.class);
+            insightsService.setModel(InsightsPanelKt.getInsightsModel());
+            insightsService.setPanel(insightsPanel);
+            var insightsContent = contentFactory.createContent(insightsPanel, "Insights", false);
+            toolWindow.getContentManager().addContent(insightsContent);
+        }
+
+        {
+            var errorsPanel = ErrorsPanelKt.errorsPanel(project);
+            var errorsService = project.getService(ErrorsService.class);
+            errorsService.setModel(ErrorsPanelKt.getErrorsModel());
+            errorsService.setPanel(errorsPanel);
+            var errorsContent = contentFactory.createContent(errorsPanel, "Errors", false);
+            toolWindow.getContentManager().addContent(errorsContent);
+        }
+
+
+        EditorInteractionService.getInstance(project).start(project);
     }
 }

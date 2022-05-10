@@ -19,6 +19,7 @@ import kotlin.jvm.JvmStatic
  */
 class CodeObjectsModel private constructor(
     private val _reanalyze: RdSignal<String>,
+    private val _reanalyzeAll: RdSignal<Unit>,
     private val _documentAnalyzed: RdSignal<String>,
     private val _documents: RdMap<String, Document>,
     private val _codeLens: RdMap<String, RiderCodeLensInfo>
@@ -36,7 +37,7 @@ class CodeObjectsModel private constructor(
         
         
         
-        const val serializationHash = -7811094522047829428L
+        const val serializationHash = -4511994912274114320L
         
     }
     override val serializersOwner: ISerializersOwner get() = CodeObjectsModel
@@ -44,6 +45,7 @@ class CodeObjectsModel private constructor(
     
     //fields
     val reanalyze: ISignal<String> get() = _reanalyze
+    val reanalyzeAll: ISignal<Unit> get() = _reanalyzeAll
     val documentAnalyzed: ISignal<String> get() = _documentAnalyzed
     val documents: IMutableViewableMap<String, Document> get() = _documents
     val codeLens: IMutableViewableMap<String, RiderCodeLensInfo> get() = _codeLens
@@ -55,6 +57,7 @@ class CodeObjectsModel private constructor(
     
     init {
         bindableChildren.add("reanalyze" to _reanalyze)
+        bindableChildren.add("reanalyzeAll" to _reanalyzeAll)
         bindableChildren.add("documentAnalyzed" to _documentAnalyzed)
         bindableChildren.add("documents" to _documents)
         bindableChildren.add("codeLens" to _codeLens)
@@ -64,6 +67,7 @@ class CodeObjectsModel private constructor(
     internal constructor(
     ) : this(
         RdSignal<String>(FrameworkMarshallers.String),
+        RdSignal<Unit>(FrameworkMarshallers.Void),
         RdSignal<String>(FrameworkMarshallers.String),
         RdMap<String, Document>(FrameworkMarshallers.String, Document),
         RdMap<String, RiderCodeLensInfo>(FrameworkMarshallers.String, RiderCodeLensInfo)
@@ -76,6 +80,7 @@ class CodeObjectsModel private constructor(
         printer.println("CodeObjectsModel (")
         printer.indent {
             print("reanalyze = "); _reanalyze.print(printer); println()
+            print("reanalyzeAll = "); _reanalyzeAll.print(printer); println()
             print("documentAnalyzed = "); _documentAnalyzed.print(printer); println()
             print("documents = "); _documents.print(printer); println()
             print("codeLens = "); _codeLens.print(printer); println()
@@ -86,6 +91,7 @@ class CodeObjectsModel private constructor(
     override fun deepClone(): CodeObjectsModel   {
         return CodeObjectsModel(
             _reanalyze.deepClonePolymorphic(),
+            _reanalyzeAll.deepClonePolymorphic(),
             _documentAnalyzed.deepClonePolymorphic(),
             _documents.deepClonePolymorphic(),
             _codeLens.deepClonePolymorphic()
@@ -98,7 +104,7 @@ val com.jetbrains.rd.ide.model.Solution.codeObjectsModel get() = getOrCreateExte
 
 
 /**
- * #### Generated from [CodeObjectsModel.kt:41]
+ * #### Generated from [CodeObjectsModel.kt:42]
  */
 class Document private constructor(
     val path: String,

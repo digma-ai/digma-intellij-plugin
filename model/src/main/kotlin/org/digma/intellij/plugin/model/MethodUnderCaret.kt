@@ -2,14 +2,16 @@ package org.digma.intellij.plugin.model
 
 data class MethodUnderCaret(
     val id: String,
+    val name:String,
     val className: String,
-    val filePath: String
+    val fileUri: String
 ) {
 
     override fun toString(): String {
-        var toString = "${id}\n" +
+        val toString = "${id}\n" +
+                       "${name}\n" +
                        "${className}\n" +
-                       "${filePath}"
+                       "${fileUri}"
         return toString;
     }
 }

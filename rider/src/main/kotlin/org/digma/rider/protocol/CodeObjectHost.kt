@@ -4,13 +4,15 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import com.jetbrains.rd.util.reactive.IMutableViewableMap
 import com.jetbrains.rider.projectView.solution
+import org.digma.intellij.plugin.document.DocumentCodeObjectsChanged
 import org.digma.intellij.plugin.model.CodeLens
 import org.digma.intellij.plugin.model.DocumentInfo
 import org.digma.intellij.plugin.model.MethodInfo
+import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.annotations.NotNull
 import java.util.function.Consumer
 
-class CodeObjectHost(project: Project) {
+class CodeObjectHost(val project: Project) {
 
     private var model: CodeObjectsModel = project.solution.codeObjectsModel
 
@@ -28,6 +30,7 @@ class CodeObjectHost(project: Project) {
 
 
     fun installCodeLens(@NotNull psiFile: PsiFile, @NotNull codeLenses: MutableList<CodeLens>) {
+
         if (codeLenses.isEmpty()) return
 
         codeLenses.forEach(Consumer { codeLens ->
@@ -35,6 +38,30 @@ class CodeObjectHost(project: Project) {
         })
         model.reanalyze.fire(psiFileToPath(psiFile))
     }
+
+
+    /**
+     * called when environment changed.
+     * clears related objects and fired DocumentCodeObjectsChanged for documents that are still in the protocol
+     */
+    fun environmentChanged() {
+        model.codeLens.clear()
+        model.reanalyzeAll.fire(Unit)
+
+        model.documents.keys.forEach {
+            val psiFile = PsiUtils.uriToPsiFile(it, project)
+            notifyDocumentCodeObjectsChanged(psiFile)
+        }
+    }
+
+
+    private fun notifyDocumentCodeObjectsChanged(psiFile: PsiFile?) {
+        val publisher: DocumentCodeObjectsChanged =
+            project.messageBus.syncPublisher(DocumentCodeObjectsChanged.DOCUMENT_CODE_OBJECTS_CHANGED_TOPIC)
+        publisher.documentCodeObjectsChanged(psiFile)
+    }
+
+
 
 
     private fun Document.toDocumentInfo() = DocumentInfo(
@@ -68,6 +95,8 @@ class CodeObjectHost(project: Project) {
         moreText = lensMoreText,
         anchor = anchor
     )
+
+
 
 
 }

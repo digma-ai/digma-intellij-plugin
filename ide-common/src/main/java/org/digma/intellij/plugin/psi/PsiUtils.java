@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.psi;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import org.digma.intellij.plugin.model.MethodUnderCaret;
@@ -21,5 +22,16 @@ public class PsiUtils {
         PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
         return languageService.detectMethodUnderCaret(project, psiFile, caretOffset);
     }
+
+
+    @Nullable
+    public static PsiFile uriToPsiFile(String uri, Project project){
+        VirtualFile virtualFile = VirtualFileManager.getInstance().findFileByUrl(uri);
+        if (virtualFile != null) {
+            return PsiManager.getInstance(project).findFile(virtualFile);
+        }
+        return null;
+    }
+
 
 }

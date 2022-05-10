@@ -41,6 +41,8 @@ class ElementUnderCaretDetector(private val project: Project) {
 
     private fun ElementUnderCaret.toModel() = MethodUnderCaret(
         id = fqn,
+        name = name,
         className = className,
-        filePath = filePath)
+        fileUri = fileUri
+    )
 }

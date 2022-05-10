@@ -2,6 +2,7 @@ import common.properties
 
 plugins {
     id("plugin-library")
+    id("common-kotlin")
 }
 
 intellij {

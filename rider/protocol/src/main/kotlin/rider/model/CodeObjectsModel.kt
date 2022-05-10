@@ -31,8 +31,9 @@ class CodeObjectsModel : Ext(SolutionModel.Solution) {
     init {
         setting(CSharp50Generator.Namespace, "Digma.Rider.Protocol")
         setting(Kotlin11Generator.Namespace, "org.digma.rider.protocol")
-        //todo: change to string and send the file to reanalyze
+
         signal("reanalyze", PredefinedType.string)
+        signal("reanalyzeAll", PredefinedType.void)
         signal("documentAnalyzed", PredefinedType.string)
 
         //key: document path, value: Document

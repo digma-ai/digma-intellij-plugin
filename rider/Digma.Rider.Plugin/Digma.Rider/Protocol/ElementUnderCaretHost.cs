@@ -1,6 +1,5 @@
 using System;
 using Digma.Rider.Discovery;
-using Digma.Rider.Logging;
 using JetBrains.Annotations;
 using JetBrains.Application.Threading;
 using JetBrains.Core;
@@ -77,27 +76,32 @@ namespace Digma.Rider.Protocol
             }
 
             Log(_logger,"Trying to discover method under caret for {0}",textControl.Document);
-            var functionDeclaration = GetFunctionUnderCaret(textControl);
-            if (functionDeclaration != null)
+            using (ReadLockCookie.Create())
             {
-                Log(_logger,"Got function under caret: {0} for {1}",functionDeclaration,textControl.Document);
-                var methodFqn = Identities.ComputeFqn(functionDeclaration);
-                var className = PsiUtils.GetClassName(functionDeclaration); 
-                var filePath = PsiUtils.GetContainingFile(functionDeclaration);
-                _model.ElementUnderCaret.Value = new ElementUnderCaret(methodFqn,className, filePath);
-                _model.Refresh.Fire(Unit.Instance);
-            }
-            else
-            {
-                Log(_logger,"No function under caret for {0}",textControl.Document);
-                EmptyModel();
+                var psiSourceFile = _documentManager.GetProjectFile(textControl.Document).ToSourceFile();
+                var functionDeclaration = GetFunctionUnderCaret(textControl);
+                if (functionDeclaration != null && psiSourceFile != null)
+                {
+                    Log(_logger, "Got function under caret: {0} for {1}", functionDeclaration, textControl.Document);
+                    var methodFqn = Identities.ComputeFqn(functionDeclaration);
+                    var methodName = PsiUtils.GetDeclaredName(functionDeclaration);
+                    var className = PsiUtils.GetClassName(functionDeclaration);
+                    var fileUri = Identities.ComputeFileUri(psiSourceFile);
+                    _model.ElementUnderCaret.Value = new ElementUnderCaret(methodFqn, methodName, className, fileUri);
+                    _model.Refresh.Fire(Unit.Instance);
+                }
+                else
+                {
+                    Log(_logger, "No function under caret for {0}", textControl.Document);
+                    EmptyModel();
+                }
             }
         }
 
 
         private void EmptyModel()
         {
-            _model.ElementUnderCaret.Value = new ElementUnderCaret(string.Empty,string.Empty, string.Empty);
+            _model.ElementUnderCaret.Value = new ElementUnderCaret(string.Empty,string.Empty,string.Empty, string.Empty);
             _model.Refresh.Fire(Unit.Instance);
         }
 

@@ -5,10 +5,11 @@ import org.digma.intellij.plugin.analytics.AnalyticsProvider;
 import org.digma.intellij.plugin.model.DocumentInfo;
 import org.digma.intellij.plugin.model.rest.CodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.CodeObjectSummaryRequest;
+import org.digma.intellij.plugin.model.rest.MethodCodeObjectSummary;
 
 import java.util.*;
 
-public class DocumentInfoContainer {
+class DocumentInfoContainer {
 
 
     private final PsiFile psiFile;
@@ -29,10 +30,20 @@ public class DocumentInfoContainer {
         this.documentInfo.getMethods().forEach((id, methodInfo) -> objectIds.add(methodInfo.idWithType()));
 
         List<CodeObjectSummary> summaries = analyticsProvider.getSummaries(new CodeObjectSummaryRequest(environment, objectIds));
-        summaries.forEach(codeObjectSummary -> methodSummaries.put(codeObjectSummary.getCodeObjectId(), codeObjectSummary));
+        if (summaries.isEmpty()) {
+            methodSummaries.clear();
+        }else{
+            summaries.forEach(codeObjectSummary -> methodSummaries.put(codeObjectSummary.getCodeObjectId(), codeObjectSummary));
+        }
+
+
     }
 
     public Map<String, CodeObjectSummary> getSummaries() {
         return methodSummaries;
+    }
+
+    public MethodCodeObjectSummary getMethodSummaries(String methodId) {
+        return (MethodCodeObjectSummary) methodSummaries.get(methodId);
     }
 }

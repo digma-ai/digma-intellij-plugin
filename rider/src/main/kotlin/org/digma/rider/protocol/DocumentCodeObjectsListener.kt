@@ -6,6 +6,7 @@ import com.intellij.psi.PsiFile
 import com.jetbrains.rd.platform.util.lifetime
 import com.jetbrains.rider.projectView.solution
 import org.digma.intellij.plugin.document.DocumentCodeObjectsChanged
+import org.digma.intellij.plugin.psi.PsiUtils
 
 class DocumentCodeObjectsListener : ProjectManagerListener {
 
@@ -23,7 +24,7 @@ class DocumentCodeObjectsListener : ProjectManagerListener {
     }
 
     private fun documentAnalyzed(filePath: String, project: Project) {
-        val psiFile = pathToPsiFile(filePath, project)
+        val psiFile = PsiUtils.uriToPsiFile(filePath, project)
         notifyDocumentCodeObjectsChanged(psiFile)
     }
 

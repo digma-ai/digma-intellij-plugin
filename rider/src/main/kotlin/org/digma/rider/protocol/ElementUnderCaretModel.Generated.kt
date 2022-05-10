@@ -32,7 +32,7 @@ class ElementUnderCaretModel private constructor(
         
         
         
-        const val serializationHash = 6038035849872197704L
+        const val serializationHash = 4784696159160401609L
         
     }
     override val serializersOwner: ISerializersOwner get() = ElementUnderCaretModel
@@ -88,8 +88,9 @@ val com.jetbrains.rd.ide.model.Solution.elementUnderCaretModel get() = getOrCrea
  */
 data class ElementUnderCaret (
     val fqn: String,
+    val name: String,
     val className: String,
-    val filePath: String
+    val fileUri: String
 ) : IPrintable {
     //companion
     
@@ -99,15 +100,17 @@ data class ElementUnderCaret (
         @Suppress("UNCHECKED_CAST")
         override fun read(ctx: SerializationCtx, buffer: AbstractBuffer): ElementUnderCaret  {
             val fqn = buffer.readString()
+            val name = buffer.readString()
             val className = buffer.readString()
-            val filePath = buffer.readString()
-            return ElementUnderCaret(fqn, className, filePath)
+            val fileUri = buffer.readString()
+            return ElementUnderCaret(fqn, name, className, fileUri)
         }
         
         override fun write(ctx: SerializationCtx, buffer: AbstractBuffer, value: ElementUnderCaret)  {
             buffer.writeString(value.fqn)
+            buffer.writeString(value.name)
             buffer.writeString(value.className)
-            buffer.writeString(value.filePath)
+            buffer.writeString(value.fileUri)
         }
         
         
@@ -124,8 +127,9 @@ data class ElementUnderCaret (
         other as ElementUnderCaret
         
         if (fqn != other.fqn) return false
+        if (name != other.name) return false
         if (className != other.className) return false
-        if (filePath != other.filePath) return false
+        if (fileUri != other.fileUri) return false
         
         return true
     }
@@ -133,8 +137,9 @@ data class ElementUnderCaret (
     override fun hashCode(): Int  {
         var __r = 0
         __r = __r*31 + fqn.hashCode()
+        __r = __r*31 + name.hashCode()
         __r = __r*31 + className.hashCode()
-        __r = __r*31 + filePath.hashCode()
+        __r = __r*31 + fileUri.hashCode()
         return __r
     }
     //pretty print
@@ -142,8 +147,9 @@ data class ElementUnderCaret (
         printer.println("ElementUnderCaret (")
         printer.indent {
             print("fqn = "); fqn.print(printer); println()
+            print("name = "); name.print(printer); println()
             print("className = "); className.print(printer); println()
-            print("filePath = "); filePath.print(printer); println()
+            print("fileUri = "); fileUri.print(printer); println()
         }
         printer.print(")")
     }

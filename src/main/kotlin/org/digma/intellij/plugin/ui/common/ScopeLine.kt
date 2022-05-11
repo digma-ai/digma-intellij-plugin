@@ -18,7 +18,7 @@ fun scopeLine(project: Project, scopeNameProducer: Producer<String>, scopeIconPr
 
     return panel {
         row("Scope: ") {
-            icon(Icons.INSIGHT_METHOD_SCOPE).bind(
+            icon(scopeIconProducer.produce()).bind(
                 JLabel::getIcon, JLabel::setIcon, PropertyBinding(
                     get = { scopeIconProducer.produce() },
                     set = {}))

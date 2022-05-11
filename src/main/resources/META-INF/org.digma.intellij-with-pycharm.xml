@@ -1,10 +1,10 @@
 <idea-plugin>
     <extensions defaultExtensionNs="com.intellij">
-        <projectService serviceImplementation="org.digma.intellij.plugin.psi.python.PythonLanguageService"
+        <projectService serviceImplementation="org.digma.intellij.plugin.pycharm.psi.python.PythonLanguageService"
                         serviceInterface="org.digma.intellij.plugin.psi.LanguageService"/>
-        <projectService serviceImplementation="org.digma.intellij.plugin.editor.PycharmEditorEventsHandler"
+        <projectService serviceImplementation="org.digma.intellij.plugin.pycharm.editor.PycharmEditorEventsHandler"
                         serviceInterface="org.digma.intellij.plugin.editor.EditorEventsHandler"/>
-        <projectService serviceImplementation="org.digma.intellij.plugin.psi.python.PythonDocumentAnalyzer"
+        <projectService serviceImplementation="org.digma.intellij.plugin.pycharm.psi.python.PythonDocumentAnalyzer"
                         serviceInterface="org.digma.intellij.plugin.document.DocumentAnalyzer"/>
     </extensions>
 

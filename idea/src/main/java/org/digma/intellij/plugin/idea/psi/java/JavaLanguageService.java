@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.psi.java;
+package org.digma.intellij.plugin.idea.psi.java;
 
 import com.intellij.lang.java.JavaLanguage;
 import com.intellij.openapi.project.Project;

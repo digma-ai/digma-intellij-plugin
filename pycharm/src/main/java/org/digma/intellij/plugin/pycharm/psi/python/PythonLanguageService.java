@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.psi.python;
+package org.digma.intellij.plugin.pycharm.psi.python;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;

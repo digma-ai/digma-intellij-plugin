@@ -30,6 +30,7 @@ fun envCombo(project: Project): JPanel {
                 comboBox(environments.toTypedArray())
                     .horizontalAlign(HorizontalAlign.FILL)
                     .apply {
+                        component.toolTipText = "Environment"
                         horizontalAlign(HorizontalAlign.FILL)
                         component.addActionListener {
                             it.source.apply {

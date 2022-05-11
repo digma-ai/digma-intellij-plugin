@@ -30,7 +30,7 @@ class CodeObjectsModel : Ext(SolutionModel.Solution) {
 
     init {
         setting(CSharp50Generator.Namespace, "Digma.Rider.Protocol")
-        setting(Kotlin11Generator.Namespace, "org.digma.rider.protocol")
+        setting(Kotlin11Generator.Namespace, "org.digma.intellij.plugin.rider.protocol")
 
         signal("reanalyze", PredefinedType.string)
         signal("reanalyzeAll", PredefinedType.void)

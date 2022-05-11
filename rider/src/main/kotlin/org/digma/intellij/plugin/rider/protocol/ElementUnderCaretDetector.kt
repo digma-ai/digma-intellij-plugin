@@ -1,4 +1,4 @@
-package org.digma.rider.protocol
+package org.digma.intellij.plugin.rider.protocol
 
 import com.intellij.openapi.project.Project
 import com.jetbrains.rd.platform.util.lifetime

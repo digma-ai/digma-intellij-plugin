@@ -1,8 +1,8 @@
-package org.digma.intellij.plugin.env;
+package org.digma.intellij.plugin.rider.env;
 
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.analytics.EnvironmentChanged;
-import org.digma.rider.protocol.CodeObjectHost;
+import org.digma.intellij.plugin.rider.protocol.CodeObjectHost;
 
 public class RiderEnvironmentChangedListener implements EnvironmentChanged {
 

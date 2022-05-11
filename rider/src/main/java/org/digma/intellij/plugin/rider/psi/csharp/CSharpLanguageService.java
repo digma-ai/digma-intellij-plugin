@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.psi.csharp;
+package org.digma.intellij.plugin.rider.psi.csharp;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;

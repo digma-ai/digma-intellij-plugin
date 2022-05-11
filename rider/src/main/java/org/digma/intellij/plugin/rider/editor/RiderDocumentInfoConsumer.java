@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.editor;
+package org.digma.intellij.plugin.rider.editor;
 
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.project.Project;
@@ -7,7 +7,7 @@ import org.digma.intellij.plugin.document.CodeLensProvider;
 import org.digma.intellij.plugin.document.DocumentInfoChanged;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.model.CodeLens;
-import org.digma.rider.protocol.CodeObjectHost;
+import org.digma.intellij.plugin.rider.protocol.CodeObjectHost;
 
 import java.util.List;
 

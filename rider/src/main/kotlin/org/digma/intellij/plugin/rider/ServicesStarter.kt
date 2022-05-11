@@ -1,14 +1,12 @@
-package org.digma.rider.plugin
+package org.digma.intellij.plugin.rider
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManagerListener
 import com.jetbrains.rd.platform.util.lifetime
 import com.jetbrains.rider.projectView.solution
 import org.digma.intellij.plugin.document.DocumentAnalyzer
-import org.digma.intellij.plugin.document.DocumentInfoChanged
-import org.digma.intellij.plugin.editor.RiderDocumentInfoConsumer
-import org.digma.intellij.plugin.env.RiderEnvironmentChangedListener
-import org.digma.intellij.plugin.psi.csharp.CSharpDocumentAnalyzer
+import org.digma.intellij.plugin.rider.editor.RiderDocumentInfoConsumer
+import org.digma.intellij.plugin.rider.env.RiderEnvironmentChangedListener
 
 class ServicesStarter : ProjectManagerListener {
 

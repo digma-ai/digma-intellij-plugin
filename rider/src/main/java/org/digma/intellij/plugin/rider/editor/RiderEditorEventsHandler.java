@@ -1,12 +1,13 @@
-package org.digma.intellij.plugin.editor;
+package org.digma.intellij.plugin.rider.editor;
 
 import com.intellij.openapi.project.Project;
+import org.digma.intellij.plugin.editor.EditorEventsHandler;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.ui.MethodContextUpdater;
-import org.digma.rider.protocol.ElementUnderCaretDetector;
+import org.digma.intellij.plugin.rider.protocol.ElementUnderCaretDetector;
 import org.jetbrains.annotations.NotNull;
 
-public class RiderEditorEventsHandler implements EditorEventsHandler{
+public class RiderEditorEventsHandler implements EditorEventsHandler {
 
     private Project project;
 

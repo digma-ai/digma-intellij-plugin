@@ -1,5 +1,5 @@
 @file:JvmName("Protocol")
-package org.digma.rider.protocol
+package org.digma.intellij.plugin.rider.protocol
 
 import com.intellij.psi.PsiFile
 import org.jetbrains.annotations.NotNull

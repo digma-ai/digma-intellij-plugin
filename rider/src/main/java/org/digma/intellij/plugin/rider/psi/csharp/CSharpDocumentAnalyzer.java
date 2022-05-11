@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.psi.csharp;
+package org.digma.intellij.plugin.rider.psi.csharp;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
@@ -6,7 +6,7 @@ import org.digma.intellij.plugin.document.DocumentAnalyzer;
 import org.digma.intellij.plugin.document.DocumentCodeObjectsChanged;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.model.DocumentInfo;
-import org.digma.rider.protocol.CodeObjectHost;
+import org.digma.intellij.plugin.rider.protocol.CodeObjectHost;
 
 public class CSharpDocumentAnalyzer implements DocumentAnalyzer , DocumentCodeObjectsChanged {
 

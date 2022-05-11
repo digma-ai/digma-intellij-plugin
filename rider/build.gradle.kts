@@ -143,7 +143,7 @@ rdgen {
 //    val RiderPluginId = properties("RiderPluginId",project).replace('.','/').toLowerCase()
     val modelDir = File(projectDir, "protocol/src/main/kotlin")
     val csOutput = File(projectDir, "Digma.Rider.Plugin/Digma.Rider/Protocol")
-    val ktOutput = File(projectDir, "src/main/kotlin/org/digma/rider/protocol")
+    val ktOutput = File(projectDir, "src/main/kotlin/org/digma/intellij/plugin/rider/protocol")
 
     verbose = true
     classpath(rdLibDirectory(project).canonicalPath + "/rider-model.jar")

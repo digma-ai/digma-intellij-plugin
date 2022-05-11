@@ -55,17 +55,6 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
             toolWindow.getContentManager().addContent(errorsContent);
         }
 
-        ComponentPredicate componentPredicate = new ComponentPredicate() {
-            @Override
-            public void addListener(@NotNull Function1<? super Boolean, Unit> function1) {
-
-            }
-
-            @Override
-            public Boolean invoke() {
-                return true;
-            }
-        };
 
         EditorInteractionService.getInstance(project).start(project);
     }

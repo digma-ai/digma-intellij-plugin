@@ -43,26 +43,26 @@ namespace Digma.Rider.Protocol
     //fields
     //public fields
     [NotNull] public IViewableProperty<Digma.Rider.Protocol.ElementUnderCaret> ElementUnderCaret => _ElementUnderCaret;
-    [NotNull] public ISignal<Unit> Refresh => _Refresh;
+    [NotNull] public ISignal<Unit> NotifyElementUnderCaret => _NotifyElementUnderCaret;
     
     //private fields
     [NotNull] private readonly RdProperty<Digma.Rider.Protocol.ElementUnderCaret> _ElementUnderCaret;
-    [NotNull] private readonly RdSignal<Unit> _Refresh;
+    [NotNull] private readonly RdSignal<Unit> _NotifyElementUnderCaret;
     
     //primary constructor
     private ElementUnderCaretModel(
       [NotNull] RdProperty<Digma.Rider.Protocol.ElementUnderCaret> elementUnderCaret,
-      [NotNull] RdSignal<Unit> refresh
+      [NotNull] RdSignal<Unit> notifyElementUnderCaret
     )
     {
       if (elementUnderCaret == null) throw new ArgumentNullException("elementUnderCaret");
-      if (refresh == null) throw new ArgumentNullException("refresh");
+      if (notifyElementUnderCaret == null) throw new ArgumentNullException("notifyElementUnderCaret");
       
       _ElementUnderCaret = elementUnderCaret;
-      _Refresh = refresh;
+      _NotifyElementUnderCaret = notifyElementUnderCaret;
       _ElementUnderCaret.OptimizeNested = true;
       BindableChildren.Add(new KeyValuePair<string, object>("elementUnderCaret", _ElementUnderCaret));
-      BindableChildren.Add(new KeyValuePair<string, object>("refresh", _Refresh));
+      BindableChildren.Add(new KeyValuePair<string, object>("notifyElementUnderCaret", _NotifyElementUnderCaret));
     }
     //secondary constructor
     internal ElementUnderCaretModel (
@@ -75,7 +75,7 @@ namespace Digma.Rider.Protocol
     
     
     
-    protected override long SerializationHash => 4784696159160401609L;
+    protected override long SerializationHash => -7498972151373417626L;
     
     protected override Action<ISerializers> Register => RegisterDeclaredTypesSerializers;
     public static void RegisterDeclaredTypesSerializers(ISerializers serializers)
@@ -97,7 +97,7 @@ namespace Digma.Rider.Protocol
       printer.Println("ElementUnderCaretModel (");
       using (printer.IndentCookie()) {
         printer.Print("elementUnderCaret = "); _ElementUnderCaret.PrintEx(printer); printer.Println();
-        printer.Print("refresh = "); _Refresh.PrintEx(printer); printer.Println();
+        printer.Print("notifyElementUnderCaret = "); _NotifyElementUnderCaret.PrintEx(printer); printer.Println();
       }
       printer.Print(")");
     }

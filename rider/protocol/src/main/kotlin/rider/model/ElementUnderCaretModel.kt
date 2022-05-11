@@ -19,7 +19,7 @@ class ElementUnderCaretModel : Ext(SolutionModel.Solution) {
         setting(CSharp50Generator.Namespace, "Digma.Rider.Protocol")
         setting(Kotlin11Generator.Namespace, "org.digma.rider.protocol")
         property("elementUnderCaret", ElementUnderCaret)
-        signal("refresh", PredefinedType.void)
+        signal("notifyElementUnderCaret", PredefinedType.void)
     }
 
 }

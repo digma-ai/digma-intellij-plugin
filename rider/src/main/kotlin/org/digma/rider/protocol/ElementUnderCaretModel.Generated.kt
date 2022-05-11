@@ -19,7 +19,7 @@ import kotlin.jvm.JvmStatic
  */
 class ElementUnderCaretModel private constructor(
     private val _elementUnderCaret: RdOptionalProperty<ElementUnderCaret>,
-    private val _refresh: RdSignal<Unit>
+    private val _notifyElementUnderCaret: RdSignal<Unit>
 ) : RdExtBase() {
     //companion
     
@@ -32,7 +32,7 @@ class ElementUnderCaretModel private constructor(
         
         
         
-        const val serializationHash = 4784696159160401609L
+        const val serializationHash = -7498972151373417626L
         
     }
     override val serializersOwner: ISerializersOwner get() = ElementUnderCaretModel
@@ -40,7 +40,7 @@ class ElementUnderCaretModel private constructor(
     
     //fields
     val elementUnderCaret: IOptProperty<ElementUnderCaret> get() = _elementUnderCaret
-    val refresh: ISignal<Unit> get() = _refresh
+    val notifyElementUnderCaret: ISignal<Unit> get() = _notifyElementUnderCaret
     //methods
     //initializer
     init {
@@ -49,7 +49,7 @@ class ElementUnderCaretModel private constructor(
     
     init {
         bindableChildren.add("elementUnderCaret" to _elementUnderCaret)
-        bindableChildren.add("refresh" to _refresh)
+        bindableChildren.add("notifyElementUnderCaret" to _notifyElementUnderCaret)
     }
     
     //secondary constructor
@@ -66,7 +66,7 @@ class ElementUnderCaretModel private constructor(
         printer.println("ElementUnderCaretModel (")
         printer.indent {
             print("elementUnderCaret = "); _elementUnderCaret.print(printer); println()
-            print("refresh = "); _refresh.print(printer); println()
+            print("notifyElementUnderCaret = "); _notifyElementUnderCaret.print(printer); println()
         }
         printer.print(")")
     }
@@ -74,7 +74,7 @@ class ElementUnderCaretModel private constructor(
     override fun deepClone(): ElementUnderCaretModel   {
         return ElementUnderCaretModel(
             _elementUnderCaret.deepClonePolymorphic(),
-            _refresh.deepClonePolymorphic()
+            _notifyElementUnderCaret.deepClonePolymorphic()
         )
     }
     //contexts

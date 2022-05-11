@@ -88,7 +88,7 @@ namespace Digma.Rider.Protocol
                     var className = PsiUtils.GetClassName(functionDeclaration);
                     var fileUri = Identities.ComputeFileUri(psiSourceFile);
                     _model.ElementUnderCaret.Value = new ElementUnderCaret(methodFqn, methodName, className, fileUri);
-                    _model.Refresh.Fire(Unit.Instance);
+                    _model.NotifyElementUnderCaret.Fire(Unit.Instance);
                 }
                 else
                 {
@@ -102,7 +102,7 @@ namespace Digma.Rider.Protocol
         private void EmptyModel()
         {
             _model.ElementUnderCaret.Value = new ElementUnderCaret(string.Empty,string.Empty,string.Empty, string.Empty);
-            _model.Refresh.Fire(Unit.Instance);
+            _model.NotifyElementUnderCaret.Fire(Unit.Instance);
         }
 
 

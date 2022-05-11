@@ -18,18 +18,18 @@ class ElementUnderCaretDetector(private val project: Project) {
         //start is invoked only when the tool window opens and maybe there is already something in the protocol.
         val elementUnderCaret = model.elementUnderCaret.valueOrNull
         if (elementUnderCaret != null){
-            notifyMethodUnderCaret(elementUnderCaret,methodContextUpdated)
+            notifyElementUnderCaret(elementUnderCaret,methodContextUpdated)
         }
 
-        model.refresh.advise(project.lifetime) {
+        model.notifyElementUnderCaret.advise(project.lifetime) {
             val elementUnderCaret: ElementUnderCaret? = model.elementUnderCaret.valueOrNull
 
-            notifyMethodUnderCaret(elementUnderCaret,methodContextUpdated)
+            notifyElementUnderCaret(elementUnderCaret,methodContextUpdated)
 
         }
     }
 
-    private fun notifyMethodUnderCaret(
+    private fun notifyElementUnderCaret(
         elementUnderCaret: ElementUnderCaret?,
         methodContextUpdated: MethodContextUpdater
     ) {

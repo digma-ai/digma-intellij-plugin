@@ -5,6 +5,9 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.ContentFactory;
+import com.intellij.ui.layout.ComponentPredicate;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function1;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.service.EditorInteractionService;
 import org.digma.intellij.plugin.ui.errors.ErrorsPanelKt;
@@ -52,6 +55,17 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
             toolWindow.getContentManager().addContent(errorsContent);
         }
 
+        ComponentPredicate componentPredicate = new ComponentPredicate() {
+            @Override
+            public void addListener(@NotNull Function1<? super Boolean, Unit> function1) {
+
+            }
+
+            @Override
+            public Boolean invoke() {
+                return true;
+            }
+        };
 
         EditorInteractionService.getInstance(project).start(project);
     }

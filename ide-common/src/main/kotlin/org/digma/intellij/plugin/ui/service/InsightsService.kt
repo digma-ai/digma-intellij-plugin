@@ -18,6 +18,7 @@ class InsightsService(val project: Project) {
     ) {
         model.methodName = methodUnderCaret.name
         model.insightsCount = 0;
+        model.className = methodUnderCaret.className
         methodCodeObjectSummary?.let { it ->
             it.insightsCount.also {
                 model.insightsCount = it

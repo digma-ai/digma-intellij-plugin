@@ -8,6 +8,7 @@ import com.intellij.ui.dsl.builder.RowLayout
 import com.intellij.ui.dsl.builder.bindItem
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
+import com.jetbrains.rider.xamarin.xcAssets.presenters.getImageTooltipText
 import org.digma.intellij.plugin.analytics.Environment
 import javax.swing.JPanel
 
@@ -25,7 +26,7 @@ fun envCombo(project: Project): JPanel {
     return panel {
         panel {
             row {
-                label("Env:")
+                label("Environment:")
                 comboBox(environments.toTypedArray())
                     .horizontalAlign(HorizontalAlign.FILL)
                     .apply {

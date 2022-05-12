@@ -1,8 +1,7 @@
 package org.digma.intellij.plugin.analytics;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import jakarta.ws.rs.InternalServerErrorException;
-import jakarta.ws.rs.ProcessingException;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import okhttp3.mockwebserver.MockResponse;
 import org.junit.jupiter.api.Test;
 
@@ -53,10 +52,12 @@ public class EnvironmentTests extends AbstractAnalyticsProviderTest {
         mockBackEnd.enqueue(new MockResponse()
                 .addHeader("Content-Type", "application/json"));
 
-        AnalyticsProvider restAnalyticsProvider = new RestAnalyticsProvider(baseUrl);
-        List<String> envsResult = restAnalyticsProvider.getEnvironments();
+        AnalyticsProviderException exception = assertThrows(AnalyticsProviderException.class, () -> {
+            AnalyticsProvider restAnalyticsProvider = new RestAnalyticsProvider(baseUrl);
+            restAnalyticsProvider.getEnvironments();
+        });
 
-        assertNull(envsResult, "environments result should be null");
+        assertEquals(MismatchedInputException.class, exception.getCause().getClass());
     }
 
     @Test
@@ -66,12 +67,12 @@ public class EnvironmentTests extends AbstractAnalyticsProviderTest {
                 .setResponseCode(500)
                 .addHeader("Content-Type", "application/json"));
 
-        InternalServerErrorException exception = assertThrows(InternalServerErrorException.class, () -> {
+        AnalyticsProviderException exception = assertThrows(AnalyticsProviderException.class, () -> {
             AnalyticsProvider restAnalyticsProvider = new RestAnalyticsProvider(baseUrl);
             restAnalyticsProvider.getEnvironments();
         });
 
-        assertEquals(500, exception.getResponse().getStatus());
+        assertEquals(500, exception.getResponseCode());
     }
 
 
@@ -82,12 +83,12 @@ public class EnvironmentTests extends AbstractAnalyticsProviderTest {
                 .setBody(objectMapper.writeValueAsString("MYENV"))
                 .addHeader("Content-Type", "application/json"));
 
-        ProcessingException exception = assertThrows(ProcessingException.class, () -> {
+        AnalyticsProviderException exception = assertThrows(AnalyticsProviderException.class, () -> {
             AnalyticsProvider restAnalyticsProvider = new RestAnalyticsProvider(baseUrl);
             restAnalyticsProvider.getEnvironments();
         });
 
-        assertTrue(exception.getMessage().contains("jakarta.ws.rs.ProcessingException: com.fasterxml.jackson.databind.exc.MismatchedInputException: Cannot construct instance of `java.util.ArrayList` (although at least one Creator exists): no String-argument constructor/factory method to deserialize from String value ('MYENV')"));
+        assertEquals(MismatchedInputException.class, exception.getCause().getClass());
     }
 
 

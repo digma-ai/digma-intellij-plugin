@@ -6,8 +6,8 @@ plugins {
 
 dependencies {
     implementation(project(":model"))
-    implementation(libs.resteasy.client)
-    implementation(libs.resteasy.jackson2.provider)
+    implementation(libs.retrofit.client)
+    implementation(libs.retrofit.jackson)
 }
 
 

@@ -1,8 +1,7 @@
 package org.digma.intellij.plugin.analytics;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import jakarta.ws.rs.InternalServerErrorException;
-import jakarta.ws.rs.ProcessingException;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import okhttp3.mockwebserver.MockResponse;
 import org.digma.intellij.plugin.model.CodeObjectSummaryType;
 import org.digma.intellij.plugin.model.rest.*;
@@ -108,11 +107,13 @@ public class SummariesTests extends AbstractAnalyticsProviderTest {
         mockBackEnd.enqueue(new MockResponse()
                 .addHeader("Content-Type", "application/json"));
 
-        CodeObjectSummaryRequest summaryRequest = new CodeObjectSummaryRequest("myenv", Collections.singletonList("nonexistingid"));
-        AnalyticsProvider restAnalyticsProvider = new RestAnalyticsProvider(baseUrl);
-        List<CodeObjectSummary> summariesResult = restAnalyticsProvider.getSummaries(summaryRequest);
+        AnalyticsProviderException exception = assertThrows(AnalyticsProviderException.class, () -> {
+            CodeObjectSummaryRequest summaryRequest = new CodeObjectSummaryRequest("myenv", Collections.singletonList("nonexistingid"));
+            AnalyticsProvider restAnalyticsProvider = new RestAnalyticsProvider(baseUrl);
+            List<CodeObjectSummary> summariesResult = restAnalyticsProvider.getSummaries(summaryRequest);
+        });
 
-        assertNull(summariesResult, "summaries result should be null");
+        assertEquals(MismatchedInputException.class, exception.getCause().getClass());
     }
 
     @Test
@@ -122,13 +123,13 @@ public class SummariesTests extends AbstractAnalyticsProviderTest {
                 .setResponseCode(500)
                 .addHeader("Content-Type", "application/json"));
 
-        InternalServerErrorException exception = assertThrows(InternalServerErrorException.class, () -> {
+        AnalyticsProviderException exception = assertThrows(AnalyticsProviderException.class, () -> {
             CodeObjectSummaryRequest summaryRequest = new CodeObjectSummaryRequest("myenv", Collections.singletonList("nonexistingid"));
             AnalyticsProvider restAnalyticsProvider = new RestAnalyticsProvider(baseUrl);
             restAnalyticsProvider.getSummaries(summaryRequest);
         });
 
-        assertEquals(500, exception.getResponse().getStatus());
+        assertEquals(500, exception.getResponseCode());
     }
 
 
@@ -139,13 +140,13 @@ public class SummariesTests extends AbstractAnalyticsProviderTest {
                 .setBody(objectMapper.writeValueAsString("mystring"))
                 .addHeader("Content-Type", "application/json"));
 
-        ProcessingException exception = assertThrows(ProcessingException.class, () -> {
+        AnalyticsProviderException exception = assertThrows(AnalyticsProviderException.class, () -> {
             CodeObjectSummaryRequest summaryRequest = new CodeObjectSummaryRequest("myenv", Collections.singletonList("nonexistingid"));
             AnalyticsProvider restAnalyticsProvider = new RestAnalyticsProvider(baseUrl);
             restAnalyticsProvider.getSummaries(summaryRequest);
         });
 
-        assertTrue(exception.getMessage().contains("com.fasterxml.jackson.databind.exc.MismatchedInputException: Cannot deserialize value of type `java.util.ArrayList<org.digma.intellij.plugin.model.rest.CodeObjectSummary>` from String value (token `JsonToken.VALUE_STRING`)"));
+        assertEquals(MismatchedInputException.class, exception.getCause().getClass());
     }
 
 

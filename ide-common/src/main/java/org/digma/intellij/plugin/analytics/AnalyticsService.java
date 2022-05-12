@@ -56,9 +56,9 @@ public class AnalyticsService implements AnalyticsProvider, Disposable {
     }
 
 
+
     /**
      * A proxy to swallow all AnalyticsProvider exceptions.
-     * could be implemented on RestAnalyticsProvider, but I prefer to keep RestAnalyticsProvider pure,throwing exceptions and testable.
      * the AnalyticsService class is an IDE component and better not to throw exceptions.
      */
     private class AnalyticsInvocationHandler implements InvocationHandler {
@@ -74,24 +74,10 @@ public class AnalyticsService implements AnalyticsProvider, Disposable {
         public Object invoke(Object proxy, Method method, Object[] args)
                 throws Throwable {
             try {
-                //fixme!! maybe replace the rest framework with one that works nice in intellij
-                // see:https://github.com/resteasy/resteasy/discussions/3096
-                //resteasy can't load ProxyBuilderImpl and fails on CNFE. intellij has its own PluginClassLoader ,
-                // but resteasy's code replaces intellij's PluginClassLoader with currentThread.getContextClassLoader()
-                // before loading ProxyBuilderImpl and the currentThread.getContextClassLoader() doesn't know how to load
-                // classes from a plugin zip.
-                ClassLoader current = Thread.currentThread().getContextClassLoader();
-                Thread.currentThread().setContextClassLoader(AnalyticsProvider.class.getClassLoader());
-
-                try {
-                    return method.invoke(analyticsProvider, args);
-                }finally {
-                    Thread.currentThread().setContextClassLoader(current);
-                }
-
+                return method.invoke(analyticsProvider, args);
             } catch (Exception e) {
-                Log.log(LOGGER::error, "error invoking {}, exception {}", method.getName(), e);
-                //todo: maybe return empty object
+                Log.log(LOGGER::error, "error invoking AnalyticsProvide.{}, exception {}", method.getName(), e);
+                //todo: we probably need to show some error message to user
                 return null;
             }
 

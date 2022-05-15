@@ -2,11 +2,11 @@ package org.digma.intellij.plugin.ui.service
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogPanel
-import org.digma.intellij.plugin.model.MethodUnderCaret
-import org.digma.intellij.plugin.model.rest.MethodCodeObjectSummary
-import org.digma.intellij.plugin.ui.model.ErrorsModel
+import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
+import org.digma.intellij.plugin.model.rest.summary.MethodCodeObjectSummary
+import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 
-class ErrorsService(val project: Project) {
+class ErrorsViewService(val project: Project) {
 
     lateinit var panel: DialogPanel
     lateinit var model: ErrorsModel;

@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.model.rest
+package org.digma.intellij.plugin.model.rest.summary
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import java.beans.ConstructorProperties

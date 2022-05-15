@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.model
+package org.digma.intellij.plugin.model.discovery
 
 interface CodeObjectInfo {
     val id: String

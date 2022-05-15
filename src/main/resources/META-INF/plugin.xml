@@ -37,8 +37,10 @@
         <projectService serviceImplementation="org.digma.intellij.plugin.document.CodeLensProvider"/>
 
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.ui.service.InsightsService"/>
-        <projectService serviceImplementation="org.digma.intellij.plugin.ui.service.ErrorsService"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.ui.service.InsightsViewService"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.ui.service.ErrorsViewService"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.insights.InsightsProvider"/>
 
 
     </extensions>

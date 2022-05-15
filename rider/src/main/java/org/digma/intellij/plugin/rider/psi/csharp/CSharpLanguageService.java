@@ -4,7 +4,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.jetbrains.rider.ideaInterop.fileTypes.csharp.CSharpLanguage;
-import org.digma.intellij.plugin.model.MethodUnderCaret;
+import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.jetbrains.annotations.Nullable;
 

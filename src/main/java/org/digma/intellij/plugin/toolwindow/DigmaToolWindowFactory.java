@@ -5,15 +5,12 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.ContentFactory;
-import com.intellij.ui.layout.ComponentPredicate;
-import kotlin.Unit;
-import kotlin.jvm.functions.Function1;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.service.EditorInteractionService;
 import org.digma.intellij.plugin.ui.errors.ErrorsPanelKt;
 import org.digma.intellij.plugin.ui.insights.InsightsPanelKt;
-import org.digma.intellij.plugin.ui.service.ErrorsService;
-import org.digma.intellij.plugin.ui.service.InsightsService;
+import org.digma.intellij.plugin.ui.service.ErrorsViewService;
+import org.digma.intellij.plugin.ui.service.InsightsViewService;
 import org.jetbrains.annotations.NotNull;
 
 
@@ -39,18 +36,18 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
 
         {
             var insightsPanel = InsightsPanelKt.insightsPanel(project);
-            var insightsService = project.getService(InsightsService.class);
-            insightsService.setModel(InsightsPanelKt.getInsightsModel());
-            insightsService.setPanel(insightsPanel);
+            var insightsViewService = project.getService(InsightsViewService.class);
+            insightsViewService.setModel(InsightsPanelKt.getInsightsModel());
+            insightsViewService.setPanel(insightsPanel);
             var insightsContent = contentFactory.createContent(insightsPanel, "Insights", false);
             toolWindow.getContentManager().addContent(insightsContent);
         }
 
         {
             var errorsPanel = ErrorsPanelKt.errorsPanel(project);
-            var errorsService = project.getService(ErrorsService.class);
-            errorsService.setModel(ErrorsPanelKt.getErrorsModel());
-            errorsService.setPanel(errorsPanel);
+            var errorsViewService = project.getService(ErrorsViewService.class);
+            errorsViewService.setModel(ErrorsPanelKt.getErrorsModel());
+            errorsViewService.setPanel(errorsPanel);
             var errorsContent = contentFactory.createContent(errorsPanel, "Errors", false);
             toolWindow.getContentManager().addContent(errorsContent);
         }

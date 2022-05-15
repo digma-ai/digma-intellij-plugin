@@ -6,32 +6,32 @@ import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.editor.EditorEventsHandler;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.MethodUnderCaret;
-import org.digma.intellij.plugin.model.rest.MethodCodeObjectSummary;
+import org.digma.intellij.plugin.model.discovery.ElementUnderCaret;
+import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.psi.LanguageService;
-import org.digma.intellij.plugin.ui.MethodContextUpdater;
-import org.digma.intellij.plugin.ui.service.ErrorsService;
-import org.digma.intellij.plugin.ui.service.InsightsService;
+import org.digma.intellij.plugin.ui.CaretContextService;
+import org.digma.intellij.plugin.ui.service.ErrorsViewService;
+import org.digma.intellij.plugin.ui.service.InsightsViewService;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * A service to implement the interactions between listeners and UI components.
  * All work should be done in the EDT.
  */
-public class EditorInteractionService implements MethodContextUpdater, Disposable {
+public class EditorInteractionService implements CaretContextService, Disposable {
 
     private static final Logger LOGGER = Logger.getInstance(EditorInteractionService.class);
 
     private Project project;
 
-    private final InsightsService insightsService;
-    private final ErrorsService errorsService;
+    private final InsightsViewService insightsViewService;
+    private final ErrorsViewService errorsViewService;
     private final DocumentInfoService documentInfoService;
 
     public EditorInteractionService(Project project) {
         this.project = project;
-        insightsService = project.getService(InsightsService.class);
-        errorsService = project.getService(ErrorsService.class);
+        insightsViewService = project.getService(InsightsViewService.class);
+        errorsViewService = project.getService(ErrorsViewService.class);
         documentInfoService = project.getService(DocumentInfoService.class);
     }
 
@@ -40,16 +40,17 @@ public class EditorInteractionService implements MethodContextUpdater, Disposabl
     }
 
     @Override
-    public void updateViewContent(MethodUnderCaret methodUnderCaret) {
+    public void contextChanged(MethodUnderCaret elementUnderCaret) {
 
-        MethodCodeObjectSummary methodCodeObjectSummary = documentInfoService.getMethodSummaries(methodUnderCaret);
-        insightsService.updateSelectedMethod(methodUnderCaret,methodCodeObjectSummary);
+        Log.log(LOGGER::info, "contextChanged: {}",elementUnderCaret);
+        insightsViewService.contextChanged(elementUnderCaret);
         //todo: errors
     }
 
     @Override
-    public void clearViewContent() {
-        insightsService.empty();
+    public void contextEmpty() {
+        //todo: implement
+        insightsViewService.empty();
     }
 
     @Override

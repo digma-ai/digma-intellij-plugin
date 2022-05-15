@@ -96,7 +96,7 @@ namespace Digma.Rider.Protocol
     
     
     
-    protected override long SerializationHash => -4511994912274114320L;
+    protected override long SerializationHash => -2027658787819476082L;
     
     protected override Action<ISerializers> Register => RegisterDeclaredTypesSerializers;
     public static void RegisterDeclaredTypesSerializers(ISerializers serializers)
@@ -351,7 +351,7 @@ namespace Digma.Rider.Protocol
     [NotNull] public string Name {get; private set;}
     [NotNull] public string ContainingClass {get; private set;}
     [NotNull] public string ContainingNamespace {get; private set;}
-    [NotNull] public string ContainingFile {get; private set;}
+    [NotNull] public string ContainingFileUri {get; private set;}
     
     //private fields
     //primary constructor
@@ -360,30 +360,30 @@ namespace Digma.Rider.Protocol
       [NotNull] string name,
       [NotNull] string containingClass,
       [NotNull] string containingNamespace,
-      [NotNull] string containingFile
+      [NotNull] string containingFileUri
     )
     {
       if (id == null) throw new ArgumentNullException("id");
       if (name == null) throw new ArgumentNullException("name");
       if (containingClass == null) throw new ArgumentNullException("containingClass");
       if (containingNamespace == null) throw new ArgumentNullException("containingNamespace");
-      if (containingFile == null) throw new ArgumentNullException("containingFile");
+      if (containingFileUri == null) throw new ArgumentNullException("containingFileUri");
       
       Id = id;
       Name = name;
       ContainingClass = containingClass;
       ContainingNamespace = containingNamespace;
-      ContainingFile = containingFile;
+      ContainingFileUri = containingFileUri;
     }
     //secondary constructor
     //deconstruct trait
-    public void Deconstruct([NotNull] out string id, [NotNull] out string name, [NotNull] out string containingClass, [NotNull] out string containingNamespace, [NotNull] out string containingFile)
+    public void Deconstruct([NotNull] out string id, [NotNull] out string name, [NotNull] out string containingClass, [NotNull] out string containingNamespace, [NotNull] out string containingFileUri)
     {
       id = Id;
       name = Name;
       containingClass = ContainingClass;
       containingNamespace = ContainingNamespace;
-      containingFile = ContainingFile;
+      containingFileUri = ContainingFileUri;
     }
     //statics
     
@@ -393,8 +393,8 @@ namespace Digma.Rider.Protocol
       var name = reader.ReadString();
       var containingClass = reader.ReadString();
       var containingNamespace = reader.ReadString();
-      var containingFile = reader.ReadString();
-      var _result = new RiderMethodInfo(id, name, containingClass, containingNamespace, containingFile);
+      var containingFileUri = reader.ReadString();
+      var _result = new RiderMethodInfo(id, name, containingClass, containingNamespace, containingFileUri);
       return _result;
     };
     
@@ -404,7 +404,7 @@ namespace Digma.Rider.Protocol
       writer.Write(value.Name);
       writer.Write(value.ContainingClass);
       writer.Write(value.ContainingNamespace);
-      writer.Write(value.ContainingFile);
+      writer.Write(value.ContainingFileUri);
     };
     
     //constants
@@ -423,7 +423,7 @@ namespace Digma.Rider.Protocol
     {
       if (ReferenceEquals(null, other)) return false;
       if (ReferenceEquals(this, other)) return true;
-      return Id == other.Id && Name == other.Name && ContainingClass == other.ContainingClass && ContainingNamespace == other.ContainingNamespace && ContainingFile == other.ContainingFile;
+      return Id == other.Id && Name == other.Name && ContainingClass == other.ContainingClass && ContainingNamespace == other.ContainingNamespace && ContainingFileUri == other.ContainingFileUri;
     }
     //hash code trait
     public override int GetHashCode()
@@ -434,7 +434,7 @@ namespace Digma.Rider.Protocol
         hash = hash * 31 + Name.GetHashCode();
         hash = hash * 31 + ContainingClass.GetHashCode();
         hash = hash * 31 + ContainingNamespace.GetHashCode();
-        hash = hash * 31 + ContainingFile.GetHashCode();
+        hash = hash * 31 + ContainingFileUri.GetHashCode();
         return hash;
       }
     }
@@ -447,7 +447,7 @@ namespace Digma.Rider.Protocol
         printer.Print("name = "); Name.PrintEx(printer); printer.Println();
         printer.Print("containingClass = "); ContainingClass.PrintEx(printer); printer.Println();
         printer.Print("containingNamespace = "); ContainingNamespace.PrintEx(printer); printer.Println();
-        printer.Print("containingFile = "); ContainingFile.PrintEx(printer); printer.Println();
+        printer.Print("containingFileUri = "); ContainingFileUri.PrintEx(printer); printer.Println();
       }
       printer.Print(")");
     }

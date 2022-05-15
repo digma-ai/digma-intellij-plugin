@@ -2,10 +2,12 @@ package org.digma.intellij.plugin.document;
 
 import com.intellij.psi.PsiFile;
 import org.digma.intellij.plugin.analytics.AnalyticsProvider;
-import org.digma.intellij.plugin.model.DocumentInfo;
-import org.digma.intellij.plugin.model.rest.CodeObjectSummary;
-import org.digma.intellij.plugin.model.rest.CodeObjectSummaryRequest;
-import org.digma.intellij.plugin.model.rest.MethodCodeObjectSummary;
+import org.digma.intellij.plugin.model.discovery.DocumentInfo;
+import org.digma.intellij.plugin.model.discovery.MethodInfo;
+import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
+import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
+import org.digma.intellij.plugin.model.rest.summary.MethodCodeObjectSummary;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -35,8 +37,6 @@ class DocumentInfoContainer {
         }else{
             summaries.forEach(codeObjectSummary -> methodSummaries.put(codeObjectSummary.getCodeObjectId(), codeObjectSummary));
         }
-
-
     }
 
     public Map<String, CodeObjectSummary> getSummaries() {
@@ -45,5 +45,10 @@ class DocumentInfoContainer {
 
     public MethodCodeObjectSummary getMethodSummaries(String methodId) {
         return (MethodCodeObjectSummary) methodSummaries.get(methodId);
+    }
+
+    @Nullable
+    public MethodInfo getMethodInfo(String id) {
+        return documentInfo.getMethods().get(id);
     }
 }

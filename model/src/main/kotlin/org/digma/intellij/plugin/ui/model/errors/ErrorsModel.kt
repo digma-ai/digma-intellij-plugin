@@ -1,9 +1,11 @@
-package org.digma.intellij.plugin.ui.model
+package org.digma.intellij.plugin.ui.model.errors
+
+import org.digma.intellij.plugin.ui.model.PanelModel
 
 data class ErrorsModel(
     var errorsCount: Int = 0,
     var methodName: String = "",
-    var className: String = ""):PanelModel {
+    var className: String = ""): PanelModel {
 
 
     override fun count(): String {

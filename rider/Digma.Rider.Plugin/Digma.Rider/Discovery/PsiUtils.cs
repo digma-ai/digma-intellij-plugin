@@ -26,9 +26,9 @@ namespace Digma.Rider.Discovery
             return functionDeclaration.DeclaredName;
         }
 
-        public static string GetContainingFile(ICSharpFunctionDeclaration functionDeclaration)
-        {
-            return functionDeclaration.GetSourceFile().GetLocation().FullPath;
-        }
+        // public static string GetContainingFile(ICSharpFunctionDeclaration functionDeclaration)
+        // {
+        //     return functionDeclaration.GetSourceFile().GetLocation().FullPath;
+        // }
     }
 }

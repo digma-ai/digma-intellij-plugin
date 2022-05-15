@@ -6,7 +6,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.MethodUnderCaret;
+import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.jetbrains.annotations.Nullable;
 
 public interface LanguageService {

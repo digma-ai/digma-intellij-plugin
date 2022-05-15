@@ -37,7 +37,7 @@ class CodeObjectsModel private constructor(
         
         
         
-        const val serializationHash = -4511994912274114320L
+        const val serializationHash = -2027658787819476082L
         
     }
     override val serializersOwner: ISerializersOwner get() = CodeObjectsModel
@@ -262,7 +262,7 @@ data class RiderMethodInfo (
     val name: String,
     val containingClass: String,
     val containingNamespace: String,
-    val containingFile: String
+    val containingFileUri: String
 ) : IPrintable {
     //companion
     
@@ -275,8 +275,8 @@ data class RiderMethodInfo (
             val name = buffer.readString()
             val containingClass = buffer.readString()
             val containingNamespace = buffer.readString()
-            val containingFile = buffer.readString()
-            return RiderMethodInfo(id, name, containingClass, containingNamespace, containingFile)
+            val containingFileUri = buffer.readString()
+            return RiderMethodInfo(id, name, containingClass, containingNamespace, containingFileUri)
         }
         
         override fun write(ctx: SerializationCtx, buffer: AbstractBuffer, value: RiderMethodInfo)  {
@@ -284,7 +284,7 @@ data class RiderMethodInfo (
             buffer.writeString(value.name)
             buffer.writeString(value.containingClass)
             buffer.writeString(value.containingNamespace)
-            buffer.writeString(value.containingFile)
+            buffer.writeString(value.containingFileUri)
         }
         
         
@@ -304,7 +304,7 @@ data class RiderMethodInfo (
         if (name != other.name) return false
         if (containingClass != other.containingClass) return false
         if (containingNamespace != other.containingNamespace) return false
-        if (containingFile != other.containingFile) return false
+        if (containingFileUri != other.containingFileUri) return false
         
         return true
     }
@@ -315,7 +315,7 @@ data class RiderMethodInfo (
         __r = __r*31 + name.hashCode()
         __r = __r*31 + containingClass.hashCode()
         __r = __r*31 + containingNamespace.hashCode()
-        __r = __r*31 + containingFile.hashCode()
+        __r = __r*31 + containingFileUri.hashCode()
         return __r
     }
     //pretty print
@@ -326,7 +326,7 @@ data class RiderMethodInfo (
             print("name = "); name.print(printer); println()
             print("containingClass = "); containingClass.print(printer); println()
             print("containingNamespace = "); containingNamespace.print(printer); println()
-            print("containingFile = "); containingFile.print(printer); println()
+            print("containingFileUri = "); containingFileUri.print(printer); println()
         }
         printer.print(")")
     }

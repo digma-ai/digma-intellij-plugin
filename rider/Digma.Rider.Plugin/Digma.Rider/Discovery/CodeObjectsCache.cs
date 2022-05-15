@@ -35,15 +35,15 @@ namespace Digma.Rider.Discovery
                 return null;
 
             var psiFiles = sourceFile.GetPsiFiles<CSharpLanguage>();
-            var docId = Identities.ComputeFileUri(sourceFile);
-            var document = new Document(docId);
+            var fileUri = Identities.ComputeFileUri(sourceFile);
+            var document = new Document(fileUri);
             foreach (var psiFile in psiFiles)
             {
                 var cSharpFile = psiFile.Is<ICSharpFile>();
                 if (cSharpFile == null) 
                     continue;
                 
-                var discoveryProcessor = new CodeObjectsDiscoveryProcessor();
+                var discoveryProcessor = new CodeObjectsDiscoveryProcessor(fileUri);
                 cSharpFile.ProcessDescendants(discoveryProcessor);
                 var methodInfos = discoveryProcessor.MethodInfos;
                 foreach (var riderMethodInfo in methodInfos)

@@ -5,10 +5,10 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.MethodUnderCaret;
+import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.psi.PsiUtils;
-import org.digma.intellij.plugin.ui.MethodContextUpdater;
+import org.digma.intellij.plugin.ui.CaretContextService;
 import org.jetbrains.annotations.NotNull;
 
 public abstract class LocalPsiEditorEventsHandler implements EditorEventsHandler, Disposable {
@@ -18,7 +18,7 @@ public abstract class LocalPsiEditorEventsHandler implements EditorEventsHandler
     private EditorListener editorListener;
     private Project project;
     private LanguageService languageService;
-    private MethodContextUpdater methodContextUpdater;
+    private CaretContextService caretContextService;
 
 
     @Override
@@ -28,26 +28,26 @@ public abstract class LocalPsiEditorEventsHandler implements EditorEventsHandler
     }
 
 
-    public void start(@NotNull Project project, MethodContextUpdater methodContextUpdater, LanguageService languageService) {
+    public void start(@NotNull Project project, CaretContextService caretContextService, LanguageService languageService) {
         Log.log(LOGGER::debug, "starting..");
         this.project = project;
         this.languageService = languageService;
-        this.methodContextUpdater = methodContextUpdater;
+        this.caretContextService = caretContextService;
         editorListener = new EditorListener(project, this);
         editorListener.start();
     }
 
-    public boolean isSupportedFile(VirtualFile newFile) {
+    boolean isSupportedFile(VirtualFile newFile) {
         return languageService.isSupportedFile(project, newFile);
     }
 
 
-    public void emptySelection() {
-        methodContextUpdater.clearViewContent();
+    void emptySelection() {
+        caretContextService.contextEmpty();
     }
 
-    public void updateCurrentElement(int caretOffset, VirtualFile file) {
+    void updateCurrentElement(int caretOffset, VirtualFile file) {
         MethodUnderCaret methodUnderCaret = PsiUtils.detectMethodUnderCaret(project,languageService,caretOffset,file);
-        methodContextUpdater.updateViewContent(methodUnderCaret);
+        caretContextService.contextChanged(methodUnderCaret);
     }
 }

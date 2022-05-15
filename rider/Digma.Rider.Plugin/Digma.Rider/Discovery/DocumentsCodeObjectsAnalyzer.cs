@@ -113,15 +113,15 @@ namespace Digma.Rider.Discovery
 
                 Log(_logger, "Found PsiSourceFile {0} for TextControl {1}", psiSourceFile, textControl.Document);
                 var psiFiles = psiSourceFile.GetPsiFiles<CSharpLanguage>();
-                var docId = Identities.ComputeFileUri(psiSourceFile);
-                var document = new Document(docId);
+                var fileUri = Identities.ComputeFileUri(psiSourceFile);
+                var document = new Document(fileUri);
                 foreach (var psiFile in psiFiles)
                 {
                     var cSharpFile = psiFile.Is<ICSharpFile>();
                     if (cSharpFile == null)
                         continue;
 
-                    var discoveryProcessor = new CodeObjectsDiscoveryProcessor();
+                    var discoveryProcessor = new CodeObjectsDiscoveryProcessor(fileUri);
                     cSharpFile.ProcessDescendants(discoveryProcessor);
                     var methodInfos = discoveryProcessor.MethodInfos;
                     foreach (var riderMethodInfo in methodInfos)

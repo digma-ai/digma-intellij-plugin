@@ -5,9 +5,9 @@ import com.intellij.psi.PsiFile
 import com.jetbrains.rd.util.reactive.IMutableViewableMap
 import com.jetbrains.rider.projectView.solution
 import org.digma.intellij.plugin.document.DocumentCodeObjectsChanged
-import org.digma.intellij.plugin.model.CodeLens
-import org.digma.intellij.plugin.model.DocumentInfo
-import org.digma.intellij.plugin.model.MethodInfo
+import org.digma.intellij.plugin.model.lens.CodeLens
+import org.digma.intellij.plugin.model.discovery.DocumentInfo
+import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.annotations.NotNull
 import java.util.function.Consumer
@@ -84,7 +84,7 @@ class CodeObjectHost(val project: Project) {
         name = name,
         containingClass = containingClass,
         containingNamespace = containingNamespace,
-        containingFile = containingFile
+        containingFileUri = containingFileUri
     )
 
 

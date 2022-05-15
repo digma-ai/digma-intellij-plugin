@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import okhttp3.mockwebserver.MockResponse;
 import org.digma.intellij.plugin.model.CodeObjectSummaryType;
-import org.digma.intellij.plugin.model.rest.*;
+import org.digma.intellij.plugin.model.rest.summary.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -16,16 +16,17 @@ import static org.junit.jupiter.api.Assertions.*;
 public class SummariesTests extends AbstractAnalyticsProviderTest {
 
 
+    //run against running env just for local test
 //    @Test
-//    public void getSummariesTemp(){
-//        List<String> ids = new ArrayList<>();
-//        ids.add("method:Sample.MoneyTransfer.API.Controllers.TransferController$_$TransferFunds");
-//        ids.add("method:Sample.MoneyTransfer.API.Controllers.TransferController$_$DepositFunds");
-//        CodeObjectSummaryRequest summaryRequest = new CodeObjectSummaryRequest("UNSET_ENV", ids);
-//        AnalyticsProvider analyticsProvider = new RestAnalyticsProvider("http://localhost:5051");
-//        List<CodeObjectSummary> summaries = analyticsProvider.getSummaries(summaryRequest);
-//        System.out.println(summaries);
-//    }
+    public void getSummariesTemp() {
+        List<String> ids = new ArrayList<>();
+        ids.add("method:Sample.MoneyTransfer.API.Controllers.TransferController$_$TransferFunds");
+        ids.add("method:Sample.MoneyTransfer.API.Controllers.TransferController$_$DepositFunds");
+        CodeObjectSummaryRequest summaryRequest = new CodeObjectSummaryRequest("UNSET_ENV", ids);
+        AnalyticsProvider analyticsProvider = new RestAnalyticsProvider("http://localhost:5051");
+        List<CodeObjectSummary> summaries = analyticsProvider.getSummaries(summaryRequest);
+        System.out.println(summaries);
+    }
 
 
     @Test

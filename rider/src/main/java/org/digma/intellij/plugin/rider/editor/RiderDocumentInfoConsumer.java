@@ -6,7 +6,7 @@ import com.intellij.psi.PsiFile;
 import org.digma.intellij.plugin.document.CodeLensProvider;
 import org.digma.intellij.plugin.document.DocumentInfoChanged;
 import org.digma.intellij.plugin.document.DocumentInfoService;
-import org.digma.intellij.plugin.model.CodeLens;
+import org.digma.intellij.plugin.model.lens.CodeLens;
 import org.digma.intellij.plugin.rider.protocol.CodeObjectHost;
 
 import java.util.List;

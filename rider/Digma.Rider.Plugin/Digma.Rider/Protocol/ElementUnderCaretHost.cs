@@ -57,10 +57,8 @@ namespace Digma.Rider.Protocol
                     _groupingEvent = _shellLocks.CreateGroupingEvent(textControl.Lifetime,
                         "ElementUnderCaretHost::CaretPositionChanged", TimeSpan.FromMilliseconds(500),
                         OnChange);
-                    textControl.Caret.Position.Change.Advise(textControl.Lifetime, cph =>
-                    {
-                        _groupingEvent.FireIncoming();
-                    });
+                    textControl.Caret.Position.Change.Advise(textControl.Lifetime,
+                        cph => { _groupingEvent.FireIncoming(); });
                 });
         }
 
@@ -70,12 +68,12 @@ namespace Digma.Rider.Protocol
             var textControl = _textControlManager.LastFocusedTextControlPerClient.ForCurrentClient();
             if (textControl == null || textControl.Lifetime.IsNotAlive)
             {
-                Log(_logger,"OnChange TextControl is null");
+                Log(_logger, "OnChange TextControl is null");
                 EmptyModel();
                 return;
             }
 
-            Log(_logger,"Trying to discover method under caret for {0}",textControl.Document);
+            Log(_logger, "Trying to discover method under caret for {0}", textControl.Document);
             using (ReadLockCookie.Create())
             {
                 var psiSourceFile = _documentManager.GetProjectFile(textControl.Document).ToSourceFile();
@@ -87,8 +85,13 @@ namespace Digma.Rider.Protocol
                     var methodName = PsiUtils.GetDeclaredName(functionDeclaration);
                     var className = PsiUtils.GetClassName(functionDeclaration);
                     var fileUri = Identities.ComputeFileUri(psiSourceFile);
-                    _model.ElementUnderCaret.Value = new ElementUnderCaret(methodFqn, methodName, className, fileUri);
-                    _model.NotifyElementUnderCaret.Fire(Unit.Instance);
+                    var newElementUnderCaret =
+                        new ElementUnderCaret(methodFqn, methodName, className, fileUri);
+                    if (!newElementUnderCaret.Equals(_model.ElementUnderCaret.Maybe.ValueOrDefault))
+                    {
+                        _model.ElementUnderCaret.Value = newElementUnderCaret;
+                        _model.NotifyElementUnderCaret.Fire(Unit.Instance);
+                    }
                 }
                 else
                 {
@@ -101,7 +104,8 @@ namespace Digma.Rider.Protocol
 
         private void EmptyModel()
         {
-            _model.ElementUnderCaret.Value = new ElementUnderCaret(string.Empty,string.Empty,string.Empty, string.Empty);
+            _model.ElementUnderCaret.Value =
+                new ElementUnderCaret(string.Empty, string.Empty, string.Empty, string.Empty);
             _model.NotifyElementUnderCaret.Fire(Unit.Instance);
         }
 
@@ -117,6 +121,7 @@ namespace Digma.Rider.Protocol
                     //Ignore interfaces
                     return null;
                 }
+
                 return node?.GetParentOfType<ICSharpFunctionDeclaration>();
             }
         }
@@ -128,31 +133,32 @@ namespace Digma.Rider.Protocol
             var psiSourceFile = _documentManager.GetProjectFile(textControl.Document).ToSourceFile();
             if (psiSourceFile == null || !psiSourceFile.GetPsiServices().Files.IsCommitted(psiSourceFile))
             {
-                Log(_logger,"PsiSourceFile {0} is null or not committed",psiSourceFile);
+                Log(_logger, "PsiSourceFile {0} is null or not committed", psiSourceFile);
                 return null;
             }
+
             var properties = psiSourceFile.Properties;
             var primaryPsiLanguage = psiSourceFile.PrimaryPsiLanguage;
             var isApplicable = !primaryPsiLanguage.IsNullOrUnknown() &&
                                !properties.IsGeneratedFile &&
-                               primaryPsiLanguage.Is<CSharpLanguage>() && 
-                               properties.ShouldBuildPsi && 
+                               primaryPsiLanguage.Is<CSharpLanguage>() &&
+                               properties.ShouldBuildPsi &&
                                properties.ProvidesCodeModel;
 
             if (!isApplicable)
             {
-                Log(_logger,"PsiSourceFile {0} is not applicable for method under caret",psiSourceFile);
+                Log(_logger, "PsiSourceFile {0} is not applicable for method under caret", psiSourceFile);
                 return null;
             }
-            
+
             var projectFile = _documentManager.GetProjectFile(textControl.Document);
-            if (!projectFile.LanguageType.Is<CSharpProjectFileType>()) 
+            if (!projectFile.LanguageType.Is<CSharpProjectFileType>())
                 return null;
 
             var range = new TextRange(textControl.Caret.Offset());
             var documentRange = range.CreateDocumentRange(projectFile);
             var file = psiSourceFile.GetPsiFile(psiSourceFile.PrimaryPsiLanguage, documentRange);
-            return  file?.FindNodeAt(documentRange);
+            return file?.FindNodeAt(documentRange);
         }
     }
 }

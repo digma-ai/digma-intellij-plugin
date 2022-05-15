@@ -11,10 +11,8 @@ import com.intellij.util.ui.JBEmptyBorder
 import org.digma.intellij.plugin.ui.common.ScopeLineIconProducer
 import org.digma.intellij.plugin.ui.common.scopeLine
 import org.digma.intellij.plugin.ui.common.topLine
-import org.digma.intellij.plugin.ui.env.envCombo
 import org.digma.intellij.plugin.ui.insights.insightsModel
-import org.digma.intellij.plugin.ui.model.ErrorsModel
-import org.digma.intellij.plugin.ui.model.InsightsModel
+import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 
 val errorsModel: ErrorsModel = ErrorsModel()
 

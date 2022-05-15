@@ -2,10 +2,10 @@ package org.digma.intellij.plugin.document;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
-import org.digma.intellij.plugin.model.CodeLens;
+import org.digma.intellij.plugin.model.lens.CodeLens;
 import org.digma.intellij.plugin.model.CodeObjectType;
-import org.digma.intellij.plugin.model.rest.CodeObjectSummary;
-import org.digma.intellij.plugin.model.rest.MethodCodeObjectSummary;
+import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
+import org.digma.intellij.plugin.model.rest.summary.MethodCodeObjectSummary;
 
 import java.util.ArrayList;
 import java.util.List;

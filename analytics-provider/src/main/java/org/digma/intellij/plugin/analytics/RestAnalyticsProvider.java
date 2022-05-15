@@ -1,8 +1,10 @@
 package org.digma.intellij.plugin.analytics;
 
 import okhttp3.OkHttpClient;
-import org.digma.intellij.plugin.model.rest.CodeObjectSummary;
-import org.digma.intellij.plugin.model.rest.CodeObjectSummaryRequest;
+import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
+import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
+import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -34,6 +36,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
     public List<CodeObjectSummary> getSummaries(CodeObjectSummaryRequest summaryRequest) {
         return execute(() -> client.analyticsProvider.getSummaries(summaryRequest));
+    }
+
+    @Override
+    public List<CodeObjectInsight> getInsights(InsightsRequest insightsRequest) {
+        return execute(() -> client.analyticsProvider.getInsights(insightsRequest));
     }
 
 
@@ -130,6 +137,15 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @POST("/CodeAnalytics/summary")
         Call<List<CodeObjectSummary>> getSummaries(@Body CodeObjectSummaryRequest summaryRequest);
+
+
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/CodeAnalytics/codeObjects/insights")
+        Call<List<CodeObjectInsight>> getInsights(@Body InsightsRequest insightsRequest);
 
 
     }

@@ -11,3 +11,10 @@ enum class CodeObjectType {
     Method, Span, Endpoint
 }
 
+enum class ElementUnderCaretType {
+    Method
+}
+
+enum class InsightType {
+    HotSpot, Errors, SpanUsages
+}

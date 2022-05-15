@@ -14,7 +14,7 @@ class CodeObjectsModel : Ext(SolutionModel.Solution) {
         field("name", PredefinedType.string)
         field("containingClass", PredefinedType.string)
         field("containingNamespace", PredefinedType.string)
-        field("containingFile", PredefinedType.string)
+        field("containingFileUri", PredefinedType.string)
     }
 
 

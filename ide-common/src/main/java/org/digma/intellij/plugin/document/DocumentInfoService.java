@@ -5,9 +5,10 @@ import com.intellij.psi.PsiFile;
 import org.digma.intellij.plugin.analytics.AnalyticsProvider;
 import org.digma.intellij.plugin.analytics.Environment;
 import org.digma.intellij.plugin.analytics.EnvironmentChanged;
-import org.digma.intellij.plugin.model.DocumentInfo;
-import org.digma.intellij.plugin.model.MethodUnderCaret;
-import org.digma.intellij.plugin.model.rest.MethodCodeObjectSummary;
+import org.digma.intellij.plugin.model.discovery.DocumentInfo;
+import org.digma.intellij.plugin.model.discovery.MethodInfo;
+import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
+import org.digma.intellij.plugin.model.rest.summary.MethodCodeObjectSummary;
 import org.digma.intellij.plugin.psi.PsiUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -68,4 +69,13 @@ public class DocumentInfoService implements EnvironmentChanged {
     }
 
 
+    @Nullable
+    public MethodInfo getMethodInfo(MethodUnderCaret elementUnderCaret) {
+        PsiFile psiFile = PsiUtils.uriToPsiFile(elementUnderCaret.getFileUri(), project);
+        DocumentInfoContainer documentInfoContainer = documents.get(psiFile);
+        if (documentInfoContainer != null) {
+            return documentInfoContainer.getMethodInfo(elementUnderCaret.getId());
+        }
+        return null;
+    }
 }

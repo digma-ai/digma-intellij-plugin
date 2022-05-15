@@ -7,8 +7,6 @@ import javax.swing.Icon
 
 class ScopeLineIconProducer(val model: PanelModel): Producer<Icon> {
 
-
-
     //currently supports only method
     override fun produce(): Icon {
         if (model.isMethodScope()){

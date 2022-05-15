@@ -4,8 +4,10 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.rest.CodeObjectSummary;
-import org.digma.intellij.plugin.model.rest.CodeObjectSummaryRequest;
+import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
+import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
+import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -38,6 +40,11 @@ public class AnalyticsService implements AnalyticsProvider, Disposable {
     @Override
     public List<CodeObjectSummary> getSummaries(CodeObjectSummaryRequest summaryRequest) {
         return analyticsProviderProxy.getSummaries(summaryRequest);
+    }
+
+    @Override
+    public List<CodeObjectInsight> getInsights(InsightsRequest insightsRequest) {
+        return analyticsProviderProxy.getInsights(insightsRequest);
     }
 
 

@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.model.rest
+package org.digma.intellij.plugin.model.rest.summary
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo

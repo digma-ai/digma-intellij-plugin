@@ -1,4 +1,6 @@
-package org.digma.intellij.plugin.model
+package org.digma.intellij.plugin.model.lens
+
+import org.digma.intellij.plugin.model.CodeObjectType
 
 data class CodeLens(val codeObjectId: String,
                     val codeObjectType: CodeObjectType,
@@ -7,5 +9,5 @@ data class CodeLens(val codeObjectId: String,
                     var lensMoreText: String,
                     var anchor: String) {
 
-    constructor(codeObjectId: String,codeObjectType: CodeObjectType, lensText: String) : this(codeObjectId,codeObjectType,lensText,"","","")
+    constructor(codeObjectId: String, codeObjectType: CodeObjectType, lensText: String) : this(codeObjectId,codeObjectType,lensText,"","","")
 }

@@ -1,11 +1,11 @@
 pluginManagement {
 
     repositories {
-        gradlePluginPortal()
+        mavenCentral()
         maven(url = "https://cache-redirector.jetbrains.com/plugins.gradle.org")
         maven(url = "https://cache-redirector.jetbrains.com/dl.bintray.com/kotlin/kotlin-eap")
         maven(url = "https://cache-redirector.jetbrains.com/myget.org.rd-snapshots.maven")
-        mavenCentral()
+        gradlePluginPortal()
     }
     resolutionStrategy {
         eachPlugin {

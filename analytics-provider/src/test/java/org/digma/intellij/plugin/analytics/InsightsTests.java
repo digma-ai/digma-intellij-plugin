@@ -83,6 +83,22 @@ public class InsightsTests extends AbstractAnalyticsProviderTest {
                 "post transfer/transferfunds",Collections.singletonList(slowSpanInfo));
         expectedCodeObjectInsights.add(expectedSlowestSpansInsight);
 
+        SlowEndpointInsight expectedSlowEndpointInsight = new SlowEndpointInsight("Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$TransferFunds", "post transfer/transferfunds"
+                , new Duration(0.11D, "ms", 11000)
+                , new Duration(0.12D, "ms", 12000)
+                , new Duration(0.13D, "ms", 13000)
+                , new Duration(0.14D, "ms", 14000)
+                , new Duration(0.15D, "ms", 15000)
+                , new Duration(0.16D, "ms", 16000)
+                , new Duration(0.17D, "ms", 17000)
+                , new Duration(0.18D, "ms", 18000)
+                , new Duration(0.19D, "ms", 19000)
+                , new Duration(0.21D, "ms", 21000)
+                , new Duration(0.22D, "ms", 22000)
+        );
+        expectedCodeObjectInsights.add(expectedSlowEndpointInsight);
+
+
         mockBackEnd.enqueue(new MockResponse()
                 .setBody(objectMapper.writeValueAsString(expectedCodeObjectInsights))
                 .addHeader("Content-Type", "application/json"));
@@ -90,7 +106,7 @@ public class InsightsTests extends AbstractAnalyticsProviderTest {
         AnalyticsProvider analyticsProvider = new RestAnalyticsProvider(baseUrl);
         List<CodeObjectInsight> codeObjectInsights = analyticsProvider.getInsights(new InsightsRequest("myenv", Collections.singletonList("method:" + codeObjectId)));
 
-        assertEquals(6, codeObjectInsights.size());
+        assertEquals(7, codeObjectInsights.size(), "count of returned insights");
 
         assertEquals(HotspotInsight.class, codeObjectInsights.get(0).getClass());
         HotspotInsight hotspotInsight = (HotspotInsight) codeObjectInsights.get(0);
@@ -116,6 +132,9 @@ public class InsightsTests extends AbstractAnalyticsProviderTest {
         SlowestSpansInsight slowestSpansInsight = (SlowestSpansInsight) codeObjectInsights.get(5);
         assertEquals(expectedSlowestSpansInsight, slowestSpansInsight);
 
+        assertEquals(SlowEndpointInsight.class, codeObjectInsights.get(6).getClass());
+        SlowEndpointInsight slowEndpointInsight = (SlowEndpointInsight) codeObjectInsights.get(6);
+        assertEquals(expectedSlowEndpointInsight, slowEndpointInsight);
 
     }
 

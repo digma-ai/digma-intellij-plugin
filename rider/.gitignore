@@ -5,3 +5,6 @@ Digma.Rider.Plugin/Digma.Rider/obj/
 Digma.Rider.Plugin/Digma.Rider.Tests/bin/
 Digma.Rider.Plugin/Digma.Rider.Tests/obj/
 /Digma.Rider.Plugin/Digma.Rider.Plugin.sln.DotSettings.user
+
+src/main/kotlin/org/digma/intellij/plugin/rider/protocol/*.Generated.kt
+Digma.Rider.Plugin/Digma.Rider/Protocol/*.Generated.cs

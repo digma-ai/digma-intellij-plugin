@@ -15,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class InsightsViewBuilder extends ListViewBuilder<CodeObjectInsight> {
 
@@ -23,8 +24,8 @@ public class InsightsViewBuilder extends ListViewBuilder<CodeObjectInsight> {
     private final CodeObjectInfo scope;
 
     public InsightsViewBuilder(@NotNull List<CodeObjectInsight> codeObjectInsights, @NotNull MethodInfo scope) {
-        this.codeObjectInsights = codeObjectInsights;
-        this.scope = scope;
+        this.codeObjectInsights = Objects.requireNonNull(codeObjectInsights,"list must not be null");
+        this.scope = Objects.requireNonNull(scope,"scope must not be null");
     }
 
     @NotNull

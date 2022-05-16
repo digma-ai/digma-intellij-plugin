@@ -5,6 +5,7 @@ pluginManagement {
         maven(url = "https://cache-redirector.jetbrains.com/plugins.gradle.org")
         maven(url = "https://cache-redirector.jetbrains.com/dl.bintray.com/kotlin/kotlin-eap")
         maven(url = "https://cache-redirector.jetbrains.com/myget.org.rd-snapshots.maven")
+        mavenCentral()
     }
     resolutionStrategy {
         eachPlugin {
@@ -25,8 +26,9 @@ kotlin-stdlib: the kotlin-stdlib must be compatible with the intellij platform v
 dependencyResolutionManagement {
     versionCatalogs {
         create("libs") {
+
             version("junit", "5.8.2")
-            version("kotlin-stdlib", "1.5.10")
+            version("kotlin-stdlib", "1.6.20")
             library("kotlin-stdlib-jdk8", "org.jetbrains.kotlin", "kotlin-stdlib-jdk8").versionRef("kotlin-stdlib")
             version("retrofit", "2.9.0")
             library("retrofit-client", "com.squareup.retrofit2", "retrofit").versionRef("retrofit")

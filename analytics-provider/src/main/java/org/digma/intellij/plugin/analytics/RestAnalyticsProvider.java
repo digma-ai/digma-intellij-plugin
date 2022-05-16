@@ -1,5 +1,7 @@
 package org.digma.intellij.plugin.analytics;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.OkHttpClient;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
@@ -93,6 +95,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
             okHttpClient = new OkHttpClient.Builder()
 //                    .eventListener()
                     .build();
+
+
 
             Retrofit retrofit = new Retrofit.Builder()
                     .baseUrl(baseUrl)

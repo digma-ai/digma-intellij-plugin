@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <PackageReference Include="JetBrains.Rider.SDK" Version="$(SdkVersion)" />
-    <PackageReference Include="JetBrains.ReSharper.SDK" Version="$(SdkVersion)" />
+<!--     <PackageReference Include="JetBrains.ReSharper.SDK" Version="$(SdkVersion)" /> -->
   </ItemGroup>
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />

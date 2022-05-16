@@ -4,16 +4,19 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
-import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
+import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
+import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class AnalyticsService implements AnalyticsProvider, Disposable {
 
@@ -83,7 +86,8 @@ public class AnalyticsService implements AnalyticsProvider, Disposable {
             try {
                 return method.invoke(analyticsProvider, args);
             } catch (Exception e) {
-                Log.log(LOGGER::error, "error invoking AnalyticsProvide.{}, exception {}", method.getName(), e);
+                String argsStr = Arrays.stream(args).map(Object::toString).collect(Collectors.joining(","));
+                Log.error(LOGGER, e, "error invoking AnalyticsProvide.{}({}), exception {}", method.getName(),argsStr,e);
                 //todo: we probably need to show some error message to user
                 return null;
             }

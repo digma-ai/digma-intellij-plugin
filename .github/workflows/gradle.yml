@@ -37,7 +37,7 @@ jobs:
       with:
         cache-read-only: ${{ github.ref != 'refs/heads/main' }}
         gradle-home-cache-excludes: |
-            caches/**/riderRD-2021.3.3/**
-            caches/**/ideaIC-2021.3.3/**
-            caches/**/pycharmPC-2021.3.3/**
+            caches/**/riderRD-*/**
+            caches/**/ideaIC-*/**
+            caches/**/pycharmPC-*/**
         arguments: buildPlugin

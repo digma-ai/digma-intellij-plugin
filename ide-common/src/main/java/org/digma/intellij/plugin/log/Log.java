@@ -21,4 +21,8 @@ public class Log {
         consumer.accept("Digma:"+String.format(format.replace("{}", "%s"), args));
     }
 
+    public static void error(Logger logger,Exception exception, String format, Object... args) {
+        logger.error("Digma:"+String.format(format.replace("{}", "%s"), args),exception);
+    }
+
 }

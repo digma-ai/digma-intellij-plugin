@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using JetBrains.Lifetimes;
+using JetBrains.Platform.RdFramework.Impl;
 using JetBrains.ProjectModel;
 using JetBrains.RdBackend.Common.Features;
-using JetBrains.RdBackend.Common.Features.Components;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Resources.Shell;
 using JetBrains.Rider.Backend.Features.SolutionAnalysis;

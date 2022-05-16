@@ -6,8 +6,8 @@ import java.util.List;
 
 public class InsightsListContainer {
 
-    private int count = 0;
-    private List<ListViewItem> listViewItems;
+    private int count;
+    private final List<ListViewItem> listViewItems;
 
     public InsightsListContainer(List<ListViewItem> listViewItems, int count) {
         this.listViewItems = listViewItems;

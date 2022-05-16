@@ -42,16 +42,16 @@ namespace Digma.Rider.Protocol
   {
     //fields
     //public fields
-    [NotNull] public IViewableProperty<Digma.Rider.Protocol.ElementUnderCaret> ElementUnderCaret => _ElementUnderCaret;
+    [NotNull] public IViewableProperty<MethodUnderCaretEvent> ElementUnderCaret => _ElementUnderCaret;
     [NotNull] public ISignal<Unit> NotifyElementUnderCaret => _NotifyElementUnderCaret;
     
     //private fields
-    [NotNull] private readonly RdProperty<Digma.Rider.Protocol.ElementUnderCaret> _ElementUnderCaret;
+    [NotNull] private readonly RdProperty<MethodUnderCaretEvent> _ElementUnderCaret;
     [NotNull] private readonly RdSignal<Unit> _NotifyElementUnderCaret;
     
     //primary constructor
     private ElementUnderCaretModel(
-      [NotNull] RdProperty<Digma.Rider.Protocol.ElementUnderCaret> elementUnderCaret,
+      [NotNull] RdProperty<MethodUnderCaretEvent> elementUnderCaret,
       [NotNull] RdSignal<Unit> notifyElementUnderCaret
     )
     {
@@ -67,7 +67,7 @@ namespace Digma.Rider.Protocol
     //secondary constructor
     internal ElementUnderCaretModel (
     ) : this (
-      new RdProperty<Digma.Rider.Protocol.ElementUnderCaret>(Digma.Rider.Protocol.ElementUnderCaret.Read, Digma.Rider.Protocol.ElementUnderCaret.Write),
+      new RdProperty<MethodUnderCaretEvent>(MethodUnderCaretEvent.Read, MethodUnderCaretEvent.Write),
       new RdSignal<Unit>(JetBrains.Rd.Impl.Serializers.ReadVoid, JetBrains.Rd.Impl.Serializers.WriteVoid)
     ) {}
     //deconstruct trait
@@ -75,7 +75,7 @@ namespace Digma.Rider.Protocol
     
     
     
-    protected override long SerializationHash => -7498972151373417626L;
+    protected override long SerializationHash => 7892200966278319174L;
     
     protected override Action<ISerializers> Register => RegisterDeclaredTypesSerializers;
     public static void RegisterDeclaredTypesSerializers(ISerializers serializers)
@@ -121,7 +121,7 @@ namespace Digma.Rider.Protocol
   /// <summary>
   /// <p>Generated from: ElementUnderCaretModel.kt:10</p>
   /// </summary>
-  public sealed class ElementUnderCaret : IPrintable, IEquatable<ElementUnderCaret>
+  public sealed class MethodUnderCaretEvent : IPrintable, IEquatable<MethodUnderCaretEvent>
   {
     //fields
     //public fields
@@ -132,7 +132,7 @@ namespace Digma.Rider.Protocol
     
     //private fields
     //primary constructor
-    public ElementUnderCaret(
+    public MethodUnderCaretEvent(
       [NotNull] string fqn,
       [NotNull] string name,
       [NotNull] string className,
@@ -160,17 +160,17 @@ namespace Digma.Rider.Protocol
     }
     //statics
     
-    public static CtxReadDelegate<ElementUnderCaret> Read = (ctx, reader) => 
+    public static CtxReadDelegate<MethodUnderCaretEvent> Read = (ctx, reader) => 
     {
       var fqn = reader.ReadString();
       var name = reader.ReadString();
       var className = reader.ReadString();
       var fileUri = reader.ReadString();
-      var _result = new ElementUnderCaret(fqn, name, className, fileUri);
+      var _result = new MethodUnderCaretEvent(fqn, name, className, fileUri);
       return _result;
     };
     
-    public static CtxWriteDelegate<ElementUnderCaret> Write = (ctx, writer, value) => 
+    public static CtxWriteDelegate<MethodUnderCaretEvent> Write = (ctx, writer, value) => 
     {
       writer.Write(value.Fqn);
       writer.Write(value.Name);
@@ -188,9 +188,9 @@ namespace Digma.Rider.Protocol
       if (ReferenceEquals(null, obj)) return false;
       if (ReferenceEquals(this, obj)) return true;
       if (obj.GetType() != GetType()) return false;
-      return Equals((ElementUnderCaret) obj);
+      return Equals((MethodUnderCaretEvent) obj);
     }
-    public bool Equals(ElementUnderCaret other)
+    public bool Equals(MethodUnderCaretEvent other)
     {
       if (ReferenceEquals(null, other)) return false;
       if (ReferenceEquals(this, other)) return true;
@@ -211,7 +211,7 @@ namespace Digma.Rider.Protocol
     //pretty print
     public void Print(PrettyPrinter printer)
     {
-      printer.Println("ElementUnderCaret (");
+      printer.Println("MethodUnderCaretEvent (");
       using (printer.IndentCookie()) {
         printer.Print("fqn = "); Fqn.PrintEx(printer); printer.Println();
         printer.Print("name = "); Name.PrintEx(printer); printer.Println();

@@ -17,6 +17,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * DocumentInfoService acts as a container for DocumentInfo objects.
+ * it knows nothing about the logic behind , timings of queries for DocumentInfo objects
+ * should be managed elsewhere, for that reason DocumentInfoService may return null if queried
+ * for an object that doesn't exist in its documents list.
+ */
 public class DocumentInfoService implements EnvironmentChanged {
 
     private final Project project;
@@ -47,13 +53,14 @@ public class DocumentInfoService implements EnvironmentChanged {
 
 
     //called after a document is analyzed for code objects
-    public void addCodeObjects(PsiFile psiFile, DocumentInfo documentInfo) {
+    public void addCodeObjects(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
         DocumentInfoContainer documentInfoContainer = documents.computeIfAbsent(psiFile, DocumentInfoContainer::new);
         documentInfoContainer.update(documentInfo, analyticsProvider, environment.getCurrent());
         notifyDocumentInfoChanged(psiFile);
     }
 
 
+    @Nullable
     public DocumentInfoContainer getDocumentInfo(PsiFile psiFile) {
         return documents.get(psiFile);
     }
@@ -69,13 +76,13 @@ public class DocumentInfoService implements EnvironmentChanged {
     }
 
 
+    /*
+     * getMethodInfo may return null. DocumentInfoService is just a container, it knows about what you feed it with.
+     */
     @Nullable
-    public MethodInfo getMethodInfo(MethodUnderCaret elementUnderCaret) {
-        PsiFile psiFile = PsiUtils.uriToPsiFile(elementUnderCaret.getFileUri(), project);
+    public MethodInfo getMethodInfo(MethodUnderCaret methodUnderCaret) {
+        PsiFile psiFile = PsiUtils.uriToPsiFile(methodUnderCaret.getFileUri(), project);
         DocumentInfoContainer documentInfoContainer = documents.get(psiFile);
-        if (documentInfoContainer != null) {
-            return documentInfoContainer.getMethodInfo(elementUnderCaret.getId());
-        }
-        return null;
+        return documentInfoContainer == null ? null : documentInfoContainer.getMethodInfo(methodUnderCaret.getId());
     }
 }

@@ -8,36 +8,38 @@ import org.digma.intellij.plugin.view.ListGroupManager;
 import org.digma.intellij.plugin.view.ListViewItemBuilder;
 import org.jetbrains.annotations.NotNull;
 
-public class HotspotListViewItemBuilder extends ListViewItemBuilder {
+import java.util.Collections;
+import java.util.List;
+
+public class HotspotListViewItemBuilder extends ListViewItemBuilder<HotspotInsight> {
 
 
+    private static final Integer SORT_INDEX = 0;
 
     private final HotspotInsight insight;
+    @SuppressWarnings("FieldCanBeLocal")
     private final CodeObjectInfo scope;
 
     public HotspotListViewItemBuilder(@NotNull HotspotInsight insight, CodeObjectInfo scope) {
+        super(insight);
         this.insight = insight;
         this.scope = scope;
     }
 
     @Override
-    public ListViewItem build(@NotNull ListGroupManager groupManager) {
+    public List<ListViewItem> build(@NotNull ListGroupManager groupManager) {
 
 
         HotspotListViewItem hotspotListViewItem = new HotspotListViewItem(
                 "This is an error hotspot",
                 "Many major errors occur or propagate through this function.",
                 "See how this was calculated",
-                "https://phmecloud.blob.core.windows.net/photo/web/ou0ehpjndrfhkkx1tekojx0-3.png");
+                "https://phmecloud.blob.core.windows.net/photo/web/ou0ehpjndrfhkkx1tekojx0-3.png",
+                SORT_INDEX);
 
-        hotspotListViewItem.setSortIndex(0);
         hotspotListViewItem.setCodeObjectId(insight.getCodeObjectId());
 
-        return hotspotListViewItem;
+        return Collections.singletonList(hotspotListViewItem);
     }
 
-    @Override
-    public boolean accepted() {
-        return insight.getScore() >= 70;
-    }
 }

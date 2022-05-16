@@ -32,23 +32,11 @@ public class InsightsProvider {
         documentInfoService = project.getService(DocumentInfoService.class);
     }
 
-    public InsightsListContainer getInsights(@NotNull MethodUnderCaret elementUnderCaret) {
+    public InsightsListContainer getInsights(@NotNull MethodInfo methodInfo) {
 
         List<String> objectIds = new ArrayList<>();
-        MethodInfo methodInfo = documentInfoService.getMethodInfo(elementUnderCaret);
-        if (methodInfo != null) {
-            objectIds.add(methodInfo.idWithType());
-            objectIds.addAll(methodInfo.getRelatedCodeObjectIds());
-        } else {
-            objectIds.add(elementUnderCaret.idWithType());
-        }
-
-        //currently supporting only MethodUnderCaret
-//        switch (elementUnderCaret.getType()) {
-//            case Method: {
-//
-//            }
-//        }
+         objectIds.add(methodInfo.idWithType());
+         objectIds.addAll(methodInfo.getRelatedCodeObjectIds());
 
 
         List<CodeObjectInsight> codeObjectInsights = analyticsProvider.getInsights(new InsightsRequest(environment.getCurrent(), objectIds));

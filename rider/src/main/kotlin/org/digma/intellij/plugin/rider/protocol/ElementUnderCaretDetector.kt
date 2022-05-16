@@ -36,9 +36,9 @@ class ElementUnderCaretDetector(private val project: Project) {
         Log.log(LOGGER::info, "Starting ElementUnderCaretDetector")
         model.notifyElementUnderCaret.throttleLast(Duration.ofMillis(500),SingleThreadScheduler(project.lifetime,"notifyElementUnderCaret")).
                 advise(project.lifetime) {
-                    val elementUnderCaret: ElementUnderCaret? = model.elementUnderCaret.valueOrNull
-                    Log.log(LOGGER::info, "Got ElementUnderCaret signal: {}",elementUnderCaret)
-                    notifyElementUnderCaret(elementUnderCaret, caretContextService)
+                    val methodUnderCaret: MethodUnderCaretEvent? = model.elementUnderCaret.valueOrNull
+                    Log.log(LOGGER::info, "Got MethodUnderCaretEvent signal: {}",methodUnderCaret)
+                    notifyElementUnderCaret(methodUnderCaret, caretContextService)
                 }
 //        val mergeQueue: MergingUpdateQueue = MergingUpdateQueue("notifyElementUnderCaret",
 //            500,
@@ -53,19 +53,19 @@ class ElementUnderCaretDetector(private val project: Project) {
     }
 
     private fun notifyElementUnderCaret(
-        elementUnderCaret: ElementUnderCaret?,
-        methodContextUpdated: CaretContextService
+        elementUnderCaret: MethodUnderCaretEvent?,
+        caretContextService: CaretContextService
     ) {
         if (elementUnderCaret == null || elementUnderCaret.fqn.isEmpty()) {
-            methodContextUpdated.contextEmpty()
+            caretContextService.contextEmpty()
         } else {
-            methodContextUpdated.contextChanged(elementUnderCaret.toModel())
+            caretContextService.contextChanged(elementUnderCaret.toModel())
         }
 
     }
 
 
-    private fun ElementUnderCaret.toModel() = MethodUnderCaret(
+    private fun MethodUnderCaretEvent.toModel() = MethodUnderCaret(
         id = fqn,
         name = name,
         className = className,

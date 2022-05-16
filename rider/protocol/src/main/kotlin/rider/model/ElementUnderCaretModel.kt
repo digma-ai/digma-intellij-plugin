@@ -7,7 +7,7 @@ import com.jetbrains.rider.model.nova.ide.SolutionModel
 
 class ElementUnderCaretModel : Ext(SolutionModel.Solution) {
 
-    val ElementUnderCaret = structdef {
+    val MethodUnderCaretEvent = structdef {
         field("fqn", PredefinedType.string)
         field("name", PredefinedType.string)
         field("className", PredefinedType.string)
@@ -18,7 +18,7 @@ class ElementUnderCaretModel : Ext(SolutionModel.Solution) {
     init {
         setting(CSharp50Generator.Namespace, "Digma.Rider.Protocol")
         setting(Kotlin11Generator.Namespace, "org.digma.intellij.plugin.rider.protocol")
-        property("elementUnderCaret", ElementUnderCaret)
+        property("elementUnderCaret", MethodUnderCaretEvent)
         signal("notifyElementUnderCaret", PredefinedType.void)
     }
 

@@ -1,7 +1,10 @@
 package org.digma.intellij.plugin.ui.model.listview
 
-abstract class GroupListViewItem(val groupId: String) : ListViewItem() {
+import java.util.*
 
-    val items: MutableList<ListViewItem> = ArrayList()
+abstract class GroupListViewItem(val groupId: String, sortIndex: Int) : ListViewItem(sortIndex) {
+
+    val items: SortedSet<ListViewItem> = TreeSet(Comparator.comparingInt(ListViewItem::sortIndex))
+
 
 }

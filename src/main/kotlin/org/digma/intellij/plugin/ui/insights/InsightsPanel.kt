@@ -39,6 +39,9 @@ fun insightsPanel(project: Project): DialogPanel {
                     scopeLine.reset()
                 }
         }.layout(RowLayout.PARENT_GRID)
+//        row{
+//            label()
+//        }
 //        row {
 //            var insightsListPanel = insightsListPanel(project)
 ////            buildListPanel(insightsListPanel)

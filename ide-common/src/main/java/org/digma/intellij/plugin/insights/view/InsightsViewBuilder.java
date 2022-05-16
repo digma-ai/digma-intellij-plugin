@@ -15,13 +15,13 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-public class InsightsViewBuilder extends ListViewBuilder {
+public class InsightsViewBuilder extends ListViewBuilder<CodeObjectInsight> {
 
 
     private final List<CodeObjectInsight> codeObjectInsights;
     private final CodeObjectInfo scope;
 
-    public InsightsViewBuilder(@NotNull List<CodeObjectInsight> codeObjectInsights, MethodInfo scope) {
+    public InsightsViewBuilder(@NotNull List<CodeObjectInsight> codeObjectInsights, @NotNull MethodInfo scope) {
         this.codeObjectInsights = codeObjectInsights;
         this.scope = scope;
     }
@@ -29,7 +29,7 @@ public class InsightsViewBuilder extends ListViewBuilder {
     @NotNull
     public List<ListViewItem> build() {
 
-        List<ListViewItemBuilder> itemBuilders = new ArrayList<>();
+        List<ListViewItemBuilder<CodeObjectInsight>> itemBuilders = new ArrayList<>();
 
         codeObjectInsights.forEach(insight -> {
             InsightType type = insight.getType();

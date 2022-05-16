@@ -1,8 +1,5 @@
 package org.digma.intellij.plugin.ui.model.listview
 
-abstract class ListViewItem {
-
+abstract class ListViewItem(val sortIndex: Int) {
     lateinit var codeObjectId: String
-    var sortIndex: Int = 0;
-
 }

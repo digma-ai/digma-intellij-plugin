@@ -18,7 +18,7 @@ import kotlin.jvm.JvmStatic
  * #### Generated from [ElementUnderCaretModel.kt:8]
  */
 class ElementUnderCaretModel private constructor(
-    private val _elementUnderCaret: RdOptionalProperty<ElementUnderCaret>,
+    private val _elementUnderCaret: RdOptionalProperty<MethodUnderCaretEvent>,
     private val _notifyElementUnderCaret: RdSignal<Unit>
 ) : RdExtBase() {
     //companion
@@ -26,20 +26,20 @@ class ElementUnderCaretModel private constructor(
     companion object : ISerializersOwner {
         
         override fun registerSerializersCore(serializers: ISerializers)  {
-            serializers.register(ElementUnderCaret)
+            serializers.register(MethodUnderCaretEvent)
         }
         
         
         
         
-        const val serializationHash = -7498972151373417626L
+        const val serializationHash = 7892200966278319174L
         
     }
     override val serializersOwner: ISerializersOwner get() = ElementUnderCaretModel
     override val serializationHash: Long get() = ElementUnderCaretModel.serializationHash
     
     //fields
-    val elementUnderCaret: IOptProperty<ElementUnderCaret> get() = _elementUnderCaret
+    val elementUnderCaret: IOptProperty<MethodUnderCaretEvent> get() = _elementUnderCaret
     val notifyElementUnderCaret: ISignal<Unit> get() = _notifyElementUnderCaret
     //methods
     //initializer
@@ -55,7 +55,7 @@ class ElementUnderCaretModel private constructor(
     //secondary constructor
     internal constructor(
     ) : this(
-        RdOptionalProperty<ElementUnderCaret>(ElementUnderCaret),
+        RdOptionalProperty<MethodUnderCaretEvent>(MethodUnderCaretEvent),
         RdSignal<Unit>(FrameworkMarshallers.Void)
     )
     
@@ -86,7 +86,7 @@ val com.jetbrains.rd.ide.model.Solution.elementUnderCaretModel get() = getOrCrea
 /**
  * #### Generated from [ElementUnderCaretModel.kt:10]
  */
-data class ElementUnderCaret (
+data class MethodUnderCaretEvent (
     val fqn: String,
     val name: String,
     val className: String,
@@ -94,19 +94,19 @@ data class ElementUnderCaret (
 ) : IPrintable {
     //companion
     
-    companion object : IMarshaller<ElementUnderCaret> {
-        override val _type: KClass<ElementUnderCaret> = ElementUnderCaret::class
+    companion object : IMarshaller<MethodUnderCaretEvent> {
+        override val _type: KClass<MethodUnderCaretEvent> = MethodUnderCaretEvent::class
         
         @Suppress("UNCHECKED_CAST")
-        override fun read(ctx: SerializationCtx, buffer: AbstractBuffer): ElementUnderCaret  {
+        override fun read(ctx: SerializationCtx, buffer: AbstractBuffer): MethodUnderCaretEvent  {
             val fqn = buffer.readString()
             val name = buffer.readString()
             val className = buffer.readString()
             val fileUri = buffer.readString()
-            return ElementUnderCaret(fqn, name, className, fileUri)
+            return MethodUnderCaretEvent(fqn, name, className, fileUri)
         }
         
-        override fun write(ctx: SerializationCtx, buffer: AbstractBuffer, value: ElementUnderCaret)  {
+        override fun write(ctx: SerializationCtx, buffer: AbstractBuffer, value: MethodUnderCaretEvent)  {
             buffer.writeString(value.fqn)
             buffer.writeString(value.name)
             buffer.writeString(value.className)
@@ -124,7 +124,7 @@ data class ElementUnderCaret (
         if (this === other) return true
         if (other == null || other::class != this::class) return false
         
-        other as ElementUnderCaret
+        other as MethodUnderCaretEvent
         
         if (fqn != other.fqn) return false
         if (name != other.name) return false
@@ -144,7 +144,7 @@ data class ElementUnderCaret (
     }
     //pretty print
     override fun print(printer: PrettyPrinter)  {
-        printer.println("ElementUnderCaret (")
+        printer.println("MethodUnderCaretEvent (")
         printer.indent {
             print("fqn = "); fqn.print(printer); println()
             print("name = "); name.print(printer); println()

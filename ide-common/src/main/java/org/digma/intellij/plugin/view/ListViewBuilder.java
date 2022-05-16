@@ -1,15 +1,18 @@
 package org.digma.intellij.plugin.view;
 
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Builds a list view from supplied builders.
+ * Builds a list view items from supplied builders.
  * ListViewBuilder is not thread safe and is stateful.
  */
-public abstract class ListViewBuilder {
+public abstract class ListViewBuilder<T extends CodeObjectInsight> {
 
     private final ListGroupManager groupManager;
 
@@ -23,14 +26,12 @@ public abstract class ListViewBuilder {
 
 
 
-    protected List<ListViewItem> build(List<ListViewItemBuilder> itemBuilders){
+    protected List<ListViewItem> build(List<ListViewItemBuilder<T>> itemBuilders){
 
         List<ListViewItem> listViewItems = new ArrayList<>();
 
         itemBuilders.forEach(builder -> {
-            if (builder.accepted()) {
-                listViewItems.add(builder.build(groupManager));
-            }
+            listViewItems.addAll(builder.build(groupManager));
         });
 
         return sortDistinct(listViewItems);

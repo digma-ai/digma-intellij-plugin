@@ -7,24 +7,23 @@ import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
 import org.digma.intellij.plugin.view.ListGroupManager;
 import org.digma.intellij.plugin.view.ListViewItemBuilder;
 
-public class ErrorsListViewItemBuilder extends ListViewItemBuilder {
+import java.util.Collections;
+import java.util.List;
+
+public class ErrorsListViewItemBuilder extends ListViewItemBuilder<ErrorInsight> {
     private final ErrorInsight insight;
     private final CodeObjectInfo scope;
 
     public ErrorsListViewItemBuilder(ErrorInsight insight, CodeObjectInfo scope) {
+        super(insight);
         this.insight = insight;
         this.scope = scope;
     }
 
     @Override
-    public ListViewItem build(ListGroupManager groupManager) {
-        ErrorsListViewItem errorsListViewItem = new ErrorsListViewItem();
-        errorsListViewItem.setSortIndex(1);
-        return errorsListViewItem;
+    public List<ListViewItem> build(ListGroupManager groupManager) {
+        ErrorsListViewItem errorsListViewItem = new ErrorsListViewItem("",1);
+        return Collections.singletonList(errorsListViewItem);
     }
 
-    @Override
-    public boolean accepted() {
-        return true;
-    }
 }

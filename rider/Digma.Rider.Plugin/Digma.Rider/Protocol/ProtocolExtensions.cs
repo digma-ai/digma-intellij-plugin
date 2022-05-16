@@ -17,7 +17,7 @@ namespace Digma.Rider.Protocol
             if (document == null) //satisfy resharper
                 return false;
             
-            return document.Path.Equals(other.Path) &&
+            return document.FileUri.Equals(other.FileUri) &&
                    document.Methods.Count == other.Methods.Count &&
                    !document.Methods.Except(other.Methods).Any();
         }

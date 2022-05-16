@@ -8,6 +8,7 @@ import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -25,16 +26,19 @@ public class PsiUtils {
     }
 
 
-    @Nullable
-    public static PsiFile uriToPsiFile(String uri, Project project) {
+    @NotNull
+    public static PsiFile uriToPsiFile(@NotNull String uri, @NotNull Project project) {
         return ReadAction.compute(() -> {
             VirtualFile virtualFile = VirtualFileManager.getInstance().findFileByUrl(uri);
-            if (virtualFile != null) {
-                return PsiManager.getInstance(project).findFile(virtualFile);
-            }
-            return null;
+            return PsiManager.getInstance(project).findFile(virtualFile);
         });
     }
 
 
+
+
+    @NotNull
+    public static String psiFileToDocumentProtocolKey(@NotNull PsiFile psiFile){
+        return psiFile.getVirtualFile().toNioPath().toString();
+    }
 }

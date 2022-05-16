@@ -17,14 +17,17 @@ class DocumentCodeObjectsListener : ProjectManagerListener {
         //todo: check what can be used on solution
         project.solution.solutionLifecycle.fullStartupFinished.advise(project.lifetime) {
             val model = project.solution.codeObjectsModel
-            model.documentAnalyzed.advise(project.lifetime) { filePath ->
-                documentAnalyzed(filePath, project)
+            model.documentAnalyzed.advise(project.lifetime) { documentKey ->
+                var docUri = model.documents[documentKey]?.fileUri
+                if (docUri != null) {
+                    documentAnalyzed(docUri, project)
+                }
             }
         }
     }
 
-    private fun documentAnalyzed(filePath: String, project: Project) {
-        val psiFile = PsiUtils.uriToPsiFile(filePath, project)
+    private fun documentAnalyzed(docUri: String, project: Project) {
+        val psiFile = PsiUtils.uriToPsiFile(docUri, project)
         notifyDocumentCodeObjectsChanged(psiFile)
     }
 

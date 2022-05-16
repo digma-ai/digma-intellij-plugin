@@ -18,14 +18,14 @@ namespace Digma.Rider.Logging
             var methodInfos = document.Methods;
             if (methodInfos.IsEmpty())
             {
-                Log(logger, "Didn't find methods for document {0}", document.Path);
+                Log(logger, "Didn't find methods for document {0}", document.FileUri);
             }
             else
             {
                 if (logger.IsInfoEnabled())
                 {
                     var methodInfosStr = string.Join("", methodInfos);
-                    Log(logger, "Found Methods for document {0}, methods: {1}", document.Path,
+                    Log(logger, "Found Methods for document {0}, methods: {1}", document.FileUri,
                         methodInfosStr);
                 }
             }

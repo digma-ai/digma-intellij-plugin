@@ -9,8 +9,10 @@ import org.digma.intellij.plugin.model.InsightType
     JsonSubTypes.Type(value = HotspotInsight::class, name = "HotSpot"),
     JsonSubTypes.Type(value = ErrorInsight::class, name = "Errors"),
     JsonSubTypes.Type(value = SpanInsight::class, name = "SpanUsages"),
-    JsonSubTypes.Type(value = NormalUsageInsight::class, name = "NormalUsage"),
     JsonSubTypes.Type(value = SlowestSpansInsight::class, name = "SlowestSpans"),
+    JsonSubTypes.Type(value = LowUsageInsight::class, name = "LowUsage"),
+    JsonSubTypes.Type(value = NormalUsageInsight::class, name = "NormalUsage"),
+    JsonSubTypes.Type(value = HighUsageInsight::class, name = "HighUsage"),
 )
 interface CodeObjectInsight {
     val type: InsightType

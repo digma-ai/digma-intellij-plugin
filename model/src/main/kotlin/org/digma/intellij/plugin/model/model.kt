@@ -16,5 +16,12 @@ enum class ElementUnderCaretType {
 }
 
 enum class InsightType {
-    HotSpot, Errors, SpanUsages, NormalUsage, SlowestSpans
+    HotSpot,
+    Errors,
+    SpanUsages,
+    SlowestSpans,
+    LowUsage,
+    NormalUsage,
+    HighUsage,
+    SlowEndpoint,
 }

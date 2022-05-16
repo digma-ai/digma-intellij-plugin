@@ -63,7 +63,7 @@ public class InsightsTests extends AbstractAnalyticsProviderTest {
 
 
         NormalUsageInsight expectedNormalUsageInsight = new NormalUsageInsight("Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$TransferFunds",
-                40,"post transfer/transferfunds");
+                "post transfer/transferfunds", 40);
         expectedCodeObjectInsights.add(expectedNormalUsageInsight);
 
         SpanInfo spanInfo = new SpanInfo("Retrieving account","Retrieving account","MoneyTransferDomainService","Sample.MoneyTransfer.API");

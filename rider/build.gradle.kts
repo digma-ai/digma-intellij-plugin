@@ -1,8 +1,7 @@
-import common.isWindows
 import common.properties
 import common.rider.rdLibDirectory
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import java.io.ByteArrayOutputStream
+
 @Suppress(
     //see: https://youtrack.jetbrains.com/issue/KTIJ-19369
     "DSL_SCOPE_VIOLATION"
@@ -47,24 +46,9 @@ tasks {
 
     val setBuildTool = create("setBuildTool") {
         doLast {
-            var toolArgs = ArrayList<String>()
-            var stdout = ByteArrayOutputStream()
-            if (isWindows()) {
-                exec {
-                    executable = "${projectDir}\\tools\\vswhere.exe"
-                    args = listOf("-latest", "-property", "installationPath", "-products", "*")
-                    standardOutput = stdout
-                    workingDir = projectDir
-                }
-                var files =
-                    groovy.ant.FileNameFinder().getFileNames("${stdout.toString().trim()}\\MSBuild", "**/MSBuild.exe")
-                extra["executable"] = files[0]
-                toolArgs.add("/v:minimal")
-            } else {
-                extra["executable"] = "dotnet"
-                toolArgs.add("msbuild")
-            }
-
+            val toolArgs = ArrayList<String>()
+            extra["executable"] = "dotnet"
+            toolArgs.add("msbuild")
             toolArgs.add(properties("DotnetPluginId", project) + "/" + properties("DotnetSolution", project))
             toolArgs.add("/p:Configuration=" + properties("BuildConfiguration", project))
             toolArgs.add("/p:HostFullIdentifier=")

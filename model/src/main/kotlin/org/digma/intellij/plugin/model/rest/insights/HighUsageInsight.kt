@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import org.digma.intellij.plugin.model.InsightType
 import java.beans.ConstructorProperties
 
-data class NormalUsageInsight
+data class HighUsageInsight
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties("codeObjectId", "route", "maxCallsIn1Min")
 constructor(
@@ -12,5 +12,5 @@ constructor(
     val route: String,
     val maxCallsIn1Min: Int
 ) : CodeObjectInsight {
-    override val type: InsightType = InsightType.NormalUsage
+    override val type: InsightType = InsightType.HighUsage
 }

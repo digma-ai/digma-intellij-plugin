@@ -61,12 +61,19 @@ public class InsightsTests extends AbstractAnalyticsProviderTest {
         ErrorInsight expectedErrorInsight = new ErrorInsight(codeObjectId, 1, 0, 0, namedErrors);
         expectedCodeObjectInsights.add(expectedErrorInsight);
 
-
         NormalUsageInsight expectedNormalUsageInsight = new NormalUsageInsight("Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$TransferFunds",
-                40,"post transfer/transferfunds");
+                "post transfer/transferfunds", 40);
         expectedCodeObjectInsights.add(expectedNormalUsageInsight);
 
-        SpanInfo spanInfo = new SpanInfo("Retrieving account","Retrieving account","MoneyTransferDomainService","Sample.MoneyTransfer.API");
+        LowUsageInsight expectedLowUsageInsight = new LowUsageInsight("Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$Abc",
+                "post transfer/transferfunds", 13);
+        expectedCodeObjectInsights.add(expectedLowUsageInsight);
+
+        HighUsageInsight expectedHighUsageInsight = new HighUsageInsight("Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$Defg",
+                "post transfer/transferfunds", 98);
+        expectedCodeObjectInsights.add(expectedHighUsageInsight);
+
+        SpanInfo spanInfo = new SpanInfo("Retrieving account", "Retrieving account", "MoneyTransferDomainService", "Sample.MoneyTransfer.API");
         SlowSpanInfo slowSpanInfo = new SlowSpanInfo(spanInfo,
                 new Percentile(0.10970134022722634D,new Duration(3.44D,"ms",3441700L)),
                 new Percentile(0.2566821090980162D,new Duration(3.44D,"ms",3441700L)),
@@ -76,6 +83,20 @@ public class InsightsTests extends AbstractAnalyticsProviderTest {
                 "post transfer/transferfunds",Collections.singletonList(slowSpanInfo));
         expectedCodeObjectInsights.add(expectedSlowestSpansInsight);
 
+        SlowEndpointInsight expectedSlowEndpointInsight = new SlowEndpointInsight("Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$TransferFunds", "post transfer/transferfunds"
+                , new Duration(0.11D, "ms", 11000)
+                , new Duration(0.12D, "ms", 12000)
+                , new Duration(0.13D, "ms", 13000)
+                , new Duration(0.14D, "ms", 14000)
+                , new Duration(0.15D, "ms", 15000)
+                , new Duration(0.16D, "ms", 16000)
+                , new Duration(0.17D, "ms", 17000)
+                , new Duration(0.18D, "ms", 18000)
+                , new Duration(0.19D, "ms", 19000)
+                , new Duration(0.21D, "ms", 21000)
+                , new Duration(0.22D, "ms", 22000)
+        );
+        expectedCodeObjectInsights.add(expectedSlowEndpointInsight);
 
 
         mockBackEnd.enqueue(new MockResponse()
@@ -85,7 +106,8 @@ public class InsightsTests extends AbstractAnalyticsProviderTest {
         AnalyticsProvider analyticsProvider = new RestAnalyticsProvider(baseUrl);
         List<CodeObjectInsight> codeObjectInsights = analyticsProvider.getInsights(new InsightsRequest("myenv", Collections.singletonList("method:" + codeObjectId)));
 
-        assertEquals(4, codeObjectInsights.size());
+        assertEquals(7, codeObjectInsights.size(), "count of returned insights");
+
         assertEquals(HotspotInsight.class, codeObjectInsights.get(0).getClass());
         HotspotInsight hotspotInsight = (HotspotInsight) codeObjectInsights.get(0);
         assertEquals(expectedHotspotInsight, hotspotInsight);
@@ -98,10 +120,21 @@ public class InsightsTests extends AbstractAnalyticsProviderTest {
         NormalUsageInsight normalUsageInsight = (NormalUsageInsight) codeObjectInsights.get(2);
         assertEquals(expectedNormalUsageInsight, normalUsageInsight);
 
-        assertEquals(SlowestSpansInsight.class, codeObjectInsights.get(3).getClass());
-        SlowestSpansInsight slowestSpansInsight = (SlowestSpansInsight) codeObjectInsights.get(3);
+        assertEquals(LowUsageInsight.class, codeObjectInsights.get(3).getClass());
+        LowUsageInsight lowUsageInsight = (LowUsageInsight) codeObjectInsights.get(3);
+        assertEquals(expectedLowUsageInsight, lowUsageInsight);
+
+        assertEquals(HighUsageInsight.class, codeObjectInsights.get(4).getClass());
+        HighUsageInsight highUsageInsight = (HighUsageInsight) codeObjectInsights.get(4);
+        assertEquals(expectedHighUsageInsight, highUsageInsight);
+
+        assertEquals(SlowestSpansInsight.class, codeObjectInsights.get(5).getClass());
+        SlowestSpansInsight slowestSpansInsight = (SlowestSpansInsight) codeObjectInsights.get(5);
         assertEquals(expectedSlowestSpansInsight, slowestSpansInsight);
 
+        assertEquals(SlowEndpointInsight.class, codeObjectInsights.get(6).getClass());
+        SlowEndpointInsight slowEndpointInsight = (SlowEndpointInsight) codeObjectInsights.get(6);
+        assertEquals(expectedSlowEndpointInsight, slowEndpointInsight);
 
     }
 

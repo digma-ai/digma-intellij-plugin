@@ -1,9 +1,6 @@
 @file:JvmName("Protocol")
 package org.digma.intellij.plugin.rider.protocol
 
-import com.intellij.psi.PsiFile
-import org.jetbrains.annotations.NotNull
-
 
 /*
 the backend send a file with file system protocol: file:///some/path/class.cs
@@ -19,7 +16,3 @@ we need to keep is when ever converting to and from psi file
 //    return null;
 //}
 
-@NotNull
-fun psiFileToPath(psiFile: PsiFile): String {
-    return psiFile.virtualFile.url
-}

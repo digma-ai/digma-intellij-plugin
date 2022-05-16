@@ -36,11 +36,11 @@ class CodeObjectsModel : Ext(SolutionModel.Solution) {
         signal("reanalyzeAll", PredefinedType.void)
         signal("documentAnalyzed", PredefinedType.string)
 
-        //key: document path, value: Document
+        //key: document file path, value: Document
         map("documents",
             PredefinedType.string,
             classdef("Document") {
-                field("path",PredefinedType.string)
+                field("fileUri",PredefinedType.string)
                 //map<codeObjectId,MethodInfo>
                 map("methods", PredefinedType.string, RiderMethodInfo)
             }

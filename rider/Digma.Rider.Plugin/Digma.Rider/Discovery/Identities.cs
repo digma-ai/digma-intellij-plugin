@@ -10,6 +10,12 @@ namespace Digma.Rider.Discovery
 
 
         [NotNull]
+        public static string ComputeFilePath([NotNull] IPsiSourceFile sourceFile)
+        {
+            return sourceFile.GetLocation().FullPath;
+        }   
+        
+        [NotNull]
         public static string ComputeFileUri([NotNull] IPsiSourceFile sourceFile)
         {
             return sourceFile.GetLocation().ToUri().ToString();

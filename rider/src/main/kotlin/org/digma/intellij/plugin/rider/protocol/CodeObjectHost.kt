@@ -17,8 +17,14 @@ class CodeObjectHost(val project: Project) {
     private var model: CodeObjectsModel = project.solution.codeObjectsModel
 
 
+    //using the file uri as the document key in rider protocol proved to be unstable because of
+    // differences in conversion between linux and windows.
+    // so the document key is just its full path without the URI schema 'file:///'
+    // the uri is a field in Document and is used to find a psi file in rider fronend
+
+
     fun getDocument(psiFile: PsiFile): DocumentInfo? {
-        val path: String = psiFileToPath(psiFile)
+        val path: String = PsiUtils.psiFileToDocumentProtocolKey(psiFile)
         val document: Document? = this.model.documents[path]
         return toModel(document)
     }
@@ -36,7 +42,9 @@ class CodeObjectHost(val project: Project) {
         codeLenses.forEach(Consumer { codeLens ->
             model.codeLens[codeLens.codeObjectId] = codeLens.toRiderCodeLensInfo()
         })
-        model.reanalyze.fire(psiFileToPath(psiFile))
+
+        var documentKey = PsiUtils.psiFileToDocumentProtocolKey(psiFile)
+        model.reanalyze.fire(documentKey)
     }
 
 
@@ -48,8 +56,9 @@ class CodeObjectHost(val project: Project) {
         model.codeLens.clear()
         model.reanalyzeAll.fire(Unit)
 
-        model.documents.keys.forEach {
-            val psiFile = PsiUtils.uriToPsiFile(it, project)
+        model.documents.values.forEach {
+            val docUri = it.fileUri
+            val psiFile = PsiUtils.uriToPsiFile(docUri, project)
             notifyDocumentCodeObjectsChanged(psiFile)
         }
     }
@@ -65,7 +74,7 @@ class CodeObjectHost(val project: Project) {
 
 
     private fun Document.toDocumentInfo() = DocumentInfo(
-        path = path,
+        path = fileUri,
         methods = toMethodInfoMap(methods)
 
     )

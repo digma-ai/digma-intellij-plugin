@@ -11,7 +11,7 @@ namespace Digma.Rider.Discovery
     {
         public void Marshal(UnsafeWriter writer, Document value)
         {
-            writer.Write(value.Path);
+            writer.Write(value.FileUri);
             writer.Write(UnsafeWriter.StringDelegate, RiderMethodInfoWriteDelegate, value.Methods);
         }
 

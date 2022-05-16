@@ -8,6 +8,7 @@ import org.digma.intellij.plugin.model.rest.insights.ErrorInsight;
 import org.digma.intellij.plugin.model.rest.insights.HotspotInsight;
 import org.digma.intellij.plugin.model.rest.insights.SpanInsight;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
+import org.digma.intellij.plugin.view.EmptyListViewItemBuilder;
 import org.digma.intellij.plugin.view.ListViewBuilder;
 import org.digma.intellij.plugin.view.ListViewItemBuilder;
 import org.jetbrains.annotations.NotNull;
@@ -51,7 +52,8 @@ public class InsightsViewBuilder extends ListViewBuilder<CodeObjectInsight> {
             case SpanUsages:
                 return new SpanListViewItemBuilder((SpanInsight) insight,scope);
             default:
-                throw new IllegalStateException("Unexpected value: " + type);
+                //todo: temporary until we have all types implemented
+                return new EmptyListViewItemBuilder(insight);
         }
     }
 }

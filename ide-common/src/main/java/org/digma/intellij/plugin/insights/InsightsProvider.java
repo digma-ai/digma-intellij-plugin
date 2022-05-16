@@ -8,7 +8,6 @@ import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.insights.view.InsightsViewBuilder;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
-import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
@@ -35,8 +34,8 @@ public class InsightsProvider {
     public InsightsListContainer getInsights(@NotNull MethodInfo methodInfo) {
 
         List<String> objectIds = new ArrayList<>();
-         objectIds.add(methodInfo.idWithType());
-         objectIds.addAll(methodInfo.getRelatedCodeObjectIds());
+        objectIds.add(methodInfo.idWithType());
+        objectIds.addAll(methodInfo.getRelatedCodeObjectIds());
 
 
         List<CodeObjectInsight> codeObjectInsights = analyticsProvider.getInsights(new InsightsRequest(environment.getCurrent(), objectIds));

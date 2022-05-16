@@ -51,6 +51,7 @@ public class InsightsTests extends AbstractAnalyticsProviderTest {
         List<CodeObjectInsight> expectedCodeObjectInsights = new ArrayList<>();
 
         HotspotInsight expectedHotspotInsight = new HotspotInsight(codeObjectId, 75);
+        expectedCodeObjectInsights.add(expectedHotspotInsight);
 
         ErrorInsightNamedError namedError1 = new ErrorInsightNamedError("e0a4d03c-c609-11ec-a9d6-0242ac130006", "System.NullReferenceException", codeObjectId, "Sample.MoneyTransfer.API.Controllers.TransferController$_$TransferFunds");
         ErrorInsightNamedError namedError2 = new ErrorInsightNamedError("de63a938-c609-11ec-b388-0242ac130006", "System.Exception", codeObjectId, "Sample.MoneyTransfer.API.Controllers.TransferController$_$TransferFunds");
@@ -58,9 +59,23 @@ public class InsightsTests extends AbstractAnalyticsProviderTest {
         namedErrors.add(namedError1);
         namedErrors.add(namedError2);
         ErrorInsight expectedErrorInsight = new ErrorInsight(codeObjectId, 1, 0, 0, namedErrors);
-
-        expectedCodeObjectInsights.add(expectedHotspotInsight);
         expectedCodeObjectInsights.add(expectedErrorInsight);
+
+
+        NormalUsageInsight expectedNormalUsageInsight = new NormalUsageInsight("Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$TransferFunds",
+                40,"post transfer/transferfunds");
+        expectedCodeObjectInsights.add(expectedNormalUsageInsight);
+
+        SpanInfo spanInfo = new SpanInfo("Retrieving account","Retrieving account","MoneyTransferDomainService","Sample.MoneyTransfer.API");
+        SlowSpanInfo slowSpanInfo = new SlowSpanInfo(spanInfo,
+                new Percentile(0.10970134022722634D,new Duration(3.44D,"ms",3441700L)),
+                new Percentile(0.2566821090980162D,new Duration(3.44D,"ms",3441700L)),
+                new Percentile(0.4407383382867023D,new Duration(5.64D,"ms",5643900L)));
+
+        SlowestSpansInsight expectedSlowestSpansInsight = new SlowestSpansInsight("Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$TransferFunds",
+                "post transfer/transferfunds",Collections.singletonList(slowSpanInfo));
+        expectedCodeObjectInsights.add(expectedSlowestSpansInsight);
+
 
 
         mockBackEnd.enqueue(new MockResponse()
@@ -70,7 +85,7 @@ public class InsightsTests extends AbstractAnalyticsProviderTest {
         AnalyticsProvider analyticsProvider = new RestAnalyticsProvider(baseUrl);
         List<CodeObjectInsight> codeObjectInsights = analyticsProvider.getInsights(new InsightsRequest("myenv", Collections.singletonList("method:" + codeObjectId)));
 
-        assertEquals(2, codeObjectInsights.size());
+        assertEquals(4, codeObjectInsights.size());
         assertEquals(HotspotInsight.class, codeObjectInsights.get(0).getClass());
         HotspotInsight hotspotInsight = (HotspotInsight) codeObjectInsights.get(0);
         assertEquals(expectedHotspotInsight, hotspotInsight);
@@ -78,6 +93,16 @@ public class InsightsTests extends AbstractAnalyticsProviderTest {
         assertEquals(ErrorInsight.class, codeObjectInsights.get(1).getClass());
         ErrorInsight errorInsight = (ErrorInsight) codeObjectInsights.get(1);
         assertEquals(expectedErrorInsight, errorInsight);
+
+        assertEquals(NormalUsageInsight.class, codeObjectInsights.get(2).getClass());
+        NormalUsageInsight normalUsageInsight = (NormalUsageInsight) codeObjectInsights.get(2);
+        assertEquals(expectedNormalUsageInsight, normalUsageInsight);
+
+        assertEquals(SlowestSpansInsight.class, codeObjectInsights.get(3).getClass());
+        SlowestSpansInsight slowestSpansInsight = (SlowestSpansInsight) codeObjectInsights.get(3);
+        assertEquals(expectedSlowestSpansInsight, slowestSpansInsight);
+
+
     }
 
 

@@ -9,7 +9,7 @@ import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 class ErrorsViewService(val project: Project) {
 
     lateinit var panel: DialogPanel
-    lateinit var model: ErrorsModel;
+    lateinit var model: ErrorsModel
 
 
     fun updateSelectedMethod(
@@ -17,7 +17,7 @@ class ErrorsViewService(val project: Project) {
         methodCodeObjectSummary: MethodCodeObjectSummary?
     ) {
         model.methodName = methodUnderCaret.name
-        model.errorsCount = 0;
+        model.errorsCount = 0
         methodCodeObjectSummary?.let { it ->
             it.insightsCount.also {
                 model.errorsCount = it

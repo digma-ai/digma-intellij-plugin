@@ -9,7 +9,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     id("plugin-library")
     id("common-kotlin")
-    id("com.jetbrains.rdgen") version "2022.1.1"
+    id("com.jetbrains.rdgen") version libs.versions.intellij.platform.get()
 }
 
 

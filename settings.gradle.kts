@@ -21,12 +21,15 @@ pluginManagement {
 kotlin-stdlib: the kotlin-stdlib must be compatible with the intellij platform version,
  see: https://plugins.jetbrains.com/docs/intellij/kotlin.html#kotlin-standard-library
 
+we currently have to specify intellij platform version in a few places , so use
+the version alias where ever possible
+
  todo: maybe use java-platforms instead of versionCatalogs
  */
 dependencyResolutionManagement {
     versionCatalogs {
         create("libs") {
-
+            version("intellij-platform", "2022.1.1")
             version("junit", "5.8.2")
             version("kotlin-stdlib", "1.6.20")
             library("kotlin-stdlib-jdk8", "org.jetbrains.kotlin", "kotlin-stdlib-jdk8").versionRef("kotlin-stdlib")

@@ -96,8 +96,6 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 //                    .eventListener()
                     .build();
 
-
-
             Retrofit retrofit = new Retrofit.Builder()
                     .baseUrl(baseUrl)
                     .client(okHttpClient)

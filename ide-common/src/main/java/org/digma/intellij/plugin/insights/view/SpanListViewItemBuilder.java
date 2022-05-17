@@ -28,16 +28,16 @@ public class SpanListViewItemBuilder extends ListViewItemBuilder<SpanInsight> {
         var span = insight.getSpan();
         var groupKey = "span:_" + span;
         SpanGroupListViewItem spanGroup = (SpanGroupListViewItem)
-                groupManager.getOrCreateGroup(groupKey, () -> new SpanGroupListViewItem(span,SORT_INDEX));
+                groupManager.getOrCreateGroup(groupKey, () -> new SpanGroupListViewItem(span, SORT_INDEX));
 
-        ListViewItem listViewItem = createListViewItem();
-        spanGroup.getItems().add(listViewItem);
+        final var listViewItem = createListViewItem();
+        spanGroup.addItem(listViewItem);
         return Collections.singletonList(spanGroup);
     }
 
     private ListViewItem createListViewItem() {
 
-        SpanListViewItem spanListViewItem = new SpanListViewItem(insight.getFlows(),0);
+        SpanListViewItem spanListViewItem = new SpanListViewItem(insight.getFlows(), 0);
         spanListViewItem.setCodeObjectId(insight.getCodeObjectId());
         return spanListViewItem;
     }

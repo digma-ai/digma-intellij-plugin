@@ -4,7 +4,9 @@ import java.util.*
 
 abstract class GroupListViewItem(val groupId: String, sortIndex: Int) : ListViewItem(sortIndex) {
 
-    val items: SortedSet<ListViewItem> = TreeSet(Comparator.comparingInt(ListViewItem::sortIndex))
+    private val items: SortedSet<ListViewItem> = TreeSet(Comparator.comparingInt(ListViewItem::sortIndex))
 
-
+    fun addItem(item: ListViewItem) {
+        items.add(item)
+    }
 }

@@ -30,14 +30,12 @@ public class HotspotListViewItemBuilder extends ListViewItemBuilder<HotspotInsig
     public List<ListViewItem> build(@NotNull ListGroupManager groupManager) {
 
 
-        HotspotListViewItem hotspotListViewItem = new HotspotListViewItem(
+        HotspotListViewItem hotspotListViewItem = new HotspotListViewItem(insight, SORT_INDEX,
                 "This is an error hotspot",
                 "Many major errors occur or propagate through this function.",
                 "See how this was calculated",
-                "https://phmecloud.blob.core.windows.net/photo/web/ou0ehpjndrfhkkx1tekojx0-3.png",
-                SORT_INDEX);
-
-        hotspotListViewItem.setCodeObjectId(insight.getCodeObjectId());
+                "https://phmecloud.blob.core.windows.net/photo/web/ou0ehpjndrfhkkx1tekojx0-3.png"
+        );
 
         return Collections.singletonList(hotspotListViewItem);
     }

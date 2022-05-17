@@ -36,11 +36,8 @@ public class SpanListViewItemBuilder extends ListViewItemBuilder<SpanInsight> {
     }
 
     private ListViewItem createListViewItem() {
-
-        SpanListViewItem spanListViewItem = new SpanListViewItem(insight.getFlows(), 0);
-        spanListViewItem.setCodeObjectId(insight.getCodeObjectId());
+        SpanListViewItem spanListViewItem = new SpanListViewItem(insight, 0);
         return spanListViewItem;
     }
-
 
 }

@@ -22,7 +22,7 @@ public class ErrorsListViewItemBuilder extends ListViewItemBuilder<ErrorInsight>
 
     @Override
     public List<ListViewItem> build(ListGroupManager groupManager) {
-        ErrorsListViewItem errorsListViewItem = new ErrorsListViewItem("",1);
+        ErrorsListViewItem errorsListViewItem = new ErrorsListViewItem(insight, 1, "");
         return Collections.singletonList(errorsListViewItem);
     }
 

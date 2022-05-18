@@ -2,6 +2,8 @@ package org.digma.intellij.plugin.insights.view;
 
 import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsight;
+import org.digma.intellij.plugin.model.rest.insights.SlowestSpansInsight;
+import org.digma.intellij.plugin.ui.model.insights.InsightGroupType;
 import org.digma.intellij.plugin.view.EmptyListViewItemBuilder;
 import org.digma.intellij.plugin.view.ListViewItemBuilder;
 import org.jetbrains.annotations.NotNull;
@@ -37,15 +39,12 @@ public class BuildersHolder {
             case SpanUsages:
                 return new SpanListViewItemBuilder();
             case SlowestSpans:
-                return new EmptyListViewItemBuilder();
+                return new GroupListViewItemBuilder<SlowestSpansInsight>(InsightGroupType.HttpEndpoint, slowestSpansInsight -> slowestSpansInsight.getRoute());
             case LowUsage:
-                return new EmptyListViewItemBuilder();
             case NormalUsage:
-                return new EmptyListViewItemBuilder();
             case HighUsage:
-                return new EmptyListViewItemBuilder();
             case SlowEndpoint:
-                return new EmptyListViewItemBuilder();
+                return new NoGroupListViewItemBuilder<>();
             default:
                 //todo: temporary until we have all types implemented
                 return new EmptyListViewItemBuilder();

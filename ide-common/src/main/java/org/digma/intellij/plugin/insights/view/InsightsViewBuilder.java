@@ -20,7 +20,7 @@ public class InsightsViewBuilder extends ListViewBuilder {
     }
 
     @NotNull
-    public List<ListViewItem<?>> build(List<CodeObjectInsight> codeObjectInsights, @NotNull MethodInfo scope) {
+    public List<ListViewItem<?>> build(@NotNull MethodInfo scope, List<CodeObjectInsight> codeObjectInsights) {
 
         List<ListViewItem<?>> allItems = new ArrayList<>();
 

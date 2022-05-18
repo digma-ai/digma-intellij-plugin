@@ -44,7 +44,7 @@ public class InsightsProvider {
         Log.log(LOGGER::info, "CodeObjectInsights for {}: {}", methodInfo, codeObjectInsights);
 
         InsightsViewBuilder insightsViewBuilder = new InsightsViewBuilder(buildersHolder);
-        List<ListViewItem<?>> listViewItems = insightsViewBuilder.build(codeObjectInsights, methodInfo);
+        List<ListViewItem<?>> listViewItems = insightsViewBuilder.build(methodInfo, codeObjectInsights);
         Log.log(LOGGER::info, "ListViewItems for {}: {}", methodInfo, listViewItems);
 
         return new InsightsListContainer(listViewItems, codeObjectInsights.size());

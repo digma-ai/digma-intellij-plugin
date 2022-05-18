@@ -24,6 +24,8 @@ dependencies{
     implementation(project(":idea"))
     implementation(project(":pycharm"))
     implementation(project(":rider"))
+
+    implementation("io.github.parubok:multiline-label:1.18")
 }
 
 // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
@@ -69,14 +71,17 @@ project.afterEvaluate{
     project(":pycharm").afterEvaluate{ buildPlugin.dependsOn(tasks.getByName("buildPlugin"))   }
     project(":rider").afterEvaluate{
         buildPlugin.dependsOn(tasks.getByName("buildPlugin"))
-        //see comment for copyKotlinModuleFile task
-        classes.finalizedBy(tasks.getByName("copyKotlinModuleFile"))
     }
 }
 
 
 
 tasks {
+
+
+    jar{
+        dependsOn(":rider:copyKotlinModuleFile")
+    }
 
     wrapper {
         gradleVersion = properties("gradleVersion")
@@ -150,7 +155,8 @@ tasks {
     runIde {
         dependsOn(deleteLog)
         //rider contributes to prepareSandbox, so it needs to run before runIde
-        dependsOn(":rider:prepareSandbox")
+        dependsOn("prepareSandbox")
+        dependsOn(":rider:prepareSandboxForRider")
         maxHeapSize = "4g"
         // Rider's backend doesn't support dynamic plugins. It might be possible to work with auto-reload of the frontend
         // part of a plugin, but there are dangers about keeping plugins in sync

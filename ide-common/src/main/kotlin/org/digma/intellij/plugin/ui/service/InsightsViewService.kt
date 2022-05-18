@@ -29,7 +29,13 @@ class InsightsViewService(val project: Project) {
     }
 
     fun empty() {
-        //todo: implement
+        model.listViewItems = ArrayList()
+        model.methodName = ""
+        model.className = ""
+        model.insightsCount = 0
+
+        panel.reset()
+
     }
 
 

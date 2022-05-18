@@ -6,10 +6,10 @@ import java.util.List;
 
 public class InsightsListContainer {
 
-    private int count;
-    private final List<ListViewItem> listViewItems;
+    private final int count;
+    private final List<ListViewItem<?>> listViewItems;
 
-    public InsightsListContainer(List<ListViewItem> listViewItems, int count) {
+    public InsightsListContainer(List<ListViewItem<?>> listViewItems, int count) {
         this.listViewItems = listViewItems;
         this.count = count;
     }
@@ -19,7 +19,7 @@ public class InsightsListContainer {
         return count;
     }
 
-    public List<ListViewItem> getListViewItems() {
+    public List<ListViewItem<?>> getListViewItems() {
         return listViewItems;
     }
 }

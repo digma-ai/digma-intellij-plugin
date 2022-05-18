@@ -8,7 +8,7 @@ data class InsightsModel(
     var insightsCount: Int = 0,
     var methodName: String = "",
     var className: String = "",
-    var listViewItems: List<ListViewItem> = Collections.emptyList()
+    var listViewItems: List<ListViewItem<*>> = Collections.emptyList()
 ) : PanelModel {
 
     override fun count(): String {

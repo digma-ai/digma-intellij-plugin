@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.analytics.AnalyticsProvider;
 import org.digma.intellij.plugin.analytics.Environment;
 import org.digma.intellij.plugin.document.DocumentInfoService;
+import org.digma.intellij.plugin.insights.view.BuilderHolder;
 import org.digma.intellij.plugin.insights.view.InsightsViewBuilder;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
@@ -24,6 +25,7 @@ public class InsightsProvider {
     private final Environment environment;
     private final DocumentInfoService documentInfoService;
 
+    private final BuilderHolder builderHolder = new BuilderHolder();
 
     public InsightsProvider(Project project) {
         analyticsProvider = project.getService(AnalyticsProvider.class);
@@ -39,13 +41,13 @@ public class InsightsProvider {
 
 
         List<CodeObjectInsight> codeObjectInsights = analyticsProvider.getInsights(new InsightsRequest(environment.getCurrent(), objectIds));
-        Log.log(LOGGER::info, "CodeObjectInsights for {}: {}",methodInfo,codeObjectInsights);
+        Log.log(LOGGER::info, "CodeObjectInsights for {}: {}", methodInfo, codeObjectInsights);
 
-        InsightsViewBuilder insightsViewBuilder = new InsightsViewBuilder(codeObjectInsights,methodInfo);
-        List<ListViewItem> listViewItems = insightsViewBuilder.build();
-        Log.log(LOGGER::info, "ListViewItems for {}: {}",methodInfo,listViewItems);
+        InsightsViewBuilder insightsViewBuilder = new InsightsViewBuilder(builderHolder);
+        List<ListViewItem<?>> listViewItems = insightsViewBuilder.build(codeObjectInsights, methodInfo);
+        Log.log(LOGGER::info, "ListViewItems for {}: {}", methodInfo, listViewItems);
 
-        return new InsightsListContainer(listViewItems,codeObjectInsights.size());
+        return new InsightsListContainer(listViewItems, codeObjectInsights.size());
 
     }
 }

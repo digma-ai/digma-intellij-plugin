@@ -11,12 +11,10 @@ import java.util.List;
 
 public class HotspotListViewItemBuilder implements ListViewItemBuilder<HotspotInsight> {
 
-    private static final Integer SORT_INDEX = 0;
-
     @Override
     public List<ListViewItem<?>> build(HotspotInsight insight, @NotNull ListGroupManager groupManager) {
 
-        HotspotListViewItem hotspotListViewItem = new HotspotListViewItem(insight, SORT_INDEX,
+        HotspotListViewItem hotspotListViewItem = new HotspotListViewItem(insight,
                 "This is an error hotspot",
                 "Many major errors occur or propagate through this function.",
                 "See how this was calculated",

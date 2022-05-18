@@ -1,8 +1,8 @@
 package org.digma.intellij.plugin.insights.view;
 
 import org.digma.intellij.plugin.model.rest.insights.SpanInsight;
+import org.digma.intellij.plugin.ui.model.insights.InsightListViewItem;
 import org.digma.intellij.plugin.ui.model.insights.SpanGroupListViewItem;
-import org.digma.intellij.plugin.ui.model.insights.SpanListViewItem;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
 import org.digma.intellij.plugin.view.ListGroupManager;
 import org.digma.intellij.plugin.view.ListViewItemBuilder;
@@ -10,8 +10,6 @@ import org.digma.intellij.plugin.view.ListViewItemBuilder;
 import java.util.List;
 
 public class SpanListViewItemBuilder implements ListViewItemBuilder<SpanInsight> {
-
-    private static final Integer SORT_INDEX = 10;
 
     @Override
     public List<ListViewItem<?>> build(SpanInsight insight, ListGroupManager groupManager) {
@@ -26,8 +24,7 @@ public class SpanListViewItemBuilder implements ListViewItemBuilder<SpanInsight>
     }
 
     private ListViewItem createListViewItem(SpanInsight insight) {
-        SpanListViewItem spanListViewItem = new SpanListViewItem(insight, SORT_INDEX);
-        return spanListViewItem;
+        return new InsightListViewItem<>(insight);
     }
 
 }

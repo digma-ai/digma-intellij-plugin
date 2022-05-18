@@ -36,17 +36,17 @@ public class BuildersHolder {
             case Errors:
                 return new NoGroupListViewItemBuilder<ErrorInsight>();
             case SpanUsages:
-                return new SpanListViewItemBuilder();
+                return new GroupListViewItemBuilder<>(InsightGroupType.Span, SpanInsight::getSpan);
             case SlowestSpans:
-                return new GroupListViewItemBuilder<SlowestSpansInsight>(InsightGroupType.HttpEndpoint, insight -> insight.getRoute());
+                return new GroupListViewItemBuilder<>(InsightGroupType.HttpEndpoint, SlowestSpansInsight::getRoute);
             case LowUsage:
-                return new GroupListViewItemBuilder<LowUsageInsight>(InsightGroupType.HttpEndpoint, insight -> insight.getRoute());
+                return new GroupListViewItemBuilder<>(InsightGroupType.HttpEndpoint, LowUsageInsight::getRoute);
             case NormalUsage:
-                return new GroupListViewItemBuilder<NormalUsageInsight>(InsightGroupType.HttpEndpoint, insight -> insight.getRoute());
+                return new GroupListViewItemBuilder<>(InsightGroupType.HttpEndpoint, NormalUsageInsight::getRoute);
             case HighUsage:
-                return new GroupListViewItemBuilder<HighUsageInsight>(InsightGroupType.HttpEndpoint, insight -> insight.getRoute());
+                return new GroupListViewItemBuilder<>(InsightGroupType.HttpEndpoint, HighUsageInsight::getRoute);
             case SlowEndpoint:
-                return new GroupListViewItemBuilder<SlowEndpointInsight>(InsightGroupType.HttpEndpoint, insight -> insight.getRoute());
+                return new GroupListViewItemBuilder<>(InsightGroupType.HttpEndpoint, SlowEndpointInsight::getRoute);
             default:
                 //todo: temporary until we have all types implemented
                 return new EmptyListViewItemBuilder();

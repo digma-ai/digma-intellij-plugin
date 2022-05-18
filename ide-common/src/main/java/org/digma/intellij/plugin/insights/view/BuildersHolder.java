@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.insights.view;
 import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupType;
-import org.digma.intellij.plugin.view.EmptyListViewItemBuilder;
 import org.digma.intellij.plugin.view.ListViewItemBuilder;
 import org.jetbrains.annotations.NotNull;
 
@@ -48,8 +47,8 @@ public class BuildersHolder {
             case SlowEndpoint:
                 return new GroupListViewItemBuilder<>(InsightGroupType.HttpEndpoint, SlowEndpointInsight::getRoute);
             default:
-                //todo: temporary until we have all types implemented
-                return new EmptyListViewItemBuilder();
+                // default will fall into Single reference
+                return new NoGroupListViewItemBuilder<>();
         }
     }
 

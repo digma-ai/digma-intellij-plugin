@@ -12,7 +12,7 @@ public class ErrorsListViewItemBuilder implements ListViewItemBuilder<ErrorInsig
 
     @Override
     public List<ListViewItem<?>> build(ErrorInsight insight, ListGroupManager groupManager) {
-        ErrorsListViewItem errorsListViewItem = new ErrorsListViewItem(insight, 1, "");
+        ErrorsListViewItem errorsListViewItem = new ErrorsListViewItem(insight, 1);
         return List.of(errorsListViewItem);
     }
 

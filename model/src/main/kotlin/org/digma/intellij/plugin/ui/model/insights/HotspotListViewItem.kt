@@ -9,6 +9,6 @@ class HotspotListViewItem(
     val linkText: String,
     val linkUrl: String
 ) :
-    InsightListViewItem<HotspotInsight>(insight, sortIndex, "") {
+    InsightListViewItem<HotspotInsight>(insight, sortIndex) {
 
 }

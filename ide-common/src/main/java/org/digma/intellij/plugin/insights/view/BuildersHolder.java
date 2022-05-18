@@ -8,11 +8,11 @@ import org.jetbrains.annotations.NotNull;
 import java.util.HashMap;
 import java.util.Map;
 
-public class BuilderHolder {
+public class BuildersHolder {
 
     private final Map<InsightType, ListViewItemBuilder<?>> map = new HashMap<>(30);
 
-    public BuilderHolder() {
+    public BuildersHolder() {
         createMap();
     }
 

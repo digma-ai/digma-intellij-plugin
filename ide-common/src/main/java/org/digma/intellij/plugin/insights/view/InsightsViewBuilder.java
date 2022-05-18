@@ -13,10 +13,10 @@ import java.util.Objects;
 
 public class InsightsViewBuilder extends ListViewBuilder {
 
-    private final BuilderHolder builderHolder;
+    private final BuildersHolder buildersHolder;
 
-    public InsightsViewBuilder(@NotNull BuilderHolder builderHolder) {
-        this.builderHolder = Objects.requireNonNull(builderHolder, "builderHolder must not be null");
+    public InsightsViewBuilder(@NotNull BuildersHolder buildersHolder) {
+        this.buildersHolder = Objects.requireNonNull(buildersHolder, "buildersHolder must not be null");
     }
 
     @NotNull
@@ -25,7 +25,7 @@ public class InsightsViewBuilder extends ListViewBuilder {
         List<ListViewItem<?>> allItems = new ArrayList<>();
 
         codeObjectInsights.forEach(insight -> {
-            final ListViewItemBuilder builder = builderHolder.getBuilder(insight.getType());
+            final ListViewItemBuilder builder = buildersHolder.getBuilder(insight.getType());
             final List<ListViewItem<?>> insightListItems = builder.build(insight, groupManager);
             allItems.addAll(insightListItems);
         });

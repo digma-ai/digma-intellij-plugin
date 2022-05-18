@@ -14,6 +14,7 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/analytics-provider" />
             <option value="$PROJECT_DIR$/buildSrc" />
+            <option value="$PROJECT_DIR$/common" />
             <option value="$PROJECT_DIR$/ide-common" />
             <option value="$PROJECT_DIR$/idea" />
             <option value="$PROJECT_DIR$/model" />

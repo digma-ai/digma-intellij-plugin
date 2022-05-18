@@ -1,8 +1,7 @@
 package org.digma.intellij.plugin.insights.view;
 
 import org.digma.intellij.plugin.model.InsightType;
-import org.digma.intellij.plugin.model.rest.insights.ErrorInsight;
-import org.digma.intellij.plugin.model.rest.insights.SlowestSpansInsight;
+import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupType;
 import org.digma.intellij.plugin.view.EmptyListViewItemBuilder;
 import org.digma.intellij.plugin.view.ListViewItemBuilder;
@@ -39,12 +38,15 @@ public class BuildersHolder {
             case SpanUsages:
                 return new SpanListViewItemBuilder();
             case SlowestSpans:
-                return new GroupListViewItemBuilder<SlowestSpansInsight>(InsightGroupType.HttpEndpoint, slowestSpansInsight -> slowestSpansInsight.getRoute());
+                return new GroupListViewItemBuilder<SlowestSpansInsight>(InsightGroupType.HttpEndpoint, insight -> insight.getRoute());
             case LowUsage:
+                return new GroupListViewItemBuilder<LowUsageInsight>(InsightGroupType.HttpEndpoint, insight -> insight.getRoute());
             case NormalUsage:
+                return new GroupListViewItemBuilder<NormalUsageInsight>(InsightGroupType.HttpEndpoint, insight -> insight.getRoute());
             case HighUsage:
+                return new GroupListViewItemBuilder<HighUsageInsight>(InsightGroupType.HttpEndpoint, insight -> insight.getRoute());
             case SlowEndpoint:
-                return new NoGroupListViewItemBuilder<>();
+                return new GroupListViewItemBuilder<SlowEndpointInsight>(InsightGroupType.HttpEndpoint, insight -> insight.getRoute());
             default:
                 //todo: temporary until we have all types implemented
                 return new EmptyListViewItemBuilder();

@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.ui.common
 
-import org.digma.intellij.plugin.ui.common.Extensions.Companion.trimLastChar
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

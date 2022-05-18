@@ -18,6 +18,7 @@ plugins {
 
 
 dependencies{
+    implementation(project(":common"))
     implementation(project(":model"))
     implementation(project(":analytics-provider"))
     implementation(project(":ide-common"))

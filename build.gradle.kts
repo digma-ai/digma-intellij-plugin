@@ -24,6 +24,9 @@ dependencies{
     implementation(project(":idea"))
     implementation(project(":pycharm"))
     implementation(project(":rider"))
+
+    testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
+    testImplementation(kotlin("test"))
 }
 
 // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin

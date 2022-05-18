@@ -6,10 +6,17 @@ plugins {
 }
 
 intellij {
-    version.set("IC-"+ properties("platformVersion", project))
+    version.set("IC-" + properties("platformVersion", project))
 }
 
 dependencies {
     implementation(project(":model"))
     implementation(project(":analytics-provider"))
+
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation(kotlin("test"))
+}
+
+tasks.test {
+    useJUnitPlatform()
 }

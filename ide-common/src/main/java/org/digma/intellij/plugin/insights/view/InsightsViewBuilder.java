@@ -30,6 +30,8 @@ public class InsightsViewBuilder extends ListViewBuilder {
             allItems.addAll(insightListItems);
         });
 
+        allItems.addAll(groupManager.getGroupItems());
+
         return sortDistinct(allItems);
     }
 

@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.model.insights
 
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.util.*

@@ -15,6 +15,7 @@ import org.digma.intellij.plugin.ui.common.scopeLine
 import org.digma.intellij.plugin.ui.common.topLine
 import org.digma.intellij.plugin.ui.list.insights.InsightsList
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
+import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 
@@ -44,7 +45,7 @@ fun insightsPanel(project: Project): DialogPanel {
         row{
 
             var insightsList = InsightsList()
-            insightsList.getModel().setListData(insightsModel.listViewItems)
+            insightsList.getModel().setListData(insightsModel.listViewItems as List<Nothing>)
 
 //            scrollCell(insightsList)
 
@@ -59,7 +60,7 @@ fun insightsPanel(project: Project): DialogPanel {
                 .horizontalAlign(HorizontalAlign.FILL)
                 .verticalAlign(VerticalAlign.BOTTOM)
                 .onReset {
-                    insightsList.getModel().setListData(insightsModel.listViewItems)
+                    insightsList.getModel().setListData(insightsModel.listViewItems as List<Nothing>)
 //                    scrollPane.component.revalidate()
 //                    scrollPane.component.repaint()
 //                    scrollPane.component.preferredSize = Dimension(-1,400)

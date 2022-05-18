@@ -1,5 +1,4 @@
 package org.digma.intellij.plugin.ui.model.listview
 
-abstract class ListViewItem(val sortIndex: Int) {
-    lateinit var codeObjectId: String
+open class ListViewItem<MO>(val modelObject: MO, val sortIndex: Int) {
 }

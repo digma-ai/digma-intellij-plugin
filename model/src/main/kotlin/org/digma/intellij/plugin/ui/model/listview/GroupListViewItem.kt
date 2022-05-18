@@ -2,9 +2,12 @@ package org.digma.intellij.plugin.ui.model.listview
 
 import java.util.*
 
-abstract class GroupListViewItem(val groupId: String, sortIndex: Int) : ListViewItem(sortIndex) {
+open class GroupListViewItem(sortIndex: Int, val groupId: String) : ListViewItem<SortedSet<ListViewItem<*>>>(
+    TreeSet(Comparator.comparingInt(ListViewItem<*>::sortIndex)),
+    sortIndex
+) {
 
-    val items: SortedSet<ListViewItem> = TreeSet(Comparator.comparingInt(ListViewItem::sortIndex))
-
-
+    fun addItem(item: ListViewItem<*>) {
+        modelObject.add(item)
+    }
 }

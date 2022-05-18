@@ -11,7 +11,7 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.intellij.plugins:gradle-intellij-plugin:1.5.3")
+    implementation("org.jetbrains.intellij.plugins:gradle-intellij-plugin:1.5.2")
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.21")
     implementation("com.dorongold.plugins:task-tree:2.1.0")
 }

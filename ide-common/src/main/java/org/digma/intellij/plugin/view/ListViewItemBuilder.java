@@ -6,30 +6,24 @@ import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
 import java.util.List;
 
 /**
- * ListViewItemBuilder is initialized with a CodeObjectInsight and on build will build a
- * ListViewItem from it.
  * Usually builders will build one ListViewItem, but it can return a list of ListViewItem in case a
  * ListViewItem needs to belong to two groups or maybe one insight creates two UI elements.
  *
- * @param <T>
+ * @param <T> CodeObjectInsight
  */
-public abstract class ListViewItemBuilder<T extends CodeObjectInsight> {
-
-    private T itemSource;
-
-    public ListViewItemBuilder(T itemSource) {
-        this.itemSource = itemSource;
-    }
+public interface ListViewItemBuilder<T extends CodeObjectInsight> {
 
     /**
      * build one or more ListViewItem from the insight.
      * if a builder adds the ListViewItem to a group it should return the group and not the
      * ListViewItem. the ListViewItems returned here are considered 'top level items' in the UI list, it may contain
      * groups of items.
-     * @param groupManager manages group instances.
+     *
+     * @param codeObjectInsight self explanatory.
+     * @param groupManager      manages group instances.
      * @return one or more ListViewItems
      */
-    public abstract List<ListViewItem> build(ListGroupManager groupManager);
+    List<ListViewItem<?>> build(T codeObjectInsight, ListGroupManager groupManager);
 
 
 }

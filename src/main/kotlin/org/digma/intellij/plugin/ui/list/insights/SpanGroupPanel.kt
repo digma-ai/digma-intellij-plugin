@@ -1,18 +1,22 @@
 package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.ui.dsl.builder.panel
-import org.digma.intellij.plugin.ui.model.insights.SpanGroupListViewItem
-import org.digma.intellij.plugin.ui.model.insights.SpanListViewItem
+import org.digma.intellij.plugin.model.rest.insights.SpanInsight
+import org.digma.intellij.plugin.ui.model.listview.Group
+import org.digma.intellij.plugin.ui.model.listview.GroupListViewItem
+import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.Color
 import javax.swing.JPanel
 
-fun spanGroupPanel(listViewItem: SpanGroupListViewItem): JPanel {
+fun spanGroupPanel(listViewItem: GroupListViewItem): JPanel {
+
+    val group: Group = listViewItem.group
 
     val result = panel {
-        row("Span:"+listViewItem.span) {}
+        row("Span:"+group.title) {}
         listViewItem.items.forEach {
             row {
-                cell(spanPanel(it as SpanListViewItem))
+                cell(spanPanel(it as ListViewItem<SpanInsight>))
             }
         }
     }
@@ -22,9 +26,12 @@ fun spanGroupPanel(listViewItem: SpanGroupListViewItem): JPanel {
 }
 
 
-fun spanPanel(spanListViewItem: SpanListViewItem): JPanel {
+fun spanPanel(listViewItem: ListViewItem<SpanInsight>): JPanel {
+
+    val spanInsight: SpanInsight = listViewItem.getModel()
+
     val result = panel {
-        spanListViewItem.flows.forEach {
+        spanInsight.flows.forEach {
 //            if (it.intermediateSpan != null) {
                 row {
                     label("a span flow")

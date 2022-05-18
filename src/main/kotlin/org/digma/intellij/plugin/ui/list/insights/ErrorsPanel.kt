@@ -3,20 +3,19 @@ package org.digma.intellij.plugin.ui.list.insights
 import com.intellij.ui.dsl.builder.panel
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsight
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsightNamedError
-import org.digma.intellij.plugin.ui.model.insights.ErrorsListViewItem
-import java.awt.Color
+import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import javax.swing.JPanel
 
-fun errorsPanel(listViewItem: ErrorsListViewItem):JPanel {
+fun errorsPanel(listViewItem: ListViewItem<ErrorInsight>):JPanel {
 
 
     val result = panel {
 
-        val errorCount = listViewItem.insight.errorCount
-        val unhandled = listViewItem.insight.unhandledCount
-        val unexpected = listViewItem.insight.unexpectedCount
+        val errorCount = listViewItem.getModel().errorCount
+        val unhandled = listViewItem.getModel().unhandledCount
+        val unexpected = listViewItem.getModel().unexpectedCount
 
-        listViewItem.insight.topErrors.forEach{
+        listViewItem.getModel().topErrors.forEach{
 
         }
         row("Errors") {}

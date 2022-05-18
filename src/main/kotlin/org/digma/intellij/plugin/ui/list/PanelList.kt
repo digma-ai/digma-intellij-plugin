@@ -9,10 +9,10 @@ import javax.swing.JPanel
 import javax.swing.event.ListDataEvent
 import javax.swing.event.ListDataListener
 
-open class PanelList<T : ListViewItem> : JPanel(), ListDataListener {
+open class PanelList<T> : JPanel(), ListDataListener {
 
-    private var model: PanelListModel<in T> = DefaultPanelListModel()
-    private var cellRenderer: PanelListCellRenderer<in T> = DefaultPanelListCellRenderer()
+    private var model: PanelListModel<T> = DefaultPanelListModel()
+    private var cellRenderer: PanelListCellRenderer<T> = DefaultPanelListCellRenderer()
 
 //    private val viewport: JPanel = JPanel()
 //    private var scrollPane: JScrollPane = JBScrollPane()
@@ -44,7 +44,7 @@ open class PanelList<T : ListViewItem> : JPanel(), ListDataListener {
         return model
     }
 
-    fun setModel(newModel: PanelListModel<in T>) {
+    fun setModel(newModel: PanelListModel<T>) {
         if (model === newModel) {
             return
         }
@@ -56,7 +56,7 @@ open class PanelList<T : ListViewItem> : JPanel(), ListDataListener {
         //fire something ?
     }
 
-    fun setCellRenderer(newCellRenderer: PanelListCellRenderer<in T>) {
+    fun setCellRenderer(newCellRenderer: PanelListCellRenderer<T>) {
         if (this.cellRenderer === newCellRenderer) {
             return
         }
@@ -75,7 +75,7 @@ open class PanelList<T : ListViewItem> : JPanel(), ListDataListener {
 
         for (i in 0..model.getSize() - 1) run {
             val newComp: Component = this.cellRenderer.getListCellRendererComponent(this,
-                model.getElementAt(i) as T, i, true)
+                model.getElementAt(i), i, true)
 
             add(newComp)
             add(Box.createVerticalStrut(10))
@@ -89,15 +89,14 @@ open class PanelList<T : ListViewItem> : JPanel(), ListDataListener {
     }
 
 
-    class DefaultPanelListCellRenderer : AbstractPanelListCellRenderer<ListViewItem>() {
-        override fun createPanel(value: ListViewItem, index: Int): Component {
+    class DefaultPanelListCellRenderer<T> : AbstractPanelListCellRenderer<T>() {
+        override fun createPanel(value: ListViewItem<T>, index: Int): Component {
             return JPanel()
         }
-
     }
 
 
-    class DefaultPanelListModel : AbstractPanelListModel<ListViewItem>()
+    class DefaultPanelListModel<T> : AbstractPanelListModel<T>()
 
 
     override fun intervalAdded(e: ListDataEvent?) {

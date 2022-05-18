@@ -7,21 +7,25 @@ import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.ui.dsl.gridLayout.VerticalAlign
 import com.intellij.util.ui.JBUI.Borders
 import org.digma.intellij.plugin.icons.Icons
+import org.digma.intellij.plugin.model.rest.insights.HotspotInsight
 import org.digma.intellij.plugin.ui.common.iconPanel
-import org.digma.intellij.plugin.ui.model.insights.HotspotListViewItem
+import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import javax.swing.JPanel
 
 
-fun hotspotPanel(listViewItem: HotspotListViewItem): JPanel {
+fun hotspotPanel(listViewItem: ListViewItem<HotspotInsight>): JPanel {
+
+    val hotspotInsight: HotspotInsight = listViewItem.getModel()
+
 
     val result = panel {
-        row(listViewItem.header) {}
+        row("This is an error hotspot") {}
         row {
             panel {
                 row {
 //                    cell(multiLineLabel(listViewItem.content))
 //                    label(listViewItem.content)
-                    textArea().bindText({ listViewItem.content }, {})
+                    textArea().bindText({ "Many major errors occur or propagate through this function." }, {})
                         .horizontalAlign(HorizontalAlign.CENTER)
                         .verticalAlign(VerticalAlign.FILL)
                         .resizableColumn()
@@ -33,12 +37,12 @@ fun hotspotPanel(listViewItem: HotspotListViewItem): JPanel {
                         }
                 }.layout(RowLayout.INDEPENDENT)
                 row {
-                    link(listViewItem.linkText, action = {
+                    link("See how this was calculated", action = {
                         println("in action " + it)
                     })
                 }.layout(RowLayout.INDEPENDENT)
                 row {
-                    browserLink(listViewItem.linkText, listViewItem.linkUrl)
+                    browserLink("See how this was calculated", "https://phmecloud.blob.core.windows.net/photo/web/ou0ehpjndrfhkkx1tekojx0-3.png")
                 }.layout(RowLayout.INDEPENDENT)
             }.horizontalAlign(HorizontalAlign.FILL)
                 .verticalAlign(VerticalAlign.FILL)

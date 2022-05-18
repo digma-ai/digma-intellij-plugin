@@ -4,29 +4,19 @@ package org.digma.intellij.plugin.ui.insights
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogPanel
-import com.intellij.ui.JBSplitter
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.dsl.builder.RowLayout
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.ui.dsl.gridLayout.VerticalAlign
 import com.intellij.util.ui.JBEmptyBorder
-import com.jetbrains.rd.ui.bedsl.dsl.spacer
-import com.jetbrains.rd.ui.bedsl.dsl.splitter
 import org.digma.intellij.plugin.ui.common.ScopeLineIconProducer
 import org.digma.intellij.plugin.ui.common.scopeLine
 import org.digma.intellij.plugin.ui.common.topLine
 import org.digma.intellij.plugin.ui.list.insights.InsightsList
-import org.digma.intellij.plugin.ui.list.insights.hotspotPanel
-import org.digma.intellij.plugin.ui.model.insights.HotspotListViewItem
-import org.digma.intellij.plugin.ui.model.insights.InsightListViewItem
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
-import java.awt.Dimension
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
-import java.util.*
-import javax.swing.BoxLayout
-import javax.swing.JPanel
 
 
 val insightsModel: InsightsModel = InsightsModel()

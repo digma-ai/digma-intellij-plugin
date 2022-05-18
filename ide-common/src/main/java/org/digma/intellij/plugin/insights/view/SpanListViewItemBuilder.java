@@ -18,7 +18,7 @@ public class SpanListViewItemBuilder implements ListViewItemBuilder<SpanInsight>
         var span = insight.getSpan();
         var groupKey = "span:_" + span;
         SpanGroupListViewItem spanGroup = (SpanGroupListViewItem)
-                groupManager.getOrCreateGroup(groupKey, () -> new SpanGroupListViewItem(span, SORT_INDEX));
+                groupManager.getOrCreateGroup(groupKey, () -> new SpanGroupListViewItem(span));
 
         final var listViewItem = createListViewItem(insight);
         spanGroup.addItem(listViewItem);
@@ -26,7 +26,7 @@ public class SpanListViewItemBuilder implements ListViewItemBuilder<SpanInsight>
     }
 
     private ListViewItem createListViewItem(SpanInsight insight) {
-        SpanListViewItem spanListViewItem = new SpanListViewItem(insight, 0);
+        SpanListViewItem spanListViewItem = new SpanListViewItem(insight, SORT_INDEX);
         return spanListViewItem;
     }
 

@@ -1,5 +1,9 @@
 package org.digma.intellij.plugin.ui.model.insights
 
-class SpanGroupListViewItem(val span: String, sortIndex: Int) : InsightGroupListViewItem(sortIndex, span) {
+class SpanGroupListViewItem(spanName: String) : InsightGroupListViewItem(spanName, InsightGroupType.Span) {
+
+    fun getSpanName(): String {
+        return groupId;
+    }
 
 }

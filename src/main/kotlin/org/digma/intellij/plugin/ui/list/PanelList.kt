@@ -1,28 +1,33 @@
 package org.digma.intellij.plugin.ui.list
 
+import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
-import java.awt.Component
-import javax.swing.Box
+import java.awt.Dimension
 import javax.swing.BoxLayout
 import javax.swing.JPanel
 import javax.swing.event.ListDataEvent
 import javax.swing.event.ListDataListener
 
-open class PanelList<T> : JPanel(), ListDataListener {
+open class PanelList(listViewItems: List<ListViewItem<*>>) : JBPanel<PanelList>(), ListDataListener {
 
-    private var model: PanelListModel<T> = DefaultPanelListModel()
-    private var cellRenderer: PanelListCellRenderer<T> = DefaultPanelListCellRenderer()
+    private var model: PanelListModel = DefaultPanelListModel()
+    private var cellRenderer: PanelListCellRenderer = DefaultPanelListCellRenderer()
+
+
+//    getPreferredScrollableViewportSize
 
 //    private val viewport: JPanel = JPanel()
 //    private var scrollPane: JScrollPane = JBScrollPane()
 
     init {
+        //set data before registering listeners
+        model.setListData(listViewItems)
         model.addListDataListener(this)
         model.addListDataListener(cellRenderer)
         this.layout = BoxLayout(this, BoxLayout.PAGE_AXIS)
 //        this.layout = BorderLayout()
-//        this.layout = GridLayout
+//        this.layout = GridLayout(0,1,5,10)
         this.border = JBUI.Borders.empty(5)
 
 //        this.maximumSize = Dimension(-1,500)
@@ -40,11 +45,11 @@ open class PanelList<T> : JPanel(), ListDataListener {
     }
 
 
-    fun getModel(): PanelListModel<in T> {
+    fun getModel(): PanelListModel {
         return model
     }
 
-    fun setModel(newModel: PanelListModel<T>) {
+    fun setModel(newModel: PanelListModel) {
         if (model === newModel) {
             return
         }
@@ -56,7 +61,7 @@ open class PanelList<T> : JPanel(), ListDataListener {
         //fire something ?
     }
 
-    fun setCellRenderer(newCellRenderer: PanelListCellRenderer<T>) {
+    fun setCellRenderer(newCellRenderer: PanelListCellRenderer) {
         if (this.cellRenderer === newCellRenderer) {
             return
         }
@@ -66,37 +71,49 @@ open class PanelList<T> : JPanel(), ListDataListener {
     }
 
 
+//    override fun repaint() {
+//        super.repaint()
+//    }
+
     private fun rebuild(e: ListDataEvent?) {
 
-        this.components.forEach {
-            this.remove(it)
+        if (components.isNotEmpty()){
+            this.components.forEach {
+                this.remove(it)
+            }
+            //revalidate()
         }
 
+        if (model.size <= 0)
+            return
 
         for (i in 0..model.getSize() - 1) run {
-            val newComp: Component = this.cellRenderer.getListCellRendererComponent(this,
+            val newComp: JPanel = this.cellRenderer.getListCellRendererComponent(this,
                 model.getElementAt(i), i, true)
 
+//            newComp.alignmentX = Component.LEFT_ALIGNMENT;
+//            newComp.preferredSize = Dimension(500, 300)
+//            newComp.maximumSize = Dimension(1000, 400)
+
+//            newComp.preferredSize = Dimension(this.parent.parent.parent.preferredSize.width,newComp.preferredSize.height)
             add(newComp)
-            add(Box.createVerticalStrut(10))
+//            add(Box.createVerticalStrut(10))
         }
 
 //        add(Box.createVerticalGlue())
         this.revalidate()
         this.repaint()
-
-
     }
 
 
-    class DefaultPanelListCellRenderer<T> : AbstractPanelListCellRenderer<T>() {
-        override fun createPanel(value: ListViewItem<T>, index: Int): Component {
+    class DefaultPanelListCellRenderer : AbstractPanelListCellRenderer() {
+        override fun createPanel(value: ListViewItem<*>, index: Int): JPanel {
             return JPanel()
         }
     }
 
 
-    class DefaultPanelListModel<T> : AbstractPanelListModel<T>()
+    class DefaultPanelListModel : AbstractPanelListModel()
 
 
     override fun intervalAdded(e: ListDataEvent?) {

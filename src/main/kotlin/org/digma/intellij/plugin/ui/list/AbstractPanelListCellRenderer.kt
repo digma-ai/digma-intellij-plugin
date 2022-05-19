@@ -8,21 +8,21 @@ import java.awt.Component
 import javax.swing.JPanel
 import javax.swing.event.ListDataEvent
 
-abstract class AbstractPanelListCellRenderer<T>: PanelListCellRenderer<T> {
+abstract class AbstractPanelListCellRenderer: PanelListCellRenderer {
 
-    override fun getListCellRendererComponent(list: PanelList<T>,
-                                              value: ListViewItem<T>,
+    override fun getListCellRendererComponent(list: PanelList,
+                                              value: ListViewItem<*>,
                                               index: Int,
-                                              cellHasFocus: Boolean): Component {
+                                              cellHasFocus: Boolean): JPanel {
 
         return wrap(createPanel(value,index))
     }
 
 
-    abstract fun createPanel(value: ListViewItem<T>, index: Int): Component
+    abstract fun createPanel(value: ListViewItem<*>, index: Int): JPanel
 
 
-    private fun wrap(component: Component): Component {
+    private fun wrap(component: JPanel): JPanel {
 
         val wrapper = JPanel()
         wrapper.layout = BorderLayout()

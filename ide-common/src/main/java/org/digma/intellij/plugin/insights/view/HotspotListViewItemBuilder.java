@@ -14,6 +14,7 @@ public class HotspotListViewItemBuilder implements ListViewItemBuilder<HotspotIn
     @Override
     public List<ListViewItem<?>> build(HotspotInsight insight, @NotNull ListGroupManager groupManager) {
 
+
         HotspotListViewItem hotspotListViewItem = new HotspotListViewItem(insight,
                 "This is an error hotspot",
                 "Many major errors occur or propagate through this function.",

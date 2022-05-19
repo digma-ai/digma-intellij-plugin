@@ -20,6 +20,12 @@ class InsightsViewService(val project: Project) {
 
         val insightsListContainer: InsightsListContainer = insightsProvider.getInsights(methodInfo)
 
+        //todo: check
+//        javax.swing.SwingUtilities.isEventDispatchThread
+            //todo:
+//        javax.swing.SwingUtilities.invokeLater
+//        or
+//        javax.swing.SwingUtilities.invokeAndWait
         model.listViewItems = insightsListContainer.listViewItems
         model.methodName = methodInfo.name
         model.className = methodInfo.containingClass

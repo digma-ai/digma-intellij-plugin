@@ -11,23 +11,30 @@ fun errorsPanel(listViewItem: ListViewItem<ErrorInsight>):JPanel {
 
     val result = panel {
 
-        val errorCount = listViewItem.getModel().errorCount
-        val unhandled = listViewItem.getModel().unhandledCount
-        val unexpected = listViewItem.getModel().unexpectedCount
+        val errorCount = listViewItem.modelObject.errorCount
+        val unhandled = listViewItem.modelObject.unhandledCount
+        val unexpected = listViewItem.modelObject.unexpectedCount
 
-        listViewItem.getModel().topErrors.forEach{
 
-        }
         row("Errors") {}
             .comment("$errorCount errors($unhandled unhandled, $unexpected unexpected)")
         row {
-            label("Error")
-        }
-        row {
-            link("Error link", action = {
+            panel {
+                listViewItem.modelObject.topErrors.forEach{
+                    row{
+//                        cell(topErrorsPanel(it))
+                        label("An error:"+it.errorType)
+                    }
+                    row {
+                        link("Error link", action = {
 
-            })
+                        })
+                    }
+                }
+            }
+
         }
+
 
     }
 

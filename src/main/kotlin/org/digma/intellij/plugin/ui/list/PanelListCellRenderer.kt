@@ -1,15 +1,15 @@
 package org.digma.intellij.plugin.ui.list
 
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
-import java.awt.Component
+import javax.swing.JPanel
 import javax.swing.event.ListDataListener
 
-interface PanelListCellRenderer<T>: ListDataListener {
+interface PanelListCellRenderer: ListDataListener {
 
-    fun getListCellRendererComponent(list: PanelList<T>,
-                                              value: ListViewItem<T>,
+    fun getListCellRendererComponent(list: PanelList,
+                                              value: ListViewItem<*>,
                                               index: Int,
-                                              cellHasFocus: Boolean): Component
+                                              cellHasFocus: Boolean): JPanel
 
 
 }

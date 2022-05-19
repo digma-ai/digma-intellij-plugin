@@ -4,12 +4,12 @@ import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.util.*
 import javax.swing.AbstractListModel
 
-abstract class AbstractPanelListModel<T> : AbstractListModel<ListViewItem<T>>(),
-    PanelListModel<T> {
+abstract class AbstractPanelListModel : AbstractListModel<ListViewItem<*>>(),
+    PanelListModel {
 
-    private var items: List<ListViewItem<T>> = ArrayList()
+    private var items: List<ListViewItem<*>> = ArrayList()
 
-    override fun setListData(listViewItems: List<ListViewItem<T>>) {
+    override fun setListData(listViewItems: List<ListViewItem<*>>) {
         this.items = listViewItems
 
         //temp: duplicate
@@ -20,7 +20,7 @@ abstract class AbstractPanelListModel<T> : AbstractListModel<ListViewItem<T>>(),
         //env temp
 
 
-        Collections.sort(this.items, Comparator.comparingInt(ListViewItem<T>::sortIndex))
+        Collections.sort(this.items, Comparator.comparingInt(ListViewItem<*>::sortIndex))
         fireContentsChanged(this, 0, items.size - 1)
     }
 
@@ -29,7 +29,7 @@ abstract class AbstractPanelListModel<T> : AbstractListModel<ListViewItem<T>>(),
         return items.size
     }
 
-    override fun getElementAt(index: Int): ListViewItem<T> {
+    override fun getElementAt(index: Int): ListViewItem<*> {
         if (index < 0 || index >= items.size) {
             throw java.lang.IllegalArgumentException("index out of bounds $index")
         }

@@ -1,21 +1,24 @@
 package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.ui.dsl.builder.RowLayout
-import com.intellij.ui.dsl.builder.bindText
+import com.intellij.ui.dsl.builder.RowLayout.INDEPENDENT
+import com.intellij.ui.dsl.builder.RowLayout.PARENT_GRID
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.ui.dsl.gridLayout.VerticalAlign
-import com.intellij.util.ui.JBUI.Borders
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.HotspotInsight
 import org.digma.intellij.plugin.ui.common.iconPanel
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
+import java.awt.BorderLayout
+import java.awt.Dimension
+import javax.swing.JLabel
 import javax.swing.JPanel
 
 
 fun hotspotPanel(listViewItem: ListViewItem<HotspotInsight>): JPanel {
 
-    val hotspotInsight: HotspotInsight = listViewItem.getModel()
+    val hotspotInsight: HotspotInsight = listViewItem.modelObject
 
 
     val result = panel {
@@ -23,35 +26,52 @@ fun hotspotPanel(listViewItem: ListViewItem<HotspotInsight>): JPanel {
         row {
             panel {
                 row {
+
+//                    var text = "Many major errors occur or propagate through this function. Many major errors occur or propagate through this function."
+//                    var html = "<html>%1s</html>"
+//                    var html = "<html><body style='width: %1spx'>%1s</body></html>"
+
+//                    val label = JLabel(String.format(html, 500, text))
+//                    val label = JLabel(String.format(html, text))
+//                    val panel = JPanel(BorderLayout())
+//                    panel.add(label, BorderLayout.NORTH)
+//                    panel.preferredSize = Dimension(640, 480)
+//                    cell(panel)
 //                    cell(multiLineLabel(listViewItem.content))
-//                    label(listViewItem.content)
-                    textArea().bindText({ "Many major errors occur or propagate through this function." }, {})
-                        .horizontalAlign(HorizontalAlign.CENTER)
-                        .verticalAlign(VerticalAlign.FILL)
-                        .resizableColumn()
+                    label("<html>Many major errors occur or propagate through this function.Many major errors occur or propagate through this function.")
+                        .horizontalAlign(HorizontalAlign.FILL)
                         .applyToComponent {
-                            this.isEditable = false
-                            this.border = Borders.empty()
-                            this.isOpaque = true
-//                            this.alignmentX = Component.RIGHT_ALIGNMENT
+//                            toolTipText = "Many major errors occur or propagate through this function."
+//                            maximumSize = Dimension(300,0)
+//                            preferredSize = Dimension(300,30)
                         }
-                }.layout(RowLayout.INDEPENDENT)
-                row {
-                    link("See how this was calculated", action = {
-                        println("in action " + it)
-                    })
-                }.layout(RowLayout.INDEPENDENT)
-                row {
-                    browserLink("See how this was calculated", "https://phmecloud.blob.core.windows.net/photo/web/ou0ehpjndrfhkkx1tekojx0-3.png")
-                }.layout(RowLayout.INDEPENDENT)
-            }.horizontalAlign(HorizontalAlign.FILL)
+//                    textArea().bindText({ "Many major errors occur or propagate through this function." }, {})
+//                        .horizontalAlign(HorizontalAlign.CENTER)
+//                        .verticalAlign(VerticalAlign.FILL)
+//                        .resizableColumn()
+//                        .applyToComponent {
+//                            this.isEditable = false
+//                            this.border = Borders.empty()
+//                            this.isOpaque = true
+////                            this.alignmentX = Component.RIGHT_ALIGNMENT
+//                        }
+                }.layout(PARENT_GRID)
+//                row {
+//                    link("See how this was calculated", action = {
+//                        println("in action " + it)
+//                    })
+//                }//.layout(RowLayout.INDEPENDENT)
+//                row {
+//                    browserLink("See how this was calculated", "https://phmecloud.blob.core.windows.net/photo/web/ou0ehpjndrfhkkx1tekojx0-3.png")
+//                }//.layout(RowLayout.INDEPENDENT)
+            }.horizontalAlign(HorizontalAlign.LEFT)
                 .verticalAlign(VerticalAlign.FILL)
             panel{
                 row{
                     cell(iconPanel(Icons.HOTSPOT,"HotSpot"))
-//                        .horizontalAlign(HorizontalAlign.RIGHT)
+                        .horizontalAlign(HorizontalAlign.RIGHT)
                           .verticalAlign(VerticalAlign.FILL)
-                }.layout(RowLayout.INDEPENDENT)
+                }.layout(PARENT_GRID)
             }.horizontalAlign(HorizontalAlign.RIGHT)
                 .verticalAlign(VerticalAlign.FILL)
 //            panel {
@@ -76,7 +96,7 @@ fun hotspotPanel(listViewItem: ListViewItem<HotspotInsight>): JPanel {
 //                .verticalAlign(VerticalAlign.CENTER)
 
 
-        }
+        }.layout(PARENT_GRID)
     }
 
     result.isOpaque = true

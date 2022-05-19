@@ -1,7 +1,9 @@
 package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.ui.dsl.builder.panel
+import org.digma.intellij.plugin.model.rest.insights.HighUsageInsight
 import org.digma.intellij.plugin.model.rest.insights.LowUsageInsight
+import org.digma.intellij.plugin.model.rest.insights.NormalUsageInsight
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupListViewItem
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.util.*
@@ -18,7 +20,9 @@ fun httpEndpointGroupPanel(listViewItem: InsightGroupListViewItem): JPanel {
             val modelObject = it.modelObject
             val cellItem =
                 when (modelObject) {
-                    is LowUsageInsight -> panelOfUnsupported("Low Usage")
+                    is LowUsageInsight -> lowUsageInsightPanel(modelObject)
+                    is NormalUsageInsight -> normalUsageInsightPanel(modelObject)
+                    is HighUsageInsight -> highUsageInsightPanel(modelObject)
                     else -> panelOfUnsupported("${modelObject?.javaClass?.simpleName}")
                 }
 

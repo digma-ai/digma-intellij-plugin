@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.model.insights
 
+import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.util.*
@@ -8,7 +9,8 @@ data class InsightsModel(
     var insightsCount: Int = 0,
     var methodName: String = "",
     var className: String = "",
-    var listViewItems: List<ListViewItem<*>> = Collections.emptyList()
+    var listViewItems: List<ListViewItem<*>> = Collections.emptyList(),
+    var scope: MethodInfo? = null
 ) : PanelModel {
 
     override fun count(): String {

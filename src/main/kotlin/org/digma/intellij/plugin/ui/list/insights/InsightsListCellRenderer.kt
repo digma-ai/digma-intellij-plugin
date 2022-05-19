@@ -47,24 +47,18 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
 
     private fun buildGroupPanel(value: GroupListViewItem): JPanel {
 
-        when (value) {
-            is InsightGroupListViewItem -> {
-                when (value.type) {
-                    HttpEndpoint -> {
-
-                    }
-                    Span -> {
-                        return spanGroupPanel(value)
-                    }
-                    else -> {
-                        return emptyPanel(value)
+        val panel =
+            when (value) {
+                is InsightGroupListViewItem -> {
+                    when (value.type) {
+                        HttpEndpoint -> httpEndpointGroupPanel(value)
+                        Span -> spanGroupPanel(value)
+                        else -> panelOfUnsupported("group type: ${value.type}")
                     }
                 }
+                else -> panelOfUnsupported("group class: ${value.javaClass.simpleName}")
             }
-        }
-
-        return emptyPanel(value)
-
+        return panel
     }
 
 

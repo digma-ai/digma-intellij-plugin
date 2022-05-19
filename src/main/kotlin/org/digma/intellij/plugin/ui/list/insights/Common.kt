@@ -19,6 +19,13 @@ fun emptyPanel(value: ListViewItem<*>): JPanel {
     }
 }
 
+fun panelOfUnsupported(caption: String): JPanel {
+    return panel {
+        row("Unsupported yet: '$caption'") {
+        }.layout(RowLayout.PARENT_GRID)
+    }
+}
+
 fun genericPanelForSingleInsight(listViewItem: ListViewItem<CodeObjectInsight>): JPanel {
     return panel {
         //temporary: need to implement logic

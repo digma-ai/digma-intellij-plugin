@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.list.insights
 
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsight
 import org.digma.intellij.plugin.model.rest.insights.HotspotInsight
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
@@ -8,7 +9,6 @@ import org.digma.intellij.plugin.ui.model.insights.InsightGroupType.HttpEndpoint
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupType.Span
 import org.digma.intellij.plugin.ui.model.listview.GroupListViewItem
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
-import java.util.*
 import javax.swing.JPanel
 import javax.swing.event.ListDataEvent
 
@@ -28,13 +28,14 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
             return panels[index]!!
         }
 
-        val panel: JPanel
-        when (value.modelObject) {
-            is HotspotInsight -> panel = hotspotPanel(value as ListViewItem<HotspotInsight>)
-            is TreeSet<*> -> panel = buildGroupPanel(value as GroupListViewItem)
-            is ErrorInsight -> panel = errorsPanel(value as ListViewItem<ErrorInsight>)
+        val panel = when (value) {
+            is GroupListViewItem -> buildGroupPanel(value)
             else -> {
-                panel = emptyPanel(value)
+                when (value.modelObject) {
+                    is HotspotInsight -> hotspotPanel(value as ListViewItem<HotspotInsight>)
+                    is ErrorInsight -> errorsPanel(value as ListViewItem<ErrorInsight>)
+                    else -> genericPanelForSingleInsight(value as ListViewItem<CodeObjectInsight>)
+                }
             }
         }
 
@@ -42,6 +43,7 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
 
         return panel
     }
+
 
     private fun buildGroupPanel(value: GroupListViewItem): JPanel {
 

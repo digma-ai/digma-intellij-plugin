@@ -30,12 +30,21 @@ public class BuildersHolder {
 
     private ListViewItemBuilder<?> newBuilder(InsightType type) {
         switch (type) {
+            //----------------------------------------------
+            // Single (non grouped) Insights
+            //----------------------------------------------
             case HotSpot:
                 return new HotspotListViewItemBuilder();
             case Errors:
-                return new NoGroupListViewItemBuilder<ErrorInsight>();
+                return new SingleInsightListViewItemBuilder<ErrorInsight>();
+            //----------------------------------------------
+            // Spans Insights
+            //----------------------------------------------
             case SpanUsages:
                 return new GroupListViewItemBuilder<>(InsightGroupType.Span, SpanInsight::getSpan);
+            //----------------------------------------------
+            // Endpoint Insights
+            //----------------------------------------------
             case SlowestSpans:
                 return new GroupListViewItemBuilder<>(InsightGroupType.HttpEndpoint, SlowestSpansInsight::getRoute);
             case LowUsage:
@@ -47,8 +56,8 @@ public class BuildersHolder {
             case SlowEndpoint:
                 return new GroupListViewItemBuilder<>(InsightGroupType.HttpEndpoint, SlowEndpointInsight::getRoute);
             default:
-                // default will fall into Single reference
-                return new NoGroupListViewItemBuilder<>();
+                // default will fall into Single (non grouped) reference
+                return new SingleInsightListViewItemBuilder<>();
         }
     }
 

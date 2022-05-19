@@ -8,7 +8,7 @@ import org.digma.intellij.plugin.view.ListViewItemBuilder;
 
 import java.util.List;
 
-public class NoGroupListViewItemBuilder<T extends CodeObjectInsight> implements ListViewItemBuilder<T> {
+public class SingleInsightListViewItemBuilder<T extends CodeObjectInsight> implements ListViewItemBuilder<T> {
 
     @Override
     public List<ListViewItem<?>> build(T insight, ListGroupManager groupManager) {

@@ -1,47 +1,38 @@
 package org.digma.intellij.plugin.ui.list
 
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.ui.components.JBPanel
-import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.JBUI.Borders
+import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.Dimension
+import java.awt.Graphics
+import java.awt.Rectangle
+import java.util.*
+import javax.swing.Box
 import javax.swing.BoxLayout
 import javax.swing.JPanel
+import javax.swing.Scrollable
 import javax.swing.event.ListDataEvent
 import javax.swing.event.ListDataListener
 
-open class PanelList(listViewItems: List<ListViewItem<*>>) : JBPanel<PanelList>(), ListDataListener {
+open class PanelList(listViewItems: List<ListViewItem<*>>) : JBPanel<PanelList>(), ListDataListener, Scrollable {
+
+    private val LOGGER = Logger.getInstance(
+        PanelList::class.java)
 
     private var model: PanelListModel = DefaultPanelListModel()
     private var cellRenderer: PanelListCellRenderer = DefaultPanelListCellRenderer()
 
-
-//    getPreferredScrollableViewportSize
-
-//    private val viewport: JPanel = JPanel()
-//    private var scrollPane: JScrollPane = JBScrollPane()
+    private var scrollablePanelList: ScrollablePanelList? = null
 
     init {
         //set data before registering listeners
         model.setListData(listViewItems)
         model.addListDataListener(this)
         model.addListDataListener(cellRenderer)
-        this.layout = BoxLayout(this, BoxLayout.PAGE_AXIS)
-//        this.layout = BorderLayout()
-//        this.layout = GridLayout(0,1,5,10)
-        this.border = JBUI.Borders.empty(5)
-
-//        this.maximumSize = Dimension(-1,500)
-//        this.preferredSize = Dimension(-1,500)
-
-//        viewport.layout = BoxLayout(viewport,BoxLayout.PAGE_AXIS)
-//        viewport.maximumSize = Dimension(-1,300)
-//        scrollPane.setViewportView(viewport)
-//        scrollPane.maximumSize = Dimension(-1,300)
-
-//        scrollPane.viewport = viewport
-//        this.add(scrollPane,BorderLayout.CENTER)
-//        this.add(scrollPane)
-
+        this.layout = BoxLayout(this, BoxLayout.Y_AXIS)
+        this.border = Borders.empty(5)
     }
 
 
@@ -49,7 +40,9 @@ open class PanelList(listViewItems: List<ListViewItem<*>>) : JBPanel<PanelList>(
         return model
     }
 
+    @Suppress("unused")
     fun setModel(newModel: PanelListModel) {
+        Objects.requireNonNull(newModel,"New model is null")
         if (model === newModel) {
             return
         }
@@ -71,38 +64,46 @@ open class PanelList(listViewItems: List<ListViewItem<*>>) : JBPanel<PanelList>(
     }
 
 
-//    override fun repaint() {
-//        super.repaint()
-//    }
 
-    private fun rebuild(e: ListDataEvent?) {
+    fun setScrollablePanelListPanel(scrollablePanelList: ScrollablePanelList) {
+        this.scrollablePanelList = scrollablePanelList
+    }
 
-        if (components.isNotEmpty()){
+    override fun update(g: Graphics?) {
+        rebuild()
+        super.update(g)
+    }
+
+
+
+    private fun rebuild() {
+
+        Log.log(LOGGER::info, "in rebuild,model size: {}", model.size)
+
+        if (components.isNotEmpty()) {
             this.components.forEach {
                 this.remove(it)
             }
-            //revalidate()
+            revalidate()
         }
 
         if (model.size <= 0)
             return
 
-        for (i in 0..model.getSize() - 1) run {
-            val newComp: JPanel = this.cellRenderer.getListCellRendererComponent(this,
-                model.getElementAt(i), i, true)
 
-//            newComp.alignmentX = Component.LEFT_ALIGNMENT;
-//            newComp.preferredSize = Dimension(500, 300)
-//            newComp.maximumSize = Dimension(1000, 400)
+        for (i in 0 until model.getSize()) run {
+            cellRenderer.apply {
+                val newComp: JPanel = getListCellRendererComponent(this@PanelList,
+                    model.getElementAt(i), i, this@PanelList.hasFocus())
+                add(newComp)
+//                add(Box.createVerticalStrut(5))
+                add(Box.createRigidArea(Dimension(10,10)))
+            }
 
-//            newComp.preferredSize = Dimension(this.parent.parent.parent.preferredSize.width,newComp.preferredSize.height)
-            add(newComp)
-//            add(Box.createVerticalStrut(10))
         }
 
-//        add(Box.createVerticalGlue())
+        add(Box.createVerticalStrut(5))
         this.revalidate()
-        this.repaint()
     }
 
 
@@ -116,15 +117,44 @@ open class PanelList(listViewItems: List<ListViewItem<*>>) : JBPanel<PanelList>(
     class DefaultPanelListModel : AbstractPanelListModel()
 
 
+
     override fun intervalAdded(e: ListDataEvent?) {
-        rebuild(e)
+        rebuild()
     }
 
     override fun intervalRemoved(e: ListDataEvent?) {
-        rebuild(e)
+        rebuild()
     }
 
     override fun contentsChanged(e: ListDataEvent?) {
-        rebuild(e)
+        rebuild()
     }
+
+    override fun getPreferredScrollableViewportSize(): Dimension? {
+
+        Log.log(LOGGER::info, "in getPreferredScrollableViewportSize,my size: {}", size)
+
+        if (scrollablePanelList != null){
+            return Dimension(scrollablePanelList!!.size.width-20, scrollablePanelList!!.size.height-20)
+        }
+
+        return Dimension(500,300)
+    }
+
+    override fun getScrollableUnitIncrement(visibleRect: Rectangle?, orientation: Int, direction: Int): Int {
+        return 30
+    }
+
+    override fun getScrollableBlockIncrement(visibleRect: Rectangle?, orientation: Int, direction: Int): Int {
+        return 60
+    }
+
+    override fun getScrollableTracksViewportWidth(): Boolean {
+        return true
+    }
+
+    override fun getScrollableTracksViewportHeight(): Boolean {
+        return false
+    }
+
 }

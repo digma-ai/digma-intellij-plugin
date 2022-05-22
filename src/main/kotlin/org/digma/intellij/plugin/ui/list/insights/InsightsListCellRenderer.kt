@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.ui.list.insights
 
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsight
 import org.digma.intellij.plugin.model.rest.insights.HotspotInsight
+import org.digma.intellij.plugin.ui.common.emptyPanel
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupListViewItem
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupType.HttpEndpoint
@@ -14,7 +15,7 @@ import javax.swing.event.ListDataEvent
 
 class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
 
-    val panels: MutableMap<Int, JPanel> = HashMap()
+    private val panels: MutableMap<Int, JPanel> = HashMap()
 
 
     override fun createPanel(value: ListViewItem<*>, index: Int): JPanel {
@@ -22,19 +23,25 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
     }
 
 
+    @Suppress("UNCHECKED_CAST")
     private fun getOrCreatePanel(index: Int, value: ListViewItem<*>): JPanel {
 
         if (panels.containsKey(index)) {
             return panels[index]!!
         }
 
-        val panel: JPanel
-        when (value.modelObject) {
-            is HotspotInsight -> panel = hotspotPanel(value as ListViewItem<HotspotInsight>)
-            is TreeSet<*> -> panel = buildGroupPanel(value as GroupListViewItem)
-            is ErrorInsight -> panel = errorsPanel(value as ListViewItem<ErrorInsight>)
+        val panel = when (value.modelObject) {
+            is HotspotInsight -> {
+                hotspotPanel(value as ListViewItem<HotspotInsight>)
+            }
+            is TreeSet<*> -> {
+                buildGroupPanel(value as GroupListViewItem)
+            }
+            is ErrorInsight -> {
+                errorsPanel(value as ListViewItem<ErrorInsight>)
+            }
             else -> {
-                panel = emptyPanel(value)
+                emptyPanel(value)
             }
         }
 

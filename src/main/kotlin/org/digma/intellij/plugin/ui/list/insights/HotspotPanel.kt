@@ -1,104 +1,53 @@
 package org.digma.intellij.plugin.ui.list.insights
 
+import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.RowLayout
-import com.intellij.ui.dsl.builder.RowLayout.INDEPENDENT
-import com.intellij.ui.dsl.builder.RowLayout.PARENT_GRID
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
-import com.intellij.ui.dsl.gridLayout.VerticalAlign
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.HotspotInsight
 import org.digma.intellij.plugin.ui.common.iconPanel
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.BorderLayout
-import java.awt.Dimension
+import java.awt.Font
+import javax.swing.BorderFactory
+import javax.swing.BoxLayout
 import javax.swing.JLabel
 import javax.swing.JPanel
+import javax.swing.SwingConstants
 
 
 fun hotspotPanel(listViewItem: ListViewItem<HotspotInsight>): JPanel {
 
     val hotspotInsight: HotspotInsight = listViewItem.modelObject
 
+    val iconPanel = iconPanel(Icons.HOTSPOT_32, "HotSpot")
 
-    val result = panel {
-        row("This is an error hotspot") {}
-        row {
-            panel {
-                row {
+    val result = JBPanel<JBPanel<*>>()
+    result.layout = BoxLayout(result, BoxLayout.X_AXIS)
 
-//                    var text = "Many major errors occur or propagate through this function. Many major errors occur or propagate through this function."
-//                    var html = "<html>%1s</html>"
-//                    var html = "<html><body style='width: %1spx'>%1s</body></html>"
+    val contentPanel = JBPanel<JBPanel<*>>()
+    contentPanel.layout = BorderLayout()
 
-//                    val label = JLabel(String.format(html, 500, text))
-//                    val label = JLabel(String.format(html, text))
-//                    val panel = JPanel(BorderLayout())
-//                    panel.add(label, BorderLayout.NORTH)
-//                    panel.preferredSize = Dimension(640, 480)
-//                    cell(panel)
-//                    cell(multiLineLabel(listViewItem.content))
-                    label("<html>Many major errors occur or propagate through this function.Many major errors occur or propagate through this function.")
-                        .horizontalAlign(HorizontalAlign.FILL)
-                        .applyToComponent {
-//                            toolTipText = "Many major errors occur or propagate through this function."
-//                            maximumSize = Dimension(300,0)
-//                            preferredSize = Dimension(300,30)
-                        }
-//                    textArea().bindText({ "Many major errors occur or propagate through this function." }, {})
-//                        .horizontalAlign(HorizontalAlign.CENTER)
-//                        .verticalAlign(VerticalAlign.FILL)
-//                        .resizableColumn()
-//                        .applyToComponent {
-//                            this.isEditable = false
-//                            this.border = Borders.empty()
-//                            this.isOpaque = true
-////                            this.alignmentX = Component.RIGHT_ALIGNMENT
-//                        }
-                }.layout(PARENT_GRID)
-//                row {
-//                    link("See how this was calculated", action = {
-//                        println("in action " + it)
-//                    })
-//                }//.layout(RowLayout.INDEPENDENT)
-//                row {
-//                    browserLink("See how this was calculated", "https://phmecloud.blob.core.windows.net/photo/web/ou0ehpjndrfhkkx1tekojx0-3.png")
-//                }//.layout(RowLayout.INDEPENDENT)
-            }.horizontalAlign(HorizontalAlign.LEFT)
-                .verticalAlign(VerticalAlign.FILL)
-            panel{
-                row{
-                    cell(iconPanel(Icons.HOTSPOT,"HotSpot"))
-                        .horizontalAlign(HorizontalAlign.RIGHT)
-                          .verticalAlign(VerticalAlign.FILL)
-                }.layout(PARENT_GRID)
-            }.horizontalAlign(HorizontalAlign.RIGHT)
-                .verticalAlign(VerticalAlign.FILL)
-//            panel {
-//                row {
-////                    val icon = Icons.HOTSPOT_PANEL.
-////                    var icon = IconLoader.getIcon("/icons/hotspot.png", Icon::class.java)
-//
-////                    val ii = ImageIcon(ImageIcon("icons/hotspot.png").image.getScaledInstance(30,30,
-////                        SCALE_SMOOTH))
-//                    icon(AllIcons.General.Error)
-//                        .horizontalAlign(HorizontalAlign.LEFT)
-//                        .verticalAlign(VerticalAlign.CENTER)
-//                }.layout(RowLayout.INDEPENDENT).bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
-//                row {
-//                    label("HotSpot")
-//                        .horizontalAlign(HorizontalAlign.RIGHT)
-//                        .verticalAlign(VerticalAlign.BOTTOM)
-////                        .gap(RightGap.SMALL)
-//                }.layout(RowLayout.INDEPENDENT)
-//
-//            }.horizontalAlign(HorizontalAlign.RIGHT)
-//                .verticalAlign(VerticalAlign.CENTER)
+//    val title = JLabel("This is an error hotspot")
+//    val f: Font = title.font
+//    title.font = f.deriveFont(f.style or Font.BOLD)
+//    title.verticalAlignment = SwingConstants.TOP
+//    contentPanel.add(title, BorderLayout.NORTH)
+    val titledBorder = BorderFactory.createTitledBorder("This is an error hotspot")
+    val orgFont: Font = titledBorder.titleFont
+    val boldFont = orgFont.deriveFont(orgFont.style or Font.BOLD)
+    titledBorder.titleFont = boldFont
+    titledBorder.border = BorderFactory.createEmptyBorder()
+    contentPanel.border = titledBorder
 
 
-        }.layout(PARENT_GRID)
-    }
+    val message =
+        JLabel("<html>Many major errors occur or propagate through this function.Many major errors occur or propagate through this function.")
+    message.horizontalAlignment = SwingConstants.LEFT
+    contentPanel.add(message, BorderLayout.CENTER)
 
-    result.isOpaque = true
+    result.add(contentPanel)
+    result.add(iconPanel)
     return result
 }

@@ -1,3 +1,4 @@
+
 package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.ui.dsl.builder.RowLayout
@@ -6,7 +7,6 @@ import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import javax.swing.JPanel
-
 
 fun emptyPanel(value: ListViewItem<*>): JPanel {
     return panel {

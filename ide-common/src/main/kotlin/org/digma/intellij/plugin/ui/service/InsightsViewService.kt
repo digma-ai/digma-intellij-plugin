@@ -6,10 +6,11 @@ import org.digma.intellij.plugin.insights.InsightsListContainer
 import org.digma.intellij.plugin.insights.InsightsProvider
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
+import org.digma.intellij.plugin.ui.panels.ResettablePanel
 
 class InsightsViewService(val project: Project) {
 
-    lateinit var panel: DialogPanel
+    lateinit var panel: ResettablePanel
     lateinit var model: InsightsModel
     private val insightsProvider: InsightsProvider = project.getService(InsightsProvider::class.java)
 

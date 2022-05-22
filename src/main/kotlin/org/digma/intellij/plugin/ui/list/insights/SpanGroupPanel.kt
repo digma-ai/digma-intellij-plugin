@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
-import com.intellij.ui.dsl.gridLayout.VerticalAlign
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.SpanInsight
 import org.digma.intellij.plugin.ui.model.listview.GroupListViewItem
@@ -22,21 +21,36 @@ fun spanGroupPanel(listViewItem: GroupListViewItem): JPanel {
 
         items.forEach {
             row {
-                label("Top Usages")
-                    .horizontalAlign(HorizontalAlign.LEFT)
-                    .verticalAlign(VerticalAlign.TOP)
-                    .bold()
-            }
-            indent {
-                row {
-                    cell(spanPanel(it as ListViewItem<SpanInsight>))
-                }
+                cell(insightItemPanel(spanPanel(it as ListViewItem<SpanInsight>)))
             }
         }
     }
 
-    return result
+    return insightGroupPanel(result)
 }
+
+//working code
+//    val result = panel {
+//        row(JLabel("  Span: ", Icons.TELESCOPE_12, SwingConstants.LEFT))
+//        {}.comment(listViewItem.groupId)
+//
+//        items.forEach {
+//            row {
+//                label("Top Usages")
+//                    .horizontalAlign(HorizontalAlign.LEFT)
+//                    .verticalAlign(VerticalAlign.TOP)
+//                    .bold()
+//            }
+//            indent {
+//                row {
+//                    cell(spanPanel(it as ListViewItem<SpanInsight>))
+//                }
+//            }
+//        }
+//    }
+//
+//    return result
+//}
 
 
 fun spanPanel(listViewItem: ListViewItem<SpanInsight>): JPanel {
@@ -44,9 +58,10 @@ fun spanPanel(listViewItem: ListViewItem<SpanInsight>): JPanel {
     val spanInsight: SpanInsight = listViewItem.modelObject
 
     val result = panel {
-        spanInsight.flows.forEach {spanFlow ->
+        spanInsight.flows.forEach { spanFlow ->
+            row("Top Usages") {}
             row {
-                label(spanFlow.percentage.toString()+"% ${spanFlow.firstService?.service}: ${spanFlow.firstService?.span}")
+                label(spanFlow.percentage.toString() + "% ${spanFlow.firstService?.service}: ${spanFlow.firstService?.span}")
                     .horizontalAlign(HorizontalAlign.FILL)
 //                label(spanFlow.percentage.toString()+"%")
 //                    .horizontalAlign(HorizontalAlign.LEFT)
@@ -56,24 +71,24 @@ fun spanPanel(listViewItem: ListViewItem<SpanInsight>): JPanel {
 //                    .horizontalAlign(HorizontalAlign.FILL)
 //                    .bold()
             }
-            indent {
-                spanFlow.lastService?.let {lastService ->
-                    row{
-                        label("${lastService.service}: ${lastService.span}")
-                    }
-                }
-                spanFlow.intermediateSpan?.let {intermediateSpan ->
-                    row{
-                        label("$intermediateSpan")
-                    }
-                }
-                spanFlow.lastServiceSpan?.let {lastServiceSpan ->
-                    row{
-                        label("$lastServiceSpan")
-                    }
-                }
-
-            }
+//            indent {
+//                spanFlow.lastService?.let {lastService ->
+//                    row{
+//                        label("${lastService.service}: ${lastService.span}")
+//                    }
+//                }
+//                spanFlow.intermediateSpan?.let {intermediateSpan ->
+//                    row{
+//                        label("$intermediateSpan")
+//                    }
+//                }
+//                spanFlow.lastServiceSpan?.let {lastServiceSpan ->
+//                    row{
+//                        label("$lastServiceSpan")
+//                    }
+//                }
+//
+//            }
         }
     }
 

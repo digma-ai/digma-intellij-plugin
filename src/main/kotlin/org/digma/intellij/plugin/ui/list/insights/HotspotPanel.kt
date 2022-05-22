@@ -49,5 +49,6 @@ fun hotspotPanel(listViewItem: ListViewItem<HotspotInsight>): JPanel {
 
     result.add(contentPanel)
     result.add(iconPanel)
-    return result
+
+    return insightItemPanel(result)
 }

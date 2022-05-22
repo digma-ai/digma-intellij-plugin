@@ -32,7 +32,7 @@ open class PanelList(listViewItems: List<ListViewItem<*>>) : JBPanel<PanelList>(
         model.addListDataListener(this)
         model.addListDataListener(cellRenderer)
         this.layout = BoxLayout(this, BoxLayout.Y_AXIS)
-        this.border = Borders.empty(5)
+//        this.border = Borders.empty(5)
     }
 
 

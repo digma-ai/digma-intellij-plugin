@@ -76,7 +76,7 @@ fun errorsPanel(listViewItem: ListViewItem<ErrorInsight>):JPanel {
 
     result.add(expandPanel)
 
-    return result
+    return insightItemPanel(result)
 }
 
 

@@ -27,27 +27,29 @@ abstract class AbstractPanelListCellRenderer: PanelListCellRenderer {
 
     private fun wrap(panel: JPanel): JPanel {
 
+        return panel
+
 //        panel.border = BorderFactory.createEtchedBorder()
-        panel.border = BorderFactory.createRaisedBevelBorder()
+//        panel.border = BorderFactory.createRaisedBevelBorder()
 //        panel.border = BorderFactory.createMatteBorder(1,5,1,1,Color.BLACK)
 
-        val wrapper = JPanel()
-
-//        val raisedBevel = BorderFactory.createRaisedBevelBorder()
-//        val loweredBevel = BorderFactory.createLoweredBevelBorder()
-//        val compound = BorderFactory.createCompoundBorder(raisedBevel,loweredBevel)
-
-
-        wrapper.layout = BorderLayout()
-        wrapper.add(panel,BorderLayout.CENTER)
-//        wrapper.border = compound
-//        wrapper.border = Borders.customLine(Color.GRAY,5)
-        wrapper.border = BorderFactory.createRaisedBevelBorder()
-//        wrapper.border = BorderFactory.createMatteBorder(1,10,1,1,Color.)
-
-        return wrapper
-
-        return wrapper
+//        val wrapper = JPanel()
+//
+////        val raisedBevel = BorderFactory.createRaisedBevelBorder()
+////        val loweredBevel = BorderFactory.createLoweredBevelBorder()
+////        val compound = BorderFactory.createCompoundBorder(raisedBevel,loweredBevel)
+//
+//
+//        wrapper.layout = BorderLayout()
+//        wrapper.add(panel,BorderLayout.CENTER)
+////        wrapper.border = compound
+////        wrapper.border = Borders.customLine(Color.GRAY,5)
+//        wrapper.border = BorderFactory.createRaisedBevelBorder()
+////        wrapper.border = BorderFactory.createMatteBorder(1,10,1,1,Color.)
+//
+//        return wrapper
+//
+//        return wrapper
     }
 
 

@@ -1,10 +1,7 @@
 package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.ui.dsl.builder.panel
-import org.digma.intellij.plugin.model.rest.insights.HighUsageInsight
-import org.digma.intellij.plugin.model.rest.insights.LowUsageInsight
-import org.digma.intellij.plugin.model.rest.insights.NormalUsageInsight
-import org.digma.intellij.plugin.model.rest.insights.SlowEndpointInsight
+import org.digma.intellij.plugin.model.rest.insights.*
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupListViewItem
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.util.*
@@ -25,6 +22,7 @@ fun httpEndpointGroupPanel(listViewItem: InsightGroupListViewItem): JPanel {
                     is NormalUsageInsight -> normalUsageInsightPanel(modelObject)
                     is HighUsageInsight -> highUsageInsightPanel(modelObject)
                     is SlowEndpointInsight -> slowEndpointPanel(modelObject)
+                    is SlowestSpansInsight -> slowestSpansPanel(modelObject)
                     else -> panelOfUnsupported("${modelObject?.javaClass?.simpleName}")
                 }
 

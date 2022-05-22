@@ -23,7 +23,7 @@ public final class Icons {
         public static final Icon LOW_USAGE = IconLoader.getIcon("/icons/insight/gauge_low-32.png", Icons.class);
         public static final Icon NORMAL_USAGE = IconLoader.getIcon("/icons/insight/gauge_normal-32.png", Icons.class);
         public static final Icon HIGH_USAGE = IconLoader.getIcon("/icons/insight/gauge_high-32.png", Icons.class);
-        public static final Icon SLOW = IconLoader.getIcon("/icons/insight/slow.png", Icons.class);
+        public static final Icon SLOW = IconLoader.getIcon("/icons/insight/slow-32.png", Icons.class);
         public static final Icon TARGET = IconLoader.getIcon("/icons/insight/target.png", Icons.class);
         public static final Icon THIN_TARGET = IconLoader.getIcon("/icons/insight/thin-target.png", Icons.class);
     }

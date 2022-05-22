@@ -19,7 +19,7 @@ public final class Icons {
 
     static public class Insight {
 
-        public static final Icon BOTTLENECK = IconLoader.getIcon("/icons/insight/bottleneck.png", Icons.class);
+        public static final Icon BOTTLENECK = IconLoader.getIcon("/icons/insight/bottleneck-32.png", Icons.class);
         public static final Icon LOW_USAGE = IconLoader.getIcon("/icons/insight/gauge_low-32.png", Icons.class);
         public static final Icon NORMAL_USAGE = IconLoader.getIcon("/icons/insight/gauge_normal-32.png", Icons.class);
         public static final Icon HIGH_USAGE = IconLoader.getIcon("/icons/insight/gauge_high-32.png", Icons.class);

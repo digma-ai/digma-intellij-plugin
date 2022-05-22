@@ -6,6 +6,7 @@ import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.Duration
 import org.digma.intellij.plugin.model.rest.insights.SlowEndpointInsight
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 
 fun slowEndpointPanel(insight: SlowEndpointInsight): DialogPanel {
@@ -44,11 +45,12 @@ fun genContent(insight: SlowEndpointInsight): String {
 }
 
 fun computePercentageDiff(insight: SlowEndpointInsight): String {
-    val decimal = computePercentageDiff(insight.median.raw, insight.endpointsMedian.raw)
+    val decimal = computePercentageDiff(insight.median.raw, insight.endpointsMedianOfMedians.raw)
     return "${decimal.toPlainString()}%"
 }
 
 fun computePercentageDiff(value: Long, compare: Long): BigDecimal {
-    val decimal = BigDecimal(((value / compare) - 1) * 100).setScale(0)
+    val decimal = BigDecimal((value.toDouble() / compare.toDouble() - 1) * 100)
+        .setScale(0, RoundingMode.HALF_DOWN)
     return decimal
 }

@@ -17,10 +17,10 @@ abstract class AbstractPanelListModel : AbstractListModel<ListViewItem<*>>(),
         this.items = listViewItems
 
         //temp: duplicate
-        var newItems = ArrayList(listViewItems)
-        newItems.addAll(listViewItems)
-        newItems.addAll(listViewItems)
-        this.items = newItems
+//        var newItems = ArrayList(listViewItems)
+//        newItems.addAll(listViewItems)
+//        newItems.addAll(listViewItems)
+//        this.items = newItems
         //env temp
 
         Log.log(LOGGER::info, "setListData {}", items)

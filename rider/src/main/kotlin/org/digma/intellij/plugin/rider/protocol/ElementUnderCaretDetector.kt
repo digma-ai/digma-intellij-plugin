@@ -26,16 +26,16 @@ class ElementUnderCaretDetector(private val project: Project) {
         Log.log(LOGGER::info, "ElementUnderCaretDetector waiting for solution startup..")
         //todo: should wait for solution startup? it will impact maybeNotifyElementUnderCaret
         project.solution.solutionLifecycle.fullStartupFinished.advise(project.lifetime) {
-        Log.log(LOGGER::info, "Starting ElementUnderCaretDetector")
+            Log.log(LOGGER::info, "Starting ElementUnderCaretDetector")
 
-        // the listener starts when the tool windows is opened, by then there may be many notifyElementUnderCaret events
-        // waiting and all will be processed. throttleLast makes sure to process only the last one.
-        model.notifyElementUnderCaret.throttleLast(Duration.ofMillis(200),
-            SingleThreadScheduler(project.lifetime, "notifyElementUnderCaret")).advise(project.lifetime) {
-            val methodUnderCaret: MethodUnderCaretEvent? = model.elementUnderCaret.valueOrNull
-            Log.log(LOGGER::info, "Got MethodUnderCaretEvent signal: {}", methodUnderCaret)
-            notifyElementUnderCaret(methodUnderCaret, caretContextService)
-        }
+            // the listener starts when the tool windows is opened, by then there may be many notifyElementUnderCaret events
+            // waiting and all will be processed. throttleLast makes sure to process only the last one.
+            model.notifyElementUnderCaret.throttleLast(Duration.ofMillis(200),
+                SingleThreadScheduler(project.lifetime, "notifyElementUnderCaret")).advise(project.lifetime) {
+                val methodUnderCaret: MethodUnderCaretEvent? = model.elementUnderCaret.valueOrNull
+                Log.log(LOGGER::info, "Got MethodUnderCaretEvent signal: {}", methodUnderCaret)
+                notifyElementUnderCaret(methodUnderCaret, caretContextService)
+            }
         }
 
 //        val mergeQueue: MergingUpdateQueue = MergingUpdateQueue("notifyElementUnderCaret",

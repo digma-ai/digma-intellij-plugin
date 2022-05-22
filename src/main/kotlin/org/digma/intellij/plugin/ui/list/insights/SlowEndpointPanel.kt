@@ -11,18 +11,28 @@ import java.math.RoundingMode
 
 fun slowEndpointPanel(insight: SlowEndpointInsight): DialogPanel {
     val result = panel {
-        row {
-            label("Slow Endpoint").bold()
-        }
-        row {
-            label(genContent(insight))
-        }
-        row {
-            icon(Icons.Insight.SLOW)
-        }
-        row {
-            label("Median is " + evalDuration(insight.median))
-        }
+        twoColumnsRow(
+            column1 = {
+                panel {
+                    row {
+                        label("Slow Endpoint").bold()
+                    }
+                    row {
+                        text(genContentAsHtml(insight))
+                    }
+                }
+            },
+            column2 = {
+                panel {
+                    row {
+                        icon(Icons.Insight.SLOW)
+                    }
+                    row {
+                        label(evalDuration(insight.median))
+                    }
+                }
+            }
+        )
     }
     result.toolTipText = genToolTip(insight)
 
@@ -40,8 +50,12 @@ fun evalDuration(duration: Duration): String {
     return "${duration.value}${duration.unit}"
 }
 
-fun genContent(insight: SlowEndpointInsight): String {
-    return "On average requests are slower than other endpoints by ${computePercentageDiff(insight)}"
+fun genContentAsHtml(insight: SlowEndpointInsight): String {
+    return "<p>On average requests are slower than </p><p>other endpoints by <span style=\"color:red\">${
+        computePercentageDiff(
+            insight
+        )
+    }</span></p>"
 }
 
 fun computePercentageDiff(insight: SlowEndpointInsight): String {
@@ -50,7 +64,6 @@ fun computePercentageDiff(insight: SlowEndpointInsight): String {
 }
 
 fun computePercentageDiff(value: Long, compare: Long): BigDecimal {
-    val decimal = BigDecimal((value.toDouble() / compare.toDouble() - 1) * 100)
-        .setScale(0, RoundingMode.HALF_DOWN)
+    val decimal = BigDecimal((value.toDouble() / compare.toDouble() - 1) * 100).setScale(0, RoundingMode.HALF_DOWN)
     return decimal
 }

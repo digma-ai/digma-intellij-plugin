@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.ui.dsl.builder.panel
 import org.digma.intellij.plugin.model.rest.insights.*
+import org.digma.intellij.plugin.ui.common.panelOfUnsupported
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupListViewItem
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.util.*

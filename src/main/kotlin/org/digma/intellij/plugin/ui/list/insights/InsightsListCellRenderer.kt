@@ -3,7 +3,8 @@ package org.digma.intellij.plugin.ui.list.insights
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsight
 import org.digma.intellij.plugin.model.rest.insights.HotspotInsight
-import org.digma.intellij.plugin.ui.common.emptyPanel
+import org.digma.intellij.plugin.ui.common.genericPanelForSingleInsight
+import org.digma.intellij.plugin.ui.common.panelOfUnsupported
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupListViewItem
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupType.HttpEndpoint

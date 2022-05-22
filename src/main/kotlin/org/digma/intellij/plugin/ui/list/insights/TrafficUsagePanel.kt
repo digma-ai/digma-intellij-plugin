@@ -9,36 +9,54 @@ import javax.swing.Icon
 import javax.swing.JPanel
 
 
-private fun trafficUsagePanel(title: String, labelValue: String, icon: Icon): JPanel {
+private fun trafficUsagePanel(title: String, labelValue: String, countPerMinute: Int, icon: Icon): JPanel {
     val result = panel {
-        row {
-            label(title).bold()
-        }
-        row {
-            label(labelValue)
-        }
-        row {
-            icon(icon)
-        }
+        twoColumnsRow(
+            column1 = {
+                panel {
+                    row {
+                        label(title).bold()
+                    }
+                    row {
+                        label(labelValue)
+                    }
+                }
+            },
+            column2 = {
+                panel {
+                    row {
+                        icon(icon)
+                    }
+                    row {
+                        label("${countPerMinute}/min")
+                    }
+                }
+            }
+        )
     }
 
     return result
 }
 
 fun lowUsageInsightPanel(insight: LowUsageInsight): JPanel {
-    return trafficUsagePanel("Endpoint low traffic", "Servicing a low number of requests", Icons.Insight.LOW_USAGE)
+    return trafficUsagePanel(
+        "Endpoint low traffic", "Servicing a low number of requests",
+        insight.maxCallsIn1Min, Icons.Insight.LOW_USAGE
+    )
 }
 
 fun normalUsageInsightPanel(insight: NormalUsageInsight): JPanel {
     return trafficUsagePanel(
-        "Endpoint normal level of traffic",
-        "Servicing an average number of requests",
-        Icons.Insight.NORMAL_USAGE
+        "Endpoint normal level of traffic", "Servicing an average number of requests",
+        insight.maxCallsIn1Min, Icons.Insight.NORMAL_USAGE
     )
 }
 
 fun highUsageInsightPanel(insight: HighUsageInsight): JPanel {
-    return trafficUsagePanel("Endpoint high traffic", "Servicing a high number of requests", Icons.Insight.HIGH_USAGE)
+    return trafficUsagePanel(
+        "Endpoint high traffic", "Servicing a high number of requests",
+        insight.maxCallsIn1Min, Icons.Insight.HIGH_USAGE
+    )
 }
 
 

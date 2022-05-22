@@ -8,15 +8,17 @@ internal object EnvComboModel: DefaultComboBoxModel<String>(){
      var initialized: Boolean = false
 
     @Synchronized fun updateEnvironments(@NotNull envs: List<String>){
-        if(initialized)
+        if (initialized)
             return
 
         initialized = true
-        envs.forEach{
+        envs.forEach {
             this.addElement(it)
         }
 
-        selectedItem = envs.first()
+        envs.firstOrNull()?.let {
+            selectedItem = envs.first()
+        }
 
     }
 

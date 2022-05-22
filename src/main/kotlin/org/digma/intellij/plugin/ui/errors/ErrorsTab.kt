@@ -13,14 +13,18 @@ import org.digma.intellij.plugin.ui.common.scopeLine
 import org.digma.intellij.plugin.ui.common.topLine
 import org.digma.intellij.plugin.ui.insights.insightsModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
+import org.digma.intellij.plugin.ui.panels.ResettablePanel
+import java.awt.BorderLayout
+import javax.swing.JLabel
+import javax.swing.SwingUtilities
 
 val errorsModel: ErrorsModel = ErrorsModel()
 
 
-fun errorsPanel(project: Project): DialogPanel {
+fun errorsPanel(project: Project): ResettablePanel {
 
 
-    val result = panel {
+    val topPanel = panel {
         row {
             var topLine = topLine(project, insightsModel,"Code errors")
             cell(topLine)
@@ -40,8 +44,14 @@ fun errorsPanel(project: Project): DialogPanel {
 
     }
 
+    val result = object: ResettablePanel() {
+        override fun reset() {
+            topPanel.reset()
+        }
+    }
 
-    result.border = JBEmptyBorder(10)
+    result.layout = BorderLayout()
+    result.add(topPanel, BorderLayout.CENTER)
 
     return result
 }

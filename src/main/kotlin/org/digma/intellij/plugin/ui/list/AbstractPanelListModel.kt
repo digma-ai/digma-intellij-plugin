@@ -1,11 +1,15 @@
 package org.digma.intellij.plugin.ui.list
 
+import com.intellij.openapi.diagnostic.Logger
+import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.util.*
 import javax.swing.AbstractListModel
 
 abstract class AbstractPanelListModel : AbstractListModel<ListViewItem<*>>(),
     PanelListModel {
+
+    private val LOGGER = Logger.getInstance(PanelList::class.java)
 
     private var items: List<ListViewItem<*>> = ArrayList()
 
@@ -19,6 +23,7 @@ abstract class AbstractPanelListModel : AbstractListModel<ListViewItem<*>>(),
 //        this.items = newItems
         //env temp
 
+        Log.log(LOGGER::info, "setListData {}", items)
 
         Collections.sort(this.items, Comparator.comparingInt(ListViewItem<*>::sortIndex))
         fireContentsChanged(this, 0, items.size - 1)

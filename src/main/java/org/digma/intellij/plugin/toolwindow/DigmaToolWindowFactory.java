@@ -7,8 +7,8 @@ import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.ContentFactory;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.service.EditorInteractionService;
-import org.digma.intellij.plugin.ui.errors.ErrorsPanelKt;
-import org.digma.intellij.plugin.ui.insights.InsightsPanelKt;
+import org.digma.intellij.plugin.ui.errors.ErrorsTabKt;
+import org.digma.intellij.plugin.ui.insights.InsightsTabKt;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
 import org.jetbrains.annotations.NotNull;
@@ -35,18 +35,18 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
         var contentFactory = ContentFactory.SERVICE.getInstance();
 
         {
-            var insightsPanel = InsightsPanelKt.insightsPanel(project);
+            var insightsPanel = InsightsTabKt.insightsPanel(project);
             var insightsViewService = project.getService(InsightsViewService.class);
-            insightsViewService.setModel(InsightsPanelKt.getInsightsModel());
+            insightsViewService.setModel(InsightsTabKt.getInsightsModel());
             insightsViewService.setPanel(insightsPanel);
             var insightsContent = contentFactory.createContent(insightsPanel, "Insights", false);
             toolWindow.getContentManager().addContent(insightsContent);
         }
 
         {
-            var errorsPanel = ErrorsPanelKt.errorsPanel(project);
+            var errorsPanel = ErrorsTabKt.errorsPanel(project);
             var errorsViewService = project.getService(ErrorsViewService.class);
-            errorsViewService.setModel(ErrorsPanelKt.getErrorsModel());
+            errorsViewService.setModel(ErrorsTabKt.getErrorsModel());
             errorsViewService.setPanel(errorsPanel);
             var errorsContent = contentFactory.createContent(errorsPanel, "Errors", false);
             toolWindow.getContentManager().addContent(errorsContent);

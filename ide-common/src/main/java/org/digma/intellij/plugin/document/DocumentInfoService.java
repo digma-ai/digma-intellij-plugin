@@ -1,10 +1,12 @@
 package org.digma.intellij.plugin.document;
 
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
 import org.digma.intellij.plugin.analytics.AnalyticsProvider;
 import org.digma.intellij.plugin.analytics.Environment;
 import org.digma.intellij.plugin.analytics.EnvironmentChanged;
+import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
@@ -24,6 +26,8 @@ import java.util.Map;
  * for an object that doesn't exist in its documents list.
  */
 public class DocumentInfoService implements EnvironmentChanged {
+
+    private static final Logger LOGGER = Logger.getInstance(DocumentInfoService.class);
 
     private final Project project;
     private final AnalyticsProvider analyticsProvider;
@@ -54,6 +58,7 @@ public class DocumentInfoService implements EnvironmentChanged {
 
     //called after a document is analyzed for code objects
     public void addCodeObjects(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
+        Log.log(LOGGER::info, "Adding DocumentInfo for {},{}",psiFile,documentInfo);
         DocumentInfoContainer documentInfoContainer = documents.computeIfAbsent(psiFile, DocumentInfoContainer::new);
         documentInfoContainer.update(documentInfo, analyticsProvider, environment.getCurrent());
         notifyDocumentInfoChanged(psiFile);

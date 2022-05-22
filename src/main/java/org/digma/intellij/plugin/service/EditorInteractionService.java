@@ -68,7 +68,6 @@ public class EditorInteractionService implements CaretContextService, Disposable
 
     @Override
     public void contextEmpty() {
-        //todo: implement
         insightsViewService.empty();
     }
 

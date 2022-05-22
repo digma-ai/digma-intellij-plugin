@@ -1,14 +1,18 @@
 package org.digma.intellij.plugin.rider.protocol
 
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManagerListener
 import com.intellij.psi.PsiFile
 import com.jetbrains.rd.platform.util.lifetime
 import com.jetbrains.rider.projectView.solution
 import org.digma.intellij.plugin.document.DocumentCodeObjectsChanged
+import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.psi.PsiUtils
 
 class DocumentCodeObjectsListener : ProjectManagerListener {
+
+    private val LOGGER = Logger.getInstance(DocumentCodeObjectsListener::class.java)
 
     lateinit var project: Project
 
@@ -18,8 +22,10 @@ class DocumentCodeObjectsListener : ProjectManagerListener {
         project.solution.solutionLifecycle.fullStartupFinished.advise(project.lifetime) {
             val model = project.solution.codeObjectsModel
             model.documentAnalyzed.advise(project.lifetime) { documentKey ->
+                Log.log(LOGGER::info, "Got documentAnalyzed event for {}",documentKey)
                 var docUri = model.documents[documentKey]?.fileUri
                 if (docUri != null) {
+                    Log.log(LOGGER::info, "Found document for {}",documentKey)
                     documentAnalyzed(docUri, project)
                 }
             }

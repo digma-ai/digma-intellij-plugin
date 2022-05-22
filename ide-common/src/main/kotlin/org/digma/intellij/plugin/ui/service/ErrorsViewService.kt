@@ -5,10 +5,11 @@ import com.intellij.openapi.ui.DialogPanel
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
 import org.digma.intellij.plugin.model.rest.summary.MethodCodeObjectSummary
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
+import org.digma.intellij.plugin.ui.panels.ResettablePanel
 
 class ErrorsViewService(val project: Project) {
 
-    lateinit var panel: DialogPanel
+    lateinit var panel: ResettablePanel
     lateinit var model: ErrorsModel
 
 

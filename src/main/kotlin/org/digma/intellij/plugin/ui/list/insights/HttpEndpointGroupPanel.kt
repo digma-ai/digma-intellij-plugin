@@ -1,6 +1,9 @@
 package org.digma.intellij.plugin.ui.list.insights
 
+import com.intellij.ui.dsl.builder.BottomGap
+import com.intellij.ui.dsl.builder.TopGap
 import com.intellij.ui.dsl.builder.panel
+import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.*
 import org.digma.intellij.plugin.ui.common.panelOfUnsupported
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupListViewItem
@@ -13,7 +16,14 @@ fun httpEndpointGroupPanel(listViewItem: InsightGroupListViewItem): JPanel {
     val items: SortedSet<ListViewItem<*>> = listViewItem.modelObject
 
     val result = panel {
-        row("HTTP: ${listViewItem.groupId}") {}
+        row {
+            label("REST:")
+            icon(Icons.TELESCOPE_12)
+            label("HTTP ").bold()
+            label("${listViewItem.groupId}")
+        }.bottomGap(BottomGap.SMALL)
+            .topGap(TopGap.SMALL)
+
 
         items.forEach {
             val modelObject = it.modelObject
@@ -28,11 +38,10 @@ fun httpEndpointGroupPanel(listViewItem: InsightGroupListViewItem): JPanel {
                 }
 
             row {
-                cell(cellItem)
+                cell(insightItemPanel(cellItem))
             }
         }
     }
 
-    result.isOpaque = true
-    return result
+    return insightGroupPanel(result)
 }

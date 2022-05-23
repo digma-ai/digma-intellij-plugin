@@ -13,7 +13,6 @@ import org.digma.intellij.plugin.ui.list.insights.InsightsList
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.panels.ResettablePanel
 import java.awt.BorderLayout
-import javax.swing.JLabel
 import javax.swing.SwingUtilities
 
 
@@ -22,21 +21,23 @@ val insightsModel: InsightsModel = InsightsModel()
 fun insightsPanel(project: Project ): ResettablePanel {
 
     val topPanel = panel {
-        row {
-            var topLine = topLine(project, insightsModel, "Code insights")
-            cell(topLine)
-                .horizontalAlign(HorizontalAlign.FILL)
-                .onReset {
-                    topLine.reset()
-                }
-        }
-        row {
-            var scopeLine = scopeLine(project, { insightsModel.classAndMethod() }, ScopeLineIconProducer(insightsModel))
-            cell(scopeLine)
-                .horizontalAlign(HorizontalAlign.FILL)
-                .onReset {
-                    scopeLine.reset()
-                }
+        indent {
+            row {
+                var topLine = topLine(project, insightsModel, "Code insights")
+                cell(topLine)
+                    .horizontalAlign(HorizontalAlign.FILL)
+                    .onReset {
+                        topLine.reset()
+                    }
+            }
+            row {
+                var scopeLine = scopeLine(project, { insightsModel.classAndMethod() }, ScopeLineIconProducer(insightsModel))
+                cell(scopeLine)
+                    .horizontalAlign(HorizontalAlign.FILL)
+                    .onReset {
+                        scopeLine.reset()
+                    }
+            }
         }
     }
 

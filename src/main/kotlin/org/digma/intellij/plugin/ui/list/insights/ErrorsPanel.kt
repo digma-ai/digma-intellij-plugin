@@ -92,7 +92,7 @@ fun topErrorPanel(error: ErrorInsightNamedError,insight: ErrorInsight):JPanel{
         if (insight.codeObjectId != error.sourceCodeObjectId) {
             indent {
                 row {
-                    label("From ${error.sourceCodeObjectId} Many major errors occur or propagate through this function.Many major errors occur or propagate through this function.")
+                    label("From ${error.sourceCodeObjectId.split("\$_\$")[0]}")
                 }
             }
         }

@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.ui.list.insights
 
-import com.intellij.openapi.ui.addKeyboardAction
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.dsl.builder.RowLayout
@@ -12,12 +11,7 @@ import org.digma.intellij.plugin.model.rest.insights.ErrorInsight
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsightNamedError
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.BorderLayout
-import java.awt.Color
-import java.awt.Dimension
-import java.awt.event.ActionEvent
-import java.awt.event.ActionListener
 import javax.swing.*
-import javax.swing.border.EtchedBorder
 
 fun errorsPanel(listViewItem: ListViewItem<ErrorInsight>):JPanel {
 
@@ -27,14 +21,15 @@ fun errorsPanel(listViewItem: ListViewItem<ErrorInsight>):JPanel {
         val unhandled = listViewItem.modelObject.unhandledCount
         val unexpected = listViewItem.modelObject.unexpectedCount
 
-        row("Errors") {}
-            .comment("$errorCount errors($unhandled unhandled, $unexpected unexpected)")
+        row {}
+            .comment("Errors:  $errorCount errors($unhandled unhandled, $unexpected unexpected)").bold()
         row {
             panel {
                 listViewItem.modelObject.topErrors.forEach{
                     row {
                         cell(topErrorPanel(it, listViewItem.modelObject))
                             .verticalAlign(VerticalAlign.FILL)
+                            .horizontalAlign(HorizontalAlign.LEFT)
                     }.layout(RowLayout.INDEPENDENT)
                 }
             }
@@ -42,41 +37,39 @@ fun errorsPanel(listViewItem: ListViewItem<ErrorInsight>):JPanel {
     }
 
 
-    val linkPanel = panel {
+    val expandLinkPanel = panel {
         row {
             link("Expand"){
-
-            }.horizontalAlign(HorizontalAlign.CENTER)
+                //action here
+            }.horizontalAlign(HorizontalAlign.RIGHT)
         }.layout(RowLayout.INDEPENDENT)
-
     }
+    expandLinkPanel.border = Borders.empty(10)
 
 
-
-    val result = JBPanel<JBPanel<*>>()
-    result.layout = BoxLayout(result,BoxLayout.X_AXIS)
-
-    errorsPanel.minimumSize = Dimension(50,100)
     val errorsWrapper = JBPanel<JBPanel<*>>()
     errorsWrapper.layout = BorderLayout()
     errorsWrapper.add(errorsPanel,BorderLayout.CENTER)
-    errorsWrapper.minimumSize = Dimension(50,100)
-//    errorsWrapper.border = Borders.empty(10)
+    errorsWrapper.border = BorderFactory.createEmptyBorder()
 
     val scrollPane = JBScrollPane()
     scrollPane.horizontalScrollBarPolicy = ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
     scrollPane.verticalScrollBarPolicy = ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
     scrollPane.setViewportView(errorsWrapper)
-//    scrollPane.setViewportView(errorsPanel)
-    result.add(scrollPane)
+    scrollPane.border = BorderFactory.createEmptyBorder()
 
     val expandPanel = JBPanel<JBPanel<*>>()
     expandPanel.layout = BorderLayout()
-    expandPanel.add(linkPanel,BorderLayout.SOUTH)
+    expandPanel.add(expandLinkPanel,BorderLayout.SOUTH)
 
+
+    val result = JBPanel<JBPanel<*>>()
+    result.layout = BoxLayout(result,BoxLayout.X_AXIS)
+    result.add(scrollPane)
+    result.add(Box.createHorizontalStrut(20))
     result.add(expandPanel)
 
-    return result
+    return insightItemPanel(result)
 }
 
 

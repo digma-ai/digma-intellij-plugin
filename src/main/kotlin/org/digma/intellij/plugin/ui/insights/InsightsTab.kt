@@ -54,7 +54,6 @@ fun insightsPanel(project: Project ): ResettablePanel {
     result.layout = BorderLayout()
     result.add(topPanel,BorderLayout.NORTH)
     result.add(insightsList,BorderLayout.CENTER)
-    result.add(JLabel("Status line..."),BorderLayout.SOUTH)
 
     return result
 }

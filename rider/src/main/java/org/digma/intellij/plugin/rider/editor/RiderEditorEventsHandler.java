@@ -1,18 +1,20 @@
 package org.digma.intellij.plugin.rider.editor;
 
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
 import org.digma.intellij.plugin.document.DocumentInfoChanged;
 import org.digma.intellij.plugin.editor.EditorEventsHandler;
-import org.digma.intellij.plugin.model.lens.CodeLens;
+import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.psi.LanguageService;
-import org.digma.intellij.plugin.ui.CaretContextService;
+import org.digma.intellij.plugin.psi.PsiUtils;
 import org.digma.intellij.plugin.rider.protocol.ElementUnderCaretDetector;
+import org.digma.intellij.plugin.ui.CaretContextService;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
-
 public class RiderEditorEventsHandler implements EditorEventsHandler, DocumentInfoChanged {
+
+    private Logger LOGGER = Logger.getInstance(RiderEditorEventsHandler.class);
 
     private Project project;
     private CaretContextService caretContextService;
@@ -36,6 +38,7 @@ public class RiderEditorEventsHandler implements EditorEventsHandler, DocumentIn
     @Override
     public void documentInfoChanged(PsiFile psiFile) {
         if (caretContextService != null){
+            Log.log(LOGGER::info, "Got documentInfoChanged event for {}}", PsiUtils.psiFileToDocumentProtocolKey(psiFile));
             ElementUnderCaretDetector elementUnderCaretDetector = project.getService(ElementUnderCaretDetector.class);
             elementUnderCaretDetector.maybeNotifyElementUnderCaret(psiFile,caretContextService);
         }

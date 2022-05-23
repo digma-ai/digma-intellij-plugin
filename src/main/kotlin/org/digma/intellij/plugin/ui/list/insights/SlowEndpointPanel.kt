@@ -1,46 +1,19 @@
 package org.digma.intellij.plugin.ui.list.insights
 
-import com.intellij.ui.components.JBPanel
-import com.intellij.ui.dsl.builder.panel
-import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.Duration
 import org.digma.intellij.plugin.model.rest.insights.SlowEndpointInsight
 import org.digma.intellij.plugin.ui.common.asHtml
-import org.digma.intellij.plugin.ui.common.iconPanelGrid
-import java.awt.BorderLayout
 import java.math.BigDecimal
 import java.math.RoundingMode
-import javax.swing.Box
-import javax.swing.BoxLayout
-import javax.swing.JLabel
-import javax.swing.SwingConstants
+import javax.swing.JPanel
 
 
-fun slowEndpointPanel(insight: SlowEndpointInsight): JBPanel<JBPanel<*>> {
-    val title = panel {
-        row {
-            label("Slow Endpoint").bold()
-        }
-    }
+fun slowEndpointPanel(insight: SlowEndpointInsight): JPanel {
+    val bodyContents = genContentAsHtml(insight)
+    val iconText = evalDuration(insight.median)
+    val result = createInsightPanel("Slow Endpoint", bodyContents, Icons.Insight.SLOW, iconText);
 
-    val descriptionNearIcon = evalDuration(insight.median)
-    val iconPanel = iconPanelGrid(Icons.Insight.SLOW, descriptionNearIcon)
-    iconPanel.border = JBUI.Borders.empty(10)
-
-    val contentPanel = JBPanel<JBPanel<*>>()
-    contentPanel.layout = BorderLayout()
-
-    val message = JLabel(genContentAsHtml(insight), SwingConstants.LEFT)
-
-    contentPanel.add(title, BorderLayout.NORTH)
-    contentPanel.add(message, BorderLayout.CENTER)
-
-    val result = JBPanel<JBPanel<*>>()
-    result.layout = BoxLayout(result, BoxLayout.X_AXIS)
-    result.add(contentPanel)
-    result.add(Box.createHorizontalStrut(20))
-    result.add(iconPanel)
     result.toolTipText = genToolTip(insight)
 
     return result

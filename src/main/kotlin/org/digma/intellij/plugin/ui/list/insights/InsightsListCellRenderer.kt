@@ -26,11 +26,11 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
     private fun getOrCreatePanel(project: Project, index: Int, value: ListViewItem<*>): JPanel {
 
         val panel = when (value) {
-            is GroupListViewItem -> buildGroupPanel(project, value)
+            is GroupListViewItem -> buildGroupPanel(value)
             else -> {
                 when (value.modelObject) {
                     is HotspotInsight -> hotspotPanel(value as ListViewItem<HotspotInsight>)
-                    is ErrorInsight -> errorsPanel(value as ListViewItem<ErrorInsight>)
+                    is ErrorInsight -> errorsPanel(project, value as ListViewItem<ErrorInsight>)
                     else -> genericPanelForSingleInsight(value as ListViewItem<CodeObjectInsight>)
                 }
             }

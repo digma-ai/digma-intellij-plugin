@@ -10,8 +10,8 @@ open class InsightListViewItem<INSIGHT : CodeObjectInsight>(insight: INSIGHT) :
     companion object {
         fun evalSortIndex(insight: CodeObjectInsight): Int {
             when (insight.type) {
-                InsightType.HotSpot -> return 10
-                InsightType.Errors -> return 20
+                InsightType.HotSpot -> return 1
+                InsightType.Errors -> return 2
                 InsightType.SpanUsages -> return 30
                 InsightType.SlowestSpans -> return 40
                 InsightType.LowUsage -> return 50

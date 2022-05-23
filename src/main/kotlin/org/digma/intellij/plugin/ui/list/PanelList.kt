@@ -5,6 +5,7 @@ import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI.Borders
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
+import java.awt.Color
 import java.awt.Dimension
 import java.awt.Graphics
 import java.awt.Rectangle
@@ -16,15 +17,14 @@ import javax.swing.Scrollable
 import javax.swing.event.ListDataEvent
 import javax.swing.event.ListDataListener
 
-open class PanelList(listViewItems: List<ListViewItem<*>>) : JBPanel<PanelList>(), ListDataListener, Scrollable {
+abstract class PanelList(listViewItems: List<ListViewItem<*>>) : JBPanel<PanelList>(), ListDataListener, Scrollable {
 
-    private val LOGGER = Logger.getInstance(
-        PanelList::class.java)
+    private val LOGGER = Logger.getInstance(PanelList::class.java)
 
     private var model: PanelListModel = DefaultPanelListModel()
     private var cellRenderer: PanelListCellRenderer = DefaultPanelListCellRenderer()
-
     private var scrollablePanelList: ScrollablePanelList? = null
+
 
     init {
         //set data before registering listeners
@@ -32,9 +32,17 @@ open class PanelList(listViewItems: List<ListViewItem<*>>) : JBPanel<PanelList>(
         model.addListDataListener(this)
         model.addListDataListener(cellRenderer)
         this.layout = BoxLayout(this, BoxLayout.Y_AXIS)
-//        this.border = Borders.empty(5)
+        this.border = Borders.empty(10)
+        this.background = getListBackground()
+        this.isOpaque = true
     }
 
+
+    abstract fun getListBackground():Color
+
+    override fun getBackground(): Color {
+        return getListBackground()
+    }
 
     fun getModel(): PanelListModel {
         return model
@@ -90,19 +98,19 @@ open class PanelList(listViewItems: List<ListViewItem<*>>) : JBPanel<PanelList>(
         if (model.size <= 0)
             return
 
+        add(Box.createVerticalStrut(10))
 
         for (i in 0 until model.getSize()) run {
             cellRenderer.apply {
                 val newComp: JPanel = getListCellRendererComponent(this@PanelList,
                     model.getElementAt(i), i, this@PanelList.hasFocus())
                 add(newComp)
-//                add(Box.createVerticalStrut(5))
-                add(Box.createRigidArea(Dimension(10,10)))
+                add(Box.createVerticalStrut(20))
             }
 
         }
 
-        add(Box.createVerticalStrut(5))
+        add(Box.createVerticalStrut(10))
         this.revalidate()
     }
 

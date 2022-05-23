@@ -7,6 +7,7 @@ import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.HighUsageInsight
 import org.digma.intellij.plugin.model.rest.insights.LowUsageInsight
 import org.digma.intellij.plugin.model.rest.insights.NormalUsageInsight
+import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.iconPanelGrid
 import java.awt.BorderLayout
 import javax.swing.*
@@ -26,7 +27,7 @@ private fun trafficUsagePanel(title: String, labelValue: String, countPerMinute:
     val contentPanel = JBPanel<JBPanel<*>>()
     contentPanel.layout = BorderLayout()
 
-    val message = JLabel(labelValue, SwingConstants.LEFT)
+    val message = JLabel(asHtml(labelValue), SwingConstants.LEFT)
 
     contentPanel.add(title, BorderLayout.NORTH)
     contentPanel.add(message, BorderLayout.CENTER)

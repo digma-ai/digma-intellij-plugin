@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.icons;
 import com.intellij.openapi.util.IconLoader;
 
 import javax.swing.*;
+import java.awt.*;
 
 @SuppressWarnings("unused")
 public final class Icons {
@@ -18,13 +19,23 @@ public final class Icons {
     public static final Icon TELESCOPE_12 = IconLoader.getIcon("/icons/telescope-12.png", Icons.class);
 
     static public class Insight {
+        public static final Icon BOTTLENECK = insightIcon(IconLoader.getIcon("/icons/insight/bottleneck.png", Icons.class));
+        public static final Icon LOW_USAGE = insightIcon(IconLoader.getIcon("/icons/insight/gauge_low.png", Icons.class));
+        public static final Icon NORMAL_USAGE = insightIcon(IconLoader.getIcon("/icons/insight/gauge_normal.png", Icons.class));
+        public static final Icon HIGH_USAGE = insightIcon(IconLoader.getIcon("/icons/insight/gauge_high.png", Icons.class));
+        public static final Icon SLOW = insightIcon(IconLoader.getIcon("/icons/insight/slow.png", Icons.class));
+        public static final Icon TARGET = insightIcon(IconLoader.getIcon("/icons/insight/target.png", Icons.class));
+        public static final Icon THIN_TARGET = insightIcon(IconLoader.getIcon("/icons/insight/thin-target.png", Icons.class));
+    }
 
-        public static final Icon BOTTLENECK = IconLoader.getIcon("/icons/insight/bottleneck-32.png", Icons.class);
-        public static final Icon LOW_USAGE = IconLoader.getIcon("/icons/insight/gauge_low-32.png", Icons.class);
-        public static final Icon NORMAL_USAGE = IconLoader.getIcon("/icons/insight/gauge_normal-32.png", Icons.class);
-        public static final Icon HIGH_USAGE = IconLoader.getIcon("/icons/insight/gauge_high-32.png", Icons.class);
-        public static final Icon SLOW = IconLoader.getIcon("/icons/insight/slow-32.png", Icons.class);
-        public static final Icon TARGET = IconLoader.getIcon("/icons/insight/target.png", Icons.class);
-        public static final Icon THIN_TARGET = IconLoader.getIcon("/icons/insight/thin-target.png", Icons.class);
+    public static ImageIcon scaledIcon(Icon icon, int size) {
+        final Image origImage = IconLoader.toImage(icon);
+        final Image scaledImage = origImage.getScaledInstance(size, size, Image.SCALE_DEFAULT);
+        final ImageIcon imageIcon = new ImageIcon(scaledImage);
+        return imageIcon;
+    }
+
+    public static ImageIcon insightIcon(Icon icon) {
+        return scaledIcon(icon, 32);
     }
 }

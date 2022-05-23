@@ -50,6 +50,7 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
             errorsViewService.setPanel(errorsPanel);
             var errorsContent = contentFactory.createContent(errorsPanel, "Errors", false);
             toolWindow.getContentManager().addContent(errorsContent);
+            errorsViewService.setContent(toolWindow,errorsContent);
         }
 
 

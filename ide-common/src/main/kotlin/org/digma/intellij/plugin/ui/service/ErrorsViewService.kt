@@ -1,7 +1,8 @@
 package org.digma.intellij.plugin.ui.service
 
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.ui.DialogPanel
+import com.intellij.openapi.wm.ToolWindow
+import com.intellij.ui.content.Content
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
 import org.digma.intellij.plugin.model.rest.summary.MethodCodeObjectSummary
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
@@ -11,7 +12,8 @@ class ErrorsViewService(val project: Project) {
 
     lateinit var panel: ResettablePanel
     lateinit var model: ErrorsModel
-
+    lateinit var toolWindow: ToolWindow
+    lateinit var errorsContent: Content
 
     fun updateSelectedMethod(
         methodUnderCaret: MethodUnderCaret,
@@ -29,6 +31,16 @@ class ErrorsViewService(val project: Project) {
 
     fun empty() {
 
+    }
+
+
+    fun setVisible(visible: Boolean) {
+        toolWindow.contentManager.setSelectedContent(errorsContent, true)
+    }
+
+    fun setContent(toolWindow: ToolWindow, errorsContent: Content) {
+        this.toolWindow = toolWindow
+        this.errorsContent = errorsContent
     }
 
 

@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.list.insights
 
+import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsight
 import org.digma.intellij.plugin.model.rest.insights.HotspotInsight
@@ -13,20 +14,19 @@ import org.digma.intellij.plugin.ui.model.listview.GroupListViewItem
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import javax.swing.JPanel
 
+
 class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
 
 
-    override fun createPanel(value: ListViewItem<*>, index: Int): JPanel {
-        return getOrCreatePanel(index, value)
+    override fun createPanel(project: Project, value: ListViewItem<*>, index: Int): JPanel {
+        return getOrCreatePanel(project, index, value)
     }
 
-
     @Suppress("UNCHECKED_CAST")
-    private fun getOrCreatePanel(index: Int, value: ListViewItem<*>): JPanel {
-
+    private fun getOrCreatePanel(project: Project, index: Int, value: ListViewItem<*>): JPanel {
 
         val panel = when (value) {
-            is GroupListViewItem -> buildGroupPanel(value)
+            is GroupListViewItem -> buildGroupPanel(project, value)
             else -> {
                 when (value.modelObject) {
                     is HotspotInsight -> hotspotPanel(value as ListViewItem<HotspotInsight>)
@@ -35,7 +35,6 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
                 }
             }
         }
-
 
         return panel
     }
@@ -56,7 +55,5 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
             }
         return panel
     }
-
-
 
 }

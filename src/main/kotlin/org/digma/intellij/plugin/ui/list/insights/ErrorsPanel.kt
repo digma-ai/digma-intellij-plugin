@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.list.insights
 
+import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.dsl.builder.RowLayout
@@ -9,11 +10,12 @@ import com.intellij.ui.dsl.gridLayout.VerticalAlign
 import com.intellij.util.ui.JBUI.Borders
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsight
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsightNamedError
+import org.digma.intellij.plugin.service.InsightsActionsService
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.BorderLayout
 import javax.swing.*
 
-fun errorsPanel(listViewItem: ListViewItem<ErrorInsight>):JPanel {
+fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>):JPanel {
 
     val errorsPanel = panel {
 
@@ -40,7 +42,9 @@ fun errorsPanel(listViewItem: ListViewItem<ErrorInsight>):JPanel {
     val expandLinkPanel = panel {
         row {
             link("Expand"){
-                //action here
+                val actionListener: InsightsActionsService = project.getService(InsightsActionsService::class.java)
+                actionListener.errorsExpandButtonClicked(listViewItem.modelObject)
+            //action here
             }.horizontalAlign(HorizontalAlign.RIGHT)
         }.layout(RowLayout.INDEPENDENT)
     }

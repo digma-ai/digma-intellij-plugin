@@ -41,7 +41,7 @@ fun insightsPanel(project: Project ): ResettablePanel {
         }
     }
 
-    val insightsList = ScrollablePanelList(InsightsList(insightsModel.listViewItems))
+    val insightsList = ScrollablePanelList(InsightsList(project,insightsModel.listViewItems))
 
     val result = object: ResettablePanel() {
         override fun reset() {

@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.list
 
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI.Borders
 import org.digma.intellij.plugin.log.Log
@@ -17,7 +18,7 @@ import javax.swing.Scrollable
 import javax.swing.event.ListDataEvent
 import javax.swing.event.ListDataListener
 
-abstract class PanelList(listViewItems: List<ListViewItem<*>>) : JBPanel<PanelList>(), ListDataListener, Scrollable {
+abstract class PanelList(val project: Project, listViewItems: List<ListViewItem<*>>) : JBPanel<PanelList>(), ListDataListener, Scrollable {
 
     private val LOGGER = Logger.getInstance(PanelList::class.java)
 
@@ -102,7 +103,7 @@ abstract class PanelList(listViewItems: List<ListViewItem<*>>) : JBPanel<PanelLi
 
         for (i in 0 until model.getSize()) run {
             cellRenderer.apply {
-                val newComp: JPanel = getListCellRendererComponent(this@PanelList,
+                val newComp: JPanel = getListCellRendererComponent(project,this@PanelList,
                     model.getElementAt(i), i, this@PanelList.hasFocus())
                 add(newComp)
                 add(Box.createVerticalStrut(20))
@@ -116,7 +117,7 @@ abstract class PanelList(listViewItems: List<ListViewItem<*>>) : JBPanel<PanelLi
 
 
     class DefaultPanelListCellRenderer : AbstractPanelListCellRenderer() {
-        override fun createPanel(value: ListViewItem<*>, index: Int): JPanel {
+        override fun createPanel(project: Project,value: ListViewItem<*>, index: Int): JPanel {
             return JPanel()
         }
     }

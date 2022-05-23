@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.list.insights
 
+import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsight
 import org.digma.intellij.plugin.model.rest.insights.HotspotInsight
 import org.digma.intellij.plugin.ui.common.emptyPanel
@@ -15,13 +16,13 @@ import javax.swing.JPanel
 class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
 
 
-    override fun createPanel(value: ListViewItem<*>, index: Int): JPanel {
-        return getOrCreatePanel(index, value)
+    override fun createPanel(project: Project, value: ListViewItem<*>, index: Int): JPanel {
+        return getOrCreatePanel(project,index, value)
     }
 
 
     @Suppress("UNCHECKED_CAST")
-    private fun getOrCreatePanel(index: Int, value: ListViewItem<*>): JPanel {
+    private fun getOrCreatePanel(project: Project,index: Int, value: ListViewItem<*>): JPanel {
 
 
         val panel = when (value.modelObject) {
@@ -32,7 +33,7 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
                 buildGroupPanel(value as GroupListViewItem)
             }
             is ErrorInsight -> {
-                errorsPanel(value as ListViewItem<ErrorInsight>)
+                errorsPanel(project,value as ListViewItem<ErrorInsight>)
             }
             else -> {
                 emptyPanel(value)

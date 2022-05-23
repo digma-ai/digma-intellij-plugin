@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.icons;
 
+import com.intellij.icons.AllIcons;
 import com.intellij.openapi.util.IconLoader;
 
 import javax.swing.*;
@@ -17,6 +18,7 @@ public final class Icons {
     public static final Icon HOTSPOT = IconLoader.getIcon("/icons/hotspot.png", Icons.class);
     public static final Icon HOTSPOT_32 = IconLoader.getIcon("/icons/hotspot-32.png", Icons.class);
     public static final Icon TELESCOPE_12 = IconLoader.getIcon("/icons/telescope-12.png", Icons.class);
+    public static final Icon INTERFACE_16 = AllIcons.Nodes.Interface;
 
     static public class Insight {
         public static final Icon BOTTLENECK = insightIcon(IconLoader.getIcon("/icons/insight/bottleneck.png", Icons.class));

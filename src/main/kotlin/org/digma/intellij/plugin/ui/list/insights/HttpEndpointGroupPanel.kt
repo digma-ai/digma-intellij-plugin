@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.ui.dsl.builder.BottomGap
+import com.intellij.ui.dsl.builder.LabelPosition
 import com.intellij.ui.dsl.builder.TopGap
 import com.intellij.ui.dsl.builder.panel
 import org.digma.intellij.plugin.icons.Icons
@@ -17,8 +18,7 @@ fun httpEndpointGroupPanel(listViewItem: InsightGroupListViewItem): JPanel {
 
     val result = panel {
         row {
-            label("REST:")
-            icon(Icons.TELESCOPE_12)
+            icon(Icons.INTERFACE_16).label("REST:", LabelPosition.LEFT)
             label("HTTP ").bold()
             label("${listViewItem.groupId}")
         }.bottomGap(BottomGap.SMALL)

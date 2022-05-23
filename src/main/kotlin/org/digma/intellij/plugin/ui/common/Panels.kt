@@ -1,15 +1,32 @@
 package org.digma.intellij.plugin.ui.common
 
-import com.intellij.icons.AllIcons
+import com.intellij.ui.dsl.builder.RowLayout
 import com.intellij.ui.dsl.builder.panel
-import com.intellij.ui.dsl.gridLayout.HorizontalAlign
-import org.digma.intellij.plugin.ui.list.insights.insightItemPanel
+import org.digma.intellij.plugin.icons.Icons
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.GridLayout
 import javax.swing.*
 
+
+fun panelOfUnsupported(caption: String): JPanel {
+    return panel {
+        row("Unsupported yet: '$caption'") {
+        }.layout(RowLayout.PARENT_GRID)
+    }
+}
+
+fun genericPanelForSingleInsight(listViewItem: ListViewItem<CodeObjectInsight>): JPanel {
+    return panel {
+        //temporary: need to implement logic
+        row {
+            label("Insight named '${listViewItem.modelObject.javaClass.simpleName}'")
+            icon(Icons.TOOL_WINDOW)
+        }
+    }
+}
 
 fun iconPanel(icon: Icon, text: String): JPanel {
     val panel = JPanel()
@@ -43,22 +60,4 @@ fun iconPanelGrid(icon: Icon, text: String): JPanel {
     panel.add(label)
     panel.border = BorderFactory.createEmptyBorder()
     return panel
-}
-
-
-
-fun emptyPanel(value: ListViewItem<*>): JPanel {
-    val result = panel {
-        row("Not implemented:") {
-
-        }.comment(value.javaClass.simpleName).bold()
-        row{
-            icon(AllIcons.General.Error)
-                .horizontalAlign(HorizontalAlign.LEFT)
-            label("value: ${value.modelObject?.javaClass}")
-                .horizontalAlign(HorizontalAlign.FILL)
-        }
-    }
-
-    return insightItemPanel(result)
 }

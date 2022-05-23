@@ -23,14 +23,18 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>):JPan
         val unhandled = listViewItem.modelObject.unhandledCount
         val unexpected = listViewItem.modelObject.unexpectedCount
 
-        row {}
-            .comment("Errors:  $errorCount errors($unhandled unhandled, $unexpected unexpected)").bold()
+        row {
+            label("Errors")
+                .bold()
+                .verticalAlign(VerticalAlign.TOP)
+                .horizontalAlign(HorizontalAlign.LEFT)
+        }.comment("$errorCount errors($unhandled unhandled, $unexpected unexpected)").bold()
         row {
             panel {
-                listViewItem.modelObject.topErrors.forEach{
+                listViewItem.modelObject.topErrors.forEach {
                     row {
                         cell(topErrorPanel(it, listViewItem.modelObject))
-                            .verticalAlign(VerticalAlign.FILL)
+                            .verticalAlign(VerticalAlign.CENTER)
                             .horizontalAlign(HorizontalAlign.LEFT)
                     }.layout(RowLayout.INDEPENDENT)
                 }
@@ -48,7 +52,7 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>):JPan
             }.horizontalAlign(HorizontalAlign.RIGHT)
         }.layout(RowLayout.INDEPENDENT)
     }
-    expandLinkPanel.border = Borders.empty(10)
+    expandLinkPanel.border = Borders.empty()
 
 
     val errorsWrapper = JBPanel<JBPanel<*>>()
@@ -70,7 +74,7 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>):JPan
     val result = JBPanel<JBPanel<*>>()
     result.layout = BoxLayout(result,BoxLayout.X_AXIS)
     result.add(scrollPane)
-    result.add(Box.createHorizontalStrut(20))
+    result.add(Box.createHorizontalStrut(5))
     result.add(expandPanel)
 
     return insightItemPanel(result)
@@ -81,24 +85,21 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>):JPan
 
 fun topErrorPanel(error: ErrorInsightNamedError,insight: ErrorInsight):JPanel{
 
-    return panel {
+    val result = panel {
         //temporary: need to implement logic
         row {
             link(error.errorType) {
                 //error.codeObjectId
                 println("In action")
             }
-            if (insight.codeObjectId == error.sourceCodeObjectId) {
-                label("From me")
+            var from = "From me"
+            if (insight.codeObjectId != error.sourceCodeObjectId) {
+                from = "From ${error.sourceCodeObjectId.split("\$_\$")[0]}"
             }
-
-        }
-        if (insight.codeObjectId != error.sourceCodeObjectId) {
-            indent {
-                row {
-                    label("From ${error.sourceCodeObjectId.split("\$_\$")[0]}")
-                }
-            }
+            label(from)
         }
     }
+
+    result.border = Borders.empty()
+    return result
 }

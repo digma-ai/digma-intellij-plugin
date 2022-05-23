@@ -19,7 +19,7 @@ abstract class AbstractPanelListModel : AbstractListModel<ListViewItem<*>>(),
         //temp: duplicate
 //        var newItems = ArrayList(listViewItems)
 //        newItems.addAll(listViewItems)
-//        newItems.addAll(listViewItems)
+////        newItems.addAll(listViewItems)
 //        this.items = newItems
         //env temp
 

@@ -77,7 +77,7 @@ class ElementUnderCaretDetector(private val project: Project) {
         val methodUnderCaret: MethodUnderCaretEvent? = model.elementUnderCaret.valueOrNull
         Log.log(LOGGER::info, "Current MethodUnderCaret: {}", methodUnderCaret)
 
-        if (methodUnderCaret == null)
+        if (methodUnderCaret?.fileUri == null || methodUnderCaret.fileUri.isBlank())
             return
 
         val psiFileForMethod = PsiUtils.uriToPsiFile(methodUnderCaret.fileUri,project)

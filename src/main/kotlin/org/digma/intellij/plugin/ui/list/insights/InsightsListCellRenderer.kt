@@ -12,11 +12,8 @@ import org.digma.intellij.plugin.ui.model.insights.InsightGroupType.Span
 import org.digma.intellij.plugin.ui.model.listview.GroupListViewItem
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import javax.swing.JPanel
-import javax.swing.event.ListDataEvent
 
 class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
-
-    private val panels: MutableMap<Int, JPanel> = HashMap()
 
 
     override fun createPanel(value: ListViewItem<*>, index: Int): JPanel {
@@ -27,9 +24,6 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
     @Suppress("UNCHECKED_CAST")
     private fun getOrCreatePanel(index: Int, value: ListViewItem<*>): JPanel {
 
-        if (panels.containsKey(index)) {
-            return panels[index]!!
-        }
 
         val panel = when (value) {
             is GroupListViewItem -> buildGroupPanel(value)
@@ -42,7 +36,6 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
             }
         }
 
-        panels[index] = panel
 
         return panel
     }
@@ -64,18 +57,6 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
         return panel
     }
 
-
-    override fun intervalAdded(e: ListDataEvent?) {
-        panels.clear()
-    }
-
-    override fun intervalRemoved(e: ListDataEvent?) {
-        panels.clear()
-    }
-
-    override fun contentsChanged(e: ListDataEvent?) {
-        panels.clear()
-    }
 
 
 }

@@ -7,7 +7,7 @@ data class SpanFlow
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties("percentage", "intermediateSpan", "lastServiceSpan", "firstService", "lastService")
 constructor(val percentage: Float,
-            var intermediateSpan: String?,
+            val intermediateSpan: String?,
             val lastServiceSpan: String?,
             val firstService: Service?,
             val lastService: Service?) {

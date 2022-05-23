@@ -24,8 +24,6 @@ dependencies{
     implementation(project(":idea"))
     implementation(project(":pycharm"))
     implementation(project(":rider"))
-
-    implementation("io.github.parubok:multiline-label:1.18")
 }
 
 // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin

@@ -7,6 +7,7 @@ import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.BorderLayout
 import java.awt.Color
+import java.awt.Font
 import java.awt.GridLayout
 import javax.swing.*
 
@@ -55,6 +56,8 @@ fun iconPanelGrid(icon: Icon, text: String): JPanel {
     val panel = JPanel()
     panel.layout = GridLayout(2,1)
     val iconLabel = JLabel(icon)
+    val f: Font = iconLabel.font
+    iconLabel.font = f.deriveFont(f.style or Font.BOLD)
     panel.add(iconLabel)
     val label = JLabel(text)
     panel.add(label)

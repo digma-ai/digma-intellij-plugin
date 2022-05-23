@@ -17,6 +17,7 @@ public final class Icons {
 
     public static final Icon HOTSPOT = IconLoader.getIcon("/icons/hotspot.png", Icons.class);
     public static final Icon HOTSPOT_32 = IconLoader.getIcon("/icons/hotspot-32.png", Icons.class);
+    public static final Icon HOTSPOT_24 = IconLoader.getIcon("/icons/hotspot-24.png", Icons.class);
     public static final Icon TELESCOPE_12 = IconLoader.getIcon("/icons/telescope-12.png", Icons.class);
     public static final Icon INTERFACE_16 = AllIcons.Nodes.Interface;
 

@@ -32,17 +32,20 @@ namespace Digma.Rider.Protocol
         private readonly ITextControlManager _textControlManager;
         private readonly IShellLocks _shellLocks;
         private readonly ILogger _logger;
+        private readonly EditorListener _editorListener;
         private GroupingEvent _groupingEvent;
 
         public ElementUnderCaretHost(Lifetime lifetime, ISolution solution,
             DocumentManager documentManager,
-            ITextControlManager textControlManager, IShellLocks shellLocks, ILogger logger)
+            ITextControlManager textControlManager, IShellLocks shellLocks, ILogger logger,
+            EditorListener editorListener)
         {
             _lifetime = lifetime;
             _documentManager = documentManager;
             _textControlManager = textControlManager;
             _shellLocks = shellLocks;
             _logger = logger;
+            _editorListener = editorListener;
             _model = solution.GetProtocolSolution().GetElementUnderCaretModel();
 
 
@@ -55,7 +58,7 @@ namespace Digma.Rider.Protocol
                 (lifetime1, textControl) =>
                 {
                     _groupingEvent = _shellLocks.CreateGroupingEvent(textControl.Lifetime,
-                        "ElementUnderCaretHost::CaretPositionChanged", TimeSpan.FromMilliseconds(500),
+                        "ElementUnderCaretHost::CaretPositionChanged", TimeSpan.FromMilliseconds(300),
                         OnChange);
                     textControl.Caret.Position.Change.Advise(textControl.Lifetime,
                         cph => { _groupingEvent.FireIncoming(); });

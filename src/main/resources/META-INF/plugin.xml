@@ -42,6 +42,8 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.insights.InsightsProvider"/>
 
+        <projectService serviceImplementation="org.digma.intellij.plugin.service.InsightsActionsService"/>
+
 
     </extensions>
 

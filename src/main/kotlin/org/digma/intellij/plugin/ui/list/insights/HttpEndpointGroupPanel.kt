@@ -4,6 +4,7 @@ import com.intellij.ui.dsl.builder.BottomGap
 import com.intellij.ui.dsl.builder.LabelPosition
 import com.intellij.ui.dsl.builder.TopGap
 import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.*
 import org.digma.intellij.plugin.ui.common.panelOfUnsupported
@@ -39,7 +40,9 @@ fun httpEndpointGroupPanel(listViewItem: InsightGroupListViewItem): JPanel {
 
             row {
                 cell(insightItemPanel(cellItem))
-            }
+                    .horizontalAlign(HorizontalAlign.FILL)
+            }.bottomGap(BottomGap.MEDIUM)
+                .topGap(TopGap.MEDIUM)
         }
     }
 

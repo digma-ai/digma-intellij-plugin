@@ -1,41 +1,43 @@
 package org.digma.intellij.plugin.ui.list.insights
 
+import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.panel
+import com.intellij.util.ui.JBUI.Borders
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.HighUsageInsight
 import org.digma.intellij.plugin.model.rest.insights.LowUsageInsight
 import org.digma.intellij.plugin.model.rest.insights.NormalUsageInsight
-import javax.swing.Icon
-import javax.swing.JPanel
+import org.digma.intellij.plugin.ui.common.iconPanelGrid
+import java.awt.BorderLayout
+import javax.swing.*
 
 
 private fun trafficUsagePanel(title: String, labelValue: String, countPerMinute: Int, icon: Icon): JPanel {
-    val result = panel {
-        twoColumnsRow(
-            column1 = {
-                panel {
-                    row {
-                        label(title).bold()
-                    }
-                    row {
-                        label(labelValue)
-                    }
-                }
-            },
-            column2 = {
-                panel {
-                    row {
-                        icon(icon)
-                    }
-                    row {
-                        label("${countPerMinute}/min")
-                    }
-                }
-            }
-        )
+
+    val title = panel {
+        row {
+            label(title).bold()
+        }
     }
 
-    return result
+    val iconPanel = iconPanelGrid(icon, "${countPerMinute}/min")
+    iconPanel.border = Borders.empty(10)
+
+    val contentPanel = JBPanel<JBPanel<*>>()
+    contentPanel.layout = BorderLayout()
+
+    val message = JLabel(labelValue, SwingConstants.LEFT)
+
+    contentPanel.add(title, BorderLayout.NORTH)
+    contentPanel.add(message, BorderLayout.CENTER)
+
+    val result = JBPanel<JBPanel<*>>()
+    result.layout = BoxLayout(result, BoxLayout.X_AXIS)
+    result.add(contentPanel)
+    result.add(Box.createHorizontalStrut(20))
+    result.add(iconPanel)
+
+    return insightItemPanel(result)
 }
 
 fun lowUsageInsightPanel(insight: LowUsageInsight): JPanel {

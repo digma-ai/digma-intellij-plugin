@@ -5,11 +5,11 @@ import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 
 open class InsightListViewItem<INSIGHT : CodeObjectInsight>(insight: INSIGHT) :
-    ListViewItem<INSIGHT>(insight, evalSortIndex(insight)) {
+    ListViewItem<INSIGHT>(insight, sortIndexOf(insight.type)) {
 
     companion object {
-        fun evalSortIndex(insight: CodeObjectInsight): Int {
-            return when (insight.type) {
+        fun sortIndexOf(insightType: InsightType): Int {
+            return when (insightType) {
                 // Standalone insights
                 InsightType.HotSpot -> 1
                 InsightType.Errors -> 2

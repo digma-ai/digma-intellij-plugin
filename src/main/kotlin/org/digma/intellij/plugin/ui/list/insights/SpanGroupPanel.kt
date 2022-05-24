@@ -21,7 +21,7 @@ fun spanGroupPanel(listViewItem: GroupListViewItem): JPanel {
     val result = panel {
         row("Span: ")
         {
-            cell(JLabel(listViewItem.groupId, Icons.TELESCOPE_12, SwingConstants.LEFT))
+            cell(JLabel(listViewItem.groupId, Icons.Insight.SPAN_GROUP_TITLE, SwingConstants.LEFT))
         }.bottomGap(BottomGap.SMALL)
 
         items.forEach {

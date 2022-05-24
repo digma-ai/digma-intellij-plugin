@@ -9,16 +9,20 @@ open class InsightListViewItem<INSIGHT : CodeObjectInsight>(insight: INSIGHT) :
 
     companion object {
         fun evalSortIndex(insight: CodeObjectInsight): Int {
-            when (insight.type) {
-                InsightType.HotSpot -> return 1
-                InsightType.Errors -> return 2
-                InsightType.SpanUsages -> return 30
-                InsightType.SlowestSpans -> return 40
-                InsightType.LowUsage -> return 50
-                InsightType.NormalUsage -> return 60
-                InsightType.HighUsage -> return 70
-                InsightType.SlowEndpoint -> return 80
-                else -> return 99
+            return when (insight.type) {
+                // Standalone insights
+                InsightType.HotSpot -> 1
+                InsightType.Errors -> 2
+                // Span Usages
+                InsightType.SpanUsages -> 60
+                // HTTP Endpoints
+                InsightType.SlowestSpans -> 40
+                InsightType.LowUsage -> 30
+                InsightType.NormalUsage -> 20
+                InsightType.HighUsage -> 10
+                InsightType.SlowEndpoint -> 50
+                //
+                else -> 99
             }
         }
     }

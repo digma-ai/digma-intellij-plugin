@@ -33,7 +33,7 @@ abstract class PanelList(val project: Project, listViewItems: List<ListViewItem<
         model.addListDataListener(this)
         model.addListDataListener(cellRenderer)
         this.layout = BoxLayout(this, BoxLayout.Y_AXIS)
-        this.border = Borders.empty(10)
+        this.border = Borders.empty(5)
         this.background = getListBackground()
         this.isOpaque = true
     }

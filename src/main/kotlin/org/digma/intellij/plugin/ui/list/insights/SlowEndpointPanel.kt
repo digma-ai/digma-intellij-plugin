@@ -14,14 +14,15 @@ fun slowEndpointPanel(insight: SlowEndpointInsight): JPanel {
     val iconText = evalDuration(insight.median)
     val result = createInsightPanel("Slow Endpoint", bodyContents, Icons.Insight.SLOW, iconText);
 
-    result.toolTipText = genToolTip(insight)
+    result.toolTipText = asHtml(genToolTip(insight))
 
     return result
 }
 
 fun genToolTip(insight: SlowEndpointInsight): String {
     return """
-server processed 50% of requests in less than ${evalDuration(insight.endpointsMedian)}\n
+server processed 50% of requests in less than ${evalDuration(insight.endpointsMedian)}
+<br>
 server processed 25% of requests in higher than ${evalDuration(insight.endpointsP75)}
 """
 }

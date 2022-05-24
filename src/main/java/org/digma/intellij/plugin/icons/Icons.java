@@ -18,10 +18,9 @@ public final class Icons {
     public static final Icon TOOL_WINDOW = IconLoader.getIcon("/icons/toolwindow.png", Icons.class);
     public static final Icon INSIGHT_METHOD_SCOPE = IconLoader.getIcon("/icons/method.png", Icons.class);
 
-    public static final Icon HOTSPOT = IconLoader.getIcon("/icons/hotspot.png", Icons.class);
-    public static final Icon HOTSPOT_32 = IconLoader.getIcon("/icons/hotspot-32.png", Icons.class);
-    public static final Icon HOTSPOT_24 = IconLoader.getIcon("/icons/hotspot-24.png", Icons.class);
-    public static final Icon TELESCOPE_12 = IconLoader.getIcon("/icons/telescope-12.png", Icons.class);
+    public static final Icon TARGET_24 = loadAndScaleIcon("/icons/insight/target.png",24);
+    public static final Icon TARGET_32 = loadAndScaleIcon("/icons/insight/target.png",32);
+    public static final Icon TELESCOPE_12 = loadAndScaleIcon("/icons/telescope.png", 12);
     public static final Icon INTERFACE_16 = AllIcons.Nodes.Interface;
 
     static public class Insight {
@@ -31,8 +30,13 @@ public final class Icons {
         public static final Icon HIGH_USAGE = loadAndScaleIcon("/icons/insight/gauge_high.png", 32);
         public static final Icon SLOW = loadAndScaleIcon("/icons/insight/slow.png", 32);
         public static final Icon TARGET = loadAndScaleIcon("/icons/insight/target.png", 32);
-        public static final Icon TARGET_24 = loadAndScaleIcon("/icons/insight/target.png",24);
+
         public static final Icon THIN_TARGET = loadAndScaleIcon("/icons/insight/thin-target.png", 32);
+
+
+        //meaningful names for specific views,makes it easier to replace sizes or read from properties files.
+        public static final Icon HOTSPOT_INSIGHT = TARGET_24;
+        public static final Icon SPAN_GROUP_TITLE = TELESCOPE_12;
     }
 
 

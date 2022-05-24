@@ -1,47 +1,28 @@
 package org.digma.intellij.plugin.ui.list.insights
 
-import com.intellij.openapi.ui.DialogPanel
-import com.intellij.ui.dsl.builder.panel
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.Duration
 import org.digma.intellij.plugin.model.rest.insights.SlowEndpointInsight
+import org.digma.intellij.plugin.ui.common.asHtml
 import java.math.BigDecimal
 import java.math.RoundingMode
+import javax.swing.JPanel
 
 
-fun slowEndpointPanel(insight: SlowEndpointInsight): DialogPanel {
-    val result = panel {
-        twoColumnsRow(
-            column1 = {
-                panel {
-                    row {
-                        label("Slow Endpoint").bold()
-                    }
-                    row {
-                        text(genContentAsHtml(insight))
-                    }
-                }
-            },
-            column2 = {
-                panel {
-                    row {
-                        icon(Icons.Insight.SLOW)
-                    }
-                    row {
-                        label(evalDuration(insight.median))
-                    }
-                }
-            }
-        )
-    }
-    result.toolTipText = genToolTip(insight)
+fun slowEndpointPanel(insight: SlowEndpointInsight): JPanel {
+    val bodyContents = genContentAsHtml(insight)
+    val iconText = evalDuration(insight.median)
+    val result = createInsightPanel("Slow Endpoint", bodyContents, Icons.Insight.SLOW, iconText);
+
+    result.toolTipText = asHtml(genToolTip(insight))
 
     return result
 }
 
 fun genToolTip(insight: SlowEndpointInsight): String {
     return """
-server processed 50% of requests in less than ${evalDuration(insight.endpointsMedian)}\n
+server processed 50% of requests in less than ${evalDuration(insight.endpointsMedian)}
+<br>
 server processed 25% of requests in higher than ${evalDuration(insight.endpointsP75)}
 """
 }
@@ -51,11 +32,8 @@ fun evalDuration(duration: Duration): String {
 }
 
 fun genContentAsHtml(insight: SlowEndpointInsight): String {
-    return "<p>On average requests are slower than </p><p>other endpoints by <span style=\"color:red\">${
-        computePercentageDiff(
-            insight
-        )
-    }</span></p>"
+    val pctVal = computePercentageDiff(insight)
+    return asHtml("On average requests are slower than other endpoints by <span style=\"color:red\">${pctVal}")
 }
 
 fun computePercentageDiff(insight: SlowEndpointInsight): String {

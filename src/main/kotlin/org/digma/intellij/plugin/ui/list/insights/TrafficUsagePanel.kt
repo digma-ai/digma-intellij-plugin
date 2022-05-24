@@ -1,41 +1,16 @@
 package org.digma.intellij.plugin.ui.list.insights
 
-import com.intellij.ui.dsl.builder.panel
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.HighUsageInsight
 import org.digma.intellij.plugin.model.rest.insights.LowUsageInsight
 import org.digma.intellij.plugin.model.rest.insights.NormalUsageInsight
+import org.digma.intellij.plugin.ui.common.asHtml
 import javax.swing.Icon
 import javax.swing.JPanel
 
 
 private fun trafficUsagePanel(title: String, labelValue: String, countPerMinute: Int, icon: Icon): JPanel {
-    val result = panel {
-        twoColumnsRow(
-            column1 = {
-                panel {
-                    row {
-                        label(title).bold()
-                    }
-                    row {
-                        label(labelValue)
-                    }
-                }
-            },
-            column2 = {
-                panel {
-                    row {
-                        icon(icon)
-                    }
-                    row {
-                        label("${countPerMinute}/min")
-                    }
-                }
-            }
-        )
-    }
-
-    return result
+    return createInsightPanel(title, asHtml(labelValue), icon, "${countPerMinute}/min")
 }
 
 fun lowUsageInsightPanel(insight: LowUsageInsight): JPanel {

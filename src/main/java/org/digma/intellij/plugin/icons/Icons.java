@@ -45,8 +45,7 @@ public final class Icons {
         return loadAndScaleIcon(path,size,size);
     }
     public static Icon loadAndScaleIcon(String path,int width,int height) {
-        try {
-            InputStream inputStream = Icons.class.getResourceAsStream(path);
+        try (InputStream inputStream = Icons.class.getResourceAsStream(path)){
             BufferedImage image = ImageIO.read(inputStream);
             Image resized = image.getScaledInstance(width,height, Image.SCALE_SMOOTH);
             return new ImageIcon(resized);

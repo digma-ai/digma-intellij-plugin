@@ -10,6 +10,6 @@ import javax.swing.JPanel
 fun hotspotPanel(listViewItem: ListViewItem<HotspotInsight>): JPanel {
     return createInsightPanel(
         "This is an error hotspot3", asHtml("Many major errors occur or propagate through this function"),
-        Icons.HOTSPOT_32, "HotSpot"
+        Icons.Insight.TARGET, "HotSpot"
     )
 }

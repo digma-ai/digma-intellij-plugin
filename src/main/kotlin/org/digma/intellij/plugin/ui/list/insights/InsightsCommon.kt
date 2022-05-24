@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.list.insights
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.dsl.gridLayout.VerticalAlign
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.JBUI.Borders.empty
 import com.intellij.util.ui.UIUtil
@@ -45,15 +46,18 @@ fun insightListBackground(): Color {
 fun createInsightPanel(title: String, body: String, icon: Icon, iconText: String): JPanel {
     val title = panel {
         row {
-            label(title).bold()
+            label(title)
+                .bold()
+                .verticalAlign(VerticalAlign.TOP)
         }
     }
+    title.border = JBUI.Borders.empty(0)
 
     val iconPanel = iconPanelGrid(icon, iconText)
-    iconPanel.border = JBUI.Borders.empty(10)
+    iconPanel.border = JBUI.Borders.empty(0)
 
     val contentPanel = JBPanel<JBPanel<*>>()
-    contentPanel.layout = BorderLayout()
+    contentPanel.layout = BorderLayout(0, 0)
 
     val message = JLabel(body, SwingConstants.LEFT)
 
@@ -63,7 +67,7 @@ fun createInsightPanel(title: String, body: String, icon: Icon, iconText: String
     val result = JBPanel<JBPanel<*>>()
     result.layout = BoxLayout(result, BoxLayout.X_AXIS)
     result.add(contentPanel)
-    result.add(Box.createHorizontalStrut(20))
+    result.add(Box.createHorizontalStrut(5))
     result.add(iconPanel)
 
     return insightItemPanel(result)

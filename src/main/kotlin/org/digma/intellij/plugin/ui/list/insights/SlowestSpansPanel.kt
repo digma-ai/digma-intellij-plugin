@@ -1,40 +1,25 @@
 package org.digma.intellij.plugin.ui.list.insights
 
-import com.intellij.openapi.ui.DialogPanel
+import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.panel
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.Percentile
 import org.digma.intellij.plugin.model.rest.insights.SlowSpanInfo
 import org.digma.intellij.plugin.model.rest.insights.SlowestSpansInsight
 import org.digma.intellij.plugin.ui.common.asHtml
+import org.digma.intellij.plugin.ui.common.wrapCentered
 import java.math.BigDecimal
 import java.math.RoundingMode
+import javax.swing.BoxLayout
 
-fun slowestSpansPanel(insight: SlowestSpansInsight): DialogPanel {
-    val result = panel {
-        twoColumnsRow(
-            column1 = {
-                panel {
-                    row {
-                        label("Span Bottleneck").bold()
-                    }
-                    row {
-                        label("The following spans are slowing request handling")
-                    }
-                }
-            },
-            column2 = {
-                panel {
-                    row {
-                        icon(Icons.Insight.BOTTLENECK)
-                    }
-                    row {
-                        label("Slow Spans")
-                    }
-                }
-            }
-        )
+fun slowestSpansPanel(insight: SlowestSpansInsight): JBPanel<JBPanel<*>> {
 
+    val topContents = createInsightPanel(
+        "Span Bottleneck", asHtml("The following spans are slowing request handling"),
+        Icons.Insight.BOTTLENECK, asHtml(wrapCentered("Slow<br>Spans"))
+    )
+
+    val panelOfList = panel {
         insight.spans.forEach {
             val displayName = it.spanInfo.displayName
             row {
@@ -45,6 +30,12 @@ fun slowestSpansPanel(insight: SlowestSpansInsight): DialogPanel {
             }.contextHelp(genToolTip(it), displayName)
         }
     }
+
+    val result = JBPanel<JBPanel<*>>()
+    result.layout = BoxLayout(result, BoxLayout.Y_AXIS)
+    result.add(topContents)
+    //result.add(Box.createVerticalStrut(5))
+    result.add(panelOfList)
 
     return result
 }

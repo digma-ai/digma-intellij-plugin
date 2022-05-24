@@ -22,10 +22,16 @@ fun insightItemPanel(panel: JPanel): JPanel {
 
 fun insightGroupPanel(panel: JPanel): JPanel {
 
-    panel.isOpaque = true
+    //isOpaque = false and wrapper overrides getBackground ,trying to make sure
+    //the background is always the same. background =.. is not really necessary.
+    panel.isOpaque = false
     panel.background = insightListBackground()
     panel.border = empty()
-    val wrapper = JPanel()
+    val wrapper = object: JPanel(){
+        override fun getBackground(): Color {
+            return insightListBackground()
+        }
+    }
     wrapper.layout = BorderLayout()
     wrapper.isOpaque = true
     wrapper.background = insightListBackground()
@@ -36,11 +42,11 @@ fun insightGroupPanel(panel: JPanel): JPanel {
 
 
 fun insightListBackground(): Color {
-    var background: Color = JBColor.namedColor("Editor.background", Color.BLACK)
-    if (UIUtil.isUnderDarcula()) {
-        background = Color(38, 38, 38)
+    var default = Color.DARK_GRAY
+    if (UIUtil.isUnderDarcula()){
+        default = Color(38, 38, 38)
     }
-    return background
+    return JBColor.namedColor("Editor.background",default)
 }
 
 fun createInsightPanel(title: String, body: String, icon: Icon, iconText: String): JPanel {

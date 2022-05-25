@@ -36,6 +36,7 @@ public final class Icons {
         //meaningful names for specific views,makes it easier to replace sizes or read from properties files.
         public static final Icon HOTSPOT = loadAndScaleIcon("/icons/insight/target.png", 32);
         public static final Icon SPAN_GROUP_TITLE = TELESCOPE_16;
+        public static final Icon HTTP_GROUP_TITLE = INTERFACE_16;
     }
 
 

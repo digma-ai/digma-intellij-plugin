@@ -62,7 +62,7 @@ public class EditorInteractionService implements CaretContextService, Disposable
         } else {
             Log.log(LOGGER::info, "Context changed to MethodInfo {}. ", methodInfo);
             insightsViewService.contextChanged(methodInfo);
-            //todo: errors panel
+            errorsViewService.contextChanged(methodInfo);
         }
     }
 

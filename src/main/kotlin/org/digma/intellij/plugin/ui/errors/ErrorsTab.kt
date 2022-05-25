@@ -8,13 +8,18 @@ import com.intellij.ui.dsl.builder.RowLayout
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBEmptyBorder
+import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.ui.common.ScopeLineIconProducer
 import org.digma.intellij.plugin.ui.common.scopeLine
 import org.digma.intellij.plugin.ui.common.topLine
 import org.digma.intellij.plugin.ui.insights.insightsModel
+import org.digma.intellij.plugin.ui.list.ScrollablePanelList
+import org.digma.intellij.plugin.ui.list.errors.ErrorsList
+import org.digma.intellij.plugin.ui.list.insights.InsightsList
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 import org.digma.intellij.plugin.ui.panels.ResettablePanel
 import java.awt.BorderLayout
+import javax.swing.Box
 import javax.swing.JLabel
 import javax.swing.SwingUtilities
 
@@ -44,14 +49,27 @@ fun errorsPanel(project: Project): ResettablePanel {
 
     }
 
+    topPanel.border = JBUI.Borders.empty()
+    val topPanelWrapper = Box.createHorizontalBox()
+    topPanelWrapper.add(Box.createHorizontalStrut(12))
+    topPanelWrapper.add(topPanel)
+    topPanelWrapper.add(Box.createHorizontalStrut(8))
+
+
+    val errorsList = ScrollablePanelList(ErrorsList(project, errorsModel.listViewItems))
+
     val result = object: ResettablePanel() {
         override fun reset() {
             topPanel.reset()
+            SwingUtilities.invokeLater {
+                errorsList.getModel().setListData(errorsModel.listViewItems)
+            }
         }
     }
 
     result.layout = BorderLayout()
-    result.add(topPanel, BorderLayout.CENTER)
+    result.add(topPanelWrapper,BorderLayout.NORTH)
+    result.add(errorsList,BorderLayout.CENTER)
 
     return result
 }

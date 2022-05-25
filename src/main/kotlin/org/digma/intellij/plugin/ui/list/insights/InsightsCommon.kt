@@ -23,19 +23,19 @@ fun insightItemPanel(panel: JPanel): JPanel {
 fun insightGroupPanel(panel: JPanel): JPanel {
 
     panel.isOpaque = true
-    panel.background = insightListBackground()
+    panel.background = panelsListBackground()
     panel.border = empty()
     val wrapper = JPanel()
     wrapper.layout = BorderLayout()
     wrapper.isOpaque = true
-    wrapper.background = insightListBackground()
+    wrapper.background = panelsListBackground()
     wrapper.add(panel, BorderLayout.CENTER)
     wrapper.border = empty()
     return wrapper
 }
 
 
-fun insightListBackground(): Color {
+fun panelsListBackground(): Color {
     var background: Color = JBColor.namedColor("Editor.background", Color.BLACK)
     if (UIUtil.isUnderDarcula()) {
         background = Color(38, 38, 38)

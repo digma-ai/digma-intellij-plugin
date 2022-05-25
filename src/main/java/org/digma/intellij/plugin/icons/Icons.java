@@ -17,7 +17,7 @@ public final class Icons {
 
     public static final Icon TOOL_WINDOW = IconLoader.getIcon("/icons/toolwindow.png", Icons.class);
     public static final Icon INSIGHT_METHOD_SCOPE = IconLoader.getIcon("/icons/method.png", Icons.class);
-    public static final Icon TELESCOPE_12 = loadAndScaleIcon("/icons/telescope.png", 12);
+    public static final Icon TELESCOPE_16 = loadAndScaleIcon("/icons/telescope.png", 16);
     public static final Icon INTERFACE_16 = AllIcons.Nodes.Interface;
 
     public static class Insight {
@@ -34,7 +34,7 @@ public final class Icons {
 
         //meaningful names for specific views,makes it easier to replace sizes or read from properties files.
         public static final Icon HOTSPOT = loadAndScaleIcon("/icons/insight/target.png", 32);
-        public static final Icon SPAN_GROUP_TITLE = TELESCOPE_12;
+        public static final Icon SPAN_GROUP_TITLE = TELESCOPE_16;
     }
 
 

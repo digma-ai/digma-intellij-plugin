@@ -31,7 +31,7 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>): JPa
                 .horizontalAlign(HorizontalAlign.LEFT)
         }
         row {
-            text(asHtml("$errorCount errors($unhandled unhandled, $unexpected unexpected)"))
+            label(asHtml("$errorCount errors($unhandled unhandled, $unexpected unexpected)"))
         }
         row {
             panel {

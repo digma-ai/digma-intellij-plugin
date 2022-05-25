@@ -10,4 +10,6 @@ fun wrapCentered(content: String): String {
 
 object HtmlConsts {
     const val RED_COLOR: String = "#f14c4c" // same as in VS Code plugin
+
+    const val ARROW_RIGHT: String = "&#8594;"
 }

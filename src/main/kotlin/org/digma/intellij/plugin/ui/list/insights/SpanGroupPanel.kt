@@ -6,6 +6,7 @@ import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.ui.dsl.gridLayout.VerticalAlign
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.SpanInsight
+import org.digma.intellij.plugin.ui.common.HtmlConsts.ARROW_RIGHT
 import org.digma.intellij.plugin.ui.model.listview.GroupListViewItem
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.BorderLayout
@@ -76,15 +77,15 @@ fun spanPanel(listViewItem: ListViewItem<SpanInsight>): JPanel {
 
         val builder = StringBuilder("<html><b>${spanFlow.percentage}%</b>  ${spanFlow.firstService?.service}: <b>${spanFlow.firstService?.span}</b>")
         spanFlow.intermediateSpan?.let { intermediateSpan ->
-            builder.append(" &#8594; ")
+            builder.append(" $ARROW_RIGHT ")
             builder.append("<b>$intermediateSpan</b>")
         }
         spanFlow.lastService?.let { lastService ->
-            builder.append(" &#8594; ")
+            builder.append(" $ARROW_RIGHT ")
             builder.append("${lastService.service}: <b>${lastService.span}</b>")
         }
         spanFlow.lastServiceSpan?.let { lastServiceSpan ->
-            builder.append(" &#8594; ")
+            builder.append(" $ARROW_RIGHT ")
             builder.append("<b>$lastServiceSpan</b>")
         }
 

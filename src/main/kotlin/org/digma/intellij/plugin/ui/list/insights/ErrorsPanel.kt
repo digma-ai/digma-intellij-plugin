@@ -11,11 +11,12 @@ import com.intellij.util.ui.JBUI.Borders
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsight
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsightNamedError
 import org.digma.intellij.plugin.service.InsightsActionsService
+import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.BorderLayout
 import javax.swing.*
 
-fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>):JPanel {
+fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>): JPanel {
 
     val errorsPanel = panel {
 
@@ -28,7 +29,10 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>):JPan
                 .bold()
                 .verticalAlign(VerticalAlign.TOP)
                 .horizontalAlign(HorizontalAlign.LEFT)
-        }.comment("$errorCount errors($unhandled unhandled, $unexpected unexpected)").bold()
+        }
+        row {
+            label(asHtml("$errorCount errors($unhandled unhandled, $unexpected unexpected)"))
+        }
         row {
             panel {
                 listViewItem.modelObject.topErrors.forEach {
@@ -40,15 +44,18 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>):JPan
                 }
             }
         }
+        // this row is used so scroll bar would work
+        row("") {
+        }
     }
 
 
     val expandLinkPanel = panel {
         row {
-            link("Expand"){
+            link("Expand") {
                 val actionListener: InsightsActionsService = project.getService(InsightsActionsService::class.java)
                 actionListener.errorsExpandButtonClicked(listViewItem.modelObject)
-            //action here
+                //action here
             }.horizontalAlign(HorizontalAlign.RIGHT)
         }.layout(RowLayout.INDEPENDENT)
     }
@@ -57,22 +64,22 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>):JPan
 
     val errorsWrapper = JBPanel<JBPanel<*>>()
     errorsWrapper.layout = BorderLayout()
-    errorsWrapper.add(errorsPanel,BorderLayout.CENTER)
+    errorsWrapper.add(errorsPanel, BorderLayout.CENTER)
     errorsWrapper.border = BorderFactory.createEmptyBorder()
 
     val scrollPane = JBScrollPane()
     scrollPane.horizontalScrollBarPolicy = ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
-    scrollPane.verticalScrollBarPolicy = ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
+    scrollPane.verticalScrollBarPolicy = ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER
     scrollPane.setViewportView(errorsWrapper)
     scrollPane.border = BorderFactory.createEmptyBorder()
 
     val expandPanel = JBPanel<JBPanel<*>>()
     expandPanel.layout = BorderLayout()
-    expandPanel.add(expandLinkPanel,BorderLayout.SOUTH)
+    expandPanel.add(expandLinkPanel, BorderLayout.SOUTH)
 
 
     val result = JBPanel<JBPanel<*>>()
-    result.layout = BoxLayout(result,BoxLayout.X_AXIS)
+    result.layout = BoxLayout(result, BoxLayout.X_AXIS)
     result.add(scrollPane)
     result.add(Box.createHorizontalStrut(5))
     result.add(expandPanel)
@@ -81,9 +88,7 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>):JPan
 }
 
 
-
-
-fun topErrorPanel(error: ErrorInsightNamedError,insight: ErrorInsight):JPanel{
+fun topErrorPanel(error: ErrorInsightNamedError, insight: ErrorInsight): JPanel {
 
     val result = panel {
         //temporary: need to implement logic

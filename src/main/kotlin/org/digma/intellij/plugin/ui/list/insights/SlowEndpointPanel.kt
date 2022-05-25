@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.list.insights
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.Duration
 import org.digma.intellij.plugin.model.rest.insights.SlowEndpointInsight
+import org.digma.intellij.plugin.ui.common.HtmlConsts.RED_COLOR
 import org.digma.intellij.plugin.ui.common.asHtml
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -33,7 +34,7 @@ fun evalDuration(duration: Duration): String {
 
 fun genContentAsHtml(insight: SlowEndpointInsight): String {
     val pctVal = computePercentageDiff(insight)
-    return asHtml("On average requests are slower than other endpoints by <span style=\"color:red\">${pctVal}")
+    return asHtml("On average requests are slower than other endpoints by <span style=\"color:${RED_COLOR}\">${pctVal}")
 }
 
 fun computePercentageDiff(insight: SlowEndpointInsight): String {

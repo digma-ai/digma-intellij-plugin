@@ -5,18 +5,11 @@ import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.analytics.AnalyticsProvider;
 import org.digma.intellij.plugin.analytics.Environment;
 import org.digma.intellij.plugin.document.DocumentInfoService;
-import org.digma.intellij.plugin.insights.InsightsListContainer;
-import org.digma.intellij.plugin.insights.view.BuildersHolder;
-import org.digma.intellij.plugin.insights.view.InsightsViewBuilder;
-import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
-import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
-import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class ErrorsProvider {
 

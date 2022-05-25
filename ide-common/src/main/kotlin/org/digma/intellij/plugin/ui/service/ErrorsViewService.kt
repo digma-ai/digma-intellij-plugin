@@ -27,6 +27,7 @@ class ErrorsViewService(val project: Project) {
         methodInfo: MethodInfo
     ) {
 
+
         val errorsListContainer = errorsProvider.getErrors(methodInfo)
         model.listViewItems = errorsListContainer.listViewItems
         model.methodName = methodInfo.name

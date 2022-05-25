@@ -16,6 +16,7 @@ public class ErrorsListContainer {
     }
 
     public List<ListViewItem<?>> getListViewItems() {
+        //todo: currently always returns one error for every method
         var dummyList = new ArrayList<ListViewItem<?>>();
         dummyList.add(new ListViewItem<>("dummy",0){
 

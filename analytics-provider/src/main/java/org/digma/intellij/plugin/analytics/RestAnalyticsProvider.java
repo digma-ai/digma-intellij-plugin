@@ -1,20 +1,16 @@
 package org.digma.intellij.plugin.analytics;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.OkHttpClient;
-import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
-import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
+import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
+import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
+import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
-import retrofit2.http.Body;
-import retrofit2.http.GET;
-import retrofit2.http.Headers;
-import retrofit2.http.POST;
+import retrofit2.http.*;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -45,6 +41,10 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         return execute(() -> client.analyticsProvider.getInsights(insightsRequest));
     }
 
+    @Override
+    public List<CodeObjectError> getErrorsOfCodeObject(String environment, String codeObjectId) {
+        return execute(() -> client.analyticsProvider.getErrorsOfCodeObject(environment, codeObjectId));
+    }
 
     public <T> T execute(Supplier<Call<T>> supplier) {
 
@@ -141,7 +141,6 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         Call<List<CodeObjectSummary>> getSummaries(@Body CodeObjectSummaryRequest summaryRequest);
 
 
-
         @Headers({
                 "Accept: application/+json",
                 "Content-Type:application/json"
@@ -149,6 +148,12 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         @POST("/CodeAnalytics/codeObjects/insights")
         Call<List<CodeObjectInsight>> getInsights(@Body InsightsRequest insightsRequest);
 
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("/CodeAnalytics/codeObjects/errors?codeObjectId={codeObjectId}&environment={env}")
+        Call<List<CodeObjectError>> getErrorsOfCodeObject(@Path("env") String environment, @Path("codeObjectId") String codeObjectId);
 
     }
 

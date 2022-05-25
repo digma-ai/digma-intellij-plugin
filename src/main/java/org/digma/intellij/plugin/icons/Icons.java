@@ -16,10 +16,9 @@ public final class Icons {
     }
 
     public static final Icon TOOL_WINDOW = IconLoader.getIcon("/icons/toolwindow.png", Icons.class);
-    public static final Icon INSIGHT_METHOD_SCOPE_16 = AllIcons.Nodes.Method; // size of 16
-    public static final Icon INSIGHT_METHOD_SCOPE = INSIGHT_METHOD_SCOPE_16;
-    public static final Icon INSIGHT_DOCUMENT_SCOPE = INSIGHT_METHOD_SCOPE_16;
-    public static final Icon INSIGHT_EMPTY_SCOPE = INSIGHT_METHOD_SCOPE_16;
+    public static final Icon INSIGHT_METHOD_SCOPE =  AllIcons.Nodes.Method;;
+    public static final Icon INSIGHT_DOCUMENT_SCOPE = AllIcons.FileTypes.Any_type;
+    public static final Icon INSIGHT_EMPTY_SCOPE = AllIcons.General.InspectionsErrorEmpty;
     public static final Icon TELESCOPE_16 = loadAndScaleIcon("/icons/telescope.png", 16);
     public static final Icon INTERFACE_16 = AllIcons.Nodes.Interface;
 

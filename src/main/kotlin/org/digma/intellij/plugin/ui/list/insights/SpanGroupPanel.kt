@@ -7,6 +7,7 @@ import com.intellij.ui.dsl.gridLayout.VerticalAlign
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.SpanInsight
 import org.digma.intellij.plugin.ui.common.HtmlConsts.ARROW_RIGHT
+import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.model.listview.GroupListViewItem
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.BorderLayout
@@ -18,11 +19,11 @@ fun spanGroupPanel(listViewItem: GroupListViewItem): JPanel {
     val items: SortedSet<ListViewItem<*>> = listViewItem.modelObject
 
 
-
     val result = panel {
         row("Span: ")
         {
-            cell(JLabel(listViewItem.groupId, Icons.Insight.SPAN_GROUP_TITLE, SwingConstants.LEFT))
+            cell(JLabel(asHtml(listViewItem.groupId), Icons.Insight.SPAN_GROUP_TITLE, SwingConstants.LEFT))
+                .bold()
         }.bottomGap(BottomGap.SMALL)
 
         items.forEach {
@@ -37,32 +38,12 @@ fun spanGroupPanel(listViewItem: GroupListViewItem): JPanel {
 }
 
 
-
-
 fun spanPanel(listViewItem: ListViewItem<SpanInsight>): JPanel {
 
     val spanInsight: SpanInsight = listViewItem.modelObject
-    //temp
-//    val spanInsightOrg: SpanInsight = listViewItem.modelObject
-//    val list = ArrayList<SpanFlow>()
-//    if (spanInsightOrg.flows != null && spanInsightOrg.flows.isNotEmpty()) {
-//        list.add(spanInsightOrg.flows.first())
-//    }
-//    list.add(SpanFlow(80f,
-//        "intermediateSpan1",
-//        "lastservicespan1",
-//        SpanFlow.Service("service1", listViewItem.modelObject.span),
-//        SpanFlow.Service("lastservice1", listViewItem.modelObject.span)))
-//    list.add(SpanFlow(100f,
-//        "intermediateSpan2",
-//        "lastservicespan2",
-//        SpanFlow.Service("service2", listViewItem.modelObject.span),
-//        SpanFlow.Service("lastservice2", listViewItem.modelObject.span)))
-//    val spanInsight = SpanInsight(listViewItem.modelObject.codeObjectId, listViewItem.modelObject.span, list)
 
-
-    val title = panel{
-        row{
+    val title = panel {
+        row {
             label("Top Usage")
                 .bold()
                 .verticalAlign(VerticalAlign.TOP)
@@ -71,11 +52,12 @@ fun spanPanel(listViewItem: ListViewItem<SpanInsight>): JPanel {
 
 
     val listPanel = JPanel()
-    listPanel.layout = BoxLayout(listPanel,BoxLayout.Y_AXIS)
+    listPanel.layout = BoxLayout(listPanel, BoxLayout.Y_AXIS)
 
     spanInsight.flows.forEach { spanFlow ->
 
-        val builder = StringBuilder("<html><b>${spanFlow.percentage}%</b>  ${spanFlow.firstService?.service}: <b>${spanFlow.firstService?.span}</b>")
+        val builder =
+            StringBuilder("<html><b>${spanFlow.percentage}%</b>  ${spanFlow.firstService?.service}: <b>${spanFlow.firstService?.span}</b>")
         spanFlow.intermediateSpan?.let { intermediateSpan ->
             builder.append(" $ARROW_RIGHT ")
             builder.append("<b>$intermediateSpan</b>")
@@ -98,7 +80,7 @@ fun spanPanel(listViewItem: ListViewItem<SpanInsight>): JPanel {
 
     val result = JPanel()
     result.layout = BorderLayout()
-    result.add(title,BorderLayout.NORTH)
+    result.add(title, BorderLayout.NORTH)
     result.add(listPanel, BorderLayout.CENTER)
 
     return result

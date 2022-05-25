@@ -54,7 +54,7 @@ class ElementUnderCaretDetector(private val project: Project) {
         elementUnderCaret: MethodUnderCaretEvent?,
         caretContextService: CaretContextService
     ) {
-        if (elementUnderCaret == null || elementUnderCaret.fqn.isEmpty()) {
+        if (elementUnderCaret == null) {
             caretContextService.contextEmpty()
         } else {
             caretContextService.contextChanged(elementUnderCaret.toModel())

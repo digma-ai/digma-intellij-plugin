@@ -3,11 +3,9 @@
 package org.digma.intellij.plugin.ui.errors
 
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.dsl.builder.RowLayout
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
-import com.intellij.util.ui.JBEmptyBorder
 import org.digma.intellij.plugin.ui.common.ScopeLineIconProducer
 import org.digma.intellij.plugin.ui.common.scopeLine
 import org.digma.intellij.plugin.ui.common.topLine
@@ -15,8 +13,6 @@ import org.digma.intellij.plugin.ui.insights.insightsModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 import org.digma.intellij.plugin.ui.panels.ResettablePanel
 import java.awt.BorderLayout
-import javax.swing.JLabel
-import javax.swing.SwingUtilities
 
 val errorsModel: ErrorsModel = ErrorsModel()
 
@@ -34,7 +30,7 @@ fun errorsPanel(project: Project): ResettablePanel {
                 }
         }.layout(RowLayout.PARENT_GRID)
         row{
-            var scopeLine = scopeLine(project,{ insightsModel.classAndMethod() }, ScopeLineIconProducer(insightsModel))
+            var scopeLine = scopeLine(project,{ errorsModel.classAndMethod() }, ScopeLineIconProducer(insightsModel))
             cell(scopeLine)
                 .horizontalAlign(HorizontalAlign.FILL)
                 .onReset {

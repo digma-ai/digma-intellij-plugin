@@ -30,7 +30,7 @@ fun spanGroupPanel(listViewItem: GroupListViewItem): JPanel {
             row {
                 cell(insightItemPanel(spanPanel(it as ListViewItem<SpanInsight>)))
                     .horizontalAlign(HorizontalAlign.FILL)
-            }
+            }.bottomGap(BottomGap.MEDIUM)
         }
     }
 

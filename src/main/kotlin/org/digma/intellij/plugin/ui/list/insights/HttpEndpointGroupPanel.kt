@@ -1,6 +1,6 @@
 package org.digma.intellij.plugin.ui.list.insights
 
-import com.intellij.ui.dsl.builder.TopGap
+import com.intellij.ui.dsl.builder.BottomGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import org.digma.intellij.plugin.icons.Icons
@@ -22,7 +22,7 @@ fun httpEndpointGroupPanel(listViewItem: InsightGroupListViewItem): JPanel {
         row("REST:") {
             cell(JLabel(headerAsHtml(listViewItem), Icons.Insight.HTTP_GROUP_TITLE, SwingConstants.LEFT))
                 .bold()
-        }.topGap(TopGap.SMALL)
+        }.bottomGap(BottomGap.SMALL)
 
         items.forEach {
             val modelObject = it.modelObject
@@ -39,7 +39,7 @@ fun httpEndpointGroupPanel(listViewItem: InsightGroupListViewItem): JPanel {
             row {
                 cell(insightItemPanel(cellItem))
                     .horizontalAlign(HorizontalAlign.FILL)
-            }.topGap(TopGap.MEDIUM)
+            }.bottomGap(BottomGap.MEDIUM)
         }
     }
 

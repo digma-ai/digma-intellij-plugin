@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-class DocumentInfoContainer {
+public class DocumentInfoContainer {
 
 
     private final PsiFile psiFile;
@@ -39,7 +39,17 @@ class DocumentInfoContainer {
         }
     }
 
+
+    public DocumentInfo getDocumentInfo() {
+        return documentInfo;
+    }
+
+    public PsiFile getPsiFile() {
+        return psiFile;
+    }
+
     public Map<String, CodeObjectSummary> getSummaries() {
+        //todo: return other summary types
         return methodSummaries;
     }
 

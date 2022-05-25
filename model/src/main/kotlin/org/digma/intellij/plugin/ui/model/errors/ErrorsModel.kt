@@ -9,7 +9,7 @@ data class ErrorsModel(
 
 
     override fun count(): String {
-       return errorsCount.toString()
+        return errorsCount.toString()
     }
 
 
@@ -17,7 +17,15 @@ data class ErrorsModel(
         return true
     }
 
-    override fun classAndMethod(): String {
+    override fun isDocumentScope(): Boolean {
+        return false
+    }
+
+    override fun getScope(): String {
+        return classAndMethod()
+    }
+
+    fun classAndMethod(): String {
         return "$className.$methodName"
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using Digma.Rider.Discovery;
 using JetBrains.Annotations;
 using JetBrains.Application.Threading;
@@ -54,9 +55,25 @@ namespace Digma.Rider.Protocol
 
         private void Register()
         {
+            
+            _textControlManager.TextControls.BeforeAddRemove.Advise(_lifetime, h => {
+                if (h.IsAdding)
+                {
+                    Log(_logger, "BeforeAddRemove adding {0}",h.Value?.Document);
+                }else if (h.IsRemoving)
+                {
+                    Log(_logger, "BeforeAddRemove removing {0}",h.Value?.Document);
+                }
+                else
+                {
+                    Log(_logger, "BeforeAddRemove not adding and nor removing??? {}",h.Value);
+                }
+            });
+            
             _textControlManager.FocusedTextControlPerClient.ForEachValue_NotNull_AllClients(_lifetime,
                 (lifetime1, textControl) =>
                 {
+                
                     _groupingEvent = _shellLocks.CreateGroupingEvent(textControl.Lifetime,
                         "ElementUnderCaretHost::CaretPositionChanged", TimeSpan.FromMilliseconds(300),
                         OnChange);
@@ -72,7 +89,7 @@ namespace Digma.Rider.Protocol
             if (textControl == null || textControl.Lifetime.IsNotAlive)
             {
                 Log(_logger, "OnChange TextControl is null");
-                EmptyModel();
+                EmptyModel(null);
                 return;
             }
 
@@ -90,28 +107,42 @@ namespace Digma.Rider.Protocol
                     var fileUri = Identities.ComputeFileUri(psiSourceFile);
                     var newElementUnderCaret =
                         new MethodUnderCaretEvent(methodFqn, methodName, className, fileUri);
-                    if (!newElementUnderCaret.Equals(_model.ElementUnderCaret.Maybe.ValueOrDefault))
-                    {
-                        _model.ElementUnderCaret.Value = newElementUnderCaret;
-                        _model.NotifyElementUnderCaret.Fire(Unit.Instance);
-                    }
+                    UpdateModel(newElementUnderCaret);
                 }
                 else
                 {
                     Log(_logger, "No function under caret for {0}", textControl.Document);
-                    EmptyModel();
+                    EmptyModel(psiSourceFile);
                 }
             }
         }
 
 
-        private void EmptyModel()
+        private void EmptyModel([CanBeNull] IPsiSourceFile psiSourceFile)
         {
-            _model.ElementUnderCaret.Value =
-                new MethodUnderCaretEvent(string.Empty, string.Empty, string.Empty, string.Empty);
-            _model.NotifyElementUnderCaret.Fire(Unit.Instance);
+            var fileUri = string.Empty;
+            if (psiSourceFile != null)
+            {
+                fileUri = Identities.ComputeFileUri(psiSourceFile);
+            }
+            var newElementUnderCaret =
+                new MethodUnderCaretEvent(string.Empty, string.Empty, string.Empty, fileUri );
+            UpdateModel(newElementUnderCaret);
         }
 
+
+        private void UpdateModel([NotNull] MethodUnderCaretEvent newMethodUnderCaretEvent)
+        {
+            if (!newMethodUnderCaretEvent.Equals(_model.ElementUnderCaret.Maybe.ValueOrDefault))
+            {
+                _model.ElementUnderCaret.Value = newMethodUnderCaretEvent;
+                _model.NotifyElementUnderCaret.Fire(Unit.Instance);
+            }
+            
+        }
+        
+        
+        
 
         [CanBeNull]
         private ICSharpFunctionDeclaration GetFunctionUnderCaret(ITextControl textControl)

@@ -15,9 +15,9 @@ data class MethodUnderCaret(
     }
 
     override fun toString(): String {
-        val toString = "${id}\n" +
-                       "${name}\n" +
-                       "${className}\n" +
+        val toString = "${id}, " +
+                       "${name}, " +
+                       "${className}, " +
                        "${fileUri}"
         return toString;
     }

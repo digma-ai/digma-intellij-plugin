@@ -11,7 +11,9 @@ class ScopeLineIconProducer(val model: PanelModel): Producer<Icon> {
     override fun produce(): Icon {
         if (model.isMethodScope()){
             return Icons.INSIGHT_METHOD_SCOPE
+        }else if (model.isDocumentScope()){
+            return Icons.INSIGHT_DOCUMENT_SCOPE
         }
-        return Icons.INSIGHT_METHOD_SCOPE
+        return Icons.INSIGHT_EMPTY_SCOPE
     }
 }

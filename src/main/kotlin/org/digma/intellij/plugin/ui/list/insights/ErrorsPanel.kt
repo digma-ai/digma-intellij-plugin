@@ -44,6 +44,9 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>): JPa
                 }
             }
         }
+        // this row is used so scroll bar would work
+        row("") {
+        }
     }
 
 
@@ -66,7 +69,7 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>): JPa
 
     val scrollPane = JBScrollPane()
     scrollPane.horizontalScrollBarPolicy = ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
-    scrollPane.verticalScrollBarPolicy = ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED
+    scrollPane.verticalScrollBarPolicy = ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER
     scrollPane.setViewportView(errorsWrapper)
     scrollPane.border = BorderFactory.createEmptyBorder()
 

@@ -32,6 +32,7 @@ public class DocumentInfoContainer {
         this.documentInfo.getMethods().forEach((id, methodInfo) -> objectIds.add(methodInfo.idWithType()));
 
         List<CodeObjectSummary> summaries = analyticsProvider.getSummaries(new CodeObjectSummaryRequest(environment, objectIds));
+        //todo: maybe always clear methodSummaries and put the new ones. maybe older summaries are not relevant anymore.
         if (summaries.isEmpty()) {
             methodSummaries.clear();
         }else{

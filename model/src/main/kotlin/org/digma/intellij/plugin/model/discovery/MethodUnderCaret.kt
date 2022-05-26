@@ -10,9 +10,6 @@ data class MethodUnderCaret(
 ): ElementUnderCaret {
 
     override val type: ElementUnderCaretType = ElementUnderCaretType.Method
-    override fun idWithType(): String {
-        return "method:$id"
-    }
 
     override fun toString(): String {
         val toString = "${id}, " +

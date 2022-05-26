@@ -17,7 +17,7 @@ class PreviewListCellRenderer : AbstractPanelListCellRenderer() {
     @Suppress("UNCHECKED_CAST")
     private fun getOrCreatePanel(project: Project, index: Int, value: ListViewItem<*>): JPanel {
 
-        return previewPanel(value as ListViewItem<CodeObjectSummary>)
+        return previewPanel(project,value as ListViewItem<CodeObjectSummary>)
     }
 
 

@@ -8,5 +8,4 @@ internal interface ElementUnderCaret {
     val fileUri: String
     val type: ElementUnderCaretType
 
-    fun idWithType():String
 }

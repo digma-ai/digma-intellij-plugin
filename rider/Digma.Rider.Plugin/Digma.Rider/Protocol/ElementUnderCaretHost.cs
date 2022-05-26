@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.CompilerServices;
 using Digma.Rider.Discovery;
 using JetBrains.Annotations;
 using JetBrains.Application.Threading;
@@ -33,6 +32,11 @@ namespace Digma.Rider.Protocol
         private readonly ITextControlManager _textControlManager;
         private readonly IShellLocks _shellLocks;
         private readonly ILogger _logger;
+
+        // ReSharper disable once NotAccessedField.Local
+        // make a dependency on EditorListener to hopefully start here
+        // only after EditorListener has started so it will be first in the listener list for text documents. probably 
+        // not really necessary!
         private readonly EditorListener _editorListener;
         private GroupingEvent _groupingEvent;
 
@@ -55,44 +59,63 @@ namespace Digma.Rider.Protocol
 
         private void Register()
         {
-            
-            _textControlManager.TextControls.BeforeAddRemove.Advise(_lifetime, h => {
+            _textControlManager.VisibleTextControls.AddRemove.Advise(_lifetime, h =>
+            {
                 if (h.IsAdding)
                 {
-                    Log(_logger, "BeforeAddRemove adding {0}",h.Value?.Document);
-                }else if (h.IsRemoving)
-                {
-                    Log(_logger, "BeforeAddRemove removing {0}",h.Value?.Document);
-                }
-                else
-                {
-                    Log(_logger, "BeforeAddRemove not adding and nor removing??? {}",h.Value);
+                    Log(_logger, "VisibleTextControls AddRemove adding {0}", h.Value?.Document);
+                    Log(_logger, "Calling OnChange for VisibleTextControls {0}", h.Value?.Document);
+                    OnChange(h.Value);    
                 }
             });
-            
-            _textControlManager.FocusedTextControlPerClient.ForEachValue_NotNull_AllClients(_lifetime,
-                (lifetime1, textControl) =>
+
+            _textControlManager.TextControls.AddRemove.Advise(_lifetime, h =>
+            {
+                if (h.IsRemoving)
                 {
-                
+                    if (_textControlManager.TextControls.Count == 0)
+                    {
+                        Log(_logger, "Last text control removed, clearing model");
+                        ClearModel();
+                    }
+                }
+            });
+
+
+            _textControlManager.FocusedTextControlPerClient.ForEachValue_NotNull_AllClients(_lifetime,
+                (_, textControl) =>
+                {
                     _groupingEvent = _shellLocks.CreateGroupingEvent(textControl.Lifetime,
                         "ElementUnderCaretHost::CaretPositionChanged", TimeSpan.FromMilliseconds(300),
                         OnChange);
                     textControl.Caret.Position.Change.Advise(textControl.Lifetime,
-                        cph => { _groupingEvent.FireIncoming(); });
+                        _ => { _groupingEvent.FireIncoming(); });
                 });
         }
 
 
         private void OnChange()
         {
+            Log(_logger, "On Caret.Position.Change event");
             var textControl = _textControlManager.LastFocusedTextControlPerClient.ForCurrentClient();
             if (textControl == null || textControl.Lifetime.IsNotAlive)
             {
-                Log(_logger, "OnChange TextControl is null");
-                EmptyModel(null);
+                Log(_logger, "OnChange TextControl is null or not alive");
+                ClearModel();
                 return;
             }
 
+            if (!_textControlManager.VisibleTextControls.Contains(textControl))
+            {
+                Log(_logger, "textControl {0} is not visible,ignoring event", textControl.Document);
+                return;
+            }
+
+            OnChange(textControl);
+        }
+
+        private void OnChange(ITextControl textControl)
+        {
             Log(_logger, "Trying to discover method under caret for {0}", textControl.Document);
             using (ReadLockCookie.Create())
             {
@@ -120,14 +143,18 @@ namespace Digma.Rider.Protocol
 
         private void EmptyModel([CanBeNull] IPsiSourceFile psiSourceFile)
         {
-            var fileUri = string.Empty;
-            if (psiSourceFile != null)
+            if (psiSourceFile == null)
             {
-                fileUri = Identities.ComputeFileUri(psiSourceFile);
+                ClearModel();
             }
-            var newElementUnderCaret =
-                new MethodUnderCaretEvent(string.Empty, string.Empty, string.Empty, fileUri );
-            UpdateModel(newElementUnderCaret);
+            else
+            {
+                var fileUri = Identities.ComputeFileUri(psiSourceFile);
+                Log(_logger, "Updating model with fileUri {0}", fileUri);
+                var newElementUnderCaret =
+                    new MethodUnderCaretEvent(string.Empty, string.Empty, string.Empty, fileUri);
+                UpdateModel(newElementUnderCaret);
+            }
         }
 
 
@@ -135,14 +162,25 @@ namespace Digma.Rider.Protocol
         {
             if (!newMethodUnderCaretEvent.Equals(_model.ElementUnderCaret.Maybe.ValueOrDefault))
             {
+                Log(_logger, "Updating model with {0}", newMethodUnderCaretEvent);
                 _model.ElementUnderCaret.Value = newMethodUnderCaretEvent;
                 _model.NotifyElementUnderCaret.Fire(Unit.Instance);
             }
-            
+            else
+            {
+                Log(_logger, "Not Updating model because method under caret is the same as previous: {0}",
+                    newMethodUnderCaretEvent);
+            }
         }
-        
-        
-        
+
+        private void ClearModel()
+        {
+            Log(_logger, "Clearing model to empty values");
+            _model.ElementUnderCaret.Value =
+                new MethodUnderCaretEvent(string.Empty, string.Empty, string.Empty, string.Empty);
+            _model.NotifyElementUnderCaret.Fire(Unit.Instance);
+        }
+
 
         [CanBeNull]
         private ICSharpFunctionDeclaration GetFunctionUnderCaret(ITextControl textControl)

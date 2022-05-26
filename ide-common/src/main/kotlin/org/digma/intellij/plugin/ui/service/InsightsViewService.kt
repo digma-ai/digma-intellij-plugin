@@ -32,6 +32,20 @@ class InsightsViewService(val project: Project) {
         panel.reset()
     }
 
+
+    fun contextChangeNoMethodInfo(dummy: MethodInfo) {
+        model.listViewItems = ArrayList()
+        model.previewListViewItems = ArrayList()
+        model.scope = MethodScope(dummy)
+        model.insightsCount = 0
+        model.card = InsightsTabCard.INSIGHTS
+
+        panel.reset()
+
+    }
+
+
+
     fun empty() {
         model.listViewItems = ArrayList()
         model.previewListViewItems = ArrayList()
@@ -54,13 +68,19 @@ class InsightsViewService(val project: Project) {
             val items: List<ListViewItem<*>> = getDocumentPreviewItems(documentInfoContainer)
             model.previewListViewItems = items
             model.scope = DocumentScope(documentInfoContainer.documentInfo)
-            model.insightsCount = items.size
+            model.insightsCount = computeInsightsPreviewCount(documentInfoContainer)
         }
 
         model.listViewItems = ArrayList()
         model.card = InsightsTabCard.PREVIEW
 
         panel.reset()
+    }
+
+
+
+    private fun computeInsightsPreviewCount(documentInfoContainer: DocumentInfoContainer): Int {
+        return documentInfoContainer.summaries.values.stream().mapToInt { it.insightsCount }.sum()
     }
 
     private fun getDocumentPreviewItems(documentInfoContainer: DocumentInfoContainer): List<ListViewItem<*>> {
@@ -72,6 +92,8 @@ class InsightsViewService(val project: Project) {
 
         return previewItems
     }
+
+
 
 
 }

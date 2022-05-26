@@ -33,9 +33,11 @@ data class InsightsModel(
     }
 
     fun getPreviewListMessage():String {
-        if (previewListViewItems.isEmpty()){
+        if (scope is EmptyScope) {
             return "No code objects found for this document"
-        }else{
+        } else if (previewListViewItems.isEmpty()) {
+            return "No insights found for this document"
+        } else {
             return "Try to click one of the following code objects"
         }
     }

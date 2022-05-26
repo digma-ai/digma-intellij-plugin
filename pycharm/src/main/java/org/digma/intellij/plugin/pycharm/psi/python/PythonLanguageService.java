@@ -36,4 +36,9 @@ public class PythonLanguageService implements LanguageService {
         return null;
     }
 
+    @Override
+    public void navigateToMethod(String codeObjectId) {
+
+    }
+
 }

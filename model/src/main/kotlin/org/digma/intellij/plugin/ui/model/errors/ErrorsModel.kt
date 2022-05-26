@@ -13,16 +13,23 @@ data class ErrorsModel(
     var scope: MethodInfo? = null
 ): PanelModel {
 
-
     override fun count(): String {
-       return errorsCount.toString()
-    }
-
-    override fun classAndMethod(): String {
-        return "$className.$methodName"
+        return errorsCount.toString()
     }
 
     override fun isMethodScope(): Boolean {
         return true
+    }
+
+    override fun isDocumentScope(): Boolean {
+        return false
+    }
+
+    override fun getScope(): String {
+        return classAndMethod()
+    }
+
+    fun classAndMethod(): String {
+        return "$className.$methodName"
     }
 }

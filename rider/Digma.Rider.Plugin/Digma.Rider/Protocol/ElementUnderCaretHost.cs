@@ -32,6 +32,11 @@ namespace Digma.Rider.Protocol
         private readonly ITextControlManager _textControlManager;
         private readonly IShellLocks _shellLocks;
         private readonly ILogger _logger;
+
+        // ReSharper disable once NotAccessedField.Local
+        // make a dependency on EditorListener to hopefully start here
+        // only after EditorListener has started so it will be first in the listener list for text documents. probably 
+        // not really necessary!
         private readonly EditorListener _editorListener;
         private GroupingEvent _groupingEvent;
 
@@ -54,28 +59,63 @@ namespace Digma.Rider.Protocol
 
         private void Register()
         {
+            _textControlManager.VisibleTextControls.AddRemove.Advise(_lifetime, h =>
+            {
+                if (h.IsAdding)
+                {
+                    Log(_logger, "VisibleTextControls AddRemove adding {0}", h.Value?.Document);
+                    Log(_logger, "Calling OnChange for VisibleTextControls {0}", h.Value?.Document);
+                    OnChange(h.Value);    
+                }
+            });
+
+            _textControlManager.TextControls.AddRemove.Advise(_lifetime, h =>
+            {
+                if (h.IsRemoving)
+                {
+                    if (_textControlManager.TextControls.Count == 0)
+                    {
+                        Log(_logger, "Last text control removed, clearing model");
+                        ClearModel();
+                    }
+                }
+            });
+
+
             _textControlManager.FocusedTextControlPerClient.ForEachValue_NotNull_AllClients(_lifetime,
-                (lifetime1, textControl) =>
+                (_, textControl) =>
                 {
                     _groupingEvent = _shellLocks.CreateGroupingEvent(textControl.Lifetime,
                         "ElementUnderCaretHost::CaretPositionChanged", TimeSpan.FromMilliseconds(300),
                         OnChange);
                     textControl.Caret.Position.Change.Advise(textControl.Lifetime,
-                        cph => { _groupingEvent.FireIncoming(); });
+                        _ => { _groupingEvent.FireIncoming(); });
                 });
         }
 
 
         private void OnChange()
         {
+            Log(_logger, "On Caret.Position.Change event");
             var textControl = _textControlManager.LastFocusedTextControlPerClient.ForCurrentClient();
             if (textControl == null || textControl.Lifetime.IsNotAlive)
             {
-                Log(_logger, "OnChange TextControl is null");
-                EmptyModel();
+                Log(_logger, "OnChange TextControl is null or not alive");
+                ClearModel();
                 return;
             }
 
+            if (!_textControlManager.VisibleTextControls.Contains(textControl))
+            {
+                Log(_logger, "textControl {0} is not visible,ignoring event", textControl.Document);
+                return;
+            }
+
+            OnChange(textControl);
+        }
+
+        private void OnChange(ITextControl textControl)
+        {
             Log(_logger, "Trying to discover method under caret for {0}", textControl.Document);
             using (ReadLockCookie.Create())
             {
@@ -90,23 +130,52 @@ namespace Digma.Rider.Protocol
                     var fileUri = Identities.ComputeFileUri(psiSourceFile);
                     var newElementUnderCaret =
                         new MethodUnderCaretEvent(methodFqn, methodName, className, fileUri);
-                    if (!newElementUnderCaret.Equals(_model.ElementUnderCaret.Maybe.ValueOrDefault))
-                    {
-                        _model.ElementUnderCaret.Value = newElementUnderCaret;
-                        _model.NotifyElementUnderCaret.Fire(Unit.Instance);
-                    }
+                    UpdateModel(newElementUnderCaret);
                 }
                 else
                 {
                     Log(_logger, "No function under caret for {0}", textControl.Document);
-                    EmptyModel();
+                    EmptyModel(psiSourceFile);
                 }
             }
         }
 
 
-        private void EmptyModel()
+        private void EmptyModel([CanBeNull] IPsiSourceFile psiSourceFile)
         {
+            if (psiSourceFile == null)
+            {
+                ClearModel();
+            }
+            else
+            {
+                var fileUri = Identities.ComputeFileUri(psiSourceFile);
+                Log(_logger, "Updating model with fileUri {0}", fileUri);
+                var newElementUnderCaret =
+                    new MethodUnderCaretEvent(string.Empty, string.Empty, string.Empty, fileUri);
+                UpdateModel(newElementUnderCaret);
+            }
+        }
+
+
+        private void UpdateModel([NotNull] MethodUnderCaretEvent newMethodUnderCaretEvent)
+        {
+            if (!newMethodUnderCaretEvent.Equals(_model.ElementUnderCaret.Maybe.ValueOrDefault))
+            {
+                Log(_logger, "Updating model with {0}", newMethodUnderCaretEvent);
+                _model.ElementUnderCaret.Value = newMethodUnderCaretEvent;
+                _model.NotifyElementUnderCaret.Fire(Unit.Instance);
+            }
+            else
+            {
+                Log(_logger, "Not Updating model because method under caret is the same as previous: {0}",
+                    newMethodUnderCaretEvent);
+            }
+        }
+
+        private void ClearModel()
+        {
+            Log(_logger, "Clearing model to empty values");
             _model.ElementUnderCaret.Value =
                 new MethodUnderCaretEvent(string.Empty, string.Empty, string.Empty, string.Empty);
             _model.NotifyElementUnderCaret.Fire(Unit.Instance);

@@ -10,6 +10,8 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.rider.protocol.CodeObjectHost"/>
 
+        <projectService serviceImplementation="org.digma.intellij.plugin.rider.protocol.MethodNavigationHost"/>
+
         <projectService serviceImplementation="org.digma.intellij.plugin.rider.psi.csharp.CSharpDocumentAnalyzer"
                         serviceInterface="org.digma.intellij.plugin.document.DocumentAnalyzer"/>
 

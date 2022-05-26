@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-class DocumentInfoContainer {
+public class DocumentInfoContainer {
 
 
     private final PsiFile psiFile;
@@ -32,6 +32,7 @@ class DocumentInfoContainer {
         this.documentInfo.getMethods().forEach((id, methodInfo) -> objectIds.add(methodInfo.idWithType()));
 
         List<CodeObjectSummary> summaries = analyticsProvider.getSummaries(new CodeObjectSummaryRequest(environment, objectIds));
+        //todo: maybe always clear methodSummaries and put the new ones. maybe older summaries are not relevant anymore.
         if (summaries.isEmpty()) {
             methodSummaries.clear();
         }else{
@@ -39,7 +40,17 @@ class DocumentInfoContainer {
         }
     }
 
+
+    public DocumentInfo getDocumentInfo() {
+        return documentInfo;
+    }
+
+    public PsiFile getPsiFile() {
+        return psiFile;
+    }
+
     public Map<String, CodeObjectSummary> getSummaries() {
+        //todo: return other summary types
         return methodSummaries;
     }
 

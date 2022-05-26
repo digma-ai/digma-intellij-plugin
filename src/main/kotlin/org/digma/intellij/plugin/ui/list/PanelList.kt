@@ -87,7 +87,7 @@ abstract class PanelList(val project: Project, listViewItems: List<ListViewItem<
 
     private fun rebuild() {
 
-        Log.log(LOGGER::info, "in rebuild,model size: {}", model.size)
+        Log.log(LOGGER::info, "{} in rebuild,model size: {}",this.javaClass.simpleName, model.size)
 
         if (components.isNotEmpty()) {
             this.components.forEach {

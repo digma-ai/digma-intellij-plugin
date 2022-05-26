@@ -6,5 +6,9 @@ interface PanelModel {
 
     fun isMethodScope(): Boolean
 
-    fun classAndMethod(): String
+    fun isDocumentScope(): Boolean
+
+
+
+    fun getScope(): String
 }

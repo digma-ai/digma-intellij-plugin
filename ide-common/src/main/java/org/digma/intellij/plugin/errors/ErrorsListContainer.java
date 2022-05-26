@@ -1,26 +1,23 @@
 package org.digma.intellij.plugin.errors;
 
+import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class ErrorsListContainer {
-    public ErrorsListContainer(ArrayList<ListViewItem<?>> listViewItems, int count) {
 
+    private final List<ListViewItem<CodeObjectError>> listViewItems;
+
+    public ErrorsListContainer(List<ListViewItem<CodeObjectError>> listViewItems) {
+        this.listViewItems = listViewItems;
     }
-
 
     public int getCount() {
-        return 1;
+        return listViewItems.size();
     }
 
-    public List<ListViewItem<?>> getListViewItems() {
-        //todo: currently always returns one error for every method
-        var dummyList = new ArrayList<ListViewItem<?>>();
-        dummyList.add(new ListViewItem<>("dummy",0){
-
-        });
-        return dummyList;
+    public List<ListViewItem<CodeObjectError>> getListViewItems() {
+        return listViewItems;
     }
 }

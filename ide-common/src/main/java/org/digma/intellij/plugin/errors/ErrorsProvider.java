@@ -5,11 +5,14 @@ import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.analytics.AnalyticsProvider;
 import org.digma.intellij.plugin.analytics.Environment;
 import org.digma.intellij.plugin.document.DocumentInfoService;
+import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
+import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class ErrorsProvider {
 
@@ -27,6 +30,15 @@ public class ErrorsProvider {
     }
 
     public ErrorsListContainer getErrors(@NotNull MethodInfo methodInfo) {
-        return new ErrorsListContainer(new ArrayList<ListViewItem<?>>(), 0);
+        final List<CodeObjectError> codeObjectErrors = analyticsProvider.getErrorsOfCodeObject(
+                environment.getCurrent(), methodInfo.getId());
+        Log.log(LOGGER::info, "CodeObjectErrors for {}: {}", methodInfo, codeObjectErrors);
+
+        final List<ListViewItem<CodeObjectError>> lviList = codeObjectErrors
+                .stream()
+                .map(x -> new ListViewItem<CodeObjectError>(x, 1))
+                .collect(Collectors.toList());
+
+        return new ErrorsListContainer(lviList);
     }
 }

@@ -7,7 +7,6 @@ import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.util.*
 
 data class ErrorsModel(
-    var errorsCount: Int = 0,
     var methodName: String = "",
     var className: String = "",
     var listViewItems: List<ListViewItem<CodeObjectError>> = Collections.emptyList(),
@@ -15,7 +14,7 @@ data class ErrorsModel(
 ) : PanelModel {
 
     override fun count(): String {
-        return errorsCount.toString()
+        return listViewItems.size.toString()
     }
 
     override fun isMethodScope(): Boolean {

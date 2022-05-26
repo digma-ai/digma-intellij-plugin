@@ -25,7 +25,7 @@ fun insightGroupPanel(panel: JPanel): JPanel {
     //isOpaque = false and wrapper overrides getBackground ,trying to make sure
     //the background is always the same. background =.. is not really necessary.
     panel.isOpaque = false
-    panel.background = panelsListBackground()
+    panel.background = insightListBackground()
     panel.border = empty()
     val wrapper = object : JPanel() {
         override fun getBackground(): Color {
@@ -34,14 +34,14 @@ fun insightGroupPanel(panel: JPanel): JPanel {
     }
     wrapper.layout = BorderLayout()
     wrapper.isOpaque = true
-    wrapper.background = panelsListBackground()
+    wrapper.background = insightListBackground()
     wrapper.add(panel, BorderLayout.CENTER)
     wrapper.border = empty()
     return wrapper
 }
 
 
-fun panelsListBackground(): Color {
+fun insightListBackground(): Color {
     var default = Color.DARK_GRAY
     if (UIUtil.isUnderDarcula()) {
         default = Color(38, 38, 38)

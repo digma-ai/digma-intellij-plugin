@@ -12,6 +12,6 @@ class InsightsList(project: Project, listViewItems: List<ListViewItem<*>>) : Pan
     }
 
     override fun getListBackground(): Color {
-        return panelsListBackground()
+        return insightListBackground()
     }
 }

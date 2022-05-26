@@ -152,8 +152,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @GET("/CodeAnalytics/codeObjects/errors?codeObjectId={codeObjectId}&environment={env}")
-        Call<List<CodeObjectError>> getErrorsOfCodeObject(@Path("env") String environment, @Path("codeObjectId") String codeObjectId);
+        @GET("/CodeAnalytics/codeObjects/errors")
+        Call<List<CodeObjectError>> getErrorsOfCodeObject(@Query("environment") String environment, @Query("codeObjectId") String codeObjectId);
 
     }
 

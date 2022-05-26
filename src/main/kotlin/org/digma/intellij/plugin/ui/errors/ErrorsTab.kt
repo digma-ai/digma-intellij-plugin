@@ -11,7 +11,7 @@ import org.digma.intellij.plugin.ui.common.ScopeLineIconProducer
 import org.digma.intellij.plugin.ui.common.scopeLine
 import org.digma.intellij.plugin.ui.common.topLine
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
-import org.digma.intellij.plugin.ui.list.errors.ErrorsList
+import org.digma.intellij.plugin.ui.list.errors.ErrorsPanelList
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 import org.digma.intellij.plugin.ui.panels.ResettablePanel
 import java.awt.BorderLayout
@@ -51,20 +51,20 @@ fun errorsPanel(project: Project): ResettablePanel {
     topPanelWrapper.add(Box.createHorizontalStrut(8))
 
 
-    val errorsList = ScrollablePanelList(ErrorsList(project, errorsModel.listViewItems))
+    val errorsPanelList = ScrollablePanelList(ErrorsPanelList(project, errorsModel.listViewItems))
 
     val result = object : ResettablePanel() {
         override fun reset() {
             topPanel.reset()
             SwingUtilities.invokeLater {
-                errorsList.getModel().setListData(errorsModel.listViewItems)
+                errorsPanelList.getModel().setListData(errorsModel.listViewItems)
             }
         }
     }
 
     result.layout = BorderLayout()
     result.add(topPanelWrapper, BorderLayout.NORTH)
-    result.add(errorsList, BorderLayout.CENTER)
+    result.add(errorsPanelList, BorderLayout.CENTER)
 
     return result
 }

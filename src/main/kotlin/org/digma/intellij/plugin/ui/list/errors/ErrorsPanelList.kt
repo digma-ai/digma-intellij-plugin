@@ -6,10 +6,10 @@ import org.digma.intellij.plugin.ui.list.insights.insightListBackground
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.Color
 
-class ErrorsList(project: Project, listViewItems: List<ListViewItem<*>>) : PanelList(project,listViewItems){
+class ErrorsPanelList(project: Project, listViewItems: List<ListViewItem<*>>) : PanelList(project, listViewItems) {
 
     init {
-        this.setCellRenderer(ErrorsListCellRenderer())
+        this.setCellRenderer(ErrorsPanelListCellRenderer())
     }
 
     override fun getListBackground(): Color {

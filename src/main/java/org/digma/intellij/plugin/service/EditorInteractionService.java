@@ -62,7 +62,7 @@ public class EditorInteractionService implements CaretContextService, Disposable
 
 
         if (methodUnderCaret.getId().isBlank()) {
-            Log.log(LOGGER::info, "No id in methodUnderCaret {}. ", methodUnderCaret);
+            Log.log(LOGGER::info, "No id in methodUnderCaret,trying fileUri {}. ", methodUnderCaret);
             //if no id then try to show a preview for the document
             if (!methodUnderCaret.getFileUri().isBlank()){
                 Log.log(LOGGER::info, "Showing document preview for {}. ", methodUnderCaret);
@@ -76,6 +76,7 @@ public class EditorInteractionService implements CaretContextService, Disposable
 
                 insightsViewService.showDocumentPreviewList(documentInfoContainer,methodUnderCaret.getFileUri());
             }else{
+                Log.log(LOGGER::info, "No id and no fileUri in methodUnderCaret,clearing context {}. ", methodUnderCaret);
                 contextEmpty();
             }
         }else{

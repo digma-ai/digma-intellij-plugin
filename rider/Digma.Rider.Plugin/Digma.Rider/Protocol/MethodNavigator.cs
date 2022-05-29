@@ -46,18 +46,14 @@ namespace Digma.Rider.Protocol
             var methodId = message.SubstringAfter("}");
             
             Log(_logger, "Got navigate request to {0}",methodId);
-            var textControl = _textControlManager.FocusedTextControlPerClient.ForCurrentClient();
-            if (textControl == null)
-            {
-                Log(_logger, "No focused textControl found for {0}", methodId);
-                textControl = _textControlManager.LastFocusedTextControlPerClient.ForCurrentClient();
-                if (textControl == null)
-                {
-                    Log(_logger, "No last focused textControl found for {0}", methodId);
-                    return;
-                }
-            }
 
+            var textControl = _textControlManager.LastFocusedTextControlPerClient.ForCurrentClient();
+            if (textControl == null )
+            {
+                Log(_logger, "LastFocusedTextControl is null, not navigating to method {0}", methodId);
+                return;
+            }
+            
             Log(_logger, "Found textControl for method {0} , document {1}",methodId,textControl.Document);
             ICSharpFunctionDeclaration declaration = null;
             using (ReadLockCookie.Create())

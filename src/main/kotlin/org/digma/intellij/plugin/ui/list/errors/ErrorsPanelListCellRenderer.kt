@@ -1,21 +1,25 @@
 package org.digma.intellij.plugin.ui.list.errors
 
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.VerticalAlign
 import com.intellij.util.ui.JBUI
+import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.model.rest.errors.ScoreInfo
 import org.digma.intellij.plugin.ui.common.Swing.ERROR_GREEN
 import org.digma.intellij.plugin.ui.common.Swing.ERROR_ORANGE
 import org.digma.intellij.plugin.ui.common.Swing.ERROR_RED
+import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
-import org.digma.intellij.plugin.ui.list.insights.insightItemPanel
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
+import java.awt.BorderLayout
 import java.awt.Color
-import javax.swing.JPanel
-import javax.swing.border.LineBorder
+import java.awt.Dimension
+import javax.swing.*
+
 
 class ErrorsPanelListCellRenderer : AbstractPanelListCellRenderer() {
 
@@ -29,25 +33,31 @@ class ErrorsPanelListCellRenderer : AbstractPanelListCellRenderer() {
 
         val model = value.modelObject
 
-        val result = panel {
-            //temporary: need to implement logic
-            row {
-                link(model.name) {
-                    //error.codeObjectId
-                    println("In action")
-                }
-                var from = "From me"
-//                if (insight.codeObjectId != error.sourceCodeObjectId) {
-//                    from = "From ${error.sourceCodeObjectId.split("\$_\$")[0]}"
-//                }
-                label(from)
-                label("Score: ${model.scoreInfo.score}")
-            }
-        }
+//        val result = simpleDataPanel(model)
+        val result = createSingleErrorPanel(model)
 
         return result
     }
 
+}
+
+private fun simpleDataPanel(model: CodeObjectError): DialogPanel {
+    val result = panel {
+        //temporary: need to implement logic
+        row {
+            link(model.name) {
+                //error.codeObjectId
+                println("In action")
+            }
+            var from = "From me"
+//                if (insight.codeObjectId != error.sourceCodeObjectId) {
+//                    from = "From ${error.sourceCodeObjectId.split("\$_\$")[0]}"
+//                }
+            label(from)
+            label("Score: ${model.scoreInfo.score}")
+        }
+    }
+    return result
 }
 
 private fun createSingleErrorPanel(model: CodeObjectError): JPanel {
@@ -62,32 +72,45 @@ private fun createSingleErrorPanel(model: CodeObjectError): JPanel {
     }
     title.border = JBUI.Borders.empty(0)
 
-//    val iconPanel = iconPanelGrid(icon, iconText)
-//    iconPanel.border = JBUI.Borders.empty(0)
-//    iconPanel.co
-//
-//    val contentPanel = JBPanel<JBPanel<*>>()
-//    contentPanel.layout = BorderLayout(0, 0)
-//
-//    val message = JLabel(body, SwingConstants.LEFT)
-//
-//    contentPanel.add(title, BorderLayout.NORTH)
-//    contentPanel.add(message, BorderLayout.CENTER)
-//
+    val scorePanel = createScorePanel(model)
+
     val result = JBPanel<JBPanel<*>>()
-//    result.layout = BoxLayout(result, BoxLayout.X_AXIS)
-//    result.add(contentPanel)
-//    result.add(Box.createHorizontalStrut(5))
-//    result.add(iconPanel)
-//
-    return insightItemPanel(result)
+    result.layout = BoxLayout(result, BoxLayout.X_AXIS)
+    result.add(title)
+    result.add(Box.createHorizontalStrut(5))
+    result.add(scorePanel)
+
+    return result
 }
 
 private fun createScorePanel(model: CodeObjectError): JBPanel<JBPanel<*>> {
-    val lineBorder = LineBorder(colorOf(model.scoreInfo.score), 2, true);
-    val toolTip = genToolTipAsHtml(model.scoreInfo)
+    val lineBorder = BorderFactory.createLineBorder(colorOf(model.scoreInfo.score), 2, true);
+    val scoreToolTip = genToolTipAsHtml(model.scoreInfo)
 
-    return JBPanel<JBPanel<*>>();
+    var scorePanel = JPanel();
+//    scorePanel.border = BorderFactory.createEmptyBorder(32, 32, 32, 32)
+    scorePanel.border = lineBorder
+    val scoreLabel = JLabel("${model.scoreInfo.score}")
+    scoreLabel.toolTipText = scoreToolTip
+    scoreLabel.size = Dimension(32, 32)
+    scorePanel.add(scoreLabel, BorderLayout.CENTER)
+
+    val iconLabel: JLabel
+    if (model.startsHere) {
+        iconLabel = JLabel(Icons.Error.RAISED_HERE)
+        iconLabel.toolTipText = "Raised here"
+    } else {
+        iconLabel = JLabel(Icons.Error.HANDLED_HERE)
+        iconLabel.toolTipText = "Handled here"
+    }
+
+    var result = JBPanel<JBPanel<*>>();
+
+    result.layout = BoxLayout(result, BoxLayout.Y_AXIS)
+    result.add(scoreLabel)
+    result.add(iconLabel, BorderLayout.EAST)
+
+    return result
 }
 
 private fun genToolTipAsHtml(scoreInfo: ScoreInfo): String {
@@ -104,7 +127,7 @@ private fun genToolTipAsHtml(scoreInfo: ScoreInfo): String {
                 sb.append("$key: $value")
             }
         }
-    return sb.toString()
+    return asHtml(sb.toString())
 }
 
 private fun colorOf(score: Int?): Color {

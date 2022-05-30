@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.ui.list.errors
 
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.VerticalAlign
@@ -38,7 +37,6 @@ class ErrorsPanelListCellRenderer : AbstractPanelListCellRenderer() {
 
         val model = value.modelObject
 
-//        val result = simpleDataPanel(model)
         val result = createSingleErrorPanel(model)
 
         return result
@@ -46,35 +44,14 @@ class ErrorsPanelListCellRenderer : AbstractPanelListCellRenderer() {
 
 }
 
-private fun simpleDataPanel(model: CodeObjectError): DialogPanel {
-    val result = panel {
-        //temporary: need to implement logic
-        row {
-            link(model.name) {
-                //error.codeObjectId
-                println("In action")
-            }
-            var from = "From me"
-//                if (insight.codeObjectId != error.sourceCodeObjectId) {
-//                    from = "From ${error.sourceCodeObjectId.split("\$_\$")[0]}"
-//                }
-            label(from)
-            label("Score: ${model.scoreInfo.score}")
-        }
-    }
-    return result
-}
-
 private fun createSingleErrorPanel(model: CodeObjectError): JPanel {
     val contents = panel {
         row {
-            link(asHtml(model.name)) { actionEvent ->
-                {
-                    //TODO: implement the link
-                }
+            link(asHtml(model.name)) {
+                //TODO: implement the link
             }.verticalAlign(VerticalAlign.TOP)
 
-            val relativeFrom: String;
+            val relativeFrom: String
             if (model.startsHere) {
                 relativeFrom = "me"
             } else {
@@ -116,10 +93,10 @@ private fun contentAsHtmlOfFirstAndLast(model: CodeObjectError): String {
 }
 
 private fun createScorePanel(model: CodeObjectError): JPanel {
-    val lineBorder = BorderFactory.createLineBorder(colorOf(model.scoreInfo.score), 2, true);
+    val lineBorder = BorderFactory.createLineBorder(colorOf(model.scoreInfo.score), 2, true)
     val scoreToolTip = genToolTipAsHtml(model.scoreInfo)
 
-    var scorePanel = JPanel(FlowLayout())
+    val scorePanel = JPanel(FlowLayout())
     fixedSize(scorePanel, Dimension(48, 48))
     val scoreLabel = JLabel("${model.scoreInfo.score}", JLabel.CENTER)
     scoreLabel.toolTipText = scoreToolTip
@@ -136,7 +113,7 @@ private fun createScorePanel(model: CodeObjectError): JPanel {
         iconLabel.toolTipText = "Handled here"
     }
 
-    var result = JPanel();
+    val result = JPanel()
 
     result.layout = BoxLayout(result, BoxLayout.Y_AXIS)
     result.add(scorePanel)

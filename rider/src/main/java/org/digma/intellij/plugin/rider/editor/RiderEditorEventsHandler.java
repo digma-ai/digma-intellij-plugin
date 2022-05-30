@@ -41,12 +41,18 @@ public class RiderEditorEventsHandler implements EditorEventsHandler, DocumentIn
         project.getMessageBus().connect().subscribe(DocumentInfoChanged.DOCUMENT_INFO_CHANGED_TOPIC,this);
 
 
+        //todo: keep this code as example until we are sure we don't need it.
         project.getMessageBus().connect().subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, new FileEditorManagerListener() {
-            //resharper does not send events on non source files, this code will compensate if a non-supported document gains focus.
+            //resharper does not send an event on non-supported files,and when a non-supported file is opened our context is still shown
+            // in the tool window.
+            //sometimes resharper will send a caret event when a source file looses focus, so in ElementUnderCaretHost, if there
+            //is a caret event for a non-visible source file the context is cleared and sends an event to the fronend, this has the same
+            // effect as the listener here. but that doesn't always happen so we still need this listener here.
+
             @Override
             public void selectionChanged(@NotNull FileEditorManagerEvent event) {
                 FileEditorManager fileEditorManager = event.getManager();
-                Log.log(LOGGER::debug, "selectionChanged: editor:{}, newFile:{}, oldFile:{}", fileEditorManager.getSelectedEditor(),
+                Log.log(LOGGER::info, "selectionChanged: editor:{}, newFile:{}, oldFile:{}", fileEditorManager.getSelectedEditor(),
                         event.getNewFile(), event.getOldFile());
 
                 var newFile = event.getNewFile();

@@ -24,6 +24,8 @@ dependencies{
     implementation(project(":idea"))
     implementation(project(":pycharm"))
     implementation(project(":rider"))
+
+    implementation("org.ocpsoft.prettytime:prettytime:5.0.3.Final")
 }
 
 // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin

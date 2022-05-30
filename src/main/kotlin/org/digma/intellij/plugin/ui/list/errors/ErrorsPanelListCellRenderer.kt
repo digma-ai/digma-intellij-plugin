@@ -15,9 +15,11 @@ import org.digma.intellij.plugin.ui.common.Swing.ERROR_RED
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
+import org.ocpsoft.prettytime.PrettyTime
 import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Dimension
+import java.util.*
 import javax.swing.*
 
 
@@ -61,26 +63,45 @@ private fun simpleDataPanel(model: CodeObjectError): DialogPanel {
 }
 
 private fun createSingleErrorPanel(model: CodeObjectError): JPanel {
-    val title = panel {
+    val contents = panel {
         row {
             link(model.name) { actionEvent ->
                 {
                     //TODO: implement the link
                 }
             }.verticalAlign(VerticalAlign.TOP)
+                .comment("from")
+        }
+        row {
+            label(model.characteristic)
+        }
+        row {
+            label(contentAsHtmlOfFirstAndLast(model))
         }
     }
-    title.border = JBUI.Borders.empty(0)
+    contents.border = JBUI.Borders.empty(0)
 
     val scorePanel = createScorePanel(model)
 
     val result = JBPanel<JBPanel<*>>()
     result.layout = BoxLayout(result, BoxLayout.X_AXIS)
-    result.add(title)
+    result.add(contents)
     result.add(Box.createHorizontalStrut(5))
     result.add(scorePanel)
 
     return result
+}
+
+private fun prettyTimeOf(date: Date): String {
+    val ptNow = PrettyTime()
+    return ptNow.format(date)
+}
+
+private fun contentAsHtmlOfFirstAndLast(model: CodeObjectError): String {
+    return asHtml(
+        "Started: <b>${prettyTimeOf(model.firstOccurenceTime)}</b>" +
+                "  Last: <b>${prettyTimeOf(model.lastOccurenceTime)}<b>"
+    )
 }
 
 private fun createScorePanel(model: CodeObjectError): JBPanel<JBPanel<*>> {

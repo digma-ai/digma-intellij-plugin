@@ -13,12 +13,14 @@ import org.digma.intellij.plugin.ui.common.Swing.ERROR_GREEN
 import org.digma.intellij.plugin.ui.common.Swing.ERROR_ORANGE
 import org.digma.intellij.plugin.ui.common.Swing.ERROR_RED
 import org.digma.intellij.plugin.ui.common.asHtml
+import org.digma.intellij.plugin.ui.common.fixedSize
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import org.ocpsoft.prettytime.PrettyTime
 import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Dimension
+import java.awt.FlowLayout
 import java.util.*
 import javax.swing.*
 
@@ -104,17 +106,17 @@ private fun contentAsHtmlOfFirstAndLast(model: CodeObjectError): String {
     )
 }
 
-private fun createScorePanel(model: CodeObjectError): JBPanel<JBPanel<*>> {
+private fun createScorePanel(model: CodeObjectError): JPanel {
     val lineBorder = BorderFactory.createLineBorder(colorOf(model.scoreInfo.score), 2, true);
     val scoreToolTip = genToolTipAsHtml(model.scoreInfo)
 
-    var scorePanel = JPanel();
-//    scorePanel.border = BorderFactory.createEmptyBorder(32, 32, 32, 32)
-    scorePanel.border = lineBorder
-    val scoreLabel = JLabel("${model.scoreInfo.score}")
+    var scorePanel = JPanel(FlowLayout())
+    fixedSize(scorePanel, Dimension(48, 48))
+    val scoreLabel = JLabel("${model.scoreInfo.score}", JLabel.CENTER)
     scoreLabel.toolTipText = scoreToolTip
     scoreLabel.size = Dimension(32, 32)
-    scorePanel.add(scoreLabel, BorderLayout.CENTER)
+    scorePanel.add(scoreLabel)
+    scorePanel.border = lineBorder
 
     val iconLabel: JLabel
     if (model.startsHere) {
@@ -125,10 +127,10 @@ private fun createScorePanel(model: CodeObjectError): JBPanel<JBPanel<*>> {
         iconLabel.toolTipText = "Handled here"
     }
 
-    var result = JBPanel<JBPanel<*>>();
+    var result = JPanel();
 
     result.layout = BoxLayout(result, BoxLayout.Y_AXIS)
-    result.add(scoreLabel)
+    result.add(scorePanel)
     result.add(iconLabel, BorderLayout.EAST)
 
     return result
@@ -163,5 +165,5 @@ private fun colorOf(score: Int?): Color {
             return ERROR_RED
         }
     }
-    return Color.BLACK
+    return Color.WHITE
 }

@@ -5,10 +5,7 @@ import com.intellij.ui.dsl.builder.panel
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
-import java.awt.BorderLayout
-import java.awt.Color
-import java.awt.Font
-import java.awt.GridLayout
+import java.awt.*
 import javax.swing.*
 
 
@@ -63,4 +60,9 @@ fun iconPanelGrid(icon: Icon, text: String): JPanel {
     panel.add(label)
     panel.border = BorderFactory.createEmptyBorder()
     return panel
+}
+
+fun fixedSize(swingComponent: JComponent, dim: Dimension) {
+    swingComponent.minimumSize = dim
+    swingComponent.maximumSize = dim
 }

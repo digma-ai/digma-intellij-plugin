@@ -1,0 +1,40 @@
+[
+  {
+    "uid": "62df19da-d754-11ec-ad13-0242ac140006",
+    "name": "System.ComponentModel.DataAnnotations.ValidationException",
+    "scoreInfo": {
+      "score": 75,
+      "scoreParams": {
+        "Occurrences": 6,
+        "Trend": 19,
+        "Recent": 0,
+        "Unhandled": 50
+      }
+    },
+    "sourceCodeObjectId": "Sample.MoneyTransfer.API.Controllers.SampleInsightsController$_$Error",
+    "characteristic": "Escalating",
+    "startsHere": true,
+    "endsHere": false,
+    "firstOccurenceTime": "2022-05-19T09:16:28.910691Z",
+    "lastOccurenceTime": "2022-05-19T09:16:28.910691Z"
+  },
+  {
+    "uid": "62df23f8-d754-11ec-8517-0242ac140006",
+    "name": "System.InvalidOperationException",
+    "scoreInfo": {
+      "score": 75,
+      "scoreParams": {
+        "Occurrences": 1,
+        "Trend": 24,
+        "Recent": 0,
+        "Unhandled": 50
+      }
+    },
+    "sourceCodeObjectId": "Sample.MoneyTransfer.API.Controllers.SampleInsightsController$_$Error",
+    "characteristic": "Escalating",
+    "startsHere": true,
+    "endsHere": false,
+    "firstOccurenceTime": "2022-05-19T09:16:28.987558Z",
+    "lastOccurenceTime": "2022-05-19T09:16:28.987558Z"
+  }
+]

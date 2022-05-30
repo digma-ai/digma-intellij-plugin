@@ -33,4 +33,7 @@ public abstract class AbstractAnalyticsProviderTest {
         baseUrl = String.format("http://localhost:%s", mockBackEnd.getPort());
     }
 
+    protected RestAnalyticsProvider instanceOfRestAnalyticsProvider() {
+        return new RestAnalyticsProvider(baseUrl);
+    }
 }

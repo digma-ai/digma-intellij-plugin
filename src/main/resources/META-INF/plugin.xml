@@ -41,6 +41,7 @@
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.service.ErrorsViewService"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.insights.InsightsProvider"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.errors.ErrorsProvider"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.service.InsightsActionsService"/>
 

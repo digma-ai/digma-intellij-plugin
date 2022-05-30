@@ -16,11 +16,14 @@ public final class Icons {
     }
 
     public static final Icon TOOL_WINDOW = IconLoader.getIcon("/icons/toolwindow.png", Icons.class);
-    public static final Icon INSIGHT_METHOD_SCOPE =  AllIcons.Nodes.Method;;
+    public static final Icon INSIGHT_METHOD_SCOPE = AllIcons.Nodes.Method;
+    ;
     public static final Icon INSIGHT_DOCUMENT_SCOPE = AllIcons.FileTypes.Any_type;
     public static final Icon INSIGHT_EMPTY_SCOPE = AllIcons.General.InspectionsErrorEmpty;
     public static final Icon TELESCOPE_16 = loadAndScaleIcon("/icons/telescope.png", 16);
     public static final Icon INTERFACE_16 = AllIcons.Nodes.Interface;
+    public static final Icon TRACE_INTO_16 = AllIcons.Actions.TraceInto;
+    public static final Icon STEP_OUT_16 = AllIcons.Actions.StepOut;
 
     public static class Insight {
 
@@ -40,6 +43,10 @@ public final class Icons {
         public static final Icon HTTP_GROUP_TITLE = INTERFACE_16;
     }
 
+    public static class Error {
+        public static final Icon RAISED_HERE = STEP_OUT_16;
+        public static final Icon HANDLED_HERE = TRACE_INTO_16;
+    }
 
     public static Icon loadAndScaleIcon(String path, int size) {
         return loadAndScaleIcon(path, size, size);

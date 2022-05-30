@@ -7,6 +7,7 @@ import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.VerticalAlign
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.icons.Icons
+import org.digma.intellij.plugin.model.discovery.CodeObjectInfo.Companion.extractMethodName
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.model.rest.errors.ScoreInfo
 import org.digma.intellij.plugin.ui.common.Swing.ERROR_GREEN
@@ -67,15 +68,23 @@ private fun simpleDataPanel(model: CodeObjectError): DialogPanel {
 private fun createSingleErrorPanel(model: CodeObjectError): JPanel {
     val contents = panel {
         row {
-            link(model.name) { actionEvent ->
+            link(asHtml(model.name)) { actionEvent ->
                 {
                     //TODO: implement the link
                 }
             }.verticalAlign(VerticalAlign.TOP)
-                .comment("from")
+
+            val relativeFrom: String;
+            if (model.startsHere) {
+                relativeFrom = "me"
+            } else {
+                relativeFrom = extractMethodName(model.sourceCodeObjectId)
+            }
+            label(asHtml(" from $relativeFrom"))
         }
         row {
             label(model.characteristic)
+                .bold()
         }
         row {
             label(contentAsHtmlOfFirstAndLast(model))

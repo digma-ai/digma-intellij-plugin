@@ -20,10 +20,7 @@ public class Environment {
         environments = analyticsProvider.getEnvironments();
         if (environments != null && environments.size() > 0){
             current = environments.get(0);
-            //temp
-            environments.add("SECOND_ENV");
         }
-
     }
 
     public String getCurrent() {

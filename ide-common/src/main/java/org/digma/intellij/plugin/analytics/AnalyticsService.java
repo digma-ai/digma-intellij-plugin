@@ -85,8 +85,12 @@ public class AnalyticsService implements AnalyticsProvider, Disposable {
             try {
                 return method.invoke(analyticsProvider, args);
             } catch (Exception e) {
-                String argsStr = Arrays.stream(args).map(Object::toString).collect(Collectors.joining(","));
-                Log.error(LOGGER, e, "error invoking AnalyticsProvide.{}({}), exception {}", method.getName(),argsStr,e);
+                if (args != null && args.length > 0) {
+                    String argsStr = Arrays.stream(args).map(Object::toString).collect(Collectors.joining(","));
+                    Log.error(LOGGER, e, "error invoking AnalyticsProvide.{}({}), exception {}", method.getName(), argsStr, e);
+                }else{
+                    Log.error(LOGGER, e, "error invoking AnalyticsProvide.{}, exception {}", method.getName(), e);
+                }
                 //todo: we probably need to show some error message to user
                 return null;
             }

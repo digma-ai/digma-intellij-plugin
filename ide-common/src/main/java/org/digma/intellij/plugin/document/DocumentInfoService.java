@@ -10,11 +10,13 @@ import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
+import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.MethodCodeObjectSummary;
 import org.digma.intellij.plugin.psi.PsiUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -70,6 +72,12 @@ public class DocumentInfoService implements EnvironmentChanged {
         return documents.get(psiFile);
     }
 
+    @Nullable
+    public DocumentInfoContainer getDocumentInfo(MethodUnderCaret methodUnderCaret) {
+        PsiFile psiFile = PsiUtils.uriToPsiFile(methodUnderCaret.getFileUri(), project);
+        return getDocumentInfo(psiFile);
+    }
+
 
     @Nullable
     public MethodCodeObjectSummary getMethodSummaries(@NotNull MethodUnderCaret methodUnderCaret) {
@@ -90,4 +98,13 @@ public class DocumentInfoService implements EnvironmentChanged {
         DocumentInfoContainer documentInfoContainer = documents.get(psiFile);
         return documentInfoContainer == null ? null : documentInfoContainer.getMethodInfo(methodUnderCaret.getId());
     }
+
+    public Collection<CodeObjectSummary> getDocumentSummaries(MethodUnderCaret methodUnderCaret) {
+        String fileUri = methodUnderCaret.getFileUri();
+        PsiFile psiFile = PsiUtils.uriToPsiFile(fileUri, project);
+        DocumentInfoContainer documentInfoContainer = documents.get(psiFile);
+        Map<String, CodeObjectSummary>  summaryMap = documentInfoContainer.getSummaries();
+        return summaryMap.values();
+    }
+
 }

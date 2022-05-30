@@ -3,10 +3,11 @@ package org.digma.intellij.plugin.ui.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.ui.content.Content
-import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
-import org.digma.intellij.plugin.model.rest.summary.MethodCodeObjectSummary
+import org.digma.intellij.plugin.errors.ErrorsProvider
+import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 import org.digma.intellij.plugin.ui.panels.ResettablePanel
+import java.util.*
 
 class ErrorsViewService(val project: Project) {
 
@@ -14,25 +15,31 @@ class ErrorsViewService(val project: Project) {
     lateinit var model: ErrorsModel
     lateinit var toolWindow: ToolWindow
     lateinit var errorsContent: Content
+    private val errorsProvider: ErrorsProvider = project.getService(ErrorsProvider::class.java)
 
-    fun updateSelectedMethod(
-        methodUnderCaret: MethodUnderCaret,
-        methodCodeObjectSummary: MethodCodeObjectSummary?
+
+    fun contextChanged(
+        methodInfo: MethodInfo
     ) {
-        model.methodName = methodUnderCaret.name
-        model.errorsCount = 0
-        methodCodeObjectSummary?.let { it ->
-            it.insightsCount.also {
-                model.errorsCount = it
-            }
-        }
+
+
+        val errorsListContainer = errorsProvider.getErrors(methodInfo)
+        model.listViewItems = errorsListContainer.listViewItems
+        model.scope = methodInfo
+        model.className = methodInfo.containingClass
+        model.methodName = methodInfo.name
+
         panel.reset()
     }
 
     fun empty() {
+        model.listViewItems = Collections.emptyList()
+        model.scope = null
+        model.className = ""
+        model.methodName = ""
 
+        panel.reset()
     }
-
 
     fun setVisible(visible: Boolean) {
         toolWindow.contentManager.setSelectedContent(errorsContent, true)
@@ -42,6 +49,5 @@ class ErrorsViewService(val project: Project) {
         this.toolWindow = toolWindow
         this.errorsContent = errorsContent
     }
-
 
 }

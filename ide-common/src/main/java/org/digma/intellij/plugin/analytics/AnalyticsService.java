@@ -4,6 +4,7 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
@@ -49,6 +50,10 @@ public class AnalyticsService implements AnalyticsProvider, Disposable {
         return analyticsProviderProxy.getInsights(insightsRequest);
     }
 
+    @Override
+    public List<CodeObjectError> getErrorsOfCodeObject(String environment, String codeObjectId) {
+        return analyticsProviderProxy.getErrorsOfCodeObject(environment, codeObjectId);
+    }
 
     @Override
     public void dispose() {
@@ -63,7 +68,6 @@ public class AnalyticsService implements AnalyticsProvider, Disposable {
     public void close() throws IOException {
         dispose();
     }
-
 
 
     /**
@@ -85,8 +89,12 @@ public class AnalyticsService implements AnalyticsProvider, Disposable {
             try {
                 return method.invoke(analyticsProvider, args);
             } catch (Exception e) {
-                String argsStr = Arrays.stream(args).map(Object::toString).collect(Collectors.joining(","));
-                Log.error(LOGGER, e, "error invoking AnalyticsProvide.{}({}), exception {}", method.getName(),argsStr,e);
+                if (args != null && args.length > 0) {
+                    String argsStr = Arrays.stream(args).map(Object::toString).collect(Collectors.joining(","));
+                    Log.error(LOGGER, e, "error invoking AnalyticsProvide.{}({}), exception {}", method.getName(), argsStr, e);
+                } else {
+                    Log.error(LOGGER, e, "error invoking AnalyticsProvide.{}, exception {}", method.getName(), e);
+                }
                 //todo: we probably need to show some error message to user
                 return null;
             }

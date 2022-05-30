@@ -26,6 +26,8 @@ dependencies{
     implementation(project(":pycharm"))
     implementation(project(":rider"))
 
+    implementation("org.ocpsoft.prettytime:prettytime:5.0.3.Final")
+
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
     testImplementation(kotlin("test"))
 }

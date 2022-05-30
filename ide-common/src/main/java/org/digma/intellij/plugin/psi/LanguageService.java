@@ -35,4 +35,5 @@ public interface LanguageService {
     }
 
 
+    void navigateToMethod(String codeObjectId);
 }

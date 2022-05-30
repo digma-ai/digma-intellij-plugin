@@ -36,4 +36,9 @@ public class JavaLanguageService implements LanguageService {
         return null;
     }
 
+    @Override
+    public void navigateToMethod(String codeObjectId) {
+
+    }
+
 }

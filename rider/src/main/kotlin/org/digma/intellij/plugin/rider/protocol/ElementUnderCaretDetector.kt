@@ -22,7 +22,6 @@ class ElementUnderCaretDetector(private val project: Project) {
     @Suppress("NAME_SHADOWING")
     fun start(caretContextService: CaretContextService) {
 
-
         Log.log(LOGGER::info, "ElementUnderCaretDetector waiting for solution startup..")
         //todo: should wait for solution startup? it will impact maybeNotifyElementUnderCaret
         project.solution.solutionLifecycle.fullStartupFinished.advise(project.lifetime) {
@@ -30,31 +29,28 @@ class ElementUnderCaretDetector(private val project: Project) {
 
             // the listener starts when the tool windows is opened, by then there may be many notifyElementUnderCaret events
             // waiting and all will be processed. throttleLast makes sure to process only the last one.
-            model.notifyElementUnderCaret.throttleLast(Duration.ofMillis(200),
+            model.notifyElementUnderCaret.throttleLast(Duration.ofMillis(300),
                 SingleThreadScheduler(project.lifetime, "notifyElementUnderCaret")).advise(project.lifetime) {
                 val methodUnderCaret: MethodUnderCaretEvent? = model.elementUnderCaret.valueOrNull
                 Log.log(LOGGER::info, "Got MethodUnderCaretEvent signal: {}", methodUnderCaret)
                 notifyElementUnderCaret(methodUnderCaret, caretContextService)
             }
         }
-
-//        val mergeQueue: MergingUpdateQueue = MergingUpdateQueue("notifyElementUnderCaret",
-//            500,
-//            true,
-//            null,project)
-//        mergeQueue.activate()
-//        model.notifyElementUnderCaret.grouppedFire(mergeQueue)
-//        model.notifyElementUnderCaret.advise(project.lifetime) {
-//            val elementUnderCaret: ElementUnderCaret? = model.elementUnderCaret.valueOrNull
-//            notifyElementUnderCaret(elementUnderCaret, caretContextService)
-//        }
     }
+
+
+
+    fun emptyModel() {
+        model.elementUnderCaret.set(MethodUnderCaretEvent("","","",""))
+    }
+
+
 
     private fun notifyElementUnderCaret(
         elementUnderCaret: MethodUnderCaretEvent?,
         caretContextService: CaretContextService
     ) {
-        if (elementUnderCaret == null || elementUnderCaret.fqn.isEmpty()) {
+        if (elementUnderCaret == null) {
             caretContextService.contextEmpty()
         } else {
             caretContextService.contextChanged(elementUnderCaret.toModel())
@@ -95,5 +91,6 @@ class ElementUnderCaretDetector(private val project: Project) {
         className = className,
         fileUri = fileUri
     )
+
 
 }

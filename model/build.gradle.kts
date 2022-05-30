@@ -7,8 +7,6 @@ plugins {
     id("common-kotlin")
 }
 
-
-
 dependencies {
     //this project needs jackson not retrofit,
     // but adding retrofit.jackson makes sure we use the same dependencies as
@@ -19,4 +17,10 @@ dependencies {
     compileOnly(libs.kotlin.stdlib.jdk8)
 
     implementation(project(":common"))
+
+    testImplementation(kotlin("test"))
+}
+
+tasks.test {
+    useJUnitPlatform()
 }

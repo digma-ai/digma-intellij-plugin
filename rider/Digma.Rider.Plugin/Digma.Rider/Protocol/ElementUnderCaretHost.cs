@@ -1,8 +1,10 @@
 using System;
 using Digma.Rider.Discovery;
+using Digma.Rider.Util;
 using JetBrains.Annotations;
 using JetBrains.Application.Threading;
 using JetBrains.Core;
+using JetBrains.DataFlow;
 using JetBrains.DocumentManagers;
 using JetBrains.DocumentManagers.Transactions;
 using JetBrains.Lifetimes;
@@ -23,6 +25,10 @@ using static Digma.Rider.Logging.Logger;
 
 namespace Digma.Rider.Protocol
 {
+    /// <summary>
+    /// This class listens to caret events and updates ElementUnderCaretModel when necessary.
+    /// ElementUnderCaretModel will generate events that the frontend catches and changes the plugin context.
+    /// </summary>
     [SolutionComponent]
     public class ElementUnderCaretHost
     {
@@ -32,6 +38,11 @@ namespace Digma.Rider.Protocol
         private readonly ITextControlManager _textControlManager;
         private readonly IShellLocks _shellLocks;
         private readonly ILogger _logger;
+
+        // ReSharper disable once NotAccessedField.Local
+        // make a dependency on EditorListener to hopefully start here
+        // only after EditorListener has started so it will be first in the listener list for text documents. probably 
+        // not really necessary!
         private readonly EditorListener _editorListener;
         private GroupingEvent _groupingEvent;
 
@@ -49,33 +60,96 @@ namespace Digma.Rider.Protocol
             _model = solution.GetProtocolSolution().GetElementUnderCaretModel();
 
 
+            //just for debugging
+            ///new TextControlsLoggerUtil(_textControlManager, _logger, _lifetime);
+            
+            
+            //todo: Currently one scenario is not covered: sometimes a document is opened but does not gain focus,
+            // our current behaviour in that case is that the model is cleared when the text control is added, and if the text control
+            // does not gain focus and does not generate a caret event it will be the opened document but our plugin
+            // context will be empty. touching the editor with the mouse will generate the caret event and the plugin context
+            // will change correctly.
+            // the desired behaviour is probably even if the text control didn't gain focus we still want to show the methods
+            // preview list.
+            // to fix that we can send an ElementUnderCaret event with only fileUri when the text control is added to VisibleTextControls
+            // so that our context will change and the insights preview list will show. but then when clicking a link in the list
+            // the MethodNavigator will not find the method in LastFocusedTextControl and needs to try also the text controls in 
+            // VisibleTextControls
+            
             Register();
         }
 
         private void Register()
         {
+
+            _textControlManager.TextControls.BeforeAddRemove.Advise(_lifetime, h =>
+            {
+                if (h.IsAdding)
+                {
+                    //always clear the context when adding a text control. if the text control will gain focus it will 
+                    //generate a caret event and the context will be changed.
+                    Log(_logger, "Clearing model on TextControls BeforeAddRemove, adding {0}", h.Value?.Document);
+                    ClearModel();
+                }
+            });
+            
+            _textControlManager.TextControls.AddRemove.Advise(_lifetime, h =>
+            {
+                if (h.IsRemoving)
+                {
+                    if (_textControlManager.TextControls.Count == 0)
+                    {
+                        //need to clear the context when the last text control is removed. i.e when closing 
+                        //the last one or 'close all tabs'.
+                        Log(_logger, "Last text control removed, clearing model");
+                        ClearModel();
+                    }
+                }
+            });
+
+
             _textControlManager.FocusedTextControlPerClient.ForEachValue_NotNull_AllClients(_lifetime,
-                (lifetime1, textControl) =>
+                (_, textControl) =>
                 {
                     _groupingEvent = _shellLocks.CreateGroupingEvent(textControl.Lifetime,
                         "ElementUnderCaretHost::CaretPositionChanged", TimeSpan.FromMilliseconds(300),
                         OnChange);
                     textControl.Caret.Position.Change.Advise(textControl.Lifetime,
-                        cph => { _groupingEvent.FireIncoming(); });
+                        h =>
+                        {
+                            //Log(_logger, "Caret.Position.Change event for {0} new pos:{1}, old pos:{2}",textControl.Document,h.GetNewOrNull(),h.GetOldOrNull());
+                            _groupingEvent.FireIncoming();
+                        });
                 });
         }
 
 
         private void OnChange()
         {
+            Log(_logger, "OnChange invoked");
             var textControl = _textControlManager.LastFocusedTextControlPerClient.ForCurrentClient();
             if (textControl == null || textControl.Lifetime.IsNotAlive)
             {
-                Log(_logger, "OnChange TextControl is null");
-                EmptyModel();
+                Log(_logger, "OnChange TextControl is null or not alive, clearing model");
+                ClearModel();
                 return;
             }
 
+            if (!_textControlManager.VisibleTextControls.Contains(textControl))
+            {
+                //if textControl is not visible then clear the context.
+                //sometimes there is a caret event for a document that lost focus even if the caret is not placed 
+                //on another document.
+                Log(_logger, "textControl {0} had a caret event but is not visible,Clearing model", textControl.Document);
+                ClearModel();
+                return;
+            }
+
+            OnChange(textControl);
+        }
+
+        private void OnChange(ITextControl textControl)
+        {
             Log(_logger, "Trying to discover method under caret for {0}", textControl.Document);
             using (ReadLockCookie.Create())
             {
@@ -90,23 +164,52 @@ namespace Digma.Rider.Protocol
                     var fileUri = Identities.ComputeFileUri(psiSourceFile);
                     var newElementUnderCaret =
                         new MethodUnderCaretEvent(methodFqn, methodName, className, fileUri);
-                    if (!newElementUnderCaret.Equals(_model.ElementUnderCaret.Maybe.ValueOrDefault))
-                    {
-                        _model.ElementUnderCaret.Value = newElementUnderCaret;
-                        _model.NotifyElementUnderCaret.Fire(Unit.Instance);
-                    }
+                    UpdateModel(newElementUnderCaret);
                 }
                 else
                 {
                     Log(_logger, "No function under caret for {0}", textControl.Document);
-                    EmptyModel();
+                    NotifyWithFileUri(psiSourceFile);
                 }
             }
         }
 
 
-        private void EmptyModel()
+        private void NotifyWithFileUri([CanBeNull] IPsiSourceFile psiSourceFile)
         {
+            if (psiSourceFile == null)
+            {
+                ClearModel();
+            }
+            else
+            {
+                var fileUri = Identities.ComputeFileUri(psiSourceFile);
+                Log(_logger, "Updating model with fileUri {0}", fileUri);
+                var newElementUnderCaret =
+                    new MethodUnderCaretEvent(string.Empty, string.Empty, string.Empty, fileUri);
+                UpdateModel(newElementUnderCaret);
+            }
+        }
+
+
+        private void UpdateModel([NotNull] MethodUnderCaretEvent newMethodUnderCaretEvent)
+        {
+            if (!newMethodUnderCaretEvent.Equals(_model.ElementUnderCaret.Maybe.ValueOrDefault))
+            {
+                Log(_logger, "Updating model with {0}", newMethodUnderCaretEvent);
+                _model.ElementUnderCaret.Value = newMethodUnderCaretEvent;
+                _model.NotifyElementUnderCaret.Fire(Unit.Instance);
+            }
+            else
+            {
+                Log(_logger, "Not Updating model because method under caret is the same as previous: {0}",
+                    newMethodUnderCaretEvent);
+            }
+        }
+
+        private void ClearModel()
+        {
+            Log(_logger, "Clearing model to empty values");
             _model.ElementUnderCaret.Value =
                 new MethodUnderCaretEvent(string.Empty, string.Empty, string.Empty, string.Empty);
             _model.NotifyElementUnderCaret.Fire(Unit.Instance);

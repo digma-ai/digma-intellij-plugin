@@ -33,7 +33,7 @@ abstract class PanelList(val project: Project, listViewItems: List<ListViewItem<
         model.addListDataListener(this)
         model.addListDataListener(cellRenderer)
         this.layout = BoxLayout(this, BoxLayout.Y_AXIS)
-        this.border = Borders.empty(10)
+        this.border = Borders.empty(5)
         this.background = getListBackground()
         this.isOpaque = true
     }
@@ -87,7 +87,7 @@ abstract class PanelList(val project: Project, listViewItems: List<ListViewItem<
 
     private fun rebuild() {
 
-        Log.log(LOGGER::info, "in rebuild,model size: {}", model.size)
+        Log.log(LOGGER::info, "{} in rebuild,model size: {}",this.javaClass.simpleName, model.size)
 
         if (components.isNotEmpty()) {
             this.components.forEach {
@@ -99,14 +99,12 @@ abstract class PanelList(val project: Project, listViewItems: List<ListViewItem<
         if (model.size <= 0)
             return
 
-        add(Box.createVerticalStrut(10))
-
         for (i in 0 until model.getSize()) run {
             cellRenderer.apply {
                 val newComp: JPanel = getListCellRendererComponent(project,this@PanelList,
                     model.getElementAt(i), i, this@PanelList.hasFocus())
                 add(newComp)
-                add(Box.createVerticalStrut(20))
+                add(Box.createVerticalStrut(10))
             }
 
         }

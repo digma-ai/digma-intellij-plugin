@@ -10,6 +10,8 @@ intellij {
 }
 
 dependencies {
+    implementation("org.ocpsoft.prettytime:prettytime:5.0.3.Final")
+
     implementation(project(":model"))
     implementation(project(":analytics-provider"))
 

@@ -42,7 +42,7 @@ public class CSharpLanguageService implements LanguageService {
 
     @Override
     public void navigateToMethod(String codeObjectId) {
-        Log.log(LOGGER::info, "Navigating to method {}", codeObjectId);
+        Log.log(LOGGER::debug, "Navigating to method {}", codeObjectId);
         methodNavigationHost.navigateToMethod(codeObjectId);
     }
 

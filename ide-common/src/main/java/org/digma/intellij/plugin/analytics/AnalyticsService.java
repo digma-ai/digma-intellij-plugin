@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.analytics;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
@@ -78,6 +79,8 @@ public class AnalyticsService implements AnalyticsProvider, Disposable {
 
         private AnalyticsProvider analyticsProvider;
 
+        private ObjectMapper objectMapper = new ObjectMapper();
+
         public AnalyticsInvocationHandler(AnalyticsProvider analyticsProvider) {
             this.analyticsProvider = analyticsProvider;
         }
@@ -87,7 +90,18 @@ public class AnalyticsService implements AnalyticsProvider, Disposable {
         public Object invoke(Object proxy, Method method, Object[] args)
                 throws Throwable {
             try {
-                return method.invoke(analyticsProvider, args);
+
+                if (LOGGER.isDebugEnabled()) {
+                    Log.log(LOGGER::debug, "Sending request to {}: args '{}'",method.getName(), argsToString(args));
+                }
+
+                Object result = method.invoke(analyticsProvider, args);
+
+                if (LOGGER.isDebugEnabled()) {
+                    Log.log(LOGGER::debug, "Got response from {}: args '{}', result '{}'",method.getName(), argsToString(args),resultToString(result));
+                }
+
+                return result;
             } catch (Exception e) {
                 if (args != null && args.length > 0) {
                     String argsStr = Arrays.stream(args).map(Object::toString).collect(Collectors.joining(","));
@@ -100,6 +114,23 @@ public class AnalyticsService implements AnalyticsProvider, Disposable {
             }
 
         }
+
+
+        private String resultToString(Object result) {
+            try{
+                return objectMapper.writeValueAsString(result);
+            }catch (Exception e){
+                return "Error parsing object "+e.getMessage();
+            }
+        }
+        private String argsToString(Object[] args){
+            try {
+                return (args == null || args.length == 0) ? "" : Arrays.stream(args).map(Object::toString).collect(Collectors.joining(","));
+            }catch (Exception e){
+                return "Error parsing args "+e.getMessage();
+            }
+        }
+
     }
 
     private AnalyticsProvider newAnalyticsProviderProxy(AnalyticsProvider obj) {

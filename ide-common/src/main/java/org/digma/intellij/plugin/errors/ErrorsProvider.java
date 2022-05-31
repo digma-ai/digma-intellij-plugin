@@ -32,7 +32,7 @@ public class ErrorsProvider {
     public ErrorsListContainer getErrors(@NotNull MethodInfo methodInfo) {
         final List<CodeObjectError> codeObjectErrors = analyticsProvider.getErrorsOfCodeObject(
                 environment.getCurrent(), methodInfo.getId());
-        Log.log(LOGGER::info, "CodeObjectErrors for {}: {}", methodInfo, codeObjectErrors);
+        Log.log(LOGGER::debug, "CodeObjectErrors for {}: {}", methodInfo, codeObjectErrors);
 
         final List<ListViewItem<CodeObjectError>> lviList = codeObjectErrors
                 .stream()

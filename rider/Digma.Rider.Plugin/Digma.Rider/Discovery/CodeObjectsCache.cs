@@ -24,6 +24,13 @@ namespace Digma.Rider.Discovery
             : base(lifetime, locks, persistentIndexManager, new DocumentMarshaller())
         {
             _logger = logger;
+            
+            //TODO:High Priority: currently we depend on resharper's cache to be ready before we can build our cache.
+            // if resharper cache is not ready we can't resolve references and will not discover spans.
+            // ClearOnLoad will force rebuild of the cache on every restart, if resharper cache is not 
+            // ready or user invalidates caches then an extra restart will build our cache.
+            // this is temporary until the above issue is fixed.
+            ClearOnLoad = true;
         }
 
 
@@ -43,7 +50,7 @@ namespace Digma.Rider.Discovery
                 if (cSharpFile == null) 
                     continue;
                 
-                var discoveryProcessor = new CodeObjectsDiscoveryProcessor(fileUri);
+                var discoveryProcessor = new CodeObjectsDiscoveryFileProcessor(fileUri,cSharpFile);
                 cSharpFile.ProcessDescendants(discoveryProcessor);
                 var methodInfos = discoveryProcessor.MethodInfos;
                 foreach (var riderMethodInfo in methodInfos)
@@ -67,13 +74,14 @@ namespace Digma.Rider.Discovery
                                properties.ProvidesCodeModel && 
                                properties.IsICacheParticipant;
             Log(_logger,"IsApplicable sf = {0}, applicable = {1}",sf,isApplicable);
+            
             return isApplicable;
         }
 
 
         public override object Load(IProgressIndicator progress, bool enablePersistence)
         {
-            Log(_logger,"Load enablePersistence = {0}",enablePersistence);
+            Log(_logger,"Load, enablePersistence = {0}",enablePersistence);
             return base.Load(progress, enablePersistence);
         }
 
@@ -146,5 +154,13 @@ namespace Digma.Rider.Discovery
             Log(_logger,"SyncUpdate underTransaction = {0}",underTransaction);
             base.SyncUpdate(underTransaction);
         }
+
+        public override bool UpToDate(IPsiSourceFile sourceFile)
+        {
+            bool upToDate = base.UpToDate(sourceFile);
+            Log(_logger,"UpToDate {0} for sourceFile = {1}",upToDate,sourceFile);
+            return upToDate;
+        }
+        
     }
 }

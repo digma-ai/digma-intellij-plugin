@@ -8,6 +8,7 @@ import org.digma.intellij.plugin.document.DocumentCodeObjectsChanged
 import org.digma.intellij.plugin.model.lens.CodeLens
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
+import org.digma.intellij.plugin.model.discovery.SpanInfo
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.annotations.NotNull
 import java.util.function.Consumer
@@ -29,10 +30,6 @@ class CodeObjectHost(val project: Project) {
         return toModel(document)
     }
 
-    private fun toModel(document: Document?): DocumentInfo? {
-        return document?.toDocumentInfo()
-    }
-
 
 
     fun installCodeLens(@NotNull psiFile: PsiFile, @NotNull codeLenses: MutableList<CodeLens>) {
@@ -43,7 +40,7 @@ class CodeObjectHost(val project: Project) {
             model.codeLens[codeLens.codeObjectId] = codeLens.toRiderCodeLensInfo()
         })
 
-        var documentKey = PsiUtils.psiFileToDocumentProtocolKey(psiFile)
+        val documentKey = PsiUtils.psiFileToDocumentProtocolKey(psiFile)
         model.reanalyze.fire(documentKey)
     }
 
@@ -72,6 +69,10 @@ class CodeObjectHost(val project: Project) {
 
 
 
+    private fun toModel(document: Document?): DocumentInfo? {
+        return document?.toDocumentInfo()
+    }
+
 
     private fun Document.toDocumentInfo() = DocumentInfo(
         path = fileUri,
@@ -93,6 +94,23 @@ class CodeObjectHost(val project: Project) {
         name = name,
         containingClass = containingClass,
         containingNamespace = containingNamespace,
+        containingFileUri = containingFileUri,
+        spans = toSpansList(spans)
+    )
+
+    private fun toSpansList(spans: List<RiderSpanInfo>): List<SpanInfo> {
+        val modelSpans = ArrayList<SpanInfo>()
+        spans.forEach {
+            modelSpans.add(it.toSpanInfo())
+        }
+        return modelSpans
+    }
+
+
+    private fun RiderSpanInfo.toSpanInfo() = SpanInfo(
+        id = id,
+        name = name,
+        containingMethod = containingMethod,
         containingFileUri = containingFileUri
     )
 

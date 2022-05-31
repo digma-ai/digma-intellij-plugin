@@ -60,7 +60,7 @@ public class DocumentInfoService implements EnvironmentChanged {
 
     //called after a document is analyzed for code objects
     public void addCodeObjects(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
-        Log.log(LOGGER::info, "Adding DocumentInfo for {},{}",psiFile,documentInfo);
+        Log.log(LOGGER::debug, "Adding DocumentInfo for {},{}",psiFile,documentInfo);
         DocumentInfoContainer documentInfoContainer = documents.computeIfAbsent(psiFile, DocumentInfoContainer::new);
         documentInfoContainer.update(documentInfo, analyticsProvider, environment.getCurrent());
         notifyDocumentInfoChanged(psiFile);

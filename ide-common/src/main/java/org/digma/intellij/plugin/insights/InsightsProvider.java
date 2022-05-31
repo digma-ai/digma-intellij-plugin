@@ -4,7 +4,6 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.analytics.AnalyticsProvider;
 import org.digma.intellij.plugin.analytics.Environment;
-import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.insights.view.BuildersHolder;
 import org.digma.intellij.plugin.insights.view.InsightsViewBuilder;
 import org.digma.intellij.plugin.log.Log;
@@ -23,14 +22,12 @@ public class InsightsProvider {
 
     private final AnalyticsProvider analyticsProvider;
     private final Environment environment;
-    private final DocumentInfoService documentInfoService;
 
     private final BuildersHolder buildersHolder = new BuildersHolder();
 
     public InsightsProvider(Project project) {
         analyticsProvider = project.getService(AnalyticsProvider.class);
         environment = project.getService(Environment.class);
-        documentInfoService = project.getService(DocumentInfoService.class);
     }
 
     public InsightsListContainer getInsights(@NotNull MethodInfo methodInfo) {
@@ -38,14 +35,14 @@ public class InsightsProvider {
         List<String> objectIds = new ArrayList<>();
         objectIds.add(methodInfo.idWithType());
         objectIds.addAll(methodInfo.getRelatedCodeObjectIds());
-
+        Log.log(LOGGER::info, "Got {} code object ids for method {}",objectIds.size(), methodInfo.getId());
 
         List<CodeObjectInsight> codeObjectInsights = analyticsProvider.getInsights(new InsightsRequest(environment.getCurrent(), objectIds));
-        Log.log(LOGGER::info, "CodeObjectInsights for {}: {}", methodInfo, codeObjectInsights);
+        Log.log(LOGGER::debug, "CodeObjectInsights for {}: {}", methodInfo, codeObjectInsights);
 
         InsightsViewBuilder insightsViewBuilder = new InsightsViewBuilder(buildersHolder);
         List<ListViewItem<?>> listViewItems = insightsViewBuilder.build(methodInfo, codeObjectInsights);
-        Log.log(LOGGER::info, "ListViewItems for {}: {}", methodInfo, listViewItems);
+        Log.log(LOGGER::debug, "ListViewItems for {}: {}", methodInfo, listViewItems);
 
         return new InsightsListContainer(listViewItems, codeObjectInsights.size());
 

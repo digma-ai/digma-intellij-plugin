@@ -1,6 +1,5 @@
 using Digma.Rider.Protocol;
 using JetBrains.Annotations;
-using JetBrains.Rd.Base;
 using JetBrains.Util;
 
 namespace Digma.Rider.Logging
@@ -9,7 +8,7 @@ namespace Digma.Rider.Logging
     {
         public static void Log(ILogger logger, string message, params object[] parameters)
         {
-            logger.Info("Digma: " + message, parameters);
+            logger.Trace("Digma: " + message, parameters);
         }
         
         
@@ -22,7 +21,7 @@ namespace Digma.Rider.Logging
             }
             else
             {
-                if (logger.IsInfoEnabled())
+                if (logger.IsTraceEnabled())
                 {
                     var methodInfosStr = string.Join("", methodInfos);
                     Log(logger, "Found Methods for document {0}, methods: {1}", document.FileUri,

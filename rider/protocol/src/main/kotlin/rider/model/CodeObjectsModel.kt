@@ -15,6 +15,14 @@ class CodeObjectsModel : Ext(SolutionModel.Solution) {
         field("containingClass", PredefinedType.string)
         field("containingNamespace", PredefinedType.string)
         field("containingFileUri", PredefinedType.string)
+        field("spans", immutableList(RiderSpanInfo))
+    }
+
+    private val RiderSpanInfo = structdef {
+        field("id", PredefinedType.string)
+        field("name", PredefinedType.string)
+        field("containingMethod", PredefinedType.string)
+        field("containingFileUri", PredefinedType.string)
     }
 
 

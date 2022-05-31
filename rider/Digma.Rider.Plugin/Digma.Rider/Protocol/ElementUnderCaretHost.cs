@@ -4,14 +4,12 @@ using Digma.Rider.Util;
 using JetBrains.Annotations;
 using JetBrains.Application.Threading;
 using JetBrains.Core;
-using JetBrains.DataFlow;
 using JetBrains.DocumentManagers;
 using JetBrains.DocumentManagers.Transactions;
 using JetBrains.Lifetimes;
 using JetBrains.ProjectModel;
 using JetBrains.RdBackend.Common.Features;
 using JetBrains.ReSharper.Psi;
-using JetBrains.ReSharper.Psi.CSharp;
 using JetBrains.ReSharper.Psi.CSharp.Tree;
 using JetBrains.ReSharper.Psi.Files;
 using JetBrains.ReSharper.Psi.Tree;
@@ -62,8 +60,8 @@ namespace Digma.Rider.Protocol
 
             //just for debugging
             ///new TextControlsLoggerUtil(_textControlManager, _logger, _lifetime);
-            
-            
+
+
             //todo: Currently one scenario is not covered: sometimes a document is opened but does not gain focus,
             // our current behaviour in that case is that the model is cleared when the text control is added, and if the text control
             // does not gain focus and does not generate a caret event it will be the opened document but our plugin
@@ -75,13 +73,12 @@ namespace Digma.Rider.Protocol
             // so that our context will change and the insights preview list will show. but then when clicking a link in the list
             // the MethodNavigator will not find the method in LastFocusedTextControl and needs to try also the text controls in 
             // VisibleTextControls
-            
+
             Register();
         }
 
         private void Register()
         {
-
             _textControlManager.TextControls.BeforeAddRemove.Advise(_lifetime, h =>
             {
                 if (h.IsAdding)
@@ -92,7 +89,7 @@ namespace Digma.Rider.Protocol
                     ClearModel();
                 }
             });
-            
+
             _textControlManager.TextControls.AddRemove.Advise(_lifetime, h =>
             {
                 if (h.IsRemoving)
@@ -130,7 +127,7 @@ namespace Digma.Rider.Protocol
             var textControl = _textControlManager.LastFocusedTextControlPerClient.ForCurrentClient();
             if (textControl == null || textControl.Lifetime.IsNotAlive)
             {
-                Log(_logger, "OnChange TextControl is null or not alive, clearing model");
+                Log(_logger, "OnChange LastFocusedTextControl is null or not alive, clearing model");
                 ClearModel();
                 return;
             }
@@ -140,7 +137,8 @@ namespace Digma.Rider.Protocol
                 //if textControl is not visible then clear the context.
                 //sometimes there is a caret event for a document that lost focus even if the caret is not placed 
                 //on another document.
-                Log(_logger, "textControl {0} had a caret event but is not visible,Clearing model", textControl.Document);
+                Log(_logger, "textControl {0} had a caret event but is not visible,Clearing model",
+                    textControl.Document);
                 ClearModel();
                 return;
             }
@@ -154,8 +152,24 @@ namespace Digma.Rider.Protocol
             using (ReadLockCookie.Create())
             {
                 var psiSourceFile = _documentManager.GetProjectFile(textControl.Document).ToSourceFile();
-                var functionDeclaration = GetFunctionUnderCaret(textControl);
-                if (functionDeclaration != null && psiSourceFile != null)
+                if (psiSourceFile == null || !psiSourceFile.GetPsiServices().Files.IsCommitted(psiSourceFile))
+                {
+                    Log(_logger, "PsiSourceFile not found for textControl {0},Clearing model", textControl.Document);
+                    ClearModel();
+                    return;
+                }
+
+                if (!PsiUtils.IsPsiSourceFileApplicable(psiSourceFile))
+                {
+                    Log(_logger, "PsiSourceFile {0} is not applicable for method under caret,Clearing model",
+                        psiSourceFile);
+                    ClearModel();
+                    return;
+                }
+
+
+                var functionDeclaration = GetFunctionUnderCaret(textControl, psiSourceFile);
+                if (functionDeclaration != null)
                 {
                     Log(_logger, "Got function under caret: {0} for {1}", functionDeclaration, textControl.Document);
                     var methodFqn = Identities.ComputeFqn(functionDeclaration);
@@ -217,46 +231,23 @@ namespace Digma.Rider.Protocol
 
 
         [CanBeNull]
-        private ICSharpFunctionDeclaration GetFunctionUnderCaret(ITextControl textControl)
+        private ICSharpFunctionDeclaration GetFunctionUnderCaret([NotNull] ITextControl textControl,
+            [NotNull] IPsiSourceFile psiSourceFile)
         {
-            using (ReadLockCookie.Create())
+            var node = GetTreeNodeUnderCaret(textControl, psiSourceFile);
+            if (node?.GetParentOfType<IInterfaceDeclaration>() != null)
             {
-                var node = GetTreeNodeUnderCaret(textControl);
-                if (node?.GetParentOfType<IInterfaceDeclaration>() != null)
-                {
-                    //Ignore interfaces
-                    return null;
-                }
-
-                return node?.GetParentOfType<ICSharpFunctionDeclaration>();
+                //Ignore interfaces
+                return null;
             }
+
+            return node?.GetParentOfType<ICSharpFunctionDeclaration>();
         }
 
 
         [CanBeNull]
-        private ITreeNode GetTreeNodeUnderCaret(ITextControl textControl)
+        private ITreeNode GetTreeNodeUnderCaret(ITextControl textControl, IPsiSourceFile psiSourceFile)
         {
-            var psiSourceFile = _documentManager.GetProjectFile(textControl.Document).ToSourceFile();
-            if (psiSourceFile == null || !psiSourceFile.GetPsiServices().Files.IsCommitted(psiSourceFile))
-            {
-                Log(_logger, "PsiSourceFile {0} is null or not committed", psiSourceFile);
-                return null;
-            }
-
-            var properties = psiSourceFile.Properties;
-            var primaryPsiLanguage = psiSourceFile.PrimaryPsiLanguage;
-            var isApplicable = !primaryPsiLanguage.IsNullOrUnknown() &&
-                               !properties.IsGeneratedFile &&
-                               primaryPsiLanguage.Is<CSharpLanguage>() &&
-                               properties.ShouldBuildPsi &&
-                               properties.ProvidesCodeModel;
-
-            if (!isApplicable)
-            {
-                Log(_logger, "PsiSourceFile {0} is not applicable for method under caret", psiSourceFile);
-                return null;
-            }
-
             var projectFile = _documentManager.GetProjectFile(textControl.Document);
             if (!projectFile.LanguageType.Is<CSharpProjectFileType>())
                 return null;

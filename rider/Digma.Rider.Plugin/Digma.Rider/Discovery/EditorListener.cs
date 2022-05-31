@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using Digma.Rider.Protocol;
+using Digma.Rider.Util;
+using JetBrains.Annotations;
 using JetBrains.Application.Threading;
 using JetBrains.DataFlow;
 using JetBrains.DocumentManagers;
@@ -47,7 +49,6 @@ namespace Digma.Rider.Discovery
             _codeObjectsHost = codeObjectsHost;
             _shellLocks = shellLocks;
 
-            textControlManager.TextControls.BeforeAddRemove.Advise(lifetime, BeforeAddRemoveDocumentHandler);
             textControlManager.TextControls.AddRemove.Advise(lifetime, AddRemoveDocumentHandler);
         }
 
@@ -60,100 +61,94 @@ namespace Digma.Rider.Discovery
         // changes on existing and new documents.
         private void AddRemoveDocumentHandler(AddRemoveEventArgs<ITextControl> addRemoveEvent)
         {
-            Log(_logger, "Got AddRemoveEvent for TextControl {0}", addRemoveEvent);
+            Log(_logger, "Got AddRemoveEvent for TextControl {0}", addRemoveEvent.Value?.Document);
             if (addRemoveEvent.Value == null || addRemoveEvent.Value.Lifetime.IsNotAlive)
+            {
+                Log(_logger, "TextControl is null or not alive {0}", addRemoveEvent.Value?.Document);
                 return;
+            }
 
             if (addRemoveEvent.IsAdding)
             {
                 var textControl = addRemoveEvent.Value;
                 Log(_logger, "TextControl Added {0}", textControl.Document);
+                IPsiSourceFile psiSourceFile;
+                using (ReadLockCookie.Create())
+                {
+                    psiSourceFile = _documentManager.GetProjectFile(textControl.Document).ToSourceFile();
+                    //psiSourceFile can be a non project file, for example libraries classes
+                    if (psiSourceFile == null || !psiSourceFile.GetPsiServices().Files.IsCommitted(psiSourceFile))
+                    {
+                        Log(_logger, "PsiSourceFile '{0}' for TextControl {1} is null or not committed", psiSourceFile,
+                            textControl.Document);
+                        return;
+                    }
+                }
+
+                if (!PsiUtils.IsPsiSourceFileApplicable(psiSourceFile))
+                {
+                    Log(_logger, "PsiSourceFile '{0}' for TextControl {1} is not applicable", psiSourceFile,
+                        textControl.Document);
+                    return;
+                }
+
+                Log(_logger, "Found PsiSourceFile '{0}' for TextControl {1}", psiSourceFile, textControl.Document);
+
                 var documentChangeTracker =
-                    new DocumentChangeTracker(this, textControl, _logger, _shellLocks);
+                    new DocumentChangeTracker(this, psiSourceFile, textControl, _logger, _shellLocks);
                 textControl.Lifetime.AddDispose(documentChangeTracker);
-                HandleDocumentOpenChange(textControl);
+
+                HandleDocumentOpenChange(psiSourceFile);
             }
         }
 
 
-        //this method handles only the remove event before the text control is fully removed.
-        //in case we want to do something while the psi source file can still be found.
-        //todo: currently this method only logs a message, maybe we need to do something here when TextControl is removed?
-        private void BeforeAddRemoveDocumentHandler(BeforeAddRemoveEventArgs<ITextControl> addRemoveEvent)
+
+
+        private void HandleDocumentOpenChange([NotNull] IPsiSourceFile psiSourceFile)
         {
-            Log(_logger, "Got BeforeAddRemoveEvent for TextControl {0}", addRemoveEvent);
-            if (addRemoveEvent.Value == null)
+            var document = _codeObjectsCache.Map.TryGetValue(psiSourceFile);
+            if (document == null)
+            {
+                Log(_logger,"Document for PsiSourceFile '{0}' was not found in cache. probably a new document or a document with no code objects.",
+                    psiSourceFile);
                 return;
-            if (addRemoveEvent.IsRemoving)
-            {
-                var textControl = addRemoveEvent.Value;
-                Log(_logger, "TextControl Removed {0}", textControl.Document);
-                var psiSourceFile = _documentManager.GetProjectFile(textControl.Document).ToSourceFile();
-                if (psiSourceFile != null)
-                {
-                    Log(_logger, "Found PsiSourceFile {0} for removed TextControl {1}", psiSourceFile,
-                        textControl.Document);
-                    //todo: maybe remove document from CodeObjectsHost for the textControl
-                }
-                else
-                {
-                    Log(_logger, "Could not find PsiSourceFile for removed TextControl {1}", textControl.Document);
-                }
-            }
-        }
-
-
-
-        private void HandleDocumentOpenChange(ITextControl textControl)
-        {
-            using (ReadLockCookie.Create())
-            {
-                var psiSourceFile = _documentManager.GetProjectFile(textControl.Document).ToSourceFile();
-                if (psiSourceFile == null || !psiSourceFile.GetPsiServices().Files.AllDocumentsAreCommitted)
-                {
-                    Log(_logger, "PsiSourceFile {0} for TextControl {1} is null or not committed", psiSourceFile,
-                        textControl.Document);
-                    return;
-                }
-
-                Log(_logger, "Found PsiSourceFile {0} for TextControl {1}", psiSourceFile, textControl.Document);
-                var document = _codeObjectsCache.Map.TryGetValue(psiSourceFile);
-                if (document == null)
-                {
-                    Log(_logger, "Document for PsiSourceFile {0} was not found in cache. probably a new document or a document with no code objects.",
-                        psiSourceFile);
-                    return;
-                }
-
-                LogFoundMethodsForDocument(_logger, document);
-
-                //no need to add or notify frontend if no methods found
-                if (EnumerableExtensions.IsEmpty(document.Methods))
-                    return;
-
-                _codeObjectsHost.AddOpenChangeDocument(psiSourceFile, document);
             }
 
+            Log(_logger,"Found cached Document for PsiSourceFile '{0}'", psiSourceFile);
+            LogFoundMethodsForDocument(_logger, document);
+
+            //no need to add or notify frontend if no methods found
+            if (EnumerableExtensions.IsEmpty(document.Methods))
+            {
+                Log(_logger,"Document for PsiSourceFile '{0}' does not contain code objects. Not updating the protocol.", psiSourceFile);
+                return;
+            }
+
+            _codeObjectsHost.AddOpenChangeDocument(psiSourceFile, document);
         }
-        
 
         
         
         
-        
+
         [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         private class DocumentChangeTracker : IDisposable
         {
             private readonly EditorListener _parent;
+            private readonly IPsiSourceFile _psiSourceFile;
             private readonly ITextControl _textControl;
             private readonly ILogger _logger;
             private readonly GroupingEvent _groupingEvent;
 
-            public DocumentChangeTracker(EditorListener parent,
-                ITextControl textControl, ILogger logger,
-                IThreading shellLocks)
+            public DocumentChangeTracker([NotNull] EditorListener parent,
+                [NotNull] IPsiSourceFile psiSourceFile,
+                [NotNull] ITextControl textControl, 
+                [NotNull] ILogger logger,
+                [NotNull] IThreading shellLocks)
             {
                 _parent = parent;
+                _psiSourceFile = psiSourceFile;
                 _textControl = textControl;
                 _logger = logger;
 
@@ -166,7 +161,7 @@ namespace Digma.Rider.Discovery
             private void DocumentChanged()
             {
                 Log(_logger, "DocumentChanged for doc {0}", _textControl.Document);
-                _parent.HandleDocumentOpenChange(_textControl);
+                _parent.HandleDocumentOpenChange(_psiSourceFile);
             }
 
             private void DocumentChangedEventGrouper(object sender, EventArgs<DocumentChange> args)

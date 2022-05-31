@@ -22,10 +22,10 @@ class DocumentCodeObjectsListener : ProjectManagerListener {
         project.solution.solutionLifecycle.fullStartupFinished.advise(project.lifetime) {
             val model = project.solution.codeObjectsModel
             model.documentAnalyzed.advise(project.lifetime) { documentKey ->
-                Log.log(LOGGER::info, "Got documentAnalyzed event for {}",documentKey)
+                Log.log(LOGGER::debug, "Got documentAnalyzed event for {}",documentKey)
                 var docUri = model.documents[documentKey]?.fileUri
                 if (docUri != null) {
-                    Log.log(LOGGER::info, "Found document for {}",documentKey)
+                    Log.log(LOGGER::debug, "Found document for {}",documentKey)
                     documentAnalyzed(docUri, project)
                 }
             }

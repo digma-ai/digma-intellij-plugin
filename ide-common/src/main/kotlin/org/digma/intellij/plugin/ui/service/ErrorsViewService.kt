@@ -41,7 +41,7 @@ class ErrorsViewService(val project: Project) {
         panel.reset()
     }
 
-    fun setVisible(visible: Boolean) {
+    fun setVisible() {
         toolWindow.contentManager.setSelectedContent(errorsContent, true)
     }
 

@@ -23,7 +23,7 @@ public class InsightsActionsService {
 
 
     public void errorsExpandButtonClicked(@NotNull ErrorInsight modelObject) {
-        errorsViewService.setVisible(true);
+        errorsViewService.setVisible();
     }
 
     public void navigateToMethod(@NotNull String codeObjectId) {

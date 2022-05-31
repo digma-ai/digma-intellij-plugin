@@ -41,6 +41,7 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
             insightsViewService.setPanel(insightsPanel);
             var insightsContent = contentFactory.createContent(insightsPanel, "Insights", false);
             toolWindow.getContentManager().addContent(insightsContent);
+            insightsViewService.setContent(toolWindow,insightsContent);
         }
 
         {

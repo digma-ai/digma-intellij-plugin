@@ -1,6 +1,8 @@
 package org.digma.intellij.plugin.ui.service
 
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.wm.ToolWindow
+import com.intellij.ui.content.Content
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.insights.InsightsListContainer
 import org.digma.intellij.plugin.insights.InsightsProvider
@@ -14,6 +16,8 @@ class InsightsViewService(val project: Project) {
 
     lateinit var panel: ResettablePanel
     lateinit var model: InsightsModel
+    lateinit var toolWindow: ToolWindow
+    lateinit var insightsContent: Content
     private val insightsProvider: InsightsProvider = project.getService(InsightsProvider::class.java)
 
 
@@ -73,8 +77,8 @@ class InsightsViewService(val project: Project) {
 
         model.listViewItems = ArrayList()
         model.card = InsightsTabCard.PREVIEW
-
         panel.reset()
+        setVisible()
     }
 
 
@@ -94,6 +98,13 @@ class InsightsViewService(val project: Project) {
     }
 
 
+    fun setVisible() {
+        toolWindow.contentManager.setSelectedContent(insightsContent, true)
+    }
 
+    fun setContent(toolWindow: ToolWindow, insightsContent: Content) {
+        this.toolWindow = toolWindow
+        this.insightsContent = insightsContent
+    }
 
 }

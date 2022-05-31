@@ -16,6 +16,8 @@ import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+
 /**
  * A service to implement the interactions between listeners and UI components.
  * All work should be done in the EDT.
@@ -46,7 +48,7 @@ public class EditorInteractionService implements CaretContextService, Disposable
     @Override
     public void contextChanged(MethodUnderCaret methodUnderCaret) {
 
-        Log.log(LOGGER::info, "contextChanged: {}", methodUnderCaret);
+        Log.log(LOGGER::debug, "contextChanged: {}", methodUnderCaret);
         /*
         Assuming here that we must have a MethodInfo in DocumentInfoService that was populated in an earlier stage.
         in Rider for example there is a cache that is updated as soon as documents change, and a listener that
@@ -62,21 +64,21 @@ public class EditorInteractionService implements CaretContextService, Disposable
 
 
         if (methodUnderCaret.getId().isBlank()) {
-            Log.log(LOGGER::info, "No id in methodUnderCaret,trying fileUri {}. ", methodUnderCaret);
+            Log.log(LOGGER::debug, "No id in methodUnderCaret,trying fileUri {}. ", methodUnderCaret);
             //if no id then try to show a preview for the document
             if (!methodUnderCaret.getFileUri().isBlank()){
-                Log.log(LOGGER::info, "Showing document preview for {}. ", methodUnderCaret);
+                Log.log(LOGGER::debug, "Showing document preview for {}. ", methodUnderCaret);
                 DocumentInfoContainer documentInfoContainer =  documentInfoService.getDocumentInfo(methodUnderCaret);
                 if (documentInfoContainer == null){
-                    Log.log(LOGGER::info, "Could not find document info for {}, Showing empty preview.", methodUnderCaret);
+                    Log.log(LOGGER::debug, "Could not find document info for {}, Showing empty preview.", methodUnderCaret);
                 }else{
-                    Log.log(LOGGER::info, "Found document info for {}. document: {}", methodUnderCaret,documentInfoContainer.getPsiFile());
+                    Log.log(LOGGER::debug, "Found document info for {}. document: {}", methodUnderCaret,documentInfoContainer.getPsiFile());
 
                 }
 
                 insightsViewService.showDocumentPreviewList(documentInfoContainer,methodUnderCaret.getFileUri());
             }else{
-                Log.log(LOGGER::info, "No id and no fileUri in methodUnderCaret,clearing context {}. ", methodUnderCaret);
+                Log.log(LOGGER::debug, "No id and no fileUri in methodUnderCaret,clearing context {}. ", methodUnderCaret);
                 contextEmpty();
             }
         }else{
@@ -86,9 +88,9 @@ public class EditorInteractionService implements CaretContextService, Disposable
                 //this happens when we don't have method info for a real method, usually when a class doesn't have
                 //code objects found during discovery, it can be synthetic or auto-generated methods.
                 //pass a dummy method info just to populate the view,the view is aware and will not try to query for insights.
-                insightsViewService.contextChangeNoMethodInfo(new MethodInfo(methodUnderCaret.getId(), methodUnderCaret.getName(), methodUnderCaret.getClassName(), "", methodUnderCaret.getFileUri()));
+                insightsViewService.contextChangeNoMethodInfo(new MethodInfo(methodUnderCaret.getId(), methodUnderCaret.getName(), methodUnderCaret.getClassName(), "", methodUnderCaret.getFileUri(),new ArrayList<>()));
             } else {
-                Log.log(LOGGER::info, "Context changed to MethodInfo {}. ", methodInfo);
+                Log.log(LOGGER::debug, "Context changed to MethodInfo {}. ", methodInfo);
                 insightsViewService.contextChanged(methodInfo);
                 //todo: errors panel
             }
@@ -99,7 +101,7 @@ public class EditorInteractionService implements CaretContextService, Disposable
 
     @Override
     public void contextEmpty() {
-        Log.log(LOGGER::info, "contextEmpty called");
+        Log.log(LOGGER::debug, "contextEmpty called");
         insightsViewService.empty();
     }
 
@@ -110,7 +112,7 @@ public class EditorInteractionService implements CaretContextService, Disposable
 
 
     public void start(@NotNull Project project) {
-        Log.log(LOGGER::debug, "starting..");
+        Log.log(LOGGER::info, "starting..");
         this.project = project;
         EditorEventsHandler editorEventsHandler = project.getService(EditorEventsHandler.class);
         LanguageService languageService = project.getService(LanguageService.class);

@@ -1,8 +1,10 @@
+using JetBrains.Annotations;
 using JetBrains.ReSharper.Psi;
+using JetBrains.ReSharper.Psi.CSharp;
 using JetBrains.ReSharper.Psi.CSharp.Tree;
 using JetBrains.RiderTutorials.Utils;
 
-namespace Digma.Rider.Discovery
+namespace Digma.Rider.Util
 {
     public static class PsiUtils
     {
@@ -30,5 +32,23 @@ namespace Digma.Rider.Discovery
         // {
         //     return functionDeclaration.GetSourceFile().GetLocation().FullPath;
         // }
+        
+        public static bool IsPsiSourceFileApplicable([NotNull] IPsiSourceFile psiSourceFile)
+        {
+            var properties = psiSourceFile.Properties;
+            var primaryPsiLanguage = psiSourceFile.PrimaryPsiLanguage;
+            var isApplicable = !primaryPsiLanguage.IsNullOrUnknown() &&
+                               !properties.IsGeneratedFile &&
+                               primaryPsiLanguage.Is<CSharpLanguage>() &&
+                               properties.ShouldBuildPsi &&
+                               properties.ProvidesCodeModel &&
+                               !properties.IsNonUserFile;
+
+            return isApplicable;
+        }
+
+        
+        
+        
     }
 }

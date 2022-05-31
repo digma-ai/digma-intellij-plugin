@@ -30,7 +30,7 @@ public class CSharpDocumentAnalyzer implements DocumentAnalyzer , DocumentCodeOb
     @Override
     public void fileOpened(PsiFile psiFile) {
         DocumentInfo documentInfo = codeObjectHost.getDocument(psiFile);
-        Log.log(LOGGER::info, "Found document for {},{}",psiFile,documentInfo);
+        Log.log(LOGGER::debug, "Found document for {},{}",psiFile,documentInfo);
         documentInfoService.addCodeObjects(psiFile,documentInfo);
     }
 

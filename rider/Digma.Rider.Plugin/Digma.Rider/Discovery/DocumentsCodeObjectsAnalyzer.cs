@@ -104,7 +104,7 @@ namespace Digma.Rider.Discovery
             using (ReadLockCookie.Create())
             {
                 var psiSourceFile = _documentManager.GetProjectFile(textControl.Document).ToSourceFile();
-                if (psiSourceFile == null || !psiSourceFile.GetPsiServices().Files.AllDocumentsAreCommitted)
+                if (psiSourceFile == null || !psiSourceFile.GetPsiServices().Files.IsCommitted(psiSourceFile))
                 {
                     Log(_logger, "PsiSourceFile {0} for TextControl {1} is null or not committed", psiSourceFile,
                         textControl.Document);
@@ -121,7 +121,7 @@ namespace Digma.Rider.Discovery
                     if (cSharpFile == null)
                         continue;
 
-                    var discoveryProcessor = new CodeObjectsDiscoveryProcessor(fileUri);
+                    var discoveryProcessor = new CodeObjectsDiscoveryFileProcessor(fileUri,cSharpFile);
                     cSharpFile.ProcessDescendants(discoveryProcessor);
                     var methodInfos = discoveryProcessor.MethodInfos;
                     foreach (var riderMethodInfo in methodInfos)

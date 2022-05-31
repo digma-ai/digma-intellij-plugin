@@ -87,7 +87,7 @@ abstract class PanelList(val project: Project, listViewItems: List<ListViewItem<
 
     private fun rebuild() {
 
-        Log.log(LOGGER::info, "{} in rebuild,model size: {}",this.javaClass.simpleName, model.size)
+        Log.log(LOGGER::debug, "{} in rebuild,model size: {}",this.javaClass.simpleName, model.size)
 
         if (components.isNotEmpty()) {
             this.components.forEach {
@@ -139,7 +139,7 @@ abstract class PanelList(val project: Project, listViewItems: List<ListViewItem<
 
     override fun getPreferredScrollableViewportSize(): Dimension? {
 
-        Log.log(LOGGER::info, "in getPreferredScrollableViewportSize,my size: {}", size)
+        Log.log(LOGGER::debug, "in getPreferredScrollableViewportSize,my size: {}", size)
 
         if (scrollablePanelList != null){
             return Dimension(scrollablePanelList!!.size.width-20, scrollablePanelList!!.size.height-20)

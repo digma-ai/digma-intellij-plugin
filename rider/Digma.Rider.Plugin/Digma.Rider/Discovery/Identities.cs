@@ -1,7 +1,7 @@
+using Digma.Rider.Util;
 using JetBrains.Annotations;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.CSharp.Tree;
-using JetBrains.RiderTutorials.Utils;
 
 namespace Digma.Rider.Discovery
 {
@@ -28,6 +28,11 @@ namespace Digma.Rider.Discovery
             var methodName = PsiUtils.GetDeclaredName(functionDeclaration);
             var fqn = namespaceName + "." + className + "$_$" + methodName;
             return fqn;
+        }
+
+        public static string ComputeSpanFqn(string instLibrary, string spanName)
+        {
+            return instLibrary + "$_$" + spanName;
         }
     }
 }

@@ -32,7 +32,7 @@ class ElementUnderCaretDetector(private val project: Project) {
             model.notifyElementUnderCaret.throttleLast(Duration.ofMillis(300),
                 SingleThreadScheduler(project.lifetime, "notifyElementUnderCaret")).advise(project.lifetime) {
                 val methodUnderCaret: MethodUnderCaretEvent? = model.elementUnderCaret.valueOrNull
-                Log.log(LOGGER::info, "Got MethodUnderCaretEvent signal: {}", methodUnderCaret)
+                Log.log(LOGGER::debug, "Got MethodUnderCaretEvent signal: {}", methodUnderCaret)
                 notifyElementUnderCaret(methodUnderCaret, caretContextService)
             }
         }
@@ -71,15 +71,15 @@ class ElementUnderCaretDetector(private val project: Project) {
     fun maybeNotifyElementUnderCaret(psiFile: PsiFile,
                                      caretContextService: CaretContextService) {
         val methodUnderCaret: MethodUnderCaretEvent? = model.elementUnderCaret.valueOrNull
-        Log.log(LOGGER::info, "Current MethodUnderCaret: {}", methodUnderCaret)
+        Log.log(LOGGER::debug, "Current MethodUnderCaret: {}", methodUnderCaret)
 
         if (methodUnderCaret?.fileUri == null || methodUnderCaret.fileUri.isBlank())
             return
 
         val psiFileForMethod = PsiUtils.uriToPsiFile(methodUnderCaret.fileUri,project)
         if (psiFile == psiFileForMethod){
-            Log.log(LOGGER::info, "Current MethodUnderCaret belongs to psi file: {}", psiFile.virtualFile.path)
-            Log.log(LOGGER::info, "Notifying MethodUnderCaret: {}", methodUnderCaret)
+            Log.log(LOGGER::debug, "Current MethodUnderCaret belongs to psi file: {}", psiFile.virtualFile.path)
+            Log.log(LOGGER::debug, "Notifying MethodUnderCaret: {}", methodUnderCaret)
             notifyElementUnderCaret(methodUnderCaret, caretContextService)
         }
     }

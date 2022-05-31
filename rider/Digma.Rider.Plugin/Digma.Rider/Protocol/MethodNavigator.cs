@@ -109,7 +109,7 @@ namespace Digma.Rider.Protocol
         private IPsiSourceFile FindPsiSourceFile(ITextControl textControl, string methodId)
         {
             var psiSourceFile = _documentManager.GetProjectFile(textControl.Document).ToSourceFile();
-            if (psiSourceFile == null)
+            if (psiSourceFile == null || !psiSourceFile.GetPsiServices().Files.IsCommitted(psiSourceFile))
             {
                 Log(_logger, "No psiSourceFile found for {0}",methodId);
                 return null;

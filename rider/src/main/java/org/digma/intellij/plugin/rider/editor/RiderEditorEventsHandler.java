@@ -52,7 +52,7 @@ public class RiderEditorEventsHandler implements EditorEventsHandler, DocumentIn
             @Override
             public void selectionChanged(@NotNull FileEditorManagerEvent event) {
                 FileEditorManager fileEditorManager = event.getManager();
-                Log.log(LOGGER::info, "selectionChanged: editor:{}, newFile:{}, oldFile:{}", fileEditorManager.getSelectedEditor(),
+                Log.log(LOGGER::debug, "selectionChanged: editor:{}, newFile:{}, oldFile:{}", fileEditorManager.getSelectedEditor(),
                         event.getNewFile(), event.getOldFile());
 
                 var newFile = event.getNewFile();
@@ -61,7 +61,7 @@ public class RiderEditorEventsHandler implements EditorEventsHandler, DocumentIn
                 }
 
                 if (!languageService.isSupportedFile(project,newFile)){
-                    Log.log(LOGGER::info, "Non supported file opened, clearing context. {}", newFile);
+                    Log.log(LOGGER::debug, "Non supported file opened, clearing context. {}", newFile);
                     caretContextService.contextEmpty();
                     elementUnderCaretDetector.emptyModel();
                 }
@@ -72,7 +72,7 @@ public class RiderEditorEventsHandler implements EditorEventsHandler, DocumentIn
     @Override
     public void documentInfoChanged(PsiFile psiFile) {
         if (caretContextService != null){
-            Log.log(LOGGER::info, "Got documentInfoChanged event for {}", PsiUtils.psiFileToDocumentProtocolKey(psiFile));
+            Log.log(LOGGER::debug, "Got documentInfoChanged event for {}", PsiUtils.psiFileToDocumentProtocolKey(psiFile));
             ElementUnderCaretDetector elementUnderCaretDetector = project.getService(ElementUnderCaretDetector.class);
             elementUnderCaretDetector.maybeNotifyElementUnderCaret(psiFile,caretContextService);
         }

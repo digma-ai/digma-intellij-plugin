@@ -45,6 +45,7 @@ namespace Digma.Rider.Protocol
             
             _codeObjectsModel.Reanalyze.Advise(lifetime, documentKey =>
             {
+                Log(_logger, "Reanalyze called for {0}",documentKey);
                 using (ReadLockCookie.Create())
                 {
                     //usually we should have the PsiSourceFile so we can call ReanalyzeFile.
@@ -52,12 +53,12 @@ namespace Digma.Rider.Protocol
                     var psiSourceFile = _docPathToPsiSourceFile.TryGetValue(documentKey);
                     if (psiSourceFile != null && psiSourceFile.IsValid())
                     {
-                        Log(_logger,"Found PsiSourceFile for {0}, Calling ReanalyzeFile {0}",documentKey,psiSourceFile);
+                        Log(_logger,"Found PsiSourceFile in local map for {0}, Calling ReanalyzeFile {0}",documentKey,psiSourceFile);
                         riderSolutionAnalysisService.ReanalyzeFile(psiSourceFile);
                     }
                     else
                     {
-                        Log(_logger,"Could not find PsiSourceFile for {0}, Calling ReanalyzeAll",documentKey);
+                        Log(_logger,"Could not find PsiSourceFile  in local map for {0}, Calling ReanalyzeAll",documentKey);
                         riderSolutionAnalysisService.ReanalyzeAll();
                     }
                 }
@@ -89,7 +90,6 @@ namespace Digma.Rider.Protocol
             
             //relying on Equals method.
             //if the document is still in the protocol and hasn't change then do nothing.
-            //if the new document is different then remove it.
             if (document.CheckEquals(_codeObjectsModel.Documents.TryGetValue(documentKey)))
             {
                 Log(_logger,"Document {0} already exists and is equals to the new one",documentKey);

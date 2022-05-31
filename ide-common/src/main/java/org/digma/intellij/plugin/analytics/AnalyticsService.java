@@ -98,7 +98,8 @@ public class AnalyticsService implements AnalyticsProvider, Disposable {
                 Object result = method.invoke(analyticsProvider, args);
 
                 if (LOGGER.isDebugEnabled()) {
-                    Log.log(LOGGER::debug, "Got response from {}: args '{}', result '{}'",method.getName(), argsToString(args),resultToString(result));
+                    Log.log(LOGGER::debug, "Got response from {}: args '{}', -----------------" +
+                            "Result '{}'",method.getName(), argsToString(args),resultToString(result));
                 }
 
                 return result;
@@ -118,6 +119,7 @@ public class AnalyticsService implements AnalyticsProvider, Disposable {
 
         private String resultToString(Object result) {
             try{
+                //pretty print doesn't work in intellij logs, line end cause the text to disappear.
                 return objectMapper.writeValueAsString(result);
             }catch (Exception e){
                 return "Error parsing object "+e.getMessage();

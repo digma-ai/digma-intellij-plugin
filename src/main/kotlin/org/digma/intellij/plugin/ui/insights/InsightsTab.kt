@@ -31,7 +31,7 @@ fun insightsPanel(project: Project ): ResettablePanel {
 
     val topPanel = panel {
             row {
-                var topLine = topLine(project, insightsModel, "Code insights")
+                val topLine = topLine(project, insightsModel, "Code insights")
                 cell(topLine)
                     .horizontalAlign(HorizontalAlign.FILL)
                     .onReset {
@@ -39,7 +39,7 @@ fun insightsPanel(project: Project ): ResettablePanel {
                     }
             }
             row {
-                var scopeLine = scopeLine(project, { insightsModel.scope.getScope() }, ScopeLineIconProducer(insightsModel))
+                val scopeLine = scopeLine(project, { insightsModel.scope.getScope() }, ScopeLineIconProducer(insightsModel))
                 cell(scopeLine)
                     .horizontalAlign(HorizontalAlign.FILL)
                     .onReset {

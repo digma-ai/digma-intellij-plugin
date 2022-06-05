@@ -1,6 +1,7 @@
 using JetBrains.Annotations;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.CSharp.Tree;
+using JetBrains.ReSharper.Psi.Resolve;
 using JetBrains.ReSharper.Psi.Tree;
 using JetBrains.Util;
 
@@ -14,6 +15,8 @@ namespace Digma.Rider.Discovery
 
         public string InstLibrary { get; private set; }
         public string SpanName { get; private set; }
+
+        public bool HasReferenceResolvingErrors { get; private set; } = false;
 
 
         public SpanDiscovery([NotNull] ILocalVariableDeclaration localVariableDeclaration)
@@ -63,7 +66,7 @@ namespace Digma.Rider.Discovery
             if (invocationExpressionInvokedExpression.IsQualified &&
                 invocationExpressionInvokedExpression.QualifierExpression is IReferenceExpression referenceExpression)
             {
-                var reference = referenceExpression.Reference.Resolve().DeclaredElement;
+                var reference = ResolveReference(referenceExpression.Reference);
                 var declaration = reference?.GetDeclarations().FirstNotNull();
                 if (declaration is IFieldDeclaration fieldDeclaration)
                 {
@@ -117,7 +120,7 @@ namespace Digma.Rider.Discovery
         private string GetTextFromObjectCreationExpression(
             [NotNull] IObjectCreationExpression objectCreationExpression)
         {
-            var declaredElement = objectCreationExpression.Reference?.Resolve().DeclaredElement;
+            var declaredElement = ResolveReference(objectCreationExpression.Reference);
             if (declaredElement is IConstructor)
             {
                 if (objectCreationExpression.ArgumentList.Arguments.Count == 1)
@@ -172,7 +175,7 @@ namespace Digma.Rider.Discovery
                 }
                 case IReferenceExpression referenceExpression:
                 {
-                    var element = referenceExpression.Reference.Resolve().DeclaredElement;
+                    var element = ResolveReference(referenceExpression.Reference);
                     var declaration = element?.GetDeclarations().FirstNotNull();
                     if (declaration != null)
                     {
@@ -219,7 +222,7 @@ namespace Digma.Rider.Discovery
         
         private bool IsStartActivityMethodReference([NotNull] IInvocationExpressionReference invocationExpressionReference)
         {
-            var declaredElement = invocationExpressionReference.Resolve().DeclaredElement;
+            var declaredElement = ResolveReference(invocationExpressionReference);
             if (declaredElement is IMethod method &&
                 StartActivityMethodName.Equals(method.ShortName) &&
                 (method.ContainingType is IClass @class) &&
@@ -231,16 +234,24 @@ namespace Digma.Rider.Discovery
             return false;
         }
 
+        
+        private IDeclaredElement ResolveReference(IReference reference)
+        {
+            if (reference == null)
+            {
+                return null;
+            }
+            
+            var declaredElement = reference.Resolve().DeclaredElement;
+            if (declaredElement == null)
+            {
+                //if any reference did not succeed mark this span discovery AllReferencesResolved = false 
+                HasReferenceResolvingErrors = true;
+            }
 
-        // [CanBeNull]
-        // private string GetContainingTypeName([NotNull] ITypeMember typeMember)
-        // {
-        //     if (typeMember.ContainingType is IClass @class)
-        //     {
-        //         return @class.GetClrName().FullName;
-        //     }
-        //
-        //     return null;
-        // }
+            return declaredElement;
+        }
+
+
     }
 }

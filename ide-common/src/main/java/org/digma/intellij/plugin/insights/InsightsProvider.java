@@ -37,7 +37,7 @@ public class InsightsProvider {
         objectIds.addAll(methodInfo.getRelatedCodeObjectIds());
         Log.log(LOGGER::debug, "Got {} code object ids for method {}",objectIds.size(), methodInfo.getId());
 
-        List<CodeObjectInsight> codeObjectInsights = analyticsProvider.getInsights(new InsightsRequest(environment.getCurrent(), objectIds));
+        List<? extends CodeObjectInsight> codeObjectInsights = analyticsProvider.getInsights(new InsightsRequest(environment.getCurrent(), objectIds));
         Log.log(LOGGER::debug, "CodeObjectInsights for {}: {}", methodInfo, codeObjectInsights);
 
         InsightsViewBuilder insightsViewBuilder = new InsightsViewBuilder(buildersHolder);

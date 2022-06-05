@@ -26,7 +26,7 @@ fun errorsPanel(project: Project): ResettablePanel {
 
     val topPanel = panel {
         row {
-            var topLine = topLine(project, errorsModel, "Code errors")
+            val topLine = topLine(project, errorsModel, "Code errors")
             cell(topLine)
                 .horizontalAlign(HorizontalAlign.FILL)
                 .onReset {
@@ -34,7 +34,7 @@ fun errorsPanel(project: Project): ResettablePanel {
                 }
         }.layout(RowLayout.PARENT_GRID)
         row {
-            var scopeLine = scopeLine(project, { errorsModel.classAndMethod() }, ScopeLineIconProducer(errorsModel))
+            val scopeLine = scopeLine(project, { errorsModel.getScope() }, ScopeLineIconProducer(errorsModel))
             cell(scopeLine)
                 .horizontalAlign(HorizontalAlign.FILL)
                 .onReset {

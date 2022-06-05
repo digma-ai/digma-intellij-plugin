@@ -8,7 +8,11 @@ import org.digma.intellij.plugin.insights.InsightsListContainer
 import org.digma.intellij.plugin.insights.InsightsProvider
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary
-import org.digma.intellij.plugin.ui.model.insights.*
+import org.digma.intellij.plugin.ui.model.DocumentScope
+import org.digma.intellij.plugin.ui.model.EmptyScope
+import org.digma.intellij.plugin.ui.model.MethodScope
+import org.digma.intellij.plugin.ui.model.insights.InsightsModel
+import org.digma.intellij.plugin.ui.model.insights.InsightsTabCard
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import org.digma.intellij.plugin.ui.panels.ResettablePanel
 
@@ -45,7 +49,6 @@ class InsightsViewService(val project: Project) {
         model.card = InsightsTabCard.INSIGHTS
 
         panel.reset()
-
     }
 
 
@@ -58,7 +61,6 @@ class InsightsViewService(val project: Project) {
         model.card = InsightsTabCard.INSIGHTS
 
         panel.reset()
-
     }
 
     fun showDocumentPreviewList(documentInfoContainer: DocumentInfoContainer?,

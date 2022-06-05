@@ -18,11 +18,11 @@ public class Log {
         // so to temporarily bypass all loggers uncomment this line.
         //LOGGER.info(String.format(format.replace("{}", "%s"), args));
         //todo: change the test IDE logging level to DEBUG for runIde task before it runs.
-        consumer.accept("Digma:"+String.format(format.replace("{}", "%s"), args));
+        consumer.accept("Digma: "+String.format(format.replace("{}", "%s"), args));
     }
 
     public static void error(Logger logger,Exception exception, String format, Object... args) {
-        logger.error("Digma:"+String.format(format.replace("{}", "%s"), args),exception);
+        logger.error("Digma: "+String.format(format.replace("{}", "%s"), args),exception);
     }
 
 }

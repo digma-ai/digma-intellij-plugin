@@ -77,6 +77,7 @@ public class EditorInteractionService implements CaretContextService, Disposable
                 }
 
                 insightsViewService.showDocumentPreviewList(documentInfoContainer,methodUnderCaret.getFileUri());
+                errorsViewService.empty();
             }else{
                 Log.log(LOGGER::debug, "No id and no fileUri in methodUnderCaret,clearing context {}. ", methodUnderCaret);
                 contextEmpty();
@@ -88,9 +89,11 @@ public class EditorInteractionService implements CaretContextService, Disposable
                 //this happens when we don't have method info for a real method, usually when a class doesn't have
                 //code objects found during discovery, it can be synthetic or auto-generated methods.
                 //pass a dummy method info just to populate the view,the view is aware and will not try to query for insights.
-                insightsViewService.contextChangeNoMethodInfo(new MethodInfo(methodUnderCaret.getId(), methodUnderCaret.getName(), methodUnderCaret.getClassName(), "", methodUnderCaret.getFileUri(),new ArrayList<>()));
+                var dummyMethodInfo = new MethodInfo(methodUnderCaret.getId(), methodUnderCaret.getName(), methodUnderCaret.getClassName(), "", methodUnderCaret.getFileUri(),new ArrayList<>());
+                insightsViewService.contextChangeNoMethodInfo(dummyMethodInfo);
+                errorsViewService.contextChangeNoMethodInfo(dummyMethodInfo);
             } else {
-                Log.log(LOGGER::debug, "Context changed to MethodInfo {}. ", methodInfo);
+                Log.log(LOGGER::debug, "Context changed to {}. ", methodInfo);
                 insightsViewService.contextChanged(methodInfo);
                 errorsViewService.contextChanged(methodInfo);
             }

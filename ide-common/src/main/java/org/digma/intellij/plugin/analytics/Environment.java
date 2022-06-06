@@ -30,10 +30,6 @@ public class Environment {
         if (environments == null || environments.isEmpty()){
             environments = analyticsService.getEnvironments();
             if (environments != null && environments.size() > 0){
-
-                //temp
-                environments.add("SECOND_ENV");
-
                 Log.log(LOGGER::info, "Got environments {}", environments);
                 current = environments.get(0);
             }else{

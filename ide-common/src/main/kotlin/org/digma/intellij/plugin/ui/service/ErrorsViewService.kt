@@ -8,12 +8,12 @@ import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.ui.model.EmptyScope
 import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
-import org.digma.intellij.plugin.ui.panels.ResettablePanel
+import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import java.util.*
 
 class ErrorsViewService(val project: Project) {
 
-    lateinit var panel: ResettablePanel
+    lateinit var panel: DigmaTabPanel
     lateinit var model: ErrorsModel
     lateinit var toolWindow: ToolWindow
     lateinit var errorsContent: Content

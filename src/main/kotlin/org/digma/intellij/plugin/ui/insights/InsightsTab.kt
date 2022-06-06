@@ -16,18 +16,15 @@ import org.digma.intellij.plugin.ui.list.insights.InsightsList
 import org.digma.intellij.plugin.ui.list.insights.PreviewList
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsTabCard
-import org.digma.intellij.plugin.ui.panels.ResettablePanel
+import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import java.awt.BorderLayout
 import java.awt.CardLayout
-import javax.swing.Box
-import javax.swing.JLabel
-import javax.swing.JPanel
-import javax.swing.SwingUtilities
+import javax.swing.*
 
 
 val insightsModel: InsightsModel = InsightsModel()
 
-fun insightsPanel(project: Project ): ResettablePanel {
+fun insightsPanel(project: Project ): DigmaTabPanel {
 
     val topPanel = panel {
             row {
@@ -92,7 +89,19 @@ fun insightsPanel(project: Project ): ResettablePanel {
     cardLayout.addLayoutComponent(previewPanel, InsightsTabCard.PREVIEW.name)
     cardLayout.show(cardsPanel,insightsModel.card.name)
 
-    val result = object: ResettablePanel() {
+    val result = object: DigmaTabPanel() {
+        override fun getPreferredFocusableComponent(): JComponent {
+            return topPanel
+        }
+
+        override fun getPreferredFocusedComponent(): JComponent {
+            return if (insightsModel.card.name == InsightsTabCard.INSIGHTS.name){
+                insightsList
+            }else{
+                previewList
+            }
+        }
+
         override fun reset() {
             topPanel.reset()
             previewTitle.reset()

@@ -14,12 +14,12 @@ import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsTabCard
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
-import org.digma.intellij.plugin.ui.panels.ResettablePanel
+import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import java.util.stream.Collectors
 
 class InsightsViewService(val project: Project) {
 
-    lateinit var panel: ResettablePanel
+    lateinit var panel: DigmaTabPanel
     lateinit var model: InsightsModel
     lateinit var toolWindow: ToolWindow
     lateinit var insightsContent: Content

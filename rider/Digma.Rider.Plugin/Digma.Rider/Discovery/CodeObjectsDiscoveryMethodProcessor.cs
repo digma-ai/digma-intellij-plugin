@@ -23,15 +23,6 @@ namespace Digma.Rider.Discovery
         {
             _functionDeclaration = functionDeclaration;
             _methodInfo = BuildMethodInfo(functionDeclaration);
-
-            //TODO: high priority: what about overloaded methods ?
-            if (discoveryContext.Methods.ContainsKey(_methodInfo.Id))
-            {
-                //TODO: this is temp until we know what to do with overloaded methods
-                _methodInfo = new RiderMethodInfo(_methodInfo.Id + "1", _methodInfo.Name, _methodInfo.ContainingClass,
-                    _methodInfo.ContainingNamespace, _methodInfo.ContainingFileUri, _methodInfo.Spans);
-            }
-
             discoveryContext.Methods.Add(_methodInfo.Id, _methodInfo);       
         }
 

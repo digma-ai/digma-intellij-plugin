@@ -83,6 +83,7 @@ public class AnalyticsService implements Disposable {
 
         private final AnalyticsProvider analyticsProvider;
 
+        //ObjectMapper here is only used for printing the result to log as json
         private final ObjectMapper objectMapper = new ObjectMapper();
 
         public AnalyticsInvocationHandler(AnalyticsProvider analyticsProvider) {

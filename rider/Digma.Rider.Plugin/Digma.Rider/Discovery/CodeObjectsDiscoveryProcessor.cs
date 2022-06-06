@@ -5,7 +5,7 @@ namespace Digma.Rider.Discovery;
 
 internal abstract class CodeObjectsDiscoveryProcessor : IRecursiveElementProcessor
 {
-    public readonly DocumentDiscoveryContext DiscoveryContext;
+    protected readonly DocumentDiscoveryContext DiscoveryContext;
     public abstract bool InteriorShouldBeProcessed(ITreeNode element);
     public abstract void ProcessBeforeInterior(ITreeNode element);
 

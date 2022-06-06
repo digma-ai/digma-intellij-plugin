@@ -6,10 +6,10 @@ import com.intellij.psi.PsiFile;
 import org.digma.intellij.plugin.document.DocumentAnalyzer;
 import org.digma.intellij.plugin.document.DocumentCodeObjectsChanged;
 import org.digma.intellij.plugin.document.DocumentInfoService;
-import org.digma.intellij.plugin.editor.EditorListener;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.rider.protocol.CodeObjectHost;
+import org.jetbrains.annotations.NotNull;
 
 public class CSharpDocumentAnalyzer implements DocumentAnalyzer , DocumentCodeObjectsChanged {
 
@@ -28,15 +28,16 @@ public class CSharpDocumentAnalyzer implements DocumentAnalyzer , DocumentCodeOb
     }
 
     @Override
-    public void fileOpened(PsiFile psiFile) {
+    public void fileOpened(@NotNull PsiFile psiFile) {
         DocumentInfo documentInfo = codeObjectHost.getDocument(psiFile);
-        Log.log(LOGGER::debug, "Found document for {},{}",psiFile,documentInfo);
+        Log.log(LOGGER::debug, "Found document for {},{}",psiFile.getVirtualFile(),documentInfo);
         documentInfoService.addCodeObjects(psiFile,documentInfo);
     }
 
     //this is the event for rider when a document is opened
     @Override
-    public void documentCodeObjectsChanged(PsiFile psiFile) {
-       fileOpened(psiFile);
+    public void documentCodeObjectsChanged(@NotNull PsiFile psiFile) {
+        Log.log(LOGGER::debug, "Got documentCodeObjectsChanged event for {}", psiFile.getVirtualFile());
+        fileOpened(psiFile);
     }
 }

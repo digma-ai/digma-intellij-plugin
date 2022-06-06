@@ -8,13 +8,10 @@ import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
-import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
-import org.digma.intellij.plugin.model.rest.summary.MethodCodeObjectSummary;
 import org.digma.intellij.plugin.psi.PsiUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,6 +43,7 @@ public class DocumentInfoService {
     }
 
     public void notifyDocumentInfoChanged(PsiFile psiFile) {
+        Log.log(LOGGER::debug, "Notifying DocumentInfo changed for {}",psiFile.getVirtualFile());
         DocumentInfoChanged publisher = project.getMessageBus().syncPublisher(DocumentInfoChanged.DOCUMENT_INFO_CHANGED_TOPIC);
         publisher.documentInfoChanged(psiFile);
     }
@@ -53,7 +51,7 @@ public class DocumentInfoService {
 
     //called after a document is analyzed for code objects
     public void addCodeObjects(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
-        Log.log(LOGGER::debug, "Adding DocumentInfo for {},{}",psiFile,documentInfo);
+        Log.log(LOGGER::debug, "Adding DocumentInfo for {},{}",psiFile.getVirtualFile(),documentInfo);
         DocumentInfoContainer documentInfoContainer = documents.computeIfAbsent(psiFile, DocumentInfoContainer::new);
         documentInfoContainer.update(documentInfo, analyticsService);
         notifyDocumentInfoChanged(psiFile);
@@ -72,16 +70,6 @@ public class DocumentInfoService {
     }
 
 
-    @Nullable
-    public MethodCodeObjectSummary getMethodSummaries(@NotNull MethodUnderCaret methodUnderCaret) {
-        String id = methodUnderCaret.getId();
-        String fileUri = methodUnderCaret.getFileUri();
-        PsiFile psiFile = PsiUtils.uriToPsiFile(fileUri, project);
-        DocumentInfoContainer documentInfoContainer = documents.get(psiFile);
-        return documentInfoContainer == null ? null : documentInfoContainer.getMethodSummaries(id);
-    }
-
-
     /*
      * getMethodInfo may return null. DocumentInfoService is just a container, it knows about what you feed it with.
      */
@@ -90,14 +78,6 @@ public class DocumentInfoService {
         PsiFile psiFile = PsiUtils.uriToPsiFile(methodUnderCaret.getFileUri(), project);
         DocumentInfoContainer documentInfoContainer = documents.get(psiFile);
         return documentInfoContainer == null ? null : documentInfoContainer.getMethodInfo(methodUnderCaret.getId());
-    }
-
-    public Collection<CodeObjectSummary> getDocumentSummaries(MethodUnderCaret methodUnderCaret) {
-        String fileUri = methodUnderCaret.getFileUri();
-        PsiFile psiFile = PsiUtils.uriToPsiFile(fileUri, project);
-        DocumentInfoContainer documentInfoContainer = documents.get(psiFile);
-        Map<String, CodeObjectSummary>  summaryMap = documentInfoContainer.getSummaries();
-        return summaryMap.values();
     }
 
 }

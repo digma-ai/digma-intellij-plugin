@@ -7,7 +7,7 @@ import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.insights.InsightsListContainer
 import org.digma.intellij.plugin.insights.InsightsProvider
 import org.digma.intellij.plugin.model.discovery.MethodInfo
-import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary
+import org.digma.intellij.plugin.model.discovery.SpanInfo
 import org.digma.intellij.plugin.ui.model.DocumentScope
 import org.digma.intellij.plugin.ui.model.EmptyScope
 import org.digma.intellij.plugin.ui.model.MethodScope
@@ -15,6 +15,7 @@ import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsTabCard
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import org.digma.intellij.plugin.ui.panels.ResettablePanel
+import java.util.stream.Collectors
 
 class InsightsViewService(val project: Project) {
 
@@ -71,8 +72,7 @@ class InsightsViewService(val project: Project) {
             model.scope = EmptyScope(fileUri.substringAfterLast('/'))
             model.insightsCount = 0
         } else {
-            val items: List<ListViewItem<*>> = getDocumentPreviewItems(documentInfoContainer)
-            model.previewListViewItems = items
+            model.previewListViewItems = getDocumentPreviewItems(documentInfoContainer)
             model.scope = DocumentScope(documentInfoContainer.documentInfo)
             model.insightsCount = computeInsightsPreviewCount(documentInfoContainer)
         }
@@ -89,14 +89,23 @@ class InsightsViewService(val project: Project) {
         return documentInfoContainer.summaries.values.stream().mapToInt { it.insightsCount }.sum()
     }
 
-    private fun getDocumentPreviewItems(documentInfoContainer: DocumentInfoContainer): List<ListViewItem<*>> {
+    private fun getDocumentPreviewItems(documentInfoContainer: DocumentInfoContainer): List<ListViewItem<String>> {
 
-        val previewItems: MutableList<ListViewItem<CodeObjectSummary>> = ArrayList()
-        documentInfoContainer.summaries.forEach{
-            previewItems.add(ListViewItem(it.value,0))
+        val listViewItems = ArrayList<ListViewItem<String>>()
+
+        documentInfoContainer.documentInfo.methods.forEach { (id, methodInfo) ->
+
+            val ids = methodInfo.spans.stream().map { obj: SpanInfo -> obj.id }
+                .collect(Collectors.toList())
+            ids.add(id)
+
+            if (documentInfoContainer.summaries.keys.any { ids.contains(it) }) {
+                listViewItems.add(ListViewItem(methodInfo.id,0))
+            }
         }
 
-        return previewItems
+        return listViewItems
+
     }
 
 

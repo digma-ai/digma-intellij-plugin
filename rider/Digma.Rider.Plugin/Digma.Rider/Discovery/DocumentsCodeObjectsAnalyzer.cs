@@ -112,6 +112,7 @@ namespace Digma.Rider.Discovery
                     return;
                 }
 
+                //this code is the same as CodeObjectsCache.Build
                 Log(_logger, "Found PsiSourceFile {0} for TextControl {1}", psiSourceFile, textControl.Document);
                 var psiFiles = psiSourceFile.GetPsiFiles<CSharpLanguage>();
                 var fileUri = Identities.ComputeFileUri(psiSourceFile);

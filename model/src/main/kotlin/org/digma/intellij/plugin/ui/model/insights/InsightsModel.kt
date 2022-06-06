@@ -7,7 +7,7 @@ import java.util.*
 data class InsightsModel(
     var insightsCount: Int = 0,
     var listViewItems: List<ListViewItem<*>> = Collections.emptyList(),
-    var previewListViewItems: List<ListViewItem<*>> = Collections.emptyList(),
+    var previewListViewItems: List<ListViewItem<String>> = Collections.emptyList(),
     var card: InsightsTabCard = InsightsTabCard.INSIGHTS,
     var scope: Scope = EmptyScope("")
 ) : PanelModel {

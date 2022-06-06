@@ -7,6 +7,7 @@ import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.ContentFactory;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.service.EditorInteractionService;
+import org.digma.intellij.plugin.ui.ToolWindowShower;
 import org.digma.intellij.plugin.ui.errors.ErrorsTabKt;
 import org.digma.intellij.plugin.ui.insights.InsightsTabKt;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
@@ -40,6 +41,8 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
             insightsViewService.setModel(InsightsTabKt.getInsightsModel());
             insightsViewService.setPanel(insightsPanel);
             var insightsContent = contentFactory.createContent(insightsPanel, "Insights", false);
+            insightsContent.setPreferredFocusedComponent(insightsPanel::getPreferredFocusedComponent);
+            insightsContent.setPreferredFocusableComponent(insightsPanel.getPreferredFocusableComponent());
             toolWindow.getContentManager().addContent(insightsContent);
             insightsViewService.setContent(toolWindow,insightsContent);
         }
@@ -50,11 +53,14 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
             errorsViewService.setModel(ErrorsTabKt.getErrorsModel());
             errorsViewService.setPanel(errorsPanel);
             var errorsContent = contentFactory.createContent(errorsPanel, "Errors", false);
+            errorsContent.setPreferredFocusedComponent(errorsPanel::getPreferredFocusedComponent);
+            errorsContent.setPreferredFocusableComponent(errorsPanel.getPreferredFocusableComponent());
             toolWindow.getContentManager().addContent(errorsContent);
             errorsViewService.setContent(toolWindow,errorsContent);
         }
 
 
+        project.getService(ToolWindowShower.class).setToolWindow(toolWindow);
         EditorInteractionService.getInstance(project).start(project);
     }
 }

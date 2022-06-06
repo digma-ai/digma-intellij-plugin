@@ -25,22 +25,24 @@
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow id="Digma" secondary="true" icon="org.digma.intellij.plugin.icons.Icons.TOOL_WINDOW" anchor="left"
                     factoryClass="org.digma.intellij.plugin.toolwindow.DigmaToolWindowFactory"/>
-        <projectService serviceImplementation="org.digma.intellij.plugin.service.EditorInteractionService"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.analytics.AnalyticsService"
-                        serviceInterface="org.digma.intellij.plugin.analytics.AnalyticsProvider"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.ui.ToolWindowShower"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.service.EditorInteractionService"
+                        serviceInterface="org.digma.intellij.plugin.ui.CaretContextService"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.analytics.AnalyticsService"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.document.DocumentInfoService"/>
-        <projectService serviceImplementation="org.digma.intellij.plugin.analytics.Environment"/>
-
 
         <projectService serviceImplementation="org.digma.intellij.plugin.document.CodeLensProvider"/>
 
-
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.service.InsightsViewService"/>
+
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.service.ErrorsViewService"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.insights.InsightsProvider"/>
+
         <projectService serviceImplementation="org.digma.intellij.plugin.errors.ErrorsProvider"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.service.InsightsActionsService"/>

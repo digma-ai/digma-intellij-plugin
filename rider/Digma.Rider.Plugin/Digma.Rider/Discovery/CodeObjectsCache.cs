@@ -1,6 +1,8 @@
 using Digma.Rider.Protocol;
+using Digma.Rider.Util;
 using JetBrains.Application.Progress;
 using JetBrains.Application.Threading;
+using JetBrains.Collections;
 using JetBrains.DocumentManagers.impl;
 using JetBrains.Lifetimes;
 using JetBrains.ReSharper.Feature.Services.CSharp.CompleteStatement;
@@ -24,56 +26,60 @@ namespace Digma.Rider.Discovery
             : base(lifetime, locks, persistentIndexManager, new DocumentMarshaller())
         {
             _logger = logger;
-            
-            //TODO:High Priority: currently we depend on resharper's cache to be ready before we can build our cache.
-            // if resharper cache is not ready we can't resolve references and will not discover spans.
-            // ClearOnLoad will force rebuild of the cache on every restart, if resharper cache is not 
-            // ready or user invalidates caches then an extra restart will build our cache.
-            // this is temporary until the above issue is fixed.
-            ClearOnLoad = true;
         }
 
 
         public override object Build(IPsiSourceFile sourceFile, bool isStartup)
         {
-            Log(_logger,"Building cache for sourceFile = {0}",sourceFile);
+            Log(_logger,"Building cache for IPsiSourceFile '{0}'",sourceFile);
             var isCommitted = sourceFile.GetPsiServices().Files.IsCommitted(sourceFile);
             if (!isCommitted)
+            {
+                Log(_logger,"IPsiSourceFile '{0}' is not committed, Can not build cache",sourceFile);
                 return null;
+            }
 
             var psiFiles = sourceFile.GetPsiFiles<CSharpLanguage>();
             var fileUri = Identities.ComputeFileUri(sourceFile);
-            var document = new Document(fileUri);
+            var discoveryContext = new DocumentDiscoveryContext(sourceFile, isStartup, fileUri);
+            
             foreach (var psiFile in psiFiles)
             {
                 var cSharpFile = psiFile.Is<ICSharpFile>();
                 if (cSharpFile == null) 
                     continue;
-                
-                var discoveryProcessor = new CodeObjectsDiscoveryFileProcessor(fileUri,cSharpFile);
+                Log(_logger,"Processing ICSharpFile '{0}' in '{1}'",cSharpFile,sourceFile);
+                var discoveryProcessor = new CodeObjectsDiscoveryFileProcessor(cSharpFile,discoveryContext);
                 cSharpFile.ProcessDescendants(discoveryProcessor);
-                var methodInfos = discoveryProcessor.MethodInfos;
-                foreach (var riderMethodInfo in methodInfos)
-                {
-                    document.Methods.Add(riderMethodInfo.Id,riderMethodInfo);
-                }
             }
 
+            Log(_logger,"Discovery for '{0}' completed",sourceFile);
             //don't keep cache for documents with no code objects, it could also be an interface which we ignore
-            return document.HasCodeObjects() ? document : null;
+            if (discoveryContext.Methods.IsEmpty())
+            {
+                Log(_logger,"IPsiSourceFile '{0}' does not contain any code objects",sourceFile);
+                return null;
+            }
+            else
+            {
+                Log(_logger,"Found code objects for IPsiSourceFile '{0}':",sourceFile);
+                var isComplete = !isStartup || !discoveryContext.HasReferenceResolvingErrors;
+                var document = new Document(isComplete, fileUri);
+                foreach (var (key, value) in discoveryContext.Methods)
+                {
+                    document.Methods.Add(key,value);
+                }
+                Log(_logger,"Built code objects Document '{0}' for IPsiSourceFile '{1}':",document,sourceFile);
+                return document;
+            }
         }
 
         protected override bool IsApplicable(IPsiSourceFile sf)
         {
             var properties = sf.Properties;
-            var primaryPsiLanguage = sf.PrimaryPsiLanguage;
-            var isApplicable = !primaryPsiLanguage.IsNullOrUnknown() &&
-                               !properties.IsGeneratedFile &&
-                               primaryPsiLanguage.Is<CSharpLanguage>() && 
-                               properties.ShouldBuildPsi && 
-                               properties.ProvidesCodeModel && 
+            var isApplicable = PsiUtils.IsPsiSourceFileApplicable(sf) && 
                                properties.IsICacheParticipant;
-            Log(_logger,"IsApplicable sf = {0}, applicable = {1}",sf,isApplicable);
+            Log(_logger,"IsApplicable '{0}' for file '{1}'",isApplicable,sf);
             
             return isApplicable;
         }
@@ -161,6 +167,11 @@ namespace Digma.Rider.Discovery
             Log(_logger,"UpToDate {0} for sourceFile = {1}",upToDate,sourceFile);
             return upToDate;
         }
-        
+
+        public void ProcessOnDemand(IPsiSourceFile psiSourceFile)
+        {
+            Log(_logger,"ProcessOnDemand for sourceFile = {0}",psiSourceFile);
+            ProcessDirtyFile(psiSourceFile);
+        }
     }
 }

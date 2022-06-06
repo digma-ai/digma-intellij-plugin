@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.service;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import org.digma.intellij.plugin.analytics.EnvironmentChanged;
 import org.digma.intellij.plugin.document.DocumentInfoContainer;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.editor.EditorEventsHandler;
@@ -22,7 +21,7 @@ import java.util.ArrayList;
  * A service to implement the interactions between listeners and UI components.
  * All work should be done in the EDT.
  */
-public class EditorInteractionService implements CaretContextService, Disposable, EnvironmentChanged {
+public class EditorInteractionService implements CaretContextService, Disposable {
 
     private static final Logger LOGGER = Logger.getInstance(EditorInteractionService.class);
 
@@ -37,12 +36,10 @@ public class EditorInteractionService implements CaretContextService, Disposable
         insightsViewService = project.getService(InsightsViewService.class);
         errorsViewService = project.getService(ErrorsViewService.class);
         documentInfoService = project.getService(DocumentInfoService.class);
-
-        project.getMessageBus().connect().subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, this);
     }
 
-    public static EditorInteractionService getInstance(Project project) {
-        return project.getService(EditorInteractionService.class);
+    public static CaretContextService getInstance(Project project) {
+        return project.getService(CaretContextService.class);
     }
 
     @Override
@@ -77,6 +74,7 @@ public class EditorInteractionService implements CaretContextService, Disposable
                 }
 
                 insightsViewService.showDocumentPreviewList(documentInfoContainer,methodUnderCaret.getFileUri());
+                errorsViewService.empty();
             }else{
                 Log.log(LOGGER::debug, "No id and no fileUri in methodUnderCaret,clearing context {}. ", methodUnderCaret);
                 contextEmpty();
@@ -88,9 +86,11 @@ public class EditorInteractionService implements CaretContextService, Disposable
                 //this happens when we don't have method info for a real method, usually when a class doesn't have
                 //code objects found during discovery, it can be synthetic or auto-generated methods.
                 //pass a dummy method info just to populate the view,the view is aware and will not try to query for insights.
-                insightsViewService.contextChangeNoMethodInfo(new MethodInfo(methodUnderCaret.getId(), methodUnderCaret.getName(), methodUnderCaret.getClassName(), "", methodUnderCaret.getFileUri(),new ArrayList<>()));
+                var dummyMethodInfo = new MethodInfo(methodUnderCaret.getId(), methodUnderCaret.getName(), methodUnderCaret.getClassName(), "", methodUnderCaret.getFileUri(),new ArrayList<>());
+                insightsViewService.contextChangeNoMethodInfo(dummyMethodInfo);
+                errorsViewService.contextChangeNoMethodInfo(dummyMethodInfo);
             } else {
-                Log.log(LOGGER::debug, "Context changed to MethodInfo {}. ", methodInfo);
+                Log.log(LOGGER::debug, "Context changed to {}. ", methodInfo);
                 insightsViewService.contextChanged(methodInfo);
                 errorsViewService.contextChanged(methodInfo);
             }
@@ -120,9 +120,4 @@ public class EditorInteractionService implements CaretContextService, Disposable
         editorEventsHandler.start(project, this, languageService);
     }
 
-
-    @Override
-    public void environmentChanged(String newEnv) {
-        contextEmpty();
-    }
 }

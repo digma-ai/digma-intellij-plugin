@@ -7,6 +7,7 @@ import com.jetbrains.rider.projectView.solution
 import org.digma.intellij.plugin.document.DocumentAnalyzer
 import org.digma.intellij.plugin.rider.editor.RiderDocumentInfoConsumer
 import org.digma.intellij.plugin.rider.env.RiderEnvironmentChangedListener
+import org.digma.intellij.plugin.rider.protocol.ShowToolWindowHost
 
 class ServicesStarter : ProjectManagerListener {
 
@@ -19,6 +20,7 @@ class ServicesStarter : ProjectManagerListener {
             project.getService(RiderDocumentInfoConsumer::class.java)
             project.getService(DocumentAnalyzer::class.java)
             project.getService(RiderEnvironmentChangedListener::class.java)
+            project.getService(ShowToolWindowHost::class.java)
         }
     }
 }

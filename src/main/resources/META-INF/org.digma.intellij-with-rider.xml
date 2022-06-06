@@ -1,5 +1,8 @@
 <idea-plugin>
     <extensions defaultExtensionNs="com.intellij">
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.rider.protocol.ShowToolWindowHost"/>
+
         <projectService serviceImplementation="org.digma.intellij.plugin.rider.psi.csharp.CSharpLanguageService"
                         serviceInterface="org.digma.intellij.plugin.psi.LanguageService"/>
 

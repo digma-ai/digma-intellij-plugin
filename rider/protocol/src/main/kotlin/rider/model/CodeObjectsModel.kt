@@ -48,6 +48,7 @@ class CodeObjectsModel : Ext(SolutionModel.Solution) {
         map("documents",
             PredefinedType.string,
             classdef("Document") {
+                field("isComplete",PredefinedType.bool)
                 field("fileUri",PredefinedType.string)
                 //map<codeObjectId,MethodInfo>
                 map("methods", PredefinedType.string, RiderMethodInfo)

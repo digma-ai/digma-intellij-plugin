@@ -20,12 +20,12 @@ public class InsightsViewBuilder extends ListViewBuilder {
     }
 
     @NotNull
-    public List<ListViewItem<?>> build(@NotNull MethodInfo scope, List<CodeObjectInsight> codeObjectInsights) {
+    public List<ListViewItem<?>> build(@NotNull MethodInfo scope, List<? extends CodeObjectInsight> codeObjectInsights) {
 
         List<ListViewItem<?>> allItems = new ArrayList<>();
 
         codeObjectInsights.forEach(insight -> {
-            final ListViewItemBuilder builder = buildersHolder.getBuilder(insight.getType());
+            final ListViewItemBuilder<CodeObjectInsight> builder = (ListViewItemBuilder<CodeObjectInsight>) buildersHolder.getBuilder(insight.getType());
             final List<ListViewItem<?>> insightListItems = builder.build(insight, groupManager);
             allItems.addAll(insightListItems);
         });

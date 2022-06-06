@@ -7,6 +7,6 @@ import org.jetbrains.annotations.NotNull;
 
 public interface EditorEventsHandler {
 
-    void start(@NotNull Project project, CaretContextService methodContextUpdated, LanguageService languageService);
+    void start(@NotNull Project project, CaretContextService caretContextService, LanguageService languageService);
 
 }

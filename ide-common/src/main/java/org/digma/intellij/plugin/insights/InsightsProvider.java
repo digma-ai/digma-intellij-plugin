@@ -2,14 +2,12 @@ package org.digma.intellij.plugin.insights;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import org.digma.intellij.plugin.analytics.AnalyticsProvider;
-import org.digma.intellij.plugin.analytics.Environment;
+import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.insights.view.BuildersHolder;
 import org.digma.intellij.plugin.insights.view.InsightsViewBuilder;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
-import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
 import org.jetbrains.annotations.NotNull;
 
@@ -20,14 +18,12 @@ public class InsightsProvider {
 
     private static final Logger LOGGER = Logger.getInstance(InsightsProvider.class);
 
-    private final AnalyticsProvider analyticsProvider;
-    private final Environment environment;
+    private final AnalyticsService analyticsService;
 
     private final BuildersHolder buildersHolder = new BuildersHolder();
 
     public InsightsProvider(Project project) {
-        analyticsProvider = project.getService(AnalyticsProvider.class);
-        environment = project.getService(Environment.class);
+        analyticsService = project.getService(AnalyticsService.class);
     }
 
     public InsightsListContainer getInsights(@NotNull MethodInfo methodInfo) {
@@ -35,9 +31,9 @@ public class InsightsProvider {
         List<String> objectIds = new ArrayList<>();
         objectIds.add(methodInfo.idWithType());
         objectIds.addAll(methodInfo.getRelatedCodeObjectIds());
-        Log.log(LOGGER::debug, "Got {} code object ids for method {}",objectIds.size(), methodInfo.getId());
+        Log.log(LOGGER::debug, "Got following code object ids for method {}: {}",methodInfo,objectIds);
 
-        List<CodeObjectInsight> codeObjectInsights = analyticsProvider.getInsights(new InsightsRequest(environment.getCurrent(), objectIds));
+        List<? extends CodeObjectInsight> codeObjectInsights = analyticsService.getInsights(objectIds);
         Log.log(LOGGER::debug, "CodeObjectInsights for {}: {}", methodInfo, codeObjectInsights);
 
         InsightsViewBuilder insightsViewBuilder = new InsightsViewBuilder(buildersHolder);

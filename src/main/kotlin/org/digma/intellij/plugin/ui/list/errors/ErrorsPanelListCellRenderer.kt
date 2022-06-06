@@ -28,18 +28,16 @@ import javax.swing.*
 class ErrorsPanelListCellRenderer : AbstractPanelListCellRenderer() {
 
 
+    @Suppress("UNCHECKED_CAST")
     override fun createPanel(project: Project, value: ListViewItem<*>, index: Int): JPanel {
-        return getOrCreatePanel(project, index, value as ListViewItem<CodeObjectError>)
+        return getOrCreatePanel(value as ListViewItem<CodeObjectError>)
     }
 
-    @Suppress("UNCHECKED_CAST")
-    private fun getOrCreatePanel(project: Project, index: Int, value: ListViewItem<CodeObjectError>): JPanel {
+    private fun getOrCreatePanel(value: ListViewItem<CodeObjectError>): JPanel {
 
         val model = value.modelObject
 
-        val result = createSingleErrorPanel(model)
-
-        return result
+        return createSingleErrorPanel(model)
     }
 
 }

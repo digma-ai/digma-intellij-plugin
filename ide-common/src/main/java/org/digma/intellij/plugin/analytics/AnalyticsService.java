@@ -12,19 +12,17 @@ import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class AnalyticsService implements AnalyticsProvider, Disposable {
+public class AnalyticsService implements Disposable {
 
     private static final Logger LOGGER = Logger.getInstance(AnalyticsService.class);
 
-    //todo: where is the url configured ?
-    private final String baseUrl = "http://localhost:5051";
+    private final Environment environment;
 
     private final Project project;
 
@@ -32,28 +30,37 @@ public class AnalyticsService implements AnalyticsProvider, Disposable {
 
     public AnalyticsService(Project project) {
         this.project = project;
-        analyticsProviderProxy = newAnalyticsProviderProxy(new RestAnalyticsProvider(baseUrl));
+        environment = new Environment(project,this);
+        analyticsProviderProxy = newAnalyticsProviderProxy(new RestAnalyticsProvider(environment.getBaseUrl()));
     }
 
+    public Environment getEnvironment() {
+        return environment;
+    }
 
-    @Override
-    public List<String> getEnvironments() {
+    List<String> getEnvironments() {
         return analyticsProviderProxy.getEnvironments();
     }
 
-    @Override
-    public List<CodeObjectSummary> getSummaries(CodeObjectSummaryRequest summaryRequest) {
-        return analyticsProviderProxy.getSummaries(summaryRequest);
+    private String getCurrentEnvironment(){
+        String currentEnv = environment.getCurrent();
+        if (currentEnv == null || currentEnv.isEmpty()){
+            throw new AnalyticsServiceException("No selected environment");
+        }
+        return currentEnv;
     }
 
-    @Override
-    public List<CodeObjectInsight> getInsights(InsightsRequest insightsRequest) {
-        return analyticsProviderProxy.getInsights(insightsRequest);
+
+    public List<CodeObjectSummary> getSummaries(List<String> objectIds) {
+        return analyticsProviderProxy.getSummaries(new CodeObjectSummaryRequest(getCurrentEnvironment(), objectIds));
     }
 
-    @Override
-    public List<CodeObjectError> getErrorsOfCodeObject(String environment, String codeObjectId) {
-        return analyticsProviderProxy.getErrorsOfCodeObject(environment, codeObjectId);
+    public List<CodeObjectInsight> getInsights(List<String> objectIds) {
+        return analyticsProviderProxy.getInsights(new InsightsRequest(getCurrentEnvironment(), objectIds));
+    }
+
+    public List<CodeObjectError> getErrorsOfCodeObject( String codeObjectId) {
+        return analyticsProviderProxy.getErrorsOfCodeObject(getCurrentEnvironment(), codeObjectId);
     }
 
     @Override
@@ -65,21 +72,19 @@ public class AnalyticsService implements AnalyticsProvider, Disposable {
         }
     }
 
-    @Override
-    public void close() throws IOException {
-        dispose();
-    }
+
 
 
     /**
      * A proxy to swallow all AnalyticsProvider exceptions.
      * the AnalyticsService class is an IDE component and better not to throw exceptions.
      */
-    private class AnalyticsInvocationHandler implements InvocationHandler {
+    private static class AnalyticsInvocationHandler implements InvocationHandler {
 
-        private AnalyticsProvider analyticsProvider;
+        private final AnalyticsProvider analyticsProvider;
 
-        private ObjectMapper objectMapper = new ObjectMapper();
+        //ObjectMapper here is only used for printing the result to log as json
+        private final ObjectMapper objectMapper = new ObjectMapper();
 
         public AnalyticsInvocationHandler(AnalyticsProvider analyticsProvider) {
             this.analyticsProvider = analyticsProvider;
@@ -104,11 +109,12 @@ public class AnalyticsService implements AnalyticsProvider, Disposable {
 
                 return result;
             } catch (Exception e) {
+                Log.log(LOGGER::warn, "Error invoking {} {}",method.getName(),e);
                 if (args != null && args.length > 0) {
                     String argsStr = Arrays.stream(args).map(Object::toString).collect(Collectors.joining(","));
-                    Log.error(LOGGER, e, "error invoking AnalyticsProvide.{}({}), exception {}", method.getName(), argsStr, e);
+                    Log.error(LOGGER, e, "error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsStr, e);
                 } else {
-                    Log.error(LOGGER, e, "error invoking AnalyticsProvide.{}, exception {}", method.getName(), e);
+                    Log.error(LOGGER, e, "error invoking AnalyticsProvider.{}, exception {}", method.getName(), e);
                 }
                 //todo: we probably need to show some error message to user
                 return null;

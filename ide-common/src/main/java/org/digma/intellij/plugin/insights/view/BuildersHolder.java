@@ -12,7 +12,7 @@ import java.util.Map;
 
 public class BuildersHolder {
 
-    private final Map<InsightType, ListViewItemBuilder<?>> map = new HashMap<>(30);
+    private final Map<InsightType, ListViewItemBuilder<? extends CodeObjectInsight>> map = new HashMap<>(30);
 
     public BuildersHolder() {
         createMap();
@@ -25,11 +25,11 @@ public class BuildersHolder {
     }
 
     @NotNull
-    public ListViewItemBuilder<?> getBuilder(InsightType insightType) {
+    public ListViewItemBuilder<? extends CodeObjectInsight> getBuilder(InsightType insightType) {
         return map.get(insightType);
     }
 
-    private ListViewItemBuilder<?> newBuilder(InsightType type) {
+    private ListViewItemBuilder<? extends CodeObjectInsight> newBuilder(InsightType type) {
         switch (type) {
             case HotSpot:
                 return new HotspotListViewItemBuilder();

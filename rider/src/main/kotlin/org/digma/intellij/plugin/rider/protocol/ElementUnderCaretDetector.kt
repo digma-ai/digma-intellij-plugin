@@ -77,7 +77,7 @@ class ElementUnderCaretDetector(private val project: Project) {
             return
 
         val psiFileForMethod = PsiUtils.uriToPsiFile(methodUnderCaret.fileUri,project)
-        if (psiFile == psiFileForMethod){
+        if (psiFile == psiFileForMethod){ //in kotlin '==' is actually calling equals method
             Log.log(LOGGER::debug, "Current MethodUnderCaret belongs to psi file: {}", psiFile.virtualFile.path)
             Log.log(LOGGER::debug, "Notifying MethodUnderCaret: {}", methodUnderCaret)
             notifyElementUnderCaret(methodUnderCaret, caretContextService)

@@ -25,5 +25,4 @@ public interface ListViewItemBuilder<T extends CodeObjectInsight> {
      */
     List<ListViewItem<?>> build(T codeObjectInsight, ListGroupManager groupManager);
 
-
 }

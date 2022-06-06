@@ -53,12 +53,6 @@ namespace Digma.Rider.Discovery
         }
 
 
-        //this method handles only the add event, when the text control is already fully loaded.
-        //todo: consider adding DocumentChange listener , the code objects will be in CodeObjectsCache.
-        // can also notify frontend about DocumentChange from CodeObjectsCache.
-        // A new class will produce the event but will not be in the cache yet, so maybe 
-        // its better to notify frontend about DocumentChanged from the cache, that will catch
-        // changes on existing and new documents.
         private void AddRemoveDocumentHandler(AddRemoveEventArgs<ITextControl> addRemoveEvent)
         {
             Log(_logger, "Got AddRemoveEvent for TextControl {0}", addRemoveEvent.Value?.Document);
@@ -107,12 +101,29 @@ namespace Digma.Rider.Discovery
 
         private void HandleDocumentOpenChange([NotNull] IPsiSourceFile psiSourceFile)
         {
+            Log(_logger,"HandleDocumentOpenChange for PsiSourceFile '{0}'", psiSourceFile);
+            Log(_logger,"Trying to find PsiSourceFile '{0}' in cache", psiSourceFile);
             var document = _codeObjectsCache.Map.TryGetValue(psiSourceFile);
-            if (document == null)
+            //document may be null if:
+            //the cache is not ready yet, it can happen if a document is opened on startup because it was opened before shutdown.
+            //the document has no code objects, the cache doesn't save empty documents.
+            //document.IsComplete will be false if the cache couldn't resolve references on startup, it happens on startup
+            //if resharper's caches are not ready yet.
+            //in all cases we try to build the Document on demand, in this stage references should resolve.
+            if (document is not { IsComplete: true })
             {
-                Log(_logger,"Document for PsiSourceFile '{0}' was not found in cache. probably a new document or a document with no code objects.",
-                    psiSourceFile);
-                return;
+                var reason = document == null ? "was not found in cache" : "was found in cache but is not complete";
+                Log(_logger,"Document for PsiSourceFile '{0}' {1}. Trying to build it on-demand.",
+                    psiSourceFile,reason);
+                _codeObjectsCache.ProcessOnDemand(psiSourceFile);
+                document = _codeObjectsCache.Map.TryGetValue(psiSourceFile);
+                
+                if (document == null)
+                {
+                    Log(_logger,"Document for PsiSourceFile '{0}' was not found in cache after ProcessOnDemand. Probably a document with no code objects.",
+                        psiSourceFile);
+                    return;    
+                }
             }
 
             Log(_logger,"Found cached Document for PsiSourceFile '{0}'", psiSourceFile);
@@ -154,6 +165,7 @@ namespace Digma.Rider.Discovery
 
                 _groupingEvent = shellLocks.CreateGroupingEvent(textControl.Lifetime,
                     "DocumentChanged::" + _textControl.Document.Moniker, TimeSpan.FromSeconds(15), DocumentChanged);
+                
                 textControl.Lifetime.Bracket(() => _textControl.Document.DocumentChanged += DocumentChangedEventGrouper,
                     () => _textControl.Document.DocumentChanged -= DocumentChangedEventGrouper);
             }

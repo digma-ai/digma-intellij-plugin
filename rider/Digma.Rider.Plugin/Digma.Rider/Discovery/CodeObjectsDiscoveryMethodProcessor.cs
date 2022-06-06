@@ -2,37 +2,28 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Digma.Rider.Protocol;
 using Digma.Rider.Util;
-using JetBrains.Annotations;
-using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.CSharp.Tree;
 using JetBrains.ReSharper.Psi.Tree;
 using JetBrains.Util;
 using static Digma.Rider.Logging.Logger;
 using static JetBrains.Util.Logging.Logger;
-using static Digma.Rider.Util.StringUtils;
 
 namespace Digma.Rider.Discovery
 {
-    internal class CodeObjectsDiscoveryMethodProcessor : IRecursiveElementProcessor
+    internal class CodeObjectsDiscoveryMethodProcessor : CodeObjectsDiscoveryProcessor
     {
         private static readonly ILogger Logger = GetLogger(typeof(CodeObjectsDiscoveryMethodProcessor));
-        
-        private readonly string _fileUri;
 
         private readonly ICSharpFunctionDeclaration _functionDeclaration;
         private readonly RiderMethodInfo _methodInfo;
-        
-        [NotNull]
-        public RiderMethodInfo MethodInfo => _methodInfo;
-        
-        public bool ProcessingIsFinished => false;
 
-        public CodeObjectsDiscoveryMethodProcessor(string fileUri,
-            ICSharpFunctionDeclaration functionDeclaration)
+
+        public CodeObjectsDiscoveryMethodProcessor(ICSharpFunctionDeclaration functionDeclaration,
+            DocumentDiscoveryContext discoveryContext) : base(discoveryContext)
         {
-            _fileUri = fileUri;
             _functionDeclaration = functionDeclaration;
             _methodInfo = BuildMethodInfo(functionDeclaration);
+            discoveryContext.Methods.Add(_methodInfo.Id, _methodInfo);       
         }
 
         private RiderMethodInfo BuildMethodInfo(ICSharpFunctionDeclaration functionDeclaration)
@@ -41,16 +32,16 @@ namespace Digma.Rider.Discovery
             var declaredName = PsiUtils.GetDeclaredName(functionDeclaration);
             var containingClassName = PsiUtils.GetClassName(functionDeclaration);
             var containingNamespace = PsiUtils.GetNamespace(functionDeclaration);
-            var containingFileUri = _fileUri;
-            
-            return new RiderMethodInfo(methodFqn,declaredName,containingClassName,containingNamespace,containingFileUri,new List<RiderSpanInfo>());
+            var containingFileUri = DiscoveryContext.FileUri;
+
+            return new RiderMethodInfo(methodFqn, declaredName, containingClassName, containingNamespace,
+                containingFileUri, new List<RiderSpanInfo>());
         }
 
 
         [SuppressMessage("ReSharper", "UnusedVariable")]
-        public bool InteriorShouldBeProcessed(ITreeNode element)
+        public override bool InteriorShouldBeProcessed(ITreeNode element)
         {
-            //Log(Logger, "InteriorShouldBeProcessed for tree node {0} for file {1}",element,GetShortFileUriName(_fileUri));
             switch (element)
             {
                 case IBlock block:
@@ -62,40 +53,40 @@ namespace Digma.Rider.Discovery
             return false;
         }
 
-        public void ProcessBeforeInterior(ITreeNode element)
+        public override void ProcessBeforeInterior(ITreeNode element)
         {
-            //Log(Logger, "ProcessBeforeInterior for tree node {0} for file {1}",element,GetShortFileUriName(_fileUri));
             switch (element)
             {
                 case ILocalVariableDeclaration localVariableDeclaration:
                 {
-                    Log(Logger, "in ILocalVariableDeclaration {0} for method {1} in file {2}",element,_functionDeclaration,GetShortFileUriName(_fileUri));
-                    Log(Logger, "in ILocalVariableDeclaration {0} ,Trying to discover span",element);
+                    Log(Logger, "in '{0}' for method '{1}' in file '{2}'", 
+                        element,
+                        _functionDeclaration, DiscoveryContext.PsiSourceFile.Name);
                     var spanDiscovery = new SpanDiscovery(localVariableDeclaration);
                     if (spanDiscovery.InstLibrary == null || spanDiscovery.SpanName == null)
                     {
-                        Log(Logger, "No span discovered in ILocalVariableDeclaration {0} for method {1} in file {2}",element,_functionDeclaration,GetShortFileUriName(_fileUri));
+                        if (spanDiscovery.HasReferenceResolvingErrors)
+                        {
+                            Log(Logger, "Could not resolve all references in SpanDiscovery for '{0}' for method '{1}' in file '{2}'. Marking Document incomplete.",element,_functionDeclaration,DiscoveryContext.PsiSourceFile.Name);
+                            DiscoveryContext.HasReferenceResolvingErrors = true;
+                        }
+
+                        Log(Logger, "No span discovered in '{0}' for method '{1}' in file '{2}'",
+                            element, _functionDeclaration, DiscoveryContext.PsiSourceFile.Name);
                         return;
                     }
+
                     var instLibrary = spanDiscovery.InstLibrary;
                     var spanName = spanDiscovery.SpanName;
                     var id = Identities.ComputeSpanFqn(instLibrary, spanName);
-                    var spanInfo = new RiderSpanInfo(id,spanName,_methodInfo.Id,_fileUri);
-                    Log(Logger, "Found span {0} for method {1} in file {2}",spanInfo,_functionDeclaration,GetShortFileUriName(_fileUri));
+                    var spanInfo = new RiderSpanInfo(id, spanName, _methodInfo.Id, DiscoveryContext.FileUri);
+                    Log(Logger, "Found span '{0}' for method '{1}' in file '{2}'", spanInfo, _functionDeclaration,
+                        DiscoveryContext.PsiSourceFile.Name);
                     _methodInfo.Spans.Add(spanInfo);
-                    
+
                     break;
                 }
             }
         }
-
-        public void ProcessAfterInterior(ITreeNode element)
-        {
-            //Log(Logger, "ProcessAfterInterior for tree node {0} for file {1}",element,GetShortFileUriName(_fileUri));
-        }
-
-     
     }
-
-  
 }

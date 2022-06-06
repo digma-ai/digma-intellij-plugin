@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.icons;
 
 import com.intellij.icons.AllIcons;
-import com.intellij.openapi.util.IconLoader;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -15,13 +14,14 @@ public final class Icons {
     private Icons() {
     }
 
-    public static final Icon TOOL_WINDOW = IconLoader.getIcon("/icons/toolwindow.png", Icons.class);
-    public static final Icon INSIGHT_METHOD_SCOPE = AllIcons.Nodes.Method;
-    ;
-    public static final Icon INSIGHT_DOCUMENT_SCOPE = AllIcons.FileTypes.Any_type;
-    public static final Icon INSIGHT_EMPTY_SCOPE = AllIcons.General.InspectionsErrorEmpty;
-    public static final Icon TELESCOPE_16 = loadAndScaleIcon("/icons/telescope.png", 16);
-    public static final Icon INTERFACE_16 = AllIcons.Nodes.Interface;
+    public static final Icon TOOL_WINDOW = loadAndScaleIcon("/icons/digma.png", 13);
+    public static final Icon METHOD_32 = loadAndScaleIcon("/icons/insight/method.png", 32);
+    public static final Icon DOCUMENT_32 = loadAndScaleIcon("/icons/insight/csharpfile.png", 32);
+    public static final Icon EMPTY = AllIcons.General.InspectionsErrorEmpty;
+
+    public static final Icon TELESCOPE_32 = loadAndScaleIcon("/icons/insight/telescope.png", 32);
+
+    public static final Icon ENDPOINT_32 = loadAndScaleIcon("/icons/insight/endpoint.png", 32);
     public static final Icon TRACE_INTO_16 = AllIcons.Actions.TraceInto;
     public static final Icon STEP_OUT_16 = AllIcons.Actions.StepOut;
 
@@ -30,6 +30,9 @@ public final class Icons {
         private Insight() {
         }
 
+        public static final Icon INSIGHT_METHOD_SCOPE = METHOD_32;
+        public static final Icon INSIGHT_DOCUMENT_SCOPE = DOCUMENT_32;
+        public static final Icon INSIGHT_EMPTY_SCOPE = EMPTY;
         public static final Icon BOTTLENECK = loadAndScaleIcon("/icons/insight/bottleneck.png", 32);
         public static final Icon LOW_USAGE = loadAndScaleIcon("/icons/insight/gauge_low.png", 32);
         public static final Icon NORMAL_USAGE = loadAndScaleIcon("/icons/insight/gauge_normal.png", 32);
@@ -39,8 +42,8 @@ public final class Icons {
 
         //meaningful names for specific views,makes it easier to replace sizes or read from properties files.
         public static final Icon HOTSPOT = loadAndScaleIcon("/icons/insight/target.png", 32);
-        public static final Icon SPAN_GROUP_TITLE = TELESCOPE_16;
-        public static final Icon HTTP_GROUP_TITLE = INTERFACE_16;
+        public static final Icon SPAN_GROUP_TITLE = TELESCOPE_32;
+        public static final Icon HTTP_GROUP_TITLE = ENDPOINT_32;
     }
 
     public static class Error {

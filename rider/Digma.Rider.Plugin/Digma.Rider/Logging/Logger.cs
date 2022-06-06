@@ -8,7 +8,7 @@ namespace Digma.Rider.Logging
     {
         public static void Log(ILogger logger, string message, params object[] parameters)
         {
-            logger.Trace("Digma: " + message, parameters);
+            logger.Info("Digma: " + message, parameters);
         }
         
         

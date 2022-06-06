@@ -4,6 +4,7 @@ using Digma.Rider.Util;
 using JetBrains.Annotations;
 using JetBrains.Application.Threading;
 using JetBrains.Core;
+using JetBrains.DataFlow;
 using JetBrains.DocumentManagers;
 using JetBrains.DocumentManagers.Transactions;
 using JetBrains.Lifetimes;
@@ -114,7 +115,7 @@ namespace Digma.Rider.Protocol
                     textControl.Caret.Position.Change.Advise(textControl.Lifetime,
                         h =>
                         {
-                            //Log(_logger, "Caret.Position.Change event for {0} new pos:{1}, old pos:{2}",textControl.Document,h.GetNewOrNull(),h.GetOldOrNull());
+                            Log(_logger, "Got Caret.Position.Change event for document {0}, client id {1} new pos:{2}, old pos:{3}",textControl.Document,textControl.GetClientId(),h.GetNewOrNull(),h.GetOldOrNull());
                             _groupingEvent.FireIncoming();
                         });
                 });

@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using Digma.Rider.Protocol;
 using JetBrains.Application.Threading;
+using JetBrains.Collections;
 using JetBrains.DataFlow;
 using JetBrains.DocumentManagers;
 using JetBrains.DocumentModel;
@@ -111,25 +112,34 @@ namespace Digma.Rider.Discovery
                     return;
                 }
 
+                //this code is the same as CodeObjectsCache.Build
                 Log(_logger, "Found PsiSourceFile {0} for TextControl {1}", psiSourceFile, textControl.Document);
                 var psiFiles = psiSourceFile.GetPsiFiles<CSharpLanguage>();
                 var fileUri = Identities.ComputeFileUri(psiSourceFile);
-                var document = new Document(fileUri);
+                var discoveryContext = new DocumentDiscoveryContext(psiSourceFile, false, fileUri);
                 foreach (var psiFile in psiFiles)
                 {
                     var cSharpFile = psiFile.Is<ICSharpFile>();
                     if (cSharpFile == null)
                         continue;
 
-                    var discoveryProcessor = new CodeObjectsDiscoveryFileProcessor(fileUri,cSharpFile);
+                    var discoveryProcessor = new CodeObjectsDiscoveryFileProcessor(cSharpFile,discoveryContext);
                     cSharpFile.ProcessDescendants(discoveryProcessor);
-                    var methodInfos = discoveryProcessor.MethodInfos;
-                    foreach (var riderMethodInfo in methodInfos)
-                    {
-                        document.Methods.Add(riderMethodInfo.Id, riderMethodInfo);
-                    }
                 }
 
+                if (discoveryContext.Methods.IsEmpty())
+                {
+                    Log(_logger, "No code objects found for {}", psiSourceFile);
+                    return;
+                }
+                
+                
+                var document = new Document(!discoveryContext.HasReferenceResolvingErrors, fileUri);
+                foreach (var (key, value) in discoveryContext.Methods)
+                {
+                    document.Methods.Add(key,value);
+                }
+                
                 LogFoundMethodsForDocument(_logger, document);
 
                 _codeObjectsHost.AddOpenChangeDocument(psiSourceFile, document);

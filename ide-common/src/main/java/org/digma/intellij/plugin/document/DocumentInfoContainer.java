@@ -1,43 +1,62 @@
 package org.digma.intellij.plugin.document;
 
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.PsiFile;
-import org.digma.intellij.plugin.analytics.AnalyticsProvider;
+import org.digma.intellij.plugin.analytics.AnalyticsService;
+import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
+import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
-import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
-import org.digma.intellij.plugin.model.rest.summary.MethodCodeObjectSummary;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class DocumentInfoContainer {
 
+    private static final Logger LOGGER = Logger.getInstance(DocumentInfoContainer.class);
 
     private final PsiFile psiFile;
     private DocumentInfo documentInfo;
     private final Map<String, CodeObjectSummary> methodSummaries = Collections.synchronizedMap(new HashMap<>());
 
-    public DocumentInfoContainer(PsiFile psiFile) {
+    public DocumentInfoContainer(@NotNull PsiFile psiFile) {
         this.psiFile = psiFile;
     }
 
 
-    public void update(DocumentInfo documentInfo, AnalyticsProvider analyticsProvider, String environment) {
+    /**
+     * update is invoked every time new code objects are available. usually when a document is opened in
+     * the editor and every time the document changes.
+     * (document change events are fired only after some quite period, see for example the grouping event in
+     * Digma.Rider.Discovery.EditorListener.DocumentChangeTracker)
+     */
+    public void update(DocumentInfo documentInfo, AnalyticsService analyticsService) {
+
+        Log.log(LOGGER::debug, "Updating document for {}: {}", psiFile.getVirtualFile(), documentInfo);
 
         //maybe documentInfo already exists, override it anyway with a new one from analysis
         this.documentInfo = documentInfo;
 
-        List<String> objectIds = new ArrayList<>();
-        this.documentInfo.getMethods().forEach((id, methodInfo) -> objectIds.add(methodInfo.idWithType()));
+        List<String> objectIds = this.documentInfo.getMethods().values().stream().flatMap((Function<MethodInfo, Stream<String>>) methodInfo -> {
+            var ids = new ArrayList<String>();
+            ids.add(methodInfo.idWithType());
+            ids.addAll(methodInfo.getSpans().stream().map(SpanInfo::idWithType).collect(Collectors.toList()));
+            return ids.stream();
+        }).collect(Collectors.toList());
 
-        List<CodeObjectSummary> summaries = analyticsProvider.getSummaries(new CodeObjectSummaryRequest(environment, objectIds));
-        //todo: maybe always clear methodSummaries and put the new ones. maybe older summaries are not relevant anymore.
-        if (summaries.isEmpty()) {
-            methodSummaries.clear();
-        }else{
-            summaries.forEach(codeObjectSummary -> methodSummaries.put(codeObjectSummary.getCodeObjectId(), codeObjectSummary));
-        }
+
+        Log.log(LOGGER::debug, "Requesting summaries for {}: with ids {}", psiFile.getVirtualFile(), objectIds);
+        List<CodeObjectSummary> summaries = analyticsService.getSummaries(objectIds);
+        Log.log(LOGGER::debug, "Got summaries for {}: {}", psiFile.getVirtualFile(), summaries);
+
+        //always clear methodSummaries and update with new ones
+        methodSummaries.clear();
+        summaries.forEach(codeObjectSummary -> methodSummaries.put(codeObjectSummary.getCodeObjectId(), codeObjectSummary));
     }
 
 
@@ -50,13 +69,10 @@ public class DocumentInfoContainer {
     }
 
     public Map<String, CodeObjectSummary> getSummaries() {
-        //todo: return other summary types
         return methodSummaries;
     }
 
-    public MethodCodeObjectSummary getMethodSummaries(String methodId) {
-        return (MethodCodeObjectSummary) methodSummaries.get(methodId);
-    }
+
 
     @Nullable
     public MethodInfo getMethodInfo(String id) {

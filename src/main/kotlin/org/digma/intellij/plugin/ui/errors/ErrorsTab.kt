@@ -13,20 +13,21 @@ import org.digma.intellij.plugin.ui.common.topLine
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.errors.ErrorsPanelList
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
-import org.digma.intellij.plugin.ui.panels.ResettablePanel
+import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import java.awt.BorderLayout
 import javax.swing.Box
+import javax.swing.JComponent
 import javax.swing.SwingUtilities
 
 val errorsModel: ErrorsModel = ErrorsModel()
 
 
-fun errorsPanel(project: Project): ResettablePanel {
+fun errorsPanel(project: Project): DigmaTabPanel {
 
 
     val topPanel = panel {
         row {
-            var topLine = topLine(project, errorsModel, "Code errors")
+            val topLine = topLine(project, errorsModel, "Code errors")
             cell(topLine)
                 .horizontalAlign(HorizontalAlign.FILL)
                 .onReset {
@@ -34,7 +35,7 @@ fun errorsPanel(project: Project): ResettablePanel {
                 }
         }.layout(RowLayout.PARENT_GRID)
         row {
-            var scopeLine = scopeLine(project, { errorsModel.classAndMethod() }, ScopeLineIconProducer(errorsModel))
+            val scopeLine = scopeLine(project, { errorsModel.getScope() }, ScopeLineIconProducer(errorsModel))
             cell(scopeLine)
                 .horizontalAlign(HorizontalAlign.FILL)
                 .onReset {
@@ -53,7 +54,15 @@ fun errorsPanel(project: Project): ResettablePanel {
 
     val errorsPanelList = ScrollablePanelList(ErrorsPanelList(project, errorsModel.listViewItems))
 
-    val result = object : ResettablePanel() {
+    val result = object : DigmaTabPanel() {
+        override fun getPreferredFocusableComponent(): JComponent {
+            return topPanel
+        }
+
+        override fun getPreferredFocusedComponent(): JComponent {
+            return errorsPanelList
+        }
+
         override fun reset() {
             topPanel.reset()
             SwingUtilities.invokeLater {

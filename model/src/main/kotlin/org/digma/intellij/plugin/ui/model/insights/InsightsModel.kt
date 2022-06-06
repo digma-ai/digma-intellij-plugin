@@ -1,17 +1,13 @@
 package org.digma.intellij.plugin.ui.model.insights
 
-import org.digma.intellij.plugin.model.discovery.DocumentInfo
-import org.digma.intellij.plugin.model.discovery.MethodInfo
-import org.digma.intellij.plugin.ui.model.PanelModel
+import org.digma.intellij.plugin.ui.model.*
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.util.*
 
 data class InsightsModel(
     var insightsCount: Int = 0,
-    var methodName: String = "",
-    var className: String = "",
     var listViewItems: List<ListViewItem<*>> = Collections.emptyList(),
-    var previewListViewItems: List<ListViewItem<*>> = Collections.emptyList(),
+    var previewListViewItems: List<ListViewItem<String>> = Collections.emptyList(),
     var card: InsightsTabCard = InsightsTabCard.INSIGHTS,
     var scope: Scope = EmptyScope("")
 ) : PanelModel {
@@ -46,30 +42,4 @@ data class InsightsModel(
 
 enum class InsightsTabCard{
     INSIGHTS,PREVIEW
-}
-
-
-interface Scope{
-    fun getScope():String
-}
-
-class EmptyScope(val text:String): Scope{
-    override fun getScope(): String {
-        return text
-    }
-
-}
-
-class MethodScope(val methodInfo: MethodInfo): Scope{
-    override fun getScope(): String {
-        return "${methodInfo.containingClass}.${methodInfo.name}"
-    }
-
-}
-
-class DocumentScope(val documentInfo: DocumentInfo): Scope{
-    override fun getScope(): String {
-        return "${documentInfo.path.substringAfterLast('/')}"
-    }
-
 }

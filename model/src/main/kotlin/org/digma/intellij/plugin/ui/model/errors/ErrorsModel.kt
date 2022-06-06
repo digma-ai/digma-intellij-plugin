@@ -1,16 +1,13 @@
 package org.digma.intellij.plugin.ui.model.errors
 
-import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
-import org.digma.intellij.plugin.ui.model.PanelModel
+import org.digma.intellij.plugin.ui.model.*
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.util.*
 
 data class ErrorsModel(
-    var methodName: String = "",
-    var className: String = "",
     var listViewItems: List<ListViewItem<CodeObjectError>> = Collections.emptyList(),
-    var scope: MethodInfo? = null
+    var scope: Scope = EmptyScope("")
 ) : PanelModel {
 
     override fun count(): String {
@@ -18,18 +15,15 @@ data class ErrorsModel(
     }
 
     override fun isMethodScope(): Boolean {
-        return true
+        return scope is MethodScope
     }
 
     override fun isDocumentScope(): Boolean {
-        return false
+        return scope is DocumentScope
     }
 
     override fun getScope(): String {
-        return classAndMethod()
+        return scope.getScope()
     }
 
-    fun classAndMethod(): String {
-        return "$className.$methodName"
-    }
 }

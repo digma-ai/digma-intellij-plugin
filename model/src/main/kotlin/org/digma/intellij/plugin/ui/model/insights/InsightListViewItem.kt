@@ -21,8 +21,6 @@ open class InsightListViewItem<INSIGHT : CodeObjectInsight>(insight: INSIGHT) :
                 InsightType.NormalUsage -> 20
                 InsightType.HighUsage -> 10
                 InsightType.SlowEndpoint -> 50
-                //
-                else -> 99
             }
         }
     }

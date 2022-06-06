@@ -1,42 +1,30 @@
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Digma.Rider.Protocol;
-using JetBrains.Annotations;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.CSharp.Tree;
 using JetBrains.ReSharper.Psi.Tree;
 using JetBrains.Util;
-using static Digma.Rider.Logging.Logger;
-using static Digma.Rider.Util.StringUtils;
 using static JetBrains.Util.Logging.Logger;
+using static Digma.Rider.Logging.Logger;
 
 namespace Digma.Rider.Discovery
 {
-    internal class CodeObjectsDiscoveryClassProcessor : IRecursiveElementProcessor
+    internal class CodeObjectsDiscoveryClassProcessor : CodeObjectsDiscoveryProcessor
     {
         private static readonly ILogger Logger = GetLogger(typeof(CodeObjectsDiscoveryClassProcessor));
-        private readonly string _fileUri;
+        
         private readonly IClassDeclaration _classDeclaration;
 
-        public bool ProcessingIsFinished => false;
-        
-        private readonly IList<RiderMethodInfo> _methodInfos = new List<RiderMethodInfo>();
-
-        [NotNull]
-        public IList<RiderMethodInfo> MethodInfos => _methodInfos;
-        
-        public CodeObjectsDiscoveryClassProcessor(string fileUri,IClassDeclaration classDeclaration)
+        public CodeObjectsDiscoveryClassProcessor(IClassDeclaration classDeclaration,
+            DocumentDiscoveryContext discoveryContext) : base(discoveryContext)
         {
-            _fileUri = fileUri;
             _classDeclaration = classDeclaration;
         }
 
        
 
         [SuppressMessage("ReSharper", "UnusedVariable")]
-        public bool InteriorShouldBeProcessed(ITreeNode element)
+        public override bool InteriorShouldBeProcessed(ITreeNode element)
         {
-            //Log(Logger, "InteriorShouldBeProcessed for tree node {0} for file {1}",element,GetShortFileUriName(_fileUri));
             switch (element)
             {
                 case IClassDeclaration classDeclaration:
@@ -47,28 +35,34 @@ namespace Digma.Rider.Discovery
             return false;
         }
 
-        public void ProcessBeforeInterior(ITreeNode element)
+        public override void ProcessBeforeInterior(ITreeNode element)
         {
-            //Log(Logger, "ProcessBeforeInterior for tree node {0} in file {1}",element,_fileUri.SubstringAfterLast("/"));
             switch (element)
             {
                 case ICSharpFunctionDeclaration functionDeclaration:
                 {
-                    Log(Logger, "in ICSharpFunctionDeclaration {0} for file '{1}'",element,GetShortFileUriName(_fileUri));
-                    var methodProcessor = new CodeObjectsDiscoveryMethodProcessor(_fileUri, functionDeclaration);
-                    functionDeclaration.ProcessDescendants(methodProcessor);
-                    var methodInfo = methodProcessor.MethodInfo;
-                    Log(Logger, "Found MethodInfo {0} for class {1} in file '{2}'",methodInfo,_classDeclaration,GetShortFileUriName(_fileUri));
-                    _methodInfos.Add(methodInfo);
+                    Log(Logger, "in '{0}' for file '{1}'",element,DiscoveryContext.PsiSourceFile.Name);
+
+                    //TODO: this is a patch to ignore overloaded methods and not include them in 
+                    // the document's code objects until overloaded methods are supported in Digma's backend.
+                    // when overloaded methods are supported we need to change the Identities.ComputeFqn
+                    // and include only the code in th else block.
+                    var fqn = Identities.ComputeFqn(functionDeclaration);
+                    if (DiscoveryContext.Methods.ContainsKey(fqn))
+                    {
+                        Log(Logger, "Ignoring overloaded method {0} for file '{1}'",element,DiscoveryContext.PsiSourceFile.Name);
+                        DiscoveryContext.Methods.Remove(fqn);
+                    }
+                    else
+                    {
+                        var methodProcessor = new CodeObjectsDiscoveryMethodProcessor(functionDeclaration,DiscoveryContext);
+                        functionDeclaration.ProcessDescendants(methodProcessor);
+                    }
                     break;
                 }
             }
         }
 
-        public void ProcessAfterInterior(ITreeNode element)
-        {
-            //Log(Logger, "ProcessAfterInterior for tree node {0} for file {1}",element,GetShortFileUriName(_fileUri));
-        }
     }
 
 }

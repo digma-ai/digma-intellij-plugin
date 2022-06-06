@@ -14,7 +14,7 @@ public final class Icons {
     private Icons() {
     }
 
-    public static final Icon TOOL_WINDOW = loadAndScaleIcon("/icons/digma.png", 16);
+    public static final Icon TOOL_WINDOW = loadAndScaleIcon("/icons/digma.png", 13);
     public static final Icon METHOD_32 = loadAndScaleIcon("/icons/insight/method.png", 32);
     public static final Icon DOCUMENT_32 = loadAndScaleIcon("/icons/insight/csharpfile.png", 32);
     public static final Icon EMPTY = AllIcons.General.InspectionsErrorEmpty;

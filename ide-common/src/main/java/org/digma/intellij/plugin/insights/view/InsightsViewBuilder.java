@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.insights.view;
 
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
-import org.digma.intellij.plugin.model.rest.insights.HotspotInsight;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
 import org.digma.intellij.plugin.view.ListViewBuilder;
 import org.digma.intellij.plugin.view.ListViewItemBuilder;

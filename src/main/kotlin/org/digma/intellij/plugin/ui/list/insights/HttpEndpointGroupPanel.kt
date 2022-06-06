@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.ui.list.insights
 
-import com.intellij.ui.dsl.builder.BottomGap
 import com.intellij.ui.dsl.builder.TopGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign

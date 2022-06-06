@@ -3,9 +3,7 @@ package org.digma.intellij.plugin.document;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
-import org.digma.intellij.plugin.analytics.AnalyticsProvider;
-import org.digma.intellij.plugin.analytics.Environment;
-import org.digma.intellij.plugin.analytics.EnvironmentChanged;
+import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
@@ -27,27 +25,22 @@ import java.util.Map;
  * should be managed elsewhere, for that reason DocumentInfoService may return null if queried
  * for an object that doesn't exist in its documents list.
  */
-public class DocumentInfoService implements EnvironmentChanged {
+public class DocumentInfoService {
 
     private static final Logger LOGGER = Logger.getInstance(DocumentInfoService.class);
 
     private final Project project;
-    private final AnalyticsProvider analyticsProvider;
-    private final Environment environment;
-
+    private final AnalyticsService analyticsService;
 
     private final Map<PsiFile, DocumentInfoContainer> documents = Collections.synchronizedMap(new HashMap<>());
 
     public DocumentInfoService(Project project) {
         this.project = project;
-        analyticsProvider = project.getService(AnalyticsProvider.class);
-        environment = project.getService(Environment.class);
-
-        project.getMessageBus().connect().subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC,this);
+        analyticsService = project.getService(AnalyticsService.class);
     }
 
 
-    @Override
+    @SuppressWarnings("unused")
     public void environmentChanged(String newEnv) {
         documents.clear();
     }
@@ -62,7 +55,7 @@ public class DocumentInfoService implements EnvironmentChanged {
     public void addCodeObjects(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
         Log.log(LOGGER::debug, "Adding DocumentInfo for {},{}",psiFile,documentInfo);
         DocumentInfoContainer documentInfoContainer = documents.computeIfAbsent(psiFile, DocumentInfoContainer::new);
-        documentInfoContainer.update(documentInfo, analyticsProvider, environment.getCurrent());
+        documentInfoContainer.update(documentInfo, analyticsService);
         notifyDocumentInfoChanged(psiFile);
     }
 

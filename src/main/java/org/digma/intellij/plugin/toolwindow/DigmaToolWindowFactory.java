@@ -7,6 +7,7 @@ import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.ContentFactory;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.service.EditorInteractionService;
+import org.digma.intellij.plugin.ui.ToolWindowShower;
 import org.digma.intellij.plugin.ui.errors.ErrorsTabKt;
 import org.digma.intellij.plugin.ui.insights.InsightsTabKt;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
@@ -59,6 +60,7 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
         }
 
 
+        project.getService(ToolWindowShower.class).setToolWindow(toolWindow);
         EditorInteractionService.getInstance(project).start(project);
     }
 }

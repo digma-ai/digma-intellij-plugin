@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Digma.Rider.Protocol;
 using JetBrains.ProjectModel;
 using JetBrains.ReSharper.Daemon.CodeInsights;
 using JetBrains.ReSharper.Feature.Services.Navigation;
@@ -13,10 +14,12 @@ namespace Digma.Rider.Highlighting
     public class MethodInsightsProvider : ICodeInsightsProvider
     {
         private readonly ILogger _logger;
+        private readonly ShowToolWindowHost _showToolWindowHost;
 
-        public MethodInsightsProvider(ILogger logger)
+        public MethodInsightsProvider(ILogger logger,ShowToolWindowHost showToolWindowHost)
         {
             _logger = logger;
+            _showToolWindowHost = showToolWindowHost;
         }
 
         public bool IsAvailableIn(ISolution solution)
@@ -27,20 +30,25 @@ namespace Digma.Rider.Highlighting
         public void OnClick(CodeInsightsHighlighting highlighting, ISolution solution)
         {
             Log(_logger, "OnClick invoked for {0}", highlighting.DeclaredElement.ShortName);
-            using (CompilationContextCookie.GetExplicitUniversalContextIfNotSet())
-            {
-                highlighting.DeclaredElement.Navigate(true);
-            }
+            NavigateToMethod(highlighting);
         }
 
         public void OnExtraActionClick(CodeInsightsHighlighting highlighting, string actionId, ISolution solution)
         {
             Log(_logger, "OnExtraActionClick invoked for {0}", highlighting.DeclaredElement);
+            NavigateToMethod(highlighting);
+        }
+        
+        private void NavigateToMethod(CodeInsightsHighlighting highlighting)
+        {
             using (CompilationContextCookie.GetExplicitUniversalContextIfNotSet())
             {
                 highlighting.DeclaredElement.Navigate(true);
             }
+            _showToolWindowHost.ShowToolWindow();
         }
+
+        
 
         public string ProviderId => nameof(MethodInsightsProvider);
         public string DisplayName => "Method Hints";

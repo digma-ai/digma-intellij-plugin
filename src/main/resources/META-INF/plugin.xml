@@ -26,6 +26,8 @@
         <toolWindow id="Digma" secondary="true" icon="org.digma.intellij.plugin.icons.Icons.TOOL_WINDOW" anchor="left"
                     factoryClass="org.digma.intellij.plugin.toolwindow.DigmaToolWindowFactory"/>
 
+        <projectService serviceImplementation="org.digma.intellij.plugin.ui.ToolWindowShower"/>
+
         <projectService serviceImplementation="org.digma.intellij.plugin.service.EditorInteractionService"
                         serviceInterface="org.digma.intellij.plugin.ui.CaretContextService"/>
 

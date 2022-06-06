@@ -46,8 +46,8 @@ public class CodeLensProvider {
                     int score = methodCodeObjectSummary.getScore();
                     if (score >= 70){
                         CodeLens codeLens = new CodeLens(id, CodeObjectType.Method,"Error Hotspot");
-                        codeLens.setLensTooltipText("Error Hotspot tooltip");
-                        codeLens.setLensMoreText("Error Hotspot more text");
+                        codeLens.setLensTooltipText("Error Hotspot for "+id);
+                        codeLens.setLensMoreText("Go to Error Hotspot");
                         codeLens.setAnchor("Top");
                         codeLensList.add(codeLens);
                     }

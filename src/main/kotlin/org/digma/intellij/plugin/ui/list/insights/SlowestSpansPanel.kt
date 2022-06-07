@@ -10,13 +10,16 @@ import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.wrapCentered
 import java.math.BigDecimal
 import java.math.RoundingMode
+import javax.swing.Box
 import javax.swing.BoxLayout
+import javax.swing.JPanel
 
-fun slowestSpansPanel(insight: SlowestSpansInsight): JBPanel<JBPanel<*>> {
+fun slowestSpansPanel(insight: SlowestSpansInsight): JPanel {
 
     val topContents = createInsightPanel(
         "Span Bottleneck", asHtml("The following spans are slowing request handling"),
-        Icons.Insight.BOTTLENECK, asHtml(wrapCentered("Slow<br>Spans"))
+        Icons.Insight.BOTTLENECK, asHtml(wrapCentered("Slow<br>Spans")),
+        false
     )
 
     val panelOfList = panel {
@@ -34,10 +37,10 @@ fun slowestSpansPanel(insight: SlowestSpansInsight): JBPanel<JBPanel<*>> {
     val result = JBPanel<JBPanel<*>>()
     result.layout = BoxLayout(result, BoxLayout.Y_AXIS)
     result.add(topContents)
-    //result.add(Box.createVerticalStrut(5))
+    result.add(Box.createVerticalStrut(5))
     result.add(panelOfList)
 
-    return result
+    return insightItemPanel(result)
 }
 
 

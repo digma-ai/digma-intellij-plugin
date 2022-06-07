@@ -14,7 +14,7 @@ fun previewPanel(project: Project, listViewItem: ListViewItem<String>): JPanel {
 
     val result = panel {
         row {
-            link(methodId.replace("\$_\$",".")){
+            link(methodId.substringAfterLast("\$_\$",methodId)){
                 val actionListener: InsightsActionsService = project.getService(InsightsActionsService::class.java)
                 actionListener.navigateToMethod(methodId)
             }

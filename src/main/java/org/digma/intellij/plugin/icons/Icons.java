@@ -33,15 +33,14 @@ public final class Icons {
         public static final Icon INSIGHT_METHOD_SCOPE = METHOD_32;
         public static final Icon INSIGHT_DOCUMENT_SCOPE = DOCUMENT_32;
         public static final Icon INSIGHT_EMPTY_SCOPE = EMPTY;
-        public static final Icon BOTTLENECK = loadAndScaleIcon("/icons/insight/bottleneck.png", 32);
-        public static final Icon LOW_USAGE = loadAndScaleIcon("/icons/insight/gauge_low.png", 32);
-        public static final Icon NORMAL_USAGE = loadAndScaleIcon("/icons/insight/gauge_normal.png", 32);
-        public static final Icon HIGH_USAGE = loadAndScaleIcon("/icons/insight/gauge_high.png", 32);
-        public static final Icon SLOW = loadAndScaleIcon("/icons/insight/slow.png", 32);
-        public static final Icon THIN_TARGET = loadAndScaleIcon("/icons/insight/thin-target.png", 32);
+        public static final Icon BOTTLENECK = loadAndScaleIcon("/icons/insight/bottleneck.png", 48);
+        public static final Icon LOW_USAGE = loadAndScaleIcon("/icons/insight/gauge_low.png", 48);
+        public static final Icon NORMAL_USAGE = loadAndScaleIcon("/icons/insight/gauge_normal.png", 48);
+        public static final Icon HIGH_USAGE = loadAndScaleIcon("/icons/insight/gauge_high.png", 48);
+        public static final Icon SLOW = loadAndScaleIcon("/icons/insight/slow.png", 48);
 
-        //meaningful names for specific views,makes it easier to replace sizes or read from properties files.
-        public static final Icon HOTSPOT = loadAndScaleIcon("/icons/insight/target.png", 32);
+        //meaningful names for specific views,makes it easier to replace.
+        public static final Icon HOTSPOT = loadAndScaleIcon("/icons/insight/target.png", 48);
         public static final Icon SPAN_GROUP_TITLE = TELESCOPE_32;
         public static final Icon HTTP_GROUP_TITLE = ENDPOINT_32;
     }

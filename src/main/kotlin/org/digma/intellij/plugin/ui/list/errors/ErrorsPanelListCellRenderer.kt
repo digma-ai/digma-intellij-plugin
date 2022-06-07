@@ -15,6 +15,7 @@ import org.digma.intellij.plugin.ui.common.Swing.ERROR_RED
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.fixedSize
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
+import org.digma.intellij.plugin.ui.list.listItemPanel
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import org.ocpsoft.prettytime.PrettyTime
 import java.awt.BorderLayout
@@ -37,7 +38,7 @@ class ErrorsPanelListCellRenderer : AbstractPanelListCellRenderer() {
 
         val model = value.modelObject
 
-        return createSingleErrorPanel(model)
+        return listItemPanel(createSingleErrorPanel(model))
     }
 
 }

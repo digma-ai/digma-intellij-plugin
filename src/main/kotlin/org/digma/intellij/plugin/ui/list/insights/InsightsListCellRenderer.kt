@@ -48,10 +48,10 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
                     when (value.type) {
                         HttpEndpoint -> httpEndpointGroupPanel(value)
                         Span -> spanGroupPanel(value)
-                        else -> panelOfUnsupported("group type: ${value.type}")
+                        else -> insightGroupPanel(panelOfUnsupported("group type: ${value.type}"))
                     }
                 }
-                else -> panelOfUnsupported("group class: ${value.javaClass.simpleName}")
+                else -> insightGroupPanel(panelOfUnsupported("group class: ${value.javaClass.simpleName}"))
             }
         return panel
     }

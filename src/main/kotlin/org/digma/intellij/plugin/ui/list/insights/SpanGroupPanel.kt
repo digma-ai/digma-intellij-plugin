@@ -1,6 +1,8 @@
 package org.digma.intellij.plugin.ui.list.insights
 
+import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.BottomGap
+import com.intellij.ui.dsl.builder.TopGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.ui.dsl.gridLayout.VerticalAlign
@@ -18,19 +20,18 @@ fun spanGroupPanel(listViewItem: GroupListViewItem): JPanel {
 
     val items: SortedSet<ListViewItem<*>> = listViewItem.modelObject
 
-
     val result = panel {
         row("Span: ")
         {
             cell(JLabel(asHtml(listViewItem.groupId), Icons.Insight.SPAN_GROUP_TITLE, SwingConstants.LEFT))
                 .bold()
-        }.bottomGap(BottomGap.SMALL)
+        }.topGap(TopGap.SMALL)
 
         items.forEach {
             row {
                 cell(insightItemPanel(spanPanel(it as ListViewItem<SpanInsight>)))
                     .horizontalAlign(HorizontalAlign.FILL)
-            }
+            }.bottomGap(BottomGap.SMALL)
         }
     }
 
@@ -51,7 +52,7 @@ fun spanPanel(listViewItem: ListViewItem<SpanInsight>): JPanel {
     }
 
 
-    val listPanel = JPanel()
+    val listPanel = JBPanel<JBPanel<*>>()
     listPanel.layout = BoxLayout(listPanel, BoxLayout.Y_AXIS)
 
     spanInsight.flows.forEach { spanFlow ->
@@ -78,7 +79,7 @@ fun spanPanel(listViewItem: ListViewItem<SpanInsight>): JPanel {
     }
 
 
-    val result = JPanel()
+    val result = JBPanel<JBPanel<*>>()
     result.layout = BorderLayout()
     result.add(title, BorderLayout.NORTH)
     result.add(listPanel, BorderLayout.CENTER)

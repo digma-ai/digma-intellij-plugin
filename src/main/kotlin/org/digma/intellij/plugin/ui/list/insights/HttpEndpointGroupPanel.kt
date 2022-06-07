@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.list.insights
 
+import com.intellij.ui.dsl.builder.BottomGap
 import com.intellij.ui.dsl.builder.TopGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
@@ -33,13 +34,13 @@ fun httpEndpointGroupPanel(listViewItem: InsightGroupListViewItem): JPanel {
                     is HighUsageInsight -> highUsageInsightPanel(modelObject)
                     is SlowEndpointInsight -> slowEndpointPanel(modelObject)
                     is SlowestSpansInsight -> slowestSpansPanel(modelObject)
-                    else -> panelOfUnsupported("${modelObject?.javaClass?.simpleName}")
+                    else -> insightItemPanel(panelOfUnsupported("${modelObject?.javaClass?.simpleName}"))
                 }
 
             row {
-                cell(insightItemPanel(cellItem))
+                cell(cellItem)
                     .horizontalAlign(HorizontalAlign.FILL)
-            }.topGap(TopGap.MEDIUM)
+            }.bottomGap(BottomGap.SMALL)
         }
     }
 

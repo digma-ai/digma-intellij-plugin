@@ -30,10 +30,17 @@ internal class EndpointSchemaTest {
     }
 
     @Test
-    fun adjustHttpRouteIfNeededShouldSkipAdjustWhenSchemaExists() {
+    fun adjustHttpRouteIfNeededShouldSkipAdjustWhenHttpSchemaAlreadyExists() {
         val normalUsageInsight = NormalUsageInsight("456", "epHTTP:post /letsgo", 8)
         adjustHttpRouteIfNeeded(normalUsageInsight)
         assertEquals("epHTTP:post /letsgo", normalUsageInsight.route)
+    }
+
+    @Test
+    fun adjustHttpRouteIfNeededShouldSkipAdjustWhenRpcSchemaAlreadyExists() {
+        val normalUsageInsight = NormalUsageInsight("789", "epRPC:serviceA.methodB", 4)
+        adjustHttpRouteIfNeeded(normalUsageInsight)
+        assertEquals("epRPC:serviceA.methodB", normalUsageInsight.route)
     }
 
 }

@@ -48,8 +48,9 @@ fun httpEndpointGroupPanel(listViewItem: InsightGroupListViewItem): JPanel {
 }
 
 private fun headerAsHtml(listViewItem: InsightGroupListViewItem): String {
+    val shortRouteName = EndpointSchema.getShortRouteName(listViewItem.groupId);
     // groupId contains "[get|post] [uri]"
-    val split = listViewItem.groupId.split(' ');
+    val split = shortRouteName.split(' ');
     val httpMethod = split[0].uppercase()
     val httpRoute = split[1]
     return asHtml("HTTP $httpMethod $httpRoute")

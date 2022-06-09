@@ -2,6 +2,8 @@ package org.digma.intellij.plugin.insights.view;
 
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
+import org.digma.intellij.plugin.model.rest.insights.EndpointInsight;
+import org.digma.intellij.plugin.model.rest.insights.EndpointSchema;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
 import org.digma.intellij.plugin.view.ListViewBuilder;
 import org.digma.intellij.plugin.view.ListViewItemBuilder;
@@ -22,6 +24,8 @@ public class InsightsViewBuilder extends ListViewBuilder {
     @NotNull
     public List<ListViewItem<?>> build(@NotNull MethodInfo scope, List<? extends CodeObjectInsight> codeObjectInsights) {
 
+        adjustToHttpIfNeeded(codeObjectInsights);
+
         List<ListViewItem<?>> allItems = new ArrayList<>();
 
         codeObjectInsights.forEach(insight -> {
@@ -33,6 +37,14 @@ public class InsightsViewBuilder extends ListViewBuilder {
         allItems.addAll(groupManager.getGroupItems());
 
         return sortDistinct(allItems);
+    }
+
+    protected void adjustToHttpIfNeeded(final List<? extends CodeObjectInsight> codeObjectInsights) {
+        codeObjectInsights
+                .stream()
+                .filter(coi -> coi instanceof EndpointInsight)
+                .map(coi -> (EndpointInsight) coi)
+                .forEach(EndpointSchema::adjustHttpRouteIfNeeded);
     }
 
 }

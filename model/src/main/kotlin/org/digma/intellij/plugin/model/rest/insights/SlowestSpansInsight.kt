@@ -6,11 +6,11 @@ import java.beans.ConstructorProperties
 
 data class SlowestSpansInsight
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@ConstructorProperties("codeObjectId", "route","spans")
+@ConstructorProperties("codeObjectId", "route", "spans")
 constructor(
     override val codeObjectId: String,
-    val route: String,
+    override var route: String,
     val spans: List<SlowSpanInfo>
-) : CodeObjectInsight {
+) : EndpointInsight {
     override val type: InsightType = InsightType.SlowestSpans
 }

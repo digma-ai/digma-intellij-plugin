@@ -19,10 +19,14 @@ import java.util.stream.Collectors
 
 class InsightsViewService(val project: Project) {
 
-    lateinit var panel: DigmaTabPanel
-    lateinit var model: InsightsModel
-    lateinit var toolWindow: ToolWindow
-    lateinit var insightsContent: Content
+    //InsightsModel is singleton object
+    private var model = InsightsModel
+
+    //these may be null if the tool window did not open yet
+    var panel: DigmaTabPanel? = null
+    var toolWindow: ToolWindow? = null
+    var insightsContent: Content? = null
+
     private val insightsProvider: InsightsProvider = project.getService(InsightsProvider::class.java)
 
 
@@ -38,7 +42,7 @@ class InsightsViewService(val project: Project) {
         model.insightsCount = insightsListContainer.count
         model.card = InsightsTabCard.INSIGHTS
 
-        panel.reset()
+        updateUi()
     }
 
 
@@ -49,7 +53,7 @@ class InsightsViewService(val project: Project) {
         model.insightsCount = 0
         model.card = InsightsTabCard.INSIGHTS
 
-        panel.reset()
+        updateUi()
     }
 
 
@@ -61,7 +65,7 @@ class InsightsViewService(val project: Project) {
         model.insightsCount = 0
         model.card = InsightsTabCard.INSIGHTS
 
-        panel.reset()
+        updateUi()
     }
 
     fun showDocumentPreviewList(documentInfoContainer: DocumentInfoContainer?,
@@ -79,7 +83,7 @@ class InsightsViewService(val project: Project) {
 
         model.listViewItems = ArrayList()
         model.card = InsightsTabCard.PREVIEW
-        panel.reset()
+        updateUi()
         setVisible()
     }
 
@@ -92,6 +96,7 @@ class InsightsViewService(val project: Project) {
     private fun getDocumentPreviewItems(documentInfoContainer: DocumentInfoContainer): List<ListViewItem<String>> {
 
         val listViewItems = ArrayList<ListViewItem<String>>()
+        val docSummaries = documentInfoContainer.summaries
 
         documentInfoContainer.documentInfo.methods.forEach { (id, methodInfo) ->
 
@@ -99,7 +104,7 @@ class InsightsViewService(val project: Project) {
                 .collect(Collectors.toList())
             ids.add(id)
 
-            if (documentInfoContainer.summaries.keys.any { ids.contains(it) }) {
+            if (docSummaries.keys.any { ids.contains(it) }) {
                 listViewItems.add(ListViewItem(methodInfo.id,0))
             }
         }
@@ -110,7 +115,7 @@ class InsightsViewService(val project: Project) {
 
 
     fun setVisible() {
-        toolWindow.contentManager.setSelectedContent(insightsContent, true)
+        toolWindow?.contentManager?.setSelectedContent(insightsContent!!, true)
     }
 
     fun setContent(toolWindow: ToolWindow, insightsContent: Content) {
@@ -118,4 +123,8 @@ class InsightsViewService(val project: Project) {
         this.insightsContent = insightsContent
     }
 
+
+    private fun updateUi(){
+        panel?.reset()
+    }
 }

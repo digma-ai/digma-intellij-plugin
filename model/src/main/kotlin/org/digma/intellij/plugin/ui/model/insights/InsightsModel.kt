@@ -4,13 +4,14 @@ import org.digma.intellij.plugin.ui.model.*
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.util.*
 
-data class InsightsModel(
-    var insightsCount: Int = 0,
-    var listViewItems: List<ListViewItem<*>> = Collections.emptyList(),
-    var previewListViewItems: List<ListViewItem<String>> = Collections.emptyList(),
-    var card: InsightsTabCard = InsightsTabCard.INSIGHTS,
+object InsightsModel : PanelModel {
+
+    var insightsCount: Int = 0
+    var listViewItems: List<ListViewItem<*>> = Collections.emptyList()
+    var previewListViewItems: List<ListViewItem<String>> = Collections.emptyList()
+    var card: InsightsTabCard = InsightsTabCard.INSIGHTS
     var scope: Scope = EmptyScope("")
-) : PanelModel {
+
 
     override fun count(): String {
         return insightsCount.toString()

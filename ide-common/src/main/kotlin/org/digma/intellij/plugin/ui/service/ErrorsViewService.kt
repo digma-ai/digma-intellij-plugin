@@ -13,10 +13,14 @@ import java.util.*
 
 class ErrorsViewService(val project: Project) {
 
-    lateinit var panel: DigmaTabPanel
-    lateinit var model: ErrorsModel
-    lateinit var toolWindow: ToolWindow
-    lateinit var errorsContent: Content
+    //ErrorsModel is singleton object
+    private var model = ErrorsModel
+
+    //these may be null if the tool window did not open yet
+    var panel: DigmaTabPanel? = null
+    var toolWindow: ToolWindow? = null
+    var errorsContent: Content? = null
+
     private val errorsProvider: ErrorsProvider = project.getService(ErrorsProvider::class.java)
 
 
@@ -29,7 +33,7 @@ class ErrorsViewService(val project: Project) {
         model.listViewItems = errorsListContainer.listViewItems
         model.scope = MethodScope(methodInfo)
 
-        panel.reset()
+        updateUi()
     }
 
 
@@ -37,8 +41,7 @@ class ErrorsViewService(val project: Project) {
         model.listViewItems = ArrayList()
         model.scope = MethodScope(dummy)
 
-        panel.reset()
-
+        updateUi()
     }
 
 
@@ -46,11 +49,11 @@ class ErrorsViewService(val project: Project) {
         model.listViewItems = Collections.emptyList()
         model.scope = EmptyScope("")
 
-        panel.reset()
+        updateUi()
     }
 
     fun setVisible() {
-        toolWindow.contentManager.setSelectedContent(errorsContent, true)
+        toolWindow?.contentManager?.setSelectedContent(errorsContent!!, true)
     }
 
     fun setContent(toolWindow: ToolWindow, errorsContent: Content) {
@@ -58,4 +61,7 @@ class ErrorsViewService(val project: Project) {
         this.errorsContent = errorsContent
     }
 
+    private fun updateUi(){
+        panel?.reset()
+    }
 }

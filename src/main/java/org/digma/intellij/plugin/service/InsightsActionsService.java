@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class InsightsActionsService {
 
-    private Project project;
+    private final Project project;
     private final InsightsViewService insightsViewService;
     private final ErrorsViewService errorsViewService;
     private final LanguageService languageService;

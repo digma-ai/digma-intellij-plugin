@@ -22,13 +22,11 @@ import java.awt.CardLayout
 import javax.swing.*
 
 
-val insightsModel: InsightsModel = InsightsModel()
-
 fun insightsPanel(project: Project ): DigmaTabPanel {
 
     val topPanel = panel {
             row {
-                val topLine = topLine(project, insightsModel, "Code insights")
+                val topLine = topLine(project, InsightsModel, "Code insights")
                 cell(topLine)
                     .horizontalAlign(HorizontalAlign.FILL)
                     .onReset {
@@ -36,7 +34,7 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
                     }
             }
             row {
-                val scopeLine = scopeLine(project, { insightsModel.scope.getScope() }, ScopeLineIconProducer(insightsModel))
+                val scopeLine = scopeLine(project, { InsightsModel.scope.getScope() }, ScopeLineIconProducer(InsightsModel))
                 cell(scopeLine)
                     .horizontalAlign(HorizontalAlign.FILL)
                     .onReset {
@@ -54,8 +52,8 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
 
 
 
-    val insightsList = ScrollablePanelList(InsightsList(project,insightsModel.listViewItems))
-    val previewList = ScrollablePanelList(PreviewList(project,insightsModel.previewListViewItems))
+    val insightsList = ScrollablePanelList(InsightsList(project,InsightsModel.listViewItems))
+    val previewList = ScrollablePanelList(PreviewList(project,InsightsModel.previewListViewItems))
 
     val previewTitle = panel {
         row {
@@ -69,7 +67,7 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
         row{
             label("").bind(
                 JLabel::getText, JLabel::setText, PropertyBinding(
-                    get = { insightsModel.getPreviewListMessage() },
+                    get = { InsightsModel.getPreviewListMessage() },
                     set = {})
             )
         }
@@ -87,7 +85,7 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
     cardsPanel.add(previewPanel, InsightsTabCard.PREVIEW.name)
     cardLayout.addLayoutComponent(insightsList, InsightsTabCard.INSIGHTS.name)
     cardLayout.addLayoutComponent(previewPanel, InsightsTabCard.PREVIEW.name)
-    cardLayout.show(cardsPanel,insightsModel.card.name)
+    cardLayout.show(cardsPanel,InsightsModel.card.name)
 
     val result = object: DigmaTabPanel() {
         override fun getPreferredFocusableComponent(): JComponent {
@@ -95,7 +93,7 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
         }
 
         override fun getPreferredFocusedComponent(): JComponent {
-            return if (insightsModel.card.name == InsightsTabCard.INSIGHTS.name){
+            return if (InsightsModel.card.name == InsightsTabCard.INSIGHTS.name){
                 insightsList
             }else{
                 previewList
@@ -106,9 +104,9 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
             topPanel.reset()
             previewTitle.reset()
             SwingUtilities.invokeLater {
-                insightsList.getModel().setListData(insightsModel.listViewItems)
-                previewList.getModel().setListData(insightsModel.previewListViewItems)
-                cardLayout.show(cardsPanel,insightsModel.card.name)
+                insightsList.getModel().setListData(InsightsModel.listViewItems)
+                previewList.getModel().setListData(InsightsModel.previewListViewItems)
+                cardLayout.show(cardsPanel,InsightsModel.card.name)
                 cardsPanel.revalidate()
             }
         }

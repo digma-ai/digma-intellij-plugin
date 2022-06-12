@@ -1,6 +1,6 @@
 package org.digma.intellij.plugin.analytics;
 
-public class AnalyticsServiceException extends RuntimeException{
+public class AnalyticsServiceException extends Exception{
 
     public AnalyticsServiceException() {
     }

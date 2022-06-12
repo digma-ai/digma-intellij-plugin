@@ -38,7 +38,6 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
         {
             var insightsPanel = InsightsTabKt.insightsPanel(project);
             var insightsViewService = project.getService(InsightsViewService.class);
-            insightsViewService.setModel(InsightsTabKt.getInsightsModel());
             insightsViewService.setPanel(insightsPanel);
             var insightsContent = contentFactory.createContent(insightsPanel, "Insights", false);
             insightsContent.setPreferredFocusedComponent(insightsPanel::getPreferredFocusedComponent);
@@ -50,7 +49,6 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
         {
             var errorsPanel = ErrorsTabKt.errorsPanel(project);
             var errorsViewService = project.getService(ErrorsViewService.class);
-            errorsViewService.setModel(ErrorsTabKt.getErrorsModel());
             errorsViewService.setPanel(errorsPanel);
             var errorsContent = contentFactory.createContent(errorsPanel, "Errors", false);
             errorsContent.setPreferredFocusedComponent(errorsPanel::getPreferredFocusedComponent);

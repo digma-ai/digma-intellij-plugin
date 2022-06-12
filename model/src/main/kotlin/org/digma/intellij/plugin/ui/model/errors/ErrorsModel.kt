@@ -5,10 +5,11 @@ import org.digma.intellij.plugin.ui.model.*
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.util.*
 
-data class ErrorsModel(
-    var listViewItems: List<ListViewItem<CodeObjectError>> = Collections.emptyList(),
+object ErrorsModel : PanelModel {
+
+    var listViewItems: List<ListViewItem<CodeObjectError>> = Collections.emptyList()
     var scope: Scope = EmptyScope("")
-) : PanelModel {
+
 
     override fun count(): String {
         return listViewItems.size.toString()

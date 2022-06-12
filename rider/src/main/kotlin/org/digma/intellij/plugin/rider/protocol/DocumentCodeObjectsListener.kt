@@ -23,7 +23,7 @@ class DocumentCodeObjectsListener : ProjectManagerListener {
             val model = project.solution.codeObjectsModel
             model.documentAnalyzed.advise(project.lifetime) { documentKey ->
                 Log.log(LOGGER::debug, "Got documentAnalyzed event for {}",documentKey)
-                var docUri = model.documents[documentKey]?.fileUri
+                val docUri = model.documents[documentKey]?.fileUri
                 if (docUri != null) {
                     Log.log(LOGGER::debug, "Found document in the protocol for {}",documentKey)
                     documentAnalyzed(docUri, project)
@@ -38,8 +38,8 @@ class DocumentCodeObjectsListener : ProjectManagerListener {
         val psiFile = PsiUtils.uriToPsiFile(docUri, project)
         //if psiFile is null we probably have a bug somewhere
         if(psiFile == null){
-            Log.log(LOGGER::error, "Could not psiFile for document uri {}",docUri)
-            throw RuntimeException("Could not psiFile for document $docUri")
+            Log.log(LOGGER::error, "Could not find psiFile for document uri {}",docUri)
+            throw RuntimeException("Could not find psiFile for document $docUri")
         }
         Log.log(LOGGER::debug, "Notifying DocumentCodeObjectsChanged for {}",psiFile.virtualFile)
         notifyDocumentCodeObjectsChanged(psiFile)

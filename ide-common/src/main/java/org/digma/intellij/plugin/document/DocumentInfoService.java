@@ -39,6 +39,7 @@ public class DocumentInfoService {
 
     @SuppressWarnings("unused")
     public void environmentChanged(String newEnv) {
+        Log.log(LOGGER::debug, "Got environmentChanged event {}",newEnv);
         documents.clear();
     }
 
@@ -52,8 +53,8 @@ public class DocumentInfoService {
     //called after a document is analyzed for code objects
     public void addCodeObjects(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
         Log.log(LOGGER::debug, "Adding DocumentInfo for {},{}",psiFile.getVirtualFile(),documentInfo);
-        DocumentInfoContainer documentInfoContainer = documents.computeIfAbsent(psiFile, DocumentInfoContainer::new);
-        documentInfoContainer.update(documentInfo, analyticsService);
+        DocumentInfoContainer documentInfoContainer = documents.computeIfAbsent(psiFile, psiFile1 -> new DocumentInfoContainer(psiFile1,analyticsService));
+        documentInfoContainer.update(documentInfo);
         notifyDocumentInfoChanged(psiFile);
     }
 

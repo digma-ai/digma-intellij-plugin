@@ -19,15 +19,13 @@ import javax.swing.Box
 import javax.swing.JComponent
 import javax.swing.SwingUtilities
 
-val errorsModel: ErrorsModel = ErrorsModel()
-
 
 fun errorsPanel(project: Project): DigmaTabPanel {
 
 
     val topPanel = panel {
         row {
-            val topLine = topLine(project, errorsModel, "Code errors")
+            val topLine = topLine(project, ErrorsModel, "Code errors")
             cell(topLine)
                 .horizontalAlign(HorizontalAlign.FILL)
                 .onReset {
@@ -35,7 +33,7 @@ fun errorsPanel(project: Project): DigmaTabPanel {
                 }
         }.layout(RowLayout.PARENT_GRID)
         row {
-            val scopeLine = scopeLine(project, { errorsModel.getScope() }, ScopeLineIconProducer(errorsModel))
+            val scopeLine = scopeLine(project, { ErrorsModel.getScope() }, ScopeLineIconProducer(ErrorsModel))
             cell(scopeLine)
                 .horizontalAlign(HorizontalAlign.FILL)
                 .onReset {
@@ -52,7 +50,7 @@ fun errorsPanel(project: Project): DigmaTabPanel {
     topPanelWrapper.add(Box.createHorizontalStrut(8))
 
 
-    val errorsPanelList = ScrollablePanelList(ErrorsPanelList(project, errorsModel.listViewItems))
+    val errorsPanelList = ScrollablePanelList(ErrorsPanelList(project, ErrorsModel.listViewItems))
 
     val result = object : DigmaTabPanel() {
         override fun getPreferredFocusableComponent(): JComponent {
@@ -66,7 +64,7 @@ fun errorsPanel(project: Project): DigmaTabPanel {
         override fun reset() {
             topPanel.reset()
             SwingUtilities.invokeLater {
-                errorsPanelList.getModel().setListData(errorsModel.listViewItems)
+                errorsPanelList.getModel().setListData(ErrorsModel.listViewItems)
             }
         }
     }

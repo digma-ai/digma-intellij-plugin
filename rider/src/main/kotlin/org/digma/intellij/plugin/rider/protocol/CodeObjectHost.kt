@@ -1,19 +1,23 @@
 package org.digma.intellij.plugin.rider.protocol
 
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import com.jetbrains.rd.util.reactive.IMutableViewableMap
 import com.jetbrains.rider.projectView.solution
 import org.digma.intellij.plugin.document.DocumentCodeObjectsChanged
-import org.digma.intellij.plugin.model.lens.CodeLens
+import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.SpanInfo
+import org.digma.intellij.plugin.model.lens.CodeLens
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.annotations.NotNull
 import java.util.function.Consumer
 
 class CodeObjectHost(val project: Project) {
+
+    private val LOGGER = Logger.getInstance(CodeObjectHost::class.java)
 
     private var model: CodeObjectsModel = project.solution.codeObjectsModel
 
@@ -36,11 +40,14 @@ class CodeObjectHost(val project: Project) {
 
         if (codeLenses.isEmpty()) return
 
+        Log.log(LOGGER::debug, "Installing code lens for {}: {}",psiFile.virtualFile,codeLenses)
+
         codeLenses.forEach(Consumer { codeLens ->
             model.codeLens[codeLens.codeObjectId] = codeLens.toRiderCodeLensInfo()
         })
 
         val documentKey = PsiUtils.psiFileToDocumentProtocolKey(psiFile)
+        Log.log(LOGGER::debug, "Calling reanalyze for {}",documentKey)
         model.reanalyze.fire(documentKey)
     }
 
@@ -50,6 +57,8 @@ class CodeObjectHost(val project: Project) {
      * clears related objects and fired DocumentCodeObjectsChanged for documents that are still in the protocol
      */
     fun environmentChanged() {
+        Log.log(LOGGER::debug, "Got environmentChanged event , refreshing all documents")
+
         model.codeLens.clear()
         model.reanalyzeAll.fire(Unit)
 

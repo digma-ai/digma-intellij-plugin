@@ -8,7 +8,5 @@ interface PanelModel {
 
     fun isDocumentScope(): Boolean
 
-
-
     fun getScope(): String
 }

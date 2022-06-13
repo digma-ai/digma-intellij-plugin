@@ -25,6 +25,8 @@ public final class Icons {
     public static final Icon TRACE_INTO_16 = AllIcons.Actions.TraceInto;
     public static final Icon STEP_OUT_16 = AllIcons.Actions.StepOut;
 
+    public static final Icon QUESTION_MARK = AllIcons.General.QuestionDialog;
+
     public static class Insight {
 
         private Insight() {

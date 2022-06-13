@@ -4,10 +4,6 @@ import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.RowLayout
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.util.ui.JBUI.Borders.empty
-import org.digma.intellij.plugin.icons.Icons
-import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
-import org.digma.intellij.plugin.ui.list.insights.insightItemPanel
-import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.*
 import javax.swing.*
 
@@ -19,17 +15,9 @@ fun panelOfUnsupported(caption: String): JPanel {
     }
 }
 
-fun genericPanelForSingleInsight(listViewItem: ListViewItem<CodeObjectInsight>): JPanel {
-    val result = panel {
-        //temporary: need to implement logic
-        row {
-            label("Insight named '${listViewItem.modelObject.javaClass.simpleName}'")
-            icon(Icons.TOOL_WINDOW)
-        }
-    }
 
-    return insightItemPanel(result)
-}
+
+
 
 fun iconPanel(icon: Icon, text: String): JPanel {
     val panel = JPanel()

@@ -47,6 +47,8 @@ public class BuildersHolder {
                 return new GroupListViewItemBuilder<HighUsageInsight>(InsightGroupType.HttpEndpoint, insight -> insight.getRoute());
             case SlowEndpoint:
                 return new GroupListViewItemBuilder<SlowEndpointInsight>(InsightGroupType.HttpEndpoint, insight -> insight.getRoute());
+            case Unmapped:
+                return new NoGroupListViewItemBuilder<UnmappedInsight>();
             default:
                 //todo: temporary until we have all types implemented
                 return new EmptyListViewItemBuilder();

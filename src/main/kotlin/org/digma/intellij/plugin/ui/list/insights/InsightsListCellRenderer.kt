@@ -4,7 +4,7 @@ import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsight
 import org.digma.intellij.plugin.model.rest.insights.HotspotInsight
-import org.digma.intellij.plugin.ui.common.genericPanelForSingleInsight
+import org.digma.intellij.plugin.model.rest.insights.UnmappedInsight
 import org.digma.intellij.plugin.ui.common.panelOfUnsupported
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupListViewItem
@@ -31,6 +31,7 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
                 when (value.modelObject) {
                     is HotspotInsight -> hotspotPanel(value as ListViewItem<HotspotInsight>)
                     is ErrorInsight -> errorsPanel(project, value as ListViewItem<ErrorInsight>)
+                    is UnmappedInsight -> unmappedInsightPanel(value as ListViewItem<UnmappedInsight>)
                     else -> genericPanelForSingleInsight(value as ListViewItem<CodeObjectInsight>)
                 }
             }

@@ -4,9 +4,14 @@ import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.VerticalAlign
 import com.intellij.util.ui.JBUI.Borders.empty
+import org.digma.intellij.plugin.icons.Icons
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
+import org.digma.intellij.plugin.model.rest.insights.UnmappedInsight
+import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.iconPanelGrid
 import org.digma.intellij.plugin.ui.list.listGroupPanel
 import org.digma.intellij.plugin.ui.list.listItemPanel
+import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.BorderLayout
 import javax.swing.*
 
@@ -56,4 +61,27 @@ fun createInsightPanel(title: String, body: String, icon: Icon, iconText: String
     } else {
         result
     }
+}
+
+
+fun unmappedInsightPanel(listViewItem: ListViewItem<UnmappedInsight>): JPanel {
+
+    val methodName = listViewItem.modelObject.codeObjectId.substringAfterLast("\$_\$")
+
+    return createInsightPanel("Unmapped insight: '${listViewItem.modelObject.theType}'",
+        asHtml("unmapped insight type for '$methodName'"),
+        Icons.QUESTION_MARK, "")
+}
+
+
+fun genericPanelForSingleInsight(listViewItem: ListViewItem<CodeObjectInsight>): JPanel {
+    val result = panel {
+        //temporary: need to implement logic
+        row {
+            label("Insight named '${listViewItem.modelObject.javaClass.simpleName}'")
+            icon(Icons.TOOL_WINDOW)
+        }
+    }
+
+    return insightItemPanel(result)
 }

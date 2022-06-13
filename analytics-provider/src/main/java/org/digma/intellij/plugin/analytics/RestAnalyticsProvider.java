@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.analytics;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.OkHttpClient;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
@@ -96,14 +97,24 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 //                    .eventListener()
                     .build();
 
+            var jacksonFactory = JacksonConverterFactory.create(createObjectMapper());
+
             Retrofit retrofit = new Retrofit.Builder()
                     .baseUrl(baseUrl)
                     .client(okHttpClient)
-                    .addConverterFactory(JacksonConverterFactory.create())
+                    .addConverterFactory(jacksonFactory)
                     .validateEagerly(true)
                     .build();
 
             analyticsProvider = retrofit.create(AnalyticsProviderRetrofit.class);
+        }
+
+
+
+        private ObjectMapper createObjectMapper(){
+            ObjectMapper objectMapper = new ObjectMapper();
+            //objectMapper can be configured here is necessary
+            return objectMapper;
         }
 
 

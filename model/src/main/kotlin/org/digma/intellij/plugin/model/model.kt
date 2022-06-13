@@ -24,4 +24,5 @@ enum class InsightType {
     NormalUsage,
     HighUsage,
     SlowEndpoint,
+    Unmapped
 }

@@ -1,0 +1,245 @@
+{
+  "name": "System.InvalidOperationException",
+  "sourceCodeObjectId": "Sample.MoneyTransfer.API.Controllers.SampleInsightsController$_$Error",
+  "firstOccurenceTime": "2022-05-15T11:32:58.494488Z",
+  "lastOccurenceTime": "2022-05-15T11:32:58.494488Z",
+  "dayAvg": 9,
+  "scoreInfo": {
+    "score": 75,
+    "scoreParams": {
+      "Occurrences": 7,
+      "Trend": 18,
+      "Recent": 0,
+      "Unhandled": 50
+    }
+  },
+  "errors": [
+    {
+      "frameStacks": [
+        {
+          "exceptionType": "System.InvalidOperationException",
+          "frames": [
+            {
+              "moduleName": "HttpProtocol",
+              "functionName": "ProcessRequests[TContext]",
+              "lineNumber": -1,
+              "executedCode": "",
+              "codeObjectId": "Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http.HttpProtocol$_$ProcessRequests[TContext]",
+              "parameters": [],
+              "repeat": 0,
+              "spanName": "SampleInsights/Error",
+              "spanKind": "Server",
+              "moduleLogicalPath": "Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http.HttpProtocol",
+              "modulePhysicalPath": "",
+              "className": null
+            },
+            {
+              "moduleName": "SwaggerMiddleware",
+              "functionName": "Invoke",
+              "lineNumber": -1,
+              "executedCode": "",
+              "codeObjectId": "Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware$_$Invoke",
+              "parameters": [],
+              "repeat": 0,
+              "spanName": "SampleInsights/Error",
+              "spanKind": "Server",
+              "moduleLogicalPath": "Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware",
+              "modulePhysicalPath": "",
+              "className": null
+            },
+            {
+              "moduleName": "SwaggerUIMiddleware",
+              "functionName": "Invoke",
+              "lineNumber": -1,
+              "executedCode": "",
+              "codeObjectId": "Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware$_$Invoke",
+              "parameters": [],
+              "repeat": 0,
+              "spanName": "SampleInsights/Error",
+              "spanKind": "Server",
+              "moduleLogicalPath": "Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware",
+              "modulePhysicalPath": "",
+              "className": null
+            },
+            {
+              "moduleName": "AuthorizationMiddleware",
+              "functionName": "Invoke",
+              "lineNumber": -1,
+              "executedCode": "",
+              "codeObjectId": "Microsoft.AspNetCore.Authorization.AuthorizationMiddleware$_$Invoke",
+              "parameters": [],
+              "repeat": 0,
+              "spanName": "SampleInsights/Error",
+              "spanKind": "Server",
+              "moduleLogicalPath": "Microsoft.AspNetCore.Authorization.AuthorizationMiddleware",
+              "modulePhysicalPath": "",
+              "className": null
+            },
+            {
+              "moduleName": "EndpointMiddleware",
+              "functionName": "<Invoke>g__AwaitRequestTask|6_0",
+              "lineNumber": -1,
+              "executedCode": "",
+              "codeObjectId": "Microsoft.AspNetCore.Routing.EndpointMiddleware$_$<Invoke>g__AwaitRequestTask|6_0",
+              "parameters": [],
+              "repeat": 0,
+              "spanName": "SampleInsights/Error",
+              "spanKind": "Server",
+              "moduleLogicalPath": "Microsoft.AspNetCore.Routing.EndpointMiddleware",
+              "modulePhysicalPath": "",
+              "className": null
+            },
+            {
+              "moduleName": "ResourceInvoker",
+              "functionName": "<InvokeAsync>g__Logged|17_1",
+              "lineNumber": -1,
+              "executedCode": "",
+              "codeObjectId": "Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker$_$<InvokeAsync>g__Logged|17_1",
+              "parameters": [],
+              "repeat": 0,
+              "spanName": "SampleInsights/Error",
+              "spanKind": "Server",
+              "moduleLogicalPath": "Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker",
+              "modulePhysicalPath": "",
+              "className": null
+            },
+            {
+              "moduleName": "ResourceInvoker",
+              "functionName": "<InvokeAsync>g__Logged|17_1",
+              "lineNumber": -1,
+              "executedCode": "",
+              "codeObjectId": "Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker$_$<InvokeAsync>g__Logged|17_1",
+              "parameters": [],
+              "repeat": 0,
+              "spanName": "SampleInsights/Error",
+              "spanKind": "Server",
+              "moduleLogicalPath": "Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker",
+              "modulePhysicalPath": "",
+              "className": null
+            },
+            {
+              "moduleName": "ResourceInvoker",
+              "functionName": "<InvokeFilterPipelineAsync>g__Awaited|20_0",
+              "lineNumber": -1,
+              "executedCode": "",
+              "codeObjectId": "Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker$_$<InvokeFilterPipelineAsync>g__Awaited|20_0",
+              "parameters": [],
+              "repeat": 0,
+              "spanName": "SampleInsights/Error",
+              "spanKind": "Server",
+              "moduleLogicalPath": "Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker",
+              "modulePhysicalPath": "",
+              "className": null
+            },
+            {
+              "moduleName": "ControllerActionInvoker",
+              "functionName": "<InvokeInnerFilterAsync>g__Awaited|13_0",
+              "lineNumber": -1,
+              "executedCode": "",
+              "codeObjectId": "Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker$_$<InvokeInnerFilterAsync>g__Awaited|13_0",
+              "parameters": [],
+              "repeat": 0,
+              "spanName": "SampleInsights/Error",
+              "spanKind": "Server",
+              "moduleLogicalPath": "Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker",
+              "modulePhysicalPath": "",
+              "className": null
+            },
+            {
+              "moduleName": "ControllerActionInvoker",
+              "functionName": "Next",
+              "lineNumber": -1,
+              "executedCode": "",
+              "codeObjectId": "Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker$_$Next",
+              "parameters": [],
+              "repeat": 0,
+              "spanName": "SampleInsights/Error",
+              "spanKind": "Server",
+              "moduleLogicalPath": "Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker",
+              "modulePhysicalPath": "",
+              "className": null
+            },
+            {
+              "moduleName": "ControllerActionInvoker",
+              "functionName": "Rethrow",
+              "lineNumber": -1,
+              "executedCode": "",
+              "codeObjectId": "Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker$_$Rethrow",
+              "parameters": [],
+              "repeat": 0,
+              "spanName": "SampleInsights/Error",
+              "spanKind": "Server",
+              "moduleLogicalPath": "Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker",
+              "modulePhysicalPath": "",
+              "className": null
+            },
+            {
+              "moduleName": "ControllerActionInvoker",
+              "functionName": "<InvokeNextActionFilterAsync>g__Awaited|10_0",
+              "lineNumber": -1,
+              "executedCode": "",
+              "codeObjectId": "Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker$_$<InvokeNextActionFilterAsync>g__Awaited|10_0",
+              "parameters": [],
+              "repeat": 0,
+              "spanName": "SampleInsights/Error",
+              "spanKind": "Server",
+              "moduleLogicalPath": "Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker",
+              "modulePhysicalPath": "",
+              "className": null
+            },
+            {
+              "moduleName": "ControllerActionInvoker",
+              "functionName": "<InvokeActionMethodAsync>g__Logged|12_1",
+              "lineNumber": -1,
+              "executedCode": "",
+              "codeObjectId": "Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker$_$<InvokeActionMethodAsync>g__Logged|12_1",
+              "parameters": [],
+              "repeat": 0,
+              "spanName": "SampleInsights/Error",
+              "spanKind": "Server",
+              "moduleLogicalPath": "Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker",
+              "modulePhysicalPath": "",
+              "className": null
+            },
+            {
+              "moduleName": "AwaitableResultExecutor",
+              "functionName": "Execute",
+              "lineNumber": -1,
+              "executedCode": "",
+              "codeObjectId": "Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.AwaitableResultExecutor$_$Execute",
+              "parameters": [],
+              "repeat": 0,
+              "spanName": "SampleInsights/Error",
+              "spanKind": "Server",
+              "moduleLogicalPath": "Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.AwaitableResultExecutor",
+              "modulePhysicalPath": "",
+              "className": null
+            },
+            {
+              "moduleName": "SampleInsightsController",
+              "functionName": "Error",
+              "lineNumber": 59,
+              "executedCode": "",
+              "codeObjectId": "Sample.MoneyTransfer.API.Controllers.SampleInsightsController$_$Error",
+              "parameters": [],
+              "repeat": 0,
+              "spanName": "SampleInsights/Error",
+              "spanKind": "Server",
+              "moduleLogicalPath": "Sample.MoneyTransfer.API.Controllers.SampleInsightsController",
+              "modulePhysicalPath": "SampleInsights.cs",
+              "className": null
+            }
+          ],
+          "exceptionMessage": "operation is not valid"
+        }
+      ],
+      "stackTrace": "System.InvalidOperationException: operation is not valid\n   at Sample.MoneyTransfer.API.Controllers.SampleInsightsController.Error() in /src/Controllers/SampleInsights.cs:line 59\n   at lambda_method15(Closure , Object )\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.AwaitableResultExecutor.Execute(IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Logged|12_1(ControllerActionInvoker invoker)\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)\n   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)\n   at Microsoft.AspNetCore.Routing.EndpointMiddleware.<Invoke>g__AwaitRequestTask|6_0(Endpoint endpoint, Task requestTask, ILogger logger)\n   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)\n   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)\n   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)\n   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http.HttpProtocol.ProcessRequests[TContext](IHttpApplication`1 application)",
+      "lastInstanceCommitId": ""
+    }
+  ],
+  "originServices": [
+    {
+      "serviceName": "Sample.MoneyTransfer.API"
+    }
+  ]
+}

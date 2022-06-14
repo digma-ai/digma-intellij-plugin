@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.analytics;
 
+import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
@@ -13,12 +14,12 @@ public interface AnalyticsProvider extends Closeable {
 
     List<String> getEnvironments();
 
-
     List<CodeObjectSummary> getSummaries(CodeObjectSummaryRequest summaryRequest);
-
 
     List<CodeObjectInsight> getInsights(InsightsRequest insightsRequest);
 
     List<CodeObjectError> getErrorsOfCodeObject(String environment, String codeObjectId);
+
+    CodeObjectErrorDetails getCodeObjectErrorDetails(String errorSourceId);
 
 }

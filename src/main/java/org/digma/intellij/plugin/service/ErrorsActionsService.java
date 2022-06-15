@@ -1,20 +1,21 @@
 package org.digma.intellij.plugin.service;
 
 import com.intellij.openapi.project.Project;
-import org.digma.intellij.plugin.model.rest.insights.ErrorInsight;
+import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
+import org.digma.intellij.plugin.model.rest.insights.ErrorInsightNamedError;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
 import org.jetbrains.annotations.NotNull;
 
-public class InsightsActionsService {
+public class ErrorsActionsService {
 
     private final Project project;
     private final InsightsViewService insightsViewService;
     private final ErrorsViewService errorsViewService;
     private final LanguageService languageService;
 
-    public InsightsActionsService(Project project) {
+    public ErrorsActionsService(Project project) {
         this.project = project;
         insightsViewService = project.getService(InsightsViewService.class);
         errorsViewService = project.getService(ErrorsViewService.class);
@@ -22,11 +23,14 @@ public class InsightsActionsService {
     }
 
 
-    public void showErrorsTab(@NotNull ErrorInsight modelObject) {
+
+    public void showErrorDetails(@NotNull ErrorInsightNamedError error) {
+        errorsViewService.showErrorDetails(error.getUid());
         errorsViewService.setVisible();
     }
 
-    public void navigateToMethod(@NotNull String codeObjectId) {
-        languageService.navigateToMethod(codeObjectId);
+    public void showErrorDetails(@NotNull CodeObjectError codeObjectError) {
+        errorsViewService.showErrorDetails(codeObjectError.getUid());
+        errorsViewService.setVisible();
     }
 }

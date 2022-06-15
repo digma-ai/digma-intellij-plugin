@@ -10,6 +10,7 @@ import com.intellij.ui.dsl.gridLayout.VerticalAlign
 import com.intellij.util.ui.JBUI.Borders
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsight
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsightNamedError
+import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.service.InsightsActionsService
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
@@ -37,7 +38,7 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>): JPa
             panel {
                 listViewItem.modelObject.topErrors.forEach {
                     row {
-                        cell(topErrorPanel(it, listViewItem.modelObject))
+                        cell(topErrorPanel(project,it, listViewItem.modelObject))
                             .verticalAlign(VerticalAlign.CENTER)
                             .horizontalAlign(HorizontalAlign.LEFT)
                     }.layout(RowLayout.INDEPENDENT)
@@ -54,8 +55,7 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>): JPa
         row {
             link("Expand") {
                 val actionListener: InsightsActionsService = project.getService(InsightsActionsService::class.java)
-                actionListener.errorsExpandButtonClicked(listViewItem.modelObject)
-                //action here
+                actionListener.showErrorsTab(listViewItem.modelObject)
             }.horizontalAlign(HorizontalAlign.RIGHT)
         }.layout(RowLayout.INDEPENDENT)
     }
@@ -88,14 +88,14 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>): JPa
 }
 
 
-fun topErrorPanel(error: ErrorInsightNamedError, insight: ErrorInsight): JPanel {
+fun topErrorPanel(project: Project, error: ErrorInsightNamedError, insight: ErrorInsight): JPanel {
 
     val result = panel {
         //temporary: need to implement logic
         row {
             link(error.errorType) {
-                //error.codeObjectId
-                println("In action")
+                val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
+                actionListener.showErrorDetails(error)
             }
             var from = "From me"
             if (insight.codeObjectId != error.sourceCodeObjectId) {

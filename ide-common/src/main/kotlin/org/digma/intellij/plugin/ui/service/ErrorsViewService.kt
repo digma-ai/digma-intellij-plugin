@@ -8,6 +8,7 @@ import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.ui.model.EmptyScope
 import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
+import org.digma.intellij.plugin.ui.model.errors.ErrorsTabCard
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import java.util.*
 
@@ -32,6 +33,7 @@ class ErrorsViewService(val project: Project) {
         val errorsListContainer = errorsProvider.getErrors(methodInfo)
         model.listViewItems = errorsListContainer.listViewItems
         model.scope = MethodScope(methodInfo)
+        model.card = ErrorsTabCard.ERRORS_LIST
 
         updateUi()
     }
@@ -40,6 +42,18 @@ class ErrorsViewService(val project: Project) {
     fun contextChangeNoMethodInfo(dummy: MethodInfo) {
         model.listViewItems = ArrayList()
         model.scope = MethodScope(dummy)
+        model.card = ErrorsTabCard.ERRORS_LIST
+
+        updateUi()
+    }
+
+
+
+    fun showErrorDetails(uid: String) {
+
+//        model.listViewItems = Collections.emptyList()
+//        model.scope = EmptyScope("")
+        model.card = ErrorsTabCard.ERROR_DETAILS
 
         updateUi()
     }
@@ -48,6 +62,7 @@ class ErrorsViewService(val project: Project) {
     fun empty() {
         model.listViewItems = Collections.emptyList()
         model.scope = EmptyScope("")
+        model.card = ErrorsTabCard.ERRORS_LIST
 
         updateUi()
     }
@@ -64,4 +79,6 @@ class ErrorsViewService(val project: Project) {
     private fun updateUi(){
         panel?.reset()
     }
+
+
 }

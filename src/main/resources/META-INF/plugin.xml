@@ -47,6 +47,8 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.service.InsightsActionsService"/>
 
+        <projectService serviceImplementation="org.digma.intellij.plugin.service.ErrorsActionsService"/>
+
 
     </extensions>
 

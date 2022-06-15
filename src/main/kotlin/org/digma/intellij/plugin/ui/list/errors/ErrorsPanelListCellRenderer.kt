@@ -9,6 +9,7 @@ import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.discovery.CodeObjectInfo.Companion.extractMethodName
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.model.rest.errors.ScoreInfo
+import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.common.Swing.ERROR_GREEN
 import org.digma.intellij.plugin.ui.common.Swing.ERROR_ORANGE
 import org.digma.intellij.plugin.ui.common.Swing.ERROR_RED
@@ -31,23 +32,24 @@ class ErrorsPanelListCellRenderer : AbstractPanelListCellRenderer() {
 
     @Suppress("UNCHECKED_CAST")
     override fun createPanel(project: Project, value: ListViewItem<*>, index: Int): JPanel {
-        return getOrCreatePanel(value as ListViewItem<CodeObjectError>)
+        return getOrCreatePanel(project,value as ListViewItem<CodeObjectError>)
     }
 
-    private fun getOrCreatePanel(value: ListViewItem<CodeObjectError>): JPanel {
+    private fun getOrCreatePanel(project: Project,value: ListViewItem<CodeObjectError>): JPanel {
 
         val model = value.modelObject
 
-        return listItemPanel(createSingleErrorPanel(model))
+        return listItemPanel(createSingleErrorPanel(project,model))
     }
 
 }
 
-private fun createSingleErrorPanel(model: CodeObjectError): JPanel {
+private fun createSingleErrorPanel(project: Project,model: CodeObjectError): JPanel {
     val contents = panel {
         row {
             link(asHtml(model.name)) {
-                //TODO: implement the link
+                val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
+                actionListener.showErrorDetails(model)
             }.verticalAlign(VerticalAlign.TOP)
 
             val relativeFrom: String

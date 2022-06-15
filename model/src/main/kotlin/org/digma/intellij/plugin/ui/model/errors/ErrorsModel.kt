@@ -9,6 +9,7 @@ object ErrorsModel : PanelModel {
 
     var listViewItems: List<ListViewItem<CodeObjectError>> = Collections.emptyList()
     var scope: Scope = EmptyScope("")
+    var card: ErrorsTabCard = ErrorsTabCard.ERRORS_LIST
 
 
     override fun count(): String {
@@ -27,4 +28,9 @@ object ErrorsModel : PanelModel {
         return scope.getScope()
     }
 
+}
+
+
+enum class ErrorsTabCard{
+    ERRORS_LIST,ERROR_DETAILS
 }

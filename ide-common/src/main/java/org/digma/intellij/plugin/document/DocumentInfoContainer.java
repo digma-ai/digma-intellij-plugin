@@ -9,6 +9,9 @@ import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
+import org.digma.intellij.plugin.model.rest.summary.EndpointCodeObjectSummary;
+import org.digma.intellij.plugin.model.rest.summary.MethodCodeObjectSummary;
+import org.digma.intellij.plugin.model.rest.summary.SpanCodeObjectSummary;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,7 +30,9 @@ public class DocumentInfoContainer {
     private final PsiFile psiFile;
     private final AnalyticsService analyticsService;
     private DocumentInfo documentInfo;
-    private Map<String, CodeObjectSummary> methodSummaries;
+    private Map<String, MethodCodeObjectSummary> methodSummaries;
+    private Map<String, SpanCodeObjectSummary> spanSummaries;
+    private Map<String, EndpointCodeObjectSummary> endpointSummaries;
 
     public DocumentInfoContainer(@NotNull PsiFile psiFile, @NotNull AnalyticsService analyticsService) {
         this.psiFile = psiFile;
@@ -66,11 +71,26 @@ public class DocumentInfoContainer {
             List<CodeObjectSummary> summaries = analyticsService.getSummaries(objectIds);
             Log.log(LOGGER::debug, "Got summaries for {}: {}", psiFile.getVirtualFile(), summaries);
             methodSummaries = new HashMap<>();
-            summaries.forEach(codeObjectSummary -> methodSummaries.put(codeObjectSummary.getCodeObjectId(), codeObjectSummary));
+            spanSummaries = new HashMap<>();
+            endpointSummaries = new HashMap<>();
+
+            summaries.forEach(codeObjectSummary -> {
+
+                if (codeObjectSummary instanceof MethodCodeObjectSummary){
+                    methodSummaries.put(codeObjectSummary.getCodeObjectId(), (MethodCodeObjectSummary) codeObjectSummary);
+                }else if (codeObjectSummary instanceof SpanCodeObjectSummary){
+                    spanSummaries.put(codeObjectSummary.getCodeObjectId(), (SpanCodeObjectSummary) codeObjectSummary);
+                }else if (codeObjectSummary instanceof EndpointCodeObjectSummary){
+                    endpointSummaries.put(codeObjectSummary.getCodeObjectId(), (EndpointCodeObjectSummary) codeObjectSummary);
+                }
+
+            });
         } catch (AnalyticsServiceException e) {
             //methodSummaries = null means there was an error loading summaries, usually if the backend is not available.
             //don't log the exception, it was logged in AnalyticsService, keep the log quite because it can happen many times.
             methodSummaries = null;
+            spanSummaries = null;
+            endpointSummaries = null;
         }
     }
 
@@ -83,7 +103,7 @@ public class DocumentInfoContainer {
         return psiFile;
     }
 
-    public Map<String, CodeObjectSummary> getSummaries() {
+    public Map<String, MethodCodeObjectSummary> getMethodsSummaries() {
         //if methodSummaries is null try to recover
         if (methodSummaries == null){
             loadSummaries();
@@ -91,6 +111,39 @@ public class DocumentInfoContainer {
         //if methodSummaries is still null it means there is still an error loading, return an empty map to keep everything
         //working and don't crash the plugin, the next request will try to recover again
         return methodSummaries == null ? new HashMap<>() : methodSummaries;
+    }
+
+    public Map<String, SpanCodeObjectSummary> getSpanSummaries() {
+        //if methodSummaries is null try to recover
+        if (spanSummaries == null){
+            loadSummaries();
+        }
+        //if methodSummaries is still null it means there is still an error loading, return an empty map to keep everything
+        //working and don't crash the plugin, the next request will try to recover again
+        return spanSummaries == null ? new HashMap<>() : spanSummaries;
+    }
+
+    public Map<String, EndpointCodeObjectSummary> getEndpointSummaries() {
+        //if methodSummaries is null try to recover
+        if (endpointSummaries == null){
+            loadSummaries();
+        }
+        //if methodSummaries is still null it means there is still an error loading, return an empty map to keep everything
+        //working and don't crash the plugin, the next request will try to recover again
+        return endpointSummaries == null ? new HashMap<>() : endpointSummaries;
+    }
+
+
+
+
+    public List<CodeObjectSummary> getAllSummaries(){
+        List<CodeObjectSummary> summaries = new ArrayList<>();
+
+        summaries.addAll(methodSummaries == null? new ArrayList<>(): methodSummaries.values());
+        summaries.addAll(spanSummaries == null? new ArrayList<>(): spanSummaries.values());
+        summaries.addAll(endpointSummaries == null? new ArrayList<>(): endpointSummaries.values());
+
+        return summaries;
     }
 
 

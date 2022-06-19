@@ -90,21 +90,21 @@ class InsightsViewService(val project: Project) {
 
 
     private fun computeInsightsPreviewCount(documentInfoContainer: DocumentInfoContainer): Int {
-        return documentInfoContainer.summaries.values.stream().mapToInt { it.insightsCount }.sum()
+        return documentInfoContainer.allSummaries.stream().mapToInt { it.insightsCount }.sum()
     }
 
     private fun getDocumentPreviewItems(documentInfoContainer: DocumentInfoContainer): List<ListViewItem<String>> {
 
         val listViewItems = ArrayList<ListViewItem<String>>()
-        val docSummaries = documentInfoContainer.summaries
+        val docSummariesIds: Set<String> = documentInfoContainer.allSummaries.stream().map { it.codeObjectId }.collect(Collectors.toSet())
 
         documentInfoContainer.documentInfo.methods.forEach { (id, methodInfo) ->
-
+            //todo: we probably don't need to check for spans code object id because the span summary code object id is the method id
             val ids = methodInfo.spans.stream().map { obj: SpanInfo -> obj.id }
                 .collect(Collectors.toList())
             ids.add(id)
 
-            if (docSummaries.keys.any { ids.contains(it) }) {
+            if (docSummariesIds.any { ids.contains(it) }) {
                 listViewItems.add(ListViewItem(methodInfo.id,0))
             }
         }

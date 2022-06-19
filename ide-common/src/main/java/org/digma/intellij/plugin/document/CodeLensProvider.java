@@ -4,15 +4,14 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.lens.CodeLens;
 import org.digma.intellij.plugin.model.CodeObjectType;
+import org.digma.intellij.plugin.model.lens.CodeLens;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.MethodCodeObjectSummary;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class CodeLensProvider {
 
@@ -37,16 +36,16 @@ public class CodeLensProvider {
 
         Log.log(LOGGER::debug, "Got DocumentInfo for {}: {}",psiFile.getVirtualFile(),documentInfo.getDocumentInfo());
 
-        Map<String, CodeObjectSummary> summaries = documentInfo.getSummaries();
+        List<CodeObjectSummary> summaries = documentInfo.getAllSummaries();
 
-        summaries.forEach((id, codeObjectSummary) -> {
+        summaries.forEach(codeObjectSummary -> {
             switch (codeObjectSummary.getType()){
                 case MethodSummary:{
                     MethodCodeObjectSummary methodCodeObjectSummary = (MethodCodeObjectSummary) codeObjectSummary;
                     int score = methodCodeObjectSummary.getScore();
                     if (score >= 70){
-                        CodeLens codeLens = new CodeLens(id, CodeObjectType.Method,"Error Hotspot");
-                        codeLens.setLensTooltipText("Error Hotspot for "+id);
+                        CodeLens codeLens = new CodeLens(codeObjectSummary.getCodeObjectId(), CodeObjectType.Method,"Error Hotspot");
+                        codeLens.setLensTooltipText("Error Hotspot for "+codeObjectSummary.getCodeObjectId());
                         codeLens.setLensMoreText("Go to Error Hotspot");
                         codeLens.setAnchor("Top");
                         codeLensList.add(codeLens);
@@ -58,9 +57,8 @@ public class CodeLensProvider {
                 case SpanSummary:{
 
                 }
-            }
+            }});
 
-        });
 
         Log.log(LOGGER::debug, "Collected code lens for {}: {}",psiFile.getVirtualFile(),codeLensList);
 

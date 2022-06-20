@@ -27,6 +27,13 @@ public final class Icons {
 
     public static final Icon QUESTION_MARK = AllIcons.General.QuestionDialog;
 
+    public static final Icon BACK = AllIcons.Actions.Back;
+    public static final Icon FORWARD = AllIcons.Actions.Forward;
+    public static final Icon BACK_ROLLOVER = loadAndScaleIcon("/icons/back-rollover.png", 48);
+    public static final Icon FORWARD_ROLLOVER = loadAndScaleIcon("/icons/forward-rollover.png", 48);
+
+    public static final Icon RED_THUNDER = loadAndScaleIcon("/icons/thunder.png", 48);
+
     public static class Insight {
 
         private Insight() {

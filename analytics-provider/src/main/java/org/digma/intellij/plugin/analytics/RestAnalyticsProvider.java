@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.analytics;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.OkHttpClient;
+import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
@@ -45,6 +46,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     @Override
     public List<CodeObjectError> getErrorsOfCodeObject(String environment, String codeObjectId) {
         return execute(() -> client.analyticsProvider.getErrorsOfCodeObject(environment, codeObjectId));
+    }
+
+    @Override
+    public CodeObjectErrorDetails getCodeObjectErrorDetails(String errorSourceId) {
+        return execute(() -> client.analyticsProvider.getCodeObjectErrorDetails(errorSourceId));
     }
 
     public <T> T execute(Supplier<Call<T>> supplier) {
@@ -132,7 +138,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     //a bit of ugly design. need a retrofit interface that returns Call objects.
     //it's internal to this implementation.
     //plus we have an AnalyticsProvider interface for the plugin code just because an interface is nice to have.
-    //both have the same methods with different return type but not necessarily.
+    //both have the same methods with different return type.
     private interface AnalyticsProviderRetrofit {
 
 
@@ -165,6 +171,12 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @GET("/CodeAnalytics/codeObjects/errors")
         Call<List<CodeObjectError>> getErrorsOfCodeObject(@Query("environment") String environment, @Query("codeObjectId") String codeObjectId);
+
+        @Headers({
+                "Content-Type:application/json"
+        })
+        @GET("/CodeAnalytics/codeObjects/errors/{errorSourceId}")
+        Call<CodeObjectErrorDetails> getCodeObjectErrorDetails(@Path("errorSourceId") String errorSourceId);
 
     }
 

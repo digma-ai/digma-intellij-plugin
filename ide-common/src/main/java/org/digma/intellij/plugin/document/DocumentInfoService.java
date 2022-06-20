@@ -81,4 +81,12 @@ public class DocumentInfoService {
         return documentInfoContainer == null ? null : documentInfoContainer.getMethodInfo(methodUnderCaret.getId());
     }
 
+    public MethodInfo findMethodInfo(String sourceCodeObjectId) {
+        MethodInfo methodInfo = this.documents.values().stream().
+                filter(documentInfoContainer -> documentInfoContainer.getDocumentInfo().getMethods().containsKey(sourceCodeObjectId)).
+                findAny().map(documentInfoContainer -> documentInfoContainer == null ? null : documentInfoContainer.getMethodInfo(sourceCodeObjectId)).
+                orElse(null);
+
+        return methodInfo;
+    }
 }

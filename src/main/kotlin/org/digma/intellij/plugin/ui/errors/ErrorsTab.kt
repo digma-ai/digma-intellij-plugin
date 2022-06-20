@@ -3,6 +3,7 @@
 package org.digma.intellij.plugin.ui.errors
 
 import com.intellij.openapi.project.Project
+import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.RowLayout
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
@@ -13,10 +14,13 @@ import org.digma.intellij.plugin.ui.common.topLine
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.errors.ErrorsPanelList
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
+import org.digma.intellij.plugin.ui.model.errors.ErrorsTabCard
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import java.awt.BorderLayout
+import java.awt.CardLayout
 import javax.swing.Box
 import javax.swing.JComponent
+import javax.swing.JPanel
 import javax.swing.SwingUtilities
 
 
@@ -52,6 +56,22 @@ fun errorsPanel(project: Project): DigmaTabPanel {
 
     val errorsPanelList = ScrollablePanelList(ErrorsPanelList(project, ErrorsModel.listViewItems))
 
+    val errorsListPanel = JBPanel<JBPanel<*>>()
+    errorsListPanel.layout = BorderLayout()
+    errorsListPanel.add(topPanelWrapper, BorderLayout.NORTH)
+    errorsListPanel.add(errorsPanelList, BorderLayout.CENTER)
+
+
+    val errorsDetailsPanel = errorDetailsPanel(project,ErrorsModel)
+
+    val cardLayout = CardLayout()
+    val cardsPanel = JPanel(cardLayout)
+    cardsPanel.add(errorsListPanel, ErrorsTabCard.ERRORS_LIST.name)
+    cardsPanel.add(errorsDetailsPanel, ErrorsTabCard.ERROR_DETAILS.name)
+    cardLayout.addLayoutComponent(errorsListPanel, ErrorsTabCard.ERRORS_LIST.name)
+    cardLayout.addLayoutComponent(errorsDetailsPanel, ErrorsTabCard.ERROR_DETAILS.name)
+    cardLayout.show(cardsPanel, ErrorsTabCard.ERRORS_LIST.name)
+
     val result = object : DigmaTabPanel() {
         override fun getPreferredFocusableComponent(): JComponent {
             return topPanel
@@ -65,13 +85,16 @@ fun errorsPanel(project: Project): DigmaTabPanel {
             topPanel.reset()
             SwingUtilities.invokeLater {
                 errorsPanelList.getModel().setListData(ErrorsModel.listViewItems)
+                errorsDetailsPanel.reset()
+                cardLayout.show(cardsPanel, ErrorsModel.card.name)
+                cardsPanel.revalidate()
             }
         }
     }
 
     result.layout = BorderLayout()
-    result.add(topPanelWrapper, BorderLayout.NORTH)
-    result.add(errorsPanelList, BorderLayout.CENTER)
+    result.add(cardsPanel,BorderLayout.CENTER)
+
 
     return result
 }

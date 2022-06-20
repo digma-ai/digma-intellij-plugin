@@ -5,25 +5,19 @@ import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.VerticalAlign
 import com.intellij.util.ui.JBUI
-import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.discovery.CodeObjectInfo.Companion.extractMethodName
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
-import org.digma.intellij.plugin.model.rest.errors.ScoreInfo
-import org.digma.intellij.plugin.ui.common.Swing.ERROR_GREEN
-import org.digma.intellij.plugin.ui.common.Swing.ERROR_ORANGE
-import org.digma.intellij.plugin.ui.common.Swing.ERROR_RED
+import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.common.asHtml
-import org.digma.intellij.plugin.ui.common.fixedSize
+import org.digma.intellij.plugin.ui.common.createScorePanel
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
 import org.digma.intellij.plugin.ui.list.listItemPanel
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import org.ocpsoft.prettytime.PrettyTime
-import java.awt.BorderLayout
-import java.awt.Color
-import java.awt.Dimension
-import java.awt.FlowLayout
 import java.util.*
-import javax.swing.*
+import javax.swing.Box
+import javax.swing.BoxLayout
+import javax.swing.JPanel
 
 
 class ErrorsPanelListCellRenderer : AbstractPanelListCellRenderer() {
@@ -31,23 +25,24 @@ class ErrorsPanelListCellRenderer : AbstractPanelListCellRenderer() {
 
     @Suppress("UNCHECKED_CAST")
     override fun createPanel(project: Project, value: ListViewItem<*>, index: Int): JPanel {
-        return getOrCreatePanel(value as ListViewItem<CodeObjectError>)
+        return getOrCreatePanel(project,value as ListViewItem<CodeObjectError>)
     }
 
-    private fun getOrCreatePanel(value: ListViewItem<CodeObjectError>): JPanel {
+    private fun getOrCreatePanel(project: Project,value: ListViewItem<CodeObjectError>): JPanel {
 
         val model = value.modelObject
 
-        return listItemPanel(createSingleErrorPanel(model))
+        return listItemPanel(createSingleErrorPanel(project,model))
     }
 
 }
 
-private fun createSingleErrorPanel(model: CodeObjectError): JPanel {
+private fun createSingleErrorPanel(project: Project,model: CodeObjectError): JPanel {
     val contents = panel {
         row {
             link(asHtml(model.name)) {
-                //TODO: implement the link
+                val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
+                actionListener.showErrorDetails(model)
             }.verticalAlign(VerticalAlign.TOP)
 
             val relativeFrom: String
@@ -91,64 +86,4 @@ private fun contentAsHtmlOfFirstAndLast(model: CodeObjectError): String {
     )
 }
 
-private fun createScorePanel(model: CodeObjectError): JPanel {
-    val lineBorder = BorderFactory.createLineBorder(colorOf(model.scoreInfo.score), 2, true)
-    val scoreToolTip = genToolTipAsHtml(model.scoreInfo)
 
-    val scorePanel = JPanel(FlowLayout())
-    fixedSize(scorePanel, Dimension(48, 48))
-    val scoreLabel = JLabel("${model.scoreInfo.score}", JLabel.CENTER)
-    scoreLabel.toolTipText = scoreToolTip
-    scoreLabel.size = Dimension(32, 32)
-    scorePanel.add(scoreLabel)
-    scorePanel.border = lineBorder
-
-    val iconLabel: JLabel
-    if (model.startsHere) {
-        iconLabel = JLabel(Icons.Error.RAISED_HERE)
-        iconLabel.toolTipText = "Raised here"
-    } else {
-        iconLabel = JLabel(Icons.Error.HANDLED_HERE)
-        iconLabel.toolTipText = "Handled here"
-    }
-
-    val result = JPanel()
-
-    result.layout = BoxLayout(result, BoxLayout.Y_AXIS)
-    result.add(scorePanel)
-    result.add(iconLabel, BorderLayout.EAST)
-
-    return result
-}
-
-private fun genToolTipAsHtml(scoreInfo: ScoreInfo): String {
-    val sb = StringBuilder()
-    var firstTime = true
-    scoreInfo.scoreParams
-        .forEach { (key, value) ->
-            if (value > 0) {
-                if (firstTime) {
-                    firstTime = false
-                } else {
-                    sb.append("<br>")
-                }
-                sb.append("$key: $value")
-            }
-        }
-    return asHtml(sb.toString())
-}
-
-private fun colorOf(score: Int?): Color {
-    if (score != null) {
-        if (score <= 40) {
-            return ERROR_GREEN
-        }
-        if (score <= 80) {
-            return ERROR_ORANGE
-        }
-        if (score <= 100) {
-            return ERROR_RED
-        }
-    }
-    return Color.WHITE
-}

@@ -22,7 +22,7 @@ public class InsightsActionsService {
     }
 
 
-    public void errorsExpandButtonClicked(@NotNull ErrorInsight modelObject) {
+    public void showErrorsTab(@NotNull ErrorInsight modelObject) {
         errorsViewService.setVisible();
     }
 

@@ -7,11 +7,13 @@ import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.ContentFactory;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.service.EditorInteractionService;
+import org.digma.intellij.plugin.service.ErrorsActionsService;
 import org.digma.intellij.plugin.ui.ToolWindowShower;
 import org.digma.intellij.plugin.ui.errors.ErrorsTabKt;
 import org.digma.intellij.plugin.ui.insights.InsightsTabKt;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
+import org.digma.intellij.plugin.ui.service.ToolWindowTabsHelper;
 import org.jetbrains.annotations.NotNull;
 
 
@@ -35,6 +37,9 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
 
         var contentFactory = ContentFactory.SERVICE.getInstance();
 
+        var toolWindowTabsHelper = project.getService(ToolWindowTabsHelper.class);
+        toolWindowTabsHelper.setToolWindow(toolWindow);
+
         {
             var insightsPanel = InsightsTabKt.insightsPanel(project);
             var insightsViewService = project.getService(InsightsViewService.class);
@@ -44,6 +49,7 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
             insightsContent.setPreferredFocusableComponent(insightsPanel.getPreferredFocusableComponent());
             toolWindow.getContentManager().addContent(insightsContent);
             insightsViewService.setContent(toolWindow,insightsContent);
+            toolWindowTabsHelper.setInsightsContent(insightsContent);
         }
 
         {
@@ -55,7 +61,12 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
             errorsContent.setPreferredFocusableComponent(errorsPanel.getPreferredFocusableComponent());
             toolWindow.getContentManager().addContent(errorsContent);
             errorsViewService.setContent(toolWindow,errorsContent);
+            toolWindowTabsHelper.setErrorsContent(errorsContent);
         }
+
+
+        ErrorsActionsService errorsActionsService = project.getService(ErrorsActionsService.class);
+        toolWindow.getContentManager().addContentManagerListener(errorsActionsService);
 
 
         project.getService(ToolWindowShower.class).setToolWindow(toolWindow);

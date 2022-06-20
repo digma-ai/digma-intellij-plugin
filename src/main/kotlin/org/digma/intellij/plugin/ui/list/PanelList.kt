@@ -18,7 +18,7 @@ import javax.swing.Scrollable
 import javax.swing.event.ListDataEvent
 import javax.swing.event.ListDataListener
 
-abstract class PanelList(val project: Project, listViewItems: List<ListViewItem<*>>) : JBPanel<PanelList>(), ListDataListener, Scrollable {
+abstract class PanelList(val project: Project, listViewItems: List<ListViewItem<*>>, private val gapBetweenItems: Boolean = true) : JBPanel<PanelList>(), ListDataListener, Scrollable {
 
     private val LOGGER = Logger.getInstance(PanelList::class.java)
 
@@ -104,7 +104,9 @@ abstract class PanelList(val project: Project, listViewItems: List<ListViewItem<
                 val newComp: JPanel = getListCellRendererComponent(project,this@PanelList,
                     model.getElementAt(i), i, this@PanelList.hasFocus())
                 add(newComp)
-                add(Box.createVerticalStrut(2))
+                if (gapBetweenItems) {
+                    add(Box.createVerticalStrut(2))
+                }
             }
 
         }

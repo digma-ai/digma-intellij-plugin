@@ -316,7 +316,7 @@ private fun backButton(project: Project): JPanel {
     val backButton = JButton(Icons.BACK)
     backButton.addActionListener {
         val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
-        actionListener.errorDetailsBackButtonPressed()
+        actionListener.closeErrorDetails()
     }
     backButton.isOpaque = false
     backButton.isContentAreaFilled = false

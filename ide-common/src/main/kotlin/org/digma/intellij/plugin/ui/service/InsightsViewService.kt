@@ -1,8 +1,6 @@
 package org.digma.intellij.plugin.ui.service
 
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.wm.ToolWindow
-import com.intellij.ui.content.Content
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.insights.InsightsListContainer
 import org.digma.intellij.plugin.insights.InsightsProvider
@@ -11,23 +9,16 @@ import org.digma.intellij.plugin.model.discovery.SpanInfo
 import org.digma.intellij.plugin.ui.model.DocumentScope
 import org.digma.intellij.plugin.ui.model.EmptyScope
 import org.digma.intellij.plugin.ui.model.MethodScope
-import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
-import org.digma.intellij.plugin.ui.model.errors.ErrorsTabCard
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsTabCard
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
-import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import java.util.stream.Collectors
 
-class InsightsViewService(val project: Project): AbstractViewService() {
+class InsightsViewService(project: Project): AbstractViewService(project) {
 
     //InsightsModel is singleton object
     private var model = InsightsModel
 
-    //these may be null if the tool window did not open yet
-    var panel: DigmaTabPanel? = null
-    var toolWindow: ToolWindow? = null
-    var insightsContent: Content? = null
 
     private val insightsProvider: InsightsProvider = project.getService(InsightsProvider::class.java)
 
@@ -115,22 +106,4 @@ class InsightsViewService(val project: Project): AbstractViewService() {
 
     }
 
-
-    fun setVisible() {
-        toolWindow?.contentManager?.setSelectedContent(insightsContent!!, true)
-    }
-
-    fun isVisible():Boolean{
-        return toolWindow?.contentManager?.selectedContent === insightsContent
-    }
-
-    fun setContent(toolWindow: ToolWindow, insightsContent: Content) {
-        this.toolWindow = toolWindow
-        this.insightsContent = insightsContent
-    }
-
-
-    override fun updateUi(){
-        panel?.reset()
-    }
 }

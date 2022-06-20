@@ -13,17 +13,14 @@ import org.digma.intellij.plugin.ui.model.errors.ErrorsTabCard
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import java.util.*
 
-class ErrorsViewService(val project: Project): AbstractViewService() {
+class ErrorsViewService(project: Project): AbstractViewService(project) {
 
     //ErrorsModel is singleton object
     private var model = ErrorsModel
 
-    //these may be null if the tool window did not open yet
-    var panel: DigmaTabPanel? = null
-    var toolWindow: ToolWindow? = null
-    var errorsContent: Content? = null
 
     private val errorsProvider: ErrorsProvider = project.getService(ErrorsProvider::class.java)
+
 
 
     fun contextChanged(
@@ -57,6 +54,7 @@ class ErrorsViewService(val project: Project): AbstractViewService() {
         model.card = ErrorsTabCard.ERROR_DETAILS
 
         updateUi()
+
     }
 
 
@@ -73,25 +71,5 @@ class ErrorsViewService(val project: Project): AbstractViewService() {
 
         updateUi()
     }
-
-    fun setVisible() {
-        toolWindow?.contentManager?.setSelectedContent(errorsContent!!, true)
-    }
-
-    fun isVisible():Boolean{
-        return toolWindow?.contentManager?.selectedContent === errorsContent
-    }
-
-    fun setContent(toolWindow: ToolWindow, errorsContent: Content) {
-        this.toolWindow = toolWindow
-        this.errorsContent = errorsContent
-    }
-
-    override fun updateUi(){
-        panel?.reset()
-    }
-
-
-
 
 }

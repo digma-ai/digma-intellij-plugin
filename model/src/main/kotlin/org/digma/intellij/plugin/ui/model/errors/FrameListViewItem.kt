@@ -21,9 +21,3 @@ class FrameItem(val frameStack: FrameStack,
     var workspaceUrl: String? = null
 
 }
-
-
-
-//enum class FrameListViewItemType{
-//    FrameStackTitle,SpanTitle,Frame
-//}

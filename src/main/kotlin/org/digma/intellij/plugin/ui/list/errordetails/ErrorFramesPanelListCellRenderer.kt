@@ -6,10 +6,8 @@ import com.intellij.ui.dsl.builder.RightGap
 import com.intellij.ui.dsl.builder.TopGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
-import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.JBUI.Borders
 import org.digma.intellij.plugin.icons.Icons
-import org.digma.intellij.plugin.ui.common.iconPanel
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
 import org.digma.intellij.plugin.ui.model.errors.FrameItem
 import org.digma.intellij.plugin.ui.model.errors.FrameListViewItem
@@ -20,7 +18,9 @@ import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.GridBagLayout
 import java.awt.GridLayout
-import javax.swing.*
+import javax.swing.JLabel
+import javax.swing.JPanel
+import javax.swing.SwingConstants
 
 class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
 
@@ -78,10 +78,6 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
 
     private fun spanTitlePanel(modelObject: SpanTitle): JPanel {
         val panel = JPanel()
-//        panel.layout = BoxLayout(panel,BoxLayout.X_AXIS)
-//        panel.layout = GridBagLayout()
-//        panel.layout = GridLayout(1,3)
-//        panel.layout = GridLayout(1,1)
         panel.layout = BorderLayout()
         panel.isOpaque = false
 
@@ -99,7 +95,6 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
         name.foreground = Color(125,160,220)
         name.border = Borders.empty()
         val namePanel = JPanel()
-//        namePanel.layout = GridBagLayout()
         namePanel.layout = BorderLayout()
         namePanel.isOpaque = false
         namePanel.border = Borders.empty(0,5,0,0)
@@ -109,15 +104,8 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
 
         panel.add(iconPanel,BorderLayout.WEST)
         panel.add(namePanel,BorderLayout.CENTER)
-//        panel.add(Box.createHorizontalGlue())
         panel.isOpaque = false
         return itemPanel(panel)
-
-//        val result = panel{
-//            row {
-//                iconPanel()
-//            }
-//        }
     }
 
 

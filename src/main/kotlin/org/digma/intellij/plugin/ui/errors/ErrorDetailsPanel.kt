@@ -70,13 +70,13 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
 
 
     val framesList = ScrollablePanelList(ErrorFramesPanelList(project,
-        errorsModel.errorDetails.flowStacks?.getCurrentStack()!!, false))
+        errorsModel.errorDetails.flowStacks.getCurrentStack(), false))
 
     val flowStackNavigation = flowStackNavigation(errorsModel,framesList)
 
 
 
-    val bottomPanel = bottomPanel(errorsModel)
+    val bottomPanel = bottomPanel(errorsModel,framesList)
 
 
     val result = object : DigmaTabPanel() {
@@ -98,7 +98,7 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
             servicesPanelWrapper.repaint()
             timesPanel.reset()
             flowStackNavigation.reset()
-            framesList.getModel().setListData(errorsModel.errorDetails.flowStacks!!.getCurrentStack())
+            framesList.getModel().setListData(errorsModel.errorDetails.flowStacks.getCurrentStack())
 
 
             //reconstruct services panel on reset
@@ -158,16 +158,22 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
 
 }
 
-fun bottomPanel(errorsModel: ErrorsModel): JPanel {
+fun bottomPanel(errorsModel: ErrorsModel, framesList: ScrollablePanelList): JPanel {
 
     val result = panel {
         row {
-            checkBox("Workspace Only")
+            checkBox("Workspace only")
                 .horizontalAlign(HorizontalAlign.LEFT).applyToComponent {
                     isOpaque = false
                     isContentAreaFilled = false
                     isBorderPainted = false
+                    isSelected = errorsModel.errorDetails.flowStacks.isWorkspaceOnly
+                    addActionListener(){
+                        errorsModel.errorDetails.flowStacks.isWorkspaceOnly = isSelected
+                        framesList.getModel().setListData(errorsModel.errorDetails.flowStacks.getCurrentStack())
+                    }
                 }
+
             link("Open raw trace"){
 
             }.horizontalAlign(HorizontalAlign.RIGHT)
@@ -200,11 +206,11 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
     backButton.maximumSize = Dimension(48, 48)
     backButton.rolloverIcon = Icons.BACK_ROLLOVER
     backButton.addActionListener {
-        val stackSize = errorsModel.errorDetails.flowStacks?.stacks?.size
-        errorsModel.errorDetails.flowStacks?.goBack()
-        val currentStack = errorsModel.errorDetails.flowStacks?.current?.plus(1)
+        val stackSize = errorsModel.errorDetails.flowStacks.stacks.size
+        errorsModel.errorDetails.flowStacks.goBack()
+        val currentStack = errorsModel.errorDetails.flowStacks.current.plus(1)
         currentLabel.text = "${currentStack}/${stackSize} Flow Stacks"
-        framesList.getModel().setListData(errorsModel.errorDetails.flowStacks?.getCurrentStack()!!)
+        framesList.getModel().setListData(errorsModel.errorDetails.flowStacks.getCurrentStack())
     }
 
     val forwardButton = JButton(Icons.FORWARD)
@@ -215,11 +221,11 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
     forwardButton.maximumSize = Dimension(48, 48)
     forwardButton.rolloverIcon = Icons.FORWARD_ROLLOVER
     forwardButton.addActionListener {
-        val stackSize = errorsModel.errorDetails.flowStacks?.stacks?.size
-        errorsModel.errorDetails.flowStacks?.goForward()
-        val currentStack = errorsModel.errorDetails.flowStacks?.current?.plus(1)
+        val stackSize = errorsModel.errorDetails.flowStacks.stacks.size
+        errorsModel.errorDetails.flowStacks.goForward()
+        val currentStack = errorsModel.errorDetails.flowStacks.current.plus(1)
         currentLabel.text = "${currentStack}/${stackSize} Flow Stacks"
-        framesList.getModel().setListData(errorsModel.errorDetails.flowStacks?.getCurrentStack()!!)
+        framesList.getModel().setListData(errorsModel.errorDetails.flowStacks.getCurrentStack())
     }
 
 
@@ -235,8 +241,8 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
     val result = panel {
         row {
             cell(panel).onReset {
-                val stackSize = errorsModel.errorDetails.flowStacks?.stacks?.size
-                val currentStack = errorsModel.errorDetails.flowStacks?.current?.plus(1)
+                val stackSize = errorsModel.errorDetails.flowStacks.stacks.size
+                val currentStack = errorsModel.errorDetails.flowStacks.current.plus(1)
                 currentLabel.text = "${currentStack}/${stackSize} Flow Stacks"
             }.horizontalAlign(HorizontalAlign.FILL)
         }

@@ -6,7 +6,7 @@ import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails
 class ErrorDetailsModel {
 
     var delegate: CodeObjectErrorDetails? = null
-    var flowStacks: FlowStacks? = FlowStacks()
+    var flowStacks: FlowStacks = FlowStacks()
     var methodInfo: MethodInfo? = null
 
 

@@ -19,9 +19,7 @@ class InsightsViewService(project: Project): AbstractViewService(project) {
     //InsightsModel is singleton object
     private var model = InsightsModel
 
-
     private val insightsProvider: InsightsProvider = project.getService(InsightsProvider::class.java)
-
 
     fun contextChanged(
         methodInfo: MethodInfo

@@ -62,7 +62,7 @@ fun errorsPanel(project: Project): DigmaTabPanel {
     errorsListPanel.add(errorsPanelList, BorderLayout.CENTER)
 
 
-    val errorsDetailsPanel = errorDetailsPanel(project)
+    val errorsDetailsPanel = errorDetailsPanel(project,ErrorsModel)
 
     val cardLayout = CardLayout()
     val cardsPanel = JPanel(cardLayout)
@@ -85,6 +85,7 @@ fun errorsPanel(project: Project): DigmaTabPanel {
             topPanel.reset()
             SwingUtilities.invokeLater {
                 errorsPanelList.getModel().setListData(ErrorsModel.listViewItems)
+                errorsDetailsPanel.reset()
                 cardLayout.show(cardsPanel, ErrorsModel.card.name)
                 cardsPanel.revalidate()
             }

@@ -11,13 +11,15 @@ import org.digma.intellij.plugin.model.discovery.SpanInfo
 import org.digma.intellij.plugin.ui.model.DocumentScope
 import org.digma.intellij.plugin.ui.model.EmptyScope
 import org.digma.intellij.plugin.ui.model.MethodScope
+import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
+import org.digma.intellij.plugin.ui.model.errors.ErrorsTabCard
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsTabCard
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import java.util.stream.Collectors
 
-class InsightsViewService(val project: Project) {
+class InsightsViewService(val project: Project): AbstractViewService() {
 
     //InsightsModel is singleton object
     private var model = InsightsModel
@@ -118,13 +120,17 @@ class InsightsViewService(val project: Project) {
         toolWindow?.contentManager?.setSelectedContent(insightsContent!!, true)
     }
 
+    fun isVisible():Boolean{
+        return toolWindow?.contentManager?.selectedContent === insightsContent
+    }
+
     fun setContent(toolWindow: ToolWindow, insightsContent: Content) {
         this.toolWindow = toolWindow
         this.insightsContent = insightsContent
     }
 
 
-    private fun updateUi(){
+    override fun updateUi(){
         panel?.reset()
     }
 }

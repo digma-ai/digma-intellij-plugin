@@ -59,3 +59,5 @@ fun fixedSize(swingComponent: JComponent, dim: Dimension) {
     swingComponent.minimumSize = dim
     swingComponent.maximumSize = dim
 }
+
+

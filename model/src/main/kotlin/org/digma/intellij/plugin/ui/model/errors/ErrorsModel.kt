@@ -9,6 +9,7 @@ object ErrorsModel : PanelModel {
 
     var listViewItems: List<ListViewItem<CodeObjectError>> = Collections.emptyList()
     var scope: Scope = EmptyScope("")
+    var errorDetails: ErrorDetailsModel = ErrorDetailsModel()
     var card: ErrorsTabCard = ErrorsTabCard.ERRORS_LIST
 
 

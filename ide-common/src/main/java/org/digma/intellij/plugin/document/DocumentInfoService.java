@@ -15,6 +15,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * DocumentInfoService acts as a container for DocumentInfo objects.
@@ -81,4 +84,12 @@ public class DocumentInfoService {
         return documentInfoContainer == null ? null : documentInfoContainer.getMethodInfo(methodUnderCaret.getId());
     }
 
+    public MethodInfo findMethodInfo(String sourceCodeObjectId) {
+        MethodInfo methodInfo = this.documents.values().stream().
+                filter(documentInfoContainer -> documentInfoContainer.getDocumentInfo().getMethods().containsKey(sourceCodeObjectId)).
+                findAny().map(documentInfoContainer -> documentInfoContainer == null ? null : documentInfoContainer.getMethodInfo(sourceCodeObjectId)).
+                orElse(null);
+
+        return methodInfo;
+    }
 }

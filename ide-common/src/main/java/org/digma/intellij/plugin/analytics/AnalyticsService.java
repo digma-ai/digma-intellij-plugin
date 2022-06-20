@@ -5,6 +5,7 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
@@ -71,6 +72,10 @@ public class AnalyticsService implements Disposable {
 
     public List<CodeObjectError> getErrorsOfCodeObject( String codeObjectId) throws AnalyticsServiceException {
         return analyticsProviderProxy.getErrorsOfCodeObject(getCurrentEnvironment(), codeObjectId);
+    }
+
+    public CodeObjectErrorDetails getErrorDetails(String errorUid) throws AnalyticsServiceException {
+        return analyticsProviderProxy.getCodeObjectErrorDetails(errorUid);
     }
 
     @Override

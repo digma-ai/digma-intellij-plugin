@@ -57,18 +57,44 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
                             label("${modelObject.frame.moduleName} in ${modelObject.frame.functionName}")
                                 .gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL).applyToComponent {
                                     foreground = Color.GRAY
+                                }.applyToComponent {
+                                    toolTipText = "${modelObject.frame.moduleName} in ${modelObject.frame.functionName}"
                                 }
                         }else {
                             link("${modelObject.frame.moduleName} in ${modelObject.frame.functionName}") {
 
-                            }.gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL)
+                            }.gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL).applyToComponent {
+                                toolTipText = "${modelObject.frame.moduleName} in ${modelObject.frame.functionName}"
+                            }
                         }
                         label("line ${modelObject.frame.lineNumber}").horizontalAlign(HorizontalAlign.RIGHT).applyToComponent {
                             foreground = Color.GRAY
                         }
                     }.bottomGap(BottomGap.NONE).topGap(TopGap.NONE)
                 }else{
-                    //todo else
+                    //todo: this is relevant for python only, check it when doing pycharm
+                    row{
+                        label("${modelObject.frame.moduleName} in ${modelObject.frame.functionName}")
+                            .gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL).applyToComponent {
+                                foreground = Color.GRAY
+                            }
+                        if (modelObject.first) {
+                            icon(Icons.RED_THUNDER).horizontalAlign(HorizontalAlign.LEFT)
+                        }
+                        if(modelObject.workspaceUrl?.isBlank()!!){
+                            label("${modelObject.frame.executedCode}")
+                                .gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL).applyToComponent {
+                                    foreground = Color.GRAY
+                                }
+                        }else {
+                            link("${modelObject.frame.executedCode}") {
+
+                            }.gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL)
+                        }
+                        label("line ${modelObject.frame.lineNumber}").horizontalAlign(HorizontalAlign.RIGHT).applyToComponent {
+                            foreground = Color.GRAY
+                        }
+                    }
                 }
             }
         }

@@ -4,6 +4,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import com.jetbrains.rd.util.reactive.IMutableViewableMap
+import com.jetbrains.rdclient.util.idea.callSynchronously
 import com.jetbrains.rider.projectView.solution
 import org.digma.intellij.plugin.document.DocumentCodeObjectsChanged
 import org.digma.intellij.plugin.log.Log
@@ -78,6 +79,18 @@ class CodeObjectHost(val project: Project) {
 
 
 
+    fun findWorkspaceUrisForCodeObjectIds(codeObjectIds: MutableList<String>): MutableMap<String, String> {
+        val workspaceUriPairs = model.getWorkspaceUris.callSynchronously(codeObjectIds,model.protocol)
+
+        var result = HashMap<String,String>()
+        workspaceUriPairs?.forEach {
+            result.put(it.codeObjectId,it.workspaceUri)
+        }
+
+        return result
+    }
+
+
     private fun toModel(document: Document?): DocumentInfo? {
         return document?.toDocumentInfo()
     }
@@ -131,7 +144,6 @@ class CodeObjectHost(val project: Project) {
         moreText = lensMoreText,
         anchor = anchor
     )
-
 
 
 

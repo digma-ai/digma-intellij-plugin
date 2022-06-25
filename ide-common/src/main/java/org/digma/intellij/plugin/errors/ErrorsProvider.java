@@ -12,13 +12,17 @@ import org.digma.intellij.plugin.model.rest.errordetails.DetailedErrorInfo;
 import org.digma.intellij.plugin.model.rest.errordetails.Frame;
 import org.digma.intellij.plugin.model.rest.errordetails.FrameStack;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
+import org.digma.intellij.plugin.project.ProjectService;
 import org.digma.intellij.plugin.ui.model.errors.*;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ErrorsProvider {
 
@@ -26,11 +30,13 @@ public class ErrorsProvider {
 
     private final AnalyticsService analyticsService;
     private final DocumentInfoService documentInfoService;
+    private final ProjectService projectService;
 
 
     public ErrorsProvider(@NotNull Project project) {
         analyticsService = project.getService(AnalyticsService.class);
         documentInfoService = project.getService(DocumentInfoService.class);
+        projectService = project.getService(ProjectService.class);
     }
 
     public ErrorsListContainer getErrors(@NotNull MethodInfo methodInfo) {
@@ -82,6 +88,8 @@ public class ErrorsProvider {
 
     private List<ListViewItem<FrameListViewItem>> buildFlowStack(DetailedErrorInfo detailedErrorInfo) {
 
+        Map<String,String> workspaceUris = findWorkspaceUriForFrames(detailedErrorInfo);
+
         var viewItems = new ArrayList<ListViewItem<FrameListViewItem>>();
         var index = 0;
         String currentSpan = null;
@@ -102,13 +110,10 @@ public class ErrorsProvider {
                     viewItems.add(spanTitleViewItem);
                 }
 
-                var frameItem = new FrameItem(frameStack,frame,first);
+                var workspaceUri = workspaceUris.getOrDefault(frame.getCodeObjectId(),null);
+                var frameItem = new FrameItem(frameStack,frame,first,workspaceUri);
                 first = false;
-                //todo: its only the file name but probably we don't need workspaceUri in order to open the file
-                // because the frame already contains all the info for opening the file.
-                // but use workspaceUri to decide if its in workspace or not.
-                // another way in rider would be to query our reshrper cache with frame.codeObjectId
-                frameItem.setWorkspaceUrl(frame.getModulePhysicalPath());
+
                 var frameViewItem = new ListViewItem<FrameListViewItem>(frameItem,index++);
                 viewItems.add(frameViewItem);
 
@@ -116,5 +121,16 @@ public class ErrorsProvider {
         }
 
         return viewItems;
+    }
+
+    private Map<String, String> findWorkspaceUriForFrames(DetailedErrorInfo detailedErrorInfo) {
+
+        List<String> codeObjectIds = detailedErrorInfo.getFrameStacks().stream().
+                    flatMap((Function<FrameStack, Stream<String>>) frameStack -> frameStack.getFrames().stream().
+                            map(Frame::getCodeObjectId)).collect(Collectors.toList());
+
+
+        return projectService.findWorkspaceUrisForCodeObjectIds(codeObjectIds);
+
     }
 }

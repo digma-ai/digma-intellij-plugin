@@ -53,19 +53,19 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
                         if (modelObject.first) {
                             icon(Icons.RED_THUNDER).horizontalAlign(HorizontalAlign.LEFT)
                         }
-                        if(modelObject.workspaceUrl?.isBlank()!!){
+                        if(modelObject.isInWorkspace()){
+                            link("${modelObject.frame.moduleName} in ${modelObject.frame.functionName}") {
+
+                            }.gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL).applyToComponent {
+                                toolTipText = "${modelObject.frame.moduleName} in ${modelObject.frame.functionName}"
+                            }
+                        }else {
                             label("${modelObject.frame.moduleName} in ${modelObject.frame.functionName}")
                                 .gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL).applyToComponent {
                                     foreground = Color.GRAY
                                 }.applyToComponent {
                                     toolTipText = "${modelObject.frame.moduleName} in ${modelObject.frame.functionName}"
                                 }
-                        }else {
-                            link("${modelObject.frame.moduleName} in ${modelObject.frame.functionName}") {
-
-                            }.gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL).applyToComponent {
-                                toolTipText = "${modelObject.frame.moduleName} in ${modelObject.frame.functionName}"
-                            }
                         }
                         label("line ${modelObject.frame.lineNumber}").horizontalAlign(HorizontalAlign.RIGHT).applyToComponent {
                             foreground = Color.GRAY
@@ -81,15 +81,15 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
                         if (modelObject.first) {
                             icon(Icons.RED_THUNDER).horizontalAlign(HorizontalAlign.LEFT)
                         }
-                        if(modelObject.workspaceUrl?.isBlank()!!){
-                            label("${modelObject.frame.executedCode}")
+                        if(modelObject.isInWorkspace()){
+                            link(modelObject.frame.executedCode) {
+
+                            }.gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL)
+                        }else {
+                            label(modelObject.frame.executedCode)
                                 .gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL).applyToComponent {
                                     foreground = Color.GRAY
                                 }
-                        }else {
-                            link("${modelObject.frame.executedCode}") {
-
-                            }.gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL)
                         }
                         label("line ${modelObject.frame.lineNumber}").horizontalAlign(HorizontalAlign.RIGHT).applyToComponent {
                             foreground = Color.GRAY

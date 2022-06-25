@@ -1,9 +1,11 @@
+using System;
 using System.Collections.Generic;
 using Digma.Rider.Discovery;
 using JetBrains.Annotations;
 using JetBrains.Lifetimes;
 using JetBrains.Platform.RdFramework.Impl;
 using JetBrains.ProjectModel;
+using JetBrains.Rd.Tasks;
 using JetBrains.RdBackend.Common.Features;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Resources.Shell;
@@ -23,13 +25,16 @@ namespace Digma.Rider.Protocol
         private readonly ShellRdDispatcher _shellRdDispatcher;
         private readonly ILogger _logger;
         private readonly CodeObjectsModel _codeObjectsModel;
+        private readonly CodeObjectsCache _codeObjectsCache;
 
         public CodeObjectsHost(Lifetime lifetime, ISolution solution,
             RiderSolutionAnalysisServiceImpl riderSolutionAnalysisService,
             ShellRdDispatcher shellRdDispatcher,
+            CodeObjectsCache codeObjectsCache,
             ILogger logger)
         {
             _shellRdDispatcher = shellRdDispatcher;
+            _codeObjectsCache = codeObjectsCache;
             _logger = logger;
             _codeObjectsModel = solution.GetProtocolSolution().GetCodeObjectsModel();
 
@@ -62,6 +67,39 @@ namespace Digma.Rider.Protocol
                         riderSolutionAnalysisService.ReanalyzeAll();
                     }
                 }
+            });
+
+
+            _codeObjectsModel.GetWorkspaceUris.Set((lifetime1, list) =>
+            {
+                RdTask<List<CodeObjectIdUriPair>> result = new RdTask<List<CodeObjectIdUriPair>>();
+                using (ReadLockCookie.Create())
+                {
+                    try
+                    {
+                        var uris = new List<CodeObjectIdUriPair>();
+                        foreach (var document in _codeObjectsCache.Map.Values)
+                        {
+                            foreach (var codeObjectId in list)
+                            {
+                                if (document.Methods.Keys.Contains(codeObjectId))
+                                {
+                                    uris.Add(new CodeObjectIdUriPair(codeObjectId,document.FileUri));
+                                }    
+                            }
+                        }
+                        
+                        result.Set(uris);
+                    }
+                    catch (Exception e)
+                    {
+                        //todo: maybe throw an error to notify the fronend ?
+                        _logger.Error(e,"Error searching documents uris");
+                        result.Set(new List<CodeObjectIdUriPair>());
+                    }
+                }
+
+                return result;
             });
         }
 

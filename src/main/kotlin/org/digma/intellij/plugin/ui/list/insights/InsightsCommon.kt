@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.ui.components.JBPanel
+import com.intellij.ui.dsl.builder.BottomGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.VerticalAlign
 import com.intellij.util.ui.JBUI.Borders.empty
@@ -34,7 +35,7 @@ fun createInsightPanel(title: String, body: String, icon: Icon, iconText: String
             label(title)
                 .bold()
                 .verticalAlign(VerticalAlign.TOP)
-        }
+        }.bottomGap(BottomGap.NONE)
     }
     titlePanel.border = empty(0)
 

@@ -20,11 +20,13 @@ public class InsightsProvider {
     private static final Logger LOGGER = Logger.getInstance(InsightsProvider.class);
 
     private final AnalyticsService analyticsService;
+    private Project project;
 
     private final BuildersHolder buildersHolder = new BuildersHolder();
 
     public InsightsProvider(Project project) {
         analyticsService = project.getService(AnalyticsService.class);
+        this.project = project;
     }
 
     public InsightsListContainer getInsights(@NotNull MethodInfo methodInfo) {
@@ -38,7 +40,7 @@ public class InsightsProvider {
             List<? extends CodeObjectInsight> codeObjectInsights = analyticsService.getInsights(objectIds);
             Log.log(LOGGER::debug, "CodeObjectInsights for {}: {}", methodInfo, codeObjectInsights);
             InsightsViewBuilder insightsViewBuilder = new InsightsViewBuilder(buildersHolder);
-            List<ListViewItem<?>> listViewItems = insightsViewBuilder.build(methodInfo, codeObjectInsights);
+            List<ListViewItem<?>> listViewItems = insightsViewBuilder.build(project,methodInfo, codeObjectInsights);
             Log.log(LOGGER::debug, "ListViewItems for {}: {}", methodInfo, listViewItems);
             return new InsightsListContainer(listViewItems, codeObjectInsights.size());
         }catch (AnalyticsServiceException e){

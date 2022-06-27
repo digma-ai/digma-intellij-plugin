@@ -17,6 +17,7 @@ import org.digma.intellij.plugin.vcs.VcsService;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashSet;
@@ -78,7 +79,20 @@ public class EditorService implements Disposable {
         }
 
 
-        openVirtualFile(fileToOpen, workspaceUrl,lineNumber);
+        openVirtualFile(fileToOpen, workspaceUrl, lineNumber);
+    }
+
+
+    public void openSpanWorkspaceFileInEditor(String workspaceUri, int offset) {
+
+        try {
+            var fileToOpen = VfsUtil.findFileByURL(new URL(workspaceUri));
+            OpenFileDescriptor navigatable = new OpenFileDescriptor(project, fileToOpen, offset);
+            FileEditorManager.getInstance(project).openTextEditor(navigatable, true);
+
+        } catch (MalformedURLException e) {
+            Messages.showErrorDialog("Could not open file. " + e.getMessage(), "Error");
+        }
     }
 
 
@@ -135,4 +149,5 @@ public class EditorService implements Disposable {
     public void dispose() {
 
     }
+
 }

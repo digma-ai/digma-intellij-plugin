@@ -76,10 +76,11 @@ namespace Digma.Rider.Discovery
                         return;
                     }
 
+                    var offset = localVariableDeclaration.GetNavigationRange().StartOffset.Offset;
                     var instLibrary = spanDiscovery.InstLibrary;
                     var spanName = spanDiscovery.SpanName;
                     var id = Identities.ComputeSpanFqn(instLibrary, spanName);
-                    var spanInfo = new RiderSpanInfo(id, spanName, _methodInfo.Id, DiscoveryContext.FileUri);
+                    var spanInfo = new RiderSpanInfo(id, spanName, _methodInfo.Id, DiscoveryContext.FileUri,offset);
                     Log(Logger, "Found span '{0}' for method '{1}' in file '{2}'", spanInfo, _functionDeclaration,
                         DiscoveryContext.PsiSourceFile.Name);
                     _methodInfo.Spans.Add(spanInfo);

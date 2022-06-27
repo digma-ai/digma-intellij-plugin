@@ -26,7 +26,7 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
     private fun getOrCreatePanel(project: Project, index: Int, value: ListViewItem<*>): JPanel {
 
         val panel = when (value) {
-            is GroupListViewItem -> buildGroupPanel(value)
+            is GroupListViewItem -> buildGroupPanel(project,value)
             else -> {
                 when (value.modelObject) {
                     is HotspotInsight -> hotspotPanel(value as ListViewItem<HotspotInsight>)
@@ -41,13 +41,13 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
     }
 
 
-    private fun buildGroupPanel(value: GroupListViewItem): JPanel {
+    private fun buildGroupPanel(project: Project,value: GroupListViewItem): JPanel {
 
         val panel =
             when (value) {
                 is InsightGroupListViewItem -> {
                     when (value.type) {
-                        HttpEndpoint -> httpEndpointGroupPanel(value)
+                        HttpEndpoint -> httpEndpointGroupPanel(project,value)
                         Span -> spanGroupPanel(value)
                         else -> insightGroupPanel(panelOfUnsupported("group type: ${value.type}"))
                     }

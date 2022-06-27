@@ -1,11 +1,14 @@
 package org.digma.intellij.plugin.ui.list.insights
 
+import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.panel
+import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.Percentile
 import org.digma.intellij.plugin.model.rest.insights.SlowSpanInfo
 import org.digma.intellij.plugin.model.rest.insights.SlowestSpansInsight
+import org.digma.intellij.plugin.service.InsightsActionsService
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.wrapCentered
 import java.math.BigDecimal
@@ -14,20 +17,33 @@ import javax.swing.Box
 import javax.swing.BoxLayout
 import javax.swing.JPanel
 
-fun slowestSpansPanel(insight: SlowestSpansInsight): JPanel {
+fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: HashMap<String, Any>): JPanel {
 
     val topContents = createInsightPanel(
         "Span Bottleneck", asHtml("The following spans are slowing request handling"),
-        Icons.Insight.BOTTLENECK, asHtml(wrapCentered("Slow<br>Spans")),
+        Icons.Insight.BOTTLENECK, asHtml(wrapCentered("Slow Spans")),
         false
     )
+
 
     val panelOfList = panel {
         insight.spans.forEach {
             val displayName = it.spanInfo.displayName
-            row {
-                label(displayName).bold()
+            val spanId = CodeObjectsUtil.createSpanId(it.spanInfo.instrumentationLibrary,it.spanInfo.name)
+            if (moreData.contains(spanId)){
+                row {
+                    link(displayName){
+                        val actionListener: InsightsActionsService = project.getService(InsightsActionsService::class.java)
+                        val workspaceUri: Pair<String,Int> = moreData[spanId] as Pair<String, Int>
+                        actionListener.openWorkspaceFileForSpan(workspaceUri.first,workspaceUri.second)
+                    }
+                }
+            }else{
+                row {
+                    label(displayName).bold()
+                }
             }
+
             row {
                 label(descriptionOf(it))
             }.contextHelp(genToolTip(it), displayName)

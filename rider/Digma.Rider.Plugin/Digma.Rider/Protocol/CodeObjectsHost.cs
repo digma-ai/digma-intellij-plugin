@@ -117,6 +117,42 @@ namespace Digma.Rider.Protocol
 
                 return result;
             });
+            
+            
+            _codeObjectsModel.GetSpansWorkspaceUris.Set((_, list) =>
+            {
+                RdTask<List<CodeObjectIdUriOffsetTrouple>> result = new RdTask<List<CodeObjectIdUriOffsetTrouple>>();
+                using (ReadLockCookie.Create())
+                {
+                    try
+                    {
+                        var uris = new List<CodeObjectIdUriOffsetTrouple>();
+                        foreach (var document in _codeObjectsCache.Map.Values)
+                        {
+                            foreach (var riderMethodInfo in document.Methods.Values)
+                            {
+                                foreach (var riderSpanInfo in riderMethodInfo.Spans)
+                                {
+                                    if (list.Contains(riderSpanInfo.Id))
+                                    {
+                                        uris.Add(new CodeObjectIdUriOffsetTrouple(riderSpanInfo.Id,document.FileUri,riderSpanInfo.Offset));
+                                    }
+                                }
+                            }
+                        }
+                        
+                        result.Set(uris);
+                    }
+                    catch (Exception e)
+                    {
+                        //todo: maybe throw an error to notify the fronend ?
+                        _logger.Error(e,"Error searching documents uris");
+                        result.Set(new List<CodeObjectIdUriOffsetTrouple>());
+                    }
+                }
+
+                return result;
+            });
         }
 
 

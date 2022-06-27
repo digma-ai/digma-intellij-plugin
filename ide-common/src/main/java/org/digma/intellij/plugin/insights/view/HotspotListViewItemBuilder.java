@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.insights.view;
 
+import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.model.rest.insights.HotspotInsight;
 import org.digma.intellij.plugin.ui.model.insights.HotspotListViewItem;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
@@ -12,7 +13,7 @@ import java.util.List;
 public class HotspotListViewItemBuilder implements ListViewItemBuilder<HotspotInsight> {
 
     @Override
-    public List<ListViewItem<?>> build(HotspotInsight insight, @NotNull ListGroupManager groupManager) {
+    public List<ListViewItem<?>> build(Project project, HotspotInsight insight, @NotNull ListGroupManager groupManager) {
 
 
         HotspotListViewItem hotspotListViewItem = new HotspotListViewItem(insight,

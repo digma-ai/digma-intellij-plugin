@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.insights.view;
 
+import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.model.rest.insights.SpanInsight;
 import org.digma.intellij.plugin.ui.model.insights.InsightListViewItem;
 import org.digma.intellij.plugin.ui.model.insights.SpanGroupListViewItem;
@@ -12,7 +13,7 @@ import java.util.List;
 public class SpanListViewItemBuilder implements ListViewItemBuilder<SpanInsight> {
 
     @Override
-    public List<ListViewItem<?>> build(SpanInsight insight, ListGroupManager groupManager) {
+    public List<ListViewItem<?>> build(Project project, SpanInsight insight, ListGroupManager groupManager) {
         var span = insight.getSpan();
         var groupKey = "span:_" + span;
         SpanGroupListViewItem spanGroup = (SpanGroupListViewItem)

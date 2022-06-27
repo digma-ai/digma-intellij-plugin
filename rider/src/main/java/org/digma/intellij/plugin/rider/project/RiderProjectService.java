@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.rider.project;
 
 import com.intellij.openapi.project.Project;
+import kotlin.Pair;
 import org.digma.intellij.plugin.project.ProjectService;
 import org.digma.intellij.plugin.rider.protocol.CodeObjectHost;
 
@@ -18,5 +19,10 @@ public class RiderProjectService implements ProjectService {
     @Override
     public Map<String, String> findWorkspaceUrisForCodeObjectIds(List<String> codeObjectIds) {
         return codeObjectHost.findWorkspaceUrisForCodeObjectIds(codeObjectIds);
+    }
+
+    @Override
+    public Map<String, Pair<String,Integer>> findWorkspaceUrisForSpanIds(List<String> spanIds) {
+        return codeObjectHost.findWorkspaceUrisForSpanIds(spanIds);
     }
 }

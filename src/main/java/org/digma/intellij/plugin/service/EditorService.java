@@ -106,6 +106,7 @@ public class EditorService implements Disposable {
         try {
             String name = "stacktrace-"+stackTrace.hashCode()+".txt";
             var vf = new LightVirtualFile(name, stackTrace);
+            vf.setWritable(false);
             OpenFileDescriptor openFileDescriptor = new OpenFileDescriptor(project, vf);
             FileEditorManager.getInstance(project).openTextEditor(openFileDescriptor, true);
         } catch (Exception e) {

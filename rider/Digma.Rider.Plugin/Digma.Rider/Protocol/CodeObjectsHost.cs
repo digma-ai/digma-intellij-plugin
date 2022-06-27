@@ -11,6 +11,7 @@ using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Resources.Shell;
 using JetBrains.Rider.Backend.Features.SolutionAnalysis;
 using JetBrains.Util;
+using JetBrains.Util.Extension;
 using static Digma.Rider.Logging.Logger;
 
 namespace Digma.Rider.Protocol
@@ -39,7 +40,7 @@ namespace Digma.Rider.Protocol
             _codeObjectsModel = solution.GetProtocolSolution().GetCodeObjectsModel();
 
 
-            _codeObjectsModel.ReanalyzeAll.Advise(lifetime, filePath =>
+            _codeObjectsModel.ReanalyzeAll.Advise(lifetime, _ =>
             {
                 using (ReadLockCookie.Create())
                 {
@@ -70,7 +71,7 @@ namespace Digma.Rider.Protocol
             });
 
 
-            _codeObjectsModel.GetWorkspaceUris.Set((lifetime1, list) =>
+            _codeObjectsModel.GetWorkspaceUris.Set((_, list) =>
             {
                 RdTask<List<CodeObjectIdUriPair>> result = new RdTask<List<CodeObjectIdUriPair>>();
                 using (ReadLockCookie.Create())
@@ -82,9 +83,24 @@ namespace Digma.Rider.Protocol
                         {
                             foreach (var codeObjectId in list)
                             {
+                                //if a method found add its document's file uri
+                                //else try to search by class name
                                 if (document.Methods.Keys.Contains(codeObjectId))
                                 {
                                     uris.Add(new CodeObjectIdUriPair(codeObjectId,document.FileUri));
+                                }
+                                else
+                                {
+                                    var className = codeObjectId.SubstringBefore("$_$").SubstringAfterLast(".");
+                                    foreach (var riderMethodInfo in document.Methods.Values)
+                                    {
+                                        if (riderMethodInfo.ContainingClass.Equals(className))
+                                        {
+                                            //need to find the first method and break
+                                            uris.Add(new CodeObjectIdUriPair(codeObjectId,document.FileUri));
+                                            break;
+                                        }
+                                    }
                                 }    
                             }
                         }

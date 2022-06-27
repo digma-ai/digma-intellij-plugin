@@ -12,6 +12,7 @@ import com.intellij.openapi.vcs.VcsException;
 import com.intellij.openapi.vcs.vfs.ContentRevisionVirtualFile;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.testFramework.LightVirtualFile;
 import com.intellij.util.messages.MessageBusConnection;
 import org.digma.intellij.plugin.vcs.VcsService;
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +30,7 @@ public class EditorService implements Disposable {
 
     private final VcsService vcsService;
 
-    private volatile Set<VirtualFile> patchOpeningFiles = Collections.synchronizedSet(new HashSet<>());
+    private final Set<VirtualFile> patchOpeningFiles = Collections.synchronizedSet(new HashSet<>());
 
     public EditorService(Project project) {
         this.project = project;
@@ -87,11 +88,28 @@ public class EditorService implements Disposable {
 
         try {
             var fileToOpen = VfsUtil.findFileByURL(new URL(workspaceUri));
-            OpenFileDescriptor navigatable = new OpenFileDescriptor(project, fileToOpen, offset);
-            FileEditorManager.getInstance(project).openTextEditor(navigatable, true);
+            OpenFileDescriptor openFileDescriptor = new OpenFileDescriptor(project, fileToOpen, offset);
+            FileEditorManager.getInstance(project).openTextEditor(openFileDescriptor, true);
 
         } catch (MalformedURLException e) {
             Messages.showErrorDialog("Could not open file. " + e.getMessage(), "Error");
+        }
+    }
+
+
+    public void openRawTrace(String stackTrace) {
+
+        if (stackTrace == null) {
+            //todo: show notification
+            return;
+        }
+        try {
+            String name = "stacktrace-"+stackTrace.hashCode()+".txt";
+            var vf = new LightVirtualFile(name, stackTrace);
+            OpenFileDescriptor openFileDescriptor = new OpenFileDescriptor(project, vf);
+            FileEditorManager.getInstance(project).openTextEditor(openFileDescriptor, true);
+        } catch (Exception e) {
+            Messages.showErrorDialog("Could not open stack trace. " + e.getMessage(), "Error");
         }
     }
 

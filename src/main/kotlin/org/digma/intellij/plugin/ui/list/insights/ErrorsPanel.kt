@@ -26,13 +26,10 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>): JPa
         val unexpected = listViewItem.modelObject.unexpectedCount
 
         row {
-            label("Errors")
+            label(asHtml("Errors<br> <span style=\"color:#808080\">$errorCount errors($unhandled unhandled, $unexpected unexpected)"))
                 .bold()
                 .verticalAlign(VerticalAlign.TOP)
                 .horizontalAlign(HorizontalAlign.LEFT)
-        }
-        row {
-            label(asHtml("$errorCount errors($unhandled unhandled, $unexpected unexpected)"))
         }
         row {
             panel {
@@ -99,7 +96,7 @@ fun topErrorPanel(project: Project, error: ErrorInsightNamedError, insight: Erro
             }
             var from = "From me"
             if (insight.codeObjectId != error.sourceCodeObjectId) {
-                from = "From ${error.sourceCodeObjectId.split("\$_\$")[0]}"
+                from = "From ${error.sourceCodeObjectId.split("\$_\$")[1]}"
             }
             label(from)
         }

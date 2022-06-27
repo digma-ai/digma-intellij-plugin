@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
+import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.ui.model.environment.EnvComboModel;
 import org.jetbrains.annotations.NotNull;
 
@@ -28,12 +29,14 @@ public class AnalyticsService implements Disposable {
     private static final Logger LOGGER = Logger.getInstance(AnalyticsService.class);
 
     private final Environment environment;
+    private Project project;
 
     private final AnalyticsProvider analyticsProviderProxy;
 
 
     public AnalyticsService(@NotNull Project project) {
         environment = new Environment(project,this);
+        this.project = project;
         analyticsProviderProxy = newAnalyticsProviderProxy(new RestAnalyticsProvider(environment.getBaseUrl()));
         List<String> envs = getEnvironments();
         if (envs != null) {
@@ -94,7 +97,7 @@ public class AnalyticsService implements Disposable {
      * A proxy to swallow all AnalyticsProvider exceptions.
      * the AnalyticsService class is an IDE component and better not to throw exceptions.
      */
-    private static class AnalyticsInvocationHandler implements InvocationHandler {
+    private class AnalyticsInvocationHandler implements InvocationHandler {
 
         private final AnalyticsProvider analyticsProvider;
 
@@ -135,11 +138,14 @@ public class AnalyticsService implements Disposable {
                 //to the log file
                 if (isConnectionException(e) && !hadConnectException){
                     hadConnectException = true;
-                    Log.error(LOGGER, e, "error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e);
+                    Log.log(LOGGER::error, "error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e);
+                    LOGGER.warn(e);
+                    NotificationUtil.notifyError(project,"Connection error with Digma backend api for method "+method.getName()+".\n"+getExceptionMessage(e));
                 }
                 else{
                    Log.log(LOGGER::warn,"error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getCause().getMessage());
                 }
+
 
                 throw new AnalyticsServiceException(e);
             }
@@ -153,6 +159,13 @@ public class AnalyticsService implements Disposable {
             return false;
         }
 
+        private String getExceptionMessage(InvocationTargetException e) {
+            if (e.getCause() instanceof AnalyticsProviderException){
+                Throwable realCause = e.getCause() != null ? e.getCause().getCause() : e.getCause();
+                return realCause != null ? realCause.getMessage() : e.getCause().getMessage();
+            }
+            return e.getCause() != null? e.getCause().getMessage():"";
+        }
 
         private String resultToString(Object result) {
             try{
@@ -171,6 +184,8 @@ public class AnalyticsService implements Disposable {
         }
 
     }
+
+
 
     private AnalyticsProvider newAnalyticsProviderProxy(AnalyticsProvider obj) {
         return (AnalyticsProvider) java.lang.reflect.Proxy.newProxyInstance(

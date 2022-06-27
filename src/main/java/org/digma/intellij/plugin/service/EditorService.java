@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.service;
 
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
@@ -14,6 +15,8 @@ import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.LightVirtualFile;
 import com.intellij.util.messages.MessageBusConnection;
+import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.vcs.VcsService;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,6 +28,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class EditorService implements Disposable {
+
+    private static final Logger LOGGER = Logger.getInstance(EditorService.class);
 
     private final Project project;
 
@@ -79,40 +84,10 @@ public class EditorService implements Disposable {
             }
         }
 
-
         openVirtualFile(fileToOpen, workspaceUrl, lineNumber);
     }
 
 
-    public void openSpanWorkspaceFileInEditor(String workspaceUri, int offset) {
-
-        try {
-            var fileToOpen = VfsUtil.findFileByURL(new URL(workspaceUri));
-            OpenFileDescriptor openFileDescriptor = new OpenFileDescriptor(project, fileToOpen, offset);
-            FileEditorManager.getInstance(project).openTextEditor(openFileDescriptor, true);
-
-        } catch (MalformedURLException e) {
-            Messages.showErrorDialog("Could not open file. " + e.getMessage(), "Error");
-        }
-    }
-
-
-    public void openRawTrace(String stackTrace) {
-
-        if (stackTrace == null) {
-            //todo: show notification
-            return;
-        }
-        try {
-            String name = "stacktrace-"+stackTrace.hashCode()+".txt";
-            var vf = new LightVirtualFile(name, stackTrace);
-            vf.setWritable(false);
-            OpenFileDescriptor openFileDescriptor = new OpenFileDescriptor(project, vf);
-            FileEditorManager.getInstance(project).openTextEditor(openFileDescriptor, true);
-        } catch (Exception e) {
-            Messages.showErrorDialog("Could not open stack trace. " + e.getMessage(), "Error");
-        }
-    }
 
 
     private void openVirtualFile(VirtualFile virtualFile, URL workspaceUrl, int lineNumber) {
@@ -161,6 +136,39 @@ public class EditorService implements Disposable {
             FileEditorManager.getInstance(project).openTextEditor(navigatable,true);
         }
 
+    }
+
+
+
+    public void openSpanWorkspaceFileInEditor(String workspaceUri, int offset) {
+
+        try {
+            var fileToOpen = VfsUtil.findFileByURL(new URL(workspaceUri));
+            OpenFileDescriptor openFileDescriptor = new OpenFileDescriptor(project, fileToOpen, offset);
+            FileEditorManager.getInstance(project).openTextEditor(openFileDescriptor, true);
+        } catch (MalformedURLException e) {
+            Log.log(LOGGER::warn, "Could not open file. " + e.getMessage());
+            NotificationUtil.notifyError(project,"Could not open file. " + e.getMessage());
+        }
+    }
+
+
+    public void openRawTrace(String stackTrace) {
+
+        if (stackTrace == null) {
+            //todo: show notification
+            return;
+        }
+        try {
+            String name = "stacktrace-"+stackTrace.hashCode()+".txt";
+            var vf = new LightVirtualFile(name, stackTrace);
+            vf.setWritable(false);
+            OpenFileDescriptor openFileDescriptor = new OpenFileDescriptor(project, vf);
+            FileEditorManager.getInstance(project).openTextEditor(openFileDescriptor, true);
+        } catch (Exception e) {
+            Log.log(LOGGER::warn, "Could not open stack trace. " + e.getMessage());
+            NotificationUtil.notifyError(project,"Could not open stack trace. " + e.getMessage());
+        }
     }
 
 

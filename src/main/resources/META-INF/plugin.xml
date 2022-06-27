@@ -56,6 +56,10 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.vcs.VcsService"/>
 
+        <notificationGroup id="Digma Notification Group"
+                           displayType="BALLOON"
+                           toolWindowId="Digma"/>
+
     </extensions>
 
 

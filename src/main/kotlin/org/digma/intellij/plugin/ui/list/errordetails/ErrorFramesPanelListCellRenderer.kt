@@ -19,6 +19,8 @@ import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.GridBagLayout
 import java.awt.GridLayout
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.SwingConstants
@@ -49,24 +51,27 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
     private fun framePanel(project: Project,modelObject: FrameItem): JPanel {
         val panel = panel {
             indent {
+                val frameTextPrefix = if(modelObject.frame.modulePhysicalPath.isBlank()) modelObject.frame.moduleName
+                        else modelObject.frame.modulePhysicalPath
+                var frameText = "${frameTextPrefix} in ${modelObject.frame.functionName}"
                 if (modelObject.frame.executedCode.isBlank()){
                     row {
                         if (modelObject.first) {
                             icon(Icons.RED_THUNDER).horizontalAlign(HorizontalAlign.LEFT)
                         }
                         if(modelObject.isInWorkspace()){
-                            link("${modelObject.frame.moduleName} in ${modelObject.frame.functionName}") {
+                            link(frameText) {
                                 val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
                                 actionListener.openErrorFrameWorkspaceFile(modelObject.getWorkspaceUrl(),modelObject.lastInstanceCommitId,modelObject.frame.lineNumber)
                             }.gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL).applyToComponent {
-                                toolTipText = "${modelObject.frame.moduleName} in ${modelObject.frame.functionName}"
+                                toolTipText = frameText
                             }
                         }else {
-                            label("${modelObject.frame.moduleName} in ${modelObject.frame.functionName}")
-                                .gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL).applyToComponent {
+                            label(frameText)
+                                .gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL)
+                                .applyToComponent {
                                     foreground = Color.GRAY
-                                }.applyToComponent {
-                                    toolTipText = "${modelObject.frame.moduleName} in ${modelObject.frame.functionName}"
+                                    toolTipText = frameText
                                 }
                         }
                         label("line ${modelObject.frame.lineNumber}").horizontalAlign(HorizontalAlign.RIGHT).applyToComponent {
@@ -74,11 +79,12 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
                         }
                     }.bottomGap(BottomGap.NONE).topGap(TopGap.NONE)
                 }else{
-                    //todo: this is relevant for python only, check it when doing pycharm
+                    //todo: this is relevant for python only where we have executed code, check it when doing pycharm
                     row {
-                        label("${modelObject.frame.moduleName} in ${modelObject.frame.functionName}")
+                        label(frameText)
                             .gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL).applyToComponent {
                                 foreground = Color.GRAY
+                                toolTipText = frameText
                             }
                     }
                     row{
@@ -87,7 +93,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
                         }
                         if(modelObject.isInWorkspace()){
                             link(modelObject.frame.executedCode) {
-
+                                //todo: action
                             }.gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL)
                         }else {
                             label(modelObject.frame.executedCode)
@@ -145,6 +151,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
         val text = "<html>${modelObject.frameStack.exceptionType}<br> <span style=\"color:#808080\">${modelObject.frameStack.exceptionMessage}</span></html>"
         val label = JLabel(text)
         panel.add(label)
+        panel.border = Borders.customLine(Color.GRAY,0,0,2,0)
         panel.isOpaque = false
         return panel
     }
@@ -154,6 +161,23 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
     private fun itemPanel(panel: JPanel): JPanel {
         panel.border = Borders.customLine(Color.GRAY,0,2,0,0)
         panel.isOpaque = false
+
+        val mouseListener = object: MouseAdapter(){
+            override fun mouseEntered(e: MouseEvent?) {
+                panel.isOpaque = true
+                panel.repaint()
+            }
+            override fun mouseExited(e: MouseEvent?) {
+                panel.isOpaque = false
+                panel.repaint()
+            }
+        }
+
+        panel.addMouseListener(mouseListener)
+        panel.components.forEach {
+            it.addMouseListener(mouseListener)
+        }
+
         return panel
     }
 

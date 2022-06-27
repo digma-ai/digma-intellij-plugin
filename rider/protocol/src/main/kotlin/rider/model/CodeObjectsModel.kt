@@ -35,8 +35,16 @@ class CodeObjectsModel : Ext(SolutionModel.Solution) {
     }
 
 
+    private val CodeObjectIdUriPair = structdef{
+        field("codeObjectId", PredefinedType.string)
+        field("workspaceUri", PredefinedType.string)
+    }
+
 
     init {
+        call("getWorkspaceUris",
+            immutableList(PredefinedType.string), immutableList(CodeObjectIdUriPair))
+
         setting(CSharp50Generator.Namespace, "Digma.Rider.Protocol")
         setting(Kotlin11Generator.Namespace, "org.digma.intellij.plugin.rider.protocol")
 

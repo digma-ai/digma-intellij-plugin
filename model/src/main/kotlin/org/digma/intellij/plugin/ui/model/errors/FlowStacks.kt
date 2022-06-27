@@ -58,11 +58,11 @@ class FlowStacks {
                         //element after span title must be FrameItem, if that fails then we have a bug when the list was built.
                         //if it fails on index out of bounds then we have a bug too
                         val frame: FrameItem = currentStack[index+1].modelObject as FrameItem
-                        if(frame.workspaceUrl?.isBlank() == true) null else n.value
+                        if(frame.isInWorkspace()) n.value else null
                     }
                     is FrameItem -> {
                         val frame: FrameItem = n.value.modelObject as FrameItem
-                        if(frame.workspaceUrl?.isBlank() == true) null else n.value
+                        if(frame.isInWorkspace()) n.value else null
                     }
                     else -> throw RuntimeException("Unknown modelObject ${n.value.modelObject}")
                 }

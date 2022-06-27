@@ -6,6 +6,9 @@
         <projectService serviceImplementation="org.digma.intellij.plugin.rider.psi.csharp.CSharpLanguageService"
                         serviceInterface="org.digma.intellij.plugin.psi.LanguageService"/>
 
+        <projectService serviceImplementation="org.digma.intellij.plugin.rider.project.RiderProjectService"
+                        serviceInterface="org.digma.intellij.plugin.project.ProjectService"/>
+
         <projectService serviceImplementation="org.digma.intellij.plugin.rider.editor.RiderEditorEventsHandler"
                         serviceInterface="org.digma.intellij.plugin.editor.EditorEventsHandler"/>
 

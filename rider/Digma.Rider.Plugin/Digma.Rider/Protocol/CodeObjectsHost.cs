@@ -1,14 +1,17 @@
+using System;
 using System.Collections.Generic;
 using Digma.Rider.Discovery;
 using JetBrains.Annotations;
 using JetBrains.Lifetimes;
 using JetBrains.Platform.RdFramework.Impl;
 using JetBrains.ProjectModel;
+using JetBrains.Rd.Tasks;
 using JetBrains.RdBackend.Common.Features;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Resources.Shell;
 using JetBrains.Rider.Backend.Features.SolutionAnalysis;
 using JetBrains.Util;
+using JetBrains.Util.Extension;
 using static Digma.Rider.Logging.Logger;
 
 namespace Digma.Rider.Protocol
@@ -23,18 +26,21 @@ namespace Digma.Rider.Protocol
         private readonly ShellRdDispatcher _shellRdDispatcher;
         private readonly ILogger _logger;
         private readonly CodeObjectsModel _codeObjectsModel;
+        private readonly CodeObjectsCache _codeObjectsCache;
 
         public CodeObjectsHost(Lifetime lifetime, ISolution solution,
             RiderSolutionAnalysisServiceImpl riderSolutionAnalysisService,
             ShellRdDispatcher shellRdDispatcher,
+            CodeObjectsCache codeObjectsCache,
             ILogger logger)
         {
             _shellRdDispatcher = shellRdDispatcher;
+            _codeObjectsCache = codeObjectsCache;
             _logger = logger;
             _codeObjectsModel = solution.GetProtocolSolution().GetCodeObjectsModel();
 
 
-            _codeObjectsModel.ReanalyzeAll.Advise(lifetime, filePath =>
+            _codeObjectsModel.ReanalyzeAll.Advise(lifetime, _ =>
             {
                 using (ReadLockCookie.Create())
                 {
@@ -62,6 +68,54 @@ namespace Digma.Rider.Protocol
                         riderSolutionAnalysisService.ReanalyzeAll();
                     }
                 }
+            });
+
+
+            _codeObjectsModel.GetWorkspaceUris.Set((_, list) =>
+            {
+                RdTask<List<CodeObjectIdUriPair>> result = new RdTask<List<CodeObjectIdUriPair>>();
+                using (ReadLockCookie.Create())
+                {
+                    try
+                    {
+                        var uris = new List<CodeObjectIdUriPair>();
+                        foreach (var document in _codeObjectsCache.Map.Values)
+                        {
+                            foreach (var codeObjectId in list)
+                            {
+                                //if a method found add its document's file uri
+                                //else try to search by class name
+                                if (document.Methods.Keys.Contains(codeObjectId))
+                                {
+                                    uris.Add(new CodeObjectIdUriPair(codeObjectId,document.FileUri));
+                                }
+                                else
+                                {
+                                    var className = codeObjectId.SubstringBefore("$_$").SubstringAfterLast(".");
+                                    foreach (var riderMethodInfo in document.Methods.Values)
+                                    {
+                                        if (riderMethodInfo.ContainingClass.Equals(className))
+                                        {
+                                            //need to find the first method and break
+                                            uris.Add(new CodeObjectIdUriPair(codeObjectId,document.FileUri));
+                                            break;
+                                        }
+                                    }
+                                }    
+                            }
+                        }
+                        
+                        result.Set(uris);
+                    }
+                    catch (Exception e)
+                    {
+                        //todo: maybe throw an error to notify the fronend ?
+                        _logger.Error(e,"Error searching documents uris");
+                        result.Set(new List<CodeObjectIdUriPair>());
+                    }
+                }
+
+                return result;
             });
         }
 

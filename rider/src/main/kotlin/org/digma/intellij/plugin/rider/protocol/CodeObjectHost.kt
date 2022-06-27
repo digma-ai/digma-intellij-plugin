@@ -4,6 +4,8 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import com.jetbrains.rd.util.reactive.IMutableViewableMap
+import com.jetbrains.rd.util.string.printToString
+import com.jetbrains.rdclient.util.idea.callSynchronously
 import com.jetbrains.rider.projectView.solution
 import org.digma.intellij.plugin.document.DocumentCodeObjectsChanged
 import org.digma.intellij.plugin.log.Log
@@ -30,7 +32,9 @@ class CodeObjectHost(val project: Project) {
 
     fun getDocument(psiFile: PsiFile): DocumentInfo? {
         val path: String = PsiUtils.psiFileToDocumentProtocolKey(psiFile)
+        Log.log(LOGGER::debug, "Got request for getDocument for {}",path)
         val document: Document? = this.model.documents[path]
+        Log.log(LOGGER::debug, "Got document for {}: {}",path,document?.printToString())
         return toModel(document)
     }
 
@@ -76,6 +80,18 @@ class CodeObjectHost(val project: Project) {
         publisher.documentCodeObjectsChanged(psiFile)
     }
 
+
+
+    fun findWorkspaceUrisForCodeObjectIds(codeObjectIds: MutableList<String>): MutableMap<String, String> {
+        val workspaceUriPairs = model.getWorkspaceUris.callSynchronously(codeObjectIds,model.protocol)
+
+        var result = HashMap<String,String>()
+        workspaceUriPairs?.forEach {
+            result.put(it.codeObjectId,it.workspaceUri)
+        }
+
+        return result
+    }
 
 
     private fun toModel(document: Document?): DocumentInfo? {
@@ -131,7 +147,6 @@ class CodeObjectHost(val project: Project) {
         moreText = lensMoreText,
         anchor = anchor
     )
-
 
 
 

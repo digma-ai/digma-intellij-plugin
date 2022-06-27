@@ -7,6 +7,7 @@ plugins {
 
 intellij {
     version.set("IC-" + properties("platformVersion", project))
+    plugins.set(listOf("Git4Idea"))
 }
 
 dependencies {

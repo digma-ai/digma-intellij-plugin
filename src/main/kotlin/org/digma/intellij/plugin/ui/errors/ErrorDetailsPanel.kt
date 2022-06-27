@@ -53,11 +53,12 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
     servicesPanel.layout = FlowLayout(FlowLayout.LEFT, 5, 5)
     servicesPanel.isOpaque = false
     buildServicesPanel(servicesPanel, errorsModel)
-    val affectedServices = JLabel("Affected Services")
+    val affectedServicesLabel = JLabel("Affected Services")
+    affectedServicesLabel.toolTipText = getAffectedServicesTooltip(errorsModel)
     val servicesPanelWrapper = JPanel()
     servicesPanelWrapper.layout = BorderLayout()
     servicesPanelWrapper.isOpaque = false
-    servicesPanelWrapper.add(affectedServices, BorderLayout.NORTH)
+    servicesPanelWrapper.add(affectedServicesLabel, BorderLayout.NORTH)
     servicesPanelWrapper.add(servicesPanel, BorderLayout.CENTER)
 
 
@@ -92,10 +93,10 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
             namePanel.reset()
             scorePanel.reset()
             buildServicesPanel(servicesPanel, errorsModel)
+            affectedServicesLabel.toolTipText = getAffectedServicesTooltip(errorsModel)
             servicesPanel.revalidate()
             servicesPanel.repaint()
             servicesPanelWrapper.revalidate()
-            servicesPanelWrapper.repaint()
             timesPanel.reset()
             flowStackNavigation.reset()
             framesList.getModel().setListData(errorsModel.errorDetails.flowStacks.getCurrentStack())
@@ -157,6 +158,8 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
     return result
 
 }
+
+
 
 fun bottomPanel(errorsModel: ErrorsModel, framesList: ScrollablePanelList): JPanel {
 
@@ -305,17 +308,19 @@ fun buildServicesPanel(servicesPanel: JPanel, errorsModel: ErrorsModel) {
         service.border = Borders.empty(2)
         service.isOpaque = true
         servicesPanel.add(service)
-
-//        for (x in 1..6){
-//            val service = JLabel(it.serviceName)
-//            service.background = Color.DARK_GRAY
-//            service.border = Borders.empty(2)
-//            service.isOpaque = true
-//            servicesPanel.add(service)
-//        }
     })
 
 }
+
+
+fun getAffectedServicesTooltip(errorsModel: ErrorsModel): String? {
+    var tooltipText = ""
+    errorsModel.errorDetails.delegate?.originServices?.forEach(Consumer {
+        tooltipText = tooltipText.plus(it.serviceName).plus("<br>")
+    })
+    return asHtml(tooltipText)
+}
+
 
 private fun backButton(project: Project): JPanel {
 
@@ -376,6 +381,7 @@ private fun scorePanel(errorsModel: ErrorsModel): DialogPanel {
                     scorePanelWrapper.remove(0)
                 }
                 if (errorsModel.errorDetails.delegate != null) {
+                    //create a dummy CodeObjectErrorDetails just so we can use the same createScorePanel function
                     val scorePanel = createScorePanel(tempCodeObjectError(errorsModel.errorDetails.delegate!!))
                     scorePanel.isOpaque = false
                     scorePanelWrapper.add(scorePanel)

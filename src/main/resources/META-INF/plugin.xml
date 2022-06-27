@@ -7,6 +7,7 @@
     <vendor>Digma inc todo:full vendor name</vendor>
 
     <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.vcs</depends>
 
     <depends
             optional="true"
@@ -51,6 +52,9 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.service.ToolWindowTabsHelper"/>
 
+        <projectService serviceImplementation="org.digma.intellij.plugin.service.EditorService"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.vcs.VcsService"/>
 
     </extensions>
 

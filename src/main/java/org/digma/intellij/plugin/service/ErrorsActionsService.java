@@ -68,4 +68,8 @@ public class ErrorsActionsService implements ContentManagerListener {
             editorService.openErrorFrameWorkspaceFileInEditor(workspaceUrl, lastInstanceCommitId,lineNumber);
         }
     }
+
+    public void openRawTrace(String stackTrace) {
+         editorService.openRawTrace(stackTrace);
+    }
 }

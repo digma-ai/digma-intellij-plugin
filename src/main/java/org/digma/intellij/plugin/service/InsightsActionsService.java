@@ -14,11 +14,14 @@ public class InsightsActionsService {
     private final ErrorsViewService errorsViewService;
     private final LanguageService languageService;
 
+    private final EditorService editorService;
+
     public InsightsActionsService(Project project) {
         this.project = project;
         insightsViewService = project.getService(InsightsViewService.class);
         errorsViewService = project.getService(ErrorsViewService.class);
         languageService = project.getService(LanguageService.class);
+        editorService = project.getService(EditorService.class);
     }
 
 
@@ -28,5 +31,11 @@ public class InsightsActionsService {
 
     public void navigateToMethod(@NotNull String codeObjectId) {
         languageService.navigateToMethod(codeObjectId);
+    }
+
+    public void openWorkspaceFileForSpan(@NotNull String workspaceUri, int offset) {
+        if (workspaceUri != null) {
+            editorService.openSpanWorkspaceFileInEditor(workspaceUri, offset);
+        }
     }
 }

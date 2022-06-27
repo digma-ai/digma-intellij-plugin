@@ -77,7 +77,7 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
 
 
 
-    val bottomPanel = bottomPanel(errorsModel,framesList)
+    val bottomPanel = bottomPanel(project,errorsModel,framesList)
 
 
     val result = object : DigmaTabPanel() {
@@ -161,7 +161,7 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
 
 
 
-fun bottomPanel(errorsModel: ErrorsModel, framesList: ScrollablePanelList): JPanel {
+fun bottomPanel(project: Project,errorsModel: ErrorsModel, framesList: ScrollablePanelList): JPanel {
 
     val result = panel {
         row {
@@ -178,7 +178,10 @@ fun bottomPanel(errorsModel: ErrorsModel, framesList: ScrollablePanelList): JPan
                 }
 
             link("Open raw trace"){
-
+                val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
+                val currentStack = errorsModel.errorDetails.flowStacks.current
+                val stackTrace = errorsModel.errorDetails.delegate?.errors?.get(currentStack)?.stackTrace
+                actionListener.openRawTrace(stackTrace)
             }.horizontalAlign(HorizontalAlign.RIGHT)
         }.layout(RowLayout.INDEPENDENT)
     }

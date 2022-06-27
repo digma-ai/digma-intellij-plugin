@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.view;
 
+import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
 
@@ -19,10 +20,11 @@ public interface ListViewItemBuilder<T extends CodeObjectInsight> {
      * ListViewItem. the ListViewItems returned here are considered 'top level items' in the UI list, it may contain
      * groups of items.
      *
+     * @param project
      * @param codeObjectInsight self explanatory.
      * @param groupManager      manages group instances.
      * @return one or more ListViewItems
      */
-    List<ListViewItem<?>> build(T codeObjectInsight, ListGroupManager groupManager);
+    List<ListViewItem<?>> build(Project project, T codeObjectInsight, ListGroupManager groupManager);
 
 }

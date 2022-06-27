@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.insights.view;
 
+import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.EndpointInsight;
@@ -22,7 +23,7 @@ public class InsightsViewBuilder extends ListViewBuilder {
     }
 
     @NotNull
-    public List<ListViewItem<?>> build(@NotNull MethodInfo scope, List<? extends CodeObjectInsight> codeObjectInsights) {
+    public List<ListViewItem<?>> build(Project project, @NotNull MethodInfo scope, List<? extends CodeObjectInsight> codeObjectInsights) {
 
         adjustToHttpIfNeeded(codeObjectInsights);
 
@@ -30,7 +31,7 @@ public class InsightsViewBuilder extends ListViewBuilder {
 
         codeObjectInsights.forEach(insight -> {
             final ListViewItemBuilder<CodeObjectInsight> builder = (ListViewItemBuilder<CodeObjectInsight>) buildersHolder.getBuilder(insight.getType());
-            final List<ListViewItem<?>> insightListItems = builder.build(insight, groupManager);
+            final List<ListViewItem<?>> insightListItems = builder.build(project,insight, groupManager);
             allItems.addAll(insightListItems);
         });
 

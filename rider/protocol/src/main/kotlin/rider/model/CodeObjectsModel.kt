@@ -23,6 +23,7 @@ class CodeObjectsModel : Ext(SolutionModel.Solution) {
         field("name", PredefinedType.string)
         field("containingMethod", PredefinedType.string)
         field("containingFileUri", PredefinedType.string)
+        field("offset", PredefinedType.int)
     }
 
 
@@ -40,10 +41,19 @@ class CodeObjectsModel : Ext(SolutionModel.Solution) {
         field("workspaceUri", PredefinedType.string)
     }
 
+    private val CodeObjectIdUriOffsetTrouple = structdef{
+        field("codeObjectId", PredefinedType.string)
+        field("workspaceUri", PredefinedType.string)
+        field("offset", PredefinedType.int)
+    }
+
 
     init {
         call("getWorkspaceUris",
-            immutableList(PredefinedType.string), immutableList(CodeObjectIdUriPair))
+            immutableList(PredefinedType.string), immutableList(CodeObjectIdUriPair)).async
+
+        call("getSpansWorkspaceUris",
+            immutableList(PredefinedType.string), immutableList(CodeObjectIdUriOffsetTrouple)).async
 
         setting(CSharp50Generator.Namespace, "Digma.Rider.Protocol")
         setting(Kotlin11Generator.Namespace, "org.digma.intellij.plugin.rider.protocol")

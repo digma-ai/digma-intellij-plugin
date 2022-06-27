@@ -14,7 +14,7 @@ object EnvComboModel : AbstractListModel<String>(), ComboBoxModel<String>, Envir
     fun initialize(environmentsSupplier: EnvironmentsSupplier) {
         this.environmentsSupplier = environmentsSupplier
         environments = ArrayList(getEnvironments())
-        selectedItem = environments.firstOrNull()
+        selectedItem = environmentsSupplier.getCurrent()?: environments.firstOrNull()
         environmentsSupplier.setCurrent(selectedItem)
         environmentsSupplier.addEnvironmentsListChangeListener(this)
         fireContentsChanged(this,0, environments.size)

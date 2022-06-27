@@ -14,8 +14,6 @@ public class Environment implements EnvironmentsSupplier {
 
     private static final Logger LOGGER = Logger.getInstance(Environment.class);
 
-    private final String baseUrl = "http://localhost:5051";
-
     private String current;
 
     @NotNull
@@ -76,10 +74,7 @@ public class Environment implements EnvironmentsSupplier {
     }
 
 
-    String getBaseUrl() {
-        return baseUrl;
-    }
-
+    @Override
     public String getCurrent() {
         maybeRecoverEnvironments();
         return current;

@@ -12,6 +12,7 @@ import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
+import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.model.environment.EnvComboModel;
 import org.jetbrains.annotations.NotNull;
 
@@ -32,12 +33,14 @@ public class AnalyticsService implements Disposable {
     private Project project;
 
     private final AnalyticsProvider analyticsProviderProxy;
+    private final SettingsState settingsState;
 
 
     public AnalyticsService(@NotNull Project project) {
+        settingsState = project.getService(SettingsState.class);
         environment = new Environment(project,this);
         this.project = project;
-        analyticsProviderProxy = newAnalyticsProviderProxy(new RestAnalyticsProvider(environment.getBaseUrl()));
+        analyticsProviderProxy = newAnalyticsProviderProxy(new RestAnalyticsProvider(settingsState.apiUrl));
         List<String> envs = getEnvironments();
         if (envs != null) {
             environment.setEnvironmentsList(envs);
@@ -138,12 +141,12 @@ public class AnalyticsService implements Disposable {
                 //to the log file
                 if (isConnectionException(e) && !hadConnectException){
                     hadConnectException = true;
-                    Log.log(LOGGER::error, "error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e);
+                    Log.log(LOGGER::warn, "error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e);
                     LOGGER.warn(e);
-                    NotificationUtil.notifyError(project,"Connection error with Digma backend api for method "+method.getName()+".\n"+getExceptionMessage(e));
-                }
-                else{
-                   Log.log(LOGGER::warn,"error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getCause().getMessage());
+                    NotificationUtil.notifyError(project,"<html>Connection error with Digma backend api for method "+method.getName()+".<br> "
+                                +getExceptionMessage(e) + ".<br> See logs for details.");
+                }else{
+                    Log.log(LOGGER::warn,"error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getCause().getMessage());
                 }
 
 
@@ -152,19 +155,33 @@ public class AnalyticsService implements Disposable {
         }
 
         private boolean isConnectionException(InvocationTargetException e) {
-            if (e.getCause() instanceof AnalyticsProviderException){
-                Throwable realCause = e.getCause().getCause();
-                return realCause instanceof ConnectException;
+            
+            var ex = e.getCause();
+            while (ex != null && !(ex instanceof ConnectException)){
+                ex = ex.getCause();
             }
+            if (ex != null){
+                return true;
+            }
+
+            if(e.getCause().getMessage() != null &&
+                    e.getCause().getMessage().contains("Error 404")){
+                return true;
+            }
+            
             return false;
         }
 
         private String getExceptionMessage(InvocationTargetException e) {
-            if (e.getCause() instanceof AnalyticsProviderException){
-                Throwable realCause = e.getCause() != null ? e.getCause().getCause() : e.getCause();
-                return realCause != null ? realCause.getMessage() : e.getCause().getMessage();
+            var ex = e.getCause();
+            while (ex != null && !(ex instanceof ConnectException)){
+                ex = ex.getCause();
             }
-            return e.getCause() != null? e.getCause().getMessage():"";
+            if (ex != null){
+                return ex.getMessage();
+            }
+            
+            return e.getCause() != null? e.getCause().getMessage():e.getMessage();
         }
 
         private String resultToString(Object result) {

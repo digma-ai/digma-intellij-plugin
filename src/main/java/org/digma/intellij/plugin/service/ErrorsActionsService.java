@@ -9,6 +9,9 @@ import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
 import org.digma.intellij.plugin.ui.service.ToolWindowTabsHelper;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.net.URL;
 
 public class ErrorsActionsService implements ContentManagerListener {
 
@@ -17,11 +20,14 @@ public class ErrorsActionsService implements ContentManagerListener {
     private final ErrorsViewService errorsViewService;
     private final ToolWindowTabsHelper toolWindowTabsHelper;
 
+    private final EditorService editorService;
+
     public ErrorsActionsService(Project project) {
         this.project = project;
         insightsViewService = project.getService(InsightsViewService.class);
         errorsViewService = project.getService(ErrorsViewService.class);
         toolWindowTabsHelper = project.getService(ToolWindowTabsHelper.class);
+        editorService = project.getService(EditorService.class);
     }
 
 
@@ -54,6 +60,12 @@ public class ErrorsActionsService implements ContentManagerListener {
             toolWindowTabsHelper.errorDetailsOff();
             errorsViewService.closeErrorDetails();
             insightsViewService.updateUi();
+        }
+    }
+
+    public void openErrorFrameWorkspaceFile(@Nullable URL workspaceUrl, @Nullable String lastInstanceCommitId, int lineNumber) {
+        if (workspaceUrl != null) {
+            editorService.openErrorFrameWorkspaceFileInEditor(workspaceUrl, lastInstanceCommitId,lineNumber);
         }
     }
 }

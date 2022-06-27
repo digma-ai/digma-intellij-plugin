@@ -8,6 +8,7 @@ import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBUI.Borders
 import org.digma.intellij.plugin.icons.Icons
+import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
 import org.digma.intellij.plugin.ui.model.errors.FrameItem
 import org.digma.intellij.plugin.ui.model.errors.FrameListViewItem
@@ -38,14 +39,14 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
             when (modelObject) {
                 is FrameStackTitle -> frameStackTitlePanel(modelObject)
                 is SpanTitle -> spanTitlePanel(modelObject)
-                is FrameItem -> framePanel(modelObject)
+                is FrameItem -> framePanel(project,modelObject)
                 else -> throw RuntimeException("Unknown modelObject $modelObject")
             }
 
         return panel
     }
 
-    private fun framePanel(modelObject: FrameItem): JPanel {
+    private fun framePanel(project: Project,modelObject: FrameItem): JPanel {
         val panel = panel {
             indent {
                 if (modelObject.frame.executedCode.isBlank()){
@@ -55,7 +56,8 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
                         }
                         if(modelObject.isInWorkspace()){
                             link("${modelObject.frame.moduleName} in ${modelObject.frame.functionName}") {
-
+                                val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
+                                actionListener.openErrorFrameWorkspaceFile(modelObject.getWorkspaceUrl(),modelObject.lastInstanceCommitId,modelObject.frame.lineNumber)
                             }.gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL).applyToComponent {
                                 toolTipText = "${modelObject.frame.moduleName} in ${modelObject.frame.functionName}"
                             }
@@ -73,11 +75,13 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
                     }.bottomGap(BottomGap.NONE).topGap(TopGap.NONE)
                 }else{
                     //todo: this is relevant for python only, check it when doing pycharm
-                    row{
+                    row {
                         label("${modelObject.frame.moduleName} in ${modelObject.frame.functionName}")
                             .gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL).applyToComponent {
                                 foreground = Color.GRAY
                             }
+                    }
+                    row{
                         if (modelObject.first) {
                             icon(Icons.RED_THUNDER).horizontalAlign(HorizontalAlign.LEFT)
                         }

@@ -19,18 +19,35 @@ class DocumentCodeObjectsListener : ProjectManagerListener {
     override fun projectOpened(project: Project) {
         this.project = project
         //todo: check what can be used on solution
+        Log.log(LOGGER::info, "DocumentCodeObjectsListener waiting for solution startup..")
         project.solution.solutionLifecycle.fullStartupFinished.advise(project.lifetime) {
+            Log.log(LOGGER::info, "Starting DocumentCodeObjectsListener for documentAnalyzed")
+
             val model = project.solution.codeObjectsModel
+
+            Log.log(LOGGER::info, "Processing existing documents in the protocol")
+            model.documents.forEach{
+                Log.log(LOGGER::info, "Notifying documentAnalyzed for {}",it.key)
+                documentAnalyzed(model, it.key, project)
+            }
+
+            Log.log(LOGGER::info, "Starting to listen for documentAnalyzed events")
             model.documentAnalyzed.advise(project.lifetime) { documentKey ->
                 Log.log(LOGGER::debug, "Got documentAnalyzed event for {}",documentKey)
-                val docUri = model.documents[documentKey]?.fileUri
-                if (docUri != null) {
-                    Log.log(LOGGER::debug, "Found document in the protocol for {}",documentKey)
-                    documentAnalyzed(docUri, project)
-                }else{
-                    Log.log(LOGGER::debug, "Could not find document in the protocol for {}",documentKey)
-                }
+                documentAnalyzed(model, documentKey, project)
             }
+        }
+    }
+
+    private fun documentAnalyzed(model: CodeObjectsModel,
+                                 documentKey: String,
+                                 project: Project) {
+        val docUri = model.documents[documentKey]?.fileUri
+        if (docUri != null) {
+            Log.log(LOGGER::debug, "Found document in the protocol for {}", documentKey)
+            documentAnalyzed(docUri, project)
+        } else {
+            Log.log(LOGGER::debug, "Could not find document in the protocol for {}", documentKey)
         }
     }
 

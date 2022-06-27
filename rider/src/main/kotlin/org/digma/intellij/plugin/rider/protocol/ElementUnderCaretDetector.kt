@@ -31,9 +31,9 @@ class ElementUnderCaretDetector(private val project: Project) {
             // waiting and all will be processed. throttleLast makes sure to process only the last one.
             model.notifyElementUnderCaret.throttleLast(Duration.ofMillis(300),
                 SingleThreadScheduler(project.lifetime, "notifyElementUnderCaret")).advise(project.lifetime) {
-                val methodUnderCaret: MethodUnderCaretEvent? = model.elementUnderCaret.valueOrNull
-                Log.log(LOGGER::debug, "Got MethodUnderCaretEvent signal: {}", methodUnderCaret)
-                notifyElementUnderCaret(methodUnderCaret, caretContextService)
+                    val methodUnderCaret: MethodUnderCaretEvent? = model.elementUnderCaret.valueOrNull
+                    Log.log(LOGGER::debug, "Got MethodUnderCaretEvent signal: {}", methodUnderCaret)
+                    notifyElementUnderCaret(methodUnderCaret, caretContextService)
             }
         }
     }

@@ -12,13 +12,10 @@ import javax.swing.event.PopupMenuEvent
 import javax.swing.event.PopupMenuListener
 
 
-//todo: how to persist the selected env between restarts
-
 @Suppress("UNCHECKED_CAST")
 fun envCombo(project: Project): JPanel {
 
-
-    return panel {
+    val result = panel {
         panel {
             row {
                 label("Environment:")
@@ -26,6 +23,7 @@ fun envCombo(project: Project): JPanel {
                     .horizontalAlign(HorizontalAlign.FILL)
                     .apply {
                         component.toolTipText = "Environment"
+                        component.isOpaque = false
                         horizontalAlign(HorizontalAlign.FILL)
 //                        component.addActionListener {
 //                            it.source.apply {
@@ -49,4 +47,6 @@ fun envCombo(project: Project): JPanel {
         }
     }
 
+    result.isOpaque = false
+    return result
 }

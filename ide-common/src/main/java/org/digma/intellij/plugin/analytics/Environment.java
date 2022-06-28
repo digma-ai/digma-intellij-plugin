@@ -22,7 +22,7 @@ public class Environment implements EnvironmentsSupplier {
 
     private final Project project;
     private final AnalyticsService analyticsService;
-    private PersistenceData persistenceData;
+    private final PersistenceData persistenceData;
 
     private final Set<EnvironmentsListChangedListener> listeners = new LinkedHashSet<>();
 

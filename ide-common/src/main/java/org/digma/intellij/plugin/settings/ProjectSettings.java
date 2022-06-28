@@ -7,10 +7,12 @@ import com.intellij.openapi.util.NlsContexts;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 public class ProjectSettings implements Configurable {
 
-    public static final String DISPLAY_NAME = "Digma Plugin Settings";
+    public static final String DISPLAY_NAME = "Digma Plugin";
 
     private Project project;
 
@@ -45,6 +47,11 @@ public class ProjectSettings implements Configurable {
     @Override
     public void apply() throws ConfigurationException {
         SettingsState settings = SettingsState.getInstance(project);
+        try {
+            new URL(mySettingsComponent.getApiUrlText());
+        } catch (MalformedURLException e) {
+            throw new ConfigurationException("URL is malformed",e,"MalformedURLException");
+        }
         settings.apiUrl = mySettingsComponent.getApiUrlText();
     }
 

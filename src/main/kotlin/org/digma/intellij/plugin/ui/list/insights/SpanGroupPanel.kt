@@ -5,16 +5,23 @@ import com.intellij.ui.dsl.builder.BottomGap
 import com.intellij.ui.dsl.builder.TopGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
-import com.intellij.ui.dsl.gridLayout.VerticalAlign
+import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.icons.Icons
+import org.digma.intellij.plugin.model.rest.insights.SpanFlow
 import org.digma.intellij.plugin.model.rest.insights.SpanInsight
-import org.digma.intellij.plugin.ui.common.HtmlConsts.ARROW_RIGHT
+import org.digma.intellij.plugin.ui.common.Html.ARROW_RIGHT
 import org.digma.intellij.plugin.ui.common.asHtml
+import org.digma.intellij.plugin.ui.common.htmlSpanSmoked
+import org.digma.intellij.plugin.ui.common.htmlSpanTitle
+import org.digma.intellij.plugin.ui.common.htmlSpanWhite
 import org.digma.intellij.plugin.ui.model.listview.GroupListViewItem
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.BorderLayout
+import java.awt.GridLayout
 import java.util.*
-import javax.swing.*
+import javax.swing.JLabel
+import javax.swing.JPanel
+import javax.swing.SwingConstants
 
 fun spanGroupPanel(listViewItem: GroupListViewItem): JPanel {
 
@@ -23,12 +30,13 @@ fun spanGroupPanel(listViewItem: GroupListViewItem): JPanel {
     val result = panel {
         row("Span: ")
         {
-            cell(JLabel(asHtml(listViewItem.groupId), Icons.Insight.SPAN_GROUP_TITLE, SwingConstants.LEFT))
+            cell(JLabel(asHtml("${htmlSpanTitle()}<b>${listViewItem.groupId}</b>"), Icons.Insight.SPAN_GROUP_TITLE, SwingConstants.LEFT))
                 .bold()
         }.topGap(TopGap.SMALL)
 
         items.forEach {
             row {
+                @Suppress("UNCHECKED_CAST")
                 cell(insightItemPanel(spanPanel(it as ListViewItem<SpanInsight>)))
                     .horizontalAlign(HorizontalAlign.FILL)
             }.bottomGap(BottomGap.SMALL)
@@ -43,46 +51,41 @@ fun spanPanel(listViewItem: ListViewItem<SpanInsight>): JPanel {
 
     val spanInsight: SpanInsight = listViewItem.modelObject
 
-    val title = panel {
-        row {
-            label("Top Usage")
-                .bold()
-                .verticalAlign(VerticalAlign.TOP)
-        }
-    }
+    val title = JLabel(asHtml("${htmlSpanTitle()}<b>Top Usage</b>"), SwingConstants.LEFT)
 
 
-    val listPanel = JBPanel<JBPanel<*>>()
-    listPanel.layout = BoxLayout(listPanel, BoxLayout.Y_AXIS)
+    val flowsListPanel = JBPanel<JBPanel<*>>()
+    flowsListPanel.layout = GridLayout(spanInsight.flows.size, 1, 0, 3)
+    flowsListPanel.border = empty()
 
-    spanInsight.flows.forEach { spanFlow ->
+    spanInsight.flows.forEach {spanFlow:SpanFlow ->
 
         val builder =
-            StringBuilder("<html><b>${spanFlow.percentage}%</b>  ${spanFlow.firstService?.service}: <b>${spanFlow.firstService?.span}</b>")
+            StringBuilder("${htmlSpanWhite()}${spanFlow.percentage}% " +
+                                "${htmlSpanSmoked()}${spanFlow.firstService?.service}: " +
+                    "           ${htmlSpanWhite()}${spanFlow.firstService?.span}")
         spanFlow.intermediateSpan?.let { intermediateSpan ->
-            builder.append(" $ARROW_RIGHT ")
-            builder.append("<b>$intermediateSpan</b>")
+            builder.append(" ${htmlSpanSmoked()}$ARROW_RIGHT ")
+            builder.append("${htmlSpanWhite()}$intermediateSpan")
         }
         spanFlow.lastService?.let { lastService ->
-            builder.append(" $ARROW_RIGHT ")
-            builder.append("${lastService.service}: <b>${lastService.span}</b>")
+            builder.append(" ${htmlSpanSmoked()}$ARROW_RIGHT ")
+            builder.append("${htmlSpanWhite()}${lastService.service}: ${lastService.span}")
         }
         spanFlow.lastServiceSpan?.let { lastServiceSpan ->
-            builder.append(" $ARROW_RIGHT ")
-            builder.append("<b>$lastServiceSpan</b>")
+            builder.append(" ${htmlSpanSmoked()}$ARROW_RIGHT ")
+            builder.append("${htmlSpanWhite()}$lastServiceSpan")
         }
 
-        val label = JLabel(builder.toString())
-        label.horizontalAlignment = SwingConstants.LEFT
-        listPanel.add(label)
-        listPanel.add(Box.createVerticalStrut(5))
+        val label = JLabel(asHtml(builder.toString()),SwingConstants.LEFT)
+        flowsListPanel.add(label)
     }
 
 
     val result = JBPanel<JBPanel<*>>()
     result.layout = BorderLayout()
     result.add(title, BorderLayout.NORTH)
-    result.add(listPanel, BorderLayout.CENTER)
+    result.add(flowsListPanel, BorderLayout.CENTER)
 
     return result
 

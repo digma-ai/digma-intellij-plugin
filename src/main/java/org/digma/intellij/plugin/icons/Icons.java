@@ -14,15 +14,15 @@ public final class Icons {
     private Icons() {
     }
 
-    private static final int INSIGHT_ICON_SIZE = 64;
+    private static final int INSIGHT_ICON_SIZE = 48;
 
     public static final Icon TOOL_WINDOW = loadAndScaleIcon("/icons/digma.png", 13);
-    public static final Icon METHOD_32 = loadAndScaleIcon("/icons/insight/method.png", 48);
-    public static final Icon DOCUMENT_32 = loadAndScaleIcon("/icons/insight/csharpfile.png", 48);
+    public static final Icon METHOD_32 = loadAndScaleIcon("/icons/insight/method.png", 32);
+    public static final Icon DOCUMENT_32 = loadAndScaleIcon("/icons/insight/csharpfile.png", 32);
     public static final Icon EMPTY = AllIcons.General.InspectionsErrorEmpty;
 
-    public static final Icon TELESCOPE_32 = loadAndScaleIcon("/icons/insight/telescope.png", 48);
-    public static final Icon ENDPOINT_32 = loadAndScaleIcon("/icons/insight/endpoint.png", 48);
+    public static final Icon TELESCOPE_32 = loadAndScaleIcon("/icons/insight/telescope.png", 32);
+    public static final Icon ENDPOINT_32 = loadAndScaleIcon("/icons/insight/endpoint.png", 32);
     public static final Icon TRACE_INTO_16 = AllIcons.Actions.TraceInto;
     public static final Icon STEP_OUT_16 = AllIcons.Actions.StepOut;
     public static final Icon QUESTION_MARK = AllIcons.General.QuestionDialog;

@@ -29,7 +29,7 @@ fun iconPanelBorder(icon: Icon, text: String): JPanel {
     label.horizontalAlignment = SwingConstants.CENTER
     panel.add(label, BorderLayout.SOUTH)
     panel.add(JSeparator(),BorderLayout.EAST)
-    panel.border = empty()
+    panel.border = empty(0,0,0,10)
     return panel
 }
 

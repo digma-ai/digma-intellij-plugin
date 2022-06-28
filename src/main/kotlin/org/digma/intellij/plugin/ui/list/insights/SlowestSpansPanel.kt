@@ -75,10 +75,9 @@ fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: 
 
 
     val result = JBPanel<JBPanel<*>>()
-    result.layout = BoxLayout(result, BoxLayout.X_AXIS)
-    result.add(spansWrapper)
-    result.add(Box.createHorizontalStrut(5))
-    result.add(iconPanelWrapper)
+    result.layout = BorderLayout()
+    result.add(spansWrapper,BorderLayout.CENTER)
+    result.add(iconPanelWrapper,BorderLayout.EAST)
 
     return insightItemPanel(result)
 }

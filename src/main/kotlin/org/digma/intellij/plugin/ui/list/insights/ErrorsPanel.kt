@@ -58,7 +58,7 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>): JPa
             }.horizontalAlign(HorizontalAlign.RIGHT)
         }.layout(RowLayout.INDEPENDENT)
     }
-    expandLinkPanel.border = Borders.empty()
+    expandLinkPanel.border = Borders.empty(0,0,0,10)
 
 
     val errorsWrapper = JBPanel<JBPanel<*>>()
@@ -72,12 +72,10 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>): JPa
     expandPanel.layout = BorderLayout()
     expandPanel.add(expandLinkPanel, BorderLayout.SOUTH)
 
-
     val result = JBPanel<JBPanel<*>>()
-    result.layout = BoxLayout(result, BoxLayout.X_AXIS)
-    result.add(errorsWrapper)
-    result.add(Box.createHorizontalStrut(5))
-    result.add(expandPanel)
+    result.layout = BorderLayout()
+    result.add(errorsWrapper,BorderLayout.CENTER)
+    result.add(expandPanel,BorderLayout.EAST)
 
     return insightItemPanel(result)
 }

@@ -9,6 +9,9 @@ import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBUI.Borders
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.service.ErrorsActionsService
+import org.digma.intellij.plugin.ui.common.asHtml
+import org.digma.intellij.plugin.ui.common.htmlSpanSmoked
+import org.digma.intellij.plugin.ui.common.htmlSpanTitle
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
 import org.digma.intellij.plugin.ui.model.errors.FrameItem
 import org.digma.intellij.plugin.ui.model.errors.FrameListViewItem
@@ -35,10 +38,8 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
 
     private fun getOrCreatePanel(project: Project, value: ListViewItem<FrameListViewItem>): JPanel {
 
-        val modelObject = value.modelObject
-
         val panel =
-            when (modelObject) {
+            when (val modelObject = value.modelObject) {
                 is FrameStackTitle -> frameStackTitlePanel(modelObject)
                 is SpanTitle -> spanTitlePanel(modelObject)
                 is FrameItem -> framePanel(project,modelObject)
@@ -53,7 +54,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
             indent {
                 val frameTextPrefix = if(modelObject.frame.modulePhysicalPath.isBlank()) modelObject.frame.moduleName
                         else modelObject.frame.modulePhysicalPath
-                var frameText = "${frameTextPrefix} in ${modelObject.frame.functionName}"
+                val frameText = "${frameTextPrefix} in ${modelObject.frame.functionName}"
                 if (modelObject.frame.executedCode.isBlank()){
                     row {
                         if (modelObject.first) {
@@ -148,8 +149,8 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
     private fun frameStackTitlePanel(modelObject: FrameStackTitle): JPanel {
         val panel = JPanel()
         panel.layout = GridLayout(1,1)
-        val text = "<html>${modelObject.frameStack.exceptionType}<br> <span style=\"color:#808080\">${modelObject.frameStack.exceptionMessage}</span></html>"
-        val label = JLabel(text)
+        val text = "${htmlSpanTitle()}<b>${modelObject.frameStack.exceptionType}<b><br> ${htmlSpanSmoked()}${modelObject.frameStack.exceptionMessage}"
+        val label = JLabel(asHtml(text))
         panel.add(label)
         panel.border = Borders.customLine(Color.GRAY,0,0,2,0)
         panel.isOpaque = false

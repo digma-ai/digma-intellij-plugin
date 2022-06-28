@@ -67,7 +67,11 @@
                 id="org.digma.intellij.plugin.settings.ProjectSettings"
                 displayName="Digma Plugin Settings"
                 nonDefaultProject="true"/>
+
         <projectService serviceImplementation="org.digma.intellij.plugin.settings.SettingsState"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.persistence.PersistenceService"/>
+
 
     </extensions>
 

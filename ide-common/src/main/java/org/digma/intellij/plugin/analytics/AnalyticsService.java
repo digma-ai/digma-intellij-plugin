@@ -12,6 +12,7 @@ import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
+import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.model.environment.EnvComboModel;
 import org.jetbrains.annotations.NotNull;
@@ -34,11 +35,13 @@ public class AnalyticsService implements Disposable {
 
     private final AnalyticsProvider analyticsProviderProxy;
     private final SettingsState settingsState;
+    private final PersistenceService persistenceService;
 
 
     public AnalyticsService(@NotNull Project project) {
         settingsState = project.getService(SettingsState.class);
-        environment = new Environment(project,this);
+        persistenceService = project.getService(PersistenceService.class);
+        environment = new Environment(project,this,persistenceService.getState());
         this.project = project;
         analyticsProviderProxy = newAnalyticsProviderProxy(new RestAnalyticsProvider(settingsState.apiUrl));
         List<String> envs = getEnvironments();

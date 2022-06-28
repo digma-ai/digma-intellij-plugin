@@ -12,6 +12,7 @@ import com.intellij.util.ui.JBUI.Borders
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
+import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.createScorePanel
@@ -174,9 +175,10 @@ fun bottomPanel(project: Project,errorsModel: ErrorsModel, framesList: Scrollabl
                     isOpaque = false
                     isContentAreaFilled = false
                     isBorderPainted = false
-                    isSelected = errorsModel.errorDetails.flowStacks.isWorkspaceOnly
+                    isSelected = project.getService(PersistenceService::class.java).state.isWorkspaceOnly
                     addActionListener(){
                         errorsModel.errorDetails.flowStacks.isWorkspaceOnly = isSelected
+                        project.getService(PersistenceService::class.java).state.isWorkspaceOnly = isSelected
                         framesList.getModel().setListData(errorsModel.errorDetails.flowStacks.getCurrentStack())
                     }
                 }

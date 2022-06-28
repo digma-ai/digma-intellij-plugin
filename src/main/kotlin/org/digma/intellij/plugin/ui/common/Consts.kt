@@ -5,6 +5,7 @@ import java.awt.Color
 
 object Html {
     const val ARROW_RIGHT: String = "&#8594;"
+    const val ARROW_LEFT: String = "&#8592;"
 
     const val RED: String = "#f14c4c"
 

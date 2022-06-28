@@ -14,6 +14,7 @@ import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.service.ErrorsActionsService
+import org.digma.intellij.plugin.ui.common.Html
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.createScorePanel
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
@@ -210,13 +211,10 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
 
     val currentLabel = JLabel("0/0 Flow Stacks")
 
-    val backButton = JButton(Icons.BACK)
-    backButton.isOpaque = false
-    backButton.isContentAreaFilled = false
-    backButton.isBorderPainted = false
-    backButton.preferredSize = Dimension(48, 48)
-    backButton.maximumSize = Dimension(48, 48)
-    backButton.rolloverIcon = Icons.BACK_ROLLOVER
+    val backButton = NavigationButton("<html><span style=\"color:#B9B9B9\">${Html.ARROW_LEFT}",
+            "<html><span style=\"color:#000000\">${Html.ARROW_LEFT}")
+    backButton.preferredSize = Dimension(64, 48)
+    backButton.maximumSize = Dimension(64, 48)
     backButton.addActionListener {
         val stackSize = errorsModel.errorDetails.flowStacks.stacks.size
         errorsModel.errorDetails.flowStacks.goBack()
@@ -225,13 +223,11 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
         framesList.getModel().setListData(errorsModel.errorDetails.flowStacks.getCurrentStack())
     }
 
-    val forwardButton = JButton(Icons.FORWARD)
-    forwardButton.isOpaque = false
-    forwardButton.isContentAreaFilled = false
-    forwardButton.isBorderPainted = false
-    forwardButton.preferredSize = Dimension(48, 48)
-    forwardButton.maximumSize = Dimension(48, 48)
-    forwardButton.rolloverIcon = Icons.FORWARD_ROLLOVER
+
+    val forwardButton = NavigationButton("<html><span style=\"color:#B9B9B9\">${Html.ARROW_RIGHT}",
+        "<html><span style=\"color:#000000\">${Html.ARROW_RIGHT}")
+    forwardButton.preferredSize = Dimension(64, 48)
+    forwardButton.maximumSize = Dimension(64, 48)
     forwardButton.addActionListener {
         val stackSize = errorsModel.errorDetails.flowStacks.stacks.size
         errorsModel.errorDetails.flowStacks.goForward()
@@ -243,12 +239,34 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
 
     val panel = JPanel()
     panel.layout = GridBagLayout()
-    panel.add(backButton)
+    val backButtonConstraints = GridBagConstraints()
+    backButtonConstraints.fill = GridBagConstraints.VERTICAL
+    backButtonConstraints.gridy = 0
+    backButtonConstraints.gridx = 0
+    backButtonConstraints.weighty = 0.0
+    backButtonConstraints.weightx = 0.0
+    backButtonConstraints.anchor = GridBagConstraints.WEST
+    panel.add(backButton,backButtonConstraints)
+
     val currentStackLabelConstraints = GridBagConstraints()
+    backButtonConstraints.fill = GridBagConstraints.HORIZONTAL
+    backButtonConstraints.gridy = 0
+    backButtonConstraints.gridx = 1
+    backButtonConstraints.weighty = 0.0
     currentStackLabelConstraints.weightx = 0.5
     currentStackLabelConstraints.anchor = GridBagConstraints.CENTER
     panel.add(currentLabel, currentStackLabelConstraints)
-    panel.add(forwardButton)
+
+
+
+    val forwardButtonConstraints = GridBagConstraints()
+    forwardButtonConstraints.fill = GridBagConstraints.BOTH
+    forwardButtonConstraints.gridy = 0
+    forwardButtonConstraints.gridx = 2
+    backButtonConstraints.weighty = 0.0
+    backButtonConstraints.weightx = 0.0
+    forwardButtonConstraints.anchor = GridBagConstraints.EAST
+    panel.add(forwardButton,forwardButtonConstraints)
 
     val result = panel {
         row {
@@ -263,6 +281,13 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
     result.isOpaque = false
     return result
 }
+
+
+
+
+
+
+
 
 fun timesPanel(errorsModel: ErrorsModel): DialogPanel {
     val timesPanel = panel {

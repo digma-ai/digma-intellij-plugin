@@ -14,6 +14,7 @@ import org.digma.intellij.plugin.ui.common.topLine
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.insights.InsightsList
 import org.digma.intellij.plugin.ui.list.insights.PreviewList
+import org.digma.intellij.plugin.ui.list.panelListBackground
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsTabCard
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
@@ -27,6 +28,7 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
     val topPanel = panel {
             row {
                 val topLine = topLine(project, InsightsModel, "Code insights")
+                topLine.isOpaque = false
                 cell(topLine)
                     .horizontalAlign(HorizontalAlign.FILL)
                     .onReset {
@@ -35,6 +37,7 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
             }
             row {
                 val scopeLine = scopeLine(project, { InsightsModel.scope.getScope() }, ScopeLineIconProducer(InsightsModel))
+                scopeLine.isOpaque = false
                 cell(scopeLine)
                     .horizontalAlign(HorizontalAlign.FILL)
                     .onReset {
@@ -43,13 +46,14 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
             }
     }
 
+    topPanel.isOpaque = false
+
     topPanel.border = JBUI.Borders.empty()
     val topPanelWrapper = Box.createHorizontalBox()
     topPanelWrapper.add(Box.createHorizontalStrut(12))
     topPanelWrapper.add(topPanel)
     topPanelWrapper.add(Box.createHorizontalStrut(8))
-
-
+    topPanelWrapper.isOpaque = false
 
 
     val insightsList = ScrollablePanelList(InsightsList(project,InsightsModel.listViewItems))
@@ -71,16 +75,18 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
                     set = {})
             )
         }
-
     }
 
+    previewTitle.isOpaque = false
 
     val previewPanel = JPanel(BorderLayout())
     previewPanel.add(previewTitle,BorderLayout.NORTH)
     previewPanel.add(previewList,BorderLayout.CENTER)
+    previewPanel.isOpaque = false
 
     val cardLayout = CardLayout()
     val cardsPanel = JPanel(cardLayout)
+    cardsPanel.isOpaque = false
     cardsPanel.add(insightsList, InsightsTabCard.INSIGHTS.name)
     cardsPanel.add(previewPanel, InsightsTabCard.PREVIEW.name)
     cardLayout.addLayoutComponent(insightsList, InsightsTabCard.INSIGHTS.name)
@@ -115,6 +121,7 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
     result.layout = BorderLayout()
     result.add(topPanelWrapper,BorderLayout.NORTH)
     result.add(cardsPanel,BorderLayout.CENTER)
+    result.background = panelListBackground()
 
     return result
 }

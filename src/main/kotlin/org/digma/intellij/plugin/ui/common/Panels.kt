@@ -19,15 +19,17 @@ fun panelOfUnsupported(caption: String): JPanel {
 
 
 
-fun iconPanel(icon: Icon, text: String): JPanel {
+fun iconPanelBorder(icon: Icon, text: String): JPanel {
     val panel = JPanel()
-    panel.layout = BorderLayout(5, 10)
-    panel.add(JLabel(icon), BorderLayout.CENTER)
+    panel.layout = BorderLayout()
+    val icon = JLabel(icon)
+    icon.horizontalAlignment = SwingConstants.CENTER
+    panel.add(icon, BorderLayout.CENTER)
     val label = JLabel(text)
     label.horizontalAlignment = SwingConstants.CENTER
     panel.add(label, BorderLayout.SOUTH)
+    panel.add(JSeparator(),BorderLayout.EAST)
     panel.border = empty()
-    panel.background = Color.BLUE
     return panel
 }
 

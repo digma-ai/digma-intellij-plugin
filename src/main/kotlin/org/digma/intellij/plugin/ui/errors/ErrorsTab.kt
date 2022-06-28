@@ -7,12 +7,13 @@ import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.RowLayout
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
-import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.ui.common.ScopeLineIconProducer
 import org.digma.intellij.plugin.ui.common.scopeLine
 import org.digma.intellij.plugin.ui.common.topLine
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.errors.ErrorsPanelList
+import org.digma.intellij.plugin.ui.list.panelListBackground
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsTabCard
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
@@ -30,6 +31,7 @@ fun errorsPanel(project: Project): DigmaTabPanel {
     val topPanel = panel {
         row {
             val topLine = topLine(project, ErrorsModel, "Code errors")
+            topLine.isOpaque = false
             cell(topLine)
                 .horizontalAlign(HorizontalAlign.FILL)
                 .onReset {
@@ -38,6 +40,7 @@ fun errorsPanel(project: Project): DigmaTabPanel {
         }.layout(RowLayout.PARENT_GRID)
         row {
             val scopeLine = scopeLine(project, { ErrorsModel.getScope() }, ScopeLineIconProducer(ErrorsModel))
+            scopeLine.isOpaque = false
             cell(scopeLine)
                 .horizontalAlign(HorizontalAlign.FILL)
                 .onReset {
@@ -47,8 +50,10 @@ fun errorsPanel(project: Project): DigmaTabPanel {
 
     }
 
-    topPanel.border = JBUI.Borders.empty()
+    topPanel.border = empty()
+    topPanel.isOpaque = false
     val topPanelWrapper = Box.createHorizontalBox()
+    topPanelWrapper.isOpaque = false
     topPanelWrapper.add(Box.createHorizontalStrut(12))
     topPanelWrapper.add(topPanel)
     topPanelWrapper.add(Box.createHorizontalStrut(8))
@@ -58,6 +63,7 @@ fun errorsPanel(project: Project): DigmaTabPanel {
 
     val errorsListPanel = JBPanel<JBPanel<*>>()
     errorsListPanel.layout = BorderLayout()
+    errorsListPanel.isOpaque = false
     errorsListPanel.add(topPanelWrapper, BorderLayout.NORTH)
     errorsListPanel.add(errorsPanelList, BorderLayout.CENTER)
 
@@ -66,6 +72,7 @@ fun errorsPanel(project: Project): DigmaTabPanel {
 
     val cardLayout = CardLayout()
     val cardsPanel = JPanel(cardLayout)
+    cardsPanel.isOpaque = false
     cardsPanel.add(errorsListPanel, ErrorsTabCard.ERRORS_LIST.name)
     cardsPanel.add(errorsDetailsPanel, ErrorsTabCard.ERROR_DETAILS.name)
     cardLayout.addLayoutComponent(errorsListPanel, ErrorsTabCard.ERRORS_LIST.name)
@@ -94,8 +101,7 @@ fun errorsPanel(project: Project): DigmaTabPanel {
 
     result.layout = BorderLayout()
     result.add(cardsPanel,BorderLayout.CENTER)
-
-
+    result.background = panelListBackground()
     return result
 }
 

@@ -11,6 +11,9 @@ import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
+import org.digma.intellij.plugin.notifications.NotificationUtil;
+import org.digma.intellij.plugin.persistence.PersistenceService;
+import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.model.environment.EnvComboModel;
 import org.jetbrains.annotations.NotNull;
 
@@ -28,13 +31,19 @@ public class AnalyticsService implements Disposable {
     private static final Logger LOGGER = Logger.getInstance(AnalyticsService.class);
 
     private final Environment environment;
+    private Project project;
 
     private final AnalyticsProvider analyticsProviderProxy;
+    private final SettingsState settingsState;
+    private final PersistenceService persistenceService;
 
 
     public AnalyticsService(@NotNull Project project) {
-        environment = new Environment(project,this);
-        analyticsProviderProxy = newAnalyticsProviderProxy(new RestAnalyticsProvider(environment.getBaseUrl()));
+        settingsState = project.getService(SettingsState.class);
+        persistenceService = project.getService(PersistenceService.class);
+        environment = new Environment(project,this,persistenceService.getState());
+        this.project = project;
+        analyticsProviderProxy = newAnalyticsProviderProxy(new RestAnalyticsProvider(settingsState.apiUrl));
         List<String> envs = getEnvironments();
         if (envs != null) {
             environment.setEnvironmentsList(envs);
@@ -94,7 +103,7 @@ public class AnalyticsService implements Disposable {
      * A proxy to swallow all AnalyticsProvider exceptions.
      * the AnalyticsService class is an IDE component and better not to throw exceptions.
      */
-    private static class AnalyticsInvocationHandler implements InvocationHandler {
+    private class AnalyticsInvocationHandler implements InvocationHandler {
 
         private final AnalyticsProvider analyticsProvider;
 
@@ -135,24 +144,48 @@ public class AnalyticsService implements Disposable {
                 //to the log file
                 if (isConnectionException(e) && !hadConnectException){
                     hadConnectException = true;
-                    Log.error(LOGGER, e, "error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e);
+                    Log.log(LOGGER::warn, "error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e);
+                    LOGGER.warn(e);
+                    NotificationUtil.notifyError(project,"<html>Connection error with Digma backend api for method "+method.getName()+".<br> "
+                                +getExceptionMessage(e) + ".<br> See logs for details.");
+                }else{
+                    Log.log(LOGGER::warn,"error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getCause().getMessage());
                 }
-                else{
-                   Log.log(LOGGER::warn,"error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getCause().getMessage());
-                }
+
 
                 throw new AnalyticsServiceException(e);
             }
         }
 
         private boolean isConnectionException(InvocationTargetException e) {
-            if (e.getCause() instanceof AnalyticsProviderException){
-                Throwable realCause = e.getCause().getCause();
-                return realCause instanceof ConnectException;
+            
+            var ex = e.getCause();
+            while (ex != null && !(ex instanceof ConnectException)){
+                ex = ex.getCause();
             }
+            if (ex != null){
+                return true;
+            }
+
+            if(e.getCause().getMessage() != null &&
+                    e.getCause().getMessage().contains("Error 404")){
+                return true;
+            }
+            
             return false;
         }
 
+        private String getExceptionMessage(InvocationTargetException e) {
+            var ex = e.getCause();
+            while (ex != null && !(ex instanceof ConnectException)){
+                ex = ex.getCause();
+            }
+            if (ex != null){
+                return ex.getMessage();
+            }
+            
+            return e.getCause() != null? e.getCause().getMessage():e.getMessage();
+        }
 
         private String resultToString(Object result) {
             try{
@@ -171,6 +204,8 @@ public class AnalyticsService implements Disposable {
         }
 
     }
+
+
 
     private AnalyticsProvider newAnalyticsProviderProxy(AnalyticsProvider obj) {
         return (AnalyticsProvider) java.lang.reflect.Proxy.newProxyInstance(

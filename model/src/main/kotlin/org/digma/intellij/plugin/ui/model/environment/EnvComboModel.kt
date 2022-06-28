@@ -14,8 +14,7 @@ object EnvComboModel : AbstractListModel<String>(), ComboBoxModel<String>, Envir
     fun initialize(environmentsSupplier: EnvironmentsSupplier) {
         this.environmentsSupplier = environmentsSupplier
         environments = ArrayList(getEnvironments())
-        selectedItem = environments.firstOrNull()
-        environmentsSupplier.setCurrent(selectedItem)
+        selectedItem = environmentsSupplier.getCurrent()
         environmentsSupplier.addEnvironmentsListChangeListener(this)
         fireContentsChanged(this,0, environments.size)
     }
@@ -46,7 +45,6 @@ object EnvComboModel : AbstractListModel<String>(), ComboBoxModel<String>, Envir
     }
 
     override fun setSelectedItem(anObject: Any?) {
-
         this.selectedItem = anObject as String?
         environmentsSupplier?.setCurrent(selectedItem)
     }

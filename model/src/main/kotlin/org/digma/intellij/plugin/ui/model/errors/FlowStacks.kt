@@ -6,9 +6,8 @@ class FlowStacks {
     var current = 0
     var stacks: List<List<ListViewItem<FrameListViewItem>>> = ArrayList()
     var isWorkspaceOnly = false
-        set(value) {
-            field = value
-        }
+
+
     fun goBack() {
         if (stacks.size == 0){
             current = 0

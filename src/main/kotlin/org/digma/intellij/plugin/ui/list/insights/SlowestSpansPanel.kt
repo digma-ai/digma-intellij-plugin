@@ -2,6 +2,8 @@ package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBPanel
+import com.intellij.ui.dsl.builder.BottomGap
+import com.intellij.ui.dsl.builder.TopGap
 import com.intellij.ui.dsl.builder.panel
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.icons.Icons
@@ -21,7 +23,7 @@ fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: 
 
     val topContents = createInsightPanel(
         "Span Bottleneck", asHtml("The following spans are slowing request handling"),
-        Icons.Insight.BOTTLENECK, asHtml(wrapCentered("Slow Spans")),
+        Icons.Insight.BOTTLENECK, asHtml(wrapCentered("Slow<br>Spans  ")),
         false
     )
 
@@ -30,23 +32,21 @@ fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: 
         insight.spans.forEach {
             val displayName = it.spanInfo.displayName
             val spanId = CodeObjectsUtil.createSpanId(it.spanInfo.instrumentationLibrary,it.spanInfo.name)
+
+            val spanText = asHtml("${displayName}<br> <span style=\"color:#808080\">${descriptionOf(it)}")
             if (moreData.contains(spanId)){
                 row {
-                    link(displayName){
+                    link(spanText){
                         val actionListener: InsightsActionsService = project.getService(InsightsActionsService::class.java)
                         val workspaceUri: Pair<String,Int> = moreData[spanId] as Pair<String, Int>
                         actionListener.openWorkspaceFileForSpan(workspaceUri.first,workspaceUri.second)
                     }
-                }
+                }.bottomGap(BottomGap.NONE).topGap(TopGap.NONE).contextHelp(genToolTip(it), displayName)
             }else{
                 row {
-                    label(displayName).bold()
-                }
+                    label(spanText)
+                }.bottomGap(BottomGap.NONE).topGap(TopGap.NONE).contextHelp(genToolTip(it), displayName)
             }
-
-            row {
-                label(descriptionOf(it))
-            }.contextHelp(genToolTip(it), displayName)
         }
     }
 

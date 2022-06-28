@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.service
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.errors.ErrorsProvider
 import org.digma.intellij.plugin.model.discovery.MethodInfo
+import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.ui.model.EmptyScope
 import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.model.errors.ErrorDetailsModel
@@ -41,10 +42,8 @@ class ErrorsViewService(project: Project): AbstractViewService(project) {
 
 
     fun showErrorDetails(uid: String) {
-
         val errorDetails = errorsProvider.getErrorDetails(uid)
-        //keep isWorkspaceOnly between updates
-        errorDetails.flowStacks.isWorkspaceOnly = model.errorDetails.flowStacks.isWorkspaceOnly == true
+        errorDetails.flowStacks.isWorkspaceOnly = project.getService(PersistenceService::class.java).state.isWorkspaceOnly
         model.errorDetails = errorDetails
         model.card = ErrorsTabCard.ERROR_DETAILS
 
@@ -71,8 +70,7 @@ class ErrorsViewService(project: Project): AbstractViewService(project) {
 
     private fun createEmptyErrorDetails(model: ErrorsModel): ErrorDetailsModel {
         val emptyErrorDetails = ErrorDetailsModel()
-        //keep isWorkspaceOnly between updates
-        emptyErrorDetails.flowStacks.isWorkspaceOnly = model.errorDetails.flowStacks.isWorkspaceOnly == true
+        emptyErrorDetails.flowStacks.isWorkspaceOnly = project.getService(PersistenceService::class.java).state.isWorkspaceOnly
         return emptyErrorDetails
     }
 

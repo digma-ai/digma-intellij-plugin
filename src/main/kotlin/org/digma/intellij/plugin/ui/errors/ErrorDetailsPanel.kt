@@ -12,6 +12,7 @@ import com.intellij.util.ui.JBUI.Borders
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
+import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.createScorePanel
@@ -133,20 +134,24 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
     constraints.gridy = 1
     constraints.fill = GridBagConstraints.BOTH
     constraints.weighty = weightyForServicesPanel(errorsModel)
+    constraints.ipady = 10
     result.add(servicesPanelWrapper, constraints)
 
     constraints.gridy = 2
     constraints.weighty = 0.0
     constraints.fill = GridBagConstraints.HORIZONTAL
+    constraints.ipady = 10
     result.add(timesPanelWrapper, constraints)
 
     constraints.gridy = 3
     constraints.fill = GridBagConstraints.HORIZONTAL
+    constraints.ipady = 5
     result.add(flowStackNavigation, constraints)
 
     constraints.gridy = 4
     constraints.weighty = 1.0
     constraints.fill = GridBagConstraints.BOTH
+    constraints.ipady = 0
     result.add(framesList, constraints)
 
     constraints.gridy = 5
@@ -170,9 +175,10 @@ fun bottomPanel(project: Project,errorsModel: ErrorsModel, framesList: Scrollabl
                     isOpaque = false
                     isContentAreaFilled = false
                     isBorderPainted = false
-                    isSelected = errorsModel.errorDetails.flowStacks.isWorkspaceOnly
+                    isSelected = project.getService(PersistenceService::class.java).state.isWorkspaceOnly
                     addActionListener(){
                         errorsModel.errorDetails.flowStacks.isWorkspaceOnly = isSelected
+                        project.getService(PersistenceService::class.java).state.isWorkspaceOnly = isSelected
                         framesList.getModel().setListData(errorsModel.errorDetails.flowStacks.getCurrentStack())
                     }
                 }

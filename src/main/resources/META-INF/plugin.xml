@@ -56,6 +56,23 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.vcs.VcsService"/>
 
+        <notificationGroup id="Digma Notification Group"
+                           displayType="BALLOON"
+                           toolWindowId="Digma"/>
+
+
+        <projectConfigurable
+                parentId="tools"
+                instance="org.digma.intellij.plugin.settings.ProjectSettings"
+                id="org.digma.intellij.plugin.settings.ProjectSettings"
+                displayName="Digma Plugin Settings"
+                nonDefaultProject="true"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.settings.SettingsState"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.persistence.PersistenceService"/>
+
+
     </extensions>
 
 

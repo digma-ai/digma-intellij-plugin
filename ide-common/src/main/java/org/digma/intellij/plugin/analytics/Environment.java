@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.analytics;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.persistence.PersistenceData;
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsListChangedListener;
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
 import org.jetbrains.annotations.NotNull;
@@ -14,8 +15,6 @@ public class Environment implements EnvironmentsSupplier {
 
     private static final Logger LOGGER = Logger.getInstance(Environment.class);
 
-    private final String baseUrl = "http://localhost:5051";
-
     private String current;
 
     @NotNull
@@ -23,12 +22,15 @@ public class Environment implements EnvironmentsSupplier {
 
     private final Project project;
     private final AnalyticsService analyticsService;
+    private PersistenceData persistenceData;
 
     private final Set<EnvironmentsListChangedListener> listeners = new LinkedHashSet<>();
 
-    public Environment(Project project, AnalyticsService analyticsService) {
+    public Environment(@NotNull Project project, @NotNull AnalyticsService analyticsService, @NotNull PersistenceData persistenceData) {
         this.project = project;
         this.analyticsService = analyticsService;
+        this.persistenceData = persistenceData;
+        this.current = persistenceData.getCurrentEnv();
     }
 
     void maybeRecoverEnvironments() {
@@ -52,7 +54,8 @@ public class Environment implements EnvironmentsSupplier {
             return;
         }
 
-        environments = newEnvironments;
+
+        setEnvironmentsList(newEnvironments);
 
         fireEnvironmentsListChange();
     }
@@ -76,10 +79,7 @@ public class Environment implements EnvironmentsSupplier {
     }
 
 
-    String getBaseUrl() {
-        return baseUrl;
-    }
-
+    @Override
     public String getCurrent() {
         maybeRecoverEnvironments();
         return current;
@@ -105,6 +105,7 @@ public class Environment implements EnvironmentsSupplier {
         }
 
         this.current = newEnv;
+        persistenceData.setCurrentEnv(newEnv);
 
         notifyEnvironmentChanged(newEnv);
     }
@@ -135,6 +136,16 @@ public class Environment implements EnvironmentsSupplier {
 
     void setEnvironmentsList(@NotNull List<String> envs) {
         this.environments = envs;
+        maybeUpdateCurrent();
+    }
+
+
+    private void maybeUpdateCurrent() {
+        if (current == null || current.isBlank() || !environments.contains(current)){
+            current = environments.size() > 0 ? environments.get(0) : null;
+            persistenceData.setCurrentEnv(current);
+            notifyEnvironmentChanged(current);
+        }
     }
 
     @Override

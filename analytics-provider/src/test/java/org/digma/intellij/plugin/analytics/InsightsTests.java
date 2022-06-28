@@ -30,13 +30,17 @@ public class InsightsTests extends AbstractAnalyticsProviderTest {
 
             System.out.println(codeObjectInsights);
         }
+    }
 
+
+    //    @Test
+    public void getInsightsTempViaSsl() {
         {
             List<String> ids = new ArrayList<>();
             ids.add("method:Sample.MoneyTransfer.API.Controllers.TransferController$_$TransferFunds");
             ids.add("span:TransferController$_$Process transfer");
             InsightsRequest insightsRequest = new InsightsRequest("UNSET_ENV", ids);
-            AnalyticsProvider analyticsProvider = new RestAnalyticsProvider("http://localhost:5051");
+            AnalyticsProvider analyticsProvider = new RestAnalyticsProvider("https://localhost:5051");
             List<CodeObjectInsight> codeObjectInsights = analyticsProvider.getInsights(insightsRequest);
 
             System.out.println(codeObjectInsights);

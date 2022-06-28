@@ -65,7 +65,7 @@
                 parentId="tools"
                 instance="org.digma.intellij.plugin.settings.ProjectSettings"
                 id="org.digma.intellij.plugin.settings.ProjectSettings"
-                displayName="Digma Plugin Settings"
+                displayName="Digma Plugin"
                 nonDefaultProject="true"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.settings.SettingsState"/>

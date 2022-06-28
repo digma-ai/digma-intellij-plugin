@@ -8,6 +8,9 @@ import com.intellij.util.ui.FormBuilder;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import java.awt.*;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 /**
  * Supports creating and managing a {@link JPanel} for the Settings Dialog.
@@ -18,8 +21,25 @@ public class SettingsComponent {
   private final JBTextField myApiUrlText = new JBTextField();
 
   public SettingsComponent() {
+
+    var myLabel = new JBLabel("Digma Api url (requires IDE restart): ");
+    var myLabelForeground = myLabel.getForeground();
+    myApiUrlText.setInputVerifier(new InputVerifier() {
+      @Override
+      public boolean verify(JComponent input) {
+        try {
+          new URL(myApiUrlText.getText());
+          myLabel.setForeground(myLabelForeground);
+          return true;
+        } catch (MalformedURLException e) {
+          myLabel.setForeground(Color.RED);
+          return false;
+        }
+      }
+    });
+
     myMainPanel = FormBuilder.createFormBuilder()
-            .addLabeledComponent(new JBLabel("Digma Api url (requires IDE restart): "), myApiUrlText, 1, false)
+            .addLabeledComponent(myLabel, myApiUrlText, 1, false)
             .addComponentFillVertically(new JPanel(), 0)
             .getPanel();
   }
@@ -33,7 +53,7 @@ public class SettingsComponent {
   }
 
   @NotNull
-  public String getApiUrlText() {
+  public String getApiUrlText()  {
     return myApiUrlText.getText();
   }
 

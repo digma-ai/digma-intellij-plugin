@@ -144,7 +144,7 @@ public class AnalyticsService implements Disposable {
                 //to the log file
                 if (isConnectionException(e) && !hadConnectException){
                     hadConnectException = true;
-                    Log.log(LOGGER::warn, "error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e);
+                    Log.log(LOGGER::warn, "Connect exception: error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e);
                     LOGGER.warn(e);
                     NotificationUtil.notifyError(project,"<html>Connection error with Digma backend api for method "+method.getName()+".<br> "
                                 +getExceptionMessage(e) + ".<br> See logs for details.");

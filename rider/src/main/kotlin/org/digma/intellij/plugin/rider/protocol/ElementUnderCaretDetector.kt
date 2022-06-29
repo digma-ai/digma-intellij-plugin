@@ -29,7 +29,7 @@ class ElementUnderCaretDetector(private val project: Project) {
 
             // the listener starts when the tool windows is opened, by then there may be many notifyElementUnderCaret events
             // waiting and all will be processed. throttleLast makes sure to process only the last one.
-            model.notifyElementUnderCaret.throttleLast(Duration.ofMillis(300),
+            model.notifyElementUnderCaret.throttleLast(Duration.ofMillis(100),
                 SingleThreadScheduler(project.lifetime, "notifyElementUnderCaret")).advise(project.lifetime) {
                     val methodUnderCaret: MethodUnderCaretEvent? = model.elementUnderCaret.valueOrNull
                     Log.log(LOGGER::debug, "Got MethodUnderCaretEvent signal: {}", methodUnderCaret)

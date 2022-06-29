@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.BottomGap
+import com.intellij.ui.dsl.builder.RightGap
 import com.intellij.ui.dsl.builder.TopGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
@@ -30,8 +31,14 @@ fun spanGroupPanel(listViewItem: GroupListViewItem): JPanel {
     val result = panel {
         row("Span: ")
         {
-            cell(JLabel(asHtml("${htmlSpanTitle()}<b>${listViewItem.groupId}</b>"), Icons.Insight.SPAN_GROUP_TITLE, SwingConstants.LEFT))
-                .bold()
+            icon(Icons.Insight.SPAN_GROUP_TITLE).applyToComponent {
+                toolTipText = listViewItem.groupId
+            }.horizontalAlign(HorizontalAlign.LEFT).gap(RightGap.SMALL)
+            label(listViewItem.groupId)
+                .bold().applyToComponent {
+                    toolTipText = listViewItem.groupId
+                }.horizontalAlign(HorizontalAlign.LEFT)
+
         }.topGap(TopGap.SMALL)
 
         items.forEach {

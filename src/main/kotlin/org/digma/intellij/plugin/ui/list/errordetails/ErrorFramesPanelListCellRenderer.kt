@@ -9,6 +9,7 @@ import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBUI.Borders
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.service.ErrorsActionsService
+import org.digma.intellij.plugin.ui.common.Swing.BLUE_LIGHT_SHADE
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.htmlSpanSmoked
 import org.digma.intellij.plugin.ui.common.htmlSpanTitle
@@ -58,7 +59,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
                 if (modelObject.frame.executedCode.isBlank()){
                     row {
                         if (modelObject.first) {
-                            icon(Icons.RED_THUNDER).horizontalAlign(HorizontalAlign.LEFT)
+                            icon(Icons.EVENT_RED).horizontalAlign(HorizontalAlign.LEFT)
                         }
                         if(modelObject.isInWorkspace()){
                             link(frameText) {
@@ -90,7 +91,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
                     }
                     row{
                         if (modelObject.first) {
-                            icon(Icons.RED_THUNDER).horizontalAlign(HorizontalAlign.LEFT)
+                            icon(Icons.EVENT_RED).horizontalAlign(HorizontalAlign.LEFT)
                         }
                         if(modelObject.isInWorkspace()){
                             link(modelObject.frame.executedCode) {
@@ -118,7 +119,8 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
         panel.layout = BorderLayout()
         panel.isOpaque = false
 
-        val icon = JLabel(Icons.TELESCOPE_32)
+        val icon = JLabel(Icons.TELESCOPE_BLUE_LIGHT_SHADE)
+        icon.foreground = BLUE_LIGHT_SHADE
         icon.horizontalAlignment = SwingConstants.LEFT
         icon.border = Borders.empty()
         val iconPanel = JPanel()
@@ -129,7 +131,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
         val name = JLabel(modelObject.spanName,SwingConstants.LEADING)
         name.horizontalAlignment = SwingConstants.LEFT
         name.horizontalTextPosition = SwingConstants.LEADING
-        name.foreground = Color(125,160,220)
+        name.foreground = BLUE_LIGHT_SHADE
         name.border = Borders.empty()
         val namePanel = JPanel()
         namePanel.layout = BorderLayout()
@@ -152,7 +154,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
         val text = "${htmlSpanTitle()}<b>${modelObject.frameStack.exceptionType}<b><br> ${htmlSpanSmoked()}${modelObject.frameStack.exceptionMessage}"
         val label = JLabel(asHtml(text))
         panel.add(label)
-        panel.border = Borders.customLine(Color.GRAY,0,0,2,0)
+        panel.border = Borders.empty(3)
         panel.isOpaque = false
         return panel
     }

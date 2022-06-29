@@ -110,7 +110,7 @@ namespace Digma.Rider.Protocol
                 (_, textControl) =>
                 {
                     _groupingEvent = _shellLocks.CreateGroupingEvent(textControl.Lifetime,
-                        "ElementUnderCaretHost::CaretPositionChanged", TimeSpan.FromMilliseconds(150),
+                        "ElementUnderCaretHost::CaretPositionChanged", TimeSpan.FromMilliseconds(100),
                         OnChange);
                     textControl.Caret.Position.Change.Advise(textControl.Lifetime,
                         h =>

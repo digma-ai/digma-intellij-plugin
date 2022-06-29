@@ -48,8 +48,11 @@ private fun createSingleErrorPanel(project: Project,model: CodeObjectError): JPa
         actionListener.showErrorDetails(model)
     }
 
-    val contentText = "${htmlSpanWhite()}${model.characteristic}<br> ${contentOfFirstAndLast(model)}"
+    val firstAndLast = contentOfFirstAndLast(model)
+    val contentText = "${htmlSpanWhite()}${model.characteristic}<br> ${firstAndLast}"
     val content = JBLabel(asHtml(contentText))
+
+    link.toolTipText = asHtml("${linkText}<br>${firstAndLast}" )
 
     val scorePanel = createScorePanel(model)
 

@@ -36,5 +36,5 @@ fun topLine(project: Project, model: PanelModel, labelText: String): DialogPanel
             cell(envCombo(project))
                 .horizontalAlign(HorizontalAlign.RIGHT)
         }.layout(RowLayout.PARENT_GRID)
-    }
+    }.andTransparent()
 }

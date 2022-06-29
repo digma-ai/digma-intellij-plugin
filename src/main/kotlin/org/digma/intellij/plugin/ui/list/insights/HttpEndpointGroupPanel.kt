@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.openapi.project.Project
 import com.intellij.ui.dsl.builder.BottomGap
+import com.intellij.ui.dsl.builder.RightGap
 import com.intellij.ui.dsl.builder.TopGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
@@ -13,9 +14,7 @@ import org.digma.intellij.plugin.ui.common.panelOfUnsupported
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupListViewItem
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.util.*
-import javax.swing.JLabel
 import javax.swing.JPanel
-import javax.swing.SwingConstants
 
 fun httpEndpointGroupPanel(project: Project, listViewItem: InsightGroupListViewItem): JPanel {
 
@@ -23,8 +22,15 @@ fun httpEndpointGroupPanel(project: Project, listViewItem: InsightGroupListViewI
 
     val result = panel {
         row("REST:") {
-            cell(JLabel(headerAsHtml(listViewItem), Icons.Insight.HTTP_GROUP_TITLE, SwingConstants.LEFT))
-                .bold()
+            val text = headerAsHtml(listViewItem)
+            icon(Icons.Insight.HTTP_GROUP_TITLE).applyToComponent {
+                toolTipText = text
+            }.horizontalAlign(HorizontalAlign.LEFT).gap(RightGap.SMALL)
+            label(text)
+                .bold().applyToComponent {
+                    toolTipText = text
+                }.horizontalAlign(HorizontalAlign.LEFT)
+
         }.topGap(TopGap.SMALL)
 
         val items: SortedSet<ListViewItem<*>> = listViewItem.modelObject

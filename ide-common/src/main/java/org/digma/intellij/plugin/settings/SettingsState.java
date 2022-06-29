@@ -21,7 +21,7 @@ import org.jetbrains.annotations.Nullable;
 )
 public class SettingsState implements PersistentStateComponent<SettingsState> {
 
-  public String apiUrl = "http://localhost:5051";
+  public String apiUrl = "https://localhost:5051";
 
   public static SettingsState getInstance(Project project) {
     return project.getService(SettingsState.class);

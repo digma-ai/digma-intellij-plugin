@@ -14,8 +14,13 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import retrofit2.http.*;
 
+import javax.net.ssl.*;
 import java.io.Closeable;
 import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -99,7 +104,14 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         public Client(String baseUrl) {
 
             //configure okHttp here if necessary
-            okHttpClient = new OkHttpClient.Builder()
+            OkHttpClient.Builder builder = new OkHttpClient.Builder();
+
+            if (baseUrl.startsWith("https:")) {
+                // SSL
+                applyInsecureSsl(builder);
+            }
+
+            okHttpClient = builder
 //                    .eventListener()
                     .build();
 
@@ -115,9 +127,25 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
             analyticsProvider = retrofit.create(AnalyticsProviderRetrofit.class);
         }
 
+        private void applyInsecureSsl(OkHttpClient.Builder builder) {
+            SSLContext sslContext;
+            X509TrustManager insecureTrustManager = new InsecureTrustManager();
+            try {
+                sslContext = SSLContext.getInstance("SSL");
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException(e);
+            }
+            try {
+                sslContext.init(null, new TrustManager[]{insecureTrustManager}, new SecureRandom());
+            } catch (KeyManagementException e) {
+                throw new RuntimeException(e);
+            }
+            SSLSocketFactory socketFactory = sslContext.getSocketFactory();
+            builder.sslSocketFactory(socketFactory, insecureTrustManager);
+            builder.hostnameVerifier(new InsecureHostnameVerifier());
+        }
 
-
-        private ObjectMapper createObjectMapper(){
+        private ObjectMapper createObjectMapper() {
             ObjectMapper objectMapper = new ObjectMapper();
             //objectMapper can be configured here is necessary
             return objectMapper;
@@ -134,6 +162,32 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         }
     }
 
+
+    static class InsecureTrustManager implements X509TrustManager {
+        @Override
+        public void checkClientTrusted(X509Certificate[] x509Certificates, String s) {
+            // accept all
+        }
+
+        @Override
+        public void checkServerTrusted(X509Certificate[] x509Certificates, String s) {
+            // accept all
+        }
+
+        @Override
+        public X509Certificate[] getAcceptedIssuers() {
+            return new X509Certificate[0];
+        }
+    }
+
+    static class InsecureHostnameVerifier implements HostnameVerifier {
+
+        @Override
+        public boolean verify(String s, SSLSession sslSession) {
+            // allow all hostnames
+            return true;
+        }
+    }
 
     //a bit of ugly design. need a retrofit interface that returns Call objects.
     //it's internal to this implementation.

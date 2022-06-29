@@ -23,7 +23,7 @@ public class SummariesTests extends AbstractAnalyticsProviderTest {
         ids.add("method:Sample.MoneyTransfer.API.Controllers.TransferController$_$TransferFunds");
         ids.add("method:Sample.MoneyTransfer.API.Controllers.TransferController$_$DepositFunds");
         CodeObjectSummaryRequest summaryRequest = new CodeObjectSummaryRequest("UNSET_ENV", ids);
-        AnalyticsProvider analyticsProvider = new RestAnalyticsProvider("http://localhost:5051");
+        AnalyticsProvider analyticsProvider = new RestAnalyticsProvider("https://localhost:5051"); // HTTPS => SSL
         List<CodeObjectSummary> summaries = analyticsProvider.getSummaries(summaryRequest);
         System.out.println(summaries);
     }

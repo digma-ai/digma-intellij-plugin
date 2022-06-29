@@ -72,6 +72,9 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.persistence.PersistenceService"/>
 
+        <editorNotificationProvider implementation="org.digma.intellij.plugin.notifications.DigmaEditorNotificationProvider"
+                                    id="org.digma.intellij.plugin.notifications.DigmaEditorNotificationProvider"/>
+
 
     </extensions>
 

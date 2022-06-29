@@ -113,6 +113,9 @@ public class Environment implements EnvironmentsSupplier {
 
     public void notifyEnvironmentChanged(String newEnv) {
         Log.log(LOGGER::debug, "Firing EnvironmentChanged event for {}", newEnv);
+        if (project.isDisposed()){
+            return;
+        }
         EnvironmentChanged publisher = project.getMessageBus().syncPublisher(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC);
         publisher.environmentChanged(newEnv);
     }

@@ -9,7 +9,6 @@ import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.ui.layout.PropertyBinding
 import com.intellij.util.Producer
-import org.digma.intellij.plugin.icons.Icons
 import javax.swing.Icon
 import javax.swing.JLabel
 
@@ -27,7 +26,10 @@ fun scopeLine(project: Project, scopeNameProducer: Producer<String>, scopeIconPr
                 JLabel::getText, JLabel::setText, PropertyBinding(
                     get = { scopeNameProducer.produce() },
                     set = {})
-            ).horizontalAlign(HorizontalAlign.FILL)
+            ).bind(
+                JLabel::getToolTipText, JLabel::setToolTipText, PropertyBinding(
+                    get = { scopeNameProducer.produce() },
+                    set = {})).horizontalAlign(HorizontalAlign.FILL)
         }.layout(RowLayout.PARENT_GRID)
-    }
+    }.andTransparent()
 }

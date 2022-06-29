@@ -4,6 +4,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.dsl.builder.RightGap
 import com.intellij.ui.dsl.builder.RowLayout
+import com.intellij.ui.dsl.builder.TopGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.ui.dsl.gridLayout.VerticalAlign
@@ -24,6 +25,8 @@ import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import org.ocpsoft.prettytime.PrettyTime
 import java.awt.*
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import java.util.*
 import java.util.function.Consumer
 import javax.swing.JButton
@@ -62,6 +65,7 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
     servicesPanelWrapper.isOpaque = false
     servicesPanelWrapper.add(affectedServicesLabel, BorderLayout.NORTH)
     servicesPanelWrapper.add(servicesPanel, BorderLayout.CENTER)
+    servicesPanelWrapper.border = Borders.empty(0, 10, 0, 0)
 
 
     val timesPanel = timesPanel(errorsModel)
@@ -69,6 +73,7 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
     timesPanelWrapper.layout = GridLayout(1, 1)
     timesPanelWrapper.isOpaque = false
     timesPanelWrapper.add(timesPanel)
+    timesPanel.border = Borders.empty(0, 10, 0, 0)
 
 
 
@@ -128,6 +133,7 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
     constraints.gridy = 0
     constraints.weightx = 1.0
     constraints.weighty = 0.0
+    constraints.ipady = 10
 
     constraints.fill = GridBagConstraints.HORIZONTAL
     result.add(titlePanelWrapper, constraints)
@@ -135,18 +141,18 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
     constraints.gridy = 1
     constraints.fill = GridBagConstraints.BOTH
     constraints.weighty = weightyForServicesPanel(errorsModel)
-    constraints.ipady = 10
+    constraints.ipady = 20
     result.add(servicesPanelWrapper, constraints)
 
     constraints.gridy = 2
     constraints.weighty = 0.0
     constraints.fill = GridBagConstraints.HORIZONTAL
-    constraints.ipady = 10
+    constraints.ipady = 20
     result.add(timesPanelWrapper, constraints)
 
     constraints.gridy = 3
     constraints.fill = GridBagConstraints.HORIZONTAL
-    constraints.ipady = 5
+    constraints.ipady = 10
     result.add(flowStackNavigation, constraints)
 
     constraints.gridy = 4
@@ -169,7 +175,7 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
 
 fun bottomPanel(project: Project,errorsModel: ErrorsModel, framesList: ScrollablePanelList): JPanel {
 
-    val result = panel {
+    return panel {
         row {
             checkBox("Workspace only")
                 .horizontalAlign(HorizontalAlign.LEFT).applyToComponent {
@@ -184,17 +190,19 @@ fun bottomPanel(project: Project,errorsModel: ErrorsModel, framesList: Scrollabl
                     }
                 }
 
-            link("Open raw trace"){
+            link("Open raw trace") {
                 val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
                 val currentStack = errorsModel.errorDetails.flowStacks.current
                 val stackTrace = errorsModel.errorDetails.delegate?.errors?.get(currentStack)?.stackTrace
                 actionListener.openRawTrace(stackTrace)
-            }.horizontalAlign(HorizontalAlign.RIGHT)
-        }.layout(RowLayout.INDEPENDENT)
-    }
+            }.horizontalAlign(HorizontalAlign.RIGHT).gap(RightGap.SMALL)
 
-    result.isOpaque = false
-    return result
+        }.layout(RowLayout.INDEPENDENT).topGap(TopGap.SMALL)
+    }.andTransparent().
+    withBorder(Borders.compound(Borders.empty(3, 0, 0, 3),
+        Borders.customLine(Color.GRAY,1,0,0,0),
+        ))
+
 }
 
 fun weightyForServicesPanel(errorsModel: ErrorsModel): Double {
@@ -285,10 +293,6 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
 
 
 
-
-
-
-
 fun timesPanel(errorsModel: ErrorsModel): DialogPanel {
     val timesPanel = panel {
 
@@ -358,7 +362,7 @@ fun getAffectedServicesTooltip(errorsModel: ErrorsModel): String? {
 
 private fun backButton(project: Project): JPanel {
 
-    val backButton = JButton(Icons.BACK)
+    val backButton = JButton(Icons.BACK_WHITE)
     backButton.addActionListener {
         val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
         actionListener.closeErrorDetails()
@@ -369,7 +373,21 @@ private fun backButton(project: Project): JPanel {
     backButton.preferredSize = Dimension(48, 48)
     backButton.maximumSize = Dimension(48, 48)
     backButton.size = Dimension(48, 48)
-    backButton.rolloverIcon = Icons.BACK_ROLLOVER
+    backButton.rolloverIcon = Icons.BACK_BLACK
+    backButton.background = Color.WHITE
+    backButton.addMouseListener(object : MouseAdapter() {
+        override fun mouseExited(e: MouseEvent?) {
+            backButton.isOpaque = false
+        }
+
+        override fun mouseEntered(e: MouseEvent?) {
+            backButton.isOpaque = true
+        }
+
+        override fun mousePressed(e: MouseEvent?) {
+            backButton.isOpaque = false
+        }
+    })
 
     val wrapper = JPanel()
     wrapper.layout = GridBagLayout()
@@ -383,25 +401,25 @@ private fun backButton(project: Project): JPanel {
 
 private fun namePanel(errorsModel: ErrorsModel): DialogPanel {
 
-    val result = panel {
+    return panel {
         indent {
             row {
                 label("").horizontalAlign(HorizontalAlign.FILL).bind(
                     JLabel::getText, JLabel::setText, PropertyBinding(
                         get = { asHtml(errorsModel.errorDetails.createErrorName()) },
                         set = {})
-                )
+                ).bind(
+                    JLabel::getText, JLabel::setText, PropertyBinding(
+                        get = { asHtml(errorsModel.errorDetails.createErrorName()) },
+                        set = {}))
             }
         }
-    }
+    }.andTransparent().withBorder(Borders.customLine(Color.DARK_GRAY, 0, 2, 0, 0))
 
-    result.isOpaque = false
-    result.border = Borders.customLine(Color.DARK_GRAY, 0, 2, 0, 0)
-    return result
 }
 
 private fun scorePanel(errorsModel: ErrorsModel): DialogPanel {
-    val result = panel {
+    return  panel {
         row {
             val scorePanelWrapper = JPanel()
             scorePanelWrapper.isOpaque = false
@@ -422,10 +440,8 @@ private fun scorePanel(errorsModel: ErrorsModel): DialogPanel {
                 }
             }.horizontalAlign(HorizontalAlign.FILL).gap(RightGap.SMALL)
         }
-    }
+    }.andTransparent()
 
-    result.isOpaque = false
-    return result
 }
 
 

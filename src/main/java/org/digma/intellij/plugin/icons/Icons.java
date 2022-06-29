@@ -21,7 +21,8 @@ public final class Icons {
     private Icons() {
     }
 
-    private static final int INSIGHT_ICON_SIZE = 48;
+    public static final int INSIGHT_ICON_SIZE = 48;
+    public static final int ERROR_SCORE_PANEL_SIZE = 52;//its here because it should be the same size as icons
 
     public static final Icon TOOL_WINDOW = loadAndScaleIcon("/icons/digma.png", 13);
 

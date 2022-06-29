@@ -1,29 +1,26 @@
 package org.digma.intellij.plugin.ui.common
 
+import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.model.rest.errors.ScoreInfo
 import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Dimension
-import java.awt.FlowLayout
-import javax.swing.BorderFactory
-import javax.swing.BoxLayout
+import javax.swing.BorderFactory.createLineBorder
 import javax.swing.JLabel
 import javax.swing.JPanel
 
 
 fun createScorePanel(model: CodeObjectError): JPanel {
-    val lineBorder = BorderFactory.createLineBorder(colorOf(model.scoreInfo.score), 2, true)
-    val scoreToolTip = genToolTipAsHtml(model.scoreInfo)
 
-    val scorePanel = JPanel(FlowLayout())
-    fixedSize(scorePanel, Dimension(48, 48))
+    val scorePanel = JPanel(BorderLayout())
     val scoreLabel = JLabel("${model.scoreInfo.score}", JLabel.CENTER)
-    scoreLabel.toolTipText = scoreToolTip
-    scoreLabel.size = Dimension(32, 32)
-    scorePanel.add(scoreLabel)
-    scorePanel.border = lineBorder
+    scoreLabel.toolTipText = genToolTipAsHtml(model.scoreInfo)
+    scoreLabel.preferredSize = Dimension(Icons.ERROR_SCORE_PANEL_SIZE,Icons.ERROR_SCORE_PANEL_SIZE)
+    scoreLabel.border = empty()
+    scorePanel.add(scoreLabel,BorderLayout.CENTER)
+    scorePanel.border = createLineBorder(colorOf(model.scoreInfo.score), 2, true)
 
     val iconLabel: JLabel
     if (model.startsHere) {
@@ -35,10 +32,9 @@ fun createScorePanel(model: CodeObjectError): JPanel {
     }
 
     val result = JPanel()
-
-    result.layout = BoxLayout(result, BoxLayout.Y_AXIS)
-    result.add(scorePanel)
-    result.add(iconLabel, BorderLayout.EAST)
+    result.layout = BorderLayout()
+    result.add(scorePanel,BorderLayout.CENTER)
+    result.add(iconLabel, BorderLayout.SOUTH)
 
     return result
 }

@@ -409,9 +409,10 @@ private fun namePanel(errorsModel: ErrorsModel): DialogPanel {
                         get = { asHtml(errorsModel.errorDetails.createErrorName()) },
                         set = {})
                 ).bind(
-                    JLabel::getText, JLabel::setText, PropertyBinding(
+                    JLabel::getToolTipText, JLabel::setToolTipText, PropertyBinding(
                         get = { asHtml(errorsModel.errorDetails.createErrorName()) },
                         set = {}))
+
             }
         }
     }.andTransparent().withBorder(Borders.customLine(Color.DARK_GRAY, 0, 2, 0, 0))

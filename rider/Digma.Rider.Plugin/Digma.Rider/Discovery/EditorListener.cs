@@ -115,8 +115,33 @@ namespace Digma.Rider.Discovery
                 var reason = document == null ? "was not found in cache" : "was found in cache but is not complete";
                 Log(_logger,"Document for PsiSourceFile '{0}' {1}. Trying to build it on-demand.",
                     psiSourceFile,reason);
-                _codeObjectsCache.ProcessOnDemand(psiSourceFile);
-                document = _codeObjectsCache.Map.TryGetValue(psiSourceFile);
+
+                //it may be a document that is not in the cache,
+                //if it wasn't process yet , that may happen on startup.
+                //if this document did not produce code objects when it was processed by the cache.
+                if (_codeObjectsCache.Map.ContainsKey(psiSourceFile))
+                {
+                    Log(_logger, "Document for PsiSourceFile '{0}' in in cache , trying ProcessOnDemand",
+                        psiSourceFile);
+                    _codeObjectsCache.ProcessOnDemand(psiSourceFile);
+                    document = _codeObjectsCache.Map.TryGetValue(psiSourceFile);
+                }
+                else
+                {
+                    //if the document is not in the cache, try to build code objects.
+                    //if this is a document that does not produce code objects then its not necessary 
+                    //but we have no knowledge of that, and we don't know if it was already processed before.
+                    //hopefully that doesn't happen a lot and usually f=very fast.
+                    Log(_logger, "Document for PsiSourceFile '{0}' in Not in cache , trying to build code objects on the fly",
+                        psiSourceFile);
+                    document = (Document)_codeObjectsCache.Build(psiSourceFile,false);
+                    if (document != null)
+                    {
+                        Log(_logger, "Document for PsiSourceFile '{0}' did produce code objects",psiSourceFile);
+                    }
+                }
+                
+                
                 
                 if (document == null)
                 {

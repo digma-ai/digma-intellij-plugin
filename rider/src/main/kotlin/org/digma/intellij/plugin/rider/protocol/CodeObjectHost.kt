@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.document.DocumentCodeObjectsChanged
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
+import org.digma.intellij.plugin.model.discovery.MethodParameter
 import org.digma.intellij.plugin.model.discovery.SpanInfo
 import org.digma.intellij.plugin.model.lens.CodeLens
 import org.digma.intellij.plugin.psi.PsiUtils
@@ -127,6 +128,7 @@ class CodeObjectHost(val project: Project) {
         containingClass = containingClass,
         containingNamespace = containingNamespace,
         containingFileUri = containingFileUri,
+        parameters = toParameters(parameters),
         spans = toSpansList(spans)
     )
 
@@ -136,6 +138,12 @@ class CodeObjectHost(val project: Project) {
             modelSpans.add(it.toSpanInfo())
         }
         return modelSpans
+    }
+
+    private fun toParameters(params: List<MethodParam>): List<MethodParameter> {
+        return params.asIterable().map {
+            MethodParameter(it.typeFqn, it.name)
+        }.toList()
     }
 
 

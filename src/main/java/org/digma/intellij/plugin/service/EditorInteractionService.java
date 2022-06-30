@@ -85,7 +85,7 @@ public class EditorInteractionService implements CaretContextService, Disposable
                 //this happens when we don't have method info for a real method, usually when a class doesn't have
                 //code objects found during discovery, it can be synthetic or auto-generated methods.
                 //pass a dummy method info just to populate the view,the view is aware and will not try to query for insights.
-                var dummyMethodInfo = new MethodInfo(methodUnderCaret.getId(), methodUnderCaret.getName(), methodUnderCaret.getClassName(), "", methodUnderCaret.getFileUri(),new ArrayList<>());
+                var dummyMethodInfo = new MethodInfo(methodUnderCaret.getId(), methodUnderCaret.getName(), methodUnderCaret.getClassName(), "", methodUnderCaret.getFileUri(), new ArrayList<>(), new ArrayList<>());
                 insightsViewService.contextChangeNoMethodInfo(dummyMethodInfo);
                 errorsViewService.contextChangeNoMethodInfo(dummyMethodInfo);
             } else {

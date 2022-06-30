@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Digma.Rider.Protocol;
 using Digma.Rider.Util;
 using JetBrains.ReSharper.Psi.CSharp.Tree;
@@ -33,11 +35,29 @@ namespace Digma.Rider.Discovery
             var containingClassName = PsiUtils.GetClassName(functionDeclaration);
             var containingNamespace = PsiUtils.GetNamespace(functionDeclaration);
             var containingFileUri = DiscoveryContext.FileUri;
+            var methodParameters = CreateParameters(functionDeclaration);
 
             return new RiderMethodInfo(methodFqn, declaredName, containingClassName, containingNamespace,
-                containingFileUri, new List<RiderSpanInfo>());
+                containingFileUri, methodParameters, new List<RiderSpanInfo>());
         }
 
+        private List<MethodParam> CreateParameters(ICSharpFunctionDeclaration functionDeclaration)
+        {
+            var parametersOwner = functionDeclaration.GetParametersOwner();
+            if (parametersOwner == null)
+            {
+                return new List<MethodParam>();
+            }
+
+            var retList = new List<MethodParam>(parametersOwner.Parameters.Count);
+            foreach (var param in parametersOwner.Parameters)
+            {
+                string typeFqn = param.Type.ToString();
+                string name = param.ShortName;
+                retList.Add(new MethodParam(typeFqn, name));
+            }
+            return retList;
+        }
 
         [SuppressMessage("ReSharper", "UnusedVariable")]
         public override bool InteriorShouldBeProcessed(ITreeNode element)

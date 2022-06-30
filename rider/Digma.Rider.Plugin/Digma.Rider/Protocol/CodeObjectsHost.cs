@@ -127,8 +127,30 @@ namespace Digma.Rider.Protocol
                     try
                     {
                         var uris = new List<CodeObjectIdUriOffsetTrouple>();
-                        foreach (var document in _codeObjectsCache.Map.Values)
+                        foreach (var psiSourceFile in _codeObjectsCache.Map.Keys)
                         {
+                            var document = _codeObjectsCache.Map.TryGetValue(psiSourceFile);
+                            if (document == null)
+                            {
+                                Log(_logger,"Got null Document for psiSourceFile '{0}'. Aborting operation.",psiSourceFile);
+                                continue; 
+                            }
+                            //it may be that the document is in the cache but reference resolving was not complete
+                            //when the cache was built. this is a compensation and the document will be updated..
+                            if (!document.IsComplete)
+                            {
+                                Log(_logger,"Document '{0}' is not complete. Trying to build it on-demand.",
+                                    document.FileUri);
+                                _codeObjectsCache.ProcessOnDemand(psiSourceFile);
+                                document = _codeObjectsCache.Map.TryGetValue(psiSourceFile);
+                            }
+                            
+                            if (document == null)
+                            {
+                                Log(_logger,"Still could not find Document for psiSourceFile '{0}' in the cache. Aborting operation.",psiSourceFile);
+                                continue; 
+                            }
+                            
                             foreach (var riderMethodInfo in document.Methods.Values)
                             {
                                 foreach (var riderSpanInfo in riderMethodInfo.Spans)

@@ -390,7 +390,7 @@ fun getAffectedServicesTooltip(errorsModel: ErrorsModel): String? {
 
 private fun backButton(project: Project): JComponent {
 
-    val buttonsSize = Dimension(Icons.ERROR_DETAILS_BACK_BUTTON_SIZE + 20,
+    val buttonsSize = Dimension(Icons.ERROR_DETAILS_BACK_BUTTON_SIZE + 3,
         Icons.ERROR_DETAILS_BACK_BUTTON_SIZE + 3)
 
     val backButton = BackButton(Icons.BACK_WHITE,Icons.BACK_BLACK)

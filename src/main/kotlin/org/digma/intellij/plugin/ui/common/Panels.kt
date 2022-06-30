@@ -48,8 +48,7 @@ fun iconPanelGrid(icon: Icon, text: String): JPanel {
     val panel = JBPanel<JBPanel<*>>()
     panel.layout = GridLayout(2,1)
     val iconLabel = JLabel(icon)
-    val f: Font = iconLabel.font
-    iconLabel.font = f.deriveFont(f.style or Font.BOLD)
+    boldFonts(iconLabel)
     panel.add(iconLabel)
     val label = JLabel(text)
     panel.add(label)

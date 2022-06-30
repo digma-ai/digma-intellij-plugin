@@ -66,14 +66,14 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
                                 val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
                                 actionListener.openErrorFrameWorkspaceFile(modelObject.getWorkspaceUrl(),modelObject.lastInstanceCommitId,modelObject.frame.lineNumber)
                             }.gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL).applyToComponent {
-                                toolTipText = frameText
+                                toolTipText = "${frameText} line ${modelObject.frame.lineNumber}"
                             }
                         }else {
                             label(frameText)
                                 .gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL)
                                 .applyToComponent {
                                     foreground = Color.GRAY
-                                    toolTipText = frameText
+                                    toolTipText = "${frameText} line ${modelObject.frame.lineNumber}"
                                 }
                         }
                         label("line ${modelObject.frame.lineNumber}").horizontalAlign(HorizontalAlign.RIGHT).applyToComponent {
@@ -86,7 +86,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
                         label(frameText)
                             .gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL).applyToComponent {
                                 foreground = Color.GRAY
-                                toolTipText = frameText
+                                toolTipText = "${frameText} line ${modelObject.frame.lineNumber}"
                             }
                     }
                     row{
@@ -155,7 +155,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
         val label = JLabel(asHtml(text))
         label.toolTipText = "${modelObject.frameStack.exceptionType} ${modelObject.frameStack.exceptionMessage}"
         panel.add(label)
-        panel.border = Borders.empty(3)
+        panel.border = Borders.empty(3,3,5,3)
         panel.isOpaque = false
         return panel
     }

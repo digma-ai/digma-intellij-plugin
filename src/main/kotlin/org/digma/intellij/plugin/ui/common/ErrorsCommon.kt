@@ -40,6 +40,25 @@ fun createScorePanel(model: CodeObjectError): JPanel {
 }
 
 
+fun createScorePanelNoArrows(model: CodeObjectError): JPanel {
+
+    val scorePanel = JPanel(BorderLayout())
+    val scoreLabel = JLabel("${model.scoreInfo.score}", JLabel.CENTER)
+    scoreLabel.toolTipText = genToolTipAsHtml(model.scoreInfo)
+    scoreLabel.preferredSize = Dimension(Icons.ERROR_SCORE_PANEL_SIZE,Icons.ERROR_SCORE_PANEL_SIZE)
+    scoreLabel.maximumSize = Dimension(Icons.ERROR_SCORE_PANEL_SIZE,Icons.ERROR_SCORE_PANEL_SIZE)
+    scoreLabel.border = empty()
+    scorePanel.add(scoreLabel,BorderLayout.CENTER)
+    scorePanel.border = createLineBorder(colorOf(model.scoreInfo.score), 2, true)
+
+    val result = JPanel()
+    result.layout = BorderLayout()
+    result.add(scorePanel,BorderLayout.CENTER)
+
+    return result
+}
+
+
 private fun genToolTipAsHtml(scoreInfo: ScoreInfo): String {
     val sb = StringBuilder()
     var firstTime = true

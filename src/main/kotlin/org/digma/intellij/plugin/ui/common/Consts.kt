@@ -13,7 +13,7 @@ object Html {
 //    const val DARK_GRAY: String = "#A8A8A8"
     const val DARK_GRAY2: String = "#ACACAC"
 //    const val BRIGHT_WHITE: String = "#FFFFFF"
-//    const val LIGHT_WHITE: String = "#FFFFF7"
+    const val LIGHT_WHITE: String = "#FFFFF7"
 //    const val WHITE_SMOKE: String = "#F5F5F5"
 //    const val WHITE_GOHST: String = "#F8F8FF"
 //    const val WHITE_PEARL: String = "#F8F6F0"

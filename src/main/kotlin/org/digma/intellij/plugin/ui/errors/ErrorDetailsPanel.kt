@@ -15,10 +15,7 @@ import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.service.ErrorsActionsService
-import org.digma.intellij.plugin.ui.common.asHtml
-import org.digma.intellij.plugin.ui.common.createScorePanel
-import org.digma.intellij.plugin.ui.common.htmlSpanSmoked
-import org.digma.intellij.plugin.ui.common.htmlSpanWhite
+import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.errordetails.ErrorFramesPanelList
 import org.digma.intellij.plugin.ui.list.panelListBackground
@@ -66,10 +63,11 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
 
 
     val servicesPanel = JPanel()
-    servicesPanel.layout = FlowLayout(FlowLayout.LEFT, 5, 5)
+    servicesPanel.layout = FlowLayout(FlowLayout.LEFT, 0, 5)
     servicesPanel.isOpaque = false
     buildServicesPanel(servicesPanel, errorsModel)
     val affectedServicesLabel = JLabel("Affected Services")
+    boldFonts(affectedServicesLabel)
     affectedServicesLabel.toolTipText = getAffectedServicesTooltip(errorsModel)
     val servicesPanelWrapper = JPanel()
     servicesPanelWrapper.layout = BorderLayout()
@@ -164,7 +162,8 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
     constraints.gridheight = 2
     constraints.fill = GridBagConstraints.NONE
     constraints.anchor = GridBagConstraints.NORTH
-    constraints.ipady = 0
+    constraints.ipady = 10
+    constraints.ipadx = 10
     result.add(scorePanelWrapper, constraints)
 
     constraints.anchor = GridBagConstraints.CENTER
@@ -185,6 +184,7 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
     constraints.weighty = 0.0
     constraints.fill = GridBagConstraints.HORIZONTAL
     constraints.ipady = 10
+    constraints.gridx = 0
     result.add(flowStackNavigation, constraints)
 
     constraints.gridx = 0
@@ -193,6 +193,7 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
     constraints.weighty = 1.0
     constraints.fill = GridBagConstraints.BOTH
     constraints.ipady = 0
+    constraints.gridx = 0
     result.add(framesList, constraints)
 
     constraints.gridx = 0
@@ -366,7 +367,7 @@ private fun prettyTimeOf(date: Date?): String {
 fun buildServicesPanel(servicesPanel: JPanel, errorsModel: ErrorsModel) {
 
     servicesPanel.removeAll()
-    servicesPanel.layout = FlowLayout(FlowLayout.LEFT, 5, 5)
+    servicesPanel.layout = FlowLayout(FlowLayout.LEFT, 0, 5)
     errorsModel.errorDetails.delegate?.originServices?.forEach(Consumer {
         val service = JLabel(it.serviceName)
         service.background = Color.DARK_GRAY
@@ -423,12 +424,12 @@ private fun namePanel(errorsModel: ErrorsModel): DialogPanel {
             row {
                 label("").horizontalAlign(HorizontalAlign.FILL).bind(
                     JLabel::getText, JLabel::setText, PropertyBinding(
-                        get = { asHtml(errorsModel.errorDetails.createErrorName()) },
+                        get = { asHtml(buildErrorName(errorsModel)) },
                         set = {})
                 ).bind(
                     JLabel::getToolTipText, JLabel::setToolTipText, PropertyBinding(
-                        get = { asHtml(errorsModel.errorDetails.createErrorName()) },
-                        set = {}))
+                        get = { asHtml(buildErrorName(errorsModel)) },
+                        set = {})).bold()
 
             }
         }
@@ -436,30 +437,35 @@ private fun namePanel(errorsModel: ErrorsModel): DialogPanel {
 
 }
 
+private fun buildErrorName(errorsModel: ErrorsModel): String{
+    val name = errorsModel.errorDetails.getName()
+    val from = errorsModel.errorDetails.getFrom()
+
+    return "${htmlSpanTitle()}<b>$name<b> ${htmlSpanSmoked()}From ${htmlSpanWhite()}${from}"
+
+}
+
+
+
+
 private fun scorePanel(errorsModel: ErrorsModel): DialogPanel {
     return  panel {
         row {
             val scorePanelWrapper = JPanel()
             scorePanelWrapper.isOpaque = false
-//            if (errorsModel.errorDetails.delegate != null){
-//                var scorePanel = createScorePanel(tempCodeObjectError(errorsModel.errorDetails.delegate!!))
-//                scorePanel.isOpaque = false
-//                scorePanelWrapper.add(scorePanel)
-//            }
             cell(scorePanelWrapper).onReset {
                 if (scorePanelWrapper.components.size > 0) {
                     scorePanelWrapper.remove(0)
                 }
                 if (errorsModel.errorDetails.delegate != null) {
                     //create a dummy CodeObjectErrorDetails just so we can use the same createScorePanel function
-                    val scorePanel = createScorePanel(tempCodeObjectError(errorsModel.errorDetails.delegate!!))
+                    val scorePanel = createScorePanelNoArrows(tempCodeObjectError(errorsModel.errorDetails.delegate!!))
                     scorePanel.isOpaque = false
                     scorePanelWrapper.add(scorePanel)
                 }
             }.horizontalAlign(HorizontalAlign.FILL).gap(RightGap.SMALL)
         }
     }.andTransparent()
-
 }
 
 

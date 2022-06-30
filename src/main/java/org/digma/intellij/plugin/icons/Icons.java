@@ -2,22 +2,23 @@ package org.digma.intellij.plugin.icons;
 
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.util.IconLoader;
-import com.intellij.ui.scale.Scale;
 import com.intellij.ui.scale.ScaleContext;
-import com.intellij.ui.scale.ScaleType;
 import com.intellij.util.IconUtil;
 import com.intellij.util.ui.JBUI;
 import org.apache.commons.io.FileUtils;
 import org.digma.intellij.plugin.ui.common.Html;
-import org.jetbrains.annotations.NotNull;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-@SuppressWarnings("unused")
+import static com.intellij.ui.scale.ScaleType.OBJ_SCALE;
+
+//@SuppressWarnings("unused")
 public final class Icons {
 
     private Icons() {
@@ -29,7 +30,7 @@ public final class Icons {
     public static final int ERROR_DETAILS_BACK_BUTTON_SIZE = JBUI.scale(32);//its here because it should be the same size as icons
     public static final int ERROR_DETAILS_NAVIGATION_BUTTON_SIZE = 32;//its here because it should be the same size as icons
 
-    public static final Icon TOOL_WINDOW = loadAndScaleIcon("/icons/digma.png", 0.1d);
+    public static final Icon TOOL_WINDOW = loadAndScaleIconObjectByWidth("/icons/digma.png", 13);
 
     public static final Icon METHOD = IconLoader.getIcon("/icons/method.svg", Icons.class.getClassLoader());
     public static final Icon METHOD_INSIGHTS_WHITE = colorizeVsCodeIcon("/icons/method.svg", Html.INSIGHTS_WHITE);
@@ -84,27 +85,43 @@ public final class Icons {
     }
 
 
-
     public static Icon loadAndScaleInsightIcon(String path) {
-        return loadAndScaleIcon(path,INSIGHT_ICON_SCALE_FACTOR);
+        return loadAndScaleInsightIconByWidth(path);
     }
-    public static Icon loadAndScaleIcon(String path, double scale) {
-        return IconUtil.scale(IconLoader.getIcon(path,Icons.class.getClassLoader()),
-                ScaleContext.create(Scale.create(scale, ScaleType.OBJ_SCALE)));
+
+    public static Icon loadAndScaleInsightIconByFactor(String path) {
+        return loadAndScaleIconObjectByFactor(path, INSIGHT_ICON_SCALE_FACTOR);
     }
-//    public static Icon loadAndScaleIcon(String path, int size) {
-//        return loadAndScaleIcon(path, size, size);
-//    }
-//
-//    public static Icon loadAndScaleIcon(String path, int width, int height) {
-//        try (InputStream inputStream = Icons.class.getResourceAsStream(path)) {
-//            BufferedImage image = ImageIO.read(inputStream);
-//            Image resized = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-//            return new ImageIcon(resized);
-//        } catch (Exception e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
+
+    public static Icon loadAndScaleInsightIconByWidth(String path) {
+        return loadAndScaleIconObjectByWidth(path, INSIGHT_ICON_SIZE);
+    }
+
+
+    public static Icon loadAndScaleIconObjectByFactor(String path, double scale) {
+        return IconUtil.scale(IconLoader.getIcon(path, Icons.class.getClassLoader()),
+                ScaleContext.create(OBJ_SCALE.of(scale)));
+    }
+
+
+    public static Icon loadAndScaleIconObjectByWidth(String path, int width) {
+
+        var icon = IconLoader.getIcon(path, Icons.class.getClassLoader());
+        //default icon is not a good scaling, hopefully IconUtil.scaleByIconWidth will succeed
+        var defaultIcon = loadAndScaleIconBySize(path, width, width);
+        return IconUtil.scaleByIconWidth(icon, null, defaultIcon);
+    }
+
+
+    public static Icon loadAndScaleIconBySize(String path, int width, int height) {
+        try (InputStream inputStream = Icons.class.getResourceAsStream(path)) {
+            BufferedImage image = ImageIO.read(inputStream);
+            Image resized = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+            return new ImageIcon(resized);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 
     public static Icon colorizeVsCodeIcon(String path, String newColor) {
@@ -121,9 +138,9 @@ public final class Icons {
     }
 
 
-    public static Icon colorizeIntellijIconIcon(@NotNull Icon icon, Color newColor) {
-        return IconUtil.colorize(icon, newColor);
-    }
+//    public static Icon colorizeIntellijIconIcon(@NotNull Icon icon, Color newColor) {
+//        return IconUtil.colorize(icon, newColor);
+//    }
 
 
 }

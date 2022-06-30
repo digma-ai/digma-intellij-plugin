@@ -6,6 +6,7 @@ import com.intellij.ui.scale.Scale;
 import com.intellij.ui.scale.ScaleContext;
 import com.intellij.ui.scale.ScaleType;
 import com.intellij.util.IconUtil;
+import com.intellij.util.ui.JBUI;
 import org.apache.commons.io.FileUtils;
 import org.digma.intellij.plugin.ui.common.Html;
 import org.jetbrains.annotations.NotNull;
@@ -24,8 +25,8 @@ public final class Icons {
 
     public static final int INSIGHT_ICON_SIZE = 32;
     public static final double INSIGHT_ICON_SCALE_FACTOR = 0.08d;
-    public static final int ERROR_SCORE_PANEL_SIZE = 32;//its here because it should be the same size as icons
-    public static final int ERROR_DETAILS_BACK_BUTTON_SIZE = 32;//its here because it should be the same size as icons
+    public static final int ERROR_SCORE_PANEL_SIZE = JBUI.scale(32);//its here because it should be the same size as icons
+    public static final int ERROR_DETAILS_BACK_BUTTON_SIZE = JBUI.scale(32);//its here because it should be the same size as icons
     public static final int ERROR_DETAILS_NAVIGATION_BUTTON_SIZE = 32;//its here because it should be the same size as icons
 
     public static final Icon TOOL_WINDOW = loadAndScaleIcon("/icons/digma.png", 0.1d);

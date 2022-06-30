@@ -153,6 +153,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
         panel.layout = GridLayout(1,1)
         val text = "${htmlSpanTitle()}<b>${modelObject.frameStack.exceptionType}<b><br> ${htmlSpanSmoked()}${modelObject.frameStack.exceptionMessage}"
         val label = JLabel(asHtml(text))
+        label.toolTipText = "${modelObject.frameStack.exceptionType} ${modelObject.frameStack.exceptionMessage}"
         panel.add(label)
         panel.border = Borders.empty(3)
         panel.isOpaque = false

@@ -16,7 +16,9 @@ import org.digma.intellij.plugin.ui.list.listItemPanel
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import org.ocpsoft.prettytime.PrettyTime
 import java.awt.BorderLayout
+import java.awt.GridLayout
 import java.util.*
+import javax.swing.BoxLayout
 import javax.swing.JPanel
 
 
@@ -55,12 +57,19 @@ private fun createSingleErrorPanel(project: Project,model: CodeObjectError): JPa
     link.toolTipText = asHtml("${linkText}<br>${firstAndLast}" )
 
     val scorePanel = createScorePanel(model)
+    val scorePanelWrapper = JPanel()
+    scorePanelWrapper.layout = GridLayout(1,1,1,1)
+    scorePanelWrapper.add(scorePanel)
 
-    val result = JBPanel<JBPanel<*>>()
-    result.layout = BorderLayout(0,3)
-    result.add(link,BorderLayout.NORTH)
-    result.add(content,BorderLayout.CENTER)
-    result.add(scorePanel,BorderLayout.EAST)
+    val leftPanel = JBPanel<JBPanel<*>>()
+    leftPanel.layout = BorderLayout(0,3)
+    leftPanel.add(link,BorderLayout.NORTH)
+    leftPanel.add(content,BorderLayout.CENTER)
+
+    val result = JPanel()
+    result.layout = BoxLayout(result,BoxLayout.X_AXIS)
+    result.add(leftPanel)
+    result.add(scorePanelWrapper)
     return result
 }
 

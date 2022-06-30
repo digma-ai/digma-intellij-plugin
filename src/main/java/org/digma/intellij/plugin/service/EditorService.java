@@ -9,6 +9,7 @@ import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.MessageConstants;
 import com.intellij.openapi.ui.Messages;
+import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vcs.VcsException;
 import com.intellij.openapi.vcs.vfs.ContentRevisionVirtualFile;
 import com.intellij.openapi.vfs.VfsUtil;
@@ -113,6 +114,7 @@ public class EditorService implements Disposable {
             }
 
 
+            virtualFile.putUserData(new Key("org.digma.plugin.editor.vcsFile"),"true");
             OpenFileDescriptor navigatable = new OpenFileDescriptor(project, virtualFile, Math.max(0, lineNumber - 1), 0);
             FileEditorManager.getInstance(project).openTextEditor(navigatable,true);
 
@@ -160,7 +162,7 @@ public class EditorService implements Disposable {
             return;
         }
         try {
-            String name = "stacktrace-"+stackTrace.hashCode()+".txt";
+            String name = "digma-stacktrace-"+stackTrace.hashCode()+".txt";
             var vf = new LightVirtualFile(name, stackTrace);
             vf.setWritable(false);
             OpenFileDescriptor openFileDescriptor = new OpenFileDescriptor(project, vf);

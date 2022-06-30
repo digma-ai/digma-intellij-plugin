@@ -7,6 +7,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.insights.view.BuildersHolder;
 import org.digma.intellij.plugin.insights.view.InsightsViewBuilder;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
@@ -38,6 +39,7 @@ public class InsightsProvider {
 
         try {
             List<? extends CodeObjectInsight> codeObjectInsights = analyticsService.getInsights(objectIds);
+            codeObjectInsights = filterUnmapped(codeObjectInsights);
             Log.log(LOGGER::debug, "CodeObjectInsights for {}: {}", methodInfo, codeObjectInsights);
             InsightsViewBuilder insightsViewBuilder = new InsightsViewBuilder(buildersHolder);
             List<ListViewItem<?>> listViewItems = insightsViewBuilder.build(project,methodInfo, codeObjectInsights);
@@ -50,5 +52,15 @@ public class InsightsProvider {
             //it may happen many times.
             return new InsightsListContainer(new ArrayList<>(), 0);
         }
+    }
+
+    private List<? extends CodeObjectInsight> filterUnmapped(List<? extends CodeObjectInsight> codeObjectInsights) {
+        var filteredInsights = new ArrayList<CodeObjectInsight>();
+        codeObjectInsights.forEach(codeObjectInsight -> {
+            if (!codeObjectInsight.getType().equals(InsightType.Unmapped)){
+                filteredInsights.add(codeObjectInsight);
+            }
+        });
+        return filteredInsights;
     }
 }

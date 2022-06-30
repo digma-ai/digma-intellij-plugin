@@ -199,6 +199,10 @@ namespace Digma.Rider.Protocol
             _shellRdDispatcher.UnguardedScheduler.Queue(() =>
             {
                 _codeObjectsModel.Documents.Remove(documentKey);
+                if (_codeObjectsModel.Documents.ContainsKey(documentKey))
+                {
+                    _logger.Error("Document is still in the protocol after calling remove {0}",documentKey);
+                }
                 _codeObjectsModel.Documents.Add(documentKey, document);
                 NotifyOnDocumentCodeObjects(documentKey);
             });

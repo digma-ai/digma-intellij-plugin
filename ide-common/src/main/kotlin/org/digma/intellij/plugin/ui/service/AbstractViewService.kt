@@ -19,7 +19,7 @@ abstract class AbstractViewService(val project: Project) {
         if (toolWindowTabsHelper.isErrorDetailsOn()){
             return
         }
-        toolWindow?.contentManager?.setSelectedContent(toolWindowContent!!, true)
+        toolWindow?.contentManager?.setSelectedContent(toolWindowContent!!, false)
     }
 
     fun isVisible():Boolean{

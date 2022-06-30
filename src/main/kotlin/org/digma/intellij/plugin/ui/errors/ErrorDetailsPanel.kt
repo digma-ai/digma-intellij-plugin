@@ -15,9 +15,10 @@ import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.service.ErrorsActionsService
-import org.digma.intellij.plugin.ui.common.Html
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.createScorePanel
+import org.digma.intellij.plugin.ui.common.htmlSpanSmoked
+import org.digma.intellij.plugin.ui.common.htmlSpanWhite
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.errordetails.ErrorFramesPanelList
 import org.digma.intellij.plugin.ui.list.panelListBackground
@@ -25,32 +26,42 @@ import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import org.ocpsoft.prettytime.PrettyTime
 import java.awt.*
-import java.awt.event.MouseAdapter
-import java.awt.event.MouseEvent
 import java.util.*
 import java.util.function.Consumer
-import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JPanel
+import javax.swing.SwingConstants
 
 
 fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel {
 
     val backButton = backButton(project)
+    val backButtonWrapper = JPanel()
+    backButtonWrapper.layout = BorderLayout()
+    backButtonWrapper.isOpaque = false
+    backButtonWrapper.border = Borders.empty(5,5,0,0)
+    backButtonWrapper.add(backButton,BorderLayout.NORTH)
+
     val namePanel = namePanel(errorsModel)
+
     val scorePanel = scorePanel(errorsModel)
+    val scorePanelWrapper = JPanel()
+    scorePanelWrapper.isOpaque = false
+    scorePanelWrapper.layout = GridLayout(1,1)
+    scorePanelWrapper.border = Borders.empty(5, 2, 5, 2)
+    scorePanelWrapper.add(scorePanel)
+
 
     val titlePanel = JPanel()
-    titlePanel.layout = BorderLayout(10, 10)
-    titlePanel.border = Borders.empty(5, 2, 5, 2)
     titlePanel.isOpaque = false
-    titlePanel.add(backButton, BorderLayout.WEST)
-    titlePanel.add(namePanel, BorderLayout.CENTER)
-    titlePanel.add(scorePanel, BorderLayout.EAST)
+    titlePanel.layout = BorderLayout(10, 10)
+    titlePanel.add(backButtonWrapper,BorderLayout.WEST)
+    titlePanel.add(namePanel,BorderLayout.CENTER)
     val titlePanelWrapper = JPanel()
     titlePanelWrapper.layout = GridLayout(1, 1)
     titlePanelWrapper.isOpaque = false
+    titlePanelWrapper.border = Borders.empty(0, 5, 0, 0)
     titlePanelWrapper.add(titlePanel)
 
 
@@ -63,17 +74,17 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
     val servicesPanelWrapper = JPanel()
     servicesPanelWrapper.layout = BorderLayout()
     servicesPanelWrapper.isOpaque = false
+    servicesPanelWrapper.border = Borders.empty(0, 5, 0, 0)
     servicesPanelWrapper.add(affectedServicesLabel, BorderLayout.NORTH)
     servicesPanelWrapper.add(servicesPanel, BorderLayout.CENTER)
-    servicesPanelWrapper.border = Borders.empty(0, 10, 0, 0)
 
 
     val timesPanel = timesPanel(errorsModel)
     val timesPanelWrapper = JPanel()
     timesPanelWrapper.layout = GridLayout(1, 1)
     timesPanelWrapper.isOpaque = false
+    timesPanel.border = Borders.empty(0, 5, 0, 0)
     timesPanelWrapper.add(timesPanel)
-    timesPanel.border = Borders.empty(0, 10, 0, 0)
 
 
 
@@ -85,7 +96,7 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
 
 
     val bottomPanel = bottomPanel(project,errorsModel,framesList)
-
+    bottomPanel.border = Borders.empty(0, 5, 0, 0)
 
     val result = object : DigmaTabPanel() {
         override fun getPreferredFocusableComponent(): JComponent {
@@ -131,37 +142,62 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
     val constraints = GridBagConstraints()
     constraints.gridx = 0
     constraints.gridy = 0
-    constraints.weightx = 1.0
+    constraints.weightx = 0.5
     constraints.weighty = 0.0
-    constraints.ipady = 10
-
+    constraints.ipady = 20
     constraints.fill = GridBagConstraints.HORIZONTAL
     result.add(titlePanelWrapper, constraints)
 
+    constraints.gridx = 0
     constraints.gridy = 1
-    constraints.fill = GridBagConstraints.BOTH
+    constraints.weightx = 0.5
     constraints.weighty = weightyForServicesPanel(errorsModel)
+    constraints.fill = GridBagConstraints.BOTH
     constraints.ipady = 20
     result.add(servicesPanelWrapper, constraints)
 
+
+    constraints.gridx = 1
+    constraints.gridy = 0
+    constraints.weightx = 0.0
+    constraints.weighty = 0.0
+    constraints.gridheight = 2
+    constraints.fill = GridBagConstraints.NONE
+    constraints.anchor = GridBagConstraints.NORTH
+    constraints.ipady = 0
+    result.add(scorePanelWrapper, constraints)
+
+    constraints.anchor = GridBagConstraints.CENTER
+    constraints.gridheight = 1
+    constraints.gridwidth = 2
+    constraints.gridx = 0
     constraints.gridy = 2
+    constraints.weightx = 0.5
     constraints.weighty = 0.0
     constraints.fill = GridBagConstraints.HORIZONTAL
     constraints.ipady = 20
     result.add(timesPanelWrapper, constraints)
 
+
+    constraints.gridx = 0
     constraints.gridy = 3
+    constraints.weightx = 0.5
+    constraints.weighty = 0.0
     constraints.fill = GridBagConstraints.HORIZONTAL
     constraints.ipady = 10
     result.add(flowStackNavigation, constraints)
 
+    constraints.gridx = 0
     constraints.gridy = 4
+    constraints.weightx = 0.5
     constraints.weighty = 1.0
     constraints.fill = GridBagConstraints.BOTH
     constraints.ipady = 0
     result.add(framesList, constraints)
 
+    constraints.gridx = 0
     constraints.gridy = 5
+    constraints.weightx = 0.5
     constraints.weighty = 0.0
     constraints.fill = GridBagConstraints.HORIZONTAL
     result.add(bottomPanel, constraints)
@@ -217,12 +253,14 @@ fun weightyForServicesPanel(errorsModel: ErrorsModel): Double {
 
 fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelList): DialogPanel {
 
-    val currentLabel = JLabel("0/0 Flow Stacks")
+    val currentLabel = JLabel("0/00 Flow Stacks")
 
-    val backButton = NavigationButton("<html><span style=\"color:#B9B9B9\">${Html.ARROW_LEFT}",
-            "<html><span style=\"color:#000000\">${Html.ARROW_LEFT}")
-    backButton.preferredSize = Dimension(64, 48)
-    backButton.maximumSize = Dimension(64, 48)
+    val buttonsSize = Dimension(Icons.ERROR_DETAILS_NAVIGATION_BUTTON_SIZE + 2,
+                            Icons.ERROR_DETAILS_NAVIGATION_BUTTON_SIZE + 2)
+
+    val backButton = NavigationButtonIcon(Icons.BACK_WHITE,Icons.BACK_BLACK)
+    backButton.preferredSize = buttonsSize
+    backButton.maximumSize = buttonsSize
     backButton.addActionListener {
         val stackSize = errorsModel.errorDetails.flowStacks.stacks.size
         errorsModel.errorDetails.flowStacks.goBack()
@@ -232,10 +270,9 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
     }
 
 
-    val forwardButton = NavigationButton("<html><span style=\"color:#B9B9B9\">${Html.ARROW_RIGHT}",
-        "<html><span style=\"color:#000000\">${Html.ARROW_RIGHT}")
-    forwardButton.preferredSize = Dimension(64, 48)
-    forwardButton.maximumSize = Dimension(64, 48)
+    val forwardButton = NavigationButtonIcon(Icons.FORWARD_WHITE,Icons.FORWARD_BLACK)
+    forwardButton.preferredSize = buttonsSize
+    forwardButton.maximumSize = buttonsSize
     forwardButton.addActionListener {
         val stackSize = errorsModel.errorDetails.flowStacks.stacks.size
         errorsModel.errorDetails.flowStacks.goForward()
@@ -247,20 +284,17 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
 
     val panel = JPanel()
     panel.layout = GridBagLayout()
+
     val backButtonConstraints = GridBagConstraints()
-    backButtonConstraints.fill = GridBagConstraints.VERTICAL
-    backButtonConstraints.gridy = 0
-    backButtonConstraints.gridx = 0
-    backButtonConstraints.weighty = 0.0
-    backButtonConstraints.weightx = 0.0
+    backButtonConstraints.fill = GridBagConstraints.NONE
+    backButtonConstraints.ipadx = 5
     backButtonConstraints.anchor = GridBagConstraints.WEST
-    panel.add(backButton,backButtonConstraints)
+    panel.add(backButton, backButtonConstraints)
+
 
     val currentStackLabelConstraints = GridBagConstraints()
-    backButtonConstraints.fill = GridBagConstraints.HORIZONTAL
-    backButtonConstraints.gridy = 0
-    backButtonConstraints.gridx = 1
-    backButtonConstraints.weighty = 0.0
+    currentStackLabelConstraints.fill = GridBagConstraints.NONE
+    currentStackLabelConstraints.gridx = 1
     currentStackLabelConstraints.weightx = 0.5
     currentStackLabelConstraints.anchor = GridBagConstraints.CENTER
     panel.add(currentLabel, currentStackLabelConstraints)
@@ -268,15 +302,13 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
 
 
     val forwardButtonConstraints = GridBagConstraints()
-    forwardButtonConstraints.fill = GridBagConstraints.BOTH
-    forwardButtonConstraints.gridy = 0
+    forwardButtonConstraints.fill = GridBagConstraints.NONE
     forwardButtonConstraints.gridx = 2
-    backButtonConstraints.weighty = 0.0
-    backButtonConstraints.weightx = 0.0
     forwardButtonConstraints.anchor = GridBagConstraints.EAST
     panel.add(forwardButton,forwardButtonConstraints)
+    panel.border = Borders.empty(3)
 
-    val result = panel {
+    return panel {
         row {
             cell(panel).onReset {
                 val stackSize = errorsModel.errorDetails.flowStacks.stacks.size
@@ -284,24 +316,21 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
                 currentLabel.text = "${currentStack}/${stackSize} Flow Stacks"
             }.horizontalAlign(HorizontalAlign.FILL)
         }
-    }
+    }.andTransparent()
 
-    result.isOpaque = false
-    return result
 }
 
 
 
 
 fun timesPanel(errorsModel: ErrorsModel): DialogPanel {
-    val timesPanel = panel {
-
+    return panel {
         row {
             panel {
                 row {
                     label("").bind(
                         JLabel::getText, JLabel::setText, PropertyBinding(
-                            get = { "<html><span style=\"color:#808080\">Started:</span><br>${prettyTimeOf(errorsModel.errorDetails.delegate?.firstOccurenceTime)}</html>" },
+                            get = { asHtml("${htmlSpanSmoked()}Started:<br>${htmlSpanWhite()}${prettyTimeOf(errorsModel.errorDetails.delegate?.firstOccurenceTime)}") },
                             set = {})).verticalAlign(VerticalAlign.TOP)
                 }
             }
@@ -309,7 +338,7 @@ fun timesPanel(errorsModel: ErrorsModel): DialogPanel {
                 row {
                     label("").bind(
                         JLabel::getText, JLabel::setText, PropertyBinding(
-                            get = { "<html><span style=\"color:#808080\">Last:</span><br>${prettyTimeOf(errorsModel.errorDetails.delegate?.lastOccurenceTime)}</html>" },
+                            get = { asHtml("${htmlSpanSmoked()}Last:<br>${htmlSpanWhite()}${prettyTimeOf(errorsModel.errorDetails.delegate?.lastOccurenceTime)}") },
                             set = {}))
                 }
             }
@@ -317,16 +346,14 @@ fun timesPanel(errorsModel: ErrorsModel): DialogPanel {
                 row {
                     label("").bind(
                         JLabel::getText, JLabel::setText, PropertyBinding(
-                            get = { "<html><span style=\"color:#808080\">Frequency:</span><br>${errorsModel.errorDetails.delegate?.dayAvg.toString()} /day</html>" },
+                            get = { asHtml("${htmlSpanSmoked()}Frequency:<br>${htmlSpanWhite()}${errorsModel.errorDetails.delegate?.dayAvg.toString()} /day") },
                             set = {}))
                 }
             }
         }
 
-    }
+    }.andTransparent()
 
-    timesPanel.isOpaque = false
-    return timesPanel
 }
 
 
@@ -360,9 +387,14 @@ fun getAffectedServicesTooltip(errorsModel: ErrorsModel): String? {
 }
 
 
-private fun backButton(project: Project): JPanel {
+private fun backButton(project: Project): JComponent {
 
-    val backButton = JButton(Icons.BACK_WHITE)
+    val buttonsSize = Dimension(Icons.ERROR_DETAILS_BACK_BUTTON_SIZE + 20,
+        Icons.ERROR_DETAILS_BACK_BUTTON_SIZE + 3)
+
+    val backButton = BackButton(Icons.BACK_WHITE,Icons.BACK_BLACK)
+    backButton.preferredSize = buttonsSize
+    backButton.maximumSize = buttonsSize
     backButton.addActionListener {
         val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
         actionListener.closeErrorDetails()
@@ -370,30 +402,15 @@ private fun backButton(project: Project): JPanel {
     backButton.isOpaque = false
     backButton.isContentAreaFilled = false
     backButton.isBorderPainted = false
-    backButton.preferredSize = Dimension(48, 48)
-    backButton.maximumSize = Dimension(48, 48)
-    backButton.size = Dimension(48, 48)
-    backButton.rolloverIcon = Icons.BACK_BLACK
-    backButton.background = Color.WHITE
-    backButton.addMouseListener(object : MouseAdapter() {
-        override fun mouseExited(e: MouseEvent?) {
-            backButton.isOpaque = false
-        }
-
-        override fun mouseEntered(e: MouseEvent?) {
-            backButton.isOpaque = true
-        }
-
-        override fun mousePressed(e: MouseEvent?) {
-            backButton.isOpaque = false
-        }
-    })
+//    return backButton
 
     val wrapper = JPanel()
-    wrapper.layout = GridBagLayout()
+    wrapper.layout = GridLayout(1,1,2,2)
+    backButton.horizontalAlignment = SwingConstants.CENTER
+    backButton.verticalAlignment = SwingConstants.CENTER
     wrapper.add(backButton)
-    wrapper.preferredSize = Dimension(48, 48)
-    wrapper.maximumSize = Dimension(48, 48)
+    wrapper.preferredSize = buttonsSize
+    wrapper.maximumSize = buttonsSize
     wrapper.isOpaque = false
 
     return wrapper

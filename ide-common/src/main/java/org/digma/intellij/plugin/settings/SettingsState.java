@@ -30,7 +30,7 @@ public class SettingsState implements PersistentStateComponent<SettingsState> {
   public static final boolean DEFAULT_IS_USE_SYSTEM_LAF = true;
   public static final boolean DEFAULT_SCALE_PANELS = true;
   public static final boolean DEFAULT_SCALE_BORDERS = false;
-  public static final boolean DEFAULT_SCALE_ICONS = false;
+  public static final boolean DEFAULT_SCALE_ICONS = true;
 
 
 

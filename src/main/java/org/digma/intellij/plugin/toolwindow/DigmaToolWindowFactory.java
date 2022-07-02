@@ -8,7 +8,9 @@ import com.intellij.ui.content.ContentFactory;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.service.EditorInteractionService;
 import org.digma.intellij.plugin.service.ErrorsActionsService;
+import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.ToolWindowShower;
+import org.digma.intellij.plugin.ui.common.Laf;
 import org.digma.intellij.plugin.ui.errors.ErrorsTabKt;
 import org.digma.intellij.plugin.ui.insights.InsightsTabKt;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
@@ -36,6 +38,8 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
         Log.log(LOGGER::debug, "createToolWindowContent for project  {}", project);
 
         var contentFactory = ContentFactory.SERVICE.getInstance();
+
+        Laf.INSTANCE.setSettings(SettingsState.getInstance(project));
 
         var toolWindowTabsHelper = project.getService(ToolWindowTabsHelper.class);
         toolWindowTabsHelper.setToolWindow(toolWindow);

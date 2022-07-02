@@ -92,8 +92,6 @@ public class ErrorsProvider {
 
         var viewItems = new ArrayList<ListViewItem<FrameListViewItem>>();
         var index = 0;
-        String currentSpan = null;
-
         for (FrameStack frameStack : detailedErrorInfo.getFrameStacks()) {
 
             var frameStackTitle = new FrameStackTitle(frameStack);
@@ -101,6 +99,7 @@ public class ErrorsProvider {
             viewItems.add(frameStackViewItem);
 
             boolean first = true;
+            String currentSpan = null;
             for (Frame frame : frameStack.getFrames()) {
 
                 if (currentSpan == null || !currentSpan.equals(frame.getSpanName())){
@@ -122,6 +121,38 @@ public class ErrorsProvider {
 
         return viewItems;
     }
+
+
+    ///do debug cal this method after the first iteration on etailedErrorInfo.getFrameStacks()
+    ///duplicateFrameStacksForDev(detailedErrorInfo, workspaceUris, viewItems, index);
+//    private void duplicateFrameStacksForDev(DetailedErrorInfo detailedErrorInfo, Map<String, String> workspaceUris, ArrayList<ListViewItem<FrameListViewItem>> viewItems, int index) {
+//        for (FrameStack frameStack : detailedErrorInfo.getFrameStacks()) {
+//
+//            var frameStackTitle = new FrameStackTitle(frameStack);
+//            var frameStackViewItem = new ListViewItem<FrameListViewItem>(frameStackTitle, index++);
+//            viewItems.add(frameStackViewItem);
+//
+//            boolean first = true;
+//            String currentSpan = null;
+//            for (Frame frame : frameStack.getFrames()) {
+//
+//                if (currentSpan == null || !currentSpan.equals(frame.getSpanName())){
+//                    currentSpan = frame.getSpanName();
+//                    var spanTitle = new SpanTitle(currentSpan);
+//                    var spanTitleViewItem = new ListViewItem<FrameListViewItem>(spanTitle, index++);
+//                    viewItems.add(spanTitleViewItem);
+//                }
+//
+//                var workspaceUri = workspaceUris.getOrDefault(frame.getCodeObjectId(),null);
+//                var frameItem = new FrameItem(frameStack,frame,first,workspaceUri, detailedErrorInfo.getLastInstanceCommitId());
+//                first = false;
+//
+//                var frameViewItem = new ListViewItem<FrameListViewItem>(frameItem, index++);
+//                viewItems.add(frameViewItem);
+//
+//            }
+//        }
+//    }
 
     private Map<String, String> findWorkspaceUriForFrames(DetailedErrorInfo detailedErrorInfo) {
 

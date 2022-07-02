@@ -5,13 +5,13 @@ import org.digma.intellij.plugin.model.rest.insights.Duration
 import org.digma.intellij.plugin.model.rest.insights.SlowEndpointInsight
 import org.digma.intellij.plugin.ui.common.Html
 import org.digma.intellij.plugin.ui.common.asHtml
+import org.digma.intellij.plugin.ui.common.span
 import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.swing.JPanel
 
 
 fun slowEndpointPanel(insight: SlowEndpointInsight): JPanel {
-
     val bodyContents = genContent(insight)
     val iconText = evalDuration(insight.median)
     val result = createInsightPanel("Slow Endpoint", bodyContents, Icons.Insight.SLOW, iconText)
@@ -33,7 +33,7 @@ fun evalDuration(duration: Duration): String {
 
 fun genContent(insight: SlowEndpointInsight): String {
     val pctVal = computePercentageDiff(insight)
-    return "On average requests are slower than other endpoints by ${Html.span(Html.RED)}${pctVal}"
+    return "On average requests are slower than other endpoints by ${span(Html.RED,pctVal)}"
 }
 
 fun computePercentageDiff(insight: SlowEndpointInsight): String {

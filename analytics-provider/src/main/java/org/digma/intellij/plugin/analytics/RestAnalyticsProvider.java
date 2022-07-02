@@ -75,7 +75,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
             try {
                 message = String.format("Error %d. %s", response.code(), response.errorBody() == null ? null : response.errorBody().string());
             } catch (IOException e) {
-                throw new AnalyticsProviderException(e);
+                throw new AnalyticsProviderException(e.getMessage(),e);
             }
             throw new AnalyticsProviderException(response.code(), message);
         }

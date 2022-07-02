@@ -17,6 +17,7 @@ import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.model.environment.EnvComboModel;
 import org.jetbrains.annotations.NotNull;
 
+import javax.net.ssl.SSLException;
 import java.io.Closeable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -142,12 +143,13 @@ public class AnalyticsService implements Disposable {
                 //log to error only the first time of ConnectException, this form of error log will popup a balloon error
                 //message, its not necessary to popup the balloon too many times. following exceptions will just be logged
                 //to the log file
-                if (isConnectionException(e) && !hadConnectException){
+                if ((isConnectionException(e) || isSslConnectionException(e)) && !hadConnectException){
                     hadConnectException = true;
                     Log.log(LOGGER::warn, "Connect exception: error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e);
                     LOGGER.warn(e);
+                    var message = isConnectionException(e) ? getConnectExceptionMessage(e):getSslExceptionMessage(e);
                     NotificationUtil.notifyError(project,"<html>Connection error with Digma backend api for method "+method.getName()+".<br> "
-                                +getExceptionMessage(e) + ".<br> See logs for details.");
+                                + message + ".<br> See logs for details.");
                 }else{
                     Log.log(LOGGER::warn,"error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getCause().getMessage());
                 }
@@ -175,7 +177,8 @@ public class AnalyticsService implements Disposable {
             return false;
         }
 
-        private String getExceptionMessage(InvocationTargetException e) {
+
+        private String getConnectExceptionMessage(InvocationTargetException e) {
             var ex = e.getCause();
             while (ex != null && !(ex instanceof ConnectException)){
                 ex = ex.getCause();
@@ -186,6 +189,34 @@ public class AnalyticsService implements Disposable {
             
             return e.getCause() != null? e.getCause().getMessage():e.getMessage();
         }
+
+        private boolean isSslConnectionException(InvocationTargetException e) {
+
+            var ex = e.getCause();
+            while (ex != null && !(ex instanceof SSLException)){
+                ex = ex.getCause();
+            }
+            if (ex != null){
+                return true;
+            }
+
+            return false;
+        }
+
+        private String getSslExceptionMessage(InvocationTargetException e) {
+            var ex = e.getCause();
+            while (ex != null && !(ex instanceof SSLException)){
+                ex = ex.getCause();
+            }
+            if (ex != null){
+                return ex.getMessage();
+            }
+
+            return e.getCause() != null? e.getCause().getMessage():e.getMessage();
+        }
+
+
+
 
         private String resultToString(Object result) {
             try{

@@ -94,7 +94,7 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
 
 
     val bottomPanel = bottomPanel(project,errorsModel,framesList)
-    bottomPanel.border = Borders.empty(0, 5, 0, 0)
+    bottomPanel.border = Borders.empty(0, 5, 0, 5)
 
     val result = object : DigmaTabPanel() {
         override fun getPreferredFocusableComponent(): JComponent {
@@ -234,12 +234,9 @@ fun bottomPanel(project: Project,errorsModel: ErrorsModel, framesList: Scrollabl
                 actionListener.openRawTrace(stackTrace)
             }.horizontalAlign(HorizontalAlign.RIGHT).gap(RightGap.SMALL)
 
-        }.layout(RowLayout.INDEPENDENT).topGap(TopGap.SMALL)
-    }.andTransparent().
-    withBorder(Borders.compound(Borders.empty(3, 0, 0, 3),
-        Borders.customLine(Color.GRAY,1,0,0,0),
-        ))
 
+        }.layout(RowLayout.INDEPENDENT).topGap(TopGap.SMALL)
+    }.andTransparent()
 }
 
 fun weightyForServicesPanel(errorsModel: ErrorsModel): Double {

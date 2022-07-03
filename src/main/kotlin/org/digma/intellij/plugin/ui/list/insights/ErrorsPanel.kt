@@ -14,6 +14,7 @@ import org.digma.intellij.plugin.service.InsightsActionsService
 import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.BorderLayout
+import java.awt.Dimension
 import java.awt.GridLayout
 import javax.swing.*
 
@@ -62,7 +63,13 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>): JPa
     errorsWrapper.border = BorderFactory.createEmptyBorder()
 
 
-    val expandPanel = JBPanel<JBPanel<*>>()
+    //the expand button wants to be aligned with the insights icons panels, so it takes its width from there
+    val expandPanel: JPanel = object: JPanel(){
+        override fun getPreferredSize(): Dimension {
+            val ps = super.getPreferredSize()
+            return Dimension(InsightsPanelsLayoutHelper.getObjectAttribute("insightsIconPanelBorder","largestWidth") as Int,ps.height)
+        }
+    }
     expandPanel.layout = BorderLayout()
     expandPanel.add(expandLinkPanel, BorderLayout.SOUTH)
 

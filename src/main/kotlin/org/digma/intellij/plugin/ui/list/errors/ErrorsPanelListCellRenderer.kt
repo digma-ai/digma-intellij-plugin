@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.ui.list.errors
 
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
-import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import org.digma.intellij.plugin.model.discovery.CodeObjectInfo.Companion.extractMethodName
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError

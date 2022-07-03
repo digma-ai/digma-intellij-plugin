@@ -57,7 +57,7 @@ fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: 
 
     val iconPanel = panel {
         row {
-            cell(iconPanelBorder(Icons.Insight.BOTTLENECK, wrapCentered("Slow<br>Spans)")))
+            cell(insightsIconPanelBorder(Icons.Insight.BOTTLENECK, wrapCentered("Slow<br>Spans)")))
                 .horizontalAlign(HorizontalAlign.RIGHT)
         }.layout(RowLayout.INDEPENDENT)
     }

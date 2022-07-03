@@ -37,7 +37,7 @@ public class SettingsComponent {
 
   public SettingsComponent(Project project) {
 
-    var myUrlLabel = new JBLabel("Digma Api url (requires IDE restart): ");
+    var myUrlLabel = new JBLabel("Digma Api url: ");
     var myLabelForeground = myUrlLabel.getForeground();
     myApiUrlText.setInputVerifier(new InputVerifier() {
       @Override

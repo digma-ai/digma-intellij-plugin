@@ -116,9 +116,6 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
     }
 
     private fun spanTitlePanel(modelObject: SpanTitle): JPanel {
-        val panel = JPanel()
-        panel.layout = BorderLayout()
-        panel.isOpaque = false
 
         val icon = JLabel(Icons.TELESCOPE_BLUE_LIGHT_SHADE)
         icon.foreground = BLUE_LIGHT_SHADE
@@ -127,6 +124,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
         val iconPanel = JPanel()
         iconPanel.layout = GridBagLayout()
         iconPanel.isOpaque = false
+        iconPanel.border = Borders.empty(2)
         iconPanel.add(icon)
 
         val name = CopyableLabel(modelObject.spanName)
@@ -138,10 +136,13 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
         namePanel.border = Borders.empty(0,Laf.scaleBorders(5),0,0)
         namePanel.add(name,BorderLayout.WEST)
 
-        panel.add(iconPanel,BorderLayout.WEST)
-        panel.add(namePanel,BorderLayout.CENTER)
-        panel.isOpaque = false
-        return itemPanel(panel)
+        val result = JPanel()
+        result.layout = BorderLayout()
+        result.isOpaque = false
+        result.add(iconPanel,BorderLayout.WEST)
+        result.add(namePanel,BorderLayout.CENTER)
+        result.isOpaque = false
+        return itemPanel(result)
     }
 
 

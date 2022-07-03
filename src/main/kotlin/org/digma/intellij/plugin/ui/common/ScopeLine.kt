@@ -16,7 +16,7 @@ import javax.swing.JLabel
 fun scopeLine(project: Project, scopeNameProducer: Producer<String>, scopeIconProducer: Producer<Icon>): DialogPanel {
 
     return panel {
-        row("Scope: ") {
+        row(asHtml(spanGrayed("Scope: "))) {
             icon(scopeIconProducer.produce()).bind(
                 JLabel::getIcon, JLabel::setIcon, PropertyBinding(
                     get = { scopeIconProducer.produce() },

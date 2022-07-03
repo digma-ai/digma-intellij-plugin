@@ -13,16 +13,19 @@ import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.persistence.PersistenceService;
+import org.digma.intellij.plugin.settings.SettingsChangeListener;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.model.environment.EnvComboModel;
 import org.jetbrains.annotations.NotNull;
 
 import javax.net.ssl.SSLException;
 import java.io.Closeable;
+import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.ConnectException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,9 +35,10 @@ public class AnalyticsService implements Disposable {
     private static final Logger LOGGER = Logger.getInstance(AnalyticsService.class);
 
     private final Environment environment;
-    private Project project;
+    private String myApiUrl;
+    private final Project project;
 
-    private final AnalyticsProvider analyticsProviderProxy;
+    private AnalyticsProvider analyticsProviderProxy;
     private final SettingsState settingsState;
     private final PersistenceService persistenceService;
 
@@ -42,21 +46,48 @@ public class AnalyticsService implements Disposable {
     public AnalyticsService(@NotNull Project project) {
         settingsState = project.getService(SettingsState.class);
         persistenceService = project.getService(PersistenceService.class);
-        environment = new Environment(project,this,persistenceService.getState());
+        environment = new Environment(project, this, persistenceService.getState());
         this.project = project;
-        analyticsProviderProxy = newAnalyticsProviderProxy(new RestAnalyticsProvider(settingsState.apiUrl));
-        List<String> envs = getEnvironments();
-        if (envs != null) {
-            environment.setEnvironmentsList(envs);
-        }
+        myApiUrl = settingsState.apiUrl;
+        reBuildClient(myApiUrl);
         EnvComboModel.INSTANCE.initialize(environment);
+        settingsState.addChangeListener(new SettingsChangeListener() {
+            @Override
+            public void settingsChanged(SettingsState settingsState) {
+                if (!settingsState.apiUrl.equals(myApiUrl)) {
+                    myApiUrl = settingsState.apiUrl;
+                    reBuildClient(myApiUrl);
+                }
+                ;
+            }
+        });
+    }
+
+
+    private void reBuildClient(String apiUrl) {
+        //try to close
+        if (analyticsProviderProxy != null) {
+            try {
+                analyticsProviderProxy.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        analyticsProviderProxy = newAnalyticsProviderProxy(new RestAnalyticsProvider(apiUrl));
+        List<String> envs = getEnvironments();
+        if (envs == null) {
+            envs = new ArrayList<>();
+        }
+
+        environment.replaceEnvironmentsList(envs);
     }
 
 
     List<String> getEnvironments() {
         try {
             return analyticsProviderProxy.getEnvironments();
-        }catch (Throwable e){
+        } catch (Throwable e) {
             //getEnvironments should never throw exception. it is called only from the constructor or be the
             //Environment object that can handle null.
             return null;

@@ -6,6 +6,7 @@ import com.intellij.openapi.vcs.vfs.ContentRevisionVirtualFile;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.EditorNotificationPanel;
 import com.intellij.ui.EditorNotificationProvider;
+import com.intellij.ui.JBColor;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -21,11 +22,13 @@ public class DigmaEditorNotificationProvider implements EditorNotificationProvid
             if (!fileEditor.getFile().isWritable() &&
                     fileEditor.getFile().getPath().contains("digma-stacktrace") ){
                 var panel = new EditorNotificationPanel();
+                panel.setBackground(JBColor.YELLOW);
                 panel.setText("Digma: This is a read only stack trace document");
                 return panel;
             }else if(!fileEditor.getFile().isWritable() &&
                     fileEditor.getFile() instanceof ContentRevisionVirtualFile){
                 var panel = new EditorNotificationPanel();
+                panel.setBackground(JBColor.YELLOW);
                 panel.setText("Digma: This is a read only vcs document");
                 return panel;
 

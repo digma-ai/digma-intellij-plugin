@@ -26,7 +26,7 @@ fun spanGroupPanel(listViewItem: GroupListViewItem): JPanel {
     val items: SortedSet<ListViewItem<*>> = listViewItem.modelObject
 
     val result = panel {
-        row("Span: ")
+        row(asHtml(spanGrayed("Span: ")))
         {
             icon(Icons.Insight.SPAN_GROUP_TITLE).applyToComponent {
                 toolTipText = listViewItem.groupId

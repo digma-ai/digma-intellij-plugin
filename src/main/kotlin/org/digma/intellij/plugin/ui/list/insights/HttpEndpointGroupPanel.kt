@@ -19,7 +19,7 @@ fun httpEndpointGroupPanel(project: Project, listViewItem: InsightGroupListViewI
 
 
     val result = panel {
-        row("REST:") {
+        row(asHtml(spanGrayed("REST: "))) {
             val text = headerAsHtml(listViewItem)
             icon(Icons.Insight.HTTP_GROUP_TITLE).applyToComponent {
                 toolTipText = text

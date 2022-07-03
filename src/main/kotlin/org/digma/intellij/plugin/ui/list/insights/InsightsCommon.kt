@@ -5,10 +5,7 @@ import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.model.rest.insights.UnmappedInsight
-import org.digma.intellij.plugin.ui.common.asHtml
-import org.digma.intellij.plugin.ui.common.htmlSpanSmoked
-import org.digma.intellij.plugin.ui.common.htmlSpanTitle
-import org.digma.intellij.plugin.ui.common.iconPanelBorder
+import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.list.listGroupPanel
 import org.digma.intellij.plugin.ui.list.listItemPanel
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
@@ -32,16 +29,14 @@ fun createInsightPanel(title: String, body: String, icon: Icon, iconText: String
 }
 
 fun createInsightPanel(title: String, body: String, icon: Icon, iconText: String, wrap: Boolean): JPanel {
-    val message = JLabel(asHtml("${htmlSpanTitle()}<b>$title</b><br>${htmlSpanSmoked()}$body"), SwingConstants.LEFT)
 
+    val message = JLabel(buildBoldTitleGrayedComment(title,body),SwingConstants.LEFT)
     val iconPanel = iconPanelBorder(icon, iconText)
-
     val result = JBPanel<JBPanel<*>>()
     result.layout = BorderLayout()
     result.add(message,BorderLayout.CENTER)
     result.add(iconPanel,BorderLayout.EAST)
     result.border = empty()
-
 
     return if (wrap) {
         insightItemPanel(result)

@@ -33,14 +33,14 @@ public class Environment implements EnvironmentsSupplier {
         this.current = persistenceData.getCurrentEnv();
     }
 
-    void maybeRecoverEnvironments() {
+    private void maybeRecoverEnvironments() {
         if (environments == null || environments.isEmpty()) {
             Log.log(LOGGER::debug, "Environments list is empty,trying recovery");
             refreshEnvironments();
         }
     }
 
-    void refreshEnvironments() {
+    private void refreshEnvironments() {
         Log.log(LOGGER::debug, "Refreshing Environments list");
         var newEnvironments = analyticsService.getEnvironments();
         if (newEnvironments != null && newEnvironments.size() > 0) {
@@ -55,9 +55,12 @@ public class Environment implements EnvironmentsSupplier {
         }
 
 
-        setEnvironmentsList(newEnvironments);
+        this.environments = newEnvironments;
 
         fireEnvironmentsListChange();
+
+        maybeUpdateCurrent();
+
     }
 
     private boolean environmentsListEquals(List<String> envs1, List<String> envs2) {
@@ -137,9 +140,14 @@ public class Environment implements EnvironmentsSupplier {
         }
     }
 
-    void setEnvironmentsList(@NotNull List<String> envs) {
+
+
+    void replaceEnvironmentsList(@NotNull List<String> envs) {
         this.environments = envs;
-        maybeUpdateCurrent();
+        current = environments.size() > 0 ? environments.get(0) : null;
+        persistenceData.setCurrentEnv(current);
+        fireEnvironmentsListChange();
+        notifyEnvironmentChanged(current);
     }
 
 

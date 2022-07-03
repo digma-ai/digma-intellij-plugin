@@ -24,7 +24,7 @@
 
 
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow id="Digma" secondary="true" icon="org.digma.intellij.plugin.icons.Icons.TOOL_WINDOW" anchor="left"
+        <toolWindow id="Digma" secondary="true" icon="org.digma.intellij.plugin.icons.AppIcons.TOOL_WINDOW" anchor="left"
                     factoryClass="org.digma.intellij.plugin.toolwindow.DigmaToolWindowFactory"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.ToolWindowShower"/>

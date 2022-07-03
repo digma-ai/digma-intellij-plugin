@@ -13,15 +13,19 @@ import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.persistence.PersistenceService;
+import org.digma.intellij.plugin.settings.SettingsChangeListener;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.model.environment.EnvComboModel;
 import org.jetbrains.annotations.NotNull;
 
+import javax.net.ssl.SSLException;
 import java.io.Closeable;
+import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.ConnectException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,9 +35,10 @@ public class AnalyticsService implements Disposable {
     private static final Logger LOGGER = Logger.getInstance(AnalyticsService.class);
 
     private final Environment environment;
-    private Project project;
+    private String myApiUrl;
+    private final Project project;
 
-    private final AnalyticsProvider analyticsProviderProxy;
+    private AnalyticsProvider analyticsProviderProxy;
     private final SettingsState settingsState;
     private final PersistenceService persistenceService;
 
@@ -41,21 +46,48 @@ public class AnalyticsService implements Disposable {
     public AnalyticsService(@NotNull Project project) {
         settingsState = project.getService(SettingsState.class);
         persistenceService = project.getService(PersistenceService.class);
-        environment = new Environment(project,this,persistenceService.getState());
+        environment = new Environment(project, this, persistenceService.getState());
         this.project = project;
-        analyticsProviderProxy = newAnalyticsProviderProxy(new RestAnalyticsProvider(settingsState.apiUrl));
-        List<String> envs = getEnvironments();
-        if (envs != null) {
-            environment.setEnvironmentsList(envs);
-        }
+        myApiUrl = settingsState.apiUrl;
+        reBuildClient(myApiUrl);
         EnvComboModel.INSTANCE.initialize(environment);
+        settingsState.addChangeListener(new SettingsChangeListener() {
+            @Override
+            public void settingsChanged(SettingsState settingsState) {
+                if (!settingsState.apiUrl.equals(myApiUrl)) {
+                    myApiUrl = settingsState.apiUrl;
+                    reBuildClient(myApiUrl);
+                }
+                ;
+            }
+        });
+    }
+
+
+    private void reBuildClient(String apiUrl) {
+        //try to close
+        if (analyticsProviderProxy != null) {
+            try {
+                analyticsProviderProxy.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        analyticsProviderProxy = newAnalyticsProviderProxy(new RestAnalyticsProvider(apiUrl));
+        List<String> envs = getEnvironments();
+        if (envs == null) {
+            envs = new ArrayList<>();
+        }
+
+        environment.replaceEnvironmentsList(envs);
     }
 
 
     List<String> getEnvironments() {
         try {
             return analyticsProviderProxy.getEnvironments();
-        }catch (Throwable e){
+        } catch (Throwable e) {
             //getEnvironments should never throw exception. it is called only from the constructor or be the
             //Environment object that can handle null.
             return null;
@@ -142,12 +174,13 @@ public class AnalyticsService implements Disposable {
                 //log to error only the first time of ConnectException, this form of error log will popup a balloon error
                 //message, its not necessary to popup the balloon too many times. following exceptions will just be logged
                 //to the log file
-                if (isConnectionException(e) && !hadConnectException){
+                if ((isConnectionException(e) || isSslConnectionException(e)) && !hadConnectException){
                     hadConnectException = true;
                     Log.log(LOGGER::warn, "Connect exception: error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e);
                     LOGGER.warn(e);
+                    var message = isConnectionException(e) ? getConnectExceptionMessage(e):getSslExceptionMessage(e);
                     NotificationUtil.notifyError(project,"<html>Connection error with Digma backend api for method "+method.getName()+".<br> "
-                                +getExceptionMessage(e) + ".<br> See logs for details.");
+                                + message + ".<br> See logs for details.");
                 }else{
                     Log.log(LOGGER::warn,"error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getCause().getMessage());
                 }
@@ -175,7 +208,8 @@ public class AnalyticsService implements Disposable {
             return false;
         }
 
-        private String getExceptionMessage(InvocationTargetException e) {
+
+        private String getConnectExceptionMessage(InvocationTargetException e) {
             var ex = e.getCause();
             while (ex != null && !(ex instanceof ConnectException)){
                 ex = ex.getCause();
@@ -186,6 +220,34 @@ public class AnalyticsService implements Disposable {
             
             return e.getCause() != null? e.getCause().getMessage():e.getMessage();
         }
+
+        private boolean isSslConnectionException(InvocationTargetException e) {
+
+            var ex = e.getCause();
+            while (ex != null && !(ex instanceof SSLException)){
+                ex = ex.getCause();
+            }
+            if (ex != null){
+                return true;
+            }
+
+            return false;
+        }
+
+        private String getSslExceptionMessage(InvocationTargetException e) {
+            var ex = e.getCause();
+            while (ex != null && !(ex instanceof SSLException)){
+                ex = ex.getCause();
+            }
+            if (ex != null){
+                return ex.getMessage();
+            }
+
+            return e.getCause() != null? e.getCause().getMessage():e.getMessage();
+        }
+
+
+
 
         private String resultToString(Object result) {
             try{

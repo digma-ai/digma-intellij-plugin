@@ -4,60 +4,79 @@ import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.model.rest.errors.ScoreInfo
-import java.awt.BorderLayout
-import java.awt.Color
-import java.awt.Dimension
-import javax.swing.BorderFactory.createLineBorder
+import java.awt.*
 import javax.swing.JLabel
 import javax.swing.JPanel
+import javax.swing.border.LineBorder
 
 
-fun createScorePanel(model: CodeObjectError): JPanel {
+fun createScorePanelNoArrows(model: CodeObjectError): JPanel {
 
-    val scorePanel = JPanel(BorderLayout())
+    val scorePanelSize = Laf.scalePanels(Icons.ERROR_SCORE_PANEL_SIZE)
     val scoreLabel = JLabel("${model.scoreInfo.score}", JLabel.CENTER)
     scoreLabel.toolTipText = genToolTipAsHtml(model.scoreInfo)
-    scoreLabel.preferredSize = Dimension(Icons.ERROR_SCORE_PANEL_SIZE,Icons.ERROR_SCORE_PANEL_SIZE)
-    scoreLabel.maximumSize = Dimension(Icons.ERROR_SCORE_PANEL_SIZE,Icons.ERROR_SCORE_PANEL_SIZE)
+    scoreLabel.preferredSize = Dimension(scorePanelSize,scorePanelSize)
+    scoreLabel.maximumSize = Dimension(scorePanelSize,scorePanelSize)
     scoreLabel.border = empty()
-    scorePanel.add(scoreLabel,BorderLayout.CENTER)
-    scorePanel.border = createLineBorder(colorOf(model.scoreInfo.score), 2, true)
+    scoreLabel.isOpaque = false
 
-    val iconLabel: JLabel
-    if (model.startsHere) {
-        iconLabel = JLabel(Icons.Error.RAISED_HERE)
-        iconLabel.toolTipText = "Raised here"
-    } else {
-        iconLabel = JLabel(Icons.Error.HANDLED_HERE)
-        iconLabel.toolTipText = "Handled here"
+    val scorePanel = JPanel(BorderLayout())
+    scorePanel.add(scoreLabel,BorderLayout.CENTER)
+    scorePanel.isOpaque = false
+    scorePanel.border = object: LineBorder(colorOf(model.scoreInfo.score), Laf.scaleBorders(3), true){
+        override fun paintBorder(c: Component?, g: Graphics?, x: Int, y: Int, width: Int, height: Int) {
+            val g2d = g as Graphics2D
+            val oldColor = g2d.color
+            g2d.color = lineColor
+            val archWidth = 15
+            g2d.drawRoundRect(x,y,width-1,height-1,archWidth,archWidth)
+            g2d.drawRoundRect(x+1,y+1,width-3,height-3,archWidth-3,archWidth-3)
+            g2d.drawRoundRect(x+2,y+2,width-5,height-5,archWidth-7,archWidth-7)
+            g2d.color = oldColor
+        }
     }
 
     val result = JPanel()
     result.layout = BorderLayout()
     result.add(scorePanel,BorderLayout.CENTER)
-    result.add(iconLabel, BorderLayout.SOUTH)
-
+    result.border = empty()
+    result.isOpaque = false
     return result
 }
 
 
-fun createScorePanelNoArrows(model: CodeObjectError): JPanel {
+//fun createScorePanelWithArrows(model: CodeObjectError): JPanel {
+//
+//    val scorePanelSize = Laf.scalePanels(Icons.ERROR_SCORE_PANEL_SIZE)
+//    val scorePanel = JPanel(BorderLayout())
+//    val scoreLabel = JLabel("${model.scoreInfo.score}", JLabel.CENTER)
+//    scoreLabel.toolTipText = genToolTipAsHtml(model.scoreInfo)
+//    scoreLabel.preferredSize = Dimension(scorePanelSize,scorePanelSize)
+//    scoreLabel.maximumSize = Dimension(scorePanelSize,scorePanelSize)
+//    scoreLabel.border = empty()
+//    scorePanel.add(scoreLabel,BorderLayout.CENTER)
+//    scorePanel.border = createLineBorder(colorOf(model.scoreInfo.score), 2, true)
+//
+//    val iconLabel: JLabel
+//    if (model.startsHere) {
+//        iconLabel = JLabel(Icons.Error.RAISED_HERE)
+//        iconLabel.toolTipText = "Raised here"
+//    } else {
+//        iconLabel = JLabel(Icons.Error.HANDLED_HERE)
+//        iconLabel.toolTipText = "Handled here"
+//    }
+//
+//    val result = JPanel()
+//    result.layout = BorderLayout()
+//    result.add(scorePanel,BorderLayout.CENTER)
+//    result.add(iconLabel, BorderLayout.SOUTH)
+//
+//    return result
+//}
 
-    val scorePanel = JPanel(BorderLayout())
-    val scoreLabel = JLabel("${model.scoreInfo.score}", JLabel.CENTER)
-    scoreLabel.toolTipText = genToolTipAsHtml(model.scoreInfo)
-    scoreLabel.preferredSize = Dimension(Icons.ERROR_SCORE_PANEL_SIZE,Icons.ERROR_SCORE_PANEL_SIZE)
-    scoreLabel.maximumSize = Dimension(Icons.ERROR_SCORE_PANEL_SIZE,Icons.ERROR_SCORE_PANEL_SIZE)
-    scoreLabel.border = empty()
-    scorePanel.add(scoreLabel,BorderLayout.CENTER)
-    scorePanel.border = createLineBorder(colorOf(model.scoreInfo.score), 2, true)
 
-    val result = JPanel()
-    result.layout = BorderLayout()
-    result.add(scorePanel,BorderLayout.CENTER)
 
-    return result
-}
+
 
 
 private fun genToolTipAsHtml(scoreInfo: ScoreInfo): String {

@@ -19,15 +19,14 @@ import java.awt.BorderLayout
 import java.awt.GridLayout
 import java.math.BigDecimal
 import java.math.RoundingMode
-import javax.swing.*
+import javax.swing.BorderFactory
+import javax.swing.JLabel
+import javax.swing.JPanel
+import javax.swing.SwingConstants
 
 fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: HashMap<String, Any>): JPanel {
 
-
-    val title = JLabel(asHtml("${htmlSpanTitle()}<b>Span Bottleneck</b><br> " +
-                                        "${htmlSpanSmoked()}The following spans are slowing request handling"),
-                                        SwingConstants.LEFT)
-
+    val title = JLabel(buildBoldTitleGrayedComment("Span Bottleneck","The following spans are slowing request handling"), SwingConstants.LEFT)
 
     val spansListPanel = JPanel()
     spansListPanel.layout = GridLayout(insight.spans.size, 1, 0, 3)
@@ -35,9 +34,11 @@ fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: 
     insight.spans.forEach { slowSpan: SlowSpanInfo ->
 
         val displayName = slowSpan.spanInfo.displayName
+        val description = descriptionOf(slowSpan)
         val spanId = CodeObjectsUtil.createSpanId(slowSpan.spanInfo.instrumentationLibrary, slowSpan.spanInfo.name)
-        val spanText = asHtml("<b>${displayName}</b><br>${htmlSpanSmoked()}${descriptionOf(slowSpan)}")
+
         if (moreData.contains(spanId)) {
+            val spanText = buildLinkTextWithTitleAndGrayedComment(displayName,description)
             val link = ActionLink(spanText) {
                 val actionListener: InsightsActionsService = project.getService(InsightsActionsService::class.java)
                 val workspaceUri: Pair<String, Int> = moreData[spanId] as Pair<String, Int>
@@ -46,6 +47,7 @@ fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: 
             link.toolTipText = genToolTip(slowSpan)
             spansListPanel.add(link)
         } else {
+            val spanText = buildBoldTitleGrayedComment(displayName,description)
             val label = JBLabel(spanText)
             label.toolTipText = genToolTip(slowSpan)
             spansListPanel.add(label)
@@ -55,7 +57,7 @@ fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: 
 
     val iconPanel = panel {
         row {
-            cell(iconPanelBorder(Icons.Insight.BOTTLENECK, asHtml(wrapCentered("Slow<br>Spans)"))))
+            cell(iconPanelBorder(Icons.Insight.BOTTLENECK, wrapCentered("Slow<br>Spans)")))
                 .horizontalAlign(HorizontalAlign.RIGHT)
         }.layout(RowLayout.INDEPENDENT)
     }

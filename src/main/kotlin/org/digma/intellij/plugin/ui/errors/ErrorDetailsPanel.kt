@@ -18,7 +18,7 @@ import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.errordetails.ErrorFramesPanelList
-import org.digma.intellij.plugin.ui.list.panelListBackground
+import org.digma.intellij.plugin.ui.list.listBackground
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import org.ocpsoft.prettytime.PrettyTime
@@ -203,7 +203,7 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
     constraints.fill = GridBagConstraints.HORIZONTAL
     result.add(bottomPanel, constraints)
 
-    result.background = panelListBackground()
+    result.background = listBackground()
     return result
 
 }
@@ -256,10 +256,11 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
 
     val currentLabel = JLabel("0/00 Flow Stacks")
 
-    val buttonsSize = Dimension(Icons.ERROR_DETAILS_NAVIGATION_BUTTON_SIZE + 2,
-                            Icons.ERROR_DETAILS_NAVIGATION_BUTTON_SIZE + 2)
+//    val size = Laf.scalePanels(Icons.ERROR_DETAILS_NAVIGATION_BUTTON_SIZE)
+    val size = Icons.ERROR_DETAILS_NAVIGATION_BUTTON_SIZE
+    val buttonsSize = Dimension(size + 2, size + 2)
 
-    val backButton = NavigationButtonIcon(Icons.BACK_WHITE,Icons.BACK_BLACK)
+    val backButton = NavigationButtonIcon(Icons.BACK_WHITE, Icons.BACK_BLACK)
     backButton.preferredSize = buttonsSize
     backButton.maximumSize = buttonsSize
     backButton.addActionListener {
@@ -331,7 +332,10 @@ fun timesPanel(errorsModel: ErrorsModel): DialogPanel {
                 row {
                     label("").bind(
                         JLabel::getText, JLabel::setText, PropertyBinding(
-                            get = { asHtml("${htmlSpanSmoked()}Started:<br>${htmlSpanWhite()}${prettyTimeOf(errorsModel.errorDetails.delegate?.firstOccurenceTime)}") },
+                            get = {
+                                buildTimeSpanHtml("Started:",
+                                    errorsModel.errorDetails.delegate?.firstOccurenceTime)
+                            },
                             set = {})).verticalAlign(VerticalAlign.TOP)
                 }
             }
@@ -339,7 +343,10 @@ fun timesPanel(errorsModel: ErrorsModel): DialogPanel {
                 row {
                     label("").bind(
                         JLabel::getText, JLabel::setText, PropertyBinding(
-                            get = { asHtml("${htmlSpanSmoked()}Last:<br>${htmlSpanWhite()}${prettyTimeOf(errorsModel.errorDetails.delegate?.lastOccurenceTime)}") },
+                            get = {
+                                buildTimeSpanHtml("Started:",
+                                    errorsModel.errorDetails.delegate?.lastOccurenceTime)
+                            },
                             set = {}))
                 }
             }
@@ -347,7 +354,7 @@ fun timesPanel(errorsModel: ErrorsModel): DialogPanel {
                 row {
                     label("").bind(
                         JLabel::getText, JLabel::setText, PropertyBinding(
-                            get = { asHtml("${htmlSpanSmoked()}Frequency:<br>${htmlSpanWhite()}${errorsModel.errorDetails.delegate?.dayAvg.toString()} /day") },
+                            get = { asHtml("${spanGrayed("Frequency:")}<br>${span(errorsModel.errorDetails.delegate?.dayAvg.toString())} /day") },
                             set = {}))
                 }
             }
@@ -355,6 +362,11 @@ fun timesPanel(errorsModel: ErrorsModel): DialogPanel {
 
     }.andTransparent()
 
+}
+
+private fun buildTimeSpanHtml(name: String, value: Date?): String {
+
+    return asHtml("${spanGrayed(name)}<br>${span(prettyTimeOf(value))}")
 }
 
 
@@ -369,7 +381,7 @@ fun buildServicesPanel(servicesPanel: JPanel, errorsModel: ErrorsModel) {
     servicesPanel.removeAll()
     servicesPanel.layout = FlowLayout(FlowLayout.LEFT, 0, 5)
     errorsModel.errorDetails.delegate?.originServices?.forEach(Consumer {
-        val service = JLabel(it.serviceName)
+        val service = CopyableLabel(it.serviceName)
         service.background = Color.DARK_GRAY
         service.border = Borders.empty(2)
         service.isOpaque = true
@@ -390,10 +402,10 @@ fun getAffectedServicesTooltip(errorsModel: ErrorsModel): String? {
 
 private fun backButton(project: Project): JComponent {
 
-    val buttonsSize = Dimension(Icons.ERROR_DETAILS_BACK_BUTTON_SIZE + 3,
-        Icons.ERROR_DETAILS_BACK_BUTTON_SIZE + 3)
+    val size = Laf.scalePanels(Icons.ERROR_DETAILS_BACK_BUTTON_SIZE)
+    val buttonsSize = Dimension(size + 2, size + 3)
 
-    val backButton = BackButton(Icons.BACK_WHITE,Icons.BACK_BLACK)
+    val backButton = BackButton(Icons.BACK_WHITE, Icons.BACK_BLACK)
     backButton.preferredSize = buttonsSize
     backButton.maximumSize = buttonsSize
     backButton.addActionListener {
@@ -403,7 +415,6 @@ private fun backButton(project: Project): JComponent {
     backButton.isOpaque = false
     backButton.isContentAreaFilled = false
     backButton.isBorderPainted = false
-//    return backButton
 
     val wrapper = JPanel()
     wrapper.layout = GridLayout(1,1,2,2)
@@ -422,14 +433,15 @@ private fun namePanel(errorsModel: ErrorsModel): DialogPanel {
     return panel {
         indent {
             row {
-                label("").horizontalAlign(HorizontalAlign.FILL).bind(
-                    JLabel::getText, JLabel::setText, PropertyBinding(
-                        get = { asHtml(buildErrorName(errorsModel)) },
-                        set = {})
-                ).bind(
-                    JLabel::getToolTipText, JLabel::setToolTipText, PropertyBinding(
-                        get = { asHtml(buildErrorName(errorsModel)) },
-                        set = {})).bold()
+                cell(CopyableLabelHtml(""))
+                    .horizontalAlign(HorizontalAlign.FILL).bind(
+                        CopyableLabelHtml::getText, CopyableLabelHtml::setText, PropertyBinding(
+                            get = { buildErrorNameHtml(errorsModel) },
+                            set = {})
+                    ).bind(
+                        CopyableLabelHtml::getToolTipText, CopyableLabelHtml::setToolTipText, PropertyBinding(
+                            get = { buildErrorNameHtml(errorsModel) },
+                            set = {}))
 
             }
         }
@@ -437,12 +449,10 @@ private fun namePanel(errorsModel: ErrorsModel): DialogPanel {
 
 }
 
-private fun buildErrorName(errorsModel: ErrorsModel): String{
+private fun buildErrorNameHtml(errorsModel: ErrorsModel): String {
     val name = errorsModel.errorDetails.getName()
     val from = errorsModel.errorDetails.getFrom()
-
-    return "${htmlSpanTitle()}<b>$name<b> ${htmlSpanSmoked()}From ${htmlSpanWhite()}${from}"
-
+    return buildBoldGrayRegularText(name, "From", from)
 }
 
 

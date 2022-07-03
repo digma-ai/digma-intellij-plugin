@@ -10,11 +10,8 @@ import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.SpanFlow
 import org.digma.intellij.plugin.model.rest.insights.SpanInsight
+import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.common.Html.ARROW_RIGHT
-import org.digma.intellij.plugin.ui.common.asHtml
-import org.digma.intellij.plugin.ui.common.htmlSpanSmoked
-import org.digma.intellij.plugin.ui.common.htmlSpanTitle
-import org.digma.intellij.plugin.ui.common.htmlSpanWhite
 import org.digma.intellij.plugin.ui.model.listview.GroupListViewItem
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.BorderLayout
@@ -29,13 +26,13 @@ fun spanGroupPanel(listViewItem: GroupListViewItem): JPanel {
     val items: SortedSet<ListViewItem<*>> = listViewItem.modelObject
 
     val result = panel {
-        row("Span: ")
+        row(asHtml(spanGrayed("Span: ")))
         {
             icon(Icons.Insight.SPAN_GROUP_TITLE).applyToComponent {
                 toolTipText = listViewItem.groupId
             }.horizontalAlign(HorizontalAlign.LEFT).gap(RightGap.SMALL)
-            label(listViewItem.groupId)
-                .bold().applyToComponent {
+            cell(CopyableLabel(listViewItem.groupId))
+                .applyToComponent {
                     toolTipText = listViewItem.groupId
                 }.horizontalAlign(HorizontalAlign.LEFT)
 
@@ -58,8 +55,7 @@ fun spanPanel(listViewItem: ListViewItem<SpanInsight>): JPanel {
 
     val spanInsight: SpanInsight = listViewItem.modelObject
 
-    val title = JLabel(asHtml("${htmlSpanTitle()}<b>Top Usage</b>"), SwingConstants.LEFT)
-
+    val title = JLabel(asHtml(spanBold("Top Usage")), SwingConstants.LEFT)
 
     val flowsListPanel = JBPanel<JBPanel<*>>()
     flowsListPanel.layout = GridLayout(spanInsight.flows.size, 1, 0, 3)
@@ -68,23 +64,24 @@ fun spanPanel(listViewItem: ListViewItem<SpanInsight>): JPanel {
     spanInsight.flows.forEach {spanFlow:SpanFlow ->
 
         val builder =
-            StringBuilder("${htmlSpanWhite()}${spanFlow.percentage}% " +
-                                "${htmlSpanSmoked()}${spanFlow.firstService?.service}: " +
-                    "           ${htmlSpanWhite()}${spanFlow.firstService?.span}")
+            StringBuilder("${span(spanFlow.percentage.toString())}% " +
+                                "${spanGrayed(spanFlow.firstService?.service.toString())}: " +
+                    "           ${span(spanFlow.firstService?.span.toString())}")
         spanFlow.intermediateSpan?.let { intermediateSpan ->
-            builder.append(" ${htmlSpanSmoked()}$ARROW_RIGHT ")
-            builder.append("${htmlSpanWhite()}$intermediateSpan")
+            builder.append(" ${spanGrayed(ARROW_RIGHT)} ")
+            builder.append(span(intermediateSpan))
         }
         spanFlow.lastService?.let { lastService ->
-            builder.append(" ${htmlSpanSmoked()}$ARROW_RIGHT ")
-            builder.append("${htmlSpanWhite()}${lastService.service}: ${lastService.span}")
+            builder.append(" ${spanGrayed(ARROW_RIGHT)} ")
+            builder.append(span("${lastService.service}: ${lastService.span}"))
         }
         spanFlow.lastServiceSpan?.let { lastServiceSpan ->
-            builder.append(" ${htmlSpanSmoked()}$ARROW_RIGHT ")
-            builder.append("${htmlSpanWhite()}$lastServiceSpan")
+            builder.append(" ${spanGrayed(ARROW_RIGHT)} ")
+            builder.append(span(lastServiceSpan))
         }
 
-        val label = JLabel(asHtml(builder.toString()),SwingConstants.LEFT)
+        val label = CopyableLabelHtml(asHtml(builder.toString()))
+        label.alignmentX = 0.0f
         flowsListPanel.add(label)
     }
 

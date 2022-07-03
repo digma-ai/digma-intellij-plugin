@@ -1,28 +1,25 @@
 package org.digma.intellij.plugin.ui.list
 
-import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
-import com.intellij.util.ui.UIUtil
+import org.digma.intellij.plugin.ui.common.Laf
+import org.digma.intellij.plugin.ui.common.Laf.panelsListBackground
 import java.awt.BorderLayout
 import java.awt.Color
+import java.awt.Insets
 import javax.swing.JPanel
 
 
-fun panelListBackground(): Color {
-    var default = Color.DARK_GRAY
-    if (UIUtil.isUnderDarcula()) {
-        default = Color(38, 38, 38)
-    }
-    return JBColor.namedColor("Editor.background", default)
+fun listBackground(): Color {
+    return panelsListBackground()
 }
 
 
 fun listItemPanel(panel: JPanel): JPanel {
-    panel.border = JBUI.Borders.empty(5)
+    panel.border = JBUI.Borders.empty(Laf.scaleBorders(2))
     val wrapper = JPanel()
     wrapper.layout = BorderLayout()
     wrapper.add(panel, BorderLayout.CENTER)
-    wrapper.border = JBUI.Borders.empty(5)
+    wrapper.border = JBUI.Borders.empty(Laf.scaleBorders(3))
     wrapper.isOpaque = false
     return wrapper
 }
@@ -30,7 +27,11 @@ fun listItemPanel(panel: JPanel): JPanel {
 fun listGroupPanel(panel: JPanel): JPanel {
     panel.isOpaque = false
     panel.border = JBUI.Borders.empty()
-    val wrapper = JPanel()
+    val wrapper = object: JPanel(){
+        override fun getInsets(): Insets {
+            return Insets(0,0,0,0)
+        }
+    }
     wrapper.layout = BorderLayout()
     wrapper.add(panel, BorderLayout.CENTER)
     wrapper.isOpaque = false

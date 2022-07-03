@@ -1,10 +1,12 @@
 package org.digma.intellij.plugin.model.rest.summary
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import org.digma.intellij.plugin.model.CodeObjectSummaryType
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type", visible = true, defaultImpl = UnmappedSummary::class)
 @JsonSubTypes(
     JsonSubTypes.Type(value = MethodCodeObjectSummary::class, name = "MethodSummary"),
     JsonSubTypes.Type(value = SpanCodeObjectSummary::class, name = "SpanSummary"),

@@ -18,9 +18,9 @@ open class InsightListViewItem<INSIGHT : CodeObjectInsight>(insight: INSIGHT) :
                 // HTTP Endpoints
                 InsightType.SlowestSpans -> 40
                 InsightType.LowUsage -> 30
-                InsightType.NormalUsage -> 20
+                InsightType.NormalUsage -> 50
                 InsightType.HighUsage -> 10
-                InsightType.SlowEndpoint -> 50
+                InsightType.SlowEndpoint -> 20
                 InsightType.Unmapped -> 200
             }
         }

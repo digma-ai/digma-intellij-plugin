@@ -485,6 +485,7 @@ private fun tempCodeObjectError(errorDetails: CodeObjectErrorDetails): CodeObjec
         errorDetails.scoreInfo,
         errorDetails.sourceCodeObjectId,
         "",
+        "",
         false,
         false,
         errorDetails.firstOccurenceTime,

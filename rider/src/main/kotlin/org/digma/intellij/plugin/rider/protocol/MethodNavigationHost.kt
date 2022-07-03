@@ -10,9 +10,11 @@ class MethodNavigationHost(private val project: Project) {
 
 
     fun navigateToMethod(codeObjectId: String) {
-        //the message needs to be unique. if a message is the same as the previous one the event is not fired
-        val message = "{${Random.nextInt()}}$codeObjectId"
-        model.navigateToMethod.set(message)
+        model.protocol.scheduler.invokeOrQueue {
+            //the message needs to be unique. if a message is the same as the previous one the event is not fired
+            val message = "{${Random.nextInt()}}$codeObjectId"
+            model.navigateToMethod.set(message)
+        }
     }
 
 

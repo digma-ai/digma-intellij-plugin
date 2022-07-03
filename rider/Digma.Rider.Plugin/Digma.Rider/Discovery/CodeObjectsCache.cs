@@ -1,5 +1,6 @@
 using Digma.Rider.Protocol;
 using Digma.Rider.Util;
+using JetBrains.Annotations;
 using JetBrains.Application.Progress;
 using JetBrains.Application.Threading;
 using JetBrains.Collections;
@@ -29,6 +30,7 @@ namespace Digma.Rider.Discovery
         }
 
 
+        [CanBeNull]
         public override object Build(IPsiSourceFile sourceFile, bool isStartup)
         {
             Log(_logger,"Building cache for IPsiSourceFile '{0}'",sourceFile);

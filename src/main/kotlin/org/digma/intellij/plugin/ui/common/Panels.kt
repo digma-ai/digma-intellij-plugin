@@ -22,14 +22,14 @@ fun panelOfUnsupported(caption: String): JPanel {
 fun iconPanelBorder(icon: Icon, text: String): JPanel {
     val panel = JPanel()
     panel.layout = BorderLayout()
-    val icon = JLabel(icon)
-    icon.horizontalAlignment = SwingConstants.CENTER
-    panel.add(icon, BorderLayout.CENTER)
-    val label = JLabel(text)
-    label.horizontalAlignment = SwingConstants.CENTER
-    panel.add(label, BorderLayout.SOUTH)
-    panel.add(JSeparator(),BorderLayout.EAST)
-    panel.border = empty(0,0,0,10)
+    val iconLabel = JLabel(icon)
+    iconLabel.horizontalAlignment = SwingConstants.CENTER
+    panel.add(iconLabel, BorderLayout.CENTER)
+    val textLabel = JLabel(text)
+    textLabel.horizontalAlignment = SwingConstants.CENTER
+    panel.add(textLabel, BorderLayout.SOUTH)
+    panel.border = empty(0,0,0,Laf.scaleBorders(10))
+
     return panel
 }
 

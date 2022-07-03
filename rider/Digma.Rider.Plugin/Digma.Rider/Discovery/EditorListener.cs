@@ -15,9 +15,7 @@ using JetBrains.TextControl;
 using JetBrains.TextControl.TextControlsManagement;
 using JetBrains.Threading;
 using JetBrains.Util;
-using NuGet;
 using static Digma.Rider.Logging.Logger;
-using ILogger = JetBrains.Util.ILogger;
 
 namespace Digma.Rider.Discovery
 {
@@ -134,7 +132,8 @@ namespace Digma.Rider.Discovery
                     //hopefully that doesn't happen a lot and usually f=very fast.
                     Log(_logger, "Document for PsiSourceFile '{0}' in Not in cache , trying to build code objects on the fly",
                         psiSourceFile);
-                    document = (Document)_codeObjectsCache.Build(psiSourceFile,false);
+
+                    document = BuildDocumentOnDemand(psiSourceFile);
                     if (document != null)
                     {
                         Log(_logger, "Document for PsiSourceFile '{0}' did produce code objects",psiSourceFile);
@@ -155,7 +154,7 @@ namespace Digma.Rider.Discovery
             LogFoundMethodsForDocument(_logger, document);
 
             //no need to add or notify frontend if no methods found
-            if (EnumerableExtensions.IsEmpty(document.Methods))
+            if (!document.HasCodeObjects())
             {
                 Log(_logger,"Document for PsiSourceFile '{0}' does not contain code objects. Not updating the protocol.", psiSourceFile);
                 return;
@@ -164,6 +163,24 @@ namespace Digma.Rider.Discovery
             _codeObjectsHost.AddOpenChangeDocument(psiSourceFile, document);
         }
 
+
+
+        private Document BuildDocumentOnDemand([NotNull] IPsiSourceFile psiSourceFile)
+        {
+            // using (ReadLockCookie.Create())
+            using (CompilationContextCookie.GetOrCreate(psiSourceFile.ResolveContext))
+            {
+                var document = (Document)_codeObjectsCache.Build(psiSourceFile, false);
+                //only add the document to the cache if it has code objects
+                if (document != null && document.HasCodeObjects())
+                {
+                    _codeObjectsCache.Merge(psiSourceFile, document);
+                }
+                
+                return _codeObjectsCache.Map.TryGetValue(psiSourceFile);
+            }
+        }
+        
         
         
         

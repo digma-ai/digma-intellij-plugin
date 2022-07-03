@@ -3,7 +3,10 @@
 package org.digma.intellij.plugin.model
 
 enum class CodeObjectSummaryType {
-    MethodSummary, SpanSummary, EndpointSummary
+    MethodSummary,
+    SpanSummary,
+    EndpointSummary,
+    Unmapped
 }
 
 //todo: add to CodeObjectInfo

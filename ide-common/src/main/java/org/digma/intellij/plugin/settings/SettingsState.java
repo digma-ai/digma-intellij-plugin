@@ -35,6 +35,8 @@ public class SettingsState implements PersistentStateComponent<SettingsState> {
 
 
   public String apiUrl = DEFAULT_API_URL;
+  @Nullable
+  public String apiToken = null;
   public boolean isUseSystemLAF = DEFAULT_IS_USE_SYSTEM_LAF;
 
   public String htmlLabelColor = DEFAULT_HTML_LABEL_COLOR;

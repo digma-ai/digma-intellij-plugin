@@ -6,7 +6,7 @@ import com.intellij.util.ui.UIUtil.isUnderDarcula
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.settings.SettingsChangeListener
 import org.digma.intellij.plugin.settings.SettingsState
-import org.digma.intellij.plugin.ui.DigmaUIUtil.*
+import org.digma.intellij.plugin.ui.DigmaUIUtil.digmaColorToHex
 import java.awt.Color
 import java.awt.Font
 import javax.swing.JLabel
@@ -42,6 +42,9 @@ object Laf : SettingsChangeListener {
 
 
     fun panelsListBackground(): Color {
+
+//        return EditorColorsManager.getInstance().schemeForCurrentUITheme.defaultBackground
+
         var default: Color = JBColor.DARK_GRAY
         if (isUnderDarcula()) {
             default = Color(38, 38, 38)
@@ -137,7 +140,7 @@ object Laf : SettingsChangeListener {
 
     class Fonts{
         companion object {
-            val DEFAULT_LABEL_FONT: Font = UIManager.getFont("Label.font")?: JLabel().font
+            val DEFAULT_LABEL_FONT: Font = com.intellij.util.ui.UIUtil.getLabelFont()
         }
     }
 

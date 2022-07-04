@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.list.insights
 
 import com.jetbrains.rd.util.getOrCreate
+import org.jetbrains.annotations.Nullable
 
 /**
  * A helper for layout panels to layout themselves, should only be used for insights list panels.
@@ -31,6 +32,7 @@ internal object InsightsPanelsLayoutHelper {
         globalAttributes[name] = value
     }
 
+    @Nullable
     fun getGlobalAttribute(name: String): Any? {
         return globalAttributes[name]
     }
@@ -39,6 +41,7 @@ internal object InsightsPanelsLayoutHelper {
         perObjectAttributes.getOrCreate(objectName, creator = {HashMap<String,Any>()})[name] = value
     }
 
+    @Nullable
     fun getObjectAttribute(objectName:String,name: String):Any?{
         return perObjectAttributes.getOrCreate(objectName,creator = {HashMap<String,Any>()})[name]
     }

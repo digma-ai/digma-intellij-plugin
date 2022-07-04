@@ -11,12 +11,17 @@ import org.digma.intellij.plugin.model.rest.insights.ErrorInsight
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsightNamedError
 import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.service.InsightsActionsService
-import org.digma.intellij.plugin.ui.common.*
+import org.digma.intellij.plugin.ui.common.Laf
+import org.digma.intellij.plugin.ui.common.buildBoldTitleGrayedComment
+import org.digma.intellij.plugin.ui.common.buildLinkTextWithGrayedAndDefaultLabelColorPart
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.GridLayout
-import javax.swing.*
+import javax.swing.BorderFactory
+import javax.swing.JLabel
+import javax.swing.JPanel
+import javax.swing.SwingConstants
 
 fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>): JPanel {
 
@@ -45,6 +50,9 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>): JPa
     }
 
 
+
+    //the expand link button needs to be the same size as insightsIconPanel so that they will align
+    //the same over the list
     val expandLinkPanel = panel {
         row {
             link("Expand") {
@@ -53,7 +61,7 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>): JPa
             }.horizontalAlign(HorizontalAlign.RIGHT)
         }.layout(RowLayout.INDEPENDENT)
     }
-    expandLinkPanel.border = Borders.empty(0,0,0,10)
+    expandLinkPanel.border = Borders.empty(0,0,0,Laf.scaleBorders(getInsightIconPanelLeftBorderSize()))
 
 
     val errorsWrapper = JBPanel<JBPanel<*>>()
@@ -67,11 +75,18 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>): JPa
     val expandPanel: JPanel = object: JPanel(){
         override fun getPreferredSize(): Dimension {
             val ps = super.getPreferredSize()
-            return Dimension(InsightsPanelsLayoutHelper.getObjectAttribute("insightsIconPanelBorder","largestWidth") as Int,ps.height)
+            if (ps == null) {
+                return ps
+            }
+            val h = ps.height
+            val w = ps.width
+            addCurrentLargestWidthIconPanel(w)
+            return Dimension(getCurrentLargestWidthIconPanel(w), h)
         }
     }
     expandPanel.layout = BorderLayout()
     expandPanel.add(expandLinkPanel, BorderLayout.SOUTH)
+    addCurrentLargestWidthIconPanel(expandPanel.preferredSize?.width ?: 0)
 
     val result = JBPanel<JBPanel<*>>()
     result.layout = BorderLayout()

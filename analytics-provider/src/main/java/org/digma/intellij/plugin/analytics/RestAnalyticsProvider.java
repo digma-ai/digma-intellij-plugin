@@ -30,6 +30,10 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
     private final Client client;
 
+    public RestAnalyticsProvider(String baseUrl) {
+        this(baseUrl,null);
+    }
+
     public RestAnalyticsProvider(String baseUrl, String apiToken) {
         this.client = createClient(baseUrl, apiToken);
     }

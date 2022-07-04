@@ -32,7 +32,6 @@ fun topLine(project: Project, model: PanelModel, labelText: String): DialogPanel
                 .horizontalAlign(HorizontalAlign.LEFT)
                 .bold()
                 .gap(RightGap.SMALL)
-            spacer()
             cell(envCombo(project))
                 .horizontalAlign(HorizontalAlign.RIGHT)
         }.layout(RowLayout.PARENT_GRID)

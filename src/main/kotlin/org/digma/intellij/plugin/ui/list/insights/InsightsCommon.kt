@@ -81,6 +81,9 @@ internal fun insightsIconPanelBorder(icon: Icon, text: String): JPanel {
     val panel: JPanel = object: JPanel(){
         override fun getPreferredSize(): Dimension {
             val ps = super.getPreferredSize()
+            if (ps == null){
+                return ps
+            }
 //            if (isVisible) {
                 val h = ps.height
                 val w = ps.width
@@ -97,7 +100,7 @@ internal fun insightsIconPanelBorder(icon: Icon, text: String): JPanel {
     panel.add(iconLabel, BorderLayout.CENTER)
     textLabel.horizontalAlignment = SwingConstants.CENTER
     panel.add(textLabel, BorderLayout.SOUTH)
-    panel.border = empty(0,0,0,Laf.scaleBorders(10))
+    panel.border = empty(0,0,0,Laf.scaleBorders(getInsightIconPanelLeftBorderSize()))
 
     val width = panel.preferredSize.width
     addCurrentLargestWidthIconPanel(width)
@@ -106,13 +109,17 @@ internal fun insightsIconPanelBorder(icon: Icon, text: String): JPanel {
 }
 
 
-
-private fun getCurrentLargestWidthIconPanel(width: Int):Int{
+internal fun getInsightIconPanelLeftBorderSize():Int{
+    return 20
+}
+internal fun getCurrentLargestWidthIconPanel(width: Int):Int{
+    //this method should never return null and never throw NPE
     val currentLargest: Int =
         (InsightsPanelsLayoutHelper.getObjectAttribute("insightsIconPanelBorder","largestWidth")?: 0) as Int
     return max(width,currentLargest)
 }
-private fun addCurrentLargestWidthIconPanel(width: Int){
+internal fun addCurrentLargestWidthIconPanel(width: Int){
+    //this method should never throw NPE
     val currentLargest: Int =
         (InsightsPanelsLayoutHelper.getObjectAttribute("insightsIconPanelBorder","largestWidth")?: 0) as Int
     InsightsPanelsLayoutHelper.addObjectAttribute("insightsIconPanelBorder","largestWidth",

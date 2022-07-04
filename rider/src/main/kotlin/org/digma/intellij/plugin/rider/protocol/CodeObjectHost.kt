@@ -137,6 +137,7 @@ class CodeObjectHost(val project: Project) {
         containingClass = containingClass,
         containingNamespace = containingNamespace,
         containingFileUri = containingFileUri,
+        offsetAtFileUri = offsetAtFileUri,
         parameters = toParameters(parameters),
         spans = toSpansList(spans)
     )

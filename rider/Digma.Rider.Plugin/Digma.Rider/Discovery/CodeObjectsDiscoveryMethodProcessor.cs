@@ -34,11 +34,12 @@ namespace Digma.Rider.Discovery
             var declaredName = PsiUtils.GetDeclaredName(functionDeclaration);
             var containingClassName = PsiUtils.GetClassName(functionDeclaration);
             var containingNamespace = PsiUtils.GetNamespace(functionDeclaration);
-            var containingFileUri = DiscoveryContext.FileUri;
             var methodParameters = CreateParameters(functionDeclaration);
+            var containingFileUri = DiscoveryContext.FileUri;
+            var offsetAtFileUri = functionDeclaration.GetNavigationRange().StartOffset.Offset;
 
             return new RiderMethodInfo(methodFqn, declaredName, containingClassName, containingNamespace,
-                containingFileUri, methodParameters, new List<RiderSpanInfo>());
+                containingFileUri, offsetAtFileUri, methodParameters, new List<RiderSpanInfo>());
         }
 
         private List<MethodParam> CreateParameters(ICSharpFunctionDeclaration functionDeclaration)

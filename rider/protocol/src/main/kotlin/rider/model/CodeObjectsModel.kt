@@ -15,6 +15,7 @@ class CodeObjectsModel : Ext(SolutionModel.Solution) {
         field("containingClass", PredefinedType.string)
         field("containingNamespace", PredefinedType.string)
         field("containingFileUri", PredefinedType.string)
+        field("offsetAtFileUri", PredefinedType.int)
         field("parameters", immutableList(MethodParam))
         field("spans", immutableList(RiderSpanInfo))
     }

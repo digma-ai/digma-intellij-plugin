@@ -15,7 +15,7 @@ import javax.swing.event.PopupMenuListener
 @Suppress("UNCHECKED_CAST")
 fun envCombo(project: Project): JPanel {
 
-    val result = panel {
+    return panel {
         panel {
             row {
                 label("Environment:")
@@ -45,8 +45,6 @@ fun envCombo(project: Project): JPanel {
                     }
             }.layout(RowLayout.LABEL_ALIGNED)
         }
-    }
+    }.andTransparent()
 
-    result.isOpaque = false
-    return result
 }

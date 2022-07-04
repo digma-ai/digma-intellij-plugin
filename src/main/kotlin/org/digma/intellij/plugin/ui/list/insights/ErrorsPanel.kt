@@ -11,12 +11,10 @@ import org.digma.intellij.plugin.model.rest.insights.ErrorInsight
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsightNamedError
 import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.service.InsightsActionsService
-import org.digma.intellij.plugin.ui.common.asHtml
-import org.digma.intellij.plugin.ui.common.htmlSpanSmoked
-import org.digma.intellij.plugin.ui.common.htmlSpanTitle
-import org.digma.intellij.plugin.ui.common.htmlSpanWhite
+import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.BorderLayout
+import java.awt.Dimension
 import java.awt.GridLayout
 import javax.swing.*
 
@@ -25,8 +23,7 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>): JPa
     val errorCount = listViewItem.modelObject.errorCount
     val unhandled = listViewItem.modelObject.unhandledCount
     val unexpected = listViewItem.modelObject.unexpectedCount
-    val title = JLabel(asHtml("${htmlSpanTitle()}<b>Errors</b><br> " +
-                                "${htmlSpanSmoked()}$errorCount errors($unhandled unhandled, $unexpected unexpected)"),
+    val title = JLabel(buildBoldTitleGrayedComment("Errors","$errorCount errors($unhandled unhandled, $unexpected unexpected)"),
                                 SwingConstants.LEFT)
 
 
@@ -35,12 +32,10 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>): JPa
     errorsListPanel.border = Borders.empty()
     listViewItem.modelObject.topErrors.forEach { error: ErrorInsightNamedError ->
 
-        var errorText = "<b>${error.errorType}</b> "
-        var from = "${htmlSpanSmoked()}From me"
-        if (listViewItem.modelObject.codeObjectId != error.sourceCodeObjectId) {
-            from = "${htmlSpanSmoked()}From ${htmlSpanWhite()}${error.sourceCodeObjectId.split("\$_\$")[1]}"
-        }
-        errorText = asHtml(errorText + from)
+        val from = if (listViewItem.modelObject.codeObjectId != error.sourceCodeObjectId) {
+            error.sourceCodeObjectId.split("\$_\$")[1]
+        }else "me"
+        val errorText = buildLinkTextWithGrayedAndDefaultLabelColorPart(error.errorType ,"From", from)
         val link = ActionLink(errorText) {
             val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
             actionListener.showErrorDetails(error)
@@ -68,7 +63,13 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>): JPa
     errorsWrapper.border = BorderFactory.createEmptyBorder()
 
 
-    val expandPanel = JBPanel<JBPanel<*>>()
+    //the expand button wants to be aligned with the insights icons panels, so it takes its width from there
+    val expandPanel: JPanel = object: JPanel(){
+        override fun getPreferredSize(): Dimension {
+            val ps = super.getPreferredSize()
+            return Dimension(InsightsPanelsLayoutHelper.getObjectAttribute("insightsIconPanelBorder","largestWidth") as Int,ps.height)
+        }
+    }
     expandPanel.layout = BorderLayout()
     expandPanel.add(expandLinkPanel, BorderLayout.SOUTH)
 

@@ -13,7 +13,7 @@ import org.digma.intellij.plugin.ui.common.scopeLine
 import org.digma.intellij.plugin.ui.common.topLine
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.errors.ErrorsPanelList
-import org.digma.intellij.plugin.ui.list.panelListBackground
+import org.digma.intellij.plugin.ui.list.listBackground
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsTabCard
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
@@ -101,7 +101,7 @@ fun errorsPanel(project: Project): DigmaTabPanel {
 
     result.layout = BorderLayout()
     result.add(cardsPanel,BorderLayout.CENTER)
-    result.background = panelListBackground()
+    result.background = listBackground()
     return result
 }
 

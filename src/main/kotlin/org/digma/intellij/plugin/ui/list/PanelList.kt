@@ -5,6 +5,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI.Borders
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.ui.common.Laf
+import org.digma.intellij.plugin.ui.common.Laf.scaleBorders
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.Color
 import java.awt.Dimension
@@ -33,7 +35,8 @@ abstract class PanelList(val project: Project, listViewItems: List<ListViewItem<
         model.addListDataListener(this)
         model.addListDataListener(cellRenderer)
         this.layout = BoxLayout(this, BoxLayout.Y_AXIS)
-        this.border = Borders.empty(5,5,5,2)
+        var size = scaleBorders(5)
+        this.border = Borders.empty(size)
         this.background = getListBackground()
         this.isOpaque = true
     }
@@ -105,7 +108,7 @@ abstract class PanelList(val project: Project, listViewItems: List<ListViewItem<
                     model.getElementAt(i), i, this@PanelList.hasFocus())
                 add(newComp)
                 if (gapBetweenItems) {
-                    add(Box.createVerticalStrut(2))
+                    add(Box.createVerticalStrut(Laf.scaleBorders(3)))
                 }
             }
 

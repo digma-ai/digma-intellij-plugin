@@ -9,10 +9,11 @@ import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBUI.Borders
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.service.ErrorsActionsService
+import org.digma.intellij.plugin.ui.common.CopyableLabel
+import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
+import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.Swing.BLUE_LIGHT_SHADE
-import org.digma.intellij.plugin.ui.common.asHtml
-import org.digma.intellij.plugin.ui.common.htmlSpanSmoked
-import org.digma.intellij.plugin.ui.common.htmlSpanTitle
+import org.digma.intellij.plugin.ui.common.buildTitleItalicGrayedComment
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
 import org.digma.intellij.plugin.ui.model.errors.FrameItem
 import org.digma.intellij.plugin.ui.model.errors.FrameListViewItem
@@ -20,7 +21,6 @@ import org.digma.intellij.plugin.ui.model.errors.FrameStackTitle
 import org.digma.intellij.plugin.ui.model.errors.SpanTitle
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.BorderLayout
-import java.awt.Color
 import java.awt.GridBagLayout
 import java.awt.GridLayout
 import java.awt.event.MouseAdapter
@@ -28,6 +28,7 @@ import java.awt.event.MouseEvent
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.SwingConstants
+
 
 class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
 
@@ -55,7 +56,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
             indent {
                 val frameTextPrefix = if(modelObject.frame.modulePhysicalPath.isBlank()) modelObject.frame.moduleName
                         else modelObject.frame.modulePhysicalPath
-                val frameText = "${frameTextPrefix} in ${modelObject.frame.functionName}"
+                val frameText = "$frameTextPrefix in ${modelObject.frame.functionName}"
                 if (modelObject.frame.executedCode.isBlank()){
                     row {
                         if (modelObject.first) {
@@ -66,27 +67,27 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
                                 val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
                                 actionListener.openErrorFrameWorkspaceFile(modelObject.getWorkspaceUrl(),modelObject.lastInstanceCommitId,modelObject.frame.lineNumber)
                             }.gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL).applyToComponent {
-                                toolTipText = frameText
+                                toolTipText = "$frameText line ${modelObject.frame.lineNumber}"
                             }
                         }else {
-                            label(frameText)
-                                .gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL)
-                                .applyToComponent {
-                                    foreground = Color.GRAY
-                                    toolTipText = frameText
-                                }
+                              cell(CopyableLabel(frameText))
+                                  .applyToComponent {
+                                  foreground = Laf.getSwingLabelGrayedColor()
+                                  toolTipText = "$frameText line ${modelObject.frame.lineNumber}"
+                              }.gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL)
                         }
-                        label("line ${modelObject.frame.lineNumber}").horizontalAlign(HorizontalAlign.RIGHT).applyToComponent {
-                            foreground = Color.GRAY
+                        label("line ${modelObject.frame.lineNumber}").horizontalAlign(HorizontalAlign.RIGHT)
+                            .gap(RightGap.SMALL)
+                            .applyToComponent {
+                            foreground = Laf.getSwingLabelGrayedColor()
                         }
                     }.bottomGap(BottomGap.NONE).topGap(TopGap.NONE)
                 }else{
                     //todo: this is relevant for python only where we have executed code, check it when doing pycharm
                     row {
-                        label(frameText)
+                        cell(CopyableLabel(frameText))
                             .gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL).applyToComponent {
-                                foreground = Color.GRAY
-                                toolTipText = frameText
+                                toolTipText = "$frameText line ${modelObject.frame.lineNumber}"
                             }
                     }
                     row{
@@ -98,13 +99,13 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
                                 //todo: action
                             }.gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL)
                         }else {
-                            label(modelObject.frame.executedCode)
+                            cell(CopyableLabel(modelObject.frame.executedCode))
                                 .gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL).applyToComponent {
-                                    foreground = Color.GRAY
+                                    foreground = Laf.getSwingLabelGrayedColor()
                                 }
                         }
                         label("line ${modelObject.frame.lineNumber}").horizontalAlign(HorizontalAlign.RIGHT).applyToComponent {
-                            foreground = Color.GRAY
+                            foreground = Laf.getSwingLabelGrayedColor()
                         }
                     }
                 }
@@ -115,9 +116,6 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
     }
 
     private fun spanTitlePanel(modelObject: SpanTitle): JPanel {
-        val panel = JPanel()
-        panel.layout = BorderLayout()
-        panel.isOpaque = false
 
         val icon = JLabel(Icons.TELESCOPE_BLUE_LIGHT_SHADE)
         icon.foreground = BLUE_LIGHT_SHADE
@@ -126,36 +124,36 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
         val iconPanel = JPanel()
         iconPanel.layout = GridBagLayout()
         iconPanel.isOpaque = false
+        iconPanel.border = Borders.empty(2)
         iconPanel.add(icon)
 
-        val name = JLabel(modelObject.spanName,SwingConstants.LEADING)
-        name.horizontalAlignment = SwingConstants.LEFT
-        name.horizontalTextPosition = SwingConstants.LEADING
+        val name = CopyableLabel(modelObject.spanName)
+        name.alignmentX = 0.0f
         name.foreground = BLUE_LIGHT_SHADE
-        name.border = Borders.empty()
         val namePanel = JPanel()
         namePanel.layout = BorderLayout()
         namePanel.isOpaque = false
-        namePanel.border = Borders.empty(0,5,0,0)
+        namePanel.border = Borders.empty(0,Laf.scaleBorders(5),0,0)
         namePanel.add(name,BorderLayout.WEST)
 
-
-
-        panel.add(iconPanel,BorderLayout.WEST)
-        panel.add(namePanel,BorderLayout.CENTER)
-        panel.isOpaque = false
-        return itemPanel(panel)
+        val result = JPanel()
+        result.layout = BorderLayout()
+        result.isOpaque = false
+        result.add(iconPanel,BorderLayout.WEST)
+        result.add(namePanel,BorderLayout.CENTER)
+        result.isOpaque = false
+        return itemPanel(result)
     }
 
 
     private fun frameStackTitlePanel(modelObject: FrameStackTitle): JPanel {
         val panel = JPanel()
         panel.layout = GridLayout(1,1)
-        val text = "${htmlSpanTitle()}<b>${modelObject.frameStack.exceptionType}<b><br> ${htmlSpanSmoked()}${modelObject.frameStack.exceptionMessage}"
-        val label = JLabel(asHtml(text))
-        label.toolTipText = "${modelObject.frameStack.exceptionType} ${modelObject.frameStack.exceptionMessage}"
+        val text = buildTitleItalicGrayedComment(modelObject.frameStack.exceptionType,modelObject.frameStack.exceptionMessage)
+        val label = CopyableLabelHtml(text)
+        label.toolTipText = text
         panel.add(label)
-        panel.border = Borders.empty(3)
+        panel.border = Borders.empty(Laf.scaleBorders(3),Laf.scaleBorders(3),Laf.scaleBorders(5),Laf.scaleBorders(3))
         panel.isOpaque = false
         return panel
     }
@@ -163,7 +161,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
 
 
     private fun itemPanel(panel: JPanel): JPanel {
-        panel.border = Borders.customLine(Color.GRAY,0,2,0,0)
+        panel.border = Borders.customLine(Laf.getSwingLabelGrayedColor(),0,2,0,0)
         panel.isOpaque = false
 
         val mouseListener = object: MouseAdapter(){

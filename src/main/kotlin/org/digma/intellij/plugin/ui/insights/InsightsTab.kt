@@ -14,7 +14,7 @@ import org.digma.intellij.plugin.ui.common.topLine
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.insights.InsightsList
 import org.digma.intellij.plugin.ui.list.insights.PreviewList
-import org.digma.intellij.plugin.ui.list.panelListBackground
+import org.digma.intellij.plugin.ui.list.listBackground
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsTabCard
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
@@ -121,7 +121,7 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
     result.layout = BorderLayout()
     result.add(topPanelWrapper,BorderLayout.NORTH)
     result.add(cardsPanel,BorderLayout.CENTER)
-    result.background = panelListBackground()
+    result.background = listBackground()
 
     return result
 }

@@ -5,7 +5,6 @@ import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsight
 import org.digma.intellij.plugin.model.rest.insights.HotspotInsight
 import org.digma.intellij.plugin.model.rest.insights.UnmappedInsight
-import org.digma.intellij.plugin.ui.common.panelOfUnsupported
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupListViewItem
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupType.HttpEndpoint
@@ -13,6 +12,7 @@ import org.digma.intellij.plugin.ui.model.insights.InsightGroupType.Span
 import org.digma.intellij.plugin.ui.model.listview.GroupListViewItem
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import javax.swing.JPanel
+import javax.swing.event.ListDataEvent
 
 
 class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
@@ -56,5 +56,22 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
             }
         return panel
     }
+
+
+    override fun intervalAdded(e: ListDataEvent?) {
+        super.intervalAdded(e)
+        InsightsPanelsLayoutHelper.reset()
+    }
+
+    override fun intervalRemoved(e: ListDataEvent?) {
+        super.intervalRemoved(e)
+        InsightsPanelsLayoutHelper.reset()
+    }
+
+    override fun contentsChanged(e: ListDataEvent?) {
+        super.contentsChanged(e)
+        InsightsPanelsLayoutHelper.reset()
+    }
+
 
 }

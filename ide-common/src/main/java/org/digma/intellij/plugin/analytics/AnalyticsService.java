@@ -17,13 +17,14 @@ import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.model.environment.EnvComboModel;
 import org.jetbrains.annotations.NotNull;
 
+import javax.net.ssl.SSLException;
 import java.io.Closeable;
+import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.ConnectException;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class AnalyticsService implements Disposable {
@@ -31,31 +32,56 @@ public class AnalyticsService implements Disposable {
     private static final Logger LOGGER = Logger.getInstance(AnalyticsService.class);
 
     private final Environment environment;
-    private Project project;
+    private String myApiUrl;
+    private final Project project;
 
-    private final AnalyticsProvider analyticsProviderProxy;
+    private AnalyticsProvider analyticsProviderProxy;
     private final SettingsState settingsState;
     private final PersistenceService persistenceService;
+
 
 
     public AnalyticsService(@NotNull Project project) {
         settingsState = project.getService(SettingsState.class);
         persistenceService = project.getService(PersistenceService.class);
-        environment = new Environment(project,this,persistenceService.getState());
+        environment = new Environment(project, this, persistenceService.getState());
         this.project = project;
-        analyticsProviderProxy = newAnalyticsProviderProxy(new RestAnalyticsProvider(settingsState.apiUrl));
-        List<String> envs = getEnvironments();
-        if (envs != null) {
-            environment.setEnvironmentsList(envs);
-        }
+        myApiUrl = settingsState.apiUrl;
+        reBuildClient(myApiUrl);
         EnvComboModel.INSTANCE.initialize(environment);
+        settingsState.addChangeListener(settingsState -> {
+            if (!settingsState.apiUrl.equals(myApiUrl)) {
+                myApiUrl = settingsState.apiUrl;
+                reBuildClient(myApiUrl);
+            }
+        });
+    }
+
+
+    private void reBuildClient(String apiUrl) {
+        //try to close
+        if (analyticsProviderProxy != null) {
+            try {
+                analyticsProviderProxy.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        analyticsProviderProxy = newAnalyticsProviderProxy(new RestAnalyticsProvider(apiUrl),project);
+        List<String> envs = getEnvironments();
+        if (envs == null) {
+            envs = new ArrayList<>();
+        }
+
+        environment.replaceEnvironmentsList(envs);
     }
 
 
     List<String> getEnvironments() {
         try {
             return analyticsProviderProxy.getEnvironments();
-        }catch (Throwable e){
+        } catch (Throwable e) {
             //getEnvironments should never throw exception. it is called only from the constructor or be the
             //Environment object that can handle null.
             return null;
@@ -103,17 +129,20 @@ public class AnalyticsService implements Disposable {
      * A proxy to swallow all AnalyticsProvider exceptions.
      * the AnalyticsService class is an IDE component and better not to throw exceptions.
      */
-    private class AnalyticsInvocationHandler implements InvocationHandler {
+    private static class AnalyticsInvocationHandler implements InvocationHandler {
 
         private final AnalyticsProvider analyticsProvider;
+        private final Project project;
 
         //ObjectMapper here is only used for printing the result to log as json
         private final ObjectMapper objectMapper = new ObjectMapper();
 
-        private boolean hadConnectException = false;
+        //this status is only used for helping with reporting messages only when necessary and keep the log clean
+        private final Status status = new Status();
 
-        public AnalyticsInvocationHandler(AnalyticsProvider analyticsProvider) {
+        public AnalyticsInvocationHandler(AnalyticsProvider analyticsProvider,Project project) {
             this.analyticsProvider = analyticsProvider;
+            this.project = project;
         }
 
 
@@ -132,8 +161,8 @@ public class AnalyticsService implements Disposable {
                             "Result '{}'",method.getName(), argsToString(args),resultToString(result));
                 }
 
-                //reset hadConnectException to false on success call
-                hadConnectException = false;
+                //reset status on success call
+                status.ok();
                 return result;
 
             } catch (InvocationTargetException e) {
@@ -142,14 +171,24 @@ public class AnalyticsService implements Disposable {
                 //log to error only the first time of ConnectException, this form of error log will popup a balloon error
                 //message, its not necessary to popup the balloon too many times. following exceptions will just be logged
                 //to the log file
-                if (isConnectionException(e) && !hadConnectException){
-                    hadConnectException = true;
+                boolean isConnectionException = isConnectionException(e) || isSslConnectionException(e);
+                if ( status.isOk() && isConnectionException ){
+                    status.connectError();
                     Log.log(LOGGER::warn, "Connect exception: error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e);
                     LOGGER.warn(e);
+                    var message = isConnectionException(e) ? getConnectExceptionMessage(e):getSslExceptionMessage(e);
                     NotificationUtil.notifyError(project,"<html>Connection error with Digma backend api for method "+method.getName()+".<br> "
-                                +getExceptionMessage(e) + ".<br> See logs for details.");
-                }else{
-                    Log.log(LOGGER::warn,"error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getCause().getMessage());
+                                + message + ".<br> See logs for details.");
+                }else if (status.isOk()){
+                    status.error();
+                    Log.log(LOGGER::debug,"Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getCause().getMessage());
+                    var message = getExceptionMessage(e);
+                    NotificationUtil.notifyError(project,"<html>Error with Digma backend api for method "+method.getName()+".<br> "
+                            + message + ".<br> See logs for details.");
+
+                }else if(!status.hadError(e)){
+                    status.error();
+                    Log.log(LOGGER::debug,"Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getCause().getMessage());
                 }
 
 
@@ -167,15 +206,12 @@ public class AnalyticsService implements Disposable {
                 return true;
             }
 
-            if(e.getCause().getMessage() != null &&
-                    e.getCause().getMessage().contains("Error 404")){
-                return true;
-            }
-            
-            return false;
+            return e.getCause().getMessage() != null &&
+                    e.getCause().getMessage().contains("Error 404");
         }
 
-        private String getExceptionMessage(InvocationTargetException e) {
+
+        private String getConnectExceptionMessage(InvocationTargetException e) {
             var ex = e.getCause();
             while (ex != null && !(ex instanceof ConnectException)){
                 ex = ex.getCause();
@@ -186,6 +222,43 @@ public class AnalyticsService implements Disposable {
             
             return e.getCause() != null? e.getCause().getMessage():e.getMessage();
         }
+
+        private boolean isSslConnectionException(InvocationTargetException e) {
+
+            var ex = e.getCause();
+            while (ex != null && !(ex instanceof SSLException)){
+                ex = ex.getCause();
+            }
+            return ex != null;
+        }
+
+        private String getSslExceptionMessage(InvocationTargetException e) {
+            var ex = e.getCause();
+            while (ex != null && !(ex instanceof SSLException)){
+                ex = ex.getCause();
+            }
+            if (ex != null){
+                return ex.getMessage();
+            }
+
+            return e.getCause() != null? e.getCause().getMessage():e.getMessage();
+        }
+
+
+        private String getExceptionMessage(InvocationTargetException e) {
+            var ex = e.getCause();
+            while (ex != null && !(ex instanceof AnalyticsProviderException)){
+                ex = ex.getCause();
+            }
+            if (ex != null){
+                return ex.getMessage();
+            }
+
+            return e.getCause() != null? e.getCause().getMessage():e.getMessage();
+        }
+
+
+
 
         private String resultToString(Object result) {
             try{
@@ -207,11 +280,59 @@ public class AnalyticsService implements Disposable {
 
 
 
-    private AnalyticsProvider newAnalyticsProviderProxy(AnalyticsProvider obj) {
+    private AnalyticsProvider newAnalyticsProviderProxy(AnalyticsProvider obj, Project project) {
         return (AnalyticsProvider) java.lang.reflect.Proxy.newProxyInstance(
                 obj.getClass().getClassLoader(),
                 new Class[]{AnalyticsProvider.class, Closeable.class},
-                new AnalyticsInvocationHandler(obj));
+                new AnalyticsInvocationHandler(obj,project));
+    }
+
+
+    private static class Status{
+
+        private final Map<String,Boolean> errorsHistory = new HashMap<>();
+
+        private boolean hadConnectException = false;
+        private boolean hadError = false;
+
+        boolean isInError(){
+            return hadConnectException || hadError;
+        }
+        boolean isOk(){
+            return !isInError();
+        }
+
+        public void ok() {
+            hadConnectException = false;
+            hadError = false;
+            errorsHistory.clear();
+        }
+
+        public void connectError() {
+            hadConnectException = true;
+        }
+
+
+        public void error() {
+            hadError = true;
+        }
+
+        public boolean hadError(InvocationTargetException e) {
+            var ex = e.getCause();
+            while (ex != null && !(ex instanceof AnalyticsProviderException)){
+                ex = ex.getCause();
+            }
+
+            if (ex != null){
+                var errorName = ex.getClass().getSimpleName();
+                if (errorsHistory.containsKey(errorName)){
+                    return true;
+                }
+                errorsHistory.put(errorName,true);
+            }
+
+            return false;
+        }
     }
 
 }

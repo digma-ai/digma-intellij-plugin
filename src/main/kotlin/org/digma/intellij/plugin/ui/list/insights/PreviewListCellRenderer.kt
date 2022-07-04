@@ -1,7 +1,10 @@
 package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.openapi.project.Project
+import com.intellij.ui.dsl.builder.panel
+import org.digma.intellij.plugin.service.InsightsActionsService
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
+import org.digma.intellij.plugin.ui.list.listBackground
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import javax.swing.JPanel
 
@@ -19,4 +22,19 @@ class PreviewListCellRenderer : AbstractPanelListCellRenderer() {
     }
 
 
+}
+
+
+fun previewPanel(project: Project, listViewItem: ListViewItem<String>): JPanel {
+
+    val methodId = listViewItem.modelObject
+
+    return panel {
+        row {
+            link(methodId.substringAfterLast("\$_\$",methodId)){
+                val actionListener: InsightsActionsService = project.getService(InsightsActionsService::class.java)
+                actionListener.navigateToMethod(methodId)
+            }
+        }
+    }.withBackground(listBackground())
 }

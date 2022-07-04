@@ -8,9 +8,7 @@ import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.*
-import org.digma.intellij.plugin.ui.common.asHtml
-import org.digma.intellij.plugin.ui.common.htmlSpanTitle
-import org.digma.intellij.plugin.ui.common.panelOfUnsupported
+import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupListViewItem
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.util.*
@@ -21,15 +19,13 @@ fun httpEndpointGroupPanel(project: Project, listViewItem: InsightGroupListViewI
 
 
     val result = panel {
-        row("REST:") {
+        row(asHtml(spanGrayed("REST: "))) {
             val text = headerAsHtml(listViewItem)
             icon(Icons.Insight.HTTP_GROUP_TITLE).applyToComponent {
                 toolTipText = text
             }.horizontalAlign(HorizontalAlign.LEFT).gap(RightGap.SMALL)
-            label(text)
-                .bold().applyToComponent {
-                    toolTipText = text
-                }.horizontalAlign(HorizontalAlign.LEFT)
+            cell(CopyableLabelHtml(text))
+                .horizontalAlign(HorizontalAlign.LEFT)
 
         }.topGap(TopGap.SMALL)
 
@@ -62,5 +58,5 @@ private fun headerAsHtml(listViewItem: InsightGroupListViewItem): String {
     val split = shortRouteName.split(' ')
     val httpMethod = split[0].uppercase()
     val httpRoute = split[1]
-    return asHtml("${htmlSpanTitle()}<b>HTTP $httpMethod $httpRoute</b>")
+    return asHtml("${spanBold("HTTP")} ${span("$httpMethod $httpRoute")}")
 }

@@ -9,6 +9,10 @@ public class AnalyticsProviderException extends RuntimeException {
         this.responseCode = code;
     }
 
+    public AnalyticsProviderException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
     public AnalyticsProviderException(Throwable cause) {
         super(cause);
     }

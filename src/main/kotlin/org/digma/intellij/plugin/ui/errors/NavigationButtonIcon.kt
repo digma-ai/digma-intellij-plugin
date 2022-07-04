@@ -8,7 +8,7 @@ import javax.swing.JButton
 
 
 
-internal class NavigationButtonIcon(val myIcon: Icon, val myRolloverIcon: Icon,val myBackground: Color = Color.WHITE) : JButton(myIcon) {
+internal class NavigationButtonIcon(val myIcon: Icon, val myRolloverIcon: Icon,val myBackground: Color = Color.LIGHT_GRAY) : JButton(myIcon) {
 
     init {
         isOpaque = false

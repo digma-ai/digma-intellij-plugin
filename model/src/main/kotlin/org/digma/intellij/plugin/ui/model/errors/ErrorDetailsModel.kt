@@ -10,26 +10,25 @@ class ErrorDetailsModel {
     var methodInfo: MethodInfo? = null
 
 
-
-    fun createErrorName(): String{
-        val name = delegate?.name +" "+ getFrom()
+    fun getName(): String{
+        if (delegate == null){
+            return ""
+        }
+        val name = delegate?.name ?: ""
         return name.ifBlank { "" }
     }
 
+    fun getFrom(): String {
 
-
-    private fun getFrom(): String {
-
-        val from: String?
-
-        if (delegate?.sourceCodeObjectId == methodInfo?.id){
-            from = "From me"
-        }else{
-            from = "From "+delegate?.sourceCodeObjectId?.substringAfterLast("\$_\$")
+        if (delegate == null){
+            return ""
         }
 
-        return from
+        return if (delegate?.sourceCodeObjectId == methodInfo?.id){
+            "me"
+        }else{
+            delegate?.sourceCodeObjectId?.substringAfterLast("\$_\$") ?: ""
+        }
     }
-
 
 }

@@ -21,7 +21,7 @@ public class InsightsProvider {
     private static final Logger LOGGER = Logger.getInstance(InsightsProvider.class);
 
     private final AnalyticsService analyticsService;
-    private Project project;
+    private final Project project;
 
     private final BuildersHolder buildersHolder = new BuildersHolder();
 
@@ -34,6 +34,7 @@ public class InsightsProvider {
 
         List<String> objectIds = new ArrayList<>();
         objectIds.add(methodInfo.idWithType());
+        objectIds.add(methodInfo.idWithParams());
         objectIds.addAll(methodInfo.getRelatedCodeObjectIds());
         Log.log(LOGGER::debug, "Got following code object ids for method {}: {}",methodInfo,objectIds);
 

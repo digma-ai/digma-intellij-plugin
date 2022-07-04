@@ -7,18 +7,25 @@ data class MethodParameter(
 
     companion object {
         private val arrayRegex = Regex("\\[,*]$")
+
+        private fun getArraysPart(typeFqn: String): String {
+            var arraysValue = ""
+            var trimmableValue = typeFqn
+
+            var arrayMatchResult = arrayRegex.find(trimmableValue, 0)
+            while (arrayMatchResult != null) {
+                arraysValue = arrayMatchResult.value + arraysValue
+                trimmableValue = trimmableValue.substring(0, arrayMatchResult.range.start);
+
+                arrayMatchResult = arrayRegex.find(trimmableValue, 0)
+            }
+            return arraysValue
+        }
     }
 
     // should meet the name of parameter as used in stack trace
     fun typeShortName(): String {
-        val arrayMatchResult = arrayRegex.find(typeFqn, 0)
-
-        val arrayPart: String
-        if (arrayMatchResult != null) {
-            arrayPart = arrayMatchResult.value
-        } else {
-            arrayPart = ""
-        }
+        val arraysValuePart = getArraysPart(typeFqn);
 
         val firstIndexOfSquaredParenthesisOpening = typeFqn.indexOf('[')
         val relevantTypeFqn =
@@ -30,7 +37,7 @@ data class MethodParameter(
             }
         val shortNameBeforeArray = relevantTypeFqn.split('.').last()
 
-        return "$shortNameBeforeArray$arrayPart"
+        return "$shortNameBeforeArray$arraysValuePart"
     }
 
 }

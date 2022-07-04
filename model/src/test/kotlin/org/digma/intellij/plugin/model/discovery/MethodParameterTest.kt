@@ -30,6 +30,22 @@ class MethodParameterTest {
     }
 
     @Test
+    fun typeShortNameShouldWorkOnJaggedArrays() {
+        assertTypeShortName("System.String[][]", "String[][]")
+        assertTypeShortName("System.Int32[][][]", "Int32[][][]")
+        assertTypeShortName("Hello.World[][][][]", "World[][][][]")
+        assertTypeShortName("Abc[][][][][]", "Abc[][][][][]")
+    }
+
+    @Test
+    fun typeShortNameShouldWorkOnMixOfJaggedAndMultiDimensionalArrays() {
+        assertTypeShortName("System.String[,,][]", "String[,,][]")
+        assertTypeShortName("System.Int32[][][,]", "Int32[][][,]")
+        assertTypeShortName("Hello.World[][][,,,][]", "World[][][,,,][]")
+        assertTypeShortName("Abc[,,][][][,][]", "Abc[,,][][][,][]")
+    }
+
+    @Test
     fun typeShortNameWithGenerics() {
         // parameter defined as "IList<string> names"
         assertTypeShortName("System.Collections.Generic.IList`1[T -> System.String]", "IList`1")

@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using Digma.Rider.Util;
 using JetBrains.Annotations;
 using JetBrains.ReSharper.Psi;
@@ -21,12 +23,30 @@ namespace Digma.Rider.Discovery
             return sourceFile.GetLocation().ToUri().ToString();
         }
 
-        public static string ComputeFqn(ICSharpFunctionDeclaration functionDeclaration)
+        public static string ComputeParametersPart(ICSharpFunctionDeclaration functionDeclaration)
+        {
+            var parametersOwner = functionDeclaration.GetParametersOwner();
+            if (parametersOwner == null || parametersOwner.Parameters.Count <= 0)
+            {
+                return "";
+            }
+
+            var paramsPart = String.Join(",", parametersOwner.Parameters.Select(param =>
+            {
+                return param.Type.ToString() + "|" + param.ShortName + "|" + param.Kind;
+            }));
+            
+            return "(" + paramsPart + ")";
+        }
+        
+        public static string ComputeFqn(ICSharpFunctionDeclaration functionDeclaration,
+            bool includeParameters = true)
         {
             var namespaceName = PsiUtils.GetNamespace(functionDeclaration);
             var className = PsiUtils.GetClassName(functionDeclaration);
             var methodName = PsiUtils.GetDeclaredName(functionDeclaration);
-            var fqn = namespaceName + "." + className + "$_$" + methodName;
+            var paramsPart = !includeParameters ? "" : ComputeParametersPart(functionDeclaration);
+            var fqn = namespaceName + "." + className + "$_$" + methodName + paramsPart;
             return fqn;
         }
 

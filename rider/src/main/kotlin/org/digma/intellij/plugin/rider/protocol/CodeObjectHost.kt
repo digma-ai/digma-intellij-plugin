@@ -132,7 +132,7 @@ class CodeObjectHost(val project: Project) {
 
 
     private fun RiderMethodInfo.toMethodInfo() = MethodInfo(
-        id = id,
+        id = cleanIdFromParamsIfNeeded(id),
         name = name,
         containingClass = containingClass,
         containingNamespace = containingNamespace,
@@ -141,6 +141,17 @@ class CodeObjectHost(val project: Project) {
         parameters = toParameters(parameters),
         spans = toSpansList(spans)
     )
+
+    private fun cleanIdFromParamsIfNeeded(codeObjectId: String): String {
+        val lastIndexOfOpeningParenthesis = codeObjectId.lastIndexOf('(')
+        if (lastIndexOfOpeningParenthesis >= 0) {
+            //TODO: 1. remove the log line
+            //TODO: 2. adjust the code so backend will return the parameters as the client needs them (short parameter including the ref sign &)
+            Log.log(LOGGER::info, "trimming parameters from codeObjectId='$codeObjectId'")
+            return codeObjectId.substring(0, lastIndexOfOpeningParenthesis)
+        }
+        return codeObjectId
+    }
 
     private fun toSpansList(spans: List<RiderSpanInfo>): List<SpanInfo> {
         val modelSpans = ArrayList<SpanInfo>()

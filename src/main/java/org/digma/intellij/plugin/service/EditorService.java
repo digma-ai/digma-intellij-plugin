@@ -158,7 +158,7 @@ public class EditorService implements Disposable {
     public void openRawTrace(String stackTrace) {
 
         if (stackTrace == null) {
-            //todo: show notification
+            NotificationUtil.showNotification(project,"This stack trace is empty");
             return;
         }
         try {

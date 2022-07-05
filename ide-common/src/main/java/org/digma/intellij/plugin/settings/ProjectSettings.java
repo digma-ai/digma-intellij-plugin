@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
+import java.util.Objects;
 
 public class ProjectSettings implements Configurable {
 
@@ -41,7 +42,7 @@ public class ProjectSettings implements Configurable {
     @Override
     public boolean isModified() {
         SettingsState settings = SettingsState.getInstance(project);
-        return isUrlChanged(settings) || isUseSystemLAFChanged(settings)
+        return isUrlChanged(settings) || isApiTokenChanged(settings) || isUseSystemLAFChanged(settings)
                 || isHtmlLabelColorChanged(settings) || isGrayedColorChanged(settings) ||
                 mySettingsComponent.getIsScaleBorders() != settings.scaleBorders ||
                 mySettingsComponent.getIsScalePanels() != settings.scalePanels ||
@@ -53,14 +54,19 @@ public class ProjectSettings implements Configurable {
     }
 
     private boolean isUrlChanged(SettingsState settings){
-        return !mySettingsComponent.getApiUrlText().equals(settings.apiUrl);
+        return !Objects.equals(settings.apiUrl,mySettingsComponent.getApiUrlText());
     }
+
+    private boolean isApiTokenChanged(SettingsState settings){
+        return !Objects.equals(settings.apiToken,mySettingsComponent.getApiToken());
+    }
+
     private boolean isHtmlLabelColorChanged(SettingsState settings){
-        return !mySettingsComponent.getHtmlLabelForeground().equals(settings.htmlLabelColor);
+        return !Objects.equals(settings.htmlLabelColor,mySettingsComponent.getHtmlLabelForeground());
     }
 
     private boolean isGrayedColorChanged(SettingsState settings){
-        return !mySettingsComponent.getGrayedForeground().equals(settings.grayedColor);
+        return !Objects.equals(settings.grayedColor,mySettingsComponent.getGrayedForeground());
     }
 
 
@@ -69,13 +75,27 @@ public class ProjectSettings implements Configurable {
     public void apply() throws ConfigurationException {
         SettingsState settings = SettingsState.getInstance(project);
         try {
+            Objects.requireNonNull(mySettingsComponent.getApiUrlText(),"api url can not be null");
             new URL(mySettingsComponent.getApiUrlText());
             Color.decode(mySettingsComponent.getHtmlLabelForeground());
             Color.decode(mySettingsComponent.getGrayedForeground());
         } catch (Exception e) {
             throw new ConfigurationException(e.getMessage(),e,e.getClass().getSimpleName());
         }
+
+        if (mySettingsComponent.getApiUrlText().isBlank()){
+            throw new ConfigurationException("Api url can not be blank");
+        }
+
+
+        var theApiToken = mySettingsComponent.getApiToken();
+        if (theApiToken != null && theApiToken.isBlank()){
+            theApiToken = null;
+        }
+
+
         settings.apiUrl = mySettingsComponent.getApiUrlText();
+        settings.apiToken = theApiToken;
         settings.isUseSystemLAF = mySettingsComponent.isUseSystemLAF();
         settings.htmlLabelColor = mySettingsComponent.getHtmlLabelForeground();
         settings.grayedColor = mySettingsComponent.getGrayedForeground();
@@ -89,6 +109,7 @@ public class ProjectSettings implements Configurable {
     public void reset() {
         SettingsState settings = SettingsState.getInstance(project);
         mySettingsComponent.setApiUrlText(settings.apiUrl);
+        mySettingsComponent.setApiToken(settings.apiToken);
         mySettingsComponent.setIsUsingSystemLAF(settings.isUseSystemLAF);
         mySettingsComponent.setHtmlLabelForeground(settings.htmlLabelColor);
         mySettingsComponent.setGrayedForeground(settings.grayedColor);

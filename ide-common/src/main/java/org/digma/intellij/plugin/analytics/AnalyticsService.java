@@ -16,6 +16,7 @@ import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.model.environment.EnvComboModel;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.net.ssl.SSLException;
 import java.io.Closeable;
@@ -33,12 +34,13 @@ public class AnalyticsService implements Disposable {
 
     private final Environment environment;
     private String myApiUrl;
+    @Nullable
+    private String myApiToken;
     private final Project project;
 
     private AnalyticsProvider analyticsProviderProxy;
     private final SettingsState settingsState;
     private final PersistenceService persistenceService;
-
 
 
     public AnalyticsService(@NotNull Project project) {
@@ -47,19 +49,25 @@ public class AnalyticsService implements Disposable {
         environment = new Environment(project, this, persistenceService.getState());
         this.project = project;
         myApiUrl = settingsState.apiUrl;
-        reBuildClient(myApiUrl);
+        myApiToken = settingsState.apiToken;
+        replaceClientAndFireChange(myApiUrl, myApiToken);
         EnvComboModel.INSTANCE.initialize(environment);
         settingsState.addChangeListener(settingsState -> {
-            if (!settingsState.apiUrl.equals(myApiUrl)) {
+            if (!Objects.equals(settingsState.apiUrl, myApiUrl)) {
                 myApiUrl = settingsState.apiUrl;
-                reBuildClient(myApiUrl);
+                myApiToken = settingsState.apiToken;
+                replaceClientAndFireChange(myApiUrl, myApiToken);
+            }
+            if (!Objects.equals(settingsState.apiToken, myApiToken)) {
+                myApiToken = settingsState.apiToken;
+                replaceClient(myApiUrl, myApiToken);
             }
         });
     }
 
 
-    private void reBuildClient(String apiUrl) {
-        //try to close
+    //just replace the client and do not fire any events
+    private void replaceClient(String url, String token) {
         if (analyticsProviderProxy != null) {
             try {
                 analyticsProviderProxy.close();
@@ -68,7 +76,14 @@ public class AnalyticsService implements Disposable {
             }
         }
 
-        analyticsProviderProxy = newAnalyticsProviderProxy(new RestAnalyticsProvider(apiUrl),project);
+        analyticsProviderProxy = newAnalyticsProviderProxy(new RestAnalyticsProvider(url, token), project);
+    }
+
+
+    private void replaceClientAndFireChange(String url, String token) {
+
+        replaceClient(url,token);
+
         List<String> envs = getEnvironments();
         if (envs == null) {
             envs = new ArrayList<>();

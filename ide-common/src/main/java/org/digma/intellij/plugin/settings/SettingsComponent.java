@@ -11,6 +11,7 @@ import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.FormBuilder;
 import org.digma.intellij.plugin.ui.DigmaUIUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,6 +26,7 @@ public class SettingsComponent {
 
   private JPanel myMainPanel;
   private final JBTextField myApiUrlText = new JBTextField();
+  private final JBTextField myApiToken = new JBTextField();
   private final JBCheckBox myIsUsingSystemLAF = new JBCheckBox();
   private final JBCheckBox myIsScalePanel = new JBCheckBox();
   private final JBCheckBox myIsScaleBorders = new JBCheckBox();
@@ -52,8 +54,6 @@ public class SettingsComponent {
         }
       }
     });
-
-
 
 
     htmlForegroundColorPicker.setForeground(Color.decode(htmlLabelForeground));
@@ -90,6 +90,7 @@ public class SettingsComponent {
 
     myMainPanel = FormBuilder.createFormBuilder()
             .addLabeledComponent(myUrlLabel, myApiUrlText, 1, false)
+            .addLabeledComponent(new JBLabel("Api token:"), myApiToken, 1, false)
             .addLabeledComponent(myIsUsingSystemLAFLabel, myIsUsingSystemLAF, 1, false)
             .addComponentToRightColumn(htmlForegroundColorPicker, 1)
             .addComponentToRightColumn(grayedColorPicker, 1)
@@ -120,16 +121,24 @@ public class SettingsComponent {
     myApiUrlText.setText(newText);
   }
 
+  @Nullable
+  public String getApiToken() {
+    return myApiToken.getText();
+  }
+
+  public void setApiToken(@Nullable String newText) {
+    myApiToken.setText(newText);
+  }
+
 
   public boolean isUseSystemLAF() {
     return myIsUsingSystemLAF.isSelected();
   }
 
   public void setIsUsingSystemLAF(boolean newIsUseSystemLAF) {
-    if (myIsUsingSystemLAF.isSelected() != newIsUseSystemLAF){
+    if (myIsUsingSystemLAF.isSelected() != newIsUseSystemLAF) {
       myIsUsingSystemLAF.doClick();
     }
-    //this.myIsUsingSystemLAF.setSelected(newIsUseSystemLAF);
   }
 
   public String getHtmlLabelForeground() {
@@ -176,6 +185,7 @@ public class SettingsComponent {
 
   private void resetToDefaults(){
     this.setApiUrlText(SettingsState.DEFAULT_API_URL);
+    this.setApiToken(null);
     this.setIsUsingSystemLAF(SettingsState.DEFAULT_IS_USE_SYSTEM_LAF);
     this.setHtmlLabelForeground(SettingsState.DEFAULT_HTML_LABEL_COLOR);
     this.setGrayedForeground(SettingsState.DEFAULT_GRAYED_COLOR);

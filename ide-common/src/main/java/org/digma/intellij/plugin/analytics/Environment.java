@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.analytics;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.persistence.PersistenceData;
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsListChangedListener;
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
@@ -98,27 +99,24 @@ public class Environment implements EnvironmentsSupplier {
         Log.log(LOGGER::debug, "Setting current environment , old={},new={}", this.current, newEnv);
 
         //don't change or fire the event if it's the same env. it happens because we have two combobox, one on each tab
-
-        if (this.current == null && newEnv == null) {
+        if (Objects.equals(this.current,newEnv)){
             return;
         }
 
-        if (this.current != null && this.current.equals(newEnv)) {
-            return;
-        }
-
+        var oldEnv = this.current;
         this.current = newEnv;
         persistenceData.setCurrentEnv(newEnv);
 
-        notifyEnvironmentChanged(newEnv);
+        notifyEnvironmentChanged(oldEnv,newEnv);
     }
 
 
-    public void notifyEnvironmentChanged(String newEnv) {
+    private void notifyEnvironmentChanged(String oldEnv,String newEnv) {
         Log.log(LOGGER::debug, "Firing EnvironmentChanged event for {}", newEnv);
         if (project.isDisposed()){
             return;
         }
+        NotificationUtil.notifyChangingEnvironment(project,oldEnv,newEnv);
         EnvironmentChanged publisher = project.getMessageBus().syncPublisher(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC);
         publisher.environmentChanged(newEnv);
     }
@@ -144,18 +142,26 @@ public class Environment implements EnvironmentsSupplier {
 
     void replaceEnvironmentsList(@NotNull List<String> envs) {
         this.environments = envs;
-        current = environments.size() > 0 ? environments.get(0) : null;
+        var oldEnv = current;
+        if (current == null || !this.environments.contains(current)){
+            current = environments.size() > 0 ? environments.get(0) : null;
+        }
+
         persistenceData.setCurrentEnv(current);
         fireEnvironmentsListChange();
-        notifyEnvironmentChanged(current);
+
+        if (!Objects.equals(oldEnv,current)) {
+            notifyEnvironmentChanged(oldEnv, current);
+        }
     }
 
 
     private void maybeUpdateCurrent() {
         if (current == null || current.isBlank() || !environments.contains(current)){
+            var oldEnv = this.current;
             current = environments.size() > 0 ? environments.get(0) : null;
             persistenceData.setCurrentEnv(current);
-            notifyEnvironmentChanged(current);
+            notifyEnvironmentChanged(oldEnv,current);
         }
     }
 

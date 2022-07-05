@@ -13,8 +13,9 @@ open class InsightListViewItem<INSIGHT : CodeObjectInsight>(insight: INSIGHT) :
                 // Standalone insights
                 InsightType.HotSpot -> 1
                 InsightType.Errors -> 2
-                // Span Usages
+                // Span
                 InsightType.SpanUsages -> 60
+                InsightType.SpanDurations -> 65
                 // HTTP Endpoints
                 InsightType.SlowestSpans -> 40
                 InsightType.LowUsage -> 30

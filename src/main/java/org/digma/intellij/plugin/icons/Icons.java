@@ -47,6 +47,9 @@ public final class Icons {
     public static final Icon EVENT = IconLoader.getIcon("/icons/event.svg", Icons.class.getClassLoader());
     public static final Icon EVENT_RED = colorizeVsCodeIcon("/icons/event.svg", Html.RED);
 
+    public static final Icon DROPPED = loadAndScaleIconByWidth("/icons/dropped.png", 8);
+    public static final Icon ROSE = loadAndScaleIconByWidth("/icons/rose.png", 8);
+
 
     public static class Insight {
 
@@ -67,6 +70,11 @@ public final class Icons {
         public static Icon HOTSPOT = loadAndScaleInsightIcon("/icons/target.png");
         public static Icon SPAN_GROUP_TITLE = TELESCOPE_INSIGHTS_WHITE;
         public static Icon HTTP_GROUP_TITLE = INTERFACE_INSIGHTS_WHITE;
+
+        public static final Icon SPAN_DURATION_DROPPED = DROPPED;
+        public static final Icon SPAN_DURATION_ROSE = ROSE;
+
+
     }
 
 //    public static class Error {
@@ -83,6 +91,11 @@ public final class Icons {
         int size = Laf.INSTANCE.scaleIcons(Laf.Sizes.getINSIGHT_ICON_SIZE() );
         return loadAndScaleIconObjectByWidth(path, size);
     }
+
+    private static Icon loadAndScaleIconByWidth(String path,int width) {
+        return loadAndScaleIconObjectByWidth(path, width);
+    }
+
 
 
 //    public static Icon loadAndScaleInsightIconByFactor(String path) {

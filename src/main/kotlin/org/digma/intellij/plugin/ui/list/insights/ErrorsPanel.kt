@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.ui.list.insights
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBPanel
-import com.intellij.ui.dsl.builder.RowLayout
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBUI.Borders
@@ -50,6 +49,13 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>): JPa
     }
 
 
+    val errorsWrapper = JBPanel<JBPanel<*>>()
+    errorsWrapper.layout = BorderLayout(0,10)
+    errorsWrapper.add(title, BorderLayout.NORTH)
+    errorsWrapper.add(errorsListPanel, BorderLayout.CENTER)
+    errorsWrapper.border = BorderFactory.createEmptyBorder()
+
+
 
     //the expand link button needs to be the same size as insightsIconPanel so that they will align
     //the same over the list
@@ -58,18 +64,10 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>): JPa
             link("Expand") {
                 val actionListener: InsightsActionsService = project.getService(InsightsActionsService::class.java)
                 actionListener.showErrorsTab(listViewItem.modelObject)
-            }.horizontalAlign(HorizontalAlign.RIGHT)
-        }.layout(RowLayout.INDEPENDENT)
+            }.horizontalAlign(HorizontalAlign.CENTER)
+        }
     }
-    expandLinkPanel.border = Borders.empty(0,0,0,Laf.scaleBorders(getInsightIconPanelLeftBorderSize()))
-
-
-    val errorsWrapper = JBPanel<JBPanel<*>>()
-    errorsWrapper.layout = BorderLayout(0,10)
-    errorsWrapper.add(title, BorderLayout.NORTH)
-    errorsWrapper.add(errorsListPanel, BorderLayout.CENTER)
-    errorsWrapper.border = BorderFactory.createEmptyBorder()
-
+    expandLinkPanel.border = Borders.empty(0,0,0,Laf.scaleBorders(getInsightIconPanelRightBorderSize()))
 
     //the expand button wants to be aligned with the insights icons panels, so it takes its width from there
     val expandPanel: JPanel = object: JPanel(){

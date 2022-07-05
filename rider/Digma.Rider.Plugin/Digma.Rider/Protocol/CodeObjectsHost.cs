@@ -220,10 +220,14 @@ namespace Digma.Rider.Protocol
             Log(_logger,"Pushing Document {0} to the protocol",documentKey);
             _shellRdDispatcher.UnguardedScheduler.Queue(() =>
             {
-                _codeObjectsModel.Documents.Remove(documentKey);
+                var removed = _codeObjectsModel.Documents.Remove(documentKey);
+                if (!removed)
+                {
+                    _logger.Warn("Document wasd not removed, _codeObjectsModel.Documents.Remove returned false {0}",documentKey);
+                }
                 if (_codeObjectsModel.Documents.ContainsKey(documentKey))
                 {
-                    _logger.Error("Document is still in the protocol after calling remove {0}",documentKey);
+                    _logger.Warn("Document is still in the protocol after calling remove {0}",documentKey);
                 }
                 _codeObjectsModel.Documents.Add(documentKey, document);
                 NotifyOnDocumentCodeObjects(documentKey);

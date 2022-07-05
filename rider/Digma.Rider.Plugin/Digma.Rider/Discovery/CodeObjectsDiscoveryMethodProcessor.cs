@@ -1,9 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Digma.Rider.Protocol;
 using Digma.Rider.Util;
+using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.CSharp.Tree;
 using JetBrains.ReSharper.Psi.Tree;
 using JetBrains.Util;
@@ -53,11 +52,28 @@ namespace Digma.Rider.Discovery
             var retList = new List<MethodParam>(parametersOwner.Parameters.Count);
             foreach (var param in parametersOwner.Parameters)
             {
-                string typeFqn = param.Type.ToString();
+                string typeFqn = getTypeFqn(param);
                 string name = param.ShortName;
                 retList.Add(new MethodParam(typeFqn, name));
             }
             return retList;
+        }
+
+        protected static string getTypeFqn(IParameter param)
+        {
+            return $"{param.Type.ToString()}{getRefSign(param.Kind)}";
+        }
+        
+        protected static string getRefSign(ParameterKind paramKind)
+        {
+            if (paramKind == ParameterKind.OUTPUT // parameter for example: "out string msg"
+                || paramKind == ParameterKind.REFERENCE // parameter for example: "ref string msg"
+               )
+            {
+                return "&";
+            }
+
+            return "";
         }
 
         [SuppressMessage("ReSharper", "UnusedVariable")]

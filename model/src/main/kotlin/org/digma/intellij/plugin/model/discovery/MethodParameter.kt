@@ -15,7 +15,7 @@ data class MethodParameter(
             var arrayMatchResult = arrayRegex.find(trimmableValue, 0)
             while (arrayMatchResult != null) {
                 arraysValue = arrayMatchResult.value + arraysValue
-                trimmableValue = trimmableValue.substring(0, arrayMatchResult.range.start);
+                trimmableValue = trimmableValue.substring(0, arrayMatchResult.range.start)
 
                 arrayMatchResult = arrayRegex.find(trimmableValue, 0)
             }
@@ -25,19 +25,28 @@ data class MethodParameter(
 
     // should meet the name of parameter as used in stack trace
     fun typeShortName(): String {
-        val arraysValuePart = getArraysPart(typeFqn);
+        val refSignToAppend: String
+        val localTypeFqn =
+            if (typeFqn.endsWith("&")) {
+                refSignToAppend = "&"
+                typeFqn.trimEnd('&')
+            } else {
+                refSignToAppend = ""
+                typeFqn
+            }
+        val arraysValuePart = getArraysPart(localTypeFqn)
 
-        val firstIndexOfSquaredParenthesisOpening = typeFqn.indexOf('[')
+        val firstIndexOfSquaredParenthesisOpening = localTypeFqn.indexOf('[')
         val relevantTypeFqn =
             if (firstIndexOfSquaredParenthesisOpening < 0) {
-                typeFqn
+                localTypeFqn
             } else {
                 // has SquaredParenthesisOpening - generic or array, never mind just get the first part
-                typeFqn.substring(0, firstIndexOfSquaredParenthesisOpening)
+                localTypeFqn.substring(0, firstIndexOfSquaredParenthesisOpening)
             }
         val shortNameBeforeArray = relevantTypeFqn.split('.').last()
 
-        return "$shortNameBeforeArray$arraysValuePart"
+        return "$shortNameBeforeArray$arraysValuePart$refSignToAppend"
     }
 
 }

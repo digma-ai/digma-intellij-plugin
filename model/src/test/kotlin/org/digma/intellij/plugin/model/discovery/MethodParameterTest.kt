@@ -8,8 +8,7 @@ class MethodParameterTest {
     @Test
     fun typeShortNameShouldWorkOnSimpleType() {
         assertTypeShortName("System.String", "String")
-        assertTypeShortName("System.Int32", "Int32")
-        assertTypeShortName("Hello.World", "World")
+        assertTypeShortName("Hello.Great.World", "World")
         assertTypeShortName("Abc", "Abc")
     }
 
@@ -17,7 +16,7 @@ class MethodParameterTest {
     fun typeShortNameShouldWorkOnArray() {
         assertTypeShortName("System.String[]", "String[]")
         assertTypeShortName("System.Int32[]", "Int32[]")
-        assertTypeShortName("Hello.World[]", "World[]")
+        assertTypeShortName("Hello.Great.World[]", "World[]")
         assertTypeShortName("Abc[]", "Abc[]")
     }
 
@@ -25,7 +24,7 @@ class MethodParameterTest {
     fun typeShortNameShouldWorkOnMultiDimensionalArrays() {
         assertTypeShortName("System.String[,]", "String[,]")
         assertTypeShortName("System.Int32[,]", "Int32[,]")
-        assertTypeShortName("Hello.World[,]", "World[,]")
+        assertTypeShortName("Hello.Great.World[,]", "World[,]")
         assertTypeShortName("Abc[,]", "Abc[,]")
     }
 
@@ -33,7 +32,7 @@ class MethodParameterTest {
     fun typeShortNameShouldWorkOnJaggedArrays() {
         assertTypeShortName("System.String[][]", "String[][]")
         assertTypeShortName("System.Int32[][][]", "Int32[][][]")
-        assertTypeShortName("Hello.World[][][][]", "World[][][][]")
+        assertTypeShortName("Hello.Great.World[][][][]", "World[][][][]")
         assertTypeShortName("Abc[][][][][]", "Abc[][][][][]")
     }
 
@@ -41,7 +40,7 @@ class MethodParameterTest {
     fun typeShortNameShouldWorkOnMixOfJaggedAndMultiDimensionalArrays() {
         assertTypeShortName("System.String[,,][]", "String[,,][]")
         assertTypeShortName("System.Int32[][][,]", "Int32[][][,]")
-        assertTypeShortName("Hello.World[][][,,,][]", "World[][][,,,][]")
+        assertTypeShortName("Hello.Great.World[][][,,,][]", "World[][][,,,][]")
         assertTypeShortName("Abc[,,][][][,][]", "Abc[,,][][][,][]")
     }
 
@@ -61,6 +60,22 @@ class MethodParameterTest {
     fun typeShortNameWithArrayOfList() {
         // parameter defined as "IList<int>[] arrayOfList"
         assertTypeShortName("System.Collections.Generic.IList`1[T -> System.Int32][]", "IList`1[]")
+    }
+
+    @Test
+    fun typeShortNameWithRefTypes() {
+        assertTypeShortName("System.String&", "String&")
+        assertTypeShortName("System.Int32&", "Int32&")
+        assertTypeShortName("Hello.Great.World&", "World&")
+        assertTypeShortName("Abc&", "Abc&")
+    }
+
+    @Test
+    fun typeShortNameWithRefArrays() {
+        assertTypeShortName("System.String[]&", "String[]&")
+        assertTypeShortName("System.Int32[]&", "Int32[]&")
+        assertTypeShortName("Hello.Great.World[]&", "World[]&")
+        assertTypeShortName("Abc[]&", "Abc[]&")
     }
 
     private fun assertTypeShortName(typeFqn: String, expectedShortName: String) {

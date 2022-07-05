@@ -22,6 +22,8 @@
             {
               "moduleName": "HttpProtocol",
               "functionName": "ProcessRequests[TContext]",
+              "functionParameterTypes": [
+              ],
               "lineNumber": -1,
               "executedCode": "",
               "codeObjectId": "Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http.HttpProtocol$_$ProcessRequests[TContext]",
@@ -36,6 +38,8 @@
             {
               "moduleName": "SwaggerMiddleware",
               "functionName": "Invoke",
+              "functionParameterTypes": [
+              ],
               "lineNumber": -1,
               "executedCode": "",
               "codeObjectId": "Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware$_$Invoke",
@@ -50,6 +54,8 @@
             {
               "moduleName": "SwaggerUIMiddleware",
               "functionName": "Invoke",
+              "functionParameterTypes": [
+              ],
               "lineNumber": -1,
               "executedCode": "",
               "codeObjectId": "Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware$_$Invoke",
@@ -64,6 +70,8 @@
             {
               "moduleName": "AuthorizationMiddleware",
               "functionName": "Invoke",
+              "functionParameterTypes": [
+              ],
               "lineNumber": -1,
               "executedCode": "",
               "codeObjectId": "Microsoft.AspNetCore.Authorization.AuthorizationMiddleware$_$Invoke",
@@ -78,6 +86,8 @@
             {
               "moduleName": "EndpointMiddleware",
               "functionName": "<Invoke>g__AwaitRequestTask|6_0",
+              "functionParameterTypes": [
+              ],
               "lineNumber": -1,
               "executedCode": "",
               "codeObjectId": "Microsoft.AspNetCore.Routing.EndpointMiddleware$_$<Invoke>g__AwaitRequestTask|6_0",
@@ -92,6 +102,8 @@
             {
               "moduleName": "ResourceInvoker",
               "functionName": "<InvokeAsync>g__Logged|17_1",
+              "functionParameterTypes": [
+              ],
               "lineNumber": -1,
               "executedCode": "",
               "codeObjectId": "Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker$_$<InvokeAsync>g__Logged|17_1",
@@ -106,6 +118,8 @@
             {
               "moduleName": "ResourceInvoker",
               "functionName": "<InvokeAsync>g__Logged|17_1",
+              "functionParameterTypes": [
+              ],
               "lineNumber": -1,
               "executedCode": "",
               "codeObjectId": "Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker$_$<InvokeAsync>g__Logged|17_1",
@@ -120,6 +134,8 @@
             {
               "moduleName": "ResourceInvoker",
               "functionName": "<InvokeFilterPipelineAsync>g__Awaited|20_0",
+              "functionParameterTypes": [
+              ],
               "lineNumber": -1,
               "executedCode": "",
               "codeObjectId": "Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker$_$<InvokeFilterPipelineAsync>g__Awaited|20_0",
@@ -134,6 +150,8 @@
             {
               "moduleName": "ControllerActionInvoker",
               "functionName": "<InvokeInnerFilterAsync>g__Awaited|13_0",
+              "functionParameterTypes": [
+              ],
               "lineNumber": -1,
               "executedCode": "",
               "codeObjectId": "Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker$_$<InvokeInnerFilterAsync>g__Awaited|13_0",
@@ -148,6 +166,8 @@
             {
               "moduleName": "ControllerActionInvoker",
               "functionName": "Next",
+              "functionParameterTypes": [
+              ],
               "lineNumber": -1,
               "executedCode": "",
               "codeObjectId": "Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker$_$Next",
@@ -162,6 +182,8 @@
             {
               "moduleName": "ControllerActionInvoker",
               "functionName": "Rethrow",
+              "functionParameterTypes": [
+              ],
               "lineNumber": -1,
               "executedCode": "",
               "codeObjectId": "Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker$_$Rethrow",
@@ -176,6 +198,8 @@
             {
               "moduleName": "ControllerActionInvoker",
               "functionName": "<InvokeNextActionFilterAsync>g__Awaited|10_0",
+              "functionParameterTypes": [
+              ],
               "lineNumber": -1,
               "executedCode": "",
               "codeObjectId": "Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker$_$<InvokeNextActionFilterAsync>g__Awaited|10_0",
@@ -190,6 +214,8 @@
             {
               "moduleName": "ControllerActionInvoker",
               "functionName": "<InvokeActionMethodAsync>g__Logged|12_1",
+              "functionParameterTypes": [
+              ],
               "lineNumber": -1,
               "executedCode": "",
               "codeObjectId": "Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker$_$<InvokeActionMethodAsync>g__Logged|12_1",
@@ -204,6 +230,8 @@
             {
               "moduleName": "AwaitableResultExecutor",
               "functionName": "Execute",
+              "functionParameterTypes": [
+              ],
               "lineNumber": -1,
               "executedCode": "",
               "codeObjectId": "Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.AwaitableResultExecutor$_$Execute",
@@ -218,6 +246,8 @@
             {
               "moduleName": "SampleInsightsController",
               "functionName": "Error",
+              "functionParameterTypes": [
+              ],
               "lineNumber": 59,
               "executedCode": "",
               "codeObjectId": "Sample.MoneyTransfer.API.Controllers.SampleInsightsController$_$Error",

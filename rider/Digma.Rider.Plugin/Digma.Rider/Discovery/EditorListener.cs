@@ -167,8 +167,7 @@ namespace Digma.Rider.Discovery
 
         private Document BuildDocumentOnDemand([NotNull] IPsiSourceFile psiSourceFile)
         {
-            // using (ReadLockCookie.Create())
-            using (CompilationContextCookie.GetOrCreate(psiSourceFile.ResolveContext))
+            using (ReadLockCookie.Create())
             {
                 var document = (Document)_codeObjectsCache.Build(psiSourceFile, false);
                 //only add the document to the cache if it has code objects

@@ -6,21 +6,7 @@
     <name>Digma Continuous Feedback</name>
     <vendor>digma.ai</vendor>
     <description>
-      <![CDATA[
-        <a href="https://github.com/digma-ai/digma"><img src="https://img.shields.io/github/stars/digma-ai/digma?style=social" alt="Github Repo"></a>&nbsp;
-        <a href="https://twitter.com/doppleware"><img src="https://img.shields.io/twitter/follow/doppleware?style=social" alt="Twitter Follow"></a>&nbsp;
-        <h1>Add Continuous Feedback to your coding practices</h2>
-        <p>Digma is a Continuous Feedback platform. It integrates with your observability
-        backend to provide meaningful code insights in the IDE. While coding, you can be aware of how the code behaves in runtime in various staging and production environments</p>
-
-        <p>Digma provides integrated insights multiple code behavior topics including:
-        <ul>
-          <li>Error hostpots</li>
-          <li>Usage bottlenecks and concurrency</li>
-          <li>Performance trends</li>
-        </ul>
-        </p>
-      ]]>
+        Please write plugin description in README.md , see <!-- Plugin description --> section
     </description>
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.vcs</depends>

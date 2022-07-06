@@ -17,4 +17,12 @@ tasks{
     jarSearchableOptions{
         enabled = false
     }
+
+    runPluginVerifier {
+        enabled = false
+    }
+
+    verifyPlugin{
+        enabled = false
+    }
 }

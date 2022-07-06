@@ -45,13 +45,13 @@ namespace Digma.Rider.Discovery
                     // the document's code objects until overloaded methods are supported in Digma's backend.
                     // when overloaded methods are supported we need to change the Identities.ComputeFqn
                     // and include only the code in th else block.
-                    // var fqn = Identities.ComputeFqn(functionDeclaration);
-                    // if (DiscoveryContext.Methods.ContainsKey(fqn))
-                    // {
-                    //     Log(Logger, "Ignoring overloaded method {0} for file '{1}'", element, DiscoveryContext.PsiSourceFile.Name);
-                    //     DiscoveryContext.Methods.Remove(fqn);
-                    // }
-                    // else
+                    var fqn = Identities.ComputeFqn(functionDeclaration);
+                    if (DiscoveryContext.Methods.ContainsKey(fqn))
+                    {
+                         Log(Logger, "Ignoring overloaded method {0} for file '{1}'", element, DiscoveryContext.PsiSourceFile.Name);
+                         //DiscoveryContext.Methods.Remove(fqn);
+                    }
+                    else
                     {
                         var methodProcessor =
                             new CodeObjectsDiscoveryMethodProcessor(functionDeclaration, DiscoveryContext);

@@ -22,8 +22,6 @@ object Swing {
     val ERROR_GREEN = Color(125, 216, 125) // " #7dd87d - same as in VS Code plugin
 
     val BLUE_LIGHT_SHADE: Color = Color.decode(Html.BLUE_LIGHT_SHADE)
-
-    val NO_INFO_PANEL_BACKGROUND:Color = Color(54, 1, 1,50)
 }
 
 

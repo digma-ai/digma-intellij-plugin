@@ -52,9 +52,11 @@ export DIGMA_JB_INTELLIJ_PUBLISH_TOKEN='YOUR_TOKEN'</br>
 https://plugins.jetbrains.com/docs/intellij/plugin-signing.html</br>
 to sign the plugin set the following environment variables</br>
 
+export:</br>
 DIGMA_JB_CERTIFICATE_CHAIN_FILE=/home/shalom/workspace/digma/digma-intellij-plugin/.keys/chain.crt</br>
 DIGMA_JB_PRIVATE_KEY_FILE=/home/shalom/workspace/digma/digma-intellij-plugin/.keys/private.pem</br>
 DIGMA_JB_PRIVATE_KEY_PASSWORD=digma</br>
+
 
 ./gradlew signPlugin</br>
 

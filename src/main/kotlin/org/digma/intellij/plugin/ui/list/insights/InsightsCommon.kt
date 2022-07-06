@@ -106,7 +106,7 @@ internal fun insightsIconPanelBorder(icon: Icon, text: String): JPanel {
         panel.add(textLabel, BorderLayout.SOUTH)
     }
 
-    panel.border = empty(0,0,0,Laf.scaleBorders(getInsightIconPanelRightBorderSize()))
+    panel.border = empty(2,0,0,Laf.scaleBorders(getInsightIconPanelRightBorderSize()))
 
     val width = panel.preferredSize.width
     addCurrentLargestWidthIconPanel(width)

@@ -1,6 +1,8 @@
 package org.digma.intellij.plugin.analytics;
 
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
@@ -167,6 +169,12 @@ public class Environment implements EnvironmentsSupplier {
 
     @Override
     public void refresh() {
-        refreshEnvironments();
+        new Task.Backgroundable(project, "Saving Project Zip") {
+            @Override
+            public void run(@NotNull ProgressIndicator indicator) {
+                refreshEnvironments();
+            }
+        }.queue();
+
     }
 }

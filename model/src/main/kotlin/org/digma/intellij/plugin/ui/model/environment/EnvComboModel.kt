@@ -85,14 +85,15 @@ object EnvComboModel : AbstractListModel<String>(), ComboBoxModel<String>, Envir
     }
 
     fun refreshEnvironments() {
-        //refresh is called when the combobox popup is opened.
-        val envs: List<String>? = environmentsSupplier?.getEnvironments()
-
-        replaceEnvironments(envs)
+        //the environment will refresh in the background and fire an event
+        //the combo will catch the event and update the list
+        if (environmentsSupplier != null) {
+            environmentsSupplier?.refresh()
+        }
     }
 
 
-    fun environmentsListEquals(envs1: List<String>?, envs2: List<String>?): Boolean {
+    private fun environmentsListEquals(envs1: List<String>?, envs2: List<String>?): Boolean {
         if (envs1 == null && envs2 == null) {
             return true
         }

@@ -2,6 +2,7 @@
 
 package org.digma.intellij.plugin.settings;
 
+import com.intellij.openapi.Disposable;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
@@ -22,31 +23,13 @@ import java.util.List;
         name = "org.digma.intellij.plugin.settings.SettingsState",
         storages = @Storage("DigmaPlugin.xml")
 )
-public class SettingsState implements PersistentStateComponent<SettingsState> {
+public class SettingsState implements PersistentStateComponent<SettingsState> , Disposable {
 
   public static final String DEFAULT_API_URL = "https://localhost:5051";
-  public static final String DEFAULT_HTML_LABEL_COLOR = "#CCCCCC";
-  public static final String DEFAULT_GRAYED_COLOR = "#8A8A8A";
-  public static final boolean DEFAULT_IS_USE_SYSTEM_LAF = true;
-  public static final boolean DEFAULT_SCALE_PANELS = true;
-  public static final boolean DEFAULT_SCALE_BORDERS = false;
-  public static final boolean DEFAULT_SCALE_ICONS = true;
-
-
-
   public String apiUrl = DEFAULT_API_URL;
   @Nullable
   public String apiToken = null;
-  public boolean isUseSystemLAF = DEFAULT_IS_USE_SYSTEM_LAF;
-
-  public String htmlLabelColor = DEFAULT_HTML_LABEL_COLOR;
-  public String grayedColor = DEFAULT_GRAYED_COLOR;
-
   private final List<SettingsChangeListener> listeners = new ArrayList<>();
-  public boolean scalePanels = DEFAULT_SCALE_PANELS;
-  public boolean scaleBorders = DEFAULT_SCALE_BORDERS;
-
-  public boolean scaleIcons = DEFAULT_SCALE_ICONS;
 
   public static SettingsState getInstance(Project project) {
     return project.getService(SettingsState.class);
@@ -78,4 +61,8 @@ public class SettingsState implements PersistentStateComponent<SettingsState> {
     });
   }
 
+  @Override
+  public void dispose() {
+    listeners.clear();
+  }
 }

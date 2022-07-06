@@ -9,6 +9,7 @@ import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.ui.layout.PropertyBinding
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.ui.common.ScopeLineIconProducer
+import org.digma.intellij.plugin.ui.common.noCodeObjectWarningPanel
 import org.digma.intellij.plugin.ui.common.scopeLine
 import org.digma.intellij.plugin.ui.common.topLine
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
@@ -22,6 +23,8 @@ import java.awt.BorderLayout
 import java.awt.CardLayout
 import javax.swing.*
 
+
+private const val NO_INFO_CARD_NAME="NO-INFO"
 
 fun insightsPanel(project: Project ): DigmaTabPanel {
 
@@ -84,13 +87,18 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
     previewPanel.add(previewList,BorderLayout.CENTER)
     previewPanel.isOpaque = false
 
+
+    val noInfoPanel = noCodeObjectWarningPanel("No Insights to show!")
+
     val cardLayout = CardLayout()
     val cardsPanel = JPanel(cardLayout)
     cardsPanel.isOpaque = false
     cardsPanel.add(insightsList, InsightsTabCard.INSIGHTS.name)
     cardsPanel.add(previewPanel, InsightsTabCard.PREVIEW.name)
+    cardsPanel.add(noInfoPanel,NO_INFO_CARD_NAME )
     cardLayout.addLayoutComponent(insightsList, InsightsTabCard.INSIGHTS.name)
     cardLayout.addLayoutComponent(previewPanel, InsightsTabCard.PREVIEW.name)
+    cardLayout.addLayoutComponent(noInfoPanel, NO_INFO_CARD_NAME)
     cardLayout.show(cardsPanel,InsightsModel.card.name)
 
     val result = object: DigmaTabPanel() {
@@ -112,7 +120,15 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
             SwingUtilities.invokeLater {
                 insightsList.getModel().setListData(InsightsModel.listViewItems)
                 previewList.getModel().setListData(InsightsModel.previewListViewItems)
-                cardLayout.show(cardsPanel,InsightsModel.card.name)
+
+                if (insightsList.getModel().size == 0 && InsightsModel.card.equals(InsightsTabCard.INSIGHTS)){
+                    cardLayout.show(cardsPanel,NO_INFO_CARD_NAME)
+                }else if (previewList.getModel().size == 0 && InsightsModel.card.equals(InsightsTabCard.PREVIEW)){
+                    cardLayout.show(cardsPanel,NO_INFO_CARD_NAME)
+                }else{
+                    cardLayout.show(cardsPanel,InsightsModel.card.name)
+                }
+
                 cardsPanel.revalidate()
             }
         }
@@ -125,3 +141,9 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
 
     return result
 }
+
+
+
+
+
+

@@ -11,4 +11,16 @@ public class DigmaUIUtil {
         var s = GuiUtils.colorToHex(color);
         return s.startsWith("#") ? s : "#"+s;
     }
+
+    public static Color digmaDecodeColor(String hex,Color defaultColor){
+        try {
+            return Color.decode(hex);
+        }catch(Exception e){
+            return defaultColor;
+        }
+    }
+
+
+
+
 }

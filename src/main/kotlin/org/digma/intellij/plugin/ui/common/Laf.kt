@@ -3,10 +3,11 @@ package org.digma.intellij.plugin.ui.common
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil.isUnderDarcula
-import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.settings.SettingsChangeListener
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.DigmaUIUtil.digmaColorToHex
+import org.digma.intellij.plugin.ui.DigmaUIUtil.digmaDecodeColor
+import org.digma.intellij.plugin.ui.common.Laf.Colors.Companion.SWING_GRAYED_LABEL_FOREGROUND
 import java.awt.Color
 import java.awt.Font
 import javax.swing.JLabel
@@ -15,6 +16,9 @@ import javax.swing.UIManager
 /**
  * its not really a swing LAF,
  * just a class to manage the standard colors for labels that should look similar all over the plugin.
+ * usually we just need the default label color,for example when changing html to gray and then back to white
+ * we need the default label foreground.
+ *
  */
 object Laf : SettingsChangeListener {
 
@@ -22,64 +26,37 @@ object Laf : SettingsChangeListener {
 
     fun setSettings(settings: SettingsState){
         this.settings = settings
-        Icons.reload()
         settings.addChangeListener(this)
     }
 
 
     override fun settingsChanged(settingsState: SettingsState?) {
         //reload some resources if necessary , maybe icons
-        Icons.reload()
     }
 
-    fun isUsingSystemLAF(): Boolean{
-        return if (settings == null)
-            true
-        else {
-            settings!!.isUseSystemLAF
-        }
-    }
 
 
     fun panelsListBackground(): Color {
-
-//        return EditorColorsManager.getInstance().schemeForCurrentUITheme.defaultBackground
-
         var default: Color = JBColor.DARK_GRAY
         if (isUnderDarcula()) {
             default = Color(38, 38, 38)
 
         }
         return JBColor.namedColor("Editor.background", default)
+
+        //consider:
+        //EditorColorsManager.getInstance().schemeForCurrentUITheme.defaultBackground
+
     }
 
-
-    /**
-     * returns the color selected for html labels.
-     * the method does not considert isUsingSystemLAF,caller should.
-     */
-    fun getHtmlLabelColor():String{
-        return if(settings == null)
-            Html.CHINESE_SILVER
-        else
-            settings!!.htmlLabelColor
-    }
 
 
     fun getHtmlLabelGrayedColor():String{
-        return if(settings == null)
-            Html.DARK_GRAY2
-        else
-            settings!!.grayedColor
+        return Html.DARK_GRAY2
     }
 
     fun getSwingLabelGrayedColor():Color{
-
-        try {
-            return Color.decode(getHtmlLabelGrayedColor())
-        }catch(e: Exception){
-            return Color.GRAY
-        }
+        return SWING_GRAYED_LABEL_FOREGROUND
     }
 
 
@@ -88,35 +65,26 @@ object Laf : SettingsChangeListener {
     }
 
 
-
-   fun getInsightsIconsWhite():String{
-       return if (isUsingSystemLAF())
-           Colors.DEFAULT_SWING_LABEL_FOREGROUND_HEX
-       else
-           getHtmlLabelColor()
+    fun getInsightsIconsWhite(): String {
+        return Colors.DEFAULT_SWING_LABEL_FOREGROUND_HEX
     }
 
 
 
     fun scalePanels(size: Int):Int{
-        return if (settings != null && settings!!.scalePanels)
-            JBUI.scale(size)
-        else
-            size
+        //todo:need to consider if to scale panels always
+        return JBUI.scale(size)
     }
 
     fun scaleBorders(size: Int):Int{
-        return if (settings != null && settings!!.scaleBorders)
-            JBUI.scale(size)
-        else
-            size
+        return size
+        //need to consider to scale borders
+        //JBUI.scale(size)
     }
 
     fun scaleIcons(size: Int): Int {
-        return if (settings != null && settings!!.scaleIcons)
-            JBUI.scale(size)
-        else
-           size
+        //todo: need to consider if to scale panels always
+        return JBUI.scale(size)
     }
 
 
@@ -124,6 +92,7 @@ object Laf : SettingsChangeListener {
         companion object {
             val DEFAULT_SWING_LABEL_FOREGROUND: Color = UIManager.getColor("Label.foreground")?: JLabel().foreground
             val DEFAULT_SWING_LABEL_FOREGROUND_HEX: String = digmaColorToHex(DEFAULT_SWING_LABEL_FOREGROUND)
+            val SWING_GRAYED_LABEL_FOREGROUND: Color = digmaDecodeColor(getHtmlLabelGrayedColor(),Color.GRAY)
         }
     }
 
@@ -131,11 +100,11 @@ object Laf : SettingsChangeListener {
         companion object {
             @JvmStatic
             val INSIGHT_ICON_SIZE: Int = 32
+            const val ERROR_SCORE_PANEL_SIZE = 32
+            const val ERROR_DETAILS_BACK_BUTTON_SIZE = 32
+            const val ERROR_DETAILS_NAVIGATION_BUTTON_SIZE = 32
         }
     }
-
-
-
 
 
     class Fonts{

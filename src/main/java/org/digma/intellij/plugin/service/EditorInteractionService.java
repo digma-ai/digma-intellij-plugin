@@ -76,7 +76,7 @@ public class EditorInteractionService implements CaretContextService, Disposable
                 }
 
                 insightsViewService.showDocumentPreviewList(documentInfoContainer,methodUnderCaret.getFileUri());
-                errorsViewService.empty();
+                errorsViewService.showDocumentPreviewList(documentInfoContainer,methodUnderCaret.getFileUri());
             }
         }else{
             MethodInfo methodInfo = documentInfoService.getMethodInfo(methodUnderCaret);

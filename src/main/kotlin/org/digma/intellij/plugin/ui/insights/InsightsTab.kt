@@ -88,7 +88,7 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
     previewPanel.isOpaque = false
 
 
-    val noInfoPanel = noCodeObjectWarningPanel("No Insights to show!")
+    val noInfoPanel = noCodeObjectWarningPanel("No insights about this code object yet.")
 
     val cardLayout = CardLayout()
     val cardsPanel = JPanel(cardLayout)

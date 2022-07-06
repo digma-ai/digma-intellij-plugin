@@ -177,7 +177,11 @@ public class AnalyticsService implements Disposable {
                 }
 
                 //reset status on success call
+                if (status.isInError()){
+                    NotificationUtil.showNotification(project,"Digma: Connection reestablished !");
+                }
                 status.ok();
+
                 return result;
 
             } catch (InvocationTargetException e) {

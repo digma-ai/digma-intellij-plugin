@@ -7,7 +7,7 @@
 ##
 ## to do: do the publish
 
-name: Publish to marketplace
+name: Publish to marketplace (experimental, not publishing yet)
 
 on: workflow_dispatch
 

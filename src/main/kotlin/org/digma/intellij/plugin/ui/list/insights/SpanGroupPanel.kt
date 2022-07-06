@@ -80,7 +80,7 @@ fun spanPanel(spanInsight: SpanInsight): JPanel {
     spanInsight.flows.forEach { spanFlow: SpanFlow ->
 
         val builder =
-            StringBuilder("${span(spanFlow.percentage.toString())}% " +
+            StringBuilder("${span(String.format("%.1f", spanFlow.percentage))}% " +
                                 "${spanGrayed(spanFlow.firstService?.service.toString())}: " +
                     "           ${span(spanFlow.firstService?.span.toString())}")
         spanFlow.intermediateSpan?.let { intermediateSpan ->

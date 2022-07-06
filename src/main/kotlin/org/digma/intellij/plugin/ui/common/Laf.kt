@@ -51,6 +51,11 @@ object Laf : SettingsChangeListener {
 
 
 
+    fun getReadOnlyEditorBannerBackground():Color{
+        return Swing.SHADE_YELLOW
+    }
+
+
     fun getHtmlLabelGrayedColor():String{
         return Html.DARK_GRAY2
     }

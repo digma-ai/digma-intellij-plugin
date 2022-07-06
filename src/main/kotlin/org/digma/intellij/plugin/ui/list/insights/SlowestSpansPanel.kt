@@ -57,11 +57,10 @@ fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: 
 
     val iconPanel = panel {
         row {
-            cell(insightsIconPanelBorder(Icons.Insight.BOTTLENECK, wrapCentered("Slow<br>Spans)")))
+            cell(insightsIconPanelBorder(Icons.Insight.BOTTLENECK, wrapCentered("Slow<br>Spans")))
                 .horizontalAlign(HorizontalAlign.RIGHT)
         }.layout(RowLayout.INDEPENDENT)
     }
-    iconPanel.border = JBUI.Borders.empty()
 
 
     val spansWrapper = JBPanel<JBPanel<*>>()

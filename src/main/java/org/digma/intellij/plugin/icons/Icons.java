@@ -56,10 +56,10 @@ public final class Icons {
         public static final Icon INSIGHT_EMPTY_SCOPE = EMPTY;
         public static final Icon BOTTLENECK = loadAndScaleInsightIcon("/icons/bottleneck.png");
         public static final Icon LOW_USAGE = loadAndScaleInsightIcon("/icons/gauge_low.png");
-
         public static final Icon NORMAL_USAGE = loadAndScaleInsightIcon("/icons/gauge_normal.png");
         public static final Icon HIGH_USAGE = loadAndScaleInsightIcon("/icons/gauge_high.png");
         public static final Icon SLOW = loadAndScaleInsightIcon("/icons/slow.png");
+        public static final Icon WAITING_DATA = loadAndScaleInsightIcon("/icons/waiting-data.png");
 
         //meaningful names for specific views,makes it easier to replace.
         public static final Icon HOTSPOT = loadAndScaleInsightIcon("/icons/target.png");
@@ -68,8 +68,6 @@ public final class Icons {
 
         public static final Icon SPAN_DURATION_DROPPED = DROPPED;
         public static final Icon SPAN_DURATION_ROSE = ROSE;
-
-
     }
 
 //    public static class Error {

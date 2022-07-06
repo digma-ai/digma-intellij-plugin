@@ -80,7 +80,7 @@ fun spanPanel(spanInsight: SpanInsight): JPanel {
     spanInsight.flows.forEach { spanFlow: SpanFlow ->
 
         val builder =
-            StringBuilder("${span(spanFlow.percentage.toString())}% " +
+            StringBuilder("${span(String.format("%.1f", spanFlow.percentage))}% " +
                                 "${spanGrayed(spanFlow.firstService?.service.toString())}: " +
                     "           ${span(spanFlow.firstService?.span.toString())}")
         spanFlow.intermediateSpan?.let { intermediateSpan ->
@@ -114,8 +114,8 @@ fun spanPanel(spanInsight: SpanInsight): JPanel {
 
 fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight): JPanel {
 
-    val sortedPercentiles = spanDurationsInsight.percentiles.sortedBy {
-        it.percentile
+    if (spanDurationsInsight.percentiles.isEmpty()) {
+        return createInsightPanel("Duration", "Waiting for more data.", Icons.Insight.WAITING_DATA, "", false)
     }
 
     val title = JLabel(asHtml(spanBold("Duration")), SwingConstants.LEFT)
@@ -123,15 +123,20 @@ fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight): JPanel {
     val durationsListPanel = JBPanel<JBPanel<*>>()
     durationsListPanel.layout = GridLayout(spanDurationsInsight.percentiles.size, 1, 0, 2)
 
+    val sortedPercentiles = spanDurationsInsight.percentiles.sortedBy {
+        it.percentile
+    }
+
+    val tolerationConstant: Long = 10000;
+
     sortedPercentiles.forEach { percentile: SpanDurationsPercentile ->
 
+        var changeMeaningfulEnough = false;
         val durationsPanel = JBPanel<JBPanel<*>>()
         durationsPanel.layout = BorderLayout(5, 0)
         durationsPanel.border = empty()
 
-
-        val pLabelText =
-            "P${percentile.percentile * 100} ${percentile.currentDuration.value} ${percentile.currentDuration.unit}"
+        val pLabelText = "P${percentile.percentile * 100} ${percentile.currentDuration.value} ${percentile.currentDuration.unit}"
         val pLabel = CopyableLabel(pLabelText)
         pLabel.toolTipText = pLabelText
         val pLabelPanel = object : JPanel() {
@@ -153,17 +158,19 @@ fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight): JPanel {
         durationsPanel.add(pLabelPanel, BorderLayout.WEST)
 
 
-        if (percentile.previousDuration != null &&
-            percentile.changeTime != null &&
-            (abs(percentile.currentDuration.raw - percentile.previousDuration!!.raw) / percentile.previousDuration!!.raw) > 0.1) {
+        if (percentile.previousDuration != null && percentile.changeTime != null) {
 
-            val icon = if (percentile.previousDuration!!.raw > percentile.currentDuration.raw) Icons.Insight.SPAN_DURATION_DROPPED else Icons.Insight.SPAN_DURATION_ROSE
-            val durationText = computeDurationText(percentile)
-            val whenText = computeWhenText(percentile)
-            val durationLabelText = asHtml(spanGrayed("$durationText,$whenText"))
-            val durationLabel = JBLabel(durationLabelText, icon, SwingConstants.LEFT)
-            durationLabel.toolTipText = durationLabelText
-            durationsPanel.add(durationLabel, BorderLayout.CENTER)
+            val rawDiff: Long = abs(percentile.currentDuration.raw - percentile.previousDuration!!.raw)
+            changeMeaningfulEnough = ((rawDiff / percentile.previousDuration!!.raw) > 0.1) && (rawDiff > tolerationConstant)
+            if (changeMeaningfulEnough) {
+                val icon = if (percentile.previousDuration!!.raw > percentile.currentDuration.raw) Icons.Insight.SPAN_DURATION_DROPPED else Icons.Insight.SPAN_DURATION_ROSE
+                val durationText = computeDurationText(percentile)
+                val whenText = computeWhenText(percentile)
+                val durationLabelText = asHtml(spanGrayed("$durationText,$whenText"))
+                val durationLabel = JBLabel(durationLabelText, icon, SwingConstants.LEFT)
+                durationLabel.toolTipText = durationLabelText
+                durationsPanel.add(durationLabel, BorderLayout.CENTER)
+            }
         }
 
         if (percentile.changeTime != null && (percentile.changeVerified == null || percentile.changeVerified == false)) {
@@ -194,6 +201,7 @@ fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight): JPanel {
         durationsListPanel.add(durationsPanel)
 
     }
+
 
     val result = JBPanel<JBPanel<*>>()
     result.layout = BorderLayout()

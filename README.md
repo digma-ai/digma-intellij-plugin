@@ -52,9 +52,11 @@ export DIGMA_JB_INTELLIJ_PUBLISH_TOKEN='YOUR_TOKEN'</br>
 https://plugins.jetbrains.com/docs/intellij/plugin-signing.html</br>
 to sign the plugin set the following environment variables</br>
 
+export:</br>
 DIGMA_JB_CERTIFICATE_CHAIN_FILE=/home/shalom/workspace/digma/digma-intellij-plugin/.keys/chain.crt</br>
 DIGMA_JB_PRIVATE_KEY_FILE=/home/shalom/workspace/digma/digma-intellij-plugin/.keys/private.pem</br>
 DIGMA_JB_PRIVATE_KEY_PASSWORD=digma</br>
+
 
 ./gradlew signPlugin</br>
 
@@ -71,7 +73,9 @@ todo: punlish?</br>
 <!-- [//]: # (example how satisfy gradle build with empty plugin description) -->
 <!-- Plugin description -->
 
-<![CDATA[<a href="https://twitter.com/doppleware"><img src="https://img.shields.io/twitter/follow/doppleware?style=social" alt="Twitter Follow"></a>&nbsp;
+<![CDATA[
+        <a href="https://github.com/digma-ai/digma"><img src="https://img.shields.io/github/stars/digma-ai/digma?style=social" alt="Github Repo"></a>&nbsp;
+        <a href="https://twitter.com/doppleware"><img src="https://img.shields.io/twitter/follow/doppleware?style=social" alt="Twitter Follow"></a>&nbsp;
         <h1>Add Continuous Feedback to your coding practices</h1>
         <p>Digma is a Continuous Feedback platform. It integrates with your observability
         backend to provide meaningful code insights in the IDE. While coding, you can be aware of how the code behaves in runtime in various staging and production environments</p>
@@ -82,7 +86,8 @@ todo: punlish?</br>
           <li>Usage bottlenecks and concurrency</li>
           <li>Performance trends</li>
         </ul>
-        </p>]]>
+        </p>
+      ]]>
 <!-- Plugin description end -->
 
 

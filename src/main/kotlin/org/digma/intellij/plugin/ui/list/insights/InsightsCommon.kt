@@ -75,8 +75,7 @@ fun genericPanelForSingleInsight(listViewItem: ListViewItem<CodeObjectInsight>):
 
 
 internal fun insightsIconPanelBorder(icon: Icon, text: String): JPanel {
-    val iconLabel = JLabel(icon)
-    val textLabel = JLabel(text)
+
 
     val panel: JPanel = object: JPanel(){
         override fun getPreferredSize(): Dimension {
@@ -96,11 +95,18 @@ internal fun insightsIconPanelBorder(icon: Icon, text: String): JPanel {
     }
 
     panel.layout = BorderLayout()
+
+    val iconLabel = JLabel(icon)
     iconLabel.horizontalAlignment = SwingConstants.CENTER
     panel.add(iconLabel, BorderLayout.CENTER)
-    textLabel.horizontalAlignment = SwingConstants.CENTER
-    panel.add(textLabel, BorderLayout.SOUTH)
-    panel.border = empty(0,0,0,Laf.scaleBorders(getInsightIconPanelRightBorderSize()))
+
+    if (text.isNotBlank()) {
+        val textLabel = JLabel(text)
+        textLabel.horizontalAlignment = SwingConstants.CENTER
+        panel.add(textLabel, BorderLayout.SOUTH)
+    }
+
+    panel.border = empty(2,0,0,Laf.scaleBorders(getInsightIconPanelRightBorderSize()))
 
     val width = panel.preferredSize.width
     addCurrentLargestWidthIconPanel(width)

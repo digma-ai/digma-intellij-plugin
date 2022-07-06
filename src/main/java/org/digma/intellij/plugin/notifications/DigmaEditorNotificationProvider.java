@@ -1,12 +1,13 @@
 package org.digma.intellij.plugin.notifications;
 
+import com.intellij.icons.AllIcons;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vcs.vfs.ContentRevisionVirtualFile;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.EditorNotificationPanel;
 import com.intellij.ui.EditorNotificationProvider;
-import com.intellij.ui.JBColor;
+import org.digma.intellij.plugin.ui.common.Laf;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -21,14 +22,14 @@ public class DigmaEditorNotificationProvider implements EditorNotificationProvid
 
             if (!fileEditor.getFile().isWritable() &&
                     fileEditor.getFile().getPath().contains("digma-stacktrace") ){
-                var panel = new EditorNotificationPanel();
-                panel.setBackground(JBColor.YELLOW);
+                var panel = new EditorNotificationPanel(null, Laf.INSTANCE.getReadOnlyEditorBannerBackground());
+                panel.icon(AllIcons.General.Warning);
                 panel.setText("Digma: This is a read only stack trace document");
                 return panel;
             }else if(!fileEditor.getFile().isWritable() &&
                     fileEditor.getFile() instanceof ContentRevisionVirtualFile){
-                var panel = new EditorNotificationPanel();
-                panel.setBackground(JBColor.YELLOW);
+                var panel = new EditorNotificationPanel(null,Laf.INSTANCE.getReadOnlyEditorBannerBackground());
+                panel.icon(AllIcons.General.Warning);
                 panel.setText("Digma: This is a read only vcs document");
                 return panel;
 

@@ -94,7 +94,7 @@ fun errorsPanel(project: Project): DigmaTabPanel {
     previewPanel.isOpaque = false
 
 
-    val noInfoWarningPanel = noCodeObjectWarningPanel("No Errors to show!")
+    val noInfoWarningPanel = noCodeObjectWarningPanel("No errors about this code object yet.")
 
     //a card layout for the errorsPanelList and noInfoWarningPanel
     val errorsPanelListCardLayout = CardLayout()

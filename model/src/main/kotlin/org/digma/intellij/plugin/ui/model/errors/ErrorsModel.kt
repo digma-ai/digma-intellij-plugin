@@ -3,10 +3,12 @@ package org.digma.intellij.plugin.ui.model.errors
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.ui.model.*
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
+import java.lang.Integer.max
 import java.util.*
 
 object ErrorsModel : PanelModel {
 
+    var errorsCount: Int = 0
     var listViewItems: List<ListViewItem<CodeObjectError>> = Collections.emptyList()
     var scope: Scope = EmptyScope("")
     var errorDetails: ErrorDetailsModel = ErrorDetailsModel()
@@ -14,7 +16,7 @@ object ErrorsModel : PanelModel {
 
 
     override fun count(): String {
-        return listViewItems.size.toString()
+        return  max(listViewItems.size, errorsCount).toString()
     }
 
     override fun isMethodScope(): Boolean {

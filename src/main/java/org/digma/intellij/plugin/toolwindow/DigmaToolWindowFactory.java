@@ -49,6 +49,7 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
             var insightsViewService = project.getService(InsightsViewService.class);
             insightsViewService.setPanel(insightsPanel);
             var insightsContent = contentFactory.createContent(insightsPanel, "Insights", false);
+            insightsContent.setTabName(ToolWindowTabsHelper.INSIGHTS_TAB_NAME);//we use tab name as a key , changing the name will break the plugin
             insightsContent.setPreferredFocusedComponent(insightsPanel::getPreferredFocusedComponent);
             insightsContent.setPreferredFocusableComponent(insightsPanel.getPreferredFocusableComponent());
             toolWindow.getContentManager().addContent(insightsContent);
@@ -61,6 +62,7 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
             var errorsViewService = project.getService(ErrorsViewService.class);
             errorsViewService.setPanel(errorsPanel);
             var errorsContent = contentFactory.createContent(errorsPanel, "Errors", false);
+            errorsContent.setTabName(ToolWindowTabsHelper.ERRORS_TAB_NAME); //we use tab name as a key , changing the name will break the plugin
             errorsContent.setPreferredFocusedComponent(errorsPanel::getPreferredFocusedComponent);
             errorsContent.setPreferredFocusableComponent(errorsPanel.getPreferredFocusableComponent());
             toolWindow.getContentManager().addContent(errorsContent);

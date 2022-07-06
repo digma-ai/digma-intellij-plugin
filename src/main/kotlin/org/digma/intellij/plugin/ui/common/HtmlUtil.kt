@@ -1,9 +1,7 @@
 package org.digma.intellij.plugin.ui.common
 
 import org.digma.intellij.plugin.ui.common.Laf.Colors.Companion.DEFAULT_SWING_LABEL_FOREGROUND_HEX
-import org.digma.intellij.plugin.ui.common.Laf.getHtmlLabelColor
 import org.digma.intellij.plugin.ui.common.Laf.getHtmlLabelGrayedColor
-import org.digma.intellij.plugin.ui.common.Laf.isUsingSystemLAF
 
 //kind of templating for html text in labels and buttons where we want to have the same color and style all over.
 //just supporting two types of colors, either not change the color and so the component will have its swing LAF color,
@@ -111,19 +109,11 @@ fun spanItalicGrayed(value:String):String{
 
 
 fun spanBold(value:String):String{
-    return if (isUsingSystemLAF()) {
-        spanBoldNoColor(value)
-    }else{
-        spanBoldWithLafColor(value)
-    }
+     return spanBoldNoColor(value)
 }
 
 fun span(value:String):String{
-    return if (isUsingSystemLAF()) {
-        spanNoColor(value)
-    }else{
-        spanWithLafColor(value)
-    }
+    return spanNoColor(value)
 }
 
 
@@ -133,39 +123,27 @@ fun spanGrayed(value:String):String{
 
 
 
-
-
-
-
 private fun italic(value: String): String {
     return "<i>$value</i>"
 }
 
-private fun spanBoldNoColor(value: String):String{
+private fun spanBoldNoColor(value: String): String {
     return "<span><b>$value</b></span>"
 }
 
-private fun spanNoColor(value: String):String{
+private fun spanNoColor(value: String): String {
     return "<span>$value</span>"
 }
 
 
-private fun spanWithLafColor(value: String):String{
-    return span(getHtmlLabelColor(),value)
-}
-private fun spanBoldWithLafColor(value: String):String{
-    return span(getHtmlLabelColor(),value,true)
+fun span(color: String, value: String): String {
+    return span(color, value, false)
 }
 
-
-fun span(color: String,value: String):String{
-    return span(color,value,false)
-}
-
-fun span(color: String,value: String, bold: Boolean):String{
+fun span(color: String, value: String, bold: Boolean): String {
     return if (bold) {
         "<span style=\"color:$color\"><b>$value</b></span>"
-    }else{
+    } else {
         "<span style=\"color:$color\">$value</span>"
     }
 }

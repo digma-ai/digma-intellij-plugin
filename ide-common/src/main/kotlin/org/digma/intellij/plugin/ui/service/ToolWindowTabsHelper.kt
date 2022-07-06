@@ -14,6 +14,18 @@ class ToolWindowTabsHelper(val project: Project) {
     var visibleTabBeforeErrorDetails: Content? = null
     var errorDetailsOn = false
 
+    companion object {
+        const val INSIGHTS_TAB_NAME = "insights"
+        const val ERRORS_TAB_NAME = "errors"
+    }
+
+    fun isInsightsTab(content: Content?):Boolean{
+        return content != null && content.tabName.equals(INSIGHTS_TAB_NAME, ignoreCase = true)
+    }
+
+    fun isErrorsTab(content: Content?):Boolean{
+        return content != null && content.tabName.equals(ERRORS_TAB_NAME, ignoreCase = true)
+    }
 
 
     fun showingErrorDetails() {
@@ -40,4 +52,8 @@ class ToolWindowTabsHelper(val project: Project) {
     fun isErrorDetailsOn():Boolean{
         return errorDetailsOn
     }
+
+
+
+
 }

@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.ui.common
 
 import com.intellij.util.ui.JBUI.Borders.empty
-import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.model.rest.errors.ScoreInfo
 import java.awt.*
@@ -12,7 +11,7 @@ import javax.swing.border.LineBorder
 
 fun createScorePanelNoArrows(model: CodeObjectError): JPanel {
 
-    val scorePanelSize = Laf.scalePanels(Icons.ERROR_SCORE_PANEL_SIZE)
+    val scorePanelSize = Laf.scalePanels(Laf.Sizes.ERROR_SCORE_PANEL_SIZE)
     val scoreLabel = JLabel("${model.scoreInfo.score}", JLabel.CENTER)
     scoreLabel.toolTipText = genToolTipAsHtml(model.scoreInfo)
     scoreLabel.preferredSize = Dimension(scorePanelSize,scorePanelSize)

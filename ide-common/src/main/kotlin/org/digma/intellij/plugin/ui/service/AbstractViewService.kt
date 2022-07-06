@@ -33,11 +33,25 @@ abstract class AbstractViewService(val project: Project) {
 
 
     fun updateUi(){
+
+        //don't update ui if error details is on,
+        //when error details is closed the ui will be updated.
+        //the models do get updated on every context changed
+
         if (toolWindowTabsHelper.isErrorDetailsOn()){
             return
         }
 
-        panel?.reset()
+        if (toolWindowContent != null){
+            toolWindowContent?.displayName = getViewDisplayName()
+        }
+
+        if (panel != null){
+            panel?.reset()
+        }
+
     }
+
+    abstract fun getViewDisplayName(): String?
 
 }

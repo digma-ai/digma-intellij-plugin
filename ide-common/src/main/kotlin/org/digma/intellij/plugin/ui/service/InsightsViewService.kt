@@ -21,6 +21,14 @@ class InsightsViewService(project: Project): AbstractViewService(project) {
 
     private val insightsProvider: InsightsProvider = project.getService(InsightsProvider::class.java)
 
+
+    override fun getViewDisplayName(): String? {
+        return "Insights" + if(model.insightsCount > 0) " (${model.count()})" else ""
+    }
+
+
+
+
     fun contextChanged(
         methodInfo: MethodInfo
     ) {
@@ -103,5 +111,6 @@ class InsightsViewService(project: Project): AbstractViewService(project) {
         return listViewItems
 
     }
+
 
 }

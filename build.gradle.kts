@@ -24,8 +24,6 @@ dependencies{
     implementation(project(":idea"))
     implementation(project(":pycharm"))
     implementation(project(":rider"))
-
-    implementation("org.ocpsoft.prettytime:prettytime:5.0.3.Final")
 }
 
 // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
@@ -143,10 +141,13 @@ tasks {
         enabled = false
     }
 
+    jarSearchableOptions {
+        enabled = false
+    }
 
     var deleteLog = create("deleteLogs", Delete::class.java) {
         project.layout.buildDirectory.dir("idea-sandbox/system/log").get().asFile.walk().forEach {
-            if (it.name.endsWith(".log")){
+            if (it.name.endsWith(".log")) {
                 delete(it)
             }
         }
@@ -161,5 +162,41 @@ tasks {
         // Rider's backend doesn't support dynamic plugins. It might be possible to work with auto-reload of the frontend
         // part of a plugin, but there are dangers about keeping plugins in sync
         autoReloadPlugins.set(false)
+    }
+
+
+    listProductsReleases {
+//        types.set(listOf("RD","IC","PC"))
+        types.set(listOf("RD","IC","PC","IU"))
+        sinceVersion.set("2022.1")
+        untilVersion.set("2022.1.2")
+//        sinceBuild.set("221.5787.35")
+//        untilBuild.set("221.5591.21")
+    }
+
+
+    runPluginVerifier {
+//        ideVersions.set(listOf())
+        subsystemsToCheck.set("without-android")
+    }
+
+    verifyPlugin {
+        dependsOn(":rider:prepareSandboxForRider")
+    }
+
+    signPlugin {
+        if (System.getenv("DIGMA_JB_PRIVATE_KEY_PASSWORD") != null) {
+            certificateChainFile.set(file(System.getenv("DIGMA_JB_CERTIFICATE_CHAIN_FILE")))
+            privateKeyFile.set(file(System.getenv("DIGMA_JB_PRIVATE_KEY_FILE")))
+            password.set(System.getenv("DIGMA_JB_PRIVATE_KEY_PASSWORD"))
+        }
+    }
+
+
+    publishPlugin {
+        if (System.getenv("DIGMA_JB_INTELLIJ_PUBLISH_TOKEN") != null) {
+            token.set(System.getenv("DIGMA_JB_INTELLIJ_PUBLISH_TOKEN"))
+        }
+        //channels.set(listOf("alpha"))
     }
 }

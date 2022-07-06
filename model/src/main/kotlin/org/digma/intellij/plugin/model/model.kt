@@ -22,6 +22,7 @@ enum class InsightType {
     HotSpot,
     Errors,
     SpanUsages,
+    SpanDurations,
     SlowestSpans,
     LowUsage,
     NormalUsage,

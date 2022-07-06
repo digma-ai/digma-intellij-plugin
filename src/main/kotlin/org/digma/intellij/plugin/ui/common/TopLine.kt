@@ -9,7 +9,6 @@ import com.intellij.ui.dsl.builder.RowLayout
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.ui.layout.PropertyBinding
-import com.jetbrains.rd.ui.bedsl.dsl.spacer
 import org.digma.intellij.plugin.ui.env.envCombo
 import org.digma.intellij.plugin.ui.model.PanelModel
 import javax.swing.JLabel
@@ -27,13 +26,12 @@ fun topLine(project: Project, model: PanelModel, labelText: String): DialogPanel
                 .horizontalAlign(HorizontalAlign.LEFT)
                 .bold()
                 .gap(RightGap.SMALL)
-            spacer()
             label(labelText)
                 .horizontalAlign(HorizontalAlign.LEFT)
                 .bold()
                 .gap(RightGap.SMALL)
             cell(envCombo(project))
                 .horizontalAlign(HorizontalAlign.RIGHT)
-        }.layout(RowLayout.PARENT_GRID)
+        }.layout(RowLayout.INDEPENDENT)
     }.andTransparent()
 }

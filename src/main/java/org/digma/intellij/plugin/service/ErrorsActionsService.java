@@ -56,7 +56,7 @@ public class ErrorsActionsService implements ContentManagerListener {
 
     @Override
     public void selectionChanged(@NotNull ContentManagerEvent event) {
-        if (toolWindowTabsHelper.isErrorDetailsOn() && event.getContent().getTabName().equalsIgnoreCase("insights")){
+        if (toolWindowTabsHelper.isErrorDetailsOn() && toolWindowTabsHelper.isInsightsTab(event.getContent())){
             toolWindowTabsHelper.errorDetailsOff();
             errorsViewService.closeErrorDetails();
             insightsViewService.updateUi();

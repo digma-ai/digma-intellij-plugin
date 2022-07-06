@@ -40,6 +40,8 @@ dependencyResolutionManagement {
             version("okhttp", "4.9.3")
             library("okhttp", "com.squareup.okhttp3", "okhttp").versionRef("okhttp")
             library("okhttp-mockwebserver", "com.squareup.okhttp3", "mockwebserver").versionRef("okhttp")
+            library("prettytime", "org.ocpsoft.prettytime", "prettytime").version("5.0.3.Final")
+            library("threeten", "org.threeten", "threeten-extra").version("1.7.0")
         }
     }
 }

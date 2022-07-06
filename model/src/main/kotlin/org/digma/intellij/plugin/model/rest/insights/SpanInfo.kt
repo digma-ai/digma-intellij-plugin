@@ -7,8 +7,9 @@ import java.beans.ConstructorProperties
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class SpanInfo
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@ConstructorProperties("instrumentationLibrary", "name", "displayName", "serviceName")
+@ConstructorProperties("instrumentationLibrary", "name", "displayName", "serviceName", "codeObjectId")
 constructor(val instrumentationLibrary: String,
             val name: String,
             val displayName: String,
-            val serviceName: String)
+            val serviceName: String?,
+            val codeObjectId: String?)

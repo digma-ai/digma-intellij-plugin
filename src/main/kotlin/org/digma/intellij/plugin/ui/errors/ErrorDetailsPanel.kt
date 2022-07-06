@@ -254,7 +254,7 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
     val currentLabel = JLabel("0/00 Flow Stacks")
 
 //    val size = Laf.scalePanels(Icons.ERROR_DETAILS_NAVIGATION_BUTTON_SIZE)
-    val size = Icons.ERROR_DETAILS_NAVIGATION_BUTTON_SIZE
+    val size = Laf.Sizes.ERROR_DETAILS_NAVIGATION_BUTTON_SIZE
     val buttonsSize = Dimension(size + 2, size + 2)
 
     val backButton = NavigationButtonIcon(Icons.BACK_WHITE, Icons.BACK_BLACK)
@@ -305,7 +305,7 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
     forwardButtonConstraints.gridx = 2
     forwardButtonConstraints.anchor = GridBagConstraints.EAST
     panel.add(forwardButton,forwardButtonConstraints)
-    panel.border = Borders.empty(3)
+    panel.border = Borders.empty(0,1,0,1)
 
     return panel {
         row {
@@ -399,7 +399,7 @@ fun getAffectedServicesTooltip(errorsModel: ErrorsModel): String? {
 
 private fun backButton(project: Project): JComponent {
 
-    val size = Laf.scalePanels(Icons.ERROR_DETAILS_BACK_BUTTON_SIZE)
+    val size = Laf.scalePanels(Laf.Sizes.ERROR_DETAILS_BACK_BUTTON_SIZE)
     val buttonsSize = Dimension(size + 2, size + 3)
 
     val backButton = BackButton(Icons.BACK_WHITE, Icons.BACK_BLACK)

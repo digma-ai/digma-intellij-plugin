@@ -38,14 +38,22 @@ namespace Digma.Rider.Discovery
             
             return "(" + paramsPart + ")";
         }
-        
+
         public static string ComputeFqn(ICSharpFunctionDeclaration functionDeclaration,
             bool includeParameters = true)
         {
             var namespaceName = PsiUtils.GetNamespace(functionDeclaration);
             var className = PsiUtils.GetClassName(functionDeclaration);
             var methodName = PsiUtils.GetDeclaredName(functionDeclaration);
-            var paramsPart = !includeParameters ? "" : ComputeParametersPart(functionDeclaration);
+            var paramsPart = "";
+            if (includeParameters)
+            {
+                using (CompilationContextCookie.GetOrCreate(functionDeclaration.GetSourceFile().ResolveContext))
+                {
+                    paramsPart = ComputeParametersPart(functionDeclaration);
+                }
+            }
+
             var fqn = namespaceName + "." + className + "$_$" + methodName + paramsPart;
             return fqn;
         }

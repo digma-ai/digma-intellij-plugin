@@ -305,7 +305,7 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
     forwardButtonConstraints.gridx = 2
     forwardButtonConstraints.anchor = GridBagConstraints.EAST
     panel.add(forwardButton,forwardButtonConstraints)
-    panel.border = Borders.empty(3)
+    panel.border = Borders.empty(0,1,0,1)
 
     return panel {
         row {

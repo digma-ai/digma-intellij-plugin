@@ -8,6 +8,8 @@
   <ItemGroup>
     <PackageReference Include="JetBrains.Rider.SDK.Tests" Version="$(SdkVersion)" />
     <PackageReference Include="JetBrains.ReSharper.SDK.Tests" Version="$(SdkVersion)" />
+    <PackageReference Include="MSTest.TestAdapter" Version="2.2.10" />
+    <PackageReference Include="MSTest.TestFramework" Version="2.2.10" />
   </ItemGroup>
 
   <ItemGroup>

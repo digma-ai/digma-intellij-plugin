@@ -79,28 +79,11 @@ namespace Digma.Rider.Discovery
             var retList = new List<MethodParam>(parametersOwner.Parameters.Count);
             foreach (var param in parametersOwner.Parameters)
             {
-                string typeFqn = getTypeFqn(param);
+                string typeFqn = Identities.GetParameterTypeFqn(param, out bool managedToResolve);
                 string name = param.ShortName;
                 retList.Add(new MethodParam(typeFqn, name));
             }
             return retList;
-        }
-
-        protected static string getTypeFqn(IParameter param)
-        {
-            return $"{param.Type.ToString()}{getRefSign(param.Kind)}";
-        }
-        
-        protected static string getRefSign(ParameterKind paramKind)
-        {
-            if (paramKind == ParameterKind.OUTPUT // parameter for example: "out string msg"
-                || paramKind == ParameterKind.REFERENCE // parameter for example: "ref string msg"
-               )
-            {
-                return "&";
-            }
-
-            return "";
         }
 
         [SuppressMessage("ReSharper", "UnusedVariable")]

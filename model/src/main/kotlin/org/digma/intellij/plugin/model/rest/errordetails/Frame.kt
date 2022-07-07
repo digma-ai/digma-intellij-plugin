@@ -9,7 +9,6 @@ data class Frame
 @ConstructorProperties(
     "moduleName",
     "functionName",
-    "functionParameterTypes",
     "lineNumber",
     "executedCode",
     "codeObjectId",
@@ -23,7 +22,6 @@ data class Frame
 )constructor(
     val moduleName: String,
     val functionName: String,
-    val functionParameterTypes: List<String>,
     val lineNumber: Int,
     val executedCode: String,
     val codeObjectId: String,

@@ -1,7 +1,7 @@
 package org.digma.intellij.plugin.model.discovery
 
 data class MethodInfo(
-    override val id: String, // the ID is without parameters
+    override val id: String, // CodeObjectId (without type (prefix of 'method:'))
     val name: String,
     val containingClass: String,
     val containingNamespace: String,
@@ -14,6 +14,7 @@ data class MethodInfo(
 
     fun getRelatedCodeObjectIds(): List<String> {
         val relatedIds: MutableList<String> = ArrayList()
+        relatedIds.add(idWithTypeButWithoutParams())
         spans.forEach {
             relatedIds.add(it.idWithType())
         }
@@ -24,15 +25,16 @@ data class MethodInfo(
         return "method:$id"
     }
 
-    // currently it is used only for errors
-    fun idWithParams(): String {
-        if (parameters.isNullOrEmpty()) {
-            return idWithType()
+    private fun idWithTypeButWithoutParams(): String {
+        return removeParamsIfNeeded(idWithType())
+    }
+
+    private fun removeParamsIfNeeded(codeObjectId: String): String {
+        val lastIndexOfOpeningParenthesis = codeObjectId.lastIndexOf('(')
+        if (lastIndexOfOpeningParenthesis >= 0) {
+            return codeObjectId.substring(0, lastIndexOfOpeningParenthesis)
         }
-        val paramsAsStr = parameters.joinToString(
-            prefix = "(", postfix = ")", separator = ",",
-            transform = { methodParameter -> methodParameter.typeShortName() })
-        return idWithType() + paramsAsStr
+        return codeObjectId
     }
 
 }

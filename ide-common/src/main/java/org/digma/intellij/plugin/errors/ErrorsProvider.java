@@ -41,8 +41,7 @@ public class ErrorsProvider {
 
     public ErrorsListContainer getErrors(@NotNull MethodInfo methodInfo) {
         try {
-            final List<CodeObjectError> codeObjectErrors = analyticsService.getErrorsOfCodeObject(methodInfo.idWithParams());
-            //Log.log(LOGGER::info, "CodeObjectErrors for cobjid '{}', {}: {}", methodInfo.idWithParams(), methodInfo, codeObjectErrors);
+            final List<CodeObjectError> codeObjectErrors = analyticsService.getErrorsOfCodeObject(methodInfo.idWithType());
             Log.log(LOGGER::debug, "CodeObjectErrors for {}: {}", methodInfo, codeObjectErrors);
 
             final List<ListViewItem<CodeObjectError>> lviList = codeObjectErrors

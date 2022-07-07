@@ -34,7 +34,6 @@ public class InsightsProvider {
 
         List<String> objectIds = new ArrayList<>();
         objectIds.add(methodInfo.idWithType());
-        objectIds.add(methodInfo.idWithParams());
         objectIds.addAll(methodInfo.getRelatedCodeObjectIds());
         Log.log(LOGGER::debug, "Got following code object ids for method {}: {}",methodInfo,objectIds);
 

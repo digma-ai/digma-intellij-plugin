@@ -205,7 +205,7 @@ namespace Digma.Rider.Discovery
                 _logger = logger;
 
                 _groupingEvent = shellLocks.CreateGroupingEvent(textControl.Lifetime,
-                    "DocumentChanged::" + _textControl.Document.Moniker, TimeSpan.FromSeconds(15), DocumentChanged);
+                    "DocumentChanged::" + _textControl.Document.Moniker, TimeSpan.FromSeconds(2), DocumentChanged);
                 
                 textControl.Lifetime.Bracket(() => _textControl.Document.DocumentChanged += DocumentChangedEventGrouper,
                     () => _textControl.Document.DocumentChanged -= DocumentChangedEventGrouper);

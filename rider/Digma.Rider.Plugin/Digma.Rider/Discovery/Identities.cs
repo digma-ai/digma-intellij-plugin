@@ -22,7 +22,8 @@ namespace Digma.Rider.Discovery
             return sourceFile.GetLocation().ToUri().ToString();
         }
 
-        static readonly Regex arrayRegex = new Regex("\\[,*]$");
+        // the original Multidimensional Array delimiter is comma (,) . however we encode those commas into semi-colon (;)
+        static readonly Regex arrayRegex = new Regex("\\[;*]$");
 
         static string GetArraysPart(string typeFqn)
         {
@@ -38,9 +39,17 @@ namespace Digma.Rider.Discovery
                 arrayMatchResult = arrayRegex.Match(trimmableValue, 0);
             }
 
-            return arraysValue;
+            return DecorateArraysPart(arraysValue);
         }
 
+        static string DecorateArraysPart(string arraysValue)
+        {
+            return arraysValue
+                // handling Multi Dimensional Arrays for example [,,,]. encoding them as semi-colon(;) instead of comma(,)
+                // doing it since the comma is already used as separator between the parameters 
+                .Replace(',', ';');
+        }
+        
         public static string ParameterShortType(string typeFqn)
         {
             string refSignToAppend = "";

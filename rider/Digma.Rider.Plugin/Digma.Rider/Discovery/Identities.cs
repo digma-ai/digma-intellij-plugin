@@ -86,19 +86,19 @@ namespace Digma.Rider.Discovery
 
         public static readonly string PsiValueOfUnresolved = "???";
 
-        public static string GetParameterTypeFqn(IParameter param, out bool managedToResolve)
+        public static string GetParameterTypeFqn(IParameter param, out bool managedToResolveReferences)
         {
             var partialFqn = param.Type.ToString();
 
             var isRef = (param.Kind == ParameterKind.OUTPUT // parameter for example: "out string msg"
                          || param.Kind == ParameterKind.REFERENCE); // parameter for example: "ref string msg"
 
-            return GetParameterTypeFqn(partialFqn, isRef, out managedToResolve);
+            return GetParameterTypeFqn(partialFqn, isRef, out managedToResolveReferences);
         }
 
-        public static string GetParameterTypeFqn(string typePartialFqn, bool isRef, out bool managedToResolve)
+        public static string GetParameterTypeFqn(string typePartialFqn, bool isRef, out bool managedToResolveReferences)
         {
-            managedToResolve = !typePartialFqn.Contains(PsiValueOfUnresolved);
+            managedToResolveReferences = !typePartialFqn.Contains(PsiValueOfUnresolved);
             var refSign = isRef ? "&" : "";
             return $"{typePartialFqn}{refSign}";
         }

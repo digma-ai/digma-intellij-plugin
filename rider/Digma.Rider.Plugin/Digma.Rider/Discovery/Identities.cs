@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
-using Digma.Rider.Util;
 using System.Text.RegularExpressions;
+using Digma.Rider.Util;
 using JetBrains.Annotations;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.CSharp.Tree;
@@ -10,14 +10,12 @@ namespace Digma.Rider.Discovery
 {
     public static class Identities
     {
-
-
         [NotNull]
         public static string ComputeFilePath([NotNull] IPsiSourceFile sourceFile)
         {
             return sourceFile.GetLocation().FullPath;
-        }   
-        
+        }
+
         [NotNull]
         public static string ComputeFileUri([NotNull] IPsiSourceFile sourceFile)
         {
@@ -42,7 +40,7 @@ namespace Digma.Rider.Discovery
 
             return arraysValue;
         }
-        
+
         public static string ParameterShortType(string typeFqn)
         {
             string refSignToAppend = "";
@@ -57,7 +55,7 @@ namespace Digma.Rider.Discovery
 
             var firstIndexOfSquaredParenthesisOpening = localTypeFqn.IndexOf('[');
             var relevantTypeFqn = localTypeFqn;
-            if (firstIndexOfSquaredParenthesisOpening >= 0) 
+            if (firstIndexOfSquaredParenthesisOpening >= 0)
             {
                 // has SquaredParenthesisOpening - generic or array, never mind just get the first part
                 relevantTypeFqn = localTypeFqn.Substring(0, firstIndexOfSquaredParenthesisOpening);
@@ -65,9 +63,28 @@ namespace Digma.Rider.Discovery
 
             var shortNameBeforeArray = relevantTypeFqn.Split('.').Last();
 
-            return $"{shortNameBeforeArray}{arraysValuePart}{refSignToAppend}";            
+            return $"{shortNameBeforeArray}{arraysValuePart}{refSignToAppend}";
         }
-        
+
+        public static readonly string PsiValueOfUnresolved = "???";
+
+        public static string GetParameterTypeFqn(IParameter param, out bool managedToResolve)
+        {
+            var partialFqn = param.Type.ToString();
+
+            var isRef = (param.Kind == ParameterKind.OUTPUT // parameter for example: "out string msg"
+                         || param.Kind == ParameterKind.REFERENCE); // parameter for example: "ref string msg"
+
+            return GetParameterTypeFqn(partialFqn, isRef, out managedToResolve);
+        }
+
+        public static string GetParameterTypeFqn(string typePartialFqn, bool isRef, out bool managedToResolve)
+        {
+            managedToResolve = !typePartialFqn.Contains(PsiValueOfUnresolved);
+            var refSign = isRef ? "&" : "";
+            return $"{typePartialFqn}{refSign}";
+        }
+
         public static string ComputeParametersPart(ICSharpFunctionDeclaration functionDeclaration)
         {
             var parametersOwner = functionDeclaration.GetParametersOwner();
@@ -76,11 +93,12 @@ namespace Digma.Rider.Discovery
                 return "";
             }
 
-            var paramsPart = String.Join(",", parametersOwner.Parameters.Select(param =>
-            {
-                return param.Type.ToString() + "|" + param.ShortName + "|" + param.Kind;
-            }));
-            
+            var paramsPart = String.Join(",",
+                parametersOwner.Parameters.Select(param =>
+                {
+                    return param.Type.ToString() + "|" + param.ShortName + "|" + param.Kind;
+                }));
+
             return "(" + paramsPart + ")";
         }
 

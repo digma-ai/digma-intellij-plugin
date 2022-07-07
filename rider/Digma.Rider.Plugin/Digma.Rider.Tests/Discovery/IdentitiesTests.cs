@@ -52,4 +52,23 @@ public class IdentitiesTests
     {
         Assert.AreEqual(expected, Identities.ParameterShortType(input));
     }
+
+    [TestMethod]
+    [DataRow("System.String")]
+    [DataRow("System.Collections.Generic.IList`1[T -> System.Int32][]")]
+    public void Test_GetParameterTypeFqn_RefFalse(string typeFqn)
+    {
+        Assert.AreEqual(typeFqn, Identities.GetParameterTypeFqn(typeFqn, false, out bool managedToResolve));
+        Assert.IsTrue(managedToResolve);
+    }
+
+    [TestMethod]
+    [DataRow("System.String")]
+    [DataRow("System.Collections.Generic.IList`1[T -> System.Int32][]")]
+    public void Test_GetParameterTypeFqn_RefTrue(string typeFqn)
+    {
+        Assert.AreEqual(typeFqn + "&", Identities.GetParameterTypeFqn(typeFqn, true, out bool managedToResolve));
+        Assert.IsTrue(managedToResolve);
+    }
+    
 }

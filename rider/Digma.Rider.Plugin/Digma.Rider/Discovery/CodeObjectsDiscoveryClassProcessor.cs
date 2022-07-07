@@ -35,28 +35,16 @@ namespace Digma.Rider.Discovery
 
         public override void ProcessBeforeInterior(ITreeNode element)
         {
+            //Log(Logger, "Got TreeNode element '{0}'", element.ToString());
             switch (element)
             {
                 case ICSharpFunctionDeclaration functionDeclaration:
                 {
                     Log(Logger, "in '{0}' for file '{1}'", element, DiscoveryContext.PsiSourceFile.Name);
 
-                    //TODO: this is a patch to ignore overloaded methods and not include them in 
-                    // the document's code objects until overloaded methods are supported in Digma's backend.
-                    // when overloaded methods are supported we need to change the Identities.ComputeFqn
-                    // and include only the code in th else block.
-                    var fqn = Identities.ComputeFqn(functionDeclaration);
-                    if (DiscoveryContext.Methods.ContainsKey(fqn))
-                    {
-                         Log(Logger, "Ignoring overloaded method {0} for file '{1}'", element, DiscoveryContext.PsiSourceFile.Name);
-                         //DiscoveryContext.Methods.Remove(fqn);
-                    }
-                    else
-                    {
-                        var methodProcessor =
-                            new CodeObjectsDiscoveryMethodProcessor(functionDeclaration, DiscoveryContext);
-                        functionDeclaration.ProcessDescendants(methodProcessor);
-                    }
+                    var methodProcessor =
+                        new CodeObjectsDiscoveryMethodProcessor(functionDeclaration, DiscoveryContext);
+                    functionDeclaration.ProcessDescendants(methodProcessor);
 
                     break;
                 }

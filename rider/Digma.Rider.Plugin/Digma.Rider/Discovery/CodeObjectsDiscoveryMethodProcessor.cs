@@ -18,13 +18,35 @@ namespace Digma.Rider.Discovery
         private readonly ICSharpFunctionDeclaration _functionDeclaration;
         private readonly RiderMethodInfo _methodInfo;
 
-
         public CodeObjectsDiscoveryMethodProcessor(ICSharpFunctionDeclaration functionDeclaration,
             DocumentDiscoveryContext discoveryContext) : base(discoveryContext)
         {
             _functionDeclaration = functionDeclaration;
-            _methodInfo = BuildMethodInfo(functionDeclaration);
-            discoveryContext.Methods.Add(_methodInfo.Id, _methodInfo);       
+            _methodInfo = BuildMethodInfo(_functionDeclaration);
+            UpdateDiscoveryContext();
+        }
+
+        private void UpdateDiscoveryContext()
+        {
+            if (DiscoveryContext.Methods.ContainsKey(_methodInfo.Id))
+            {
+                ProcessingIsFinished = true;
+            } 
+            else 
+            {
+                if (_methodInfo.Id.Contains("???") && DiscoveryContext.IsStartup)
+                {
+                    Log(Logger, "method {0} has unresolved parameter type. flagging 'HasReferenceResolvingErrors'",
+                        _functionDeclaration);
+                    DiscoveryContext.HasReferenceResolvingErrors = true;
+
+                    ProcessingIsFinished = true;
+                }
+                else
+                {
+                    DiscoveryContext.Methods.Add(_methodInfo.Id, _methodInfo);
+                }
+            }
         }
 
         private RiderMethodInfo BuildMethodInfo(ICSharpFunctionDeclaration functionDeclaration)
@@ -33,7 +55,12 @@ namespace Digma.Rider.Discovery
             var declaredName = PsiUtils.GetDeclaredName(functionDeclaration);
             var containingClassName = PsiUtils.GetClassName(functionDeclaration);
             var containingNamespace = PsiUtils.GetNamespace(functionDeclaration);
-            var methodParameters = CreateParameters(functionDeclaration);
+            List<MethodParam> methodParameters;
+            using (CompilationContextCookie.GetOrCreate(functionDeclaration.GetSourceFile().ResolveContext))
+            {
+                methodParameters = CreateParameters(functionDeclaration);
+            }
+
             var containingFileUri = DiscoveryContext.FileUri;
             var offsetAtFileUri = functionDeclaration.GetNavigationRange().StartOffset.Offset;
 
@@ -92,6 +119,7 @@ namespace Digma.Rider.Discovery
 
         public override void ProcessBeforeInterior(ITreeNode element)
         {
+            //Log(Logger, "Got TreeNode element '{0}'", element.ToString());
             switch (element)
             {
                 case ILocalVariableDeclaration localVariableDeclaration:

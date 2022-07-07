@@ -18,20 +18,20 @@ public class IdentitiesTests
     [DataRow("Array", "Hello.Great.World[]", "World[]")]
     [DataRow("Array", "Abc[]", "Abc[]")]
     // MultiDimensionalArray
-    [DataRow("MultiDimensionalArray", "System.String[;]", "String[;]")]
-    [DataRow("MultiDimensionalArray", "System.Int32[;]", "Int32[;]")]
-    [DataRow("MultiDimensionalArray", "Hello.Great.World[;]", "World[;]")]
-    [DataRow("MultiDimensionalArray", "Abc[;]", "Abc[;]")]
+    [DataRow("MultiDimensionalArray", "System.String[,]", "String[;]")]
+    [DataRow("MultiDimensionalArray", "System.Int32[,]", "Int32[;]")]
+    [DataRow("MultiDimensionalArray", "Hello.Great.World[,]", "World[;]")]
+    [DataRow("MultiDimensionalArray", "Abc[,]", "Abc[;]")]
     // JaggedArrays
     [DataRow("JaggedArrays", "System.String[][]", "String[][]")]
     [DataRow("JaggedArrays", "System.Int32[][][]", "Int32[][][]")]
     [DataRow("JaggedArrays", "Hello.Great.World[][][][]", "World[][][][]")]
     [DataRow("JaggedArrays", "Abc[][][][][]", "Abc[][][][][]")]
     // MixOfJaggedAndMultiDimensionalArrays
-    [DataRow("MixOfJaggedAndMultiDimensionalArrays", "System.String[;;][]", "String[;;][]")]
-    [DataRow("MixOfJaggedAndMultiDimensionalArrays", "System.Int32[][][;]", "Int32[][][;]")]
-    [DataRow("MixOfJaggedAndMultiDimensionalArrays", "Hello.Great.World[][][;;;][]", "World[][][;;;][]")]
-    [DataRow("MixOfJaggedAndMultiDimensionalArrays", "Abc[;;][][][;][]", "Abc[;;][][][;][]")]
+    [DataRow("MixOfJaggedAndMultiDimensionalArrays", "System.String[,,][]", "String[;;][]")]
+    [DataRow("MixOfJaggedAndMultiDimensionalArrays", "System.Int32[][][,]", "Int32[][][;]")]
+    [DataRow("MixOfJaggedAndMultiDimensionalArrays", "Hello.Great.World[][][,,,][]", "World[][][;;;][]")]
+    [DataRow("MixOfJaggedAndMultiDimensionalArrays", "Abc[,,][][][,][]", "Abc[;;][][][;][]")]
     // WithGenerics , parameter defined as "IList<string> names"
     [DataRow("WithGenerics", "System.Collections.Generic.IList`1[T -> System.String]", "IList`1")]
     // GenericsListOfArray , parameter defined as "IList<string[]> listOfArray"

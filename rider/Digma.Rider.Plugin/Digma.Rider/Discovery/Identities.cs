@@ -22,8 +22,10 @@ namespace Digma.Rider.Discovery
             return sourceFile.GetLocation().ToUri().ToString();
         }
 
-        // the original Multidimensional Array delimiter is comma (,) . however we encode those commas into semi-colon (;)
-        static readonly Regex arrayRegex = new Regex("\\[;*]$");
+        // searches for ending of either:
+        // 1) array - []
+        // 2) multi dimensional array - [,,,] (delimited with one comma or more)
+        static readonly Regex arrayRegex = new Regex("\\[,*]$");
 
         static string GetArraysPart(string typeFqn)
         {
@@ -50,6 +52,13 @@ namespace Digma.Rider.Discovery
                 .Replace(',', ';');
         }
         
+        // the value of this type should be equivalent to value as returned in StackTraceFrame
+        // few values for example:
+        // 1) Int32[] - array of ints
+        // 2) String& - ref to string
+        // 3) Int32[;;] - multi dimension array of ints (note its encoded with semi-colons) unlike the original which is delimited with commas
+        // 4) List`1 - List of any type of class
+        // 5) Int32[][] - jagged array of ints
         public static string ParameterShortType(string typeFqn)
         {
             string refSignToAppend = "";

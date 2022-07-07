@@ -1,5 +1,5 @@
-using System;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using Digma.Rider.Util;
 using JetBrains.Annotations;
@@ -85,40 +85,61 @@ namespace Digma.Rider.Discovery
             return $"{typePartialFqn}{refSign}";
         }
 
-        public static string ComputeParametersPart(ICSharpFunctionDeclaration functionDeclaration)
+        private static string ComputeParametersPart(ICSharpFunctionDeclaration functionDeclaration,
+            out bool managedToResolveParams)
         {
+            managedToResolveParams = true;
             var parametersOwner = functionDeclaration.GetParametersOwner();
             if (parametersOwner == null || parametersOwner.Parameters.Count <= 0)
             {
                 return "";
             }
 
-            var paramsPart = String.Join(",",
-                parametersOwner.Parameters.Select(param =>
+            var paramsPart = new StringBuilder();
+            paramsPart.Append('(');
+            bool firstIteration = true;
+            foreach (var param in parametersOwner.Parameters)
+            {
+                if (!firstIteration)
                 {
-                    return param.Type.ToString() + "|" + param.ShortName + "|" + param.Kind;
-                }));
+                    paramsPart.Append(',');
+                }
 
-            return "(" + paramsPart + ")";
+                firstIteration = false;
+
+                var paramTypeFqn = GetParameterTypeFqn(param, out bool managedToResolveCurrent);
+                managedToResolveParams &= managedToResolveCurrent;
+
+                var parameterShortType = ParameterShortType(paramTypeFqn);
+                paramsPart.Append(parameterShortType);
+            }
+
+            paramsPart.Append(')');
+
+            return paramsPart.ToString();
         }
 
+        // computes MethodFqn supposed to equal CodeObjectId
         public static string ComputeFqn(ICSharpFunctionDeclaration functionDeclaration,
-            bool includeParameters = true)
+            out bool managedToResolve)
         {
+            managedToResolve = true;
             var namespaceName = PsiUtils.GetNamespace(functionDeclaration);
             var className = PsiUtils.GetClassName(functionDeclaration);
             var methodName = PsiUtils.GetDeclaredName(functionDeclaration);
             var paramsPart = "";
-            if (includeParameters)
+            using (CompilationContextCookie.GetOrCreate(functionDeclaration.GetSourceFile().ResolveContext))
             {
-                using (CompilationContextCookie.GetOrCreate(functionDeclaration.GetSourceFile().ResolveContext))
-                {
-                    paramsPart = ComputeParametersPart(functionDeclaration);
-                }
+                paramsPart = ComputeParametersPart(functionDeclaration, out managedToResolve);
             }
 
             var fqn = namespaceName + "." + className + "$_$" + methodName + paramsPart;
             return fqn;
+        }
+
+        public static string ComputeFqn(ICSharpFunctionDeclaration functionDeclaration)
+        {
+            return ComputeFqn(functionDeclaration, out bool b);
         }
 
         public static string ComputeSpanFqn(string instLibrary, string spanName)

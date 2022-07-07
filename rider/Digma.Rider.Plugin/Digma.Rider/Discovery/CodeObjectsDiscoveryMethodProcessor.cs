@@ -22,11 +22,11 @@ namespace Digma.Rider.Discovery
             DocumentDiscoveryContext discoveryContext) : base(discoveryContext)
         {
             _functionDeclaration = functionDeclaration;
-            _methodInfo = BuildMethodInfo(_functionDeclaration);
-            UpdateDiscoveryContext();
+            _methodInfo = BuildMethodInfo(_functionDeclaration, out bool managedToResolveReferences);
+            UpdateDiscoveryContext(managedToResolveReferences);
         }
 
-        private void UpdateDiscoveryContext()
+        private void UpdateDiscoveryContext(bool managedToResolveReferences)
         {
             if (DiscoveryContext.Methods.ContainsKey(_methodInfo.Id))
             {
@@ -34,7 +34,7 @@ namespace Digma.Rider.Discovery
             } 
             else 
             {
-                if (_methodInfo.Id.Contains("???") && DiscoveryContext.IsStartup)
+                if (!managedToResolveReferences && DiscoveryContext.IsStartup)
                 {
                     Log(Logger, "method {0} has unresolved parameter type. flagging 'HasReferenceResolvingErrors'",
                         _functionDeclaration);
@@ -49,9 +49,9 @@ namespace Digma.Rider.Discovery
             }
         }
 
-        private RiderMethodInfo BuildMethodInfo(ICSharpFunctionDeclaration functionDeclaration)
+        private RiderMethodInfo BuildMethodInfo(ICSharpFunctionDeclaration functionDeclaration, out bool managedToResolveReferences)
         {
-            var methodFqn = Identities.ComputeFqn(functionDeclaration);
+            var methodFqn = Identities.ComputeFqn(functionDeclaration, out managedToResolveReferences);
             var declaredName = PsiUtils.GetDeclaredName(functionDeclaration);
             var containingClassName = PsiUtils.GetClassName(functionDeclaration);
             var containingNamespace = PsiUtils.GetNamespace(functionDeclaration);

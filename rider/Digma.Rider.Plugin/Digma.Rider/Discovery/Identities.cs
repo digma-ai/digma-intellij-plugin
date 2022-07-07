@@ -139,16 +139,16 @@ namespace Digma.Rider.Discovery
 
         // computes MethodFqn supposed to equal CodeObjectId
         public static string ComputeFqn(ICSharpFunctionDeclaration functionDeclaration,
-            out bool managedToResolve)
+            out bool managedToResolveReferences)
         {
-            managedToResolve = true;
+            managedToResolveReferences = true;
             var namespaceName = PsiUtils.GetNamespace(functionDeclaration);
             var className = PsiUtils.GetClassName(functionDeclaration);
             var methodName = PsiUtils.GetDeclaredName(functionDeclaration);
             var paramsPart = "";
             using (CompilationContextCookie.GetOrCreate(functionDeclaration.GetSourceFile().ResolveContext))
             {
-                paramsPart = ComputeParametersPart(functionDeclaration, out managedToResolve);
+                paramsPart = ComputeParametersPart(functionDeclaration, out managedToResolveReferences);
             }
 
             var fqn = namespaceName + "." + className + "$_$" + methodName + paramsPart;

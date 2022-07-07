@@ -16,7 +16,6 @@ class CodeObjectsModel : Ext(SolutionModel.Solution) {
         field("containingNamespace", PredefinedType.string)
         field("containingFileUri", PredefinedType.string)
         field("offsetAtFileUri", PredefinedType.int)
-        field("parameters", immutableList(MethodParam))
         field("spans", immutableList(RiderSpanInfo))
     }
 
@@ -47,11 +46,6 @@ class CodeObjectsModel : Ext(SolutionModel.Solution) {
         field("codeObjectId", PredefinedType.string)
         field("workspaceUri", PredefinedType.string)
         field("offset", PredefinedType.int)
-    }
-
-    private val MethodParam = structdef {
-        field("typeFqn", PredefinedType.string)
-        field("name", PredefinedType.string)
     }
 
 

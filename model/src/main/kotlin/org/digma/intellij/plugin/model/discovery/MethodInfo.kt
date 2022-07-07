@@ -7,7 +7,6 @@ data class MethodInfo(
     val containingNamespace: String,
     val containingFileUri: String,
     val offsetAtFileUri: Int,
-    val parameters: List<MethodParameter>,
     val spans: List<SpanInfo>
 ) : CodeObjectInfo {
 

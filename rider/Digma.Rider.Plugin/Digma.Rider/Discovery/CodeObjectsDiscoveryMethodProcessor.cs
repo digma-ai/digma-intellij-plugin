@@ -55,35 +55,11 @@ namespace Digma.Rider.Discovery
             var declaredName = PsiUtils.GetDeclaredName(functionDeclaration);
             var containingClassName = PsiUtils.GetClassName(functionDeclaration);
             var containingNamespace = PsiUtils.GetNamespace(functionDeclaration);
-            List<MethodParam> methodParameters;
-            using (CompilationContextCookie.GetOrCreate(functionDeclaration.GetSourceFile().ResolveContext))
-            {
-                methodParameters = CreateParameters(functionDeclaration);
-            }
-
             var containingFileUri = DiscoveryContext.FileUri;
             var offsetAtFileUri = functionDeclaration.GetNavigationRange().StartOffset.Offset;
 
             return new RiderMethodInfo(methodFqn, declaredName, containingClassName, containingNamespace,
-                containingFileUri, offsetAtFileUri, methodParameters, new List<RiderSpanInfo>());
-        }
-
-        private List<MethodParam> CreateParameters(ICSharpFunctionDeclaration functionDeclaration)
-        {
-            var parametersOwner = functionDeclaration.GetParametersOwner();
-            if (parametersOwner == null)
-            {
-                return new List<MethodParam>();
-            }
-
-            var retList = new List<MethodParam>(parametersOwner.Parameters.Count);
-            foreach (var param in parametersOwner.Parameters)
-            {
-                string typeFqn = Identities.GetParameterTypeFqn(param, out bool managedToResolve);
-                string name = param.ShortName;
-                retList.Add(new MethodParam(typeFqn, name));
-            }
-            return retList;
+                containingFileUri, offsetAtFileUri, new List<RiderSpanInfo>());
         }
 
         [SuppressMessage("ReSharper", "UnusedVariable")]

@@ -136,6 +136,7 @@ class CodeObjectHost(val project: Project) {
         containingClass = containingClass,
         containingNamespace = containingNamespace,
         containingFileUri = containingFileUri,
+        offsetAtFileUri = offsetAtFileUri,
         spans = toSpansList(spans)
     )
 
@@ -146,7 +147,6 @@ class CodeObjectHost(val project: Project) {
         }
         return modelSpans
     }
-
 
     private fun RiderSpanInfo.toSpanInfo() = SpanInfo(
         id = id,

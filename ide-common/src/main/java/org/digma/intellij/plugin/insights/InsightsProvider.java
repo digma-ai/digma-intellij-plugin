@@ -21,7 +21,7 @@ public class InsightsProvider {
     private static final Logger LOGGER = Logger.getInstance(InsightsProvider.class);
 
     private final AnalyticsService analyticsService;
-    private Project project;
+    private final Project project;
 
     private final BuildersHolder buildersHolder = new BuildersHolder();
 

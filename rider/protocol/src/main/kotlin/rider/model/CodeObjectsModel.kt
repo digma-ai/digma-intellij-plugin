@@ -15,6 +15,7 @@ class CodeObjectsModel : Ext(SolutionModel.Solution) {
         field("containingClass", PredefinedType.string)
         field("containingNamespace", PredefinedType.string)
         field("containingFileUri", PredefinedType.string)
+        field("offsetAtFileUri", PredefinedType.int)
         field("spans", immutableList(RiderSpanInfo))
     }
 
@@ -41,7 +42,7 @@ class CodeObjectsModel : Ext(SolutionModel.Solution) {
         field("workspaceUri", PredefinedType.string)
     }
 
-    private val CodeObjectIdUriOffsetTrouple = structdef{
+    private val CodeObjectIdUriOffsetTrouple = structdef {
         field("codeObjectId", PredefinedType.string)
         field("workspaceUri", PredefinedType.string)
         field("offset", PredefinedType.int)
@@ -49,11 +50,15 @@ class CodeObjectsModel : Ext(SolutionModel.Solution) {
 
 
     init {
-        call("getWorkspaceUris",
-            immutableList(PredefinedType.string), immutableList(CodeObjectIdUriPair)).async
+        call(
+            "getWorkspaceUris",
+            immutableList(PredefinedType.string), immutableList(CodeObjectIdUriPair)
+        ).async
 
-        call("getSpansWorkspaceUris",
-            immutableList(PredefinedType.string), immutableList(CodeObjectIdUriOffsetTrouple)).async
+        call(
+            "getSpansWorkspaceUris",
+            immutableList(PredefinedType.string), immutableList(CodeObjectIdUriOffsetTrouple)
+        ).async
 
         setting(CSharp50Generator.Namespace, "Digma.Rider.Protocol")
         setting(Kotlin11Generator.Namespace, "org.digma.intellij.plugin.rider.protocol")

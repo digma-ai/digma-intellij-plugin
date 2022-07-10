@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Digma.Rider.Protocol;
 using Digma.Rider.Util;
+using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.CSharp.Tree;
 using JetBrains.ReSharper.Psi.Tree;
 using JetBrains.Util;
@@ -17,27 +18,49 @@ namespace Digma.Rider.Discovery
         private readonly ICSharpFunctionDeclaration _functionDeclaration;
         private readonly RiderMethodInfo _methodInfo;
 
-
         public CodeObjectsDiscoveryMethodProcessor(ICSharpFunctionDeclaration functionDeclaration,
             DocumentDiscoveryContext discoveryContext) : base(discoveryContext)
         {
             _functionDeclaration = functionDeclaration;
-            _methodInfo = BuildMethodInfo(functionDeclaration);
-            discoveryContext.Methods.Add(_methodInfo.Id, _methodInfo);       
+            _methodInfo = BuildMethodInfo(_functionDeclaration, out bool managedToResolveReferences);
+            UpdateDiscoveryContext(managedToResolveReferences);
         }
 
-        private RiderMethodInfo BuildMethodInfo(ICSharpFunctionDeclaration functionDeclaration)
+        private void UpdateDiscoveryContext(bool managedToResolveReferences)
         {
-            var methodFqn = Identities.ComputeFqn(functionDeclaration);
+            if (DiscoveryContext.Methods.ContainsKey(_methodInfo.Id))
+            {
+                ProcessingIsFinished = true;
+            } 
+            else 
+            {
+                if (!managedToResolveReferences && DiscoveryContext.IsStartup)
+                {
+                    Log(Logger, "method {0} has unresolved parameter type. flagging 'HasReferenceResolvingErrors'",
+                        _functionDeclaration);
+                    DiscoveryContext.HasReferenceResolvingErrors = true;
+
+                    ProcessingIsFinished = true;
+                }
+                else
+                {
+                    DiscoveryContext.Methods.Add(_methodInfo.Id, _methodInfo);
+                }
+            }
+        }
+
+        private RiderMethodInfo BuildMethodInfo(ICSharpFunctionDeclaration functionDeclaration, out bool managedToResolveReferences)
+        {
+            var methodFqn = Identities.ComputeFqn(functionDeclaration, out managedToResolveReferences);
             var declaredName = PsiUtils.GetDeclaredName(functionDeclaration);
             var containingClassName = PsiUtils.GetClassName(functionDeclaration);
             var containingNamespace = PsiUtils.GetNamespace(functionDeclaration);
             var containingFileUri = DiscoveryContext.FileUri;
+            var offsetAtFileUri = functionDeclaration.GetNavigationRange().StartOffset.Offset;
 
             return new RiderMethodInfo(methodFqn, declaredName, containingClassName, containingNamespace,
-                containingFileUri, new List<RiderSpanInfo>());
+                containingFileUri, offsetAtFileUri, new List<RiderSpanInfo>());
         }
-
 
         [SuppressMessage("ReSharper", "UnusedVariable")]
         public override bool InteriorShouldBeProcessed(ITreeNode element)
@@ -55,6 +78,7 @@ namespace Digma.Rider.Discovery
 
         public override void ProcessBeforeInterior(ITreeNode element)
         {
+            //Log(Logger, "Got TreeNode element '{0}'", element.ToString());
             switch (element)
             {
                 case ILocalVariableDeclaration localVariableDeclaration:

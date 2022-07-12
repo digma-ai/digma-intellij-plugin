@@ -15,6 +15,9 @@ abstract class AbstractViewService(val project: Project) {
 
     private val toolWindowTabsHelper: ToolWindowTabsHelper = project.getService(ToolWindowTabsHelper::class.java)
 
+    abstract fun getViewDisplayName(): String
+
+
     fun setVisible() {
         if (toolWindowTabsHelper.isErrorDetailsOn()){
             return
@@ -52,6 +55,5 @@ abstract class AbstractViewService(val project: Project) {
 
     }
 
-    abstract fun getViewDisplayName(): String?
 
 }

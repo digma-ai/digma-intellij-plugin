@@ -25,11 +25,19 @@ class DocumentCodeObjectsListener : ProjectManagerListener {
 
             val model = project.solution.codeObjectsModel
 
+            //process documents that are currently in the protocol, they wher added by the
+            //backend before the solution was fully started
             Log.log(LOGGER::info, "Processing existing documents in the protocol")
             model.documents.forEach{
                 Log.log(LOGGER::info, "Notifying documentAnalyzed for {}",it.key)
                 documentAnalyzed(model, it.key, project)
             }
+
+            //the documents that are currently in the protocol may be incomplete, could not resolve
+            //references. call refreshIncompleteDocuments so the backend will refresh all incomplete
+            //documents, hopefully at this stage reference resolving should work.
+            //if a documents was refreshed it will be notified again to the frontend
+            model.refreshIncompleteDocuments.fire(Unit)
 
             Log.log(LOGGER::info, "Starting to listen for documentAnalyzed events")
             model.documentAnalyzed.advise(project.lifetime) { documentKey ->
@@ -64,6 +72,10 @@ class DocumentCodeObjectsListener : ProjectManagerListener {
 
 
     private fun notifyDocumentCodeObjectsChanged(psiFile: PsiFile?) {
+        if (project.isDisposed){
+            Log.log(LOGGER::error, "notifyDocumentCodeObjectsChanged for file {} called after project is disposed {}",psiFile?.virtualFile,project)
+            return
+        }
         val publisher: DocumentCodeObjectsChanged =
             project.messageBus.syncPublisher(DocumentCodeObjectsChanged.DOCUMENT_CODE_OBJECTS_CHANGED_TOPIC)
         publisher.documentCodeObjectsChanged(psiFile)

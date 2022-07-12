@@ -87,6 +87,7 @@ public class EditorInteractionService implements CaretContextService, Disposable
                 //pass a dummy method info just to populate the view,the view is aware and will not try to query for insights.
                 var dummyMethodInfo = new MethodInfo(methodUnderCaret.getId(), methodUnderCaret.getName(), methodUnderCaret.getClassName(), "",
                         methodUnderCaret.getFileUri(), 0, new ArrayList<>());
+                Log.log(LOGGER::warn, "Using dummy MethodInfo for to update views {}. ", dummyMethodInfo);
                 insightsViewService.contextChangeNoMethodInfo(dummyMethodInfo);
                 errorsViewService.contextChangeNoMethodInfo(dummyMethodInfo);
             } else {

@@ -1,9 +1,11 @@
 package org.digma.intellij.plugin.ui.service
 
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.insights.InsightsListContainer
 import org.digma.intellij.plugin.insights.InsightsProvider
+import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.SpanInfo
 import org.digma.intellij.plugin.ui.model.DocumentScope
@@ -16,13 +18,15 @@ import java.util.stream.Collectors
 
 class InsightsViewService(project: Project): AbstractViewService(project) {
 
+    private val LOGGER: Logger = Logger.getInstance(InsightsViewService::class.java)
+
     //InsightsModel is singleton object
     private var model = InsightsModel
 
     private val insightsProvider: InsightsProvider = project.getService(InsightsProvider::class.java)
 
 
-    override fun getViewDisplayName(): String? {
+    override fun getViewDisplayName(): String {
         return "Insights" + if(model.insightsCount > 0) " (${model.count()})" else ""
     }
 
@@ -32,6 +36,8 @@ class InsightsViewService(project: Project): AbstractViewService(project) {
     fun contextChanged(
         methodInfo: MethodInfo
     ) {
+
+        Log.log(LOGGER::debug, "contextChanged to {}. ", methodInfo)
 
         val insightsListContainer: InsightsListContainer = insightsProvider.getInsights(methodInfo)
 
@@ -46,6 +52,9 @@ class InsightsViewService(project: Project): AbstractViewService(project) {
 
 
     fun contextChangeNoMethodInfo(dummy: MethodInfo) {
+
+        Log.log(LOGGER::debug, "contextChangeNoMethodInfo to {}. ", dummy)
+
         model.listViewItems = ArrayList()
         model.previewListViewItems = ArrayList()
         model.scope = MethodScope(dummy)
@@ -58,6 +67,9 @@ class InsightsViewService(project: Project): AbstractViewService(project) {
 
 
     fun empty() {
+
+        Log.log(LOGGER::debug, "empty called")
+
         model.listViewItems = ArrayList()
         model.previewListViewItems = ArrayList()
         model.scope = EmptyScope("")
@@ -69,6 +81,8 @@ class InsightsViewService(project: Project): AbstractViewService(project) {
 
     fun showDocumentPreviewList(documentInfoContainer: DocumentInfoContainer?,
                                 fileUri: String) {
+
+        Log.log(LOGGER::debug, "showDocumentPreviewList for {}. ", fileUri)
 
         if (documentInfoContainer == null) {
             model.previewListViewItems = ArrayList()

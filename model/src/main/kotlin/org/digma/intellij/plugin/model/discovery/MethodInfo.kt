@@ -23,4 +23,15 @@ data class MethodInfo(
         return "method:$id"
     }
 
+    fun nameWithParams():String{
+        return name + getParamsPartFromId()
+    }
+
+    private fun getParamsPartFromId():String{
+        val indexOf = id.indexOf('(')
+        if (indexOf > 0){
+            return id.substring(indexOf,id.length)
+        }
+        return ""
+    }
 }

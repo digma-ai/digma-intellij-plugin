@@ -2,8 +2,6 @@
 
 package org.digma.intellij.plugin.ui.env
 
-import com.intellij.openapi.project.Project
-import com.intellij.ui.dsl.builder.RowLayout
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import org.digma.intellij.plugin.ui.model.environment.EnvComboModel
@@ -13,7 +11,7 @@ import javax.swing.event.PopupMenuListener
 
 
 @Suppress("UNCHECKED_CAST")
-fun envCombo(project: Project): JPanel {
+fun envCombo(): JPanel {
 
     return panel {
         panel {
@@ -24,14 +22,6 @@ fun envCombo(project: Project): JPanel {
                     .apply {
                         component.toolTipText = "Environment"
                         component.isOpaque = false
-                        horizontalAlign(HorizontalAlign.FILL)
-//                        component.addActionListener {
-//                            it.source.apply {
-//                                val combo: ComboBox<String> = this as ComboBox<String>
-//                                env.current = combo.item
-//                            }
-//                        }
-//
                         component.addPopupMenuListener(object: PopupMenuListener{
                             override fun popupMenuWillBecomeVisible(e: PopupMenuEvent?) {
                                 EnvComboModel.refreshEnvironments()
@@ -43,7 +33,7 @@ fun envCombo(project: Project): JPanel {
 
                         })
                     }
-            }.layout(RowLayout.LABEL_ALIGNED)
+            }
         }
     }.andTransparent()
 

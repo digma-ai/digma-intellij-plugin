@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Digma.Rider.Protocol;
 using Digma.Rider.Util;
-using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.CSharp.Tree;
 using JetBrains.ReSharper.Psi.Tree;
 using JetBrains.Util;
@@ -23,29 +22,26 @@ namespace Digma.Rider.Discovery
         {
             _functionDeclaration = functionDeclaration;
             _methodInfo = BuildMethodInfo(_functionDeclaration, out bool managedToResolveReferences);
-            UpdateDiscoveryContext(managedToResolveReferences);
+            UpdateDiscoveryContext(managedToResolveReferences,_methodInfo.Id);
         }
 
-        private void UpdateDiscoveryContext(bool managedToResolveReferences)
+        private void UpdateDiscoveryContext(bool managedToResolveReferences, string methodInfoId)
         {
             if (DiscoveryContext.Methods.ContainsKey(_methodInfo.Id))
             {
+                Log(Logger, "DiscoveryContext already contains method {0}, aborting",_methodInfo.Id);
                 ProcessingIsFinished = true;
             } 
             else 
             {
-                if (!managedToResolveReferences && DiscoveryContext.IsStartup)
+                if (!managedToResolveReferences)
                 {
-                    Log(Logger, "method {0} has unresolved parameter type. flagging 'HasReferenceResolvingErrors'",
-                        _functionDeclaration);
+                    Log(Logger, "method with id {0} has unresolved parameter type. flagging 'HasReferenceResolvingErrors', {1}",methodInfoId,_functionDeclaration);
                     DiscoveryContext.HasReferenceResolvingErrors = true;
+                }
 
-                    ProcessingIsFinished = true;
-                }
-                else
-                {
-                    DiscoveryContext.Methods.Add(_methodInfo.Id, _methodInfo);
-                }
+                DiscoveryContext.Methods.Add(_methodInfo.Id, _methodInfo);
+                
             }
         }
 

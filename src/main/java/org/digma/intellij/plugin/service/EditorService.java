@@ -30,6 +30,44 @@ import java.util.Set;
 
 public class EditorService implements Disposable {
 
+    //todo: checkout
+    // FrontendTextControlHost.getInstance(project).visibleEditorsChange
+    // RiderTextControlHost.getInstance(project).visibleEditorsChange
+    // RiderTextControlHost.getInstance(project).
+
+    //todo:
+    // before opening an editor check if it is opened , for rider maybe use the classes above
+    // see this log
+    /*
+    022-07-07 11:01:25,815 [  18479]   INFO - #c.j.r.d.FrontendDocumentHost - finished registering document file, MoneyTransferDomainService.cs
+2022-07-07 11:01:25,818 [  18482]   WARN - #c.j.r.e.RiderTextControlHost - file /home/shalom/workspace/digma/otel-sample-application-dotnet/Sample.MoneyTransfer.Api/Domain/Services/MoneyTransferDomainService.cs doesn't exist
+2022-07-07 11:01:25,820 [  18484]   INFO - #c.j.r.e.FrontendTextControlHost - Closing (file, SampleInsights.cs, Host, 1, EditorTab) ...
+2022-07-07 11:01:25,832 [  18496]   INFO - #c.j.r.d.FrontendDocumentHost - Unbinding document RdProjectFileDocumentId (projectModelElementId = 0filePath = "/home/shalom/workspace/digma/otel-sample-application-dotnet/Sample.MoneyTransfer.Api/Controllers/SampleInsights.cs"protocol = "file")
+2022-07-07 11:01:25,863 [  18527]   INFO - #c.j.r.d.FrontendDocumentHost - Subscribing for document changes.
+2022-07-07 11:01:25,864 [  18528]   INFO - #c.j.r.d.FrontendDocumentHost - finished registering document file, SampleInsights.cs
+2022-07-07 11:01:25,866 [  18530]   WARN - #c.j.r.e.RiderTextControlHost - file /home/shalom/workspace/digma/otel-sample-application-dotnet/Sample.MoneyTransfer.Api/Controllers/SampleInsights.cs doesn't exist
+2022-07-07 11:01:25,868 [  18532]   INFO - #c.j.r.e.FrontendTextControlHost - Closing (file, IMoneyTransferDomainService.cs, Host, 1, EditorTab) ...
+2022-07-07 11:01:25,868 [  18532]   INFO - #c.j.r.d.FrontendDocumentHost - Unbinding document RdProjectFileDocumentId (projectModelElementId = 0filePath = "/home/shalom/workspace/digma/otel-sample-application-dotnet/Sample.MoneyTransfer.Api/Domain/Services/IMoneyTransferDomainService.cs"protocol = "file")
+2022-07-07 11:01:25,869 [  18533]   INFO - #c.j.r.d.FrontendDocumentHost - Subscribing for document changes.
+2022-07-07 11:01:25,871 [  18535]   INFO - #c.j.r.d.FrontendDocumentHost - finished registering document file, IMoneyTransferDomainService.cs
+2022-07-07 11:01:25,873 [  18537]   WARN - #c.j.r.e.RiderTextControlHost - file /home/shalom/workspace/digma/otel-sample-application-dotnet/Sample.MoneyTransfer.Api/Domain/Services/IMoneyTransferDomainService.cs doesn't exist
+2022-07-07 11:01:25,875 [  18539]   INFO - #c.j.r.e.FrontendTextControlHost - Closing (file, AccountController.cs, Host, 1, EditorTab) ...
+2022-07-07 11:01:25,876 [  18540]   INFO - #c.j.r.d.FrontendDocumentHost - Unbinding document RdProjectFileDocumentId (projectModelElementId = 0filePath = "/home/shalom/workspace/digma/otel-sample-application-dotnet/Sample.MoneyTransfer.Api/Controllers/AccountController.cs"protocol = "file")
+2022-07-07 11:01:25,876 [  18540]   INFO - #c.j.r.d.FrontendDocumentHost - Subscribing for document changes.
+2022-07-07 11:01:25,878 [  18542]   INFO - #c.j.r.d.FrontendDocumentHost - finished registering document file, AccountController.cs
+2022-07-07 11:01:25,880 [  18544]   WARN - #c.j.r.e.RiderTextControlHost - file /home/shalom/workspace/digma/otel-sample-application-dotnet/Sample.MoneyTransfer.Api/Controllers/AccountController.cs doesn't exist
+2022-07-07 11:01:25,970 [  18634]   FINE - #o.d.i.p.r.p.DocumentCodeObjectsListener - Digma: Got documentAnalyzed event for /home/shalom/workspace/digma/otel-sample-application-dotnet/Sample.MoneyTransfer.Api/Domain/Services/CreditProviderService.cs
+2022-07-07 11:01:25,970 [  18634]   FINE - #o.d.i.p.r.p.DocumentCodeObjectsListener - Digma: Found document in the protocol for /home/shalom/workspace/digma/otel-sample-application-dotnet/Sample.MoneyTransfer.Api/Domain/Services/CreditProviderService.cs
+2022-07-07 11:01:25,972 [  18636]   FINE - #o.d.i.p.r.p.DocumentCodeObjectsListener - Digma: Notifying DocumentCodeObjectsChanged for file:///home/shalom/workspace/digma/otel-sample-application-dotnet/Sample.MoneyTransfer.Api/Domain/Services/CreditProviderService.cs
+2022-07-07 11:01:25,973 [  18637]   FINE - #o.d.i.p.r.p.c.CSharpDocumentAnalyzer - Digma: Got documentCodeObjectsChanged event for file:///home/shalom/workspace/digma/otel-sample-application-dotnet/Sample.MoneyTransfer.Api/Domain/Services/CreditProviderService.cs
+2022-07-07 11:01:25,974 [  18638]   FINE - #o.d.i.p.r.p.CodeObjectHost - Digma: Got request for getDocument for /home/shalom/workspace/digma/otel-sample-application-dotnet/Sample.MoneyTransfer.Api/Domain/Services/CreditProviderService.cs
+2022-07-07 11:01:25,976 [  18640]   FINE - #o.d.i.p.r.p.CodeObjectHost - Digma: Got document for /home/shalom/workspace/digma/otel-sample-application-dotnet/Sample.MoneyTransfer.Api/Domain/Services/CreditProviderService.cs: Document (
+  isComplete = true
+  fileUri = "file:///home/shalom/workspace/digma/otel-sample-application-dotnet/Sample.MoneyTransfer.Api/Domain/Services/CreditProviderService.cs"
+  methods = RdMap: `RiderClientFromEBS.SolutionModel.solutions.[1].codeObjectsModel.documents.[/home/shalom/workspace/digma/otel-sample-application-dotnet/Sample.MoneyTransfer.Api/Domain/Services/CreditProviderService.cs].methods` (5557519777679624951) [
+
+     */
+
     private static final Logger LOGGER = Logger.getInstance(EditorService.class);
 
     private final Project project;

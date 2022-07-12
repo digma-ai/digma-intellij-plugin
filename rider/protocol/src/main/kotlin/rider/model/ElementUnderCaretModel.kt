@@ -5,6 +5,7 @@ import com.jetbrains.rd.generator.nova.csharp.CSharp50Generator
 import com.jetbrains.rd.generator.nova.kotlin.Kotlin11Generator
 import com.jetbrains.rider.model.nova.ide.SolutionModel
 
+@Suppress("unused")
 class ElementUnderCaretModel : Ext(SolutionModel.Solution) {
 
     val MethodUnderCaretEvent = structdef {
@@ -20,6 +21,7 @@ class ElementUnderCaretModel : Ext(SolutionModel.Solution) {
         setting(Kotlin11Generator.Namespace, "org.digma.intellij.plugin.rider.protocol")
         property("elementUnderCaret", MethodUnderCaretEvent)
         signal("notifyElementUnderCaret", PredefinedType.void)
+        signal("refresh", PredefinedType.void)
     }
 
 }

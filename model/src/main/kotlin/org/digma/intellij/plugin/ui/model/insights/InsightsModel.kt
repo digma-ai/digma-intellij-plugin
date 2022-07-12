@@ -29,6 +29,10 @@ object InsightsModel : PanelModel {
         return scope.getScope()
     }
 
+    override fun getScopeTooltip(): String {
+        return scope.getScopeTooltip()
+    }
+
     fun getPreviewListMessage():String {
         if (scope is EmptyScope) {
             return "No code objects found for this document"

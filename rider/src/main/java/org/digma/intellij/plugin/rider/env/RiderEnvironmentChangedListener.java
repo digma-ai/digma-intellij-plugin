@@ -28,6 +28,10 @@ public class RiderEnvironmentChangedListener implements EnvironmentChanged {
     @Override
     public void environmentChanged(String newEnv) {
         Log.log(LOGGER::debug, "Got environmentChanged {}", newEnv);
+        //todo: not correct
+        //codeObjectHost.environmentChanged should be called before documentInfoService.environmentChanged
+        //and should clear the lenses only
+        //then documentInfoService.environmentChanged should reload summaries
         caretContextService.contextEmpty();
         documentInfoService.environmentChanged(newEnv);
         codeObjectHost.environmentChanged();

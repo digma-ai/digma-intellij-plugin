@@ -6,6 +6,7 @@ import com.jetbrains.rd.generator.nova.kotlin.Kotlin11Generator
 import com.jetbrains.rider.model.nova.ide.SolutionModel
 
 //todo: create root, see ExampleModel
+@Suppress("unused")
 class CodeObjectsModel : Ext(SolutionModel.Solution) {
 
 
@@ -66,6 +67,7 @@ class CodeObjectsModel : Ext(SolutionModel.Solution) {
         signal("reanalyze", PredefinedType.string)
         signal("reanalyzeAll", PredefinedType.void)
         signal("documentAnalyzed", PredefinedType.string)
+        signal("refreshIncompleteDocuments", PredefinedType.void)
 
         //key: document file path, value: Document
         map("documents",

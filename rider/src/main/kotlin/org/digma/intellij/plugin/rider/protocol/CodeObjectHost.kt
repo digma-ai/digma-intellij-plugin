@@ -69,6 +69,11 @@ class CodeObjectHost(val project: Project) {
     fun environmentChanged() {
         Log.log(LOGGER::debug, "Got environmentChanged event , refreshing all documents")
 
+        //todo: that not correct,
+        //clean codeLens
+        //call reanalyze for each file in the documents and delete reanalyzeAll
+        //don't notifyDocumentCodeObjectsChanged because they didn't change,
+        //
          model.protocol.scheduler.invokeOrQueue {
 
             model.codeLens.clear()

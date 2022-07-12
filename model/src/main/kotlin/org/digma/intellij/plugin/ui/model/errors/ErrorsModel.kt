@@ -31,6 +31,10 @@ object ErrorsModel : PanelModel {
         return scope.getScope()
     }
 
+    override fun getScopeTooltip(): String {
+        return scope.getScopeTooltip()
+    }
+
 }
 
 

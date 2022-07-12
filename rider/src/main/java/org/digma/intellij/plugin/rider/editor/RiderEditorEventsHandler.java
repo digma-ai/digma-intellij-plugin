@@ -10,16 +10,15 @@ import org.digma.intellij.plugin.document.DocumentInfoChanged;
 import org.digma.intellij.plugin.editor.EditorEventsHandler;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.psi.LanguageService;
-import org.digma.intellij.plugin.psi.PsiUtils;
 import org.digma.intellij.plugin.rider.protocol.ElementUnderCaretDetector;
 import org.digma.intellij.plugin.ui.CaretContextService;
 import org.jetbrains.annotations.NotNull;
 
 public class RiderEditorEventsHandler implements EditorEventsHandler, DocumentInfoChanged {
 
-    private Logger LOGGER = Logger.getInstance(RiderEditorEventsHandler.class);
+    private static final Logger LOGGER = Logger.getInstance(RiderEditorEventsHandler.class);
 
-    private Project project;
+    private final Project project;
     private CaretContextService caretContextService;
 
     private final LanguageService languageService;
@@ -46,7 +45,7 @@ public class RiderEditorEventsHandler implements EditorEventsHandler, DocumentIn
             //resharper does not send an event on non-supported files,and when a non-supported file is opened our context is still shown
             // in the tool window.
             //sometimes resharper will send a caret event when a source file looses focus, so in ElementUnderCaretHost, if there
-            //is a caret event for a non-visible source file the context is cleared and sends an event to the fronend, this has the same
+            // is a caret event for a non-visible source file the context is cleared and sends an event to the fronend, this has the same
             // effect as the listener here. but that doesn't always happen so we still need this listener here.
 
             @Override
@@ -71,11 +70,7 @@ public class RiderEditorEventsHandler implements EditorEventsHandler, DocumentIn
 
     @Override
     public void documentInfoChanged(PsiFile psiFile) {
-        if (caretContextService != null){
-            Log.log(LOGGER::debug, "Got documentInfoChanged event for {}", PsiUtils.psiFileToDocumentProtocolKey(psiFile));
-            ElementUnderCaretDetector elementUnderCaretDetector = project.getService(ElementUnderCaretDetector.class);
-            elementUnderCaretDetector.maybeNotifyElementUnderCaret(psiFile,caretContextService);
-        }
-
+       ElementUnderCaretDetector elementUnderCaretDetector = project.getService(ElementUnderCaretDetector.class);
+       elementUnderCaretDetector.refresh();
     }
 }

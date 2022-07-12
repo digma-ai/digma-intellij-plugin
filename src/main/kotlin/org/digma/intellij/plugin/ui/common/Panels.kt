@@ -1,29 +1,66 @@
 package org.digma.intellij.plugin.ui.common
 
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.dsl.builder.BottomGap
+import com.intellij.ui.dsl.builder.MutableProperty
 import com.intellij.ui.dsl.builder.TopGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBUI
-import javax.swing.JPanel
+import org.digma.intellij.plugin.ui.model.PanelModel
+import org.digma.intellij.plugin.ui.model.insights.InsightsModel
+import javax.swing.JLabel
 
 
-fun noCodeObjectWarningPanel(text: String): JPanel {
+fun noCodeObjectWarningPanel(model: PanelModel): DialogPanel {
 
-    val panel =  panel {
+    return  panel {
         row{
             icon(AllIcons.General.BalloonInformation)
                 .horizontalAlign(HorizontalAlign.CENTER)
         }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
         row{
-            label(text)
+            label(getNoInfoMessage(model)).bind(JLabel::getText,JLabel::setText, MutableProperty(
+                getter = { getNoInfoMessage(model) },
+                setter = {}))
                 .horizontalAlign(HorizontalAlign.CENTER)
         }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
-    }
-
-    panel.border = JBUI.Borders.empty()
-    panel.isOpaque = false
-    return panel
+    }.andTransparent().withBorder(JBUI.Borders.empty())
 }
 
+
+private fun getNoInfoMessage(model: PanelModel):String{
+    var msg = if(model is InsightsModel) "No insights" else "No errors"
+
+    if (model.getScope().isNotBlank()){
+        msg += " for "+model.getScope()
+    }
+    return msg
+}
+
+
+fun createTopPanel(project: Project, model: PanelModel, labelText: String): DialogPanel {
+
+    return panel {
+        row {
+            val topLine = topLine(model, labelText)
+            topLine.isOpaque = false
+            cell(topLine)
+                .horizontalAlign(HorizontalAlign.FILL)
+                .onReset {
+                    topLine.reset()
+                }
+        }
+        row {
+            val scopeLine = scopeLine({ model.getScope() }, { model.getScopeTooltip() }, ScopeLineIconProducer(model))
+            scopeLine.isOpaque = false
+            cell(scopeLine)
+                .horizontalAlign(HorizontalAlign.FILL)
+                .onReset {
+                    scopeLine.reset()
+                }
+        }
+    }.andTransparent().withBorder(JBUI.Borders.empty(0,12,0,8))
+}

@@ -42,19 +42,22 @@ public class ErrorsProvider {
     public ErrorsListContainer getErrors(@NotNull MethodInfo methodInfo) {
         try {
             final List<CodeObjectError> codeObjectErrors = analyticsService.getErrorsOfCodeObject(methodInfo.idWithType());
-            Log.log(LOGGER::debug, "CodeObjectErrors for {}: {}", methodInfo, codeObjectErrors);
+            Log.log(LOGGER::debug, "CodeObjectErrors for {}: {}", methodInfo.getId(), codeObjectErrors);
 
-            final List<ListViewItem<CodeObjectError>> lviList = codeObjectErrors
+            final List<ListViewItem<CodeObjectError>> errorsListViewItems = codeObjectErrors
                     .stream()
                     .map(x -> new ListViewItem<>(x, 1))
                     .collect(Collectors.toList());
 
-            return new ErrorsListContainer(lviList);
+            Log.log(LOGGER::debug, "ListViewItems for {}: {}", methodInfo.getId(), errorsListViewItems);
+
+            return new ErrorsListContainer(errorsListViewItems);
         }catch (AnalyticsServiceException e){
             //if analyticsService.getErrorsOfCodeObject throws exception it means errors could not be loaded, usually when
             //the backend is not available. return an empty ErrorsListContainer to keep everything running and don't
             //crash the plugin. don't log the exception, it was logged in AnalyticsService, keep the log quite because
             //it may happen many times.
+            Log.log(LOGGER::debug, "AnalyticsServiceException for getErrors for {}: {}", methodInfo.getId(), e.getMessage());
             return new ErrorsListContainer(new ArrayList<>());
         }
     }

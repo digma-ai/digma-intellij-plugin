@@ -8,6 +8,7 @@ namespace Digma.Rider.Logging
     {
         public static void Log(ILogger logger, string message, params object[] parameters)
         {
+            //todo: change to debug. first find out how to change the level in resharper
             logger.Info("Digma: " + message, parameters);
         }
         

@@ -13,7 +13,6 @@ data class MethodInfo(
 
     fun getRelatedCodeObjectIds(): List<String> {
         val relatedIds: MutableList<String> = ArrayList()
-        relatedIds.add(idWithTypeButWithoutParams())
         spans.forEach {
             relatedIds.add(it.idWithType())
         }
@@ -22,18 +21,6 @@ data class MethodInfo(
 
     override fun idWithType(): String {
         return "method:$id"
-    }
-
-    private fun idWithTypeButWithoutParams(): String {
-        return removeParamsIfNeeded(idWithType())
-    }
-
-    private fun removeParamsIfNeeded(codeObjectId: String): String {
-        val lastIndexOfOpeningParenthesis = codeObjectId.lastIndexOf('(')
-        if (lastIndexOfOpeningParenthesis >= 0) {
-            return codeObjectId.substring(0, lastIndexOfOpeningParenthesis)
-        }
-        return codeObjectId
     }
 
 }

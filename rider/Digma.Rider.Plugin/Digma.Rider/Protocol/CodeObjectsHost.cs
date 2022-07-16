@@ -310,6 +310,8 @@ namespace Digma.Rider.Protocol
             //todo: in case of DocumentChange event
             // the document from the cache should already be updated after DocumentChange event because we have 2 seconds delay,
             // that gives time for the cache to update.
+            // without this delay we may need to build the document on demand for DocumentChange event, this method is executed
+            // also on document open so we may need two separate flows, one for document opened and one for DocumentChange.
 
             //document may be null if:
             //the cache is not ready yet, it can happen if a document is re-opened on startup by the IDE and the cache is

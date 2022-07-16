@@ -70,7 +70,7 @@ namespace Digma.Rider.Protocol
                         }
                         else
                         {
-                            Log(_logger, "Could not find PsiSourceFile  in local map for {0}",documentKey);
+                            Log(_logger, "Could not find PsiSourceFile  in local map for {0}", documentKey);
                         }
                     }
                 });
@@ -196,7 +196,6 @@ namespace Digma.Rider.Protocol
         }
 
 
-
         [CanBeNull]
         public RiderCodeLensInfo GetRiderCodeLensInfo([NotNull] string codeObjectId)
         {
@@ -273,7 +272,7 @@ namespace Digma.Rider.Protocol
         /// when called it will try to load psiSourceFile from the CodeObjectsCache and if necessary notify the frontend
         /// about the code object for this file. if the cache Document for this file is not complete it will be rebuilt.
         /// It is called on few events when we need to notify the frontend. usually when a document is opened or changed.
-        /// This method should eventually notify the frontend about the code objects. 
+        /// This method will eventually notify the frontend about the code objects. 
         /// </summary>
         /// <param name="psiSourceFile"></param>
         public void NotifyDocumentOpenedOrChanged([NotNull] IPsiSourceFile psiSourceFile)
@@ -339,23 +338,22 @@ namespace Digma.Rider.Protocol
                 if (document == null)
                 {
                     Log(_logger,
-                        "Document for PsiSourceFile '{0}' was not found in cache after ProcessOnDemand. Probably a document with no code objects.",
+                        "Document for PsiSourceFile '{0}' was not found in cache after ProcessOnDemand. Probably a document with no code objects. using an empty document to update the protocol",
                         psiSourceFile);
-                    return;
+                    //the document may be null if this file didn't produce code objects, but it may be a file that had code objects
+                    //and now it doesn't, for example a method deleted. in that case we want to update the protocol and the fronend.
+                    //AddOpenChangeDocument will decide if this document should be updated in the protocol or ignored.
+                    var fileUri = Identities.ComputeFileUri(psiSourceFile);
+                    document = new Document(true,fileUri);
                 }
             }
 
             Log(_logger, "Found Document for PsiSourceFile '{0}' {1}", psiSourceFile, document);
-            LogFoundMethodsForDocument(_logger, document);
-
-            //no need to add or notify frontend if no methods found
-            if (!document.HasCodeObjects())
+            if (document.HasCodeObjects())
             {
-                Log(_logger,
-                    "Document for PsiSourceFile '{0}' does not contain code objects. Not updating the protocol.",
-                    psiSourceFile);
-                return;
+                LogFoundMethodsForDocument(_logger, document);    
             }
+            
 
             AddOpenChangeDocument(psiSourceFile, document);
         }
@@ -384,22 +382,29 @@ namespace Digma.Rider.Protocol
             }
         }
 
-
         //This method adds the Document to the protocol if necessary and nofifies frontend
-        public void AddOpenChangeDocument([NotNull] IPsiSourceFile psiSourceFile, [NotNull] Document document)
+        private void AddOpenChangeDocument([NotNull] IPsiSourceFile psiSourceFile, [NotNull] Document document)
         {
-            Log(_logger, "Got AddOpenChangeDocument request for {0}, document:{1}", psiSourceFile, document);
-
-            if (document.Methods.IsEmpty())
-                return;
-
             var documentKey = Identities.ComputeFilePath(psiSourceFile);
+
+            Log(_logger, "Got AddOpenChangeDocument request for {0}, document:{1} key:{2}", psiSourceFile, document,
+                documentKey);
+
+            //no need to add or notify frontend if no code objects found found.
+            //unless the document is already in the protocol because it had code object and now it doesn't , that can happen after document change.
+            if (!document.HasCodeObjects() && !_codeObjectsModel.Documents.ContainsKey(documentKey))
+            {
+                Log(_logger,
+                    "Document for PsiSourceFile '{0}' does not contain code objects. Not updating the protocol.",
+                    psiSourceFile);
+                return;
+            }
 
 
             //relying on Equals method.
             //if the document is still in the protocol and hasn't change then don't notify frontend.
             if (_codeObjectsModel.Documents.ContainsKey(documentKey) &&
-                    document.CheckEquals(_codeObjectsModel.Documents.TryGetValue(documentKey)))
+                document.CheckEquals(_codeObjectsModel.Documents.TryGetValue(documentKey)))
             {
                 Log(_logger, "Document {0} already exists and is equals to the new one, not pushing to the protocol",
                     documentKey);
@@ -420,14 +425,13 @@ namespace Digma.Rider.Protocol
             {
                 using (WriteLockCookie.Create())
                 {
-
                     //sometimes a document already has RdId, if it was already added to the protocol before ?
                     if (!document.RdId.IsNil)
                     {
-                        _logger.Warn("Document already has RdId, setting RdId to null for {0}",documentKey);
+                        _logger.Warn("Document already has RdId, setting RdId to null for {0}", documentKey);
                         document.RdId = RdId.Nil;
                     }
-                    
+
                     var removed = _codeObjectsModel.Documents.Remove(documentKey);
                     if (!removed)
                     {
@@ -442,7 +446,7 @@ namespace Digma.Rider.Protocol
 
                     _codeObjectsModel.Documents.Add(documentKey, document);
                     Log(_logger, "Notifying DocumentAnalyzed for {0}", documentKey);
-                    _codeObjectsModel.DocumentAnalyzed.Fire(documentKey);
+                    _codeObjectsModel.DocumentAnalyzed(documentKey);
                 }
             });
         }

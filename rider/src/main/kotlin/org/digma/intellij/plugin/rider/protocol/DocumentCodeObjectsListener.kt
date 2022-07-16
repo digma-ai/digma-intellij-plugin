@@ -51,9 +51,9 @@ class DocumentCodeObjectsListener(project: Project) : LifetimedProjectComponent(
             //if a document was refreshed it will be notified again to the frontend.
             model.refreshIncompleteDocuments.fire(Unit)
 
-            Log.log(logger::info, "Starting to listen for documentAnalyzed events")
+            Log.log(logger::info,project, "Starting to listen for documentAnalyzed events")
             model.documentAnalyzed.advise(project.lifetime) { documentKey ->
-                Log.log(logger::debug, "Got documentAnalyzed event for {}", documentKey)
+                Log.log(logger::debug,project, "Got documentAnalyzed event for {}", documentKey)
                 documentAnalyzed(model, documentKey, project)
                 //todo: check why the event comes few time when open document in the digma rider project
             }

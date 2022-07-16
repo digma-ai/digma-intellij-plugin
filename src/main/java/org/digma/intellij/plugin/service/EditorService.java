@@ -30,7 +30,7 @@ import java.util.Set;
 
 public class EditorService implements Disposable {
 
-    //todo: checkout
+    //todo: check these
 
     // FrontendTextControlHost.getInstance(project).visibleEditorsChange
     // RiderTextControlHost.getInstance(project).visibleEditorsChange

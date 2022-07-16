@@ -141,7 +141,8 @@ namespace Digma.Rider.Discovery
                 
                 LogFoundMethodsForDocument(_logger, document);
 
-                _codeObjectsHost.AddOpenChangeDocument(psiSourceFile, document);
+                // this is probably not correct anymore, this class id not in use
+                //_codeObjectsHost.AddOpenChangeDocument(psiSourceFile, document);
             }
         }
 

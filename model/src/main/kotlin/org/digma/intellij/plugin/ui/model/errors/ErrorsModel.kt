@@ -6,7 +6,7 @@ import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.lang.Integer.max
 import java.util.*
 
-object ErrorsModel : PanelModel {
+class ErrorsModel : PanelModel {
 
     var errorsCount: Int = 0
     var listViewItems: List<ListViewItem<CodeObjectError>> = Collections.emptyList()

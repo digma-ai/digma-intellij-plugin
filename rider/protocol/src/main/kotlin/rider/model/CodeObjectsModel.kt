@@ -7,8 +7,9 @@ import com.jetbrains.rider.model.nova.ide.SolutionModel
 
 //todo: create root, see ExampleModel
 @Suppress("unused")
-class CodeObjectsModel : Ext(SolutionModel.Solution) {
+object CodeObjectsModel : Ext(SolutionModel.Solution) {
 
+    //todo: fix the signals, see unity
 
     private val RiderMethodInfo = structdef {
         field("id", PredefinedType.string)
@@ -35,6 +36,7 @@ class CodeObjectsModel : Ext(SolutionModel.Solution) {
         field("lensTooltip", PredefinedType.string.nullable)
         field("moreText", PredefinedType.string.nullable)
         field("anchor", PredefinedType.string.nullable)
+        field("documentProtocolKey", PredefinedType.string)
     }
 
 
@@ -65,7 +67,6 @@ class CodeObjectsModel : Ext(SolutionModel.Solution) {
         setting(Kotlin11Generator.Namespace, "org.digma.intellij.plugin.rider.protocol")
 
         signal("reanalyze", PredefinedType.string)
-        signal("reanalyzeAll", PredefinedType.void)
         signal("documentAnalyzed", PredefinedType.string)
         signal("refreshIncompleteDocuments", PredefinedType.void)
 

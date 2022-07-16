@@ -25,7 +25,7 @@ import java.util.stream.Stream;
 
 public class DocumentInfoContainer {
 
-    private static final Logger LOGGER = Logger.getInstance(DocumentInfoContainer.class);
+    private final Logger LOGGER = Logger.getInstance(DocumentInfoContainer.class);
 
     private final PsiFile psiFile;
     private final AnalyticsService analyticsService;

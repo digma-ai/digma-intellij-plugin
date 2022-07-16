@@ -8,6 +8,7 @@ using JetBrains.Collections.Viewable;
 using JetBrains.Lifetimes;
 using JetBrains.Platform.RdFramework.Impl;
 using JetBrains.ProjectModel;
+using JetBrains.Rd;
 using JetBrains.Rd.Tasks;
 using JetBrains.RdBackend.Common.Features;
 using JetBrains.ReSharper.Psi;
@@ -51,8 +52,6 @@ namespace Digma.Rider.Protocol
             _codeObjectsModel = solution.GetProtocolSolution().GetCodeObjectsModel();
 
 
-            _codeObjectsModel.ReanalyzeAll.Advise(lifetime, _ => { ReanalyzeAll(); });
-
             _codeObjectsModel.Reanalyze.Advise(lifetime, documentKey =>
             {
                 Log(_logger, "Reanalyze called for {0}", documentKey);
@@ -71,9 +70,7 @@ namespace Digma.Rider.Protocol
                         }
                         else
                         {
-                            Log(_logger, "Could not find PsiSourceFile  in local map for {0}, Calling ReanalyzeAll",
-                                documentKey);
-                            ReanalyzeAll();
+                            Log(_logger, "Could not find PsiSourceFile  in local map for {0}",documentKey);
                         }
                     }
                 });
@@ -198,18 +195,6 @@ namespace Digma.Rider.Protocol
             });
         }
 
-
-        private void ReanalyzeAll()
-        {
-            _shellRdDispatcher.Queue(() =>
-            {
-                using (ReadLockCookie.Create())
-                {
-                    Log(_logger, "Calling ReanalyzeAll");
-                    _riderSolutionAnalysisService.ReanalyzeAll();
-                }
-            });
-        }
 
 
         [CanBeNull]
@@ -411,7 +396,8 @@ namespace Digma.Rider.Protocol
 
             //relying on Equals method.
             //if the document is still in the protocol and hasn't change then don't notify frontend.
-            if (document.CheckEquals(_codeObjectsModel.Documents.TryGetValue(documentKey)))
+            if (_codeObjectsModel.Documents.ContainsKey(documentKey) &&
+                    document.CheckEquals(_codeObjectsModel.Documents.TryGetValue(documentKey)))
             {
                 Log(_logger, "Document {0} already exists and is equals to the new one, not pushing to the protocol",
                     documentKey);
@@ -432,6 +418,14 @@ namespace Digma.Rider.Protocol
             {
                 using (WriteLockCookie.Create())
                 {
+
+                    //sometimes a document already has RdId, if it was already added to the protocol before ?
+                    if (!document.RdId.IsNil)
+                    {
+                        _logger.Warn("Document already has RdId, setting RdId to null for {0}",documentKey);
+                        document.RdId = RdId.Nil;
+                    }
+                    
                     var removed = _codeObjectsModel.Documents.Remove(documentKey);
                     if (!removed)
                     {

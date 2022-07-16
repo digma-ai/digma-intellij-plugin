@@ -1,36 +1,44 @@
 package org.digma.intellij.plugin.rider.protocol
 
+import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.jetbrains.rd.platform.util.lifetime
 import com.jetbrains.rd.util.threading.SingleThreadScheduler
 import com.jetbrains.rd.util.throttleLast
+import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent
 import com.jetbrains.rider.projectView.solution
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
 import org.digma.intellij.plugin.ui.CaretContextService
 import java.time.Duration
 
-class ElementUnderCaretDetector(private val project: Project) {
+class ElementUnderCaretDetector(project: Project) : LifetimedProjectComponent(project) {
 
-    private val LOGGER = Logger.getInstance(ElementUnderCaretDetector::class.java)
+    private val logger = Logger.getInstance(ElementUnderCaretDetector::class.java)
 
     private val model: ElementUnderCaretModel = project.solution.elementUnderCaretModel
 
-    @Suppress("NAME_SHADOWING")
-    fun start(caretContextService: CaretContextService) {
+    private val caretContextService: CaretContextService = project.getService(CaretContextService::class.java)
 
-        Log.log(LOGGER::info, "ElementUnderCaretDetector waiting for solution startup..")
+    init {
+
+        Log.log(logger::info,project, "ElementUnderCaretDetector registering for solution startup..")
+
+        //todo: remove
+        project.solution.isLoaded.advise(project.lifetime) {
+            Log.log(logger::info,"in isLoaded")
+        }
+
         project.solution.solutionLifecycle.fullStartupFinished.advise(project.lifetime) {
-            Log.log(LOGGER::info, "Starting ElementUnderCaretDetector")
-
+            Log.log(logger::info, "Starting ElementUnderCaretDetector")
 
             //maybe there is already a MethodUnderCaretEvent in the protocol. the backend may fire events
             //even before the frontend solution is fully started.
             var methodUnderCaret = model.elementUnderCaret.valueOrNull
             if (methodUnderCaret != null) {
-                Log.log(LOGGER::debug, "MethodUnderCaretEvent exists,notifying {}", methodUnderCaret)
-                notifyElementUnderCaret(methodUnderCaret, caretContextService)
+                Log.log(logger::debug, "MethodUnderCaretEvent exists on startup,notifying {}", methodUnderCaret)
+                notifyElementUnderCaret(methodUnderCaret)
             }
 
 
@@ -39,8 +47,8 @@ class ElementUnderCaretDetector(private val project: Project) {
             model.notifyElementUnderCaret.throttleLast(Duration.ofMillis(100),
                 SingleThreadScheduler(project.lifetime, "notifyElementUnderCaret")).advise(project.lifetime){
                 methodUnderCaret = model.elementUnderCaret.valueOrNull
-                Log.log(LOGGER::debug, "Got MethodUnderCaretEvent signal: {}", methodUnderCaret)
-                notifyElementUnderCaret(methodUnderCaret, caretContextService)
+                Log.log(logger::debug, "Got MethodUnderCaretEvent signal: {}", methodUnderCaret)
+                notifyElementUnderCaret(methodUnderCaret)
             }
         }
     }
@@ -48,7 +56,9 @@ class ElementUnderCaretDetector(private val project: Project) {
 
     fun emptyModel() {
         model.protocol.scheduler.invokeOrQueue {
-            model.elementUnderCaret.set(MethodUnderCaretEvent("", "", "", ""))
+            WriteAction.run<Exception> {
+                model.elementUnderCaret.set(MethodUnderCaretEvent("", "", "", ""))
+            }
         }
     }
 
@@ -57,18 +67,17 @@ class ElementUnderCaretDetector(private val project: Project) {
     //that may happen for the same reason we have incomplete documents. usually happens on startup and when resharper
     //caches are not ready. refresh will fix it. and will maybe fix other misses on element under caret.
     //it is called when new code objects are received, when that happens we want to update the ui with the
-    //current context. refresh is an easy way to cause a methodUnderCaret event.
+    //current context. refresh is an easy way to intentionally cause a methodUnderCaret event.
     fun refresh() {
         model.protocol.scheduler.invokeOrQueue {
-            model.refresh.fire(Unit)
+            WriteAction.run<Exception> {
+                model.refresh.fire(Unit)
+            }
         }
     }
 
 
-    private fun notifyElementUnderCaret(
-        elementUnderCaret: MethodUnderCaretEvent?,
-        caretContextService: CaretContextService
-    ) {
+    private fun notifyElementUnderCaret(elementUnderCaret: MethodUnderCaretEvent?) {
         if (elementUnderCaret == null) {
             caretContextService.contextEmpty()
         } else {
@@ -82,7 +91,8 @@ class ElementUnderCaretDetector(private val project: Project) {
         id = fqn,
         name = name,
         className = className,
-        fileUri = fileUri
+        fileUri = fileUri,
+        isSupportedFile = isSupportedFile
     )
 
 

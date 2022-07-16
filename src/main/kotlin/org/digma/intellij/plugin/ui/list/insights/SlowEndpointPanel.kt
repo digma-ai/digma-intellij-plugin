@@ -6,15 +6,16 @@ import org.digma.intellij.plugin.model.rest.insights.SlowEndpointInsight
 import org.digma.intellij.plugin.ui.common.Html
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.span
+import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.swing.JPanel
 
 
-fun slowEndpointPanel(insight: SlowEndpointInsight): JPanel {
+fun slowEndpointPanel(insight: SlowEndpointInsight, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
     val bodyContents = genContent(insight)
     val iconText = evalDuration(insight.median)
-    val result = createInsightPanel("Slow Endpoint", bodyContents, Icons.Insight.SLOW, iconText)
+    val result = createInsightPanel("Slow Endpoint", bodyContents, Icons.Insight.SLOW, iconText,panelsLayoutHelper)
     result.toolTipText = asHtml(genToolTip(insight))
     return result
 }

@@ -40,7 +40,7 @@ jobs:
             caches/**/riderRD-*/**
             caches/**/ideaIC-*/**
             caches/**/pycharmPC-*/**
-        arguments: buildPlugin
+        arguments: runPluginVerifier buildPlugin
     - name: Upload Artifact GitHub Action
       uses: actions/upload-artifact@v3
       with:

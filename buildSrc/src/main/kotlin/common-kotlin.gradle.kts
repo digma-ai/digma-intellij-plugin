@@ -1,4 +1,5 @@
 import common.properties
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 
 /*
@@ -19,10 +20,20 @@ plugins {
     id("org.jetbrains.kotlin.jvm")
 }
 
+
 kotlin {
     jvmToolchain {
             (this as JavaToolchainSpec).languageVersion.set(JavaLanguageVersion.of(properties("javaVersion", project)))
         //to build with amazon corretto download it in the gradlew script. see resharper-unity
         //vendor.set(JvmVendorSpec.AMAZON)
+    }
+}
+
+
+tasks{
+    properties("javaVersion", project).let {
+        withType<KotlinCompile> {
+            kotlinOptions.jvmTarget = it
+        }
     }
 }

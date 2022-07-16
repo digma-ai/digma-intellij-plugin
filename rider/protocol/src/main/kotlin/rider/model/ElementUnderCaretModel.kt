@@ -6,19 +6,21 @@ import com.jetbrains.rd.generator.nova.kotlin.Kotlin11Generator
 import com.jetbrains.rider.model.nova.ide.SolutionModel
 
 @Suppress("unused")
-class ElementUnderCaretModel : Ext(SolutionModel.Solution) {
+object ElementUnderCaretModel : Ext(SolutionModel.Solution) {
 
-    val MethodUnderCaretEvent = structdef {
+    private val MethodUnderCaretEvent = structdef {
         field("fqn", PredefinedType.string)
         field("name", PredefinedType.string)
         field("className", PredefinedType.string)
         field("fileUri", PredefinedType.string)
+        field("isSupportedFile", PredefinedType.bool).default(true).documentation = "Used when a source file is not applicable for code objects, for example classes from external assemblies"
     }
 
 
     init {
         setting(CSharp50Generator.Namespace, "Digma.Rider.Protocol")
         setting(Kotlin11Generator.Namespace, "org.digma.intellij.plugin.rider.protocol")
+        //todo: maybe instead of elementUnderCaret and a signal just register to elementUnderCaret change and remove the signal
         property("elementUnderCaret", MethodUnderCaretEvent)
         signal("notifyElementUnderCaret", PredefinedType.void)
         signal("refresh", PredefinedType.void)

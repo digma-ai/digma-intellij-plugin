@@ -4,7 +4,7 @@ import org.digma.intellij.plugin.ui.model.*
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.util.*
 
-object InsightsModel : PanelModel {
+class InsightsModel : PanelModel {
 
     var insightsCount: Int = 0
     var listViewItems: List<ListViewItem<*>> = Collections.emptyList()

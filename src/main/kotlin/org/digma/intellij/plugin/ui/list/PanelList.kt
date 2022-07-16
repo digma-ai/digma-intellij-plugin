@@ -90,6 +90,9 @@ abstract class PanelList(val project: Project, listViewItems: List<ListViewItem<
 
     private fun rebuild() {
 
+        //create a new instance for every rebuild
+        val panelsLayoutHelper = PanelsLayoutHelper()
+
         Log.log(LOGGER::debug, "{} in rebuild,model size: {}",this.javaClass.simpleName, model.size)
 
         if (components.isNotEmpty()) {
@@ -105,7 +108,7 @@ abstract class PanelList(val project: Project, listViewItems: List<ListViewItem<
         for (i in 0 until model.getSize()) run {
             cellRenderer.apply {
                 val newComp: JPanel = getListCellRendererComponent(project,this@PanelList,
-                    model.getElementAt(i), i, this@PanelList.hasFocus())
+                    model.getElementAt(i), i, this@PanelList.hasFocus(),panelsLayoutHelper)
                 add(newComp)
                 if (gapBetweenItems) {
                     add(Box.createVerticalStrut(Laf.scaleBorders(3)))
@@ -119,7 +122,10 @@ abstract class PanelList(val project: Project, listViewItems: List<ListViewItem<
 
 
     class DefaultPanelListCellRenderer : AbstractPanelListCellRenderer() {
-        override fun createPanel(project: Project,value: ListViewItem<*>, index: Int): JPanel {
+        override fun createPanel(project: Project,
+                                 value: ListViewItem<*>,
+                                 index: Int,
+                                 panelsLayoutHelper: PanelsLayoutHelper): JPanel {
             return JPanel()
         }
     }

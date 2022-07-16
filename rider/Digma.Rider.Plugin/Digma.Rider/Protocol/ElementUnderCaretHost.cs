@@ -205,19 +205,24 @@ namespace Digma.Rider.Protocol
                     return;
                 }
 
-                if (!PsiUtils.IsPsiSourceFileApplicable(psiSourceFile))
+                if (PsiUtils.IsPsiSourceFileApplicable(psiSourceFile))
                 {
-                    Log(_logger, "PsiSourceFile {0} is not applicable for method under caret,Clearing model",
-                        psiSourceFile);
-                    ClearModel();
-                    return;
+                    Log(_logger, "PsiSourceFile {0} is applicable for method under caret, calling OnChange.",psiSourceFile);
+                    OnChange(textControl, psiSourceFile);
                 }
-
-
-                OnChange(textControl, psiSourceFile);
+                else
+                {
+                    Log(_logger, "PsiSourceFile {0} is not applicable for method under caret,Notifying unsupported file.",psiSourceFile);
+                    var fileUri = textControl.Document.ToString();
+                    var newElementUnderCaret =
+                             new MethodUnderCaretEvent(string.Empty, string.Empty, string.Empty, fileUri,false);
+                    UpdateModelAndNotify(newElementUnderCaret);
+                }
             }
         }
 
+        
+        
         private void OnChange([NotNull] ITextControl textControl, [NotNull] IPsiSourceFile psiSourceFile)
         {
             if (!psiSourceFile.GetPsiServices().Files.IsCommitted(psiSourceFile))
@@ -256,16 +261,25 @@ namespace Digma.Rider.Protocol
         }
 
         //there may be incomplete documents in CodeObjectsCache. usually it happens on startup and when resharper caches 
-        //are not complete. we use the caret change event as a hook to call to fix the current document if its not complete.
+        //are not complete. we use the caret change event as a hook to call NotifyDocumentOpenedOrChanged to fix the
+        //current document if its not complete.
         private void HookRefreshCodeObjectsCache(IPsiSourceFile psiSourceFile)
         {
             Log(_logger, "In HookRefreshCodeObjectsCache for {0}", psiSourceFile);
             var document = _codeObjectsCache.Map.TryGetValue(psiSourceFile);
-            Log(_logger, "In HookRefreshCodeObjectsCache, found cached document for {0}", psiSourceFile);
             if (document is { IsComplete: false })
             {
+                Log(_logger, "In HookRefreshCodeObjectsCache, found incomplete cached document for {0}", psiSourceFile);
                 Log(_logger, "Calling NotifyDocumentOpenedOrChanged for {0}", psiSourceFile);
                 _codeObjectsHost.NotifyDocumentOpenedOrChanged(psiSourceFile);
+            }
+            else if (document != null)
+            {
+                Log(_logger, "In HookRefreshCodeObjectsCache, cached document is complete for {0}", psiSourceFile);
+            }
+            else
+            {
+                Log(_logger, "In HookRefreshCodeObjectsCache, could not find cached document for {0}", psiSourceFile);
             }
         }
 

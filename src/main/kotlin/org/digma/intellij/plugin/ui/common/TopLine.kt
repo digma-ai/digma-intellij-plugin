@@ -2,6 +2,7 @@
 
 package org.digma.intellij.plugin.ui.common
 
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.dsl.builder.MutableProperty
 import com.intellij.ui.dsl.builder.RightGap
@@ -13,7 +14,7 @@ import org.digma.intellij.plugin.ui.model.PanelModel
 import javax.swing.JLabel
 
 
-fun topLine(model: PanelModel, labelText: String): DialogPanel {
+fun topLine(project: Project, model: PanelModel, labelText: String): DialogPanel {
 
     return panel {
         row {
@@ -29,7 +30,7 @@ fun topLine(model: PanelModel, labelText: String): DialogPanel {
                 .horizontalAlign(HorizontalAlign.LEFT)
                 .bold()
                 .gap(RightGap.SMALL)
-            cell(envCombo())
+            cell(envCombo(project))
                 .horizontalAlign(HorizontalAlign.RIGHT)
         }.layout(RowLayout.INDEPENDENT)
     }.andTransparent()

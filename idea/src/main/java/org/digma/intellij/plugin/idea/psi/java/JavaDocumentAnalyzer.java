@@ -5,7 +5,7 @@ import org.digma.intellij.plugin.document.DocumentAnalyzer;
 
 public class JavaDocumentAnalyzer implements DocumentAnalyzer {
     @Override
-    public void fileOpened(PsiFile psiFile) {
+    public void analyzeDocument(PsiFile psiFile) {
 
     }
 }

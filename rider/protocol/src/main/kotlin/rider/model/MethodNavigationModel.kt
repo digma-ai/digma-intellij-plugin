@@ -8,7 +8,7 @@ import com.jetbrains.rd.generator.nova.property
 import com.jetbrains.rd.generator.nova.setting
 import com.jetbrains.rider.model.nova.ide.SolutionModel
 
-class MethodNavigationModel : Ext(SolutionModel.Solution) {
+object MethodNavigationModel : Ext(SolutionModel.Solution) {
 
 
     init {

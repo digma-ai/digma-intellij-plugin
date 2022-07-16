@@ -13,9 +13,9 @@ import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.insights.InsightsList
 import org.digma.intellij.plugin.ui.list.insights.PreviewList
 import org.digma.intellij.plugin.ui.list.listBackground
-import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsTabCard
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
+import org.digma.intellij.plugin.ui.service.InsightsViewService
 import java.awt.BorderLayout
 import java.awt.CardLayout
 import javax.swing.JComponent
@@ -28,11 +28,17 @@ private const val NO_INFO_CARD_NAME="NO-INFO"
 
 fun insightsPanel(project: Project ): DigmaTabPanel {
 
-    val topPanelWrapper = createTopPanel(project,InsightsModel,"Code insights")
+    //errorsModel and insightsModel are not singletons but are single per open project.
+    //they are created by the view service and live as long as the project is alive.
+    //so components can bind to them, but not to members of them, the model instance is the same on but the
+    //members change , like the various lists. or bind to a function of the mode like getScope.
+    val insightsModel = InsightsViewService.getInstance(project).model
+
+    val topPanelWrapper = createTopPanel(project,insightsModel,"Code insights")
 
 
-    val insightsList = ScrollablePanelList(InsightsList(project,InsightsModel.listViewItems))
-    val previewList = ScrollablePanelList(PreviewList(project,InsightsModel.previewListViewItems))
+    val insightsList = ScrollablePanelList(InsightsList(project,insightsModel.listViewItems))
+    val previewList = ScrollablePanelList(PreviewList(project,insightsModel.previewListViewItems))
 
     val previewTitle = panel {
         row {
@@ -46,7 +52,7 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
         row{
             label("").bind(
                 JLabel::getText, JLabel::setText, MutableProperty(
-                    getter = { InsightsModel.getPreviewListMessage() },
+                    getter = { insightsModel.getPreviewListMessage() },
                     setter = {})
             )
         }
@@ -60,7 +66,7 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
     previewPanel.isOpaque = false
 
 
-    val noInfoWarningPanel = noCodeObjectWarningPanel(InsightsModel)
+    val noInfoWarningPanel = noCodeObjectWarningPanel(insightsModel)
 
     val cardLayout = CardLayout()
     val cardsPanel = JPanel(cardLayout)
@@ -71,7 +77,7 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
     cardLayout.addLayoutComponent(insightsList, InsightsTabCard.INSIGHTS.name)
     cardLayout.addLayoutComponent(previewPanel, InsightsTabCard.PREVIEW.name)
     cardLayout.addLayoutComponent(noInfoWarningPanel, NO_INFO_CARD_NAME)
-    cardLayout.show(cardsPanel,InsightsModel.card.name)
+    cardLayout.show(cardsPanel,insightsModel.card.name)
 
     val result = object: DigmaTabPanel() {
         override fun getPreferredFocusableComponent(): JComponent {
@@ -79,7 +85,7 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
         }
 
         override fun getPreferredFocusedComponent(): JComponent {
-            return if (InsightsModel.card.name == InsightsTabCard.INSIGHTS.name){
+            return if (insightsModel.card.name == InsightsTabCard.INSIGHTS.name){
                 insightsList
             }else{
                 previewList
@@ -97,15 +103,15 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
 
 
             SwingUtilities.invokeLater {
-                insightsList.getModel().setListData(InsightsModel.listViewItems)
-                previewList.getModel().setListData(InsightsModel.previewListViewItems)
+                insightsList.getModel().setListData(insightsModel.listViewItems)
+                previewList.getModel().setListData(insightsModel.previewListViewItems)
 
-                if (insightsList.getModel().size == 0 && InsightsModel.card.equals(InsightsTabCard.INSIGHTS)){
+                if (insightsList.getModel().size == 0 && insightsModel.card.equals(InsightsTabCard.INSIGHTS)){
                     cardLayout.show(cardsPanel,NO_INFO_CARD_NAME)
-                }else if (previewList.getModel().size == 0 && InsightsModel.card.equals(InsightsTabCard.PREVIEW)){
+                }else if (previewList.getModel().size == 0 && insightsModel.card.equals(InsightsTabCard.PREVIEW)){
                     cardLayout.show(cardsPanel,NO_INFO_CARD_NAME)
                 }else{
-                    cardLayout.show(cardsPanel,InsightsModel.card.name)
+                    cardLayout.show(cardsPanel,insightsModel.card.name)
                 }
 
                 cardsPanel.revalidate()

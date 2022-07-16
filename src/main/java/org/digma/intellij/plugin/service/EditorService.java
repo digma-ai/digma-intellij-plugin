@@ -31,6 +31,7 @@ import java.util.Set;
 public class EditorService implements Disposable {
 
     //todo: checkout
+
     // FrontendTextControlHost.getInstance(project).visibleEditorsChange
     // RiderTextControlHost.getInstance(project).visibleEditorsChange
     // RiderTextControlHost.getInstance(project).
@@ -127,6 +128,106 @@ public class EditorService implements Disposable {
     }
 
 
+
+    /*
+
+    /todo: check this exception, maybe change the id of the document and keep them open , or copy to temp folder
+
+    com.jetbrains.rdclient.util.BackendException: An item with the same key has already been added. Key: /home/shalom/workspace/digma/otel-sample-application-dotnet/Sample.MoneyTransfer.Api/Controllers/SampleInsights.cs
+
+--- EXCEPTION #1/2 [ArgumentException]
+Message = “An item with the same key has already been added. Key: /home/shalom/workspace/digma/otel-sample-application-dotnet/Sample.MoneyTransfer.Api/Controllers/SampleInsights.cs”
+ExceptionPath = Root.InnerException
+ClassName = System.ArgumentException
+Data.ThreadLocalDebugInfo = “
+  map `RoslynHost.RoslynModel.session.$.openDocuments` (13243236516587360802)
+   -> map `MainProtocol.SolutionModel.solutions.[1].documentsOperationModel.documents` (14314735552276044795)
+   -> RdDispatcher::FlushAll
+”
+HResult = E_INVALIDARG=COR_E_ARGUMENT=WIN32_ERROR_INVALID_PARAMETER=80070057
+Source = System.Private.CoreLib
+StackTraceString = “
+  at System.Collections.Generic.Dictionary`2.TryInsert(TKey key, TValue value, InsertionBehavior behavior)
+     at System.Collections.Generic.Dictionary`2.Add(TKey key, TValue value)
+     at JetBrains.Collections.Viewable.ViewableMap`2.Add(TK key, TV value)
+     at JetBrains.Collections.Viewable.ViewableMap`2.Add(KeyValuePair`2 item)
+     at JetBrains.Rd.Impl.RdMap`2.Add(KeyValuePair`2 item)
+     at JetBrains.DictionaryEx.<>c__DisplayClass4_0`2.<Add>b__0()
+     at JetBrains.Lifetimes.LifetimeDefinition.Bracket(Action opening, Action closing)
+     at JetBrains.DictionaryEx.Add[TKey,TValue](IDictionary`2 dictionary, Lifetime lifetime, TKey key, TValue value)
+     at JetBrains.Rider.Roslyn.Host.RiderWorkerHost.<>c__DisplayClass14_0.<ViewOpenedDocuments>b__0(Lifetime documentLifetime, RdDocumentId key, RiderDocument document)
+     at JetBrains.Collections.Viewable.ReactiveEx.<>c__DisplayClass18_0`2.<View>b__0(AddRemove kind, K key, V value)
+     at JetBrains.Collections.Viewable.ReactiveEx.<>c__DisplayClass15_0`2.<AdviseAddRemove>b__0(MapEvent`2 e)
+     at JetBrains.Collections.Viewable.SignalBase`1.Fire(T value)
+”
+
+--- Outer ---
+
+--- EXCEPTION #2/2 [LoggerException]
+Message = “An item with the same key has already been added. Key: /home/shalom/workspace/digma/otel-sample-application-dotnet/Sample.MoneyTransfer.Api/Controllers/SampleInsights.cs”
+ExceptionPath = Root
+ClassName = JetBrains.Util.LoggerException
+InnerException = “Exception #1 at Root.InnerException”
+HResult = COR_E_APPLICATION=80131600
+StackTraceString = “
+  at JetBrains.Util.LoggerBase.Log(LoggingLevel level, String message, Exception ex)
+     at JetBrains.Diagnostics.Log.SwitchingLog.JetBrains.Diagnostics.ILog.Log(LoggingLevel level, String message, Exception exception)
+     at JetBrains.Diagnostics.LogEx.Error(ILog this, Exception ex, String message)
+     at JetBrains.Collections.Viewable.SignalBase`1.Fire(T value)
+     at JetBrains.Collections.Viewable.ViewableMap`2.Add(TK key, TV value)
+     at JetBrains.Collections.Viewable.ViewableMap`2.Add(KeyValuePair`2 item)
+     at JetBrains.DictionaryEx.<>c__DisplayClass4_0`2.<Add>b__0()
+     at JetBrains.Lifetimes.LifetimeDefinition.Bracket(Action opening, Action closing)
+     at JetBrains.DictionaryEx.Add[TKey,TValue](IDictionary`2 dictionary, Lifetime lifetime, TKey key, TValue value)
+     at JetBrains.Rider.Backend.Features.Documents.RiderDocumentHost.<AdviseModel>b__5_0(Lifetime lifetime, RdDocumentId documentId, IDocumentViewModel documentModel)
+     at JetBrains.Collections.Viewable.ReactiveEx.<>c__DisplayClass18_0`2.<View>b__0(AddRemove kind, K key, V value)
+     at JetBrains.Collections.Viewable.ReactiveEx.<>c__DisplayClass15_0`2.<AdviseAddRemove>b__0(MapEvent`2 e)
+     at JetBrains.Collections.Viewable.SignalBase`1.Fire(T value)
+     at JetBrains.Collections.Viewable.ViewableMap`2.Add(TK key, TV value)
+     at JetBrains.Rider.Backend.Features.Documents.RiderDocumentHost.<InitSolutionModel>b__4_0(MapEvent`2 change)
+     at JetBrains.Collections.Viewable.SignalBase`1.Fire(T value)
+     at JetBrains.Collections.Viewable.ViewableMap`2.set_Item(TK key, TV value)
+     at JetBrains.Rd.Impl.RdMap`2.OnWireReceived(UnsafeReader stream)
+     at JetBrains.Rd.Impl.MessageBroker.Execute(IRdWireable reactive, Byte[] msg)
+     at JetBrains.Util.Concurrency.ExecutionContextEx.<>c__DisplayClass0_0.<Run>b__0(Object _)
+     at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+     at JetBrains.Util.Concurrency.ExecutionContextEx.Run(ExecutionContext context, ContextCallback callback, Object state)
+     at JetBrains.Platform.RdFramework.Impl.RdDispatcher.FlushAll()
+     at JetBrains.Util.Concurrency.ExecutionContextEx.<>c__DisplayClass0_0.<Run>b__0(Object _)
+     at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+     at JetBrains.Util.Concurrency.ExecutionContextEx.Run(ExecutionContext context, ContextCallback callback, Object state)
+     at JetBrains.Threading.ReentrancyGuard.Execute(String name, Action action)
+     at JetBrains.Threading.ReentrancyGuard.ExecutePendingActions()
+     at JetBrains.Util.Concurrency.ExecutionContextEx.<>c__DisplayClass0_0.<Run>b__0(Object _)
+     at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+     at JetBrains.Util.Concurrency.ExecutionContextEx.Run(ExecutionContext context, ContextCallback callback, Object state)
+     at JetBrains.Threading.JetDispatcher.Closure.Execute()
+     at JetBrains.Threading.JetDispatcher.Run()
+     at JetBrains.Rider.Backend.Product.RiderMain.Main(Lifetime lifetime, IRiderSettings settings, ILogger logger, ProtocolComponent protocol, RdShellModel shellModel, ApplicationShutdownRequests shutdownRequests)
+     at System.RuntimeMethodHandle.InvokeMethod(Object target, Span`1& arguments, Signature sig, Boolean constructor, Boolean wrapExceptions)
+     at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+     at JetBrains.Application.Environment.RunsPublicStaticIntMain.<>c__DisplayClass0_0.<.ctor>b__0()
+     at JetBrains.Application.Environment.RunsPublicStaticIntMain.<>c__DisplayClass0_2.<.ctor>b__5()
+     at JetBrains.Util.Logging.Logger.Catch(Action action)
+     at JetBrains.Application.Threading.IThreadingEx.<>c__DisplayClass18_1.<ExecuteOrQueueWhenNotGuarded>b__4()
+     at JetBrains.Util.Concurrency.ExecutionContextEx.<>c__DisplayClass1_0.<Run>b__0(Object _)
+     at JetBrains.Util.Concurrency.ExecutionContextEx.<>c__DisplayClass0_0.<Run>b__0(Object _)
+     at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+     at System.Threading.ExecutionContext.Run(ExecutionContext executionContext, ContextCallback callback, Object state)
+     at JetBrains.Util.Concurrency.ExecutionContextEx.Run(ExecutionContext context, ContextCallback callback, Object state)
+     at JetBrains.Util.Concurrency.ExecutionContextEx.Run(ExecutionContext context, Action action)
+     at JetBrains.Threading.JetDispatcher.Closure.<>c__DisplayClass10_1.<.ctor>b__0()
+     at JetBrains.Threading.JetDispatcher.Closure.Execute()
+     at JetBrains.Threading.JetDispatcher.Run(Func`1 condition, TimeSpan timeout, Boolean bThrowOnTimeout)
+     at JetBrains.Application.Environment.IJetHostEx.RunHostMessageLoop(IComponentContainer containerEnv)
+     at JetBrains.Application.Environment.HostParameters.MessagePumpMainLoopHostMixin.JetBrains.Application.Environment.HostParameters.IRunMainLoopHostMixin.RunMainLoop(ComponentContainer containerEnv)
+     at JetBrains.Application.Environment.HostParameters.JetHostParametersCaller.RunMainLoop(ComponentContainer containerEnv)
+     at JetBrains.Application.Environment.JetEnvironment.InternalRun(JetHostParametersCaller host, ComponentContainer containerEnv)
+     at JetBrains.Application.Environment.JetEnvironment.CreateAndRun(Full hostparams)
+
+
+
+     */
 
 
     private void openVirtualFile(VirtualFile virtualFile, URL workspaceUrl, int lineNumber) {

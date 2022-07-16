@@ -9,6 +9,7 @@ import com.intellij.ui.dsl.builder.TopGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBUI
+import org.digma.intellij.plugin.ui.model.NOT_SUPPORTED_OBJECT_MSG
 import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import javax.swing.JLabel
@@ -24,6 +25,8 @@ fun noCodeObjectWarningPanel(model: PanelModel): DialogPanel {
         row{
             label(getNoInfoMessage(model)).bind(JLabel::getText,JLabel::setText, MutableProperty(
                 getter = { getNoInfoMessage(model) },
+                setter = {})).bind(JLabel::getToolTipText,JLabel::setToolTipText, MutableProperty(
+                getter = { getNoInfoMessage(model) },
                 setter = {}))
                 .horizontalAlign(HorizontalAlign.CENTER)
         }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
@@ -34,7 +37,7 @@ fun noCodeObjectWarningPanel(model: PanelModel): DialogPanel {
 private fun getNoInfoMessage(model: PanelModel):String{
     var msg = if(model is InsightsModel) "No insights" else "No errors"
 
-    if (model.getScope().isNotBlank()){
+    if (model.getScope().isNotBlank() && !model.getScope().contains(NOT_SUPPORTED_OBJECT_MSG)){
         msg += " for "+model.getScope()
     }
     return msg
@@ -45,7 +48,7 @@ fun createTopPanel(project: Project, model: PanelModel, labelText: String): Dial
 
     return panel {
         row {
-            val topLine = topLine(model, labelText)
+            val topLine = topLine(project,model, labelText)
             topLine.isOpaque = false
             cell(topLine)
                 .horizontalAlign(HorizontalAlign.FILL)

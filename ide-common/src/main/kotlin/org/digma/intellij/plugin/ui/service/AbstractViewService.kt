@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.ui.content.Content
+import org.digma.intellij.plugin.ui.model.NOT_SUPPORTED_OBJECT_MSG
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 
 
@@ -14,6 +15,7 @@ abstract class AbstractViewService(val project: Project) {
     var toolWindowContent: Content? = null
 
     private val toolWindowTabsHelper: ToolWindowTabsHelper = project.getService(ToolWindowTabsHelper::class.java)
+
 
     abstract fun getViewDisplayName(): String
 
@@ -53,6 +55,10 @@ abstract class AbstractViewService(val project: Project) {
             panel?.reset()
         }
 
+    }
+
+    protected fun getNonSupportedFileScopeMessage(fileUri: String?): String{
+        return NOT_SUPPORTED_OBJECT_MSG + " " +fileUri?.substringAfterLast('/',fileUri)
     }
 
 

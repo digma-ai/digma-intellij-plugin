@@ -15,11 +15,11 @@ import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.errors.ErrorsPanelList
 import org.digma.intellij.plugin.ui.list.insights.PreviewList
 import org.digma.intellij.plugin.ui.list.listBackground
-import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsTabCard
-import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsTabCard
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
+import org.digma.intellij.plugin.ui.service.ErrorsViewService
+import org.digma.intellij.plugin.ui.service.InsightsViewService
 import java.awt.BorderLayout
 import java.awt.CardLayout
 import javax.swing.JComponent
@@ -35,11 +35,18 @@ private const val PREVIEW_LIST_CARD_NAME="PREVIEW_LIST"
 
 fun errorsPanel(project: Project): DigmaTabPanel {
 
-    val topPanelWrapper = createTopPanel(project,InsightsModel,"Code errors")
+    //errorsModel and insightsModel are not singletons but are single per open project.
+    //they are created by the view service and live as long as the project is alive.
+    //so components can bind to them, but not to members of them, the model instance is the same on but the
+    //members change , like the various lists. or bind to a function of the mode like getScope.
+    val errorsModel = ErrorsViewService.getInstance(project).model
+    val insightsModel = InsightsViewService.getInstance(project).model
 
-    val errorsList = ScrollablePanelList(ErrorsPanelList(project, ErrorsModel.listViewItems))
+    val topPanelWrapper = createTopPanel(project,errorsModel,"Code errors")
 
-    val previewList = ScrollablePanelList(PreviewList(project, InsightsModel.previewListViewItems))
+    val errorsList = ScrollablePanelList(ErrorsPanelList(project, errorsModel.listViewItems))
+
+    val previewList = ScrollablePanelList(PreviewList(project, insightsModel.previewListViewItems))
     val previewTitle = panel {
         row {
             icon(AllIcons.Ide.FatalErrorRead)
@@ -52,7 +59,7 @@ fun errorsPanel(project: Project): DigmaTabPanel {
         row{
             label("").bind(
                 JLabel::getText, JLabel::setText, MutableProperty(
-                    getter = { InsightsModel.getPreviewListMessage() },
+                    getter = { insightsModel.getPreviewListMessage() },
                     setter = {})
             )
         }
@@ -64,7 +71,7 @@ fun errorsPanel(project: Project): DigmaTabPanel {
     previewPanel.isOpaque = false
 
 
-    val noInfoWarningPanel = noCodeObjectWarningPanel(ErrorsModel)
+    val noInfoWarningPanel = noCodeObjectWarningPanel(errorsModel)
 
 
     //a card layout for the errorsPanelList and noInfoWarningPanel
@@ -88,7 +95,7 @@ fun errorsPanel(project: Project): DigmaTabPanel {
     errorsListPanel.add(errorsPanelListCardPanel, BorderLayout.CENTER)
 
 
-    val errorsDetailsPanel = errorDetailsPanel(project,ErrorsModel)
+    val errorsDetailsPanel = errorDetailsPanel(project,errorsModel)
 
 
     val cardLayout = CardLayout()
@@ -120,12 +127,12 @@ fun errorsPanel(project: Project): DigmaTabPanel {
 
 
             SwingUtilities.invokeLater {
-                errorsList.getModel().setListData(ErrorsModel.listViewItems)
-                previewList.getModel().setListData(InsightsModel.previewListViewItems)
+                errorsList.getModel().setListData(errorsModel.listViewItems)
+                previewList.getModel().setListData(insightsModel.previewListViewItems)
                 errorsDetailsPanel.reset()
-                cardLayout.show(cardsPanel, ErrorsModel.card.name)
+                cardLayout.show(cardsPanel, errorsModel.card.name)
 
-                if (errorsList.getModel().size == 0 && previewList.getModel().size > 0 && InsightsModel.card == InsightsTabCard.PREVIEW){
+                if (errorsList.getModel().size == 0 && previewList.getModel().size > 0 && insightsModel.card == InsightsTabCard.PREVIEW){
                     errorsPanelListCardLayout.show(errorsPanelListCardPanel, PREVIEW_LIST_CARD_NAME)
                 }else if(errorsList.getModel().size == 0){
                     errorsPanelListCardLayout.show(errorsPanelListCardPanel, NO_INFO_CARD_NAME)

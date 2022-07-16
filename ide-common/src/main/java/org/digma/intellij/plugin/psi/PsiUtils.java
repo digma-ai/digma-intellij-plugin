@@ -26,11 +26,21 @@ public class PsiUtils {
     }
 
 
+    /*
+    This method should either succeed or throw exception,never return null
+     */
     @NotNull
-    public static PsiFile uriToPsiFile(@NotNull String uri, @NotNull Project project) {
+    public static PsiFile uriToPsiFile(@NotNull String uri, @NotNull Project project) throws PsiFileNotFountException {
         return ReadAction.compute(() -> {
             VirtualFile virtualFile = VirtualFileManager.getInstance().findFileByUrl(uri);
-            return PsiManager.getInstance(project).findFile(virtualFile);
+            if (virtualFile == null){
+                throw new PsiFileNotFountException("could not locate VirtualFile for uri "+uri);
+            }
+            var psiFile = PsiManager.getInstance(project).findFile(virtualFile);
+            if (psiFile == null){
+                throw new PsiFileNotFountException("could not locate PsiFile for uri "+uri+", virtual file:"+virtualFile);
+            }
+            return psiFile;
         });
     }
 

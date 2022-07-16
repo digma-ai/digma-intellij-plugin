@@ -1,13 +1,13 @@
 package org.digma.intellij.plugin.rider.protocol
 
 import com.intellij.openapi.project.Project
+import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent
 import com.jetbrains.rider.projectView.solution
 import kotlin.random.Random
 
-class MethodNavigationHost(private val project: Project) {
+class MethodNavigationHost(project: Project) : LifetimedProjectComponent(project) {
 
     private var model: MethodNavigationModel = project.solution.methodNavigationModel
-
 
     fun navigateToMethod(codeObjectId: String) {
         model.protocol.scheduler.invokeOrQueue {

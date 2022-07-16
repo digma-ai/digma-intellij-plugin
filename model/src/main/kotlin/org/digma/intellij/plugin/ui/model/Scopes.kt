@@ -3,13 +3,14 @@ package org.digma.intellij.plugin.ui.model
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 
+const val NOT_SUPPORTED_OBJECT_MSG = "Non supported object"
 
 interface Scope{
     fun getScope():String
     fun getScopeTooltip():String
 }
 
-class EmptyScope(val text:String): Scope{
+class EmptyScope(val text:String = ""): Scope{
     override fun getScope(): String {
         return text
     }

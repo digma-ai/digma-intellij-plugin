@@ -9,6 +9,7 @@ import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.model.rest.insights.UnmappedInsight
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.buildBoldTitleGrayedComment
+import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.list.listGroupPanel
 import org.digma.intellij.plugin.ui.list.listItemPanel
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
@@ -29,14 +30,14 @@ fun insightGroupPanel(panel: JPanel): JPanel {
 }
 
 
-fun createInsightPanel(title: String, body: String, icon: Icon, iconText: String): JPanel {
-    return createInsightPanel(title, body, icon, iconText, true)
+fun createInsightPanel(title: String, body: String, icon: Icon, iconText: String, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
+    return createInsightPanel(title, body, icon, iconText, true,panelsLayoutHelper)
 }
 
-fun createInsightPanel(title: String, body: String, icon: Icon, iconText: String, wrap: Boolean): JPanel {
+fun createInsightPanel(title: String, body: String, icon: Icon, iconText: String, wrap: Boolean, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
 
     val message = JLabel(buildBoldTitleGrayedComment(title,body),SwingConstants.LEFT)
-    val iconPanel = insightsIconPanelBorder(icon, iconText)
+    val iconPanel = insightsIconPanelBorder(icon, iconText,panelsLayoutHelper)
     val result = JBPanel<JBPanel<*>>()
     result.layout = BorderLayout()
     result.add(message,BorderLayout.CENTER)
@@ -51,30 +52,27 @@ fun createInsightPanel(title: String, body: String, icon: Icon, iconText: String
 }
 
 
-fun unmappedInsightPanel(listViewItem: ListViewItem<UnmappedInsight>): JPanel {
+fun unmappedInsightPanel(listViewItem: ListViewItem<UnmappedInsight>, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
 
     val methodName = listViewItem.modelObject.codeObjectId.substringAfterLast("\$_\$")
     return createInsightPanel("Unmapped insight: '${listViewItem.modelObject.theType}'",
         "unmapped insight type for '$methodName'",
-        Icons.QUESTION_MARK, "")
+        Icons.QUESTION_MARK, "",panelsLayoutHelper)
 }
 
 
-fun genericPanelForSingleInsight(listViewItem: ListViewItem<CodeObjectInsight>): JPanel {
+fun genericPanelForSingleInsight(listViewItem: ListViewItem<CodeObjectInsight>, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
 
     return createInsightPanel("Generic insight panel",
         "Insight named ${listViewItem.modelObject.javaClass.simpleName}",
-        Icons.QUESTION_MARK, "")
+        Icons.QUESTION_MARK, "",panelsLayoutHelper)
 }
 
 
 
 
 
-
-
-
-internal fun insightsIconPanelBorder(icon: Icon, text: String): JPanel {
+internal fun insightsIconPanelBorder(icon: Icon, text: String, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
 
 
     val panel: JPanel = object: JPanel(){
@@ -86,8 +84,8 @@ internal fun insightsIconPanelBorder(icon: Icon, text: String): JPanel {
 //            if (isVisible) {
                 val h = ps.height
                 val w = ps.width
-                addCurrentLargestWidthIconPanel(w)
-                return Dimension(getCurrentLargestWidthIconPanel(w), h)
+                addCurrentLargestWidthIconPanel(panelsLayoutHelper,w)
+                return Dimension(getCurrentLargestWidthIconPanel(panelsLayoutHelper,w), h)
 //            }else{
 //                return ps
 //            }
@@ -109,26 +107,28 @@ internal fun insightsIconPanelBorder(icon: Icon, text: String): JPanel {
     panel.border = empty(2,0,0,Laf.scaleBorders(getInsightIconPanelRightBorderSize()))
 
     val width = panel.preferredSize.width
-    addCurrentLargestWidthIconPanel(width)
+    addCurrentLargestWidthIconPanel(panelsLayoutHelper,width)
 
     return panel
 }
 
 
+
+
 internal fun getInsightIconPanelRightBorderSize():Int{
-    return 20
+    return 5
 }
-internal fun getCurrentLargestWidthIconPanel(width: Int):Int{
+internal fun getCurrentLargestWidthIconPanel(layoutHelper: PanelsLayoutHelper, width: Int):Int{
     //this method should never return null and never throw NPE
     val currentLargest: Int =
-        (InsightsPanelsLayoutHelper.getObjectAttribute("insightsIconPanelBorder","largestWidth")?: 0) as Int
+        (layoutHelper.getObjectAttribute("insightsIconPanelBorder","largestWidth")?: 0) as Int
     return max(width,currentLargest)
 }
-internal fun addCurrentLargestWidthIconPanel(width: Int){
+internal fun addCurrentLargestWidthIconPanel(layoutHelper: PanelsLayoutHelper,width: Int){
     //this method should never throw NPE
     val currentLargest: Int =
-        (InsightsPanelsLayoutHelper.getObjectAttribute("insightsIconPanelBorder","largestWidth")?: 0) as Int
-    InsightsPanelsLayoutHelper.addObjectAttribute("insightsIconPanelBorder","largestWidth",
+        (layoutHelper.getObjectAttribute("insightsIconPanelBorder","largestWidth")?: 0) as Int
+    layoutHelper.addObjectAttribute("insightsIconPanelBorder","largestWidth",
         max(currentLargest,width))
 }
 

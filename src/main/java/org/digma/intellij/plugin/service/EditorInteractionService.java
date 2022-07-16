@@ -9,11 +9,9 @@ import org.digma.intellij.plugin.editor.EditorEventsHandler;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
-import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.ui.CaretContextService;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 
@@ -60,7 +58,10 @@ public class EditorInteractionService implements CaretContextService, Disposable
          */
 
 
-        if (methodUnderCaret.getId().isBlank()) {
+        if (!methodUnderCaret.isSupportedFile()){
+            Log.log(LOGGER::debug, "methodUnderCaret is non supported file {}. ", methodUnderCaret);
+            contextEmptyNonSupportedFile(methodUnderCaret.getFileUri());
+        }else if (methodUnderCaret.getId().isBlank()) {
             Log.log(LOGGER::debug, "No id in methodUnderCaret,trying fileUri {}. ", methodUnderCaret);
             //if no id then try to show a preview for the document
             if (methodUnderCaret.getFileUri().isBlank()){
@@ -100,6 +101,12 @@ public class EditorInteractionService implements CaretContextService, Disposable
 
     }
 
+    private void contextEmptyNonSupportedFile(String fileUri) {
+        Log.log(LOGGER::debug, "contextEmptyNonSupportedFile called");
+        insightsViewService.emptyNonSupportedFile(fileUri);
+        errorsViewService.emptyNonSupportedFile(fileUri);
+    }
+
     @Override
     public void contextEmpty() {
         Log.log(LOGGER::debug, "contextEmpty called");
@@ -113,12 +120,10 @@ public class EditorInteractionService implements CaretContextService, Disposable
     }
 
 
-    public void start(@NotNull Project project) {
-        Log.log(LOGGER::info, "starting..");
-        this.project = project;
+    public void start() {
+        Log.log(LOGGER::info, "Starting...");
         EditorEventsHandler editorEventsHandler = project.getService(EditorEventsHandler.class);
-        LanguageService languageService = project.getService(LanguageService.class);
-        editorEventsHandler.start(project, this, languageService);
+        editorEventsHandler.start(project);
     }
 
 }

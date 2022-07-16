@@ -18,10 +18,11 @@ import java.util.stream.Collectors
 
 class InsightsViewService(project: Project): AbstractViewService(project) {
 
-    private val LOGGER: Logger = Logger.getInstance(InsightsViewService::class.java)
+    private val logger: Logger = Logger.getInstance(InsightsViewService::class.java)
 
-    //InsightsModel is singleton object
-    private var model = InsightsModel
+    //the model is single per the life of an open project in intellij. it shouldn't be created
+    //elsewhere in the program. it can not be singleton.
+    val model = InsightsModel()
 
     private val insightsProvider: InsightsProvider = project.getService(InsightsProvider::class.java)
 
@@ -31,15 +32,27 @@ class InsightsViewService(project: Project): AbstractViewService(project) {
     }
 
 
-
+    companion object {
+        fun getInstance(project: Project): InsightsViewService {
+            return project.getService(InsightsViewService::class.java)
+        }
+    }
 
     fun contextChanged(
         methodInfo: MethodInfo
     ) {
 
-        Log.log(LOGGER::debug, "contextChanged to {}. ", methodInfo)
+        Log.log(logger::debug, "contextChanged to {}. ", methodInfo)
 
         val insightsListContainer: InsightsListContainer = insightsProvider.getInsights(methodInfo)
+
+        //todo: flickering
+        //todo: when a document changes there are events that will refresh the view.
+        //when editing a document there may be many changes , many times the content of the view didn't
+        //change at all and we refresh for nothing. maybe we can ass a last update timestamp to the model
+        //and update the ui only if something changed since last time
+        //its not easy because the list of insights will change and we need to check if any insight changed...
+
 
         model.listViewItems = insightsListContainer.listViewItems
         model.previewListViewItems = ArrayList()
@@ -53,7 +66,7 @@ class InsightsViewService(project: Project): AbstractViewService(project) {
 
     fun contextChangeNoMethodInfo(dummy: MethodInfo) {
 
-        Log.log(LOGGER::debug, "contextChangeNoMethodInfo to {}. ", dummy)
+        Log.log(logger::debug, "contextChangeNoMethodInfo to {}. ", dummy)
 
         model.listViewItems = ArrayList()
         model.previewListViewItems = ArrayList()
@@ -68,7 +81,7 @@ class InsightsViewService(project: Project): AbstractViewService(project) {
 
     fun empty() {
 
-        Log.log(LOGGER::debug, "empty called")
+        Log.log(logger::debug, "empty called")
 
         model.listViewItems = ArrayList()
         model.previewListViewItems = ArrayList()
@@ -79,10 +92,23 @@ class InsightsViewService(project: Project): AbstractViewService(project) {
         updateUi()
     }
 
+   fun emptyNonSupportedFile(fileUri: String) {
+
+        Log.log(logger::debug, "empty called")
+
+        model.listViewItems = ArrayList()
+        model.previewListViewItems = ArrayList()
+        model.scope = EmptyScope(getNonSupportedFileScopeMessage(fileUri))
+        model.insightsCount = 0
+        model.card = InsightsTabCard.INSIGHTS
+
+        updateUi()
+    }
+
     fun showDocumentPreviewList(documentInfoContainer: DocumentInfoContainer?,
                                 fileUri: String) {
 
-        Log.log(LOGGER::debug, "showDocumentPreviewList for {}. ", fileUri)
+        Log.log(logger::debug, "showDocumentPreviewList for {}. ", fileUri)
 
         if (documentInfoContainer == null) {
             model.previewListViewItems = ArrayList()

@@ -34,7 +34,7 @@ public class EditorManagerFileOpenedListener implements FileEditorManagerListene
                 PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
                 Log.log(LOGGER::debug, "EditorManagerFileOpenedListener.fileOpened: file:{}, psi-file {}", file,psiFile);
                 if (languageService.isSupportedFile(project,psiFile)) {
-                    documentAnalyzer.fileOpened(psiFile);
+                    documentAnalyzer.analyzeDocument(psiFile);
                 }
             }
         });

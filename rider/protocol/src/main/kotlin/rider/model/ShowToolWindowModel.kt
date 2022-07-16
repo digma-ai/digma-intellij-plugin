@@ -1,11 +1,14 @@
 package rider.model
 
-import com.jetbrains.rd.generator.nova.*
+import com.jetbrains.rd.generator.nova.Ext
+import com.jetbrains.rd.generator.nova.PredefinedType
 import com.jetbrains.rd.generator.nova.csharp.CSharp50Generator
 import com.jetbrains.rd.generator.nova.kotlin.Kotlin11Generator
+import com.jetbrains.rd.generator.nova.setting
+import com.jetbrains.rd.generator.nova.signal
 import com.jetbrains.rider.model.nova.ide.SolutionModel
 
-class ShowToolWindowModel : Ext(SolutionModel.Solution) {
+object ShowToolWindowModel : Ext(SolutionModel.Solution) {
 
 
     init {

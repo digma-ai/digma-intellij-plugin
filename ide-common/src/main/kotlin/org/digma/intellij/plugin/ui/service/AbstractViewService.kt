@@ -5,6 +5,7 @@ import com.intellij.openapi.wm.ToolWindow
 import com.intellij.ui.content.Content
 import org.digma.intellij.plugin.ui.model.NOT_SUPPORTED_OBJECT_MSG
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
+import javax.swing.SwingUtilities
 
 
 abstract class AbstractViewService(val project: Project) {
@@ -24,7 +25,9 @@ abstract class AbstractViewService(val project: Project) {
         if (toolWindowTabsHelper.isErrorDetailsOn()){
             return
         }
-        toolWindow?.contentManager?.setSelectedContent(toolWindowContent!!, false)
+        SwingUtilities.invokeLater {
+            toolWindow?.contentManager?.setSelectedContent(toolWindowContent!!, false)
+        }
     }
 
     fun isVisible():Boolean{
@@ -52,7 +55,9 @@ abstract class AbstractViewService(val project: Project) {
         }
 
         if (panel != null){
-            panel?.reset()
+            SwingUtilities.invokeLater {
+                panel?.reset()
+            }
         }
 
     }

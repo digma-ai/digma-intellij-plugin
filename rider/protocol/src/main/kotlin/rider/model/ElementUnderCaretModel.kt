@@ -20,10 +20,10 @@ object ElementUnderCaretModel : Ext(SolutionModel.Solution) {
     init {
         setting(CSharp50Generator.Namespace, "Digma.Rider.Protocol")
         setting(Kotlin11Generator.Namespace, "org.digma.intellij.plugin.rider.protocol")
-        //todo: maybe instead of elementUnderCaret and a signal just register to elementUnderCaret change and remove the signal
+        //todo: consider instead of elementUnderCaret property and a notifyElementUnderCaret signal just register to elementUnderCaret change and remove the signal
         property("elementUnderCaret", MethodUnderCaretEvent)
-        signal("notifyElementUnderCaret", PredefinedType.void)
-        signal("refresh", PredefinedType.void)
+        sink("notifyElementUnderCaret", PredefinedType.void)
+        source("refresh", PredefinedType.void)
     }
 
 }

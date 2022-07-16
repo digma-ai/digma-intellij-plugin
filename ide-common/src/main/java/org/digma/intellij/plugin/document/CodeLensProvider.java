@@ -44,11 +44,14 @@ public class CodeLensProvider {
                     MethodCodeObjectSummary methodCodeObjectSummary = (MethodCodeObjectSummary) codeObjectSummary;
                     int score = methodCodeObjectSummary.getScore();
                     if (score >= 70){
+                        Log.log(LOGGER::debug, "Collecting code lese for {}",codeObjectSummary.getCodeObjectId());
                         CodeLens codeLens = new CodeLens(codeObjectSummary.getCodeObjectId(), CodeObjectType.Method,"Error Hotspot");
                         codeLens.setLensTooltipText("Error Hotspot for "+codeObjectSummary.getCodeObjectId());
                         codeLens.setLensMoreText("Go to Error Hotspot");
                         codeLens.setAnchor("Top");
                         codeLensList.add(codeLens);
+                    }else{
+                        Log.log(LOGGER::debug, "Not Collecting code lese for {} because score is less the 70",codeObjectSummary.getCodeObjectId());
                     }
                 }
                 case EndpointSummary:{

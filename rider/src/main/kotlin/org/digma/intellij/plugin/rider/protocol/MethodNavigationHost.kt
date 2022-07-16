@@ -13,7 +13,7 @@ class MethodNavigationHost(project: Project) : LifetimedProjectComponent(project
         model.protocol.scheduler.invokeOrQueue {
             //the message needs to be unique. if a message is the same as the previous one the event is not fired
             val message = "{${Random.nextInt()}}$codeObjectId"
-            model.navigateToMethod.set(message)
+            model.navigateToMethod.fire(message)
         }
     }
 

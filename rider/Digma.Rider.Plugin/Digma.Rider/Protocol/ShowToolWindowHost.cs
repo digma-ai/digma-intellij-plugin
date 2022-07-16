@@ -1,4 +1,3 @@
-using JetBrains.Core;
 using JetBrains.ProjectModel;
 using JetBrains.RdBackend.Common.Features;
 using JetBrains.Util;
@@ -23,7 +22,7 @@ namespace Digma.Rider.Protocol
         public void ShowToolWindow()
         {
             Log(_logger, "ShowToolWindow called");
-            _showToolWindowModel.ShowToolWindow.Fire(Unit.Instance);
+            _showToolWindowModel.ShowToolWindow();
         }
        
         

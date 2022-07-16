@@ -3,7 +3,6 @@ using Digma.Rider.Discovery;
 using Digma.Rider.Util;
 using JetBrains.Annotations;
 using JetBrains.Application.Threading;
-using JetBrains.Core;
 using JetBrains.DataFlow;
 using JetBrains.DocumentManagers;
 using JetBrains.DocumentManagers.Transactions;
@@ -312,7 +311,7 @@ namespace Digma.Rider.Protocol
                     {
                         Log(_logger, "Updating model with {0}", newMethodUnderCaretEvent);
                         _model.ElementUnderCaret.Value = newMethodUnderCaretEvent;
-                        _model.NotifyElementUnderCaret.Fire(Unit.Instance);
+                        _model.NotifyElementUnderCaret();
                     }
                     else
                     {

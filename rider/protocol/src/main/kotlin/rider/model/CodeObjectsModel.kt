@@ -66,9 +66,9 @@ object CodeObjectsModel : Ext(SolutionModel.Solution) {
         setting(CSharp50Generator.Namespace, "Digma.Rider.Protocol")
         setting(Kotlin11Generator.Namespace, "org.digma.intellij.plugin.rider.protocol")
 
-        signal("reanalyze", PredefinedType.string)
+        source("reanalyze", PredefinedType.string)
         sink("documentAnalyzed", PredefinedType.string)
-        signal("refreshIncompleteDocuments", PredefinedType.void)
+        source("refreshIncompleteDocuments", PredefinedType.void)
 
         //key: document file path, value: Document
         map("documents",

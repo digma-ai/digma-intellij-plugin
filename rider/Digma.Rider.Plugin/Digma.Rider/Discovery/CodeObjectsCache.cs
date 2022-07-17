@@ -1,8 +1,6 @@
-using System;
 using Digma.Rider.Protocol;
 using Digma.Rider.Util;
 using JetBrains.Application.Progress;
-using JetBrains.Application.Settings;
 using JetBrains.Application.Threading;
 using JetBrains.Collections;
 using JetBrains.DocumentManagers.impl;
@@ -38,56 +36,18 @@ namespace Digma.Rider.Discovery
     {
         private readonly ILogger _logger;
 
-        public CodeObjectsCache(ILogger logger,Lifetime lifetime, IShellLocks locks, IPersistentIndexManager persistentIndexManager,
-            ISettingsStore settingsStore) 
+        /// <summary>
+        /// Increment the version when the cache structure changes.
+        /// it will set ClearOnLoad to true and the cache will be invalidated and rebuild.
+        /// </summary>
+        public override string Version => "2";
+
+        public CodeObjectsCache(ILogger logger,Lifetime lifetime, IShellLocks locks, IPersistentIndexManager persistentIndexManager) 
             : base(lifetime, locks, persistentIndexManager, new DocumentMarshaller())
         {
             _logger = logger;
             
             //todo: check PsiCachesAwaiter and PsiCacheNotifier, maybe wait for caches before starting load
-
-            MaybeInvalidateCache(settingsStore);
-        }
-
-        private void MaybeInvalidateCache(ISettingsStore settingsStore)
-        {
-            Log(_logger,"Checking if should invalidate cache..");
-            ClearOnLoad = ShouldClearOnLoad(settingsStore);
-            var msg = ClearOnLoad ? "CodeObjectsCache will rebuild." : "";
-            Log(_logger,"ClearOnLoad is {0}. "+msg,ClearOnLoad);
-        }
-
-        private bool ShouldClearOnLoad(ISettingsStore settingsStore)
-        {
-            try
-            {
-                Log(_logger,"Checking last invalidate time");
-                bool result;
-                var boundSettings = settingsStore.BindToContextTransient(ContextRange.ApplicationWide);
-                var setting = boundSettings.GetKey<CacheInvalidateSettings>(SettingsOptimization.DoMeSlowly);
-                if (setting.LastInvalidateTime == null || setting.LastInvalidateTime.IsEmpty())
-                {
-                    Log(_logger,"LastInvalidateTime is empty");
-                    result = true;
-                }
-                else
-                {
-                    var lastInvalidate = DateTime.Parse(setting.LastInvalidateTime);
-                    var requiredInvalidate = DateTime.Parse(setting.RequiredInvalidateTime);
-                    Log(_logger,"LastInvalidateTime is {0},RequiredInvalidateTime is {1}",lastInvalidate,requiredInvalidate);
-                    result = requiredInvalidate > lastInvalidate;
-                }
-
-                setting.LastInvalidateTime = setting.RequiredInvalidateTime;
-                Log(_logger,"Saving settings: LastInvalidateTime is {0},RequiredInvalidateTime is {1}",setting.LastInvalidateTime,setting.RequiredInvalidateTime);
-                boundSettings.SetKey(setting, SettingsOptimization.DoMeSlowly);
-                return result;
-            }
-            catch (Exception e)
-            {
-                _logger.Error(e, "Error parsing cache invalidate settings ");
-                return true;
-            }
         }
 
 

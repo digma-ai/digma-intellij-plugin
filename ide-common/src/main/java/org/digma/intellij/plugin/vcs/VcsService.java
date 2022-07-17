@@ -96,7 +96,7 @@ public class VcsService {
                         return hasChangeWithWorkingDir(vcs, filePath, requiredRevision, lineNumber);
                     }
                 } catch (VcsException e) {
-                    Log.error(LOGGER, e, "Could not compare revision {} with working dir for file {}", requiredRevision, filePath);
+                    Log.log(LOGGER::warn, "Could not compare revision {} with working dir for file {}", requiredRevision, filePath);
                 }
 
                 var currentRevision = vcs.getDiffProvider().getCurrentRevision(filePath.getVirtualFile());

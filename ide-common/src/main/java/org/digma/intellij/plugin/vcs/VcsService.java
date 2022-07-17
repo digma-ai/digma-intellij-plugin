@@ -40,13 +40,24 @@ public class VcsService {
         this.project = project;
     }
 
-    public boolean isFileUnderVcs(URL workspaceUrl) {
+    public boolean isFileUnderVcs(@NotNull URL workspaceUrl) {
         var filePath = VcsUtil.getFilePath(workspaceUrl.getPath());
+        if (filePath.getVirtualFile() == null){
+            return false;
+        }
         return VcsUtil.isFileUnderVcs(project, filePath);
     }
 
     public boolean isLocalContentChanged(URL workspaceUrl, String lastInstanceCommitId, int lineNumber) throws VcsException {
-        return isLocalContentLineChanged(workspaceUrl, lastInstanceCommitId, lineNumber);
+        if (isFileUnderVcs(workspaceUrl) && isRevisionExist(workspaceUrl,lastInstanceCommitId)) {
+            try {
+                return isLocalContentLineChanged(workspaceUrl, lastInstanceCommitId, lineNumber);
+            }catch (VcsException e){
+                Log.log(LOGGER::warn, "Could not find revision {} for {}, {}",lastInstanceCommitId, workspaceUrl,e.getMessage());
+                throw e;
+            }
+        }
+        return false;
     }
 
 
@@ -58,6 +69,7 @@ public class VcsService {
     }
 
 
+    //this method assumes that the file is under vcs and lastInstanceCommitId exists, otherwise there may be error dialogs from the vcs plugin.
     private boolean isLocalContentLineChanged(URL workspaceUrl, String lastInstanceCommitId, int lineNumber) throws VcsException {
 
         return ProgressManager.getInstance().run(new Task.WithResult<Boolean, VcsException>(project, "Check Local Changes", true) {
@@ -69,6 +81,10 @@ public class VcsService {
                     return false;
                 }
 
+                if (!isRevisionExist(workspaceUrl,lastInstanceCommitId)) {
+                    Log.log(LOGGER::debug, "Revision {} for File {} was not found",lastInstanceCommitId, workspaceUrl);
+                    return false;
+                }
 
                 var filePath = VcsUtil.getFilePath(workspaceUrl.getPath());
                 var vcs = VcsUtil.getVcsFor(project, filePath);
@@ -166,7 +182,11 @@ public class VcsService {
     @Nullable
     private VcsRevisionNumber getLastCommittedRevision(@NotNull AbstractVcs vcs, @NotNull FilePath filePath) {
 
-        var lastRevision = Objects.requireNonNull(vcs.getDiffProvider()).getLastRevision(filePath);
+        if (vcs.getDiffProvider() == null){
+            return null;
+        }
+
+        var lastRevision = vcs.getDiffProvider().getLastRevision(filePath);
         if (lastRevision != null) {
             return lastRevision.getNumber();
         }
@@ -184,6 +204,13 @@ public class VcsService {
                     Log.log(LOGGER::debug, "File {} is not under vcs", workspaceUrl);
                     return null;
                 }
+
+                if (!isRevisionExist(workspaceUrl,lastInstanceCommitId)) {
+                    Log.log(LOGGER::debug, "Revision {} for File {} was not found",lastInstanceCommitId, workspaceUrl);
+                    return null;
+                }
+
+
 
                 var filePath = VcsUtil.getFilePath(workspaceUrl.getPath());
                 var vcs = VcsUtil.getVcsFor(project, filePath);
@@ -214,7 +241,7 @@ public class VcsService {
                     if (vcs.getDiffProvider().canCompareWithWorkingDir()) {
                         var result = getFromCompareWithWorkingDir(vcs, filePath, requiredRevision);
                         if (result != null){
-                            return ContentRevisionVirtualFile.create(Objects.requireNonNull(result));
+                            return ContentRevisionVirtualFile.create(result);
                         }
                     }
                 } catch (VcsException e) {
@@ -222,15 +249,22 @@ public class VcsService {
                 }
 
                 var requiredRevisionContent = vcs.getDiffProvider().createFileContent(requiredRevision, filePath.getVirtualFile());
+                if (requiredRevisionContent == null){
+                    return null;
+                }
 
-                return ContentRevisionVirtualFile.create(Objects.requireNonNull(requiredRevisionContent));
+                return ContentRevisionVirtualFile.create(requiredRevisionContent);
             }
         });
     }
 
     private @Nullable ContentRevision getFromCompareWithWorkingDir(AbstractVcs vcs, FilePath filePath, VcsRevisionNumber requiredRevision) throws VcsException {
 
-        var changes = Objects.requireNonNull(vcs.getDiffProvider()).compareWithWorkingDir(Objects.requireNonNull(filePath.getVirtualFile()), requiredRevision);
+        if (vcs.getDiffProvider() == null || filePath.getVirtualFile() == null){
+            return null;
+        }
+
+        var changes = vcs.getDiffProvider().compareWithWorkingDir(filePath.getVirtualFile(), requiredRevision);
         if (changes != null && changes.size() == 1 ) {
             var change = changes.iterator().next();
             if (change.getBeforeRevision() == null) {
@@ -242,5 +276,33 @@ public class VcsService {
         return null;
     }
 
+
+    public boolean isRevisionExist(@NotNull URL workspaceUrl, @Nullable String lastInstanceCommitId) {
+
+        try {
+
+            if (!isFileUnderVcs(workspaceUrl)){
+                return false;
+            }
+
+            var filePath = VcsUtil.getFilePath(workspaceUrl.getPath());
+            var vcs = VcsUtil.getVcsFor(project, filePath);
+            if (vcs == null){
+                return false;
+            }
+            var requiredRevision = lastInstanceCommitId == null || lastInstanceCommitId.isBlank() ?
+                    getLastCommittedRevision(vcs, filePath) :
+                    vcs.parseRevisionNumber(lastInstanceCommitId);
+
+            if (requiredRevision == null){
+                return false;
+            }
+
+            return vcs.loadRevisions(filePath.getVirtualFile(), requiredRevision) != null;
+        }catch (VcsException e){
+            Log.log(LOGGER::warn, "Could not find revision {} for {}, {}",lastInstanceCommitId, workspaceUrl,e.getMessage());
+            return false;
+        }
+    }
 
 }

@@ -51,15 +51,26 @@ public class EditorService implements Disposable {
         }
 
         try {
-            VirtualFile vcsFile;
-            if (vcsService.isFileUnderVcs(workspaceUrl) &&
-                    vcsService.isLocalContentChanged(workspaceUrl, lastInstanceCommitId, lineNumber) &&
-                    (vcsFile = vcsService.getRevisionVirtualFile(workspaceUrl, lastInstanceCommitId)) != null) {
-
-                maybeOpenVcsFile(workspaceFile, (ContentRevisionVirtualFile) vcsFile, workspaceUrl, lineNumber);
-                return;
+            //if file not under vcs then the workspaceFile will open
+            if (vcsService.isFileUnderVcs(workspaceUrl)) {
+                //if revision doesn't exist show a warning and then the workspaceFile will open
+                if (vcsService.isRevisionExist(workspaceUrl, lastInstanceCommitId)) {
+                    //if no changes then the workspaceFile will open
+                    if(vcsService.isLocalContentChanged(workspaceUrl, lastInstanceCommitId, lineNumber)) {
+                        VirtualFile vcsFile = vcsService.getRevisionVirtualFile(workspaceUrl, lastInstanceCommitId);
+                        if (vcsFile != null) {
+                            maybeOpenVcsFile(workspaceFile, (ContentRevisionVirtualFile) vcsFile, workspaceUrl, lineNumber);
+                            return;
+                        }else{
+                            Messages.showWarningDialog(project,"Could not load vcs file for  "+workspaceFile+", Opening workspace file.","");
+                        }
+                    }
+                }else{
+                    Messages.showWarningDialog(project,"Revision "+lastInstanceCommitId+" for "+workspaceFile+" was not found, Opening workspace file.","");
+                }
             }
         } catch (VcsException e) {
+            Log.log(LOGGER::warn , "Could not query vcs for file {} " , workspaceUrl);
             var vcsErrorMsgResult = Messages.showOkCancelDialog(project, "Can not query VCS for file, Show Workspace file ?", "VCS error:" + e.getMessage(), "Ok", "Cancel", AllIcons.General.Error);
             if (vcsErrorMsgResult == MessageConstants.CANCEL) {
                 return;
@@ -103,8 +114,8 @@ public class EditorService implements Disposable {
 
 
     private void openVirtualFile(VirtualFile virtualFile, int lineNumber) {
-        OpenFileDescriptor navigatable = new OpenFileDescriptor(project, virtualFile, Math.max(0, lineNumber - 1), 0);
-        FileEditorManager.getInstance(project).openTextEditor(navigatable, true);
+        OpenFileDescriptor navigable = new OpenFileDescriptor(project, virtualFile, Math.max(0, lineNumber - 1), 0);
+        FileEditorManager.getInstance(project).openTextEditor(navigable, true);
     }
 
 
@@ -144,6 +155,7 @@ public class EditorService implements Disposable {
             NotificationUtil.showNotification(project, "This stack trace is empty");
             return;
         }
+
         try {
             //create unique name
             String name = STACKTRACE_PREFIX + "-" + Math.abs(stackTrace.hashCode()) + ".txt";

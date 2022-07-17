@@ -22,11 +22,16 @@ abstract class AbstractViewService(val project: Project) {
 
 
     fun setVisible() {
-        if (toolWindowTabsHelper.isErrorDetailsOn()){
+        if (toolWindowTabsHelper.isErrorDetailsOn()) {
             return
         }
-        SwingUtilities.invokeLater {
+
+        if (SwingUtilities.isEventDispatchThread()) {
             toolWindow?.contentManager?.setSelectedContent(toolWindowContent!!, false)
+        } else {
+            SwingUtilities.invokeLater {
+                toolWindow?.contentManager?.setSelectedContent(toolWindowContent!!, false)
+            }
         }
     }
 
@@ -55,8 +60,13 @@ abstract class AbstractViewService(val project: Project) {
         }
 
         if (panel != null){
-            SwingUtilities.invokeLater {
+
+            if (SwingUtilities.isEventDispatchThread()){
                 panel?.reset()
+            }else{
+                SwingUtilities.invokeLater {
+                    panel?.reset()
+                }
             }
         }
 

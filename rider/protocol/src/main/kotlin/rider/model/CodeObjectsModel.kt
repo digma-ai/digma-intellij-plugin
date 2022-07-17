@@ -9,8 +9,6 @@ import com.jetbrains.rider.model.nova.ide.SolutionModel
 @Suppress("unused")
 object CodeObjectsModel : Ext(SolutionModel.Solution) {
 
-    //todo: fix the signals, see unity
-
     private val RiderMethodInfo = structdef {
         field("id", PredefinedType.string)
         field("name", PredefinedType.string)

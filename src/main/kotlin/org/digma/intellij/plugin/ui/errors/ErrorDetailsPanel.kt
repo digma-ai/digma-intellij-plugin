@@ -21,7 +21,10 @@ import org.ocpsoft.prettytime.PrettyTime
 import java.awt.*
 import java.util.*
 import java.util.function.Consumer
-import javax.swing.*
+import javax.swing.JComponent
+import javax.swing.JLabel
+import javax.swing.JPanel
+import javax.swing.SwingConstants
 
 
 fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel {
@@ -98,6 +101,7 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
             return backButton.getComponent(0) as JComponent
         }
 
+        //reset must be called from EDT
         override fun reset() {
 
             //for intellij DialogPanel instances call reset.
@@ -108,28 +112,26 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
             timesPanel.reset()
             flowStackNavigation.reset()
 
-            SwingUtilities.invokeLater {
-                buildServicesPanel(servicesPanel, errorsModel)
-                affectedServicesLabel.toolTipText = getAffectedServicesTooltip(errorsModel)
-                servicesPanel.revalidate()
-                servicesPanel.repaint()
-                servicesPanelWrapper.revalidate()
+            buildServicesPanel(servicesPanel, errorsModel)
+            affectedServicesLabel.toolTipText = getAffectedServicesTooltip(errorsModel)
+            servicesPanel.revalidate()
+            servicesPanel.repaint()
+            servicesPanelWrapper.revalidate()
 
-                framesList.getModel().setListData(errorsModel.errorDetails.flowStacks.getCurrentStack())
+            framesList.getModel().setListData(errorsModel.errorDetails.flowStacks.getCurrentStack())
 
-                //reconstruct services panel on reset
-                val index = components.indexOf(servicesPanelWrapper)
-                remove(servicesPanelWrapper)
-                val constraints = GridBagConstraints()
-                constraints.gridx = 0
-                constraints.gridy = 1
-                constraints.weightx = 1.0
-                constraints.fill = GridBagConstraints.BOTH
-                constraints.weighty = weightyForServicesPanel(errorsModel)
-                add(servicesPanelWrapper, constraints, index)
+            //reconstruct services panel on reset
+            val index = components.indexOf(servicesPanelWrapper)
+            remove(servicesPanelWrapper)
+            val constraints = GridBagConstraints()
+            constraints.gridx = 0
+            constraints.gridy = 1
+            constraints.weightx = 1.0
+            constraints.fill = GridBagConstraints.BOTH
+            constraints.weighty = weightyForServicesPanel(errorsModel)
+            add(servicesPanelWrapper, constraints, index)
 
-                revalidate()
-            }
+            revalidate()
 
         }
     }
@@ -232,7 +234,7 @@ fun bottomPanel(project: Project,errorsModel: ErrorsModel, framesList: Scrollabl
                 val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
                 val currentStack = errorsModel.errorDetails.flowStacks.current
                 val stackTrace = errorsModel.errorDetails.delegate?.errors?.get(currentStack)?.stackTrace
-                actionListener.openRawTrace(stackTrace)
+                actionListener.openRawStackTrace(stackTrace)
             }.horizontalAlign(HorizontalAlign.RIGHT).gap(RightGap.SMALL)
 
 
@@ -408,7 +410,7 @@ private fun backButton(project: Project): JComponent {
     backButton.maximumSize = buttonsSize
     backButton.addActionListener {
         val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
-        actionListener.closeErrorDetails()
+        actionListener.closeErrorDetailsBackButton()
     }
     backButton.isOpaque = false
     backButton.isContentAreaFilled = false

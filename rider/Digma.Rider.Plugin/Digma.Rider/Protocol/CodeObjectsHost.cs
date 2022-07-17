@@ -122,7 +122,7 @@ namespace Digma.Rider.Protocol
                     }
                     catch (Exception e)
                     {
-                        //todo: maybe throw an error to notify the fronend ?
+                        //todo: maybe throw an error to notify the frontend ?
                         _logger.Error(e, "Error searching documents uris");
                         result.Set(new List<CodeObjectIdUriPair>());
                     }

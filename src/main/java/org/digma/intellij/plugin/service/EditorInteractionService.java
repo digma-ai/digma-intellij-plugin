@@ -21,7 +21,7 @@ import java.util.ArrayList;
  */
 public class EditorInteractionService implements CaretContextService, Disposable {
 
-    private static final Logger LOGGER = Logger.getInstance(EditorInteractionService.class);
+    private final Logger LOGGER = Logger.getInstance(EditorInteractionService.class);
 
     private Project project;
 
@@ -101,7 +101,7 @@ public class EditorInteractionService implements CaretContextService, Disposable
 
     }
 
-    private void contextEmptyNonSupportedFile(String fileUri) {
+    public void contextEmptyNonSupportedFile(String fileUri) {
         Log.log(LOGGER::debug, "contextEmptyNonSupportedFile called");
         insightsViewService.emptyNonSupportedFile(fileUri);
         errorsViewService.emptyNonSupportedFile(fileUri);

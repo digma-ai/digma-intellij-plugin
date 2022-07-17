@@ -38,6 +38,8 @@ fun previewPanel(project: Project, listViewItem: ListViewItem<String>): JPanel {
             link(methodId.substringAfterLast("\$_\$",methodId)){
                 val actionListener: InsightsActionsService = project.getService(InsightsActionsService::class.java)
                 actionListener.navigateToMethod(methodId)
+            }.applyToComponent {
+                toolTipText = methodId
             }
         }
     }.withBackground(listBackground())

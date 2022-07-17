@@ -21,7 +21,6 @@ import java.awt.CardLayout
 import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JPanel
-import javax.swing.SwingUtilities
 
 
 private const val NO_INFO_CARD_NAME="NO-INFO"
@@ -92,30 +91,25 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
             }
         }
 
+        //reset must be called from EDT
         override fun reset() {
-
-            //for intellij DialogPanel instances call reset.
-            //for others call inside SwingUtilities.invokeLater
 
             noInfoWarningPanel.reset()
             topPanelWrapper.reset()
             previewTitle.reset()
 
+            insightsList.getModel().setListData(insightsModel.listViewItems)
+            previewList.getModel().setListData(insightsModel.previewListViewItems)
 
-            SwingUtilities.invokeLater {
-                insightsList.getModel().setListData(insightsModel.listViewItems)
-                previewList.getModel().setListData(insightsModel.previewListViewItems)
-
-                if (insightsList.getModel().size == 0 && insightsModel.card.equals(InsightsTabCard.INSIGHTS)){
-                    cardLayout.show(cardsPanel,NO_INFO_CARD_NAME)
-                }else if (previewList.getModel().size == 0 && insightsModel.card.equals(InsightsTabCard.PREVIEW)){
-                    cardLayout.show(cardsPanel,NO_INFO_CARD_NAME)
-                }else{
-                    cardLayout.show(cardsPanel,insightsModel.card.name)
-                }
-
-                cardsPanel.revalidate()
+            if (insightsList.getModel().size == 0 && insightsModel.card.equals(InsightsTabCard.INSIGHTS)) {
+                cardLayout.show(cardsPanel, NO_INFO_CARD_NAME)
+            } else if (previewList.getModel().size == 0 && insightsModel.card.equals(InsightsTabCard.PREVIEW)) {
+                cardLayout.show(cardsPanel, NO_INFO_CARD_NAME)
+            } else {
+                cardLayout.show(cardsPanel, insightsModel.card.name)
             }
+
+            cardsPanel.revalidate()
         }
     }
 

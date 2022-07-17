@@ -42,12 +42,12 @@ public class ErrorsActionsService implements ContentManagerListener {
 
     private void showErrorDetails(@NotNull String uid) {
         toolWindowTabsHelper.showingErrorDetails();
-        errorsViewService.showErrorDetails(uid);
         errorsViewService.setVisible();
+        errorsViewService.showErrorDetails(uid);
         toolWindowTabsHelper.errorDetailsOn();
     }
 
-    public void closeErrorDetails() {
+    public void closeErrorDetailsBackButton() {
         toolWindowTabsHelper.errorDetailsOff();
         errorsViewService.closeErrorDetails();
         insightsViewService.updateUi();
@@ -69,7 +69,7 @@ public class ErrorsActionsService implements ContentManagerListener {
         }
     }
 
-    public void openRawTrace(String stackTrace) {
-         editorService.openRawTrace(stackTrace);
+    public void openRawStackTrace(String stackTrace) {
+         editorService.openRawStackTrace(stackTrace);
     }
 }

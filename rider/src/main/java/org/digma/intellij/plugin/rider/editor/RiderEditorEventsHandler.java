@@ -78,10 +78,19 @@ public class RiderEditorEventsHandler extends LifetimedProjectComponent implemen
                     return;
                 }
 
-                if (!languageService.isSupportedFile(project,newFile)){
+                //the file may be supported but not writable,for example when we open vcs files.
+                if (!languageService.isSupportedFile(project,newFile) || !newFile.isWritable()){
                     Log.log(LOGGER::debug, "Non supported file opened, clearing context. {}", newFile);
-                    caretContextService.contextEmpty();
+                    caretContextService.contextEmptyNonSupportedFile(newFile.getUrl());
                     elementUnderCaretDetector.emptyModel();
+                }else{
+                    //sometimes when selection changes from a non-supported file to a supported file the supported
+                    //file editor will not gain focus, elementUnderCaretDetector.refresh will compensate.
+                    var oldFile = event.getOldFile();
+                    if (oldFile != null && (!languageService.isSupportedFile(project,oldFile) || !oldFile.isWritable())){
+                        elementUnderCaretDetector.refresh();
+                    }
+
                 }
             }
         });

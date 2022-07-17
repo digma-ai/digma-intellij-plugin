@@ -11,8 +11,6 @@ import java.util.function.Consumer;
  */
 public class Log {
 
-    //todo: check how logs come out and maybe change to include project from now on
-
     //todo: change all logging to print the current project
     public static void log(Consumer<String> consumer, Project project, String format, Object... args) {
         log(consumer, "Digma: Project:" + project.getName() + ": " + String.format(format.replace("{}", "%s"), args));

@@ -12,6 +12,7 @@ import com.intellij.openapi.vcs.changes.Change;
 import com.intellij.openapi.vcs.changes.ChangeListManager;
 import com.intellij.openapi.vcs.changes.ContentRevision;
 import com.intellij.openapi.vcs.changes.CurrentContentRevision;
+import com.intellij.openapi.vcs.history.ShortVcsRevisionNumber;
 import com.intellij.openapi.vcs.history.VcsRevisionNumber;
 import com.intellij.openapi.vcs.vfs.ContentRevisionVirtualFile;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -46,6 +47,14 @@ public class VcsService {
 
     public boolean isLocalContentChanged(URL workspaceUrl, String lastInstanceCommitId, int lineNumber) throws VcsException {
         return isLocalContentLineChanged(workspaceUrl, lastInstanceCommitId, lineNumber);
+    }
+
+
+    public String getShortRevisionString(@NotNull VcsRevisionNumber vcsRevisionNumber){
+        if (ShortVcsRevisionNumber.class.isAssignableFrom(vcsRevisionNumber.getClass())){
+            return ((ShortVcsRevisionNumber)vcsRevisionNumber).toShortString();
+        }
+        return vcsRevisionNumber.asString();
     }
 
 

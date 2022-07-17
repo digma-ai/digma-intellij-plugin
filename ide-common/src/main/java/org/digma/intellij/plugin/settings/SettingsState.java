@@ -24,7 +24,7 @@ import java.util.List;
         storages = @Storage("DigmaPlugin.xml")
 )
 public class SettingsState implements PersistentStateComponent<SettingsState> , Disposable {
-//todo: check if settings is per project
+
   public static final String DEFAULT_API_URL = "https://localhost:5051";
   public String apiUrl = DEFAULT_API_URL;
   @Nullable

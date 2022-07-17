@@ -25,7 +25,6 @@ import java.awt.CardLayout
 import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JPanel
-import javax.swing.SwingUtilities
 
 
 private const val NO_INFO_CARD_NAME="NO-INFO"
@@ -116,6 +115,7 @@ fun errorsPanel(project: Project): DigmaTabPanel {
             return errorsList
         }
 
+        //reset must be called from EDT
         override fun reset() {
 
             //for intellij DialogPanel instances call reset.
@@ -126,23 +126,21 @@ fun errorsPanel(project: Project): DigmaTabPanel {
             previewTitle.reset()
 
 
-            SwingUtilities.invokeLater {
-                errorsList.getModel().setListData(errorsModel.listViewItems)
-                previewList.getModel().setListData(insightsModel.previewListViewItems)
-                errorsDetailsPanel.reset()
-                cardLayout.show(cardsPanel, errorsModel.card.name)
+            errorsList.getModel().setListData(errorsModel.listViewItems)
+            previewList.getModel().setListData(insightsModel.previewListViewItems)
+            errorsDetailsPanel.reset()
+            cardLayout.show(cardsPanel, errorsModel.card.name)
 
-                if (errorsList.getModel().size == 0 && previewList.getModel().size > 0 && insightsModel.card == InsightsTabCard.PREVIEW){
-                    errorsPanelListCardLayout.show(errorsPanelListCardPanel, PREVIEW_LIST_CARD_NAME)
-                }else if(errorsList.getModel().size == 0){
-                    errorsPanelListCardLayout.show(errorsPanelListCardPanel, NO_INFO_CARD_NAME)
-                }else{
-                    errorsPanelListCardLayout.show(errorsPanelListCardPanel, LIST_CARD_NAME)
-                }
-
-                errorsPanelListCardPanel.revalidate()
-                cardsPanel.revalidate()
+            if (errorsList.getModel().size == 0 && previewList.getModel().size > 0 && insightsModel.card == InsightsTabCard.PREVIEW) {
+                errorsPanelListCardLayout.show(errorsPanelListCardPanel, PREVIEW_LIST_CARD_NAME)
+            } else if (errorsList.getModel().size == 0) {
+                errorsPanelListCardLayout.show(errorsPanelListCardPanel, NO_INFO_CARD_NAME)
+            } else {
+                errorsPanelListCardLayout.show(errorsPanelListCardPanel, LIST_CARD_NAME)
             }
+
+            errorsPanelListCardPanel.revalidate()
+            cardsPanel.revalidate()
         }
     }
 

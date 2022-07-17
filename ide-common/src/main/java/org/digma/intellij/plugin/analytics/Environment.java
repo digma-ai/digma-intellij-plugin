@@ -81,7 +81,13 @@ public class Environment implements EnvironmentsSupplier {
 
     private void fireEnvironmentsListChange() {
         Log.log(LOGGER::debug, "Firing environmentsListChanged event");
-        SwingUtilities.invokeLater(() -> listeners.forEach(listener -> listener.environmentsListChanged(environments)));
+        Runnable r = () -> listeners.forEach(listener -> listener.environmentsListChanged(environments));
+        if (SwingUtilities.isEventDispatchThread()){
+            r.run();
+        }else{
+            SwingUtilities.invokeLater(r);
+        }
+
     }
 
 

@@ -61,8 +61,10 @@ public class DocumentInfoContainer {
 
         List<String> objectIds = this.documentInfo.getMethods().values().stream().flatMap((Function<MethodInfo, Stream<String>>) methodInfo -> {
             var ids = new ArrayList<String>();
+            //todo: if collecting getRelatedCodeObjectIds there are less summaries , probably because of idWithTypeButWithoutParams()
             ids.add(methodInfo.idWithType());
             ids.addAll(methodInfo.getSpans().stream().map(SpanInfo::idWithType).collect(Collectors.toList()));
+//            ids.addAll(methodInfo.getRelatedCodeObjectIds());
             return ids.stream();
         }).collect(Collectors.toList());
 

@@ -35,14 +35,5 @@ jobs:
     - name: Build with Gradle
       uses: gradle/gradle-build-action@0d13054264b0bb894ded474f08ebb30921341cee
       with:
-        cache-read-only: ${{ github.ref != 'refs/heads/main' }}
-        gradle-home-cache-excludes: |
-            caches/**/riderRD-*/**
-            caches/**/ideaIC-*/**
-            caches/**/pycharmPC-*/**
-        arguments: runPluginVerifier buildPlugin
-    - name: Upload Artifact GitHub Action
-      uses: actions/upload-artifact@v3
-      with:
-        name: digma-intellij-plugin
-        path: build/distributions/digma-intellij-1.0.3.zip
+        cache-disabled: true
+        arguments: buildPlugin runPluginVerifier

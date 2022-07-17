@@ -256,8 +256,7 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
 
     val currentLabel = JLabel("0/00 Flow Stacks")
 
-//    val size = Laf.scalePanels(Icons.ERROR_DETAILS_NAVIGATION_BUTTON_SIZE)
-    val size = Laf.Sizes.ERROR_DETAILS_NAVIGATION_BUTTON_SIZE
+    val size = Laf.scalePanels(Laf.Sizes.ERROR_DETAILS_NAVIGATION_BUTTON_SIZE)
     val buttonsSize = Dimension(size + 2, size + 2)
 
     val backButton = NavigationButtonIcon(Icons.BACK_WHITE, Icons.BACK_BLACK)

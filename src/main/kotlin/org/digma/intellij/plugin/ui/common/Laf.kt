@@ -94,7 +94,7 @@ object Laf  {
             val INSIGHT_ICON_SIZE: Int = 32
             const val ERROR_SCORE_PANEL_SIZE = 32
             const val ERROR_DETAILS_BACK_BUTTON_SIZE = 32
-            const val ERROR_DETAILS_NAVIGATION_BUTTON_SIZE = 32
+            const val ERROR_DETAILS_NAVIGATION_BUTTON_SIZE = 24
         }
     }
 

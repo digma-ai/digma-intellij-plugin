@@ -196,7 +196,7 @@ public class VcsService {
 
     public @Nullable VirtualFile getRevisionVirtualFile(URL workspaceUrl, String lastInstanceCommitId) throws VcsException {
 
-        return ProgressManager.getInstance().run(new Task.WithResult<VirtualFile, VcsException>(project, "Load Revision From VCS", true) {
+        return ProgressManager.getInstance().run(new Task.WithResult<VirtualFile, VcsException>(project, "Load Revision Content From VCS", true) {
             @Override
             protected VirtualFile compute(@NotNull ProgressIndicator indicator) throws VcsException {
 
@@ -279,30 +279,38 @@ public class VcsService {
 
     public boolean isRevisionExist(@NotNull URL workspaceUrl, @Nullable String lastInstanceCommitId) {
 
-        try {
 
-            if (!isFileUnderVcs(workspaceUrl)){
-                return false;
+        return ProgressManager.getInstance().run(new Task.WithResult<>(project, "Is Revision Exist", true) {
+            @Override
+            protected Boolean compute(@NotNull ProgressIndicator indicator) {
+                try {
+
+                    if (!isFileUnderVcs(workspaceUrl)) {
+                        return false;
+                    }
+
+                    var filePath = VcsUtil.getFilePath(workspaceUrl.getPath());
+                    var vcs = VcsUtil.getVcsFor(project, filePath);
+                    if (vcs == null) {
+                        return false;
+                    }
+                    var requiredRevision = lastInstanceCommitId == null || lastInstanceCommitId.isBlank() ?
+                            getLastCommittedRevision(vcs, filePath) :
+                            vcs.parseRevisionNumber(lastInstanceCommitId);
+
+                    if (requiredRevision == null) {
+                        return false;
+                    }
+
+                    return vcs.loadRevisions(filePath.getVirtualFile(), requiredRevision) != null;
+                } catch (VcsException e) {
+                    Log.log(LOGGER::warn, "Could not find revision {} for {}, {}", lastInstanceCommitId, workspaceUrl, e.getMessage());
+                    return false;
+                }
             }
+        });
 
-            var filePath = VcsUtil.getFilePath(workspaceUrl.getPath());
-            var vcs = VcsUtil.getVcsFor(project, filePath);
-            if (vcs == null){
-                return false;
-            }
-            var requiredRevision = lastInstanceCommitId == null || lastInstanceCommitId.isBlank() ?
-                    getLastCommittedRevision(vcs, filePath) :
-                    vcs.parseRevisionNumber(lastInstanceCommitId);
 
-            if (requiredRevision == null){
-                return false;
-            }
-
-            return vcs.loadRevisions(filePath.getVirtualFile(), requiredRevision) != null;
-        }catch (VcsException e){
-            Log.log(LOGGER::warn, "Could not find revision {} for {}, {}",lastInstanceCommitId, workspaceUrl,e.getMessage());
-            return false;
-        }
     }
 
 }

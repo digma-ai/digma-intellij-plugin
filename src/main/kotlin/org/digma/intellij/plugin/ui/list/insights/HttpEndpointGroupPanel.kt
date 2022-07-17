@@ -9,12 +9,13 @@ import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.*
 import org.digma.intellij.plugin.ui.common.*
+import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupListViewItem
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.util.*
 import javax.swing.JPanel
 
-fun httpEndpointGroupPanel(project: Project, listViewItem: InsightGroupListViewItem): JPanel {
+fun httpEndpointGroupPanel(project: Project, listViewItem: InsightGroupListViewItem,panelsLayoutHelper: PanelsLayoutHelper): JPanel {
 
 
 
@@ -34,11 +35,11 @@ fun httpEndpointGroupPanel(project: Project, listViewItem: InsightGroupListViewI
             val modelObject = it.modelObject
             val cellItem =
                 when (modelObject) {
-                    is LowUsageInsight -> lowUsageInsightPanel(modelObject)
-                    is NormalUsageInsight -> normalUsageInsightPanel(modelObject)
-                    is HighUsageInsight -> highUsageInsightPanel(modelObject)
-                    is SlowEndpointInsight -> slowEndpointPanel(modelObject)
-                    is SlowestSpansInsight -> slowestSpansPanel(project,modelObject,it.moreData)
+                    is LowUsageInsight -> lowUsageInsightPanel(modelObject,panelsLayoutHelper)
+                    is NormalUsageInsight -> normalUsageInsightPanel(modelObject,panelsLayoutHelper)
+                    is HighUsageInsight -> highUsageInsightPanel(modelObject,panelsLayoutHelper)
+                    is SlowEndpointInsight -> slowEndpointPanel(modelObject,panelsLayoutHelper)
+                    is SlowestSpansInsight -> slowestSpansPanel(project,modelObject,it.moreData,panelsLayoutHelper)
                     else -> insightItemPanel(panelOfUnsupported("${modelObject?.javaClass?.simpleName}"))
                 }
 

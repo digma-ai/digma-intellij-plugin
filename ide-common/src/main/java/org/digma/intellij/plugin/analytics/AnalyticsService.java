@@ -14,7 +14,6 @@ import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.settings.SettingsState;
-import org.digma.intellij.plugin.ui.model.environment.EnvComboModel;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -39,32 +38,33 @@ public class AnalyticsService implements Disposable {
     private final Project project;
 
     private AnalyticsProvider analyticsProviderProxy;
-    private final SettingsState settingsState;
-    private final PersistenceService persistenceService;
 
 
     public AnalyticsService(@NotNull Project project) {
-        settingsState = project.getService(SettingsState.class);
-        persistenceService = project.getService(PersistenceService.class);
+        SettingsState settingsState = project.getService(SettingsState.class);
+        PersistenceService persistenceService = project.getService(PersistenceService.class);
         environment = new Environment(project, this, persistenceService.getState());
         this.project = project;
         myApiUrl = settingsState.apiUrl;
         myApiToken = settingsState.apiToken;
         replaceClientAndFireChange(myApiUrl, myApiToken);
-        EnvComboModel.INSTANCE.initialize(environment);
-        settingsState.addChangeListener(settingsState -> {
-            if (!Objects.equals(settingsState.apiUrl, myApiUrl)) {
-                myApiUrl = settingsState.apiUrl;
-                myApiToken = settingsState.apiToken;
+        settingsState.addChangeListener(state -> {
+            if (!Objects.equals(state.apiUrl, myApiUrl)) {
+                myApiUrl = state.apiUrl;
+                myApiToken = state.apiToken;
                 replaceClientAndFireChange(myApiUrl, myApiToken);
             }
-            if (!Objects.equals(settingsState.apiToken, myApiToken)) {
-                myApiToken = settingsState.apiToken;
+            if (!Objects.equals(state.apiToken, myApiToken)) {
+                myApiToken = state.apiToken;
                 replaceClient(myApiUrl, myApiToken);
             }
         });
     }
 
+
+    public Environment getEnvironment() {
+        return environment;
+    }
 
     //just replace the client and do not fire any events
     private void replaceClient(String url, String token) {

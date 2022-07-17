@@ -9,11 +9,9 @@ import org.digma.intellij.plugin.editor.EditorEventsHandler;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
-import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.ui.CaretContextService;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 
@@ -23,7 +21,7 @@ import java.util.ArrayList;
  */
 public class EditorInteractionService implements CaretContextService, Disposable {
 
-    private static final Logger LOGGER = Logger.getInstance(EditorInteractionService.class);
+    private final Logger LOGGER = Logger.getInstance(EditorInteractionService.class);
 
     private Project project;
 
@@ -60,7 +58,10 @@ public class EditorInteractionService implements CaretContextService, Disposable
          */
 
 
-        if (methodUnderCaret.getId().isBlank()) {
+        if (!methodUnderCaret.isSupportedFile()){
+            Log.log(LOGGER::debug, "methodUnderCaret is non supported file {}. ", methodUnderCaret);
+            contextEmptyNonSupportedFile(methodUnderCaret.getFileUri());
+        }else if (methodUnderCaret.getId().isBlank()) {
             Log.log(LOGGER::debug, "No id in methodUnderCaret,trying fileUri {}. ", methodUnderCaret);
             //if no id then try to show a preview for the document
             if (methodUnderCaret.getFileUri().isBlank()){
@@ -87,6 +88,7 @@ public class EditorInteractionService implements CaretContextService, Disposable
                 //pass a dummy method info just to populate the view,the view is aware and will not try to query for insights.
                 var dummyMethodInfo = new MethodInfo(methodUnderCaret.getId(), methodUnderCaret.getName(), methodUnderCaret.getClassName(), "",
                         methodUnderCaret.getFileUri(), 0, new ArrayList<>());
+                Log.log(LOGGER::warn, "Using dummy MethodInfo for to update views {}. ", dummyMethodInfo);
                 insightsViewService.contextChangeNoMethodInfo(dummyMethodInfo);
                 errorsViewService.contextChangeNoMethodInfo(dummyMethodInfo);
             } else {
@@ -97,6 +99,12 @@ public class EditorInteractionService implements CaretContextService, Disposable
 
         }
 
+    }
+
+    public void contextEmptyNonSupportedFile(String fileUri) {
+        Log.log(LOGGER::debug, "contextEmptyNonSupportedFile called");
+        insightsViewService.emptyNonSupportedFile(fileUri);
+        errorsViewService.emptyNonSupportedFile(fileUri);
     }
 
     @Override
@@ -112,12 +120,10 @@ public class EditorInteractionService implements CaretContextService, Disposable
     }
 
 
-    public void start(@NotNull Project project) {
-        Log.log(LOGGER::info, "starting..");
-        this.project = project;
+    public void start() {
+        Log.log(LOGGER::info, "Starting...");
         EditorEventsHandler editorEventsHandler = project.getService(EditorEventsHandler.class);
-        LanguageService languageService = project.getService(LanguageService.class);
-        editorEventsHandler.start(project, this, languageService);
+        editorEventsHandler.start(project);
     }
 
 }

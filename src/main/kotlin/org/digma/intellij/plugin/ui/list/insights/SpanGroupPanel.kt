@@ -15,6 +15,7 @@ import org.digma.intellij.plugin.model.rest.insights.SpanFlow
 import org.digma.intellij.plugin.model.rest.insights.SpanInsight
 import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.common.Html.ARROW_RIGHT
+import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.model.listview.GroupListViewItem
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import org.ocpsoft.prettytime.PrettyTime
@@ -32,7 +33,7 @@ import kotlin.math.abs
 import kotlin.math.max
 
 
-fun spanGroupPanel(listViewItem: GroupListViewItem): JPanel {
+fun spanGroupPanel(listViewItem: GroupListViewItem, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
 
     val items: SortedSet<ListViewItem<*>> = listViewItem.modelObject
 
@@ -55,7 +56,7 @@ fun spanGroupPanel(listViewItem: GroupListViewItem): JPanel {
                 val cellItem =
                     when (modelObject) {
                         is SpanInsight -> spanPanel(modelObject)
-                        is SpanDurationsInsight -> spanDurationPanel(modelObject)
+                        is SpanDurationsInsight -> spanDurationPanel(modelObject,panelsLayoutHelper)
                         else -> panelOfUnsupported("${modelObject?.javaClass?.simpleName}")
                     }
 
@@ -112,10 +113,10 @@ fun spanPanel(spanInsight: SpanInsight): JPanel {
 }
 
 
-fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight): JPanel {
+fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
 
     if (spanDurationsInsight.percentiles.isEmpty()) {
-        return createInsightPanel("Duration", "Waiting for more data.", Icons.Insight.WAITING_DATA, "", false)
+        return createInsightPanel("Duration", "Waiting for more data.", Icons.Insight.WAITING_DATA, "", false,panelsLayoutHelper)
     }
 
     val title = JLabel(asHtml(spanBold("Duration")), SwingConstants.LEFT)
@@ -127,11 +128,11 @@ fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight): JPanel {
         it.percentile
     }
 
-    val tolerationConstant: Long = 10000;
+    val tolerationConstant: Long = 10000
 
     sortedPercentiles.forEach { percentile: SpanDurationsPercentile ->
 
-        var changeMeaningfulEnough = false;
+        var changeMeaningfulEnough = false
         val durationsPanel = JBPanel<JBPanel<*>>()
         durationsPanel.layout = BorderLayout(5, 0)
         durationsPanel.border = empty()
@@ -147,14 +148,14 @@ fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight): JPanel {
                 }
                 val h = ps.height
                 val w = ps.width
-                addCurrentLargestWidthDurationPLabel(w)
-                return Dimension(getCurrentLargestWidthDurationPLabel(w), h)
+                addCurrentLargestWidthDurationPLabel(panelsLayoutHelper,w)
+                return Dimension(getCurrentLargestWidthDurationPLabel(panelsLayoutHelper,w), h)
             }
         }
         pLabelPanel.layout = BorderLayout()
         pLabelPanel.border = empty()
         pLabelPanel.add(pLabel, BorderLayout.WEST)
-        addCurrentLargestWidthDurationPLabel(pLabelPanel.preferredSize.width)
+        addCurrentLargestWidthDurationPLabel(panelsLayoutHelper,pLabelPanel.preferredSize.width)
         durationsPanel.add(pLabelPanel, BorderLayout.WEST)
 
 
@@ -187,14 +188,14 @@ fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight): JPanel {
                     }
                     val h = ps.height
                     val w = ps.width
-                    addCurrentLargestWidthIconPanel(w)
-                    return Dimension(getCurrentLargestWidthIconPanel(w), h)
+                    addCurrentLargestWidthIconPanel(panelsLayoutHelper,w)
+                    return Dimension(getCurrentLargestWidthIconPanel(panelsLayoutHelper,w), h)
                 }
             }
             evalPanel.layout = BorderLayout()
             evalPanel.add(evalLabel, BorderLayout.CENTER)
             evalPanel.border = empty(0, 0, 0, Laf.scaleBorders(getInsightIconPanelRightBorderSize()))
-            addCurrentLargestWidthIconPanel(evalPanel.preferredSize.width)
+            addCurrentLargestWidthIconPanel(panelsLayoutHelper,evalPanel.preferredSize.width)
             durationsPanel.add(evalPanel, BorderLayout.EAST)
         }
 
@@ -232,17 +233,17 @@ private fun computeDurationText(percentile: SpanDurationsPercentile): String {
 }
 
 
-private fun getCurrentLargestWidthDurationPLabel(width: Int): Int {
+private fun getCurrentLargestWidthDurationPLabel(layoutHelper: PanelsLayoutHelper, width: Int): Int {
     //this method should never return null and never throw NPE
     val currentLargest: Int =
-        (InsightsPanelsLayoutHelper.getObjectAttribute("SpanDurationsDurationPLabel", "largestWidth") ?: 0) as Int
+        (layoutHelper.getObjectAttribute("SpanDurationsDurationPLabel", "largestWidth") ?: 0) as Int
     return max(width, currentLargest)
 }
 
-private fun addCurrentLargestWidthDurationPLabel(width: Int) {
+private fun addCurrentLargestWidthDurationPLabel(layoutHelper: PanelsLayoutHelper,width: Int) {
     //this method should never throw NPE
     val currentLargest: Int =
-        (InsightsPanelsLayoutHelper.getObjectAttribute("SpanDurationsDurationPLabel", "largestWidth") ?: 0) as Int
-    InsightsPanelsLayoutHelper.addObjectAttribute("SpanDurationsDurationPLabel", "largestWidth",
+        (layoutHelper.getObjectAttribute("SpanDurationsDurationPLabel", "largestWidth") ?: 0) as Int
+    layoutHelper.addObjectAttribute("SpanDurationsDurationPLabel", "largestWidth",
         max(currentLargest, width))
 }

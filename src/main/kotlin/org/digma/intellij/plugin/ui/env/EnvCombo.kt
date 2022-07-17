@@ -3,10 +3,9 @@
 package org.digma.intellij.plugin.ui.env
 
 import com.intellij.openapi.project.Project
-import com.intellij.ui.dsl.builder.RowLayout
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
-import org.digma.intellij.plugin.ui.model.environment.EnvComboModel
+import org.digma.intellij.plugin.service.EnvComboModelService
 import javax.swing.JPanel
 import javax.swing.event.PopupMenuEvent
 import javax.swing.event.PopupMenuListener
@@ -15,26 +14,20 @@ import javax.swing.event.PopupMenuListener
 @Suppress("UNCHECKED_CAST")
 fun envCombo(project: Project): JPanel {
 
+    val envComboModelService = project.getService(EnvComboModelService::class.java)
+
     return panel {
         panel {
             row {
                 label("Environment:")
-                comboBox(EnvComboModel)
+                comboBox(envComboModelService.envComboModel)
                     .horizontalAlign(HorizontalAlign.FILL)
                     .apply {
                         component.toolTipText = "Environment"
                         component.isOpaque = false
-                        horizontalAlign(HorizontalAlign.FILL)
-//                        component.addActionListener {
-//                            it.source.apply {
-//                                val combo: ComboBox<String> = this as ComboBox<String>
-//                                env.current = combo.item
-//                            }
-//                        }
-//
                         component.addPopupMenuListener(object: PopupMenuListener{
                             override fun popupMenuWillBecomeVisible(e: PopupMenuEvent?) {
-                                EnvComboModel.refreshEnvironments()
+                                envComboModelService.envComboModel.refreshEnvironments()
                             }
 
                             override fun popupMenuWillBecomeInvisible(e: PopupMenuEvent?) {}
@@ -43,7 +36,7 @@ fun envCombo(project: Project): JPanel {
 
                         })
                     }
-            }.layout(RowLayout.LABEL_ALIGNED)
+            }
         }
     }.andTransparent()
 

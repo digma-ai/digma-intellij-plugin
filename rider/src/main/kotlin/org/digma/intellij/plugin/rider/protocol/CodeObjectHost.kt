@@ -1,14 +1,15 @@
 package org.digma.intellij.plugin.rider.protocol
 
 import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import com.jetbrains.rd.util.reactive.IMutableViewableMap
 import com.jetbrains.rd.util.string.printToString
+import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent
 import com.jetbrains.rdclient.util.idea.callSynchronously
 import com.jetbrains.rider.projectView.solution
-import org.digma.intellij.plugin.document.DocumentCodeObjectsChanged
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
@@ -18,9 +19,9 @@ import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.annotations.NotNull
 import java.util.function.Consumer
 
-class CodeObjectHost(val project: Project) {
+class CodeObjectHost(project: Project): LifetimedProjectComponent(project) {
 
-    private val LOGGER = Logger.getInstance(CodeObjectHost::class.java)
+    private val logger = Logger.getInstance(CodeObjectHost::class.java)
 
     private var model: CodeObjectsModel = project.solution.codeObjectsModel
 
@@ -34,9 +35,9 @@ class CodeObjectHost(val project: Project) {
     fun getDocument(psiFile: PsiFile): DocumentInfo? {
         return ReadAction.compute<DocumentInfo,Exception> {
             val path: String = PsiUtils.psiFileToDocumentProtocolKey(psiFile)
-            Log.log(LOGGER::debug, "Got request for getDocument for {}",path)
+            Log.log(logger::debug, "Got request for getDocument for PsiFile {}, converted to path: {}",psiFile.virtualFile,path)
             val document: Document? = this.model.documents[path]
-            Log.log(LOGGER::debug, "Got document for {}: {}",path,document?.printToString())
+            Log.log(logger::debug, "Got document for {}: {}",path,document?.printToString())
             return@compute toModel(document)
         }
     }
@@ -47,46 +48,41 @@ class CodeObjectHost(val project: Project) {
 
         if (codeLenses.isEmpty()) return
 
-        Log.log(LOGGER::debug, "Installing code lens for {}: {}",psiFile.virtualFile,codeLenses)
+        Log.log(logger::debug, "Installing code lens for {}: {}",psiFile.virtualFile,codeLenses)
 
         model.protocol.scheduler.invokeOrQueue {
-            codeLenses.forEach(Consumer { codeLens ->
-                model.codeLens[codeLens.codeObjectId] = codeLens.toRiderCodeLensInfo()
-            })
+            WriteAction.run<Exception> {
+                val documentKey = PsiUtils.psiFileToDocumentProtocolKey(psiFile)
+                codeLenses.forEach(Consumer { codeLens ->
+                    model.codeLens[codeLens.codeObjectId] = codeLens.toRiderCodeLensInfo(documentKey)
+                })
 
-            val documentKey = PsiUtils.psiFileToDocumentProtocolKey(psiFile)
-            Log.log(LOGGER::debug, "Calling reanalyze for {}",documentKey)
-            model.reanalyze.fire(documentKey)
-
-        }
-    }
-
-
-    /**
-     * called when environment changed.
-     * clears related objects and fired DocumentCodeObjectsChanged for documents that are still in the protocol
-     */
-    fun environmentChanged() {
-        Log.log(LOGGER::debug, "Got environmentChanged event , refreshing all documents")
-
-         model.protocol.scheduler.invokeOrQueue {
-
-            model.codeLens.clear()
-            model.reanalyzeAll.fire(Unit)
-
-            model.documents.values.forEach {
-                val docUri = it.fileUri
-                val psiFile = PsiUtils.uriToPsiFile(docUri, project)
-                notifyDocumentCodeObjectsChanged(psiFile)
+                Log.log(logger::debug, "Calling reanalyze for {}",documentKey)
+                model.reanalyze.fire(documentKey)
             }
         }
     }
 
 
-    private fun notifyDocumentCodeObjectsChanged(psiFile: PsiFile?) {
-        val publisher: DocumentCodeObjectsChanged =
-            project.messageBus.syncPublisher(DocumentCodeObjectsChanged.DOCUMENT_CODE_OBJECTS_CHANGED_TOPIC)
-        publisher.documentCodeObjectsChanged(psiFile)
+
+    fun environmentChanged() {
+        Log.log(logger::debug, "Got environmentChanged event")
+
+         model.protocol.scheduler.invokeOrQueue {
+             WriteAction.run<Exception> {
+                 //collect document keys, clear code lens and call reanalyze for each document
+                 val docKeys = HashSet<String>()
+                 model.codeLens.forEach {
+                     docKeys.add(it.value.documentProtocolKey)
+                 }
+                 model.codeLens.clear()
+
+                 docKeys.forEach {
+                     Log.log(logger::debug, "Got environmentChanged , calling reanalyze for {}",it)
+                     model.reanalyze.fire(it)
+                 }
+             }
+        }
     }
 
 
@@ -156,12 +152,13 @@ class CodeObjectHost(val project: Project) {
     )
 
 
-    private fun CodeLens.toRiderCodeLensInfo() = RiderCodeLensInfo(
+    private fun CodeLens.toRiderCodeLensInfo(docKey: String) = RiderCodeLensInfo(
         codeObjectId = codeObjectId,
         lensText = lensText,
         lensTooltip = lensTooltipText,
         moreText = lensMoreText,
-        anchor = anchor
+        anchor = anchor,
+        documentProtocolKey = docKey
     )
 
 

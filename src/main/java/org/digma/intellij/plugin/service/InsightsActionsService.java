@@ -34,8 +34,6 @@ public class InsightsActionsService {
     }
 
     public void openWorkspaceFileForSpan(@NotNull String workspaceUri, int offset) {
-        if (workspaceUri != null) {
-            editorService.openSpanWorkspaceFileInEditor(workspaceUri, offset);
-        }
+        editorService.openSpanWorkspaceFileInEditor(workspaceUri, offset);
     }
 }

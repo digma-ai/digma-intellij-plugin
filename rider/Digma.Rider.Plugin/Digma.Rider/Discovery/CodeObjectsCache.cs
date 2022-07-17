@@ -1,6 +1,5 @@
 using Digma.Rider.Protocol;
 using Digma.Rider.Util;
-using JetBrains.Annotations;
 using JetBrains.Application.Progress;
 using JetBrains.Application.Threading;
 using JetBrains.Collections;
@@ -18,6 +17,20 @@ using static Digma.Rider.Logging.Logger;
 
 namespace Digma.Rider.Discovery
 {
+    /// <summary>
+    /// An IPsiSourceFileCache for code objects.
+    /// the keys are IPsiSourceFile and the values are Documents containing code objects.
+    ///
+    ///
+    /// A note about incomplete documents.
+    /// when building the cache sometimes reference resolving is necessary. if resharper caches are not ready yet
+    /// then not all reference resolving will succeed. it usually happens in startup and after invalidating caches.
+    /// If that happens we mark the documents as isComplete=False.
+    /// later when the document is necessary we try to fix it by rebuilding the cache again in a later stage when all
+    /// resharper caches are ready. the rebuild happens in CodeObjectsHost.NotifyDocumentOpenedOrChanged that is called
+    /// on various events.
+    /// 
+    /// </summary>
     [PsiComponent]
     public class CodeObjectsCache: SimpleICache<Document>
     {
@@ -30,7 +43,6 @@ namespace Digma.Rider.Discovery
         }
 
 
-        [CanBeNull]
         public override object Build(IPsiSourceFile sourceFile, bool isStartup)
         {
             Log(_logger,"Building cache for IPsiSourceFile '{0}'",sourceFile);
@@ -65,7 +77,8 @@ namespace Digma.Rider.Discovery
             else
             {
                 Log(_logger,"Found code objects for IPsiSourceFile '{0}':",sourceFile);
-                var isComplete = !isStartup || !discoveryContext.HasReferenceResolvingErrors;
+
+                var isComplete = !discoveryContext.HasReferenceResolvingErrors;
                 var document = new Document(isComplete, fileUri);
                 foreach (var (key, value) in discoveryContext.Methods)
                 {
@@ -168,12 +181,6 @@ namespace Digma.Rider.Discovery
             bool upToDate = base.UpToDate(sourceFile);
             Log(_logger,"UpToDate {0} for sourceFile = {1}",upToDate,sourceFile);
             return upToDate;
-        }
-
-        public void ProcessOnDemand(IPsiSourceFile psiSourceFile)
-        {
-            Log(_logger,"ProcessOnDemand for sourceFile = {0}",psiSourceFile);
-            ProcessDirtyFile(psiSourceFile);
         }
     }
 }

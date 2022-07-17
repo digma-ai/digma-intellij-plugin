@@ -6,8 +6,8 @@ import com.jetbrains.rd.generator.nova.kotlin.Kotlin11Generator
 import com.jetbrains.rider.model.nova.ide.SolutionModel
 
 //todo: create root, see ExampleModel
-class CodeObjectsModel : Ext(SolutionModel.Solution) {
-
+@Suppress("unused")
+object CodeObjectsModel : Ext(SolutionModel.Solution) {
 
     private val RiderMethodInfo = structdef {
         field("id", PredefinedType.string)
@@ -34,6 +34,7 @@ class CodeObjectsModel : Ext(SolutionModel.Solution) {
         field("lensTooltip", PredefinedType.string.nullable)
         field("moreText", PredefinedType.string.nullable)
         field("anchor", PredefinedType.string.nullable)
+        field("documentProtocolKey", PredefinedType.string)
     }
 
 
@@ -63,9 +64,9 @@ class CodeObjectsModel : Ext(SolutionModel.Solution) {
         setting(CSharp50Generator.Namespace, "Digma.Rider.Protocol")
         setting(Kotlin11Generator.Namespace, "org.digma.intellij.plugin.rider.protocol")
 
-        signal("reanalyze", PredefinedType.string)
-        signal("reanalyzeAll", PredefinedType.void)
-        signal("documentAnalyzed", PredefinedType.string)
+        source("reanalyze", PredefinedType.string)
+        sink("documentAnalyzed", PredefinedType.string)
+        source("refreshIncompleteDocuments", PredefinedType.void)
 
         //key: document file path, value: Document
         map("documents",

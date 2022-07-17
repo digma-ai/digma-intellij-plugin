@@ -4,24 +4,21 @@ import java.util.*
 import javax.swing.AbstractListModel
 import javax.swing.ComboBoxModel
 
-object EnvComboModel : AbstractListModel<String>(), ComboBoxModel<String>, EnvironmentsListChangedListener {
-
-    private var environmentsSupplier: EnvironmentsSupplier? = null
+class EnvComboModel(private val environmentsSupplier: EnvironmentsSupplier) : AbstractListModel<String>(), ComboBoxModel<String>, EnvironmentsListChangedListener {
 
     private var environments: List<String> = ArrayList()
     private var selectedItem : String? = null
 
-
-    fun initialize(environmentsSupplier: EnvironmentsSupplier) {
-        this.environmentsSupplier = environmentsSupplier
+    init {
         environments = ArrayList(getEnvironments())
         selectedItem = environmentsSupplier.getCurrent()
         environmentsSupplier.addEnvironmentsListChangeListener(this)
         fireContentsChanged(this,0, environments.size)
     }
 
+
     private fun getEnvironments():List<String>{
-        return environmentsSupplier?.getEnvironments() ?: ArrayList()
+        return environmentsSupplier.getEnvironments()
     }
 
     override fun getSize(): Int {
@@ -38,7 +35,7 @@ object EnvComboModel : AbstractListModel<String>(), ComboBoxModel<String>, Envir
 
 
 
-    private fun replaceEnvironments(newEnvironments: List<String>?) {
+    private fun replaceEnvironments(newEnvironments: List<String>) {
 
         if (environmentsListEquals(newEnvironments,this.environments)){
             return
@@ -56,9 +53,7 @@ object EnvComboModel : AbstractListModel<String>(), ComboBoxModel<String>, Envir
 
         if (!Objects.equals(newSelectedItem,this.selectedItem)){
             this.selectedItem = newSelectedItem
-            if (environmentsSupplier != null) {
-                environmentsSupplier?.setCurrent(selectedItem)
-            }
+            environmentsSupplier.setCurrent(selectedItem)
         }
 
         fireContentsChanged(this, 0, this.environments.size)
@@ -73,9 +68,7 @@ object EnvComboModel : AbstractListModel<String>(), ComboBoxModel<String>, Envir
         }
 
         this.selectedItem = anObject as String?
-        if (environmentsSupplier != null) {
-            environmentsSupplier?.setCurrent(selectedItem)
-        }
+        environmentsSupplier.setCurrent(selectedItem)
         val i = this.environments.indexOf(this.selectedItem)
         fireContentsChanged(this,i,i+1)
     }
@@ -87,9 +80,7 @@ object EnvComboModel : AbstractListModel<String>(), ComboBoxModel<String>, Envir
     fun refreshEnvironments() {
         //the environment will refresh in the background and fire an event
         //the combo will catch the event and update the list
-        if (environmentsSupplier != null) {
-            environmentsSupplier?.refresh()
-        }
+        environmentsSupplier.refresh()
     }
 
 

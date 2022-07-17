@@ -27,7 +27,7 @@ namespace Digma.Rider.Discovery
     /// its a lot of waste comparing to CodeObjectsCache because documents are analyzed every time they are
     /// opened. and it will happen again and again when the solution is closed/opened. 
     /// </summary>
-    [Obsolete(message: "not used, we use CodeObjectsCache. its here as example and is fully working")]
+    [Obsolete(message: "not used, we use CodeObjectsCache. its here as example but is not fully working, to change to this listener instead of CodeObjectsCache it needs to be refactored")]
     // [SolutionComponent]
     public class DocumentsCodeObjectsAnalyzer
     {
@@ -88,7 +88,6 @@ namespace Digma.Rider.Discovery
                 {
                     Log(_logger, "Found PsiSourceFile {0} for removed TextControl {1}", psiSourceFile,
                         textControl.Document);
-                    //todo: maybe remove document from CodeObjectsHost for the textControl
                 }
                 else
                 {
@@ -142,7 +141,8 @@ namespace Digma.Rider.Discovery
                 
                 LogFoundMethodsForDocument(_logger, document);
 
-                _codeObjectsHost.AddOpenChangeDocument(psiSourceFile, document);
+                // this is probably not correct anymore, this class id not in use
+                //_codeObjectsHost.AddOpenChangeDocument(psiSourceFile, document);
             }
         }
 

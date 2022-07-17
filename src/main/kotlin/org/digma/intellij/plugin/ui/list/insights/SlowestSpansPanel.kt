@@ -15,6 +15,7 @@ import org.digma.intellij.plugin.model.rest.insights.SlowSpanInfo
 import org.digma.intellij.plugin.model.rest.insights.SlowestSpansInsight
 import org.digma.intellij.plugin.service.InsightsActionsService
 import org.digma.intellij.plugin.ui.common.*
+import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import java.awt.BorderLayout
 import java.awt.GridLayout
 import java.math.BigDecimal
@@ -24,7 +25,7 @@ import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.SwingConstants
 
-fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: HashMap<String, Any>): JPanel {
+fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: HashMap<String, Any>, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
 
     val title = JLabel(buildBoldTitleGrayedComment("Span Bottleneck","The following spans are slowing request handling"), SwingConstants.LEFT)
 
@@ -57,7 +58,7 @@ fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: 
 
     val iconPanel = panel {
         row {
-            cell(insightsIconPanelBorder(Icons.Insight.BOTTLENECK, wrapCentered("Slow<br>Spans")))
+            cell(insightsIconPanelBorder(Icons.Insight.BOTTLENECK, wrapCentered("Slow<br>Spans"),panelsLayoutHelper))
                 .horizontalAlign(HorizontalAlign.RIGHT)
         }.layout(RowLayout.INDEPENDENT)
     }

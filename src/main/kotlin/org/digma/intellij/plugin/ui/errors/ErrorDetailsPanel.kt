@@ -2,13 +2,9 @@ package org.digma.intellij.plugin.ui.errors
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogPanel
-import com.intellij.ui.dsl.builder.RightGap
-import com.intellij.ui.dsl.builder.RowLayout
-import com.intellij.ui.dsl.builder.TopGap
-import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.dsl.builder.*
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.ui.dsl.gridLayout.VerticalAlign
-import com.intellij.ui.layout.PropertyBinding
 import com.intellij.util.ui.JBUI.Borders
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails
@@ -105,18 +101,24 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
             return backButton.getComponent(0) as JComponent
         }
 
+        //reset must be called from EDT
         override fun reset() {
+
+            //for intellij DialogPanel instances call reset.
+            //for others call inside SwingUtilities.invokeLater
+
             namePanel.reset()
             scorePanel.reset()
+            timesPanel.reset()
+            flowStackNavigation.reset()
+
             buildServicesPanel(servicesPanel, errorsModel)
             affectedServicesLabel.toolTipText = getAffectedServicesTooltip(errorsModel)
             servicesPanel.revalidate()
             servicesPanel.repaint()
             servicesPanelWrapper.revalidate()
-            timesPanel.reset()
-            flowStackNavigation.reset()
-            framesList.getModel().setListData(errorsModel.errorDetails.flowStacks.getCurrentStack())
 
+            framesList.getModel().setListData(errorsModel.errorDetails.flowStacks.getCurrentStack())
 
             //reconstruct services panel on reset
             val index = components.indexOf(servicesPanelWrapper)
@@ -130,6 +132,7 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
             add(servicesPanelWrapper, constraints, index)
 
             revalidate()
+
         }
     }
 
@@ -231,7 +234,7 @@ fun bottomPanel(project: Project,errorsModel: ErrorsModel, framesList: Scrollabl
                 val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
                 val currentStack = errorsModel.errorDetails.flowStacks.current
                 val stackTrace = errorsModel.errorDetails.delegate?.errors?.get(currentStack)?.stackTrace
-                actionListener.openRawTrace(stackTrace)
+                actionListener.openRawStackTrace(stackTrace)
             }.horizontalAlign(HorizontalAlign.RIGHT).gap(RightGap.SMALL)
 
 
@@ -328,31 +331,31 @@ fun timesPanel(errorsModel: ErrorsModel): DialogPanel {
             panel {
                 row {
                     label("").bind(
-                        JLabel::getText, JLabel::setText, PropertyBinding(
-                            get = {
+                        JLabel::getText, JLabel::setText, MutableProperty(
+                            getter = {
                                 buildTimeSpanHtml("Started:",
                                     errorsModel.errorDetails.delegate?.firstOccurenceTime)
                             },
-                            set = {})).verticalAlign(VerticalAlign.TOP)
+                            setter = {})).verticalAlign(VerticalAlign.TOP)
                 }
             }
             panel {
                 row {
                     label("").bind(
-                        JLabel::getText, JLabel::setText, PropertyBinding(
-                            get = {
+                        JLabel::getText, JLabel::setText, MutableProperty(
+                            getter = {
                                 buildTimeSpanHtml("Started:",
                                     errorsModel.errorDetails.delegate?.lastOccurenceTime)
                             },
-                            set = {}))
+                            setter = {}))
                 }
             }
             panel {
                 row {
                     label("").bind(
-                        JLabel::getText, JLabel::setText, PropertyBinding(
-                            get = { asHtml("${spanGrayed("Frequency:")}<br>${span(errorsModel.errorDetails.delegate?.dayAvg.toString())} /day") },
-                            set = {}))
+                        JLabel::getText, JLabel::setText, MutableProperty(
+                            getter = { asHtml("${spanGrayed("Frequency:")}<br>${span(errorsModel.errorDetails.delegate?.dayAvg.toString())} /day") },
+                            setter = {}))
                 }
             }
         }
@@ -388,7 +391,7 @@ fun buildServicesPanel(servicesPanel: JPanel, errorsModel: ErrorsModel) {
 }
 
 
-fun getAffectedServicesTooltip(errorsModel: ErrorsModel): String? {
+fun getAffectedServicesTooltip(errorsModel: ErrorsModel): String {
     var tooltipText = ""
     errorsModel.errorDetails.delegate?.originServices?.forEach(Consumer {
         tooltipText = tooltipText.plus(it.serviceName).plus("<br>")
@@ -407,7 +410,7 @@ private fun backButton(project: Project): JComponent {
     backButton.maximumSize = buttonsSize
     backButton.addActionListener {
         val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
-        actionListener.closeErrorDetails()
+        actionListener.closeErrorDetailsBackButton()
     }
     backButton.isOpaque = false
     backButton.isContentAreaFilled = false
@@ -432,13 +435,13 @@ private fun namePanel(errorsModel: ErrorsModel): DialogPanel {
             row {
                 cell(CopyableLabelHtml(""))
                     .horizontalAlign(HorizontalAlign.FILL).bind(
-                        CopyableLabelHtml::getText, CopyableLabelHtml::setText, PropertyBinding(
-                            get = { buildErrorNameHtml(errorsModel) },
-                            set = {})
+                        CopyableLabelHtml::getText, CopyableLabelHtml::setText, MutableProperty(
+                            getter = { buildErrorNameHtml(errorsModel) },
+                            setter = {})
                     ).bind(
-                        CopyableLabelHtml::getToolTipText, CopyableLabelHtml::setToolTipText, PropertyBinding(
-                            get = { buildErrorNameHtml(errorsModel) },
-                            set = {}))
+                        CopyableLabelHtml::getToolTipText, CopyableLabelHtml::setToolTipText, MutableProperty(
+                            getter = { buildErrorNameHtml(errorsModel) },
+                            setter = {}))
 
             }
         }

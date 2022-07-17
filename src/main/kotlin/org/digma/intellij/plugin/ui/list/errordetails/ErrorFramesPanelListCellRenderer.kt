@@ -15,6 +15,7 @@ import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.Swing.BLUE_LIGHT_SHADE
 import org.digma.intellij.plugin.ui.common.buildTitleItalicGrayedComment
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
+import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.model.errors.FrameItem
 import org.digma.intellij.plugin.ui.model.errors.FrameListViewItem
 import org.digma.intellij.plugin.ui.model.errors.FrameStackTitle
@@ -34,7 +35,10 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
 
 
     @Suppress("UNCHECKED_CAST")
-    override fun createPanel(project: Project, value: ListViewItem<*>, index: Int): JPanel {
+    override fun createPanel(project: Project,
+                             value: ListViewItem<*>,
+                             index: Int,
+                             panelsLayoutHelper: PanelsLayoutHelper): JPanel {
         return getOrCreatePanel(project,value as ListViewItem<FrameListViewItem>)
     }
 

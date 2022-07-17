@@ -6,33 +6,39 @@ import org.digma.intellij.plugin.model.rest.insights.ErrorInsight
 import org.digma.intellij.plugin.model.rest.insights.HotspotInsight
 import org.digma.intellij.plugin.model.rest.insights.UnmappedInsight
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
+import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupListViewItem
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupType.HttpEndpoint
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupType.Span
 import org.digma.intellij.plugin.ui.model.listview.GroupListViewItem
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import javax.swing.JPanel
-import javax.swing.event.ListDataEvent
 
 
 class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
 
 
-    override fun createPanel(project: Project, value: ListViewItem<*>, index: Int): JPanel {
-        return getOrCreatePanel(project, index, value)
+    override fun createPanel(project: Project,
+                             value: ListViewItem<*>,
+                             index: Int,
+                             panelsLayoutHelper: PanelsLayoutHelper): JPanel {
+        return getOrCreatePanel(project, index, value,panelsLayoutHelper)
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun getOrCreatePanel(project: Project, index: Int, value: ListViewItem<*>): JPanel {
+    private fun getOrCreatePanel(project: Project,
+                                 index: Int,
+                                 value: ListViewItem<*>,
+                                 panelsLayoutHelper: PanelsLayoutHelper): JPanel {
 
         val panel = when (value) {
-            is GroupListViewItem -> buildGroupPanel(project,value)
+            is GroupListViewItem -> buildGroupPanel(project,value,panelsLayoutHelper)
             else -> {
                 when (value.modelObject) {
-                    is HotspotInsight -> hotspotPanel(value as ListViewItem<HotspotInsight>)
-                    is ErrorInsight -> errorsPanel(project, value as ListViewItem<ErrorInsight>)
-                    is UnmappedInsight -> unmappedInsightPanel(value as ListViewItem<UnmappedInsight>)
-                    else -> genericPanelForSingleInsight(value as ListViewItem<CodeObjectInsight>)
+                    is HotspotInsight -> hotspotPanel(value as ListViewItem<HotspotInsight>,panelsLayoutHelper)
+                    is ErrorInsight -> errorsPanel(project, value as ListViewItem<ErrorInsight>,panelsLayoutHelper)
+                    is UnmappedInsight -> unmappedInsightPanel(value as ListViewItem<UnmappedInsight>,panelsLayoutHelper)
+                    else -> genericPanelForSingleInsight(value as ListViewItem<CodeObjectInsight>,panelsLayoutHelper)
                 }
             }
         }
@@ -41,14 +47,14 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
     }
 
 
-    private fun buildGroupPanel(project: Project,value: GroupListViewItem): JPanel {
+    private fun buildGroupPanel(project: Project, value: GroupListViewItem, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
 
         val panel =
             when (value) {
                 is InsightGroupListViewItem -> {
                     when (value.type) {
-                        HttpEndpoint -> httpEndpointGroupPanel(project,value)
-                        Span -> spanGroupPanel(value)
+                        HttpEndpoint -> httpEndpointGroupPanel(project,value,panelsLayoutHelper)
+                        Span -> spanGroupPanel(value,panelsLayoutHelper)
                         else -> insightGroupPanel(panelOfUnsupported("group type: ${value.type}"))
                     }
                 }
@@ -58,20 +64,6 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
     }
 
 
-    override fun intervalAdded(e: ListDataEvent?) {
-        super.intervalAdded(e)
-        InsightsPanelsLayoutHelper.reset()
-    }
-
-    override fun intervalRemoved(e: ListDataEvent?) {
-        super.intervalRemoved(e)
-        InsightsPanelsLayoutHelper.reset()
-    }
-
-    override fun contentsChanged(e: ListDataEvent?) {
-        super.contentsChanged(e)
-        InsightsPanelsLayoutHelper.reset()
-    }
 
 
 }

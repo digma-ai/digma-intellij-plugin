@@ -3,7 +3,9 @@ package org.digma.intellij.plugin.ui.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.ui.content.Content
+import org.digma.intellij.plugin.ui.model.NOT_SUPPORTED_OBJECT_MSG
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
+import javax.swing.SwingUtilities
 
 
 abstract class AbstractViewService(val project: Project) {
@@ -15,11 +17,22 @@ abstract class AbstractViewService(val project: Project) {
 
     private val toolWindowTabsHelper: ToolWindowTabsHelper = project.getService(ToolWindowTabsHelper::class.java)
 
+
+    abstract fun getViewDisplayName(): String
+
+
     fun setVisible() {
-        if (toolWindowTabsHelper.isErrorDetailsOn()){
+        if (toolWindowTabsHelper.isErrorDetailsOn()) {
             return
         }
-        toolWindow?.contentManager?.setSelectedContent(toolWindowContent!!, false)
+
+        if (SwingUtilities.isEventDispatchThread()) {
+            toolWindow?.contentManager?.setSelectedContent(toolWindowContent!!, false)
+        } else {
+            SwingUtilities.invokeLater {
+                toolWindow?.contentManager?.setSelectedContent(toolWindowContent!!, false)
+            }
+        }
     }
 
     fun isVisible():Boolean{
@@ -47,11 +60,21 @@ abstract class AbstractViewService(val project: Project) {
         }
 
         if (panel != null){
-            panel?.reset()
+
+            if (SwingUtilities.isEventDispatchThread()){
+                panel?.reset()
+            }else{
+                SwingUtilities.invokeLater {
+                    panel?.reset()
+                }
+            }
         }
 
     }
 
-    abstract fun getViewDisplayName(): String?
+    protected fun getNonSupportedFileScopeMessage(fileUri: String?): String{
+        return NOT_SUPPORTED_OBJECT_MSG + " " +fileUri?.substringAfterLast('/',fileUri)
+    }
+
 
 }

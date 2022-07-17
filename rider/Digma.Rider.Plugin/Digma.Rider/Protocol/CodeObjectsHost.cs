@@ -29,8 +29,6 @@ namespace Digma.Rider.Protocol
             new Dictionary<string, IPsiSourceFile>();
 
         private readonly Lifetime _lifetime;
-        private readonly RiderSolutionAnalysisServiceImpl _riderSolutionAnalysisService;
-        private readonly ShellRdDispatcher _shellRdDispatcher;
         private readonly ILogger _logger;
         private readonly CodeObjectsModel _codeObjectsModel;
         private readonly CodeObjectsCache _codeObjectsCache;
@@ -44,18 +42,17 @@ namespace Digma.Rider.Protocol
             ILogger logger)
         {
             _lifetime = lifetime;
-            _riderSolutionAnalysisService = riderSolutionAnalysisService;
-            _shellRdDispatcher = shellRdDispatcher;
             _codeObjectsCache = codeObjectsCache;
             _shellLocks = shellLocks;
             _logger = logger;
             _codeObjectsModel = solution.GetProtocolSolution().GetCodeObjectsModel();
 
+            
 
             _codeObjectsModel.Reanalyze.Advise(lifetime, documentKey =>
             {
                 Log(_logger, "Reanalyze called for {0}", documentKey);
-                _shellRdDispatcher.Queue(() =>
+                shellRdDispatcher.Queue(() =>
                 {
                     using (ReadLockCookie.Create())
                     {

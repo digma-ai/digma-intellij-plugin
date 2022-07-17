@@ -46,8 +46,6 @@ namespace Digma.Rider.Discovery
             : base(lifetime, locks, persistentIndexManager, new DocumentMarshaller())
         {
             _logger = logger;
-            
-            //todo: check PsiCachesAwaiter and PsiCacheNotifier, maybe wait for caches before starting load
         }
 
 

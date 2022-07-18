@@ -53,8 +53,10 @@ class CodeObjectHost(project: Project): LifetimedProjectComponent(project) {
         model.protocol.scheduler.invokeOrQueue {
             WriteAction.run<Exception> {
                 val documentKey = PsiUtils.psiFileToDocumentProtocolKey(psiFile)
+
                 codeLenses.forEach(Consumer { codeLens ->
-                    model.codeLens[codeLens.codeObjectId] = codeLens.toRiderCodeLensInfo(documentKey)
+                    model.codeLens.computeIfAbsent(codeLens.codeObjectId){LensPerObjectId()}
+                    model.codeLens[codeLens.codeObjectId]?.lens?.add(codeLens.toRiderCodeLensInfo(documentKey))
                 })
 
                 Log.log(logger::debug, "Calling reanalyze for {}",documentKey)
@@ -70,11 +72,16 @@ class CodeObjectHost(project: Project): LifetimedProjectComponent(project) {
 
          model.protocol.scheduler.invokeOrQueue {
              WriteAction.run<Exception> {
+
                  //collect document keys, clear code lens and call reanalyze for each document
                  val docKeys = HashSet<String>()
-                 model.codeLens.forEach {
-                     docKeys.add(it.value.documentProtocolKey)
+
+                 model.codeLens.forEach { entry ->
+                     entry.value.lens.forEach {codeLensInfo ->
+                         docKeys.add(codeLensInfo.documentProtocolKey)
+                     }
                  }
+
                  model.codeLens.clear()
 
                  docKeys.forEach {

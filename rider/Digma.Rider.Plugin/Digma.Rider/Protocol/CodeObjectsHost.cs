@@ -194,12 +194,11 @@ namespace Digma.Rider.Protocol
 
 
         [CanBeNull]
-        public RiderCodeLensInfo GetRiderCodeLensInfo([NotNull] string codeObjectId)
+        public IList<RiderCodeLensInfo> GetRiderCodeLensInfo([NotNull] string codeObjectId)
         {
             using (ReadLockCookie.Create())
             {
-                _codeObjectsModel.CodeLens.TryGetValue(codeObjectId, out var lensInfo);
-                return lensInfo;
+                return _codeObjectsModel.CodeLens.TryGetValue(codeObjectId)?.Lens;
             }
         }
 

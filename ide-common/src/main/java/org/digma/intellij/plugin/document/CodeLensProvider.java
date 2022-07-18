@@ -7,6 +7,7 @@ import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.CodeObjectType;
 import org.digma.intellij.plugin.model.lens.CodeLens;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
+import org.digma.intellij.plugin.model.rest.summary.EndpointCodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.MethodCodeObjectSummary;
 import org.jetbrains.annotations.NotNull;
 
@@ -17,11 +18,9 @@ public class CodeLensProvider {
 
     private static final Logger LOGGER = Logger.getInstance(CodeLensProvider.class);
 
-    private final Project project;
     private final DocumentInfoService documentInfoService;
 
     public CodeLensProvider(Project project) {
-        this.project = project;
         documentInfoService = project.getService(DocumentInfoService.class);
     }
 
@@ -33,6 +32,10 @@ public class CodeLensProvider {
         List<CodeLens> codeLensList = new ArrayList<>();
 
         DocumentInfoContainer documentInfo = documentInfoService.getDocumentInfo(psiFile);
+        if (documentInfo == null){
+            Log.log(LOGGER::error, "Can't find DocumentInfo for {}",psiFile.getVirtualFile());
+            return new ArrayList<>();
+        }
 
         Log.log(LOGGER::debug, "Got DocumentInfo for {}: {}",psiFile.getVirtualFile(),documentInfo.getDocumentInfo());
 
@@ -44,7 +47,7 @@ public class CodeLensProvider {
                     MethodCodeObjectSummary methodCodeObjectSummary = (MethodCodeObjectSummary) codeObjectSummary;
                     int score = methodCodeObjectSummary.getScore();
                     if (score >= 70){
-                        Log.log(LOGGER::debug, "Collecting code lese for {}",codeObjectSummary.getCodeObjectId());
+                        Log.log(LOGGER::debug, "Collecting code lese for MethodCodeObjectSummary {}",codeObjectSummary.getCodeObjectId());
                         CodeLens codeLens = new CodeLens(codeObjectSummary.getCodeObjectId(), CodeObjectType.Method,"Error Hotspot");
                         codeLens.setLensTooltipText("Error Hotspot for "+codeObjectSummary.getCodeObjectId());
                         codeLens.setLensMoreText("Go to Error Hotspot");
@@ -53,12 +56,24 @@ public class CodeLensProvider {
                     }else{
                         Log.log(LOGGER::debug, "Not Collecting code lese for {} because score is less the 70",codeObjectSummary.getCodeObjectId());
                     }
+                    break;
                 }
                 case EndpointSummary:{
-
+                    EndpointCodeObjectSummary endpointCodeObjectSummary = (EndpointCodeObjectSummary) codeObjectSummary;
+                    if (endpointCodeObjectSummary.getLowUsage() || endpointCodeObjectSummary.getHighUsage()){
+                        Log.log(LOGGER::debug, "Collecting code lese for EndpointCodeObjectSummary {}",codeObjectSummary.getCodeObjectId());
+                        var lensText = endpointCodeObjectSummary.getLowUsage() ? "Low Usage" : "High Usage";
+                        CodeLens codeLens = new CodeLens(codeObjectSummary.getCodeObjectId(), CodeObjectType.Method,lensText);
+                        codeLens.setLensTooltipText("Maximum of "+endpointCodeObjectSummary.getMaxCallsIn1Min() +" requests per minute");
+                        codeLens.setLensMoreText("Go to "+lensText);
+                        codeLens.setAnchor("Top");
+                        codeLensList.add(codeLens);
+                    }
+                    break;
                 }
                 case SpanSummary:{
 
+                    break;
                 }
             }});
 

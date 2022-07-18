@@ -25,7 +25,7 @@ object Laf  {
         if (isUnderDarcula()) {
             default = Color(60, 63, 65)
         }
-        return JBColor.namedColor("Plugins.background", default)
+        return JBColor.namedColor("Plugins.background", JBColor.PanelBackground)
 
         //todo: consider:
         //EditorColorsManager.getInstance().schemeForCurrentUITheme.defaultBackground

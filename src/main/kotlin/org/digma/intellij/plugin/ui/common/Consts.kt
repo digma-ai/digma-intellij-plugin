@@ -7,7 +7,8 @@ import java.awt.Color
 
 
 object DigmaColors{
-    val LIST_ITEM_BACKGROUND: JBColor = JBColor(0xE6EEF7, 0x45494A)
+    //val LIST_ITEM_BACKGROUND: JBColor = JBColor(0xE6EEF7, 0x45494A)
+    val LIST_ITEM_BACKGROUND: JBColor = JBColor(Color(0, 0, 50, 15), Color(200, 200, 255, 15))
     val TRANSPARENT: Color = Color(0, 0, 0, 0)
     val BLUE_LIGHT_SHADE: Color = Color(0x8f90ff)
     val ERROR_RED: Color = Color(0xf95959)      // same as in VS Code plugin

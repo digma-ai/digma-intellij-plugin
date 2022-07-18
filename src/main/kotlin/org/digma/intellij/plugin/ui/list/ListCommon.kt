@@ -1,11 +1,12 @@
 package org.digma.intellij.plugin.ui.list
 
+import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.Laf.panelsListBackground
-import java.awt.BorderLayout
-import java.awt.Color
-import java.awt.Insets
+import org.digma.intellij.plugin.ui.common.Swing
+import java.awt.*
 import javax.swing.JPanel
 
 
@@ -15,12 +16,16 @@ fun listBackground(): Color {
 
 
 fun listItemPanel(panel: JPanel): JPanel {
-    panel.border = JBUI.Borders.empty(Laf.scaleBorders(2))
-    val wrapper = JPanel()
+    panel.border = empty(Laf.scaleBorders(5))
+    panel.background = Swing.Transparent
+    //panel.border = JBUI.Borders.empty()
+
+    val wrapper = RoundedPanel(5)
     wrapper.layout = BorderLayout()
     wrapper.add(panel, BorderLayout.CENTER)
-    wrapper.border = JBUI.Borders.empty(Laf.scaleBorders(3))
-    wrapper.isOpaque = false
+    wrapper.border = empty(Laf.scaleBorders(5))
+    //wrapper.isOpaque = false
+    wrapper.background = JBColor(0xE6EEF7, 0x45494A);
     return wrapper
 }
 
@@ -37,4 +42,21 @@ fun listGroupPanel(panel: JPanel): JPanel {
     wrapper.isOpaque = false
     wrapper.border = JBUI.Borders.empty()
     return wrapper
+}
+
+class RoundedPanel(val radius: Int) : JPanel() {
+
+    init {
+        isOpaque = false
+    }
+
+    override fun paintComponent(g: Graphics) {
+        super.paintComponent(g)
+        val graphics = g as Graphics2D
+        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+
+        graphics.color = super.getBackground()
+        val border = super.getBorder().getBorderInsets(this)
+        graphics.fillRoundRect(border.left, border.top, width-border.right, height-border.bottom, radius, radius)
+    }
 }

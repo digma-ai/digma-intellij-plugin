@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.model.rest.insights.ErrorInsightNamedError
 import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.service.InsightsActionsService
 import org.digma.intellij.plugin.ui.common.Laf
+import org.digma.intellij.plugin.ui.common.Swing
 import org.digma.intellij.plugin.ui.common.buildBoldTitleGrayedComment
 import org.digma.intellij.plugin.ui.common.buildLinkTextWithGrayedAndDefaultLabelColorPart
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
@@ -34,6 +35,7 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>): JPa
     val errorsListPanel = JPanel()
     errorsListPanel.layout = GridLayout(listViewItem.modelObject.topErrors.size, 1,0,3)
     errorsListPanel.border = Borders.empty()
+    errorsListPanel.background = Swing.Transparent
     listViewItem.modelObject.topErrors.forEach { error: ErrorInsightNamedError ->
 
         val from = if (listViewItem.modelObject.codeObjectId != error.sourceCodeObjectId) {
@@ -48,14 +50,12 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>): JPa
         errorsListPanel.add(link)
     }
 
-
     val errorsWrapper = JBPanel<JBPanel<*>>()
     errorsWrapper.layout = BorderLayout(0,10)
+    errorsWrapper.border = BorderFactory.createEmptyBorder()
+    errorsWrapper.background = Swing.Transparent
     errorsWrapper.add(title, BorderLayout.NORTH)
     errorsWrapper.add(errorsListPanel, BorderLayout.CENTER)
-    errorsWrapper.border = BorderFactory.createEmptyBorder()
-
-
 
     //the expand link button needs to be the same size as insightsIconPanel so that they will align
     //the same over the list
@@ -68,6 +68,7 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>): JPa
         }
     }
     expandLinkPanel.border = Borders.empty(0,0,0,Laf.scaleBorders(getInsightIconPanelRightBorderSize()))
+    expandLinkPanel.background = Swing.Transparent
 
     //the expand button wants to be aligned with the insights icons panels, so it takes its width from there
     val expandPanel: JPanel = object: JPanel(){
@@ -83,11 +84,13 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>): JPa
         }
     }
     expandPanel.layout = BorderLayout()
+    expandPanel.background = Swing.Transparent
     expandPanel.add(expandLinkPanel, BorderLayout.SOUTH)
     addCurrentLargestWidthIconPanel(expandPanel.preferredSize?.width ?: 0)
 
     val result = JBPanel<JBPanel<*>>()
     result.layout = BorderLayout()
+    result.background = Swing.Transparent
     result.add(errorsWrapper,BorderLayout.CENTER)
     result.add(expandPanel,BorderLayout.EAST)
 

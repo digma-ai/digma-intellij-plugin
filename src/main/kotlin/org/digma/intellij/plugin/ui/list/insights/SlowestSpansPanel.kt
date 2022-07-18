@@ -31,6 +31,7 @@ fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: 
     val spansListPanel = JPanel()
     spansListPanel.layout = GridLayout(insight.spans.size, 1, 0, 3)
     spansListPanel.border = JBUI.Borders.empty()
+    spansListPanel.background = Swing.Transparent
     insight.spans.forEach { slowSpan: SlowSpanInfo ->
 
         val displayName = slowSpan.spanInfo.displayName
@@ -61,18 +62,19 @@ fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: 
                 .horizontalAlign(HorizontalAlign.RIGHT)
         }.layout(RowLayout.INDEPENDENT)
     }
-
+    iconPanel.background = Swing.Transparent
 
     val spansWrapper = JBPanel<JBPanel<*>>()
     spansWrapper.layout = BorderLayout(0,10)
     spansWrapper.add(title, BorderLayout.NORTH)
     spansWrapper.add(spansListPanel, BorderLayout.CENTER)
     spansWrapper.border = BorderFactory.createEmptyBorder()
-
+    spansWrapper.background = Swing.Transparent
 
     val iconPanelWrapper = JBPanel<JBPanel<*>>()
     iconPanelWrapper.layout = BorderLayout()
     iconPanelWrapper.add(iconPanel, BorderLayout.EAST)
+    iconPanelWrapper.background = Swing.Transparent
 
 
     val result = JBPanel<JBPanel<*>>()

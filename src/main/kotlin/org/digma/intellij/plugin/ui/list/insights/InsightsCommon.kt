@@ -8,17 +8,15 @@ import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.model.rest.insights.UnmappedInsight
 import org.digma.intellij.plugin.ui.common.Laf
+import org.digma.intellij.plugin.ui.common.Swing
 import org.digma.intellij.plugin.ui.common.buildBoldTitleGrayedComment
 import org.digma.intellij.plugin.ui.list.listGroupPanel
 import org.digma.intellij.plugin.ui.list.listItemPanel
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
-import java.awt.BorderLayout
-import java.awt.Dimension
-import javax.swing.Icon
-import javax.swing.JLabel
-import javax.swing.JPanel
-import javax.swing.SwingConstants
+import java.awt.*
+import javax.swing.*
 import kotlin.math.max
+
 
 fun insightItemPanel(panel: JPanel): JPanel {
     return listItemPanel(panel)
@@ -35,13 +33,21 @@ fun createInsightPanel(title: String, body: String, icon: Icon, iconText: String
 
 fun createInsightPanel(title: String, body: String, icon: Icon, iconText: String, wrap: Boolean): JPanel {
 
-    val message = JLabel(buildBoldTitleGrayedComment(title,body),SwingConstants.LEFT)
     val iconPanel = insightsIconPanelBorder(icon, iconText)
+    iconPanel.background = Swing.Transparent
+
+    val message = JLabel(buildBoldTitleGrayedComment(title,body),SwingConstants.LEFT)
+    val messagePanel = JBPanel<JBPanel<*>>()
+    messagePanel.layout = BorderLayout()
+    messagePanel.add(message,BorderLayout.NORTH)
+    messagePanel.border = empty()
+    messagePanel.background = Swing.Transparent
+
     val result = JBPanel<JBPanel<*>>()
+
     result.layout = BorderLayout()
-    result.add(message,BorderLayout.CENTER)
+    result.add(messagePanel,BorderLayout.WEST)
     result.add(iconPanel,BorderLayout.EAST)
-    result.border = empty()
 
     return if (wrap) {
         insightItemPanel(result)
@@ -107,6 +113,7 @@ internal fun insightsIconPanelBorder(icon: Icon, text: String): JPanel {
     }
 
     panel.border = empty(2,0,0,Laf.scaleBorders(getInsightIconPanelRightBorderSize()))
+    panel.background = Swing.Transparent
 
     val width = panel.preferredSize.width
     addCurrentLargestWidthIconPanel(width)
@@ -116,7 +123,7 @@ internal fun insightsIconPanelBorder(icon: Icon, text: String): JPanel {
 
 
 internal fun getInsightIconPanelRightBorderSize():Int{
-    return 20
+    return 5
 }
 internal fun getCurrentLargestWidthIconPanel(width: Int):Int{
     //this method should never return null and never throw NPE

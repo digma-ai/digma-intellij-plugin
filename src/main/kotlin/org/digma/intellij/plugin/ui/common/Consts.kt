@@ -23,6 +23,7 @@ object Swing {
 
     val BLUE_LIGHT_SHADE: Color = Color.decode(Html.BLUE_LIGHT_SHADE)
     val SHADE_YELLOW: Color = Color(200, 200, 120   ,50)
+    val Transparent: Color = Color(0, 0, 0, 0)
 }
 
 

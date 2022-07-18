@@ -39,10 +39,9 @@ object Laf : SettingsChangeListener {
     fun panelsListBackground(): Color {
         var default: Color = JBColor.DARK_GRAY
         if (isUnderDarcula()) {
-            default = Color(38, 38, 38)
-
+            default = Color(60, 63, 65)
         }
-        return JBColor.namedColor("Editor.background", default)
+        return JBColor.namedColor("Plugins.background", default)
 
         //consider:
         //EditorColorsManager.getInstance().schemeForCurrentUITheme.defaultBackground

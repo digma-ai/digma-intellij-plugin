@@ -72,10 +72,12 @@ fun spanGroupPanel(listViewItem: GroupListViewItem): JPanel {
 fun spanPanel(spanInsight: SpanInsight): JPanel {
 
     val title = JLabel(asHtml(spanBold("Top Usage")), SwingConstants.LEFT)
+    title.background = Swing.Transparent
 
     val flowsListPanel = JBPanel<JBPanel<*>>()
     flowsListPanel.layout = GridLayout(spanInsight.flows.size, 1, 0, 3)
     flowsListPanel.border = empty()
+    flowsListPanel.background = Swing.Transparent
 
     spanInsight.flows.forEach { spanFlow: SpanFlow ->
 
@@ -135,6 +137,7 @@ fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight): JPanel {
         val durationsPanel = JBPanel<JBPanel<*>>()
         durationsPanel.layout = BorderLayout(5, 0)
         durationsPanel.border = empty()
+        durationsPanel.background = Swing.Transparent
 
         val pLabelText = "P${percentile.percentile * 100} ${percentile.currentDuration.value} ${percentile.currentDuration.unit}"
         val pLabel = CopyableLabel(pLabelText)
@@ -153,6 +156,7 @@ fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight): JPanel {
         }
         pLabelPanel.layout = BorderLayout()
         pLabelPanel.border = empty()
+        pLabelPanel.background = Swing.Transparent
         pLabelPanel.add(pLabel, BorderLayout.WEST)
         addCurrentLargestWidthDurationPLabel(pLabelPanel.preferredSize.width)
         durationsPanel.add(pLabelPanel, BorderLayout.WEST)
@@ -205,6 +209,7 @@ fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight): JPanel {
 
     val result = JBPanel<JBPanel<*>>()
     result.layout = BorderLayout()
+    result.background = Swing.Transparent
     result.add(title, BorderLayout.NORTH)
     result.add(durationsListPanel, BorderLayout.CENTER)
     return result

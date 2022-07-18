@@ -108,7 +108,7 @@ abstract class PanelList(val project: Project, listViewItems: List<ListViewItem<
                     model.getElementAt(i), i, this@PanelList.hasFocus())
                 add(newComp)
                 if (gapBetweenItems) {
-                    add(Box.createVerticalStrut(Laf.scaleBorders(3)))
+                    add(Box.createVerticalStrut(Laf.scaleBorders(5)))
                 }
             }
 

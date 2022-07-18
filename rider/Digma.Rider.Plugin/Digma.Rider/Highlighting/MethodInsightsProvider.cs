@@ -13,18 +13,20 @@ namespace Digma.Rider.Highlighting
     [SolutionComponent]
     public class MethodInsightsProvider : ICodeInsightsProvider
     {
+        private readonly ISolution _solution;
         private readonly ILogger _logger;
         private readonly ShowToolWindowHost _showToolWindowHost;
 
-        public MethodInsightsProvider(ILogger logger,ShowToolWindowHost showToolWindowHost)
+        public MethodInsightsProvider(ISolution solution,ILogger logger,ShowToolWindowHost showToolWindowHost)
         {
+            _solution = solution;
             _logger = logger;
             _showToolWindowHost = showToolWindowHost;
         }
 
         public bool IsAvailableIn(ISolution solution)
         {
-            return true;
+            return _solution == solution;
         }
 
         public void OnClick(CodeInsightsHighlighting highlighting, ISolution solution)

@@ -36,6 +36,12 @@ namespace Digma.Rider.Discovery
     {
         private readonly ILogger _logger;
 
+        /// <summary>
+        /// Increment the version when the cache structure changes.
+        /// it will set ClearOnLoad to true and the cache will be invalidated and rebuild.
+        /// </summary>
+        public override string Version => "2";
+
         public CodeObjectsCache(ILogger logger,Lifetime lifetime, IShellLocks locks, IPersistentIndexManager persistentIndexManager) 
             : base(lifetime, locks, persistentIndexManager, new DocumentMarshaller())
         {

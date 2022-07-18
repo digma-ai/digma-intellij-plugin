@@ -76,10 +76,13 @@ object CodeObjectsModel : Ext(SolutionModel.Solution) {
                 field("fileUri",PredefinedType.string)
                 //map<codeObjectId,MethodInfo>
                 map("methods", PredefinedType.string, RiderMethodInfo)
-            }
-        )
+            })
 
-        map("codeLens",PredefinedType.string,RiderCodeLensInfo)
+
+        map("codeLens", PredefinedType.string,
+            classdef("lensPerObjectId") {
+                list("lens", RiderCodeLensInfo)
+            })
 
     }
 

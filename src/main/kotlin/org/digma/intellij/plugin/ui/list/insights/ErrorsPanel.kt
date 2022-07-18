@@ -14,6 +14,7 @@ import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.Swing
 import org.digma.intellij.plugin.ui.common.buildBoldTitleGrayedComment
 import org.digma.intellij.plugin.ui.common.buildLinkTextWithGrayedAndDefaultLabelColorPart
+import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.BorderLayout
 import java.awt.Dimension
@@ -23,7 +24,7 @@ import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.SwingConstants
 
-fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>): JPanel {
+fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
 
     val errorCount = listViewItem.modelObject.errorCount
     val unhandled = listViewItem.modelObject.unhandledCount
@@ -79,14 +80,14 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>): JPa
             }
             val h = ps.height
             val w = ps.width
-            addCurrentLargestWidthIconPanel(w)
-            return Dimension(getCurrentLargestWidthIconPanel(w), h)
+            addCurrentLargestWidthIconPanel(panelsLayoutHelper,w)
+            return Dimension(getCurrentLargestWidthIconPanel(panelsLayoutHelper,w), h)
         }
     }
     expandPanel.layout = BorderLayout()
     expandPanel.background = Swing.Transparent
     expandPanel.add(expandLinkPanel, BorderLayout.SOUTH)
-    addCurrentLargestWidthIconPanel(expandPanel.preferredSize?.width ?: 0)
+    addCurrentLargestWidthIconPanel(panelsLayoutHelper,expandPanel.preferredSize?.width ?: 0)
 
     val result = JBPanel<JBPanel<*>>()
     result.layout = BorderLayout()

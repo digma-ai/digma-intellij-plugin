@@ -145,6 +145,7 @@ rdgen {
 
     verbose = true
     classpath(rdLibDirectory(project).canonicalPath + "/rider-model.jar")
+    logger.lifecycle("rdLibDirectory is ${rdLibDirectory(project).canonicalPath}")
     sources("${modelDir.canonicalPath}/rider/model")
     hashFolder = buildDir.canonicalPath
     packages = "rider.model"

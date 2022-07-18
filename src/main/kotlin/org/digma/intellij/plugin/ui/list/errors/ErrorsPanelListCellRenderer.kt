@@ -3,11 +3,13 @@ package org.digma.intellij.plugin.ui.list.errors
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBPanel
+import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.model.discovery.CodeObjectInfo.Companion.extractMethodName
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
+import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.list.listItemPanel
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import org.ocpsoft.prettytime.PrettyTime
@@ -22,7 +24,10 @@ class ErrorsPanelListCellRenderer : AbstractPanelListCellRenderer() {
 
 
     @Suppress("UNCHECKED_CAST")
-    override fun createPanel(project: Project, value: ListViewItem<*>, index: Int): JPanel {
+    override fun createPanel(project: Project,
+                             value: ListViewItem<*>,
+                             index: Int,
+                             panelsLayoutHelper: PanelsLayoutHelper): JPanel {
         return getOrCreatePanel(project,value as ListViewItem<CodeObjectError>)
     }
 
@@ -57,6 +62,8 @@ private fun createSingleErrorPanel(project: Project, model: CodeObjectError ): J
 
     val scorePanel = createScorePanelNoArrows(model)
     val scorePanelWrapper = JPanel()
+    scorePanelWrapper.border = JBUI.Borders.empty(0,0,0,5)
+    scorePanelWrapper.isOpaque = false
     scorePanelWrapper.layout = GridBagLayout()
     val constraints = GridBagConstraints()
     constraints.anchor = GridBagConstraints.NORTH

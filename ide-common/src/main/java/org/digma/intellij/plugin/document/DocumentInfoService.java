@@ -8,6 +8,7 @@ import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
+import org.digma.intellij.plugin.psi.PsiFileNotFountException;
 import org.digma.intellij.plugin.psi.PsiUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,7 +25,7 @@ import java.util.Map;
  */
 public class DocumentInfoService {
 
-    private static final Logger LOGGER = Logger.getInstance(DocumentInfoService.class);
+    private final Logger LOGGER = Logger.getInstance(DocumentInfoService.class);
 
     private final Project project;
     private final AnalyticsService analyticsService;
@@ -66,8 +67,13 @@ public class DocumentInfoService {
 
     @Nullable
     public DocumentInfoContainer getDocumentInfo(MethodUnderCaret methodUnderCaret) {
-        PsiFile psiFile = PsiUtils.uriToPsiFile(methodUnderCaret.getFileUri(), project);
-        return getDocumentInfo(psiFile);
+        try {
+            PsiFile psiFile = PsiUtils.uriToPsiFile(methodUnderCaret.getFileUri(), project);
+            return getDocumentInfo(psiFile);
+        } catch (PsiFileNotFountException e) {
+            Log.log(LOGGER::error, "Could not locate psi file for uri {}", methodUnderCaret.getFileUri());
+            return null;
+        }
     }
 
 
@@ -76,17 +82,21 @@ public class DocumentInfoService {
      */
     @Nullable
     public MethodInfo getMethodInfo(MethodUnderCaret methodUnderCaret) {
-        PsiFile psiFile = PsiUtils.uriToPsiFile(methodUnderCaret.getFileUri(), project);
-        DocumentInfoContainer documentInfoContainer = documents.get(psiFile);
-        return documentInfoContainer == null ? null : documentInfoContainer.getMethodInfo(methodUnderCaret.getId());
+        try {
+            PsiFile psiFile = PsiUtils.uriToPsiFile(methodUnderCaret.getFileUri(), project);
+            DocumentInfoContainer documentInfoContainer = documents.get(psiFile);
+            return documentInfoContainer == null ? null : documentInfoContainer.getMethodInfo(methodUnderCaret.getId());
+        } catch (PsiFileNotFountException e) {
+            Log.log(LOGGER::error, "Could not locate psi file for uri {}", methodUnderCaret.getFileUri());
+            return null;
+        }
     }
 
     public MethodInfo findMethodInfo(String sourceCodeObjectId) {
-        MethodInfo methodInfo = this.documents.values().stream().
-                filter(documentInfoContainer -> documentInfoContainer.getDocumentInfo().getMethods().containsKey(sourceCodeObjectId)).
-                findAny().map(documentInfoContainer -> documentInfoContainer == null ? null : documentInfoContainer.getMethodInfo(sourceCodeObjectId)).
-                orElse(null);
 
-        return methodInfo;
+        return this.documents.values().stream().
+                filter(documentInfoContainer -> documentInfoContainer.getDocumentInfo().getMethods().containsKey(sourceCodeObjectId)).
+                findAny().map(documentInfoContainer -> documentInfoContainer.getMethodInfo(sourceCodeObjectId)).
+                orElse(null);
     }
 }

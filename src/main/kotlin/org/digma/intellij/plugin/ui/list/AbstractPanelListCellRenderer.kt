@@ -13,14 +13,15 @@ abstract class AbstractPanelListCellRenderer: PanelListCellRenderer {
                                               list: PanelList,
                                               value: ListViewItem<*>,
                                               index: Int,
-                                              cellHasFocus: Boolean): JPanel {
+                                              cellHasFocus: Boolean,
+                                              panelsLayoutHelper: PanelsLayoutHelper): JPanel {
 
 
         if (panels.containsKey(index)) {
             return panels[index]!!
         }
 
-        val panel = createPanel(project,value,index)
+        val panel = createPanel(project,value,index,panelsLayoutHelper)
 
         panels[index] = panel
 
@@ -28,7 +29,10 @@ abstract class AbstractPanelListCellRenderer: PanelListCellRenderer {
     }
 
 
-    abstract fun createPanel(project: Project,value: ListViewItem<*>, index: Int): JPanel
+    abstract fun createPanel(project: Project,
+                             value: ListViewItem<*>,
+                             index: Int,
+                             panelsLayoutHelper: PanelsLayoutHelper): JPanel
 
 
     private fun wrap(panel: JPanel): JPanel {

@@ -1,8 +1,10 @@
 package org.digma.intellij.plugin.ui.service
 
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.errors.ErrorsProvider
+import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.ui.model.DocumentScope
@@ -15,19 +17,31 @@ import java.util.*
 
 class ErrorsViewService(project: Project): AbstractViewService(project) {
 
-    //ErrorsModel is singleton object
-    private var model = ErrorsModel
+    private val logger: Logger = Logger.getInstance(ErrorsViewService::class.java)
+
+    //the model is single per the life of an open project in intellij. it shouldn't be created
+    //elsewhere in the program. it can not be singleton.
+    val model = ErrorsModel()
 
     private val errorsProvider: ErrorsProvider = project.getService(ErrorsProvider::class.java)
 
+    companion object {
+        fun getInstance(project: Project): ErrorsViewService {
+            return project.getService(ErrorsViewService::class.java)
+        }
+    }
 
-    override fun getViewDisplayName(): String? {
+
+    override fun getViewDisplayName(): String {
         return "Errors" + if(model.errorsCount > 0) " (${model.count()})" else ""
     }
 
     fun contextChanged(
         methodInfo: MethodInfo
     ) {
+
+        Log.log(logger::debug, "contextChanged to {}. ", methodInfo)
+
         val errorsListContainer = errorsProvider.getErrors(methodInfo)
         model.listViewItems = errorsListContainer.listViewItems
         model.scope = MethodScope(methodInfo)
@@ -40,6 +54,9 @@ class ErrorsViewService(project: Project): AbstractViewService(project) {
 
 
     fun contextChangeNoMethodInfo(dummy: MethodInfo) {
+
+        Log.log(logger::debug, "contextChangeNoMethodInfo to {}. ", dummy)
+
         model.listViewItems = ArrayList()
         model.scope = MethodScope(dummy)
         model.card = ErrorsTabCard.ERRORS_LIST
@@ -51,6 +68,9 @@ class ErrorsViewService(project: Project): AbstractViewService(project) {
 
 
     fun showErrorDetails(uid: String) {
+
+        Log.log(logger::debug, "showDocumentPreviewList for {}. ", uid)
+
         val errorDetails = errorsProvider.getErrorDetails(uid)
         errorDetails.flowStacks.isWorkspaceOnly = project.getService(PersistenceService::class.java).state.isWorkspaceOnly
         model.errorDetails = errorDetails
@@ -62,14 +82,32 @@ class ErrorsViewService(project: Project): AbstractViewService(project) {
 
 
     fun closeErrorDetails() {
-        model.errorDetails = createEmptyErrorDetails(model)
+
+        Log.log(logger::debug, "closeErrorDetails called")
+
+        model.errorDetails = createEmptyErrorDetails()
         model.card = ErrorsTabCard.ERRORS_LIST
         updateUi()
     }
 
     fun empty() {
+
+        Log.log(logger::debug, "empty called")
+
         model.listViewItems = Collections.emptyList()
         model.scope = EmptyScope("")
+        model.card = ErrorsTabCard.ERRORS_LIST
+        model.errorsCount = 0
+
+        updateUi()
+    }
+
+    fun emptyNonSupportedFile(fileUri: String) {
+
+        Log.log(logger::debug, "emptyNonSupportedFile called")
+
+        model.listViewItems = Collections.emptyList()
+        model.scope = EmptyScope(getNonSupportedFileScopeMessage(fileUri))
         model.card = ErrorsTabCard.ERRORS_LIST
         model.errorsCount = 0
 
@@ -83,6 +121,8 @@ class ErrorsViewService(project: Project): AbstractViewService(project) {
      */
     fun showDocumentPreviewList(documentInfoContainer: DocumentInfoContainer?,
                                 fileUri: String) {
+
+        Log.log(logger::debug, "showDocumentPreviewList for {}. ", fileUri)
 
         if (documentInfoContainer == null) {
             model.scope = EmptyScope(fileUri.substringAfterLast('/'))
@@ -103,7 +143,7 @@ class ErrorsViewService(project: Project): AbstractViewService(project) {
         return documentInfoContainer.allSummaries.stream().mapToInt { it.errorsCount }.sum()
     }
 
-    private fun createEmptyErrorDetails(model: ErrorsModel): ErrorDetailsModel {
+    private fun createEmptyErrorDetails(): ErrorDetailsModel {
         val emptyErrorDetails = ErrorDetailsModel()
         emptyErrorDetails.flowStacks.isWorkspaceOnly =
             project.getService(PersistenceService::class.java).state.isWorkspaceOnly

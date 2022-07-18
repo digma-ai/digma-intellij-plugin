@@ -39,7 +39,7 @@ namespace Digma.Rider.Protocol
             _logger = logger;
            
             var methodNavigationModel = solution.GetProtocolSolution().GetMethodNavigationModel();
-            methodNavigationModel.NavigateToMethod.Change.Advise(lifetime, Navigate);
+            methodNavigationModel.NavigateToMethod.Advise(lifetime, Navigate);
         }
 
         private void Navigate(string message)

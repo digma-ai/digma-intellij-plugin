@@ -166,7 +166,9 @@ tasks {
 
 
     listProductsReleases {
+        //todo: decide which releases to support
 //        types.set(listOf("RD","IC","PC"))
+        //todo: change to support only rider and add support for other IDEs later
         types.set(listOf("RD","IC","PC","IU"))
         sinceVersion.set("2022.1")
         untilVersion.set("2022.1.2")

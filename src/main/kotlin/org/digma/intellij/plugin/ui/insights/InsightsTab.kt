@@ -4,63 +4,40 @@ package org.digma.intellij.plugin.ui.insights
 
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.project.Project
+import com.intellij.ui.dsl.builder.MutableProperty
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
-import com.intellij.ui.layout.PropertyBinding
-import com.intellij.util.ui.JBUI
-import org.digma.intellij.plugin.ui.common.ScopeLineIconProducer
+import org.digma.intellij.plugin.ui.common.createTopPanel
 import org.digma.intellij.plugin.ui.common.noCodeObjectWarningPanel
-import org.digma.intellij.plugin.ui.common.scopeLine
-import org.digma.intellij.plugin.ui.common.topLine
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.insights.InsightsList
 import org.digma.intellij.plugin.ui.list.insights.PreviewList
 import org.digma.intellij.plugin.ui.list.listBackground
-import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsTabCard
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
+import org.digma.intellij.plugin.ui.service.InsightsViewService
 import java.awt.BorderLayout
 import java.awt.CardLayout
-import javax.swing.*
+import javax.swing.JComponent
+import javax.swing.JLabel
+import javax.swing.JPanel
 
 
 private const val NO_INFO_CARD_NAME="NO-INFO"
 
 fun insightsPanel(project: Project ): DigmaTabPanel {
 
-    val topPanel = panel {
-            row {
-                val topLine = topLine(project, InsightsModel, "Code insights")
-                topLine.isOpaque = false
-                cell(topLine)
-                    .horizontalAlign(HorizontalAlign.FILL)
-                    .onReset {
-                        topLine.reset()
-                    }
-            }
-            row {
-                val scopeLine = scopeLine(project, { InsightsModel.scope.getScope() }, ScopeLineIconProducer(InsightsModel))
-                scopeLine.isOpaque = false
-                cell(scopeLine)
-                    .horizontalAlign(HorizontalAlign.FILL)
-                    .onReset {
-                        scopeLine.reset()
-                    }
-            }
-    }
+    //errorsModel and insightsModel are not singletons but are single per open project.
+    //they are created by the view service and live as long as the project is alive.
+    //so components can bind to them, but not to members of them, the model instance is the same on but the
+    //members change , like the various lists. or bind to a function of the mode like getScope.
+    val insightsModel = InsightsViewService.getInstance(project).model
 
-    topPanel.isOpaque = false
-
-    topPanel.border = JBUI.Borders.empty()
-    val topPanelWrapper = Box.createHorizontalBox()
-    topPanelWrapper.add(Box.createHorizontalStrut(12))
-    topPanelWrapper.add(topPanel)
-    topPanelWrapper.add(Box.createHorizontalStrut(8))
-    topPanelWrapper.isOpaque = false
+    val topPanelWrapper = createTopPanel(project,insightsModel,"Code insights")
 
 
-    val insightsList = ScrollablePanelList(InsightsList(project,InsightsModel.listViewItems))
-    val previewList = ScrollablePanelList(PreviewList(project,InsightsModel.previewListViewItems))
+    val insightsList = ScrollablePanelList(InsightsList(project,insightsModel.listViewItems))
+    val previewList = ScrollablePanelList(PreviewList(project,insightsModel.previewListViewItems))
 
     val previewTitle = panel {
         row {
@@ -73,9 +50,9 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
         }
         row{
             label("").bind(
-                JLabel::getText, JLabel::setText, PropertyBinding(
-                    get = { InsightsModel.getPreviewListMessage() },
-                    set = {})
+                JLabel::getText, JLabel::setText, MutableProperty(
+                    getter = { insightsModel.getPreviewListMessage() },
+                    setter = {})
             )
         }
     }
@@ -88,49 +65,51 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
     previewPanel.isOpaque = false
 
 
-    val noInfoPanel = noCodeObjectWarningPanel("No insights about this code object yet.")
+    val noInfoWarningPanel = noCodeObjectWarningPanel(insightsModel)
 
     val cardLayout = CardLayout()
     val cardsPanel = JPanel(cardLayout)
     cardsPanel.isOpaque = false
     cardsPanel.add(insightsList, InsightsTabCard.INSIGHTS.name)
     cardsPanel.add(previewPanel, InsightsTabCard.PREVIEW.name)
-    cardsPanel.add(noInfoPanel,NO_INFO_CARD_NAME )
+    cardsPanel.add(noInfoWarningPanel,NO_INFO_CARD_NAME )
     cardLayout.addLayoutComponent(insightsList, InsightsTabCard.INSIGHTS.name)
     cardLayout.addLayoutComponent(previewPanel, InsightsTabCard.PREVIEW.name)
-    cardLayout.addLayoutComponent(noInfoPanel, NO_INFO_CARD_NAME)
-    cardLayout.show(cardsPanel,InsightsModel.card.name)
+    cardLayout.addLayoutComponent(noInfoWarningPanel, NO_INFO_CARD_NAME)
+    cardLayout.show(cardsPanel,insightsModel.card.name)
 
     val result = object: DigmaTabPanel() {
         override fun getPreferredFocusableComponent(): JComponent {
-            return topPanel
+            return topPanelWrapper
         }
 
         override fun getPreferredFocusedComponent(): JComponent {
-            return if (InsightsModel.card.name == InsightsTabCard.INSIGHTS.name){
+            return if (insightsModel.card.name == InsightsTabCard.INSIGHTS.name){
                 insightsList
             }else{
                 previewList
             }
         }
 
+        //reset must be called from EDT
         override fun reset() {
-            topPanel.reset()
+
+            noInfoWarningPanel.reset()
+            topPanelWrapper.reset()
             previewTitle.reset()
-            SwingUtilities.invokeLater {
-                insightsList.getModel().setListData(InsightsModel.listViewItems)
-                previewList.getModel().setListData(InsightsModel.previewListViewItems)
 
-                if (insightsList.getModel().size == 0 && InsightsModel.card.equals(InsightsTabCard.INSIGHTS)){
-                    cardLayout.show(cardsPanel,NO_INFO_CARD_NAME)
-                }else if (previewList.getModel().size == 0 && InsightsModel.card.equals(InsightsTabCard.PREVIEW)){
-                    cardLayout.show(cardsPanel,NO_INFO_CARD_NAME)
-                }else{
-                    cardLayout.show(cardsPanel,InsightsModel.card.name)
-                }
+            insightsList.getModel().setListData(insightsModel.listViewItems)
+            previewList.getModel().setListData(insightsModel.previewListViewItems)
 
-                cardsPanel.revalidate()
+            if (insightsList.getModel().size == 0 && insightsModel.card.equals(InsightsTabCard.INSIGHTS)) {
+                cardLayout.show(cardsPanel, NO_INFO_CARD_NAME)
+            } else if (previewList.getModel().size == 0 && insightsModel.card.equals(InsightsTabCard.PREVIEW)) {
+                cardLayout.show(cardsPanel, NO_INFO_CARD_NAME)
+            } else {
+                cardLayout.show(cardsPanel, insightsModel.card.name)
             }
+
+            cardsPanel.revalidate()
         }
     }
 

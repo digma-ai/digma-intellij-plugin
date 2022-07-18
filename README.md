@@ -74,8 +74,6 @@ todo: punlish?</br>
 <!-- Plugin description -->
 
 <![CDATA[
-        <a href="https://github.com/digma-ai/digma"><img src="https://img.shields.io/github/stars/digma-ai/digma?style=social" alt="Github Repo"></a>&nbsp;
-        <a href="https://twitter.com/doppleware"><img src="https://img.shields.io/twitter/follow/doppleware?style=social" alt="Twitter Follow"></a>&nbsp;
         <h1>Add Continuous Feedback to your coding practices</h1>
         <p>Digma is a Continuous Feedback platform. It integrates with your observability
         backend to provide meaningful code insights in the IDE. While coding, you can be aware of how the code behaves in runtime in various staging and production environments</p>

@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.log;
 
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.project.Project;
 
 import java.util.function.Consumer;
 
@@ -10,19 +11,30 @@ import java.util.function.Consumer;
  */
 public class Log {
 
-    private static final Logger LOGGER = Logger.getInstance(Log.class);
+    //todo: change all logging to print the current project
+    public static void log(Consumer<String> consumer, Project project, String format, Object... args) {
+        log(consumer, "Digma: Project:" + project.getName() + ": " + String.format(format.replace("{}", "%s"), args));
+    }
 
     public static void log(Consumer<String> consumer, String format, Object... args) {
-        //Its not always clear how to change logging level in the ide, didn't find it in
-        // rider for example but very easy to find in idea.
-        // so to temporarily bypass all loggers uncomment this line.
-        //LOGGER.info(String.format(format.replace("{}", "%s"), args));
-        //todo: change the test IDE logging level to DEBUG for runIde task before it runs.
-        consumer.accept("Digma: "+String.format(format.replace("{}", "%s"), args));
+        log(consumer, "Digma: " + String.format(format.replace("{}", "%s"), args));
     }
 
-    public static void error(Logger logger,Exception exception, String format, Object... args) {
-        logger.error("Digma: "+String.format(format.replace("{}", "%s"), args),exception);
+    public static void log(Consumer<String> consumer, String msg) {
+        consumer.accept(msg);
     }
+
+    public static void error(Logger logger,Project project, Exception exception, String format, Object... args) {
+        error(logger, exception,"Digma: Project:" + project.getName() + ": " + String.format(format.replace("{}", "%s"), args));
+    }
+    public static void error(Logger logger, Exception exception, String format, Object... args) {
+        error(logger, exception, "Digma: " + String.format(format.replace("{}", "%s"), args));
+    }
+
+    public static void error(Logger logger, Exception exception, String msg) {
+        logger.error(msg, exception);
+    }
+
+
 
 }

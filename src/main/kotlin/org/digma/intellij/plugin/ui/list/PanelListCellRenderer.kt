@@ -11,7 +11,7 @@ interface PanelListCellRenderer: ListDataListener {
                                      list: PanelList,
                                      value: ListViewItem<*>,
                                      index: Int,
-                                     cellHasFocus: Boolean): JPanel
-
+                                     cellHasFocus: Boolean,
+                                     panelsLayoutHelper: PanelsLayoutHelper): JPanel
 
 }

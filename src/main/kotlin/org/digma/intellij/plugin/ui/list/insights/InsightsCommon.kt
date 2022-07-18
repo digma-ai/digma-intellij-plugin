@@ -35,14 +35,14 @@ fun createInsightPanel(title: String, body: String, icon: Icon, iconText: String
 fun createInsightPanel(title: String, body: String, icon: Icon, iconText: String, wrap: Boolean, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
 
     val iconPanel = insightsIconPanelBorder(icon, iconText, panelsLayoutHelper)
-    iconPanel.background = DigmaColors.LIST_ITEM_BACKGROUND
+    iconPanel.isOpaque = false
 
     val message = JLabel(buildBoldTitleGrayedComment(title,body),SwingConstants.LEFT)
     val messagePanel = JBPanel<JBPanel<*>>()
     messagePanel.layout = BorderLayout()
     messagePanel.add(message,BorderLayout.NORTH)
     messagePanel.border = empty()
-    messagePanel.background = DigmaColors.LIST_ITEM_BACKGROUND
+    messagePanel.isOpaque = false
 
     val result = JBPanel<JBPanel<*>>()
 
@@ -111,7 +111,7 @@ internal fun insightsIconPanelBorder(icon: Icon, text: String, panelsLayoutHelpe
     }
 
     panel.border = empty(2,0,0,Laf.scaleBorders(getInsightIconPanelRightBorderSize()))
-    panel.background = DigmaColors.LIST_ITEM_BACKGROUND
+    panel.isOpaque = false
 
     val width = panel.preferredSize.width
     addCurrentLargestWidthIconPanel(panelsLayoutHelper,width)

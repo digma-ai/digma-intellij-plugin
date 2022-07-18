@@ -15,7 +15,7 @@ fun listBackground(): Color {
 
 fun listItemPanel(panel: JPanel): JPanel {
     panel.border = empty(Laf.scaleBorders(5))
-    panel.background = DigmaColors.TRANSPARENT
+    panel.isOpaque = false
     //panel.border = JBUI.Borders.empty()
 
     val wrapper = RoundedPanel(7)

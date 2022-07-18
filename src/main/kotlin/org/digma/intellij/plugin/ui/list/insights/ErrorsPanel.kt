@@ -33,7 +33,7 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>, pane
     val errorsListPanel = JPanel()
     errorsListPanel.layout = GridLayout(listViewItem.modelObject.topErrors.size, 1,0,3)
     errorsListPanel.border = Borders.empty()
-    errorsListPanel.background = DigmaColors.LIST_ITEM_BACKGROUND
+    errorsListPanel.isOpaque = false
     listViewItem.modelObject.topErrors.forEach { error: ErrorInsightNamedError ->
 
         val from = if (listViewItem.modelObject.codeObjectId != error.sourceCodeObjectId) {
@@ -51,7 +51,7 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>, pane
     val errorsWrapper = JBPanel<JBPanel<*>>()
     errorsWrapper.layout = BorderLayout(0,10)
     errorsWrapper.border = BorderFactory.createEmptyBorder()
-    errorsWrapper.background = DigmaColors.LIST_ITEM_BACKGROUND
+    errorsWrapper.isOpaque = false
     errorsWrapper.add(title, BorderLayout.NORTH)
     errorsWrapper.add(errorsListPanel, BorderLayout.CENTER)
 
@@ -66,7 +66,7 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>, pane
         }
     }
     expandLinkPanel.border = Borders.empty(0,0,0,Laf.scaleBorders(getInsightIconPanelRightBorderSize()))
-    expandLinkPanel.background = DigmaColors.LIST_ITEM_BACKGROUND
+    expandLinkPanel.isOpaque = false
 
     //the expand button wants to be aligned with the insights icons panels, so it takes its width from there
     val expandPanel: JPanel = object: JPanel(){
@@ -82,13 +82,13 @@ fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>, pane
         }
     }
     expandPanel.layout = BorderLayout()
-    expandPanel.background = DigmaColors.LIST_ITEM_BACKGROUND
+    expandPanel.isOpaque = false
     expandPanel.add(expandLinkPanel, BorderLayout.SOUTH)
     addCurrentLargestWidthIconPanel(panelsLayoutHelper,expandPanel.preferredSize?.width ?: 0)
 
     val result = JBPanel<JBPanel<*>>()
     result.layout = BorderLayout()
-    result.background = DigmaColors.LIST_ITEM_BACKGROUND
+    result.isOpaque = false
     result.add(errorsWrapper,BorderLayout.CENTER)
     result.add(expandPanel,BorderLayout.EAST)
 

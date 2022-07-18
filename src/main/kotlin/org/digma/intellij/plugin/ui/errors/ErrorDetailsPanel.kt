@@ -384,7 +384,7 @@ fun buildServicesPanel(servicesPanel: JPanel, errorsModel: ErrorsModel) {
         val service = CopyableLabel(it.serviceName)
         service.background = JBColor.PanelBackground
         service.border = Borders.empty(2)
-        service.isOpaque = true
+        service.isOpaque = false
         servicesPanel.add(service)
     })
 

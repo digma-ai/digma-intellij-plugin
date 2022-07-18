@@ -3,9 +3,7 @@ package org.digma.intellij.plugin.ui.list.insights
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.Duration
 import org.digma.intellij.plugin.model.rest.insights.SlowEndpointInsight
-import org.digma.intellij.plugin.ui.common.Html
-import org.digma.intellij.plugin.ui.common.asHtml
-import org.digma.intellij.plugin.ui.common.span
+import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -34,7 +32,7 @@ fun evalDuration(duration: Duration): String {
 
 fun genContent(insight: SlowEndpointInsight): String {
     val pctVal = computePercentageDiff(insight)
-    return "On average requests are slower than other endpoints by ${span(Html.RED,pctVal)}"
+    return "On average requests are slower than other endpoints by ${span(DigmaColors.ERROR_RED,pctVal)}"
 }
 
 fun computePercentageDiff(insight: SlowEndpointInsight): String {

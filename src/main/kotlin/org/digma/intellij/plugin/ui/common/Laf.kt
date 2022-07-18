@@ -3,9 +3,6 @@ package org.digma.intellij.plugin.ui.common
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil.isUnderDarcula
-import org.digma.intellij.plugin.ui.DigmaUIUtil.digmaColorToHex
-import org.digma.intellij.plugin.ui.DigmaUIUtil.digmaDecodeColor
-import org.digma.intellij.plugin.ui.common.Laf.Colors.Companion.SWING_GRAYED_LABEL_FOREGROUND
 import java.awt.Color
 import java.awt.Font
 import javax.swing.JLabel
@@ -35,28 +32,16 @@ object Laf  {
 
     }
 
+    fun getLabelGrayedColor():Color{
+        return DigmaColors.GRAY
+    }
 
-
-    fun getReadOnlyEditorBannerBackground():Color{
-        return Swing.SHADE_YELLOW
+    fun getNavigationButtonColor():Color{
+        return DigmaColors.SIMPLE_ICON_COLOR
     }
 
 
-    fun getHtmlLabelGrayedColor():String{
-        return Html.DARK_GRAY2
-    }
-
-    fun getSwingLabelGrayedColor():Color{
-        return SWING_GRAYED_LABEL_FOREGROUND
-    }
-
-
-    fun getNavigationButtonColor():String{
-        return Html.LIGHT_WHITE
-    }
-
-
-    fun getInsightsIconsWhite(): String {
+    fun getInsightsIconsWhite():Color {
         return Colors.DEFAULT_SWING_LABEL_FOREGROUND_HEX
     }
 
@@ -82,8 +67,7 @@ object Laf  {
     class Colors{
         companion object {
             val DEFAULT_SWING_LABEL_FOREGROUND: Color = UIManager.getColor("Label.foreground")?: JLabel().foreground
-            val DEFAULT_SWING_LABEL_FOREGROUND_HEX: String = digmaColorToHex(DEFAULT_SWING_LABEL_FOREGROUND)
-            val SWING_GRAYED_LABEL_FOREGROUND: Color = digmaDecodeColor(getHtmlLabelGrayedColor(),Color.GRAY)
+            val DEFAULT_SWING_LABEL_FOREGROUND_HEX: Color = DEFAULT_SWING_LABEL_FOREGROUND
         }
     }
 

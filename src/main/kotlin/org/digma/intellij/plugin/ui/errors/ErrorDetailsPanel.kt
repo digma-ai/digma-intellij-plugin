@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.ui.errors
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogPanel
+import com.intellij.ui.JBColor
 import com.intellij.ui.dsl.builder.*
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.ui.dsl.gridLayout.VerticalAlign
@@ -381,7 +382,7 @@ fun buildServicesPanel(servicesPanel: JPanel, errorsModel: ErrorsModel) {
     servicesPanel.layout = FlowLayout(FlowLayout.LEFT, 0, 5)
     errorsModel.errorDetails.delegate?.originServices?.forEach(Consumer {
         val service = CopyableLabel(it.serviceName)
-        service.background = Color.DARK_GRAY
+        service.background = JBColor.PanelBackground
         service.border = Borders.empty(2)
         service.isOpaque = true
         servicesPanel.add(service)

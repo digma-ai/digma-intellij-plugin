@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 import static com.intellij.ui.scale.ScaleType.OBJ_SCALE;
+import static org.digma.intellij.plugin.ui.DigmaUIUtil.digmaColorToHex;
 
 public class IconsUtil {
 
@@ -52,12 +53,12 @@ public class IconsUtil {
 
 
 
-    public static Icon colorizeVsCodeIcon(String path, String newColor) {
+    public static Icon colorizeVsCodeIcon(String path, Color newColor) {
 
         try (InputStream inputStream = Icons.class.getResourceAsStream(path)) {
             Objects.requireNonNull(inputStream);
             String text = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-            text = text.replaceAll("currentColor", newColor);
+            text = text.replaceAll("currentColor", digmaColorToHex(newColor));
             var tmpFile = File.createTempFile("digma", ".svg");
             FileUtils.writeStringToFile(tmpFile, text, StandardCharsets.UTF_8);
             return IconLoader.findIcon(tmpFile.toURI().toURL());

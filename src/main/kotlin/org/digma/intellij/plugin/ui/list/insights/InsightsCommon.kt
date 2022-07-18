@@ -7,7 +7,7 @@ import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.model.rest.insights.UnmappedInsight
-import org.digma.intellij.plugin.ui.common.Intellij
+import org.digma.intellij.plugin.ui.common.DigmaColors
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.buildBoldTitleGrayedComment
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
@@ -35,14 +35,14 @@ fun createInsightPanel(title: String, body: String, icon: Icon, iconText: String
 fun createInsightPanel(title: String, body: String, icon: Icon, iconText: String, wrap: Boolean, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
 
     val iconPanel = insightsIconPanelBorder(icon, iconText, panelsLayoutHelper)
-    iconPanel.background = Intellij.LIST_ITEM_BACKGROUND
+    iconPanel.background = DigmaColors.LIST_ITEM_BACKGROUND
 
     val message = JLabel(buildBoldTitleGrayedComment(title,body),SwingConstants.LEFT)
     val messagePanel = JBPanel<JBPanel<*>>()
     messagePanel.layout = BorderLayout()
     messagePanel.add(message,BorderLayout.NORTH)
     messagePanel.border = empty()
-    messagePanel.background = Intellij.LIST_ITEM_BACKGROUND
+    messagePanel.background = DigmaColors.LIST_ITEM_BACKGROUND
 
     val result = JBPanel<JBPanel<*>>()
 
@@ -111,7 +111,7 @@ internal fun insightsIconPanelBorder(icon: Icon, text: String, panelsLayoutHelpe
     }
 
     panel.border = empty(2,0,0,Laf.scaleBorders(getInsightIconPanelRightBorderSize()))
-    panel.background = Intellij.LIST_ITEM_BACKGROUND
+    panel.background = DigmaColors.LIST_ITEM_BACKGROUND
 
     val width = panel.preferredSize.width
     addCurrentLargestWidthIconPanel(panelsLayoutHelper,width)

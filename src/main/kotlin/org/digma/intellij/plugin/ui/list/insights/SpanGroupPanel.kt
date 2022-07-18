@@ -73,12 +73,12 @@ fun spanGroupPanel(listViewItem: GroupListViewItem, panelsLayoutHelper: PanelsLa
 fun spanPanel(spanInsight: SpanInsight): JPanel {
 
     val title = JLabel(asHtml(spanBold("Top Usage")), SwingConstants.LEFT)
-    title.background = Intellij.LIST_ITEM_BACKGROUND
+    title.background = DigmaColors.LIST_ITEM_BACKGROUND
 
     val flowsListPanel = JBPanel<JBPanel<*>>()
     flowsListPanel.layout = GridLayout(spanInsight.flows.size, 1, 0, 3)
     flowsListPanel.border = empty()
-    flowsListPanel.background = Intellij.LIST_ITEM_BACKGROUND
+    flowsListPanel.background = DigmaColors.LIST_ITEM_BACKGROUND
 
     spanInsight.flows.forEach { spanFlow: SpanFlow ->
 
@@ -138,7 +138,7 @@ fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight, panelsLayoutHe
         val durationsPanel = JBPanel<JBPanel<*>>()
         durationsPanel.layout = BorderLayout(5, 0)
         durationsPanel.border = empty()
-        durationsPanel.background = Intellij.LIST_ITEM_BACKGROUND
+        durationsPanel.background = DigmaColors.LIST_ITEM_BACKGROUND
 
         val pLabelText = "P${percentile.percentile * 100} ${percentile.currentDuration.value} ${percentile.currentDuration.unit}"
         val pLabel = CopyableLabel(pLabelText)
@@ -157,7 +157,7 @@ fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight, panelsLayoutHe
         }
         pLabelPanel.layout = BorderLayout()
         pLabelPanel.border = empty()
-        pLabelPanel.background = Intellij.LIST_ITEM_BACKGROUND
+        pLabelPanel.background = DigmaColors.LIST_ITEM_BACKGROUND
         pLabelPanel.add(pLabel, BorderLayout.WEST)
         addCurrentLargestWidthDurationPLabel(panelsLayoutHelper,pLabelPanel.preferredSize.width)
         durationsPanel.add(pLabelPanel, BorderLayout.WEST)
@@ -210,7 +210,7 @@ fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight, panelsLayoutHe
 
     val result = JBPanel<JBPanel<*>>()
     result.layout = BorderLayout()
-    result.background = Intellij.LIST_ITEM_BACKGROUND
+    result.background = DigmaColors.LIST_ITEM_BACKGROUND
     result.add(title, BorderLayout.NORTH)
     result.add(durationsListPanel, BorderLayout.CENTER)
     return result

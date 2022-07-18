@@ -25,6 +25,7 @@ fun createScorePanelNoArrows(model: CodeObjectError): JPanel {
     scorePanel.border = object: LineBorder(colorOf(model.scoreInfo.score), Laf.scaleBorders(3), true){
         override fun paintBorder(c: Component?, g: Graphics?, x: Int, y: Int, width: Int, height: Int) {
             val g2d = g as Graphics2D
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
             val oldColor = g2d.color
             g2d.color = lineColor
             val archWidth = 15

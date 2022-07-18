@@ -71,11 +71,14 @@ private fun createSingleErrorPanel(project: Project, model: CodeObjectError ): J
 
     val leftPanel = JBPanel<JBPanel<*>>()
     leftPanel.layout = BorderLayout(0,3)
+    leftPanel.background = Intellij.LIST_ITEM_BACKGROUND
+    leftPanel.border = JBUI.Borders.empty(0,0,0,10)
     leftPanel.add(link,BorderLayout.NORTH)
     leftPanel.add(content,BorderLayout.CENTER)
 
     val result = JPanel()
     result.layout = BorderLayout()
+    result.background = Intellij.LIST_ITEM_BACKGROUND
     result.add(leftPanel,BorderLayout.CENTER)
     result.add(scorePanelWrapper,BorderLayout.EAST)
     return result

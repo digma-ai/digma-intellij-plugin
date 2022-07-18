@@ -1,8 +1,7 @@
 package org.digma.intellij.plugin.ui.list
 
-import com.intellij.ui.JBColor
-import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.JBUI.Borders.empty
+import org.digma.intellij.plugin.ui.common.Intellij
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.Laf.panelsListBackground
 import org.digma.intellij.plugin.ui.common.Swing
@@ -17,7 +16,7 @@ fun listBackground(): Color {
 
 fun listItemPanel(panel: JPanel): JPanel {
     panel.border = empty(Laf.scaleBorders(5))
-    panel.background = Swing.Transparent
+    panel.background = Swing.TRANSPARENMT
     //panel.border = JBUI.Borders.empty()
 
     val wrapper = RoundedPanel(5)
@@ -25,13 +24,13 @@ fun listItemPanel(panel: JPanel): JPanel {
     wrapper.add(panel, BorderLayout.CENTER)
     wrapper.border = empty(Laf.scaleBorders(5))
     //wrapper.isOpaque = false
-    wrapper.background = JBColor(0xE6EEF7, 0x45494A);
+    wrapper.background = Intellij.LIST_ITEM_BACKGROUND
     return wrapper
 }
 
 fun listGroupPanel(panel: JPanel): JPanel {
     panel.isOpaque = false
-    panel.border = JBUI.Borders.empty()
+    panel.border = empty()
     val wrapper = object: JPanel(){
         override fun getInsets(): Insets {
             return Insets(0,0,0,0)
@@ -40,7 +39,7 @@ fun listGroupPanel(panel: JPanel): JPanel {
     wrapper.layout = BorderLayout()
     wrapper.add(panel, BorderLayout.CENTER)
     wrapper.isOpaque = false
-    wrapper.border = JBUI.Borders.empty()
+    wrapper.border = empty()
     return wrapper
 }
 

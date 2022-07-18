@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.common
 
+import com.intellij.ui.JBColor
 import java.awt.Color
 
 
@@ -23,8 +24,10 @@ object Swing {
 
     val BLUE_LIGHT_SHADE: Color = Color.decode(Html.BLUE_LIGHT_SHADE)
     val SHADE_YELLOW: Color = Color(200, 200, 120   ,50)
-    val Transparent: Color = Color(0, 0, 0, 0)
+    val TRANSPARENMT: Color = Color(0, 0, 0, 0)
 }
 
-
+object Intellij{
+    val LIST_ITEM_BACKGROUND: JBColor = JBColor(0xE6EEF7, 0x45494A)
+}
 

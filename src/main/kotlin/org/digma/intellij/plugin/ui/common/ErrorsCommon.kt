@@ -99,13 +99,13 @@ private fun genToolTipAsHtml(scoreInfo: ScoreInfo): String {
 private fun colorOf(score: Int?): Color {
     if (score != null) {
         if (score <= 40) {
-            return DigmaColors.ERROR_GREEN
+            return Laf.Colors.ERROR_GREEN
         }
         if (score <= 80) {
-            return DigmaColors.ERROR_ORANGE
+            return Laf.Colors.ERROR_ORANGE
         }
         if (score <= 100) {
-            return DigmaColors.ERROR_RED
+            return Laf.Colors.ERROR_RED
         }
     }
     return Color.WHITE

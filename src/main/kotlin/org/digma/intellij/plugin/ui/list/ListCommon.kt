@@ -1,15 +1,13 @@
 package org.digma.intellij.plugin.ui.list
 
 import com.intellij.util.ui.JBUI.Borders.empty
-import org.digma.intellij.plugin.ui.common.DigmaColors
 import org.digma.intellij.plugin.ui.common.Laf
-import org.digma.intellij.plugin.ui.common.Laf.panelsListBackground
 import java.awt.*
 import javax.swing.JPanel
 
 
 fun listBackground(): Color {
-    return panelsListBackground()
+    return Laf.panelsListBackground()
 }
 
 
@@ -23,7 +21,7 @@ fun listItemPanel(panel: JPanel): JPanel {
     wrapper.add(panel, BorderLayout.CENTER)
     wrapper.border = empty(Laf.scaleBorders(5))
     //wrapper.isOpaque = false
-    wrapper.background = DigmaColors.LIST_ITEM_BACKGROUND
+    wrapper.background = Laf.Colors.LIST_ITEM_BACKGROUND
     return wrapper
 }
 

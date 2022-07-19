@@ -118,7 +118,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
     private fun spanTitlePanel(modelObject: SpanTitle): JPanel {
 
         val icon = JLabel(Icons.TELESCOPE_BLUE_LIGHT_SHADE)
-        icon.foreground = DigmaColors.BLUE_LIGHT_SHADE
+        icon.foreground = Laf.Colors.BLUE_LIGHT_SHADE
         icon.horizontalAlignment = SwingConstants.LEFT
         icon.border = Borders.empty()
         val iconPanel = JPanel()
@@ -129,7 +129,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
 
         val name = CopyableLabel(modelObject.spanName)
         name.alignmentX = 0.0f
-        name.foreground = DigmaColors.BLUE_LIGHT_SHADE
+        name.foreground = Laf.Colors.BLUE_LIGHT_SHADE
         val namePanel = JPanel()
         namePanel.layout = BorderLayout()
         namePanel.isOpaque = false

@@ -32,7 +32,7 @@ fun evalDuration(duration: Duration): String {
 
 fun genContent(insight: SlowEndpointInsight): String {
     val pctVal = computePercentageDiff(insight)
-    return "On average requests are slower than other endpoints by ${span(DigmaColors.ERROR_RED,pctVal)}"
+    return "On average requests are slower than other endpoints by ${span(Laf.Colors.ERROR_RED,pctVal)}"
 }
 
 fun computePercentageDiff(insight: SlowEndpointInsight): String {

@@ -14,7 +14,9 @@ import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsTabCard
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
+import java.util.*
 import java.util.stream.Collectors
+import kotlin.collections.ArrayList
 
 class InsightsViewService(project: Project): AbstractViewService(project) {
 
@@ -148,6 +150,9 @@ class InsightsViewService(project: Project): AbstractViewService(project) {
             }
         }
 
+        //sort by name of the function, it will be sorted later by sortIndex when added to a PanelListModel, but
+        // because they all have the same sortIndex then positions will not change
+        Collections.sort(listViewItems,Comparator.comparing { it.modelObject } )
         return listViewItems
 
     }

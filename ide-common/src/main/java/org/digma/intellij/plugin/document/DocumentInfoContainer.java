@@ -7,7 +7,6 @@ import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
-import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.EndpointCodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.MethodCodeObjectSummary;
@@ -61,10 +60,8 @@ public class DocumentInfoContainer {
 
         List<String> objectIds = this.documentInfo.getMethods().values().stream().flatMap((Function<MethodInfo, Stream<String>>) methodInfo -> {
             var ids = new ArrayList<String>();
-            //todo: if collecting getRelatedCodeObjectIds there are less summaries , probably because of idWithTypeButWithoutParams()
             ids.add(methodInfo.idWithType());
-            ids.addAll(methodInfo.getSpans().stream().map(SpanInfo::idWithType).collect(Collectors.toList()));
-//            ids.addAll(methodInfo.getRelatedCodeObjectIds());
+            ids.addAll(methodInfo.getRelatedCodeObjectIds());
             return ids.stream();
         }).collect(Collectors.toList());
 
@@ -139,12 +136,11 @@ public class DocumentInfoContainer {
 
 
     public List<CodeObjectSummary> getAllSummaries(){
+        //this method should not try to reload summaries because it happens too often
         List<CodeObjectSummary> summaries = new ArrayList<>();
-
         summaries.addAll(methodSummaries == null? new ArrayList<>(): methodSummaries.values());
         summaries.addAll(spanSummaries == null? new ArrayList<>(): spanSummaries.values());
         summaries.addAll(endpointSummaries == null? new ArrayList<>(): endpointSummaries.values());
-
         return summaries;
     }
 

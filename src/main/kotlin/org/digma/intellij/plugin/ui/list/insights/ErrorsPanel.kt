@@ -11,28 +11,27 @@ import org.digma.intellij.plugin.service.InsightsActionsService
 import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.list.ListItemActionButton
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
-import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.GridLayout
 import javax.swing.*
 
-fun errorsPanel(project: Project, listViewItem: ListViewItem<ErrorInsight>, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
+fun errorsPanel(project: Project, modelObject: ErrorInsight, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
 
-    val errorCount = listViewItem.modelObject.errorCount
-    val unhandled = listViewItem.modelObject.unhandledCount
-    val unexpected = listViewItem.modelObject.unexpectedCount
+    val errorCount = modelObject.errorCount
+    val unhandled = modelObject.unhandledCount
+    val unexpected = modelObject.unexpectedCount
     val title = JLabel(buildBoldTitleGrayedComment("Errors","$errorCount errors($unhandled unhandled, $unexpected unexpected)"),
                                 SwingConstants.LEFT)
 
 
     val errorsListPanel = JPanel()
-    errorsListPanel.layout = GridLayout(listViewItem.modelObject.topErrors.size, 1,0,3)
+    errorsListPanel.layout = GridLayout(modelObject.topErrors.size, 1,0,3)
     errorsListPanel.border = Borders.empty()
     errorsListPanel.isOpaque = false
-    listViewItem.modelObject.topErrors.forEach { error: ErrorInsightNamedError ->
+    modelObject.modelObject.topErrors.forEach { error: ErrorInsightNamedError ->
 
-        val from = if (listViewItem.modelObject.codeObjectId != error.sourceCodeObjectId) {
+        val from = if (modelObject.codeObjectId != error.sourceCodeObjectId) {
             error.sourceCodeObjectId.split("\$_\$")[1]
         }else "me"
         val errorText = buildLinkTextWithGrayedAndDefaultLabelColorPart(error.errorType ,"From", from)

@@ -10,7 +10,7 @@ import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
-import org.digma.intellij.plugin.ui.list.listItemPanel
+import org.digma.intellij.plugin.ui.list.commonListItemPanel
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import org.ocpsoft.prettytime.PrettyTime
 import java.awt.BorderLayout
@@ -33,7 +33,7 @@ class ErrorsPanelListCellRenderer : AbstractPanelListCellRenderer() {
 
     private fun getOrCreatePanel(project: Project,value: ListViewItem<CodeObjectError>): JPanel {
         val model = value.modelObject
-        return listItemPanel(createSingleErrorPanel(project,model))
+        return commonListItemPanel(createSingleErrorPanel(project,model))
     }
 
 }

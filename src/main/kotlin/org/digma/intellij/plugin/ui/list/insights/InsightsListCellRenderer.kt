@@ -1,17 +1,18 @@
 package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.openapi.project.Project
-import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
-import org.digma.intellij.plugin.model.rest.insights.ErrorInsight
-import org.digma.intellij.plugin.model.rest.insights.HotspotInsight
-import org.digma.intellij.plugin.model.rest.insights.UnmappedInsight
+import com.intellij.ui.dsl.builder.RightGap
+import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.dsl.gridLayout.HorizontalAlign
+import org.digma.intellij.plugin.icons.Icons
+import org.digma.intellij.plugin.model.rest.insights.*
+import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
-import org.digma.intellij.plugin.ui.model.insights.InsightGroupListViewItem
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupType.HttpEndpoint
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupType.Span
-import org.digma.intellij.plugin.ui.model.listview.GroupListViewItem
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
+import javax.swing.Icon
 import javax.swing.JPanel
 
 
@@ -22,48 +23,91 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
                              value: ListViewItem<*>,
                              index: Int,
                              panelsLayoutHelper: PanelsLayoutHelper): JPanel {
-        return getOrCreatePanel(project, index, value,panelsLayoutHelper)
+        return getOrCreatePanel(project, value, panelsLayoutHelper)
     }
 
     @Suppress("UNCHECKED_CAST")
     private fun getOrCreatePanel(project: Project,
-                                 index: Int,
                                  value: ListViewItem<*>,
                                  panelsLayoutHelper: PanelsLayoutHelper): JPanel {
 
-        val panel = when (value) {
-            is GroupListViewItem -> buildGroupPanel(project,value,panelsLayoutHelper)
-            else -> {
-                when (value.modelObject) {
-                    is HotspotInsight -> hotspotPanel(value as ListViewItem<HotspotInsight>,panelsLayoutHelper)
-                    is ErrorInsight -> errorsPanel(project, value as ListViewItem<ErrorInsight>,panelsLayoutHelper)
-                    is UnmappedInsight -> unmappedInsightPanel(value as ListViewItem<UnmappedInsight>,panelsLayoutHelper)
-                    else -> genericPanelForSingleInsight(value as ListViewItem<CodeObjectInsight>,panelsLayoutHelper)
-                }
-            }
+        val panel = when (value.modelObject) {
+            is InsightsList.GroupTitleModel -> buildGroupTitle(value.modelObject as InsightsList.GroupTitleModel)
+            is HotspotInsight -> hotspotPanel(value.modelObject as HotspotInsight, panelsLayoutHelper)
+            is ErrorInsight -> errorsPanel(project, value.modelObject as ErrorInsight, panelsLayoutHelper)
+            is LowUsageInsight -> lowUsageInsightPanel(value.modelObject as LowUsageInsight, panelsLayoutHelper)
+            is NormalUsageInsight -> normalUsageInsightPanel(value.modelObject as NormalUsageInsight,
+                panelsLayoutHelper)
+            is HighUsageInsight -> highUsageInsightPanel(value.modelObject as HighUsageInsight,
+                panelsLayoutHelper)
+            is SlowEndpointInsight -> slowEndpointPanel(value.modelObject as SlowEndpointInsight,
+                panelsLayoutHelper)
+            is SlowestSpansInsight -> slowestSpansPanel(project,
+                value.modelObject as SlowestSpansInsight, value.moreData, panelsLayoutHelper)
+            is SpanInsight -> spanPanel(value.modelObject as SpanInsight)
+            is SpanDurationsInsight -> spanDurationPanel(value.modelObject as SpanDurationsInsight,
+                panelsLayoutHelper)
+            is UnmappedInsight -> unmappedInsightPanel(value.modelObject as UnmappedInsight,
+                panelsLayoutHelper)
+            else -> genericPanelForSingleInsight(value.modelObject, panelsLayoutHelper)
         }
 
         return panel
     }
 
 
-    private fun buildGroupPanel(project: Project, value: GroupListViewItem, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
+    private fun buildGroupTitle(value: InsightsList.GroupTitleModel): JPanel {
 
-        val panel =
-            when (value) {
-                is InsightGroupListViewItem -> {
-                    when (value.type) {
-                        HttpEndpoint -> httpEndpointGroupPanel(project,value,panelsLayoutHelper)
-                        Span -> spanGroupPanel(value,panelsLayoutHelper)
-                        else -> insightGroupPanel(panelOfUnsupported("group type: ${value.type}"))
-                    }
-                }
-                else -> insightGroupPanel(panelOfUnsupported("group class: ${value.javaClass.simpleName}"))
+        val panel = when (value.type) {
+            HttpEndpoint -> httpEndpointGroupTitle(value)
+            Span -> spanGroupTitle(value)
+            else -> defaultInsightGroupTitle(value)
+        }
+
+        return insightTitlePanel(panel)
+
+    }
+
+
+    private fun defaultInsightGroupTitle(value: InsightsList.GroupTitleModel): JPanel {
+        return groupTitlePanel("Unknown: ",value.groupId,Icons.TELESCOPE_INSIGHTS_WHITE)
+    }
+
+
+    private fun spanGroupTitle(value: InsightsList.GroupTitleModel): JPanel {
+        return groupTitlePanel("Span: ",value.groupId,Icons.Insight.SPAN_GROUP_TITLE)
+    }
+
+    private fun httpEndpointGroupTitle(value: InsightsList.GroupTitleModel): JPanel {
+        val labelText = headerAsHtml(value)
+        return groupTitlePanel("REST: ",labelText,Icons.Insight.HTTP_GROUP_TITLE)
+    }
+
+
+
+    private fun groupTitlePanel(titleText: String, labelText: String,icon: Icon): JPanel {
+        return panel {
+            row(asHtml(spanGrayed(titleText))) {
+                icon(icon).applyToComponent {
+                    toolTipText = labelText
+                }.horizontalAlign(HorizontalAlign.LEFT).gap(RightGap.SMALL)
+                cell(CopyableLabelHtml(labelText)).applyToComponent {
+                    toolTipText = labelText
+                }.horizontalAlign(HorizontalAlign.LEFT)
             }
-        return panel
+        }
     }
 
 
 
 
+
+    private fun headerAsHtml(value: InsightsList.GroupTitleModel): String {
+        val shortRouteName = EndpointSchema.getShortRouteName(value.groupId)
+        // groupId contains "[get|post] [uri]"
+        val split = shortRouteName.split(' ')
+        val httpMethod = split[0].uppercase()
+        val httpRoute = split[1]
+        return asHtml("${spanBold("HTTP")} ${span("$httpMethod $httpRoute")}")
+    }
 }

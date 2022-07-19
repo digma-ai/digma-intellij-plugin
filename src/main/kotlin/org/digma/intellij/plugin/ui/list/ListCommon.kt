@@ -3,6 +3,8 @@ package org.digma.intellij.plugin.ui.list
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.ui.common.Laf
 import java.awt.*
+import java.awt.BorderLayout
+import java.awt.Color
 import javax.swing.JPanel
 
 
@@ -10,7 +12,8 @@ fun listBackground(): Color {
     return Laf.panelsListBackground()
 }
 
-
+//this method is just an option,not necessary to use. but if two lists want to look the same they can both
+//wrap the panels with this method. currently the insights and errors lists use it.
 fun listItemPanel(panel: JPanel): JPanel {
     panel.border = empty(Laf.scaleBorders(5))
     panel.isOpaque = false
@@ -20,21 +23,6 @@ fun listItemPanel(panel: JPanel): JPanel {
     wrapper.add(panel, BorderLayout.CENTER)
     wrapper.border = empty(Laf.scaleBorders(0),Laf.scaleBorders(2),Laf.scaleBorders(0),Laf.scaleBorders(2))
     wrapper.background = Laf.Colors.LIST_ITEM_BACKGROUND
-    return wrapper
-}
-
-fun listGroupPanel(panel: JPanel): JPanel {
-    panel.isOpaque = false
-    panel.border = empty()
-    val wrapper = object: JPanel(){
-        override fun getInsets(): Insets {
-            return Insets(0,0,0,0)
-        }
-    }
-    wrapper.layout = BorderLayout()
-    wrapper.add(panel, BorderLayout.CENTER)
-    wrapper.isOpaque = false
-    wrapper.border = empty()
     return wrapper
 }
 

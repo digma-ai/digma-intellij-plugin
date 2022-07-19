@@ -2,11 +2,6 @@ package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
-import com.intellij.ui.dsl.builder.BottomGap
-import com.intellij.ui.dsl.builder.RightGap
-import com.intellij.ui.dsl.builder.TopGap
-import com.intellij.ui.dsl.builder.panel
-import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight
@@ -16,8 +11,6 @@ import org.digma.intellij.plugin.model.rest.insights.SpanInsight
 import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.common.Html.ARROW_RIGHT
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
-import org.digma.intellij.plugin.ui.model.listview.GroupListViewItem
-import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import org.ocpsoft.prettytime.PrettyTime
 import org.threeten.extra.AmountFormats
 import java.awt.BorderLayout
@@ -31,43 +24,6 @@ import javax.swing.JPanel
 import javax.swing.SwingConstants
 import kotlin.math.abs
 import kotlin.math.max
-
-
-fun spanGroupPanel(listViewItem: GroupListViewItem, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
-
-    val items: SortedSet<ListViewItem<*>> = listViewItem.modelObject
-
-    val result = panel {
-        row(asHtml(spanGrayed("Span: ")))
-        {
-            icon(Icons.Insight.SPAN_GROUP_TITLE).applyToComponent {
-                toolTipText = listViewItem.groupId
-            }.horizontalAlign(HorizontalAlign.LEFT).gap(RightGap.SMALL)
-            cell(CopyableLabel(listViewItem.groupId))
-                .applyToComponent {
-                    toolTipText = listViewItem.groupId
-                }.horizontalAlign(HorizontalAlign.LEFT)
-
-        }.topGap(TopGap.SMALL)
-
-        items.forEach {
-            row {
-                val modelObject = it.modelObject
-                val cellItem =
-                    when (modelObject) {
-                        is SpanInsight -> spanPanel(modelObject)
-                        is SpanDurationsInsight -> spanDurationPanel(modelObject,panelsLayoutHelper)
-                        else -> panelOfUnsupported("${modelObject?.javaClass?.simpleName}")
-                    }
-
-                cell(insightItemPanel(cellItem))
-                    .horizontalAlign(HorizontalAlign.FILL)
-            }.bottomGap(BottomGap.SMALL)
-        }
-    }
-
-    return insightGroupPanel(result)
-}
 
 
 fun spanPanel(spanInsight: SpanInsight): JPanel {
@@ -110,7 +66,7 @@ fun spanPanel(spanInsight: SpanInsight): JPanel {
     result.add(title, BorderLayout.NORTH)
     result.add(flowsListPanel, BorderLayout.CENTER)
 
-    return result
+    return insightItemPanel(result)
 
 }
 
@@ -118,7 +74,7 @@ fun spanPanel(spanInsight: SpanInsight): JPanel {
 fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
 
     if (spanDurationsInsight.percentiles.isEmpty()) {
-        return createInsightPanel("Duration", "Waiting for more data.", Icons.Insight.WAITING_DATA, "", false,panelsLayoutHelper)
+        return createInsightPanel("Duration", "Waiting for more data.", Icons.Insight.WAITING_DATA, "", panelsLayoutHelper)
     }
 
     val title = JLabel(asHtml(spanBold("Duration")), SwingConstants.LEFT)
@@ -126,14 +82,13 @@ fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight, panelsLayoutHe
     val durationsListPanel = JBPanel<JBPanel<*>>()
     durationsListPanel.layout = GridLayout(spanDurationsInsight.percentiles.size, 1, 0, 2)
 
-    val sortedPercentiles = spanDurationsInsight.percentiles.sortedBy {
-        it.percentile
-    }
+    val sortedPercentiles = spanDurationsInsight.percentiles.sortedBy(SpanDurationsPercentile::percentile)
 
     val tolerationConstant: Long = 10000
 
     sortedPercentiles.forEach { percentile: SpanDurationsPercentile ->
 
+        @Suppress("VARIABLE_WITH_REDUNDANT_INITIALIZER")
         var changeMeaningfulEnough = false
         val durationsPanel = JBPanel<JBPanel<*>>()
         durationsPanel.layout = BorderLayout(5, 0)
@@ -213,7 +168,7 @@ fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight, panelsLayoutHe
     result.isOpaque = false
     result.add(title, BorderLayout.NORTH)
     result.add(durationsListPanel, BorderLayout.CENTER)
-    return result
+    return insightItemPanel(result)
 }
 
 private fun computeWhenText(percentile: SpanDurationsPercentile): String {

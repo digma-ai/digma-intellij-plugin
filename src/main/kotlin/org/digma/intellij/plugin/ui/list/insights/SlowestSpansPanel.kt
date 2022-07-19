@@ -42,6 +42,7 @@ fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: 
             val spanText = buildLinkTextWithTitleAndGrayedComment(displayName,description)
             val link = ActionLink(spanText) {
                 val actionListener: InsightsActionsService = project.getService(InsightsActionsService::class.java)
+                @Suppress("UNCHECKED_CAST")
                 val workspaceUri: Pair<String, Int> = moreData[spanId] as Pair<String, Int>
                 actionListener.openWorkspaceFileForSpan(workspaceUri.first, workspaceUri.second)
             }

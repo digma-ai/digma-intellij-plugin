@@ -14,13 +14,11 @@ fun listBackground(): Color {
 fun listItemPanel(panel: JPanel): JPanel {
     panel.border = empty(Laf.scaleBorders(5))
     panel.isOpaque = false
-    //panel.border = JBUI.Borders.empty()
 
     val wrapper = RoundedPanel(7)
     wrapper.layout = BorderLayout()
     wrapper.add(panel, BorderLayout.CENTER)
-    wrapper.border = empty(Laf.scaleBorders(5))
-    //wrapper.isOpaque = false
+    wrapper.border = empty(Laf.scaleBorders(0),Laf.scaleBorders(2),Laf.scaleBorders(0),Laf.scaleBorders(2))
     wrapper.background = Laf.Colors.LIST_ITEM_BACKGROUND
     return wrapper
 }
@@ -53,6 +51,6 @@ class RoundedPanel(val radius: Int) : JPanel() {
 
         graphics.color = super.getBackground()
         val border = super.getBorder().getBorderInsets(this)
-        graphics.fillRoundRect(border.left, border.top, width-border.right, height-border.bottom, radius, radius)
+        graphics.fillRoundRect(border.left, border.top, width-border.left-border.right, height-border.top-border.bottom, radius, radius)
     }
 }

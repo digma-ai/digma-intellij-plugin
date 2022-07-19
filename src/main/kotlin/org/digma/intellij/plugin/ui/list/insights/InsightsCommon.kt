@@ -46,7 +46,7 @@ fun createInsightPanel(title: String, body: String, icon: Icon, iconText: String
     val result = JBPanel<JBPanel<*>>()
 
     result.layout = BorderLayout()
-    result.add(messagePanel,BorderLayout.WEST)
+    result.add(messagePanel,BorderLayout.CENTER)
     result.add(iconPanel,BorderLayout.EAST)
 
     return if (wrap) {

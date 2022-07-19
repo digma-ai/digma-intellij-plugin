@@ -29,7 +29,7 @@ fun errorsPanel(project: Project, modelObject: ErrorInsight, panelsLayoutHelper:
     errorsListPanel.layout = GridLayout(modelObject.topErrors.size, 1,0,3)
     errorsListPanel.border = Borders.empty()
     errorsListPanel.isOpaque = false
-    modelObject.modelObject.topErrors.forEach { error: ErrorInsightNamedError ->
+    modelObject.topErrors.forEach { error: ErrorInsightNamedError ->
 
         val from = if (modelObject.codeObjectId != error.sourceCodeObjectId) {
             error.sourceCodeObjectId.split("\$_\$")[1]
@@ -52,7 +52,7 @@ fun errorsPanel(project: Project, modelObject: ErrorInsight, panelsLayoutHelper:
 
 
     val expandButton = ListItemActionButton("Expand")
-    expandButton.addActionListener { project.getService(InsightsActionsService::class.java).showErrorsTab(listViewItem.modelObject) }
+    expandButton.addActionListener { project.getService(InsightsActionsService::class.java).showErrorsTab(modelObject) }
 
     val expandPanel = JPanel()
     expandPanel.layout = BorderLayout()

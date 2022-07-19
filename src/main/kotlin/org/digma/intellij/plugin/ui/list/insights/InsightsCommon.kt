@@ -14,11 +14,6 @@ import javax.swing.Icon
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.SwingConstants
-import org.digma.intellij.plugin.ui.list.listGroupPanel
-import org.digma.intellij.plugin.ui.list.listItemPanel
-import org.digma.intellij.plugin.ui.model.listview.ListViewItem
-import java.awt.*
-import javax.swing.*
 import kotlin.math.max
 
 fun insightTitlePanel(panel: JPanel): JPanel {

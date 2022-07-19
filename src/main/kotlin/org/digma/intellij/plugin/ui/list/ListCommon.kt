@@ -14,7 +14,7 @@ fun listBackground(): Color {
 
 //this method is just an option,not necessary to use. but if two lists want to look the same they can both
 //wrap the panels with this method. currently the insights and errors lists use it.
-fun listItemPanel(panel: JPanel): JPanel {
+fun commonListItemPanel(panel: JPanel): JPanel {
     panel.border = empty(Laf.scaleBorders(5))
     panel.isOpaque = false
 

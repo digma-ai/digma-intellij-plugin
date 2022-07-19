@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.ui.list.insights
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.icons.Icons
-import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.model.rest.insights.UnmappedInsight
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.buildBoldTitleGrayedComment
@@ -61,10 +60,10 @@ fun unmappedInsightPanel(modelObject: UnmappedInsight, panelsLayoutHelper: Panel
 }
 
 
-fun genericPanelForSingleInsight(modelObject: CodeObjectInsight, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
+fun genericPanelForSingleInsight(modelObject: Any?, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
 
     return createInsightPanel("Generic insight panel",
-        "Insight named ${modelObject.javaClass.simpleName}",
+        "Insight named ${modelObject?.javaClass?.simpleName}",
         Icons.QUESTION_MARK, "",panelsLayoutHelper)
 }
 

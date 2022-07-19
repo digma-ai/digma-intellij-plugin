@@ -6,6 +6,8 @@ import org.digma.intellij.plugin.ui.list.PanelList
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupListViewItem
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupType
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
+import java.util.*
+import kotlin.collections.ArrayList
 
 class InsightsList(project: Project, listViewItems: List<ListViewItem<*>>) :
     PanelList(project, MyModel(listViewItems)) {
@@ -22,6 +24,10 @@ class InsightsList(project: Project, listViewItems: List<ListViewItem<*>>) :
         //flatten the original list to single ListViewItem so InsightsListCellRenderer only deals with
         //insights panels and title panels
         override fun setListData(listViewItems: List<ListViewItem<*>>) {
+
+            //first sort to make sure the groups are in order
+            Collections.sort(listViewItems, Comparator.comparingInt(ListViewItem<*>::sortIndex))
+
             val newViewItems = ArrayList<ListViewItem<*>>()
             var index = 0
             listViewItems.forEach { value ->

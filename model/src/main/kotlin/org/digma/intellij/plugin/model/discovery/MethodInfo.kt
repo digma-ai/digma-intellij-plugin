@@ -1,5 +1,7 @@
 package org.digma.intellij.plugin.model.discovery
 
+import java.util.stream.Collectors
+
 data class MethodInfo(
     override val id: String, // CodeObjectId (without type (prefix of 'method:'))
     val name: String,
@@ -12,11 +14,7 @@ data class MethodInfo(
 
 
     fun getRelatedCodeObjectIds(): List<String> {
-        val relatedIds: MutableList<String> = ArrayList()
-        spans.forEach {
-            relatedIds.add(it.idWithType())
-        }
-        return relatedIds
+        return spans.stream().map(SpanInfo::idWithType).collect(Collectors.toList())
     }
 
     override fun idWithType(): String {

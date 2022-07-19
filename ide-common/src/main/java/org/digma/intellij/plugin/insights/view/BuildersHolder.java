@@ -32,7 +32,7 @@ public class BuildersHolder {
     private ListViewItemBuilder<? extends CodeObjectInsight> newBuilder(InsightType type) {
         switch (type) {
             case HotSpot:
-                return new HotspotListViewItemBuilder();
+                return new NoGroupListViewItemBuilder<HotspotInsight>();
             case Errors:
                 return new NoGroupListViewItemBuilder<ErrorInsight>();
             case SpanUsages:

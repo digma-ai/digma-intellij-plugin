@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.openapi.project.Project
 import com.intellij.ui.dsl.builder.RightGap
-import com.intellij.ui.dsl.builder.TopGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import org.digma.intellij.plugin.icons.Icons
@@ -13,6 +12,7 @@ import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupType.HttpEndpoint
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupType.Span
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
+import javax.swing.Icon
 import javax.swing.JPanel
 
 
@@ -49,7 +49,7 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
                 panelsLayoutHelper)
             is UnmappedInsight -> unmappedInsightPanel(value.modelObject as UnmappedInsight,
                 panelsLayoutHelper)
-            else -> genericPanelForSingleInsight(value.modelObject as CodeObjectInsight, panelsLayoutHelper)
+            else -> genericPanelForSingleInsight(value.modelObject, panelsLayoutHelper)
         }
 
         return panel
@@ -70,50 +70,36 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
 
 
     private fun defaultInsightGroupTitle(value: InsightsList.GroupTitleModel): JPanel {
-        return panel {
-            row(asHtml(spanGrayed("Unknown: ")))
-            {
-                icon(Icons.TELESCOPE_INSIGHTS_WHITE).applyToComponent {
-                    toolTipText = value.groupId
-                }.horizontalAlign(HorizontalAlign.LEFT).gap(RightGap.SMALL)
-                cell(CopyableLabel(value.groupId))
-                    .applyToComponent {
-                        toolTipText = value.groupId
-                    }.horizontalAlign(HorizontalAlign.LEFT)
-
-            }.topGap(TopGap.SMALL)
-        }
+        return groupTitlePanel("Unknown: ",value.groupId,Icons.TELESCOPE_INSIGHTS_WHITE)
     }
 
 
     private fun spanGroupTitle(value: InsightsList.GroupTitleModel): JPanel {
-        return panel {
-            row(asHtml(spanGrayed("Span: "))){
-                icon(Icons.Insight.SPAN_GROUP_TITLE).applyToComponent {
-                    toolTipText = value.groupId
-                }.horizontalAlign(HorizontalAlign.LEFT).gap(RightGap.SMALL)
-                cell(CopyableLabel(value.groupId))
-                    .applyToComponent {
-                        toolTipText = value.groupId
-                    }.horizontalAlign(HorizontalAlign.LEFT)
-
-            }
-        }
+        return groupTitlePanel("Span: ",value.groupId,Icons.Insight.SPAN_GROUP_TITLE)
     }
 
     private fun httpEndpointGroupTitle(value: InsightsList.GroupTitleModel): JPanel {
-        return panel {
-            row(asHtml(spanGrayed("REST: "))) {
-                val text = headerAsHtml(value)
-                icon(Icons.Insight.HTTP_GROUP_TITLE).applyToComponent {
-                    toolTipText = text
-                }.horizontalAlign(HorizontalAlign.LEFT).gap(RightGap.SMALL)
-                cell(CopyableLabelHtml(text))
-                    .horizontalAlign(HorizontalAlign.LEFT)
+        val labelText = headerAsHtml(value)
+        return groupTitlePanel("REST: ",labelText,Icons.Insight.HTTP_GROUP_TITLE)
+    }
 
+
+
+    private fun groupTitlePanel(titleText: String, labelText: String,icon: Icon): JPanel {
+        return panel {
+            row(asHtml(spanGrayed(titleText))) {
+                icon(icon).applyToComponent {
+                    toolTipText = labelText
+                }.horizontalAlign(HorizontalAlign.LEFT).gap(RightGap.SMALL)
+                cell(CopyableLabelHtml(labelText)).applyToComponent {
+                    toolTipText = labelText
+                }.horizontalAlign(HorizontalAlign.LEFT)
             }
         }
     }
+
+
+
 
 
     private fun headerAsHtml(value: InsightsList.GroupTitleModel): String {

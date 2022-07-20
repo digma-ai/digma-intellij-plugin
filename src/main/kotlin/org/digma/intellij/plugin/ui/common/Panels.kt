@@ -65,5 +65,14 @@ fun createTopPanel(project: Project, model: PanelModel, labelText: String): Dial
                     scopeLine.reset()
                 }
         }
+        row {
+            val pnl = environmentsPanel(model::getEnvironmentsSupplier)
+            pnl.isOpaque = false
+            cell(pnl)
+                .horizontalAlign(HorizontalAlign.FILL)
+                .onReset {
+                    pnl.reset()
+                }
+        }
     }.andTransparent().withBorder(JBUI.Borders.empty(0,12,0,8))
 }

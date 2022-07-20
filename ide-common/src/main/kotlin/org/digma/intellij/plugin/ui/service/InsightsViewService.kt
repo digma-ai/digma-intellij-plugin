@@ -16,7 +16,6 @@ import org.digma.intellij.plugin.ui.model.insights.InsightsTabCard
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.util.*
 import java.util.stream.Collectors
-import kotlin.collections.ArrayList
 
 class InsightsViewService(project: Project): AbstractViewService(project) {
 
@@ -24,7 +23,7 @@ class InsightsViewService(project: Project): AbstractViewService(project) {
 
     //the model is single per the life of an open project in intellij. it shouldn't be created
     //elsewhere in the program. it can not be singleton.
-    val model = InsightsModel()
+    val model = InsightsModel(this.envsSupplier)
 
     private val insightsProvider: InsightsProvider = project.getService(InsightsProvider::class.java)
 

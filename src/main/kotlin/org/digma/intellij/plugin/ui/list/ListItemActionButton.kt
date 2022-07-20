@@ -12,59 +12,64 @@ import javax.swing.JComponent
 import javax.swing.plaf.basic.BasicButtonUI
 
 
-//internal class ListItemActionButton2 constructor(text: String): JButton(text) {
-//	init {
-//		isOpaque = false
-//		background = getDefaultBgColor()
-//		isContentAreaFilled = false
-//		isBorderPainted = false
-//		border = JBUI.Borders.empty()
-//
-//		addMouseListener(object : MouseAdapter() {
-//			override fun mouseEntered(e: MouseEvent?) {
-//				background = getEnteredBgColor()
-//			}
-//
-//			override fun mouseExited(e: MouseEvent?) {
-//				background = Laf.Colors.PLUGIN_BACKGROUND
-//			}
-//
-//			override fun mousePressed(e: MouseEvent?) {
-//				background = getPressedBgColor()
-//			}
-//		})
-//	}
-//
-//	private fun getDefaultBgColor() = Laf.Colors.PLUGIN_BACKGROUND
-//
-//	private fun getEnteredBgColor():Color
-//	{
-//		return if (JBColor.isBright())
-//			getDefaultBgColor().darker()
-//		else
-//			getDefaultBgColor().brighter()
-//	}
-//
-//	private fun getPressedBgColor():Color
-//	{
-//		return if (JBColor.isBright())
-//			getDefaultBgColor().darker().darker()
-//		else
-//			getDefaultBgColor().darker()
-//	}
-//
-//	override fun paintComponent(g: Graphics) {
-//		val graphics = g as Graphics2D
-//		graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-//
-//		graphics.color = super.getBackground()
-//		val border = (super.getBorder()?: JBUI.Borders.empty()).getBorderInsets(this)
-//		graphics.fillRoundRect(border.left, border.top, width-border.right, height-border.bottom, 5, 5)
-//		super.paintComponent(g)
-//	}
-//}
-
 internal class ListItemActionButton constructor(text: String): JButton(text) {
+	init {
+		isOpaque = false
+		background = getDefaultBgColor()
+		isContentAreaFilled = false
+		isBorderPainted = false
+		border = JBUI.Borders.empty()
+
+		addMouseListener(object : MouseAdapter() {
+			override fun mouseEntered(e: MouseEvent?) {
+				background = getEnteredBgColor()
+			}
+
+			override fun mouseExited(e: MouseEvent?) {
+				background = Laf.Colors.PLUGIN_BACKGROUND
+			}
+
+			override fun mousePressed(e: MouseEvent?) {
+				background = getPressedBgColor()
+			}
+		})
+	}
+
+	private fun getDefaultBgColor() = Laf.Colors.PLUGIN_BACKGROUND
+
+	private fun getEnteredBgColor():Color
+	{
+		return if (JBColor.isBright())
+			getDefaultBgColor().darker()
+		else
+			getDefaultBgColor().brighter()
+	}
+
+	private fun getPressedBgColor():Color
+	{
+		return if (JBColor.isBright())
+			getDefaultBgColor().darker().darker()
+		else
+			getDefaultBgColor().darker()
+	}
+
+	override fun getPreferredSize(): Dimension {
+		// user the original: super.getPreferredSize
+		return Dimension(50,15)
+	}
+
+	override fun paintComponent(g: Graphics) {
+		val graphics = g as Graphics2D
+		graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+
+		graphics.color = super.getBackground()
+		val border = (super.getBorder()?: JBUI.Borders.empty()).getBorderInsets(this)
+		graphics.fillRoundRect(border.left, border.top, width-border.right-border.left, height-border.bottom-border.top, 5, 5)
+		super.paintComponent(g)
+	}
+}
+
+internal class ListItemActionButton2 constructor(text: String): JButton(text) {
 	init {
 		isOpaque = false
 		isBorderPainted = false

@@ -18,8 +18,7 @@ import kotlin.math.max
 
 fun insightTitlePanel(panel: JPanel): JPanel {
     panel.isOpaque = false
-    val borderSize = Laf.scaleBorders(5)
-    panel.border = empty(0,borderSize,0,borderSize)
+    panel.border = empty(10, 5,0,5)
     return panel
 }
 

@@ -15,13 +15,13 @@ fun listBackground(): Color {
 //this method is just an option,not necessary to use. but if two lists want to look the same they can both
 //wrap the panels with this method. currently the insights and errors lists use it.
 fun commonListItemPanel(panel: JPanel): JPanel {
-    panel.border = empty(Laf.scaleBorders(5))
+    panel.border = empty(4,5,5,5)
     panel.isOpaque = false
 
     val wrapper = RoundedPanel(7)
     wrapper.layout = BorderLayout()
     wrapper.add(panel, BorderLayout.CENTER)
-    wrapper.border = empty(Laf.scaleBorders(0),Laf.scaleBorders(2),Laf.scaleBorders(0),Laf.scaleBorders(2))
+    wrapper.border = empty(0, 2, 0, 2)
     wrapper.background = Laf.Colors.LIST_ITEM_BACKGROUND
     return wrapper
 }

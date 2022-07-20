@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.icons;
 
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.util.IconLoader;
+import com.intellij.ui.JBColor;
 import org.digma.intellij.plugin.ui.common.Laf;
 
 import javax.swing.*;

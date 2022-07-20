@@ -73,7 +73,6 @@ todo: punlish?</br>
 <!-- [//]: # (example how satisfy gradle build with empty plugin description) -->
 <!-- Plugin description -->
 
-<![CDATA[
         <h1>Add Continuous Feedback to your coding practices</h1>
         <p>Digma is a Continuous Feedback platform. It integrates with your observability
         backend to provide meaningful code insights in the IDE. While coding, you can be aware of how the code behaves in runtime in various staging and production environments</p>
@@ -85,7 +84,6 @@ todo: punlish?</br>
           <li>Performance trends</li>
         </ul>
         </p>
-      ]]>
 <!-- Plugin description end -->
 
 

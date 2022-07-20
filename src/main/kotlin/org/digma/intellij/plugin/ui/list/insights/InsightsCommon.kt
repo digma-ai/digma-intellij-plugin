@@ -18,8 +18,7 @@ import kotlin.math.max
 
 fun insightTitlePanel(panel: JPanel): JPanel {
     panel.isOpaque = false
-    val borderSize = Laf.scaleBorders(5)
-    panel.border = empty(0,borderSize,0,borderSize)
+    panel.border = empty(10, 5,0,5)
     return panel
 }
 
@@ -35,13 +34,21 @@ fun createInsightPanel(title: String, body: String, icon: Icon, iconText: String
 @Deprecated("remove,wrap is always true")
 private fun createInsightPanel(title: String, body: String, icon: Icon, iconText: String, wrap: Boolean, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
 
+    val iconPanel = insightsIconPanelBorder(icon, iconText, panelsLayoutHelper)
+    iconPanel.isOpaque = false
+
     val message = JLabel(buildBoldTitleGrayedComment(title,body),SwingConstants.LEFT)
-    val iconPanel = insightsIconPanelBorder(icon, iconText,panelsLayoutHelper)
+    val messagePanel = JBPanel<JBPanel<*>>()
+    messagePanel.layout = BorderLayout()
+    messagePanel.add(message,BorderLayout.NORTH)
+    messagePanel.border = empty()
+    messagePanel.isOpaque = false
+
     val result = JBPanel<JBPanel<*>>()
+
     result.layout = BorderLayout()
-    result.add(message,BorderLayout.CENTER)
+    result.add(messagePanel,BorderLayout.CENTER)
     result.add(iconPanel,BorderLayout.EAST)
-    result.border = empty()
 
     return if (wrap) {
         insightItemPanel(result)
@@ -104,6 +111,7 @@ internal fun insightsIconPanelBorder(icon: Icon, text: String, panelsLayoutHelpe
     }
 
     panel.border = empty(2,0,0,Laf.scaleBorders(getInsightIconPanelRightBorderSize()))
+    panel.isOpaque = false
 
     val width = panel.preferredSize.width
     addCurrentLargestWidthIconPanel(panelsLayoutHelper,width)

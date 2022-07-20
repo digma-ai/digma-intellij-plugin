@@ -9,11 +9,7 @@ import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBUI.Borders
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.service.ErrorsActionsService
-import org.digma.intellij.plugin.ui.common.CopyableLabel
-import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
-import org.digma.intellij.plugin.ui.common.Laf
-import org.digma.intellij.plugin.ui.common.Swing.BLUE_LIGHT_SHADE
-import org.digma.intellij.plugin.ui.common.buildTitleItalicGrayedComment
+import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.model.errors.FrameItem
@@ -76,14 +72,14 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
                         }else {
                               cell(CopyableLabel(frameText))
                                   .applyToComponent {
-                                  foreground = Laf.getSwingLabelGrayedColor()
+                                  foreground = Laf.getLabelGrayedColor()
                                   toolTipText = "$frameText line ${modelObject.frame.lineNumber}"
                               }.gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL)
                         }
                         label("line ${modelObject.frame.lineNumber}").horizontalAlign(HorizontalAlign.RIGHT)
                             .gap(RightGap.SMALL)
                             .applyToComponent {
-                            foreground = Laf.getSwingLabelGrayedColor()
+                            foreground = Laf.getLabelGrayedColor()
                         }
                     }.bottomGap(BottomGap.NONE).topGap(TopGap.NONE)
                 }else{
@@ -105,11 +101,11 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
                         }else {
                             cell(CopyableLabel(modelObject.frame.executedCode))
                                 .gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL).applyToComponent {
-                                    foreground = Laf.getSwingLabelGrayedColor()
+                                    foreground = Laf.getLabelGrayedColor()
                                 }
                         }
                         label("line ${modelObject.frame.lineNumber}").horizontalAlign(HorizontalAlign.RIGHT).applyToComponent {
-                            foreground = Laf.getSwingLabelGrayedColor()
+                            foreground = Laf.getLabelGrayedColor()
                         }
                     }
                 }
@@ -122,7 +118,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
     private fun spanTitlePanel(modelObject: SpanTitle): JPanel {
 
         val icon = JLabel(Icons.TELESCOPE_BLUE_LIGHT_SHADE)
-        icon.foreground = BLUE_LIGHT_SHADE
+        icon.foreground = Laf.Colors.BLUE_LIGHT_SHADE
         icon.horizontalAlignment = SwingConstants.LEFT
         icon.border = Borders.empty()
         val iconPanel = JPanel()
@@ -133,7 +129,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
 
         val name = CopyableLabel(modelObject.spanName)
         name.alignmentX = 0.0f
-        name.foreground = BLUE_LIGHT_SHADE
+        name.foreground = Laf.Colors.BLUE_LIGHT_SHADE
         val namePanel = JPanel()
         namePanel.layout = BorderLayout()
         namePanel.isOpaque = false
@@ -165,7 +161,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
 
 
     private fun itemPanel(panel: JPanel): JPanel {
-        panel.border = Borders.customLine(Laf.getSwingLabelGrayedColor(),0,2,0,0)
+        panel.border = Borders.customLine(Laf.getLabelGrayedColor(),0,2,0,0)
         panel.isOpaque = false
 
         val mouseListener = object: MouseAdapter(){

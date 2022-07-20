@@ -29,10 +29,12 @@ import kotlin.math.max
 fun spanPanel(spanInsight: SpanInsight): JPanel {
 
     val title = JLabel(asHtml(spanBold("Top Usage")), SwingConstants.LEFT)
+    title.isOpaque = false
 
     val flowsListPanel = JBPanel<JBPanel<*>>()
     flowsListPanel.layout = GridLayout(spanInsight.flows.size, 1, 0, 3)
     flowsListPanel.border = empty()
+    flowsListPanel.isOpaque = false
 
     spanInsight.flows.forEach { spanFlow: SpanFlow ->
 
@@ -91,6 +93,7 @@ fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight, panelsLayoutHe
         val durationsPanel = JBPanel<JBPanel<*>>()
         durationsPanel.layout = BorderLayout(5, 0)
         durationsPanel.border = empty()
+        durationsPanel.isOpaque = false
 
         val pLabelText = "P${percentile.percentile * 100} ${percentile.currentDuration.value} ${percentile.currentDuration.unit}"
         val pLabel = CopyableLabel(pLabelText)
@@ -109,6 +112,7 @@ fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight, panelsLayoutHe
         }
         pLabelPanel.layout = BorderLayout()
         pLabelPanel.border = empty()
+        pLabelPanel.isOpaque = false
         pLabelPanel.add(pLabel, BorderLayout.WEST)
         addCurrentLargestWidthDurationPLabel(panelsLayoutHelper,pLabelPanel.preferredSize.width)
         durationsPanel.add(pLabelPanel, BorderLayout.WEST)
@@ -161,6 +165,7 @@ fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight, panelsLayoutHe
 
     val result = JBPanel<JBPanel<*>>()
     result.layout = BorderLayout()
+    result.isOpaque = false
     result.add(title, BorderLayout.NORTH)
     result.add(durationsListPanel, BorderLayout.CENTER)
     return insightItemPanel(result)

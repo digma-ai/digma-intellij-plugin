@@ -2,7 +2,7 @@ package org.digma.intellij.plugin.icons;
 
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.util.IconLoader;
-import org.digma.intellij.plugin.ui.common.Html;
+import com.intellij.ui.JBColor;
 import org.digma.intellij.plugin.ui.common.Laf;
 
 import javax.swing.*;
@@ -24,7 +24,7 @@ public final class Icons {
     public static final Icon EMPTY = AllIcons.General.InspectionsErrorEmpty;
 
     public static final Icon TELESCOPE = IconLoader.getIcon("/icons/telescope.svg", Icons.class.getClassLoader());
-    public static final Icon TELESCOPE_BLUE_LIGHT_SHADE = colorizeVsCodeIcon("/icons/telescope.svg", Html.BLUE_LIGHT_SHADE);
+    public static final Icon TELESCOPE_BLUE_LIGHT_SHADE = colorizeVsCodeIcon("/icons/telescope.svg", Laf.Colors.Companion.getBLUE_LIGHT_SHADE());
     public static final Icon TELESCOPE_INSIGHTS_WHITE = colorizeVsCodeIcon("/icons/telescope.svg", Laf.INSTANCE.getInsightsIconsWhite());
 
     public static final Icon INTERFACE = IconLoader.getIcon("/icons/interface.svg", Icons.class.getClassLoader());
@@ -40,7 +40,7 @@ public final class Icons {
     public static final Icon FORWARD_BLACK = IconLoader.getIcon("/icons/arrow-right.svg", Icons.class.getClassLoader());
 
     public static final Icon EVENT = IconLoader.getIcon("/icons/event.svg", Icons.class.getClassLoader());
-    public static final Icon EVENT_RED = colorizeVsCodeIcon("/icons/event.svg", Html.RED);
+    public static final Icon EVENT_RED = colorizeVsCodeIcon("/icons/event.svg", Laf.Colors.getERROR_RED());
 
     public static final Icon DROPPED = loadAndScaleIconByWidth("/icons/dropped.png", 8);
     public static final Icon ROSE = loadAndScaleIconByWidth("/icons/rose.png", 8);

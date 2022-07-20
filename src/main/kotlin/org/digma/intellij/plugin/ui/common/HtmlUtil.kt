@@ -1,7 +1,8 @@
 package org.digma.intellij.plugin.ui.common
 
 import org.digma.intellij.plugin.ui.common.Laf.Colors.Companion.DEFAULT_SWING_LABEL_FOREGROUND_HEX
-import org.digma.intellij.plugin.ui.common.Laf.getHtmlLabelGrayedColor
+import org.digma.intellij.plugin.ui.common.Laf.getLabelGrayedColor
+import java.awt.Color
 
 //kind of templating for html text in labels and buttons where we want to have the same color and style all over.
 //just supporting two types of colors, either not change the color and so the component will have its swing LAF color,
@@ -56,13 +57,6 @@ fun buildLinkTextWithTitleAndGrayedComment(title: String,comment: String): Strin
     return asHtml("$titlePart<br>$commentPart")
 }
 
-
-
-
-fun buildTitleGrayedComment(title: String,comment: String): String{
-    return buildTitleGrayedComment(title, comment,false)
-}
-
 fun buildBoldTitleGrayedComment(title: String,comment: String): String{
     return buildTitleGrayedComment(title, comment,true)
 }
@@ -84,10 +78,6 @@ fun buildTitleGrayedComment(title: String,comment: String,bold: Boolean): String
 
 fun buildTitleItalicGrayedComment(title: String,comment: String): String{
     return buildTitleItalicGrayedComment(title, comment,false)
-}
-
-fun buildBoldTitleItalicGrayedComment(title: String,comment: String): String{
-    return buildTitleItalicGrayedComment(title, comment,true)
 }
 
 fun buildTitleItalicGrayedComment(title: String,comment: String,bold: Boolean): String{
@@ -118,7 +108,7 @@ fun span(value:String):String{
 
 
 fun spanGrayed(value:String):String{
-    return span(getHtmlLabelGrayedColor(),value)
+    return span(getLabelGrayedColor(),value)
 }
 
 
@@ -136,15 +126,15 @@ private fun spanNoColor(value: String): String {
 }
 
 
-fun span(color: String, value: String): String {
+fun span(color: Color, value: String): String {
     return span(color, value, false)
 }
 
-fun span(color: String, value: String, bold: Boolean): String {
+fun span(color: Color, value: String, bold: Boolean): String {
     return if (bold) {
-        "<span style=\"color:$color\"><b>$value</b></span>"
+        "<span style=\"color:${color.getHex()}\"><b>$value</b></span>"
     } else {
-        "<span style=\"color:$color\">$value</span>"
+        "<span style=\"color:${color.getHex()}\">$value</span>"
     }
 }
 

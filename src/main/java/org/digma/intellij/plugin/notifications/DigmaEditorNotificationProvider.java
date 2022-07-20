@@ -22,13 +22,13 @@ public class DigmaEditorNotificationProvider implements EditorNotificationProvid
 
             if (!fileEditor.getFile().isWritable() &&
                     fileEditor.getFile().getPath().contains(EditorService.STACKTRACE_PREFIX) ){
-                var panel = new EditorNotificationPanel(null, Laf.INSTANCE.getReadOnlyEditorBannerBackground());
+                var panel = new EditorNotificationPanel();
                 panel.icon(AllIcons.General.Warning);
                 panel.setText("Digma: This is a read only stack trace document");
                 return panel;
             }else if(!fileEditor.getFile().isWritable() &&
                     fileEditor.getFile().getPath().contains(EditorService.VCS_PREFIX)){
-                var panel = new EditorNotificationPanel(null,Laf.INSTANCE.getReadOnlyEditorBannerBackground());
+                var panel = new EditorNotificationPanel();
                 panel.icon(AllIcons.General.Warning);
                 panel.setText("Digma: This is a read only vcs document");
                 return panel;

@@ -3,9 +3,6 @@ package org.digma.intellij.plugin.ui.common
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil.isUnderDarcula
-import org.digma.intellij.plugin.ui.DigmaUIUtil.digmaColorToHex
-import org.digma.intellij.plugin.ui.DigmaUIUtil.digmaDecodeColor
-import org.digma.intellij.plugin.ui.common.Laf.Colors.Companion.SWING_GRAYED_LABEL_FOREGROUND
 import java.awt.Color
 import java.awt.Font
 import javax.swing.JLabel
@@ -22,46 +19,21 @@ import javax.swing.UIManager
  */
 object Laf  {
 
-
     fun panelsListBackground(): Color {
-        var default: Color = JBColor.DARK_GRAY
-        if (isUnderDarcula()) {
-            default = Color(38, 38, 38)
-
-        }
-        return JBColor.namedColor("Editor.background", default)
-
-        //todo: consider:
-        //EditorColorsManager.getInstance().schemeForCurrentUITheme.defaultBackground
-
+        return Colors.PLUGIN_BACKGROUND
     }
 
-
-
-    fun getReadOnlyEditorBannerBackground():Color{
-        return Swing.SHADE_YELLOW
+    fun getLabelGrayedColor():Color{
+        return Colors.GRAY
     }
 
-
-    fun getHtmlLabelGrayedColor():String{
-        return Html.DARK_GRAY2
+    fun getNavigationButtonColor():Color{
+        return Colors.SIMPLE_ICON_COLOR
     }
 
-    fun getSwingLabelGrayedColor():Color{
-        return SWING_GRAYED_LABEL_FOREGROUND
-    }
-
-
-    fun getNavigationButtonColor():String{
-        return Html.LIGHT_WHITE
-    }
-
-
-    fun getInsightsIconsWhite(): String {
+    fun getInsightsIconsWhite():Color {
         return Colors.DEFAULT_SWING_LABEL_FOREGROUND_HEX
     }
-
-
 
     fun scalePanels(size: Int):Int{
         //todo:need to consider if to scale panels always
@@ -79,12 +51,22 @@ object Laf  {
         return JBUI.scale(size)
     }
 
-
     class Colors{
         companion object {
-            val DEFAULT_SWING_LABEL_FOREGROUND: Color = UIManager.getColor("Label.foreground")?: JLabel().foreground
-            val DEFAULT_SWING_LABEL_FOREGROUND_HEX: String = digmaColorToHex(DEFAULT_SWING_LABEL_FOREGROUND)
-            val SWING_GRAYED_LABEL_FOREGROUND: Color = digmaDecodeColor(getHtmlLabelGrayedColor(),Color.GRAY)
+            @JvmStatic val DEFAULT_SWING_LABEL_FOREGROUND: Color = UIManager.getColor("Label.foreground") ?: JLabel().foreground
+            @JvmStatic val DEFAULT_SWING_LABEL_FOREGROUND_HEX: Color = DEFAULT_SWING_LABEL_FOREGROUND
+
+            @JvmStatic val PLUGIN_BACKGROUND: JBColor = JBColor.namedColor("Plugins.background", JBColor.PanelBackground)
+
+            //val LIST_ITEM_BACKGROUND: JBColor = JBColor(0xE6EEF7, 0x45494A)
+            @JvmStatic val LIST_ITEM_BACKGROUND: JBColor = JBColor(Color(0, 0, 50, 15), Color(200, 200, 255, 20))
+            @JvmStatic val TRANSPARENT: Color = Color(0, 0, 0, 0)
+            @JvmStatic val BLUE_LIGHT_SHADE: Color = Color(0x8f90ff)
+            @JvmStatic val ERROR_RED: Color = Color(0xf95959)      // same as in VS Code plugin
+            @JvmStatic val ERROR_ORANGE: Color = Color(0xfdb44b)   // same as in VS Code plugin
+            @JvmStatic val ERROR_GREEN: Color = Color(0x7dd87d)    // same as in VS Code plugin
+            @JvmStatic val SIMPLE_ICON_COLOR: JBColor = JBColor(0x222222, 0xDDDDDD)
+            @JvmStatic val GRAY: Color = Color(0x8A8A8A)
         }
     }
 
@@ -98,14 +80,11 @@ object Laf  {
         }
     }
 
-
     class Fonts{
         companion object {
             val DEFAULT_LABEL_FONT: Font = com.intellij.util.ui.UIUtil.getLabelFont()
         }
     }
-
-
 }
 
 

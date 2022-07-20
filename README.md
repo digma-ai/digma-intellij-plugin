@@ -85,7 +85,7 @@ todo: punlish?</br>
     <li>Performance trends</li>
   </ul>
   </p>
-]]>
+
 <!-- Plugin description end -->
 
 

@@ -1,10 +1,12 @@
 package org.digma.intellij.plugin.ui.common
 
 import com.intellij.openapi.ui.DialogPanel
+import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.MutableProperty
 import com.intellij.ui.dsl.builder.panel
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
 import java.util.function.Supplier
+import javax.swing.JLabel
 
 fun environmentsPanel(envsSupplierSupplier: Supplier<EnvironmentsSupplier>): DialogPanel {
 
@@ -15,38 +17,34 @@ fun environmentsPanel(envsSupplierSupplier: Supplier<EnvironmentsSupplier>): Dia
 
         row {
             cell(
-                CopyableLabel("")
+                JPanelHolder()
             ).bind(
-                CopyableLabel::getText, CopyableLabel::setText, PanelMutableProperty(envsSupplierSupplier)
+                JPanelHolder::getLabelz, JPanelHolder::setLabelz, LabelsMutableProperty(envsSupplierSupplier)
             )
         }
     }.andTransparent()
 
 }
 
-private class PanelMutableProperty(val envsSupplierSupplier: Supplier<EnvironmentsSupplier>) : MutableProperty<String> {
+private class LabelsMutableProperty(val envsSupplierSupplier: Supplier<EnvironmentsSupplier>) :
+    MutableProperty<List<JLabel>> {
 
-    override fun set(value: String) {
-        // do nothing
+    override fun set(value: List<JLabel>) {
+        // nothing
     }
 
-    override fun get(): String {
+    override fun get(): List<JLabel> {
         val envsSupplier = envsSupplierSupplier.get()
 
-        val sb = StringBuilder()
-        var firstIteration = true
-
+        val list = ArrayList<JLabel>()
         for (currEnv in envsSupplier.getEnvironments()) {
             val isSelectedEnv = currEnv.contentEquals(envsSupplier.getCurrent())
             val linkText = buildLinkText(currEnv, isSelectedEnv)
-            if (!firstIteration) {
-                sb.append(", ")
-            }
-            sb.append(linkText)
-            firstIteration = false
+            val jLabel = JLabel(asHtml(linkText))
+            list.add(jLabel)
         }
 
-        return asHtml(sb.toString())
+        return list
     }
 
     fun buildLinkText(currEnv: String, isSelectedEnv: Boolean): String {
@@ -55,4 +53,26 @@ private class PanelMutableProperty(val envsSupplierSupplier: Supplier<Environmen
         }
         return span(currEnv)
     }
+}
+
+class JPanelHolder : JBPanel<JPanelHolder>() {
+
+    var labels: List<JLabel> = emptyList()
+
+    init {
+        andTransparent()
+    }
+
+    fun setLabelz(labelList: List<JLabel>) {
+        labels = labelList
+        removeAll()
+        for (curr in labels) {
+            add(curr)
+        }
+    }
+
+    fun getLabelz(): List<JLabel> {
+        return labels
+    }
+
 }

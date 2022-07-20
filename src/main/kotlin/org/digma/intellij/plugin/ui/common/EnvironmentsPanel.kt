@@ -1,12 +1,12 @@
 package org.digma.intellij.plugin.ui.common
 
 import com.intellij.openapi.ui.DialogPanel
+import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.MutableProperty
 import com.intellij.ui.dsl.builder.panel
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
 import java.util.function.Supplier
-import javax.swing.JLabel
 
 fun environmentsPanel(envsSupplierSupplier: Supplier<EnvironmentsSupplier>): DialogPanel {
 
@@ -19,29 +19,36 @@ fun environmentsPanel(envsSupplierSupplier: Supplier<EnvironmentsSupplier>): Dia
             cell(
                 JPanelHolder()
             ).bind(
-                JPanelHolder::getLabelz, JPanelHolder::setLabelz, LabelsMutableProperty(envsSupplierSupplier)
+                JPanelHolder::getEnvs, JPanelHolder::setEnvs, SingleEnvPanelMutableProperty(envsSupplierSupplier)
             )
         }
     }.andTransparent()
 
 }
 
-private class LabelsMutableProperty(val envsSupplierSupplier: Supplier<EnvironmentsSupplier>) :
-    MutableProperty<List<JLabel>> {
+private class SingleEnvPanelMutableProperty(val envsSupplierSupplier: Supplier<EnvironmentsSupplier>) :
+    MutableProperty<List<SingleEnvPanel>> {
 
-    override fun set(value: List<JLabel>) {
+    override fun set(value: List<SingleEnvPanel>) {
         // nothing
     }
 
-    override fun get(): List<JLabel> {
+    override fun get(): List<SingleEnvPanel> {
         val envsSupplier = envsSupplierSupplier.get()
 
-        val list = ArrayList<JLabel>()
+        val list = ArrayList<SingleEnvPanel>()
+
         for (currEnv in envsSupplier.getEnvironments()) {
             val isSelectedEnv = currEnv.contentEquals(envsSupplier.getCurrent())
             val linkText = buildLinkText(currEnv, isSelectedEnv)
-            val jLabel = JLabel(asHtml(linkText))
-            list.add(jLabel)
+            val link = ActionLink(asHtml(linkText)) {
+                envsSupplier.setCurrent(currEnv)
+            }
+
+            val singlePanel = SingleEnvPanel()
+            singlePanel.add(link)
+
+            list.add(singlePanel)
         }
 
         return list
@@ -55,24 +62,31 @@ private class LabelsMutableProperty(val envsSupplierSupplier: Supplier<Environme
     }
 }
 
+class SingleEnvPanel : JBPanel<SingleEnvPanel>() {
+    init {
+        andTransparent()
+    }
+
+}
+
 class JPanelHolder : JBPanel<JPanelHolder>() {
 
-    var labels: List<JLabel> = emptyList()
+    var envList: List<SingleEnvPanel> = emptyList()
 
     init {
         andTransparent()
     }
 
-    fun setLabelz(labelList: List<JLabel>) {
-        labels = labelList
+    fun setEnvs(prmEnvList: List<SingleEnvPanel>) {
+        envList = prmEnvList
         removeAll()
-        for (curr in labels) {
+        for (curr in envList) {
             add(curr)
         }
     }
 
-    fun getLabelz(): List<JLabel> {
-        return labels
+    fun getEnvs(): List<SingleEnvPanel> {
+        return envList
     }
 
 }

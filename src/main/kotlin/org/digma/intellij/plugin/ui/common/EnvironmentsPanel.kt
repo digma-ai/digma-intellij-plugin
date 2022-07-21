@@ -83,7 +83,7 @@ private class SingleEnvPanelMutableProperty(val envsSupplierSupplier: Supplier<E
             txtValue = "LOCAL"
         }
         if (isSelectedEnv) {
-            return spanBold(txtValue)
+            return spanBoldUnderLine(txtValue)
         }
         return span(txtValue)
     }

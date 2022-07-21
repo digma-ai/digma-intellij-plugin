@@ -103,7 +103,7 @@ abstract class PanelList(val project: Project, private var model: PanelListModel
                     model.getElementAt(i), i, this@PanelList.hasFocus(),panelsLayoutHelper)
                 add(newComp)
                 if (gapBetweenItems) {
-                    add(Box.createVerticalStrut(scaleBorders(3)))
+                    add(Box.createVerticalStrut(scaleBorders(5)))
                 }
             }
 

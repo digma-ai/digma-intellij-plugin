@@ -16,7 +16,7 @@ class ErrorsModel : PanelModel {
 
 
     override fun count(): String {
-        return  max(listViewItems.size, errorsCount).toString()
+        return max(listViewItems.size, errorsCount).toString()
     }
 
     override fun isMethodScope(): Boolean {
@@ -38,6 +38,6 @@ class ErrorsModel : PanelModel {
 }
 
 
-enum class ErrorsTabCard{
-    ERRORS_LIST,ERROR_DETAILS
+enum class ErrorsTabCard {
+    ERRORS_LIST, ERROR_DETAILS
 }

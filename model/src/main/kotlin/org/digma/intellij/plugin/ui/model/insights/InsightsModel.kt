@@ -33,7 +33,7 @@ class InsightsModel : PanelModel {
         return scope.getScopeTooltip()
     }
 
-    fun getPreviewListMessage():String {
+    fun getPreviewListMessage(): String {
         if (scope is EmptyScope) {
             return "No code objects found for this document"
         } else if (previewListViewItems.isEmpty()) {
@@ -45,6 +45,6 @@ class InsightsModel : PanelModel {
 }
 
 
-enum class InsightsTabCard{
-    INSIGHTS,PREVIEW
+enum class InsightsTabCard {
+    INSIGHTS, PREVIEW
 }

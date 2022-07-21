@@ -82,9 +82,9 @@ public class Environment implements EnvironmentsSupplier {
     private void fireEnvironmentsListChange() {
         Log.log(LOGGER::debug, "Firing environmentsListChanged event");
         Runnable r = () -> listeners.forEach(listener -> listener.environmentsListChanged(environments));
-        if (SwingUtilities.isEventDispatchThread()){
+        if (SwingUtilities.isEventDispatchThread()) {
             r.run();
-        }else{
+        } else {
             SwingUtilities.invokeLater(r);
         }
 
@@ -99,6 +99,7 @@ public class Environment implements EnvironmentsSupplier {
 
     /**
      * Called when user changes environment
+     *
      * @param newEnv the new environment
      */
     @Override
@@ -107,7 +108,7 @@ public class Environment implements EnvironmentsSupplier {
         Log.log(LOGGER::debug, "Setting current environment , old={},new={}", this.current, newEnv);
 
         //don't change or fire the event if it's the same env. it happens because we have two combobox, one on each tab
-        if (Objects.equals(this.current,newEnv)){
+        if (Objects.equals(this.current, newEnv)) {
             return;
         }
 
@@ -115,16 +116,16 @@ public class Environment implements EnvironmentsSupplier {
         this.current = newEnv;
         persistenceData.setCurrentEnv(newEnv);
 
-        notifyEnvironmentChanged(oldEnv,newEnv);
+        notifyEnvironmentChanged(oldEnv, newEnv);
     }
 
 
-    private void notifyEnvironmentChanged(String oldEnv,String newEnv) {
+    private void notifyEnvironmentChanged(String oldEnv, String newEnv) {
         Log.log(LOGGER::debug, "Firing EnvironmentChanged event for {}", newEnv);
-        if (project.isDisposed()){
+        if (project.isDisposed()) {
             return;
         }
-        NotificationUtil.notifyChangingEnvironment(project,oldEnv,newEnv);
+        NotificationUtil.notifyChangingEnvironment(project, oldEnv, newEnv);
         EnvironmentChanged publisher = project.getMessageBus().syncPublisher(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC);
         publisher.environmentChanged(newEnv);
     }
@@ -147,35 +148,34 @@ public class Environment implements EnvironmentsSupplier {
     }
 
 
-
     void replaceEnvironmentsList(@NotNull List<String> envs) {
         this.environments = envs;
         var oldEnv = current;
-        if (current == null || !this.environments.contains(current)){
+        if (current == null || !this.environments.contains(current)) {
             current = environments.size() > 0 ? environments.get(0) : null;
         }
 
         persistenceData.setCurrentEnv(current);
         fireEnvironmentsListChange();
 
-        if (!Objects.equals(oldEnv,current)) {
+        if (!Objects.equals(oldEnv, current)) {
             notifyEnvironmentChanged(oldEnv, current);
         }
     }
 
 
     private void maybeUpdateCurrent() {
-        if (current == null || current.isBlank() || !environments.contains(current)){
+        if (current == null || current.isBlank() || !environments.contains(current)) {
             var oldEnv = this.current;
             current = environments.size() > 0 ? environments.get(0) : null;
             persistenceData.setCurrentEnv(current);
-            notifyEnvironmentChanged(oldEnv,current);
+            notifyEnvironmentChanged(oldEnv, current);
         }
     }
 
     @Override
     public void refresh() {
-        new Task.Backgroundable(project, "Saving Project Zip") {
+        new Task.Backgroundable(project, "Refreshing environments") {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
                 refreshEnvironments();

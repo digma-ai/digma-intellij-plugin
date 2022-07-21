@@ -16,7 +16,6 @@ import org.digma.intellij.plugin.ui.model.insights.InsightsTabCard
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.util.*
 import java.util.stream.Collectors
-import kotlin.collections.ArrayList
 
 class InsightsViewService(project: Project): AbstractViewService(project) {
 

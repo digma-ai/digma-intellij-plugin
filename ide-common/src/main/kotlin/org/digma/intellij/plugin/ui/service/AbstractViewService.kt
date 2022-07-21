@@ -17,7 +17,6 @@ abstract class AbstractViewService(val project: Project) {
 
     private val toolWindowTabsHelper: ToolWindowTabsHelper = project.getService(ToolWindowTabsHelper::class.java)
 
-
     abstract fun getViewDisplayName(): String
 
 

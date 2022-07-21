@@ -9,6 +9,7 @@ import com.intellij.ui.dsl.builder.TopGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBUI
+import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.ui.model.NOT_SUPPORTED_OBJECT_MSG
 import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
@@ -44,18 +45,11 @@ private fun getNoInfoMessage(model: PanelModel):String{
 }
 
 
-fun createTopPanel(project: Project, model: PanelModel, labelText: String): DialogPanel {
+fun createTopPanel(project: Project, model: PanelModel): DialogPanel {
+    val analyticsService: AnalyticsService = AnalyticsService.getInstance(project)
+    val environmentsSupplierSupplier = { analyticsService.environment }
 
     return panel {
-        row {
-            val topLine = topLine(project,model, labelText)
-            topLine.isOpaque = false
-            cell(topLine)
-                .horizontalAlign(HorizontalAlign.FILL)
-                .onReset {
-                    topLine.reset()
-                }
-        }
         row {
             val scopeLine = scopeLine({ model.getScope() }, { model.getScopeTooltip() }, ScopeLineIconProducer(model))
             scopeLine.isOpaque = false
@@ -63,6 +57,15 @@ fun createTopPanel(project: Project, model: PanelModel, labelText: String): Dial
                 .horizontalAlign(HorizontalAlign.FILL)
                 .onReset {
                     scopeLine.reset()
+                }
+        }
+        row {
+            val pnl = environmentsPanel(environmentsSupplierSupplier)
+            pnl.isOpaque = false
+            cell(pnl)
+                .horizontalAlign(HorizontalAlign.FILL)
+                .onReset {
+                    pnl.reset()
                 }
         }
     }.andTransparent().withBorder(JBUI.Borders.empty(0,12,0,8))

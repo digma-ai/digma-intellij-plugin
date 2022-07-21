@@ -33,7 +33,7 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
     //members change , like the various lists. or bind to a function of the mode like getScope.
     val insightsModel = InsightsViewService.getInstance(project).model
 
-    val topPanelWrapper = createTopPanel(project,insightsModel,"Code insights")
+    val topPanelWrapper = createTopPanel(project, insightsModel)
 
 
     val insightsList = ScrollablePanelList(InsightsList(project,insightsModel.listViewItems))

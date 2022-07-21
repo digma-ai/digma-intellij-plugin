@@ -93,28 +93,35 @@ fun buildTitleItalicGrayedComment(title: String,comment: String,bold: Boolean): 
 }
 
 
-fun spanItalicGrayed(value:String):String{
+fun spanItalicGrayed(value: String): String {
     return spanGrayed(italic(value))
 }
 
 
-fun spanBold(value:String):String{
-     return spanBoldNoColor(value)
+fun spanBold(value: String): String {
+    return spanBoldNoColor(value)
 }
 
-fun span(value:String):String{
+fun spanBoldUnderLine(value: String): String {
+    return spanBoldNoColor(underline(value))
+}
+
+fun span(value: String): String {
     return spanNoColor(value)
 }
 
 
-fun spanGrayed(value:String):String{
-    return span(getLabelGrayedColor(),value)
+fun spanGrayed(value: String): String {
+    return span(getLabelGrayedColor(), value)
 }
-
 
 
 private fun italic(value: String): String {
     return "<i>$value</i>"
+}
+
+private fun underline(value: String): String {
+    return "<u>$value</u>"
 }
 
 private fun spanBoldNoColor(value: String): String {

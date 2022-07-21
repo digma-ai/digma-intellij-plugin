@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.ui.common
 
 import com.intellij.icons.AllIcons
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.dsl.builder.BottomGap
 import com.intellij.ui.dsl.builder.MutableProperty
@@ -44,18 +43,9 @@ private fun getNoInfoMessage(model: PanelModel):String{
 }
 
 
-fun createTopPanel(project: Project, model: PanelModel, labelText: String): DialogPanel {
+fun createTopPanel(model: PanelModel): DialogPanel {
 
     return panel {
-        row {
-            val topLine = topLine(project,model, labelText)
-            topLine.isOpaque = false
-            cell(topLine)
-                .horizontalAlign(HorizontalAlign.FILL)
-                .onReset {
-                    topLine.reset()
-                }
-        }
         row {
             val scopeLine = scopeLine({ model.getScope() }, { model.getScopeTooltip() }, ScopeLineIconProducer(model))
             scopeLine.isOpaque = false

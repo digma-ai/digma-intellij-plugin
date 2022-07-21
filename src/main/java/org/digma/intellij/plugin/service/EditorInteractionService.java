@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.service;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.document.DocumentInfoContainer;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.editor.EditorEventsHandler;
@@ -10,6 +11,7 @@ import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.ui.CaretContextService;
+import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
 
@@ -23,17 +25,20 @@ public class EditorInteractionService implements CaretContextService, Disposable
 
     private final Logger LOGGER = Logger.getInstance(EditorInteractionService.class);
 
-    private Project project;
+    private final Project project;
 
     private final InsightsViewService insightsViewService;
     private final ErrorsViewService errorsViewService;
     private final DocumentInfoService documentInfoService;
+    private final EnvironmentsSupplier environmentsSupplier;
 
     public EditorInteractionService(Project project) {
         this.project = project;
         insightsViewService = project.getService(InsightsViewService.class);
         errorsViewService = project.getService(ErrorsViewService.class);
         documentInfoService = project.getService(DocumentInfoService.class);
+        var analyticsService = project.getService(AnalyticsService.class);
+        environmentsSupplier = analyticsService.getEnvironment();
     }
 
     public static CaretContextService getInstance(Project project) {
@@ -57,6 +62,7 @@ public class EditorInteractionService implements CaretContextService, Disposable
 
          */
 
+        environmentsSupplier.refresh();
 
         if (!methodUnderCaret.isSupportedFile()){
             Log.log(LOGGER::debug, "methodUnderCaret is non supported file {}. ", methodUnderCaret);
@@ -124,6 +130,7 @@ public class EditorInteractionService implements CaretContextService, Disposable
         Log.log(LOGGER::info, "Starting...");
         EditorEventsHandler editorEventsHandler = project.getService(EditorEventsHandler.class);
         editorEventsHandler.start(project);
+        environmentsSupplier.refresh();
     }
 
 }

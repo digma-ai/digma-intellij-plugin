@@ -61,6 +61,9 @@ public class AnalyticsService implements Disposable {
         });
     }
 
+    public static AnalyticsService getInstance(@NotNull Project project) {
+        return project.getService(AnalyticsService.class);
+    }
 
     public Environment getEnvironment() {
         return environment;

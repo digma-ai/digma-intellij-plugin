@@ -43,6 +43,7 @@ private class SingleEnvPanelMutableProperty(val envsSupplierSupplier: Supplier<E
             val link = ActionLink(asHtml(linkText)) {
                 envsSupplier.setCurrent(currEnv)
             }
+            link.toolTipText = currEnv
 
             val singlePanel = SingleEnvPanel()
             singlePanel.add(link)

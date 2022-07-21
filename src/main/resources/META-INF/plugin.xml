@@ -36,8 +36,6 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.analytics.AnalyticsService"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.service.EnvComboModelService"/>
-
         <projectService serviceImplementation="org.digma.intellij.plugin.document.DocumentInfoService"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.document.CodeLensProvider"/>

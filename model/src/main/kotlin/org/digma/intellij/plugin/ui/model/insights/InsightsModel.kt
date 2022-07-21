@@ -1,11 +1,10 @@
 package org.digma.intellij.plugin.ui.model.insights
 
 import org.digma.intellij.plugin.ui.model.*
-import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.util.*
 
-class InsightsModel(private val envsSupplier: EnvironmentsSupplier) : PanelModel {
+class InsightsModel : PanelModel {
 
     var insightsCount: Int = 0
     var listViewItems: List<ListViewItem<*>> = Collections.emptyList()
@@ -34,10 +33,6 @@ class InsightsModel(private val envsSupplier: EnvironmentsSupplier) : PanelModel
         return scope.getScopeTooltip()
     }
 
-    override fun getEnvironmentsSupplier(): EnvironmentsSupplier {
-        return envsSupplier
-    }
-
     fun getPreviewListMessage(): String {
         if (scope is EmptyScope) {
             return "No code objects found for this document"
@@ -50,6 +45,6 @@ class InsightsModel(private val envsSupplier: EnvironmentsSupplier) : PanelModel
 }
 
 
-enum class InsightsTabCard{
-    INSIGHTS,PREVIEW
+enum class InsightsTabCard {
+    INSIGHTS, PREVIEW
 }

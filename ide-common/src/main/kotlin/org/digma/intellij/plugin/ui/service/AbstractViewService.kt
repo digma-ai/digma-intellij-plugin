@@ -3,9 +3,7 @@ package org.digma.intellij.plugin.ui.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.ui.content.Content
-import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.ui.model.NOT_SUPPORTED_OBJECT_MSG
-import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import javax.swing.SwingUtilities
 
@@ -18,10 +16,6 @@ abstract class AbstractViewService(val project: Project) {
     var toolWindowContent: Content? = null
 
     private val toolWindowTabsHelper: ToolWindowTabsHelper = project.getService(ToolWindowTabsHelper::class.java)
-
-    var analyticsService: AnalyticsService = project.getService(AnalyticsService::class.java)
-    protected val envsSupplier: EnvironmentsSupplier = analyticsService.environment
-
 
     abstract fun getViewDisplayName(): String
 

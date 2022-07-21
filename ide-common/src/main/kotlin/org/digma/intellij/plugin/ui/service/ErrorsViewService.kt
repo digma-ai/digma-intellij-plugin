@@ -21,7 +21,7 @@ class ErrorsViewService(project: Project): AbstractViewService(project) {
 
     //the model is single per the life of an open project in intellij. it shouldn't be created
     //elsewhere in the program. it can not be singleton.
-    val model = ErrorsModel(this.envsSupplier)
+    val model = ErrorsModel()
 
     private val errorsProvider: ErrorsProvider = project.getService(ErrorsProvider::class.java)
 

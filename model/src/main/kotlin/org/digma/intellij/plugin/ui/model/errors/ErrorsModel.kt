@@ -2,12 +2,11 @@ package org.digma.intellij.plugin.ui.model.errors
 
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.ui.model.*
-import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.lang.Integer.max
 import java.util.*
 
-class ErrorsModel(private val envsSupplier: EnvironmentsSupplier) : PanelModel {
+class ErrorsModel : PanelModel {
 
     var errorsCount: Int = 0
     var listViewItems: List<ListViewItem<CodeObjectError>> = Collections.emptyList()
@@ -36,13 +35,9 @@ class ErrorsModel(private val envsSupplier: EnvironmentsSupplier) : PanelModel {
         return scope.getScopeTooltip()
     }
 
-    override fun getEnvironmentsSupplier(): EnvironmentsSupplier {
-        return envsSupplier
-    }
-
 }
 
 
-enum class ErrorsTabCard{
-    ERRORS_LIST,ERROR_DETAILS
+enum class ErrorsTabCard {
+    ERRORS_LIST, ERROR_DETAILS
 }

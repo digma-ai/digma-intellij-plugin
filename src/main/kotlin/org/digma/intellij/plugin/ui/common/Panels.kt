@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.common
 
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.dsl.builder.BottomGap
 import com.intellij.ui.dsl.builder.MutableProperty
@@ -8,6 +9,7 @@ import com.intellij.ui.dsl.builder.TopGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBUI
+import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.ui.model.NOT_SUPPORTED_OBJECT_MSG
 import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
@@ -43,7 +45,9 @@ private fun getNoInfoMessage(model: PanelModel):String{
 }
 
 
-fun createTopPanel(model: PanelModel): DialogPanel {
+fun createTopPanel(project: Project, model: PanelModel): DialogPanel {
+    val analyticsService: AnalyticsService = AnalyticsService.getInstance(project)
+    val environmentsSupplierSupplier = { analyticsService.environment }
 
     return panel {
         row {
@@ -56,7 +60,7 @@ fun createTopPanel(model: PanelModel): DialogPanel {
                 }
         }
         row {
-            val pnl = environmentsPanel(model::getEnvironmentsSupplier)
+            val pnl = environmentsPanel(environmentsSupplierSupplier)
             pnl.isOpaque = false
             cell(pnl)
                 .horizontalAlign(HorizontalAlign.FILL)

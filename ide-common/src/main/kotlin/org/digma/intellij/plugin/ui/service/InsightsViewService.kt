@@ -23,7 +23,7 @@ class InsightsViewService(project: Project): AbstractViewService(project) {
 
     //the model is single per the life of an open project in intellij. it shouldn't be created
     //elsewhere in the program. it can not be singleton.
-    val model = InsightsModel(this.envsSupplier)
+    val model = InsightsModel()
 
     private val insightsProvider: InsightsProvider = project.getService(InsightsProvider::class.java)
 

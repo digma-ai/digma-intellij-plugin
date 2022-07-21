@@ -12,10 +12,6 @@ import java.util.function.Supplier
 fun environmentsPanel(envsSupplierSupplier: Supplier<EnvironmentsSupplier>): DialogPanel {
 
     return panel {
-        row(asHtml(spanGrayed("Environments: "))) {
-
-        }
-
         row {
             cell(
                 JPanelHolder()

@@ -62,7 +62,7 @@ DIGMA_JB_PRIVATE_KEY_PASSWORD=digma</br>
 
 
 
-todo: punlish?</br>
+
 
 
 
@@ -73,17 +73,17 @@ todo: punlish?</br>
 <!-- [//]: # (example how satisfy gradle build with empty plugin description) -->
 <!-- Plugin description -->
 <![CDATA[
-  Add Continuous Feedback to your coding practices
-  Digma is a Continuous Feedback platform. It integrates with your observability
-  backend to provide meaningful code insights in the IDE. While coding, you can be aware of how the code behaves in runtime in various staging and production environments<
+  &lt;h1&gt;Add Continuous Feedback to your coding practices&lt;/h1&gt;
+  &lt;p&gt;Digma is a Continuous Feedback platform. It integrates with your observability
+  backend to provide meaningful code insights in the IDE. While coding, you can be aware of how the code behaves in runtime in various staging and production environments&lt;/p&gt;
 
-  <p>Digma provides integrated insights multiple code behavior topics including:
-  <ul>
-    <li>Error hostpots</li>
-    <li>Usage bottlenecks and concurrency</li>
-    <li>Performance trends</li>
-  </ul>
-  </p>]]>
+  &lt;p&gt;Digma provides integrated insights multiple code behavior topics including:
+  &lt;ul&gt;
+    &lt;li&gt;Error hostpots&lt;/li&gt;
+    &lt;li&gt;Usage bottlenecks and concurrency&lt;/li&gt;
+    &lt;li&gt;Performance trends&lt;/li&gt;
+  &lt;/ul&gt;
+  &lt;/p&gt;ֿ]]>
 <!-- Plugin description end -->
 
 

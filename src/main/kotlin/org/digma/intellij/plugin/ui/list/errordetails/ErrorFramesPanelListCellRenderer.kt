@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.list.errordetails
 
 import com.intellij.openapi.project.Project
+import com.intellij.ui.JBColor
 import com.intellij.ui.dsl.builder.BottomGap
 import com.intellij.ui.dsl.builder.RightGap
 import com.intellij.ui.dsl.builder.TopGap
@@ -163,6 +164,14 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
     private fun itemPanel(panel: JPanel): JPanel {
         panel.border = Borders.customLine(Laf.getLabelGrayedColor(),0,2,0,0)
         panel.isOpaque = false
+        if (com.intellij.util.ui.UIUtil.isUnderDarcula()){
+            //because under dracula JBColor.namedColor("Plugins.background") will be empty so JBColor.PanelBackground will
+            // be used as the list background Laf.Colors.PLUGIN_BACKGROUND, which is the default panel background, and so the
+            // rollover behaviour here is lost.
+            // changing the panel background under dracula bring back the rollover behaviour.
+            // another option is to select another list background under dracula instead of the default JBColor.PanelBackground
+            panel.background = JBColor.LIGHT_GRAY //doesn't look good with Laf.Colors.LIST_ITEM_BACKGROUND or transparent colors
+        }
 
         val mouseListener = object: MouseAdapter(){
             override fun mouseEntered(e: MouseEvent?) {

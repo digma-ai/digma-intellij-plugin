@@ -8,13 +8,16 @@ import org.digma.intellij.plugin.model.rest.insights.ErrorInsight
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsightNamedError
 import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.service.InsightsActionsService
-import org.digma.intellij.plugin.ui.common.*
+import org.digma.intellij.plugin.ui.common.buildBoldTitleGrayedComment
+import org.digma.intellij.plugin.ui.common.buildLinkTextWithGrayedAndDefaultLabelColorPart
 import org.digma.intellij.plugin.ui.list.ListItemActionButton
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import java.awt.BorderLayout
-import java.awt.Dimension
 import java.awt.GridLayout
-import javax.swing.*
+import javax.swing.BorderFactory
+import javax.swing.JLabel
+import javax.swing.JPanel
+import javax.swing.SwingConstants
 
 fun errorsPanel(project: Project, modelObject: ErrorInsight, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
 
@@ -54,10 +57,11 @@ fun errorsPanel(project: Project, modelObject: ErrorInsight, panelsLayoutHelper:
     val expandButton = ListItemActionButton("Expand")
     expandButton.addActionListener { project.getService(InsightsActionsService::class.java).showErrorsTab(modelObject) }
 
-    val expandPanel = JPanel()
+    val expandPanel = InsightAlignedPanel(panelsLayoutHelper)
     expandPanel.layout = BorderLayout()
     expandPanel.isOpaque = false
     expandPanel.add(expandButton, BorderLayout.EAST)
+    addCurrentLargestWidthIconPanel(panelsLayoutHelper,expandPanel.preferredSize.width)
 
     val result = JBPanel<JBPanel<*>>()
     result.layout = BorderLayout()

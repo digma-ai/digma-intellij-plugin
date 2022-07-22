@@ -80,25 +80,10 @@ fun genericPanelForSingleInsight(modelObject: Any?, panelsLayoutHelper: PanelsLa
 
 internal fun insightsIconPanelBorder(icon: Icon, text: String, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
 
-
-    val panel: JPanel = object: JPanel(){
-        override fun getPreferredSize(): Dimension {
-            val ps = super.getPreferredSize()
-            if (ps == null){
-                return ps
-            }
-//            if (isVisible) {
-                val h = ps.height
-                val w = ps.width
-                addCurrentLargestWidthIconPanel(panelsLayoutHelper,w)
-                return Dimension(getCurrentLargestWidthIconPanel(panelsLayoutHelper,w), h)
-//            }else{
-//                return ps
-//            }
-        }
-    }
-
+    val panel = InsightAlignedPanel(panelsLayoutHelper)
     panel.layout = BorderLayout()
+    panel.isOpaque = false
+    panel.border = empty(2,0,0,Laf.scaleBorders(getInsightIconPanelRightBorderSize()))
 
     val iconLabel = JLabel(icon)
     iconLabel.horizontalAlignment = SwingConstants.CENTER
@@ -110,11 +95,7 @@ internal fun insightsIconPanelBorder(icon: Icon, text: String, panelsLayoutHelpe
         panel.add(textLabel, BorderLayout.SOUTH)
     }
 
-    panel.border = empty(2,0,0,Laf.scaleBorders(getInsightIconPanelRightBorderSize()))
-    panel.isOpaque = false
-
-    val width = panel.preferredSize.width
-    addCurrentLargestWidthIconPanel(panelsLayoutHelper,width)
+    addCurrentLargestWidthIconPanel(panelsLayoutHelper,panel.preferredSize.width)
 
     return panel
 }
@@ -140,3 +121,20 @@ internal fun addCurrentLargestWidthIconPanel(layoutHelper: PanelsLayoutHelper,wi
 }
 
 
+
+class InsightAlignedPanel(private val layoutHelper: PanelsLayoutHelper): JPanel(){
+
+    init {
+        border = empty(0,0,0,Laf.scaleBorders(getInsightIconPanelRightBorderSize()))
+    }
+    override fun getPreferredSize(): Dimension {
+        val ps = super.getPreferredSize()
+        if (ps == null){
+            return ps
+        }
+        val h = ps.height
+        val w = ps.width
+        addCurrentLargestWidthIconPanel(layoutHelper,w)
+        return Dimension(getCurrentLargestWidthIconPanel(layoutHelper,w), h)
+    }
+}

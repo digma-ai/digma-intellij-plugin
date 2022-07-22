@@ -54,8 +54,8 @@ internal class ListItemActionButton constructor(text: String): JButton(text) {
 	}
 
 	override fun getPreferredSize(): Dimension {
-		// user the original: super.getPreferredSize
-		return Dimension(50,15)
+		// use the original: super.getPreferredSize
+		return Dimension(Laf.scalePanels(50),Laf.scalePanels(15))
 	}
 
 	override fun paintComponent(g: Graphics) {

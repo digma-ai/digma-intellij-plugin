@@ -81,6 +81,7 @@ fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight, panelsLayoutHe
 
     val durationsListPanel = JBPanel<JBPanel<*>>()
     durationsListPanel.layout = GridLayout(spanDurationsInsight.percentiles.size, 1, 0, 2)
+    durationsListPanel.isOpaque = false
 
     val sortedPercentiles = spanDurationsInsight.percentiles.sortedBy(SpanDurationsPercentile::percentile)
 
@@ -154,6 +155,7 @@ fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight, panelsLayoutHe
             evalPanel.layout = BorderLayout()
             evalPanel.add(evalLabel, BorderLayout.CENTER)
             evalPanel.border = empty(0, 0, 0, Laf.scaleBorders(getInsightIconPanelRightBorderSize()))
+            evalPanel.isOpaque = false
             addCurrentLargestWidthIconPanel(panelsLayoutHelper,evalPanel.preferredSize.width)
             durationsPanel.add(evalPanel, BorderLayout.EAST)
         }

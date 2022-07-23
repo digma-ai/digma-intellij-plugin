@@ -61,6 +61,14 @@ public class VcsService {
     }
 
 
+    @Nullable
+    public String getShortRevisionString(@NotNull URL workspaceUrl,String lastInstanceCommitId){
+        var revision = getRevisionFor(workspaceUrl,lastInstanceCommitId);
+        return revision == null ? null : getShortRevisionString(revision);
+    }
+
+
+    @NotNull
     public String getShortRevisionString(@NotNull VcsRevisionNumber vcsRevisionNumber){
         if (ShortVcsRevisionNumber.class.isAssignableFrom(vcsRevisionNumber.getClass())){
             return ((ShortVcsRevisionNumber)vcsRevisionNumber).toShortString();
@@ -311,6 +319,22 @@ public class VcsService {
         });
 
 
+    }
+
+
+    @Nullable
+    public VcsRevisionNumber getRevisionFor(@NotNull URL workspaceUrl, String lastInstanceCommitId) {
+
+        try {
+            if (lastInstanceCommitId != null && isFileUnderVcs(workspaceUrl)) {
+                var filePath = VcsUtil.getFilePath(workspaceUrl.getPath());
+                var vcs = VcsUtil.getVcsFor(project, filePath);
+                return vcs != null ? vcs.parseRevisionNumber(lastInstanceCommitId) : null;
+            }
+        }catch (Exception e){
+            Log.log(LOGGER::warn, "Could not parse revision {} for {}, {}", lastInstanceCommitId, workspaceUrl, e.getMessage());
+        }
+        return null;
     }
 
 }

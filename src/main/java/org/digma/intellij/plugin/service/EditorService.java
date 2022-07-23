@@ -50,13 +50,35 @@ public class EditorService implements Disposable {
             return;
         }
 
+        if (lastInstanceCommitId == null){
+            openVirtualFile(workspaceFile,lineNumber);
+        }else{
+            tryOpenFromVcs(workspaceFile,workspaceUrl,lastInstanceCommitId,lineNumber);
+        }
+    }
+
+    private void tryOpenFromVcs(VirtualFile workspaceFile, @NotNull URL workspaceUrl, @NotNull String lastInstanceCommitId, int lineNumber) {
+
         try {
+
+
+
             //if file not under vcs then the workspaceFile will open
             if (vcsService.isFileUnderVcs(workspaceUrl)) {
                 //if revision doesn't exist show a warning and then the workspaceFile will open
                 if (vcsService.isRevisionExist(workspaceUrl, lastInstanceCommitId)) {
                     //if no changes then the workspaceFile will open
                     if(vcsService.isLocalContentChanged(workspaceUrl, lastInstanceCommitId, lineNumber)) {
+                        //for fast re-opening of files that are already opened, the user already answered yes for this file.
+                        //if there are changes with working dir then try to check if the file was already opened.
+                        //try to build a vcs file name and showIfAlreadyOpen without loading the revision again, it may be faster.
+                        //if buildVcsFileName did not succeed that doesn't mean it's not possible,
+                        // vcsService.getRevisionVirtualFile may succeed because it's a query to vcs and may find a suitable revision.
+                        var vcsFileName = buildVcsFileName(workspaceUrl,lastInstanceCommitId);
+                        if (showIfAlreadyOpen(vcsFileName, lineNumber)){
+                            return;
+                        }
+
                         VirtualFile vcsFile = vcsService.getRevisionVirtualFile(workspaceUrl, lastInstanceCommitId);
                         if (vcsFile != null) {
                             maybeOpenVcsFile(workspaceFile, (ContentRevisionVirtualFile) vcsFile, workspaceUrl, lineNumber);
@@ -82,13 +104,35 @@ public class EditorService implements Disposable {
     }
 
 
+
+
+
+    private String buildVcsFileName(URL workspaceUrl, String lastInstanceCommitId) {
+        var hash =  vcsService.getShortRevisionString(workspaceUrl,lastInstanceCommitId);
+        return hash == null ? null : buildVcsFileName(hash,workspaceUrl);
+    }
+
+
+
+
+    private String buildVcsFileName(String hash,URL workspaceUrl) {
+        if (hash != null) {
+            var filePath = workspaceUrl.getPath();
+            var indexAfterSlash = Math.max(filePath.lastIndexOf('/') + 1, 0);
+            var fileName = filePath.substring(indexAfterSlash);
+            return VCS_PREFIX + "-" + hash + "-" + fileName;
+        }else{
+            return null;
+        }
+    }
+
+
+
+
     private void maybeOpenVcsFile(@NotNull VirtualFile workspaceFile, @NotNull ContentRevisionVirtualFile vcsFile, @NotNull URL workspaceUrl, int lineNumber) {
 
         var hash =  vcsService.getShortRevisionString(vcsFile.getContentRevision().getRevisionNumber());
-        var filePath = workspaceUrl.getPath();
-        var indexOfSlash = Math.max(filePath.lastIndexOf('/') + 1, 0);
-        var fileName = filePath.substring(indexOfSlash);
-        String name = VCS_PREFIX + "-" + hash + "-" + fileName;
+        String name = buildVcsFileName(hash,workspaceUrl);
 
         //if the vcs file is already opened just show it and don't ask again
         if (showIfAlreadyOpen(name, lineNumber)) {
@@ -120,6 +164,11 @@ public class EditorService implements Disposable {
 
 
     private boolean showIfAlreadyOpen(String name, int lineNumber) {
+
+        if (name == null){
+            return false;
+        }
+
         var openedFile = Arrays.stream(FileEditorManager.getInstance(project).getOpenFiles())
                 .filter(virtualFile -> name.equals(virtualFile.getName())).findAny().orElse(null);
 

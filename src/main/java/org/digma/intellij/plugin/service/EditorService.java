@@ -61,14 +61,7 @@ public class EditorService implements Disposable {
 
         try {
 
-            //try to build a vcs file name and showIfAlreadyOpen without querying the vcs, for fast re-opening of
-            // files that are already opened.
-            //if buildVcsFileName did not succeed that doesn't mean it's not possible,
-            // vcsService.getRevisionVirtualFile may succeed because it's really a query to vcs and may find a suitable revision.
-            var vcsFileName = buildVcsFileName(workspaceUrl,lastInstanceCommitId);
-            if (showIfAlreadyOpen(vcsFileName, lineNumber)){
-                return;
-            }
+
 
             //if file not under vcs then the workspaceFile will open
             if (vcsService.isFileUnderVcs(workspaceUrl)) {
@@ -76,6 +69,16 @@ public class EditorService implements Disposable {
                 if (vcsService.isRevisionExist(workspaceUrl, lastInstanceCommitId)) {
                     //if no changes then the workspaceFile will open
                     if(vcsService.isLocalContentChanged(workspaceUrl, lastInstanceCommitId, lineNumber)) {
+                        //for fast re-opening of files that are already opened, the user already answered yes for this file.
+                        //if there are changes with working dir then try to check if the file was already opened.
+                        //try to build a vcs file name and showIfAlreadyOpen without loading the revision again, it may be faster.
+                        //if buildVcsFileName did not succeed that doesn't mean it's not possible,
+                        // vcsService.getRevisionVirtualFile may succeed because it's a query to vcs and may find a suitable revision.
+                        var vcsFileName = buildVcsFileName(workspaceUrl,lastInstanceCommitId);
+                        if (showIfAlreadyOpen(vcsFileName, lineNumber)){
+                            return;
+                        }
+
                         VirtualFile vcsFile = vcsService.getRevisionVirtualFile(workspaceUrl, lastInstanceCommitId);
                         if (vcsFile != null) {
                             maybeOpenVcsFile(workspaceFile, (ContentRevisionVirtualFile) vcsFile, workspaceUrl, lineNumber);

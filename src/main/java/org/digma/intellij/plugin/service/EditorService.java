@@ -50,7 +50,26 @@ public class EditorService implements Disposable {
             return;
         }
 
+        if (lastInstanceCommitId == null){
+            openVirtualFile(workspaceFile,lineNumber);
+        }else{
+            tryOpenFromVcs(workspaceFile,workspaceUrl,lastInstanceCommitId,lineNumber);
+        }
+    }
+
+    private void tryOpenFromVcs(VirtualFile workspaceFile, @NotNull URL workspaceUrl, @NotNull String lastInstanceCommitId, int lineNumber) {
+
         try {
+
+            //try to build a vcs file name and showIfAlreadyOpen without querying the vcs, for fast re-opening of
+            // files that are already opened.
+            //if buildVcsFileName did not succeed that doesn't mean it's not possible,
+            // vcsService.getRevisionVirtualFile may succeed because it's really a query to vcs and may find a suitable revision.
+            var vcsFileName = buildVcsFileName(workspaceUrl,lastInstanceCommitId);
+            if (showIfAlreadyOpen(vcsFileName, lineNumber)){
+                return;
+            }
+
             //if file not under vcs then the workspaceFile will open
             if (vcsService.isFileUnderVcs(workspaceUrl)) {
                 //if revision doesn't exist show a warning and then the workspaceFile will open
@@ -82,13 +101,35 @@ public class EditorService implements Disposable {
     }
 
 
+
+
+
+    private String buildVcsFileName(URL workspaceUrl, String lastInstanceCommitId) {
+        var hash =  vcsService.getShortRevisionString(workspaceUrl,lastInstanceCommitId);
+        return hash == null ? null : buildVcsFileName(hash,workspaceUrl);
+    }
+
+
+
+
+    private String buildVcsFileName(String hash,URL workspaceUrl) {
+        if (hash != null) {
+            var filePath = workspaceUrl.getPath();
+            var indexAfterSlash = Math.max(filePath.lastIndexOf('/') + 1, 0);
+            var fileName = filePath.substring(indexAfterSlash);
+            return VCS_PREFIX + "-" + hash + "-" + fileName;
+        }else{
+            return null;
+        }
+    }
+
+
+
+
     private void maybeOpenVcsFile(@NotNull VirtualFile workspaceFile, @NotNull ContentRevisionVirtualFile vcsFile, @NotNull URL workspaceUrl, int lineNumber) {
 
         var hash =  vcsService.getShortRevisionString(vcsFile.getContentRevision().getRevisionNumber());
-        var filePath = workspaceUrl.getPath();
-        var indexOfSlash = Math.max(filePath.lastIndexOf('/') + 1, 0);
-        var fileName = filePath.substring(indexOfSlash);
-        String name = VCS_PREFIX + "-" + hash + "-" + fileName;
+        String name = buildVcsFileName(hash,workspaceUrl);
 
         //if the vcs file is already opened just show it and don't ask again
         if (showIfAlreadyOpen(name, lineNumber)) {
@@ -120,6 +161,11 @@ public class EditorService implements Disposable {
 
 
     private boolean showIfAlreadyOpen(String name, int lineNumber) {
+
+        if (name == null){
+            return false;
+        }
+
         var openedFile = Arrays.stream(FileEditorManager.getInstance(project).getOpenFiles())
                 .filter(virtualFile -> name.equals(virtualFile.getName())).findAny().orElse(null);
 

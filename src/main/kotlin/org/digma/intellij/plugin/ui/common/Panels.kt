@@ -13,6 +13,8 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.ui.model.NOT_SUPPORTED_OBJECT_MSG
 import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
+import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
+import java.awt.BorderLayout
 import javax.swing.JLabel
 
 
@@ -45,28 +47,25 @@ private fun getNoInfoMessage(model: PanelModel):String{
 }
 
 
-fun createTopPanel(project: Project, model: PanelModel): DialogPanel {
-    val analyticsService: AnalyticsService = AnalyticsService.getInstance(project)
-    val environmentsSupplierSupplier = { analyticsService.environment }
+fun createTopPanel(project: Project, model: PanelModel): DigmaResettablePanel {
 
-    return panel {
-        row {
-            val scopeLine = scopeLine({ model.getScope() }, { model.getScopeTooltip() }, ScopeLineIconProducer(model))
-            scopeLine.isOpaque = false
-            cell(scopeLine)
-                .horizontalAlign(HorizontalAlign.FILL)
-                .onReset {
-                    scopeLine.reset()
-                }
+    val scopeLine = scopeLine({ model.getScope() }, { model.getScopeTooltip() }, ScopeLineIconProducer(model))
+    scopeLine.isOpaque = false
+
+    val envsPanel = environmentsPanel(AnalyticsService.getInstance(project).environment)
+    envsPanel.isOpaque = false
+
+    val result = object: DigmaResettablePanel(){
+
+        override fun reset() {
+            scopeLine.reset()
         }
-        row {
-            val pnl = environmentsPanel(environmentsSupplierSupplier)
-            pnl.isOpaque = false
-            cell(pnl)
-                .horizontalAlign(HorizontalAlign.FILL)
-                .onReset {
-                    pnl.reset()
-                }
-        }
-    }.andTransparent().withBorder(JBUI.Borders.empty(0,12,0,8))
+    }
+
+    result.isOpaque = false
+    result.border = JBUI.Borders.empty(0,12,0,8)
+    result.layout = BorderLayout()
+    result.add(scopeLine,BorderLayout.NORTH)
+    result.add(envsPanel,BorderLayout.CENTER)
+    return result
 }

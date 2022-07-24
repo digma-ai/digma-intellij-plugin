@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.icons;
 
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.util.IconLoader;
-import com.intellij.ui.JBColor;
 import org.digma.intellij.plugin.ui.common.Laf;
 
 import javax.swing.*;
@@ -44,6 +43,8 @@ public final class Icons {
 
     public static final Icon DROPPED = loadAndScaleIconByWidth("/icons/dropped.png", 8);
     public static final Icon ROSE = loadAndScaleIconByWidth("/icons/rose.png", 8);
+    public static final Icon ENVIRONMENT_HAS_USAGE = loadAndScaleIconByWidth("/icons/used.png", 8);
+    public static final Icon ENVIRONMENT_HAS_NO_USAGE = loadAndScaleIconByWidth("/icons/unused.png", 8);
 
 
     public static class Insight {

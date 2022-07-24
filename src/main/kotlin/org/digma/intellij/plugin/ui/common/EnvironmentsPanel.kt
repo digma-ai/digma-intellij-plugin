@@ -10,6 +10,8 @@ import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
+import org.ocpsoft.prettytime.PrettyTime
+import java.util.Date
 import java.util.function.Supplier
 import javax.swing.Icon
 
@@ -54,17 +56,19 @@ private class SingleEnvPanelMutableProperty(
 
         for (currEnv in relevantEnvs) {
             val isSelectedEnv = currEnv.contentEquals(envsSupplier.getCurrent())
+            val toolTip = createToolTip(usageStatusResult, currEnv)
             val linkText = buildLinkText(currEnv, isSelectedEnv)
             val link = ActionLink(asHtml(linkText)) {
                 envsSupplier.setCurrent(currEnv)
             }
-            link.toolTipText = currEnv
+            link.toolTipText = toolTip
 
             val icon: Icon =
                 if (hasUsageFunction(currEnv)) Icons.ENVIRONMENT_HAS_USAGE else Icons.ENVIRONMENT_HAS_NO_USAGE
             val iconComponent = JBLabel(icon)
 
             val singlePanel = SingleEnvPanel()
+            singlePanel.toolTipText = toolTip
 
             singlePanel.add(iconComponent)
             singlePanel.add(link)
@@ -73,6 +77,26 @@ private class SingleEnvPanelMutableProperty(
         }
 
         return list
+    }
+
+    fun createToolTip(usageStatusResult: UsageStatusResult, envName: String): String {
+        val envUsageStatus = usageStatusResult.environmentStatuses.firstOrNull { it.name.equals(envName) }
+        val sb = StringBuilder()
+        sb.append(envName)
+        if (envUsageStatus != null) {
+            sb.append("<br>")
+            sb.append("Last data received: ")
+            sb.append(prettyTimeOf(envUsageStatus.environmentLastRecordedTime))
+            sb.append("<br>")
+            sb.append("First data received: ")
+            sb.append(prettyTimeOf(envUsageStatus.environmentFirstRecordedTime))
+        }
+        return asHtml(sb.toString())
+    }
+
+    private fun prettyTimeOf(date: Date): String {
+        val ptNow = PrettyTime()
+        return ptNow.format(date)
     }
 
     fun buildEnvironmentWithUsages(usageStatusResult: UsageStatusResult): Set<String> {

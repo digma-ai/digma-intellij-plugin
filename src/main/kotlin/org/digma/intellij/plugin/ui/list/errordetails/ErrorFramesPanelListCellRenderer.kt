@@ -20,6 +20,7 @@ import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.*
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import java.awt.event.MouseListener
 import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JPanel
@@ -143,7 +144,6 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
         return itemPanel(result)
     }
 
-
     private fun frameStackTitlePanel(modelObject: FrameStackTitle): JPanel {
         val panel = JPanel()
         panel.layout = GridLayout(1,1)
@@ -156,67 +156,10 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
         return panel
     }
 
-
-
     private fun itemPanel(panel: JPanel): JPanel {
-        panel.isOpaque = false
+        panel.border = Borders.customLine(Laf.getLabelGrayedColor(),0,2,0,0)
+        panel.background = Laf.Colors.TRANSPARENT
 
-        val wrapper = object : JPanel() {
-            override fun paintComponent(g: Graphics) {
-                g.color = background
-                g.fillRect(0, 0, width, height)
-                super.paintComponent(g)
-            }
-        }
-        wrapper.layout = GridLayout(1,1)
-        wrapper.add(panel)
-        wrapper.border = Borders.customLine(Laf.getLabelGrayedColor(),0,2,0,0)
-        wrapper.isOpaque = false
-        wrapper.background = Laf.Colors.TRANSPARENT
-
-        val mouseListener = object: MouseAdapter(){
-            override fun mouseEntered(e: MouseEvent?) {
-                wrapper.background = Laf.Colors.LIST_ITEM_BACKGROUND
-            }
-            override fun mouseExited(e: MouseEvent?) {
-                wrapper.background = Laf.Colors.TRANSPARENT
-            }
-        }
-
-        wrapper.addMouseListener(mouseListener)
-        panel.addMouseListener(mouseListener)
-        panel.components.forEach {
-            it.addMouseListener(mouseListener)
-        }
-
-        return wrapper
+        return Hover(panel, Laf.Colors.LIST_ITEM_BACKGROUND)
     }
-
-    class Hover constructor(val component: JComponent, val hoverColor: Color): JPanel() {
-        init {
-            component.isOpaque = false
-            background = component.background
-            val mouseListener =object: MouseAdapter(){
-                override fun mouseEntered(e: MouseEvent?) {
-                    background = hoverColor
-                }
-                override fun mouseExited(e: MouseEvent?) {
-                    background = component.background
-                }
-            }
-
-            this.addMouseListener(mouseListener)
-            component.addMouseListener(mouseListener)
-            component.components.forEach {
-                it.addMouseListener(mouseListener)
-            }
-        }
-
-        override fun paintComponent(g: Graphics) {
-            g.color = background
-            g.fillRect(0, 0, width, height)
-            super.paintComponent(g)
-        }
-    }
-
 }

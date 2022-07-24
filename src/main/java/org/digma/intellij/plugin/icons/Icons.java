@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.icons;
 
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.util.IconLoader;
-import com.intellij.ui.JBColor;
 import org.digma.intellij.plugin.ui.common.Laf;
 
 import javax.swing.*;
@@ -17,10 +16,10 @@ public final class Icons {
     }
 
     public static final Icon METHOD = IconLoader.getIcon("/icons/method.svg", Icons.class.getClassLoader());
-    public static final Icon METHOD_INSIGHTS_WHITE = colorizeVsCodeIcon("/icons/method.svg", Laf.INSTANCE.getInsightsIconsWhite());
+    public static final Icon METHOD_WHITE = colorizeVsCodeIcon("/icons/method.svg", Laf.INSTANCE.getInsightsIconsWhite());
 
     public static final Icon FILE = IconLoader.getIcon("/icons/file.svg", Icons.class.getClassLoader());
-    public static final Icon FILE_INSIGHTS_WHITE = colorizeVsCodeIcon("/icons/file.svg", Laf.INSTANCE.getInsightsIconsWhite());
+    public static final Icon FILE_WHITE = colorizeVsCodeIcon("/icons/file.svg", Laf.INSTANCE.getInsightsIconsWhite());
     public static final Icon EMPTY = AllIcons.General.InspectionsErrorEmpty;
 
     public static final Icon TELESCOPE = IconLoader.getIcon("/icons/telescope.svg", Icons.class.getClassLoader());
@@ -35,9 +34,9 @@ public final class Icons {
 
     public static final Icon QUESTION_MARK = AllIcons.General.QuestionDialog;
     public static final Icon BACK_WHITE = colorizeVsCodeIcon("/icons/arrow-left.svg", Laf.INSTANCE.getNavigationButtonColor());
-    public static final Icon BACK_BLACK = IconLoader.getIcon("/icons/arrow-left.svg", Icons.class.getClassLoader());
+    public static final Icon BACK = IconLoader.getIcon("/icons/arrow-left.svg", Icons.class.getClassLoader());
     public static final Icon FORWARD_WHITE = colorizeVsCodeIcon("/icons/arrow-right.svg", Laf.INSTANCE.getNavigationButtonColor());
-    public static final Icon FORWARD_BLACK = IconLoader.getIcon("/icons/arrow-right.svg", Icons.class.getClassLoader());
+    public static final Icon FORWARD = IconLoader.getIcon("/icons/arrow-right.svg", Icons.class.getClassLoader());
 
     public static final Icon EVENT = IconLoader.getIcon("/icons/event.svg", Icons.class.getClassLoader());
     public static final Icon EVENT_RED = colorizeVsCodeIcon("/icons/event.svg", Laf.Colors.getERROR_RED());
@@ -51,8 +50,8 @@ public final class Icons {
         private Insight() {
         }
 
-        public static final Icon INSIGHT_METHOD_SCOPE = METHOD_INSIGHTS_WHITE;
-        public static final Icon INSIGHT_DOCUMENT_SCOPE = FILE_INSIGHTS_WHITE;
+        public static final Icon INSIGHT_METHOD_SCOPE = METHOD_WHITE;
+        public static final Icon INSIGHT_DOCUMENT_SCOPE = FILE_WHITE;
         public static final Icon INSIGHT_EMPTY_SCOPE = EMPTY;
         public static final Icon BOTTLENECK = loadAndScaleInsightIcon("/icons/bottleneck.png");
         public static final Icon LOW_USAGE = loadAndScaleInsightIcon("/icons/gauge_low.png");

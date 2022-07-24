@@ -1,12 +1,14 @@
 package org.digma.intellij.plugin.ui.common
 
+import com.intellij.icons.AllIcons
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
-import com.intellij.util.ui.UIUtil.isUnderDarcula
 import java.awt.Color
 import java.awt.Font
+import javax.swing.Icon
 import javax.swing.JLabel
 import javax.swing.UIManager
+import org.digma.intellij.plugin.icons.Icons as IconConsts
 
 /**
  * It's not really a swing LAF,
@@ -67,6 +69,17 @@ object Laf  {
             @JvmStatic val ERROR_GREEN: Color = Color(0x7dd87d)    // same as in VS Code plugin
             @JvmStatic val SIMPLE_ICON_COLOR: JBColor = JBColor(0x222222, 0xDDDDDD)
             @JvmStatic val GRAY: Color = Color(0x8A8A8A)
+        }
+    }
+
+    class Icons{
+        companion object{
+            @JvmStatic val EMPTY: Icon = AllIcons.General.InspectionsErrorEmpty
+            @JvmStatic val METHOD: JBIcon = JBIcon(IconConsts.METHOD, IconConsts.METHOD_WHITE)
+            @JvmStatic val FILE: JBIcon = JBIcon(IconConsts.FILE, IconConsts.FILE_WHITE)
+            @JvmStatic val BACK: JBIcon = JBIcon(IconConsts.BACK, IconConsts.BACK_WHITE)
+            @JvmStatic val FORWARD: JBIcon = JBIcon(IconConsts.FORWARD, IconConsts.FORWARD_WHITE)
+            @JvmStatic val EVENT_RED: JBIcon = JBIcon(IconConsts.EVENT_RED, IconConsts.EVENT_RED)
         }
     }
 

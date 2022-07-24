@@ -41,7 +41,7 @@ fun errorsPanel(project: Project): DigmaTabPanel {
     val errorsModel = ErrorsViewService.getInstance(project).model
     val insightsModel = InsightsViewService.getInstance(project).model
 
-    val topPanelWrapper = createTopPanel(project, errorsModel)
+    val topPanelWrapper = createTopPanel(project, errorsModel, errorsModel::usageStatusResult)
 
     val errorsList = ScrollablePanelList(ErrorsPanelList(project, errorsModel.listViewItems))
 

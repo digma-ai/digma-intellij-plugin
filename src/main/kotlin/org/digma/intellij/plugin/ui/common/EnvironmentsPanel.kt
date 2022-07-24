@@ -1,30 +1,39 @@
 package org.digma.intellij.plugin.ui.common
 
+import com.google.common.annotations.VisibleForTesting
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.MutableProperty
 import com.intellij.ui.dsl.builder.panel
 import org.digma.intellij.plugin.common.CommonUtils
+import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
 import java.util.function.Supplier
 
-fun environmentsPanel(envsSupplierSupplier: Supplier<EnvironmentsSupplier>): DialogPanel {
+fun environmentsPanel(
+    envsSupplierSupplier: Supplier<EnvironmentsSupplier>,
+    usageStatusResultSupplier: Supplier<UsageStatusResult>,
+): DialogPanel {
 
     return panel {
         row {
             cell(
                 JPanelHolder()
             ).bind(
-                JPanelHolder::getEnvs, JPanelHolder::setEnvs, SingleEnvPanelMutableProperty(envsSupplierSupplier)
+                JPanelHolder::getEnvs,
+                JPanelHolder::setEnvs,
+                SingleEnvPanelMutableProperty(envsSupplierSupplier, usageStatusResultSupplier)
             )
         }
     }.andTransparent()
 
 }
 
-private class SingleEnvPanelMutableProperty(val envsSupplierSupplier: Supplier<EnvironmentsSupplier>) :
-    MutableProperty<List<SingleEnvPanel>> {
+private class SingleEnvPanelMutableProperty(
+    val envsSupplierSupplier: Supplier<EnvironmentsSupplier>,
+    val usageStatusResultSupplier: Supplier<UsageStatusResult>,
+) : MutableProperty<List<SingleEnvPanel>> {
 
     override fun set(value: List<SingleEnvPanel>) {
         // nothing
@@ -32,8 +41,11 @@ private class SingleEnvPanelMutableProperty(val envsSupplierSupplier: Supplier<E
 
     override fun get(): List<SingleEnvPanel> {
         val envsSupplier = envsSupplierSupplier.get()
+        val usageStatusResult = usageStatusResultSupplier.get()
+        val envsHasUsage: Set<String> = buildEnvironmentWithUsages(usageStatusResult)
+        val hasUsageFunction = fun(env: String): Boolean { return envsHasUsage.contains(env) }
 
-        val relevantEnvs = buildRelevantSortedEnvironments(envsSupplier)
+        val relevantEnvs = buildRelevantSortedEnvironments(envsSupplier, hasUsageFunction)
 
         val list = ArrayList<SingleEnvPanel>()
 
@@ -54,8 +66,19 @@ private class SingleEnvPanelMutableProperty(val envsSupplierSupplier: Supplier<E
         return list
     }
 
-    fun buildRelevantSortedEnvironments(envsSupplier: EnvironmentsSupplier): List<String> {
+    @VisibleForTesting
+    public fun buildEnvironmentWithUsages(usageStatusResult: UsageStatusResult): Set<String> {
+        return usageStatusResult.codeObjectStatuses
+            .map { it.environment }
+            .toSet()
+    }
+
+    fun buildRelevantSortedEnvironments(
+        envsSupplier: EnvironmentsSupplier,
+        hasUsageFun: (String) -> Boolean
+    ): List<String> {
         val builtEnvs = ArrayList<String>()
+        val envsWithoutUsage = ArrayList<String>()
 
         var mineLocalEnv = ""
 
@@ -63,17 +86,25 @@ private class SingleEnvPanelMutableProperty(val envsSupplierSupplier: Supplier<E
             if (isEnvironmentLocal(currEnv)) {
                 if (isLocalEnvironmentMine(currEnv)) {
                     mineLocalEnv = currEnv
+                } else {
+                    // skip other local (not mine)
                 }
                 continue
             } else {
-                builtEnvs.add(currEnv)
+                if (hasUsageFun(currEnv)) {
+                    builtEnvs.add(currEnv)
+                } else {
+                    envsWithoutUsage.add(currEnv)
+                }
             }
         }
 
         builtEnvs.sortWith(String.CASE_INSENSITIVE_ORDER)
+        envsWithoutUsage.sortWith(String.CASE_INSENSITIVE_ORDER)
         if (mineLocalEnv.isNotBlank()) {
             builtEnvs.add(0, mineLocalEnv)
         }
+        builtEnvs.addAll(envsWithoutUsage)
         return builtEnvs
     }
 

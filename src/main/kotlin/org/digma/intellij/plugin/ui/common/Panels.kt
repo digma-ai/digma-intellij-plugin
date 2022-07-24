@@ -10,9 +10,11 @@ import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
 import org.digma.intellij.plugin.ui.model.NOT_SUPPORTED_OBJECT_MSG
 import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
+import java.util.function.Supplier
 import javax.swing.JLabel
 
 
@@ -45,7 +47,11 @@ private fun getNoInfoMessage(model: PanelModel):String{
 }
 
 
-fun createTopPanel(project: Project, model: PanelModel): DialogPanel {
+fun createTopPanel(
+    project: Project,
+    model: PanelModel,
+    usageStatusResultSupplier: Supplier<UsageStatusResult>
+): DialogPanel {
     val analyticsService: AnalyticsService = AnalyticsService.getInstance(project)
     val environmentsSupplierSupplier = { analyticsService.environment }
 
@@ -60,7 +66,7 @@ fun createTopPanel(project: Project, model: PanelModel): DialogPanel {
                 }
         }
         row {
-            val pnl = environmentsPanel(environmentsSupplierSupplier)
+            val pnl = environmentsPanel(environmentsSupplierSupplier, usageStatusResultSupplier)
             pnl.isOpaque = false
             cell(pnl)
                 .horizontalAlign(HorizontalAlign.FILL)

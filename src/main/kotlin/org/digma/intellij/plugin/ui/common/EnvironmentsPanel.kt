@@ -82,7 +82,6 @@ private class SingleEnvPanelMutableProperty(
         val envUsageStatus = usageStatusResult.environmentStatuses.firstOrNull { it.name.equals(envName) }
         val sb = StringBuilder()
         sb.append(envName)
-        sb.append(envName)
         if (envUsageStatus != null) {
             sb.append("<br>")
             sb.append("Last data received: ")

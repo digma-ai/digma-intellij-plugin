@@ -20,8 +20,6 @@ import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.BorderLayout
 import java.awt.GridBagLayout
 import java.awt.GridLayout
-import java.awt.event.MouseAdapter
-import java.awt.event.MouseEvent
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.SwingConstants
@@ -141,10 +139,8 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
         result.isOpaque = false
         result.add(iconPanel,BorderLayout.WEST)
         result.add(namePanel,BorderLayout.CENTER)
-        result.isOpaque = false
         return itemPanel(result)
     }
-
 
     private fun frameStackTitlePanel(modelObject: FrameStackTitle): JPanel {
         val panel = JPanel()
@@ -158,31 +154,10 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
         return panel
     }
 
-
-
     private fun itemPanel(panel: JPanel): JPanel {
         panel.border = Borders.customLine(Laf.getLabelGrayedColor(),0,2,0,0)
-        panel.isOpaque = false
+        panel.background = Laf.Colors.TRANSPARENT
 
-        val mouseListener = object: MouseAdapter(){
-            override fun mouseEntered(e: MouseEvent?) {
-                panel.isOpaque = true
-                panel.repaint()
-            }
-            override fun mouseExited(e: MouseEvent?) {
-                panel.isOpaque = false
-                panel.repaint()
-            }
-        }
-
-        panel.addMouseListener(mouseListener)
-        panel.components.forEach {
-            it.addMouseListener(mouseListener)
-        }
-
-        return panel
+        return Hover(panel, Laf.Colors.LIST_ITEM_BACKGROUND)
     }
-
-
-
 }

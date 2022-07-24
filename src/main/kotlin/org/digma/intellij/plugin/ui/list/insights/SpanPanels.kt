@@ -81,6 +81,7 @@ fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight, panelsLayoutHe
 
     val durationsListPanel = JBPanel<JBPanel<*>>()
     durationsListPanel.layout = GridLayout(spanDurationsInsight.percentiles.size, 1, 0, 2)
+    durationsListPanel.isOpaque = false
 
     val sortedPercentiles = spanDurationsInsight.percentiles.sortedBy(SpanDurationsPercentile::percentile)
 
@@ -139,21 +140,10 @@ fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight, panelsLayoutHe
             evalLabel.toolTipText = "This change is still being validated and is based on initial data."
             evalLabel.horizontalAlignment = SwingConstants.RIGHT
             //the evalLabel wants to be aligned with the insights icons panels, so it takes its width from there
-            val evalPanel = object : JPanel() {
-                override fun getPreferredSize(): Dimension {
-                    val ps = super.getPreferredSize()
-                    if (ps == null) {
-                        return ps
-                    }
-                    val h = ps.height
-                    val w = ps.width
-                    addCurrentLargestWidthIconPanel(panelsLayoutHelper,w)
-                    return Dimension(getCurrentLargestWidthIconPanel(panelsLayoutHelper,w), h)
-                }
-            }
+            val evalPanel = InsightAlignedPanel(panelsLayoutHelper)
             evalPanel.layout = BorderLayout()
             evalPanel.add(evalLabel, BorderLayout.CENTER)
-            evalPanel.border = empty(0, 0, 0, Laf.scaleBorders(getInsightIconPanelRightBorderSize()))
+            evalPanel.isOpaque = false
             addCurrentLargestWidthIconPanel(panelsLayoutHelper,evalPanel.preferredSize.width)
             durationsPanel.add(evalPanel, BorderLayout.EAST)
         }

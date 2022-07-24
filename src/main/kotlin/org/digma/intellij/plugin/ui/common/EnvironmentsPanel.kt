@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.common.CommonUtils.prettyTimeOf
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
+import java.awt.FlowLayout
 import java.util.function.Supplier
 import javax.swing.Icon
 
@@ -168,6 +169,7 @@ class JPanelHolder : JBPanel<JPanelHolder>() {
 
     init {
         andTransparent()
+        layout = FlowLayout(FlowLayout.LEFT, 1, 1)
     }
 
     fun setEnvs(prmEnvList: List<SingleEnvPanel>) {

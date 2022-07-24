@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.ui.list.errordetails
 
 import com.intellij.openapi.project.Project
-import com.intellij.ui.JBColor
 import com.intellij.ui.dsl.builder.BottomGap
 import com.intellij.ui.dsl.builder.RightGap
 import com.intellij.ui.dsl.builder.TopGap
@@ -18,11 +17,10 @@ import org.digma.intellij.plugin.ui.model.errors.FrameListViewItem
 import org.digma.intellij.plugin.ui.model.errors.FrameStackTitle
 import org.digma.intellij.plugin.ui.model.errors.SpanTitle
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
-import java.awt.BorderLayout
-import java.awt.GridBagLayout
-import java.awt.GridLayout
+import java.awt.*
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.SwingConstants
@@ -142,7 +140,6 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
         result.isOpaque = false
         result.add(iconPanel,BorderLayout.WEST)
         result.add(namePanel,BorderLayout.CENTER)
-        result.isOpaque = false
         return itemPanel(result)
     }
 
@@ -162,36 +159,64 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
 
 
     private fun itemPanel(panel: JPanel): JPanel {
-        panel.border = Borders.customLine(Laf.getLabelGrayedColor(),0,2,0,0)
         panel.isOpaque = false
-        if (com.intellij.util.ui.UIUtil.isUnderDarcula()){
-            //because under dracula JBColor.namedColor("Plugins.background") will be empty so JBColor.PanelBackground will
-            // be used as the list background Laf.Colors.PLUGIN_BACKGROUND, which is the default panel background, and so the
-            // rollover behaviour here is lost.
-            // changing the panel background under dracula bring back the rollover behaviour.
-            // another option is to select another list background under dracula instead of the default JBColor.PanelBackground
-            panel.background = JBColor.LIGHT_GRAY //doesn't look good with Laf.Colors.LIST_ITEM_BACKGROUND or transparent colors
+
+        val wrapper = object : JPanel() {
+            override fun paintComponent(g: Graphics) {
+                g.color = background
+                g.fillRect(0, 0, width, height)
+                super.paintComponent(g)
+            }
         }
+        wrapper.layout = GridLayout(1,1)
+        wrapper.add(panel)
+        wrapper.border = Borders.customLine(Laf.getLabelGrayedColor(),0,2,0,0)
+        wrapper.isOpaque = false
+        wrapper.background = Laf.Colors.TRANSPARENT
 
         val mouseListener = object: MouseAdapter(){
             override fun mouseEntered(e: MouseEvent?) {
-                panel.isOpaque = true
-                panel.repaint()
+                wrapper.background = Laf.Colors.LIST_ITEM_BACKGROUND
             }
             override fun mouseExited(e: MouseEvent?) {
-                panel.isOpaque = false
-                panel.repaint()
+                wrapper.background = Laf.Colors.TRANSPARENT
             }
         }
 
+        wrapper.addMouseListener(mouseListener)
         panel.addMouseListener(mouseListener)
         panel.components.forEach {
             it.addMouseListener(mouseListener)
         }
 
-        return panel
+        return wrapper
     }
 
+    class Hover constructor(val component: JComponent, val hoverColor: Color): JPanel() {
+        init {
+            component.isOpaque = false
+            background = component.background
+            val mouseListener =object: MouseAdapter(){
+                override fun mouseEntered(e: MouseEvent?) {
+                    background = hoverColor
+                }
+                override fun mouseExited(e: MouseEvent?) {
+                    background = component.background
+                }
+            }
 
+            this.addMouseListener(mouseListener)
+            component.addMouseListener(mouseListener)
+            component.components.forEach {
+                it.addMouseListener(mouseListener)
+            }
+        }
+
+        override fun paintComponent(g: Graphics) {
+            g.color = background
+            g.fillRect(0, 0, width, height)
+            super.paintComponent(g)
+        }
+    }
 
 }

@@ -11,6 +11,8 @@ import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
+import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
+import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.settings.SettingsState;
@@ -123,12 +125,16 @@ public class AnalyticsService implements Disposable {
         return analyticsProviderProxy.getInsights(new InsightsRequest(getCurrentEnvironment(), objectIds));
     }
 
-    public List<CodeObjectError> getErrorsOfCodeObject( String codeObjectId) throws AnalyticsServiceException {
+    public List<CodeObjectError> getErrorsOfCodeObject(String codeObjectId) throws AnalyticsServiceException {
         return analyticsProviderProxy.getErrorsOfCodeObject(getCurrentEnvironment(), codeObjectId);
     }
 
     public CodeObjectErrorDetails getErrorDetails(String errorUid) throws AnalyticsServiceException {
         return analyticsProviderProxy.getCodeObjectErrorDetails(errorUid);
+    }
+
+    public UsageStatusResult getUsageStatus(List<String> objectIds) throws AnalyticsServiceException {
+        return analyticsProviderProxy.getUsageStatus(new UsageStatusRequest(objectIds));
     }
 
     @Override

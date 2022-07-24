@@ -6,6 +6,7 @@ import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.insights.InsightsListContainer
 import org.digma.intellij.plugin.insights.InsightsProvider
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.SpanInfo
 import org.digma.intellij.plugin.ui.model.DocumentScope
@@ -57,6 +58,7 @@ class InsightsViewService(project: Project): AbstractViewService(project) {
 
         model.listViewItems = insightsListContainer.listViewItems
         model.previewListViewItems = ArrayList()
+        model.usageStatusResult = insightsListContainer.usageStatus
         model.scope = MethodScope(methodInfo)
         model.insightsCount = insightsListContainer.count
         model.card = InsightsTabCard.INSIGHTS
@@ -71,6 +73,7 @@ class InsightsViewService(project: Project): AbstractViewService(project) {
 
         model.listViewItems = ArrayList()
         model.previewListViewItems = ArrayList()
+        model.usageStatusResult = EmptyUsageStatusResult
         model.scope = MethodScope(dummy)
         model.insightsCount = 0
         model.card = InsightsTabCard.INSIGHTS
@@ -86,6 +89,7 @@ class InsightsViewService(project: Project): AbstractViewService(project) {
 
         model.listViewItems = ArrayList()
         model.previewListViewItems = ArrayList()
+        model.usageStatusResult = EmptyUsageStatusResult
         model.scope = EmptyScope("")
         model.insightsCount = 0
         model.card = InsightsTabCard.INSIGHTS
@@ -98,8 +102,9 @@ class InsightsViewService(project: Project): AbstractViewService(project) {
         Log.log(logger::debug, "empty called")
 
         model.listViewItems = ArrayList()
-        model.previewListViewItems = ArrayList()
-        model.scope = EmptyScope(getNonSupportedFileScopeMessage(fileUri))
+       model.previewListViewItems = ArrayList()
+       model.usageStatusResult = EmptyUsageStatusResult
+       model.scope = EmptyScope(getNonSupportedFileScopeMessage(fileUri))
         model.insightsCount = 0
         model.card = InsightsTabCard.INSIGHTS
 
@@ -113,10 +118,12 @@ class InsightsViewService(project: Project): AbstractViewService(project) {
 
         if (documentInfoContainer == null) {
             model.previewListViewItems = ArrayList()
+            model.usageStatusResult = EmptyUsageStatusResult
             model.scope = EmptyScope(fileUri.substringAfterLast('/'))
             model.insightsCount = 0
         } else {
             model.previewListViewItems = getDocumentPreviewItems(documentInfoContainer)
+            model.usageStatusResult = documentInfoContainer.usageStatus
             model.scope = DocumentScope(documentInfoContainer.documentInfo)
             model.insightsCount = computeInsightsPreviewCount(documentInfoContainer)
         }

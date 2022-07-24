@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.EndpointCodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.MethodCodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.SpanCodeObjectSummary;
+import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -22,6 +23,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult;
+
 public class DocumentInfoContainer {
 
     private final Logger LOGGER = Logger.getInstance(DocumentInfoContainer.class);
@@ -32,6 +35,7 @@ public class DocumentInfoContainer {
     private Map<String, MethodCodeObjectSummary> methodSummaries;
     private Map<String, SpanCodeObjectSummary> spanSummaries;
     private Map<String, EndpointCodeObjectSummary> endpointSummaries;
+    private UsageStatusResult usageStatus = EmptyUsageStatusResult;
 
     public DocumentInfoContainer(@NotNull PsiFile psiFile, @NotNull AnalyticsService analyticsService) {
         this.psiFile = psiFile;
@@ -91,6 +95,14 @@ public class DocumentInfoContainer {
             spanSummaries = null;
             endpointSummaries = null;
         }
+
+        try {
+            Log.log(LOGGER::debug, "Requesting usage status for {}: with ids {}", psiFile.getVirtualFile(), objectIds);
+            usageStatus = analyticsService.getUsageStatus(objectIds);
+            Log.log(LOGGER::debug, "Got usage status for {}: {}", psiFile.getVirtualFile(), usageStatus);
+        } catch (AnalyticsServiceException e) {
+            usageStatus = EmptyUsageStatusResult;
+        }
     }
 
 
@@ -133,18 +145,18 @@ public class DocumentInfoContainer {
     }
 
 
-
-
-    public List<CodeObjectSummary> getAllSummaries(){
+    public List<CodeObjectSummary> getAllSummaries() {
         //this method should not try to reload summaries because it happens too often
         List<CodeObjectSummary> summaries = new ArrayList<>();
-        summaries.addAll(methodSummaries == null? new ArrayList<>(): methodSummaries.values());
-        summaries.addAll(spanSummaries == null? new ArrayList<>(): spanSummaries.values());
-        summaries.addAll(endpointSummaries == null? new ArrayList<>(): endpointSummaries.values());
+        summaries.addAll(methodSummaries == null ? new ArrayList<>() : methodSummaries.values());
+        summaries.addAll(spanSummaries == null ? new ArrayList<>() : spanSummaries.values());
+        summaries.addAll(endpointSummaries == null ? new ArrayList<>() : endpointSummaries.values());
         return summaries;
     }
 
-
+    public UsageStatusResult getUsageStatus() {
+        return usageStatus;
+    }
 
     @Nullable
     public MethodInfo getMethodInfo(String id) {

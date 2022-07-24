@@ -1,6 +1,8 @@
 package org.digma.intellij.plugin.ui.model.errors
 
+import org.digma.intellij.plugin.model.Models
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
+import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
 import org.digma.intellij.plugin.ui.model.*
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.lang.Integer.max
@@ -10,6 +12,7 @@ class ErrorsModel : PanelModel {
 
     var errorsCount: Int = 0
     var listViewItems: List<ListViewItem<CodeObjectError>> = Collections.emptyList()
+    var usageStatusResult: UsageStatusResult = Models.Empties.EmptyUsageStatusResult //TODO: fill me
     var scope: Scope = EmptyScope("")
     var errorDetails: ErrorDetailsModel = ErrorDetailsModel()
     var card: ErrorsTabCard = ErrorsTabCard.ERRORS_LIST

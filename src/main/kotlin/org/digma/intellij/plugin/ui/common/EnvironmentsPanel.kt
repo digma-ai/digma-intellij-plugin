@@ -7,11 +7,10 @@ import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.MutableProperty
 import com.intellij.ui.dsl.builder.panel
 import org.digma.intellij.plugin.common.CommonUtils
+import org.digma.intellij.plugin.common.CommonUtils.prettyTimeOf
 import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
-import org.ocpsoft.prettytime.PrettyTime
-import java.util.Date
 import java.util.function.Supplier
 import javax.swing.Icon
 
@@ -83,6 +82,7 @@ private class SingleEnvPanelMutableProperty(
         val envUsageStatus = usageStatusResult.environmentStatuses.firstOrNull { it.name.equals(envName) }
         val sb = StringBuilder()
         sb.append(envName)
+        sb.append(envName)
         if (envUsageStatus != null) {
             sb.append("<br>")
             sb.append("Last data received: ")
@@ -92,11 +92,6 @@ private class SingleEnvPanelMutableProperty(
             sb.append(prettyTimeOf(envUsageStatus.environmentFirstRecordedTime))
         }
         return asHtml(sb.toString())
-    }
-
-    private fun prettyTimeOf(date: Date): String {
-        val ptNow = PrettyTime()
-        return ptNow.format(date)
     }
 
     fun buildEnvironmentWithUsages(usageStatusResult: UsageStatusResult): Set<String> {

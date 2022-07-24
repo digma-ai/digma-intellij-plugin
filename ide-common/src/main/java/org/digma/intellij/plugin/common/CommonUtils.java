@@ -1,7 +1,10 @@
 package org.digma.intellij.plugin.common;
 
+import org.ocpsoft.prettytime.PrettyTime;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Date;
 
 public final class CommonUtils {
 
@@ -29,5 +32,10 @@ public final class CommonUtils {
             throw new RuntimeException("could not resolve hostname by environment variables");
         }
         return hostname;
+    }
+
+    public static String prettyTimeOf(Date date) {
+        PrettyTime ptNow = new PrettyTime();
+        return ptNow.format(date);
     }
 }

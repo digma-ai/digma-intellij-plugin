@@ -1,15 +1,17 @@
 package org.digma.intellij.plugin.ui.common
 
-import com.google.common.annotations.VisibleForTesting
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.components.ActionLink
+import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.MutableProperty
 import com.intellij.ui.dsl.builder.panel
 import org.digma.intellij.plugin.common.CommonUtils
+import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
 import java.util.function.Supplier
+import javax.swing.Icon
 
 fun environmentsPanel(
     envsSupplierSupplier: Supplier<EnvironmentsSupplier>,
@@ -42,8 +44,9 @@ private class SingleEnvPanelMutableProperty(
     override fun get(): List<SingleEnvPanel> {
         val envsSupplier = envsSupplierSupplier.get()
         val usageStatusResult = usageStatusResultSupplier.get()
-        val envsHasUsage: Set<String> = buildEnvironmentWithUsages(usageStatusResult)
-        val hasUsageFunction = fun(env: String): Boolean { return envsHasUsage.contains(env) }
+
+        val envsThatHaveUsageSet: Set<String> = buildEnvironmentWithUsages(usageStatusResult)
+        val hasUsageFunction = fun(env: String): Boolean { return envsThatHaveUsageSet.contains(env) }
 
         val relevantEnvs = buildRelevantSortedEnvironments(envsSupplier, hasUsageFunction)
 
@@ -57,7 +60,13 @@ private class SingleEnvPanelMutableProperty(
             }
             link.toolTipText = currEnv
 
+            val icon: Icon =
+                if (hasUsageFunction(currEnv)) Icons.ENVIRONMENT_HAS_USAGE else Icons.ENVIRONMENT_HAS_NO_USAGE
+            val iconComponent = JBLabel(icon)
+
             val singlePanel = SingleEnvPanel()
+
+            singlePanel.add(iconComponent)
             singlePanel.add(link)
 
             list.add(singlePanel)
@@ -66,8 +75,7 @@ private class SingleEnvPanelMutableProperty(
         return list
     }
 
-    @VisibleForTesting
-    public fun buildEnvironmentWithUsages(usageStatusResult: UsageStatusResult): Set<String> {
+    fun buildEnvironmentWithUsages(usageStatusResult: UsageStatusResult): Set<String> {
         return usageStatusResult.codeObjectStatuses
             .map { it.environment }
             .toSet()

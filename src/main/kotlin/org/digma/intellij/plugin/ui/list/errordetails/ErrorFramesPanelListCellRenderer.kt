@@ -58,7 +58,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
                 if (modelObject.frame.executedCode.isBlank()){
                     row {
                         if (modelObject.first) {
-                            icon(Icons.EVENT_RED).horizontalAlign(HorizontalAlign.LEFT)
+                            icon(Laf.Icons.EVENT_RED).horizontalAlign(HorizontalAlign.LEFT)
                         }
                         if(modelObject.isInWorkspace()){
                             link(frameText) {
@@ -90,7 +90,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
                     }
                     row{
                         if (modelObject.first) {
-                            icon(Icons.EVENT_RED).horizontalAlign(HorizontalAlign.LEFT)
+                            icon(Laf.Icons.EVENT_RED).horizontalAlign(HorizontalAlign.LEFT)
                         }
                         if(modelObject.isInWorkspace()){
                             link(modelObject.frame.executedCode) {

@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.ui.list.errordetails
 
 import com.intellij.openapi.project.Project
-import com.intellij.ui.JBColor
 import com.intellij.ui.dsl.builder.BottomGap
 import com.intellij.ui.dsl.builder.RightGap
 import com.intellij.ui.dsl.builder.TopGap
@@ -21,8 +20,6 @@ import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.BorderLayout
 import java.awt.GridBagLayout
 import java.awt.GridLayout
-import java.awt.event.MouseAdapter
-import java.awt.event.MouseEvent
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.SwingConstants
@@ -142,10 +139,8 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
         result.isOpaque = false
         result.add(iconPanel,BorderLayout.WEST)
         result.add(namePanel,BorderLayout.CENTER)
-        result.isOpaque = false
         return itemPanel(result)
     }
-
 
     private fun frameStackTitlePanel(modelObject: FrameStackTitle): JPanel {
         val panel = JPanel()
@@ -159,39 +154,10 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
         return panel
     }
 
-
-
     private fun itemPanel(panel: JPanel): JPanel {
         panel.border = Borders.customLine(Laf.getLabelGrayedColor(),0,2,0,0)
-        panel.isOpaque = false
-        if (com.intellij.util.ui.UIUtil.isUnderDarcula()){
-            //because under dracula JBColor.namedColor("Plugins.background") will be empty so JBColor.PanelBackground will
-            // be used as the list background Laf.Colors.PLUGIN_BACKGROUND, which is the default panel background, and so the
-            // rollover behaviour here is lost.
-            // changing the panel background under dracula bring back the rollover behaviour.
-            // another option is to select another list background under dracula instead of the default JBColor.PanelBackground
-            panel.background = JBColor.LIGHT_GRAY //doesn't look good with Laf.Colors.LIST_ITEM_BACKGROUND or transparent colors
-        }
+        panel.background = Laf.Colors.TRANSPARENT
 
-        val mouseListener = object: MouseAdapter(){
-            override fun mouseEntered(e: MouseEvent?) {
-                panel.isOpaque = true
-                panel.repaint()
-            }
-            override fun mouseExited(e: MouseEvent?) {
-                panel.isOpaque = false
-                panel.repaint()
-            }
-        }
-
-        panel.addMouseListener(mouseListener)
-        panel.components.forEach {
-            it.addMouseListener(mouseListener)
-        }
-
-        return panel
+        return Hover(panel, Laf.Colors.LIST_ITEM_BACKGROUND)
     }
-
-
-
 }

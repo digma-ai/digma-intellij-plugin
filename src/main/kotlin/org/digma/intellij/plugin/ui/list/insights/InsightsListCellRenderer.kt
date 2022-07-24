@@ -4,7 +4,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.dsl.builder.RightGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
-import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.*
 import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
@@ -70,17 +69,17 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
 
 
     private fun defaultInsightGroupTitle(value: InsightsList.GroupTitleModel): JPanel {
-        return groupTitlePanel("Unknown: ",value.groupId,Icons.TELESCOPE_INSIGHTS_WHITE)
+        return groupTitlePanel("Unknown: ", value.groupId, Laf.Icons.TELESCOPE)
     }
 
 
     private fun spanGroupTitle(value: InsightsList.GroupTitleModel): JPanel {
-        return groupTitlePanel("Span: ",value.groupId,Icons.Insight.SPAN_GROUP_TITLE)
+        return groupTitlePanel("Span: ", value.groupId, Laf.Icons.TELESCOPE)
     }
 
     private fun httpEndpointGroupTitle(value: InsightsList.GroupTitleModel): JPanel {
         val labelText = headerAsHtml(value)
-        return groupTitlePanel("REST: ",labelText,Icons.Insight.HTTP_GROUP_TITLE)
+        return groupTitlePanel("REST: ", labelText, Laf.Icons.INTERFACE)
     }
 
 

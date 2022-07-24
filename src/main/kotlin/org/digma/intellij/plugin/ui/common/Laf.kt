@@ -7,8 +7,6 @@ import java.awt.Color
 import java.awt.Font
 import javax.swing.Icon
 import javax.swing.JLabel
-import javax.swing.UIManager
-import org.digma.intellij.plugin.icons.Icons as IconConsts
 
 /**
  * It's not really a swing LAF,
@@ -29,14 +27,6 @@ object Laf  {
         return Colors.GRAY
     }
 
-    fun getNavigationButtonColor():Color{
-        return Colors.SIMPLE_ICON_COLOR
-    }
-
-    fun getInsightsIconsWhite():Color {
-        return Colors.DEFAULT_SWING_LABEL_FOREGROUND_HEX
-    }
-
     fun scalePanels(size: Int):Int{
         //todo:need to consider if to scale panels always
         return JBUI.scale(size)
@@ -55,8 +45,7 @@ object Laf  {
 
     class Colors{
         companion object {
-            @JvmStatic val DEFAULT_SWING_LABEL_FOREGROUND: Color = UIManager.getColor("Label.foreground") ?: JLabel().foreground
-            @JvmStatic val DEFAULT_SWING_LABEL_FOREGROUND_HEX: Color = DEFAULT_SWING_LABEL_FOREGROUND
+            @JvmStatic val DEFAULT_LABEL_FOREGROUND: Color = JBColor("Label.foreground", JLabel().foreground)
 
             @JvmStatic val PLUGIN_BACKGROUND: JBColor = JBColor.namedColor("Plugins.background", JBColor.PanelBackground)
 
@@ -75,11 +64,15 @@ object Laf  {
     class Icons{
         companion object{
             @JvmStatic val EMPTY: Icon = AllIcons.General.InspectionsErrorEmpty
-            @JvmStatic val METHOD: JBIcon = JBIcon(IconConsts.METHOD, IconConsts.METHOD_WHITE)
-            @JvmStatic val FILE: JBIcon = JBIcon(IconConsts.FILE, IconConsts.FILE_WHITE)
-            @JvmStatic val BACK: JBIcon = JBIcon(IconConsts.BACK, IconConsts.BACK_WHITE)
-            @JvmStatic val FORWARD: JBIcon = JBIcon(IconConsts.FORWARD, IconConsts.FORWARD_WHITE)
-            @JvmStatic val EVENT_RED: JBIcon = JBIcon(IconConsts.EVENT_RED, IconConsts.EVENT_RED)
+            //@JvmStatic val METHOD: JBIcon = JBIcon(IconConsts.METHOD, IconConsts.METHOD_WHITE)
+            @JvmStatic val METHOD: Icon = SvgIcon.withColor("/icons/method.svg", Colors.DEFAULT_LABEL_FOREGROUND)
+            @JvmStatic val FILE: Icon = SvgIcon.withColor("/icons/file.svg", Colors.DEFAULT_LABEL_FOREGROUND)
+            @JvmStatic val TELESCOPE: Icon = SvgIcon.withColor("/icons/telescope.svg", Colors.DEFAULT_LABEL_FOREGROUND)
+            @JvmStatic val TELESCOPE_BLUE_LIGHT_SHADE: Icon = SvgIcon.withColor("/icons/telescope.svg", Colors.BLUE_LIGHT_SHADE)
+            @JvmStatic val INTERFACE: Icon = SvgIcon.withColor("/icons/interface.svg", Colors.DEFAULT_LABEL_FOREGROUND)
+            @JvmStatic val BACK: Icon = SvgIcon.withColor("/icons/arrow-left.svg", Colors.DEFAULT_LABEL_FOREGROUND)
+            @JvmStatic val FORWARD: Icon = SvgIcon.withColor("/icons/arrow-right.svg", Colors.DEFAULT_LABEL_FOREGROUND)
+            @JvmStatic val EVENT_RED: Icon = SvgIcon.withColor("/icons/event.svg", Colors.ERROR_RED)
         }
     }
 
@@ -98,6 +91,7 @@ object Laf  {
             val DEFAULT_LABEL_FONT: Font = com.intellij.util.ui.UIUtil.getLabelFont()
         }
     }
+
 }
 
 

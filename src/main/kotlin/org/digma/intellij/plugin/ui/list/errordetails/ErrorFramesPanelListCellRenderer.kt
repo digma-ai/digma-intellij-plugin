@@ -7,7 +7,6 @@ import com.intellij.ui.dsl.builder.TopGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBUI.Borders
-import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
@@ -115,7 +114,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
 
     private fun spanTitlePanel(modelObject: SpanTitle): JPanel {
 
-        val icon = JLabel(Icons.TELESCOPE_BLUE_LIGHT_SHADE)
+        val icon = JLabel(Laf.Icons.TELESCOPE_BLUE_LIGHT_SHADE)
         icon.foreground = Laf.Colors.BLUE_LIGHT_SHADE
         icon.horizontalAlignment = SwingConstants.LEFT
         icon.border = Borders.empty()

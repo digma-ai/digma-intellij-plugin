@@ -1,6 +1,6 @@
 package org.digma.intellij.plugin.ui.common
 
-import org.digma.intellij.plugin.ui.common.Laf.Colors.Companion.DEFAULT_SWING_LABEL_FOREGROUND
+import org.digma.intellij.plugin.ui.common.Laf.Colors.Companion.DEFAULT_LABEL_FOREGROUND
 import org.digma.intellij.plugin.ui.common.Laf.Fonts.Companion.DEFAULT_LABEL_FONT
 import java.awt.Color
 import java.awt.Font
@@ -25,7 +25,7 @@ open class BaseCopyableLabel(val myText: String) : JTextPane() {
 
     companion object {
         private var DEFAULT_FONT: Font = DEFAULT_LABEL_FONT
-        private var DEFAULT_FOREGROUND: Color = DEFAULT_SWING_LABEL_FOREGROUND
+        private var DEFAULT_FOREGROUND: Color = DEFAULT_LABEL_FOREGROUND
     }
 
 

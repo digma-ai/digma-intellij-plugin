@@ -17,7 +17,9 @@ import org.digma.intellij.plugin.ui.model.errors.FrameListViewItem
 import org.digma.intellij.plugin.ui.model.errors.FrameStackTitle
 import org.digma.intellij.plugin.ui.model.errors.SpanTitle
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
-import java.awt.*
+import java.awt.BorderLayout
+import java.awt.GridBagLayout
+import java.awt.GridLayout
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.SwingConstants

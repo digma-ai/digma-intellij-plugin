@@ -55,6 +55,7 @@ class SvgIcon constructor(val path: String, val getColor : ColorGetter) : Icon {
                 text = text.replace("currentColor".toRegex(), color.getHex())
                 val tmpFile = File.createTempFile("digma", ".svg")
                 tmpFile.writeText(text, StandardCharsets.UTF_8)
+                tmpFile.deleteOnExit()
                 return IconLoader.findIcon(tmpFile.toURI().toURL())!!
             }
         } catch (e: Exception) {

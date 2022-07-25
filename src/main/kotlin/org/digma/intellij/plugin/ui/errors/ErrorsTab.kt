@@ -112,13 +112,8 @@ fun errorsPanel(project: Project): DigmaTabPanel {
         }
 
         override fun getPreferredFocusedComponent(): JComponent {
-            return errorsList
+            return topPanelWrapper
         }
-
-        override fun isValidateRoot(): Boolean {
-            return true
-        }
-
 
         //reset must be called from EDT
         override fun reset() {
@@ -144,10 +139,6 @@ fun errorsPanel(project: Project): DigmaTabPanel {
                 errorsPanelListCardLayout.show(errorsPanelListCardPanel, LIST_CARD_NAME)
             }
 
-            errorsPanelListCardPanel.revalidate()
-            cardsPanel.revalidate()
-            topPanelWrapper.revalidate()
-            topPanelWrapper.repaint()
             revalidate()
             repaint()
         }

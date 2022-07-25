@@ -71,7 +71,6 @@ abstract class AbstractViewService(val project: Project) {
                     toolWindowContent?.displayName = getViewDisplayName()
                     toolWindowContent?.component?.revalidate()
                     toolWindow?.component?.revalidate()
-                    toolWindow?.component?.repaint()
                 }
             }
 

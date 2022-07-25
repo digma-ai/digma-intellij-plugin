@@ -1,7 +1,5 @@
 package org.digma.intellij.plugin.ui.common
 
-import org.digma.intellij.plugin.ui.common.Laf.Colors.Companion.DEFAULT_SWING_LABEL_FOREGROUND_HEX
-import org.digma.intellij.plugin.ui.common.Laf.getLabelGrayedColor
 import java.awt.Color
 
 //kind of templating for html text in labels and buttons where we want to have the same color and style all over.
@@ -41,7 +39,7 @@ fun buildLinkTextWithGrayedAndDefaultLabelColorPart(linkPart: String,grayedPart:
 
     val secondPart = spanGrayed(grayedPart)
 
-    val thirdPart = span(DEFAULT_SWING_LABEL_FOREGROUND_HEX,regularPart)
+    val thirdPart = span(Laf.Colors.DEFAULT_LABEL_FOREGROUND,regularPart)
 
     return asHtml("$firstPart $secondPart $thirdPart")
 
@@ -112,7 +110,7 @@ fun span(value: String): String {
 
 
 fun spanGrayed(value: String): String {
-    return span(getLabelGrayedColor(), value)
+    return span(Laf.getLabelGrayedColor(), value)
 }
 
 

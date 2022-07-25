@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.ui.list.insights
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI.Borders.empty
-import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
 import org.digma.intellij.plugin.model.rest.insights.SpanFlow
@@ -74,7 +73,7 @@ fun spanPanel(spanInsight: SpanInsight): JPanel {
 fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
 
     if (spanDurationsInsight.percentiles.isEmpty()) {
-        return createInsightPanel("Duration", "Waiting for more data.", Icons.Insight.WAITING_DATA, "", panelsLayoutHelper)
+        return createInsightPanel("Duration", "Waiting for more data.", Laf.Icons.Insight.WAITING_DATA, "", panelsLayoutHelper)
     }
 
     val title = JLabel(asHtml(spanBold("Duration")), SwingConstants.LEFT)
@@ -124,7 +123,7 @@ fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight, panelsLayoutHe
             val rawDiff: Long = abs(percentile.currentDuration.raw - percentile.previousDuration!!.raw)
             changeMeaningfulEnough = ((rawDiff / percentile.previousDuration!!.raw) > 0.1) && (rawDiff > tolerationConstant)
             if (changeMeaningfulEnough) {
-                val icon = if (percentile.previousDuration!!.raw > percentile.currentDuration.raw) Icons.Insight.SPAN_DURATION_DROPPED else Icons.Insight.SPAN_DURATION_ROSE
+                val icon = if (percentile.previousDuration!!.raw > percentile.currentDuration.raw) Laf.Icons.Insight.SPAN_DURATION_DROPPED else Laf.Icons.Insight.SPAN_DURATION_ROSE
                 val durationText = computeDurationText(percentile)
                 val whenText = computeWhenText(percentile)
                 val durationLabelText = asHtml(spanGrayed("$durationText,$whenText"))

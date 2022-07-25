@@ -7,7 +7,6 @@ import com.intellij.ui.dsl.builder.TopGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBUI.Borders
-import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
@@ -58,7 +57,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
                 if (modelObject.frame.executedCode.isBlank()){
                     row {
                         if (modelObject.first) {
-                            icon(Icons.EVENT_RED).horizontalAlign(HorizontalAlign.LEFT)
+                            icon(Laf.Icons.ErrorDetails.EVENT_RED).horizontalAlign(HorizontalAlign.LEFT)
                         }
                         if(modelObject.isInWorkspace()){
                             link(frameText) {
@@ -90,7 +89,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
                     }
                     row{
                         if (modelObject.first) {
-                            icon(Icons.EVENT_RED).horizontalAlign(HorizontalAlign.LEFT)
+                            icon(Laf.Icons.ErrorDetails.EVENT_RED).horizontalAlign(HorizontalAlign.LEFT)
                         }
                         if(modelObject.isInWorkspace()){
                             link(modelObject.frame.executedCode) {
@@ -115,7 +114,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
 
     private fun spanTitlePanel(modelObject: SpanTitle): JPanel {
 
-        val icon = JLabel(Icons.TELESCOPE_BLUE_LIGHT_SHADE)
+        val icon = JLabel(Laf.Icons.ErrorDetails.TELESCOPE_BLUE_LIGHT_SHADE)
         icon.foreground = Laf.Colors.BLUE_LIGHT_SHADE
         icon.horizontalAlignment = SwingConstants.LEFT
         icon.border = Borders.empty()
@@ -131,7 +130,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
         val namePanel = JPanel()
         namePanel.layout = BorderLayout()
         namePanel.isOpaque = false
-        namePanel.border = Borders.empty(0,Laf.scaleBorders(5),0,0)
+        namePanel.border = Borders.empty(0,5,0,0)
         namePanel.add(name,BorderLayout.WEST)
 
         val result = JPanel()
@@ -149,7 +148,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
         val label = CopyableLabelHtml(text)
         label.toolTipText = text
         panel.add(label)
-        panel.border = Borders.empty(Laf.scaleBorders(3),Laf.scaleBorders(3),Laf.scaleBorders(5),Laf.scaleBorders(3))
+        panel.border = Borders.empty(3,3,5,3)
         panel.isOpaque = false
         return panel
     }

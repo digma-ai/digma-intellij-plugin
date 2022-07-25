@@ -7,6 +7,7 @@ import com.intellij.ui.dsl.builder.*
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.ui.dsl.gridLayout.VerticalAlign
 import com.intellij.util.ui.JBUI.Borders
+import com.intellij.util.ui.WrapLayout
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.persistence.PersistenceService
@@ -375,7 +376,7 @@ private fun prettyTimeOf(date: Date?): String {
 fun buildServicesPanel(servicesPanel: JPanel, errorsModel: ErrorsModel) {
 
     servicesPanel.removeAll()
-    servicesPanel.layout = FlowLayout(FlowLayout.LEFT, 0, 5)
+    servicesPanel.layout = WrapLayout(FlowLayout.LEFT, 0, 5)
     errorsModel.errorDetails.delegate?.originServices?.forEach(Consumer {
         val service = CopyableLabel(it.serviceName)
         service.background = JBColor.PanelBackground

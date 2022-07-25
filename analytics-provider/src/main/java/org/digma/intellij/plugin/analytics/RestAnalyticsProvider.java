@@ -24,6 +24,7 @@ import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
@@ -124,6 +125,9 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 });
             }
 
+            builder.callTimeout(5, TimeUnit.SECONDS)
+                    .connectTimeout(5, TimeUnit.SECONDS)
+                    .readTimeout(5, TimeUnit.SECONDS);
 
             okHttpClient = builder.build();
 

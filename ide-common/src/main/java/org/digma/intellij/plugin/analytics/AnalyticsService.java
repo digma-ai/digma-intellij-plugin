@@ -43,7 +43,7 @@ public class AnalyticsService implements Disposable {
     public AnalyticsService(@NotNull Project project) {
         SettingsState settingsState = project.getService(SettingsState.class);
         PersistenceService persistenceService = project.getService(PersistenceService.class);
-        environment = new Environment(project, this, persistenceService.getState());
+        environment = new Environment(project, this, persistenceService.getState(),settingsState);
         this.project = project;
         myApiUrl = settingsState.apiUrl;
         myApiToken = settingsState.apiToken;

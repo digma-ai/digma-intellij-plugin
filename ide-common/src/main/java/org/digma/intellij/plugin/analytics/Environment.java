@@ -7,11 +7,14 @@ import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.persistence.PersistenceData;
+import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsListChangedListener;
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 
 public class Environment implements EnvironmentsSupplier {
@@ -19,6 +22,7 @@ public class Environment implements EnvironmentsSupplier {
     private static final Logger LOGGER = Logger.getInstance(Environment.class);
 
     private String current;
+    private final SettingsState settingsState;
 
     @NotNull
     private List<String> environments = new ArrayList<>();
@@ -29,21 +33,110 @@ public class Environment implements EnvironmentsSupplier {
 
     private final Set<EnvironmentsListChangedListener> listeners = new LinkedHashSet<>();
 
-    public Environment(@NotNull Project project, @NotNull AnalyticsService analyticsService, @NotNull PersistenceData persistenceData) {
+    private Instant lastRefreshTimestamp = Instant.now();
+
+    public Environment(@NotNull Project project, @NotNull AnalyticsService analyticsService, @NotNull PersistenceData persistenceData, SettingsState settingsState) {
         this.project = project;
         this.analyticsService = analyticsService;
         this.persistenceData = persistenceData;
         this.current = persistenceData.getCurrentEnv();
+        this.settingsState = settingsState;
     }
 
-    private void maybeRecoverEnvironments() {
-        if (environments == null || environments.isEmpty()) {
-            Log.log(LOGGER::debug, "Environments list is empty,trying recovery");
-            refreshEnvironments();
+
+
+    @Override
+    public String getCurrent() {
+        //using getCurrent as a hook to recover environments in case it could not be loaded yet.
+        //maybeRecoverEnvironments will run in the background. if current is null the method will return null,
+        //if the environments where recovered the next call to getCurrent will return an environment.
+        maybeRecoverEnvironments();
+        return current;
+    }
+
+    @Override
+    public void setCurrent(String newEnv) {
+
+        Log.log(LOGGER::debug, "Setting current environment , old={},new={}", this.current, newEnv);
+
+        //don't change or fire the event if it's the same env. it happens because we have two combobox, one on each tab
+        if (Objects.equals(this.current, newEnv)) {
+            return;
+        }
+
+        var oldEnv = this.current;
+        this.current = newEnv;
+        persistenceData.setCurrentEnv(newEnv);
+
+        notifyEnvironmentChanged(oldEnv, newEnv);
+    }
+
+
+
+    @NotNull
+    @Override
+    public List<String> getEnvironments() {
+        return environments;
+    }
+
+
+    @Override
+    public void addEnvironmentsListChangeListener(EnvironmentsListChangedListener listener) {
+        if (listener != null) {
+            listeners.remove(listener);
+            listeners.add(listener);
         }
     }
 
+
+
+    @Override
+    public void refresh() {
+
+        if (!timeToRefresh()){
+            Log.log(LOGGER::debug, "Skipping Refresh Environments , will try again in few seconds..");
+            return;
+        }
+
+        new Task.Backgroundable(project, "Digma: Refreshing environments...") {
+            @Override
+            public void run(@NotNull ProgressIndicator indicator) {
+                refreshEnvironments();
+            }
+        }.queue();
+    }
+
+
+
+    private boolean timeToRefresh() {
+        //don't try to refresh to often, It's usually not necessary
+        var now = Instant.now();
+        Duration duration = Duration.between(lastRefreshTimestamp, now);
+        if (duration.getSeconds() < settingsState.refreshDelay){
+            return false;
+        }
+        lastRefreshTimestamp = now;
+        return true;
+    }
+
+
+    /**
+     * maybeRecoverEnvironments is a hook to try and recover the environments list in case it could not be loaded yet.
+     * it may be called in several events and will try to recover the environments list in the background.
+     */
+    private void maybeRecoverEnvironments() {
+        if (environments == null || environments.isEmpty()) {
+            Log.log(LOGGER::debug, "Environments list is empty,trying recovery");
+            refresh();
+        }
+    }
+
+
+    //this method should not be called on ui threads, it may hang and cause a freeze
     private void refreshEnvironments() {
+
+        Log.log(LOGGER::debug, "Refresh Environments called");
+
         Log.log(LOGGER::debug, "Refreshing Environments list");
         var newEnvironments = analyticsService.getEnvironments();
         if (newEnvironments != null && newEnvironments.size() > 0) {
@@ -57,14 +150,26 @@ public class Environment implements EnvironmentsSupplier {
             return;
         }
 
+        replaceEnvironmentsList(newEnvironments);
+    }
 
-        this.environments = newEnvironments;
 
+    //this method may be called from both ui threads or background threads
+    void replaceEnvironmentsList(@NotNull List<String> envs) {
+        this.environments = envs;
+        var oldEnv = current;
+        if (current == null || !this.environments.contains(current)) {
+            current = environments.size() > 0 ? environments.get(0) : null;
+        }
+
+        persistenceData.setCurrentEnv(current);
         fireEnvironmentsListChange();
 
-        maybeUpdateCurrent();
-
+        if (!Objects.equals(oldEnv, current)) {
+            notifyEnvironmentChanged(oldEnv, current);
+        }
     }
+
 
     private boolean environmentsListEquals(List<String> envs1, List<String> envs2) {
         if (envs1 == null && envs2 == null) {
@@ -87,37 +192,9 @@ public class Environment implements EnvironmentsSupplier {
         } else {
             SwingUtilities.invokeLater(r);
         }
-
     }
 
 
-    @Override
-    public String getCurrent() {
-        maybeRecoverEnvironments();
-        return current;
-    }
-
-    /**
-     * Called when user changes environment
-     *
-     * @param newEnv the new environment
-     */
-    @Override
-    public void setCurrent(String newEnv) {
-
-        Log.log(LOGGER::debug, "Setting current environment , old={},new={}", this.current, newEnv);
-
-        //don't change or fire the event if it's the same env. it happens because we have two combobox, one on each tab
-        if (Objects.equals(this.current, newEnv)) {
-            return;
-        }
-
-        var oldEnv = this.current;
-        this.current = newEnv;
-        persistenceData.setCurrentEnv(newEnv);
-
-        notifyEnvironmentChanged(oldEnv, newEnv);
-    }
 
 
     private void notifyEnvironmentChanged(String oldEnv, String newEnv) {
@@ -130,57 +207,4 @@ public class Environment implements EnvironmentsSupplier {
         publisher.environmentChanged(newEnv);
     }
 
-
-    @NotNull
-    @Override
-    public List<String> getEnvironments() {
-        maybeRecoverEnvironments();
-        return environments;
-    }
-
-
-    @Override
-    public void addEnvironmentsListChangeListener(EnvironmentsListChangedListener listener) {
-        if (listener != null) {
-            listeners.remove(listener);
-            listeners.add(listener);
-        }
-    }
-
-
-    void replaceEnvironmentsList(@NotNull List<String> envs) {
-        this.environments = envs;
-        var oldEnv = current;
-        if (current == null || !this.environments.contains(current)) {
-            current = environments.size() > 0 ? environments.get(0) : null;
-        }
-
-        persistenceData.setCurrentEnv(current);
-        fireEnvironmentsListChange();
-
-        if (!Objects.equals(oldEnv, current)) {
-            notifyEnvironmentChanged(oldEnv, current);
-        }
-    }
-
-
-    private void maybeUpdateCurrent() {
-        if (current == null || current.isBlank() || !environments.contains(current)) {
-            var oldEnv = this.current;
-            current = environments.size() > 0 ? environments.get(0) : null;
-            persistenceData.setCurrentEnv(current);
-            notifyEnvironmentChanged(oldEnv, current);
-        }
-    }
-
-    @Override
-    public void refresh() {
-        new Task.Backgroundable(project, "Refreshing environments") {
-            @Override
-            public void run(@NotNull ProgressIndicator indicator) {
-                refreshEnvironments();
-            }
-        }.queue();
-
-    }
 }

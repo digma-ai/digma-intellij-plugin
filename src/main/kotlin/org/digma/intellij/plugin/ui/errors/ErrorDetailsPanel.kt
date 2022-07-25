@@ -7,6 +7,8 @@ import com.intellij.ui.dsl.builder.*
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.ui.dsl.gridLayout.VerticalAlign
 import com.intellij.util.ui.JBUI.Borders
+import com.intellij.util.ui.WrapLayout
+import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.persistence.PersistenceService
@@ -135,7 +137,6 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
 
         }
     }
-    result.isOpaque = true
 
 
 
@@ -260,7 +261,7 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
     val size = Laf.scalePanels(Laf.Sizes.ERROR_DETAILS_NAVIGATION_BUTTON_SIZE)
     val buttonsSize = Dimension(size + 2, size + 2)
 
-    val backButton = IconButton(Laf.Icons.ErrorDetails.BACK)
+    val backButton = NavigationButtonIcon(Icons.BACK_WHITE, Icons.BACK_BLACK)
     backButton.preferredSize = buttonsSize
     backButton.maximumSize = buttonsSize
     backButton.addActionListener {
@@ -271,7 +272,8 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
         framesList.getModel().setListData(errorsModel.errorDetails.flowStacks.getCurrentStack())
     }
 
-    val forwardButton = IconButton(Laf.Icons.ErrorDetails.FORWARD)
+
+    val forwardButton = NavigationButtonIcon(Icons.FORWARD_WHITE,Icons.FORWARD_BLACK)
     forwardButton.preferredSize = buttonsSize
     forwardButton.maximumSize = buttonsSize
     forwardButton.addActionListener {
@@ -282,16 +284,16 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
         framesList.getModel().setListData(errorsModel.errorDetails.flowStacks.getCurrentStack())
     }
 
-    val panel = JTransparentPanel()
+
+    val panel = JPanel()
     panel.layout = GridBagLayout()
-    panel.border = Borders.empty(0,1,0,1)
-    panel.background = Laf.Colors.LIST_ITEM_BACKGROUND
 
     val backButtonConstraints = GridBagConstraints()
     backButtonConstraints.fill = GridBagConstraints.NONE
     backButtonConstraints.ipadx = 5
     backButtonConstraints.anchor = GridBagConstraints.WEST
     panel.add(backButton, backButtonConstraints)
+
 
     val currentStackLabelConstraints = GridBagConstraints()
     currentStackLabelConstraints.fill = GridBagConstraints.NONE
@@ -300,11 +302,14 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
     currentStackLabelConstraints.anchor = GridBagConstraints.CENTER
     panel.add(currentLabel, currentStackLabelConstraints)
 
+
+
     val forwardButtonConstraints = GridBagConstraints()
     forwardButtonConstraints.fill = GridBagConstraints.NONE
     forwardButtonConstraints.gridx = 2
     forwardButtonConstraints.anchor = GridBagConstraints.EAST
     panel.add(forwardButton,forwardButtonConstraints)
+    panel.border = Borders.empty(0,1,0,1)
 
     return panel {
         row {
@@ -375,7 +380,7 @@ private fun prettyTimeOf(date: Date?): String {
 fun buildServicesPanel(servicesPanel: JPanel, errorsModel: ErrorsModel) {
 
     servicesPanel.removeAll()
-    servicesPanel.layout = FlowLayout(FlowLayout.LEFT, 0, 5)
+    servicesPanel.layout = WrapLayout(FlowLayout.LEFT,0,5)
     errorsModel.errorDetails.delegate?.originServices?.forEach(Consumer {
         val service = CopyableLabel(it.serviceName)
         service.background = JBColor.PanelBackground
@@ -401,13 +406,16 @@ private fun backButton(project: Project): JComponent {
     val size = Laf.scalePanels(Laf.Sizes.ERROR_DETAILS_BACK_BUTTON_SIZE)
     val buttonsSize = Dimension(size + 2, size + 3)
 
-    val backButton = IconButton(Laf.Icons.ErrorDetails.BACK)
+    val backButton = BackButton(Icons.BACK_WHITE, Icons.BACK_BLACK)
     backButton.preferredSize = buttonsSize
     backButton.maximumSize = buttonsSize
     backButton.addActionListener {
         val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
         actionListener.closeErrorDetailsBackButton()
     }
+    backButton.isOpaque = false
+    backButton.isContentAreaFilled = false
+    backButton.isBorderPainted = false
 
     val wrapper = JPanel()
     wrapper.layout = GridLayout(1,1,2,2)

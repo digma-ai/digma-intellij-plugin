@@ -22,17 +22,18 @@ public class SettingsComponent {
   private JPanel myMainPanel;
   private final JBTextField myApiUrlText = new JBTextField();
   private final JBTextField myApiToken = new JBTextField();
+  private final JBTextField myRefreshDelay = new JBTextField();
 
   public SettingsComponent(Project project) {
 
     var myUrlLabel = new JBLabel("Digma Api url: ");
-    var myLabelForeground = myUrlLabel.getForeground();
+    var myUrlLabelForeground = myUrlLabel.getForeground();
     myApiUrlText.setInputVerifier(new InputVerifier() {
       @Override
       public boolean verify(JComponent input) {
         try {
           new URL(myApiUrlText.getText());
-          myUrlLabel.setForeground(myLabelForeground);
+          myUrlLabel.setForeground(myUrlLabelForeground);
           return true;
         } catch (MalformedURLException e) {
           myUrlLabel.setForeground(JBColor.RED);
@@ -41,12 +42,31 @@ public class SettingsComponent {
       }
     });
 
+    var myRefreshLabel = new JBLabel("Refresh every (sec.): ");
+    var myRefreshLabelForeground = myRefreshLabel.getForeground();
+    myRefreshDelay.setInputVerifier(new InputVerifier() {
+      @Override
+      public boolean verify(JComponent input) {
+        try {
+          Integer.parseInt(myRefreshDelay.getText());
+          myRefreshLabel.setForeground(myRefreshLabelForeground);
+          return true;
+        } catch (NumberFormatException e) {
+          myRefreshLabel.setForeground(JBColor.RED);
+          return false;
+        }
+      }
+    });
+
+
+
     var resetButton = new JButton("Reset to defaults");
     resetButton.addActionListener(e -> resetToDefaults());
 
     myMainPanel = FormBuilder.createFormBuilder()
             .addLabeledComponent(myUrlLabel, myApiUrlText, 1, false)
             .addLabeledComponent(new JBLabel("Api token:"), myApiToken, 1, false)
+            .addLabeledComponent(myRefreshLabel, myRefreshDelay, 1, false)
             .addComponent(resetButton)
             .addComponentFillVertically(new JPanel(), 0)
             .getPanel();
@@ -78,9 +98,18 @@ public class SettingsComponent {
     myApiToken.setText(newText);
   }
 
+  @NotNull
+  public String getRefreshDelayText() {
+    return myRefreshDelay.getText();
+  }
+
+  public void setRefreshDelayText(@NotNull String newText) {
+    myRefreshDelay.setText(newText);
+  }
 
   private void resetToDefaults(){
     this.setApiUrlText(SettingsState.DEFAULT_API_URL);
     this.setApiToken(null);
+    this.setRefreshDelayText(String.valueOf(SettingsState.DEFAULT_REFRESH_DELAY));
   }
 }

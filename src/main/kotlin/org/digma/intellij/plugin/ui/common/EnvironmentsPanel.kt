@@ -29,8 +29,9 @@ fun environmentsPanel(environmentsSupplier: EnvironmentsSupplier): JPanel {
 class EnvironmentsPanel(private val environmentsSupplier: EnvironmentsSupplier) : JBPanel<EnvironmentsPanel>() {
 
     init {
+        isOpaque = false
         andTransparent()
-        layout = WrapLayout(FlowLayout.LEFT)
+        layout = WrapLayout(FlowLayout.LEFT,2,2)
         rebuild()
         environmentsSupplier.addEnvironmentsListChangeListener(object: EnvironmentsListChangedListener{
             override fun environmentsListChanged(newEnvironments: List<String>) {
@@ -51,13 +52,19 @@ class EnvironmentsPanel(private val environmentsSupplier: EnvironmentsSupplier) 
         val relevantEnvs = buildRelevantSortedEnvironments(environmentsSupplier)
 
 
+        val currentEnvironment = environmentsSupplier.getCurrent()
         for (currEnv in relevantEnvs) {
 
-            val isSelectedEnv = currEnv.contentEquals(environmentsSupplier.getCurrent())
+            val isSelectedEnv = currEnv.contentEquals(currentEnvironment)
             val linkText = buildLinkText(currEnv, isSelectedEnv)
             val envLink = EnvLink(currEnv,linkText,isSelectedEnv)
+            envLink.toolTipText = currEnv
+            val singlePanel = SingleEnvPanel(envLink)
+            add(singlePanel)
+
             envLink.addActionListener(){ event ->
-                val currentSelected: EnvLink? = (components.stream().filter { (it as SingleEnvPanel).myLink.isSelectedEnv }.findAny().orElse(null) as SingleEnvPanel).myLink
+                val currentSelectedPanel: SingleEnvPanel? = (components.stream().filter { (it as SingleEnvPanel).myLink.isSelectedEnv }.findAny().orElse(null) as SingleEnvPanel?)
+                val currentSelected: EnvLink? = currentSelectedPanel?.myLink
 
                 if (currentSelected === event.source){
                     return@addActionListener
@@ -73,15 +80,8 @@ class EnvironmentsPanel(private val environmentsSupplier: EnvironmentsSupplier) 
                 clickedLink.isSelectedEnv = true
                 environmentsSupplier.setCurrent(clickedLink.env)
             }
-
-            envLink.toolTipText = currEnv
-            val singlePanel = SingleEnvPanel(envLink)
-
-            add(singlePanel)
         }
-
         revalidate()
-
     }
 
 
@@ -106,7 +106,7 @@ class EnvironmentsPanel(private val environmentsSupplier: EnvironmentsSupplier) 
             builtEnvs.add(0, mineLocalEnv)
         }
 
-       return builtEnvs
+        return builtEnvs
     }
 
 
@@ -136,8 +136,9 @@ class EnvironmentsPanel(private val environmentsSupplier: EnvironmentsSupplier) 
 
 class SingleEnvPanel(val myLink: EnvLink) : JBPanel<SingleEnvPanel>() {
     init {
-        andTransparent()
+        isOpaque = false
         layout = GridLayout(1,1)
+        border = JBUI.Borders.empty(1)
         add(myLink)
     }
 }

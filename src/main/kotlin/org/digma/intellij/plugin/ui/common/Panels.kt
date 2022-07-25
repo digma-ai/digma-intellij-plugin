@@ -63,7 +63,7 @@ fun createTopPanel(project: Project, model: PanelModel): DigmaResettablePanel {
     }
 
     result.isOpaque = false
-    result.border = JBUI.Borders.empty(0,12,0,8)
+    result.border = JBUI.Borders.empty(0,10,0,10)
     result.layout = BorderLayout()
     result.add(scopeLine,BorderLayout.NORTH)
     result.add(envsPanel,BorderLayout.CENTER)

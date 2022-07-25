@@ -25,11 +25,17 @@ abstract class AbstractViewService(val project: Project) {
             return
         }
 
-        if (SwingUtilities.isEventDispatchThread()) {
+        val r = Runnable {
             toolWindow?.contentManager?.setSelectedContent(toolWindowContent!!, false)
+            toolWindowContent?.component?.revalidate()
+            panel?.reset()
+        }
+
+        if (SwingUtilities.isEventDispatchThread()) {
+            r.run()
         } else {
             SwingUtilities.invokeLater {
-                toolWindow?.contentManager?.setSelectedContent(toolWindowContent!!, false)
+                r.run()
             }
         }
     }

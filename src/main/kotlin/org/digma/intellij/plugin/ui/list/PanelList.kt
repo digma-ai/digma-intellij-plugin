@@ -99,8 +99,8 @@ abstract class PanelList(val project: Project, private var model: PanelListModel
 
         for (i in 0 until model.getSize()) run {
             cellRenderer.apply {
-                val newComp: JPanel = getListCellRendererComponent(project,this@PanelList,
-                    model.getElementAt(i), i, this@PanelList.hasFocus(),panelsLayoutHelper)
+                val newComp: JPanel = getListCellRendererComponent(project, this@PanelList,
+                        model.getElementAt(i), i, this@PanelList.hasFocus(), panelsLayoutHelper)
                 add(newComp)
                 if (gapBetweenItems) {
                     add(Box.createVerticalStrut(scaleBorders(5)))
@@ -109,7 +109,8 @@ abstract class PanelList(val project: Project, private var model: PanelListModel
 
         }
 
-        this.revalidate()
+        revalidate()
+        repaint()
     }
 
 

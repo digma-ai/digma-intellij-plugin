@@ -60,6 +60,14 @@ fun createTopPanel(project: Project, model: PanelModel): DigmaResettablePanel {
         override fun reset() {
             scopeLine.reset()
         }
+
+        override fun requestFocus() {
+            envsPanel.requestFocus()
+        }
+
+        override fun requestFocusInWindow(): Boolean {
+            return envsPanel.requestFocusInWindow()
+        }
     }
 
     result.isOpaque = false

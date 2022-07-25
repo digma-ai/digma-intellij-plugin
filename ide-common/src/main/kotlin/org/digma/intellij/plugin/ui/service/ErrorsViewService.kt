@@ -133,13 +133,14 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         if (documentInfoContainer == null) {
             model.scope = EmptyScope(fileUri.substringAfterLast('/'))
             model.errorsCount = 0
+            model.usageStatusResult = EmptyUsageStatusResult
         } else {
             model.scope = DocumentScope(documentInfoContainer.documentInfo)
             model.errorsCount = computeErrorsPreviewCount(documentInfoContainer)
+            model.usageStatusResult = documentInfoContainer.usageStatusOfErrors
         }
 
         model.listViewItems = ArrayList()
-        model.usageStatusResult = EmptyUsageStatusResult
         model.card = ErrorsTabCard.ERRORS_LIST
 
         updateUi()

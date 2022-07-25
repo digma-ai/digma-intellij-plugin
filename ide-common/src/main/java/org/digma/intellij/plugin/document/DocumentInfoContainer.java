@@ -36,6 +36,7 @@ public class DocumentInfoContainer {
     private Map<String, SpanCodeObjectSummary> spanSummaries;
     private Map<String, EndpointCodeObjectSummary> endpointSummaries;
     private UsageStatusResult usageStatus = EmptyUsageStatusResult;
+    private UsageStatusResult usageStatusOfErrors = EmptyUsageStatusResult;
 
     public DocumentInfoContainer(@NotNull PsiFile psiFile, @NotNull AnalyticsService analyticsService) {
         this.psiFile = psiFile;
@@ -79,11 +80,11 @@ public class DocumentInfoContainer {
 
             summaries.forEach(codeObjectSummary -> {
 
-                if (codeObjectSummary instanceof MethodCodeObjectSummary){
+                if (codeObjectSummary instanceof MethodCodeObjectSummary) {
                     methodSummaries.put(codeObjectSummary.getCodeObjectId(), (MethodCodeObjectSummary) codeObjectSummary);
-                }else if (codeObjectSummary instanceof SpanCodeObjectSummary){
+                } else if (codeObjectSummary instanceof SpanCodeObjectSummary) {
                     spanSummaries.put(codeObjectSummary.getCodeObjectId(), (SpanCodeObjectSummary) codeObjectSummary);
-                }else if (codeObjectSummary instanceof EndpointCodeObjectSummary){
+                } else if (codeObjectSummary instanceof EndpointCodeObjectSummary) {
                     endpointSummaries.put(codeObjectSummary.getCodeObjectId(), (EndpointCodeObjectSummary) codeObjectSummary);
                 }
 
@@ -100,8 +101,13 @@ public class DocumentInfoContainer {
             Log.log(LOGGER::debug, "Requesting usage status for {}: with ids {}", psiFile.getVirtualFile(), objectIds);
             usageStatus = analyticsService.getUsageStatus(objectIds);
             Log.log(LOGGER::debug, "Got usage status for {}: {}", psiFile.getVirtualFile(), usageStatus);
+
+            Log.log(LOGGER::debug, "Requesting usage status of errors for {}: with ids {}", psiFile.getVirtualFile(), objectIds);
+            usageStatusOfErrors = analyticsService.getUsageStatusForErrors(objectIds);
+            Log.log(LOGGER::debug, "Got usage status of errors for {}: {}", psiFile.getVirtualFile(), usageStatus);
         } catch (AnalyticsServiceException e) {
             usageStatus = EmptyUsageStatusResult;
+            usageStatusOfErrors = EmptyUsageStatusResult;
         }
     }
 
@@ -116,7 +122,7 @@ public class DocumentInfoContainer {
 
     public Map<String, MethodCodeObjectSummary> getMethodsSummaries() {
         //if methodSummaries is null try to recover
-        if (methodSummaries == null){
+        if (methodSummaries == null) {
             loadSummaries();
         }
         //if methodSummaries is still null it means there is still an error loading, return an empty map to keep everything
@@ -126,7 +132,7 @@ public class DocumentInfoContainer {
 
     public Map<String, SpanCodeObjectSummary> getSpanSummaries() {
         //if methodSummaries is null try to recover
-        if (spanSummaries == null){
+        if (spanSummaries == null) {
             loadSummaries();
         }
         //if methodSummaries is still null it means there is still an error loading, return an empty map to keep everything
@@ -136,7 +142,7 @@ public class DocumentInfoContainer {
 
     public Map<String, EndpointCodeObjectSummary> getEndpointSummaries() {
         //if methodSummaries is null try to recover
-        if (endpointSummaries == null){
+        if (endpointSummaries == null) {
             loadSummaries();
         }
         //if methodSummaries is still null it means there is still an error loading, return an empty map to keep everything
@@ -156,6 +162,10 @@ public class DocumentInfoContainer {
 
     public UsageStatusResult getUsageStatus() {
         return usageStatus;
+    }
+
+    public UsageStatusResult getUsageStatusOfErrors() {
+        return usageStatusOfErrors;
     }
 
     @Nullable

@@ -52,7 +52,7 @@ fun createTopPanel(project: Project, model: PanelModel): DigmaResettablePanel {
     val scopeLine = scopeLine({ model.getScope() }, { model.getScopeTooltip() }, ScopeLineIconProducer(model))
     scopeLine.isOpaque = false
 
-    val envsPanel = environmentsPanel(AnalyticsService.getInstance(project).environment)
+    val envsPanel = environmentsPanel(project, AnalyticsService.getInstance(project).environment)
     envsPanel.isOpaque = false
 
     val result = object: DigmaResettablePanel(){

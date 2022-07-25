@@ -1,19 +1,26 @@
 package org.digma.intellij.plugin.ui.common
 
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Disposer
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.containers.stream
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.WrapLayout
+import org.digma.intellij.plugin.analytics.EnvironmentChanged
 import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsListChangedListener
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
-import java.awt.*
+import java.awt.BorderLayout
+import java.awt.FlowLayout
+import java.awt.GridLayout
+import java.util.*
+import java.util.function.Function
 import javax.swing.JPanel
 
-fun environmentsPanel(environmentsSupplier: EnvironmentsSupplier): JPanel {
+fun environmentsPanel(project: Project, environmentsSupplier: EnvironmentsSupplier): JPanel {
 
-    val envsPanel = EnvironmentsPanel(environmentsSupplier)
+    val envsPanel = EnvironmentsPanel(project, environmentsSupplier)
 
     val result = JPanel()
     result.isOpaque = false
@@ -25,19 +32,47 @@ fun environmentsPanel(environmentsSupplier: EnvironmentsSupplier): JPanel {
 }
 
 
-
-class EnvironmentsPanel(private val environmentsSupplier: EnvironmentsSupplier) : JBPanel<EnvironmentsPanel>() {
+//need to remember we have two instances of this panel , one for the insights tab and one for the errors tab.
+//both instances need to be in sync with the selected button and the environments list.
+class EnvironmentsPanel(project: Project, private val environmentsSupplier: EnvironmentsSupplier) : JBPanel<EnvironmentsPanel>() {
 
     init {
         isOpaque = false
         andTransparent()
-        layout = WrapLayout(FlowLayout.LEFT,2,2)
+        layout = WrapLayout(FlowLayout.LEFT, 2, 2)
         rebuild()
-        environmentsSupplier.addEnvironmentsListChangeListener(object: EnvironmentsListChangedListener{
+        environmentsSupplier.addEnvironmentsListChangeListener(object : EnvironmentsListChangedListener {
             override fun environmentsListChanged(newEnvironments: List<String>) {
                 rebuild()
             }
         })
+
+        //we have two instances of EnvironmentsPanel, if a button is clicked in the insights tab the selected button
+        //need to change also in the errors tab, and vice versa.
+        val messageBusConnection = project.messageBus.connect()
+        messageBusConnection.subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, EnvironmentChanged {
+            select(it)
+        })
+        Disposer.register(project, messageBusConnection)
+    }
+
+    private fun select(newSelectedEnv: String?) {
+        val currentSelected: EnvLink? = getSelected()
+        if (currentSelected != null) {
+            //both panels will catch the event,the one that generated the event will be ignored and not changed.
+            if (Objects.equals(currentSelected.env, newSelectedEnv)) {
+                return
+            }
+            currentSelected.deselect { buildLinkText(it, false) }
+        }
+
+        if (newSelectedEnv == null) {
+            return
+        }
+
+        val toSelectPanel: SingleEnvPanel? = (components.stream().filter { (it as SingleEnvPanel).myLink.env == newSelectedEnv }.findAny().orElse(null) as SingleEnvPanel?)
+        toSelectPanel?.myLink?.select { buildLinkText(it, true) }
+
     }
 
     private fun rebuild() {
@@ -63,25 +98,25 @@ class EnvironmentsPanel(private val environmentsSupplier: EnvironmentsSupplier) 
             add(singlePanel)
 
             envLink.addActionListener(){ event ->
-                val currentSelectedPanel: SingleEnvPanel? = (components.stream().filter { (it as SingleEnvPanel).myLink.isSelectedEnv }.findAny().orElse(null) as SingleEnvPanel?)
-                val currentSelected: EnvLink? = currentSelectedPanel?.myLink
+                val currentSelected: EnvLink? = getSelected()
 
                 if (currentSelected === event.source){
                     return@addActionListener
                 }
 
-                if (currentSelected != null) {
-                    currentSelected.isSelectedEnv = false
-                    currentSelected.text = buildLinkText(currentSelected.env, false)
-                }
+                currentSelected?.deselect { buildLinkText(it, false) }
 
                 val clickedLink: EnvLink = event.source as EnvLink
-                clickedLink.text = buildLinkText(clickedLink.env,true)
-                clickedLink.isSelectedEnv = true
+                clickedLink.select { buildLinkText(it, true) }
                 environmentsSupplier.setCurrent(clickedLink.env)
             }
         }
         revalidate()
+    }
+
+    private fun getSelected(): EnvLink? {
+        val currentSelectedPanel: SingleEnvPanel? = (components.stream().filter { (it as SingleEnvPanel).myLink.isSelectedEnvironment() }.findAny().orElse(null) as SingleEnvPanel?)
+        return currentSelectedPanel?.myLink
     }
 
 
@@ -144,9 +179,18 @@ class SingleEnvPanel(val myLink: EnvLink) : JBPanel<SingleEnvPanel>() {
 }
 
 
+class EnvLink(val env: String, text: String, private var isSelectedEnv: Boolean = false) : ActionLink(text) {
 
+    fun select(textSupplier: Function<String, String>) {
+        this.text = textSupplier.apply(env)
+        this.isSelectedEnv = true
+    }
 
-class EnvLink(val env: String,text: String,var isSelectedEnv: Boolean = false) : ActionLink(text){
+    fun deselect(textSupplier: Function<String, String>) {
+        this.text = textSupplier.apply(env)
+        this.isSelectedEnv = false
+    }
 
+    fun isSelectedEnvironment(): Boolean = isSelectedEnv
 }
 

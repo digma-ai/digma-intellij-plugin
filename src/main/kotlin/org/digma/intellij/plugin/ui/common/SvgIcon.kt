@@ -3,16 +3,17 @@ package org.digma.intellij.plugin.ui.common
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.util.IconLoader
 import com.intellij.ui.scale.JBUIScale
-import com.intellij.util.SVGLoader
+import org.apache.commons.io.FileUtils
+import org.digma.intellij.plugin.icons.Icons
+import org.digma.intellij.plugin.icons.IconsUtil
 import org.digma.intellij.plugin.log.Log
 import java.awt.Color
 import java.awt.Component
 import java.awt.Graphics
-import java.io.InputStream
+import java.io.File
 import java.nio.charset.StandardCharsets
 import java.util.*
 import javax.swing.Icon
-import javax.swing.ImageIcon
 
 typealias ColorGetter = () -> Color
 
@@ -26,7 +27,6 @@ class SvgIcon constructor(val path: String, val getColor : ColorGetter) : Icon {
             return SvgIcon(path) { color }
         }
     }
-
 
     override fun paintIcon(c: Component?, g: Graphics?, x: Int, y: Int) {
         getIcon().paintIcon(c,g,x,y)
@@ -42,28 +42,41 @@ class SvgIcon constructor(val path: String, val getColor : ColorGetter) : Icon {
 
     private fun getIcon(): Icon {
         val color = getColor()
-        val scale = JBUIScale.sysScale()
-        val key = "$path:x$scale:${color.getHex()}"
+        val key = "$path:${color.getHex()}"
         var icon = cache[key]
         if(icon == null){
-            icon = loadSvg(path, color, scale)
+            icon = loadSvg(path, color)
             cache[key] = icon
         }
         return icon
     }
 
-    private fun loadSvg(path: String, color: Color, scale: Float): Icon {
+    private fun loadSvg(path: String, color: Color): Icon {
         try {
-            Laf::class.java.getResourceAsStream(path).use { inputStream ->
+            Icons::class.java.getResourceAsStream(path).use { inputStream ->
                 Objects.requireNonNull(inputStream)
                 var text = String(inputStream.readAllBytes(), StandardCharsets.UTF_8)
                 text = text.replace("currentColor".toRegex(), color.getHex())
-                val coloredStream: InputStream = text.byteInputStream()
-                return ImageIcon(SVGLoader.load(coloredStream, scale))
+                val tmpFile = File.createTempFile("digma", ".svg")
+                FileUtils.writeStringToFile(tmpFile, text, StandardCharsets.UTF_8)
+                return IconLoader.findIcon(tmpFile.toURI().toURL())!!
             }
         } catch (e: Exception) {
-            Log.error(LOGGER, e, "Could not load svg", path)
-            return IconLoader.getIcon(path, Laf::class.java.classLoader)
+            Log.error(LOGGER, e, "Could not colorize vscode icon {}", path)
+            return IconLoader.getIcon(path, Icons::class.java.classLoader)
         }
+
+//        try {
+//            Laf::class.java.getResourceAsStream(path).use { inputStream ->
+//                Objects.requireNonNull(inputStream)
+//                var text = String(inputStream.readAllBytes(), StandardCharsets.UTF_8)
+//                text = text.replace("currentColor".toRegex(), color.getHex())
+//                val coloredStream: InputStream = text.byteInputStream()
+//                return ImageIcon(SVGLoader.load(coloredStream, JBUIScale.sysScale()))
+//            }
+//        } catch (e: Exception) {
+//            Log.error(LOGGER, e, "Could not load svg", path)
+//            return IconLoader.getIcon(path, Laf::class.java.classLoader)
+//        }
     }
 }

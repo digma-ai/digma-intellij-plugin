@@ -34,6 +34,7 @@ abstract class AbstractViewService(val project: Project) {
         }
     }
 
+    @Suppress("unused")
     fun isVisible():Boolean{
         return toolWindow?.contentManager?.selectedContent === toolWindowContent
     }
@@ -54,17 +55,23 @@ abstract class AbstractViewService(val project: Project) {
             return
         }
 
-        if (toolWindowContent != null){
-            toolWindowContent?.displayName = getViewDisplayName()
-        }
 
-        if (panel != null){
+        if (panel != null) {
 
-            if (SwingUtilities.isEventDispatchThread()){
+            val r = Runnable {
                 panel?.reset()
-            }else{
+
+                if (toolWindowContent != null) {
+                    toolWindowContent?.displayName = getViewDisplayName()
+                    toolWindowContent?.component?.revalidate()
+                }
+            }
+
+            if (SwingUtilities.isEventDispatchThread()) {
+                r.run()
+            } else {
                 SwingUtilities.invokeLater {
-                    panel?.reset()
+                    r.run()
                 }
             }
         }

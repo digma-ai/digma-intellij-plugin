@@ -70,6 +70,8 @@ abstract class AbstractViewService(val project: Project) {
                 if (toolWindowContent != null) {
                     toolWindowContent?.displayName = getViewDisplayName()
                     toolWindowContent?.component?.revalidate()
+                    toolWindow?.component?.revalidate()
+                    toolWindow?.component?.repaint()
                 }
             }
 
@@ -81,7 +83,6 @@ abstract class AbstractViewService(val project: Project) {
                 }
             }
         }
-
     }
 
     protected fun getNonSupportedFileScopeMessage(fileUri: String?): String{

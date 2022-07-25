@@ -112,6 +112,7 @@ class EnvironmentsPanel(project: Project, private val environmentsSupplier: Envi
             }
         }
         revalidate()
+        repaint()
     }
 
     private fun getSelected(): EnvLink? {

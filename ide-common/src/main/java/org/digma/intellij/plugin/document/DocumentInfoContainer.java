@@ -103,8 +103,8 @@ public class DocumentInfoContainer {
             Log.log(LOGGER::debug, "Got usage status for {}: {}", psiFile.getVirtualFile(), usageStatus);
 
             Log.log(LOGGER::debug, "Requesting usage status of errors for {}: with ids {}", psiFile.getVirtualFile(), objectIds);
-            usageStatusOfErrors = analyticsService.getUsageStatusForErrors(objectIds);
-            Log.log(LOGGER::debug, "Got usage status of errors for {}: {}", psiFile.getVirtualFile(), usageStatus);
+            usageStatusOfErrors = analyticsService.getUsageStatusOfErrors(objectIds);
+            Log.log(LOGGER::debug, "Got usage status of errors for {}: {}", psiFile.getVirtualFile(), usageStatusOfErrors);
         } catch (AnalyticsServiceException e) {
             usageStatus = EmptyUsageStatusResult;
             usageStatusOfErrors = EmptyUsageStatusResult;

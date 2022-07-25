@@ -57,7 +57,7 @@ public class ErrorsProvider {
 
             Log.log(LOGGER::debug, "ListViewItems for {}: {}", methodInfo.getId(), errorsListViewItems);
 
-            final UsageStatusResult usageStatus = analyticsService.getUsageStatusForErrors(List.of(methodInfo.idWithType()));
+            final UsageStatusResult usageStatus = analyticsService.getUsageStatusOfErrors(List.of(methodInfo.idWithType()));
             Log.log(LOGGER::debug, "UsageStatus for {}: {}", methodInfo.getId(), usageStatus);
 
             return new ErrorsListContainer(errorsListViewItems, usageStatus);

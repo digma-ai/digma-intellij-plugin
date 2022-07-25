@@ -142,7 +142,7 @@ public class AnalyticsService implements Disposable {
         return analyticsProviderProxy.getUsageStatus(new UsageStatusRequest(objectIds));
     }
 
-    public UsageStatusResult getUsageStatusForErrors(List<String> objectIds) throws AnalyticsServiceException {
+    public UsageStatusResult getUsageStatusOfErrors(List<String> objectIds) throws AnalyticsServiceException {
         return analyticsProviderProxy.getUsageStatus(new UsageStatusRequest(objectIds, List.of("Error")));
     }
 

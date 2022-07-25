@@ -84,11 +84,15 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
         }
 
         override fun getPreferredFocusedComponent(): JComponent {
-            return if (insightsModel.card.name == InsightsTabCard.INSIGHTS.name){
+            return if (insightsModel.card.name == InsightsTabCard.INSIGHTS.name) {
                 insightsList
-            }else{
+            } else {
                 previewList
             }
+        }
+
+        override fun isValidateRoot(): Boolean {
+            return true
         }
 
         //reset must be called from EDT
@@ -110,7 +114,10 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
             }
 
             cardsPanel.revalidate()
+            topPanelWrapper.revalidate()
+            topPanelWrapper.repaint()
             revalidate()
+            repaint()
         }
     }
 

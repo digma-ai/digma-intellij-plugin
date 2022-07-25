@@ -26,7 +26,7 @@ fun environmentsPanel(project: Project, environmentsSupplier: EnvironmentsSuppli
     result.isOpaque = false
     result.border = JBUI.Borders.empty()
     result.layout = BorderLayout()
-    result.add(envsPanel, BorderLayout.CENTER)
+    result.add(envsPanel, BorderLayout.NORTH)
     return result
 
 }

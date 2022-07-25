@@ -115,6 +115,11 @@ fun errorsPanel(project: Project): DigmaTabPanel {
             return errorsList
         }
 
+        override fun isValidateRoot(): Boolean {
+            return true
+        }
+
+
         //reset must be called from EDT
         override fun reset() {
 
@@ -141,7 +146,10 @@ fun errorsPanel(project: Project): DigmaTabPanel {
 
             errorsPanelListCardPanel.revalidate()
             cardsPanel.revalidate()
+            topPanelWrapper.revalidate()
+            topPanelWrapper.repaint()
             revalidate()
+            repaint()
         }
     }
 

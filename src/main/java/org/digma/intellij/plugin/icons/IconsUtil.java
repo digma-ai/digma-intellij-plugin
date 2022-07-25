@@ -4,8 +4,6 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.IconLoader;
 import com.intellij.ui.scale.ScaleContext;
 import com.intellij.util.IconUtil;
-import org.apache.commons.io.FileUtils;
-import org.digma.intellij.plugin.log.Log;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;

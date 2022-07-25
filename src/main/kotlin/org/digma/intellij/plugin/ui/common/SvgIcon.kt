@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.ui.common
 
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.util.IconLoader
-import org.apache.commons.io.FileUtils
 import org.digma.intellij.plugin.log.Log
 import java.awt.Color
 import java.awt.Component
@@ -52,10 +51,10 @@ class SvgIcon constructor(val path: String, val getColor : ColorGetter) : Icon {
         try {
             javaClass.getResourceAsStream(path).use { inputStream ->
                 Objects.requireNonNull(inputStream)
-                var text = String(inputStream.readAllBytes(), StandardCharsets.UTF_8)
+                var text = String(inputStream!!.readAllBytes(), StandardCharsets.UTF_8)
                 text = text.replace("currentColor".toRegex(), color.getHex())
                 val tmpFile = File.createTempFile("digma", ".svg")
-                FileUtils.writeStringToFile(tmpFile, text, StandardCharsets.UTF_8)
+                tmpFile.writeText(text, StandardCharsets.UTF_8)
                 return IconLoader.findIcon(tmpFile.toURI().toURL())!!
             }
         } catch (e: Exception) {

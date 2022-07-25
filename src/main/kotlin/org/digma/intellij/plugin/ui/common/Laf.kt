@@ -8,7 +8,6 @@ import org.digma.intellij.plugin.ui.common.Laf.Sizes.Companion.INSIGHT_ICON_SIZE
 import java.awt.Color
 import java.awt.Font
 import javax.swing.Icon
-import javax.swing.JLabel
 
 /**
  * It's not really a swing LAF,
@@ -47,18 +46,15 @@ object Laf  {
 
     class Colors{
         companion object {
-            @JvmStatic val DEFAULT_LABEL_FOREGROUND: Color = JBColor("Label.foreground", JLabel().foreground)
-
+            @JvmStatic val DEFAULT_LABEL_FOREGROUND: Color = JBColor.foreground()
             @JvmStatic val PLUGIN_BACKGROUND: JBColor = JBColor.namedColor("Plugins.background", JBColor.PanelBackground)
-
-            //val LIST_ITEM_BACKGROUND: JBColor = JBColor(0xE6EEF7, 0x45494A)
             @JvmStatic val LIST_ITEM_BACKGROUND: JBColor = JBColor(Color(0, 0, 50, 15), Color(200, 200, 255, 20))
             @JvmStatic val TRANSPARENT: Color = Color(0, 0, 0, 0)
             @JvmStatic val BLUE_LIGHT_SHADE: Color = Color(0x8f90ff)
             @JvmStatic val ERROR_RED: Color = Color(0xf95959)      // same as in VS Code plugin
             @JvmStatic val ERROR_ORANGE: Color = Color(0xfdb44b)   // same as in VS Code plugin
             @JvmStatic val ERROR_GREEN: Color = Color(0x7dd87d)    // same as in VS Code plugin
-            @JvmStatic val SIMPLE_ICON_COLOR: JBColor = JBColor(0x222222, 0xDDDDDD)
+            //@JvmStatic val SIMPLE_ICON_COLOR: JBColor = JBColor(0x222222, 0xDDDDDD)
             @JvmStatic val GRAY: Color = Color(0x8A8A8A)
         }
     }

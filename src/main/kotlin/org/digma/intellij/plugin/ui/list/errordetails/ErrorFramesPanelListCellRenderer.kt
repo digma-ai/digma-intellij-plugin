@@ -130,7 +130,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
         val namePanel = JPanel()
         namePanel.layout = BorderLayout()
         namePanel.isOpaque = false
-        namePanel.border = Borders.empty(0,Laf.scaleBorders(5),0,0)
+        namePanel.border = Borders.empty(0,5,0,0)
         namePanel.add(name,BorderLayout.WEST)
 
         val result = JPanel()
@@ -148,7 +148,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
         val label = CopyableLabelHtml(text)
         label.toolTipText = text
         panel.add(label)
-        panel.border = Borders.empty(Laf.scaleBorders(3),Laf.scaleBorders(3),Laf.scaleBorders(5),Laf.scaleBorders(3))
+        panel.border = Borders.empty(3,3,5,3)
         panel.isOpaque = false
         return panel
     }

@@ -30,7 +30,7 @@ abstract class PanelList(val project: Project, private var model: PanelListModel
         model.addListDataListener(this)
         model.addListDataListener(cellRenderer)
         this.layout = BoxLayout(this, BoxLayout.Y_AXIS)
-        this.border = Borders.empty(scaleBorders(5))
+        this.border = Borders.empty(5)
         this.background = listBackground()
         this.isOpaque = true
     }

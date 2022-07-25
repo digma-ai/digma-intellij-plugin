@@ -82,7 +82,7 @@ internal fun insightsIconPanelBorder(icon: Icon, text: String, panelsLayoutHelpe
     val panel = InsightAlignedPanel(panelsLayoutHelper)
     panel.layout = BorderLayout()
     panel.isOpaque = false
-    panel.border = empty(2,0,0,Laf.scaleBorders(getInsightIconPanelRightBorderSize()))
+    panel.border = empty(2,0,0, getInsightIconPanelRightBorderSize())
 
     val iconLabel = JLabel(icon)
     iconLabel.horizontalAlignment = SwingConstants.CENTER
@@ -124,7 +124,7 @@ internal fun addCurrentLargestWidthIconPanel(layoutHelper: PanelsLayoutHelper,wi
 class InsightAlignedPanel(private val layoutHelper: PanelsLayoutHelper): JPanel(){
 
     init {
-        border = empty(0,0,0,Laf.scaleBorders(getInsightIconPanelRightBorderSize()))
+        border = empty(0,0,0, getInsightIconPanelRightBorderSize())
     }
     override fun getPreferredSize(): Dimension {
         val ps = super.getPreferredSize()

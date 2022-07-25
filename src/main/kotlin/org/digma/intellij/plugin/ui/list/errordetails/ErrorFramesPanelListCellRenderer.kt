@@ -57,7 +57,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
                 if (modelObject.frame.executedCode.isBlank()){
                     row {
                         if (modelObject.first) {
-                            icon(Laf.Icons.EVENT_RED).horizontalAlign(HorizontalAlign.LEFT)
+                            icon(Laf.Icons.ErrorDetails.EVENT_RED).horizontalAlign(HorizontalAlign.LEFT)
                         }
                         if(modelObject.isInWorkspace()){
                             link(frameText) {
@@ -89,7 +89,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
                     }
                     row{
                         if (modelObject.first) {
-                            icon(Laf.Icons.EVENT_RED).horizontalAlign(HorizontalAlign.LEFT)
+                            icon(Laf.Icons.ErrorDetails.EVENT_RED).horizontalAlign(HorizontalAlign.LEFT)
                         }
                         if(modelObject.isInWorkspace()){
                             link(modelObject.frame.executedCode) {
@@ -114,7 +114,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
 
     private fun spanTitlePanel(modelObject: SpanTitle): JPanel {
 
-        val icon = JLabel(Laf.Icons.TELESCOPE_BLUE_LIGHT_SHADE)
+        val icon = JLabel(Laf.Icons.ErrorDetails.TELESCOPE_BLUE_LIGHT_SHADE)
         icon.foreground = Laf.Colors.BLUE_LIGHT_SHADE
         icon.horizontalAlignment = SwingConstants.LEFT
         icon.border = Borders.empty()

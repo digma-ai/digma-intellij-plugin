@@ -69,17 +69,17 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
 
 
     private fun defaultInsightGroupTitle(value: InsightsList.GroupTitleModel): JPanel {
-        return groupTitlePanel("Unknown: ", value.groupId, Laf.Icons.TELESCOPE)
+        return groupTitlePanel("Unknown: ", value.groupId, Laf.Icons.Insight.TELESCOPE)
     }
 
 
     private fun spanGroupTitle(value: InsightsList.GroupTitleModel): JPanel {
-        return groupTitlePanel("Span: ", value.groupId, Laf.Icons.TELESCOPE)
+        return groupTitlePanel("Span: ", value.groupId, Laf.Icons.Insight.TELESCOPE)
     }
 
     private fun httpEndpointGroupTitle(value: InsightsList.GroupTitleModel): JPanel {
         val labelText = headerAsHtml(value)
-        return groupTitlePanel("REST: ", labelText, Laf.Icons.INTERFACE)
+        return groupTitlePanel("REST: ", labelText, Laf.Icons.Insight.INTERFACE)
     }
 
 

@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI.Borders.empty
-import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.UnmappedInsight
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.buildBoldTitleGrayedComment
@@ -63,7 +62,7 @@ fun unmappedInsightPanel(modelObject: UnmappedInsight, panelsLayoutHelper: Panel
     val methodName = modelObject.codeObjectId.substringAfterLast("\$_\$")
     return createInsightPanel("Unmapped insight: '${modelObject.theType}'",
         "unmapped insight type for '$methodName'",
-        Icons.QUESTION_MARK, "",panelsLayoutHelper)
+        Laf.Icons.Insight.QUESTION_MARK, "",panelsLayoutHelper)
 }
 
 
@@ -71,7 +70,7 @@ fun genericPanelForSingleInsight(modelObject: Any?, panelsLayoutHelper: PanelsLa
 
     return createInsightPanel("Generic insight panel",
         "Insight named ${modelObject?.javaClass?.simpleName}",
-        Icons.QUESTION_MARK, "",panelsLayoutHelper)
+        Laf.Icons.Insight.QUESTION_MARK, "",panelsLayoutHelper)
 }
 
 

@@ -9,10 +9,10 @@ class ScopeLineIconProducer(val model: PanelModel): Producer<Icon> {
     //currently supports only method
     override fun produce(): Icon {
         if (model.isMethodScope()){
-            return Laf.Icons.METHOD
+            return Laf.Icons.Insight.METHOD
         }else if (model.isDocumentScope()){
-            return Laf.Icons.FILE
+            return Laf.Icons.Insight.FILE
         }
-        return Laf.Icons.EMPTY
+        return Laf.Icons.Insight.EMPTY
     }
 }

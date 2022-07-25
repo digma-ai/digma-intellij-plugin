@@ -260,7 +260,7 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
     val size = Laf.scalePanels(Laf.Sizes.ERROR_DETAILS_NAVIGATION_BUTTON_SIZE)
     val buttonsSize = Dimension(size + 2, size + 2)
 
-    val backButton = IconButton(Laf.Icons.BACK)
+    val backButton = IconButton(Laf.Icons.ErrorDetails.BACK)
     backButton.preferredSize = buttonsSize
     backButton.maximumSize = buttonsSize
     backButton.addActionListener {
@@ -271,7 +271,7 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
         framesList.getModel().setListData(errorsModel.errorDetails.flowStacks.getCurrentStack())
     }
 
-    val forwardButton = IconButton(Laf.Icons.FORWARD)
+    val forwardButton = IconButton(Laf.Icons.ErrorDetails.FORWARD)
     forwardButton.preferredSize = buttonsSize
     forwardButton.maximumSize = buttonsSize
     forwardButton.addActionListener {
@@ -401,7 +401,7 @@ private fun backButton(project: Project): JComponent {
     val size = Laf.scalePanels(Laf.Sizes.ERROR_DETAILS_BACK_BUTTON_SIZE)
     val buttonsSize = Dimension(size + 2, size + 3)
 
-    val backButton = IconButton(Laf.Icons.BACK)
+    val backButton = IconButton(Laf.Icons.ErrorDetails.BACK)
     backButton.preferredSize = buttonsSize
     backButton.maximumSize = buttonsSize
     backButton.addActionListener {

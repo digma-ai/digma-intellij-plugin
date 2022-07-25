@@ -2,10 +2,7 @@ package org.digma.intellij.plugin.ui.common
 
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.util.IconLoader
-import com.intellij.ui.scale.JBUIScale
 import org.apache.commons.io.FileUtils
-import org.digma.intellij.plugin.icons.Icons
-import org.digma.intellij.plugin.icons.IconsUtil
 import org.digma.intellij.plugin.log.Log
 import java.awt.Color
 import java.awt.Component
@@ -53,7 +50,7 @@ class SvgIcon constructor(val path: String, val getColor : ColorGetter) : Icon {
 
     private fun loadSvg(path: String, color: Color): Icon {
         try {
-            Icons::class.java.getResourceAsStream(path).use { inputStream ->
+            javaClass.getResourceAsStream(path).use { inputStream ->
                 Objects.requireNonNull(inputStream)
                 var text = String(inputStream.readAllBytes(), StandardCharsets.UTF_8)
                 text = text.replace("currentColor".toRegex(), color.getHex())
@@ -63,11 +60,11 @@ class SvgIcon constructor(val path: String, val getColor : ColorGetter) : Icon {
             }
         } catch (e: Exception) {
             Log.error(LOGGER, e, "Could not colorize vscode icon {}", path)
-            return IconLoader.getIcon(path, Icons::class.java.classLoader)
+            return IconLoader.getIcon(path, javaClass.classLoader)
         }
 
 //        try {
-//            Laf::class.java.getResourceAsStream(path).use { inputStream ->
+//            javaClass.getResourceAsStream(path).use { inputStream ->
 //                Objects.requireNonNull(inputStream)
 //                var text = String(inputStream.readAllBytes(), StandardCharsets.UTF_8)
 //                text = text.replace("currentColor".toRegex(), color.getHex())
@@ -76,7 +73,7 @@ class SvgIcon constructor(val path: String, val getColor : ColorGetter) : Icon {
 //            }
 //        } catch (e: Exception) {
 //            Log.error(LOGGER, e, "Could not load svg", path)
-//            return IconLoader.getIcon(path, Laf::class.java.classLoader)
+//            return IconLoader.getIcon(path, javaClass.classLoader)
 //        }
     }
 }

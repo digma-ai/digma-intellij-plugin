@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.errors.ErrorsProvider
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.ui.model.DocumentScope
@@ -13,9 +14,9 @@ import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.model.errors.ErrorDetailsModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsTabCard
-import java.util.*
+import java.util.Collections
 
-class ErrorsViewService(project: Project): AbstractViewService(project) {
+class ErrorsViewService(project: Project) : AbstractViewService(project) {
 
     private val logger: Logger = Logger.getInstance(ErrorsViewService::class.java)
 
@@ -33,7 +34,7 @@ class ErrorsViewService(project: Project): AbstractViewService(project) {
 
 
     override fun getViewDisplayName(): String {
-        return "Errors" + if(model.errorsCount > 0) " (${model.count()})" else ""
+        return "Errors" + if (model.errorsCount > 0) " (${model.count()})" else ""
     }
 
     fun contextChanged(
@@ -44,6 +45,7 @@ class ErrorsViewService(project: Project): AbstractViewService(project) {
 
         val errorsListContainer = errorsProvider.getErrors(methodInfo)
         model.listViewItems = errorsListContainer.listViewItems
+        model.usageStatusResult = EmptyUsageStatusResult
         model.scope = MethodScope(methodInfo)
         model.card = ErrorsTabCard.ERRORS_LIST
         model.errorsCount = errorsListContainer.count
@@ -52,12 +54,12 @@ class ErrorsViewService(project: Project): AbstractViewService(project) {
     }
 
 
-
     fun contextChangeNoMethodInfo(dummy: MethodInfo) {
 
         Log.log(logger::debug, "contextChangeNoMethodInfo to {}. ", dummy)
 
         model.listViewItems = ArrayList()
+        model.usageStatusResult = EmptyUsageStatusResult
         model.scope = MethodScope(dummy)
         model.card = ErrorsTabCard.ERRORS_LIST
         model.errorsCount = 0
@@ -66,13 +68,13 @@ class ErrorsViewService(project: Project): AbstractViewService(project) {
     }
 
 
-
     fun showErrorDetails(uid: String) {
 
         Log.log(logger::debug, "showDocumentPreviewList for {}. ", uid)
 
         val errorDetails = errorsProvider.getErrorDetails(uid)
-        errorDetails.flowStacks.isWorkspaceOnly = project.getService(PersistenceService::class.java).state.isWorkspaceOnly
+        errorDetails.flowStacks.isWorkspaceOnly =
+            project.getService(PersistenceService::class.java).state.isWorkspaceOnly
         model.errorDetails = errorDetails
         model.card = ErrorsTabCard.ERROR_DETAILS
 
@@ -95,6 +97,7 @@ class ErrorsViewService(project: Project): AbstractViewService(project) {
         Log.log(logger::debug, "empty called")
 
         model.listViewItems = Collections.emptyList()
+        model.usageStatusResult = EmptyUsageStatusResult
         model.scope = EmptyScope("")
         model.card = ErrorsTabCard.ERRORS_LIST
         model.errorsCount = 0
@@ -107,6 +110,7 @@ class ErrorsViewService(project: Project): AbstractViewService(project) {
         Log.log(logger::debug, "emptyNonSupportedFile called")
 
         model.listViewItems = Collections.emptyList()
+        model.usageStatusResult = EmptyUsageStatusResult
         model.scope = EmptyScope(getNonSupportedFileScopeMessage(fileUri))
         model.card = ErrorsTabCard.ERRORS_LIST
         model.errorsCount = 0
@@ -119,8 +123,10 @@ class ErrorsViewService(project: Project): AbstractViewService(project) {
     the errors tab don't need to load anything when showing preview in insights tab,
     just needs to update the scope and empty the list
      */
-    fun showDocumentPreviewList(documentInfoContainer: DocumentInfoContainer?,
-                                fileUri: String) {
+    fun showDocumentPreviewList(
+        documentInfoContainer: DocumentInfoContainer?,
+        fileUri: String
+    ) {
 
         Log.log(logger::debug, "showDocumentPreviewList for {}. ", fileUri)
 
@@ -133,6 +139,7 @@ class ErrorsViewService(project: Project): AbstractViewService(project) {
         }
 
         model.listViewItems = ArrayList()
+        model.usageStatusResult = EmptyUsageStatusResult
         model.card = ErrorsTabCard.ERRORS_LIST
 
         updateUi()

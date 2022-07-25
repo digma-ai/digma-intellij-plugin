@@ -141,6 +141,7 @@ fun errorsPanel(project: Project): DigmaTabPanel {
 
             errorsPanelListCardPanel.revalidate()
             cardsPanel.revalidate()
+            revalidate()
         }
     }
 

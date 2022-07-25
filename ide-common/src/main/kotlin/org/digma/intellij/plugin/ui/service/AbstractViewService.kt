@@ -25,15 +25,22 @@ abstract class AbstractViewService(val project: Project) {
             return
         }
 
-        if (SwingUtilities.isEventDispatchThread()) {
+        val r = Runnable {
             toolWindow?.contentManager?.setSelectedContent(toolWindowContent!!, false)
+            toolWindowContent?.component?.revalidate()
+            panel?.reset()
+        }
+
+        if (SwingUtilities.isEventDispatchThread()) {
+            r.run()
         } else {
             SwingUtilities.invokeLater {
-                toolWindow?.contentManager?.setSelectedContent(toolWindowContent!!, false)
+                r.run()
             }
         }
     }
 
+    @Suppress("unused")
     fun isVisible():Boolean{
         return toolWindow?.contentManager?.selectedContent === toolWindowContent
     }
@@ -54,21 +61,28 @@ abstract class AbstractViewService(val project: Project) {
             return
         }
 
-        if (toolWindowContent != null){
-            toolWindowContent?.displayName = getViewDisplayName()
-        }
 
-        if (panel != null){
+        if (panel != null) {
 
-            if (SwingUtilities.isEventDispatchThread()){
+            val r = Runnable {
                 panel?.reset()
-            }else{
+
+                if (toolWindowContent != null) {
+                    toolWindowContent?.displayName = getViewDisplayName()
+                    toolWindowContent?.component?.revalidate()
+                    toolWindow?.component?.revalidate()
+                    toolWindow?.component?.repaint()
+                }
+            }
+
+            if (SwingUtilities.isEventDispatchThread()) {
+                r.run()
+            } else {
                 SwingUtilities.invokeLater {
-                    panel?.reset()
+                    r.run()
                 }
             }
         }
-
     }
 
     protected fun getNonSupportedFileScopeMessage(fileUri: String?): String{

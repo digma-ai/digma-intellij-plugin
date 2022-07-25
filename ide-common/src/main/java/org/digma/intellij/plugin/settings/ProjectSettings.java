@@ -41,7 +41,11 @@ public class ProjectSettings implements Configurable {
     @Override
     public boolean isModified() {
         SettingsState settings = SettingsState.getInstance(project);
-        return isUrlChanged(settings) || isApiTokenChanged(settings);
+        return isUrlChanged(settings) || isApiTokenChanged(settings) || isRefreshDelayChanged(settings);
+    }
+
+    private boolean isRefreshDelayChanged(SettingsState settings) {
+        return !Objects.equals(String.valueOf(settings.refreshDelay),mySettingsComponent.getRefreshDelayText());
     }
 
     private boolean isUrlChanged(SettingsState settings){
@@ -74,6 +78,7 @@ public class ProjectSettings implements Configurable {
 
         settings.apiUrl = mySettingsComponent.getApiUrlText();
         settings.apiToken = theApiToken;
+        settings.refreshDelay = Integer.parseInt(mySettingsComponent.getRefreshDelayText());
         settings.fireChanged();
     }
 
@@ -82,6 +87,7 @@ public class ProjectSettings implements Configurable {
         SettingsState settings = SettingsState.getInstance(project);
         mySettingsComponent.setApiUrlText(settings.apiUrl);
         mySettingsComponent.setApiToken(settings.apiToken);
+        mySettingsComponent.setRefreshDelayText(String.valueOf(settings.refreshDelay));
     }
 
     @Override

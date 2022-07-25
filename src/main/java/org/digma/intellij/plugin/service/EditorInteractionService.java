@@ -130,7 +130,6 @@ public class EditorInteractionService implements CaretContextService, Disposable
         Log.log(LOGGER::info, "Starting...");
         EditorEventsHandler editorEventsHandler = project.getService(EditorEventsHandler.class);
         editorEventsHandler.start(project);
-        environmentsSupplier.refresh();
     }
 
 }

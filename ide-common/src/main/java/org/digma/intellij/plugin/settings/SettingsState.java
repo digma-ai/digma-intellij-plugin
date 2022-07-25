@@ -26,7 +26,10 @@ import java.util.List;
 public class SettingsState implements PersistentStateComponent<SettingsState> , Disposable {
 
   public static final String DEFAULT_API_URL = "https://localhost:5051";
+  public static final int DEFAULT_REFRESH_DELAY = 30;
   public String apiUrl = DEFAULT_API_URL;
+
+  public int refreshDelay = DEFAULT_REFRESH_DELAY;
   @Nullable
   public String apiToken = null;
   private final List<SettingsChangeListener> listeners = new ArrayList<>();

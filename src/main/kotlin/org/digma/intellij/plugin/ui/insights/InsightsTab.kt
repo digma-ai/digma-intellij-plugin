@@ -110,6 +110,7 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
             }
 
             cardsPanel.revalidate()
+            revalidate()
         }
     }
 

@@ -9,7 +9,6 @@ import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.document.CodeObjectsUtil
-import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.Percentile
 import org.digma.intellij.plugin.model.rest.insights.SlowSpanInfo
 import org.digma.intellij.plugin.model.rest.insights.SlowestSpansInsight
@@ -60,7 +59,7 @@ fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: 
 
     val iconPanel = panel {
         row {
-            cell(insightsIconPanelBorder(Icons.Insight.BOTTLENECK, wrapCentered("Slow<br>Spans"),panelsLayoutHelper))
+            cell(insightsIconPanelBorder(Laf.Icons.Insight.BOTTLENECK, wrapCentered("Slow<br>Spans"),panelsLayoutHelper))
                 .horizontalAlign(HorizontalAlign.RIGHT)
         }.layout(RowLayout.INDEPENDENT)
     }

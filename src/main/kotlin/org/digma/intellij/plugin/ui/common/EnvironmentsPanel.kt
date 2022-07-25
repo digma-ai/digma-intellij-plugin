@@ -11,17 +11,17 @@ import com.intellij.util.ui.WrapLayout
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
 import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.common.CommonUtils.prettyTimeOf
-import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
+import org.digma.intellij.plugin.ui.common.Laf.Icons.Environment.Companion.ENVIRONMENT_HAS_NO_USAGE
+import org.digma.intellij.plugin.ui.common.Laf.Icons.Environment.Companion.ENVIRONMENT_HAS_USAGE
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsListChangedListener
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
-import java.awt.FlowLayout
-import java.util.function.Supplier
-import javax.swing.Icon
 import java.awt.BorderLayout
 import java.awt.FlowLayout
 import java.awt.GridLayout
+import java.util.Objects
 import java.util.function.Function
+import javax.swing.Icon
 import javax.swing.JPanel
 
 fun environmentsPanel(project: Project, environmentsSupplier: EnvironmentsSupplier, usageStatusResult: UsageStatusResult): JPanel {
@@ -117,7 +117,7 @@ class EnvironmentsPanel(project: Project, private val environmentsSupplier: Envi
             }
 
             val icon: Icon =
-                if (hasUsageFunction(currEnv)) Icons.ENVIRONMENT_HAS_USAGE else Icons.ENVIRONMENT_HAS_NO_USAGE
+                if (hasUsageFunction(currEnv)) ENVIRONMENT_HAS_USAGE else ENVIRONMENT_HAS_NO_USAGE
             val iconComponent = JBLabel(icon)
 
             val singlePanel = SingleEnvPanel()

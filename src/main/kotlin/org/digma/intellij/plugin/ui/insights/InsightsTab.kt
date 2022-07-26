@@ -23,9 +23,9 @@ import javax.swing.JLabel
 import javax.swing.JPanel
 
 
-private const val NO_INFO_CARD_NAME="NO-INFO"
+private const val NO_INFO_CARD_NAME = "NO-INFO"
 
-fun insightsPanel(project: Project ): DigmaTabPanel {
+fun insightsPanel(project: Project): DigmaTabPanel {
 
     //errorsModel and insightsModel are not singletons but are single per open project.
     //they are created by the view service and live as long as the project is alive.
@@ -36,8 +36,8 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
     val topPanelWrapper = createTopPanel(project, insightsModel)
 
 
-    val insightsList = ScrollablePanelList(InsightsList(project,insightsModel.listViewItems))
-    val previewList = ScrollablePanelList(PreviewList(project,insightsModel.previewListViewItems))
+    val insightsList = ScrollablePanelList(InsightsList(project, insightsModel.listViewItems))
+    val previewList = ScrollablePanelList(PreviewList(project, insightsModel.previewListViewItems))
 
     val previewTitle = panel {
         row {
@@ -48,7 +48,7 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
             label("No code object was selected")
                 .horizontalAlign(HorizontalAlign.CENTER)
         }
-        row{
+        row {
             label("").bind(
                 JLabel::getText, JLabel::setText, MutableProperty(
                     getter = { insightsModel.getPreviewListMessage() },
@@ -60,8 +60,8 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
     previewTitle.isOpaque = false
 
     val previewPanel = JPanel(BorderLayout())
-    previewPanel.add(previewTitle,BorderLayout.NORTH)
-    previewPanel.add(previewList,BorderLayout.CENTER)
+    previewPanel.add(previewTitle, BorderLayout.NORTH)
+    previewPanel.add(previewList, BorderLayout.CENTER)
     previewPanel.isOpaque = false
 
 
@@ -72,13 +72,13 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
     cardsPanel.isOpaque = false
     cardsPanel.add(insightsList, InsightsTabCard.INSIGHTS.name)
     cardsPanel.add(previewPanel, InsightsTabCard.PREVIEW.name)
-    cardsPanel.add(noInfoWarningPanel,NO_INFO_CARD_NAME )
+    cardsPanel.add(noInfoWarningPanel, NO_INFO_CARD_NAME)
     cardLayout.addLayoutComponent(insightsList, InsightsTabCard.INSIGHTS.name)
     cardLayout.addLayoutComponent(previewPanel, InsightsTabCard.PREVIEW.name)
     cardLayout.addLayoutComponent(noInfoWarningPanel, NO_INFO_CARD_NAME)
-    cardLayout.show(cardsPanel,insightsModel.card.name)
+    cardLayout.show(cardsPanel, insightsModel.card.name)
 
-    val result = object: DigmaTabPanel() {
+    val result = object : DigmaTabPanel() {
         override fun getPreferredFocusableComponent(): JComponent {
             return topPanelWrapper
         }
@@ -111,8 +111,8 @@ fun insightsPanel(project: Project ): DigmaTabPanel {
     }
 
     result.layout = BorderLayout()
-    result.add(topPanelWrapper,BorderLayout.NORTH)
-    result.add(cardsPanel,BorderLayout.CENTER)
+    result.add(topPanelWrapper, BorderLayout.NORTH)
+    result.add(cardsPanel, BorderLayout.CENTER)
     result.background = listBackground()
 
     return result

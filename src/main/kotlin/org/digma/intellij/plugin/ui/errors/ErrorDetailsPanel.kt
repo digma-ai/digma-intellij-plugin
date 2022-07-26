@@ -3,24 +3,43 @@ package org.digma.intellij.plugin.ui.errors
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.JBColor
-import com.intellij.ui.dsl.builder.*
+import com.intellij.ui.dsl.builder.MutableProperty
+import com.intellij.ui.dsl.builder.RightGap
+import com.intellij.ui.dsl.builder.RowLayout
+import com.intellij.ui.dsl.builder.TopGap
+import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.ui.dsl.gridLayout.VerticalAlign
 import com.intellij.util.ui.JBUI.Borders
 import com.intellij.util.ui.WrapLayout
+import org.digma.intellij.plugin.common.CommonUtils.prettyTimeOf
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.service.ErrorsActionsService
-import org.digma.intellij.plugin.ui.common.*
+import org.digma.intellij.plugin.ui.common.CopyableLabel
+import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
+import org.digma.intellij.plugin.ui.common.JTransparentPanel
+import org.digma.intellij.plugin.ui.common.Laf
+import org.digma.intellij.plugin.ui.common.asHtml
+import org.digma.intellij.plugin.ui.common.boldFonts
+import org.digma.intellij.plugin.ui.common.buildBoldGrayRegularText
+import org.digma.intellij.plugin.ui.common.createScorePanelNoArrows
+import org.digma.intellij.plugin.ui.common.span
+import org.digma.intellij.plugin.ui.common.spanGrayed
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.errordetails.ErrorFramesPanelList
 import org.digma.intellij.plugin.ui.list.listBackground
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
-import org.ocpsoft.prettytime.PrettyTime
-import java.awt.*
-import java.util.*
+import java.awt.BorderLayout
+import java.awt.Color
+import java.awt.Dimension
+import java.awt.FlowLayout
+import java.awt.GridBagConstraints
+import java.awt.GridBagLayout
+import java.awt.GridLayout
+import java.util.Date
 import java.util.function.Consumer
 import javax.swing.JComponent
 import javax.swing.JLabel
@@ -34,7 +53,7 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
     val backButtonWrapper = JPanel()
     backButtonWrapper.layout = BorderLayout()
     backButtonWrapper.isOpaque = false
-    backButtonWrapper.border = Borders.empty(5,5,0,0)
+    backButtonWrapper.border = Borders.empty(5, 5, 0, 0)
     backButtonWrapper.add(backButton,BorderLayout.NORTH)
 
     val namePanel = namePanel(errorsModel)
@@ -365,13 +384,6 @@ private fun buildTimeSpanHtml(name: String, value: Date?): String {
 
     return asHtml("${spanGrayed(name)}<br>${span(prettyTimeOf(value))}")
 }
-
-
-private fun prettyTimeOf(date: Date?): String {
-    val ptNow = PrettyTime()
-    return ptNow.format(date)
-}
-
 
 fun buildServicesPanel(servicesPanel: JPanel, errorsModel: ErrorsModel) {
 

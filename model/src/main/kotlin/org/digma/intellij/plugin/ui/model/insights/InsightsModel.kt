@@ -1,14 +1,21 @@
 package org.digma.intellij.plugin.ui.model.insights
 
-import org.digma.intellij.plugin.ui.model.*
+import org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult
+import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
+import org.digma.intellij.plugin.ui.model.DocumentScope
+import org.digma.intellij.plugin.ui.model.EmptyScope
+import org.digma.intellij.plugin.ui.model.MethodScope
+import org.digma.intellij.plugin.ui.model.PanelModel
+import org.digma.intellij.plugin.ui.model.Scope
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
-import java.util.*
+import java.util.Collections
 
 class InsightsModel : PanelModel {
 
     var insightsCount: Int = 0
     var listViewItems: List<ListViewItem<*>> = Collections.emptyList()
     var previewListViewItems: List<ListViewItem<String>> = Collections.emptyList()
+    var usageStatusResult: UsageStatusResult = EmptyUsageStatusResult
     var card: InsightsTabCard = InsightsTabCard.INSIGHTS
     var scope: Scope = EmptyScope("")
 
@@ -31,6 +38,10 @@ class InsightsModel : PanelModel {
 
     override fun getScopeTooltip(): String {
         return scope.getScopeTooltip()
+    }
+
+    override fun getUsageStatus(): UsageStatusResult {
+        return usageStatusResult
     }
 
     fun getPreviewListMessage(): String {

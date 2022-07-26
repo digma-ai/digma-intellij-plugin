@@ -68,6 +68,12 @@ object Laf  {
                 @JvmStatic val TELESCOPE_BLUE_LIGHT_SHADE: Icon = SvgIcon.withColor("/icons/telescope.svg", Colors.BLUE_LIGHT_SHADE)
             }
         }
+        class Environment {
+            companion object {
+                @JvmStatic val ENVIRONMENT_HAS_USAGE = loadAndScaleIconByWidth("/icons/used.png", 8)
+                @JvmStatic val ENVIRONMENT_HAS_NO_USAGE = loadAndScaleIconByWidth("/icons/unused.png", 8)
+            }
+        }
         class Insight{
             companion object {
                 // Scope icons

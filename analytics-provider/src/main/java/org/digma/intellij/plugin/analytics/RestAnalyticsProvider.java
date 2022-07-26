@@ -9,6 +9,8 @@ import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
+import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
+import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -32,7 +34,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     private final Client client;
 
     public RestAnalyticsProvider(String baseUrl) {
-        this(baseUrl,null);
+        this(baseUrl, null);
     }
 
     public RestAnalyticsProvider(String baseUrl, String apiToken) {
@@ -62,6 +64,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     @Override
     public CodeObjectErrorDetails getCodeObjectErrorDetails(String errorSourceId) {
         return execute(() -> client.analyticsProvider.getCodeObjectErrorDetails(errorSourceId));
+    }
+
+    @Override
+    public UsageStatusResult getUsageStatus(UsageStatusRequest usageStatusRequest) {
+        return execute(() -> client.analyticsProvider.getUsageStatus(usageStatusRequest));
     }
 
     public <T> T execute(Supplier<Call<T>> supplier) {
@@ -247,6 +254,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @GET("/CodeAnalytics/codeObjects/errors/{errorSourceId}")
         Call<CodeObjectErrorDetails> getCodeObjectErrorDetails(@Path("errorSourceId") String errorSourceId);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/CodeAnalytics/codeobjects/status")
+        Call<UsageStatusResult> getUsageStatus(@Body UsageStatusRequest usageStatusRequest);
 
     }
 

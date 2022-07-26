@@ -18,7 +18,6 @@ import org.digma.intellij.plugin.ui.model.environment.EnvironmentsListChangedLis
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
 import java.awt.BorderLayout
 import java.awt.FlowLayout
-import java.awt.GridLayout
 import java.util.Objects
 import java.util.function.Function
 import javax.swing.Icon
@@ -232,8 +231,9 @@ class EnvironmentsPanel(
 class SingleEnvPanel(val myLink: EnvLink, iconComponent: JComponent) : JBPanel<SingleEnvPanel>() {
     init {
         isOpaque = false
-        layout = GridLayout(1, 1)
+        layout = FlowLayout(FlowLayout.LEFT, 3, 3)
         border = JBUI.Borders.empty(1)
+
         add(iconComponent)
         add(myLink)
     }

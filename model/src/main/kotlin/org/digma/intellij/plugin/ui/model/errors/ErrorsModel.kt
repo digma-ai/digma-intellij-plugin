@@ -11,12 +11,13 @@ import org.digma.intellij.plugin.ui.model.Scope
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.lang.Integer.max
 import java.util.Collections
+import java.util.concurrent.atomic.AtomicReference
 
 class ErrorsModel : PanelModel {
 
     var errorsCount: Int = 0
     var listViewItems: List<ListViewItem<CodeObjectError>> = Collections.emptyList()
-    var usageStatusResult: UsageStatusResult = EmptyUsageStatusResult
+    var usageStatusResultRef: AtomicReference<UsageStatusResult> = AtomicReference(EmptyUsageStatusResult)
     var scope: Scope = EmptyScope("")
     var errorDetails: ErrorDetailsModel = ErrorDetailsModel()
     var card: ErrorsTabCard = ErrorsTabCard.ERRORS_LIST

@@ -15,10 +15,10 @@ import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsTabCard
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
-import java.util.*
+import java.util.Collections
 import java.util.stream.Collectors
 
-class InsightsViewService(project: Project): AbstractViewService(project) {
+class InsightsViewService(project: Project) : AbstractViewService(project) {
 
     private val logger: Logger = Logger.getInstance(InsightsViewService::class.java)
 
@@ -30,7 +30,7 @@ class InsightsViewService(project: Project): AbstractViewService(project) {
 
 
     override fun getViewDisplayName(): String {
-        return "Insights" + if(model.insightsCount > 0) " (${model.count()})" else ""
+        return "Insights" + if (model.insightsCount > 0) " (${model.count()})" else ""
     }
 
 
@@ -58,7 +58,7 @@ class InsightsViewService(project: Project): AbstractViewService(project) {
 
         model.listViewItems = insightsListContainer.listViewItems
         model.previewListViewItems = ArrayList()
-        model.usageStatusResult = insightsListContainer.usageStatus
+        model.usageStatusResultRef.set(insightsListContainer.usageStatus)
         model.scope = MethodScope(methodInfo)
         model.insightsCount = insightsListContainer.count
         model.card = InsightsTabCard.INSIGHTS
@@ -73,7 +73,7 @@ class InsightsViewService(project: Project): AbstractViewService(project) {
 
         model.listViewItems = ArrayList()
         model.previewListViewItems = ArrayList()
-        model.usageStatusResult = EmptyUsageStatusResult
+        model.usageStatusResultRef.set(EmptyUsageStatusResult)
         model.scope = MethodScope(dummy)
         model.insightsCount = 0
         model.card = InsightsTabCard.INSIGHTS
@@ -82,14 +82,13 @@ class InsightsViewService(project: Project): AbstractViewService(project) {
     }
 
 
-
     fun empty() {
 
         Log.log(logger::debug, "empty called")
 
         model.listViewItems = ArrayList()
         model.previewListViewItems = ArrayList()
-        model.usageStatusResult = EmptyUsageStatusResult
+        model.usageStatusResultRef.set(EmptyUsageStatusResult)
         model.scope = EmptyScope("")
         model.insightsCount = 0
         model.card = InsightsTabCard.INSIGHTS
@@ -97,33 +96,35 @@ class InsightsViewService(project: Project): AbstractViewService(project) {
         updateUi()
     }
 
-   fun emptyNonSupportedFile(fileUri: String) {
+    fun emptyNonSupportedFile(fileUri: String) {
 
         Log.log(logger::debug, "empty called")
 
         model.listViewItems = ArrayList()
-       model.previewListViewItems = ArrayList()
-       model.usageStatusResult = EmptyUsageStatusResult
-       model.scope = EmptyScope(getNonSupportedFileScopeMessage(fileUri))
+        model.previewListViewItems = ArrayList()
+        model.usageStatusResultRef.set(EmptyUsageStatusResult)
+        model.scope = EmptyScope(getNonSupportedFileScopeMessage(fileUri))
         model.insightsCount = 0
         model.card = InsightsTabCard.INSIGHTS
 
         updateUi()
     }
 
-    fun showDocumentPreviewList(documentInfoContainer: DocumentInfoContainer?,
-                                fileUri: String) {
+    fun showDocumentPreviewList(
+        documentInfoContainer: DocumentInfoContainer?,
+        fileUri: String
+    ) {
 
         Log.log(logger::debug, "showDocumentPreviewList for {}. ", fileUri)
 
         if (documentInfoContainer == null) {
             model.previewListViewItems = ArrayList()
-            model.usageStatusResult = EmptyUsageStatusResult
+            model.usageStatusResultRef.set(EmptyUsageStatusResult)
             model.scope = EmptyScope(fileUri.substringAfterLast('/'))
             model.insightsCount = 0
         } else {
             model.previewListViewItems = getDocumentPreviewItems(documentInfoContainer)
-            model.usageStatusResult = documentInfoContainer.usageStatus
+            model.usageStatusResultRef.set(documentInfoContainer.usageStatus)
             model.scope = DocumentScope(documentInfoContainer.documentInfo)
             model.insightsCount = computeInsightsPreviewCount(documentInfoContainer)
         }
@@ -133,7 +134,6 @@ class InsightsViewService(project: Project): AbstractViewService(project) {
         updateUi()
         setVisible()
     }
-
 
 
     private fun computeInsightsPreviewCount(documentInfoContainer: DocumentInfoContainer): Int {
@@ -152,13 +152,13 @@ class InsightsViewService(project: Project): AbstractViewService(project) {
             ids.add(id)
 
             if (docSummariesIds.any { ids.contains(it) }) {
-                listViewItems.add(ListViewItem(methodInfo.id,0))
+                listViewItems.add(ListViewItem(methodInfo.id, 0))
             }
         }
 
         //sort by name of the function, it will be sorted later by sortIndex when added to a PanelListModel, but
         // because they all have the same sortIndex then positions will not change
-        Collections.sort(listViewItems,Comparator.comparing { it.modelObject } )
+        Collections.sort(listViewItems, Comparator.comparing { it.modelObject })
         return listViewItems
 
     }

@@ -27,9 +27,9 @@ import javax.swing.JLabel
 import javax.swing.JPanel
 
 
-private const val NO_INFO_CARD_NAME="NO-INFO"
-private const val LIST_CARD_NAME="LIST"
-private const val PREVIEW_LIST_CARD_NAME="PREVIEW_LIST"
+private const val NO_INFO_CARD_NAME = "NO-INFO"
+private const val LIST_CARD_NAME = "LIST"
+private const val PREVIEW_LIST_CARD_NAME = "PREVIEW_LIST"
 
 
 fun errorsPanel(project: Project): DigmaTabPanel {
@@ -41,7 +41,7 @@ fun errorsPanel(project: Project): DigmaTabPanel {
     val errorsModel = ErrorsViewService.getInstance(project).model
     val insightsModel = InsightsViewService.getInstance(project).model
 
-    val topPanelWrapper = createTopPanel(project, errorsModel, errorsModel::usageStatusResult)
+    val topPanelWrapper = createTopPanel(project, errorsModel, errorsModel.usageStatusResultRef)
 
     val errorsList = ScrollablePanelList(ErrorsPanelList(project, errorsModel.listViewItems))
 
@@ -55,7 +55,7 @@ fun errorsPanel(project: Project): DigmaTabPanel {
             label("No code object was selected")
                 .horizontalAlign(HorizontalAlign.CENTER)
         }
-        row{
+        row {
             label("").bind(
                 JLabel::getText, JLabel::setText, MutableProperty(
                     getter = { insightsModel.getPreviewListMessage() },
@@ -65,8 +65,8 @@ fun errorsPanel(project: Project): DigmaTabPanel {
     }
     previewTitle.isOpaque = false
     val previewPanel = JPanel(BorderLayout())
-    previewPanel.add(previewTitle,BorderLayout.NORTH)
-    previewPanel.add(previewList,BorderLayout.CENTER)
+    previewPanel.add(previewTitle, BorderLayout.NORTH)
+    previewPanel.add(previewList, BorderLayout.CENTER)
     previewPanel.isOpaque = false
 
 
@@ -94,7 +94,7 @@ fun errorsPanel(project: Project): DigmaTabPanel {
     errorsListPanel.add(errorsPanelListCardPanel, BorderLayout.CENTER)
 
 
-    val errorsDetailsPanel = errorDetailsPanel(project,errorsModel)
+    val errorsDetailsPanel = errorDetailsPanel(project, errorsModel)
 
 
     val cardLayout = CardLayout()
@@ -146,7 +146,7 @@ fun errorsPanel(project: Project): DigmaTabPanel {
     }
 
     result.layout = BorderLayout()
-    result.add(cardsPanel,BorderLayout.CENTER)
+    result.add(cardsPanel, BorderLayout.CENTER)
     result.background = listBackground()
     return result
 }

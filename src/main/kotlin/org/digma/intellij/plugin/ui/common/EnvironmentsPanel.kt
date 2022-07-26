@@ -19,6 +19,7 @@ import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
 import java.awt.BorderLayout
 import java.awt.FlowLayout
 import java.util.Objects
+import java.util.concurrent.atomic.AtomicReference
 import java.util.function.Function
 import javax.swing.Icon
 import javax.swing.JComponent
@@ -27,10 +28,10 @@ import javax.swing.JPanel
 fun environmentsPanel(
     project: Project,
     environmentsSupplier: EnvironmentsSupplier,
-    usageStatusResult: UsageStatusResult
+    usageStatusResultRef: AtomicReference<UsageStatusResult>
 ): JPanel {
 
-    val envsPanel = EnvironmentsPanel(project, environmentsSupplier, usageStatusResult)
+    val envsPanel = EnvironmentsPanel(project, environmentsSupplier, usageStatusResultRef)
 
     val result = JPanel()
     result.isOpaque = false
@@ -46,8 +47,8 @@ fun environmentsPanel(
 //both instances need to be in sync with the selected button and the environments list.
 class EnvironmentsPanel(
     project: Project,
-    private val environmentsSupplier: EnvironmentsSupplier,
-    private val usageStatusResult: UsageStatusResult
+    private val environmentsSupplier: EnvironmentsSupplier, // assuming its a singleton
+    private val usageStatusResultRef: AtomicReference<UsageStatusResult>
 ) : JBPanel<EnvironmentsPanel>() {
 
     init {
@@ -99,6 +100,9 @@ class EnvironmentsPanel(
             }
             revalidate()
         }
+
+        val usageStatusResult = usageStatusResultRef.get()
+
         val envsThatHaveUsageSet: Set<String> = buildEnvironmentWithUsages(usageStatusResult)
         val hasUsageFunction = fun(env: String): Boolean { return envsThatHaveUsageSet.contains(env) }
 
@@ -161,7 +165,6 @@ class EnvironmentsPanel(
         return asHtml(sb.toString())
     }
 
-
     fun buildEnvironmentWithUsages(usageStatusResult: UsageStatusResult): Set<String> {
         return usageStatusResult.codeObjectStatuses
             .map { it.environment }
@@ -204,7 +207,6 @@ class EnvironmentsPanel(
         return builtEnvs
     }
 
-
     private fun buildLinkText(currEnv: String, isSelectedEnv: Boolean): String {
         var txtValue = currEnv
         if (isLocalEnvironmentMine(currEnv)) {
@@ -215,7 +217,6 @@ class EnvironmentsPanel(
         }
         return asHtml(span(txtValue))
     }
-
 
     private fun isEnvironmentLocal(environment: String): Boolean {
         return environment.endsWith("[local]", true)

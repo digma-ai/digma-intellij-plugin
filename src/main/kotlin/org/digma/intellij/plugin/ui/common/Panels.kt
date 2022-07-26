@@ -16,7 +16,7 @@ import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.BorderLayout
-import java.util.function.Supplier
+import java.util.concurrent.atomic.AtomicReference
 import javax.swing.JLabel
 
 
@@ -56,14 +56,14 @@ private fun getNoInfoMessage(model: PanelModel): String {
 fun createTopPanel(
     project: Project,
     model: PanelModel,
-    usageStatusResultSupplier: Supplier<UsageStatusResult>
+    usageStatusResultRef: AtomicReference<UsageStatusResult>
 ): DigmaResettablePanel {
 
     val scopeLine = scopeLine({ model.getScope() }, { model.getScopeTooltip() }, ScopeLineIconProducer(model))
     scopeLine.isOpaque = false
 
     val envsPanel =
-        environmentsPanel(project, AnalyticsService.getInstance(project).environment, usageStatusResultSupplier.get())
+        environmentsPanel(project, AnalyticsService.getInstance(project).environment, usageStatusResultRef)
     envsPanel.isOpaque = false
 
     val result = object : DigmaResettablePanel() {

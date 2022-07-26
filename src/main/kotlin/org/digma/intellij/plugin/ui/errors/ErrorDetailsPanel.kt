@@ -19,6 +19,7 @@ import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.common.CopyableLabel
 import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
+import org.digma.intellij.plugin.ui.common.JTransparentPanel
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.boldFonts
@@ -52,7 +53,7 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
     val backButtonWrapper = JPanel()
     backButtonWrapper.layout = BorderLayout()
     backButtonWrapper.isOpaque = false
-    backButtonWrapper.border = Borders.empty(5,5,0,0)
+    backButtonWrapper.border = Borders.empty(5, 5, 0, 0)
     backButtonWrapper.add(backButton,BorderLayout.NORTH)
 
     val namePanel = namePanel(errorsModel)

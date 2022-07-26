@@ -22,9 +22,14 @@ import java.awt.GridLayout
 import java.util.Objects
 import java.util.function.Function
 import javax.swing.Icon
+import javax.swing.JComponent
 import javax.swing.JPanel
 
-fun environmentsPanel(project: Project, environmentsSupplier: EnvironmentsSupplier, usageStatusResult: UsageStatusResult): JPanel {
+fun environmentsPanel(
+    project: Project,
+    environmentsSupplier: EnvironmentsSupplier,
+    usageStatusResult: UsageStatusResult
+): JPanel {
 
     val envsPanel = EnvironmentsPanel(project, environmentsSupplier, usageStatusResult)
 
@@ -40,7 +45,11 @@ fun environmentsPanel(project: Project, environmentsSupplier: EnvironmentsSuppli
 
 //need to remember we have two instances of this panel , one for the insights tab and one for the errors tab.
 //both instances need to be in sync with the selected button and the environments list.
-class EnvironmentsPanel(project: Project, private val environmentsSupplier: EnvironmentsSupplier, private val usageStatusResult: UsageStatusResult) : JBPanel<EnvironmentsPanel>() {
+class EnvironmentsPanel(
+    project: Project,
+    private val environmentsSupplier: EnvironmentsSupplier,
+    private val usageStatusResult: UsageStatusResult
+) : JBPanel<EnvironmentsPanel>() {
 
     init {
         isOpaque = false
@@ -76,7 +85,9 @@ class EnvironmentsPanel(project: Project, private val environmentsSupplier: Envi
             return
         }
 
-        val toSelectPanel: SingleEnvPanel? = (components.stream().filter { (it as SingleEnvPanel).myLink.env == newSelectedEnv }.findAny().orElse(null) as SingleEnvPanel?)
+        val toSelectPanel: SingleEnvPanel? =
+            (components.stream().filter { (it as SingleEnvPanel).myLink.env == newSelectedEnv }.findAny()
+                .orElse(null) as SingleEnvPanel?)
         toSelectPanel?.myLink?.select { buildLinkText(it, true) }
 
     }
@@ -97,15 +108,15 @@ class EnvironmentsPanel(project: Project, private val environmentsSupplier: Envi
 
         for (currEnv in relevantEnvs) {
             val isSelectedEnv = currEnv.contentEquals(environmentsSupplier.getCurrent())
-            val toolTip = createToolTip(usageStatusResult, currEnv)
+            val toolTip = buildToolTip(usageStatusResult, currEnv)
             val linkText = buildLinkText(currEnv, isSelectedEnv)
-            val envLink = EnvLink(currEnv,linkText,isSelectedEnv)
+            val envLink = EnvLink(currEnv, linkText, isSelectedEnv)
             envLink.toolTipText = toolTip
 
-            envLink.addActionListener(){ event ->
+            envLink.addActionListener() { event ->
                 val currentSelected: EnvLink? = getSelected()
 
-                if (currentSelected === event.source){
+                if (currentSelected === event.source) {
                     return@addActionListener
                 }
 
@@ -120,26 +131,23 @@ class EnvironmentsPanel(project: Project, private val environmentsSupplier: Envi
                 if (hasUsageFunction(currEnv)) ENVIRONMENT_HAS_USAGE else ENVIRONMENT_HAS_NO_USAGE
             val iconComponent = JBLabel(icon)
 
-            val singlePanel = SingleEnvPanel()
+            val singlePanel = SingleEnvPanel(envLink, iconComponent)
             singlePanel.toolTipText = toolTip
 
-            singlePanel.add(iconComponent)
-            singlePanel.add(link)
-
-            list.add(singlePanel)
+            this.add(singlePanel)
         }
         revalidate()
         repaint()
     }
 
     private fun getSelected(): EnvLink? {
-        val currentSelectedPanel: SingleEnvPanel? = (components.stream().filter { (it as SingleEnvPanel).myLink.isSelectedEnvironment() }.findAny().orElse(null) as SingleEnvPanel?)
+        val currentSelectedPanel: SingleEnvPanel? =
+            (components.stream().filter { (it as SingleEnvPanel).myLink.isSelectedEnvironment() }.findAny()
+                .orElse(null) as SingleEnvPanel?)
         return currentSelectedPanel?.myLink
     }
 
-
-    private fun buildRelevantSortedEnvironments(envsSupplier: EnvironmentsSupplier): List<String> {
-    fun createToolTip(usageStatusResult: UsageStatusResult, envName: String): String {
+    fun buildToolTip(usageStatusResult: UsageStatusResult, envName: String): String {
         val envUsageStatus = usageStatusResult.environmentStatuses.firstOrNull { it.name.equals(envName) }
         val sb = StringBuilder()
         sb.append(envName)
@@ -153,6 +161,7 @@ class EnvironmentsPanel(project: Project, private val environmentsSupplier: Envi
         }
         return asHtml(sb.toString())
     }
+
 
     fun buildEnvironmentWithUsages(usageStatusResult: UsageStatusResult): Set<String> {
         return usageStatusResult.codeObjectStatuses
@@ -220,12 +229,12 @@ class EnvironmentsPanel(project: Project, private val environmentsSupplier: Envi
 }
 
 
-
-class SingleEnvPanel(val myLink: EnvLink) : JBPanel<SingleEnvPanel>() {
+class SingleEnvPanel(val myLink: EnvLink, iconComponent: JComponent) : JBPanel<SingleEnvPanel>() {
     init {
         isOpaque = false
-        layout = GridLayout(1,1)
+        layout = GridLayout(1, 1)
         border = JBUI.Borders.empty(1)
+        add(iconComponent)
         add(myLink)
     }
 }
@@ -245,4 +254,3 @@ class EnvLink(val env: String, text: String, private var isSelectedEnv: Boolean 
 
     fun isSelectedEnvironment(): Boolean = isSelectedEnv
 }
-

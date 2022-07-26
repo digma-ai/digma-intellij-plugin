@@ -45,7 +45,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
 
         val errorsListContainer = errorsProvider.getErrors(methodInfo)
         model.listViewItems = errorsListContainer.listViewItems
-        model.usageStatusResultRef.set(EmptyUsageStatusResult)
+        model.usageStatusResult = EmptyUsageStatusResult
         model.scope = MethodScope(methodInfo)
         model.card = ErrorsTabCard.ERRORS_LIST
         model.errorsCount = errorsListContainer.count
@@ -59,7 +59,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         Log.log(logger::debug, "contextChangeNoMethodInfo to {}. ", dummy)
 
         model.listViewItems = ArrayList()
-        model.usageStatusResultRef.set(EmptyUsageStatusResult)
+        model.usageStatusResult = EmptyUsageStatusResult
         model.scope = MethodScope(dummy)
         model.card = ErrorsTabCard.ERRORS_LIST
         model.errorsCount = 0
@@ -97,7 +97,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         Log.log(logger::debug, "empty called")
 
         model.listViewItems = Collections.emptyList()
-        model.usageStatusResultRef.set(EmptyUsageStatusResult)
+        model.usageStatusResult = EmptyUsageStatusResult
         model.scope = EmptyScope("")
         model.card = ErrorsTabCard.ERRORS_LIST
         model.errorsCount = 0
@@ -110,7 +110,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         Log.log(logger::debug, "emptyNonSupportedFile called")
 
         model.listViewItems = Collections.emptyList()
-        model.usageStatusResultRef.set(EmptyUsageStatusResult)
+        model.usageStatusResult = EmptyUsageStatusResult
         model.scope = EmptyScope(getNonSupportedFileScopeMessage(fileUri))
         model.card = ErrorsTabCard.ERRORS_LIST
         model.errorsCount = 0
@@ -133,11 +133,11 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         if (documentInfoContainer == null) {
             model.scope = EmptyScope(fileUri.substringAfterLast('/'))
             model.errorsCount = 0
-            model.usageStatusResultRef.set(EmptyUsageStatusResult)
+            model.usageStatusResult = EmptyUsageStatusResult
         } else {
             model.scope = DocumentScope(documentInfoContainer.documentInfo)
             model.errorsCount = computeErrorsPreviewCount(documentInfoContainer)
-            model.usageStatusResultRef.set(documentInfoContainer.usageStatusOfErrors)
+            model.usageStatusResult = documentInfoContainer.usageStatusOfErrors
         }
 
         model.listViewItems = ArrayList()

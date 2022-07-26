@@ -9,14 +9,13 @@ import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.Scope
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.util.Collections
-import java.util.concurrent.atomic.AtomicReference
 
 class InsightsModel : PanelModel {
 
     var insightsCount: Int = 0
     var listViewItems: List<ListViewItem<*>> = Collections.emptyList()
     var previewListViewItems: List<ListViewItem<String>> = Collections.emptyList()
-    var usageStatusResultRef: AtomicReference<UsageStatusResult> = AtomicReference(EmptyUsageStatusResult)
+    var usageStatusResult: UsageStatusResult = EmptyUsageStatusResult
     var card: InsightsTabCard = InsightsTabCard.INSIGHTS
     var scope: Scope = EmptyScope("")
 
@@ -42,7 +41,7 @@ class InsightsModel : PanelModel {
     }
 
     override fun getUsageStatus(): UsageStatusResult {
-        return usageStatusResultRef.get()
+        return usageStatusResult
     }
 
     fun getPreviewListMessage(): String {

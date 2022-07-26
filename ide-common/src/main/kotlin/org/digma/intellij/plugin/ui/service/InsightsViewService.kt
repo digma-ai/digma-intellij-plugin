@@ -14,7 +14,7 @@ import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsTabCard
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
-import java.util.*
+import java.util.Collections
 import java.util.stream.Collectors
 
 class InsightsViewService(project: Project): AbstractViewService(project) {
@@ -124,7 +124,6 @@ class InsightsViewService(project: Project): AbstractViewService(project) {
         model.listViewItems = ArrayList()
         model.card = InsightsTabCard.PREVIEW
         updateUi()
-        setVisible()
     }
 
 

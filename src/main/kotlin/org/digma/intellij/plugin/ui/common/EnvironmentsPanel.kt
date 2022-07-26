@@ -17,6 +17,8 @@ import java.awt.GridLayout
 import java.util.*
 import java.util.function.Function
 import javax.swing.JPanel
+import kotlin.math.abs
+import kotlin.math.max
 import kotlin.math.min
 
 fun environmentsPanel(project: Project, environmentsSupplier: EnvironmentsSupplier): JPanel {
@@ -64,9 +66,17 @@ class EnvironmentsPanel(project: Project, private val environmentsSupplier: Envi
     override fun getPreferredSize(): Dimension {
         if (startup < 5) {
             startup++
-            val d = super.getPreferredSize()
-            if (d != null) {
-                return Dimension(d.width, min(d.height, 300))
+            val myPs = super.getPreferredSize()
+            if (myPs != null && myPs.width > 0 && myPs.height > 0) {
+                var aggregatedWidth = 0
+                var height = 30
+                components.forEach {
+                    aggregatedWidth += abs(it.preferredSize.width)
+                    height = max(height, abs(it.preferredSize.height))
+                }
+                val lines = (aggregatedWidth / (abs(myPs.width) + 1)) + 1
+                val preferredHeight = (lines * height) + (lines * 3)
+                return Dimension(myPs.width, min(min(myPs.height, preferredHeight), 300))
             }
         }
         return super.getPreferredSize()

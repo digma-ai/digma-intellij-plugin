@@ -4,5 +4,5 @@ fun String.trimLastChar(): String {
     if (this.isEmpty()) {
         return this
     }
-    return this.substring(0, this.length - 1)
+    return this.dropLast(1)
 }

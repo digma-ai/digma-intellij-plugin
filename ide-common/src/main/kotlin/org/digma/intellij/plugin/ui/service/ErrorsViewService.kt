@@ -45,7 +45,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
 
         val errorsListContainer = errorsProvider.getErrors(methodInfo)
         model.listViewItems = errorsListContainer.listViewItems
-        model.usageStatusResult = EmptyUsageStatusResult
+        model.usageStatusResult = errorsListContainer.usageStatus
         model.scope = MethodScope(methodInfo)
         model.card = ErrorsTabCard.ERRORS_LIST
         model.errorsCount = errorsListContainer.count

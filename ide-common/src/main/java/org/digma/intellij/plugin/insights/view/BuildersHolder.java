@@ -1,13 +1,22 @@
 package org.digma.intellij.plugin.insights.view;
 
 import org.digma.intellij.plugin.model.InsightType;
-import org.digma.intellij.plugin.model.rest.insights.*;
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
+import org.digma.intellij.plugin.model.rest.insights.ErrorInsight;
+import org.digma.intellij.plugin.model.rest.insights.HighUsageInsight;
+import org.digma.intellij.plugin.model.rest.insights.HotspotInsight;
+import org.digma.intellij.plugin.model.rest.insights.LowUsageInsight;
+import org.digma.intellij.plugin.model.rest.insights.NormalUsageInsight;
+import org.digma.intellij.plugin.model.rest.insights.SlowEndpointInsight;
+import org.digma.intellij.plugin.model.rest.insights.SlowestSpansInsight;
+import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight;
+import org.digma.intellij.plugin.model.rest.insights.SpanInsight;
+import org.digma.intellij.plugin.model.rest.insights.UnmappedInsight;
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupType;
 import org.digma.intellij.plugin.view.ListViewItemBuilder;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class BuildersHolder {
 
@@ -34,14 +43,14 @@ public class BuildersHolder {
             // Single (non grouped) Insights
             //----------------------------------------------
             case HotSpot:
-                return new NoGroupListViewItemBuilder<HotspotInsight>();
+                return new SingleInsightListViewItemBuilder<HotspotInsight>();
             case Errors:
                 return new SingleInsightListViewItemBuilder<ErrorInsight>();
             //----------------------------------------------
             // Spans Insights
             //----------------------------------------------
             case SpanUsages:
-                return new GroupListViewItemBuilder<SpanInsight>(InsightGroupType.Span, SpanInsight::getSpan);
+                return new GroupListViewItemBuilder<>(InsightGroupType.Span, SpanInsight::getSpan);
             case SpanDurations:
                 return new GroupListViewItemBuilder<SpanDurationsInsight>(InsightGroupType.Span, spanDurationsInsight -> spanDurationsInsight.getSpan().getName());
             //----------------------------------------------
@@ -58,7 +67,7 @@ public class BuildersHolder {
             case SlowEndpoint:
                 return new GroupListViewItemBuilder<>(InsightGroupType.HttpEndpoint, SlowEndpointInsight::getRoute);
             case Unmapped:
-                return new NoGroupListViewItemBuilder<UnmappedInsight>();
+                return new SingleInsightListViewItemBuilder<UnmappedInsight>();
             default:
                 // default will fall into Single (non grouped) reference
                 return new SingleInsightListViewItemBuilder<>();

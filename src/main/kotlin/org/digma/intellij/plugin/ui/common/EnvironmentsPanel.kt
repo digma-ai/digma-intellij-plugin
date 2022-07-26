@@ -16,7 +16,7 @@ import org.digma.intellij.plugin.ui.common.Laf.Icons.Environment.Companion.ENVIR
 import org.digma.intellij.plugin.ui.common.Laf.Icons.Environment.Companion.ENVIRONMENT_HAS_USAGE
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsListChangedListener
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
-import java.awt.BorderLayout
+import java.awt.Dimension
 import java.awt.FlowLayout
 import java.util.Objects
 import java.util.concurrent.atomic.AtomicReference
@@ -24,6 +24,9 @@ import java.util.function.Function
 import javax.swing.Icon
 import javax.swing.JComponent
 import javax.swing.JPanel
+import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 
 fun environmentsPanel(
     project: Project,
@@ -31,15 +34,7 @@ fun environmentsPanel(
     usageStatusResultRef: AtomicReference<UsageStatusResult>
 ): JPanel {
 
-    val envsPanel = EnvironmentsPanel(project, environmentsSupplier, usageStatusResultRef)
-
-    val result = JPanel()
-    result.isOpaque = false
-    result.border = JBUI.Borders.empty()
-    result.layout = BorderLayout()
-    result.add(envsPanel, BorderLayout.CENTER)
-    return result
-
+    return EnvironmentsPanel(project, environmentsSupplier, usageStatusResultRef)
 }
 
 
@@ -69,6 +64,37 @@ class EnvironmentsPanel(
             select(it)
         })
         Disposer.register(project, messageBusConnection)
+    }
+
+
+    /*
+    usually this panel works fine.
+    there is one issue: sometimes when the plugin window opens on startup this panel takes too much
+    vertical space and the insights list is almost not shown. any hover over this panel with the mouse or any
+    other action related to the plugin will fix it and the tab will re-layout. from there on the panel functions ok.
+    I could not find any way to cause this panel to layout correctly on startup.
+    so the code in getPreferredSize limits the height on startup to a reasonable size and only the first few calls
+    to getPreferredSize, from there on its ok. it proves to solve or at least hide the issue.
+    it will be noticeable when there are many environments and only on first opening of the window and only occasionally.
+     */
+    private var startup = 0
+    override fun getPreferredSize(): Dimension {
+        if (startup < 5) {
+            startup++
+            val myPs = super.getPreferredSize()
+            if (myPs != null && myPs.width > 0 && myPs.height > 0) {
+                var aggregatedWidth = 0
+                var height = 30
+                components.forEach {
+                    aggregatedWidth += abs(it.preferredSize.width)
+                    height = max(height, abs(it.preferredSize.height))
+                }
+                val lines = (aggregatedWidth / (abs(myPs.width) + 1)) + 1
+                val preferredHeight = (lines * height) + (lines * 3)
+                return Dimension(myPs.width, min(min(myPs.height, preferredHeight), 300))
+            }
+        }
+        return super.getPreferredSize()
     }
 
     private fun select(newSelectedEnv: String?) {
@@ -225,6 +251,17 @@ class EnvironmentsPanel(
     private fun isLocalEnvironmentMine(environment: String): Boolean {
         val localHostname = CommonUtils.getLocalHostname()
         return environment.startsWith(localHostname, true)
+    }
+
+
+    //this is the method called by the platform when requesting focus with ContentManager.setSelectedContent
+    override fun requestFocus() {
+        getSelected()?.requestFocusInWindow()
+    }
+
+    override fun requestFocusInWindow(): Boolean {
+        requestFocus()
+        return true
     }
 }
 

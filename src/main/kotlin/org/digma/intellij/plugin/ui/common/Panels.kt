@@ -71,6 +71,14 @@ fun createTopPanel(
         override fun reset() {
             scopeLine.reset()
         }
+
+        override fun requestFocus() {
+            envsPanel.requestFocus()
+        }
+
+        override fun requestFocusInWindow(): Boolean {
+            return envsPanel.requestFocusInWindow()
+        }
     }
 
     result.isOpaque = false

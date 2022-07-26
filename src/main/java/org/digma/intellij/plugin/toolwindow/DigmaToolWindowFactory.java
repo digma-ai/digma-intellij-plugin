@@ -4,6 +4,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
+import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.service.EditorInteractionService;
@@ -40,6 +41,8 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
         var toolWindowTabsHelper = project.getService(ToolWindowTabsHelper.class);
         toolWindowTabsHelper.setToolWindow(toolWindow);
 
+        Content contentToSelect;
+
         {
             var insightsPanel = InsightsTabKt.insightsPanel(project);
             var insightsViewService = project.getService(InsightsViewService.class);
@@ -51,6 +54,7 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
             toolWindow.getContentManager().addContent(insightsContent);
             insightsViewService.setContent(toolWindow,insightsContent);
             toolWindowTabsHelper.setInsightsContent(insightsContent);
+            contentToSelect = insightsContent;
         }
 
         {
@@ -73,5 +77,7 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
 
         project.getService(ToolWindowShower.class).setToolWindow(toolWindow);
         EditorInteractionService.getInstance(project).start();
+
+        toolWindow.getContentManager().setSelectedContent(contentToSelect, true);
     }
 }

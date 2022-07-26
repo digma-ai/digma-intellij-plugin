@@ -1,9 +1,21 @@
 # digma-jetbrains-plugin
 
-TBD
+<!-- https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax -->
+<!-- Plugin description -->
+**Digma is a Continuous Feedback platform. It integrates with your observability
+backend to provide meaningful code insights in the IDE. While coding,
+you can be aware of how the code behaves in runtime in various staging and production environments**
 
+### Digma provides integrated insights multiple code behaviour topics including:
+
+- Error hotspots
+- Usage bottlenecks and concurrency
+- Performance trends
+
+<!-- Plugin description end -->
 
 ## Build
+
 The project must be built with jdk 11 or later as the gradle jdk.</br>
 
 ./gradlew buildPlugin -Porg.gradle.java.home=<PATH TO JDK 11></br>
@@ -34,10 +46,30 @@ Rider implementation is in rider module. </br>
 The solution can be opened with rider or vscode - rider/Digma.Rider.Plugin</br>
 
 
-<!-- Plugin description -->
-[//]: # (satisfy gradle build with plugin description)
-<!-- Plugin description end -->
+
+### Publishing
+
+run plugin verifier. verify plugin takes the IDEs to verify against from task listProductsReleases task</br>
+
+./gradlew runPluginVerifier -Dorg.gradle.jvmargs=-Xmx2024m</br>
+
+sign the plugin.</br>
+
+Provide Your Personal Access Token to Gradle</br>
+export DIGMA_JB_INTELLIJ_PUBLISH_TOKEN='YOUR_TOKEN'</br>
 
 
+### Signing
+
+https://plugins.jetbrains.com/docs/intellij/plugin-signing.html</br>
+to sign the plugin set the following environment variables</br>
+
+export:</br>
+DIGMA_JB_CERTIFICATE_CHAIN_FILE=/home/shalom/workspace/digma/digma-intellij-plugin/.keys/chain.crt</br>
+DIGMA_JB_PRIVATE_KEY_FILE=/home/shalom/workspace/digma/digma-intellij-plugin/.keys/private.pem</br>
+DIGMA_JB_PRIVATE_KEY_PASSWORD=digma</br>
+
+
+./gradlew signPlugin</br>
 
 

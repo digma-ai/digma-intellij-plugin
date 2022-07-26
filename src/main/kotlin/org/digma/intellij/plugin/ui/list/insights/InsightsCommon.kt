@@ -1,80 +1,139 @@
 package org.digma.intellij.plugin.ui.list.insights
 
-import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBPanel
-import com.intellij.ui.dsl.builder.panel
-import com.intellij.ui.dsl.gridLayout.VerticalAlign
-import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.JBUI.Borders.empty
-import com.intellij.util.ui.UIUtil
-import org.digma.intellij.plugin.ui.common.iconPanelGrid
+import org.digma.intellij.plugin.model.rest.insights.UnmappedInsight
+import org.digma.intellij.plugin.ui.common.Laf
+import org.digma.intellij.plugin.ui.common.buildBoldTitleGrayedComment
+import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
+import org.digma.intellij.plugin.ui.list.commonListItemPanel
 import java.awt.BorderLayout
-import java.awt.Color
-import javax.swing.*
+import java.awt.Dimension
+import javax.swing.Icon
+import javax.swing.JLabel
+import javax.swing.JPanel
+import javax.swing.SwingConstants
+import kotlin.math.max
+
+fun insightTitlePanel(panel: JPanel): JPanel {
+    panel.isOpaque = false
+    panel.border = empty(10, 5,0,5)
+    return panel
+}
 
 fun insightItemPanel(panel: JPanel): JPanel {
-    val wrapper = JPanel()
-    wrapper.border = empty(5)
-    wrapper.layout = BorderLayout()
-    wrapper.add(panel, BorderLayout.CENTER)
-    return wrapper
-}
-
-fun insightGroupPanel(panel: JPanel): JPanel {
-
-    //isOpaque = false and wrapper overrides getBackground ,trying to make sure
-    //the background is always the same. background =.. is not really necessary.
-    panel.isOpaque = false
-    panel.background = insightListBackground()
-    panel.border = empty()
-    val wrapper = object : JPanel() {
-        override fun getBackground(): Color {
-            return insightListBackground()
-        }
-    }
-    wrapper.layout = BorderLayout()
-    wrapper.isOpaque = true
-    wrapper.background = insightListBackground()
-    wrapper.add(panel, BorderLayout.CENTER)
-    wrapper.border = empty()
-    return wrapper
+    return commonListItemPanel(panel)
 }
 
 
-fun insightListBackground(): Color {
-    var default = Color.DARK_GRAY
-    if (UIUtil.isUnderDarcula()) {
-        default = Color(38, 38, 38)
-    }
-    return JBColor.namedColor("Editor.background", default)
+fun createInsightPanel(title: String, body: String, icon: Icon, iconText: String, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
+    return createInsightPanel(title, body, icon, iconText, true,panelsLayoutHelper)
 }
 
-fun createInsightPanel(title: String, body: String, icon: Icon, iconText: String): JPanel {
-    val title = panel {
-        row {
-            label(title)
-                .bold()
-                .verticalAlign(VerticalAlign.TOP)
-        }
-    }
-    title.border = JBUI.Borders.empty(0)
+@Deprecated("remove,wrap is always true")
+private fun createInsightPanel(title: String, body: String, icon: Icon, iconText: String, wrap: Boolean, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
 
-    val iconPanel = iconPanelGrid(icon, iconText)
-    iconPanel.border = JBUI.Borders.empty(0)
+    val iconPanel = insightsIconPanelBorder(icon, iconText, panelsLayoutHelper)
+    iconPanel.isOpaque = false
 
-    val contentPanel = JBPanel<JBPanel<*>>()
-    contentPanel.layout = BorderLayout(0, 0)
-
-    val message = JLabel(body, SwingConstants.LEFT)
-
-    contentPanel.add(title, BorderLayout.NORTH)
-    contentPanel.add(message, BorderLayout.CENTER)
+    val message = JLabel(buildBoldTitleGrayedComment(title,body),SwingConstants.LEFT)
+    val messagePanel = JBPanel<JBPanel<*>>()
+    messagePanel.layout = BorderLayout()
+    messagePanel.add(message,BorderLayout.NORTH)
+    messagePanel.border = empty()
+    messagePanel.isOpaque = false
 
     val result = JBPanel<JBPanel<*>>()
-    result.layout = BoxLayout(result, BoxLayout.X_AXIS)
-    result.add(contentPanel)
-    result.add(Box.createHorizontalStrut(5))
-    result.add(iconPanel)
 
-    return insightItemPanel(result)
+    result.layout = BorderLayout()
+    result.add(messagePanel,BorderLayout.CENTER)
+    result.add(iconPanel,BorderLayout.EAST)
+
+    return if (wrap) {
+        insightItemPanel(result)
+    } else {
+        result
+    }
+}
+
+
+fun unmappedInsightPanel(modelObject: UnmappedInsight, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
+
+    val methodName = modelObject.codeObjectId.substringAfterLast("\$_\$")
+    return createInsightPanel("Unmapped insight: '${modelObject.theType}'",
+        "unmapped insight type for '$methodName'",
+        Laf.Icons.Insight.QUESTION_MARK, "",panelsLayoutHelper)
+}
+
+
+fun genericPanelForSingleInsight(modelObject: Any?, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
+
+    return createInsightPanel("Generic insight panel",
+        "Insight named ${modelObject?.javaClass?.simpleName}",
+        Laf.Icons.Insight.QUESTION_MARK, "",panelsLayoutHelper)
+}
+
+
+
+
+
+internal fun insightsIconPanelBorder(icon: Icon, text: String, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
+
+    val panel = InsightAlignedPanel(panelsLayoutHelper)
+    panel.layout = BorderLayout()
+    panel.isOpaque = false
+    panel.border = empty(2,0,0, getInsightIconPanelRightBorderSize())
+
+    val iconLabel = JLabel(icon)
+    iconLabel.horizontalAlignment = SwingConstants.CENTER
+    panel.add(iconLabel, BorderLayout.CENTER)
+
+    if (text.isNotBlank()) {
+        val textLabel = JLabel(text)
+        textLabel.horizontalAlignment = SwingConstants.CENTER
+        panel.add(textLabel, BorderLayout.SOUTH)
+    }
+
+    addCurrentLargestWidthIconPanel(panelsLayoutHelper,panel.preferredSize.width)
+
+    return panel
+}
+
+
+
+
+internal fun getInsightIconPanelRightBorderSize():Int{
+    return 5
+}
+internal fun getCurrentLargestWidthIconPanel(layoutHelper: PanelsLayoutHelper, width: Int):Int{
+    //this method should never return null and never throw NPE
+    val currentLargest: Int =
+        (layoutHelper.getObjectAttribute("insightsIconPanelBorder","largestWidth")?: 0) as Int
+    return max(width,currentLargest)
+}
+internal fun addCurrentLargestWidthIconPanel(layoutHelper: PanelsLayoutHelper,width: Int){
+    //this method should never throw NPE
+    val currentLargest: Int =
+        (layoutHelper.getObjectAttribute("insightsIconPanelBorder","largestWidth")?: 0) as Int
+    layoutHelper.addObjectAttribute("insightsIconPanelBorder","largestWidth",
+        max(currentLargest,width))
+}
+
+
+
+class InsightAlignedPanel(private val layoutHelper: PanelsLayoutHelper): JPanel(){
+
+    init {
+        border = empty(0,0,0, getInsightIconPanelRightBorderSize())
+    }
+    override fun getPreferredSize(): Dimension {
+        val ps = super.getPreferredSize()
+        if (ps == null){
+            return ps
+        }
+        val h = ps.height
+        val w = ps.width
+        addCurrentLargestWidthIconPanel(layoutHelper,w)
+        return Dimension(getCurrentLargestWidthIconPanel(layoutHelper,w), h)
+    }
 }

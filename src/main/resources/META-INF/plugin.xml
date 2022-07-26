@@ -1,21 +1,24 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
-<idea-plugin>
+<idea-plugin require-restart="true">
 
     <id>org.digma.intellij</id>
     <version>${project.version}</version>
-    <name>Digma</name>
-    <vendor>Digma inc todo:full vendor name</vendor>
-
+    <name>Digma Continuous Feedback</name>
+    <vendor>digma.ai</vendor>
+    <description>
+        Please write plugin description in README.md , see <!-- Plugin description --> section
+    </description>
     <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.vcs</depends>
 
-    <depends
-            optional="true"
-            config-file="org.digma.intellij-with-pycharm.xml">com.intellij.modules.python
-    </depends>
-    <depends
-            optional="true"
-            config-file="org.digma.intellij-with-idea.xml">com.intellij.modules.java
-    </depends>
+    <!--    <depends-->
+    <!--            optional="true"-->
+    <!--            config-file="org.digma.intellij-with-pycharm.xml">com.intellij.modules.python-->
+    <!--    </depends>-->
+    <!--    <depends-->
+    <!--            optional="true"-->
+    <!--            config-file="org.digma.intellij-with-idea.xml">com.intellij.modules.java-->
+<!--    </depends>-->
     <depends
             optional="true"
             config-file="org.digma.intellij-with-rider.xml">com.intellij.modules.rider
@@ -23,27 +26,56 @@
 
 
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow id="Digma" secondary="true" icon="org.digma.intellij.plugin.icons.Icons.TOOL_WINDOW" anchor="left"
+        <toolWindow id="Digma" secondary="true" icon="org.digma.intellij.plugin.icons.AppIcons.TOOL_WINDOW" anchor="left"
                     factoryClass="org.digma.intellij.plugin.toolwindow.DigmaToolWindowFactory"/>
-        <projectService serviceImplementation="org.digma.intellij.plugin.service.EditorInteractionService"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.analytics.AnalyticsService"
-                        serviceInterface="org.digma.intellij.plugin.analytics.AnalyticsProvider"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.ui.ToolWindowShower"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.service.EditorInteractionService"
+                        serviceInterface="org.digma.intellij.plugin.ui.CaretContextService"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.analytics.AnalyticsService"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.document.DocumentInfoService"/>
-        <projectService serviceImplementation="org.digma.intellij.plugin.analytics.Environment"/>
-
 
         <projectService serviceImplementation="org.digma.intellij.plugin.document.CodeLensProvider"/>
 
-
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.service.InsightsViewService"/>
+
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.service.ErrorsViewService"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.insights.InsightsProvider"/>
+
         <projectService serviceImplementation="org.digma.intellij.plugin.errors.ErrorsProvider"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.service.InsightsActionsService"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.service.ErrorsActionsService"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.ui.service.ToolWindowTabsHelper"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.service.EditorService"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.vcs.VcsService"/>
+
+        <notificationGroup id="Digma Notification Group"
+                           displayType="BALLOON"
+                           toolWindowId="Digma"/>
+
+
+        <projectConfigurable
+                parentId="tools"
+                instance="org.digma.intellij.plugin.settings.ProjectSettings"
+                id="org.digma.intellij.plugin.settings.ProjectSettings"
+                displayName="Digma Plugin"
+                nonDefaultProject="true"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.settings.SettingsState"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.persistence.PersistenceService"/>
+
+        <editorNotificationProvider implementation="org.digma.intellij.plugin.notifications.DigmaEditorNotificationProvider"
+                                    id="org.digma.intellij.plugin.notifications.DigmaEditorNotificationProvider"/>
 
 
     </extensions>

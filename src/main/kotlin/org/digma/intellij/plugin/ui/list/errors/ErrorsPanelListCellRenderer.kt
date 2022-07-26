@@ -1,155 +1,96 @@
 package org.digma.intellij.plugin.ui.list.errors
 
 import com.intellij.openapi.project.Project
+import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBPanel
-import com.intellij.ui.dsl.builder.panel
-import com.intellij.ui.dsl.gridLayout.VerticalAlign
 import com.intellij.util.ui.JBUI
-import org.digma.intellij.plugin.icons.Icons
+import org.digma.intellij.plugin.common.CommonUtils.prettyTimeOf
 import org.digma.intellij.plugin.model.discovery.CodeObjectInfo.Companion.extractMethodName
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
-import org.digma.intellij.plugin.model.rest.errors.ScoreInfo
-import org.digma.intellij.plugin.ui.common.Swing.ERROR_GREEN
-import org.digma.intellij.plugin.ui.common.Swing.ERROR_ORANGE
-import org.digma.intellij.plugin.ui.common.Swing.ERROR_RED
+import org.digma.intellij.plugin.service.ErrorsActionsService
+import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
 import org.digma.intellij.plugin.ui.common.asHtml
-import org.digma.intellij.plugin.ui.common.fixedSize
+import org.digma.intellij.plugin.ui.common.buildLinkTextWithGrayedAndDefaultLabelColorPart
+import org.digma.intellij.plugin.ui.common.createScorePanelNoArrows
+import org.digma.intellij.plugin.ui.common.span
+import org.digma.intellij.plugin.ui.common.spanGrayed
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
+import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
+import org.digma.intellij.plugin.ui.list.commonListItemPanel
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
-import org.ocpsoft.prettytime.PrettyTime
 import java.awt.BorderLayout
-import java.awt.Color
-import java.awt.Dimension
-import java.awt.FlowLayout
-import java.util.*
-import javax.swing.*
+import java.awt.GridBagConstraints
+import java.awt.GridBagLayout
+import javax.swing.JPanel
 
 
 class ErrorsPanelListCellRenderer : AbstractPanelListCellRenderer() {
 
 
-    override fun createPanel(project: Project, value: ListViewItem<*>, index: Int): JPanel {
-        return getOrCreatePanel(project, index, value as ListViewItem<CodeObjectError>)
-    }
-
     @Suppress("UNCHECKED_CAST")
-    private fun getOrCreatePanel(project: Project, index: Int, value: ListViewItem<CodeObjectError>): JPanel {
+    override fun createPanel(project: Project,
+                             value: ListViewItem<*>,
+                             index: Int,
+                             panelsLayoutHelper: PanelsLayoutHelper): JPanel {
+        return getOrCreatePanel(project,value as ListViewItem<CodeObjectError>)
+    }
 
+    private fun getOrCreatePanel(project: Project,value: ListViewItem<CodeObjectError>): JPanel {
         val model = value.modelObject
-
-        val result = createSingleErrorPanel(model)
-
-        return result
+        return commonListItemPanel(createSingleErrorPanel(project,model))
     }
 
 }
 
-private fun createSingleErrorPanel(model: CodeObjectError): JPanel {
-    val contents = panel {
-        row {
-            link(asHtml(model.name)) {
-                //TODO: implement the link
-            }.verticalAlign(VerticalAlign.TOP)
+private fun createSingleErrorPanel(project: Project, model: CodeObjectError ): JPanel {
 
-            val relativeFrom: String
-            if (model.startsHere) {
-                relativeFrom = "me"
-            } else {
-                relativeFrom = extractMethodName(model.sourceCodeObjectId)
-            }
-            label(asHtml(" from $relativeFrom"))
-        }
-        row {
-            label(model.characteristic)
-                .bold()
-        }
-        row {
-            label(contentAsHtmlOfFirstAndLast(model))
-        }
-    }
-    contents.border = JBUI.Borders.empty(0)
-
-    val scorePanel = createScorePanel(model)
-
-    val result = JBPanel<JBPanel<*>>()
-    result.layout = BoxLayout(result, BoxLayout.X_AXIS)
-    result.add(contents)
-    result.add(Box.createHorizontalStrut(5))
-    result.add(scorePanel)
-
-    return result
-}
-
-private fun prettyTimeOf(date: Date): String {
-    val ptNow = PrettyTime()
-    return ptNow.format(date)
-}
-
-private fun contentAsHtmlOfFirstAndLast(model: CodeObjectError): String {
-    return asHtml(
-        "Started: <b>${prettyTimeOf(model.firstOccurenceTime)}</b>" +
-                "  Last: <b>${prettyTimeOf(model.lastOccurenceTime)}<b>"
-    )
-}
-
-private fun createScorePanel(model: CodeObjectError): JPanel {
-    val lineBorder = BorderFactory.createLineBorder(colorOf(model.scoreInfo.score), 2, true)
-    val scoreToolTip = genToolTipAsHtml(model.scoreInfo)
-
-    val scorePanel = JPanel(FlowLayout())
-    fixedSize(scorePanel, Dimension(48, 48))
-    val scoreLabel = JLabel("${model.scoreInfo.score}", JLabel.CENTER)
-    scoreLabel.toolTipText = scoreToolTip
-    scoreLabel.size = Dimension(32, 32)
-    scorePanel.add(scoreLabel)
-    scorePanel.border = lineBorder
-
-    val iconLabel: JLabel
-    if (model.startsHere) {
-        iconLabel = JLabel(Icons.Error.RAISED_HERE)
-        iconLabel.toolTipText = "Raised here"
+    val relativeFrom = if (model.startsHere) {
+        "me"
     } else {
-        iconLabel = JLabel(Icons.Error.HANDLED_HERE)
-        iconLabel.toolTipText = "Handled here"
+        extractMethodName(model.sourceCodeObjectId)
     }
+
+    val linkText = buildLinkTextWithGrayedAndDefaultLabelColorPart(model.name,"from",relativeFrom)
+    val link = ActionLink(asHtml(linkText)){
+        val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
+        actionListener.showErrorDetails(model)
+    }
+
+    val firstAndLast = contentOfFirstAndLast(model)
+
+    link.toolTipText = asHtml("${linkText}<br>${firstAndLast}" )
+
+    val contentText = "${span(model.characteristic)}<br> $firstAndLast"
+    val content = CopyableLabelHtml(asHtml(contentText))
+
+
+    val scorePanel = createScorePanelNoArrows(model)
+    val scorePanelWrapper = JPanel()
+    scorePanelWrapper.border = JBUI.Borders.empty(0,0,0,5)
+    scorePanelWrapper.isOpaque = false
+    scorePanelWrapper.layout = GridBagLayout()
+    val constraints = GridBagConstraints()
+    constraints.anchor = GridBagConstraints.NORTH
+    scorePanelWrapper.add(scorePanel)
+
+    val leftPanel = JBPanel<JBPanel<*>>()
+    leftPanel.layout = BorderLayout(0,3)
+    leftPanel.isOpaque = false
+    leftPanel.border = JBUI.Borders.empty(0,0,0,10)
+    leftPanel.add(link,BorderLayout.NORTH)
+    leftPanel.add(content,BorderLayout.CENTER)
 
     val result = JPanel()
-
-    result.layout = BoxLayout(result, BoxLayout.Y_AXIS)
-    result.add(scorePanel)
-    result.add(iconLabel, BorderLayout.EAST)
-
+    result.layout = BorderLayout()
+    result.isOpaque = false
+    result.add(leftPanel,BorderLayout.CENTER)
+    result.add(scorePanelWrapper,BorderLayout.EAST)
     return result
 }
 
-private fun genToolTipAsHtml(scoreInfo: ScoreInfo): String {
-    val sb = StringBuilder()
-    var firstTime = true
-    scoreInfo.scoreParams
-        .forEach { (key, value) ->
-            if (value > 0) {
-                if (firstTime) {
-                    firstTime = false
-                } else {
-                    sb.append("<br>")
-                }
-                sb.append("$key: $value")
-            }
-        }
-    return asHtml(sb.toString())
+private fun contentOfFirstAndLast(model: CodeObjectError): String {
+    return "${spanGrayed("Started:")} ${span(prettyTimeOf(model.firstOccurenceTime))}" +
+                "  ${spanGrayed("Last:")} ${span(prettyTimeOf(model.lastOccurenceTime))}"
 }
 
-private fun colorOf(score: Int?): Color {
-    if (score != null) {
-        if (score <= 40) {
-            return ERROR_GREEN
-        }
-        if (score <= 80) {
-            return ERROR_ORANGE
-        }
-        if (score <= 100) {
-            return ERROR_RED
-        }
-    }
-    return Color.WHITE
-}
+

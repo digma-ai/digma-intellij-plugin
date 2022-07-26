@@ -32,9 +32,9 @@ public class EditorManagerFileOpenedListener implements FileEditorManagerListene
             @Override
             public void run() {
                 PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
-                Log.log(LOGGER::info, "EditorManagerFileOpenedListener.fileOpened: file:{}, psi-file {}", file,psiFile);
+                Log.log(LOGGER::debug, "EditorManagerFileOpenedListener.fileOpened: file:{}, psi-file {}", file,psiFile);
                 if (languageService.isSupportedFile(project,psiFile)) {
-                    documentAnalyzer.fileOpened(psiFile);
+                    documentAnalyzer.analyzeDocument(psiFile);
                 }
             }
         });

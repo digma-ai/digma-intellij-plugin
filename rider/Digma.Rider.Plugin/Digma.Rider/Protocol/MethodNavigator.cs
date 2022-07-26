@@ -1,10 +1,12 @@
 using System.Diagnostics.CodeAnalysis;
 using Digma.Rider.Discovery;
+using JetBrains.Annotations;
 using JetBrains.DocumentManagers;
 using JetBrains.Lifetimes;
 using JetBrains.ProjectModel;
 using JetBrains.RdBackend.Common.Features;
 using JetBrains.ReSharper.Feature.Services.CSharp.CompleteStatement;
+using JetBrains.ReSharper.Feature.Services.Navigation;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.CSharp;
 using JetBrains.ReSharper.Psi.CSharp.Tree;
@@ -14,7 +16,6 @@ using JetBrains.ReSharper.Resources.Shell;
 using JetBrains.ReSharper.TestRunner.Abstractions.Extensions;
 using JetBrains.TextControl;
 using JetBrains.TextControl.CodeWithMe;
-using JetBrains.TextControl.Coords;
 using JetBrains.Util;
 using static Digma.Rider.Logging.Logger;
 
@@ -38,13 +39,14 @@ namespace Digma.Rider.Protocol
             _logger = logger;
            
             var methodNavigationModel = solution.GetProtocolSolution().GetMethodNavigationModel();
-            methodNavigationModel.NavigateToMethod.Change.Advise(lifetime, Navigate);
+            methodNavigationModel.NavigateToMethod.Advise(lifetime, Navigate);
         }
 
         private void Navigate(string message)
         {
+            //the message needs to be unique. the frontend adds a unique string prefix to the method id 
             var methodId = message.SubstringAfter("}");
-            
+           
             Log(_logger, "Got navigate request to {0}",methodId);
 
             var textControl = _textControlManager.LastFocusedTextControlPerClient.ForCurrentClient();
@@ -96,11 +98,20 @@ namespace Digma.Rider.Protocol
             }
         }
 
-        private void FocusOn(ITextControl textControl, ICSharpFunctionDeclaration declaration)
+        private void FocusOn(ITextControl textControl,[NotNull] ICSharpFunctionDeclaration declaration)
         {
             Log(_logger, "Moving caret in {0} to {1}",textControl.Document,declaration);
-            textControl.Caret.MoveTo(textControl.Coords.FromDocOffset(declaration.GetNavigationRange().StartOffset.Offset),
-                CaretVisualPlacement.DirectionalUp);
+
+            using (ReadLockCookie.Create())
+            {
+                using (CompilationContextCookie.GetExplicitUniversalContextIfNotSet())
+                {
+                    declaration.DeclaredElement?.Navigate(true);
+                }
+            }
+
+            // textControl.Caret.MoveTo(textControl.Coords.FromDocOffset(declaration.GetNavigationRange().StartOffset.Offset),
+            //     CaretVisualPlacement.DirectionalUp);
         }
 
 
@@ -109,7 +120,7 @@ namespace Digma.Rider.Protocol
         private IPsiSourceFile FindPsiSourceFile(ITextControl textControl, string methodId)
         {
             var psiSourceFile = _documentManager.GetProjectFile(textControl.Document).ToSourceFile();
-            if (psiSourceFile == null)
+            if (psiSourceFile == null || !psiSourceFile.GetPsiServices().Files.IsCommitted(psiSourceFile))
             {
                 Log(_logger, "No psiSourceFile found for {0}",methodId);
                 return null;

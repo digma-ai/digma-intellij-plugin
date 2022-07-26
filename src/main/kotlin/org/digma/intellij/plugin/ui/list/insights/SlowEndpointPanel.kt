@@ -1,22 +1,19 @@
 package org.digma.intellij.plugin.ui.list.insights
 
-import org.digma.intellij.plugin.icons.Icons
 import org.digma.intellij.plugin.model.rest.insights.Duration
 import org.digma.intellij.plugin.model.rest.insights.SlowEndpointInsight
-import org.digma.intellij.plugin.ui.common.HtmlConsts.RED_COLOR
-import org.digma.intellij.plugin.ui.common.asHtml
+import org.digma.intellij.plugin.ui.common.*
+import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.swing.JPanel
 
 
-fun slowEndpointPanel(insight: SlowEndpointInsight): JPanel {
-    val bodyContents = genContentAsHtml(insight)
+fun slowEndpointPanel(insight: SlowEndpointInsight, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
+    val bodyContents = genContent(insight)
     val iconText = evalDuration(insight.median)
-    val result = createInsightPanel("Slow Endpoint", bodyContents, Icons.Insight.SLOW, iconText);
-
+    val result = createInsightPanel("Slow Endpoint", bodyContents, Laf.Icons.Insight.SLOW, iconText,panelsLayoutHelper)
     result.toolTipText = asHtml(genToolTip(insight))
-
     return result
 }
 
@@ -32,9 +29,9 @@ fun evalDuration(duration: Duration): String {
     return "${duration.value}${duration.unit}"
 }
 
-fun genContentAsHtml(insight: SlowEndpointInsight): String {
+fun genContent(insight: SlowEndpointInsight): String {
     val pctVal = computePercentageDiff(insight)
-    return asHtml("On average requests are slower than other endpoints by <span style=\"color:${RED_COLOR}\">${pctVal}")
+    return "On average requests are slower than other endpoints by ${span(Laf.Colors.ERROR_RED,pctVal)}"
 }
 
 fun computePercentageDiff(insight: SlowEndpointInsight): String {

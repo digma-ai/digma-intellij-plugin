@@ -1,58 +1,149 @@
 package org.digma.intellij.plugin.analytics;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
+import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
+import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
+import org.digma.intellij.plugin.notifications.NotificationUtil;
+import org.digma.intellij.plugin.persistence.PersistenceService;
+import org.digma.intellij.plugin.settings.SettingsState;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import javax.net.ssl.SSLException;
 import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.ConnectException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class AnalyticsService implements AnalyticsProvider, Disposable {
+public class AnalyticsService implements Disposable {
 
     private static final Logger LOGGER = Logger.getInstance(AnalyticsService.class);
 
-    //todo: where is the url configured ?
-    private final String baseUrl = "http://localhost:5051";
-
+    private final Environment environment;
+    private String myApiUrl;
+    @Nullable
+    private String myApiToken;
     private final Project project;
 
-    private final AnalyticsProvider analyticsProviderProxy;
+    private AnalyticsProvider analyticsProviderProxy;
 
-    public AnalyticsService(Project project) {
+
+    public AnalyticsService(@NotNull Project project) {
+        SettingsState settingsState = project.getService(SettingsState.class);
+        PersistenceService persistenceService = project.getService(PersistenceService.class);
+        environment = new Environment(project, this, persistenceService.getState(),settingsState);
         this.project = project;
-        analyticsProviderProxy = newAnalyticsProviderProxy(new RestAnalyticsProvider(baseUrl));
+        myApiUrl = settingsState.apiUrl;
+        myApiToken = settingsState.apiToken;
+        replaceClientAndFireChange(myApiUrl, myApiToken);
+        settingsState.addChangeListener(state -> {
+            if (!Objects.equals(state.apiUrl, myApiUrl)) {
+                myApiUrl = state.apiUrl;
+                myApiToken = state.apiToken;
+                replaceClientAndFireChange(myApiUrl, myApiToken);
+            }
+            if (!Objects.equals(state.apiToken, myApiToken)) {
+                myApiToken = state.apiToken;
+                replaceClient(myApiUrl, myApiToken);
+            }
+        });
+    }
+
+    public static AnalyticsService getInstance(@NotNull Project project) {
+        return project.getService(AnalyticsService.class);
+    }
+
+    public Environment getEnvironment() {
+        return environment;
+    }
+
+    //just replace the client and do not fire any events
+    private void replaceClient(String url, String token) {
+        if (analyticsProviderProxy != null) {
+            try {
+                analyticsProviderProxy.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        analyticsProviderProxy = newAnalyticsProviderProxy(new RestAnalyticsProvider(url, token), project);
     }
 
 
-    @Override
-    public List<String> getEnvironments() {
-        return analyticsProviderProxy.getEnvironments();
+    private void replaceClientAndFireChange(String url, String token) {
+
+        replaceClient(url,token);
+
+        List<String> envs = getEnvironments();
+        if (envs == null) {
+            envs = new ArrayList<>();
+        }
+
+        environment.replaceEnvironmentsList(envs);
     }
 
-    @Override
-    public List<CodeObjectSummary> getSummaries(CodeObjectSummaryRequest summaryRequest) {
-        return analyticsProviderProxy.getSummaries(summaryRequest);
+
+    List<String> getEnvironments() {
+        try {
+            return analyticsProviderProxy.getEnvironments();
+        } catch (Throwable e) {
+            //getEnvironments should never throw exception. it is called only from the constructor or be the
+            //Environment object that can handle null.
+            return null;
+        }
     }
 
-    @Override
-    public List<CodeObjectInsight> getInsights(InsightsRequest insightsRequest) {
-        return analyticsProviderProxy.getInsights(insightsRequest);
+    private String getCurrentEnvironment() throws AnalyticsServiceException {
+        String currentEnv = environment.getCurrent();
+        if (currentEnv == null || currentEnv.isEmpty()){
+            throw new AnalyticsServiceException("No selected environment");
+        }
+        return currentEnv;
     }
 
-    @Override
-    public List<CodeObjectError> getErrorsOfCodeObject(String environment, String codeObjectId) {
-        return analyticsProviderProxy.getErrorsOfCodeObject(environment, codeObjectId);
+
+    public List<CodeObjectSummary> getSummaries(List<String> objectIds) throws AnalyticsServiceException {
+        return analyticsProviderProxy.getSummaries(new CodeObjectSummaryRequest(getCurrentEnvironment(), objectIds));
+    }
+
+    public List<CodeObjectInsight> getInsights(List<String> objectIds) throws AnalyticsServiceException {
+        return analyticsProviderProxy.getInsights(new InsightsRequest(getCurrentEnvironment(), objectIds));
+    }
+
+    public List<CodeObjectError> getErrorsOfCodeObject(String codeObjectId) throws AnalyticsServiceException {
+        return analyticsProviderProxy.getErrorsOfCodeObject(getCurrentEnvironment(), codeObjectId);
+    }
+
+    public CodeObjectErrorDetails getErrorDetails(String errorUid) throws AnalyticsServiceException {
+        return analyticsProviderProxy.getCodeObjectErrorDetails(errorUid);
+    }
+
+    public UsageStatusResult getUsageStatus(List<String> objectIds) throws AnalyticsServiceException {
+        return analyticsProviderProxy.getUsageStatus(new UsageStatusRequest(objectIds));
+    }
+
+    public UsageStatusResult getUsageStatusOfErrors(List<String> objectIds) throws AnalyticsServiceException {
+        return analyticsProviderProxy.getUsageStatus(new UsageStatusRequest(objectIds, List.of("Error")));
     }
 
     @Override
@@ -64,49 +155,221 @@ public class AnalyticsService implements AnalyticsProvider, Disposable {
         }
     }
 
-    @Override
-    public void close() throws IOException {
-        dispose();
-    }
+
 
 
     /**
      * A proxy to swallow all AnalyticsProvider exceptions.
      * the AnalyticsService class is an IDE component and better not to throw exceptions.
      */
-    private class AnalyticsInvocationHandler implements InvocationHandler {
+    private static class AnalyticsInvocationHandler implements InvocationHandler {
 
-        private AnalyticsProvider analyticsProvider;
+        private final AnalyticsProvider analyticsProvider;
+        private final Project project;
 
-        public AnalyticsInvocationHandler(AnalyticsProvider analyticsProvider) {
+        //ObjectMapper here is only used for printing the result to log as json
+        private final ObjectMapper objectMapper = new ObjectMapper();
+
+        //this status is only used for helping with reporting messages only when necessary and keep the log clean
+        private final Status status = new Status();
+
+        public AnalyticsInvocationHandler(AnalyticsProvider analyticsProvider,Project project) {
             this.analyticsProvider = analyticsProvider;
+            this.project = project;
         }
 
 
         @Override
-        public Object invoke(Object proxy, Method method, Object[] args)
-                throws Throwable {
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable{
             try {
-                return method.invoke(analyticsProvider, args);
-            } catch (Exception e) {
-                if (args != null && args.length > 0) {
-                    String argsStr = Arrays.stream(args).map(Object::toString).collect(Collectors.joining(","));
-                    Log.error(LOGGER, e, "error invoking AnalyticsProvide.{}({}), exception {}", method.getName(), argsStr, e);
-                } else {
-                    Log.error(LOGGER, e, "error invoking AnalyticsProvide.{}, exception {}", method.getName(), e);
+
+                if (LOGGER.isDebugEnabled()) {
+                    Log.log(LOGGER::debug, "Sending request to {}: args '{}'",method.getName(), argsToString(args));
                 }
-                //todo: we probably need to show some error message to user
-                return null;
+
+                Object result = method.invoke(analyticsProvider, args);
+
+                if (LOGGER.isDebugEnabled()) {
+                    Log.log(LOGGER::debug, "Got response from {}: args '{}', -----------------" +
+                            "Result '{}'",method.getName(), argsToString(args),resultToString(result));
+                }
+
+                //reset status on success call
+                if (status.isInError()){
+                    NotificationUtil.showNotification(project,"Digma: Connection reestablished !");
+                }
+                status.ok();
+
+                return result;
+
+            } catch (InvocationTargetException e) {
+
+                //handle only InvocationTargetException, other exceptions are probably a bug.
+                //log to error only the first time of ConnectException, this form of error log will popup a balloon error
+                //message, its not necessary to popup the balloon too many times. following exceptions will just be logged
+                //to the log file
+                boolean isConnectionException = isConnectionException(e) || isSslConnectionException(e);
+                if ( status.isOk() && isConnectionException ){
+                    status.connectError();
+                    Log.log(LOGGER::warn, "Connect exception: error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e);
+                    LOGGER.warn(e);
+                    var message = isConnectionException(e) ? getConnectExceptionMessage(e):getSslExceptionMessage(e);
+                    NotificationUtil.notifyError(project,"<html>Connection error with Digma backend api for method "+method.getName()+".<br> "
+                                + message + ".<br> See logs for details.");
+                }else if (status.isOk()){
+                    status.error();
+                    Log.log(LOGGER::debug,"Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getCause().getMessage());
+                    var message = getExceptionMessage(e);
+                    NotificationUtil.notifyError(project,"<html>Error with Digma backend api for method "+method.getName()+".<br> "
+                            + message + ".<br> See logs for details.");
+
+                }else if(!status.hadError(e)){
+                    status.error();
+                    Log.log(LOGGER::debug,"Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getCause().getMessage());
+                }
+
+
+                throw new AnalyticsServiceException(e);
+            }
+        }
+
+        private boolean isConnectionException(InvocationTargetException e) {
+
+            var ex = e.getCause();
+            while (ex != null && !(ex instanceof ConnectException)){
+                ex = ex.getCause();
+            }
+            if (ex != null){
+                return true;
             }
 
+            return e.getCause().getMessage() != null &&
+                    e.getCause().getMessage().contains("Error 404");
         }
+
+
+        private String getConnectExceptionMessage(InvocationTargetException e) {
+            var ex = e.getCause();
+            while (ex != null && !(ex instanceof ConnectException)){
+                ex = ex.getCause();
+            }
+            if (ex != null){
+                return ex.getMessage();
+            }
+
+            return e.getCause() != null? e.getCause().getMessage():e.getMessage();
+        }
+
+        private boolean isSslConnectionException(InvocationTargetException e) {
+
+            var ex = e.getCause();
+            while (ex != null && !(ex instanceof SSLException)){
+                ex = ex.getCause();
+            }
+            return ex != null;
+        }
+
+        private String getSslExceptionMessage(InvocationTargetException e) {
+            var ex = e.getCause();
+            while (ex != null && !(ex instanceof SSLException)){
+                ex = ex.getCause();
+            }
+            if (ex != null){
+                return ex.getMessage();
+            }
+
+            return e.getCause() != null? e.getCause().getMessage():e.getMessage();
+        }
+
+
+        private String getExceptionMessage(InvocationTargetException e) {
+            var ex = e.getCause();
+            while (ex != null && !(ex instanceof AnalyticsProviderException)){
+                ex = ex.getCause();
+            }
+            if (ex != null){
+                return ex.getMessage();
+            }
+
+            return e.getCause() != null? e.getCause().getMessage():e.getMessage();
+        }
+
+
+
+
+        private String resultToString(Object result) {
+            try{
+                //pretty print doesn't work in intellij logs, line end cause the text to disappear.
+                return objectMapper.writeValueAsString(result);
+            }catch (Exception e){
+                return "Error parsing object "+e.getMessage();
+            }
+        }
+        private String argsToString(Object[] args){
+            try {
+                return (args == null || args.length == 0) ? "" : Arrays.stream(args).map(Object::toString).collect(Collectors.joining(","));
+            }catch (Exception e){
+                return "Error parsing args "+e.getMessage();
+            }
+        }
+
     }
 
-    private AnalyticsProvider newAnalyticsProviderProxy(AnalyticsProvider obj) {
+
+
+    private AnalyticsProvider newAnalyticsProviderProxy(AnalyticsProvider obj, Project project) {
         return (AnalyticsProvider) java.lang.reflect.Proxy.newProxyInstance(
                 obj.getClass().getClassLoader(),
                 new Class[]{AnalyticsProvider.class, Closeable.class},
-                new AnalyticsInvocationHandler(obj));
+                new AnalyticsInvocationHandler(obj,project));
+    }
+
+
+    private static class Status{
+
+        private final Map<String,Boolean> errorsHistory = new HashMap<>();
+
+        private boolean hadConnectException = false;
+        private boolean hadError = false;
+
+        boolean isInError(){
+            return hadConnectException || hadError;
+        }
+        boolean isOk(){
+            return !isInError();
+        }
+
+        public void ok() {
+            hadConnectException = false;
+            hadError = false;
+            errorsHistory.clear();
+        }
+
+        public void connectError() {
+            hadConnectException = true;
+        }
+
+
+        public void error() {
+            hadError = true;
+        }
+
+        public boolean hadError(InvocationTargetException e) {
+            var ex = e.getCause();
+            while (ex != null && !(ex instanceof AnalyticsProviderException)){
+                ex = ex.getCause();
+            }
+
+            if (ex != null){
+                var errorName = ex.getClass().getSimpleName();
+                if (errorsHistory.containsKey(errorName)){
+                    return true;
+                }
+                errorsHistory.put(errorName,true);
+            }
+
+            return false;
+        }
     }
 
 }

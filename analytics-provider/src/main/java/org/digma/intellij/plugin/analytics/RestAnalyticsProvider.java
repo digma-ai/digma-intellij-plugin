@@ -1,21 +1,32 @@
 package org.digma.intellij.plugin.analytics;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
+import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
+import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import retrofit2.http.*;
 
+import javax.net.ssl.*;
 import java.io.Closeable;
 import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
@@ -23,7 +34,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     private final Client client;
 
     public RestAnalyticsProvider(String baseUrl) {
-        this.client = createClient(baseUrl);
+        this(baseUrl, null);
+    }
+
+    public RestAnalyticsProvider(String baseUrl, String apiToken) {
+        this.client = createClient(baseUrl, apiToken);
     }
 
 
@@ -46,6 +61,16 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         return execute(() -> client.analyticsProvider.getErrorsOfCodeObject(environment, codeObjectId));
     }
 
+    @Override
+    public CodeObjectErrorDetails getCodeObjectErrorDetails(String errorSourceId) {
+        return execute(() -> client.analyticsProvider.getCodeObjectErrorDetails(errorSourceId));
+    }
+
+    @Override
+    public UsageStatusResult getUsageStatus(UsageStatusRequest usageStatusRequest) {
+        return execute(() -> client.analyticsProvider.getUsageStatus(usageStatusRequest));
+    }
+
     public <T> T execute(Supplier<Call<T>> supplier) {
 
         Response<T> response;
@@ -63,15 +88,15 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
             try {
                 message = String.format("Error %d. %s", response.code(), response.errorBody() == null ? null : response.errorBody().string());
             } catch (IOException e) {
-                throw new AnalyticsProviderException(e);
+                throw new AnalyticsProviderException(e.getMessage(), e);
             }
             throw new AnalyticsProviderException(response.code(), message);
         }
     }
 
 
-    private Client createClient(String baseUrl) {
-        return new Client(baseUrl);
+    private Client createClient(String baseUrl, String apiToken) {
+        return new Client(baseUrl, apiToken);
     }
 
 
@@ -89,21 +114,64 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         private final OkHttpClient okHttpClient;
 
         @SuppressWarnings("MoveFieldAssignmentToInitializer")
-        public Client(String baseUrl) {
+        public Client(String baseUrl, String apiToken) {
 
             //configure okHttp here if necessary
-            okHttpClient = new OkHttpClient.Builder()
-//                    .eventListener()
-                    .build();
+            OkHttpClient.Builder builder = new OkHttpClient.Builder();
+
+            if (baseUrl.startsWith("https:")) {
+                // SSL
+                applyInsecureSsl(builder);
+            }
+
+
+            if (apiToken != null && !apiToken.isBlank()) {
+                builder.addInterceptor(chain -> {
+                    Request request = chain.request().newBuilder().addHeader("Authorization", "Token " + apiToken).build();
+                    return chain.proceed(request);
+                });
+            }
+
+            builder.callTimeout(5, TimeUnit.SECONDS)
+                    .connectTimeout(5, TimeUnit.SECONDS)
+                    .readTimeout(5, TimeUnit.SECONDS);
+
+            okHttpClient = builder.build();
+
+            var jacksonFactory = JacksonConverterFactory.create(createObjectMapper());
 
             Retrofit retrofit = new Retrofit.Builder()
                     .baseUrl(baseUrl)
                     .client(okHttpClient)
-                    .addConverterFactory(JacksonConverterFactory.create())
+                    .addConverterFactory(jacksonFactory)
                     .validateEagerly(true)
                     .build();
 
             analyticsProvider = retrofit.create(AnalyticsProviderRetrofit.class);
+        }
+
+        private void applyInsecureSsl(OkHttpClient.Builder builder) {
+            SSLContext sslContext;
+            X509TrustManager insecureTrustManager = new InsecureTrustManager();
+            try {
+                sslContext = SSLContext.getInstance("SSL");
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException(e);
+            }
+            try {
+                sslContext.init(null, new TrustManager[]{insecureTrustManager}, new SecureRandom());
+            } catch (KeyManagementException e) {
+                throw new RuntimeException(e);
+            }
+            SSLSocketFactory socketFactory = sslContext.getSocketFactory();
+            builder.sslSocketFactory(socketFactory, insecureTrustManager);
+            builder.hostnameVerifier(new InsecureHostnameVerifier());
+        }
+
+        private ObjectMapper createObjectMapper() {
+            ObjectMapper objectMapper = new ObjectMapper();
+            //objectMapper can be configured here is necessary
+            return objectMapper;
         }
 
 
@@ -118,10 +186,36 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
 
+    static class InsecureTrustManager implements X509TrustManager {
+        @Override
+        public void checkClientTrusted(X509Certificate[] x509Certificates, String s) {
+            // accept all
+        }
+
+        @Override
+        public void checkServerTrusted(X509Certificate[] x509Certificates, String s) {
+            // accept all
+        }
+
+        @Override
+        public X509Certificate[] getAcceptedIssuers() {
+            return new X509Certificate[0];
+        }
+    }
+
+    static class InsecureHostnameVerifier implements HostnameVerifier {
+
+        @Override
+        public boolean verify(String s, SSLSession sslSession) {
+            // allow all hostnames
+            return true;
+        }
+    }
+
     //a bit of ugly design. need a retrofit interface that returns Call objects.
     //it's internal to this implementation.
     //plus we have an AnalyticsProvider interface for the plugin code just because an interface is nice to have.
-    //both have the same methods with different return type but not necessarily.
+    //both have the same methods with different return type.
     private interface AnalyticsProviderRetrofit {
 
 
@@ -154,6 +248,19 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @GET("/CodeAnalytics/codeObjects/errors")
         Call<List<CodeObjectError>> getErrorsOfCodeObject(@Query("environment") String environment, @Query("codeObjectId") String codeObjectId);
+
+        @Headers({
+                "Content-Type:application/json"
+        })
+        @GET("/CodeAnalytics/codeObjects/errors/{errorSourceId}")
+        Call<CodeObjectErrorDetails> getCodeObjectErrorDetails(@Path("errorSourceId") String errorSourceId);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/CodeAnalytics/codeobjects/status")
+        Call<UsageStatusResult> getUsageStatus(@Body UsageStatusRequest usageStatusRequest);
 
     }
 

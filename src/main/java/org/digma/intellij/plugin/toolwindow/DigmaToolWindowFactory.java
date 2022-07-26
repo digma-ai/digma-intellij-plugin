@@ -4,13 +4,17 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
+import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.service.EditorInteractionService;
+import org.digma.intellij.plugin.service.ErrorsActionsService;
+import org.digma.intellij.plugin.ui.ToolWindowShower;
 import org.digma.intellij.plugin.ui.errors.ErrorsTabKt;
 import org.digma.intellij.plugin.ui.insights.InsightsTabKt;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
+import org.digma.intellij.plugin.ui.service.ToolWindowTabsHelper;
 import org.jetbrains.annotations.NotNull;
 
 
@@ -34,26 +38,46 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
 
         var contentFactory = ContentFactory.SERVICE.getInstance();
 
+        var toolWindowTabsHelper = project.getService(ToolWindowTabsHelper.class);
+        toolWindowTabsHelper.setToolWindow(toolWindow);
+
+        Content contentToSelect;
+
         {
             var insightsPanel = InsightsTabKt.insightsPanel(project);
             var insightsViewService = project.getService(InsightsViewService.class);
-            insightsViewService.setModel(InsightsTabKt.getInsightsModel());
             insightsViewService.setPanel(insightsPanel);
             var insightsContent = contentFactory.createContent(insightsPanel, "Insights", false);
+            insightsContent.setTabName(ToolWindowTabsHelper.INSIGHTS_TAB_NAME);//we use tab name as a key , changing the name will break the plugin
+            insightsContent.setPreferredFocusedComponent(insightsPanel::getPreferredFocusedComponent);
+            insightsContent.setPreferredFocusableComponent(insightsPanel.getPreferredFocusableComponent());
             toolWindow.getContentManager().addContent(insightsContent);
+            insightsViewService.setContent(toolWindow,insightsContent);
+            toolWindowTabsHelper.setInsightsContent(insightsContent);
+            contentToSelect = insightsContent;
         }
 
         {
             var errorsPanel = ErrorsTabKt.errorsPanel(project);
             var errorsViewService = project.getService(ErrorsViewService.class);
-            errorsViewService.setModel(ErrorsTabKt.getErrorsModel());
             errorsViewService.setPanel(errorsPanel);
             var errorsContent = contentFactory.createContent(errorsPanel, "Errors", false);
+            errorsContent.setTabName(ToolWindowTabsHelper.ERRORS_TAB_NAME); //we use tab name as a key , changing the name will break the plugin
+            errorsContent.setPreferredFocusedComponent(errorsPanel::getPreferredFocusedComponent);
+            errorsContent.setPreferredFocusableComponent(errorsPanel.getPreferredFocusableComponent());
             toolWindow.getContentManager().addContent(errorsContent);
             errorsViewService.setContent(toolWindow,errorsContent);
+            toolWindowTabsHelper.setErrorsContent(errorsContent);
         }
 
 
-        EditorInteractionService.getInstance(project).start(project);
+        ErrorsActionsService errorsActionsService = project.getService(ErrorsActionsService.class);
+        toolWindow.getContentManager().addContentManagerListener(errorsActionsService);
+
+
+        project.getService(ToolWindowShower.class).setToolWindow(toolWindow);
+        EditorInteractionService.getInstance(project).start();
+
+        toolWindow.getContentManager().setSelectedContent(contentToSelect, true);
     }
 }

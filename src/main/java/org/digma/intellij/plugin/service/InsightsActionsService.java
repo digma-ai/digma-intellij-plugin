@@ -9,24 +9,31 @@ import org.jetbrains.annotations.NotNull;
 
 public class InsightsActionsService {
 
-    private Project project;
+    private final Project project;
     private final InsightsViewService insightsViewService;
     private final ErrorsViewService errorsViewService;
     private final LanguageService languageService;
+
+    private final EditorService editorService;
 
     public InsightsActionsService(Project project) {
         this.project = project;
         insightsViewService = project.getService(InsightsViewService.class);
         errorsViewService = project.getService(ErrorsViewService.class);
         languageService = project.getService(LanguageService.class);
+        editorService = project.getService(EditorService.class);
     }
 
 
-    public void errorsExpandButtonClicked(@NotNull ErrorInsight modelObject) {
-        errorsViewService.setVisible(true);
+    public void showErrorsTab(@NotNull ErrorInsight modelObject) {
+        errorsViewService.setVisible();
     }
 
     public void navigateToMethod(@NotNull String codeObjectId) {
         languageService.navigateToMethod(codeObjectId);
+    }
+
+    public void openWorkspaceFileForSpan(@NotNull String workspaceUri, int offset) {
+        editorService.openSpanWorkspaceFileInEditor(workspaceUri, offset);
     }
 }

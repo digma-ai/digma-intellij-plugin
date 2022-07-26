@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class BuildersHolder {
 
-    private final Map<InsightType, ListViewItemBuilder<?>> map = new HashMap<>(30);
+    private final Map<InsightType, ListViewItemBuilder<? extends CodeObjectInsight>> map = new HashMap<>(30);
 
     public BuildersHolder() {
         createMap();
@@ -24,24 +24,26 @@ public class BuildersHolder {
     }
 
     @NotNull
-    public ListViewItemBuilder<?> getBuilder(InsightType insightType) {
+    public ListViewItemBuilder<? extends CodeObjectInsight> getBuilder(InsightType insightType) {
         return map.get(insightType);
     }
 
-    private ListViewItemBuilder<?> newBuilder(InsightType type) {
+    private ListViewItemBuilder<? extends CodeObjectInsight> newBuilder(InsightType type) {
         switch (type) {
             //----------------------------------------------
             // Single (non grouped) Insights
             //----------------------------------------------
             case HotSpot:
-                return new HotspotListViewItemBuilder();
+                return new NoGroupListViewItemBuilder<HotspotInsight>();
             case Errors:
                 return new SingleInsightListViewItemBuilder<ErrorInsight>();
             //----------------------------------------------
             // Spans Insights
             //----------------------------------------------
             case SpanUsages:
-                return new GroupListViewItemBuilder<>(InsightGroupType.Span, SpanInsight::getSpan);
+                return new GroupListViewItemBuilder<SpanInsight>(InsightGroupType.Span, SpanInsight::getSpan);
+            case SpanDurations:
+                return new GroupListViewItemBuilder<SpanDurationsInsight>(InsightGroupType.Span, spanDurationsInsight -> spanDurationsInsight.getSpan().getName());
             //----------------------------------------------
             // Endpoint Insights
             //----------------------------------------------
@@ -55,6 +57,8 @@ public class BuildersHolder {
                 return new GroupListViewItemBuilder<>(InsightGroupType.HttpEndpoint, HighUsageInsight::getRoute);
             case SlowEndpoint:
                 return new GroupListViewItemBuilder<>(InsightGroupType.HttpEndpoint, SlowEndpointInsight::getRoute);
+            case Unmapped:
+                return new NoGroupListViewItemBuilder<UnmappedInsight>();
             default:
                 // default will fall into Single (non grouped) reference
                 return new SingleInsightListViewItemBuilder<>();

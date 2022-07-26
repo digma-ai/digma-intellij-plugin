@@ -1,32 +1,35 @@
 package org.digma.intellij.plugin.model.discovery
 
-data class MethodInfo(override val id: String,
-                      val name: String,
-                      val containingClass: String,
-                      val containingNamespace: String,
-                      val containingFileUri: String) : CodeObjectInfo {
+import java.util.stream.Collectors
+
+data class MethodInfo(
+    override val id: String, // CodeObjectId (without type (prefix of 'method:'))
+    val name: String,
+    val containingClass: String,
+    val containingNamespace: String,
+    val containingFileUri: String,
+    val offsetAtFileUri: Int,
+    val spans: List<SpanInfo>
+) : CodeObjectInfo {
 
 
     fun getRelatedCodeObjectIds(): List<String> {
-
-
-        val relatedIds: MutableList<String> = ArrayList()
-
-
-        //todo: temp. hard coded span ids until we have related code objects discovery
-        if ("Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService\$_\$TransferFunds" == id) {
-            relatedIds.add("span:MoneyTransferDomainService\$_\$Peristing balance transfer")
-            relatedIds.add("span:MoneyTransferDomainService\$_\$Creating record of transaction")
-        } else if ("Sample.MoneyTransfer.API.Controllers.TransferController\$_\$TransferFunds" == id) {
-            relatedIds.add("span:TransferController\$_\$Process transfer")
-        }else if ("Sample.MoneyTransfer.API.Controllers.SampleInsightsController\$_\$SpanBottleneck" == id) {
-            relatedIds.add("span:SampleInsightsController\$_\$SpanBottleneck 1")
-            relatedIds.add("span:SampleInsightsController\$_\$SpanBottleneck 2")
-        }
-        return relatedIds
+        return spans.stream().map(SpanInfo::idWithType).collect(Collectors.toList())
     }
 
     override fun idWithType(): String {
         return "method:$id"
+    }
+
+    fun nameWithParams():String{
+        return name + getParamsPartFromId()
+    }
+
+    private fun getParamsPartFromId():String{
+        val indexOf = id.indexOf('(')
+        if (indexOf > 0){
+            return id.substring(indexOf,id.length)
+        }
+        return ""
     }
 }

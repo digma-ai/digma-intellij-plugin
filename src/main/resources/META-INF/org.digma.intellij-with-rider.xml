@@ -1,7 +1,18 @@
 <idea-plugin>
+
+    <depends>rider.intellij.plugin.appender</depends>
+
     <extensions defaultExtensionNs="com.intellij">
+
+        <postStartupActivity implementation="org.digma.intellij.plugin.rider.ServicesStarter" id="rider-startup"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.rider.protocol.ShowToolWindowHost"/>
+
         <projectService serviceImplementation="org.digma.intellij.plugin.rider.psi.csharp.CSharpLanguageService"
                         serviceInterface="org.digma.intellij.plugin.psi.LanguageService"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.rider.project.RiderProjectService"
+                        serviceInterface="org.digma.intellij.plugin.project.ProjectService"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.rider.editor.RiderEditorEventsHandler"
                         serviceInterface="org.digma.intellij.plugin.editor.EditorEventsHandler"/>
@@ -17,15 +28,11 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.rider.editor.RiderDocumentInfoConsumer"/>
 
+        <projectService serviceImplementation="org.digma.intellij.plugin.rider.protocol.DocumentCodeObjectsListener"/>
+
         <projectService serviceImplementation="org.digma.intellij.plugin.rider.env.RiderEnvironmentChangedListener"/>
+
     </extensions>
 
-
-    <projectListeners>
-        <listener class="org.digma.intellij.plugin.rider.ServicesStarter"
-                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
-        <listener class="org.digma.intellij.plugin.rider.protocol.DocumentCodeObjectsListener"
-                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
-    </projectListeners>
 
 </idea-plugin>

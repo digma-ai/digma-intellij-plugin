@@ -1,18 +1,27 @@
 package org.digma.intellij.plugin.rider.protocol
 
+import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.application.WriteAction
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import com.jetbrains.rd.util.reactive.IMutableViewableMap
+import com.jetbrains.rd.util.string.printToString
+import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent
+import com.jetbrains.rdclient.util.idea.callSynchronously
 import com.jetbrains.rider.projectView.solution
-import org.digma.intellij.plugin.document.DocumentCodeObjectsChanged
-import org.digma.intellij.plugin.model.lens.CodeLens
+import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
+import org.digma.intellij.plugin.model.discovery.SpanInfo
+import org.digma.intellij.plugin.model.lens.CodeLens
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.annotations.NotNull
 import java.util.function.Consumer
 
-class CodeObjectHost(val project: Project) {
+class CodeObjectHost(project: Project): LifetimedProjectComponent(project) {
+
+    private val logger = Logger.getInstance(CodeObjectHost::class.java)
 
     private var model: CodeObjectsModel = project.solution.codeObjectsModel
 
@@ -24,13 +33,13 @@ class CodeObjectHost(val project: Project) {
 
 
     fun getDocument(psiFile: PsiFile): DocumentInfo? {
-        val path: String = PsiUtils.psiFileToDocumentProtocolKey(psiFile)
-        val document: Document? = this.model.documents[path]
-        return toModel(document)
-    }
-
-    private fun toModel(document: Document?): DocumentInfo? {
-        return document?.toDocumentInfo()
+        return ReadAction.compute<DocumentInfo,Exception> {
+            val path: String = PsiUtils.psiFileToDocumentProtocolKey(psiFile)
+            Log.log(logger::debug, "Got request for getDocument for PsiFile {}, converted to path: {}",psiFile.virtualFile,path)
+            val document: Document? = this.model.documents[path]
+            Log.log(logger::debug, "Got document for {}: {}",path,document?.printToString())
+            return@compute toModel(document)
+        }
     }
 
 
@@ -39,38 +48,74 @@ class CodeObjectHost(val project: Project) {
 
         if (codeLenses.isEmpty()) return
 
-        codeLenses.forEach(Consumer { codeLens ->
-            model.codeLens[codeLens.codeObjectId] = codeLens.toRiderCodeLensInfo()
-        })
+        Log.log(logger::debug, "Installing code lens for {}: {}",psiFile.virtualFile,codeLenses)
 
-        var documentKey = PsiUtils.psiFileToDocumentProtocolKey(psiFile)
-        model.reanalyze.fire(documentKey)
-    }
+        model.protocol.scheduler.invokeOrQueue {
+            WriteAction.run<Exception> {
+                val documentKey = PsiUtils.psiFileToDocumentProtocolKey(psiFile)
 
+                codeLenses.forEach(Consumer { codeLens ->
+                    model.codeLens.computeIfAbsent(codeLens.codeObjectId){LensPerObjectId()}
+                    model.codeLens[codeLens.codeObjectId]?.lens?.add(codeLens.toRiderCodeLensInfo(documentKey))
+                })
 
-    /**
-     * called when environment changed.
-     * clears related objects and fired DocumentCodeObjectsChanged for documents that are still in the protocol
-     */
-    fun environmentChanged() {
-        model.codeLens.clear()
-        model.reanalyzeAll.fire(Unit)
-
-        model.documents.values.forEach {
-            val docUri = it.fileUri
-            val psiFile = PsiUtils.uriToPsiFile(docUri, project)
-            notifyDocumentCodeObjectsChanged(psiFile)
+                Log.log(logger::debug, "Calling reanalyze for {}",documentKey)
+                model.reanalyze.fire(documentKey)
+            }
         }
     }
 
 
-    private fun notifyDocumentCodeObjectsChanged(psiFile: PsiFile?) {
-        val publisher: DocumentCodeObjectsChanged =
-            project.messageBus.syncPublisher(DocumentCodeObjectsChanged.DOCUMENT_CODE_OBJECTS_CHANGED_TOPIC)
-        publisher.documentCodeObjectsChanged(psiFile)
+
+    fun environmentChanged() {
+        Log.log(logger::debug, "Got environmentChanged event")
+
+         model.protocol.scheduler.invokeOrQueue {
+             WriteAction.run<Exception> {
+
+                 //collect document keys, clear code lens and call reanalyze for each document
+                 val docKeys = HashSet<String>()
+
+                 model.codeLens.forEach { entry ->
+                     entry.value.lens.forEach {codeLensInfo ->
+                         docKeys.add(codeLensInfo.documentProtocolKey)
+                     }
+                 }
+
+                 model.codeLens.clear()
+
+                 docKeys.forEach {
+                     Log.log(logger::debug, "Got environmentChanged , calling reanalyze for {}",it)
+                     model.reanalyze.fire(it)
+                 }
+             }
+        }
     }
 
 
+
+    fun findWorkspaceUrisForCodeObjectIds(codeObjectIds: MutableList<String>): Map<String, String> {
+        val result = HashMap<String, String>()
+        val workspaceUriPairs = model.getWorkspaceUris.callSynchronously(codeObjectIds, model.protocol)
+        workspaceUriPairs?.forEach {
+            result.put(it.codeObjectId, it.workspaceUri)
+        }
+        return result
+    }
+
+    fun findWorkspaceUrisForSpanIds(spanIds: MutableList<String>): Map<String, Pair<String,Int>> {
+        val result = HashMap<String,Pair<String,Int>>()
+        val workspaceUris = model.getSpansWorkspaceUris.callSynchronously(spanIds,model.protocol)
+        workspaceUris?.forEach {
+            result[it.codeObjectId] = Pair(it.workspaceUri,it.offset)
+        }
+        return result
+    }
+
+
+    private fun toModel(document: Document?): DocumentInfo? {
+        return document?.toDocumentInfo()
+    }
 
 
     private fun Document.toDocumentInfo() = DocumentInfo(
@@ -93,18 +138,35 @@ class CodeObjectHost(val project: Project) {
         name = name,
         containingClass = containingClass,
         containingNamespace = containingNamespace,
+        containingFileUri = containingFileUri,
+        offsetAtFileUri = offsetAtFileUri,
+        spans = toSpansList(spans)
+    )
+
+    private fun toSpansList(spans: List<RiderSpanInfo>): List<SpanInfo> {
+        val modelSpans = ArrayList<SpanInfo>()
+        spans.forEach {
+            modelSpans.add(it.toSpanInfo())
+        }
+        return modelSpans
+    }
+
+    private fun RiderSpanInfo.toSpanInfo() = SpanInfo(
+        id = id,
+        name = name,
+        containingMethod = containingMethod,
         containingFileUri = containingFileUri
     )
 
 
-    private fun CodeLens.toRiderCodeLensInfo() = RiderCodeLensInfo(
+    private fun CodeLens.toRiderCodeLensInfo(docKey: String) = RiderCodeLensInfo(
         codeObjectId = codeObjectId,
         lensText = lensText,
         lensTooltip = lensTooltipText,
         moreText = lensMoreText,
-        anchor = anchor
+        anchor = anchor,
+        documentProtocolKey = docKey
     )
-
 
 
 

@@ -9,8 +9,8 @@ data class NormalUsageInsight
 @ConstructorProperties("codeObjectId", "route", "maxCallsIn1Min")
 constructor(
     override val codeObjectId: String,
-    val route: String,
+    override var route: String,
     val maxCallsIn1Min: Int
-) : CodeObjectInsight {
+) : EndpointInsight {
     override val type: InsightType = InsightType.NormalUsage
 }

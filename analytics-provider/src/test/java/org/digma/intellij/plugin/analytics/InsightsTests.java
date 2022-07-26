@@ -30,13 +30,17 @@ public class InsightsTests extends AbstractAnalyticsProviderTest {
 
             System.out.println(codeObjectInsights);
         }
+    }
 
+
+    //    @Test
+    public void getInsightsTempViaSsl() {
         {
             List<String> ids = new ArrayList<>();
             ids.add("method:Sample.MoneyTransfer.API.Controllers.TransferController$_$TransferFunds");
             ids.add("span:TransferController$_$Process transfer");
             InsightsRequest insightsRequest = new InsightsRequest("UNSET_ENV", ids);
-            AnalyticsProvider analyticsProvider = new RestAnalyticsProvider("http://localhost:5051");
+            AnalyticsProvider analyticsProvider = new RestAnalyticsProvider("https://localhost:5051");
             List<CodeObjectInsight> codeObjectInsights = analyticsProvider.getInsights(insightsRequest);
 
             System.out.println(codeObjectInsights);
@@ -73,7 +77,7 @@ public class InsightsTests extends AbstractAnalyticsProviderTest {
                 "post transfer/transferfunds", 98);
         expectedCodeObjectInsights.add(expectedHighUsageInsight);
 
-        SpanInfo spanInfo = new SpanInfo("Retrieving account", "Retrieving account", "MoneyTransferDomainService", "Sample.MoneyTransfer.API");
+        SpanInfo spanInfo = new SpanInfo("Retrieving account", "Retrieving account", "MoneyTransferDomainService", "Sample.MoneyTransfer.API","Sample.MoneyTransfer.API.MoneyTransferDomainService$_$Error");
         SlowSpanInfo slowSpanInfo = new SlowSpanInfo(spanInfo,
                 new Percentile(0.10970134022722634D,new Duration(3.44D,"ms",3441700L)),
                 new Percentile(0.2566821090980162D,new Duration(3.44D,"ms",3441700L)),

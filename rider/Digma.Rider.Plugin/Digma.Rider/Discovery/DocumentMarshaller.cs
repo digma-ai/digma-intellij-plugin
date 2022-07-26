@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Digma.Rider.Protocol;
 using JetBrains.Rd;
 using JetBrains.Serialization;
@@ -11,16 +12,19 @@ namespace Digma.Rider.Discovery
     {
         public void Marshal(UnsafeWriter writer, Document value)
         {
+            writer.Write(value.IsComplete);
             writer.Write(value.FileUri);
             writer.Write(UnsafeWriter.StringDelegate, RiderMethodInfoWriteDelegate, value.Methods);
         }
 
         public Document Unmarshal(UnsafeReader reader)
         {
+            var isComplete = reader.ReadBool();
             var path = reader.ReadString();
             IDictionary<string, RiderMethodInfo> methods = reader.ReadDictionary(UnsafeReader.StringDelegate,
-                RiderMethodInfoReadDelegate, i => new Dictionary<string, RiderMethodInfo>());
-            var document = new Document(path ?? throw new InvalidOperationException());
+                RiderMethodInfoReadDelegate, _ => new Dictionary<string, RiderMethodInfo>());
+            var document = new Document(isComplete,path ?? throw new InvalidOperationException("Document path is null"));
+            Debug.Assert(methods != null, nameof(methods) + " != null");
             foreach (var riderMethodInfo in methods)
             {
                 document.Methods.Add(riderMethodInfo.Key, riderMethodInfo.Value);

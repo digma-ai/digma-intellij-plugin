@@ -15,6 +15,6 @@ public class DocumentManagerFileOpenedListener implements FileDocumentManagerLis
 
     @Override
     public void fileContentLoaded(@NotNull VirtualFile file, @NotNull Document document) {
-        Log.log(LOGGER::info, "DocumentManagerFileOpenedListener.fileContentLoaded: file:{}", file);
+        Log.log(LOGGER::debug, "DocumentManagerFileOpenedListener.fileContentLoaded: file:{}", file);
     }
 }

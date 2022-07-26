@@ -53,19 +53,24 @@ namespace Digma.Rider.Highlighting
                 case ICSharpFunctionDeclaration functionDeclaration:
                 {
                     var methodFqn = Identities.ComputeFqn(functionDeclaration);
-                    var riderCodeLensInfo = _codeObjectsHost.GetRiderCodeLensInfo(methodFqn);
-                    if (riderCodeLensInfo != null)
+                    var methodCodeLenses = _codeObjectsHost.GetRiderCodeLensInfo(methodFqn);
+                    if (methodCodeLenses is { Count: > 0 })
                     {
-                        Log(_logger, "Installing code lens for code object {0}", methodFqn);
-                        _highlightingConsumer.AddHighlighting(
-                            new CodeInsightsHighlighting(
-                                functionDeclaration.GetNameDocumentRange(),
-                                riderCodeLensInfo.LensText ?? throw new InvalidOperationException("LensText must not be null"),
-                                riderCodeLensInfo.LensTooltip ?? string.Empty, //todo: can be null
-                                riderCodeLensInfo.MoreText ?? string.Empty, //todo: can be null
-                                _methodInsightsProvider,
-                                functionDeclaration.DeclaredElement,null)
-                        );
+                        Log(_logger, "Found {0} code lens for method {1}", methodCodeLenses.Count,methodFqn);
+                        foreach (var riderCodeLensInfo in methodCodeLenses)
+                        {
+                            Log(_logger, "Installing code lens for code method {0}: {1}", methodFqn,riderCodeLensInfo);
+                            _highlightingConsumer.AddHighlighting(
+                                new CodeInsightsHighlighting(
+                                    functionDeclaration.GetNameDocumentRange(),
+                                    riderCodeLensInfo.LensText ?? throw new InvalidOperationException("LensText must not be null"),
+                                    riderCodeLensInfo.LensTooltip ?? string.Empty, //todo: can be null
+                                    riderCodeLensInfo.MoreText ?? string.Empty, //todo: can be null
+                                    _methodInsightsProvider,
+                                    functionDeclaration.DeclaredElement,null)
+                            );
+                        }
+                        
                     }
                     
                     break;

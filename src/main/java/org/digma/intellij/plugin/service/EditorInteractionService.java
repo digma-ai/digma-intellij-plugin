@@ -3,50 +3,52 @@ package org.digma.intellij.plugin.service;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import org.digma.intellij.plugin.analytics.EnvironmentChanged;
+import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.document.DocumentInfoContainer;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.editor.EditorEventsHandler;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
-import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.ui.CaretContextService;
+import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
-import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
 
 /**
  * A service to implement the interactions between listeners and UI components.
  * All work should be done in the EDT.
  */
-public class EditorInteractionService implements CaretContextService, Disposable, EnvironmentChanged {
+public class EditorInteractionService implements CaretContextService, Disposable {
 
-    private static final Logger LOGGER = Logger.getInstance(EditorInteractionService.class);
+    private final Logger LOGGER = Logger.getInstance(EditorInteractionService.class);
 
-    private Project project;
+    private final Project project;
 
     private final InsightsViewService insightsViewService;
     private final ErrorsViewService errorsViewService;
     private final DocumentInfoService documentInfoService;
+    private final EnvironmentsSupplier environmentsSupplier;
 
     public EditorInteractionService(Project project) {
         this.project = project;
         insightsViewService = project.getService(InsightsViewService.class);
         errorsViewService = project.getService(ErrorsViewService.class);
         documentInfoService = project.getService(DocumentInfoService.class);
-
-        project.getMessageBus().connect().subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, this);
+        var analyticsService = project.getService(AnalyticsService.class);
+        environmentsSupplier = analyticsService.getEnvironment();
     }
 
-    public static EditorInteractionService getInstance(Project project) {
-        return project.getService(EditorInteractionService.class);
+    public static CaretContextService getInstance(Project project) {
+        return project.getService(CaretContextService.class);
     }
 
     @Override
     public void contextChanged(MethodUnderCaret methodUnderCaret) {
 
-        Log.log(LOGGER::info, "contextChanged: {}", methodUnderCaret);
+        Log.log(LOGGER::debug, "contextChanged: {}", methodUnderCaret);
         /*
         Assuming here that we must have a MethodInfo in DocumentInfoService that was populated in an earlier stage.
         in Rider for example there is a cache that is updated as soon as documents change, and a listener that
@@ -60,24 +62,28 @@ public class EditorInteractionService implements CaretContextService, Disposable
 
          */
 
+        environmentsSupplier.refresh();
 
-        if (methodUnderCaret.getId().isBlank()) {
-            Log.log(LOGGER::info, "No id in methodUnderCaret,trying fileUri {}. ", methodUnderCaret);
+        if (!methodUnderCaret.isSupportedFile()){
+            Log.log(LOGGER::debug, "methodUnderCaret is non supported file {}. ", methodUnderCaret);
+            contextEmptyNonSupportedFile(methodUnderCaret.getFileUri());
+        }else if (methodUnderCaret.getId().isBlank()) {
+            Log.log(LOGGER::debug, "No id in methodUnderCaret,trying fileUri {}. ", methodUnderCaret);
             //if no id then try to show a preview for the document
-            if (!methodUnderCaret.getFileUri().isBlank()){
-                Log.log(LOGGER::info, "Showing document preview for {}. ", methodUnderCaret);
+            if (methodUnderCaret.getFileUri().isBlank()){
+                Log.log(LOGGER::debug, "No id and no fileUri in methodUnderCaret,clearing context {}. ", methodUnderCaret);
+                contextEmpty();
+            }else{
+                Log.log(LOGGER::debug, "Showing document preview for {}. ", methodUnderCaret);
                 DocumentInfoContainer documentInfoContainer =  documentInfoService.getDocumentInfo(methodUnderCaret);
                 if (documentInfoContainer == null){
-                    Log.log(LOGGER::info, "Could not find document info for {}, Showing empty preview.", methodUnderCaret);
+                    Log.log(LOGGER::debug, "Could not find document info for {}, Showing empty preview.", methodUnderCaret);
                 }else{
-                    Log.log(LOGGER::info, "Found document info for {}. document: {}", methodUnderCaret,documentInfoContainer.getPsiFile());
-
+                    Log.log(LOGGER::debug, "Found document info for {}. document: {}", methodUnderCaret,documentInfoContainer.getPsiFile());
                 }
 
                 insightsViewService.showDocumentPreviewList(documentInfoContainer,methodUnderCaret.getFileUri());
-            }else{
-                Log.log(LOGGER::info, "No id and no fileUri in methodUnderCaret,clearing context {}. ", methodUnderCaret);
-                contextEmpty();
+                errorsViewService.showDocumentPreviewList(documentInfoContainer,methodUnderCaret.getFileUri());
             }
         }else{
             MethodInfo methodInfo = documentInfoService.getMethodInfo(methodUnderCaret);
@@ -86,9 +92,13 @@ public class EditorInteractionService implements CaretContextService, Disposable
                 //this happens when we don't have method info for a real method, usually when a class doesn't have
                 //code objects found during discovery, it can be synthetic or auto-generated methods.
                 //pass a dummy method info just to populate the view,the view is aware and will not try to query for insights.
-                insightsViewService.contextChangeNoMethodInfo(new MethodInfo(methodUnderCaret.getId(), methodUnderCaret.getName(), methodUnderCaret.getClassName(), "", methodUnderCaret.getFileUri()));
+                var dummyMethodInfo = new MethodInfo(methodUnderCaret.getId(), methodUnderCaret.getName(), methodUnderCaret.getClassName(), "",
+                        methodUnderCaret.getFileUri(), 0, new ArrayList<>());
+                Log.log(LOGGER::warn, "Using dummy MethodInfo for to update views {}. ", dummyMethodInfo);
+                insightsViewService.contextChangeNoMethodInfo(dummyMethodInfo);
+                errorsViewService.contextChangeNoMethodInfo(dummyMethodInfo);
             } else {
-                Log.log(LOGGER::info, "Context changed to MethodInfo {}. ", methodInfo);
+                Log.log(LOGGER::debug, "Context changed to {}. ", methodInfo);
                 insightsViewService.contextChanged(methodInfo);
                 errorsViewService.contextChanged(methodInfo);
             }
@@ -97,9 +107,15 @@ public class EditorInteractionService implements CaretContextService, Disposable
 
     }
 
+    public void contextEmptyNonSupportedFile(String fileUri) {
+        Log.log(LOGGER::debug, "contextEmptyNonSupportedFile called");
+        insightsViewService.emptyNonSupportedFile(fileUri);
+        errorsViewService.emptyNonSupportedFile(fileUri);
+    }
+
     @Override
     public void contextEmpty() {
-        Log.log(LOGGER::info, "contextEmpty called");
+        Log.log(LOGGER::debug, "contextEmpty called");
         insightsViewService.empty();
         errorsViewService.empty();
     }
@@ -110,17 +126,10 @@ public class EditorInteractionService implements CaretContextService, Disposable
     }
 
 
-    public void start(@NotNull Project project) {
-        Log.log(LOGGER::debug, "starting..");
-        this.project = project;
+    public void start() {
+        Log.log(LOGGER::info, "Starting...");
         EditorEventsHandler editorEventsHandler = project.getService(EditorEventsHandler.class);
-        LanguageService languageService = project.getService(LanguageService.class);
-        editorEventsHandler.start(project, this, languageService);
+        editorEventsHandler.start(project);
     }
 
-
-    @Override
-    public void environmentChanged(String newEnv) {
-        contextEmpty();
-    }
 }

@@ -1,5 +1,7 @@
 package org.digma.intellij.plugin.ui.model
 
+import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
+
 interface PanelModel {
 
     fun count(): String
@@ -8,7 +10,9 @@ interface PanelModel {
 
     fun isDocumentScope(): Boolean
 
-
-
     fun getScope(): String
+
+    fun getScopeTooltip(): String
+
+    fun getUsageStatus(): UsageStatusResult
 }

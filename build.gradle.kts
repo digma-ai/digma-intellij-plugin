@@ -26,8 +26,6 @@ dependencies{
     implementation(project(":pycharm"))
     implementation(project(":rider"))
 
-    implementation("org.ocpsoft.prettytime:prettytime:5.0.3.Final")
-
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.2")
     testImplementation(kotlin("test"))
 }
@@ -100,23 +98,23 @@ tasks {
 
         // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest
         pluginDescription.set(
-            projectDir.resolve("README.md").readText().lines().run {
-                val start = "<!-- Plugin description -->"
-                val end = "<!-- Plugin description end -->"
+                projectDir.resolve("README.md").readText().lines().run {
+                    val start = "<!-- Plugin description -->"
+                    val end = "<!-- Plugin description end -->"
 
-                if (!containsAll(listOf(start, end))) {
-                    throw GradleException("Plugin description section not found in README.md:\n$start ... $end")
-                }
-                subList(indexOf(start) + 1, indexOf(end))
-            }.joinToString("\n").run { markdownToHTML(this) }
+                    if (!containsAll(listOf(start, end))) {
+                        throw GradleException("Plugin description section not found in README.md:\n$start ... $end")
+                    }
+                    subList(indexOf(start) + 1, indexOf(end))
+                }.joinToString("\n").run { markdownToHTML(this) }
         )
 
         // Get the latest available change notes from the changelog file
-        changeNotes.set(provider {
-            changelog.run {
-                getOrNull(properties("pluginVersion")) ?: getLatest()
-            }.toHTML()
-        })
+//        changeNotes.set(provider {
+//            changelog.run {
+//                getOrNull(properties("pluginVersion")) ?: getLatest()
+//            }.toHTML()
+//        })
     }
 
     // Configure UI tests plugin
@@ -147,10 +145,13 @@ tasks {
         enabled = false
     }
 
+    jarSearchableOptions {
+        enabled = false
+    }
 
     var deleteLog = create("deleteLogs", Delete::class.java) {
         project.layout.buildDirectory.dir("idea-sandbox/system/log").get().asFile.walk().forEach {
-            if (it.name.endsWith(".log")){
+            if (it.name.endsWith(".log")) {
                 delete(it)
             }
         }
@@ -165,5 +166,43 @@ tasks {
         // Rider's backend doesn't support dynamic plugins. It might be possible to work with auto-reload of the frontend
         // part of a plugin, but there are dangers about keeping plugins in sync
         autoReloadPlugins.set(false)
+    }
+
+
+    listProductsReleases {
+        //todo: decide which releases to support
+//        types.set(listOf("RD","IC","PC"))
+        //todo: change to support only rider and add support for other IDEs later
+        types.set(listOf("RD","IC","PC","IU"))
+        sinceVersion.set("2022.1")
+        untilVersion.set("2022.1.2")
+//        sinceBuild.set("221.5787.35")
+//        untilBuild.set("221.5591.21")
+    }
+
+
+    runPluginVerifier {
+//        ideVersions.set(listOf())
+        subsystemsToCheck.set("without-android")
+    }
+
+    verifyPlugin {
+        dependsOn(":rider:prepareSandboxForRider")
+    }
+
+    signPlugin {
+        if (System.getenv("DIGMA_JB_PRIVATE_KEY_PASSWORD") != null) {
+            certificateChainFile.set(file(System.getenv("DIGMA_JB_CERTIFICATE_CHAIN_FILE")))
+            privateKeyFile.set(file(System.getenv("DIGMA_JB_PRIVATE_KEY_FILE")))
+            password.set(System.getenv("DIGMA_JB_PRIVATE_KEY_PASSWORD"))
+        }
+    }
+
+
+    publishPlugin {
+        if (System.getenv("DIGMA_JB_INTELLIJ_PUBLISH_TOKEN") != null) {
+            token.set(System.getenv("DIGMA_JB_INTELLIJ_PUBLISH_TOKEN"))
+        }
+        ////channels.set(listOf("alpha"))
     }
 }

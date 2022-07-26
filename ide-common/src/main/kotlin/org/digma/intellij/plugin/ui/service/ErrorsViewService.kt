@@ -1,53 +1,162 @@
 package org.digma.intellij.plugin.ui.service
 
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.wm.ToolWindow
-import com.intellij.ui.content.Content
+import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.errors.ErrorsProvider
+import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult
 import org.digma.intellij.plugin.model.discovery.MethodInfo
+import org.digma.intellij.plugin.persistence.PersistenceService
+import org.digma.intellij.plugin.ui.model.DocumentScope
+import org.digma.intellij.plugin.ui.model.EmptyScope
+import org.digma.intellij.plugin.ui.model.MethodScope
+import org.digma.intellij.plugin.ui.model.errors.ErrorDetailsModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
-import org.digma.intellij.plugin.ui.panels.ResettablePanel
-import java.util.*
+import org.digma.intellij.plugin.ui.model.errors.ErrorsTabCard
+import java.util.Collections
 
-class ErrorsViewService(val project: Project) {
+class ErrorsViewService(project: Project) : AbstractViewService(project) {
 
-    lateinit var panel: ResettablePanel
-    lateinit var model: ErrorsModel
-    lateinit var toolWindow: ToolWindow
-    lateinit var errorsContent: Content
+    private val logger: Logger = Logger.getInstance(ErrorsViewService::class.java)
+
+    //the model is single per the life of an open project in intellij. it shouldn't be created
+    //elsewhere in the program. it can not be singleton.
+    val model = ErrorsModel()
+
     private val errorsProvider: ErrorsProvider = project.getService(ErrorsProvider::class.java)
 
+    companion object {
+        fun getInstance(project: Project): ErrorsViewService {
+            return project.getService(ErrorsViewService::class.java)
+        }
+    }
+
+
+    override fun getViewDisplayName(): String {
+        return "Errors" + if (model.errorsCount > 0) " (${model.count()})" else ""
+    }
 
     fun contextChanged(
         methodInfo: MethodInfo
     ) {
 
+        Log.log(logger::debug, "contextChanged to {}. ", methodInfo)
 
         val errorsListContainer = errorsProvider.getErrors(methodInfo)
         model.listViewItems = errorsListContainer.listViewItems
-        model.scope = methodInfo
-        model.className = methodInfo.containingClass
-        model.methodName = methodInfo.name
+        model.usageStatusResult = errorsListContainer.usageStatus
+        model.scope = MethodScope(methodInfo)
+        model.card = ErrorsTabCard.ERRORS_LIST
+        model.errorsCount = errorsListContainer.count
 
-        panel.reset()
+        updateUi()
+    }
+
+
+    fun contextChangeNoMethodInfo(dummy: MethodInfo) {
+
+        Log.log(logger::debug, "contextChangeNoMethodInfo to {}. ", dummy)
+
+        model.listViewItems = ArrayList()
+        model.usageStatusResult = EmptyUsageStatusResult
+        model.scope = MethodScope(dummy)
+        model.card = ErrorsTabCard.ERRORS_LIST
+        model.errorsCount = 0
+
+        updateUi()
+    }
+
+
+    fun showErrorDetails(uid: String) {
+
+        Log.log(logger::debug, "showDocumentPreviewList for {}. ", uid)
+
+        val errorDetails = errorsProvider.getErrorDetails(uid)
+        errorDetails.flowStacks.isWorkspaceOnly =
+            project.getService(PersistenceService::class.java).state.isWorkspaceOnly
+        model.errorDetails = errorDetails
+        model.card = ErrorsTabCard.ERROR_DETAILS
+
+        updateUi()
+
+    }
+
+
+    fun closeErrorDetails() {
+
+        Log.log(logger::debug, "closeErrorDetails called")
+
+        model.errorDetails = createEmptyErrorDetails()
+        model.card = ErrorsTabCard.ERRORS_LIST
+        updateUi()
     }
 
     fun empty() {
+
+        Log.log(logger::debug, "empty called")
+
         model.listViewItems = Collections.emptyList()
-        model.scope = null
-        model.className = ""
-        model.methodName = ""
+        model.usageStatusResult = EmptyUsageStatusResult
+        model.scope = EmptyScope("")
+        model.card = ErrorsTabCard.ERRORS_LIST
+        model.errorsCount = 0
 
-        panel.reset()
+        updateUi()
     }
 
-    fun setVisible(visible: Boolean) {
-        toolWindow.contentManager.setSelectedContent(errorsContent, true)
+    fun emptyNonSupportedFile(fileUri: String) {
+
+        Log.log(logger::debug, "emptyNonSupportedFile called")
+
+        model.listViewItems = Collections.emptyList()
+        model.usageStatusResult = EmptyUsageStatusResult
+        model.scope = EmptyScope(getNonSupportedFileScopeMessage(fileUri))
+        model.card = ErrorsTabCard.ERRORS_LIST
+        model.errorsCount = 0
+
+        updateUi()
     }
 
-    fun setContent(toolWindow: ToolWindow, errorsContent: Content) {
-        this.toolWindow = toolWindow
-        this.errorsContent = errorsContent
+
+    /*
+    the errors tab don't need to load anything when showing preview in insights tab,
+    just needs to update the scope and empty the list
+     */
+    fun showDocumentPreviewList(
+        documentInfoContainer: DocumentInfoContainer?,
+        fileUri: String
+    ) {
+
+        Log.log(logger::debug, "showDocumentPreviewList for {}. ", fileUri)
+
+        if (documentInfoContainer == null) {
+            model.scope = EmptyScope(fileUri.substringAfterLast('/'))
+            model.errorsCount = 0
+            model.usageStatusResult = EmptyUsageStatusResult
+        } else {
+            model.scope = DocumentScope(documentInfoContainer.documentInfo)
+            model.errorsCount = computeErrorsPreviewCount(documentInfoContainer)
+            model.usageStatusResult = documentInfoContainer.usageStatusOfErrors
+        }
+
+        model.listViewItems = ArrayList()
+        model.card = ErrorsTabCard.ERRORS_LIST
+
+        updateUi()
     }
+
+
+    private fun computeErrorsPreviewCount(documentInfoContainer: DocumentInfoContainer): Int {
+        return documentInfoContainer.allSummaries.stream().mapToInt { it.errorsCount }.sum()
+    }
+
+    private fun createEmptyErrorDetails(): ErrorDetailsModel {
+        val emptyErrorDetails = ErrorDetailsModel()
+        emptyErrorDetails.flowStacks.isWorkspaceOnly =
+            project.getService(PersistenceService::class.java).state.isWorkspaceOnly
+        return emptyErrorDetails
+    }
+
 
 }

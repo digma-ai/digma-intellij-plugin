@@ -7,10 +7,15 @@ plugins {
 
 intellij {
     version.set("IC-" + properties("platformVersion", project))
+    plugins.set(listOf("Git4Idea"))
 }
 
 dependencies {
-    implementation("org.ocpsoft.prettytime:prettytime:5.0.3.Final")
+    //pretty time can be moved to the model project to it s accessible to all project classes.
+    //from here the model classes can't use it
+    api(libs.prettytime)
+    api(libs.threeten)
+
 
     implementation(project(":model"))
     implementation(project(":analytics-provider"))

@@ -1,7 +1,10 @@
 package org.digma.intellij.plugin.insights.view;
 
+import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
+import org.digma.intellij.plugin.model.rest.insights.EndpointInsight;
+import org.digma.intellij.plugin.model.rest.insights.EndpointSchema;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
 import org.digma.intellij.plugin.view.ListViewBuilder;
 import org.digma.intellij.plugin.view.ListViewItemBuilder;
@@ -20,19 +23,29 @@ public class InsightsViewBuilder extends ListViewBuilder {
     }
 
     @NotNull
-    public List<ListViewItem<?>> build(@NotNull MethodInfo scope, List<CodeObjectInsight> codeObjectInsights) {
+    public List<ListViewItem<?>> build(Project project, @NotNull MethodInfo scope, List<? extends CodeObjectInsight> codeObjectInsights) {
+
+        adjustToHttpIfNeeded(codeObjectInsights);
 
         List<ListViewItem<?>> allItems = new ArrayList<>();
 
         codeObjectInsights.forEach(insight -> {
-            final ListViewItemBuilder builder = buildersHolder.getBuilder(insight.getType());
-            final List<ListViewItem<?>> insightListItems = builder.build(insight, groupManager);
+            final ListViewItemBuilder<CodeObjectInsight> builder = (ListViewItemBuilder<CodeObjectInsight>) buildersHolder.getBuilder(insight.getType());
+            final List<ListViewItem<?>> insightListItems = builder.build(project,insight, groupManager);
             allItems.addAll(insightListItems);
         });
 
         allItems.addAll(groupManager.getGroupItems());
 
         return sortDistinct(allItems);
+    }
+
+    protected void adjustToHttpIfNeeded(final List<? extends CodeObjectInsight> codeObjectInsights) {
+        codeObjectInsights
+                .stream()
+                .filter(coi -> coi instanceof EndpointInsight)
+                .map(coi -> (EndpointInsight) coi)
+                .forEach(EndpointSchema::adjustHttpRouteIfNeeded);
     }
 
 }

@@ -13,16 +13,16 @@ open class InsightListViewItem<INSIGHT : CodeObjectInsight>(insight: INSIGHT) :
                 // Standalone insights
                 InsightType.HotSpot -> 1
                 InsightType.Errors -> 2
-                // Span Usages
+                // Span
                 InsightType.SpanUsages -> 60
+                InsightType.SpanDurations -> 65
                 // HTTP Endpoints
                 InsightType.SlowestSpans -> 40
                 InsightType.LowUsage -> 30
-                InsightType.NormalUsage -> 20
+                InsightType.NormalUsage -> 50
                 InsightType.HighUsage -> 10
-                InsightType.SlowEndpoint -> 50
-                //
-                else -> 99
+                InsightType.SlowEndpoint -> 20
+                InsightType.Unmapped -> 200
             }
         }
     }

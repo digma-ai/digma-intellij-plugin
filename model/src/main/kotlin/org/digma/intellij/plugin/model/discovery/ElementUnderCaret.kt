@@ -7,5 +7,6 @@ internal interface ElementUnderCaret {
     val id: String
     val fileUri: String
     val type: ElementUnderCaretType
+    val isSupportedFile: Boolean
 
 }

@@ -1,68 +1,84 @@
 package org.digma.intellij.plugin.ui.common
 
-import com.intellij.ui.dsl.builder.RowLayout
+import com.intellij.icons.AllIcons
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.DialogPanel
+import com.intellij.ui.dsl.builder.BottomGap
+import com.intellij.ui.dsl.builder.MutableProperty
+import com.intellij.ui.dsl.builder.TopGap
 import com.intellij.ui.dsl.builder.panel
-import org.digma.intellij.plugin.icons.Icons
-import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
-import org.digma.intellij.plugin.ui.model.listview.ListViewItem
-import java.awt.*
-import javax.swing.*
+import com.intellij.ui.dsl.gridLayout.HorizontalAlign
+import com.intellij.util.ui.JBUI
+import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.ui.model.NOT_SUPPORTED_OBJECT_MSG
+import org.digma.intellij.plugin.ui.model.PanelModel
+import org.digma.intellij.plugin.ui.model.insights.InsightsModel
+import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
+import java.awt.BorderLayout
+import javax.swing.JLabel
 
 
-fun panelOfUnsupported(caption: String): JPanel {
+fun noCodeObjectWarningPanel(model: PanelModel): DialogPanel {
+
     return panel {
-        row("Unsupported yet: '$caption'") {
-        }.layout(RowLayout.PARENT_GRID)
-    }
+        row {
+            icon(AllIcons.General.BalloonInformation)
+                .horizontalAlign(HorizontalAlign.CENTER)
+        }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
+        row {
+            label(getNoInfoMessage(model)).bind(
+                JLabel::getText, JLabel::setText, MutableProperty(
+                    getter = { getNoInfoMessage(model) },
+                    setter = {})
+            ).bind(
+                JLabel::getToolTipText, JLabel::setToolTipText, MutableProperty(
+                    getter = { getNoInfoMessage(model) },
+                    setter = {})
+            )
+                .horizontalAlign(HorizontalAlign.CENTER)
+        }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
+    }.andTransparent().withBorder(JBUI.Borders.empty())
 }
 
-fun genericPanelForSingleInsight(listViewItem: ListViewItem<CodeObjectInsight>): JPanel {
-    return panel {
-        //temporary: need to implement logic
-        row {
-            label("Insight named '${listViewItem.modelObject.javaClass.simpleName}'")
-            icon(Icons.TOOL_WINDOW)
+
+private fun getNoInfoMessage(model: PanelModel): String {
+    var msg = if (model is InsightsModel) "No insights" else "No errors"
+
+    if (model.getScope().isNotBlank() && !model.getScope().contains(NOT_SUPPORTED_OBJECT_MSG)) {
+        msg += " for " + model.getScope()
+    }
+    return msg
+}
+
+
+fun createTopPanel(project: Project, model: PanelModel): DigmaResettablePanel {
+
+    val scopeLine = scopeLine({ model.getScope() }, { model.getScopeTooltip() }, ScopeLineIconProducer(model))
+    scopeLine.isOpaque = false
+
+    val envsPanel = EnvironmentsPanel(project, model, AnalyticsService.getInstance(project).environment)
+    envsPanel.isOpaque = false
+
+    val result = object : DigmaResettablePanel() {
+
+        override fun reset() {
+            scopeLine.reset()
+            envsPanel.reset()
+        }
+
+        override fun requestFocus() {
+            envsPanel.requestFocus()
+        }
+
+        override fun requestFocusInWindow(): Boolean {
+            return envsPanel.requestFocusInWindow()
         }
     }
-}
 
-fun iconPanel(icon: Icon, text: String): JPanel {
-    val panel = JPanel()
-    panel.layout = BorderLayout(5, 10)
-    panel.add(JLabel(icon), BorderLayout.CENTER)
-    val label = JLabel(text)
-    label.horizontalAlignment = SwingConstants.CENTER
-    panel.add(label, BorderLayout.SOUTH)
-    panel.border = BorderFactory.createEmptyBorder()
-    panel.background = Color.BLUE
-    return panel
-}
-
-fun iconPanelBox(icon: Icon, text: String): JPanel {
-    val panel = JPanel()
-    panel.layout = BoxLayout(panel,BoxLayout.Y_AXIS)
-    val iconLabel = JLabel(icon)
-    panel.add(iconLabel)
-    val label = JLabel(text)
-    panel.add(label)
-    panel.border = BorderFactory.createEmptyBorder()
-    return panel
-}
-
-fun iconPanelGrid(icon: Icon, text: String): JPanel {
-    val panel = JPanel()
-    panel.layout = GridLayout(2,1)
-    val iconLabel = JLabel(icon)
-    val f: Font = iconLabel.font
-    iconLabel.font = f.deriveFont(f.style or Font.BOLD)
-    panel.add(iconLabel)
-    val label = JLabel(text)
-    panel.add(label)
-    panel.border = BorderFactory.createEmptyBorder()
-    return panel
-}
-
-fun fixedSize(swingComponent: JComponent, dim: Dimension) {
-    swingComponent.minimumSize = dim
-    swingComponent.maximumSize = dim
+    result.isOpaque = false
+    result.border = JBUI.Borders.empty(0, 10, 0, 10)
+    result.layout = BorderLayout()
+    result.add(scopeLine, BorderLayout.NORTH)
+    result.add(envsPanel, BorderLayout.CENTER)
+    return result
 }

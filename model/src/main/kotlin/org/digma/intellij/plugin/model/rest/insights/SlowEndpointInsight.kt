@@ -14,7 +14,7 @@ data class SlowEndpointInsight
 )
 constructor(
     override val codeObjectId: String,
-    val route: String,
+    override var route: String,
     val endpointsMedian: Duration,
     val endpointsMedianOfMedians: Duration,
     val endpointsMedianOfP75: Duration,
@@ -26,6 +26,6 @@ constructor(
     val p75: Duration,
     val p95: Duration,
     val p99: Duration
-) : CodeObjectInsight {
+) : EndpointInsight {
     override val type: InsightType = InsightType.SlowEndpoint
 }

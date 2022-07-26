@@ -72,10 +72,10 @@ class EnvironmentsPanel(
         val ps = super.getPreferredSize()
         if (ps != null) {
             return if (ps.width >= 0 && ps.height >= 0) {
-                lastPositivePs = ps
+                this.lastPositivePs = ps
                 ps
             } else {
-                lastPositivePs
+                this.lastPositivePs
             }
         }
 

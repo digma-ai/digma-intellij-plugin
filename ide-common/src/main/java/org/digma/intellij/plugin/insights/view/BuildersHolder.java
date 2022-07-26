@@ -16,7 +16,9 @@ import org.digma.intellij.plugin.ui.model.insights.InsightGroupType;
 import org.digma.intellij.plugin.view.ListViewItemBuilder;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+
 
 public class BuildersHolder {
 

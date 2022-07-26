@@ -41,6 +41,10 @@ class InsightsModel : PanelModel {
         return scope.getScopeTooltip()
     }
 
+    override fun getUsageStatus(): UsageStatusResult {
+        return usageStatusResultRef.get()
+    }
+
     fun getPreviewListMessage(): String {
         if (scope is EmptyScope) {
             return "No code objects found for this document"

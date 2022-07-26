@@ -14,13 +14,13 @@ import org.digma.intellij.plugin.common.CommonUtils.prettyTimeOf
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
 import org.digma.intellij.plugin.ui.common.Laf.Icons.Environment.Companion.ENVIRONMENT_HAS_NO_USAGE
 import org.digma.intellij.plugin.ui.common.Laf.Icons.Environment.Companion.ENVIRONMENT_HAS_USAGE
+import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsListChangedListener
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.Dimension
 import java.awt.FlowLayout
 import java.util.Objects
-import java.util.concurrent.atomic.AtomicReference
 import java.util.function.Function
 import javax.swing.Icon
 import javax.swing.JComponent
@@ -32,8 +32,8 @@ import kotlin.math.min
 //both instances need to be in sync with the selected button and the environments list.
 class EnvironmentsPanel(
     project: Project,
+    private val model: PanelModel,
     private val environmentsSupplier: EnvironmentsSupplier, // assuming its a singleton
-    private val usageStatusResultRef: AtomicReference<UsageStatusResult>
 ) : DigmaResettablePanel() {
 
     init {
@@ -119,7 +119,7 @@ class EnvironmentsPanel(
             revalidate()
         }
 
-        val usageStatusResult = usageStatusResultRef.get()
+        val usageStatusResult = model.getUsageStatus()
 
         val envsThatHaveUsageSet: Set<String> = buildEnvironmentWithUsages(usageStatusResult)
         val hasUsageFunction = fun(env: String): Boolean { return envsThatHaveUsageSet.contains(env) }

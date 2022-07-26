@@ -43,6 +43,9 @@ class ErrorsModel : PanelModel {
         return scope.getScopeTooltip()
     }
 
+    override fun getUsageStatus(): UsageStatusResult {
+        return usageStatusResultRef.get()
+    }
 }
 
 

@@ -10,13 +10,11 @@ import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.analytics.AnalyticsService
-import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
 import org.digma.intellij.plugin.ui.model.NOT_SUPPORTED_OBJECT_MSG
 import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.BorderLayout
-import java.util.concurrent.atomic.AtomicReference
 import javax.swing.JLabel
 
 
@@ -53,16 +51,12 @@ private fun getNoInfoMessage(model: PanelModel): String {
 }
 
 
-fun createTopPanel(
-    project: Project,
-    model: PanelModel,
-    usageStatusResultRef: AtomicReference<UsageStatusResult>
-): DigmaResettablePanel {
+fun createTopPanel(project: Project, model: PanelModel): DigmaResettablePanel {
 
     val scopeLine = scopeLine({ model.getScope() }, { model.getScopeTooltip() }, ScopeLineIconProducer(model))
     scopeLine.isOpaque = false
 
-    val envsPanel = EnvironmentsPanel(project, AnalyticsService.getInstance(project).environment, usageStatusResultRef)
+    val envsPanel = EnvironmentsPanel(project, model, AnalyticsService.getInstance(project).environment)
     envsPanel.isOpaque = false
 
     val result = object : DigmaResettablePanel() {

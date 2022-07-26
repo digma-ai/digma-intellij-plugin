@@ -1,9 +1,20 @@
 # digma-jetbrains-plugin
 
-TBD
+<!-- Plugin description -->
+**Digma is a Continuous Feedback platform. It integrates with your observability
+backend to provide meaningful code insights in the IDE. While coding,
+you can be aware of how the code behaves in runtime in various staging and production environments**
 
+### Digma provides integrated insights multiple code behaviour topics including:
+
+- Error hotspots
+- Usage bottlenecks and concurrency
+- Performance trends
+
+<!-- Plugin description end -->
 
 ## Build
+
 The project must be built with jdk 11 or later as the gradle jdk.</br>
 
 ./gradlew buildPlugin -Porg.gradle.java.home=<PATH TO JDK 11></br>

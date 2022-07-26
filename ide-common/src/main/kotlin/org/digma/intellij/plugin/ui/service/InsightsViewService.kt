@@ -132,7 +132,6 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
         model.listViewItems = ArrayList()
         model.card = InsightsTabCard.PREVIEW
         updateUi()
-        setVisible()
     }
 
 

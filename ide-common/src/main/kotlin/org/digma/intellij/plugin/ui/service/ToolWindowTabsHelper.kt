@@ -17,6 +17,7 @@ class ToolWindowTabsHelper(val project: Project) {
     companion object {
         const val INSIGHTS_TAB_NAME = "insights"
         const val ERRORS_TAB_NAME = "errors"
+        const val SUMMARY_TAB_NAME = "summary"
     }
 
     fun isInsightsTab(content: Content?):Boolean{

@@ -6,6 +6,7 @@ import okhttp3.Request;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
+import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
@@ -52,6 +53,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     @Override
     public List<CodeObjectInsight> getInsights(InsightsRequest insightsRequest) {
         return execute(() -> client.analyticsProvider.getInsights(insightsRequest));
+    }
+
+    @Override
+    public List<GlobalInsight> getGlobalInsights(InsightsRequest insightsRequest) {
+        return execute(() -> client.analyticsProvider.getGlobalInsights(insightsRequest));
     }
 
     @Override
@@ -234,6 +240,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @POST("/CodeAnalytics/codeObjects/insights")
         Call<List<CodeObjectInsight>> getInsights(@Body InsightsRequest insightsRequest);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/CodeAnalytics/insights")
+        Call<List<GlobalInsight>> getGlobalInsights(@Body InsightsRequest insightsRequest);
 
         @Headers({
                 "Accept: application/+json",

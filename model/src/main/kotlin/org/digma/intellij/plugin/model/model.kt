@@ -28,5 +28,7 @@ enum class InsightType {
     NormalUsage,
     HighUsage,
     SlowEndpoint,
-    Unmapped
+    Unmapped,
+    TopErrorFlows,
+    SpanDurationChange
 }

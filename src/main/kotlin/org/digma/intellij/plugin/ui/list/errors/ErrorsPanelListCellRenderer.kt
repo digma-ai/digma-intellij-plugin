@@ -16,7 +16,8 @@ import org.ocpsoft.prettytime.PrettyTime
 import java.awt.BorderLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
-import java.util.*
+import java.sql.Timestamp
+import java.util.Date
 import javax.swing.JPanel
 
 
@@ -52,7 +53,7 @@ private fun createSingleErrorPanel(project: Project, model: CodeObjectError ): J
         actionListener.showErrorDetails(model)
     }
 
-    val firstAndLast = contentOfFirstAndLast(model)
+    val firstAndLast = contentOfFirstAndLast(model.firstOccurenceTime, model.lastOccurenceTime)
 
     link.toolTipText = asHtml("${linkText}<br>${firstAndLast}" )
 
@@ -89,9 +90,9 @@ private fun prettyTimeOf(date: Date): String {
     return ptNow.format(date)
 }
 
-private fun contentOfFirstAndLast(model: CodeObjectError): String {
-    return "${spanGrayed("Started:")} ${span(prettyTimeOf(model.firstOccurenceTime))}" +
-                "  ${spanGrayed("Last:")} ${span(prettyTimeOf(model.lastOccurenceTime))}"
+fun contentOfFirstAndLast(firstOccurenceTime: Timestamp, lastOccurenceTime: Timestamp,): String {
+    return "${spanGrayed("Started:")} ${span(prettyTimeOf(firstOccurenceTime))}" +
+                "  ${spanGrayed("Last:")} ${span(prettyTimeOf(lastOccurenceTime))}"
 }
 
 

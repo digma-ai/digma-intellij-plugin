@@ -8,6 +8,7 @@ import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
+import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
@@ -117,6 +118,10 @@ public class AnalyticsService implements Disposable {
 
     public List<CodeObjectSummary> getSummaries(List<String> objectIds) throws AnalyticsServiceException {
         return analyticsProviderProxy.getSummaries(new CodeObjectSummaryRequest(getCurrentEnvironment(), objectIds));
+    }
+
+    public List<GlobalInsight> getGlobalInsights() throws AnalyticsServiceException {
+        return analyticsProviderProxy.getGlobalInsights(new InsightsRequest(getCurrentEnvironment(), Collections.emptyList()));
     }
 
     public List<CodeObjectInsight> getInsights(List<String> objectIds) throws AnalyticsServiceException {

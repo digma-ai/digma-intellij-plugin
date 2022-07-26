@@ -23,6 +23,8 @@ open class InsightListViewItem<INSIGHT : CodeObjectInsight>(insight: INSIGHT) :
                 InsightType.HighUsage -> 10
                 InsightType.SlowEndpoint -> 20
                 InsightType.Unmapped -> 200
+
+                else -> 999
             }
         }
     }

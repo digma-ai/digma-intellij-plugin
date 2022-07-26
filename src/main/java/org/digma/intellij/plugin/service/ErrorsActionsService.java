@@ -40,7 +40,7 @@ public class ErrorsActionsService implements ContentManagerListener {
         showErrorDetails(codeObjectError.getUid());
     }
 
-    private void showErrorDetails(@NotNull String uid) {
+    public void showErrorDetails(@NotNull String uid) {
         toolWindowTabsHelper.showingErrorDetails();
         errorsViewService.setVisible();
         errorsViewService.showErrorDetails(uid);

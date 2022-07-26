@@ -5,19 +5,39 @@
     <version>${project.version}</version>
     <name>Digma Continuous Feedback</name>
     <vendor>digma.ai</vendor>
-    <description>
-        Please write plugin description in README.md , see <!-- Plugin description --> section
-    </description>
+    <description><![CDATA[
+<p>Digma is a Continuous Feedback platform. It integrates with your observability
+  backend to provide meaningful code insights in the IDE. While coding,
+  you can be aware of how the code behaves in runtime in various staging and production environments
+</p>
+<br/>
+
+<p><h2><strong>Digma provides integrated insights multiple code behavior topics including:</strong></h2></p>
+
+<ul>
+    <li>
+       Error hostpots
+    </li>
+
+    <li>
+        Usage bottlenecks and concurrency
+    </li>
+
+    <li>
+       Performance trends
+    </li>
+</ul>
+    ]]></description>
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.vcs</depends>
 
-<!--    <depends-->
-<!--            optional="true"-->
-<!--            config-file="org.digma.intellij-with-pycharm.xml">com.intellij.modules.python-->
-<!--    </depends>-->
-<!--    <depends-->
-<!--            optional="true"-->
-<!--            config-file="org.digma.intellij-with-idea.xml">com.intellij.modules.java-->
+    <!--    <depends-->
+    <!--            optional="true"-->
+    <!--            config-file="org.digma.intellij-with-pycharm.xml">com.intellij.modules.python-->
+    <!--    </depends>-->
+    <!--    <depends-->
+    <!--            optional="true"-->
+    <!--            config-file="org.digma.intellij-with-idea.xml">com.intellij.modules.java-->
 <!--    </depends>-->
     <depends
             optional="true"

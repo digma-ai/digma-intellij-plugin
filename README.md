@@ -5,7 +5,7 @@
 backend to provide meaningful code insights in the IDE. While coding,
 you can be aware of how the code behaves in runtime in various staging and production environments**
 
-### Digma provides integrated insights multiple code behavior topics including:
+### Digma provides integrated insights multiple code behaviour topics including:
 
 - Error hotspots
 - Usage bottlenecks and concurrency

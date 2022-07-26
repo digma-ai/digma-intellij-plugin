@@ -16,6 +16,7 @@ import org.digma.intellij.plugin.ui.common.Laf.Icons.Environment.Companion.ENVIR
 import org.digma.intellij.plugin.ui.common.Laf.Icons.Environment.Companion.ENVIRONMENT_HAS_USAGE
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsListChangedListener
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
+import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.Dimension
 import java.awt.FlowLayout
 import java.util.Objects
@@ -23,20 +24,9 @@ import java.util.concurrent.atomic.AtomicReference
 import java.util.function.Function
 import javax.swing.Icon
 import javax.swing.JComponent
-import javax.swing.JPanel
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
-
-fun environmentsPanel(
-    project: Project,
-    environmentsSupplier: EnvironmentsSupplier,
-    usageStatusResultRef: AtomicReference<UsageStatusResult>
-): JPanel {
-
-    return EnvironmentsPanel(project, environmentsSupplier, usageStatusResultRef)
-}
-
 
 //need to remember we have two instances of this panel , one for the insights tab and one for the errors tab.
 //both instances need to be in sync with the selected button and the environments list.
@@ -44,11 +34,10 @@ class EnvironmentsPanel(
     project: Project,
     private val environmentsSupplier: EnvironmentsSupplier, // assuming its a singleton
     private val usageStatusResultRef: AtomicReference<UsageStatusResult>
-) : JBPanel<EnvironmentsPanel>() {
+) : DigmaResettablePanel() {
 
     init {
         isOpaque = false
-        andTransparent()
         layout = WrapLayout(FlowLayout.LEFT, 2, 2)
         rebuild()
         environmentsSupplier.addEnvironmentsListChangeListener(object : EnvironmentsListChangedListener {
@@ -66,6 +55,9 @@ class EnvironmentsPanel(
         Disposer.register(project, messageBusConnection)
     }
 
+    override fun reset() {
+        rebuild()
+    }
 
     /*
     usually this panel works fine.

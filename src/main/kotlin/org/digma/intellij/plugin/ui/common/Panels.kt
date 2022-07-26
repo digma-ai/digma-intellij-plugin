@@ -62,14 +62,14 @@ fun createTopPanel(
     val scopeLine = scopeLine({ model.getScope() }, { model.getScopeTooltip() }, ScopeLineIconProducer(model))
     scopeLine.isOpaque = false
 
-    val envsPanel =
-        environmentsPanel(project, AnalyticsService.getInstance(project).environment, usageStatusResultRef)
+    val envsPanel = EnvironmentsPanel(project, AnalyticsService.getInstance(project).environment, usageStatusResultRef)
     envsPanel.isOpaque = false
 
     val result = object : DigmaResettablePanel() {
 
         override fun reset() {
             scopeLine.reset()
+            envsPanel.reset()
         }
 
         override fun requestFocus() {

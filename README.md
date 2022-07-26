@@ -1,5 +1,6 @@
 # digma-jetbrains-plugin
 
+<!-- https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax -->
 <!-- Plugin description -->
 **Digma is a Continuous Feedback platform. It integrates with your observability
 backend to provide meaningful code insights in the IDE. While coding,

@@ -15,6 +15,7 @@ import org.digma.intellij.plugin.ui.model.NOT_SUPPORTED_OBJECT_MSG
 import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
+import java.awt.BorderLayout
 import java.util.function.Supplier
 import javax.swing.JLabel
 
@@ -62,7 +63,7 @@ fun createTopPanel(
     scopeLine.isOpaque = false
 
     val envsPanel =
-        environmentsPanel(project, AnalyticsService.getInstance(project).environment, usageStatusResultSupplier)
+        environmentsPanel(project, AnalyticsService.getInstance(project).environment, usageStatusResultSupplier.get())
     envsPanel.isOpaque = false
 
     val result = object : DigmaResettablePanel() {

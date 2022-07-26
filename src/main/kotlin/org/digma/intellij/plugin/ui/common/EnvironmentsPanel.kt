@@ -20,13 +20,10 @@ import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.Dimension
 import java.awt.FlowLayout
-import java.util.Objects
+import java.util.*
 import java.util.function.Function
 import javax.swing.Icon
 import javax.swing.JComponent
-import kotlin.math.abs
-import kotlin.math.max
-import kotlin.math.min
 
 //need to remember we have two instances of this panel , one for the insights tab and one for the errors tab.
 //both instances need to be in sync with the selected button and the environments list.
@@ -60,34 +57,31 @@ class EnvironmentsPanel(
     }
 
     /*
-    usually this panel works fine.
-    there is one issue: sometimes when the plugin window opens on startup this panel takes too much
-    vertical space and the insights list is almost not shown. any hover over this panel with the mouse or any
-    other action related to the plugin will fix it and the tab will re-layout. from there on the panel functions ok.
-    I could not find any way to cause this panel to layout correctly on startup.
-    so the code in getPreferredSize limits the height on startup to a reasonable size and only the first few calls
-    to getPreferredSize, from there on its ok. it proves to solve or at least hide the issue.
-    it will be noticeable when there are many environments and only on first opening of the window and only occasionally.
-     */
-    private var startup = 0
+        usually this panel works fine.
+        there is one issue: sometimes when the plugin window opens on startup this panel takes too much
+        vertical space and the insights list is almost not shown. any hover over this panel with the mouse or any
+        other action related to the plugin will fix it and the tab will re-layout. from there on the panel functions ok.
+        It seems that super.getPreferredSize() sometimes returns a size with negative width, when that happens the flow
+        layout computes a much too large vertical space and when the panel is first visible it's too large.
+        I could not find any way to cause this panel to layout correctly on startup.
+        this code in getPreferredSize will keep track on the last positive size and return that one if super returns
+        a negative width. it seems to do the job.
+         */
+    private var lastPositivePs: Dimension = Dimension(100, 300)
     override fun getPreferredSize(): Dimension {
-        if (startup < 5) {
-            startup++
-            val myPs = super.getPreferredSize()
-            if (myPs != null && myPs.width > 0 && myPs.height > 0) {
-                var aggregatedWidth = 0
-                var height = 30
-                components.forEach {
-                    aggregatedWidth += abs(it.preferredSize.width)
-                    height = max(height, abs(it.preferredSize.height))
-                }
-                val lines = (aggregatedWidth / (abs(myPs.width) + 1)) + 1
-                val preferredHeight = (lines * height) + (lines * 3)
-                return Dimension(myPs.width, min(min(myPs.height, preferredHeight), 300))
+        val ps = super.getPreferredSize()
+        if (ps != null) {
+            return if (ps.width >= 0 && ps.height >= 0) {
+                lastPositivePs = ps
+                ps
+            } else {
+                lastPositivePs
             }
         }
+
         return super.getPreferredSize()
     }
+
 
     private fun select(newSelectedEnv: String?) {
         val currentSelected: EnvLink? = getSelected()

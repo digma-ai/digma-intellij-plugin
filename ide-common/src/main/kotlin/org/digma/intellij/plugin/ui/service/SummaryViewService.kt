@@ -1,6 +1,8 @@
 package org.digma.intellij.plugin.ui.service
 
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.Models
@@ -25,8 +27,21 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
         }
     }
 
+    init {
+        object : Task.Backgroundable(project, "Init summary tab") {
+            override fun run(indicator: ProgressIndicator) {
+                reload()
+            }
+        }.queue()
+    }
+
     fun environmentChanged() {
         Log.log(logger::debug, "environmentChanged called")
+        reload()
+    }
+
+    private fun reload() {
+        Log.log(logger::debug, "reload called")
         val insights = summariesProvider.getGlobalInsights()
         val environmentStatuses = summariesProvider.getEnvironmentStatuses()
         model.insights = insights

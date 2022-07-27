@@ -1,9 +1,21 @@
 # digma-jetbrains-plugin
 
-TBD
+<!-- https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax -->
+<!-- Plugin description -->
+**Digma is a Continuous Feedback platform. It integrates with your observability
+backend to provide meaningful code insights in the IDE. While coding,
+you can be aware of how the code behaves in runtime in various staging and production environments**
 
+### Digma provides integrated insights multiple code behaviour topics including:
+
+- Error hotspots
+- Usage bottlenecks and concurrency
+- Performance trends
+
+<!-- Plugin description end -->
 
 ## Build
+
 The project must be built with jdk 11 or later as the gradle jdk.</br>
 
 ./gradlew buildPlugin -Porg.gradle.java.home=<PATH TO JDK 11></br>
@@ -59,33 +71,5 @@ DIGMA_JB_PRIVATE_KEY_PASSWORD=digma</br>
 
 
 ./gradlew signPlugin</br>
-
-
-
-
-
-
-
-
-
-
-
-<!-- [//]: # (example how satisfy gradle build with empty plugin description) -->
-<!-- Plugin description -->
-<![CDATA[
-  &lt;h1&gt;Add Continuous Feedback to your coding practices&lt;/h1&gt;
-  &lt;p&gt;Digma is a Continuous Feedback platform. It integrates with your observability
-  backend to provide meaningful code insights in the IDE. While coding, you can be aware of how the code behaves in runtime in various staging and production environments&lt;/p&gt;
-
-  &lt;p&gt;Digma provides integrated insights multiple code behavior topics including:
-  &lt;ul&gt;
-    &lt;li&gt;Error hostpots&lt;/li&gt;
-    &lt;li&gt;Usage bottlenecks and concurrency&lt;/li&gt;
-    &lt;li&gt;Performance trends&lt;/li&gt;
-  &lt;/ul&gt;
-  &lt;/p&gt;ֿ]]>
-<!-- Plugin description end -->
-
-
 
 

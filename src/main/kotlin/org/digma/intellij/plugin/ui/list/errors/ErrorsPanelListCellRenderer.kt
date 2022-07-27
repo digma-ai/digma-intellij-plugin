@@ -4,15 +4,20 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI
+import org.digma.intellij.plugin.common.CommonUtils.prettyTimeOf
 import org.digma.intellij.plugin.model.discovery.CodeObjectInfo.Companion.extractMethodName
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.service.ErrorsActionsService
-import org.digma.intellij.plugin.ui.common.*
+import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
+import org.digma.intellij.plugin.ui.common.asHtml
+import org.digma.intellij.plugin.ui.common.buildLinkTextWithGrayedAndDefaultLabelColorPart
+import org.digma.intellij.plugin.ui.common.createScorePanelNoArrows
+import org.digma.intellij.plugin.ui.common.span
+import org.digma.intellij.plugin.ui.common.spanGrayed
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.list.commonListItemPanel
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
-import org.ocpsoft.prettytime.PrettyTime
 import java.awt.BorderLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
@@ -83,11 +88,6 @@ private fun createSingleErrorPanel(project: Project, model: CodeObjectError ): J
     result.add(leftPanel,BorderLayout.CENTER)
     result.add(scorePanelWrapper,BorderLayout.EAST)
     return result
-}
-
-private fun prettyTimeOf(date: Date): String {
-    val ptNow = PrettyTime()
-    return ptNow.format(date)
 }
 
 fun contentOfFirstAndLast(firstOccurenceTime: Timestamp, lastOccurenceTime: Timestamp,): String {

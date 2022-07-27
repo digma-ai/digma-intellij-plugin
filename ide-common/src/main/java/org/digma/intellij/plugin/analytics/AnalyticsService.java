@@ -12,6 +12,8 @@ import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
+import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
+import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.settings.SettingsState;
@@ -25,7 +27,12 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.ConnectException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class AnalyticsService implements Disposable {
@@ -128,12 +135,20 @@ public class AnalyticsService implements Disposable {
         return analyticsProviderProxy.getInsights(new InsightsRequest(getCurrentEnvironment(), objectIds));
     }
 
-    public List<CodeObjectError> getErrorsOfCodeObject( String codeObjectId) throws AnalyticsServiceException {
+    public List<CodeObjectError> getErrorsOfCodeObject(String codeObjectId) throws AnalyticsServiceException {
         return analyticsProviderProxy.getErrorsOfCodeObject(getCurrentEnvironment(), codeObjectId);
     }
 
     public CodeObjectErrorDetails getErrorDetails(String errorUid) throws AnalyticsServiceException {
         return analyticsProviderProxy.getCodeObjectErrorDetails(errorUid);
+    }
+
+    public UsageStatusResult getUsageStatus(List<String> objectIds) throws AnalyticsServiceException {
+        return analyticsProviderProxy.getUsageStatus(new UsageStatusRequest(objectIds));
+    }
+
+    public UsageStatusResult getUsageStatusOfErrors(List<String> objectIds) throws AnalyticsServiceException {
+        return analyticsProviderProxy.getUsageStatus(new UsageStatusRequest(objectIds, List.of("Error")));
     }
 
     @Override
@@ -224,7 +239,7 @@ public class AnalyticsService implements Disposable {
         }
 
         private boolean isConnectionException(InvocationTargetException e) {
-            
+
             var ex = e.getCause();
             while (ex != null && !(ex instanceof ConnectException)){
                 ex = ex.getCause();
@@ -246,7 +261,7 @@ public class AnalyticsService implements Disposable {
             if (ex != null){
                 return ex.getMessage();
             }
-            
+
             return e.getCause() != null? e.getCause().getMessage():e.getMessage();
         }
 

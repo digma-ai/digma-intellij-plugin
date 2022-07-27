@@ -2,21 +2,21 @@ package org.digma.intellij.plugin.insights.view;
 
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.document.CodeObjectsUtil;
-import org.digma.intellij.plugin.model.rest.insights.SlowestSpansInsight;
+import org.digma.intellij.plugin.model.rest.insights.SpanInfo;
 import org.digma.intellij.plugin.project.ProjectService;
-import org.digma.intellij.plugin.ui.model.insights.InsightListViewItem;
+import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
 
 import java.util.ArrayList;
+import java.util.List;
 
-class SlowestSpansHelper {
+public class SlowestSpansHelper {
 
-    static void findWorkspaceUrisForSpans(Project project, InsightListViewItem<?> theListView, SlowestSpansInsight insight) {
+    public static void findWorkspaceUrisForSpans(Project project, ListViewItem<?> theListView, List<SpanInfo> spanInfos) {
 
         var spanIds = new ArrayList<String>();
 
-        insight.getSpans().forEach(slowSpanInfo -> {
-            var spanId = CodeObjectsUtil.createSpanId(slowSpanInfo.getSpanInfo().getInstrumentationLibrary(),
-                    slowSpanInfo.getSpanInfo().getName());
+        spanInfos.forEach(spanInfo -> {
+            var spanId = CodeObjectsUtil.createSpanId(spanInfo.getInstrumentationLibrary(), spanInfo.getName());
             spanIds.add(spanId);
         });
 

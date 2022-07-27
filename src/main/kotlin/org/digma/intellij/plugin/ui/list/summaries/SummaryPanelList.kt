@@ -45,7 +45,9 @@ class SummaryPanelList(project: Project, listViewItems: List<ListViewItem<*>>) :
                         for (change in model.spanDurationChanges) {
                             val changedPercentiles = change.percentiles.filter { needToShowDurationChange(it) } // Should be server side?
                             if (changedPercentiles.isNotEmpty()) {
-                                newViewItems.add(ListViewItem(SpanDurationChangeInsight.Change(change.codeObjectId, change.span, changedPercentiles), index++))
+                                val item = ListViewItem(SpanDurationChangeInsight.Change(change.codeObjectId, change.span, changedPercentiles), index++)
+                                item.moreData.putAll(value.moreData)
+                                newViewItems.add(item)
                             }
                         }
                     }

@@ -6,6 +6,8 @@ import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
+import org.digma.intellij.plugin.model.rest.insights.SpanDurationChangeInsight;
+import org.digma.intellij.plugin.model.rest.insights.SpanInfo;
 import org.digma.intellij.plugin.model.rest.usage.EnvironmentUsageStatus;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
@@ -14,6 +16,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static org.digma.intellij.plugin.insights.view.SlowestSpansHelper.findWorkspaceUrisForSpans;
 
 public class SummariesProvider {
 
@@ -32,9 +36,7 @@ public class SummariesProvider {
         try {
             List<GlobalInsight> globalInsights = analyticsService.getGlobalInsights();
             Log.log(LOGGER::debug, "GlobalInsights: {}", globalInsights);
-            return globalInsights.stream()
-                    .map(x -> new ListViewItem<>(x, 1))
-                    .collect(Collectors.toList());
+            return toListViewItems(globalInsights);
         } catch (AnalyticsServiceException e) {
             //if analyticsService.getGlobalInsights throws exception it means insights could not be loaded, usually when
             //the backend is not available. return an empty List<GlobalInsight> to keep everything running and don't
@@ -57,9 +59,17 @@ public class SummariesProvider {
         }
     }
 
-    private List<ListViewItem<?>> toListViewItems(List<GlobalInsight> insights) {
-        List<ListViewItem<?>> items = new ArrayList<>();
+    private List<ListViewItem<GlobalInsight>> toListViewItems(List<GlobalInsight> insights) {
+        List<ListViewItem<GlobalInsight>> items = new ArrayList<>();
 
+        for (GlobalInsight insight : insights) {
+            ListViewItem<GlobalInsight> item = new ListViewItem<>(insight, 1);
+            if (insight instanceof SpanDurationChangeInsight) {
+                List<SpanInfo> spanInfos = ((SpanDurationChangeInsight) insight).getSpanDurationChanges().stream().map(SpanDurationChangeInsight.Change::getSpan).collect(Collectors.toList());
+                findWorkspaceUrisForSpans(project, item, spanInfos);
+            }
+            items.add(item);
+        }
 
 //        insights.forEach(insight -> {
 //            if (insight instanceof TopErrorFlowsInsight) {

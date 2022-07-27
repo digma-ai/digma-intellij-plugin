@@ -24,6 +24,7 @@ import java.util.*
 import java.util.function.Function
 import javax.swing.Icon
 import javax.swing.JComponent
+import javax.swing.SwingUtilities
 
 //need to remember we have two instances of this panel , one for the insights tab and one for the errors tab.
 //both instances need to be in sync with the selected button and the environments list.
@@ -47,7 +48,13 @@ class EnvironmentsPanel(
         //need to change also in the errors tab, and vice versa.
         val messageBusConnection = project.messageBus.connect()
         messageBusConnection.subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, EnvironmentChanged {
-            select(it)
+            if (SwingUtilities.isEventDispatchThread()) {
+                select(it)
+            } else {
+                SwingUtilities.invokeLater {
+                    select(it)
+                }
+            }
         })
         Disposer.register(project, messageBusConnection)
     }

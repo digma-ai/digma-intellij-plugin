@@ -39,7 +39,9 @@ public class RiderEnvironmentChangedListener extends LifetimedProjectComponent i
         Log.log(LOGGER::debug, "Got environmentChanged {}", newEnv);
 
         //empty the context
-        caretContextService.contextEmpty();
+        //todo: probably don't need to empty the context here
+        /////caretContextService.contextEmpty();
+
         //call document service to clean its maps
         documentInfoService.environmentChanged(newEnv);
         //codeObjectHost should mainly clear code lens

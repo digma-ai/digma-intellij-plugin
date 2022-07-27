@@ -6,6 +6,8 @@ import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
+import org.digma.intellij.plugin.model.rest.usage.EnvironmentUsageStatus;
+import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
 
 import java.util.ArrayList;
@@ -38,6 +40,18 @@ public class SummariesProvider {
             //the backend is not available. return an empty List<GlobalInsight> to keep everything running and don't
             //crash the plugin. don't log the exception, it was logged in AnalyticsService, keep the log quite because
             //it may happen many times.
+            Log.log(LOGGER::debug, "AnalyticsServiceException for getGlobalInsights: {}", e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    public List<EnvironmentUsageStatus> getEnvironmentStatuses() {
+        try {
+            final UsageStatusResult usageStatus = analyticsService.getUsageStatus(Collections.emptyList());
+            return usageStatus != null
+                    ? usageStatus.getEnvironmentStatuses()
+                    : Collections.emptyList();
+        } catch (AnalyticsServiceException e) {
             Log.log(LOGGER::debug, "AnalyticsServiceException for getGlobalInsights: {}", e.getMessage());
             return Collections.emptyList();
         }

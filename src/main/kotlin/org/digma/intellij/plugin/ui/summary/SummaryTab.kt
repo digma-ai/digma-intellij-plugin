@@ -3,7 +3,7 @@ package org.digma.intellij.plugin.ui.summary
 import com.intellij.openapi.project.Project
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.analytics.AnalyticsService
-import org.digma.intellij.plugin.ui.common.environmentsPanel
+import org.digma.intellij.plugin.ui.common.EnvironmentsPanel
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.listBackground
 import org.digma.intellij.plugin.ui.list.summaries.SummaryPanelList
@@ -14,11 +14,12 @@ import javax.swing.JComponent
 
 fun summaryPanel(project: Project): DigmaTabPanel {
 
+    val model = SummaryViewService.getInstance(project).model
+
     val analyticsService: AnalyticsService = AnalyticsService.getInstance(project)
-    val envsPanel = environmentsPanel(project, analyticsService.environment)
+    val envsPanel = EnvironmentsPanel(project, model, analyticsService.environment)
     envsPanel.border = empty(10)
 
-    val model = SummaryViewService.getInstance(project).model
     val summaryList = ScrollablePanelList(SummaryPanelList(project, model.insights))
 
     val result = object : DigmaTabPanel() {
@@ -32,6 +33,7 @@ fun summaryPanel(project: Project): DigmaTabPanel {
 
         //reset must be called from EDT
         override fun reset() {
+            envsPanel.reset()
             summaryList.getModel().setListData(model.insights)
         }
     }

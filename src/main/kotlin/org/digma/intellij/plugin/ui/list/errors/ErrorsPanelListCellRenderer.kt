@@ -8,12 +8,7 @@ import org.digma.intellij.plugin.common.CommonUtils.prettyTimeOf
 import org.digma.intellij.plugin.model.discovery.CodeObjectInfo.Companion.extractMethodName
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.service.ErrorsActionsService
-import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
-import org.digma.intellij.plugin.ui.common.asHtml
-import org.digma.intellij.plugin.ui.common.buildLinkTextWithGrayedAndDefaultLabelColorPart
-import org.digma.intellij.plugin.ui.common.createScorePanelNoArrows
-import org.digma.intellij.plugin.ui.common.span
-import org.digma.intellij.plugin.ui.common.spanGrayed
+import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.list.commonListItemPanel
@@ -22,7 +17,6 @@ import java.awt.BorderLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.sql.Timestamp
-import java.util.Date
 import javax.swing.JPanel
 
 

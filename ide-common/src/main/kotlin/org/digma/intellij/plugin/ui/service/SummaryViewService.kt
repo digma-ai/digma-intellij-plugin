@@ -3,8 +3,11 @@ package org.digma.intellij.plugin.ui.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.Models
 import org.digma.intellij.plugin.model.rest.insights.GlobalInsight
+import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
 import org.digma.intellij.plugin.summary.SummariesProvider
+import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.util.Collections
 
@@ -25,7 +28,9 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
     fun environmentChanged() {
         Log.log(logger::debug, "environmentChanged called")
         val insights = summariesProvider.getGlobalInsights()
+        val environmentStatuses = summariesProvider.getEnvironmentStatuses()
         model.insights = insights
+        model.usageStatusResult = UsageStatusResult(emptyList(), environmentStatuses)
         model.count = insights.sumOf { it.modelObject.count() }
         updateUi()
     }
@@ -33,6 +38,7 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
     fun empty() {
         Log.log(logger::debug, "empty called")
         model.insights = Collections.emptyList()
+        model.usageStatusResult = Models.Empties.EmptyUsageStatusResult
         model.count = 0
         updateUi()
     }
@@ -41,9 +47,22 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
         return "Summary" + if (model.count > 0) " (${model.count})" else ""
     }
 
-    class Model {
+    class Model : PanelModel {
         var insights: List<ListViewItem<GlobalInsight>> = Collections.emptyList()
         var count = 0
+        var usageStatusResult: UsageStatusResult = Models.Empties.EmptyUsageStatusResult
+
+        override fun count(): String = count.toString()
+
+        override fun isMethodScope(): Boolean = false
+
+        override fun isDocumentScope(): Boolean = false
+
+        override fun getScope(): String = ""
+
+        override fun getScopeTooltip(): String = ""
+
+        override fun getUsageStatus(): UsageStatusResult = usageStatusResult
     }
 }
 

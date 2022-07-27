@@ -3,6 +3,8 @@ package org.digma.intellij.plugin.analytics;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
@@ -20,18 +22,14 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.net.ssl.SSLException;
+import javax.swing.*;
 import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.ConnectException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class AnalyticsService implements Disposable {
@@ -77,7 +75,7 @@ public class AnalyticsService implements Disposable {
     }
 
     //just replace the client and do not fire any events
-    private void replaceClient(String url, String token) {
+    private synchronized void replaceClient(String url, String token) {
         if (analyticsProviderProxy != null) {
             try {
                 analyticsProviderProxy.close();
@@ -92,14 +90,31 @@ public class AnalyticsService implements Disposable {
 
     private void replaceClientAndFireChange(String url, String token) {
 
-        replaceClient(url,token);
+        replaceClient(url, token);
 
-        List<String> envs = getEnvironments();
-        if (envs == null) {
-            envs = new ArrayList<>();
+        var r = new Runnable() {
+            @Override
+            public void run() {
+                List<String> envs = getEnvironments();
+                if (envs == null) {
+                    envs = new ArrayList<>();
+                }
+
+                environment.replaceEnvironmentsList(envs);
+            }
+        };
+
+        if (SwingUtilities.isEventDispatchThread()) {
+            new Task.Backgroundable(project, "Digma: Environments list changed...") {
+                @Override
+                public void run(@NotNull ProgressIndicator indicator) {
+                    r.run();
+                }
+            }.queue();
+        } else {
+            r.run();
         }
 
-        environment.replaceEnvironmentsList(envs);
     }
 
 

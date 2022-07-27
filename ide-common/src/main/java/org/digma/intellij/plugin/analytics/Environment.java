@@ -69,7 +69,7 @@ public class Environment implements EnvironmentsSupplier {
         persistenceData.setCurrentEnv(newEnv);
 
         if (SwingUtilities.isEventDispatchThread()) {
-            new Task.Backgroundable(project, "Digma: Environment Changed...") {
+            new Task.Backgroundable(project, "Digma: environment changed...") {
                 @Override
                 public void run(@NotNull ProgressIndicator indicator) {
                     notifyEnvironmentChanged(oldEnv, newEnv);

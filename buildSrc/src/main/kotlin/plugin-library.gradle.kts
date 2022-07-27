@@ -25,4 +25,12 @@ tasks{
     verifyPlugin{
         enabled = false
     }
+
+    signPlugin {
+        enabled = false
+    }
+
+    publishPlugin {
+        enabled = false
+    }
 }

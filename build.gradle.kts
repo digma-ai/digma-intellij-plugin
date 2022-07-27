@@ -199,6 +199,5 @@ tasks {
         if (System.getenv("DIGMA_JB_INTELLIJ_PUBLISH_TOKEN") != null) {
             token.set(System.getenv("DIGMA_JB_INTELLIJ_PUBLISH_TOKEN"))
         }
-        ////channels.set(listOf("alpha"))
     }
 }

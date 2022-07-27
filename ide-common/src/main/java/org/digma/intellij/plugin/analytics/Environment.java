@@ -78,8 +78,6 @@ public class Environment implements EnvironmentsSupplier {
         } else {
             notifyEnvironmentChanged(oldEnv, newEnv);
         }
-
-
     }
 
 

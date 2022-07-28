@@ -1,8 +1,7 @@
 package org.digma.intellij.plugin.ui.service
 
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.progress.ProgressIndicator
-import com.intellij.openapi.progress.Task
+import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.Models
@@ -28,11 +27,9 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
     }
 
     init {
-        object : Task.Backgroundable(project, "Init summary tab") {
-            override fun run(indicator: ProgressIndicator) {
-                reload()
-            }
-        }.queue()
+        DumbService.getInstance(project).runWhenSmart {
+            reload()
+        }
     }
 
     fun environmentChanged() {

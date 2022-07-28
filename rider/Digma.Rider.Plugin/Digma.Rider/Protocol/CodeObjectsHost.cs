@@ -139,6 +139,12 @@ namespace Digma.Rider.Protocol
                         var uris = new List<CodeObjectIdUriOffsetTrouple>();
                         foreach (var psiSourceFile in _codeObjectsCache.Map.Keys)
                         {
+                            if (psiSourceFile == null)
+                            {
+                                Log(_logger, "psiSourceFile is null. Aborting operation.");
+                                continue;
+                            }
+                            
                             var document = _codeObjectsCache.Map.TryGetValue(psiSourceFile);
                             if (document == null)
                             {

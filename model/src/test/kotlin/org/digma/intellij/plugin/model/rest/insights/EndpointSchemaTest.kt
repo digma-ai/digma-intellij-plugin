@@ -9,17 +9,17 @@ internal class EndpointSchemaTest {
 
     @Test
     fun getShortRouteNameShouldWorkForHttpSchema() {
-        assertEquals("get /hello", getShortRouteName("epHTTP:get /hello"))
+        assertEquals("get /hello", getShortRouteName("epHTTP:get /hello").first)
     }
 
     @Test
     fun getShortRouteNameShouldWorkForRpcSchema() {
-        assertEquals("hello.world", getShortRouteName("epRPC:hello.world"))
+        assertEquals("hello.world", getShortRouteName("epRPC:hello.world").first)
     }
 
     @Test
     fun getShortRouteNameShouldWorkEvenWhenNonRecognizedSchema() {
-        assertEquals("whats.up.dude", getShortRouteName("whats.up.dude"))
+        assertEquals("whats.up.dude", getShortRouteName("whats.up.dude").first)
     }
 
     @Test

@@ -5,6 +5,9 @@ import com.intellij.ui.dsl.builder.RightGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import org.digma.intellij.plugin.model.rest.insights.*
+import org.digma.intellij.plugin.model.rest.insights.EndpointSchema.Companion.CONSUMER_SCHEMA
+import org.digma.intellij.plugin.model.rest.insights.EndpointSchema.Companion.HTTP_SCHEMA
+import org.digma.intellij.plugin.model.rest.insights.EndpointSchema.Companion.RPC_SCHEMA
 import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
@@ -78,8 +81,8 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
     }
 
     private fun httpEndpointGroupTitle(value: InsightsList.GroupTitleModel): JPanel {
-        val labelText = headerAsHtml(value)
-        return groupTitlePanel("REST: ", labelText, Laf.Icons.Insight.INTERFACE)
+        val header = headerAsHtml(value)
+        return groupTitlePanel(header.first, header.second, Laf.Icons.Insight.INTERFACE)
     }
 
 
@@ -98,15 +101,21 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
     }
 
 
+    private fun headerAsHtml(value: InsightsList.GroupTitleModel): Pair<String,String> {
+        val routeInfo = EndpointSchema.getShortRouteName(value.groupId)
+        val endpoint = routeInfo.first
+        return when (routeInfo.second) {
+            HTTP_SCHEMA -> {
+                val split = endpoint.split(' ')
+                Pair("REST: ",asHtml("${spanBold("HTTP")} ${span("${split[0].uppercase()} ${split[1]}")}"))
+            }
+            RPC_SCHEMA -> Pair("RPC: ",asHtml(span(endpoint)))
+            CONSUMER_SCHEMA ->{
+                val split = endpoint.split(' ')
+                Pair("CONSUMER: ",asHtml(span("${split[0].uppercase()} ${split[1]}")))
+            }
+            else -> Pair("REST: ",asHtml(endpoint))
+        }
 
-
-
-    private fun headerAsHtml(value: InsightsList.GroupTitleModel): String {
-        val shortRouteName = EndpointSchema.getShortRouteName(value.groupId)
-        // groupId contains "[get|post] [uri]"
-        val split = shortRouteName.split(' ')
-        val httpMethod = split[0].uppercase()
-        val httpRoute = split[1]
-        return asHtml("${spanBold("HTTP")} ${span("$httpMethod $httpRoute")}")
     }
 }

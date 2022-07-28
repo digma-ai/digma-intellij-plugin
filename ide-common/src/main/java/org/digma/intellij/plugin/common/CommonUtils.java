@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.common;
 
+import org.apache.commons.lang.StringUtils;
 import org.ocpsoft.prettytime.PrettyTime;
 
 import java.net.InetAddress;
@@ -19,6 +20,7 @@ public final class CommonUtils {
         } catch (UnknownHostException e) {
             hostname = hostnameByEnvVar();
         }
+        hostname = StringUtils.removeEnd(hostname, ".local");
         return hostname;
     }
 

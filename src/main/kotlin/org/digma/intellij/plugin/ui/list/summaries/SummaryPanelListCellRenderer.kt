@@ -54,9 +54,11 @@ private fun buildTitle(model: SummaryTypeTitle): JPanel {
     }
     val label = JLabel(text)
     label.border = empty(5, 7, 5, 7)
+    label.isOpaque = false
 
     val panel = JPanel(BorderLayout())
     panel.add(label, BorderLayout.CENTER)
+    panel.isOpaque = false
     return panel
 }
 

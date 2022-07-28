@@ -73,7 +73,7 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
 
         override fun isDocumentScope(): Boolean = false
 
-        override fun getScope(): String = ""
+        override fun getScope(): String = "Current environment"
 
         override fun getScopeTooltip(): String = ""
 

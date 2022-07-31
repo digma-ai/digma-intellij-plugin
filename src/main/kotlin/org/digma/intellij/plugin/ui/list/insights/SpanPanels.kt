@@ -168,7 +168,7 @@ fun needToShowDurationChange(percentile: SpanDurationsPercentile): Boolean {
 
 private fun computeWhenText(percentile: SpanDurationsPercentile): String {
     val current = PrettyTime(Timestamp(System.currentTimeMillis()))
-    return current.format(current.calculatePreciseDuration(percentile.changeTime))
+    return current.format(current.approximateDuration(percentile.changeTime))
 }
 
 private fun computeDurationText(percentile: SpanDurationsPercentile): String {

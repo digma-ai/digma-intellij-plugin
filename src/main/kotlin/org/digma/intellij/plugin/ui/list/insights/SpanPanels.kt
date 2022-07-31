@@ -191,7 +191,9 @@ fun buildIconPanelWithLinks(settingsState: SettingsState, traceSamples: List<Tra
         }
         if (jaegerUrl.isNotBlank()) {
             row {
-                browserLink("Compare", jaegerUrl)
+                val bl = browserLink("Compare", jaegerUrl)
+                bl.component.icon = null
+                bl.component.toolTipText = "Compare with Jaeger"
             }
         }
     }.andTransparent()

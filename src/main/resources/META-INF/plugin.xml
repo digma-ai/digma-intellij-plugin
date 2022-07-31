@@ -62,6 +62,8 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.vcs.VcsService"/>
 
+        <projectService serviceImplementation="org.digma.intellij.plugin.common.DumbAwareNotifier"/>
+
         <notificationGroup id="Digma Notification Group"
                            displayType="BALLOON"
                            toolWindowId="Digma"/>
@@ -81,6 +83,7 @@
         <editorNotificationProvider implementation="org.digma.intellij.plugin.notifications.DigmaEditorNotificationProvider"
                                     id="org.digma.intellij.plugin.notifications.DigmaEditorNotificationProvider"/>
 
+        <postStartupActivity implementation="org.digma.intellij.plugin.common.DumbAwareStartupActivity"/>
 
     </extensions>
 

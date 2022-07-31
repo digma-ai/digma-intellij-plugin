@@ -1,8 +1,8 @@
 package org.digma.intellij.plugin.ui.service
 
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.common.DumbAwareNotifier
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.Models
 import org.digma.intellij.plugin.model.rest.insights.GlobalInsight
@@ -27,7 +27,7 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
     }
 
     init {
-        DumbService.getInstance(project).runWhenSmart {
+        DumbAwareNotifier.getInstance(project).whenSmart {
             reload()
         }
     }

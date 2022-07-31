@@ -2,21 +2,31 @@ package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
+import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.dsl.gridLayout.HorizontalAlign
+import com.intellij.util.containers.isNullOrEmpty
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
 import org.digma.intellij.plugin.model.rest.insights.SpanFlow
 import org.digma.intellij.plugin.model.rest.insights.SpanInsight
-import org.digma.intellij.plugin.ui.common.*
+import org.digma.intellij.plugin.ui.common.CopyableLabel
+import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
 import org.digma.intellij.plugin.ui.common.Html.ARROW_RIGHT
+import org.digma.intellij.plugin.ui.common.Laf
+import org.digma.intellij.plugin.ui.common.asHtml
+import org.digma.intellij.plugin.ui.common.span
+import org.digma.intellij.plugin.ui.common.spanBold
+import org.digma.intellij.plugin.ui.common.spanGrayed
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
+import org.digma.intellij.plugin.ui.model.TraceSample
 import org.ocpsoft.prettytime.PrettyTime
 import org.threeten.extra.AmountFormats
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.GridLayout
 import java.sql.Timestamp
-import java.util.*
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 import javax.swing.JLabel
 import javax.swing.JPanel
@@ -86,6 +96,8 @@ fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight, panelsLayoutHe
 
     val tolerationConstant: Long = 10000
 
+    val traceSamples = ArrayList<TraceSample>()
+
     sortedPercentiles.forEach { percentile: SpanDurationsPercentile ->
 
         @Suppress("VARIABLE_WITH_REDUNDANT_INITIALIZER")
@@ -95,7 +107,9 @@ fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight, panelsLayoutHe
         durationsPanel.border = empty()
         durationsPanel.isOpaque = false
 
-        val pLabelText = "P${percentile.percentile * 100} ${percentile.currentDuration.value} ${percentile.currentDuration.unit}"
+        val percentileName = "P${(percentile.percentile * 100).toInt()}"
+        traceSamples.add(buildTraceSample(percentile))
+        val pLabelText = "$percentileName ${percentile.currentDuration.value} ${percentile.currentDuration.unit}"
         val pLabel = CopyableLabel(pLabelText)
         pLabel.toolTipText = pLabelText
         val pLabelPanel = object : JPanel() {
@@ -151,13 +165,61 @@ fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight, panelsLayoutHe
 
     }
 
+    val iconPanel = buildIconPanelWithLinks(traceSamples)
 
     val result = JBPanel<JBPanel<*>>()
     result.layout = BorderLayout()
     result.isOpaque = false
     result.add(title, BorderLayout.NORTH)
     result.add(durationsListPanel, BorderLayout.CENTER)
+    result.add(iconPanel, BorderLayout.EAST)
     return insightItemPanel(result)
+}
+
+fun buildIconPanelWithLinks(traceSamples: List<TraceSample>): JBPanel<*> {
+    val jaegerUrl = buildLinkToJaeger(traceSamples)
+    val iconPanel = panel {
+        row {
+            icon(Laf.Icons.Insight.HISTOGRAM)
+                .horizontalAlign(HorizontalAlign.CENTER)
+        }
+        if (jaegerUrl.isNotBlank()) {
+            row {
+                browserLink("Compare", jaegerUrl)
+            }
+        }
+    }.andTransparent()
+    return iconPanel
+}
+
+fun buildLinkToJaeger(traceSamples: List<TraceSample>, embedLinks: Boolean = false): String {
+    val jaegerAddress = "http://localhost:16686/".trimEnd('/') //TODO: take from config
+    if (traceSamples.isNullOrEmpty()) {
+        return ""
+    }
+    val filtered = traceSamples.filter { x -> x.hasTraceId() }
+    if (filtered.isNullOrEmpty()) {
+        return ""
+    }
+    val embedPart = if (embedLinks) "&uiEmbed=v0" else ""
+
+    val trace1 = filtered[0].traceId?.lowercase()
+    if (filtered.size == 1) {
+        return "${jaegerAddress}/trace/${trace1}?cohort=${trace1}${embedPart}"
+    }
+
+    // assuming it has (at least) size of 2
+    val trace2 = filtered[1].traceId?.lowercase()
+    return "${jaegerAddress}/trace/${trace1}...${trace2}?cohort=${trace1}&cohort=${trace2}${embedPart}"
+}
+
+fun buildTraceSample(percentile: SpanDurationsPercentile): TraceSample {
+    val percentileName = "P${(percentile.percentile * 100).toInt()}"
+    var traceId = ""
+    if (!percentile.traceIds.isNullOrEmpty()) {
+        traceId = percentile.traceIds.first()
+    }
+    return TraceSample(percentileName, traceId)
 }
 
 private fun computeWhenText(percentile: SpanDurationsPercentile): String {
@@ -168,8 +230,10 @@ private fun computeWhenText(percentile: SpanDurationsPercentile): String {
 private fun computeDurationText(percentile: SpanDurationsPercentile): String {
 
     val durationMillis =
-        TimeUnit.MILLISECONDS.convert(abs(percentile.previousDuration!!.raw - percentile.currentDuration.raw),
-            TimeUnit.NANOSECONDS)
+        TimeUnit.MILLISECONDS.convert(
+            abs(percentile.previousDuration!!.raw - percentile.currentDuration.raw),
+            TimeUnit.NANOSECONDS
+        )
     val javaDuration = java.time.Duration.ofMillis(durationMillis)
     if (javaDuration.isZero) {
         return "a few milliseconds"

@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.list.insights
 
+import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.panel
@@ -10,6 +11,7 @@ import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
 import org.digma.intellij.plugin.model.rest.insights.SpanFlow
 import org.digma.intellij.plugin.model.rest.insights.SpanInsight
+import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.common.CopyableLabel
 import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
 import org.digma.intellij.plugin.ui.common.Html.ARROW_RIGHT
@@ -80,7 +82,11 @@ fun spanPanel(spanInsight: SpanInsight): JPanel {
 }
 
 
-fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
+fun spanDurationPanel(
+    project: Project,
+    spanDurationsInsight: SpanDurationsInsight,
+    panelsLayoutHelper: PanelsLayoutHelper
+): JPanel {
 
     if (spanDurationsInsight.percentiles.isEmpty()) {
         return createInsightPanel("Duration", "Waiting for more data.", Laf.Icons.Insight.WAITING_DATA, "", panelsLayoutHelper)
@@ -165,7 +171,8 @@ fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight, panelsLayoutHe
 
     }
 
-    val iconPanel = buildIconPanelWithLinks(traceSamples)
+    val settingsState = SettingsState.getInstance(project)
+    val iconPanel = buildIconPanelWithLinks(settingsState, traceSamples)
 
     val result = JBPanel<JBPanel<*>>()
     result.layout = BorderLayout()
@@ -176,8 +183,8 @@ fun spanDurationPanel(spanDurationsInsight: SpanDurationsInsight, panelsLayoutHe
     return insightItemPanel(result)
 }
 
-fun buildIconPanelWithLinks(traceSamples: List<TraceSample>): JBPanel<*> {
-    val jaegerUrl = buildLinkToJaeger(traceSamples)
+fun buildIconPanelWithLinks(settingsState: SettingsState, traceSamples: List<TraceSample>): JBPanel<*> {
+    val jaegerUrl = buildLinkToJaeger(settingsState, traceSamples)
     val iconPanel = panel {
         row {
             icon(Laf.Icons.Insight.HISTOGRAM)
@@ -192,9 +199,9 @@ fun buildIconPanelWithLinks(traceSamples: List<TraceSample>): JBPanel<*> {
     return iconPanel
 }
 
-fun buildLinkToJaeger(traceSamples: List<TraceSample>, embedLinks: Boolean = false): String {
-    val jaegerAddress = "http://localhost:16686/".trimEnd('/') //TODO: take from config
-    if (traceSamples.isNullOrEmpty()) {
+fun buildLinkToJaeger(settingsState: SettingsState, traceSamples: List<TraceSample>, embedLinks: Boolean = false): String {
+    val jaegerBaseUrl = settingsState.jaegerUrl?.trim()?.trimEnd('/')
+    if (jaegerBaseUrl.isNullOrBlank() || traceSamples.isNullOrEmpty()) {
         return ""
     }
     val filtered = traceSamples.filter { x -> x.hasTraceId() }
@@ -205,12 +212,12 @@ fun buildLinkToJaeger(traceSamples: List<TraceSample>, embedLinks: Boolean = fal
 
     val trace1 = filtered[0].traceId?.lowercase()
     if (filtered.size == 1) {
-        return "${jaegerAddress}/trace/${trace1}?cohort=${trace1}${embedPart}"
+        return "${jaegerBaseUrl}/trace/${trace1}?cohort=${trace1}${embedPart}"
     }
 
     // assuming it has (at least) size of 2
     val trace2 = filtered[1].traceId?.lowercase()
-    return "${jaegerAddress}/trace/${trace1}...${trace2}?cohort=${trace1}&cohort=${trace2}${embedPart}"
+    return "${jaegerBaseUrl}/trace/${trace1}...${trace2}?cohort=${trace1}&cohort=${trace2}${embedPart}"
 }
 
 fun buildTraceSample(percentile: SpanDurationsPercentile): TraceSample {

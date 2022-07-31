@@ -4,8 +4,23 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.dsl.builder.RightGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
-import org.digma.intellij.plugin.model.rest.insights.*
-import org.digma.intellij.plugin.ui.common.*
+import org.digma.intellij.plugin.model.rest.insights.EndpointSchema
+import org.digma.intellij.plugin.model.rest.insights.ErrorInsight
+import org.digma.intellij.plugin.model.rest.insights.HighUsageInsight
+import org.digma.intellij.plugin.model.rest.insights.HotspotInsight
+import org.digma.intellij.plugin.model.rest.insights.LowUsageInsight
+import org.digma.intellij.plugin.model.rest.insights.NormalUsageInsight
+import org.digma.intellij.plugin.model.rest.insights.SlowEndpointInsight
+import org.digma.intellij.plugin.model.rest.insights.SlowestSpansInsight
+import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight
+import org.digma.intellij.plugin.model.rest.insights.SpanInsight
+import org.digma.intellij.plugin.model.rest.insights.UnmappedInsight
+import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
+import org.digma.intellij.plugin.ui.common.Laf
+import org.digma.intellij.plugin.ui.common.asHtml
+import org.digma.intellij.plugin.ui.common.span
+import org.digma.intellij.plugin.ui.common.spanBold
+import org.digma.intellij.plugin.ui.common.spanGrayed
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupType.HttpEndpoint
@@ -44,7 +59,7 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
             is SlowestSpansInsight -> slowestSpansPanel(project,
                 value.modelObject as SlowestSpansInsight, value.moreData, panelsLayoutHelper)
             is SpanInsight -> spanPanel(value.modelObject as SpanInsight)
-            is SpanDurationsInsight -> spanDurationPanel(value.modelObject as SpanDurationsInsight,
+            is SpanDurationsInsight -> spanDurationPanel(project, value.modelObject as SpanDurationsInsight,
                 panelsLayoutHelper)
             is UnmappedInsight -> unmappedInsightPanel(value.modelObject as UnmappedInsight,
                 panelsLayoutHelper)

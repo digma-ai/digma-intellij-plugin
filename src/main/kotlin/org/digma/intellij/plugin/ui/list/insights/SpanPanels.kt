@@ -36,7 +36,6 @@ import javax.swing.SwingConstants
 import kotlin.math.abs
 import kotlin.math.max
 
-
 fun spanPanel(spanInsight: SpanInsight): JPanel {
 
     val title = JLabel(asHtml(spanBold("Top Usage")), SwingConstants.LEFT)

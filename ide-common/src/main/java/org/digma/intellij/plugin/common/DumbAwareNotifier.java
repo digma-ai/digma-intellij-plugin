@@ -12,21 +12,21 @@ public class DumbAwareNotifier {
     private static final Logger LOGGER = Logger.getInstance(DumbAwareNotifier.class);
     private final List<Runnable> runnableList;
 
-    public DumbAwareNotifier(){
+    public DumbAwareNotifier() {
         this.runnableList = new ArrayList<>();
     }
 
-    public static DumbAwareNotifier getInstance(Project project){
+    public static DumbAwareNotifier getInstance(Project project) {
         return project.getService(DumbAwareNotifier.class);
     }
 
-    public void whenSmart(@NotNull Runnable runnable){
+    public void whenSmart(@NotNull Runnable runnable) {
         runnableList.add(runnable);
     }
 
-    void trigger(){
+    void trigger() {
         Log.log(LOGGER::debug, "DumbAware event is triggered");
-        for (Runnable runnable: runnableList) {
+        for (Runnable runnable : runnableList) {
             runnable.run();
         }
     }

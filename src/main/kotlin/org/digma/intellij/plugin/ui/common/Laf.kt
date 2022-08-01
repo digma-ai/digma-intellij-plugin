@@ -91,6 +91,7 @@ object Laf  {
                 @JvmStatic val SLOW = loadAndScaleInsightIcon("/icons/slow.png")
                 @JvmStatic val WAITING_DATA = loadAndScaleInsightIcon("/icons/waiting-data.png")
                 @JvmStatic val HOTSPOT = loadAndScaleInsightIcon("/icons/target.png")
+                @JvmStatic val HISTOGRAM = loadAndScaleInsightIcon("/icons/histogram.png")
                 @JvmStatic val SPAN_DURATION_DROPPED = loadAndScaleIconByWidth("/icons/dropped.png", 8)
                 @JvmStatic val SPAN_DURATION_ROSE = loadAndScaleIconByWidth("/icons/rose.png", 8)
             }

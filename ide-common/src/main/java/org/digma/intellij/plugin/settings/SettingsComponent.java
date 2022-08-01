@@ -1,5 +1,3 @@
-// Copyright 2000-2022 JetBrains s.r.o. and other contributors. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
-
 package org.digma.intellij.plugin.settings;
 
 import com.intellij.openapi.project.Project;
@@ -19,10 +17,11 @@ import java.net.URL;
  */
 public class SettingsComponent {
 
-  private JPanel myMainPanel;
+  private final JPanel myMainPanel;
   private final JBTextField myApiUrlText = new JBTextField();
   private final JBTextField myApiToken = new JBTextField();
   private final JBTextField myRefreshDelay = new JBTextField();
+  private final JBTextField myJaegerUrlText = new JBTextField();
 
   public SettingsComponent(Project project) {
 
@@ -32,7 +31,7 @@ public class SettingsComponent {
       @Override
       public boolean verify(JComponent input) {
         try {
-          new URL(myApiUrlText.getText());
+          new URL(myApiUrlText.getText().trim());
           myUrlLabel.setForeground(myUrlLabelForeground);
           return true;
         } catch (MalformedURLException e) {
@@ -48,7 +47,7 @@ public class SettingsComponent {
       @Override
       public boolean verify(JComponent input) {
         try {
-          Integer.parseInt(myRefreshDelay.getText());
+          Integer.parseInt(myRefreshDelay.getText().trim());
           myRefreshLabel.setForeground(myRefreshLabelForeground);
           return true;
         } catch (NumberFormatException e) {
@@ -58,6 +57,25 @@ public class SettingsComponent {
       }
     });
 
+    var myJaegerUrlLabel = new JBLabel("Jaeger URL: ");
+    var myJaegerUrlForeground = myUrlLabel.getForeground();
+    myJaegerUrlText.setInputVerifier(new InputVerifier() {
+      @Override
+      public boolean verify(JComponent input) {
+        if (myJaegerUrlText.getText().isBlank()) {
+          myJaegerUrlLabel.setForeground(myJaegerUrlForeground);
+          return true;
+        }
+        try {
+          new URL(myJaegerUrlText.getText().trim());
+          myJaegerUrlLabel.setForeground(myJaegerUrlForeground);
+          return true;
+        } catch (MalformedURLException e) {
+          myJaegerUrlLabel.setForeground(JBColor.RED);
+          return false;
+        }
+      }
+    });
 
 
     var resetButton = new JButton("Reset to defaults");
@@ -67,6 +85,7 @@ public class SettingsComponent {
             .addLabeledComponent(myUrlLabel, myApiUrlText, 1, false)
             .addLabeledComponent(new JBLabel("Api token:"), myApiToken, 1, false)
             .addLabeledComponent(myRefreshLabel, myRefreshDelay, 1, false)
+            .addLabeledComponent(myJaegerUrlLabel, myJaegerUrlText, 1, false)
             .addComponent(resetButton)
             .addComponentFillVertically(new JPanel(), 0)
             .getPanel();
@@ -82,34 +101,47 @@ public class SettingsComponent {
 
   @NotNull
   public String getApiUrlText() {
-    return myApiUrlText.getText();
+    return myApiUrlText.getText().trim();
   }
 
   public void setApiUrlText(@NotNull String newText) {
-    myApiUrlText.setText(newText);
+    myApiUrlText.setText(newText.trim());
   }
 
   @Nullable
   public String getApiToken() {
-    return myApiToken.getText();
+    return myApiToken.getText().trim();
   }
 
   public void setApiToken(@Nullable String newText) {
-    myApiToken.setText(newText);
+    if (newText == null) {
+      myApiToken.setText("");
+    } else {
+      myApiToken.setText(newText.trim());
+    }
+  }
+
+  public String getJaegerUrl() {
+    return myJaegerUrlText.getText().trim();
+  }
+
+  public void setJaegerUrl(String newText) {
+    myJaegerUrlText.setText(newText.trim());
   }
 
   @NotNull
   public String getRefreshDelayText() {
-    return myRefreshDelay.getText();
+    return myRefreshDelay.getText().trim();
   }
 
   public void setRefreshDelayText(@NotNull String newText) {
-    myRefreshDelay.setText(newText);
+    myRefreshDelay.setText(newText.trim());
   }
 
   private void resetToDefaults(){
     this.setApiUrlText(SettingsState.DEFAULT_API_URL);
     this.setApiToken(null);
     this.setRefreshDelayText(String.valueOf(SettingsState.DEFAULT_REFRESH_DELAY));
+    this.setJaegerUrl(SettingsState.DEFAULT_JAEGER_URL);
   }
 }

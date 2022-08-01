@@ -80,7 +80,7 @@ public class EditorInteractionService implements CaretContextService, Disposable
         }
 
         stopWatch.stop();
-        Log.log(LOGGER::debug, "contextChanged took {}", stopWatch.getTime(TimeUnit.MILLISECONDS));
+        Log.log(LOGGER::debug, "contextChanged took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS));
     }
 
     private void contextChangedImpl(MethodUnderCaret methodUnderCaret) {

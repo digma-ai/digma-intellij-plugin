@@ -175,7 +175,7 @@ fun spanDurationPanel(
 
     }
 
-    val buttonToGraph = buildButtonToGraph(project, spanDurationsInsight.span)
+    val buttonToGraph = buildButtonToPercentilesGraph(project, spanDurationsInsight.span)
     val settingsState = SettingsState.getInstance(project)
     val iconPanel = buildIconPanelWithLinks(settingsState, traceSamples, buttonToGraph)
 
@@ -188,7 +188,7 @@ fun spanDurationPanel(
     return insightItemPanel(result)
 }
 
-fun buildButtonToGraph(project: Project, span: SpanInfo): JButton {
+fun buildButtonToPercentilesGraph(project: Project, span: SpanInfo): ActionLink {
     val analyticsService = AnalyticsService.getInstance(project)
     val button = ActionLink("Histogram")
     button.addActionListener {

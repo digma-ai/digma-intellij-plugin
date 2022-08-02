@@ -1,15 +1,19 @@
 package org.digma.intellij.plugin.ui.list.insights
 
+import com.intellij.openapi.fileEditor.impl.HTMLEditorProvider
 import com.intellij.openapi.project.Project
+import com.intellij.ui.colorpicker.CommonButton
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.containers.isNullOrEmpty
 import com.intellij.util.ui.JBUI.Borders.empty
+import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
 import org.digma.intellij.plugin.model.rest.insights.SpanFlow
+import org.digma.intellij.plugin.model.rest.insights.SpanInfo
 import org.digma.intellij.plugin.model.rest.insights.SpanInsight
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.common.CopyableLabel
@@ -30,6 +34,7 @@ import java.awt.GridLayout
 import java.sql.Timestamp
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import javax.swing.JButton
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.SwingConstants
@@ -170,8 +175,9 @@ fun spanDurationPanel(
 
     }
 
+    val buttonToGraph = buildButtonToGraph(project, spanDurationsInsight.span)
     val settingsState = SettingsState.getInstance(project)
-    val iconPanel = buildIconPanelWithLinks(settingsState, traceSamples)
+    val iconPanel = buildIconPanelWithLinks(settingsState, traceSamples, buttonToGraph)
 
     val result = JBPanel<JBPanel<*>>()
     result.layout = BorderLayout()
@@ -182,12 +188,29 @@ fun spanDurationPanel(
     return insightItemPanel(result)
 }
 
-fun buildIconPanelWithLinks(settingsState: SettingsState, traceSamples: List<TraceSample>): JBPanel<*> {
+fun buildButtonToGraph(project: Project, span: SpanInfo): JButton {
+    val analyticsService = AnalyticsService.getInstance(project)
+    val button = CommonButton("Histogram")
+    button.addActionListener {
+        val htmlContent = analyticsService.getHtmlGraphFromSpanPercentile(span.instrumentationLibrary, span.name)
+        HTMLEditorProvider.openEditor(project, "Span Percentiles", htmlContent)
+    }
+
+    return button;
+}
+
+fun buildIconPanelWithLinks(
+    settingsState: SettingsState, traceSamples: List<TraceSample>, buttonToPercentilesGraph: JButton
+): JBPanel<*> {
+
     val jaegerUrl = buildLinkToJaeger(settingsState, traceSamples)
     val iconPanel = panel {
         row {
             icon(Laf.Icons.Insight.HISTOGRAM)
                 .horizontalAlign(HorizontalAlign.CENTER)
+        }
+        row {
+            cell(buttonToPercentilesGraph)
         }
         if (jaegerUrl.isNotBlank()) {
             row {

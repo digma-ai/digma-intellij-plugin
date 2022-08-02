@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.list.insights
 
+import com.google.common.io.CharStreams
 import com.intellij.openapi.fileEditor.impl.HTMLEditorProvider
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
@@ -31,6 +32,7 @@ import org.threeten.extra.AmountFormats
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.GridLayout
+import java.io.InputStreamReader
 import java.sql.Timestamp
 import java.util.Locale
 import java.util.concurrent.TimeUnit
@@ -40,6 +42,21 @@ import javax.swing.JPanel
 import javax.swing.SwingConstants
 import kotlin.math.abs
 import kotlin.math.max
+
+class SpanPanels {
+
+    companion object {
+        val JAEGER_EMBEDDED_HTML_TEMPLATE: String
+
+        init {
+            this::class.java.getResourceAsStream("/templates/Jaeger-embedded-template.html").use {
+                val loadedContent = CharStreams.toString(InputStreamReader(it))
+                JAEGER_EMBEDDED_HTML_TEMPLATE = loadedContent
+            }
+        }
+    }
+
+}
 
 fun spanPanel(spanInsight: SpanInsight): JPanel {
 
@@ -176,8 +193,8 @@ fun spanDurationPanel(
     }
 
     val buttonToGraph = buildButtonToPercentilesGraph(project, spanDurationsInsight.span)
-    val settingsState = SettingsState.getInstance(project)
-    val iconPanel = buildIconPanelWithLinks(settingsState, traceSamples, buttonToGraph)
+    val buttonToJaeger = buildButtonToJaeger(project, spanDurationsInsight.span, traceSamples)
+    val iconPanel = buildIconPanelWithLinks(buttonToGraph, buttonToJaeger)
 
     val result = JBPanel<JBPanel<*>>()
     result.layout = BorderLayout()
@@ -189,10 +206,9 @@ fun spanDurationPanel(
 }
 
 fun buildIconPanelWithLinks(
-    settingsState: SettingsState, traceSamples: List<TraceSample>, buttonToPercentilesGraph: JButton
+    buttonToPercentilesGraph: JButton, buttonToJaeger: JButton?
 ): JBPanel<*> {
 
-    val jaegerUrl = buildLinkToJaeger(settingsState, traceSamples)
     val iconPanel = panel {
         row {
             icon(Laf.Icons.Insight.HISTOGRAM)
@@ -201,39 +217,58 @@ fun buildIconPanelWithLinks(
         row {
             cell(buttonToPercentilesGraph)
         }
-        if (jaegerUrl.isNotBlank()) {
+        if (buttonToJaeger != null) {
             row {
-                val bl = browserLink("Compare", jaegerUrl)
-                bl.component.icon = null
-                bl.component.toolTipText = "Compare with Jaeger"
+                cell(buttonToJaeger)
             }
         }
     }.andTransparent()
     return iconPanel
 }
 
-fun buildLinkToJaeger(
-    settingsState: SettingsState, traceSamples: List<TraceSample>, embedLinks: Boolean = false
-): String {
+// if cannot create the button then would return null
+fun buildButtonToJaeger(
+    project: Project, spanInfo: SpanInfo, traceSamples: List<TraceSample>
+): JButton? {
+
+    val settingsState = SettingsState.getInstance(project)
 
     val jaegerBaseUrl = settingsState.jaegerUrl?.trim()?.trimEnd('/')
     if (jaegerBaseUrl.isNullOrBlank() || traceSamples.isNullOrEmpty()) {
-        return ""
+        return null
     }
     val filtered = traceSamples.filter { x -> x.hasTraceId() }
     if (filtered.isNullOrEmpty()) {
-        return ""
+        return null
     }
-    val embedPart = if (embedLinks) "&uiEmbed=v0" else ""
+
+    val caption: String
+    val jaegerUrl: String
+    val embedPart = "&uiEmbed=v0"
 
     val trace1 = filtered[0].traceId?.lowercase()
     if (filtered.size == 1) {
-        return "${jaegerBaseUrl}/trace/${trace1}?cohort=${trace1}${embedPart}"
+        caption = "Trace"
+        jaegerUrl = "${jaegerBaseUrl}/trace/${trace1}?cohort=${trace1}${embedPart}"
+    } else {
+        // assuming it has (at least) size of 2
+        val trace2 = filtered[1].traceId?.lowercase()
+        caption = "Comparing: A sample ${trace1} trace with a ${trace2} trace"
+        jaegerUrl = "${jaegerBaseUrl}/trace/${trace1}...${trace2}?cohort=${trace1}&cohort=${trace2}${embedPart}"
     }
 
-    // assuming it has (at least) size of 2
-    val trace2 = filtered[1].traceId?.lowercase()
-    return "${jaegerBaseUrl}/trace/${trace1}...${trace2}?cohort=${trace1}&cohort=${trace2}${embedPart}"
+    val htmlContent = SpanPanels.JAEGER_EMBEDDED_HTML_TEMPLATE
+        .replace("__JAEGER_EMBEDDED_URL__", jaegerUrl)
+        .replace("__CAPTION__", caption)
+
+    val editorTitle = "Jaeger sample traces of Span ${spanInfo.name}"
+
+    val button = ActionLink("Compare")
+    button.addActionListener {
+        HTMLEditorProvider.openEditor(project, editorTitle,  htmlContent)
+    }
+
+    return button
 }
 
 fun buildButtonToPercentilesGraph(project: Project, span: SpanInfo): ActionLink {

@@ -2,7 +2,7 @@ package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.openapi.fileEditor.impl.HTMLEditorProvider
 import com.intellij.openapi.project.Project
-import com.intellij.ui.colorpicker.CommonButton
+import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.panel
@@ -190,7 +190,7 @@ fun spanDurationPanel(
 
 fun buildButtonToGraph(project: Project, span: SpanInfo): JButton {
     val analyticsService = AnalyticsService.getInstance(project)
-    val button = CommonButton("Histogram")
+    val button = ActionLink("Histogram")
     button.addActionListener {
         val htmlContent = analyticsService.getHtmlGraphForSpanPercentiles(span.instrumentationLibrary, span.name)
         HTMLEditorProvider.openEditor(project, "Span Percentiles", htmlContent)

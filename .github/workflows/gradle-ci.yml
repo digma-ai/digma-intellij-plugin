@@ -9,9 +9,9 @@ name: CI Build and Upload plugin all branches
 
 on:
   push:
-    branches: [ '**','!publish-workflow' ]
-#  pull_request:
-#    branches: [ main ]
+    branches: [ '**' ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   build:

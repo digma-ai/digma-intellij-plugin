@@ -48,17 +48,17 @@ class EndpointSchema {
         @JvmStatic
         fun adjustHttpRouteIfNeeded(endpointInsight: EndpointInsight) {
             val origValue = endpointInsight.route
-            if (origValue.startsWith(HTTP_SCHEMA)) {
+            if (isOfType(origValue, HTTP_SCHEMA)) {
                 return;
             }
-            if (origValue.startsWith(RPC_SCHEMA)) {
+            if (isOfType(origValue, RPC_SCHEMA)) {
                 return;
             }
-            if (origValue.startsWith(CONSUMER_SCHEMA)) {
+            if (isOfType(origValue, CONSUMER_SCHEMA)) {
                 return;
             }
             // default behaviour, to be backward compatible, where did not have the scheme part of the route, so adding it as HTTP one
-            endpointInsight.route = HTTP_SCHEMA + origValue;
+            endpointInsight.route = HTTP_SCHEMA +":"+ origValue;
         }
     }
 }

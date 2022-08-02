@@ -58,6 +58,13 @@ jobs:
         uses: gradle/gradle-build-action@v2.2.2
 
       # Set environment variables
+      # the original template feeds the whole changelog history to the release draft. we don't need it,
+      #  and we don't keep a changelog file in the repository
+      #          CHANGELOG="$(./gradlew getChangelog --unreleased --no-header --console=plain -q)"
+      #          CHANGELOG="${CHANGELOG//'%'/'%25'}"
+      #          CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
+      #          CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
+      #          echo "::set-output name=changelog::$CHANGELOG"
       - name: Export Properties
         id: properties
         shell: bash
@@ -66,16 +73,8 @@ jobs:
           VERSION="$(echo "$PROPERTIES" | grep "^version:" | cut -f2- -d ' ')"
           NAME="$(echo "$PROPERTIES" | grep "^pluginName:" | cut -f2- -d ' ')"
           
-          # the original template feeds the whole changelog history to the release draft. we don't need it,
-          #  and we don't keep a changelog file in the repository
-          #          CHANGELOG="$(./gradlew getChangelog --unreleased --no-header --console=plain -q)"
-          #          CHANGELOG="${CHANGELOG//'%'/'%25'}"
-          #          CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
-          #          CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
-          
           echo "::set-output name=version::$VERSION"
           echo "::set-output name=name::$NAME"
-          #          echo "::set-output name=changelog::$CHANGELOG"
           echo "::set-output name=pluginVerifierHomeDir::~/.pluginVerifier"
           
           ./gradlew listProductsReleases # prepare list of IDEs for Plugin Verifier
@@ -166,7 +165,3 @@ jobs:
             --draft \
             --title "v${{ needs.build.outputs.version }}" \
             --notes "## $VERSION ATX_2 is reserved for patchChangelog"
-#            --notes "$(cat << 'EOM'
-#          ${{ needs.build.outputs.changelog }}
-#          EOM
-#          )"

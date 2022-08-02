@@ -106,11 +106,11 @@ tasks {
         )
 
         // Get the latest available change notes from the changelog file
-//        changeNotes.set(provider {
-//            changelog.run {
-//                getOrNull(properties("pluginVersion")) ?: getLatest()
-//            }.toHTML()
-//        })
+        changeNotes.set(provider {
+            changelog.run {
+                getOrNull(properties("pluginVersion")) ?: getLatest()
+            }.toHTML()
+        })
     }
 
     // Configure UI tests plugin

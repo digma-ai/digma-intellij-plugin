@@ -185,7 +185,6 @@ tasks {
 
 
     publishPlugin {
-        dependsOn("patchChangelog")
         if (System.getenv("PUBLISH_TOKEN") != null) {
             token.set(System.getenv("PUBLISH_TOKEN"))
         }

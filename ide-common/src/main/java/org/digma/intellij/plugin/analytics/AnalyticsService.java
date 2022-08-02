@@ -167,9 +167,9 @@ public class AnalyticsService implements Disposable {
         return analyticsProviderProxy.getUsageStatus(new UsageStatusRequest(objectIds, List.of("Error")));
     }
 
-    public String getHtmlGraphFromSpanPercentile(String instrumentationLibrary, String spanName) throws AnalyticsServiceException {
+    public String getHtmlGraphForSpanPercentiles(String instrumentationLibrary, String spanName) throws AnalyticsServiceException {
         final SpanHistogramQuery spanHistogramQuery = new SpanHistogramQuery(getCurrentEnvironment(), spanName, instrumentationLibrary, "");
-        return analyticsProviderProxy.getHtmlGraphFromSpanPercentile(spanHistogramQuery);
+        return analyticsProviderProxy.getHtmlGraphForSpanPercentiles(spanHistogramQuery);
     }
 
     @Override

@@ -192,7 +192,7 @@ fun buildButtonToGraph(project: Project, span: SpanInfo): JButton {
     val analyticsService = AnalyticsService.getInstance(project)
     val button = CommonButton("Histogram")
     button.addActionListener {
-        val htmlContent = analyticsService.getHtmlGraphFromSpanPercentile(span.instrumentationLibrary, span.name)
+        val htmlContent = analyticsService.getHtmlGraphForSpanPercentiles(span.instrumentationLibrary, span.name)
         HTMLEditorProvider.openEditor(project, "Span Percentiles", htmlContent)
     }
 

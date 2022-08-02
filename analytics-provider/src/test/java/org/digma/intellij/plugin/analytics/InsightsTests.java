@@ -62,12 +62,12 @@ public class InsightsTests extends AbstractAnalyticsProviderTest {
     }
 
     //@Test
-    public void actualGetHtmlGraphFromSpanPercentile() {
+    public void actualgetHtmlGraphForSpanPercentiles() {
         final SpanHistogramQuery query = new SpanHistogramQuery(
                 "ARIK-LAPTOP[LOCAL]", "SampleInsights/Error", "OpenTelemetry.Instrumentation.AspNetCore", "");
         AnalyticsProvider analyticsProvider = new RestAnalyticsProvider("https://localhost:5051");
 
-        String htmlBody = analyticsProvider.getHtmlGraphFromSpanPercentile(query);
+        String htmlBody = analyticsProvider.getHtmlGraphForSpanPercentiles(query);
 
         System.out.println("htmlBody:" + htmlBody);
     }

@@ -88,8 +88,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public String getHtmlGraphFromSpanPercentile(SpanHistogramQuery request) {
-        final ResponseBody responseBody = execute(() -> client.analyticsProvider.getHtmlGraphFromSpanPercentile(request));
+    public String getHtmlGraphForSpanPercentiles(SpanHistogramQuery request) {
+        final ResponseBody responseBody = execute(() -> client.analyticsProvider.getHtmlGraphForSpanPercentiles(request));
         return readEntire(responseBody);
     }
 
@@ -300,7 +300,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         @POST("/Graphs/graphForSpanPercentiles")
         // @Streaming means ResponseBody as is, without conversion
         @Streaming
-        Call<ResponseBody> getHtmlGraphFromSpanPercentile(@Body SpanHistogramQuery request);
+        Call<ResponseBody> getHtmlGraphForSpanPercentiles(@Body SpanHistogramQuery request);
 
     }
 

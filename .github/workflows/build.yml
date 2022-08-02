@@ -10,20 +10,20 @@
 #
 # GitHub Actions reference: https://help.github.com/en/actions
 #
-## JBIJPPTPL
+## JBIJPPTPL (Jetbrains intellij platform plugin template)
 
 name: Build
 on:
   # Trigger the workflow on pushes to only the 'main' branch (this avoids duplicate checks being run e.g. for dependabot pull requests)
   push:
-    #    branches: [main]
-    #    todo: temp, should be main
-    branches: [ publish-workflow ]
+    branches: [ main ]
   # Trigger the workflow on any pull request
-#  pull_request:
-
+  pull_request:
+    branches: [ main ]
 
 jobs:
+
+  #todo: java matrix , os matrix
 
   # Run Gradle Wrapper Validation Action to verify the wrapper's checksum
   # Run verifyPlugin, IntelliJ Plugin Verifier, and test Gradle tasks
@@ -34,6 +34,7 @@ jobs:
     outputs:
       version: ${{ steps.properties.outputs.version }}
       changelog: ${{ steps.properties.outputs.changelog }}
+
     steps:
 
       # Check out current repository
@@ -48,9 +49,13 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
-          distribution: zulu
-          java-version: 11
-          cache: gradle
+          java-version: '11'
+          distribution: 'corretto'
+
+      # All subsequent Gradle invocations will benefit from caching, build-scan capture and other features of the gradle-build-action.
+      # setup-java can also cache gradle, but we use gradle-build-action for gradle caching and should not mix between workflows.
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2.2.2
 
       # Set environment variables
       - name: Export Properties
@@ -60,16 +65,19 @@ jobs:
           PROPERTIES="$(./gradlew properties --console=plain -q)"
           VERSION="$(echo "$PROPERTIES" | grep "^version:" | cut -f2- -d ' ')"
           NAME="$(echo "$PROPERTIES" | grep "^pluginName:" | cut -f2- -d ' ')"
-          CHANGELOG="$(./gradlew getChangelog --unreleased --no-header --console=plain -q)"
-          CHANGELOG="${CHANGELOG//'%'/'%25'}"
-          CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
-          CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
-
+          
+          # the original template feeds the whole changelog history to the release draft. we don't need it,
+          #  and we don't keep a changelog file in the repository
+          #          CHANGELOG="$(./gradlew getChangelog --unreleased --no-header --console=plain -q)"
+          #          CHANGELOG="${CHANGELOG//'%'/'%25'}"
+          #          CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
+          #          CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
+          
           echo "::set-output name=version::$VERSION"
           echo "::set-output name=name::$NAME"
-          echo "::set-output name=changelog::$CHANGELOG"
+          #          echo "::set-output name=changelog::$CHANGELOG"
           echo "::set-output name=pluginVerifierHomeDir::~/.pluginVerifier"
-
+          
           ./gradlew listProductsReleases # prepare list of IDEs for Plugin Verifier
 
       # Run tests
@@ -77,7 +85,7 @@ jobs:
         run: ./gradlew test
 
       # Collect Tests Result of failed tests
-      ##todo: add more modules reports
+      ##todo: add other modules test reports
       - name: Collect Tests Result
         if: ${{ failure() }}
         uses: actions/upload-artifact@v3
@@ -94,7 +102,7 @@ jobs:
 
       # Run Verify Plugin task and IntelliJ Plugin Verifier tool
       - name: Run Plugin Verification tasks
-        run: ./gradlew runPluginVerifier -Pplugin.verifier.home.dir=${{ steps.properties.outputs.pluginVerifierHomeDir }}
+        run: ./gradlew buildPlugin runPluginVerifier -Pplugin.verifier.home.dir=${{ steps.properties.outputs.pluginVerifierHomeDir }}
 
       # Collect Plugin Verifier Result
       - name: Collect Plugin Verifier Result
@@ -157,7 +165,8 @@ jobs:
           gh release create v${{ needs.build.outputs.version }} \
             --draft \
             --title "v${{ needs.build.outputs.version }}" \
-            --notes "$(cat << 'EOM'
-          ${{ needs.build.outputs.changelog }}
-          EOM
-          )"
+            --notes "## $VERSION ATX_2 is reserved for patchChangelog"
+#            --notes "$(cat << 'EOM'
+#          ${{ needs.build.outputs.changelog }}
+#          EOM
+#          )"

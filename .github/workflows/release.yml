@@ -22,12 +22,18 @@ jobs:
           ref: ${{ github.event.release.tag_name }}
 
       # Setup Java 11 environment for the next steps
+      # Setup Java 11 environment for the next steps
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
-          distribution: zulu
-          java-version: 11
-          cache: gradle
+          java-version: '11'
+          distribution: 'corretto'
+
+      # All subsequent Gradle invocations will benefit from caching, build-scan capture and other features of the gradle-build-action.
+      # setup-java can also cache gradle, but we use gradle-build-action for gradle caching and should not mix between workflows.
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2.2.2
+
 
       # Set environment variables
       - name: Export Properties
@@ -42,15 +48,18 @@ jobs:
           CHANGELOG="${CHANGELOG//'%'/'%25'}"
           CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
           CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
-
+          CHANGELOG=$(echo $CHANGELOG | sed  's/## /### /g')
           echo "::set-output name=changelog::$CHANGELOG"
 
       # Update Unreleased section with the current release note
+      # we replaced ATX_2 with ATX_3 because patchChangelog will fail if it can't find ATX_2 line with a version.
+      # we don't keep a changelog file in git, just create it here ,patch plugin.xml and ignore it.
       - name: Patch Changelog
         if: ${{ steps.properties.outputs.changelog != '' }}
         env:
           CHANGELOG: ${{ steps.properties.outputs.changelog }}
         run: |
+          ./gradlew initializeChangelog
           ./gradlew patchChangelog --release-note="$CHANGELOG"
 
       # Publish the plugin to the Marketplace
@@ -66,23 +75,23 @@ jobs:
         run: gh release upload ${{ github.event.release.tag_name }} ./build/distributions/*
 
       # Create pull request
-      - name: Create Pull Request
-        if: ${{ steps.properties.outputs.changelog != '' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          VERSION="${{ github.event.release.tag_name }}"
-          BRANCH="changelog-update-$VERSION"
-
-          git config user.email "action@github.com"
-          git config user.name "GitHub Action"
-
-          git checkout -b $BRANCH
-          git commit -am "Changelog update - $VERSION"
-          git push --set-upstream origin $BRANCH
-
-          gh pr create \
-            --title "Changelog update - \`$VERSION\`" \
-            --body "Current pull request contains patched \`CHANGELOG.md\` file for the \`$VERSION\` version." \
-            --base main \
-            --head $BRANCH
+#      - name: Create Pull Request
+#        if: ${{ steps.properties.outputs.changelog != '' }}
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        run: |
+#          VERSION="${{ github.event.release.tag_name }}"
+#          BRANCH="changelog-update-$VERSION"
+#
+#          git config user.email "action@github.com"
+#          git config user.name "GitHub Action"
+#
+#          git checkout -b $BRANCH
+#          git commit -am "Changelog update - $VERSION"
+#          git push --set-upstream origin $BRANCH
+#
+#          gh pr create \
+#            --title "Changelog update - \`$VERSION\`" \
+#            --body "Current pull request contains patched \`CHANGELOG.md\` file for the \`$VERSION\` version." \
+#            --base main \
+#            --head $BRANCH

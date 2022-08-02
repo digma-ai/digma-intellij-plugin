@@ -241,7 +241,7 @@ fun buildButtonToPercentilesGraph(project: Project, span: SpanInfo): ActionLink 
     val button = ActionLink("Histogram")
     button.addActionListener {
         val htmlContent = analyticsService.getHtmlGraphForSpanPercentiles(span.instrumentationLibrary, span.name)
-        HTMLEditorProvider.openEditor(project, "Span Percentiles", htmlContent)
+        HTMLEditorProvider.openEditor(project, "Percentiles Graph of Span ${span.name}", htmlContent)
     }
 
     return button

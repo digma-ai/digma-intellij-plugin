@@ -1,15 +1,19 @@
 package org.digma.intellij.plugin.ui.list.insights
 
+import com.intellij.openapi.fileEditor.impl.HTMLEditorProvider
 import com.intellij.openapi.project.Project
+import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.containers.isNullOrEmpty
 import com.intellij.util.ui.JBUI.Borders.empty
+import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
 import org.digma.intellij.plugin.model.rest.insights.SpanFlow
+import org.digma.intellij.plugin.model.rest.insights.SpanInfo
 import org.digma.intellij.plugin.model.rest.insights.SpanInsight
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.common.CopyableLabel
@@ -30,6 +34,7 @@ import java.awt.GridLayout
 import java.sql.Timestamp
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import javax.swing.JButton
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.SwingConstants
@@ -125,15 +130,15 @@ fun spanDurationPanel(
                 }
                 val h = ps.height
                 val w = ps.width
-                addCurrentLargestWidthDurationPLabel(panelsLayoutHelper,w)
-                return Dimension(getCurrentLargestWidthDurationPLabel(panelsLayoutHelper,w), h)
+                addCurrentLargestWidthDurationPLabel(panelsLayoutHelper, w)
+                return Dimension(getCurrentLargestWidthDurationPLabel(panelsLayoutHelper, w), h)
             }
         }
         pLabelPanel.layout = BorderLayout()
         pLabelPanel.border = empty()
         pLabelPanel.isOpaque = false
         pLabelPanel.add(pLabel, BorderLayout.WEST)
-        addCurrentLargestWidthDurationPLabel(panelsLayoutHelper,pLabelPanel.preferredSize.width)
+        addCurrentLargestWidthDurationPLabel(panelsLayoutHelper, pLabelPanel.preferredSize.width)
         durationsPanel.add(pLabelPanel, BorderLayout.WEST)
 
 
@@ -162,7 +167,7 @@ fun spanDurationPanel(
             evalPanel.layout = BorderLayout()
             evalPanel.add(evalLabel, BorderLayout.CENTER)
             evalPanel.isOpaque = false
-            addCurrentLargestWidthIconPanel(panelsLayoutHelper,evalPanel.preferredSize.width)
+            addCurrentLargestWidthIconPanel(panelsLayoutHelper, evalPanel.preferredSize.width)
             durationsPanel.add(evalPanel, BorderLayout.EAST)
         }
 
@@ -170,8 +175,9 @@ fun spanDurationPanel(
 
     }
 
+    val buttonToGraph = buildButtonToPercentilesGraph(project, spanDurationsInsight.span)
     val settingsState = SettingsState.getInstance(project)
-    val iconPanel = buildIconPanelWithLinks(settingsState, traceSamples)
+    val iconPanel = buildIconPanelWithLinks(settingsState, traceSamples, buttonToGraph)
 
     val result = JBPanel<JBPanel<*>>()
     result.layout = BorderLayout()
@@ -182,12 +188,18 @@ fun spanDurationPanel(
     return insightItemPanel(result)
 }
 
-fun buildIconPanelWithLinks(settingsState: SettingsState, traceSamples: List<TraceSample>): JBPanel<*> {
+fun buildIconPanelWithLinks(
+    settingsState: SettingsState, traceSamples: List<TraceSample>, buttonToPercentilesGraph: JButton
+): JBPanel<*> {
+
     val jaegerUrl = buildLinkToJaeger(settingsState, traceSamples)
     val iconPanel = panel {
         row {
             icon(Laf.Icons.Insight.HISTOGRAM)
                 .horizontalAlign(HorizontalAlign.CENTER)
+        }
+        row {
+            cell(buttonToPercentilesGraph)
         }
         if (jaegerUrl.isNotBlank()) {
             row {
@@ -200,7 +212,10 @@ fun buildIconPanelWithLinks(settingsState: SettingsState, traceSamples: List<Tra
     return iconPanel
 }
 
-fun buildLinkToJaeger(settingsState: SettingsState, traceSamples: List<TraceSample>, embedLinks: Boolean = false): String {
+fun buildLinkToJaeger(
+    settingsState: SettingsState, traceSamples: List<TraceSample>, embedLinks: Boolean = false
+): String {
+
     val jaegerBaseUrl = settingsState.jaegerUrl?.trim()?.trimEnd('/')
     if (jaegerBaseUrl.isNullOrBlank() || traceSamples.isNullOrEmpty()) {
         return ""
@@ -219,6 +234,17 @@ fun buildLinkToJaeger(settingsState: SettingsState, traceSamples: List<TraceSamp
     // assuming it has (at least) size of 2
     val trace2 = filtered[1].traceId?.lowercase()
     return "${jaegerBaseUrl}/trace/${trace1}...${trace2}?cohort=${trace1}&cohort=${trace2}${embedPart}"
+}
+
+fun buildButtonToPercentilesGraph(project: Project, span: SpanInfo): ActionLink {
+    val analyticsService = AnalyticsService.getInstance(project)
+    val button = ActionLink("Histogram")
+    button.addActionListener {
+        val htmlContent = analyticsService.getHtmlGraphForSpanPercentiles(span.instrumentationLibrary, span.name)
+        HTMLEditorProvider.openEditor(project, "Percentiles Graph of Span ${span.name}", htmlContent)
+    }
+
+    return button
 }
 
 fun buildTraceSample(percentile: SpanDurationsPercentile): TraceSample {
@@ -261,7 +287,7 @@ private fun getCurrentLargestWidthDurationPLabel(layoutHelper: PanelsLayoutHelpe
     return max(width, currentLargest)
 }
 
-private fun addCurrentLargestWidthDurationPLabel(layoutHelper: PanelsLayoutHelper,width: Int) {
+private fun addCurrentLargestWidthDurationPLabel(layoutHelper: PanelsLayoutHelper, width: Int) {
     //this method should never throw NPE
     val currentLargest: Int =
         (layoutHelper.getObjectAttribute("SpanDurationsDurationPLabel", "largestWidth") ?: 0) as Int

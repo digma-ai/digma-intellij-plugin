@@ -4,6 +4,7 @@ import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
+import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
@@ -26,4 +27,5 @@ public interface AnalyticsProvider extends Closeable {
 
     UsageStatusResult getUsageStatus(UsageStatusRequest usageStatusRequest);
 
+    String getHtmlGraphForSpanPercentiles(SpanHistogramQuery request);
 }

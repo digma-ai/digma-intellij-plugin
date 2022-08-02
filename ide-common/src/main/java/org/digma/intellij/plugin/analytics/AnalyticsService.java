@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
+import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
@@ -29,7 +30,12 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.ConnectException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class AnalyticsService implements Disposable {
@@ -159,6 +165,11 @@ public class AnalyticsService implements Disposable {
 
     public UsageStatusResult getUsageStatusOfErrors(List<String> objectIds) throws AnalyticsServiceException {
         return analyticsProviderProxy.getUsageStatus(new UsageStatusRequest(objectIds, List.of("Error")));
+    }
+
+    public String getHtmlGraphForSpanPercentiles(String instrumentationLibrary, String spanName) throws AnalyticsServiceException {
+        final SpanHistogramQuery spanHistogramQuery = new SpanHistogramQuery(getCurrentEnvironment(), spanName, instrumentationLibrary, "");
+        return analyticsProviderProxy.getHtmlGraphForSpanPercentiles(spanHistogramQuery);
     }
 
     @Override

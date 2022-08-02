@@ -188,17 +188,6 @@ fun spanDurationPanel(
     return insightItemPanel(result)
 }
 
-fun buildButtonToPercentilesGraph(project: Project, span: SpanInfo): ActionLink {
-    val analyticsService = AnalyticsService.getInstance(project)
-    val button = ActionLink("Histogram")
-    button.addActionListener {
-        val htmlContent = analyticsService.getHtmlGraphForSpanPercentiles(span.instrumentationLibrary, span.name)
-        HTMLEditorProvider.openEditor(project, "Span Percentiles", htmlContent)
-    }
-
-    return button
-}
-
 fun buildIconPanelWithLinks(
     settingsState: SettingsState, traceSamples: List<TraceSample>, buttonToPercentilesGraph: JButton
 ): JBPanel<*> {
@@ -245,6 +234,17 @@ fun buildLinkToJaeger(
     // assuming it has (at least) size of 2
     val trace2 = filtered[1].traceId?.lowercase()
     return "${jaegerBaseUrl}/trace/${trace1}...${trace2}?cohort=${trace1}&cohort=${trace2}${embedPart}"
+}
+
+fun buildButtonToPercentilesGraph(project: Project, span: SpanInfo): ActionLink {
+    val analyticsService = AnalyticsService.getInstance(project)
+    val button = ActionLink("Histogram")
+    button.addActionListener {
+        val htmlContent = analyticsService.getHtmlGraphForSpanPercentiles(span.instrumentationLibrary, span.name)
+        HTMLEditorProvider.openEditor(project, "Span Percentiles", htmlContent)
+    }
+
+    return button
 }
 
 fun buildTraceSample(percentile: SpanDurationsPercentile): TraceSample {

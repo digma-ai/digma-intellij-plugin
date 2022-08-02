@@ -57,3 +57,12 @@ jobs:
         with:
           name: ${{ steps.artifact.outputs.filename }}
           path: ./build/distributions/content/*/*
+
+      # Collect Tests Result of failed tests
+      ##todo: add other modules test reports
+      - name: Collect Tests Result
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: tests-result
+          path: ${{ github.workspace }}/ide-common/build/reports/tests

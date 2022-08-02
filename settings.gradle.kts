@@ -33,6 +33,7 @@ dependencyResolutionManagement {
             version("junit", "5.8.2")
             version("kotlin-stdlib", "1.6.20")
             library("kotlin-stdlib-jdk8", "org.jetbrains.kotlin", "kotlin-stdlib-jdk8").versionRef("kotlin-stdlib")
+            library("guava", "com.google.guava", "guava").version("31.1-jre")
             version("retrofit", "2.9.0")
             library("retrofit-client", "com.squareup.retrofit2", "retrofit").versionRef("retrofit")
             library("retrofit-jackson","com.squareup.retrofit2","converter-jackson").versionRef("retrofit")

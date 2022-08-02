@@ -15,6 +15,7 @@ dependencies {
     //from here the model classes can't use it
     api(libs.prettytime)
     api(libs.threeten)
+    api(libs.commons.lang3)
 
 
     implementation(project(":model"))

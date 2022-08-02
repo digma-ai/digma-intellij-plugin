@@ -248,12 +248,12 @@ fun buildButtonToJaeger(
 
     val trace1 = filtered[0].traceId?.lowercase()
     if (filtered.size == 1) {
-        caption = "Trace"
+        caption = "A sample ${filtered[0].traceName} trace"
         jaegerUrl = "${jaegerBaseUrl}/trace/${trace1}?cohort=${trace1}${embedPart}"
     } else {
         // assuming it has (at least) size of 2
         val trace2 = filtered[1].traceId?.lowercase()
-        caption = "Comparing: A sample ${trace1} trace with a ${trace2} trace"
+        caption = "Comparing: A sample ${filtered[0].traceName} trace with a ${filtered[1].traceName} trace"
         jaegerUrl = "${jaegerBaseUrl}/trace/${trace1}...${trace2}?cohort=${trace1}&cohort=${trace2}${embedPart}"
     }
 

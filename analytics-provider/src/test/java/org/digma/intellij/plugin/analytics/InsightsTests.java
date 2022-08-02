@@ -3,7 +3,21 @@ package org.digma.intellij.plugin.analytics;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import okhttp3.mockwebserver.MockResponse;
-import org.digma.intellij.plugin.model.rest.insights.*;
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
+import org.digma.intellij.plugin.model.rest.insights.Duration;
+import org.digma.intellij.plugin.model.rest.insights.ErrorInsight;
+import org.digma.intellij.plugin.model.rest.insights.ErrorInsightNamedError;
+import org.digma.intellij.plugin.model.rest.insights.HighUsageInsight;
+import org.digma.intellij.plugin.model.rest.insights.HotspotInsight;
+import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
+import org.digma.intellij.plugin.model.rest.insights.LowUsageInsight;
+import org.digma.intellij.plugin.model.rest.insights.NormalUsageInsight;
+import org.digma.intellij.plugin.model.rest.insights.Percentile;
+import org.digma.intellij.plugin.model.rest.insights.SlowEndpointInsight;
+import org.digma.intellij.plugin.model.rest.insights.SlowSpanInfo;
+import org.digma.intellij.plugin.model.rest.insights.SlowestSpansInsight;
+import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
+import org.digma.intellij.plugin.model.rest.insights.SpanInfo;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -18,7 +32,7 @@ public class InsightsTests extends AbstractAnalyticsProviderTest {
 
     //run against running env just for local test
 //    @Test
-    public void getInsightsTemp() {
+    public void actualGetInsightsTemp() {
         {
             List<String> ids = new ArrayList<>();
             ids.add("method:Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$TransferFunds");
@@ -34,7 +48,7 @@ public class InsightsTests extends AbstractAnalyticsProviderTest {
 
 
     //    @Test
-    public void getInsightsTempViaSsl() {
+    public void actualGetInsightsTempViaSsl() {
         {
             List<String> ids = new ArrayList<>();
             ids.add("method:Sample.MoneyTransfer.API.Controllers.TransferController$_$TransferFunds");
@@ -47,6 +61,16 @@ public class InsightsTests extends AbstractAnalyticsProviderTest {
         }
     }
 
+    //@Test
+    public void actualGetHtmlGraphFromSpanPercentile() {
+        final SpanHistogramQuery query = new SpanHistogramQuery(
+                "ARIK-LAPTOP[LOCAL]", "SampleInsights/Error", "OpenTelemetry.Instrumentation.AspNetCore", "");
+        AnalyticsProvider analyticsProvider = new RestAnalyticsProvider("https://localhost:5051");
+
+        String htmlBody = analyticsProvider.getHtmlGraphFromSpanPercentile(query);
+
+        System.out.println("htmlBody:" + htmlBody);
+    }
 
     @Test
     public void getInsights() throws JsonProcessingException {

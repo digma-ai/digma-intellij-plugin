@@ -47,6 +47,7 @@ changelog {
     //groups.set(listOf("Added", "Changed", "Deprecated", "Removed", "Fixed", "Security"))
     groups.set(emptyList())
     header.set(provider { "[${version.get()}] - ${date()}" })
+    keepUnreleasedSection.set(false)
 }
 
 
@@ -182,7 +183,6 @@ tasks {
 
     publishPlugin {
         dependsOn("patchChangelog")
-        dependsOn("verifyPlugin")
         if (System.getenv("PUBLISH_TOKEN") != null) {
             token.set(System.getenv("PUBLISH_TOKEN"))
         }
@@ -193,4 +193,7 @@ tasks {
         channels.set(listOf(properties("pluginVersion").split('-').getOrElse(1) { "default" }.split('.').first()))
     }
 
+    patchChangelog {
+
+    }
 }

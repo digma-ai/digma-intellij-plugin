@@ -130,15 +130,15 @@ fun spanDurationPanel(
                 }
                 val h = ps.height
                 val w = ps.width
-                addCurrentLargestWidthDurationPLabel(panelsLayoutHelper,w)
-                return Dimension(getCurrentLargestWidthDurationPLabel(panelsLayoutHelper,w), h)
+                addCurrentLargestWidthDurationPLabel(panelsLayoutHelper, w)
+                return Dimension(getCurrentLargestWidthDurationPLabel(panelsLayoutHelper, w), h)
             }
         }
         pLabelPanel.layout = BorderLayout()
         pLabelPanel.border = empty()
         pLabelPanel.isOpaque = false
         pLabelPanel.add(pLabel, BorderLayout.WEST)
-        addCurrentLargestWidthDurationPLabel(panelsLayoutHelper,pLabelPanel.preferredSize.width)
+        addCurrentLargestWidthDurationPLabel(panelsLayoutHelper, pLabelPanel.preferredSize.width)
         durationsPanel.add(pLabelPanel, BorderLayout.WEST)
 
 
@@ -167,7 +167,7 @@ fun spanDurationPanel(
             evalPanel.layout = BorderLayout()
             evalPanel.add(evalLabel, BorderLayout.CENTER)
             evalPanel.isOpaque = false
-            addCurrentLargestWidthIconPanel(panelsLayoutHelper,evalPanel.preferredSize.width)
+            addCurrentLargestWidthIconPanel(panelsLayoutHelper, evalPanel.preferredSize.width)
             durationsPanel.add(evalPanel, BorderLayout.EAST)
         }
 
@@ -196,7 +196,7 @@ fun buildButtonToGraph(project: Project, span: SpanInfo): JButton {
         HTMLEditorProvider.openEditor(project, "Span Percentiles", htmlContent)
     }
 
-    return button;
+    return button
 }
 
 fun buildIconPanelWithLinks(
@@ -223,7 +223,10 @@ fun buildIconPanelWithLinks(
     return iconPanel
 }
 
-fun buildLinkToJaeger(settingsState: SettingsState, traceSamples: List<TraceSample>, embedLinks: Boolean = false): String {
+fun buildLinkToJaeger(
+    settingsState: SettingsState, traceSamples: List<TraceSample>, embedLinks: Boolean = false
+): String {
+
     val jaegerBaseUrl = settingsState.jaegerUrl?.trim()?.trimEnd('/')
     if (jaegerBaseUrl.isNullOrBlank() || traceSamples.isNullOrEmpty()) {
         return ""
@@ -284,7 +287,7 @@ private fun getCurrentLargestWidthDurationPLabel(layoutHelper: PanelsLayoutHelpe
     return max(width, currentLargest)
 }
 
-private fun addCurrentLargestWidthDurationPLabel(layoutHelper: PanelsLayoutHelper,width: Int) {
+private fun addCurrentLargestWidthDurationPLabel(layoutHelper: PanelsLayoutHelper, width: Int) {
     //this method should never throw NPE
     val currentLargest: Int =
         (layoutHelper.getObjectAttribute("SpanDurationsDurationPLabel", "largestWidth") ?: 0) as Int

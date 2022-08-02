@@ -1,26 +1,48 @@
 package org.digma.intellij.plugin.model.rest.insights
 
+import javax.swing.Icon
+
+class GroupViewModel(val titleText: String, val labelText: String, val icon: Icon)
+
+class RouteInfo(val shortName: String, val schema: String)
+
 class EndpointSchema {
 
     companion object {
-        const val HTTP_SCHEMA: String = "epHTTP:"
-        const val RPC_SCHEMA: String = "epRPC:"
-        const val CONSUMER_SCHEMA: String = "epConsumer:"
+        const val HTTP_SCHEMA: String = "epHTTP"
+        const val RPC_SCHEMA: String = "epRPC"
+        const val CONSUMER_SCHEMA: String = "epConsumer"
 
-        // strips the scheme and returns the rest of the of name
         @JvmStatic
-        fun getShortRouteName(fullRouteName: String): Pair<String, String> {
-            if (fullRouteName.startsWith(HTTP_SCHEMA)) {
-                return Pair(fullRouteName.replace(HTTP_SCHEMA, ""), HTTP_SCHEMA);
+        fun getRouteInfo(fullRouteName: String): RouteInfo {
+            val schema = getSchema(fullRouteName);
+            return RouteInfo(removeSchema(fullRouteName, schema), schema);
+        }
+
+        @JvmStatic
+        private fun isOfType(fullRouteName: String, schema: String): Boolean{
+            return fullRouteName.startsWith("$schema:");
+        }
+        @JvmStatic
+        private fun getSchema(fullRouteName: String): String{
+            if (isOfType(fullRouteName, HTTP_SCHEMA)) {
+                return HTTP_SCHEMA
             }
-            if (fullRouteName.startsWith(RPC_SCHEMA)) {
-                return Pair(fullRouteName.replace(RPC_SCHEMA, ""), RPC_SCHEMA);
+            if (isOfType(fullRouteName, RPC_SCHEMA)) {
+                return RPC_SCHEMA
             }
-            if (fullRouteName.startsWith(CONSUMER_SCHEMA)) {
-                return Pair(fullRouteName.replace(CONSUMER_SCHEMA, ""), CONSUMER_SCHEMA);
+            if (isOfType(fullRouteName, CONSUMER_SCHEMA)) {
+                return CONSUMER_SCHEMA
             }
-            // did not manage to find relevant Scheme, so returning value as is
-            return Pair(fullRouteName, "");
+            return "";
+        }
+
+        @JvmStatic
+        private fun removeSchema(fullRouteName: String, schema: String): String{
+            if(schema == ""){
+                return fullRouteName;
+            }
+            return fullRouteName.replace("$schema:", "");
         }
 
         @JvmStatic

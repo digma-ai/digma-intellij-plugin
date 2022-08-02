@@ -1,7 +1,7 @@
 package org.digma.intellij.plugin.model.rest.insights
 
 import org.digma.intellij.plugin.model.rest.insights.EndpointSchema.Companion.adjustHttpRouteIfNeeded
-import org.digma.intellij.plugin.model.rest.insights.EndpointSchema.Companion.getShortRouteName
+import org.digma.intellij.plugin.model.rest.insights.EndpointSchema.Companion.getRouteInfo
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -9,17 +9,17 @@ internal class EndpointSchemaTest {
 
     @Test
     fun getShortRouteNameShouldWorkForHttpSchema() {
-        assertEquals("get /hello", getShortRouteName("epHTTP:get /hello").first)
+        assertEquals("get /hello", getRouteInfo("epHTTP:get /hello").shortName)
     }
 
     @Test
     fun getShortRouteNameShouldWorkForRpcSchema() {
-        assertEquals("hello.world", getShortRouteName("epRPC:hello.world").first)
+        assertEquals("hello.world", getRouteInfo("epRPC:hello.world").shortName)
     }
 
     @Test
     fun getShortRouteNameShouldWorkEvenWhenNonRecognizedSchema() {
-        assertEquals("whats.up.dude", getShortRouteName("whats.up.dude").first)
+        assertEquals("whats.up.dude", getRouteInfo("whats.up.dude").shortName)
     }
 
     @Test

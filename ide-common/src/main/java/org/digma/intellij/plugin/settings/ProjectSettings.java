@@ -41,7 +41,7 @@ public class ProjectSettings implements Configurable {
     @Override
     public boolean isModified() {
         SettingsState settings = SettingsState.getInstance(project);
-        return isUrlChanged(settings) || isApiTokenChanged(settings) || isRefreshDelayChanged(settings);
+        return isUrlChanged(settings) || isApiTokenChanged(settings) || isRefreshDelayChanged(settings) || isJaegerUrlChanged(settings);
     }
 
     private boolean isRefreshDelayChanged(SettingsState settings) {
@@ -54,6 +54,10 @@ public class ProjectSettings implements Configurable {
 
     private boolean isApiTokenChanged(SettingsState settings){
         return !Objects.equals(settings.apiToken,mySettingsComponent.getApiToken());
+    }
+
+    private boolean isJaegerUrlChanged(SettingsState settings) {
+        return !Objects.equals(settings.jaegerUrl, mySettingsComponent.getJaegerUrl());
     }
 
     @Override
@@ -79,6 +83,7 @@ public class ProjectSettings implements Configurable {
         settings.apiUrl = mySettingsComponent.getApiUrlText();
         settings.apiToken = theApiToken;
         settings.refreshDelay = Integer.parseInt(mySettingsComponent.getRefreshDelayText());
+        settings.jaegerUrl = mySettingsComponent.getJaegerUrl();
         settings.fireChanged();
     }
 
@@ -88,6 +93,7 @@ public class ProjectSettings implements Configurable {
         mySettingsComponent.setApiUrlText(settings.apiUrl);
         mySettingsComponent.setApiToken(settings.apiToken);
         mySettingsComponent.setRefreshDelayText(String.valueOf(settings.refreshDelay));
+        mySettingsComponent.setJaegerUrl(settings.jaegerUrl);
     }
 
     @Override

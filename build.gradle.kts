@@ -1,4 +1,5 @@
 import common.properties
+import org.jetbrains.changelog.date
 import org.jetbrains.changelog.markdownToHTML
 
 fun properties(key: String) = properties(key,project)
@@ -21,8 +22,10 @@ dependencies{
     implementation(project(":model"))
     implementation(project(":analytics-provider"))
     implementation(project(":ide-common"))
-    implementation(project(":idea"))
-    implementation(project(":pycharm"))
+    //todo: github builds fail for no space on device, we need a solution for that. maybe don't depend on the IDE but only on the
+    // python module?
+//    implementation(project(":idea"))
+//    implementation(project(":pycharm"))
     implementation(project(":rider"))
 }
 
@@ -42,8 +45,13 @@ intellij {
 // Configure Gradle Changelog Plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
 changelog {
     version.set(properties("pluginVersion"))
+    path.set("${project.projectDir}/CHANGELOG.md")
+    //groups.set(listOf("Added", "Changed", "Deprecated", "Removed", "Fixed", "Security"))
     groups.set(emptyList())
+    header.set(provider { "[${version.get()}] - ${date()}" })
+    keepUnreleasedSection.set(false)
 }
+
 
 // Configure Gradle Qodana Plugin - read more: https://github.com/JetBrains/gradle-qodana-plugin
 qodana {
@@ -64,12 +72,9 @@ project.afterEvaluate{
     //it can be written with task fqn like buildPlugin.dependsOn(":rider:buildPlugin")
     //but this syntax is not favorite by the gradle developers becasue it will cause eager initialization of the task.
     val buildPlugin = tasks.named("buildPlugin").get()
-    val classes = tasks.named("classes").get()
-    project(":idea").afterEvaluate{ buildPlugin.dependsOn(tasks.getByName("buildPlugin"))   }
-    project(":pycharm").afterEvaluate{ buildPlugin.dependsOn(tasks.getByName("buildPlugin"))   }
-    project(":rider").afterEvaluate{
-        buildPlugin.dependsOn(tasks.getByName("buildPlugin"))
-    }
+//    project(":idea").afterEvaluate{ buildPlugin.dependsOn(tasks.getByName("buildPlugin"))   }
+//    project(":pycharm").afterEvaluate { buildPlugin.dependsOn(tasks.getByName("buildPlugin")) }
+    project(":rider").afterEvaluate { buildPlugin.dependsOn(tasks.getByName("buildPlugin")) }
 }
 
 
@@ -122,20 +127,6 @@ tasks {
         systemProperty("jb.consents.confirmation.enabled", "false")
     }
 
-    signPlugin {
-        certificateChain.set(System.getenv("CERTIFICATE_CHAIN"))
-        privateKey.set(System.getenv("PRIVATE_KEY"))
-        password.set(System.getenv("PRIVATE_KEY_PASSWORD"))
-    }
-
-    publishPlugin {
-        dependsOn("patchChangelog")
-        token.set(System.getenv("PUBLISH_TOKEN"))
-        // pluginVersion is based on the SemVer (https://semver.org) and supports pre-release labels, like 2.1.7-alpha.3
-        // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
-        // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
-        channels.set(listOf(properties("pluginVersion").split('-').getOrElse(1) { "default" }.split('.').first()))
-    }
 
     buildSearchableOptions {
         enabled = false
@@ -145,7 +136,7 @@ tasks {
         enabled = false
     }
 
-    var deleteLog = create("deleteLogs", Delete::class.java) {
+    val deleteLog = create("deleteLogs", Delete::class.java) {
         project.layout.buildDirectory.dir("idea-sandbox/system/log").get().asFile.walk().forEach {
             if (it.name.endsWith(".log")) {
                 delete(it)
@@ -166,10 +157,8 @@ tasks {
 
 
     listProductsReleases {
-        //todo: decide which releases to support
-//        types.set(listOf("RD","IC","PC"))
-        //todo: change to support only rider and add support for other IDEs later
-        types.set(listOf("RD","IC","PC","IU"))
+//        types.set(listOf("RD","IC","PC","IU"))
+        types.set(listOf("RD"))
         sinceVersion.set("2022.1")
         untilVersion.set("2022.1.2")
 //        sinceBuild.set("221.5787.35")
@@ -196,8 +185,14 @@ tasks {
 
 
     publishPlugin {
-        if (System.getenv("DIGMA_JB_INTELLIJ_PUBLISH_TOKEN") != null) {
-            token.set(System.getenv("DIGMA_JB_INTELLIJ_PUBLISH_TOKEN"))
+        if (System.getenv("PUBLISH_TOKEN") != null) {
+            token.set(System.getenv("PUBLISH_TOKEN"))
         }
+
+        // pluginVersion is based on the SemVer (https://semver.org) and supports pre-release labels, like 2.1.7-alpha.3
+        // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
+        // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
+        channels.set(listOf(properties("pluginVersion").split('-').getOrElse(1) { "default" }.split('.').first()))
     }
+
 }

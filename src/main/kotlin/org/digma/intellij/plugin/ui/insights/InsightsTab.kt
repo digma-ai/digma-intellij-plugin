@@ -76,7 +76,7 @@ fun insightsPanel(project: Project): DigmaTabPanel {
     cardLayout.addLayoutComponent(insightsList, InsightsTabCard.INSIGHTS.name)
     cardLayout.addLayoutComponent(previewPanel, InsightsTabCard.PREVIEW.name)
     cardLayout.addLayoutComponent(noInfoWarningPanel, NO_INFO_CARD_NAME)
-    cardLayout.show(cardsPanel, insightsModel.card.name)
+    cardLayout.show(cardsPanel, NO_INFO_CARD_NAME)
 
     val result = object : DigmaTabPanel() {
         override fun getPreferredFocusableComponent(): JComponent {

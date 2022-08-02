@@ -48,8 +48,8 @@ jobs:
             caches/**/pycharmPC-*/**
           arguments: buildPlugin
 
-    - name: Upload Artifact GitHub Action
-      uses: actions/upload-artifact@v3
-      with:
-        name: digma-intellij-plugin
-        path: build/distributions/*.zip
+      - name: Upload Artifact GitHub Action
+        uses: actions/upload-artifact@v3
+        with:
+          name: digma-intellij-plugin
+          path: build/distributions/*.zip

@@ -74,9 +74,11 @@ fun spanUsagesPanel(project: Project, spanUsagesInsight: SpanUsagesInsight): JPa
 
         val builder = StringBuilder("${span(String.format("%.1f", spanFlow.percentage))}% ")
 
-        spanFlow.firstService?.let {firstService->
+        var spanName = spanUsagesInsight.span // default, just in case first service is not found
+        spanFlow.firstService?.let { firstService ->
             builder.append(spanGrayed(firstService.service + ": "))
             builder.append(span(firstService.span))
+            spanName = firstService.span
         }
         spanFlow.intermediateSpan?.let { intermediateSpan ->
             builder.append(" ${spanGrayed(ARROW_RIGHT)} ")
@@ -97,9 +99,9 @@ fun spanUsagesPanel(project: Project, spanUsagesInsight: SpanUsagesInsight): JPa
 
         var traceSample: TraceSample? = null
         spanFlow.sampleTraceIds.firstOrNull()?.let { sampleTraceId ->
-            traceSample = TraceSample("usage", sampleTraceId)
+            traceSample = TraceSample(spanName, sampleTraceId)
         }
-        val buttonToJaeger = buildButtonToJaeger(project, "Trace","SpanUsage", traceSample)
+        val buttonToJaeger = buildButtonToJaeger(project, "Trace", spanName, traceSample)
         if (buttonToJaeger == null) {
             flowsListPanel.add(label)
         } else {

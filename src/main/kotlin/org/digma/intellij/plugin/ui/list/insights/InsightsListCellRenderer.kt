@@ -62,7 +62,7 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
                 panelsLayoutHelper)
             is SlowestSpansInsight -> slowestSpansPanel(project,
                 value.modelObject as SlowestSpansInsight, value.moreData, panelsLayoutHelper)
-            is SpanUsagesInsight -> spanUsagesPanel(value.modelObject as SpanUsagesInsight)
+            is SpanUsagesInsight -> spanUsagesPanel(project, value.modelObject as SpanUsagesInsight)
             is SpanDurationsInsight -> spanDurationPanel(project, value.modelObject as SpanDurationsInsight,
                 panelsLayoutHelper)
             is UnmappedInsight -> unmappedInsightPanel(value.modelObject as UnmappedInsight,

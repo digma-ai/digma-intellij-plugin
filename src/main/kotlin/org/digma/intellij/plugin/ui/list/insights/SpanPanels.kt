@@ -10,6 +10,7 @@ import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.containers.isNullOrEmpty
 import com.intellij.util.ui.JBUI.Borders.empty
+import com.intellij.util.ui.WrapLayout
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
@@ -31,6 +32,7 @@ import org.ocpsoft.prettytime.PrettyTime
 import org.threeten.extra.AmountFormats
 import java.awt.BorderLayout
 import java.awt.Dimension
+import java.awt.FlowLayout
 import java.awt.GridLayout
 import java.io.InputStreamReader
 import java.sql.Timestamp
@@ -58,7 +60,7 @@ class SpanPanels {
 
 }
 
-fun spanUsagesPanel(spanUsagesInsight: SpanUsagesInsight): JPanel {
+fun spanUsagesPanel(project: Project, spanUsagesInsight: SpanUsagesInsight): JPanel {
 
     val title = JLabel(asHtml(spanBold("Top Usage")), SwingConstants.LEFT)
     title.isOpaque = false
@@ -89,7 +91,24 @@ fun spanUsagesPanel(spanUsagesInsight: SpanUsagesInsight): JPanel {
 
         val label = CopyableLabelHtml(asHtml(builder.toString()))
         label.alignmentX = 0.0f
-        flowsListPanel.add(label)
+
+        var traceSample: TraceSample? = null
+        spanFlow.sampleTraceIds.firstOrNull()?.let { sampleTraceId ->
+            traceSample = TraceSample("usage", sampleTraceId)
+        }
+        val buttonToJaeger = buildButtonToJaeger(project, "SpanUsage", traceSample)
+        if (buttonToJaeger == null) {
+            flowsListPanel.add(label)
+        } else {
+            val wrapperPanel = JBPanel<JBPanel<*>>()
+            wrapperPanel.andTransparent()
+            wrapperPanel.layout = WrapLayout(FlowLayout.LEFT, 1, 1)
+            wrapperPanel.add(label)
+            wrapperPanel.add(buttonToJaeger)
+
+            flowsListPanel.add(wrapperPanel)
+        }
+
     }
 
 
@@ -193,7 +212,7 @@ fun spanDurationPanel(
     }
 
     val buttonToGraph = buildButtonToPercentilesGraph(project, spanDurationsInsight.span)
-    val buttonToJaeger = buildButtonToJaeger(project, spanDurationsInsight.span, traceSamples)
+    val buttonToJaeger = buildButtonToJaeger(project, spanDurationsInsight.span.name, traceSamples)
     val iconPanel = buildIconPanelWithLinks(buttonToGraph, buttonToJaeger)
 
     val result = JBPanel<JBPanel<*>>()
@@ -226,9 +245,10 @@ fun buildIconPanelWithLinks(
     return iconPanel
 }
 
+
 // if cannot create the button then would return null
 fun buildButtonToJaeger(
-    project: Project, spanInfo: SpanInfo, traceSamples: List<TraceSample>
+    project: Project, spanName: String, traceSamples: List<TraceSample>
 ): JButton? {
 
     val settingsState = SettingsState.getInstance(project)
@@ -261,7 +281,7 @@ fun buildButtonToJaeger(
         .replace("__JAEGER_EMBEDDED_URL__", jaegerUrl)
         .replace("__CAPTION__", caption)
 
-    val editorTitle = "Jaeger sample traces of Span ${spanInfo.name}"
+    val editorTitle = "Jaeger sample traces of Span ${spanName}"
 
     val button = ActionLink("Compare")
     button.addActionListener {
@@ -269,6 +289,16 @@ fun buildButtonToJaeger(
     }
 
     return button
+}
+
+// if cannot create the button then would return null
+fun buildButtonToJaeger(
+    project: Project, spanName: String, traceSample: TraceSample?
+): JButton? {
+    if (traceSample == null) {
+        return null
+    }
+    return buildButtonToJaeger(project, spanName, listOf(traceSample))
 }
 
 fun buildButtonToPercentilesGraph(project: Project, span: SpanInfo): ActionLink {

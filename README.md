@@ -17,6 +17,11 @@ For more info check out the Digma [main repo](https://github.com/digma-ai/digma)
 
 <!-- Plugin description end -->
 
+## Supported jetbrains IDEs
+
+Rider</br>
+more to come soon...
+
 ## Build
 
 The project must be built with jdk 11 or later as the gradle jdk.</br>
@@ -46,33 +51,7 @@ and test python projects too)
 ### Rider
 
 Rider implementation is in rider module. </br>
-The solution can be opened with rider or vscode - rider/Digma.Rider.Plugin</br>
-
-
-
-### Publishing
-
-run plugin verifier. verify plugin takes the IDEs to verify against from task listProductsReleases task</br>
-
-./gradlew runPluginVerifier -Dorg.gradle.jvmargs=-Xmx2024m</br>
-
-sign the plugin.</br>
-
-Provide Your Personal Access Token to Gradle</br>
-export DIGMA_JB_INTELLIJ_PUBLISH_TOKEN='YOUR_TOKEN'</br>
-
-
-### Signing
-
-https://plugins.jetbrains.com/docs/intellij/plugin-signing.html</br>
-to sign the plugin set the following environment variables</br>
-
-export:</br>
-DIGMA_JB_CERTIFICATE_CHAIN_FILE=/home/shalom/workspace/digma/digma-intellij-plugin/.keys/chain.crt</br>
-DIGMA_JB_PRIVATE_KEY_FILE=/home/shalom/workspace/digma/digma-intellij-plugin/.keys/private.pem</br>
-DIGMA_JB_PRIVATE_KEY_PASSWORD=digma</br>
-
-
-./gradlew signPlugin</br>
+The dotnet solution can be opened with rider - rider/Digma.Rider.Plugin</br>
+TBD: dotnet requirements
 
 

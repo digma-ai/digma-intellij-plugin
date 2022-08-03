@@ -10,7 +10,6 @@ import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.service.InsightsActionsService
 import org.digma.intellij.plugin.ui.common.buildBoldTitleGrayedComment
 import org.digma.intellij.plugin.ui.common.buildLinkTextWithGrayedAndDefaultLabelColorPart
-import org.digma.intellij.plugin.ui.list.ListItemActionButton
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import java.awt.BorderLayout
 import java.awt.GridLayout
@@ -54,7 +53,7 @@ fun errorsPanel(project: Project, modelObject: ErrorInsight, panelsLayoutHelper:
     errorsWrapper.add(errorsListPanel, BorderLayout.CENTER)
 
 
-    val expandButton = ListItemActionButton("Expand")
+    val expandButton = ActionLink("Expand")
     expandButton.addActionListener { project.getService(InsightsActionsService::class.java).showErrorsTab(modelObject) }
 
     val expandPanel = InsightAlignedPanel(panelsLayoutHelper)

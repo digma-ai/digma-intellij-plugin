@@ -65,6 +65,9 @@ jobs:
       - name: Publish Plugin
         env:
           PUBLISH_TOKEN: ${{ secrets.DIGMA_JB_INTELLIJ_PUBLISH_TOKEN }}
+          DIGMA_JB_PRIVATE_KEY_PASSWORD: ${{ secrets.DIGMA_JB_PRIVATE_KEY_PASSWORD }}
+          DIGMA_JB_CERTIFICATE_CHAIN_FILE: ${{ secrets.DIGMA_JB_CERTIFICATE_CHAIN_FILE }}
+          DIGMA_JB_PRIVATE_KEY_FILE: ${{ secrets.DIGMA_JB_PRIVATE_KEY_FILE }}
         run: ./gradlew publishPlugin
 
       # Upload artifact as a release asset

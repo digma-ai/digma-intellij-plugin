@@ -7,18 +7,22 @@ import java.beans.ConstructorProperties
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class SpanFlow
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@ConstructorProperties("percentage", "intermediateSpan", "lastServiceSpan", "firstService", "lastService")
-constructor(val percentage: Float,
-            val intermediateSpan: String?,
-            val lastServiceSpan: String?,
-            val firstService: Service?,
-            val lastService: Service?) {
-
+@ConstructorProperties("percentage", "intermediateSpan", "lastServiceSpan", "firstService", "lastService", "sampleTraceIds")
+constructor(
+    val percentage: Float,
+    val intermediateSpan: String?,
+    val lastServiceSpan: String?,
+    val firstService: Service?,
+    val lastService: Service?,
+    val sampleTraceIds: List<String>,
+) {
 
     data class Service
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     @ConstructorProperties("service", "span")
-    constructor(val service: String,
-                val span: String)
+    constructor(
+        val service: String,
+        val span: String,
+    )
 
 }

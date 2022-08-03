@@ -72,17 +72,20 @@ fun spanUsagesPanel(project: Project, spanUsagesInsight: SpanUsagesInsight): JPa
 
     spanUsagesInsight.flows.forEach { spanFlow: SpanFlow ->
 
-        val builder =
-            StringBuilder("${span(String.format("%.1f", spanFlow.percentage))}% " +
-                                "${spanGrayed(spanFlow.firstService?.service.toString())}: " +
-                    "           ${span(spanFlow.firstService?.span.toString())}")
+        val builder = StringBuilder("${span(String.format("%.1f", spanFlow.percentage))}% ")
+
+        spanFlow.firstService?.let {firstService->
+            builder.append(spanGrayed(firstService.service + ": "))
+            builder.append(span(firstService.span))
+        }
         spanFlow.intermediateSpan?.let { intermediateSpan ->
             builder.append(" ${spanGrayed(ARROW_RIGHT)} ")
             builder.append(span(intermediateSpan))
         }
         spanFlow.lastService?.let { lastService ->
             builder.append(" ${spanGrayed(ARROW_RIGHT)} ")
-            builder.append(span("${lastService.service}: ${lastService.span}"))
+            builder.append(spanGrayed(lastService.service + ": "))
+            builder.append(span(lastService.span))
         }
         spanFlow.lastServiceSpan?.let { lastServiceSpan ->
             builder.append(" ${spanGrayed(ARROW_RIGHT)} ")

@@ -57,6 +57,7 @@ jobs:
         with:
           name: ${{ steps.artifact.outputs.filename }}
           path: ./build/distributions/content/*/*
+          retention-days: 5
 
       # Collect Tests Result of failed tests
       ##todo: add other modules test reports
@@ -66,3 +67,4 @@ jobs:
         with:
           name: tests-result
           path: ${{ github.workspace }}/ide-common/build/reports/tests
+          retention-days: 5

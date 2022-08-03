@@ -54,13 +54,8 @@ jobs:
         uses: gradle/gradle-build-action@v2.2.2
 
       # Set environment variables
-      # the original template feeds the whole changelog history to the release draft. we don't need it,
-      #  and we don't keep a changelog file in the repository
-      #          CHANGELOG="$(./gradlew getChangelog --unreleased --no-header --console=plain -q)"
-      #          CHANGELOG="${CHANGELOG//'%'/'%25'}"
-      #          CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
-      #          CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
-      #          echo "::set-output name=changelog::$CHANGELOG"
+      # the original jetbrains template feeds the whole changelog history to the release draft. we don't need it,
+      #  we keep an empty CHANGELOG.md file in the repository used only to patch plugin.xml in the publish workflow.
       - name: Export Properties
         id: properties
         shell: bash

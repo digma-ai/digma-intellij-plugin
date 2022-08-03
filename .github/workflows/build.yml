@@ -13,24 +13,19 @@
 ## JBIJPPTPL (Jetbrains intellij platform plugin template)
 
 
-name: Build
+name: Build, Verify and Prepare Release
 on:
   # Trigger the workflow on pushes to only the 'main' branch (this avoids duplicate checks being run e.g. for dependabot pull requests)
   push:
     branches: [ main ]
-  # Trigger the workflow on any pull request
-#  pull_request:
-#    branches: [ main ]
 
 jobs:
-
-  #todo: java matrix , os matrix
 
   # Run Gradle Wrapper Validation Action to verify the wrapper's checksum
   # Run verifyPlugin, IntelliJ Plugin Verifier, and test Gradle tasks
   # Build plugin and provide the artifact for the next workflow jobs
   build:
-    name: Build
+    name: Build and Verify
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.properties.outputs.version }}
@@ -59,13 +54,8 @@ jobs:
         uses: gradle/gradle-build-action@v2.2.2
 
       # Set environment variables
-      # the original template feeds the whole changelog history to the release draft. we don't need it,
-      #  and we don't keep a changelog file in the repository
-      #          CHANGELOG="$(./gradlew getChangelog --unreleased --no-header --console=plain -q)"
-      #          CHANGELOG="${CHANGELOG//'%'/'%25'}"
-      #          CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
-      #          CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
-      #          echo "::set-output name=changelog::$CHANGELOG"
+      # the original jetbrains template feeds the whole changelog history to the release draft. we don't need it,
+      #  we keep an empty CHANGELOG.md file in the repository used only to patch plugin.xml in the publish workflow.
       - name: Export Properties
         id: properties
         shell: bash
@@ -78,7 +68,7 @@ jobs:
           echo "::set-output name=name::$NAME"
           echo "::set-output name=pluginVerifierHomeDir::~/.pluginVerifier"
           
-          ./gradlew listProductsReleases # prepare list of IDEs for Plugin Verifier
+          ./gradlew listProductsReleases -q # prepare list of IDEs for Plugin Verifier
 
       # Run tests
       - name: Run Tests
@@ -138,7 +128,7 @@ jobs:
   # Prepare a draft release for GitHub Releases page for the manual verification
   # If accepted and published, release workflow would be triggered
   releaseDraft:
-    name: Release Draft
+    name: Prepare Release Draft
     if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest

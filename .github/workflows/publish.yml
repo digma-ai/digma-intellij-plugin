@@ -10,7 +10,7 @@ on:
 jobs:
 
   # Prepare and publish the plugin to the Marketplace repository
-  release:
+  publish:
     name: Publish Plugin
     runs-on: ubuntu-latest
     steps:

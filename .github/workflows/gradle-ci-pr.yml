@@ -5,11 +5,11 @@
 # This workflow will build a Java project with Gradle and cache/restore any dependencies to improve the workflow execution time
 # For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-gradle
 
-name: CI Build and Upload plugin all branches
+name: CI Build and Upload plugin on pull request
 
 on:
-  push:
-    branches: [ '**','!main' ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   build:
@@ -37,11 +37,7 @@ jobs:
         uses: gradle/gradle-build-action@v2.2.2
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
-          #          gradle-home-cache-excludes: |
-          #            caches/**/riderRD-*/**
-          #            caches/**/ideaIC-*/**
-          #            caches/**/pycharmPC-*/**
-          arguments: buildPlugin --no-daemon
+          arguments: buildPlugin runPluginVerifier --no-daemon
 
       - name: Prepare Plugin Artifact
         id: artifact

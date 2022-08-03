@@ -105,7 +105,7 @@ fun spanUsagesPanel(project: Project, spanUsagesInsight: SpanUsagesInsight): JPa
         } else {
             val wrapperPanel = JBPanel<JBPanel<*>>()
             wrapperPanel.andTransparent()
-            wrapperPanel.layout = WrapLayout(FlowLayout.LEFT, 1, 1)
+            wrapperPanel.layout = WrapLayout(FlowLayout.LEFT, 3, 3)
             wrapperPanel.add(label)
             wrapperPanel.add(buttonToJaeger)
 

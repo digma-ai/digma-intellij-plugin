@@ -19,8 +19,8 @@ on:
   push:
     branches: [ main ]
   # Trigger the workflow on any pull request
-  pull_request:
-    branches: [ main ]
+#  pull_request:
+#    branches: [ main ]
 
 jobs:
 
@@ -165,4 +165,4 @@ jobs:
           gh release create v${{ needs.build.outputs.version }} \
             --draft \
             --title "v${{ needs.build.outputs.version }}" \
-            --notes "## $VERSION ATX_2 is reserved for patchChangelog"
+            --notes "## ${{ needs.build.outputs.version }} ATX_2 is reserved for patchChangelog"

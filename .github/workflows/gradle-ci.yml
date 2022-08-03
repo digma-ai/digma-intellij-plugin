@@ -10,6 +10,8 @@ name: CI Build and Upload plugin all branches
 on:
   push:
     branches: [ '**','!main' ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   build:

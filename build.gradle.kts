@@ -203,7 +203,7 @@ tasks {
 
     create("printVersion", DefaultTask::class.java) {
         doLast {
-            println("The project current version is ${project.semanticVersion.version.get()}")
+            logger.lifecycle("The project current version is ${project.semanticVersion.version.get()}")
         }
     }
 

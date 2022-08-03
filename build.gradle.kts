@@ -44,7 +44,7 @@ intellij {
 
 // Configure Gradle Changelog Plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
 changelog {
-    version.set(properties("pluginVersion"))
+    version.set(project.semanticVersion.version.get().toString())
     path.set("${project.projectDir}/CHANGELOG.md")
     //groups.set(listOf("Added", "Changed", "Deprecated", "Removed", "Fixed", "Security"))
     groups.set(emptyList())
@@ -64,7 +64,7 @@ qodana {
 
 project.afterEvaluate{
     //the final plugin distribution is packaged from the sandbox.
-    //So,make all the sub projects buildPlugin task run before this project's buildPlugin.
+    //So,make all the subprojects buildPlugin task run before this project's buildPlugin.
     //that will make sure that their prepareSandbox task runs before building the plugin coz
     //maybe they contribute something to the sandbox.
     //currently, only rider contributes the dotnet dll's to the sandbox.
@@ -81,8 +81,12 @@ project.afterEvaluate{
 
 tasks {
 
+    incrementSemanticVersion {
+        //enable the SemanticVersion only for this module
+        enabled = true
+    }
 
-    jar{
+    jar {
         dependsOn(":rider:copyKotlinModuleFile")
     }
 
@@ -93,27 +97,27 @@ tasks {
     }
 
     patchPluginXml {
-        version.set(properties("pluginVersion"))
+        version.set(project.semanticVersion.version.get().toString())
         sinceBuild.set(properties("pluginSinceBuild"))
         untilBuild.set(properties("pluginUntilBuild"))
 
         // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest
         pluginDescription.set(
-                projectDir.resolve("README.md").readText().lines().run {
-                    val start = "<!-- Plugin description -->"
-                    val end = "<!-- Plugin description end -->"
+            projectDir.resolve("README.md").readText().lines().run {
+                val start = "<!-- Plugin description -->"
+                val end = "<!-- Plugin description end -->"
 
-                    if (!containsAll(listOf(start, end))) {
-                        throw GradleException("Plugin description section not found in README.md:\n$start ... $end")
-                    }
-                    subList(indexOf(start) + 1, indexOf(end))
-                }.joinToString("\n").run { markdownToHTML(this) }
+                if (!containsAll(listOf(start, end))) {
+                    throw GradleException("Plugin description section not found in README.md:\n$start ... $end")
+                }
+                subList(indexOf(start) + 1, indexOf(end))
+            }.joinToString("\n").run { markdownToHTML(this) }
         )
 
         // Get the latest available change notes from the changelog file
         changeNotes.set(provider {
             changelog.run {
-                getOrNull(properties("pluginVersion")) ?: getLatest()
+                getOrNull(project.semanticVersion.version.get().toString()) ?: getLatest()
             }.toHTML()
         })
     }
@@ -189,10 +193,11 @@ tasks {
             token.set(System.getenv("PUBLISH_TOKEN").trim())
         }
 
-        // pluginVersion is based on the SemVer (https://semver.org) and supports pre-release labels, like 2.1.7-alpha.3
+        // the version is based on the SemVer (https://semver.org) and supports pre-release labels, like 2.1.7-alpha.3
         // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
         // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
-        channels.set(listOf(properties("pluginVersion").split('-').getOrElse(1) { "default" }.split('.').first()))
+        channels.set(listOf(project.semanticVersion.version.get().toString().split('-').getOrElse(1) { "default" }
+            .split('.').first()))
     }
 
 }

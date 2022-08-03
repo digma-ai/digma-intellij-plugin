@@ -200,4 +200,11 @@ tasks {
             .split('.').first()))
     }
 
+
+    create("printVersion", DefaultTask::class.java) {
+        doLast {
+            println("The project current version is ${project.semanticVersion.version.get()}")
+        }
+    }
+
 }

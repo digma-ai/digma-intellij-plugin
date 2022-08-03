@@ -155,4 +155,4 @@ jobs:
           gh release create v${{ needs.build.outputs.version }} \
             --draft \
             --title "v${{ needs.build.outputs.version }}" \
-            --notes "## ${{ needs.build.outputs.version }} ATX_2 is reserved for patchChangelog"
+            --notes "## ${{ needs.build.outputs.version }} "

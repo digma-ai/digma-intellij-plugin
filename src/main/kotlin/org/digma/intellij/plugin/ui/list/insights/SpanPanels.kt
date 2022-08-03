@@ -96,7 +96,7 @@ fun spanUsagesPanel(project: Project, spanUsagesInsight: SpanUsagesInsight): JPa
         spanFlow.sampleTraceIds.firstOrNull()?.let { sampleTraceId ->
             traceSample = TraceSample("usage", sampleTraceId)
         }
-        val buttonToJaeger = buildButtonToJaeger(project, "SpanUsage", traceSample)
+        val buttonToJaeger = buildButtonToJaeger(project, "Trace","SpanUsage", traceSample)
         if (buttonToJaeger == null) {
             flowsListPanel.add(label)
         } else {
@@ -212,7 +212,7 @@ fun spanDurationPanel(
     }
 
     val buttonToGraph = buildButtonToPercentilesGraph(project, spanDurationsInsight.span)
-    val buttonToJaeger = buildButtonToJaeger(project, spanDurationsInsight.span.name, traceSamples)
+    val buttonToJaeger = buildButtonToJaeger(project, "Compare", spanDurationsInsight.span.name, traceSamples)
     val iconPanel = buildIconPanelWithLinks(buttonToGraph, buttonToJaeger)
 
     val result = JBPanel<JBPanel<*>>()
@@ -248,7 +248,7 @@ fun buildIconPanelWithLinks(
 
 // if cannot create the button then would return null
 fun buildButtonToJaeger(
-    project: Project, spanName: String, traceSamples: List<TraceSample>
+    project: Project, linkCaption: String, spanName: String, traceSamples: List<TraceSample>
 ): JButton? {
 
     val settingsState = SettingsState.getInstance(project)
@@ -283,7 +283,7 @@ fun buildButtonToJaeger(
 
     val editorTitle = "Jaeger sample traces of Span ${spanName}"
 
-    val button = ActionLink("Compare")
+    val button = ActionLink(linkCaption)
     button.addActionListener {
         HTMLEditorProvider.openEditor(project, editorTitle,  htmlContent)
     }
@@ -293,12 +293,12 @@ fun buildButtonToJaeger(
 
 // if cannot create the button then would return null
 fun buildButtonToJaeger(
-    project: Project, spanName: String, traceSample: TraceSample?
+    project: Project, linkCaption: String, spanName: String, traceSample: TraceSample?
 ): JButton? {
     if (traceSample == null) {
         return null
     }
-    return buildButtonToJaeger(project, spanName, listOf(traceSample))
+    return buildButtonToJaeger(project, linkCaption, spanName, listOf(traceSample))
 }
 
 fun buildButtonToPercentilesGraph(project: Project, span: SpanInfo): ActionLink {

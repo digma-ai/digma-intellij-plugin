@@ -15,7 +15,7 @@ import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
 import org.digma.intellij.plugin.model.rest.insights.SpanFlow
 import org.digma.intellij.plugin.model.rest.insights.SpanInfo
-import org.digma.intellij.plugin.model.rest.insights.SpanInsight
+import org.digma.intellij.plugin.model.rest.insights.SpanUsagesInsight
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.common.CopyableLabel
 import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
@@ -58,17 +58,17 @@ class SpanPanels {
 
 }
 
-fun spanPanel(spanInsight: SpanInsight): JPanel {
+fun spanUsagesPanel(spanUsagesInsight: SpanUsagesInsight): JPanel {
 
     val title = JLabel(asHtml(spanBold("Top Usage")), SwingConstants.LEFT)
     title.isOpaque = false
 
     val flowsListPanel = JBPanel<JBPanel<*>>()
-    flowsListPanel.layout = GridLayout(spanInsight.flows.size, 1, 0, 3)
+    flowsListPanel.layout = GridLayout(spanUsagesInsight.flows.size, 1, 0, 3)
     flowsListPanel.border = empty()
     flowsListPanel.isOpaque = false
 
-    spanInsight.flows.forEach { spanFlow: SpanFlow ->
+    spanUsagesInsight.flows.forEach { spanFlow: SpanFlow ->
 
         val builder =
             StringBuilder("${span(String.format("%.1f", spanFlow.percentage))}% " +

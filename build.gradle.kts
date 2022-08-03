@@ -177,16 +177,16 @@ tasks {
 
     signPlugin {
         if (System.getenv("DIGMA_JB_PRIVATE_KEY_PASSWORD") != null) {
-            certificateChainFile.set(file(System.getenv("DIGMA_JB_CERTIFICATE_CHAIN_FILE")))
-            privateKeyFile.set(file(System.getenv("DIGMA_JB_PRIVATE_KEY_FILE")))
-            password.set(System.getenv("DIGMA_JB_PRIVATE_KEY_PASSWORD"))
+            certificateChain.set(System.getenv("DIGMA_JB_CERTIFICATE_CHAIN_FILE").trimIndent())
+            privateKey.set(System.getenv("DIGMA_JB_PRIVATE_KEY_FILE").trimIndent())
+            password.set(System.getenv("DIGMA_JB_PRIVATE_KEY_PASSWORD").trim())
         }
     }
 
 
     publishPlugin {
         if (System.getenv("PUBLISH_TOKEN") != null) {
-            token.set(System.getenv("PUBLISH_TOKEN"))
+            token.set(System.getenv("PUBLISH_TOKEN").trim())
         }
 
         // pluginVersion is based on the SemVer (https://semver.org) and supports pre-release labels, like 2.1.7-alpha.3

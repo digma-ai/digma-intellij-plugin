@@ -80,6 +80,7 @@ public class AnalyticsService implements Disposable {
     }
 
     //just replace the client and do not fire any events
+    //this method should be synchronized, and it shouldn't be a problem that really doesn't happen too often.
     private synchronized void replaceClient(String url, String token) {
         if (analyticsProviderProxy != null) {
             try {

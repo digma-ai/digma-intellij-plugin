@@ -25,12 +25,8 @@ class ElementUnderCaretDetector(project: Project) : LifetimedProjectComponent(pr
 
         Log.log(logger::info,project, "ElementUnderCaretDetector registering for solution startup..")
 
-        //todo: remove
-        project.solution.isLoaded.advise(project.lifetime) {
-            Log.log(logger::info,"in isLoaded")
-        }
 
-        project.solution.solutionLifecycle.fullStartupFinished.advise(project.lifetime) {
+        project.solution.isLoaded.advise(project.lifetime) {
             Log.log(logger::info, "Starting ElementUnderCaretDetector")
 
             //maybe there is already a MethodUnderCaretEvent in the protocol. the backend may fire events

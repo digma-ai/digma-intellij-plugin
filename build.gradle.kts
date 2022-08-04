@@ -157,7 +157,7 @@ tasks {
         // Rider's backend doesn't support dynamic plugins. It might be possible to work with auto-reload of the frontend
         // part of a plugin, but there are dangers about keeping plugins in sync
         autoReloadPlugins.set(false)
-        //workaround, it's a Gradle IntelliJ Plugin issue
+        //todo: workaround, it's a Gradle IntelliJ Plugin issue, it will be fixed in version 1.8.0 according to jetbrains developers.
         jvmArgs = listOf("--add-opens=java.desktop/sun.awt.X11=ALL-UNNAMED")
     }
 

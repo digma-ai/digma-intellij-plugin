@@ -132,7 +132,7 @@ private fun buildSpanDuration(value: SpanDurationChangeInsight.Change, moreData:
     durationsListPanel.isOpaque = false
 
     for (percentile in value.percentiles.sortedBy(SpanDurationsPercentile::percentile)) {
-        val durationsPanel = percentileRowPanel(percentile, panelsLayoutHelper)
+        val durationsPanel = percentileRowPanel(percentile, panelsLayoutHelper, ArrayList())
         durationsListPanel.add(durationsPanel)
     }
 

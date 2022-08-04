@@ -12,20 +12,10 @@ import com.intellij.util.containers.isNullOrEmpty
 import com.intellij.util.ui.JBUI.Borders.empty
 import com.intellij.util.ui.WrapLayout
 import org.digma.intellij.plugin.analytics.AnalyticsService
-import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight
-import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
-import org.digma.intellij.plugin.model.rest.insights.SpanFlow
-import org.digma.intellij.plugin.model.rest.insights.SpanInfo
-import org.digma.intellij.plugin.model.rest.insights.SpanUsagesInsight
+import org.digma.intellij.plugin.model.rest.insights.*
 import org.digma.intellij.plugin.settings.SettingsState
-import org.digma.intellij.plugin.ui.common.CopyableLabel
-import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
+import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.common.Html.ARROW_RIGHT
-import org.digma.intellij.plugin.ui.common.Laf
-import org.digma.intellij.plugin.ui.common.asHtml
-import org.digma.intellij.plugin.ui.common.span
-import org.digma.intellij.plugin.ui.common.spanBold
-import org.digma.intellij.plugin.ui.common.spanGrayed
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.model.TraceSample
 import org.ocpsoft.prettytime.PrettyTime
@@ -148,7 +138,7 @@ fun spanDurationPanel(
     spanDurationsInsight.percentiles
             .sortedBy(SpanDurationsPercentile::percentile)
             .forEach { percentile: SpanDurationsPercentile ->
-                val durationsPanel = percentileRowPanel(percentile, panelsLayoutHelper)
+                val durationsPanel = percentileRowPanel(percentile, panelsLayoutHelper, traceSamples)
                 durationsListPanel.add(durationsPanel)
             }
 
@@ -165,7 +155,7 @@ fun spanDurationPanel(
     return insightItemPanel(result)
 }
 
-fun percentileRowPanel(percentile: SpanDurationsPercentile, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
+fun percentileRowPanel(percentile: SpanDurationsPercentile, panelsLayoutHelper: PanelsLayoutHelper, traceSamples: ArrayList<TraceSample>): JPanel {
 
     @Suppress("VARIABLE_WITH_REDUNDANT_INITIALIZER")
 

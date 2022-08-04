@@ -44,9 +44,13 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.service.ErrorsViewService"/>
 
+        <projectService serviceImplementation="org.digma.intellij.plugin.ui.service.SummaryViewService"/>
+
         <projectService serviceImplementation="org.digma.intellij.plugin.insights.InsightsProvider"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.errors.ErrorsProvider"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.summary.SummariesProvider"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.service.InsightsActionsService"/>
 
@@ -57,6 +61,8 @@
         <projectService serviceImplementation="org.digma.intellij.plugin.service.EditorService"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.vcs.VcsService"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.common.DumbAwareNotifier"/>
 
         <notificationGroup id="Digma Notification Group"
                            displayType="BALLOON"
@@ -77,6 +83,7 @@
         <editorNotificationProvider implementation="org.digma.intellij.plugin.notifications.DigmaEditorNotificationProvider"
                                     id="org.digma.intellij.plugin.notifications.DigmaEditorNotificationProvider"/>
 
+        <postStartupActivity implementation="org.digma.intellij.plugin.common.DumbAwareStartupActivity"/>
 
     </extensions>
 

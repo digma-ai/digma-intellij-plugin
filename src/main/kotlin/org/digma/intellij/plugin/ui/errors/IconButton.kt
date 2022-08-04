@@ -25,6 +25,10 @@ internal class IconButton(icon: Icon) : JButton(icon) {
             override fun mouseExited(e: MouseEvent?) {
                 background = Laf.Colors.TRANSPARENT
             }
+
+            override fun mousePressed(e: MouseEvent?) {
+                background = Laf.Colors.TRANSPARENT
+            }
         })
     }
 

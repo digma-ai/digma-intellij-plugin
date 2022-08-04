@@ -11,6 +11,6 @@ data class DetailedErrorInfo
 constructor(
     val frameStacks: List<FrameStack>,
     val stackTrace: String,
-    val lastInstanceCommitId: String
+    val lastInstanceCommitId: String?
 )
 

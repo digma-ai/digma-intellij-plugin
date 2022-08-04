@@ -14,7 +14,9 @@ import org.digma.intellij.plugin.ui.errors.ErrorsTabKt;
 import org.digma.intellij.plugin.ui.insights.InsightsTabKt;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
+import org.digma.intellij.plugin.ui.service.SummaryViewService;
 import org.digma.intellij.plugin.ui.service.ToolWindowTabsHelper;
+import org.digma.intellij.plugin.ui.summary.SummaryTabKt;
 import org.jetbrains.annotations.NotNull;
 
 
@@ -70,6 +72,17 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
             toolWindowTabsHelper.setErrorsContent(errorsContent);
         }
 
+        {
+            var summaryPanel = SummaryTabKt.summaryPanel(project);
+            var summaryViewService = project.getService(SummaryViewService.class);
+            summaryViewService.setPanel(summaryPanel);
+            var summaryContent = contentFactory.createContent(summaryPanel, "Summary", false);
+            summaryContent.setTabName(ToolWindowTabsHelper.SUMMARY_TAB_NAME);
+            summaryContent.setPreferredFocusedComponent(summaryPanel::getPreferredFocusedComponent);
+            summaryContent.setPreferredFocusableComponent(summaryPanel.getPreferredFocusableComponent());
+            toolWindow.getContentManager().addContent(summaryContent);
+            summaryViewService.setContent(toolWindow, summaryContent);
+        }
 
         ErrorsActionsService errorsActionsService = project.getService(ErrorsActionsService.class);
         toolWindow.getContentManager().addContentManagerListener(errorsActionsService);

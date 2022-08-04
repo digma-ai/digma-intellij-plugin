@@ -8,12 +8,7 @@ import org.digma.intellij.plugin.common.CommonUtils.prettyTimeOf
 import org.digma.intellij.plugin.model.discovery.CodeObjectInfo.Companion.extractMethodName
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.service.ErrorsActionsService
-import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
-import org.digma.intellij.plugin.ui.common.asHtml
-import org.digma.intellij.plugin.ui.common.buildLinkTextWithGrayedAndDefaultLabelColorPart
-import org.digma.intellij.plugin.ui.common.createScorePanelNoArrows
-import org.digma.intellij.plugin.ui.common.span
-import org.digma.intellij.plugin.ui.common.spanGrayed
+import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.list.commonListItemPanel
@@ -21,6 +16,7 @@ import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.BorderLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
+import java.sql.Timestamp
 import javax.swing.JPanel
 
 
@@ -56,7 +52,7 @@ private fun createSingleErrorPanel(project: Project, model: CodeObjectError ): J
         actionListener.showErrorDetails(model)
     }
 
-    val firstAndLast = contentOfFirstAndLast(model)
+    val firstAndLast = contentOfFirstAndLast(model.firstOccurenceTime, model.lastOccurenceTime)
 
     link.toolTipText = asHtml("${linkText}<br>${firstAndLast}" )
 
@@ -88,9 +84,9 @@ private fun createSingleErrorPanel(project: Project, model: CodeObjectError ): J
     return result
 }
 
-private fun contentOfFirstAndLast(model: CodeObjectError): String {
-    return "${spanGrayed("Started:")} ${span(prettyTimeOf(model.firstOccurenceTime))}" +
-                "  ${spanGrayed("Last:")} ${span(prettyTimeOf(model.lastOccurenceTime))}"
+fun contentOfFirstAndLast(firstOccurenceTime: Timestamp, lastOccurenceTime: Timestamp,): String {
+    return "${spanGrayed("Started:")} ${span(prettyTimeOf(firstOccurenceTime))}" +
+                "  ${spanGrayed("Last:")} ${span(prettyTimeOf(lastOccurenceTime))}"
 }
 
 

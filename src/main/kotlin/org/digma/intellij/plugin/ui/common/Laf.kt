@@ -84,14 +84,24 @@ object Laf  {
                 @JvmStatic val INTERFACE: Icon = SvgIcon.withColor("/icons/interface.svg", Colors.DEFAULT_LABEL_FOREGROUND)
                 @JvmStatic val MESSAGE: Icon = SvgIcon.withColor("/icons/message.svg", Colors.DEFAULT_LABEL_FOREGROUND)
                 // Insight item icons
+                @JvmStatic val BOTTLENECK = SvgIcon.asIs("/icons/bottleneck.svg");
+                @JvmStatic val DURATION = SvgIcon.asIs("/icons/duration.svg");
+                @JvmStatic val ERRORS = SvgIcon.asIs("/icons/errors.svg");
+                @JvmStatic val HOTSPOT = SvgIcon.asIs("/icons/hotspot.svg");
+                @JvmStatic val LOW_USAGE = SvgIcon.asIs("/icons/traffic-low.svg")
+                @JvmStatic val NORMAL_USAGE = SvgIcon.asIs("/icons/traffic-normal.svg")
+                @JvmStatic val HIGH_USAGE = SvgIcon.asIs("/icons/traffic-high.svg")
+                @JvmStatic val WAITING_DATA = SvgIcon.asIs("/icons/sand-watch.svg")
+
+
                 @JvmStatic val QUESTION_MARK = AllIcons.General.QuestionDialog
-                @JvmStatic val BOTTLENECK = loadAndScaleInsightIcon("/icons/bottleneck.png")
-                @JvmStatic val LOW_USAGE = loadAndScaleInsightIcon("/icons/gauge_low.png")
-                @JvmStatic val NORMAL_USAGE = loadAndScaleInsightIcon("/icons/gauge_normal.png")
-                @JvmStatic val HIGH_USAGE = loadAndScaleInsightIcon("/icons/gauge_high.png")
+                //@JvmStatic val BOTTLENECK = loadAndScaleInsightIcon("/icons/bottleneck.png")
+//                @JvmStatic val LOW_USAGE = loadAndScaleInsightIcon("/icons/gauge_low.png")
+//                @JvmStatic val NORMAL_USAGE = loadAndScaleInsightIcon("/icons/gauge_normal.png")
+//                @JvmStatic val HIGH_USAGE = loadAndScaleInsightIcon("/icons/gauge_high.png")
                 @JvmStatic val SLOW = loadAndScaleInsightIcon("/icons/slow.png")
-                @JvmStatic val WAITING_DATA = loadAndScaleInsightIcon("/icons/waiting-data.png")
-                @JvmStatic val HOTSPOT = loadAndScaleInsightIcon("/icons/target.png")
+                //@JvmStatic val WAITING_DATA = loadAndScaleInsightIcon("/icons/waiting-data.png")
+                //@JvmStatic val HOTSPOT = loadAndScaleInsightIcon("/icons/target.png")
                 @JvmStatic val HISTOGRAM = loadAndScaleInsightIcon("/icons/histogram.png")
                 @JvmStatic val SPAN_DURATION_DROPPED = loadAndScaleIconByWidth("/icons/dropped.png", 8)
                 @JvmStatic val SPAN_DURATION_ROSE = loadAndScaleIconByWidth("/icons/rose.png", 8)

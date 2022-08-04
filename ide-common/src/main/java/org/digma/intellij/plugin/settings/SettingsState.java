@@ -25,13 +25,13 @@ public class SettingsState implements PersistentStateComponent<SettingsState> , 
 
   public static final String DEFAULT_API_URL = "https://localhost:5051";
   public static final int DEFAULT_REFRESH_DELAY = 30;
-  public static final String DEFAULT_JAEGER_URL = "http://localhost:16686";
+  public static final String DEFAULT_JAEGER_URL = ""; // http://localhost:16686
   public String apiUrl = DEFAULT_API_URL;
   public int refreshDelay = DEFAULT_REFRESH_DELAY;
   @Nullable
   public String apiToken = null;
   @Nullable
-  public String jaegerUrl = DEFAULT_API_URL;
+  public String jaegerUrl = DEFAULT_JAEGER_URL;
   private final List<SettingsChangeListener> listeners = new ArrayList<>();
 
   public static SettingsState getInstance(Project project) {

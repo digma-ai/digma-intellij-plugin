@@ -1,12 +1,17 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Digma.Rider.Protocol;
 using Digma.Rider.Util;
 using JetBrains.ReSharper.Psi.CSharp.Tree;
 using JetBrains.ReSharper.Psi.Tree;
+using JetBrains.ReSharper.Psi.VB.Tree;
 using JetBrains.Util;
 using static Digma.Rider.Logging.Logger;
 using static JetBrains.Util.Logging.Logger;
+using IBlock = JetBrains.ReSharper.Psi.CSharp.Tree.IBlock;
+using ILambdaExpression = JetBrains.ReSharper.Psi.CSharp.Tree.ILambdaExpression;
+using ILocalVariableDeclaration = JetBrains.ReSharper.Psi.CSharp.Tree.ILocalVariableDeclaration;
 
 namespace Digma.Rider.Discovery
 {
@@ -66,9 +71,13 @@ namespace Digma.Rider.Discovery
                 case IBlock block:
                 case ICSharpStatement cSharpStatement:
                 case IMultipleLocalVariableDeclaration multipleLocalVariableDeclaration:
+                case ILocalVariableDeclaration localVariableDeclaration:
+                case IExpressionInitializer expressionInitializer:
+                case ILambdaExpression lambdaExpression:
+                case ILocalFunctionDeclaration localFunctionDeclaration:
                     return true;
             }
-
+            
             return false;
         }
 
@@ -82,7 +91,7 @@ namespace Digma.Rider.Discovery
                     Log(Logger, "in '{0}' for method '{1}' in file '{2}'", 
                         element,
                         _functionDeclaration, DiscoveryContext.PsiSourceFile.Name);
-                    var spanDiscovery = new SpanDiscovery(localVariableDeclaration);
+                    var spanDiscovery = new SpanDiscovery(localVariableDeclaration, _methodInfo.Name);
                     if (spanDiscovery.InstLibrary == null || spanDiscovery.SpanName == null)
                     {
                         if (spanDiscovery.HasReferenceResolvingErrors)

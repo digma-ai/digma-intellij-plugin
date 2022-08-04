@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.rider
 
+import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
 import org.digma.intellij.plugin.document.DocumentAnalyzer
@@ -10,7 +11,7 @@ import org.digma.intellij.plugin.rider.protocol.ShowToolWindowHost
 import java.util.*
 
 //todo : delete
-class ServicesStarter : StartupActivity {
+class ServicesStarter : StartupActivity, DumbAware {
 
     //with rider some services need to start when the project starts.
     //StartupActivity is a good option. but if the tool window is re-opened on startup

@@ -1,7 +1,8 @@
-# digma-jetbrains-plugin
+# Digma Jetbrain Plugin
 
 <!-- https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax -->
 <!-- Plugin description -->
+
 **Digma is a Continuous Feedback platform. It integrates with your observability
 backend to provide meaningful code insights in the IDE. While coding,
 you can be aware of how the code behaves in runtime in various staging and production environments**
@@ -12,7 +13,14 @@ you can be aware of how the code behaves in runtime in various staging and produ
 - Usage bottlenecks and concurrency
 - Performance trends
 
+For more info check out the Digma [main repo](https://github.com/digma-ai/digma)
+
 <!-- Plugin description end -->
+
+## Supported jetbrains IDEs
+
+Rider</br>
+more to come soon...
 
 ## Build
 
@@ -29,7 +37,7 @@ gradlew.bat buildPlugin -Porg.gradle.java.home=<PATH TO JDK 11></br>
 - setup ProjectJdk for gradle in 'Settings -> Gradle'</br>
 
 
-### Local ide testing with development instances
+### Local IDE testing with development instances
 
 - in gradle.properties change 'platformType' to any of the supported IDEs, default is Rider</br>
 - open gradle tool window in idea and execute task intellij.runIde. or from the 'Run/Debug configuration' load and run 'Run Plugin'</br>
@@ -43,33 +51,7 @@ and test python projects too)
 ### Rider
 
 Rider implementation is in rider module. </br>
-The solution can be opened with rider or vscode - rider/Digma.Rider.Plugin</br>
-
-
-
-### Publishing
-
-run plugin verifier. verify plugin takes the IDEs to verify against from task listProductsReleases task</br>
-
-./gradlew runPluginVerifier -Dorg.gradle.jvmargs=-Xmx2024m</br>
-
-sign the plugin.</br>
-
-Provide Your Personal Access Token to Gradle</br>
-export DIGMA_JB_INTELLIJ_PUBLISH_TOKEN='YOUR_TOKEN'</br>
-
-
-### Signing
-
-https://plugins.jetbrains.com/docs/intellij/plugin-signing.html</br>
-to sign the plugin set the following environment variables</br>
-
-export:</br>
-DIGMA_JB_CERTIFICATE_CHAIN_FILE=/home/shalom/workspace/digma/digma-intellij-plugin/.keys/chain.crt</br>
-DIGMA_JB_PRIVATE_KEY_FILE=/home/shalom/workspace/digma/digma-intellij-plugin/.keys/private.pem</br>
-DIGMA_JB_PRIVATE_KEY_PASSWORD=digma</br>
-
-
-./gradlew signPlugin</br>
+The dotnet solution can be opened with rider - rider/Digma.Rider.Plugin</br>
+TBD: dotnet requirements
 
 

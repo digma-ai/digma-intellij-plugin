@@ -4,6 +4,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
+import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.persistence.PersistenceData;
@@ -16,6 +17,7 @@ import javax.swing.*;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class Environment implements EnvironmentsSupplier {
 
@@ -110,7 +112,10 @@ public class Environment implements EnvironmentsSupplier {
         new Task.Backgroundable(project, "Digma: Refreshing environments...") {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
+                var stopWatch = StopWatch.createStarted();
                 refreshEnvironments();
+                stopWatch.stop();
+                Log.log(LOGGER::debug, "Refresh environments took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS));
             }
         }.queue();
     }
@@ -165,6 +170,7 @@ public class Environment implements EnvironmentsSupplier {
 
     //this method may be called from both ui threads or background threads
     void replaceEnvironmentsList(@NotNull List<String> envs) {
+        Log.log(LOGGER::debug, "replaceEnvironmentsList called");
         this.environments = envs;
         var oldEnv = current;
         if (current == null || !this.environments.contains(current)) {

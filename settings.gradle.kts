@@ -33,6 +33,7 @@ dependencyResolutionManagement {
             version("junit", "5.8.2")
             version("kotlin-stdlib", "1.6.20")
             library("kotlin-stdlib-jdk8", "org.jetbrains.kotlin", "kotlin-stdlib-jdk8").versionRef("kotlin-stdlib")
+            library("guava", "com.google.guava", "guava").version("31.1-jre")
             version("retrofit", "2.9.0")
             library("retrofit-client", "com.squareup.retrofit2", "retrofit").versionRef("retrofit")
             library("retrofit-jackson","com.squareup.retrofit2","converter-jackson").versionRef("retrofit")
@@ -42,6 +43,7 @@ dependencyResolutionManagement {
             library("okhttp-mockwebserver", "com.squareup.okhttp3", "mockwebserver").versionRef("okhttp")
             library("prettytime", "org.ocpsoft.prettytime", "prettytime").version("5.0.3.Final")
             library("threeten", "org.threeten", "threeten-extra").version("1.7.0")
+            library("commons-lang3", "org.apache.commons", "commons-lang3").version("3.12.0")
         }
     }
 }
@@ -50,4 +52,4 @@ dependencyResolutionManagement {
 rootProject.name = "digma-intellij-plugin"
 include("rider:protocol")
 findProject(":rider:protocol")?.name = "protocol"
-include("model","analytics-provider","ide-common","idea","pycharm","rider")
+include("model", "analytics-provider", "ide-common", "rider")

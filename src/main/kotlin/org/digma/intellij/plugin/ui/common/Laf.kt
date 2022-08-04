@@ -82,6 +82,7 @@ object Laf  {
                 @JvmStatic val FILE: Icon = SvgIcon.withColor("/icons/file.svg", Colors.DEFAULT_LABEL_FOREGROUND)
                 @JvmStatic val TELESCOPE: Icon = SvgIcon.withColor("/icons/telescope.svg", Colors.DEFAULT_LABEL_FOREGROUND)
                 @JvmStatic val INTERFACE: Icon = SvgIcon.withColor("/icons/interface.svg", Colors.DEFAULT_LABEL_FOREGROUND)
+                @JvmStatic val MESSAGE: Icon = SvgIcon.withColor("/icons/message.svg", Colors.DEFAULT_LABEL_FOREGROUND)
                 // Insight item icons
                 @JvmStatic val QUESTION_MARK = AllIcons.General.QuestionDialog
                 @JvmStatic val BOTTLENECK = loadAndScaleInsightIcon("/icons/bottleneck.png")
@@ -91,6 +92,7 @@ object Laf  {
                 @JvmStatic val SLOW = loadAndScaleInsightIcon("/icons/slow.png")
                 @JvmStatic val WAITING_DATA = loadAndScaleInsightIcon("/icons/waiting-data.png")
                 @JvmStatic val HOTSPOT = loadAndScaleInsightIcon("/icons/target.png")
+                @JvmStatic val HISTOGRAM = loadAndScaleInsightIcon("/icons/histogram.png")
                 @JvmStatic val SPAN_DURATION_DROPPED = loadAndScaleIconByWidth("/icons/dropped.png", 8)
                 @JvmStatic val SPAN_DURATION_ROSE = loadAndScaleIconByWidth("/icons/rose.png", 8)
             }

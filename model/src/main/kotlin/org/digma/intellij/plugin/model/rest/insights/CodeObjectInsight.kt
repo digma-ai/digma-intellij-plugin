@@ -17,7 +17,7 @@ import org.digma.intellij.plugin.model.InsightType
 @JsonSubTypes(
     JsonSubTypes.Type(value = HotspotInsight::class, name = "HotSpot"),
     JsonSubTypes.Type(value = ErrorInsight::class, name = "Errors"),
-    JsonSubTypes.Type(value = SpanInsight::class, name = "SpanUsages"),
+    JsonSubTypes.Type(value = SpanUsagesInsight::class, name = "SpanUsages"),
     JsonSubTypes.Type(value = SlowestSpansInsight::class, name = "SlowestSpans"),
     JsonSubTypes.Type(value = LowUsageInsight::class, name = "LowUsage"),
     JsonSubTypes.Type(value = NormalUsageInsight::class, name = "NormalUsage"),

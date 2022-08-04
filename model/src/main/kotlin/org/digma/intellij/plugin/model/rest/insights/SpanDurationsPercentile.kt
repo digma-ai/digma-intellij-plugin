@@ -8,9 +8,12 @@ import java.sql.Timestamp
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class SpanDurationsPercentile
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@ConstructorProperties("percentile", "currentDuration","previousDuration","changeTime","changeVerified")
-constructor(val percentile: Float,
-            val currentDuration: Duration,
-            val previousDuration: Duration?,
-            val changeTime: Timestamp?,
-            val changeVerified: Boolean?)
+@ConstructorProperties("percentile", "currentDuration", "previousDuration", "changeTime", "changeVerified", "traceIds")
+constructor(
+    val percentile: Float,
+    val currentDuration: Duration,
+    val previousDuration: Duration?,
+    val changeTime: Timestamp?,
+    val changeVerified: Boolean?,
+    val traceIds: List<String>,
+)

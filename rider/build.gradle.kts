@@ -63,7 +63,7 @@ tasks {
         dependsOn(named("setBuildTool"))
         dependsOn(named("rdgen"))
         doLast {
-            var arguments: MutableList<String> = (setBuildTool.extra.get("args") as Array<String>).toMutableList()
+            val arguments: MutableList<String> = (setBuildTool.extra.get("args") as Array<String>).toMutableList()
             arguments.add("/t:Restore;Rebuild")
             exec {
                 executable = setBuildTool.extra.get("executable").toString()
@@ -93,7 +93,7 @@ tasks {
 
         dllFiles.forEach {
             val file = file(it)
-            println("found dotnet object: " + file)
+            logger.lifecycle("found dotnet object: $file")
             from(file)
         }
         into(sandboxDotnetDir)

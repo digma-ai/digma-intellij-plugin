@@ -6,12 +6,14 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
+import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
+import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
@@ -30,8 +32,15 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.ConnectException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.concurrent.TimeUnit;
+
 
 public class AnalyticsService implements Disposable {
 
@@ -166,6 +175,11 @@ public class AnalyticsService implements Disposable {
         return analyticsProviderProxy.getUsageStatus(new UsageStatusRequest(objectIds, List.of("Error")));
     }
 
+    public String getHtmlGraphForSpanPercentiles(String instrumentationLibrary, String spanName) throws AnalyticsServiceException {
+        final SpanHistogramQuery spanHistogramQuery = new SpanHistogramQuery(getCurrentEnvironment(), spanName, instrumentationLibrary, "");
+        return analyticsProviderProxy.getHtmlGraphForSpanPercentiles(spanHistogramQuery);
+    }
+
     @Override
     public void dispose() {
         try {
@@ -200,11 +214,14 @@ public class AnalyticsService implements Disposable {
 
 
         @Override
-        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable{
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+
+            var stopWatch = StopWatch.createStarted();
+
             try {
 
                 if (LOGGER.isDebugEnabled()) {
-                    Log.log(LOGGER::debug, "Sending request to {}: args '{}'",method.getName(), argsToString(args));
+                    Log.log(LOGGER::debug, "Sending request to {}: args '{}'", method.getName(), argsToString(args));
                 }
 
                 Object result = method.invoke(analyticsProvider, args);
@@ -235,21 +252,24 @@ public class AnalyticsService implements Disposable {
                     LOGGER.warn(e);
                     var message = isConnectionException(e) ? getConnectExceptionMessage(e):getSslExceptionMessage(e);
                     NotificationUtil.notifyError(project,"<html>Connection error with Digma backend api for method "+method.getName()+".<br> "
-                                + message + ".<br> See logs for details.");
+                            + message + ".<br> See logs for details.");
                 }else if (status.isOk()){
                     status.error();
                     Log.log(LOGGER::debug,"Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getCause().getMessage());
                     var message = getExceptionMessage(e);
-                    NotificationUtil.notifyError(project,"<html>Error with Digma backend api for method "+method.getName()+".<br> "
+                    NotificationUtil.notifyError(project, "<html>Error with Digma backend api for method " + method.getName() + ".<br> "
                             + message + ".<br> See logs for details.");
 
-                }else if(!status.hadError(e)){
+                } else if (!status.hadError(e)) {
                     status.error();
-                    Log.log(LOGGER::debug,"Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getCause().getMessage());
+                    Log.log(LOGGER::debug, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getCause().getMessage());
                 }
 
 
                 throw new AnalyticsServiceException(e);
+            } finally {
+                stopWatch.stop();
+                Log.log(LOGGER::debug, "Api call {} took {} milliseconds", method.getName(), stopWatch.getTime(TimeUnit.MILLISECONDS));
             }
         }
 

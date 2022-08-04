@@ -33,4 +33,12 @@ tasks{
     publishPlugin {
         enabled = false
     }
+
+    listProductsReleases{
+        enabled = false
+    }
+
+    patchPluginXml{
+        enabled = false
+    }
 }

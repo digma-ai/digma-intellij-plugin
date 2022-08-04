@@ -7,6 +7,7 @@ import org.digma.intellij.plugin.ui.model.insights.InsightGroupListViewItem
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupType
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.util.*
+import javax.swing.Icon
 import kotlin.collections.ArrayList
 
 class InsightsList(project: Project, listViewItems: List<ListViewItem<*>>) :

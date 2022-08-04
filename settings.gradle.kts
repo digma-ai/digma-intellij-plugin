@@ -29,15 +29,18 @@ the version alias where ever possible
 dependencyResolutionManagement {
     versionCatalogs {
         create("libs") {
-            version("intellij-platform", "2022.1.1")
+            //if necessary can be used as libs.versions.intellij.platform.get()
+            version("intellij-platform", "2022.2")
+            //rdgen version is not always the same as platform version
+            version("rider-rdgen", "2022.2.5")
             version("junit", "5.8.2")
-            version("kotlin-stdlib", "1.6.20")
+            version("kotlin-stdlib", "1.7.10")
             library("kotlin-stdlib-jdk8", "org.jetbrains.kotlin", "kotlin-stdlib-jdk8").versionRef("kotlin-stdlib")
             library("guava", "com.google.guava", "guava").version("31.1-jre")
             version("retrofit", "2.9.0")
             library("retrofit-client", "com.squareup.retrofit2", "retrofit").versionRef("retrofit")
-            library("retrofit-jackson","com.squareup.retrofit2","converter-jackson").versionRef("retrofit")
-            library("logging-interceptor","com.squareup.retrofit2","converter-jackson").versionRef("retrofit")
+            library("retrofit-jackson", "com.squareup.retrofit2", "converter-jackson").versionRef("retrofit")
+            library("logging-interceptor", "com.squareup.retrofit2", "converter-jackson").versionRef("retrofit")
             version("okhttp", "4.9.3")
             library("okhttp", "com.squareup.okhttp3", "okhttp").versionRef("okhttp")
             library("okhttp-mockwebserver", "com.squareup.okhttp3", "mockwebserver").versionRef("okhttp")

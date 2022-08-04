@@ -318,7 +318,7 @@ fun buildTraceSample(percentile: SpanDurationsPercentile): TraceSample {
     val percentileName = "P${(percentile.percentile * 100).toInt()}"
     var traceId = ""
     if (!percentile.traceIds.isNullOrEmpty()) {
-        traceId = percentile.traceIds.first()
+        traceId = percentile.traceIds!!.first()
     }
     return TraceSample(percentileName, traceId)
 }

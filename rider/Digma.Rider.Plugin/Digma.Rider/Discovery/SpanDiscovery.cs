@@ -1,4 +1,5 @@
 using JetBrains.Annotations;
+using JetBrains.ReSharper.Feature.Services.Html;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.CSharp.Tree;
 using JetBrains.ReSharper.Psi.Resolve;
@@ -10,6 +11,7 @@ namespace Digma.Rider.Discovery
 
     public class SpanDiscovery
     {
+        private readonly string _methodName;
         private const string ActivitySourceClassName = "System.Diagnostics.ActivitySource";
         private const string StartActivityMethodName = "StartActivity";
 
@@ -19,8 +21,9 @@ namespace Digma.Rider.Discovery
         public bool HasReferenceResolvingErrors { get; private set; } = false;
 
 
-        public SpanDiscovery([NotNull] ILocalVariableDeclaration localVariableDeclaration)
+        public SpanDiscovery([NotNull] ILocalVariableDeclaration localVariableDeclaration , string methodName)
         {
+            _methodName = methodName;
             var expressionInitializer = localVariableDeclaration.Children<IExpressionInitializer>().FirstNotNull();
             var value = expressionInitializer?.Value;
             if (value is IInvocationExpression expression)
@@ -48,7 +51,10 @@ namespace Digma.Rider.Discovery
             }
         }
 
-        //the arguments to Activity.StartActivity("the argument")
+        /*
+         * the arguments to Activity.StartActivity("the argument")
+         * or Activity.StartActivity()
+        */
         private string DiscoverSpanNameFromInvocationArguments([NotNull] IArgumentList invocationExpressionArgumentList)
         {
             if (invocationExpressionArgumentList.Arguments.Count is 1 or 2)
@@ -56,7 +62,7 @@ namespace Digma.Rider.Discovery
                 return GetTextFromArgument(invocationExpressionArgumentList.Arguments[0]);
             }
 
-            return null;
+            return invocationExpressionArgumentList.Arguments.Count == 0 ? _methodName : null;
         }
 
         private string DiscoverInstrumentationLibraryFromInvokedExpression(

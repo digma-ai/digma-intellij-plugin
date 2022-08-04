@@ -22,12 +22,8 @@ class DocumentCodeObjectsListener(project: Project) : LifetimedProjectComponent(
         Log.log(logger::info, "DocumentCodeObjectsListener registering for solution startup..")
 
 
-        //todo: remove
-        project.solution.isLoaded.advise(project.lifetime) {
-            Log.log(logger::info, "in isLoaded")
-        }
 
-        project.solution.solutionLifecycle.fullStartupFinished.advise(project.lifetime) {
+        project.solution.isLoaded.advise(project.lifetime) {
 
             Log.log(logger::info, "Starting DocumentCodeObjectsListener")
 

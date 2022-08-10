@@ -19,6 +19,4 @@ dependencies {
 
     implementation(project(":model"))
     implementation(project(":analytics-provider"))
-
-    testImplementation(kotlin("test"))
 }

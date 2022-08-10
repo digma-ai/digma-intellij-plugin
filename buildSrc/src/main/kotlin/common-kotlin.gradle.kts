@@ -29,6 +29,12 @@ kotlin {
 }
 
 
+dependencies{
+    //add the kotlin test library to all projects that apply this common-kotlin plugin.
+    //so all project are ready to use kotlin test
+    testImplementation(kotlin("test"))
+}
+
 tasks{
     properties("javaVersion", project).let {
         withType<KotlinCompile> {

@@ -7,6 +7,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins{
     `java`
+    `jvm-test-suite`
     id("com.dorongold.task-tree")
     id("com.glovoapp.semantic-versioning")
 }
@@ -58,6 +59,43 @@ project.afterEvaluate{
         }
     }
 }
+
+
+
+testing {
+    //https://docs.gradle.org/current/userguide/jvm_test_suite_plugin.html
+
+    //this is the basic configuration of the test task for all projects.
+    //it can be extended in projects to add dependencies and other configuration.
+    //see for example analytics-provider project.
+    //jvmTestSuite eventually adds a test task to every project so the test task can also be configured
+    //independently like in legacy gradle versions. for example just adding testImplementation dependencies.
+    //but extending jvmTestSuite like in analytics-provider is more consice and safe with regards to depenency hell.
+    //so all projects are already configured to use junit jupiter.
+
+    suites {
+        val test by getting(JvmTestSuite::class) {
+            //this is the only place junit version should be mentioned in the project.
+            //it applies to all projects. can't use versions catalog in scripts plugins so using
+            //hard coded version.
+            useJUnitJupiter("5.8.2")
+
+            dependencies {
+                implementation(project)
+
+                //this is a workaround to an issue with junit launcher in intellij platform 2022.2 plus gradle 7.5.1.
+                //it is discussed in a slack thread and will probably be fixed in the next intellij platform patch.
+                //todo: when upgrading the platform version check if its fixed just by removing it and building the project with no errors.
+                //https://jetbrains-platform.slack.com/archives/CPL5291JP/p1660085792256189
+                runtimeOnly("org.junit.platform:junit-platform-launcher")
+                runtimeOnly("org.junit.jupiter:junit-jupiter-engine")
+            }
+        }
+    }
+}
+
+
+
 
 
 tasks{

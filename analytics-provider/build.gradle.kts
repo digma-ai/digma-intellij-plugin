@@ -13,9 +13,10 @@ dependencies {
 
 
 testing {
+    //basic shared configuration is in buildSrc/src/main/kotlin/digma-base.gradle.kts
+
     suites {
         val test by getting(JvmTestSuite::class) {
-            useJUnitJupiter(libs.versions.junit.get())
 
             dependencies {
                 implementation(project)

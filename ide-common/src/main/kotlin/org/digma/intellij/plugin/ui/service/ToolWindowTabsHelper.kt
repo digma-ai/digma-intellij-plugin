@@ -20,12 +20,16 @@ class ToolWindowTabsHelper(val project: Project) {
         const val SUMMARY_TAB_NAME = "summary"
     }
 
-    fun isInsightsTab(content: Content?):Boolean{
+    fun isInsightsTab(content: Content?): Boolean {
         return content != null && content.tabName.equals(INSIGHTS_TAB_NAME, ignoreCase = true)
     }
 
-    fun isErrorsTab(content: Content?):Boolean{
+    fun isErrorsTab(content: Content?): Boolean {
         return content != null && content.tabName.equals(ERRORS_TAB_NAME, ignoreCase = true)
+    }
+
+    fun isSummaryTab(content: Content?): Boolean {
+        return content != null && content.tabName.equals(SUMMARY_TAB_NAME, ignoreCase = true)
     }
 
 

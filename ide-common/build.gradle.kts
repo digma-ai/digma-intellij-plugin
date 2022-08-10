@@ -17,13 +17,8 @@ dependencies {
     api(libs.threeten)
     api(libs.commons.lang3)
 
-
     implementation(project(":model"))
     implementation(project(":analytics-provider"))
 
     testImplementation(kotlin("test"))
-}
-
-tasks.test {
-    useJUnitPlatform()
 }

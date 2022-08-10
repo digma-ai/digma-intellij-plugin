@@ -72,7 +72,7 @@ jobs:
 
       # Run tests
       - name: Run Tests
-        run: ./gradlew test
+        run: ./gradlew build
 
       # Collect Tests Result of failed tests
       ##todo: add other modules test reports

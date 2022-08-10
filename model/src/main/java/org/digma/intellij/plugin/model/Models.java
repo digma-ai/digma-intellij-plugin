@@ -14,6 +14,7 @@ public final class Models {
         private Empties() {
         }
 
+        //todo: maybe change to kotlin object ?
         public static final UsageStatusResult EmptyUsageStatusResult = new UsageStatusResult(Collections.emptyList(), Collections.emptyList());
 
     }

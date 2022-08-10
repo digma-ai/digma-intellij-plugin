@@ -34,7 +34,10 @@ dependencyResolutionManagement {
             //rdgen version is not always the same as platform version
             version("rider-rdgen", "2022.2.5")
             version("junit", "5.8.2")
-            version("kotlin-stdlib", "1.7.10")
+            //kotlin stdlib is not packaged with the plugin because intellij platform already contains it.
+            //it's necessary for compilation in some cases for example rider protocol module.
+            //it must target the lowest bundled stdlib version of the platform we support
+            version("kotlin-stdlib", "1.6.20")
             library("kotlin-stdlib-jdk8", "org.jetbrains.kotlin", "kotlin-stdlib-jdk8").versionRef("kotlin-stdlib")
             library("guava", "com.google.guava", "guava").version("31.1-jre")
             version("retrofit", "2.9.0")

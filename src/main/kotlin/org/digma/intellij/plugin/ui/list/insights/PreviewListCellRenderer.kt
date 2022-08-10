@@ -20,7 +20,7 @@ class PreviewListCellRenderer : AbstractPanelListCellRenderer() {
         return getOrCreatePanel(project, index, value)
     }
 
-    @Suppress("UNCHECKED_CAST")
+    @Suppress("UNCHECKED_CAST", "UNUSED_PARAMETER")
     private fun getOrCreatePanel(project: Project, index: Int, value: ListViewItem<*>): JPanel {
         return previewPanel(project,value as ListViewItem<String>)
     }

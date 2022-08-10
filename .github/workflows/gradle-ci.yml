@@ -41,7 +41,7 @@ jobs:
           #            caches/**/riderRD-*/**
           #            caches/**/ideaIC-*/**
           #            caches/**/pycharmPC-*/**
-          arguments: buildPlugin --no-daemon
+          arguments: build buildPlugin --no-daemon
 
       - name: Prepare Plugin Artifact
         id: artifact

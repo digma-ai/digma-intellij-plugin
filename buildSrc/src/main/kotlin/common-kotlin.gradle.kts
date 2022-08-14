@@ -23,12 +23,17 @@ plugins {
 
 kotlin {
     jvmToolchain {
-            (this as JavaToolchainSpec).languageVersion.set(JavaLanguageVersion.of(properties("javaVersion", project)))
-        //to build with amazon corretto download it in the gradlew script. see resharper-unity
-        //vendor.set(JvmVendorSpec.AMAZON)
+            this.languageVersion.set(JavaLanguageVersion.of(properties("javaVersion", project)))
+            this.vendor.set(JvmVendorSpec.AMAZON)
     }
 }
 
+
+dependencies{
+    //add the kotlin test library to all projects that apply this common-kotlin plugin.
+    //so all project are ready to use kotlin test
+    testImplementation(kotlin("test"))
+}
 
 tasks{
     properties("javaVersion", project).let {

@@ -37,7 +37,7 @@ jobs:
         uses: gradle/gradle-build-action@v2.2.2
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
-          arguments: buildPlugin runPluginVerifier --no-daemon
+          arguments: build buildPlugin runPluginVerifier --no-daemon
 
       - name: Prepare Plugin Artifact
         id: artifact

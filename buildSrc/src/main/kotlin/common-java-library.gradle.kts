@@ -1,6 +1,3 @@
-import org.gradle.api.tasks.testing.logging.TestExceptionFormat
-import org.gradle.api.tasks.testing.logging.TestLogEvent
-
 //this plugin is for projects that are pure java, meaning they don't have the
 //org.jetbrains.intellij plugin.
 //for example analytics-provider, model

@@ -1,9 +1,6 @@
 import common.properties
-import gradle.kotlin.dsl.accessors._32850698d653820f6f0bff6e9d585ccb.build
-import gradle.kotlin.dsl.accessors._744ce3376bf13942cde73334c3c9bc84.kotlin
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins{
     `java`

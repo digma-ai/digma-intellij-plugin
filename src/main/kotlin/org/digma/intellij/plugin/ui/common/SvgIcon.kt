@@ -8,12 +8,12 @@ import java.awt.Component
 import java.awt.Graphics
 import java.io.File
 import java.nio.charset.StandardCharsets
-import java.util.*
+import java.util.Objects
 import javax.swing.Icon
 
 typealias ColorGetter = () -> Color
 
-class SvgIcon constructor(val path: String, val getColor : ColorGetter) : Icon {
+class SvgIcon constructor(val path: String, val getColor : ColorGetter? = null) : Icon {
 
     companion object {
         private val cache: MutableMap<String, Icon> = HashMap()
@@ -21,6 +21,10 @@ class SvgIcon constructor(val path: String, val getColor : ColorGetter) : Icon {
 
         fun withColor(path: String, color: Color): SvgIcon{
             return SvgIcon(path) { color }
+        }
+
+        fun asIs(path: String): SvgIcon{
+            return SvgIcon(path)
         }
     }
 
@@ -37,7 +41,10 @@ class SvgIcon constructor(val path: String, val getColor : ColorGetter) : Icon {
     }
 
     private fun getIcon(): Icon {
-        val color = getColor()
+        if(getColor == null)
+            return IconLoader.getIcon(path, javaClass.classLoader);
+
+        val color = getColor.invoke()
         val key = "$path:${color.getHex()}"
         var icon = cache[key]
         if(icon == null){

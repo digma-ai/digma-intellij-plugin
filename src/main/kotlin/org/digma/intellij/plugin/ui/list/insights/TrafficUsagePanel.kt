@@ -7,11 +7,13 @@ import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import javax.swing.Icon
+import javax.swing.JLabel
 import javax.swing.JPanel
 
 
 private fun trafficUsagePanel(title: String, labelValue: String, countPerMinute: Int, icon: Icon, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
-    return createInsightPanel(title, asHtml(labelValue), icon, "${countPerMinute}/min",panelsLayoutHelper)
+    val callsPerMinuteLabel = JLabel("${countPerMinute}/min")
+    return createInsightPanel(title, asHtml(labelValue), icon, callsPerMinuteLabel, null, panelsLayoutHelper)
 }
 
 fun lowUsageInsightPanel(insight: LowUsageInsight, panelsLayoutHelper: PanelsLayoutHelper): JPanel {

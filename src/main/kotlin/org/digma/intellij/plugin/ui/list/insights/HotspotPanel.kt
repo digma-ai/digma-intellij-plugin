@@ -10,6 +10,6 @@ import javax.swing.JPanel
 fun hotspotPanel(modelObject: HotspotInsight, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
     return createInsightPanel(
         "This is an error hotspot", "Many major errors occur or propagate through this function",
-        Laf.Icons.Insight.HOTSPOT, "HotSpot",panelsLayoutHelper
+        Laf.Icons.Insight.HOTSPOT,null, null, panelsLayoutHelper
     )
 }

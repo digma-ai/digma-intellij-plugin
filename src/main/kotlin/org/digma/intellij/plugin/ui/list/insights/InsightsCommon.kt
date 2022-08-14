@@ -9,11 +9,10 @@ import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.list.commonListItemPanel
 import java.awt.BorderLayout
 import java.awt.Dimension
-import javax.swing.Icon
-import javax.swing.JLabel
-import javax.swing.JPanel
-import javax.swing.SwingConstants
+import java.awt.FlowLayout
+import javax.swing.*
 import kotlin.math.max
+
 
 fun insightTitlePanel(panel: JPanel): JPanel {
     panel.isOpaque = false
@@ -26,34 +25,56 @@ fun insightItemPanel(panel: JPanel): JPanel {
 }
 
 
-fun createInsightPanel(title: String, body: String, icon: Icon, iconText: String, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
-    return createInsightPanel(title, body, icon, iconText, true,panelsLayoutHelper)
-}
+fun createInsightPanel(title: String, description: String, icon: Icon, body: JComponent?, buttons: List<JButton?>?, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
 
-@Deprecated("remove,wrap is always true")
-private fun createInsightPanel(title: String, body: String, icon: Icon, iconText: String, wrap: Boolean, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
+    // .-----------------------------------.
+    // | title                     | icon  |
+    // | description               |       |
+    // |-----------------------------------|
+    // | body                              |
+    // |-----------------------------------|
+    // |                           buttons |
+    // '-----------------------------------'
 
-    val iconPanel = insightsIconPanelBorder(icon, iconText, panelsLayoutHelper)
-    iconPanel.isOpaque = false
+    val iconLabel = JLabel(icon, SwingConstants.RIGHT)
+    iconLabel.horizontalAlignment = SwingConstants.RIGHT
+    iconLabel.verticalAlignment = SwingConstants.TOP
+    iconLabel.isOpaque = false
+    iconLabel.border = empty(2)
 
-    val message = JLabel(buildBoldTitleGrayedComment(title,body),SwingConstants.LEFT)
-    val messagePanel = JBPanel<JBPanel<*>>()
-    messagePanel.layout = BorderLayout()
-    messagePanel.add(message,BorderLayout.NORTH)
-    messagePanel.border = empty()
-    messagePanel.isOpaque = false
+    val messageLabel = JLabel(buildBoldTitleGrayedComment(title,description), SwingConstants.LEFT)
+    messageLabel.isOpaque = false
+    messageLabel.verticalAlignment = SwingConstants.TOP
 
     val result = JBPanel<JBPanel<*>>()
 
     result.layout = BorderLayout()
-    result.add(messagePanel,BorderLayout.CENTER)
-    result.add(iconPanel,BorderLayout.EAST)
+    result.add(messageLabel,BorderLayout.CENTER)
+    result.add(iconLabel,BorderLayout.EAST)
 
-    return if (wrap) {
-        insightItemPanel(result)
-    } else {
-        result
+    if(body != null || buttons != null){
+        val bodyWrapper = JPanel(BorderLayout())
+        bodyWrapper.isOpaque = false
+
+        if(body != null)
+            bodyWrapper.add(body, BorderLayout.CENTER)
+
+        if(buttons != null){
+            val buttonsList = JPanel(FlowLayout(FlowLayout.RIGHT, 0 ,0))
+            buttonsList.isOpaque = false
+            buttonsList.border = empty()
+            buttons.filterNotNull().forEach {
+                buttonsList.add(Box.createHorizontalStrut(5))
+                buttonsList.add(it)
+            }
+            bodyWrapper.add(buttonsList, BorderLayout.SOUTH)
+        }
+
+        result.add(bodyWrapper,BorderLayout.SOUTH)
     }
+
+
+    return insightItemPanel(result)
 }
 
 
@@ -62,7 +83,7 @@ fun unmappedInsightPanel(modelObject: UnmappedInsight, panelsLayoutHelper: Panel
     val methodName = modelObject.codeObjectId.substringAfterLast("\$_\$")
     return createInsightPanel("Unmapped insight: '${modelObject.theType}'",
         "unmapped insight type for '$methodName'",
-        Laf.Icons.Insight.QUESTION_MARK, "",panelsLayoutHelper)
+        Laf.Icons.Insight.QUESTION_MARK, null, null, panelsLayoutHelper)
 }
 
 
@@ -70,7 +91,7 @@ fun genericPanelForSingleInsight(modelObject: Any?, panelsLayoutHelper: PanelsLa
 
     return createInsightPanel("Generic insight panel",
         "Insight named ${modelObject?.javaClass?.simpleName}",
-        Laf.Icons.Insight.QUESTION_MARK, "",panelsLayoutHelper)
+        Laf.Icons.Insight.QUESTION_MARK,null, null, panelsLayoutHelper)
 }
 
 

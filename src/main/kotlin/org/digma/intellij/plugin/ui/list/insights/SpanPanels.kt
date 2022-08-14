@@ -7,7 +7,6 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.containers.isNullOrEmpty
 import com.intellij.util.ui.JBUI.Borders.empty
-import com.intellij.util.ui.WrapLayout
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.model.rest.insights.*
 import org.digma.intellij.plugin.settings.SettingsState
@@ -20,7 +19,6 @@ import org.ocpsoft.prettytime.PrettyTime
 import org.threeten.extra.AmountFormats
 import java.awt.BorderLayout
 import java.awt.Dimension
-import java.awt.FlowLayout
 import java.awt.GridLayout
 import java.io.InputStreamReader
 import java.sql.Timestamp
@@ -60,8 +58,15 @@ fun spanUsagesPanel(project: Project, spanUsagesInsight: SpanUsagesInsight): JPa
 
     spanUsagesInsight.flows.forEach { spanFlow: SpanFlow ->
 
-        val builder = StringBuilder("${span(String.format("%.1f", spanFlow.percentage))}% ")
+        val line = JPanel(BorderLayout())
+        line.isOpaque = false
 
+        val percentageLabel = CopyableLabelHtml(asHtml("${span(String.format("%.1f", spanFlow.percentage))}% "))
+        percentageLabel.border = empty(0,0,0,5)
+
+        line.add(percentageLabel, BorderLayout.WEST)
+
+        val builder = StringBuilder()
         var spanName = spanUsagesInsight.span // default, just in case first service is not found
         spanFlow.firstService?.let { firstService ->
             builder.append(spanGrayed(firstService.service + ": "))
@@ -81,29 +86,23 @@ fun spanUsagesPanel(project: Project, spanUsagesInsight: SpanUsagesInsight): JPa
             builder.append(" ${spanGrayed(ARROW_RIGHT)} ")
             builder.append(span(lastServiceSpan))
         }
-
-        val label = CopyableLabelHtml(asHtml(builder.toString()))
-        label.alignmentX = 0.0f
+        val spanFlowLabel = CopyableLabelHtml(asHtml(builder.toString()))
+        spanFlowLabel.alignmentX = 0.0f
+        line.add(spanFlowLabel, BorderLayout.CENTER)
 
         var traceSample: TraceSample? = null
         spanFlow.sampleTraceIds.firstOrNull()?.let { sampleTraceId ->
             traceSample = TraceSample(spanName, sampleTraceId)
         }
         val buttonToJaeger = buildButtonToJaeger(project, "Trace", spanName, traceSample)
-        if (buttonToJaeger == null) {
-            flowsListPanel.add(label)
-        } else {
-            val wrapperPanel = JBPanel<JBPanel<*>>()
-            wrapperPanel.andTransparent()
-            wrapperPanel.layout = WrapLayout(FlowLayout.LEFT, 3, 3)
-            wrapperPanel.add(label)
-            wrapperPanel.add(buttonToJaeger)
-
-            flowsListPanel.add(wrapperPanel)
+        if (buttonToJaeger != null) {
+            val wrapper = JPanel(BorderLayout())
+            wrapper.isOpaque = false
+            wrapper.add(buttonToJaeger, BorderLayout.NORTH)
+            line.add(wrapper, BorderLayout.EAST)
         }
-
+        flowsListPanel.add(line)
     }
-
 
     val result = JBPanel<JBPanel<*>>()
     result.layout = BorderLayout()
@@ -112,7 +111,7 @@ fun spanUsagesPanel(project: Project, spanUsagesInsight: SpanUsagesInsight): JPa
 
     return insightItemPanel(result)
 
-}
+    }
 
 
 fun spanDurationPanel(

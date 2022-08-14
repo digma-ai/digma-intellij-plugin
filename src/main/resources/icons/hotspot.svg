@@ -2,49 +2,15 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-        width="4.1558228mm"
-        height="4.1568527mm"
-        viewBox="0 0 4.1558228 4.1568527"
+        width="4.1558199mm"
+        height="4.1568518mm"
+        viewBox="0 0 4.1558199 4.1568518"
         version="1.1"
         id="svg5"
         xml:space="preserve"
-        inkscape:version="1.2 (dc2aedaf03, 2022-05-15)"
-        sodipodi:docname="small-icons-demo.svg"
-        xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-        xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
         xmlns="http://www.w3.org/2000/svg"
-><sodipodi:namedview
-     id="namedview7"
-     pagecolor="#ffffff"
-     bordercolor="#000000"
-     borderopacity="0.25"
-     inkscape:showpageshadow="2"
-     inkscape:pageopacity="0.0"
-     inkscape:pagecheckerboard="0"
-     inkscape:deskcolor="#d1d1d1"
-     inkscape:document-units="mm"
-     showgrid="true"
-     inkscape:zoom="1"
-     inkscape:cx="383.5"
-     inkscape:cy="347"
-     inkscape:window-width="1920"
-     inkscape:window-height="1009"
-     inkscape:window-x="1912"
-     inkscape:window-y="-8"
-     inkscape:window-maximized="1"
-     inkscape:current-layer="layer3"><inkscape:grid
-       type="xygrid"
-       id="grid5748"
-       visible="false"
-       snapvisiblegridlinesonly="false" /></sodipodi:namedview><defs
-     id="defs2" /><g
-     inkscape:groupmode="layer"
-     id="layer2"
-     inkscape:label="hotspot"
-     transform="translate(-232.98314,-34.853598)"><path
-       id="path2004"
-       style="display:inline;fill:#ed4646;stroke-width:0;stroke-linecap:round;stroke-linejoin:round"
-       d="m 235.4569,34.853598 v 0.541569 a 1.5874816,1.5874816 0 0 1 1.1405,1.139982 h 0.54157 a 2.1166666,2.1166666 0 0 0 -1.68207,-1.681551 z m -0.79272,0.001 a 2.1166666,2.1166666 0 0 0 -1.68103,1.680518 h 0.54157 a 1.5874816,1.5874816 0 0 1 1.13946,-1.138949 z m 0.39636,1.548743 a 0.52917224,0.52917224 0 0 0 -0.52917,0.529167 0.52917224,0.52917224 0 0 0 0.52917,0.529166 0.52917224,0.52917224 0 0 0 0.52917,-0.529166 0.52917224,0.52917224 0 0 0 -0.52917,-0.529167 z m -2.07739,0.926559 a 2.1166666,2.1166666 0 0 0 1.68103,1.680517 V 38.468848 A 1.5874816,1.5874816 0 0 1 233.52472,37.3299 Z m 3.61425,0 a 1.5874816,1.5874816 0 0 1 -1.1405,1.139982 v 0.540535 a 2.1166666,2.1166666 0 0 0 1.68103,-1.680517 z"
-       inkscape:export-filename="..\NewSmallIcons\hotspot.svg"
-       inkscape:export-xdpi="96"
-       inkscape:export-ydpi="96" /></g></svg>
+><defs
+     id="defs2" /><path
+     id="path2004"
+     style="fill:#ed4646;stroke-width:0;stroke-linecap:round;stroke-linejoin:round"
+     d="m 2.47375,0 v 0.541569 a 1.5874816,1.5874816 0 0 1 1.1405,1.139982 H 4.15582 A 2.1166666,2.1166666 0 0 0 2.47375,0 Z M 1.68103,10e-4 A 2.1166666,2.1166666 0 0 0 0,1.681518 H 0.54157 A 1.5874816,1.5874816 0 0 1 1.68103,0.542569 Z M 2.07739,1.549743 A 0.52917224,0.52917224 0 0 0 1.54822,2.07891 0.52917224,0.52917224 0 0 0 2.07739,2.608076 0.52917224,0.52917224 0 0 0 2.60656,2.07891 0.52917224,0.52917224 0 0 0 2.07739,1.549743 Z M 0,2.476302 A 2.1166666,2.1166666 0 0 0 1.68103,4.156819 V 3.61525 A 1.5874816,1.5874816 0 0 1 0.54157,2.476302 Z m 3.61425,0 A 1.5874816,1.5874816 0 0 1 2.47375,3.616284 V 4.156819 A 2.1166666,2.1166666 0 0 0 4.15478,2.476302 Z" /></svg>

@@ -9,10 +9,11 @@ import java.util.List;
 import static org.digma.intellij.plugin.analytics.UtilForTest.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ErrorsOfCodeObjectTests extends AbstractAnalyticsProviderTest {
+@SuppressWarnings("resource")
+class ErrorsOfCodeObjectTests extends AbstractAnalyticsProviderTest {
 
     @Test
-    public void ableToParse2Items() {
+    void ableToParse2Items() {
         final var jsonContent = loadTextFile("/jsons/errors_of_code_object_2_items.json");
         mockBackEnd.enqueue(new MockResponse()
                 .setBody(jsonContent)

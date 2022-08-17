@@ -1,8 +1,9 @@
 package org.digma.intellij.plugin.analytics;
 
-public class AnalyticsServiceException extends Exception{
+public class AnalyticsServiceException extends Exception {
 
     public AnalyticsServiceException() {
+        super();
     }
 
     public AnalyticsServiceException(String message) {

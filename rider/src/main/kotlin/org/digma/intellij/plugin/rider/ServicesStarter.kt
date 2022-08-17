@@ -9,6 +9,7 @@ import org.digma.intellij.plugin.rider.env.RiderEnvironmentChangedListener
 import org.digma.intellij.plugin.rider.protocol.DocumentCodeObjectsListener
 import org.digma.intellij.plugin.rider.protocol.ShowToolWindowHost
 import java.util.*
+import javax.swing.SwingUtilities
 
 //todo : delete
 class ServicesStarter : StartupActivity, DumbAware {
@@ -25,7 +26,13 @@ class ServicesStarter : StartupActivity, DumbAware {
 
 
     override fun runActivity(project: Project) {
-        loadStartupServices(project)
+        if (SwingUtilities.isEventDispatchThread()) {
+            loadStartupServices(project)
+        } else {
+            SwingUtilities.invokeAndWait {
+                loadStartupServices(project)
+            }
+        }
     }
 
 

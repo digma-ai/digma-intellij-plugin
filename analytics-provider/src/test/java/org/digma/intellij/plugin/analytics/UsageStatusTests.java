@@ -7,7 +7,8 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UsageStatusTests extends AbstractAnalyticsProviderTest {
+@SuppressWarnings("resource")
+class UsageStatusTests extends AbstractAnalyticsProviderTest {
 
     //run against running env just for local test
     //@Test
@@ -25,6 +26,6 @@ public class UsageStatusTests extends AbstractAnalyticsProviderTest {
     }
 
     @Test
-    public void doNothing() {
+    void doNothing() {
     }
 }

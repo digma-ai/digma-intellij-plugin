@@ -31,9 +31,11 @@ import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.UndeclaredThrowableException;
 import java.net.ConnectException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 
@@ -127,7 +129,7 @@ public class AnalyticsService implements Disposable {
     List<String> getEnvironments() {
         try {
             return analyticsProviderProxy.getEnvironments();
-        } catch (Throwable e) {
+        } catch (Exception e) {
             //getEnvironments should never throw exception. it is called only from the constructor or be the
             //Environment object that can handle null.
             return null;
@@ -144,36 +146,40 @@ public class AnalyticsService implements Disposable {
 
 
     public List<CodeObjectSummary> getSummaries(List<String> objectIds) throws AnalyticsServiceException {
-        return analyticsProviderProxy.getSummaries(new CodeObjectSummaryRequest(getCurrentEnvironment(), objectIds));
+        var env = getCurrentEnvironment();
+        return executeCatching(() -> analyticsProviderProxy.getSummaries(new CodeObjectSummaryRequest(env, objectIds)));
     }
 
     public List<GlobalInsight> getGlobalInsights() throws AnalyticsServiceException {
-        return analyticsProviderProxy.getGlobalInsights(new InsightsRequest(getCurrentEnvironment(), Collections.emptyList()));
+        var env = getCurrentEnvironment();
+        return executeCatching(() -> analyticsProviderProxy.getGlobalInsights(new InsightsRequest(env, Collections.emptyList())));
     }
 
     public List<CodeObjectInsight> getInsights(List<String> objectIds) throws AnalyticsServiceException {
-        return analyticsProviderProxy.getInsights(new InsightsRequest(getCurrentEnvironment(), objectIds));
+        var env = getCurrentEnvironment();
+        return executeCatching(() -> analyticsProviderProxy.getInsights(new InsightsRequest(env, objectIds)));
     }
 
     public List<CodeObjectError> getErrorsOfCodeObject(String codeObjectId) throws AnalyticsServiceException {
-        return analyticsProviderProxy.getErrorsOfCodeObject(getCurrentEnvironment(), codeObjectId);
+        var env = getCurrentEnvironment();
+        return executeCatching(() -> analyticsProviderProxy.getErrorsOfCodeObject(env, codeObjectId));
     }
 
     public CodeObjectErrorDetails getErrorDetails(String errorUid) throws AnalyticsServiceException {
-        return analyticsProviderProxy.getCodeObjectErrorDetails(errorUid);
+        return executeCatching(() -> analyticsProviderProxy.getCodeObjectErrorDetails(errorUid));
     }
 
     public UsageStatusResult getUsageStatus(List<String> objectIds) throws AnalyticsServiceException {
-        return analyticsProviderProxy.getUsageStatus(new UsageStatusRequest(objectIds));
+        return executeCatching(() -> analyticsProviderProxy.getUsageStatus(new UsageStatusRequest(objectIds)));
     }
 
     public UsageStatusResult getUsageStatusOfErrors(List<String> objectIds) throws AnalyticsServiceException {
-        return analyticsProviderProxy.getUsageStatus(new UsageStatusRequest(objectIds, List.of("Error")));
+        return executeCatching(() -> analyticsProviderProxy.getUsageStatus(new UsageStatusRequest(objectIds, List.of("Error"))));
     }
 
     public String getHtmlGraphForSpanPercentiles(String instrumentationLibrary, String spanName) throws AnalyticsServiceException {
         final SpanHistogramQuery spanHistogramQuery = new SpanHistogramQuery(getCurrentEnvironment(), spanName, instrumentationLibrary, "");
-        return analyticsProviderProxy.getHtmlGraphForSpanPercentiles(spanHistogramQuery);
+        return executeCatching(() -> analyticsProviderProxy.getHtmlGraphForSpanPercentiles(spanHistogramQuery));
     }
 
     @Override
@@ -186,11 +192,33 @@ public class AnalyticsService implements Disposable {
     }
 
 
+    /**
+     * The AnalyticsService class is an IDE component and better throw declared known exceptions.
+     * this is a catch-all method that will translate AnalyticsProvider exceptions to AnalyticsServiceException.
+     * It's not a replacement to the AnalyticsProvider proxy, a proxy is more suitable for different things. The proxy will
+     * throw an AnalyticsProvider exception if that was the source of the exception, otherwise it may throw an
+     * UndeclaredThrowableException if something else goes wrong. in all cases we want to rethrow an AnalyticsServiceException
+     * because that's what the plugin code expects.
+     * All calls to the AnalyticsProvider proxy must be wrapped by a call to this method.
+     * this is purely catch exceptions and rethrow AnalyticsServiceException.
+     */
+    private <T> T executeCatching(Supplier<T> tSupplier) throws AnalyticsServiceException {
+        try {
+            return tSupplier.get();
+        } catch (AnalyticsProviderException e) {
+            throw new AnalyticsServiceException("An AnalyticsProviderException was caught", e);
+        } catch (UndeclaredThrowableException e) {
+            throw new AnalyticsServiceException("UndeclaredThrowableException caught", e.getUndeclaredThrowable());
+        } catch (Exception e) {
+            throw new AnalyticsServiceException("Unknown exception", e);
+        }
+    }
 
 
     /**
-     * A proxy to swallow all AnalyticsProvider exceptions.
-     * the AnalyticsService class is an IDE component and better not to throw exceptions.
+     * A proxy for cross-cutting concerns across all api methods.
+     * In a proxy it's easier to log events, we have the method name, parameters etc.
+     * easier to investigate exceptions, if its an InvocationTargetException or IllegalAccessException etc.
      */
     private static class AnalyticsInvocationHandler implements InvocationHandler {
 
@@ -211,6 +239,16 @@ public class AnalyticsService implements Disposable {
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+
+            //these methods are called by idea debugger and flags are changed while debugging when they should not.
+            //and anyway there methods do not need cross-cutting concerns that this proxy offers.
+            if (method.getName().equals("toString") ||
+                    method.getName().equals("hashCode") ||
+                    method.getName().equals("equals") ||
+                    method.getName().equals("close")) {
+                return method.invoke(analyticsProvider, args);
+            }
+
 
             var stopWatch = StopWatch.createStarted();
 
@@ -239,12 +277,12 @@ public class AnalyticsService implements Disposable {
 
                 //handle only InvocationTargetException, other exceptions are probably a bug.
                 //log to error only the first time of ConnectException, this form of error log will popup a balloon error
-                //message, its not necessary to popup the balloon too many times. following exceptions will just be logged
+                //message, it's not necessary to pop up the balloon too many times. following exceptions will just be logged
                 //to the log file
                 boolean isConnectionException = isConnectionException(e) || isSslConnectionException(e);
                 if ( status.isOk() && isConnectionException ){
                     status.connectError();
-                    Log.log(LOGGER::warn, "Connect exception: error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e);
+                    Log.log(LOGGER::warn, "Connection exception: error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getCause().getMessage());
                     LOGGER.warn(e);
                     var message = isConnectionException(e) ? getConnectExceptionMessage(e):getSslExceptionMessage(e);
                     NotificationUtil.notifyError(project,"<html>Connection error with Digma backend api for method "+method.getName()+".<br> "
@@ -262,7 +300,16 @@ public class AnalyticsService implements Disposable {
                 }
 
 
+                if (e.getCause() instanceof AnalyticsProviderException) {
+                    throw e.getCause();
+                }
+
                 throw new AnalyticsServiceException(e);
+
+            } catch (Throwable e) {
+                status.error();
+                Log.log(LOGGER::debug, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getMessage());
+                throw e;
             } finally {
                 stopWatch.stop();
                 Log.log(LOGGER::debug, "Api call {} took {} milliseconds", method.getName(), stopWatch.getTime(TimeUnit.MILLISECONDS));
@@ -392,12 +439,8 @@ public class AnalyticsService implements Disposable {
 
         public boolean hadError(InvocationTargetException e) {
             var ex = e.getCause();
-            while (ex != null && !(ex instanceof AnalyticsProviderException)){
-                ex = ex.getCause();
-            }
-
             if (ex != null){
-                var errorName = ex.getClass().getSimpleName();
+                var errorName = ex.getClass().getName();
                 if (errorsHistory.containsKey(errorName)){
                     return true;
                 }

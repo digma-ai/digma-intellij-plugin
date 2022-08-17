@@ -8,7 +8,7 @@ import java.io.IOException;
 import static org.digma.intellij.plugin.analytics.UtilForTest.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class ErrorsDetailsTests extends AbstractAnalyticsProviderTest {
+class ErrorsDetailsTests extends AbstractAnalyticsProviderTest {
 
 
 //    @Test
@@ -19,9 +19,8 @@ public class ErrorsDetailsTests extends AbstractAnalyticsProviderTest {
 //    }
 
 
-
     @Test
-    public void testErrorDetails() {
+    void testErrorDetails() {
         final var jsonContent = loadTextFile("/jsons/error-details.json");
         mockBackEnd.enqueue(new MockResponse()
                 .setBody(jsonContent)

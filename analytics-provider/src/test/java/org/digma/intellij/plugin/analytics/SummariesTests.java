@@ -11,9 +11,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class SummariesTests extends AbstractAnalyticsProviderTest {
+@SuppressWarnings("resource")
+class SummariesTests extends AbstractAnalyticsProviderTest {
 
 
     //run against running env just for local test
@@ -30,7 +32,7 @@ public class SummariesTests extends AbstractAnalyticsProviderTest {
 
 
     @Test
-    public void getSummaries() throws JsonProcessingException {
+    void getSummaries() throws JsonProcessingException {
 
         String codeObjectId = "Sample.MoneyTransfer.API.Controllers.TransferController$_$TransferFunds";
         List<ExecutedCodeSummary> executedCodeSummaries = new ArrayList<>();
@@ -49,12 +51,12 @@ public class SummariesTests extends AbstractAnalyticsProviderTest {
         assertEquals(1, summariesResult.size());
         assertEquals(MethodCodeObjectSummary.class, summariesResult.get(0).getClass());
         MethodCodeObjectSummary methodCodeObjectSummary = (MethodCodeObjectSummary) summariesResult.get(0);
-        assertEquals(methodCodeObjectSummary.getType(), CodeObjectSummaryType.MethodSummary);
-        assertTrue(expectedCodeObjectSummary.equals(methodCodeObjectSummary));
+        assertEquals(CodeObjectSummaryType.MethodSummary, methodCodeObjectSummary.getType());
+        assertEquals(expectedCodeObjectSummary, methodCodeObjectSummary);
     }
 
     @Test
-    public void getMultipleSummaries() throws JsonProcessingException {
+    void getMultipleSummaries() throws JsonProcessingException {
 
         String codeObjectId = "Sample.MoneyTransfer.API.Controllers.TransferController$_$TransferFunds";
         List<ExecutedCodeSummary> executedCodeSummaries = new ArrayList<>();
@@ -79,17 +81,17 @@ public class SummariesTests extends AbstractAnalyticsProviderTest {
         assertEquals(MethodCodeObjectSummary.class, summariesResult.get(0).getClass());
         assertEquals(SpanCodeObjectSummary.class, summariesResult.get(1).getClass());
         MethodCodeObjectSummary methodCodeObjectSummary = (MethodCodeObjectSummary) summariesResult.get(0);
-        assertEquals(methodCodeObjectSummary.getType(), CodeObjectSummaryType.MethodSummary);
-        assertTrue(expectedMethodCodeObjectSummary.equals(methodCodeObjectSummary));
+        assertEquals(CodeObjectSummaryType.MethodSummary, methodCodeObjectSummary.getType());
+        assertEquals(expectedMethodCodeObjectSummary, methodCodeObjectSummary);
 
         SpanCodeObjectSummary spanCodeObjectSummary = (SpanCodeObjectSummary) summariesResult.get(1);
-        assertEquals(spanCodeObjectSummary.getType(), CodeObjectSummaryType.SpanSummary);
-        assertTrue(spanCodeObjectSummary.equals(expectedSpanCodeObjectSummary));
+        assertEquals(CodeObjectSummaryType.SpanSummary, spanCodeObjectSummary.getType());
+        assertEquals(spanCodeObjectSummary, expectedSpanCodeObjectSummary);
     }
 
 
     @Test
-    public void getSummariesEmptyResultTest() throws JsonProcessingException {
+    void getSummariesEmptyResultTest() throws JsonProcessingException {
 
         mockBackEnd.enqueue(new MockResponse()
                 .setBody(objectMapper.writeValueAsString(Collections.emptyList()))
@@ -103,7 +105,7 @@ public class SummariesTests extends AbstractAnalyticsProviderTest {
     }
 
     @Test
-    public void getSummariesNullResultTest() {
+    void getSummariesNullResultTest() {
 
         mockBackEnd.enqueue(new MockResponse()
                 .addHeader("Content-Type", "application/json"));
@@ -111,14 +113,14 @@ public class SummariesTests extends AbstractAnalyticsProviderTest {
         AnalyticsProviderException exception = assertThrows(AnalyticsProviderException.class, () -> {
             CodeObjectSummaryRequest summaryRequest = new CodeObjectSummaryRequest("myenv", Collections.singletonList("nonexistingid"));
             AnalyticsProvider restAnalyticsProvider = new RestAnalyticsProvider(baseUrl);
-            List<CodeObjectSummary> summariesResult = restAnalyticsProvider.getSummaries(summaryRequest);
+            restAnalyticsProvider.getSummaries(summaryRequest);
         });
 
         assertEquals(MismatchedInputException.class, exception.getCause().getClass());
     }
 
     @Test
-    public void getSummariesErrorResultTest() {
+    void getSummariesErrorResultTest() {
 
         mockBackEnd.enqueue(new MockResponse()
                 .setResponseCode(500)
@@ -135,7 +137,7 @@ public class SummariesTests extends AbstractAnalyticsProviderTest {
 
 
     @Test
-    public void getSummariesWrongResultTest() throws JsonProcessingException {
+    void getSummariesWrongResultTest() throws JsonProcessingException {
 
         mockBackEnd.enqueue(new MockResponse()
                 .setBody(objectMapper.writeValueAsString("mystring"))

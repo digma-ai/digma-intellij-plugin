@@ -3,21 +3,7 @@ package org.digma.intellij.plugin.analytics;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import okhttp3.mockwebserver.MockResponse;
-import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
-import org.digma.intellij.plugin.model.rest.insights.Duration;
-import org.digma.intellij.plugin.model.rest.insights.ErrorInsight;
-import org.digma.intellij.plugin.model.rest.insights.ErrorInsightNamedError;
-import org.digma.intellij.plugin.model.rest.insights.HighUsageInsight;
-import org.digma.intellij.plugin.model.rest.insights.HotspotInsight;
-import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
-import org.digma.intellij.plugin.model.rest.insights.LowUsageInsight;
-import org.digma.intellij.plugin.model.rest.insights.NormalUsageInsight;
-import org.digma.intellij.plugin.model.rest.insights.Percentile;
-import org.digma.intellij.plugin.model.rest.insights.SlowEndpointInsight;
-import org.digma.intellij.plugin.model.rest.insights.SlowSpanInfo;
-import org.digma.intellij.plugin.model.rest.insights.SlowestSpansInsight;
-import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
-import org.digma.intellij.plugin.model.rest.insights.SpanInfo;
+import org.digma.intellij.plugin.model.rest.insights.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -27,7 +13,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class InsightsTests extends AbstractAnalyticsProviderTest {
+@SuppressWarnings("resource")
+class InsightsTests extends AbstractAnalyticsProviderTest {
 
 
     //run against running env just for local test
@@ -73,7 +60,7 @@ public class InsightsTests extends AbstractAnalyticsProviderTest {
     }
 
     @Test
-    public void getInsights() throws JsonProcessingException {
+    void getInsights() throws JsonProcessingException {
 
         String codeObjectId = "Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$TransferFunds";
         List<CodeObjectInsight> expectedCodeObjectInsights = new ArrayList<>();
@@ -168,7 +155,7 @@ public class InsightsTests extends AbstractAnalyticsProviderTest {
 
 
     @Test
-    public void getInsightsEmptyResultTest() throws JsonProcessingException {
+    void getInsightsEmptyResultTest() throws JsonProcessingException {
 
         mockBackEnd.enqueue(new MockResponse()
                 .setBody(objectMapper.writeValueAsString(Collections.emptyList()))
@@ -181,21 +168,21 @@ public class InsightsTests extends AbstractAnalyticsProviderTest {
     }
 
     @Test
-    public void getSummariesNullResultTest() {
+    void getSummariesNullResultTest() {
 
         mockBackEnd.enqueue(new MockResponse()
                 .addHeader("Content-Type", "application/json"));
 
         AnalyticsProviderException exception = assertThrows(AnalyticsProviderException.class, () -> {
             AnalyticsProvider analyticsProvider = new RestAnalyticsProvider(baseUrl);
-            List<CodeObjectInsight> codeObjectInsights = analyticsProvider.getInsights(new InsightsRequest("myenv", Collections.singletonList("method:aaaa")));
+            analyticsProvider.getInsights(new InsightsRequest("myenv", Collections.singletonList("method:aaaa")));
         });
 
         assertEquals(MismatchedInputException.class, exception.getCause().getClass());
     }
 
     @Test
-    public void getSummariesErrorResultTest() {
+    void getSummariesErrorResultTest() {
 
         mockBackEnd.enqueue(new MockResponse()
                 .setResponseCode(500)
@@ -203,7 +190,7 @@ public class InsightsTests extends AbstractAnalyticsProviderTest {
 
         AnalyticsProviderException exception = assertThrows(AnalyticsProviderException.class, () -> {
             AnalyticsProvider analyticsProvider = new RestAnalyticsProvider(baseUrl);
-            List<CodeObjectInsight> codeObjectInsights = analyticsProvider.getInsights(new InsightsRequest("myenv", Collections.singletonList("method:aaaa")));
+            analyticsProvider.getInsights(new InsightsRequest("myenv", Collections.singletonList("method:aaaa")));
         });
 
         assertEquals(500, exception.getResponseCode());
@@ -211,7 +198,7 @@ public class InsightsTests extends AbstractAnalyticsProviderTest {
 
 
     @Test
-    public void getSummariesWrongResultTest() throws JsonProcessingException {
+    void getSummariesWrongResultTest() throws JsonProcessingException {
 
         mockBackEnd.enqueue(new MockResponse()
                 .setBody(objectMapper.writeValueAsString("mystring"))
@@ -219,7 +206,7 @@ public class InsightsTests extends AbstractAnalyticsProviderTest {
 
         AnalyticsProviderException exception = assertThrows(AnalyticsProviderException.class, () -> {
             AnalyticsProvider analyticsProvider = new RestAnalyticsProvider(baseUrl);
-            List<CodeObjectInsight> codeObjectInsights = analyticsProvider.getInsights(new InsightsRequest("myenv", Collections.singletonList("method:aaaa")));
+            analyticsProvider.getInsights(new InsightsRequest("myenv", Collections.singletonList("method:aaaa")));
         });
 
         assertEquals(MismatchedInputException.class, exception.getCause().getClass());

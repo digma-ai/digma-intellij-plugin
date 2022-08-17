@@ -12,7 +12,10 @@ public final class UtilForTest {
 
     public static String loadTextFile(String path) {
         try (var inputStream = UtilForTest.class.getResourceAsStream(path)) {
-            return new String(inputStream.readAllBytes());
+            if (inputStream != null) {
+                return new String(inputStream.readAllBytes());
+            }
+            return "";
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -11,10 +11,11 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class EnvironmentTests extends AbstractAnalyticsProviderTest {
+@SuppressWarnings("resource")
+class EnvironmentTests extends AbstractAnalyticsProviderTest {
 
     @Test
-    public void getEnvironmentsTest() throws JsonProcessingException {
+    void getEnvironmentsTest() throws JsonProcessingException {
 
         List<String> expectedEnvs = new ArrayList<>();
         expectedEnvs.add("env1");
@@ -33,7 +34,7 @@ public class EnvironmentTests extends AbstractAnalyticsProviderTest {
 
 
     @Test
-    public void getEnvironmentsEmptyResultTest() throws JsonProcessingException {
+    void getEnvironmentsEmptyResultTest() throws JsonProcessingException {
 
         mockBackEnd.enqueue(new MockResponse()
                 .setBody(objectMapper.writeValueAsString(Collections.emptyList()))
@@ -47,7 +48,7 @@ public class EnvironmentTests extends AbstractAnalyticsProviderTest {
     }
 
     @Test
-    public void getEnvironmentsNullResultTest() {
+    void getEnvironmentsNullResultTest() {
 
         mockBackEnd.enqueue(new MockResponse()
                 .addHeader("Content-Type", "application/json"));
@@ -61,7 +62,7 @@ public class EnvironmentTests extends AbstractAnalyticsProviderTest {
     }
 
     @Test
-    public void getEnvironmentsErrorResultTest() {
+    void getEnvironmentsErrorResultTest() {
 
         mockBackEnd.enqueue(new MockResponse()
                 .setResponseCode(500)
@@ -77,7 +78,7 @@ public class EnvironmentTests extends AbstractAnalyticsProviderTest {
 
 
     @Test
-    public void getEnvironmentsWrongResultTest() throws JsonProcessingException {
+    void getEnvironmentsWrongResultTest() throws JsonProcessingException {
 
         mockBackEnd.enqueue(new MockResponse()
                 .setBody(objectMapper.writeValueAsString("MYENV"))

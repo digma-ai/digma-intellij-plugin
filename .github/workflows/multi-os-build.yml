@@ -10,8 +10,8 @@ name: Multi OS CI Build on main
 on:
   push:
     branches: [ 'main' ]
-  pull_request:
-    branches: [ 'main' ]
+#  pull_request:
+#    branches: [ 'main' ]
 
 jobs:
   build:

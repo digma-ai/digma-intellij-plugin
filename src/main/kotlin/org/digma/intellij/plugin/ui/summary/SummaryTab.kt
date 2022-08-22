@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.ui.summary
 
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.ui.common.createTopPanel
+import org.digma.intellij.plugin.ui.common.wrapWithNoConnectionWrapper
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.listBackground
 import org.digma.intellij.plugin.ui.list.summaries.SummaryPanelList
@@ -37,5 +38,6 @@ fun summaryPanel(project: Project): DigmaTabPanel {
     result.add(topPanelWrapper, BorderLayout.NORTH)
     result.add(summaryList, BorderLayout.CENTER)
     result.background = listBackground()
-    return result
+
+    return wrapWithNoConnectionWrapper(project, result)
 }

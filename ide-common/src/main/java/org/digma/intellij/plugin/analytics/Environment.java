@@ -9,14 +9,16 @@ import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.persistence.PersistenceData;
 import org.digma.intellij.plugin.settings.SettingsState;
-import org.digma.intellij.plugin.ui.model.environment.EnvironmentsListChangedListener;
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class Environment implements EnvironmentsSupplier {
@@ -33,8 +35,6 @@ public class Environment implements EnvironmentsSupplier {
     private final AnalyticsService analyticsService;
     private final PersistenceData persistenceData;
 
-    private final Set<EnvironmentsListChangedListener> listeners = new LinkedHashSet<>();
-
     private Instant lastRefreshTimestamp = Instant.now();
 
     public Environment(@NotNull Project project, @NotNull AnalyticsService analyticsService, @NotNull PersistenceData persistenceData, SettingsState settingsState) {
@@ -43,21 +43,32 @@ public class Environment implements EnvironmentsSupplier {
         this.persistenceData = persistenceData;
         this.current = persistenceData.getCurrentEnv();
         this.settingsState = settingsState;
+
+        //call refresh on environment when connection is lost, in some cases its necessary for some components to reset or update ui.
+        //usually these components react to environment change events, so this will trigger an environment change if not already happened before.
+        //if the connection lost happened during environment refresh then it may cause a second redundant event but will do no harm.
+        project.getMessageBus().connect(project).subscribe(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, new AnalyticsServiceConnectionEvent() {
+            @Override
+            public void connectionLost() {
+                refresh();
+            }
+
+            @Override
+            public void connectionGained() {
+                //do nothing ,usually connectionGained will be a result of refresh environment
+            }
+        });
     }
 
 
 
     @Override
     public String getCurrent() {
-        //using getCurrent as a hook to recover environments in case it could not be loaded yet.
-        //maybeRecoverEnvironments will run in the background. if current is null the method will return null,
-        //if the environments where recovered the next call to getCurrent will return an environment.
-        maybeRecoverEnvironments();
         return current;
     }
 
     @Override
-    public void setCurrent(String newEnv) {
+    public void setCurrent(@NotNull String newEnv) {
 
         Log.log(LOGGER::debug, "Setting current environment , old={},new={}", this.current, newEnv);
 
@@ -70,6 +81,7 @@ public class Environment implements EnvironmentsSupplier {
         this.current = newEnv;
         persistenceData.setCurrentEnv(newEnv);
 
+        //todo: maybe always on background
         if (SwingUtilities.isEventDispatchThread()) {
             new Task.Backgroundable(project, "Digma: environment changed...") {
                 @Override
@@ -83,7 +95,6 @@ public class Environment implements EnvironmentsSupplier {
     }
 
 
-
     @NotNull
     @Override
     public List<String> getEnvironments() {
@@ -91,35 +102,42 @@ public class Environment implements EnvironmentsSupplier {
     }
 
 
+    //refresh is called many times, every time the method context changes,and it's not necessary to
+    //really try every time,it used as a hook to refresh in case the backend list changed.
+    //so it will only refresh if some time passed since the last call
     @Override
-    public void addEnvironmentsListChangeListener(EnvironmentsListChangedListener listener) {
-        if (listener != null) {
-            listeners.remove(listener);
-            listeners.add(listener);
-        }
+    public void refresh() {
+        refreshOnlyEverySomeTimePassed();
     }
 
 
-
+    //this should be used when a refresh is necessary as soon as possible.
     @Override
-    public void refresh() {
+    public void refreshNowOnBackground() {
+        refreshOnBackground();
+    }
 
-        if (!timeToRefresh()){
+    private void refreshOnlyEverySomeTimePassed() {
+
+        if (!timeToRefresh()) {
             Log.log(LOGGER::debug, "Skipping Refresh Environments , will try again in few seconds..");
             return;
         }
 
+        refreshOnBackground();
+    }
+
+
+    private void refreshOnBackground() {
+
+        Log.log(LOGGER::debug, "Refreshing Environments on background thread.");
         new Task.Backgroundable(project, "Digma: Refreshing environments...") {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
-                var stopWatch = StopWatch.createStarted();
                 refreshEnvironments();
-                stopWatch.stop();
-                Log.log(LOGGER::debug, "Refresh environments took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS));
             }
         }.queue();
     }
-
 
 
     private boolean timeToRefresh() {
@@ -134,37 +152,33 @@ public class Environment implements EnvironmentsSupplier {
     }
 
 
-    /**
-     * maybeRecoverEnvironments is a hook to try and recover the environments list in case it could not be loaded yet.
-     * it may be called in several events and will try to recover the environments list in the background.
-     */
-    private void maybeRecoverEnvironments() {
-        if (environments == null || environments.isEmpty()) {
-            Log.log(LOGGER::debug, "Environments list is empty,trying recovery");
-            refresh();
-        }
-    }
-
 
     //this method should not be called on ui threads, it may hang and cause a freeze
     private void refreshEnvironments() {
 
-        Log.log(LOGGER::debug, "Refresh Environments called");
+        var stopWatch = StopWatch.createStarted();
 
-        Log.log(LOGGER::debug, "Refreshing Environments list");
-        var newEnvironments = analyticsService.getEnvironments();
-        if (newEnvironments != null && newEnvironments.size() > 0) {
-            Log.log(LOGGER::debug, "Got environments {}", newEnvironments);
-        } else {
-            Log.log(LOGGER::warn, "Error loading environments: {}", newEnvironments);
-            newEnvironments = new ArrayList<>();
+        try {
+            Log.log(LOGGER::debug, "Refresh Environments called");
+
+            Log.log(LOGGER::debug, "Refreshing Environments list");
+            var newEnvironments = analyticsService.getEnvironments();
+            if (newEnvironments != null && newEnvironments.size() > 0) {
+                Log.log(LOGGER::debug, "Got environments {}", newEnvironments);
+            } else {
+                Log.log(LOGGER::warn, "Error loading environments: {}", newEnvironments);
+                newEnvironments = new ArrayList<>();
+            }
+
+            if (environmentsListEquals(newEnvironments, environments)) {
+                return;
+            }
+
+            replaceEnvironmentsList(newEnvironments);
+        } finally {
+            stopWatch.stop();
+            Log.log(LOGGER::debug, "Refresh environments took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS));
         }
-
-        if (environmentsListEquals(newEnvironments, environments)) {
-            return;
-        }
-
-        replaceEnvironmentsList(newEnvironments);
     }
 
 
@@ -173,12 +187,20 @@ public class Environment implements EnvironmentsSupplier {
         Log.log(LOGGER::debug, "replaceEnvironmentsList called");
         this.environments = envs;
         var oldEnv = current;
-        if (current == null || !this.environments.contains(current)) {
-            current = environments.size() > 0 ? environments.get(0) : null;
+
+        if (this.environments.contains(persistenceData.getCurrentEnv())) {
+            current = persistenceData.getCurrentEnv();
+        } else if (current == null || !this.environments.contains(current)) {
+            current = environments.isEmpty() ? null : environments.get(0);
         }
 
-        persistenceData.setCurrentEnv(current);
-        fireEnvironmentsListChange();
+        if (current != null) {
+            //don't update the persistent data with null,null will happen on connection lost,
+            //so when connection is back the current env can be restored to the last one.
+            persistenceData.setCurrentEnv(current);
+        }
+
+        notifyEnvironmentsListChange();
 
         if (!Objects.equals(oldEnv, current)) {
             notifyEnvironmentChanged(oldEnv, current);
@@ -199,18 +221,14 @@ public class Environment implements EnvironmentsSupplier {
     }
 
 
-    private void fireEnvironmentsListChange() {
-        Log.log(LOGGER::debug, "Firing environmentsListChanged event");
-        Runnable r = () -> listeners.forEach(listener -> listener.environmentsListChanged(environments));
-        if (SwingUtilities.isEventDispatchThread()) {
-            r.run();
-        } else {
-            SwingUtilities.invokeLater(r);
+    private void notifyEnvironmentsListChange() {
+        Log.log(LOGGER::debug, "Firing EnvironmentsListChange event for {}", environments);
+        if (project.isDisposed()) {
+            return;
         }
+        EnvironmentChanged publisher = project.getMessageBus().syncPublisher(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC);
+        publisher.environmentsListChanged(environments);
     }
-
-
-
 
     private void notifyEnvironmentChanged(String oldEnv, String newEnv) {
         Log.log(LOGGER::debug, "Firing EnvironmentChanged event for {}", newEnv);

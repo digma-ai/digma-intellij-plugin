@@ -28,6 +28,7 @@ import javax.net.ssl.SSLException;
 import javax.swing.*;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -53,9 +54,11 @@ public class AnalyticsService implements Disposable {
 
 
     public AnalyticsService(@NotNull Project project) {
+        //initialize BackendConnectionMonitor when starting, so it is aware early on connection statuses
+        project.getService(BackendConnectionMonitor.class);
         SettingsState settingsState = project.getService(SettingsState.class);
         PersistenceService persistenceService = project.getService(PersistenceService.class);
-        environment = new Environment(project, this, persistenceService.getState(),settingsState);
+        environment = new Environment(project, this, persistenceService.getState(), settingsState);
         this.project = project;
         myApiUrl = settingsState.apiUrl;
         myApiToken = settingsState.apiToken;
@@ -266,8 +269,9 @@ public class AnalyticsService implements Disposable {
                 }
 
                 //reset status on success call
-                if (status.isInError()){
-                    NotificationUtil.showNotification(project,"Digma: Connection reestablished !");
+                if (status.isInConnectionError()) {
+                    NotificationUtil.showNotification(project, "Digma: Connection reestablished !");
+                    project.getMessageBus().syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC).connectionGained();
                 }
                 status.ok();
 
@@ -276,27 +280,27 @@ public class AnalyticsService implements Disposable {
             } catch (InvocationTargetException e) {
 
                 //handle only InvocationTargetException, other exceptions are probably a bug.
-                //log to error only the first time of ConnectException, this form of error log will popup a balloon error
-                //message, it's not necessary to pop up the balloon too many times. following exceptions will just be logged
-                //to the log file
+                //log to error only the first time of ConnectException and show an error notification.
+                // following exceptions will just be logged to the log file
                 boolean isConnectionException = isConnectionException(e) || isSslConnectionException(e);
-                if ( status.isOk() && isConnectionException ){
+                if (status.isOk() && isConnectionException) {
                     status.connectError();
-                    Log.log(LOGGER::warn, "Connection exception: error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getCause().getMessage());
+                    project.getMessageBus().syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC).connectionLost();
+                    var message = isConnectionException(e) ? getConnectExceptionMessage(e) : getSslExceptionMessage(e);
+                    Log.log(LOGGER::warn, "Connection exception: error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
                     LOGGER.warn(e);
-                    var message = isConnectionException(e) ? getConnectExceptionMessage(e):getSslExceptionMessage(e);
-                    NotificationUtil.notifyError(project,"<html>Connection error with Digma backend api for method "+method.getName()+".<br> "
+                    NotificationUtil.notifyError(project, "<html>Connection error with Digma backend api for method " + method.getName() + ".<br> "
                             + message + ".<br> See logs for details.");
-                }else if (status.isOk()){
+                } else if (status.isOk()) {
                     status.error();
                     Log.log(LOGGER::debug,"Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getCause().getMessage());
                     var message = getExceptionMessage(e);
                     NotificationUtil.notifyError(project, "<html>Error with Digma backend api for method " + method.getName() + ".<br> "
                             + message + ".<br> See logs for details.");
-
                 } else if (!status.hadError(e)) {
                     status.error();
-                    Log.log(LOGGER::debug, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getCause().getMessage());
+                    var message = getExceptionMessage(e);
+                    Log.log(LOGGER::debug, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
                 }
 
 
@@ -319,7 +323,7 @@ public class AnalyticsService implements Disposable {
         private boolean isConnectionException(InvocationTargetException e) {
 
             var ex = e.getCause();
-            while (ex != null && !(ex instanceof ConnectException)){
+            while (ex != null && !(isConnectionUnavailableException(ex))) {
                 ex = ex.getCause();
             }
             if (ex != null){
@@ -333,20 +337,32 @@ public class AnalyticsService implements Disposable {
 
         private String getConnectExceptionMessage(InvocationTargetException e) {
             var ex = e.getCause();
-            while (ex != null && !(ex instanceof ConnectException)){
+            while (ex != null && !(isConnectionUnavailableException(ex))) {
                 ex = ex.getCause();
             }
-            if (ex != null){
+            if (ex != null) {
                 return ex.getMessage();
             }
 
-            return e.getCause() != null? e.getCause().getMessage():e.getMessage();
+            return e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
         }
+
+
+        //Exceptions that may indicate that connection can't be established
+        private boolean isConnectionUnavailableException(Throwable exception) {
+
+            //InterruptedIOException is thrown when the connection is dropped , for example by iptables
+
+            return exception instanceof ConnectException ||
+                    exception instanceof InterruptedIOException;
+
+        }
+
 
         private boolean isSslConnectionException(InvocationTargetException e) {
 
             var ex = e.getCause();
-            while (ex != null && !(ex instanceof SSLException)){
+            while (ex != null && !(ex instanceof SSLException)) {
                 ex = ex.getCause();
             }
             return ex != null;
@@ -408,17 +424,22 @@ public class AnalyticsService implements Disposable {
     }
 
 
-    private static class Status{
+    private static class Status {
 
-        private final Map<String,Boolean> errorsHistory = new HashMap<>();
+        private final Map<String, Boolean> errorsHistory = new HashMap<>();
 
         private boolean hadConnectException = false;
         private boolean hadError = false;
 
-        boolean isInError(){
+        boolean isInError() {
             return hadConnectException || hadError;
         }
-        boolean isOk(){
+
+        boolean isInConnectionError() {
+            return hadConnectException;
+        }
+
+        boolean isOk() {
             return !isInError();
         }
 

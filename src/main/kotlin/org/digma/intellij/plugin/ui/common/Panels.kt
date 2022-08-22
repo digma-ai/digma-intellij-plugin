@@ -14,6 +14,7 @@ import org.digma.intellij.plugin.ui.model.NOT_SUPPORTED_OBJECT_MSG
 import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
+import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import java.awt.BorderLayout
 import javax.swing.JLabel
 
@@ -81,4 +82,9 @@ fun createTopPanel(project: Project, model: PanelModel): DigmaResettablePanel {
     result.add(scopeLine, BorderLayout.NORTH)
     result.add(envsPanel, BorderLayout.CENTER)
     return result
+}
+
+
+fun wrapWithNoConnectionWrapper(project: Project, panel: DigmaTabPanel): DigmaTabPanel {
+    return NoConnectionWrapper(project, panel)
 }

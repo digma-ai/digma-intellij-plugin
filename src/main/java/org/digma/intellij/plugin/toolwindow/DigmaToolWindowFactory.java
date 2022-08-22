@@ -1,11 +1,14 @@
 package org.digma.intellij.plugin.toolwindow;
 
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
+import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.service.EditorInteractionService;
 import org.digma.intellij.plugin.service.ErrorsActionsService;
@@ -42,6 +45,9 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
 
         var toolWindowTabsHelper = project.getService(ToolWindowTabsHelper.class);
         toolWindowTabsHelper.setToolWindow(toolWindow);
+
+        //initialize AnalyticsService early so the UI already can detect the connection status when created
+        project.getService(AnalyticsService.class);
 
         Content contentToSelect;
 
@@ -92,5 +98,17 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
         EditorInteractionService.getInstance(project).start();
 
         toolWindow.getContentManager().setSelectedContent(contentToSelect, true);
+
+
+        new Task.Backgroundable(project, "Digma: Summary view reload...") {
+            //SummaryViewService will get the event when the environment is loaded and will update its model,
+            // but if the tool window is not opened yet then the summary tab will not update because the panel is not
+            // available yet. only at this stage the panels are constructed already. just calling SummaryViewService.updateUi()
+            // will do the job.
+            @Override
+            public void run(@NotNull ProgressIndicator indicator) {
+                project.getService(SummaryViewService.class).updateUi();
+            }
+        }.queue();
     }
 }

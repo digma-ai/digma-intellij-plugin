@@ -9,8 +9,11 @@ import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.rider.protocol.CodeObjectHost;
 import org.digma.intellij.plugin.rider.protocol.DocumentCodeObjectsListener;
+import org.digma.intellij.plugin.rider.protocol.ElementUnderCaretDetector;
 import org.digma.intellij.plugin.ui.CaretContextService;
 import org.digma.intellij.plugin.ui.service.SummaryViewService;
+
+import java.util.List;
 
 public class RiderEnvironmentChangedListener extends LifetimedProjectComponent implements EnvironmentChanged {
 
@@ -18,6 +21,7 @@ public class RiderEnvironmentChangedListener extends LifetimedProjectComponent i
 
     private final CodeObjectHost codeObjectHost;
     private final DocumentCodeObjectsListener documentCodeObjectsListener;
+    private final ElementUnderCaretDetector elementUnderCaretDetector;
     private final CaretContextService caretContextService;
     private final DocumentInfoService documentInfoService;
     private final SummaryViewService summaryViewService;
@@ -27,6 +31,7 @@ public class RiderEnvironmentChangedListener extends LifetimedProjectComponent i
         super(project);
         codeObjectHost = project.getService(CodeObjectHost.class);
         documentCodeObjectsListener = project.getService(DocumentCodeObjectsListener.class);
+        elementUnderCaretDetector = project.getService(ElementUnderCaretDetector.class);
         caretContextService = project.getService(CaretContextService.class);
         documentInfoService = project.getService(DocumentInfoService.class);
         summaryViewService = project.getService(SummaryViewService.class);
@@ -50,10 +55,15 @@ public class RiderEnvironmentChangedListener extends LifetimedProjectComponent i
         //in the protocol, that will cause a refresh of the code objects,summaries etc. and will eventually
         //trigger a MethodUnderCaret event
         documentCodeObjectsListener.environmentChanged();
-        // summary tab affected only by env change
-        summaryViewService.environmentChanged();
 
-        //todo: maybe trigger again MethodUnderCaret event
+        //trigger a refresh here, its necessary when connection is lost and regained so that contextChange will be called
+        //and the view update.
+        elementUnderCaretDetector.refresh();
+    }
+
+    @Override
+    public void environmentsListChanged(List<String> newEnvironments) {
+        //do nothing
     }
 
     @Override

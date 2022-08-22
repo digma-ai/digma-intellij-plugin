@@ -7,6 +7,7 @@ import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
+import org.digma.intellij.plugin.analytics.BackendConnectionMonitor;
 import org.digma.intellij.plugin.document.DocumentInfoContainer;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.editor.EditorEventsHandler;
@@ -17,6 +18,7 @@ import org.digma.intellij.plugin.ui.CaretContextService;
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
+import org.digma.intellij.plugin.ui.service.SummaryViewService;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -37,14 +39,19 @@ public class EditorInteractionService implements CaretContextService, Disposable
 
     private final InsightsViewService insightsViewService;
     private final ErrorsViewService errorsViewService;
+    private final SummaryViewService summaryViewService;
     private final DocumentInfoService documentInfoService;
     private final EnvironmentsSupplier environmentsSupplier;
+    private final BackendConnectionMonitor backendConnectionMonitor;
+
 
     public EditorInteractionService(Project project) {
         this.project = project;
         insightsViewService = project.getService(InsightsViewService.class);
         errorsViewService = project.getService(ErrorsViewService.class);
+        summaryViewService = project.getService(SummaryViewService.class);
         documentInfoService = project.getService(DocumentInfoService.class);
+        backendConnectionMonitor = project.getService(BackendConnectionMonitor.class);
         var analyticsService = project.getService(AnalyticsService.class);
         environmentsSupplier = analyticsService.getEnvironment();
     }
@@ -53,10 +60,46 @@ public class EditorInteractionService implements CaretContextService, Disposable
         return project.getService(CaretContextService.class);
     }
 
+
+    boolean hadConnectionError = false;
+
+    private boolean testConnectionToBackend() {
+
+        //refresh will run in the background.
+        //if there is currently no connection but it will recover during this refresh call then
+        //not sure backendConnectionMonitor will catch it so the contextChange flow may still block.
+        //the next contextChange will pass.
+        //but anyway if the connection will recover an environmentChanged event will fire and that should have some kind
+        //of hook to intentionally cause a contextChange event.
+        environmentsSupplier.refresh();
+
+        //hadConnectionError helps to call contextEmptyNoConnection() only once on the first time that a connection error is discovered.
+        //and there is no need to empty again or change the models and ui until the connection is back.
+        if (backendConnectionMonitor.isConnectionError()) {
+            if (hadConnectionError) {
+                Log.log(LOGGER::debug, "Not Executing contextChanged because there is no connection to backend service");
+                return false;
+            }
+            contextEmptyNoConnection();
+            hadConnectionError = true;
+            return false;
+        } else {
+            hadConnectionError = false;
+            return true;
+        }
+    }
+
+
     @Override
     public void contextChanged(MethodUnderCaret methodUnderCaret) {
 
-        environmentsSupplier.refresh();
+        //There is no need to execute the contextChanged flow if there is no connection to the backend.
+        // so testConnectionToBackend will detect a backend connection error , call contextEmptyNoConnection once
+        // to clean the views, and will return. and will keep blocking until the connection is regained.
+        if (!testConnectionToBackend()) {
+            return;
+        }
+
 
         if (runningTask != null) {
             runningTask.cancel();
@@ -96,7 +139,6 @@ public class EditorInteractionService implements CaretContextService, Disposable
          coding or paste, maybe the MethodUnderCaret event will happen soon enough so there is still no MethodInfo
          in DocumentInfoService.
         for now ignoring the MethodUnderCaret if MethodInfo was not found.
-
          */
 
 
@@ -154,6 +196,13 @@ public class EditorInteractionService implements CaretContextService, Disposable
         Log.log(LOGGER::debug, "contextEmpty called");
         insightsViewService.empty();
         errorsViewService.empty();
+    }
+
+    private void contextEmptyNoConnection() {
+        Log.log(LOGGER::debug, "contextEmptyNoConnection called");
+        insightsViewService.empty();
+        errorsViewService.empty();
+        summaryViewService.empty();
     }
 
     @Override

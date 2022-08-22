@@ -9,6 +9,7 @@ import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import org.digma.intellij.plugin.ui.common.createTopPanel
 import org.digma.intellij.plugin.ui.common.noCodeObjectWarningPanel
+import org.digma.intellij.plugin.ui.common.wrapWithNoConnectionWrapper
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.insights.InsightsList
 import org.digma.intellij.plugin.ui.list.insights.PreviewList
@@ -115,7 +116,7 @@ fun insightsPanel(project: Project): DigmaTabPanel {
     result.add(cardsPanel, BorderLayout.CENTER)
     result.background = listBackground()
 
-    return result
+    return wrapWithNoConnectionWrapper(project, result)
 }
 
 

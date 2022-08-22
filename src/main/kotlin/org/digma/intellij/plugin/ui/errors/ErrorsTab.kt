@@ -11,6 +11,7 @@ import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.ui.common.createTopPanel
 import org.digma.intellij.plugin.ui.common.noCodeObjectWarningPanel
+import org.digma.intellij.plugin.ui.common.wrapWithNoConnectionWrapper
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.errors.ErrorsPanelList
 import org.digma.intellij.plugin.ui.list.insights.PreviewList
@@ -108,10 +109,16 @@ fun errorsPanel(project: Project): DigmaTabPanel {
 
     val result = object : DigmaTabPanel() {
         override fun getPreferredFocusableComponent(): JComponent {
+            if (ErrorsTabCard.ERROR_DETAILS == errorsModel.card) {
+                return errorsDetailsPanel.getPreferredFocusableComponent()
+            }
             return topPanelWrapper
         }
 
         override fun getPreferredFocusedComponent(): JComponent {
+            if (ErrorsTabCard.ERROR_DETAILS == errorsModel.card) {
+                return errorsDetailsPanel.getPreferredFocusedComponent()
+            }
             return topPanelWrapper
         }
 
@@ -147,6 +154,7 @@ fun errorsPanel(project: Project): DigmaTabPanel {
     result.layout = BorderLayout()
     result.add(cardsPanel, BorderLayout.CENTER)
     result.background = listBackground()
-    return result
+
+    return wrapWithNoConnectionWrapper(project, result)
 }
 

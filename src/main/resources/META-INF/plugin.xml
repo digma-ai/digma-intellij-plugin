@@ -64,6 +64,8 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.common.DumbAwareNotifier"/>
 
+        <projectService serviceImplementation="org.digma.intellij.plugin.analytics.BackendConnectionMonitor"/>
+
         <notificationGroup id="Digma Notification Group"
                            displayType="BALLOON"
                            toolWindowId="Digma"/>

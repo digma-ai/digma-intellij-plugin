@@ -71,7 +71,10 @@ object Laf  {
         class Environment {
             companion object {
                 @JvmStatic val ENVIRONMENT_HAS_USAGE = loadAndScaleIconByWidth("/icons/used.png", 8)
-                @JvmStatic val ENVIRONMENT_HAS_NO_USAGE = loadAndScaleIconByWidth("/icons/unused.png", 8)
+                @JvmStatic
+                val ENVIRONMENT_HAS_NO_USAGE = loadAndScaleIconByWidth("/icons/unused.png", 8)
+                @JvmStatic
+                val NO_CONNECTION_ICON = SvgIcon.asIs("/icons/no-signal.svg")
             }
         }
         class Insight{

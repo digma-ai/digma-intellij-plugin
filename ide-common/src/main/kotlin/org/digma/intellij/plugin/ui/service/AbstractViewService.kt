@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.ui.content.Content
+import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.ui.model.NOT_SUPPORTED_OBJECT_MSG
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import javax.swing.SwingUtilities
@@ -17,11 +18,39 @@ abstract class AbstractViewService(val project: Project) {
 
     private val toolWindowTabsHelper: ToolWindowTabsHelper = project.getService(ToolWindowTabsHelper::class.java)
 
+    init {
+        //subscribe to connection lost/gained , call doUpdateUi() on each event so that the no connection card will show or hide
+        project.messageBus.connect(project)
+            .subscribe(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC,
+                handler = object : AnalyticsServiceConnectionEvent {
+                    override fun connectionLost() {
+                        doUpdateUi()
+                    }
+
+                    override fun connectionGained() {
+                        doUpdateUi()
+                    }
+                }
+            )
+    }
+
+
     abstract fun getViewDisplayName(): String
+
+    //in some situation the UI should not be updated, for example if the error details is On then nothing changes
+    //in the view until its closed. there may be exceptions, for example the summary view can reload while error details
+    // is on but setVisible should not run.
+    open fun canUpdateUI(): Boolean {
+        return !toolWindowTabsHelper.isErrorDetailsOn()
+    }
+
+    open fun canSetVisible(): Boolean {
+        return !toolWindowTabsHelper.isErrorDetailsOn()
+    }
 
 
     fun setVisible() {
-        if (toolWindowTabsHelper.isErrorDetailsOn()) {
+        if (!canSetVisible()) {
             return
         }
 
@@ -51,16 +80,23 @@ abstract class AbstractViewService(val project: Project) {
     }
 
 
-    fun updateUi(){
+    fun updateUi() {
 
         //don't update ui if error details is on,
         //when error details is closed the ui will be updated.
         //the models do get updated on every context changed
 
-        if (toolWindowTabsHelper.isErrorDetailsOn()){
+        if (!canUpdateUI()) {
             return
         }
 
+        doUpdateUi()
+    }
+
+
+    //this method should never be called directly,only when connection is lost or gained.
+    //it by-pass the conditions usually tested in updateUi so that the no-connection card will show on all tabs.
+    private fun doUpdateUi() {
 
         if (panel != null) {
 
@@ -69,6 +105,9 @@ abstract class AbstractViewService(val project: Project) {
 
                 if (toolWindowContent != null) {
                     toolWindowContent?.displayName = getViewDisplayName()
+                    //reset focusable component methods, some panels are dynamic in what they return, see for example NoConnectionWrapper
+                    toolWindowContent?.setPreferredFocusedComponent { panel?.getPreferredFocusedComponent() }
+                    toolWindowContent?.preferredFocusableComponent = panel?.getPreferredFocusableComponent()
                     toolWindowContent?.component?.revalidate()
                     toolWindow?.component?.revalidate()
                 }
@@ -87,6 +126,5 @@ abstract class AbstractViewService(val project: Project) {
     protected fun getNonSupportedFileScopeMessage(fileUri: String?): String{
         return NOT_SUPPORTED_OBJECT_MSG + " " +fileUri?.substringAfterLast('/',fileUri)
     }
-
 
 }

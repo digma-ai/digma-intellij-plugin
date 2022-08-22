@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.ui.common
 
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.Disposer
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
@@ -15,7 +14,6 @@ import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
 import org.digma.intellij.plugin.ui.common.Laf.Icons.Environment.Companion.ENVIRONMENT_HAS_NO_USAGE
 import org.digma.intellij.plugin.ui.common.Laf.Icons.Environment.Companion.ENVIRONMENT_HAS_USAGE
 import org.digma.intellij.plugin.ui.model.PanelModel
-import org.digma.intellij.plugin.ui.model.environment.EnvironmentsListChangedListener
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.Dimension
@@ -38,26 +36,33 @@ class EnvironmentsPanel(
         isOpaque = false
         layout = WrapLayout(FlowLayout.LEFT, 2, 2)
         rebuild()
-        environmentsSupplier.addEnvironmentsListChangeListener(object : EnvironmentsListChangedListener {
-            override fun environmentsListChanged(newEnvironments: List<String>) {
-                rebuild()
-            }
-        })
 
-        //we have two instances of EnvironmentsPanel, if a button is clicked in the insights tab the selected button
-        //need to change also in the errors tab, and vice versa.
-        val messageBusConnection = project.messageBus.connect()
-        messageBusConnection.subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, EnvironmentChanged {
-            if (SwingUtilities.isEventDispatchThread()) {
-                select(it)
-            } else {
-                SwingUtilities.invokeLater {
-                    select(it)
+        project.messageBus.connect(project)
+            .subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, object : EnvironmentChanged {
+                //there are few instances of EnvironmentsPanel, if a button is clicked in the insights tab the selected button
+                //need to change also in the errors tab, and vice versa.
+                override fun environmentChanged(newEnv: String?) {
+                    if (SwingUtilities.isEventDispatchThread()) {
+                        select(newEnv)
+                    } else {
+                        SwingUtilities.invokeLater {
+                            select(newEnv)
+                        }
+                    }
                 }
-            }
-        })
-        Disposer.register(project, messageBusConnection)
+
+                override fun environmentsListChanged(newEnvironments: MutableList<String>?) {
+                    if (SwingUtilities.isEventDispatchThread()) {
+                        rebuild()
+                    } else {
+                        SwingUtilities.invokeLater {
+                            rebuild()
+                        }
+                    }
+                }
+            })
     }
+
 
     override fun reset() {
         rebuild()

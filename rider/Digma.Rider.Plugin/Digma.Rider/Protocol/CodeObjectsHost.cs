@@ -63,7 +63,12 @@ namespace Digma.Rider.Protocol
                         {
                             Log(_logger, "Found PsiSourceFile in local map for {0}, Calling ReanalyzeFile {0}",
                                 documentKey, psiSourceFile);
-                            riderSolutionAnalysisService.ReanalyzeFile(psiSourceFile);
+                            //// riderSolutionAnalysisService.ReanalyzeFile(psiSourceFile);
+                            //todo: ReanalyzeFile does the job but the editor is not updated immediately, sometimes 
+                            //need to close and reopen it to see the new code lens.
+                            //ReanalyzeAll just works.
+                            Log(_logger, "Calling ReanalyzeAll instead of ReanalyzeFile for {0}",documentKey);
+                            riderSolutionAnalysisService.ReanalyzeAll();
                         }
                         else
                         {

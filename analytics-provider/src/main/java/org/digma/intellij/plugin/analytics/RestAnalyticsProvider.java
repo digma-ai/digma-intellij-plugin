@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.analytics;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.CharStreams;
 import okhttp3.OkHttpClient;
@@ -19,20 +20,9 @@ import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
-import retrofit2.http.Body;
-import retrofit2.http.GET;
-import retrofit2.http.Headers;
-import retrofit2.http.POST;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
-import retrofit2.http.Streaming;
+import retrofit2.http.*;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
+import javax.net.ssl.*;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.Reader;
@@ -207,6 +197,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         private ObjectMapper createObjectMapper() {
             ObjectMapper objectMapper = new ObjectMapper();
             //objectMapper can be configured here is necessary
+            objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            objectMapper.configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false);
             return objectMapper;
         }
 

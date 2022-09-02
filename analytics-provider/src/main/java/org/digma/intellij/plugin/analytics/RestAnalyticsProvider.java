@@ -197,8 +197,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         private ObjectMapper createObjectMapper() {
             ObjectMapper objectMapper = new ObjectMapper();
             //objectMapper can be configured here is necessary
-            objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-            objectMapper.configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false);
+            objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+            objectMapper.disable(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES);
             return objectMapper;
         }
 

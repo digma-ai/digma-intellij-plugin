@@ -1,6 +1,8 @@
 package org.digma.intellij.plugin.settings;
 
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.ComboBox;
+import com.intellij.ui.EnumComboBoxModel;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
@@ -22,6 +24,7 @@ public class SettingsComponent {
   private final JBTextField myApiToken = new JBTextField();
   private final JBTextField myRefreshDelay = new JBTextField();
   private final JBTextField myJaegerUrlText = new JBTextField();
+  private final ComboBox<LinkMode> myJaegerLinkModeComboBox = new ComboBox<>(new EnumComboBoxModel<>(LinkMode.class));
 
   public SettingsComponent(Project project) {
 
@@ -77,6 +80,7 @@ public class SettingsComponent {
       }
     });
 
+    var myJaegerLinkModeLabel = new JBLabel("Jaeger Link Mode: ");
 
     var resetButton = new JButton("Reset to defaults");
     resetButton.addActionListener(e -> resetToDefaults());
@@ -86,6 +90,7 @@ public class SettingsComponent {
             .addLabeledComponent(new JBLabel("Api token:"), myApiToken, 1, false)
             .addLabeledComponent(myRefreshLabel, myRefreshDelay, 1, false)
             .addLabeledComponent(myJaegerUrlLabel, myJaegerUrlText, 1, false)
+            .addLabeledComponent(myJaegerLinkModeLabel, myJaegerLinkModeComboBox, 1, false)
             .addComponent(resetButton)
             .addComponentFillVertically(new JPanel(), 0)
             .getPanel();
@@ -129,6 +134,14 @@ public class SettingsComponent {
     myJaegerUrlText.setText(newText.trim());
   }
 
+  public LinkMode getJaegerLinkMode() {
+    return (LinkMode) myJaegerLinkModeComboBox.getSelectedItem();
+  }
+
+  public void setJaegerLinkMode(LinkMode linkMode) {
+    myJaegerLinkModeComboBox.setSelectedItem(linkMode);
+  }
+
   @NotNull
   public String getRefreshDelayText() {
     return myRefreshDelay.getText().trim();
@@ -143,5 +156,6 @@ public class SettingsComponent {
     this.setApiToken(null);
     this.setRefreshDelayText(String.valueOf(SettingsState.DEFAULT_REFRESH_DELAY));
     this.setJaegerUrl(SettingsState.DEFAULT_JAEGER_URL);
+    this.setJaegerLinkMode(SettingsState.DEFAULT_JAEGER_LINK_MODE);
   }
 }

@@ -2,18 +2,19 @@ import common.properties
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
-plugins{
+plugins {
     `java`
     `jvm-test-suite`
     id("com.dorongold.task-tree")
     id("com.glovoapp.semantic-versioning")
 }
 
-semanticVersion{
+semanticVersion {
     //if the propertiesFile is not changed the plugin will look for a file in each module.
     propertiesFile.set(project.rootProject.file("version.properties"))
 }
-tasks.incrementSemanticVersion{
+
+tasks.incrementSemanticVersion {
     //disable the task for all projects.
     //because digma-base is applied to all projects then calling incrementSemanticVersion will be invoked
     //for each project and we don't want that.
@@ -28,7 +29,7 @@ java {
     }
 }
 
-group = properties("pluginGroup",project)
+group = properties("pluginGroup", project)
 version = project.semanticVersion.version.get()
 
 repositories {
@@ -45,12 +46,12 @@ configurations {
 }
 
 
-project.afterEvaluate{
-    tasks{
+project.afterEvaluate {
+    tasks {
         //the project can be built with build task or buildPlugin task. build triggers buildPlugin.
         //but buildPlugin doesn't trigger build, so if calling only buildPlugin unit tests will not run.
         //if the project is built by calling buildPlugin we want it to trigger test.
-        named("buildPlugin"){
+        named("buildPlugin") {
             dependsOn(test)
         }
     }
@@ -92,9 +93,7 @@ testing {
 
 
 
-
-
-tasks{
+tasks {
 
     withType<JavaCompile> {
         options.compilerArgs.addAll(listOf("-Xlint:unchecked,deprecation"))
@@ -130,7 +129,6 @@ tasks{
             }
         })
 
-
         testLogging {
             lifecycle {
                 events = mutableSetOf(TestLogEvent.FAILED)
@@ -160,7 +158,5 @@ tasks{
             }
         }
     }
-
-
 
 }

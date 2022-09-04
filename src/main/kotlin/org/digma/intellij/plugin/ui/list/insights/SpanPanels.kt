@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.list.insights
 
 import com.google.common.io.CharStreams
+import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.fileEditor.impl.HTMLEditorProvider
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBLabel
@@ -8,10 +9,21 @@ import com.intellij.ui.components.JBPanel
 import com.intellij.util.containers.isNullOrEmpty
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.analytics.AnalyticsService
-import org.digma.intellij.plugin.model.rest.insights.*
+import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight
+import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
+import org.digma.intellij.plugin.model.rest.insights.SpanFlow
+import org.digma.intellij.plugin.model.rest.insights.SpanInfo
+import org.digma.intellij.plugin.model.rest.insights.SpanUsagesInsight
+import org.digma.intellij.plugin.settings.LinkMode
 import org.digma.intellij.plugin.settings.SettingsState
-import org.digma.intellij.plugin.ui.common.*
+import org.digma.intellij.plugin.ui.common.CopyableLabel
+import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
 import org.digma.intellij.plugin.ui.common.Html.ARROW_RIGHT
+import org.digma.intellij.plugin.ui.common.Laf
+import org.digma.intellij.plugin.ui.common.asHtml
+import org.digma.intellij.plugin.ui.common.span
+import org.digma.intellij.plugin.ui.common.spanBold
+import org.digma.intellij.plugin.ui.common.spanGrayed
 import org.digma.intellij.plugin.ui.list.ListItemActionButton
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.model.TraceSample
@@ -252,8 +264,15 @@ fun buildButtonToJaeger(
     val editorTitle = "Jaeger sample traces of Span ${spanName}"
 
     val button = ListItemActionButton(linkCaption)
-    button.addActionListener {
-        HTMLEditorProvider.openEditor(project, editorTitle,  htmlContent)
+    if (settingsState.jaegerLinkMode == LinkMode.Internal) {
+        button.addActionListener {
+            HTMLEditorProvider.openEditor(project, editorTitle, htmlContent)
+        }
+    } else {
+        // handle LinkMode.External
+        button.addActionListener {
+            BrowserUtil.browse(jaegerUrl, project)
+        }
     }
 
     return button

@@ -24,8 +24,7 @@ tasks.incrementSemanticVersion{
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(properties("javaVersion",project)))
-        vendor.set(JvmVendorSpec.AMAZON)
+        languageVersion.set(JavaLanguageVersion.of(properties("javaVersion", project)))
     }
 }
 

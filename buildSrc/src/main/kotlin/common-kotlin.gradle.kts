@@ -23,8 +23,7 @@ plugins {
 
 kotlin {
     jvmToolchain {
-            this.languageVersion.set(JavaLanguageVersion.of(properties("javaVersion", project)))
-            this.vendor.set(JvmVendorSpec.AMAZON)
+        this.languageVersion.set(JavaLanguageVersion.of(properties("javaVersion", project)))
     }
 }
 

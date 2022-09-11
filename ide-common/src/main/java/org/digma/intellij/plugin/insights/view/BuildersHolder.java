@@ -10,6 +10,7 @@ import org.digma.intellij.plugin.model.rest.insights.NormalUsageInsight;
 import org.digma.intellij.plugin.model.rest.insights.SlowEndpointInsight;
 import org.digma.intellij.plugin.model.rest.insights.SlowestSpansInsight;
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight;
+import org.digma.intellij.plugin.model.rest.insights.SpanSlowEndpointsInsight;
 import org.digma.intellij.plugin.model.rest.insights.SpanUsagesInsight;
 import org.digma.intellij.plugin.model.rest.insights.UnmappedInsight;
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupType;
@@ -49,6 +50,8 @@ public class BuildersHolder {
                 return new GroupListViewItemBuilder<SpanUsagesInsight>(InsightGroupType.Span, SpanUsagesInsight::getSpan);
             case SpanDurations:
                 return new GroupListViewItemBuilder<SpanDurationsInsight>(InsightGroupType.Span, spanDurationsInsight -> spanDurationsInsight.getSpan().getName());
+            case SpanEndpointBottleneck:
+                return new GroupListViewItemBuilder<SpanSlowEndpointsInsight>(InsightGroupType.Span, insight -> insight.getSpan().getName());
             case SlowestSpans:
                 return new GroupListViewItemBuilder<SlowestSpansInsight>(InsightGroupType.HttpEndpoint, SlowestSpansInsight::getRoute);
             case LowUsage:

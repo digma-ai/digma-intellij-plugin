@@ -30,5 +30,7 @@ enum class InsightType {
     SlowEndpoint,
     Unmapped,
     TopErrorFlows,
-    SpanDurationChange
+    SpanDurationChange,
+    SpanEndpointBottleneck,
+    ;
 }

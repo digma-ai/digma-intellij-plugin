@@ -17,6 +17,7 @@ import org.digma.intellij.plugin.model.rest.insights.NormalUsageInsight
 import org.digma.intellij.plugin.model.rest.insights.SlowEndpointInsight
 import org.digma.intellij.plugin.model.rest.insights.SlowestSpansInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight
+import org.digma.intellij.plugin.model.rest.insights.SpanSlowEndpointsInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanUsagesInsight
 import org.digma.intellij.plugin.model.rest.insights.UnmappedInsight
 import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
@@ -64,6 +65,8 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
                 value.modelObject as SlowestSpansInsight, value.moreData, panelsLayoutHelper)
             is SpanUsagesInsight -> spanUsagesPanel(project, value.modelObject as SpanUsagesInsight)
             is SpanDurationsInsight -> spanDurationPanel(project, value.modelObject as SpanDurationsInsight,
+                panelsLayoutHelper)
+            is SpanSlowEndpointsInsight -> spanSlowEndpointsPanel(project, value.modelObject as SpanSlowEndpointsInsight,
                 panelsLayoutHelper)
             is UnmappedInsight -> unmappedInsightPanel(value.modelObject as UnmappedInsight,
                 panelsLayoutHelper)

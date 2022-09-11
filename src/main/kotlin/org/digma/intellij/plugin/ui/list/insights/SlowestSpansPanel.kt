@@ -3,26 +3,22 @@ package org.digma.intellij.plugin.ui.list.insights
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
-import com.intellij.ui.components.JBPanel
-import com.intellij.ui.dsl.builder.RowLayout
-import com.intellij.ui.dsl.builder.panel
-import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.model.rest.insights.Percentile
 import org.digma.intellij.plugin.model.rest.insights.SlowSpanInfo
 import org.digma.intellij.plugin.model.rest.insights.SlowestSpansInsight
+import org.digma.intellij.plugin.model.rest.insights.SpanSlowEndpointsInsight
 import org.digma.intellij.plugin.service.InsightsActionsService
-import org.digma.intellij.plugin.ui.common.*
+import org.digma.intellij.plugin.ui.common.Laf
+import org.digma.intellij.plugin.ui.common.asHtml
+import org.digma.intellij.plugin.ui.common.buildBoldTitleGrayedComment
+import org.digma.intellij.plugin.ui.common.buildLinkTextWithTitleAndGrayedComment
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
-import java.awt.BorderLayout
 import java.awt.GridLayout
 import java.math.BigDecimal
 import java.math.RoundingMode
-import javax.swing.BorderFactory
-import javax.swing.JLabel
 import javax.swing.JPanel
-import javax.swing.SwingConstants
 
 fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: HashMap<String, Any>, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
 
@@ -63,6 +59,18 @@ fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: 
             panelsLayoutHelper)
 }
 
+fun spanSlowEndpointsPanel(project: Project, insight: SpanSlowEndpointsInsight, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
+    val endpointsListPanel = JPanel()
+    //TODO: fill data from insight itself
+
+    return createInsightPanel(
+        "Bottleneck",
+        "The following trace sources spend a significant portion here:",
+        Laf.Icons.Insight.BOTTLENECK,
+        endpointsListPanel,
+        null,
+        panelsLayoutHelper)
+}
 
 fun descriptionOf(span: SlowSpanInfo): String {
     if (span.p50.fraction > 0.4)

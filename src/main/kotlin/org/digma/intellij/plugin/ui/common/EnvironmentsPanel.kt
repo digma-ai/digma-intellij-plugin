@@ -164,7 +164,6 @@ class EnvironmentsPanel(
             this.add(singlePanel)
         }
         revalidate()
-        repaint()
     }
 
     private fun getSelected(): EnvLink? {

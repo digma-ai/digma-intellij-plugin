@@ -19,9 +19,11 @@ public class CodeLensProvider {
     private static final Logger LOGGER = Logger.getInstance(CodeLensProvider.class);
 
     private final DocumentInfoService documentInfoService;
+    private final Project project;
 
     public CodeLensProvider(Project project) {
         documentInfoService = project.getService(DocumentInfoService.class);
+        this.project = project;
     }
 
 
@@ -44,11 +46,12 @@ public class CodeLensProvider {
         summaries.forEach(codeObjectSummary -> {
             switch (codeObjectSummary.getType()){
                 case MethodSummary:{
+
                     MethodCodeObjectSummary methodCodeObjectSummary = (MethodCodeObjectSummary) codeObjectSummary;
                     int score = methodCodeObjectSummary.getScore();
                     if (score >= 70){
                         Log.log(LOGGER::debug, "Collecting code lese for MethodCodeObjectSummary {}",codeObjectSummary.getCodeObjectId());
-                        CodeLens codeLens = new CodeLens(codeObjectSummary.getCodeObjectId(), CodeObjectType.Method,"Error Hotspot");
+                        CodeLens codeLens = new CodeLens(codeObjectSummary.getCodeObjectId(), CodeObjectType.Method, CodeLens.CodeLensType.ErrorHotspot, "Error Hotspot");
                         codeLens.setLensTooltipText("Error Hotspot for "+codeObjectSummary.getCodeObjectId());
                         codeLens.setLensMoreText("Go to Error Hotspot");
                         codeLens.setAnchor("Top");
@@ -59,13 +62,15 @@ public class CodeLensProvider {
                     break;
                 }
                 case EndpointSummary:{
+
                     EndpointCodeObjectSummary endpointCodeObjectSummary = (EndpointCodeObjectSummary) codeObjectSummary;
-                    if (endpointCodeObjectSummary.getLowUsage() || endpointCodeObjectSummary.getHighUsage()){
-                        Log.log(LOGGER::debug, "Collecting code lese for EndpointCodeObjectSummary {}",codeObjectSummary.getCodeObjectId());
+                    if (endpointCodeObjectSummary.getLowUsage() || endpointCodeObjectSummary.getHighUsage()) {
+                        Log.log(LOGGER::debug, "Collecting code lese for EndpointCodeObjectSummary {}", codeObjectSummary.getCodeObjectId());
                         var lensText = endpointCodeObjectSummary.getLowUsage() ? "Low Usage" : "High Usage";
-                        CodeLens codeLens = new CodeLens(codeObjectSummary.getCodeObjectId(), CodeObjectType.Method,lensText);
-                        codeLens.setLensTooltipText("Maximum of "+endpointCodeObjectSummary.getMaxCallsIn1Min() +" requests per minute");
-                        codeLens.setLensMoreText("Go to "+lensText);
+                        var lensType = endpointCodeObjectSummary.getLowUsage() ? CodeLens.CodeLensType.LowUsage : CodeLens.CodeLensType.HighUsage;
+                        CodeLens codeLens = new CodeLens(codeObjectSummary.getCodeObjectId(), CodeObjectType.Method, lensType, lensText);
+                        codeLens.setLensTooltipText("Maximum of " + endpointCodeObjectSummary.getMaxCallsIn1Min() + " requests per minute");
+                        codeLens.setLensMoreText("Go to " + lensText);
                         codeLens.setAnchor("Top");
                         codeLensList.add(codeLens);
                     }

@@ -161,6 +161,7 @@ class CodeObjectHost(project: Project): LifetimedProjectComponent(project) {
 
     private fun CodeLens.toRiderCodeLensInfo(docKey: String) = RiderCodeLensInfo(
         codeObjectId = codeObjectId,
+        type = toRiderCodeLensType(type),
         lensText = lensText,
         lensTooltip = lensTooltipText,
         moreText = lensMoreText,
@@ -168,6 +169,13 @@ class CodeObjectHost(project: Project): LifetimedProjectComponent(project) {
         documentProtocolKey = docKey
     )
 
+    private fun toRiderCodeLensType(type: CodeLens.CodeLensType): CodeLensType {
+        return when (type) {
+            CodeLens.CodeLensType.ErrorHotspot -> CodeLensType.ErrorHotspot
+            CodeLens.CodeLensType.LowUsage -> CodeLensType.LowUsage
+            CodeLens.CodeLensType.HighUsage -> CodeLensType.HighUsage
+        }
+    }
 
 
 }

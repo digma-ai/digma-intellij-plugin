@@ -9,6 +9,8 @@ import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
+import org.digma.intellij.plugin.analytics.BackendConnectionMonitor;
+import org.digma.intellij.plugin.analytics.EnvironmentChanged;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.service.EditorInteractionService;
 import org.digma.intellij.plugin.service.ErrorsActionsService;
@@ -51,6 +53,7 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
 
         Content contentToSelect;
 
+
         {
             var insightsPanel = InsightsTabKt.insightsPanel(project);
             var insightsViewService = project.getService(InsightsViewService.class);
@@ -63,6 +66,7 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
             insightsViewService.setContent(toolWindow,insightsContent);
             toolWindowTabsHelper.setInsightsContent(insightsContent);
             contentToSelect = insightsContent;
+            insightsPanel.reset();
         }
 
         {
@@ -76,6 +80,7 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
             toolWindow.getContentManager().addContent(errorsContent);
             errorsViewService.setContent(toolWindow,errorsContent);
             toolWindowTabsHelper.setErrorsContent(errorsContent);
+            errorsPanel.reset();
         }
 
         {
@@ -88,6 +93,7 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
             summaryContent.setPreferredFocusableComponent(summaryPanel.getPreferredFocusableComponent());
             toolWindow.getContentManager().addContent(summaryContent);
             summaryViewService.setContent(toolWindow, summaryContent);
+            summaryPanel.reset();
         }
 
         ErrorsActionsService errorsActionsService = project.getService(ErrorsActionsService.class);
@@ -99,7 +105,6 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
 
         toolWindow.getContentManager().setSelectedContent(contentToSelect, true);
 
-
         new Task.Backgroundable(project, "Digma: Summary view reload...") {
             //SummaryViewService will get the event when the environment is loaded and will update its model,
             // but if the tool window is not opened yet then the summary tab will not update because the panel is not
@@ -110,5 +115,20 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
                 project.getService(SummaryViewService.class).updateUi();
             }
         }.queue();
+
+
+        //sometimes the environment panel doesn't show on startup until some ui action occurs, can't say why.
+        //calling repaint here forces it to repaint
+        toolWindow.getComponent().repaint(toolWindow.getComponent().getVisibleRect());
+
+
+        //todo: sometimes there is a race condition on startup, a contextChange is fired before method info is available.
+        //calling environmentChanged will fix it
+        BackendConnectionMonitor backendConnectionMonitor = project.getService(BackendConnectionMonitor.class);
+        if (backendConnectionMonitor.isConnectionOk()) {
+            EnvironmentChanged publisher = project.getMessageBus().syncPublisher(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC);
+            publisher.environmentChanged(project.getService(AnalyticsService.class).getEnvironment().getCurrent());
+        }
+
     }
 }

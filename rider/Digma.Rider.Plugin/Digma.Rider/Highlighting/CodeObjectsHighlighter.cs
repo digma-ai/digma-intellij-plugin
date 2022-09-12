@@ -1,38 +1,69 @@
+using System;
+using Digma.Rider.Discovery;
 using Digma.Rider.Protocol;
 using JetBrains.ProjectModel;
+using JetBrains.ReSharper.Daemon.CodeInsights;
 using JetBrains.ReSharper.Feature.Services.Daemon;
-using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.CSharp.Tree;
+using JetBrains.ReSharper.Psi.Tree;
 using JetBrains.Util;
 using static Digma.Rider.Logging.Logger;
 
 namespace Digma.Rider.Highlighting
 {
-    [ElementProblemAnalyzer(typeof(ICSharpFile))]
-    public class CodeObjectsHighlighter : ElementProblemAnalyzer<ICSharpFile>
+    [ElementProblemAnalyzer(typeof(ICSharpFunctionDeclaration))]
+    public class CodeObjectsHighlighter : ElementProblemAnalyzer<ICSharpFunctionDeclaration>
     {
         private readonly ILogger _logger;
         private readonly CodeObjectsHost _codeObjectsHost;
-        private readonly MethodInsightsProvider _methodInsightsProvider;
+        private readonly ErrorHotspotMethodInsightsProvider _errorHotspotMethodInsightsProvider;
+        private readonly UsageMethodInsightsProvider _usageMethodInsightsProvider;
 
         public CodeObjectsHighlighter(ILogger logger,
             CodeObjectsHost codeObjectsHost,
             ISolution solution,
-            MethodInsightsProvider methodInsightsProvider)
+            ErrorHotspotMethodInsightsProvider errorHotspotMethodInsightsProvider,
+            UsageMethodInsightsProvider usageMethodInsightsProvider)
         {
             _logger = logger;
             _codeObjectsHost = codeObjectsHost;
-            _methodInsightsProvider = methodInsightsProvider;
+            _errorHotspotMethodInsightsProvider = errorHotspotMethodInsightsProvider;
+            _usageMethodInsightsProvider = usageMethodInsightsProvider;
         }
 
-        protected override void Run(ICSharpFile element,
+        protected override void Run(ICSharpFunctionDeclaration functionDeclaration,
             ElementProblemAnalyzerData data,
-            IHighlightingConsumer consumer)
+            IHighlightingConsumer highlightingConsumer)
         {
-            Log(_logger, "CodeObjectsHighlighter.Run invoked for {0}", element.GetSourceFile());
-            var elementProcessor =
-                new CodeObjectsHighlightingProcessor(_codeObjectsHost, consumer, _methodInsightsProvider,_logger);
-            element.ProcessDescendants(elementProcessor);
+            Log(_logger, "CodeObjectsHighlighter.Run invoked for {0}", functionDeclaration);
+
+            var methodFqn = Identities.ComputeFqn(functionDeclaration);
+            var methodCodeLenses = _codeObjectsHost.GetRiderCodeLensInfo(methodFqn);
+            if (methodCodeLenses is { Count: > 0 })
+            {
+                Log(_logger, "Found {0} code lens for method {1}", methodCodeLenses.Count,methodFqn);
+                foreach (var riderCodeLensInfo in methodCodeLenses)
+                {
+                    Log(_logger, "Installing code lens for code method {0}: {1}", methodFqn,riderCodeLensInfo);
+
+                    ICodeInsightsProvider codeInsightsProvider =
+                        riderCodeLensInfo.Type.Equals(CodeLensType.ErrorHotspot)
+                            ? _errorHotspotMethodInsightsProvider
+                            : _usageMethodInsightsProvider;
+                    
+                    highlightingConsumer.AddHighlighting(
+                        new CodeInsightsHighlighting(
+                            functionDeclaration.GetNameDocumentRange(),
+                            riderCodeLensInfo.LensText ?? throw new InvalidOperationException("LensText must not be null"),
+                            riderCodeLensInfo.LensTooltip ?? string.Empty, //todo: can be null
+                            riderCodeLensInfo.MoreText ?? string.Empty, //todo: can be null
+                            codeInsightsProvider,
+                            functionDeclaration.DeclaredElement,null)
+                    );
+                }
+
+            }
         }
+
     }
 }

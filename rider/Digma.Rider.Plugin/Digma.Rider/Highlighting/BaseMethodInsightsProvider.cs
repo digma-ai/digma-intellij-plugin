@@ -10,14 +10,13 @@ using static Digma.Rider.Logging.Logger;
 
 namespace Digma.Rider.Highlighting
 {
-    [SolutionComponent]
-    public class MethodInsightsProvider : ICodeInsightsProvider
+    public abstract class BaseMethodInsightsProvider : ICodeInsightsProvider
     {
         private readonly ISolution _solution;
         private readonly ILogger _logger;
         private readonly ShowToolWindowHost _showToolWindowHost;
 
-        public MethodInsightsProvider(ISolution solution,ILogger logger,ShowToolWindowHost showToolWindowHost)
+        protected BaseMethodInsightsProvider(ISolution solution,ILogger logger,ShowToolWindowHost showToolWindowHost)
         {
             _solution = solution;
             _logger = logger;
@@ -40,7 +39,10 @@ namespace Digma.Rider.Highlighting
             Log(_logger, "OnExtraActionClick invoked for {0}", highlighting.DeclaredElement);
             NavigateToMethod(highlighting);
         }
-        
+
+        public abstract string ProviderId { get; }
+        public abstract string DisplayName { get; }
+
         private void NavigateToMethod(CodeInsightsHighlighting highlighting)
         {
             using (CompilationContextCookie.GetExplicitUniversalContextIfNotSet())
@@ -51,12 +53,7 @@ namespace Digma.Rider.Highlighting
         }
 
         
-
-        public string ProviderId => nameof(MethodInsightsProvider);
-        public string DisplayName => "Method Hints";
         public CodeLensAnchorKind DefaultAnchor => CodeLensAnchorKind.Top;
-
-        public ICollection<CodeLensRelativeOrdering> RelativeOrderings => new CodeLensRelativeOrdering[]
-            { new CodeLensRelativeOrderingFirst() };
+        public abstract ICollection<CodeLensRelativeOrdering> RelativeOrderings { get; }
     }
 }

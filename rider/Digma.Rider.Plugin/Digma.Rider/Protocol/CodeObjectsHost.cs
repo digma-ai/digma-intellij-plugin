@@ -11,6 +11,7 @@ using JetBrains.ProjectModel;
 using JetBrains.Rd;
 using JetBrains.Rd.Tasks;
 using JetBrains.RdBackend.Common.Features;
+using JetBrains.ReSharper.Daemon;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.Files;
 using JetBrains.ReSharper.Resources.Shell;
@@ -36,6 +37,7 @@ namespace Digma.Rider.Protocol
 
         public CodeObjectsHost(Lifetime lifetime, ISolution solution,
             RiderSolutionAnalysisServiceImpl riderSolutionAnalysisService,
+            SolutionAnalysisConfiguration solutionAnalysisConfiguration,
             ShellRdDispatcher shellRdDispatcher,
             CodeObjectsCache codeObjectsCache,
             IShellLocks shellLocks,
@@ -61,14 +63,22 @@ namespace Digma.Rider.Protocol
                         var psiSourceFile = _docPathToPsiSourceFile.TryGetValue(documentKey);
                         if (psiSourceFile != null && psiSourceFile.IsValid())
                         {
-                            Log(_logger, "Found PsiSourceFile in local map for {0}, Calling ReanalyzeFile {0}",
-                                documentKey, psiSourceFile);
-                            //// riderSolutionAnalysisService.ReanalyzeFile(psiSourceFile);
-                            //todo: ReanalyzeFile does the job but the editor is not updated immediately, sometimes 
+                            // Log(_logger, "Found PsiSourceFile in local map for {0}, Calling ReanalyzeFile {0}",
+                            //     documentKey, psiSourceFile);
+                            // riderSolutionAnalysisService.ReanalyzeFile(psiSourceFile);
+                            //todo: ReanalyzeFile does the job but the code vision links in the editor don't refresh immediately, sometimes 
                             //need to close and reopen it to see the new code lens.
                             //ReanalyzeAll just works.
                             Log(_logger, "Calling ReanalyzeAll instead of ReanalyzeFile for {0}",documentKey);
-                            riderSolutionAnalysisService.ReanalyzeAll();
+                            solutionAnalysisConfiguration.Loaded.WhenTrueGuarded(lifetime, solution.Locks,
+                            _ =>
+                            {
+                                using (ReadLockCookie.Create())
+                                {
+                                    riderSolutionAnalysisService.ReanalyzeAll();    
+                                }
+                            });
+                            
                         }
                         else
                         {

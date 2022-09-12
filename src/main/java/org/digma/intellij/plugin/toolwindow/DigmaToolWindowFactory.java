@@ -9,6 +9,7 @@ import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
+import org.digma.intellij.plugin.analytics.BackendConnectionMonitor;
 import org.digma.intellij.plugin.analytics.EnvironmentChanged;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.service.EditorInteractionService;
@@ -52,8 +53,6 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
 
         Content contentToSelect;
 
-        //sometimes the environment panel doesn't show on startup until some ui action occurs, so calling
-        // reset on all panel will force it to show.
 
         {
             var insightsPanel = InsightsTabKt.insightsPanel(project);
@@ -117,12 +116,19 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
             }
         }.queue();
 
-        //Sometimes there are race conditions on startup. especially if there are re-opened editors but the tool window
-        //is not visible yet.
-        //there may be a contextChange before there is MethodInfo available.
-        //The environment panel doesn't always show on startup until some ui action occurs. can't say why.
-        //implicitly calling environmentChanged here forces everything to refresh.
-        EnvironmentChanged publisher = project.getMessageBus().syncPublisher(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC);
-        publisher.environmentChanged(project.getService(AnalyticsService.class).getEnvironment().getCurrent());
+
+        //sometimes the environment panel doesn't show on startup until some ui action occurs, can't say why.
+        //calling repaint here forces it to repaint
+        toolWindow.getComponent().repaint(toolWindow.getComponent().getVisibleRect());
+
+
+        //todo: sometimes there is a race condition on startup, a contextChange is fired before method info is available.
+        //calling environmentChanged will fix it
+        BackendConnectionMonitor backendConnectionMonitor = project.getService(BackendConnectionMonitor.class);
+        if (backendConnectionMonitor.isConnectionOk()) {
+            EnvironmentChanged publisher = project.getMessageBus().syncPublisher(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC);
+            publisher.environmentChanged(project.getService(AnalyticsService.class).getEnvironment().getCurrent());
+        }
+
     }
 }

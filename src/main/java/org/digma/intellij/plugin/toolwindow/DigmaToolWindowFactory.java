@@ -66,7 +66,6 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
             insightsViewService.setContent(toolWindow,insightsContent);
             toolWindowTabsHelper.setInsightsContent(insightsContent);
             contentToSelect = insightsContent;
-            insightsPanel.reset();
         }
 
         {
@@ -80,7 +79,6 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
             toolWindow.getContentManager().addContent(errorsContent);
             errorsViewService.setContent(toolWindow,errorsContent);
             toolWindowTabsHelper.setErrorsContent(errorsContent);
-            errorsPanel.reset();
         }
 
         {
@@ -93,7 +91,6 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
             summaryContent.setPreferredFocusableComponent(summaryPanel.getPreferredFocusableComponent());
             toolWindow.getContentManager().addContent(summaryContent);
             summaryViewService.setContent(toolWindow, summaryContent);
-            summaryPanel.reset();
         }
 
         ErrorsActionsService errorsActionsService = project.getService(ErrorsActionsService.class);
@@ -116,10 +113,6 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
             }
         }.queue();
 
-
-        //sometimes the environment panel doesn't show on startup until some ui action occurs, can't say why.
-        //calling repaint here forces it to repaint
-        toolWindow.getComponent().repaint(toolWindow.getComponent().getVisibleRect());
 
 
         //todo: sometimes there is a race condition on startup, a contextChange is fired before method info is available.

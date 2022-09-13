@@ -4,8 +4,11 @@ using Digma.Rider.Protocol;
 using JetBrains.ProjectModel;
 using JetBrains.ReSharper.Daemon.CodeInsights;
 using JetBrains.ReSharper.Feature.Services.Daemon;
+using JetBrains.ReSharper.Features.Internal.Resources;
 using JetBrains.ReSharper.Psi.CSharp.Tree;
 using JetBrains.ReSharper.Psi.Tree;
+using JetBrains.Rider.Backend.Platform.Icons;
+using JetBrains.UI.Icons;
 using JetBrains.Util;
 using static Digma.Rider.Logging.Logger;
 
@@ -18,17 +21,19 @@ namespace Digma.Rider.Highlighting
         private readonly CodeObjectsHost _codeObjectsHost;
         private readonly ErrorHotspotMethodInsightsProvider _errorHotspotMethodInsightsProvider;
         private readonly UsageMethodInsightsProvider _usageMethodInsightsProvider;
+        private readonly IconHost _iconHost;
 
         public CodeObjectsHighlighter(ILogger logger,
             CodeObjectsHost codeObjectsHost,
             ISolution solution,
             ErrorHotspotMethodInsightsProvider errorHotspotMethodInsightsProvider,
-            UsageMethodInsightsProvider usageMethodInsightsProvider)
+            UsageMethodInsightsProvider usageMethodInsightsProvider,IconHost iconHost)
         {
             _logger = logger;
             _codeObjectsHost = codeObjectsHost;
             _errorHotspotMethodInsightsProvider = errorHotspotMethodInsightsProvider;
             _usageMethodInsightsProvider = usageMethodInsightsProvider;
+            _iconHost = iconHost;
         }
 
         protected override void Run(ICSharpFunctionDeclaration functionDeclaration,
@@ -51,6 +56,11 @@ namespace Digma.Rider.Highlighting
                             ? _errorHotspotMethodInsightsProvider
                             : _usageMethodInsightsProvider;
                     
+                    var icon =
+                        riderCodeLensInfo.Type.Equals(CodeLensType.ErrorHotspot)
+                            ? _iconHost.Transform(Icons.ExclMark)
+                            : null;
+                    
                     highlightingConsumer.AddHighlighting(
                         new CodeInsightsHighlighting(
                             functionDeclaration.GetNameDocumentRange(),
@@ -58,7 +68,7 @@ namespace Digma.Rider.Highlighting
                             riderCodeLensInfo.LensTooltip ?? string.Empty, //todo: can be null
                             riderCodeLensInfo.MoreText ?? string.Empty, //todo: can be null
                             codeInsightsProvider,
-                            functionDeclaration.DeclaredElement,null)
+                            functionDeclaration.DeclaredElement,icon)
                     );
                 }
 

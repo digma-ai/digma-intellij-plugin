@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.ui.service.ToolWindowTabsHelper;
 
 public class ToolWindowShower {
 
@@ -15,8 +16,11 @@ public class ToolWindowShower {
 
     private ToolWindow toolWindow;
 
+    private final ToolWindowTabsHelper toolWindowTabsHelper;
+
     public ToolWindowShower(Project project) {
         this.project = project;
+        toolWindowTabsHelper = project.getService(ToolWindowTabsHelper.class);
     }
 
     public void setToolWindow(ToolWindow toolWindow) {
@@ -49,5 +53,6 @@ public class ToolWindowShower {
             Log.log(LOGGER::debug, "Calling toolWindow.show");
             toolWindow.show();
         }
+        toolWindowTabsHelper.showInsightsTab();
     }
 }

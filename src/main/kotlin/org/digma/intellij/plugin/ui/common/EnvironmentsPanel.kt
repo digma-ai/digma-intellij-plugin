@@ -16,16 +16,18 @@ import org.digma.intellij.plugin.ui.common.Laf.Icons.Environment.Companion.ENVIR
 import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
+import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import java.awt.Dimension
 import java.awt.FlowLayout
+import java.lang.Integer.max
 import java.util.*
 import java.util.function.Function
 import javax.swing.Icon
 import javax.swing.JComponent
 import javax.swing.SwingUtilities
 
-//need to remember we have two instances of this panel , one for the insights tab and one for the errors tab.
-//both instances need to be in sync with the selected button and the environments list.
+//need to remember we have few instances of this panel , one on every main tab.
+//all instances need to be in sync with the selected button and the environments list.
 class EnvironmentsPanel(
     project: Project,
     private val model: PanelModel,
@@ -70,25 +72,44 @@ class EnvironmentsPanel(
 
     /*
         usually this panel works fine.
-        there is one issue: sometimes when the plugin window opens on startup this panel takes too much
-        vertical space and the insights list is almost not shown. any hover over this panel with the mouse or any
-        other action related to the plugin will fix it and the tab will re-layout. from there on the panel functions ok.
-        It seems that super.getPreferredSize() sometimes returns a size with negative width, when that happens the flow
-        layout computes a much too large vertical space and when the panel is first visible it's too large.
-        I could not find any way to cause this panel to layout correctly on startup.
-        this code in getPreferredSize will keep track on the last positive size and return that one if super returns
-        a negative width. it seems to do the job.
-         */
-    private var lastPositivePs: Dimension = Dimension(100, 300)
+        there is one issue: sometimes when the plugin window opens on startup the WrapLayout computes a large
+        vertical height and the panel takes too much vertical space.
+        Its noticed that when the computed width is a negative number it means the calculation is not good. in that
+        case this method will calculate a preferred size based on the buttons size. its usually only on first
+        initialization of the tool window.
+    */
     override fun getPreferredSize(): Dimension {
         val ps = super.getPreferredSize()
         if (ps != null) {
-            return if (ps.width >= 0 && ps.height >= 0) {
-                this.lastPositivePs = ps
+            return if (ps.width > 0 && ps.height > 0) {
                 ps
             } else {
-                this.lastPositivePs
+                computePreferredSize()
             }
+        }
+
+        return super.getPreferredSize()
+    }
+
+    private fun computePreferredSize(): Dimension {
+
+        var tabPanel = parent
+        while ((tabPanel != null) && (tabPanel !is DigmaTabPanel)) {
+            tabPanel = tabPanel.parent
+        }
+
+        if ((tabPanel != null) && (tabPanel.size.width > 0) && components.isNotEmpty()) {
+            val width = tabPanel.size.width - (this.insets.left + this.insets.right)
+            var componentsWidth = 0
+            var componentsHeight = 0
+            components.forEach {
+                componentsWidth += it.preferredSize.width + (layout as WrapLayout).hgap
+                componentsHeight = max(componentsHeight, it.preferredSize.height)
+            }
+
+            val lines = (componentsWidth / width) + 1
+            val height = lines * (componentsHeight + ((layout as WrapLayout).vgap) * 2)
+            return Dimension(width, height)
         }
 
         return super.getPreferredSize()
@@ -122,7 +143,6 @@ class EnvironmentsPanel(
             this.components.forEach {
                 this.remove(it)
             }
-            revalidate()
         }
 
         val usageStatusResult = model.getUsageStatus()

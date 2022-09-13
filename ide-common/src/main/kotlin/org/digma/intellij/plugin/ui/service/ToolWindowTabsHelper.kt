@@ -54,11 +54,13 @@ class ToolWindowTabsHelper(val project: Project) {
         errorsContent.displayName = "Errors"
     }
 
-    fun isErrorDetailsOn():Boolean{
+    fun isErrorDetailsOn(): Boolean {
         return errorDetailsOn
     }
 
-
+    fun showInsightsTab() {
+        toolWindow.contentManager.setSelectedContent(insightsContent)
+    }
 
 
 }

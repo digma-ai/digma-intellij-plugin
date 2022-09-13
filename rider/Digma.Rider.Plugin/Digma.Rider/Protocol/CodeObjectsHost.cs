@@ -6,16 +6,13 @@ using JetBrains.Application.Threading;
 using JetBrains.Collections;
 using JetBrains.Collections.Viewable;
 using JetBrains.Lifetimes;
-using JetBrains.Platform.RdFramework.Impl;
 using JetBrains.ProjectModel;
 using JetBrains.Rd;
 using JetBrains.Rd.Tasks;
 using JetBrains.RdBackend.Common.Features;
-using JetBrains.ReSharper.Daemon;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.Files;
 using JetBrains.ReSharper.Resources.Shell;
-using JetBrains.Rider.Backend.Features.SolutionAnalysis;
 using JetBrains.Util;
 using JetBrains.Util.Extension;
 using static Digma.Rider.Logging.Logger;
@@ -25,9 +22,8 @@ namespace Digma.Rider.Protocol
     [SolutionComponent]
     public class CodeObjectsHost
     {
-        // A dictionary to help us call reanalyze for specific PsiSourceFile when code lens are available.
-        private readonly Dictionary<string, IPsiSourceFile> _docPathToPsiSourceFile =
-            new Dictionary<string, IPsiSourceFile>();
+        // A dictionary of documentUri to PsiSourceFile to help us in various tasks.
+        internal readonly Dictionary<string, IPsiSourceFile> DocPathToPsiSourceFile = new();
 
         private readonly Lifetime _lifetime;
         private readonly ILogger _logger;
@@ -36,9 +32,6 @@ namespace Digma.Rider.Protocol
         private readonly IShellLocks _shellLocks;
 
         public CodeObjectsHost(Lifetime lifetime, ISolution solution,
-            RiderSolutionAnalysisServiceImpl riderSolutionAnalysisService,
-            SolutionAnalysisConfiguration solutionAnalysisConfiguration,
-            ShellRdDispatcher shellRdDispatcher,
             CodeObjectsCache codeObjectsCache,
             IShellLocks shellLocks,
             ILogger logger)
@@ -50,43 +43,6 @@ namespace Digma.Rider.Protocol
             _codeObjectsModel = solution.GetProtocolSolution().GetCodeObjectsModel();
 
             
-
-            _codeObjectsModel.Reanalyze.Advise(lifetime, documentKey =>
-            {
-                Log(_logger, "Reanalyze called for {0}", documentKey);
-                shellRdDispatcher.Queue(() =>
-                {
-                    using (ReadLockCookie.Create())
-                    {
-                        //usually we should have the PsiSourceFile so we can call ReanalyzeFile.
-                        //if not found fallback to ReanalyzeAll 
-                        var psiSourceFile = _docPathToPsiSourceFile.TryGetValue(documentKey);
-                        if (psiSourceFile != null && psiSourceFile.IsValid())
-                        {
-                            // Log(_logger, "Found PsiSourceFile in local map for {0}, Calling ReanalyzeFile {0}",
-                            //     documentKey, psiSourceFile);
-                            // riderSolutionAnalysisService.ReanalyzeFile(psiSourceFile);
-                            //todo: ReanalyzeFile does the job but the code vision links in the editor don't refresh immediately, sometimes 
-                            //need to close and reopen it to see the new code lens.
-                            //ReanalyzeAll just works.
-                            Log(_logger, "Calling ReanalyzeAll instead of ReanalyzeFile for {0}",documentKey);
-                            solutionAnalysisConfiguration.Loaded.WhenTrueGuarded(lifetime, solution.Locks,
-                            _ =>
-                            {
-                                using (ReadLockCookie.Create())
-                                {
-                                    riderSolutionAnalysisService.ReanalyzeAll();    
-                                }
-                            });
-                            
-                        }
-                        else
-                        {
-                            Log(_logger, "Could not find PsiSourceFile  in local map for {0}", documentKey);
-                        }
-                    }
-                });
-            });
 
             //some documents in the protocol may be incomplete on startup, it usually happens after 
             //invalidating caches and our cache executes before reference resolving is available.
@@ -245,7 +201,7 @@ namespace Digma.Rider.Protocol
             foreach (var incompleteDocument in incompleteDocuments)
             {
                 Log(_logger, "Refreshing incomplete document {0}", incompleteDocument);
-                var psiSourceFile = _docPathToPsiSourceFile.TryGetValue(incompleteDocument);
+                var psiSourceFile = DocPathToPsiSourceFile.TryGetValue(incompleteDocument);
 
                 if (psiSourceFile != null)
                 {
@@ -427,15 +383,15 @@ namespace Digma.Rider.Protocol
                     documentKey);
                 //if the document exists in the protocol then update the PsiSourceFile mapping, it can be a new instance of PsiSourceFile
                 //remove before add because it may be a new IPsiSourceFile instance
-                _docPathToPsiSourceFile.Remove(documentKey);
-                _docPathToPsiSourceFile.Add(documentKey, psiSourceFile);
+                DocPathToPsiSourceFile.Remove(documentKey);
+                DocPathToPsiSourceFile.Add(documentKey, psiSourceFile);
                 return;
             }
 
 
             //remove before add because it may be a new IPsiSourceFile instance
-            _docPathToPsiSourceFile.Remove(documentKey);
-            _docPathToPsiSourceFile.Add(documentKey, psiSourceFile);
+            DocPathToPsiSourceFile.Remove(documentKey);
+            DocPathToPsiSourceFile.Add(documentKey, psiSourceFile);
             //remove before add in case there is a non equals document already
             Log(_logger, "Pushing Document {0} to the protocol: {1}", documentKey, document);
             _codeObjectsModel.Proto.Scheduler.InvokeOrQueue(() =>

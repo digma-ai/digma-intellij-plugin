@@ -24,16 +24,33 @@ abstract class AbstractViewService(val project: Project) {
             .subscribe(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC,
                 handler = object : AnalyticsServiceConnectionEvent {
                     override fun connectionLost() {
+                        doConnectionLost()
                         doUpdateUi()
                     }
 
                     override fun connectionGained() {
+                        doConnectionGained()
                         doUpdateUi()
                     }
                 }
             )
     }
 
+
+    fun doConnectionLost() {
+        //if a view needs to do something when connection lost can override this method and don't forget to call super
+        if (toolWindowTabsHelper.isErrorDetailsOn()) {
+            toolWindowTabsHelper.errorDetailsOff()
+            if (this is ErrorsViewService) {
+                this.closeErrorDetails()
+            }
+            toolWindowTabsHelper.errorDetailsClosed()
+        }
+    }
+
+    fun doConnectionGained() {
+        //if a view needs to do something when connection gained can override this method and don't forget to call super
+    }
 
     abstract fun getViewDisplayName(): String
 

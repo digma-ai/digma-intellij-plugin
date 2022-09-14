@@ -33,7 +33,9 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.UndeclaredThrowableException;
-import java.net.ConnectException;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.net.http.HttpTimeoutException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -52,6 +54,9 @@ public class AnalyticsService implements Disposable {
 
     private AnalyticsProvider analyticsProviderProxy;
 
+    //this status is used to keep track of connection errors, and for helping with reporting messages only when necessary
+    // and keep the log clean
+    private final Status status = new Status();
 
     public AnalyticsService(@NotNull Project project) {
         //initialize BackendConnectionMonitor when starting, so it is aware early on connection statuses
@@ -91,11 +96,11 @@ public class AnalyticsService implements Disposable {
             try {
                 analyticsProviderProxy.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.log(LOGGER::warn, e.getMessage());
             }
         }
 
-        analyticsProviderProxy = newAnalyticsProviderProxy(new RestAnalyticsProvider(url, token), project);
+        analyticsProviderProxy = newAnalyticsProviderProxy(new RestAnalyticsProvider(url, token));
     }
 
 
@@ -133,8 +138,8 @@ public class AnalyticsService implements Disposable {
         try {
             return analyticsProviderProxy.getEnvironments();
         } catch (Exception e) {
-            //getEnvironments should never throw exception. it is called only from the constructor or be the
-            //Environment object that can handle null.
+            //getEnvironments should never throw exception.
+            // it is called only from this class or from the Environment object and both can handle null.
             return null;
         }
     }
@@ -218,25 +223,30 @@ public class AnalyticsService implements Disposable {
     }
 
 
+    private AnalyticsProvider newAnalyticsProviderProxy(AnalyticsProvider obj) {
+        return (AnalyticsProvider) java.lang.reflect.Proxy.newProxyInstance(
+                obj.getClass().getClassLoader(),
+                new Class[]{AnalyticsProvider.class, Closeable.class},
+                new AnalyticsInvocationHandler(obj));
+    }
+
+
     /**
      * A proxy for cross-cutting concerns across all api methods.
      * In a proxy it's easier to log events, we have the method name, parameters etc.
-     * easier to investigate exceptions, if its an InvocationTargetException or IllegalAccessException etc.
+     * easier to investigate exceptions, if it's an InvocationTargetException or IllegalAccessException etc.
+     * It's an inner class intentionally, so it has access to the enclosing AnalyticsService members.
      */
-    private static class AnalyticsInvocationHandler implements InvocationHandler {
+    private class AnalyticsInvocationHandler implements InvocationHandler {
 
         private final AnalyticsProvider analyticsProvider;
-        private final Project project;
 
         //ObjectMapper here is only used for printing the result to log as json
         private final ObjectMapper objectMapper = new ObjectMapper();
 
-        //this status is only used for helping with reporting messages only when necessary and keep the log clean
-        private final Status status = new Status();
 
-        public AnalyticsInvocationHandler(AnalyticsProvider analyticsProvider,Project project) {
+        public AnalyticsInvocationHandler(AnalyticsProvider analyticsProvider) {
             this.analyticsProvider = analyticsProvider;
-            this.project = project;
         }
 
 
@@ -279,9 +289,13 @@ public class AnalyticsService implements Disposable {
 
             } catch (InvocationTargetException e) {
 
+                //Note: when logging LOGGER.error idea will popup a red message which we don't want, so only report warn messages.
+
                 //handle only InvocationTargetException, other exceptions are probably a bug.
-                //log to error only the first time of ConnectException and show an error notification.
-                // following exceptions will just be logged to the log file
+                //log connection exceptions only the first time and show an error notification.
+                // while status is in error the following connection exceptions will not be logged, other exceptions
+                // will be logged only once.
+
                 boolean isConnectionException = isConnectionException(e) || isSslConnectionException(e);
                 if (status.isOk() && isConnectionException) {
                     status.connectError();
@@ -293,14 +307,16 @@ public class AnalyticsService implements Disposable {
                             + message + ".<br> See logs for details.");
                 } else if (status.isOk()) {
                     status.error();
-                    Log.log(LOGGER::debug,"Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getCause().getMessage());
+                    Log.log(LOGGER::warn, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getCause().getMessage());
                     var message = getExceptionMessage(e);
                     NotificationUtil.notifyError(project, "<html>Error with Digma backend api for method " + method.getName() + ".<br> "
                             + message + ".<br> See logs for details.");
+                    LOGGER.warn(e);
                 } else if (!status.hadError(e)) {
                     status.error();
                     var message = getExceptionMessage(e);
-                    Log.log(LOGGER::debug, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
+                    Log.log(LOGGER::warn, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
+                    LOGGER.warn(e);
                 }
 
 
@@ -313,6 +329,7 @@ public class AnalyticsService implements Disposable {
             } catch (Throwable e) {
                 status.error();
                 Log.log(LOGGER::debug, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getMessage());
+                LOGGER.error(e);
                 throw e;
             } finally {
                 stopWatch.stop();
@@ -353,7 +370,9 @@ public class AnalyticsService implements Disposable {
 
             //InterruptedIOException is thrown when the connection is dropped , for example by iptables
 
-            return exception instanceof ConnectException ||
+            return exception instanceof SocketException ||
+                    exception instanceof UnknownHostException ||
+                    exception instanceof HttpTimeoutException ||
                     exception instanceof InterruptedIOException;
 
         }
@@ -387,7 +406,7 @@ public class AnalyticsService implements Disposable {
                 ex = ex.getCause();
             }
             if (ex != null){
-                return ex.getMessage();
+                return ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage();
             }
 
             return e.getCause() != null? e.getCause().getMessage():e.getMessage();
@@ -412,15 +431,6 @@ public class AnalyticsService implements Disposable {
             }
         }
 
-    }
-
-
-
-    private AnalyticsProvider newAnalyticsProviderProxy(AnalyticsProvider obj, Project project) {
-        return (AnalyticsProvider) java.lang.reflect.Proxy.newProxyInstance(
-                obj.getClass().getClassLoader(),
-                new Class[]{AnalyticsProvider.class, Closeable.class},
-                new AnalyticsInvocationHandler(obj,project));
     }
 
 
@@ -459,16 +469,29 @@ public class AnalyticsService implements Disposable {
         }
 
         public boolean hadError(InvocationTargetException e) {
-            var ex = e.getCause();
-            if (ex != null){
-                var errorName = ex.getClass().getName();
-                if (errorsHistory.containsKey(errorName)){
-                    return true;
-                }
-                errorsHistory.put(errorName,true);
+            var cause = findRealError(e);
+            var errorName = cause.getClass().getName();
+            if (errorsHistory.containsKey(errorName)) {
+                return true;
             }
+            errorsHistory.put(errorName, true);
 
             return false;
+        }
+
+        @NotNull
+        private Throwable findRealError(InvocationTargetException e) {
+
+            Throwable cause = e.getCause();
+            while (cause != null && !cause.getClass().equals(AnalyticsProviderException.class)) {
+                cause = cause.getCause();
+            }
+
+            if (cause != null && cause.getCause() != null) {
+                return cause.getCause();
+            }
+
+            return cause == null ? e : cause;
         }
     }
 

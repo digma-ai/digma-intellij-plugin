@@ -28,7 +28,7 @@ public class NotificationUtil {
 
     public static void showNotification(Project project,String content) {
 
-        content = content.startsWith("content") ? content : "Digma: " +content;
+        content = content.startsWith("Digma:") ? content : "Digma: " + content;
         NotificationGroupManager.getInstance()
                 .getNotificationGroup(NOTIFICATION_GROUP)
                 .createNotification(content, NotificationType.INFORMATION)

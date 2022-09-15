@@ -38,6 +38,9 @@ tasks{
         enabled = false
     }
 
+    runPluginVerifier {
+        enabled = false
+    }
     patchPluginXml{
         enabled = false
     }

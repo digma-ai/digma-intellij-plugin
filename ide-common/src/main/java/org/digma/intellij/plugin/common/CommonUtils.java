@@ -20,7 +20,6 @@ public final class CommonUtils {
         } catch (UnknownHostException e) {
             hostname = hostnameByEnvVar();
         }
-        hostname = StringUtils.removeEnd(hostname, ".local");
         return hostname;
     }
 

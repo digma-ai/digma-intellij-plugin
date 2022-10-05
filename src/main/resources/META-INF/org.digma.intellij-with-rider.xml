@@ -8,14 +8,11 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.rider.protocol.ShowToolWindowHost"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.rider.psi.csharp.CSharpLanguageService"
-                        serviceInterface="org.digma.intellij.plugin.psi.LanguageService"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.rider.psi.csharp.CSharpLanguageService"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.rider.project.RiderProjectService"
-                        serviceInterface="org.digma.intellij.plugin.project.ProjectService"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.rider.editor.RiderEditorEventsHandler"
-                        serviceInterface="org.digma.intellij.plugin.editor.EditorEventsHandler"/>
+        <!--        <projectService serviceImplementation="org.digma.intellij.plugin.rider.editor.RiderEditorEventsStarter"-->
+        <!--                        serviceInterface="org.digma.intellij.plugin.editor.EditorEventsHandler"/>-->
 
         <projectService serviceImplementation="org.digma.intellij.plugin.rider.protocol.ElementUnderCaretDetector"/>
 
@@ -23,22 +20,28 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.rider.protocol.MethodNavigationHost"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.rider.psi.csharp.CSharpDocumentAnalyzer"
-                        serviceInterface="org.digma.intellij.plugin.document.DocumentAnalyzer"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.rider.psi.csharp.CSharpDocumentAnalyzer"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.rider.editor.RiderDocumentInfoConsumer"/>
+<!--        <projectService serviceImplementation="org.digma.intellij.plugin.rider.document.RiderDocumentInfoConsumer"/>-->
 
         <projectService serviceImplementation="org.digma.intellij.plugin.rider.protocol.DocumentCodeObjectsListener"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.rider.env.RiderEnvironmentChangedListener"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.rider.env.RiderEnvironmentChangedHandler"/>
 
     </extensions>
 
 
     <projectListeners>
         <listener
+                class="org.digma.intellij.plugin.rider.editor.RiderEditorEventsStarter"
+                topic="com.intellij.openapi.wm.ex.ToolWindowManagerListener"/>
+        <listener
+                class="org.digma.intellij.plugin.rider.document.RiderDocumentInfoConsumer"
+                topic="org.digma.intellij.plugin.document.DocumentInfoChanged"/>
+        <listener
                 class="org.digma.intellij.plugin.rider.editor.RiderFileClosedListener"
                 topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
+
     </projectListeners>
 
 

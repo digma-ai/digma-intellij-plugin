@@ -8,11 +8,11 @@
         <!--                        serviceInterface="org.digma.intellij.plugin.document.DocumentAnalyzer"/>-->
     </extensions>
 
-    <!--    <projectListeners>-->
-    <!--        <listener-->
-    <!--                class="org.digma.intellij.plugin.document.EditorManagerFileOpenedListener"-->
-    <!--                topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>-->
-    <!--    </projectListeners>-->
+    <projectListeners>
+        <listener
+                class="org.digma.intellij.plugin.listener.EditorListener"
+                topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
+    </projectListeners>
 
 
 </idea-plugin>

@@ -22,8 +22,8 @@ public class CodeLensProvider {
     private final Project project;
 
     public CodeLensProvider(Project project) {
-        documentInfoService = project.getService(DocumentInfoService.class);
         this.project = project;
+        documentInfoService = project.getService(DocumentInfoService.class);
     }
 
 

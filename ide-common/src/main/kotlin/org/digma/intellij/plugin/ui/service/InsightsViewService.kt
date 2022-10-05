@@ -48,14 +48,6 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
 
         val insightsListContainer: InsightsListContainer = insightsProvider.getInsights(methodInfo)
 
-        //todo: flickering
-        //todo: when a document changes there are events that will refresh the view.
-        //when editing a document there may be many changes , many times the content of the view didn't
-        //change at all and we refresh for nothing. maybe we can add a last update timestamp to the model
-        //and update the ui only if something changed since last time
-        //its not easy because the list of insights will change and we need to check if any insight changed...
-
-
         model.listViewItems = insightsListContainer.listViewItems
         model.previewListViewItems = ArrayList()
         model.usageStatusResult = insightsListContainer.usageStatus
@@ -145,7 +137,6 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
         val docSummariesIds: Set<String> = documentInfoContainer.allSummaries.stream().map { it.codeObjectId }.collect(Collectors.toSet())
 
         documentInfoContainer.documentInfo.methods.forEach { (id, methodInfo) ->
-            //todo: we probably don't need to check for spans code object id because the span summary code object id is the method id
             val ids = methodInfo.spans.stream().map { obj: SpanInfo -> obj.id }
                 .collect(Collectors.toList())
             ids.add(id)

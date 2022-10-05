@@ -10,6 +10,7 @@ dependencies{
 }
 
 intellij {
-    version.set("PC-"+ properties("platformVersion", project))
-    plugins.set(listOf("PythonCore"))
+    version.set("IC-" + properties("platformVersion", project))
+    //the python plugin version must be compatible with platformVersion
+    plugins.set(listOf("PythonCore:222.4167.37"))
 }

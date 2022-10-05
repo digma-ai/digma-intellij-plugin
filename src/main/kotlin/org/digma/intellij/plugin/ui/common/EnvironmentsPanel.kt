@@ -7,6 +7,7 @@ import com.intellij.ui.components.JBPanel
 import com.intellij.util.containers.stream
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.WrapLayout
+import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
 import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.common.CommonUtils.prettyTimeOf
@@ -39,7 +40,7 @@ class EnvironmentsPanel(
         layout = WrapLayout(FlowLayout.LEFT, 2, 2)
         rebuild()
 
-        project.messageBus.connect(project)
+        project.messageBus.connect(project.getService(AnalyticsService::class.java))
             .subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, object : EnvironmentChanged {
                 //there are few instances of EnvironmentsPanel, if a button is clicked in the insights tab the selected button
                 //need to change also in the errors tab, and vice versa.

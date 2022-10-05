@@ -5,50 +5,70 @@ import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.wm.ToolWindow;
+import com.intellij.openapi.wm.ex.ToolWindowManagerListener;
 import com.intellij.psi.PsiFile;
-import com.intellij.util.messages.MessageBusConnection;
-import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent;
+import org.digma.intellij.plugin.PluginId;
 import org.digma.intellij.plugin.document.DocumentInfoChanged;
-import org.digma.intellij.plugin.editor.EditorEventsHandler;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.rider.ServicesStarter;
 import org.digma.intellij.plugin.rider.protocol.ElementUnderCaretDetector;
+import org.digma.intellij.plugin.rider.psi.csharp.CSharpLanguageService;
 import org.digma.intellij.plugin.ui.CaretContextService;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
-public class RiderEditorEventsHandler extends LifetimedProjectComponent implements EditorEventsHandler, DocumentInfoChanged {
+/**
+ * A tool windows listener that initializes some services and resources only when the tool window is opened
+ * at least once.
+ * Some listeners are pointless if the user did not open the tool windows. for example there is no need to update
+ * the panels UI if the tool window is hidden. if the user opened the tool window these listeners will start and keep
+ * until the project is closed. user needs to open the tool window at least once, that means he is using the plugin.
+ */
+public class RiderEditorEventsStarter implements ToolWindowManagerListener, DocumentInfoChanged {
 
-    private final Logger LOGGER = Logger.getInstance(RiderEditorEventsHandler.class);
+    private final Logger LOGGER = Logger.getInstance(RiderEditorEventsStarter.class);
 
+    private final Project project;
     private final CaretContextService caretContextService;
-    private final LanguageService languageService;
+    private final CSharpLanguageService cSharpLanguageService;
 
-    private MessageBusConnection documentInfoChangedMessageBusConnection;
-    private MessageBusConnection fileEditorMessageBusConnection;
 
     private boolean initialized = false;
 
-    public RiderEditorEventsHandler(Project project) {
-        super(project);
-        languageService = project.getService(LanguageService.class);
+    public RiderEditorEventsStarter(Project project) {
+        this.project = project;
+        cSharpLanguageService = project.getService(CSharpLanguageService.class);
         caretContextService = project.getService(CaretContextService.class);
     }
 
-    //start is called once per project when the tool window is created
+
+    /**
+     * This event will be called every time the tool window is shows after it was hidden. but we want to initialize
+     * our listeners only once, and we check it with initialized flag.
+     * There is no need to synchronize access to initialized flag, showing the tool window can't happen by multiple
+     * threads simultaneously
+     */
     @Override
-    public void start(@NotNull Project project) {
+    public void toolWindowShown(@NotNull ToolWindow toolWindow) {
+        if (PluginId.TOOL_WINDOW_ID.equals(toolWindow.getId()) && !initialized) {
+            start();
+        }
+    }
+
+
+    //start is calle d once per project when the tool window is shown
+    private void start() {
 
         initialized = true;
 
-        Log.log(LOGGER::debug,"Starting RiderEditorEventsHandler");
+        Log.log(LOGGER::debug, "Starting RiderEditorEventsStarter");
 
         ServicesStarter.loadStartupServices(project);
 
-        documentInfoChangedMessageBusConnection = project.getMessageBus().connect();
-        documentInfoChangedMessageBusConnection.subscribe(DocumentInfoChanged.DOCUMENT_INFO_CHANGED_TOPIC,this);
+        project.getMessageBus().connect(caretContextService).subscribe(DocumentInfoChanged.DOCUMENT_INFO_CHANGED_TOPIC, this);
 
         //initializing ElementUnderCaretDetector only here when the tool window is opened.
         //ElementUnderCaret events are only necessary if the tool windows was created already, otherwise its useless
@@ -57,9 +77,7 @@ public class RiderEditorEventsHandler extends LifetimedProjectComponent implemen
         Objects.requireNonNull(elementUnderCaretDetector);
 
 
-
-        fileEditorMessageBusConnection = project.getMessageBus().connect();
-        fileEditorMessageBusConnection.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, new FileEditorManagerListener() {
+        project.getMessageBus().connect(caretContextService).subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, new FileEditorManagerListener() {
             //resharper does not send an event on non-supported files,and when a non-supported file is opened our context is still shown
             // in the tool window.
             //sometimes resharper will send a caret event when a source file looses focus, so in ElementUnderCaretHost, if there
@@ -74,7 +92,7 @@ public class RiderEditorEventsHandler extends LifetimedProjectComponent implemen
 
                 var newFile = event.getNewFile();
                 //the file may be supported but not writable,for example when we open vcs files.
-                if (newFile != null && (!languageService.isSupportedFile(project, newFile) || !newFile.isWritable())) {
+                if (newFile != null && (!cSharpLanguageService.isSupportedFile(project, newFile) || !newFile.isWritable())) {
                     Log.log(LOGGER::debug, "Non supported file opened, clearing context. {}", newFile);
                     caretContextService.contextEmptyNonSupportedFile(newFile.getUrl());
                     elementUnderCaretDetector.emptyModel();
@@ -82,14 +100,21 @@ public class RiderEditorEventsHandler extends LifetimedProjectComponent implemen
                     //sometimes when selection changes from a non-supported file to a supported file the supported
                     //file editor will not gain focus, elementUnderCaretDetector.refresh will compensate.
                     var oldFile = event.getOldFile();
-                    if (oldFile != null && (!languageService.isSupportedFile(project, oldFile) || !oldFile.isWritable())) {
+                    if (oldFile != null && (!cSharpLanguageService.isSupportedFile(project, oldFile) || !oldFile.isWritable())) {
                         elementUnderCaretDetector.refresh();
                     }
                 }
             }
+
+
+            @Override
+            public void fileClosed(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
+                if (!cSharpLanguageService.isSupportedFile(project, file) || !file.isWritable()) {
+                    elementUnderCaretDetector.refresh();
+                }
+            }
         });
     }
-
 
 
     @Override
@@ -97,23 +122,10 @@ public class RiderEditorEventsHandler extends LifetimedProjectComponent implemen
         //refresh element under caret, sometimes the document that opens does not grab focus and
         // element under caret event is not fired, this will cause an element under caret event.
         // there's no need to refresh if the tool window wasn't opened yet
-        if (initialized) {
-            ElementUnderCaretDetector elementUnderCaretDetector = getProject().getService(ElementUnderCaretDetector.class);
+        if (initialized && cSharpLanguageService.isSupportedFile(project, psiFile)) {
+            ElementUnderCaretDetector elementUnderCaretDetector = project.getService(ElementUnderCaretDetector.class);
             elementUnderCaretDetector.refresh();
         }
     }
 
-
-
-
-    @Override
-    public void dispose() {
-        super.dispose();
-        if (documentInfoChangedMessageBusConnection != null){
-            documentInfoChangedMessageBusConnection.dispose();
-        }
-        if (fileEditorMessageBusConnection != null){
-            fileEditorMessageBusConnection.dispose();
-        }
-    }
 }

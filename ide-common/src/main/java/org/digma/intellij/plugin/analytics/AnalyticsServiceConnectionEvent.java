@@ -2,6 +2,10 @@ package org.digma.intellij.plugin.analytics;
 
 import com.intellij.util.messages.Topic;
 
+/**
+ * An event fired by AnalyticsService when connection is lost or regained.
+ * it helps keep track of AnalyticsService availability and present the user with informational messages.
+ */
 public interface AnalyticsServiceConnectionEvent {
 
 

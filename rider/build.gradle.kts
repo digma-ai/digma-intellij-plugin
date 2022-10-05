@@ -14,14 +14,14 @@ plugins {
 
 
 dependencies {
-    compileOnly(project(":model"))
     compileOnly(project(":ide-common"))
+    compileOnly(project(":model"))
 }
 
 
 
 intellij {
-    version.set("RD-"+ properties("platformVersion",project))
+    version.set("RD-" + properties("riderVersion", project))
     plugins.set(listOf("rider-plugins-appender"))
     downloadSources.set(false) //there are no sources for rider
     instrumentCode.set(false) // why not??

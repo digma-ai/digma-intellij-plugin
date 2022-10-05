@@ -21,8 +21,10 @@ abstract class AbstractViewService(val project: Project) : Disposable {
 
     init {
         //subscribe to connection lost/gained , call doUpdateUi() on each event so that the no connection card will show or hide
+        @Suppress("LeakingThis")// it's ok, it's only a parent disposable
         project.messageBus.connect(this)
-            .subscribe(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC,
+            .subscribe(
+                AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC,
                 handler = object : AnalyticsServiceConnectionEvent {
                     override fun connectionLost() {
                         doConnectionLost()
@@ -145,7 +147,8 @@ abstract class AbstractViewService(val project: Project) : Disposable {
         return NOT_SUPPORTED_OBJECT_MSG + " " + fileUri?.substringAfterLast('/', fileUri)
     }
 
+
     override fun dispose() {
-        //do nothing
+        //nothing to do here
     }
 }

@@ -12,6 +12,14 @@ data class MethodInfo(
     val spans: List<SpanInfo>
 ) : CodeObjectInfo {
 
+    companion object {
+        fun removeType(objectId: String): String {
+            if (objectId.startsWith("method:")) {
+                return objectId.substringAfter("method:", objectId)
+            }
+            return objectId
+        }
+    }
 
     fun getRelatedCodeObjectIds(): List<String> {
         return spans.stream().map(SpanInfo::idWithType).collect(Collectors.toList())
@@ -21,7 +29,7 @@ data class MethodInfo(
         return "method:$id"
     }
 
-    fun nameWithParams():String{
+    fun nameWithParams(): String {
         return name + getParamsPartFromId()
     }
 
@@ -32,4 +40,6 @@ data class MethodInfo(
         }
         return ""
     }
+
+
 }

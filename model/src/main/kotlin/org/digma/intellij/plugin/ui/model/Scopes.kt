@@ -21,7 +21,7 @@ class EmptyScope(val text:String = ""): Scope{
 
 }
 
-class MethodScope(val methodInfo: MethodInfo): Scope{
+class MethodScope(private val methodInfo: MethodInfo) : Scope {
     override fun getScope(): String {
         return "${methodInfo.containingClass}.${methodInfo.name}"
     }
@@ -31,7 +31,7 @@ class MethodScope(val methodInfo: MethodInfo): Scope{
     }
 }
 
-class DocumentScope(val documentInfo: DocumentInfo): Scope{
+class DocumentScope(private val documentInfo: DocumentInfo) : Scope {
     override fun getScope(): String {
         return documentInfo.path.substringAfterLast('/')
     }

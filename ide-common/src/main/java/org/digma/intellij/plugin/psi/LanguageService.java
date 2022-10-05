@@ -1,13 +1,18 @@
 package org.digma.intellij.plugin.psi;
 
+import com.intellij.lang.Language;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import kotlin.Pair;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
+import java.util.Map;
 
 public interface LanguageService {
 
@@ -36,4 +41,12 @@ public interface LanguageService {
 
 
     void navigateToMethod(String codeObjectId);
+
+    boolean isServiceFor(Language language);
+
+    Map<String, String> findWorkspaceUrisForCodeObjectIds(List<String> codeObjectIds);
+
+    Map<String, Pair<String, Integer>> findWorkspaceUrisForSpanIds(List<String> spanIds);
+
+    void environmentChanged(String newEnv);
 }

@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.rider.psi.csharp;
+package org.digma.intellij.plugin.document;
 
 public class DocumentInfoNotFoundException extends RuntimeException{
     public DocumentInfoNotFoundException() {

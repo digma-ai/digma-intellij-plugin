@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.common;
 
-import org.apache.commons.lang.StringUtils;
 import org.ocpsoft.prettytime.PrettyTime;
 
 import java.net.InetAddress;

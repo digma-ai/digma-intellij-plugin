@@ -62,6 +62,7 @@ public class Environment implements EnvironmentsSupplier {
     }
 
 
+
     @Override
     public String getCurrent() {
         return current;
@@ -149,12 +150,13 @@ public class Environment implements EnvironmentsSupplier {
         //don't try to refresh to often, It's usually not necessary
         var now = Instant.now();
         Duration duration = Duration.between(lastRefreshTimestamp, now);
-        if (duration.getSeconds() < settingsState.refreshDelay) {
+        if (duration.getSeconds() < settingsState.refreshDelay){
             return false;
         }
         lastRefreshTimestamp = now;
         return true;
     }
+
 
 
     //this method should not be called on ui threads, it may hang and cause a freeze

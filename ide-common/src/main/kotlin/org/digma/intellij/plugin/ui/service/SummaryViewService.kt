@@ -44,7 +44,6 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
                     Backgroundable.ensureBackground(project, "Summary view Reload") {
                         reload()
                     }
-
                 }
 
                 override fun environmentsListChanged(newEnvironments: MutableList<String>?) {

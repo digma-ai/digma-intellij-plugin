@@ -182,7 +182,7 @@ public class VcsService {
 
     private String getLine(String text, int lineNumber) {
         try (Stream<String> lines = text.lines()) {
-            return lines.skip(lineNumber - 1).findFirst().orElse(null);
+            return lines.skip((long) lineNumber - 1).findFirst().orElse(null);
         }
     }
 

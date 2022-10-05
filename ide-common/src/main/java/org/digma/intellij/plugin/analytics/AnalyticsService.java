@@ -315,7 +315,7 @@ public class AnalyticsService implements Disposable {
                 } else if (!status.hadError(e)) {
                     status.error();
                     var message = getExceptionMessage(e);
-                    Log.log(LOGGER::warn, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
+                    Log.log(LOGGER::warn, "New Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
                     LOGGER.warn(e);
                 }
 
@@ -326,7 +326,7 @@ public class AnalyticsService implements Disposable {
 
                 throw new AnalyticsServiceException(e);
 
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 status.error();
                 Log.log(LOGGER::debug, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getMessage());
                 LOGGER.error(e);

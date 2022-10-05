@@ -10,7 +10,6 @@ import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor;
 import org.digma.intellij.plugin.document.DocumentInfoContainer;
 import org.digma.intellij.plugin.document.DocumentInfoService;
-import org.digma.intellij.plugin.editor.EditorEventsHandler;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
@@ -208,13 +207,6 @@ public class EditorInteractionService implements CaretContextService, Disposable
     @Override
     public void dispose() {
         Log.log(LOGGER::debug, "disposing..");
-    }
-
-
-    public void start() {
-        Log.log(LOGGER::info, "Starting...");
-        EditorEventsHandler editorEventsHandler = project.getService(EditorEventsHandler.class);
-        editorEventsHandler.start(project);
     }
 
 }

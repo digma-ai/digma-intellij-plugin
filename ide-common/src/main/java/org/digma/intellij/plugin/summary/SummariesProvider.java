@@ -71,25 +71,6 @@ public class SummariesProvider {
             items.add(item);
         }
 
-//        insights.forEach(insight -> {
-//            if (insight instanceof TopErrorFlowsInsight) {
-//                GroupListViewItem group = new GroupListViewItem(0, insight.getType().toString());
-//                int index = 0;
-//                ((TopErrorFlowsInsight) insight).getErrors().forEach(error -> {
-//                    group.addItem(new ListViewItem(error, index++));
-//                });
-//                items.add(group);
-//            } else if (insight instanceof SpanDurationChangeInsight) {
-//                GroupListViewItem group = new GroupListViewItem(1, insight.getType().toString());
-//                ((SpanDurationChangeInsight) insight).getSpanDurationChanges().forEach(change -> {
-//                    group.addItem(new ListViewItem(change, 0));
-//                });
-//                items.add(group);
-//            } else {
-//                Log.log(LOGGER::warn, "Unknown global : {}", insight.getType());
-//            }
-//        });
-
         return items;
     }
 }

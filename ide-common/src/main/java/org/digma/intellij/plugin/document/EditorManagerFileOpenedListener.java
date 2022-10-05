@@ -13,17 +13,18 @@ import org.jetbrains.annotations.NotNull;
 
 public class EditorManagerFileOpenedListener implements FileEditorManagerListener {
 
+    private static final Logger LOGGER = Logger.getInstance(EditorManagerFileOpenedListener.class);
+
     private final Project project;
     private final DocumentAnalyzer documentAnalyzer;
     private final LanguageService languageService;
+
 
     public EditorManagerFileOpenedListener(Project project) {
         this.project = project;
         documentAnalyzer = project.getService(DocumentAnalyzer.class);
         languageService = project.getService(LanguageService.class);
     }
-
-    private static final Logger LOGGER = Logger.getInstance(EditorManagerFileOpenedListener.class);
 
     @Override
     public void fileOpened(@NotNull FileEditorManager source, @NotNull VirtualFile file) {

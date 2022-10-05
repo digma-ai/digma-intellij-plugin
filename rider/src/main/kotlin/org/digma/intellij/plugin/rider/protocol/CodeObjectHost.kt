@@ -13,11 +13,11 @@ import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.SpanInfo
 import org.digma.intellij.plugin.model.lens.CodeLens
-import org.digma.intellij.plugin.psi.PsiUtils
+import org.digma.intellij.plugin.rider.psi.RiderPsiUtils
 import org.jetbrains.annotations.NotNull
 import java.util.function.Consumer
 
-class CodeObjectHost(project: Project) : LifetimedProjectComponent(project) {
+class CodeObjectHost(project: Project): LifetimedProjectComponent(project) {
 
     private val logger = Logger.getInstance(CodeObjectHost::class.java)
 
@@ -31,13 +31,8 @@ class CodeObjectHost(project: Project) : LifetimedProjectComponent(project) {
 
 
     fun getDocument(psiFile: PsiFile): DocumentInfo? {
-        val path: String = PsiUtils.psiFileToDocumentProtocolKey(psiFile)
-        Log.log(
-            logger::debug,
-            "Got request for getDocument for PsiFile {}, converted to path: {}",
-            psiFile.virtualFile,
-            path
-        )
+        val path: String = RiderPsiUtils.psiFileToDocumentProtocolKey(psiFile)
+        Log.log(logger::debug,"Got request for getDocument for PsiFile {}, converted to path: {}",psiFile.virtualFile,path)
         val document: Document? = this.model.documents[path]
         if (logger.isDebugEnabled) {
             Log.log(logger::debug, "Got document for {}: {}", path, document?.printToString())
@@ -49,7 +44,7 @@ class CodeObjectHost(project: Project) : LifetimedProjectComponent(project) {
     fun removeDocument(psiFile: PsiFile) {
         model.protocol.scheduler.invokeOrQueue {
             Log.log(logger::debug, "Removing document for PsiFile {}", psiFile.virtualFile)
-            val path: String = PsiUtils.psiFileToDocumentProtocolKey(psiFile)
+            val path: String = RiderPsiUtils.psiFileToDocumentProtocolKey(psiFile)
             this.model.documents.remove(path)
         }
     }
@@ -63,7 +58,7 @@ class CodeObjectHost(project: Project) : LifetimedProjectComponent(project) {
         Log.log(logger::debug, "Installing code lens for {}: {}", psiFile.virtualFile, codeLenses)
 
         model.protocol.scheduler.invokeOrQueue {
-            val documentKey = PsiUtils.psiFileToDocumentProtocolKey(psiFile)
+            val documentKey = RiderPsiUtils.psiFileToDocumentProtocolKey(psiFile)
 
             //first remove all code lens entries belonging to this document.
             //the map is not keyed by document, so we have to search
@@ -101,11 +96,11 @@ class CodeObjectHost(project: Project) : LifetimedProjectComponent(project) {
         return result
     }
 
-    fun findWorkspaceUrisForSpanIds(spanIds: MutableList<String>): Map<String, Pair<String, Int>> {
-        val result = HashMap<String, Pair<String, Int>>()
-        val workspaceUris = model.getSpansWorkspaceUris.callSynchronously(spanIds, model.protocol)
+    fun findWorkspaceUrisForSpanIds(spanIds: MutableList<String>): Map<String, Pair<String,Int>> {
+        val result = HashMap<String,Pair<String,Int>>()
+        val workspaceUris = model.getSpansWorkspaceUris.callSynchronously(spanIds,model.protocol)
         workspaceUris?.forEach {
-            result[it.codeObjectId] = Pair(it.workspaceUri, it.offset)
+            result[it.codeObjectId] = Pair(it.workspaceUri,it.offset)
         }
         return result
     }

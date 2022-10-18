@@ -5,13 +5,12 @@ import com.intellij.openapi.project.Project;
 import com.intellij.util.messages.MessageBusConnection;
 import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent;
 import org.digma.intellij.plugin.analytics.EnvironmentChanged;
+import org.digma.intellij.plugin.document.CodeLensProvider;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.lens.CodeLens;
 import org.digma.intellij.plugin.rider.protocol.CodeObjectHost;
-import org.digma.intellij.plugin.rider.protocol.DocumentCodeObjectsListener;
 import org.digma.intellij.plugin.rider.protocol.ElementUnderCaretDetector;
-import org.digma.intellij.plugin.ui.CaretContextService;
-import org.digma.intellij.plugin.ui.service.SummaryViewService;
 
 import java.util.List;
 
@@ -20,21 +19,18 @@ public class RiderEnvironmentChangedListener extends LifetimedProjectComponent i
     private final Logger LOGGER = Logger.getInstance(RiderEnvironmentChangedListener.class);
 
     private final CodeObjectHost codeObjectHost;
-    private final DocumentCodeObjectsListener documentCodeObjectsListener;
     private final ElementUnderCaretDetector elementUnderCaretDetector;
-    private final CaretContextService caretContextService;
     private final DocumentInfoService documentInfoService;
-    private final SummaryViewService summaryViewService;
+    private final CodeLensProvider codeLensProvider;
+
     private final MessageBusConnection messageBusConnection;
 
     public RiderEnvironmentChangedListener(Project project) {
         super(project);
         codeObjectHost = project.getService(CodeObjectHost.class);
-        documentCodeObjectsListener = project.getService(DocumentCodeObjectsListener.class);
         elementUnderCaretDetector = project.getService(ElementUnderCaretDetector.class);
-        caretContextService = project.getService(CaretContextService.class);
         documentInfoService = project.getService(DocumentInfoService.class);
-        summaryViewService = project.getService(SummaryViewService.class);
+        codeLensProvider = project.getService(CodeLensProvider.class);
         messageBusConnection = project.getMessageBus().connect();
         messageBusConnection.subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC,this);
     }
@@ -43,21 +39,23 @@ public class RiderEnvironmentChangedListener extends LifetimedProjectComponent i
     public void environmentChanged(String newEnv) {
         Log.log(LOGGER::debug, "Got environmentChanged {}", newEnv);
 
-        //empty the context
-        //todo: probably don't need to empty the context here
-        /////caretContextService.contextEmpty();
+        //this code is orchestration of what needs to be done on environmentChanged.
+        //must be run in background thread to not freeze the UI.
+        //when fired from the environment object it runs on background.
 
-        //call document service to clean its maps
+        //call document service to refresh all its document info from the backend
         documentInfoService.environmentChanged(newEnv);
-        //codeObjectHost should mainly clear code lens
-        codeObjectHost.environmentChanged();
-        //documentCodeObjectsListener will fire documentCodeObjectsChanged for each documents
-        //in the protocol, that will cause a refresh of the code objects,summaries etc. and will eventually
-        //trigger a MethodUnderCaret event
-        documentCodeObjectsListener.environmentChanged();
 
-        //trigger a refresh here, its necessary when connection is lost and regained so that contextChange will be called
-        //and the view update.
+        //install new code lens for all open documents
+        documentInfoService.allKeys().forEach(psiFile -> {
+            Log.log(LOGGER::debug, "Requesting code lens for {}", psiFile.getVirtualFile());
+            List<CodeLens> codeLens = codeLensProvider.provideCodeLens(psiFile);
+            Log.log(LOGGER::debug, "Got codeLens for {}: {}", psiFile.getVirtualFile(), codeLens);
+            codeObjectHost.installCodeLens(psiFile, codeLens);
+        });
+
+        //trigger a refresh of element under current, after environment change it will cause a contextChange
+        //and the UI will refresh with the new environment
         elementUnderCaretDetector.refresh();
     }
 

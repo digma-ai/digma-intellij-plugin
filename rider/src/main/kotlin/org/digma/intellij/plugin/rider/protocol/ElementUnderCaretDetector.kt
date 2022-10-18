@@ -66,9 +66,7 @@ class ElementUnderCaretDetector(project: Project) : LifetimedProjectComponent(pr
     //current context. refresh is an easy way to intentionally cause a methodUnderCaret event.
     fun refresh() {
         model.protocol.scheduler.invokeOrQueue {
-            WriteAction.run<Exception> {
-                model.refresh.fire(Unit)
-            }
+            model.refresh.fire(Unit)
         }
     }
 

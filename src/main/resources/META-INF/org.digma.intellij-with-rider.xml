@@ -35,4 +35,11 @@
     </extensions>
 
 
+    <projectListeners>
+        <listener
+                class="org.digma.intellij.plugin.rider.editor.RiderFileClosedListener"
+                topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
+    </projectListeners>
+
+
 </idea-plugin>

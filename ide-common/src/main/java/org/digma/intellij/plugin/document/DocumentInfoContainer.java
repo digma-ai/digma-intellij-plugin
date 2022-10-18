@@ -60,6 +60,11 @@ public class DocumentInfoContainer {
         loadSummaries();
     }
 
+    public void refresh() {
+        Log.log(LOGGER::debug, "Refreshing document backend data for {}: ", psiFile.getVirtualFile());
+        loadSummaries();
+    }
+
 
     private void loadSummaries() {
 
@@ -172,4 +177,5 @@ public class DocumentInfoContainer {
     public MethodInfo getMethodInfo(String id) {
         return documentInfo.getMethods().get(id);
     }
+
 }

@@ -58,7 +58,6 @@ public class RiderEditorEventsHandler extends LifetimedProjectComponent implemen
 
 
 
-        //todo: keep this code as example until we are sure we don't need it.
         fileEditorMessageBusConnection = project.getMessageBus().connect();
         fileEditorMessageBusConnection.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, new FileEditorManagerListener() {
             //resharper does not send an event on non-supported files,and when a non-supported file is opened our context is still shown
@@ -95,7 +94,9 @@ public class RiderEditorEventsHandler extends LifetimedProjectComponent implemen
 
     @Override
     public void documentInfoChanged(PsiFile psiFile) {
-        //there's no need to refresh ElementUnderCaret if the tool window wasn't opened yet
+        //refresh element under caret, sometimes the document that opens does not grab focus and
+        // element under caret event is not fired, this will cause an element under caret event.
+        // there's no need to refresh if the tool window wasn't opened yet
         if (initialized) {
             ElementUnderCaretDetector elementUnderCaretDetector = getProject().getService(ElementUnderCaretDetector.class);
             elementUnderCaretDetector.refresh();

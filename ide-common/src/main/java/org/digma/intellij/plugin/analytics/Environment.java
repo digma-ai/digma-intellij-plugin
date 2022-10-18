@@ -1,10 +1,9 @@
 package org.digma.intellij.plugin.analytics;
 
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.progress.ProgressIndicator;
-import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import org.apache.commons.lang3.time.StopWatch;
+import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.persistence.PersistenceData;
@@ -12,7 +11,6 @@ import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
 import org.jetbrains.annotations.NotNull;
 
-import javax.swing.*;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -20,6 +18,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Environment implements EnvironmentsSupplier {
 
@@ -37,6 +36,8 @@ public class Environment implements EnvironmentsSupplier {
 
     private Instant lastRefreshTimestamp = Instant.now();
 
+    private final ReentrantLock envChangeLock = new ReentrantLock();
+
     public Environment(@NotNull Project project, @NotNull AnalyticsService analyticsService, @NotNull PersistenceData persistenceData, SettingsState settingsState) {
         this.project = project;
         this.analyticsService = analyticsService;
@@ -47,7 +48,7 @@ public class Environment implements EnvironmentsSupplier {
         //call refresh on environment when connection is lost, in some cases its necessary for some components to reset or update ui.
         //usually these components react to environment change events, so this will trigger an environment change if not already happened before.
         //if the connection lost happened during environment refresh then it may cause a second redundant event but will do no harm.
-        project.getMessageBus().connect(project).subscribe(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, new AnalyticsServiceConnectionEvent() {
+        project.getMessageBus().connect(analyticsService).subscribe(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, new AnalyticsServiceConnectionEvent() {
             @Override
             public void connectionLost() {
                 refresh();
@@ -59,7 +60,6 @@ public class Environment implements EnvironmentsSupplier {
             }
         });
     }
-
 
 
     @Override
@@ -77,21 +77,29 @@ public class Environment implements EnvironmentsSupplier {
             return;
         }
 
+
+        //changeEnvironment must run in the background, the use of envChangeLock makes sure no two threads
+        //change environment at the same time. if user changes environments very quickly they will run one after the
+        // other.
+        //listeners that handle environmentChanged event in most cases need to stay on the same thread.
+        Runnable task = () -> {
+            envChangeLock.lock();
+            try {
+                changeEnvironment(newEnv);
+            } finally {
+                envChangeLock.unlock();
+            }
+        };
+
+        Backgroundable.ensureBackground(project, "Digma: environment changed " + newEnv, task);
+    }
+
+
+    private void changeEnvironment(@NotNull String newEnv) {
         var oldEnv = this.current;
         this.current = newEnv;
         persistenceData.setCurrentEnv(newEnv);
-
-        //todo: maybe always on background
-        if (SwingUtilities.isEventDispatchThread()) {
-            new Task.Backgroundable(project, "Digma: environment changed...") {
-                @Override
-                public void run(@NotNull ProgressIndicator indicator) {
-                    notifyEnvironmentChanged(oldEnv, newEnv);
-                }
-            }.queue();
-        } else {
-            notifyEnvironmentChanged(oldEnv, newEnv);
-        }
+        notifyEnvironmentChanged(oldEnv, newEnv);
     }
 
 
@@ -131,12 +139,9 @@ public class Environment implements EnvironmentsSupplier {
     private void refreshOnBackground() {
 
         Log.log(LOGGER::debug, "Refreshing Environments on background thread.");
-        new Task.Backgroundable(project, "Digma: Refreshing environments...") {
-            @Override
-            public void run(@NotNull ProgressIndicator indicator) {
-                refreshEnvironments();
-            }
-        }.queue();
+
+        Backgroundable.ensureBackground(project, "Refreshing Environments on background thread.", this::refreshEnvironments);
+
     }
 
 
@@ -144,13 +149,12 @@ public class Environment implements EnvironmentsSupplier {
         //don't try to refresh to often, It's usually not necessary
         var now = Instant.now();
         Duration duration = Duration.between(lastRefreshTimestamp, now);
-        if (duration.getSeconds() < settingsState.refreshDelay){
+        if (duration.getSeconds() < settingsState.refreshDelay) {
             return false;
         }
         lastRefreshTimestamp = now;
         return true;
     }
-
 
 
     //this method should not be called on ui threads, it may hang and cause a freeze
@@ -163,7 +167,7 @@ public class Environment implements EnvironmentsSupplier {
 
             Log.log(LOGGER::debug, "Refreshing Environments list");
             var newEnvironments = analyticsService.getEnvironments();
-            if (newEnvironments != null && newEnvironments.size() > 0) {
+            if (newEnvironments != null && !newEnvironments.isEmpty()) {
                 Log.log(LOGGER::debug, "Got environments {}", newEnvironments);
             } else {
                 Log.log(LOGGER::warn, "Error loading environments: {}", newEnvironments);

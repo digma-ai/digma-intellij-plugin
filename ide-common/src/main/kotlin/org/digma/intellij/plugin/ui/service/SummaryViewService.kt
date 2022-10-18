@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
+import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.DumbAwareNotifier
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.Models
@@ -35,17 +36,22 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
         }
 
         //this is for when environment changes or connection lost and regained
-        project.messageBus.connect(project)
+        project.messageBus.connect(this)
             .subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, object : EnvironmentChanged {
 
                 override fun environmentChanged(newEnv: String?) {
                     Log.log(logger::debug, "environmentChanged called")
-                    reload()
+                    Backgroundable.ensureBackground(project, "Summary view Reload") {
+                        reload()
+                    }
+
                 }
 
                 override fun environmentsListChanged(newEnvironments: MutableList<String>?) {
                     Log.log(logger::debug, "environmentsListChanged called")
-                    reload()
+                    Backgroundable.ensureBackground(project, "Summary view Reload") {
+                        reload()
+                    }
                 }
             })
     }

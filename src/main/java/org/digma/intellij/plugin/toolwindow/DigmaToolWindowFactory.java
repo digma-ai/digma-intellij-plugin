@@ -11,6 +11,7 @@ import com.intellij.ui.content.ContentFactory;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor;
 import org.digma.intellij.plugin.analytics.EnvironmentChanged;
+import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.service.EditorInteractionService;
 import org.digma.intellij.plugin.service.ErrorsActionsService;
@@ -114,13 +115,15 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
         }.queue();
 
 
-
+        //todo: check and remove, find another solution
         //todo: sometimes there is a race condition on startup, a contextChange is fired before method info is available.
         //calling environmentChanged will fix it
         BackendConnectionMonitor backendConnectionMonitor = project.getService(BackendConnectionMonitor.class);
         if (backendConnectionMonitor.isConnectionOk()) {
-            EnvironmentChanged publisher = project.getMessageBus().syncPublisher(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC);
-            publisher.environmentChanged(project.getService(AnalyticsService.class).getEnvironment().getCurrent());
+            Backgroundable.ensureBackground(project, "change environment", () -> {
+                EnvironmentChanged publisher = project.getMessageBus().syncPublisher(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC);
+                publisher.environmentChanged(project.getService(AnalyticsService.class).getEnvironment().getCurrent());
+            });
         }
 
     }

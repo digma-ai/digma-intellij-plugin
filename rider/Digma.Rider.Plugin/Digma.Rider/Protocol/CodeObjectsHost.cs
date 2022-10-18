@@ -130,8 +130,7 @@ namespace Digma.Rider.Protocol
                             {
                                 Log(_logger, "Document '{0}' is not complete. Trying to build it on-demand.",
                                     document.FileUri);
-                                NotifyDocumentOpenedOrChanged(psiSourceFile);
-                                document = _codeObjectsCache.Map.TryGetValue(psiSourceFile);
+                                document = BuildDocumentOnDemand(psiSourceFile);
                             }
 
                             if (document == null)

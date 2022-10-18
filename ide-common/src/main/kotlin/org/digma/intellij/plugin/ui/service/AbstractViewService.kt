@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.service
 
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.ui.content.Content
@@ -9,7 +10,7 @@ import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import javax.swing.SwingUtilities
 
 
-abstract class AbstractViewService(val project: Project) {
+abstract class AbstractViewService(val project: Project) : Disposable {
 
     //these may be null if the tool window did not open yet
     var panel: DigmaTabPanel? = null
@@ -20,7 +21,7 @@ abstract class AbstractViewService(val project: Project) {
 
     init {
         //subscribe to connection lost/gained , call doUpdateUi() on each event so that the no connection card will show or hide
-        project.messageBus.connect(project)
+        project.messageBus.connect(this)
             .subscribe(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC,
                 handler = object : AnalyticsServiceConnectionEvent {
                     override fun connectionLost() {
@@ -140,8 +141,11 @@ abstract class AbstractViewService(val project: Project) {
         }
     }
 
-    protected fun getNonSupportedFileScopeMessage(fileUri: String?): String{
-        return NOT_SUPPORTED_OBJECT_MSG + " " +fileUri?.substringAfterLast('/',fileUri)
+    protected fun getNonSupportedFileScopeMessage(fileUri: String?): String {
+        return NOT_SUPPORTED_OBJECT_MSG + " " + fileUri?.substringAfterLast('/', fileUri)
     }
 
+    override fun dispose() {
+        //do nothing
+    }
 }

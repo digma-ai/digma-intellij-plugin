@@ -66,7 +66,7 @@ public class EditorInteractionService implements CaretContextService, Disposable
     private boolean testConnectionToBackend() {
 
         //refresh will run in the background.
-        //if there is currently no connection but it will recover during this refresh call then
+        //if there is currently no connection, but connection will recover during this refresh call then
         //not sure backendConnectionMonitor will catch it so the contextChange flow may still block.
         //the next contextChange will pass.
         //but anyway if the connection will recover an environmentChanged event will fire and that should have some kind

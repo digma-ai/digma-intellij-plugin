@@ -9,7 +9,7 @@ class BackendConnectionMonitor(val project: Project) : Disposable, AnalyticsServ
 
 
     init {
-        project.messageBus.connect(project)
+        project.messageBus.connect(this)
             .subscribe(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, this)
     }
 

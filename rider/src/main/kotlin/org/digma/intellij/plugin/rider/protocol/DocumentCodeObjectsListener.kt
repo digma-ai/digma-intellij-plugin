@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.rider.protocol
 
 import com.intellij.openapi.application.ReadAction
-import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
@@ -20,7 +19,6 @@ class DocumentCodeObjectsListener(project: Project) : LifetimedProjectComponent(
 
     init {
         Log.log(logger::info, "DocumentCodeObjectsListener registering for solution startup..")
-
 
 
         project.solution.isLoaded.advise(project.lifetime) {
@@ -51,7 +49,6 @@ class DocumentCodeObjectsListener(project: Project) : LifetimedProjectComponent(
             model.documentAnalyzed.advise(project.lifetime) { documentKey ->
                 Log.log(logger::debug,project, "Got documentAnalyzed event for {}", documentKey)
                 documentAnalyzed(model, documentKey, project)
-                //todo: check why the event comes few time when open document in the digma rider project
             }
         }
     }
@@ -92,22 +89,5 @@ class DocumentCodeObjectsListener(project: Project) : LifetimedProjectComponent(
         publisher.documentCodeObjectsChanged(psiFile)
     }
 
-    fun environmentChanged() {
-        val model = project.solution.codeObjectsModel
-        model.protocol.scheduler.invokeOrQueue {
-            WriteAction.run<Exception> {
-                model.documents.values.forEach {
-                    val docUri = it.fileUri
-                    try {
-                        val psiFile = PsiUtils.uriToPsiFile(docUri, project)
-                        notifyDocumentCodeObjectsChanged(psiFile)
-                    } catch (e: PsiFileNotFountException) {
-                        Log.log(logger::error, "Could not locate psi file for uri {}", docUri)
-                    }
-                }
-            }
-
-        }
-    }
 
 }

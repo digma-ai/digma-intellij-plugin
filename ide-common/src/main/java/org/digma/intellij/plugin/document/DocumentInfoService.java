@@ -16,6 +16,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * DocumentInfoService acts as a container for DocumentInfo objects.
@@ -38,10 +39,19 @@ public class DocumentInfoService {
     }
 
 
-    @SuppressWarnings("unused")
+    public Set<PsiFile> allKeys() {
+        return documents.keySet();
+    }
+
+
     public void environmentChanged(String newEnv) {
-        Log.log(LOGGER::debug, "Got environmentChanged event {}",newEnv);
-        documents.clear();
+        Log.log(LOGGER::debug, "Got environmentChanged event {}", newEnv);
+
+        //refresh all backend data.
+        //must run in background
+        documents.forEach((psiFile, container) -> {
+            container.refresh();
+        });
     }
 
     public void notifyDocumentInfoChanged(PsiFile psiFile) {
@@ -53,12 +63,15 @@ public class DocumentInfoService {
 
     //called after a document is analyzed for code objects
     public void addCodeObjects(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
-        Log.log(LOGGER::debug, "Adding DocumentInfo for {},{}",psiFile.getVirtualFile(),documentInfo);
-        DocumentInfoContainer documentInfoContainer = documents.computeIfAbsent(psiFile, psiFile1 -> new DocumentInfoContainer(psiFile1,analyticsService));
+        Log.log(LOGGER::debug, "Adding DocumentInfo for {},{}", psiFile.getVirtualFile(), documentInfo);
+        DocumentInfoContainer documentInfoContainer = documents.computeIfAbsent(psiFile, psiFile1 -> new DocumentInfoContainer(psiFile1, analyticsService));
         documentInfoContainer.update(documentInfo);
         notifyDocumentInfoChanged(psiFile);
     }
 
+    public void removeDocumentInfo(@NotNull PsiFile psiFile) {
+        documents.remove(psiFile);
+    }
 
     @Nullable
     public DocumentInfoContainer getDocumentInfo(PsiFile psiFile) {
@@ -99,4 +112,5 @@ public class DocumentInfoService {
                 findAny().map(documentInfoContainer -> documentInfoContainer.getMethodInfo(sourceCodeObjectId)).
                 orElse(null);
     }
+
 }

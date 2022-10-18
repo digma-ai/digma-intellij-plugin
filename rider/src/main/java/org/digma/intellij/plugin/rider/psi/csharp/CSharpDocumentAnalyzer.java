@@ -1,12 +1,11 @@
 package org.digma.intellij.plugin.rider.psi.csharp;
 
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.progress.ProgressIndicator;
-import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
 import com.intellij.util.messages.MessageBusConnection;
 import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent;
+import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.document.DocumentAnalyzer;
 import org.digma.intellij.plugin.document.DocumentCodeObjectsChanged;
 import org.digma.intellij.plugin.document.DocumentInfoService;
@@ -34,10 +33,10 @@ public class CSharpDocumentAnalyzer extends LifetimedProjectComponent implements
 
     @Override
     public void analyzeDocument(@NotNull PsiFile psiFile) {
-        new Task.Backgroundable(getProject(), "Digma: analyzeDocument...") {
-            @Override
-            public void run(@NotNull ProgressIndicator indicator) {
 
+        Backgroundable.ensureBackground(getProject(), "Digma: analyzeDocument", new Runnable() {
+            @Override
+            public void run() {
                 DocumentInfo documentInfo = codeObjectHost.getDocument(psiFile);
                 if (documentInfo == null) {
                     Log.log(LOGGER::error, "Could not find document for psi file {}", psiFile.getVirtualFile());
@@ -45,9 +44,8 @@ public class CSharpDocumentAnalyzer extends LifetimedProjectComponent implements
                 }
                 Log.log(LOGGER::debug, "Found document for {},{}", psiFile.getVirtualFile(), documentInfo);
                 documentInfoService.addCodeObjects(psiFile, documentInfo);
-
             }
-        }.queue();
+        });
     }
 
     //this is the event for rider when a document is opened

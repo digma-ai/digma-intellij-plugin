@@ -6,6 +6,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
+import com.intellij.ui.JBColor;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
@@ -185,8 +186,8 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getUsageStatus(new UsageStatusRequest(objectIds, List.of("Error"))));
     }
 
-    public String getHtmlGraphForSpanPercentiles(String instrumentationLibrary, String spanName) throws AnalyticsServiceException {
-        final SpanHistogramQuery spanHistogramQuery = new SpanHistogramQuery(getCurrentEnvironment(), spanName, instrumentationLibrary, "");
+    public String getHtmlGraphForSpanPercentiles(String instrumentationLibrary, String spanName, String backgroundColor) throws AnalyticsServiceException {
+        final SpanHistogramQuery spanHistogramQuery = new SpanHistogramQuery(getCurrentEnvironment(), spanName, instrumentationLibrary, "", JBColor.isBright() ? "light" : "dark", backgroundColor);
         return executeCatching(() -> analyticsProviderProxy.getHtmlGraphForSpanPercentiles(spanHistogramQuery));
     }
 

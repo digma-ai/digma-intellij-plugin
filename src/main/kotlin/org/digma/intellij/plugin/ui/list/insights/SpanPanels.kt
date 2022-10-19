@@ -9,21 +9,11 @@ import com.intellij.ui.components.JBPanel
 import com.intellij.util.containers.isNullOrEmpty
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.analytics.AnalyticsService
-import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight
-import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
-import org.digma.intellij.plugin.model.rest.insights.SpanFlow
-import org.digma.intellij.plugin.model.rest.insights.SpanInfo
-import org.digma.intellij.plugin.model.rest.insights.SpanUsagesInsight
+import org.digma.intellij.plugin.model.rest.insights.*
 import org.digma.intellij.plugin.settings.LinkMode
 import org.digma.intellij.plugin.settings.SettingsState
-import org.digma.intellij.plugin.ui.common.CopyableLabel
-import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
+import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.common.Html.ARROW_RIGHT
-import org.digma.intellij.plugin.ui.common.Laf
-import org.digma.intellij.plugin.ui.common.asHtml
-import org.digma.intellij.plugin.ui.common.span
-import org.digma.intellij.plugin.ui.common.spanBold
-import org.digma.intellij.plugin.ui.common.spanGrayed
 import org.digma.intellij.plugin.ui.list.ListItemActionButton
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.model.TraceSample
@@ -292,7 +282,7 @@ fun buildButtonToPercentilesGraph(project: Project, span: SpanInfo): JButton {
     val analyticsService = AnalyticsService.getInstance(project)
     val button = ListItemActionButton("Histogram")
     button.addActionListener {
-        val htmlContent = analyticsService.getHtmlGraphForSpanPercentiles(span.instrumentationLibrary, span.name)
+        val htmlContent = analyticsService.getHtmlGraphForSpanPercentiles(span.instrumentationLibrary, span.name, Laf.Colors.PLUGIN_BACKGROUND.getHex())
         HTMLEditorProvider.openEditor(project, "Percentiles Graph of Span ${span.name}", htmlContent)
     }
 

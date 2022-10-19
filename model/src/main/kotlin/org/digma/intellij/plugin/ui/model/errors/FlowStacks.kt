@@ -42,9 +42,9 @@ class FlowStacks {
     private fun filterWorkspaceOnly(currentStack: List<ListViewItem<FrameListViewItem>>): List<ListViewItem<*>> {
 
         val result = ArrayList<ListViewItem<*>>()
+        var latestSpan: ListViewItem<FrameListViewItem>? = null
 
         for (n in currentStack.withIndex()){
-
             val toAdd =
                 when (n.value.modelObject) {
                     is FrameStackTitle -> {
@@ -52,12 +52,9 @@ class FlowStacks {
                         n.value
                     }
                     is SpanTitle -> {
-                        //check if we need to add this span title , if the frame following it has workspaceUri
-                        val index = n.index
-                        //element after span title must be FrameItem, if that fails then we have a bug when the list was built.
-                        //if it fails on index out of bounds then we have a bug too
-                        val frame: FrameItem = currentStack[index+1].modelObject as FrameItem
-                        if(frame.isInWorkspace()) n.value else null
+                        //keep the latest span, we may need to add it if there is a frame under it that is in workspace
+                        latestSpan = n.value
+                        null
                     }
                     is FrameItem -> {
                         val frame: FrameItem = n.value.modelObject as FrameItem
@@ -66,7 +63,11 @@ class FlowStacks {
                     else -> throw RuntimeException("Unknown modelObject ${n.value.modelObject}")
                 }
 
-            if (toAdd != null){
+            if (toAdd != null) {
+                if (toAdd.modelObject is FrameItem && latestSpan != null) {
+                    result.add(latestSpan)
+                    latestSpan = null
+                }
                 result.add(toAdd)
             }
 

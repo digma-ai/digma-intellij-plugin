@@ -9,4 +9,6 @@ constructor(
     val spanName: String,
     val instrumentationLibrary: String,
     val codeObjectId: String,
+    val theme: String?,
+    val backgroundColor: String?,
 )

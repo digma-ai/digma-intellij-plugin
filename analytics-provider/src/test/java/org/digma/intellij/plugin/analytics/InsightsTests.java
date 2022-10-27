@@ -92,7 +92,8 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
         SlowSpanInfo slowSpanInfo = new SlowSpanInfo(spanInfo,
                 new Percentile(0.10970134022722634D,new Duration(3.44D,"ms",3441700L)),
                 new Percentile(0.2566821090980162D,new Duration(3.44D,"ms",3441700L)),
-                new Percentile(0.4407383382867023D,new Duration(5.64D,"ms",5643900L)));
+                new Percentile(0.4407383382867023D,new Duration(5.64D,"ms",5643900L)),
+                null, null);
 
         SlowestSpansInsight expectedSlowestSpansInsight = new SlowestSpansInsight("Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$TransferFunds",
                 "post transfer/transferfunds",Collections.singletonList(slowSpanInfo));

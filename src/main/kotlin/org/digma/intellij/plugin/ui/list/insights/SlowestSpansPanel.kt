@@ -5,12 +5,7 @@ import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.document.CodeObjectsUtil
-import org.digma.intellij.plugin.model.rest.insights.EndpointSchema
-import org.digma.intellij.plugin.model.rest.insights.Percentile
-import org.digma.intellij.plugin.model.rest.insights.SlowEndpointInfo
-import org.digma.intellij.plugin.model.rest.insights.SlowSpanInfo
-import org.digma.intellij.plugin.model.rest.insights.SlowestSpansInsight
-import org.digma.intellij.plugin.model.rest.insights.SpanSlowEndpointsInsight
+import org.digma.intellij.plugin.model.rest.insights.*
 import org.digma.intellij.plugin.service.InsightsActionsService
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
@@ -80,7 +75,7 @@ fun spanSlowEndpointsPanel(project: Project, insight: SpanSlowEndpointsInsight, 
 
         currContainerPanel.add(line1)
         currContainerPanel.add(line2)
-        endpointsListPanel.add(currContainerPanel);
+        endpointsListPanel.add(currContainerPanel)
     }
 
     return createInsightPanel(
@@ -93,11 +88,20 @@ fun spanSlowEndpointsPanel(project: Project, insight: SpanSlowEndpointsInsight, 
 }
 
 fun descriptionOf(sei: SlowEndpointInfo): String {
-    if (sei.p95.fraction > 0) {
-        return "Up to ~${percentageForDisplaySlowSpanInfo(sei.p95)} of entire of the entire request time ${durationText(sei.p95)}"
-    }
+    if (sei.ProbabilityOfBeingBottleneck != null &&
+        sei.AvgDurationWhenBeingBottleneck != null){
 
-    return "Up to ~${percentageForDisplaySlowSpanInfo(sei.p50)} of entire of the entire request time ${durationText(sei.p50)}"
+        return "Slowing ${(sei.ProbabilityOfBeingBottleneck!!*100).toInt()}% of the requests (~${sei.AvgDurationWhenBeingBottleneck!!.value}${sei.AvgDurationWhenBeingBottleneck!!.unit})"
+
+    }
+    else{ // Obsolete
+
+        if (sei.p95.fraction > 0) {
+            return "Up to ~${percentageForDisplaySlowSpanInfo(sei.p95)} of entire of the entire request time ${durationText(sei.p95)}"
+        }
+
+        return "Up to ~${percentageForDisplaySlowSpanInfo(sei.p50)} of entire of the entire request time ${durationText(sei.p50)}"
+    }
 }
 
 fun durationText(percentile: Percentile): String {
@@ -105,13 +109,22 @@ fun durationText(percentile: Percentile): String {
 }
 
 fun descriptionOf(span: SlowSpanInfo): String {
-    if (span.p50.fraction > 0.4)
-        return "50% of the users by up to ${span.p50.maxDuration.value}${span.p50.maxDuration.unit}"
+    if (span.ProbabilityOfBeingBottleneck != null &&
+        span.AvgDurationWhenBeingBottleneck != null){
 
-    if (span.p95.fraction > 0.4)
-        return "5% of the users by up to ${span.p95.maxDuration.value}${span.p95.maxDuration.unit}"
+        return "Slowing ${(span.ProbabilityOfBeingBottleneck!!*100).toInt()}% of the requests (~${span.AvgDurationWhenBeingBottleneck!!.value}${span.AvgDurationWhenBeingBottleneck!!.unit})"
 
-    return "1% of the users by up to ${span.p99.maxDuration.value}${span.p99.maxDuration.unit}"
+    }
+    else{ // Obsolete
+
+        if (span.p50.fraction > 0.4)
+            return "50% of the users by up to ${span.p50.maxDuration.value}${span.p50.maxDuration.unit}"
+
+        if (span.p95.fraction > 0.4)
+            return "5% of the users by up to ${span.p95.maxDuration.value}${span.p95.maxDuration.unit}"
+
+        return "1% of the users by up to ${span.p99.maxDuration.value}${span.p99.maxDuration.unit}"
+    }
 }
 
 private fun percentageForDisplaySlowSpanInfo(percentile: Percentile): String {
@@ -120,23 +133,23 @@ private fun percentageForDisplaySlowSpanInfo(percentile: Percentile): String {
 }
 
 fun genToolTip(span: SlowSpanInfo): String {
-    return asHtml(
-        """
-Percentage of time spent in span:
-<pre>
-Median: ${oneLiner(span.p50)}%
-P95:    ${oneLiner(span.p95)}%
-P99:    ${oneLiner(span.p99)}%
-</pre>
-"""
-    )
+    return asHtml(span.spanInfo.displayName)
+//        """
+//Percentage of time spent in span:
+//<pre>
+//Median: ${oneLiner(span.p50)}%
+//P95:    ${oneLiner(span.p95)}%
+//P99:    ${oneLiner(span.p99)}%
+//</pre>
+//"""
+//    )
 }
 
-private fun percentageForDisplay(percentile: Percentile): String {
-    val decimal = BigDecimal(percentile.fraction * 100).setScale(0, RoundingMode.HALF_DOWN)
-    return decimal.toPlainString()
-}
+//private fun percentageForDisplay(percentile: Percentile): String {
+//    val decimal = BigDecimal(percentile.fraction * 100).setScale(0, RoundingMode.HALF_DOWN)
+//    return decimal.toPlainString()
+//}
 
-private fun oneLiner(percentile: Percentile): String {
-    return "${percentageForDisplay(percentile)}% ~${percentile.maxDuration.value}${percentile.maxDuration.unit}"
-}
+//private fun oneLiner(percentile: Percentile): String {
+//    return "${percentageForDisplay(percentile)}% ~${percentile.maxDuration.value}${percentile.maxDuration.unit}"
+//}

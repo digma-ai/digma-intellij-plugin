@@ -33,7 +33,7 @@ class MethodScope(private val methodInfo: MethodInfo) : Scope {
 
 class DocumentScope(private val documentInfo: DocumentInfo) : Scope {
     override fun getScope(): String {
-        return documentInfo.path.substringAfterLast('/')
+        return documentInfo.fileUri.substringAfterLast('/')
     }
 
     override fun getScopeTooltip(): String {

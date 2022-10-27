@@ -24,10 +24,10 @@ class CodeObjectHost(project: Project): LifetimedProjectComponent(project) {
     private var model: CodeObjectsModel = project.solution.codeObjectsModel
 
 
-    //using the file uri as the document key in rider protocol proved to be unstable because of
+    //Note: using the file uri as the document key in rider protocol proved to be unstable because of
     // differences in conversion between linux and windows.
     // so the document key is just its full path without the URI schema 'file:///'
-    // the uri is a field in Document and is used to find a psi file in rider the frontend
+    // the Document has a fileUri field which is a uri with schema and is used to find a psi file in rider the frontend.
 
 
     fun getDocument(psiFile: PsiFile): DocumentInfo? {
@@ -112,7 +112,7 @@ class CodeObjectHost(project: Project): LifetimedProjectComponent(project) {
 
 
     private fun Document.toDocumentInfo() = DocumentInfo(
-        path = fileUri,
+        fileUri = fileUri,
         methods = toMethodInfoMap(methods)
 
     )

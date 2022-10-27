@@ -13,6 +13,7 @@ import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.messages.MessageBusConnection;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.ui.CaretContextService;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -28,7 +29,8 @@ public class EditorListener implements FileEditorManagerListener {
 
     private boolean active = false;
     private final Project project;
-    private final LocalPsiEditorEventsHandler localPsiEditorEventsHandler;
+    private final CaretContextService caretContextService;
+    private final EditorEventsHandler editorEventsHandler;
     private MessageBusConnection messageBusConnection;
 
     /**
@@ -41,9 +43,23 @@ public class EditorListener implements FileEditorManagerListener {
     private final Map<VirtualFile, Disposable> disposables = new HashMap<>();
 
 
-    public EditorListener(@NotNull Project project, @NotNull LocalPsiEditorEventsHandler editorEventsHandler) {
+    public EditorListener(@NotNull Project project, CaretContextService caretContextService, @NotNull EditorEventsHandler editorEventsHandler) {
         this.project = project;
-        this.localPsiEditorEventsHandler = editorEventsHandler;
+        this.caretContextService = caretContextService;
+        this.editorEventsHandler = editorEventsHandler;
+    }
+
+
+    public void start() {
+        if (active) {
+            Log.log(LOGGER::error, "trying to start an already active listener");
+            return;
+        }
+        Log.log(LOGGER::debug, "starting");
+        messageBusConnection = project.getMessageBus().connect(caretContextService);
+        messageBusConnection.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, this);
+        installOnCurrentlyOpenedEditors();
+        active = true;
     }
 
 
@@ -72,7 +88,7 @@ public class EditorListener implements FileEditorManagerListener {
         var newFile = editorManagerEvent.getNewFile();
 
         //ignore non supported files. newFile may be null when the last editor is closed.
-        if (newFile != null && localPsiEditorEventsHandler.isSupportedFile(newFile)) {
+        if (newFile != null && editorEventsHandler.isSupportedFile(newFile)) {
             var editor = fileEditorManager.getSelectedTextEditor();
             if (editor != null && !disposables.containsKey(newFile)) {
                 addCaretListener(editor, newFile);
@@ -82,9 +98,10 @@ public class EditorListener implements FileEditorManagerListener {
                 Log.log(LOGGER::debug, "selectionChanged: updating with file:{}", newFile);
                 updateCurrentElement(editor.getCaretModel().getOffset(), newFile);
             }
-        } else {
-            localPsiEditorEventsHandler.emptySelection();
         }
+//        else {
+//            editorEventsHandler.emptySelection();
+//        }
     }
 
 
@@ -113,27 +130,15 @@ public class EditorListener implements FileEditorManagerListener {
 
 
     private void updateCurrentElement(int caretOffset, @NotNull VirtualFile file) {
-        localPsiEditorEventsHandler.updateCurrentElement(caretOffset, file);
+        editorEventsHandler.updateCurrentContext(caretOffset, file);
     }
 
-
-    public void start() {
-        if (active) {
-            Log.log(LOGGER::error, "trying to start an already active listener");
-            return;
-        }
-        Log.log(LOGGER::debug, "starting");
-        messageBusConnection = project.getMessageBus().connect(localPsiEditorEventsHandler);
-        messageBusConnection.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, this);
-        installOnCurrentlyOpenedEditors();
-        active = true;
-    }
 
     /*
     EditorListener is started only when the tool window is opened,not before that because we don't
      want or need to listen to events before the window is opened.
     at that stage there may be already opened editors that we didn't install a caret listener for them,
-     they will be caught in the following selectionChanged events. but we still want to update the content
+     they will be caught in the following selectionChanged events. but we still want to update the context
      with the currently opened file and install a listener for the editor.
     this code assumes there is only one selected editor.
      */
@@ -141,7 +146,7 @@ public class EditorListener implements FileEditorManagerListener {
         var editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
         var fileEditor = FileEditorManager.getInstance(project).getSelectedEditor();
         if (editor != null && fileEditor != null && fileEditor.getFile() != null &&
-                localPsiEditorEventsHandler.isSupportedFile(fileEditor.getFile())) {
+                editorEventsHandler.isSupportedFile(fileEditor.getFile())) {
             addCaretListener(editor, fileEditor.getFile());
             updateCurrentElement(editor.getCaretModel().getOffset(), fileEditor.getFile());
         }

@@ -12,21 +12,9 @@
     <depends>com.intellij.modules.vcs</depends>
 
 
-    <!--    <depends-->
-    <!--            optional="true"-->
-    <!--            config-file="org.digma.intellij-with-pycharm.xml">com.intellij.modules.python-->
-    <!--    </depends>-->
-    <!--    <depends-->
-    <!--            optional="true"-->
-    <!--            config-file="org.digma.intellij-with-idea.xml">com.intellij.modules.java-->
-    <!--    </depends>-->
-
 
     <depends optional="true" config-file="org.digma.intellij-with-python.xml">com.intellij.modules.python</depends>
     <depends optional="true" config-file="org.digma.intellij-with-java.xml">com.intellij.modules.java</depends>
-    <!--    <depends optional="true" config-file="org.digma.intellij-with-idea-listeners.xml">com.intellij.modules.python</depends>-->
-
-
     <depends optional="true" config-file="org.digma.intellij-with-rider.xml">com.intellij.modules.rider</depends>
 
 

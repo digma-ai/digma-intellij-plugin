@@ -1,7 +1,5 @@
 package org.digma.intellij.plugin.rider.protocol
 
-import com.intellij.openapi.application.ReadAction
-import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.jetbrains.rd.platform.util.lifetime
@@ -15,6 +13,7 @@ import org.digma.intellij.plugin.rider.psi.csharp.CSharpDocumentAnalyzer
 /**
  * Listens for documentAnalyzed events from resharper, actually when a document is opened.
  */
+//todo: its actually 'document open listener' so change the name
 class DocumentCodeObjectsListener(project: Project) : LifetimedProjectComponent(project) {
 
     private val logger = Logger.getInstance(DocumentCodeObjectsListener::class.java)
@@ -56,6 +55,7 @@ class DocumentCodeObjectsListener(project: Project) : LifetimedProjectComponent(
         }
     }
 
+    //todo: its actually 'document open' , so change the name
     private fun documentAnalyzed(model: CodeObjectsModel,
                                  documentKey: String,
                                  project: Project) {
@@ -72,7 +72,7 @@ class DocumentCodeObjectsListener(project: Project) : LifetimedProjectComponent(
     private fun documentAnalyzed(docUri: String, project: Project) {
         try {
             val psiFile = PsiUtils.uriToPsiFile(docUri, project)
-            Log.log(logger::debug, "Notifying DocumentCodeObjectsChanged for {}", psiFile.virtualFile)
+            Log.log(logger::debug, "Notifying document opened for {}", psiFile.virtualFile)
             cSharpDocumentAnalyzer.analyzeDocument(psiFile)
         } catch (e: PsiFileNotFountException) {
             Log.error(logger, project, e, "Could not find psiFile for document uri {}", docUri)

@@ -1,24 +1,12 @@
 <idea-plugin>
 
 
-    <depends config-file="org.digma.intellij-with-idea-listeners.xml">com.intellij.modules.java</depends>
+    <depends config-file="org.digma.intellij-with-intellij-platform.xml">com.intellij.modules.java</depends>
 
 
     <extensions defaultExtensionNs="com.intellij">
-        <!--        <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaLanguageService"-->
-        <!--                        serviceInterface="org.digma.intellij.plugin.psi.LanguageService"/>-->
-        <!--        <projectService serviceImplementation="org.digma.intellij.plugin.idea.editor.IdeaEditorEventsHandler"-->
-        <!--                        serviceInterface="org.digma.intellij.plugin.editor.EditorEventsHandler"/>-->
-        <!--        <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaDocumentAnalyzer"-->
-        <!--                        serviceInterface="org.digma.intellij.plugin.document.DocumentAnalyzer"/>-->
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaLanguageService"/>
     </extensions>
-
-
-    <!--    <projectListeners>-->
-    <!--        <listener-->
-    <!--                class="org.digma.intellij.plugin.document.EditorManagerFileOpenedListener"-->
-    <!--                topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>-->
-    <!--    </projectListeners>-->
 
 
 </idea-plugin>

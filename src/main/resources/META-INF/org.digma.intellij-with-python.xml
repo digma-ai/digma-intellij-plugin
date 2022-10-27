@@ -1,23 +1,11 @@
 <idea-plugin>
 
 
-    <depends config-file="org.digma.intellij-with-idea-listeners.xml">com.intellij.modules.python</depends>
+    <depends config-file="org.digma.intellij-with-intellij-platform.xml">com.intellij.modules.python</depends>
 
 
     <extensions defaultExtensionNs="com.intellij">
-        <!--        <projectService serviceImplementation="org.digma.intellij.plugin.pycharm.psi.python.PythonLanguageService"-->
-        <!--                        serviceInterface="org.digma.intellij.plugin.psi.LanguageService"/>-->
-        <!--        <projectService serviceImplementation="org.digma.intellij.plugin.pycharm.editor.PycharmEditorEventsHandler"-->
-        <!--                        serviceInterface="org.digma.intellij.plugin.editor.EditorEventsHandler"/>-->
-        <!--        <projectService serviceImplementation="org.digma.intellij.plugin.pycharm.psi.python.PythonDocumentAnalyzer"-->
-        <!--                        serviceInterface="org.digma.intellij.plugin.document.DocumentAnalyzer"/>-->
+        <projectService serviceImplementation="org.digma.intellij.plugin.pycharm.psi.python.PythonLanguageService"/>
     </extensions>
-
-    <!--    <projectListeners>-->
-    <!--        <listener-->
-    <!--                class="org.digma.intellij.plugin.document.EditorManagerFileOpenedListener"-->
-    <!--                topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>-->
-    <!--    </projectListeners>-->
-
 
 </idea-plugin>

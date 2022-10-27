@@ -9,13 +9,13 @@ import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent;
 import com.jetbrains.rider.ideaInterop.fileTypes.csharp.CSharpLanguage;
 import kotlin.Pair;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.rider.env.RiderEnvironmentChangedHandler;
 import org.digma.intellij.plugin.rider.protocol.CodeObjectHost;
 import org.digma.intellij.plugin.rider.protocol.MethodNavigationHost;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
@@ -53,8 +53,8 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     }
 
     @Override
-    public @Nullable MethodUnderCaret detectMethodUnderCaret(Project project, PsiFile psiFile, int caretOffset) {
-        throw new UnsupportedOperationException("should not be called");
+    public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, int caretOffset) {
+        throw new UnsupportedOperationException("should not be called, its in ElementUnderCaretDetector");
     }
 
     @Override
@@ -82,5 +82,21 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     @Override
     public void environmentChanged(String newEnv) {
         riderEnvironmentChangedHandler.environmentChanged(newEnv);
+    }
+
+    @Override
+    public boolean isIndexedLanguage() {
+        //C# is not an indexed language, it's indexed in resharper
+        return false;
+    }
+
+    @Override
+    public DocumentInfo buildDocumentInfo(PsiFile psiFile) {
+        throw new UnsupportedOperationException("should not be called, C# is indexed in resharper");
+    }
+
+    @Override
+    public boolean isIntellijPlatformPluginLanguage() {
+        return false;
     }
 }

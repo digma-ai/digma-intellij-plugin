@@ -6,7 +6,7 @@ data class MethodInfo(
     override val id: String, // CodeObjectId (without type (prefix of 'method:'))
     val name: String,
     val containingClass: String,
-    val containingNamespace: String,
+    val containingNamespace: String, //namespace for c# is namespace, for java its the package
     val containingFileUri: String,
     val offsetAtFileUri: Int,
     val spans: List<SpanInfo>

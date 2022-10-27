@@ -5,8 +5,9 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import kotlin.Pair;
+import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.List;
@@ -27,8 +28,8 @@ public class NoOpLanguageService implements LanguageService {
     }
 
     @Override
-    public @Nullable MethodUnderCaret detectMethodUnderCaret(Project project, PsiFile psiFile, int caretOffset) {
-        return null;
+    public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, int caretOffset) {
+        return MethodUnderCaret.getEMPTY();
     }
 
     @Override
@@ -54,5 +55,20 @@ public class NoOpLanguageService implements LanguageService {
     @Override
     public void environmentChanged(String newEnv) {
 
+    }
+
+    @Override
+    public boolean isIndexedLanguage() {
+        return false;
+    }
+
+    @Override
+    public DocumentInfo buildDocumentInfo(PsiFile psiFile) {
+        throw new UnsupportedOperationException("should not be called");
+    }
+
+    @Override
+    public boolean isIntellijPlatformPluginLanguage() {
+        return false;
     }
 }

@@ -10,6 +10,8 @@ namespace Digma.Rider.Discovery
 {
     public static class Identities
     {
+        //file path is used as the document key in the protocol. its different from 
+        //the file uri that is saved as a Document field 'fileUri' which is a uri with schema.
         [NotNull]
         public static string ComputeFilePath([NotNull] IPsiSourceFile sourceFile)
         {

@@ -55,14 +55,13 @@ public class RiderEditorEventsStarter implements ToolWindowManagerListener, Docu
     public void toolWindowShown(@NotNull ToolWindow toolWindow) {
         if (PluginId.TOOL_WINDOW_ID.equals(toolWindow.getId()) && !initialized) {
             start();
+            initialized = true;
         }
     }
 
 
     //start is calle d once per project when the tool window is shown
     private void start() {
-
-        initialized = true;
 
         Log.log(LOGGER::debug, "Starting RiderEditorEventsStarter");
 

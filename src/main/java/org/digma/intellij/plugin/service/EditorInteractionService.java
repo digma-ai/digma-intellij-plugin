@@ -96,7 +96,7 @@ public class EditorInteractionService implements CaretContextService, Disposable
         // so testConnectionToBackend will detect a backend connection error , call contextEmptyNoConnection once
         // to clean the views, and will return. and will keep blocking until the connection is regained.
         if (!testConnectionToBackend()) {
-            return;
+            return; //todo: temp, uncomment
         }
 
 

@@ -8,7 +8,9 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import kotlin.Pair;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -23,8 +25,7 @@ public interface LanguageService {
 
     boolean isSupportedFile(Project project, PsiFile psiFile);
 
-    @Nullable
-    MethodUnderCaret detectMethodUnderCaret(Project project, PsiFile psiFile, int caretOffset);
+    MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, int caretOffset);
 
 
 
@@ -49,4 +50,17 @@ public interface LanguageService {
     Map<String, Pair<String, Integer>> findWorkspaceUrisForSpanIds(List<String> spanIds);
 
     void environmentChanged(String newEnv);
+
+    boolean isIndexedLanguage();
+
+    DocumentInfo buildDocumentInfo(PsiFile psiFile);
+
+    /**
+     * This method is meant to mark languages that are implemented as intellij platform plugin.
+     * the main reason is that we need to know if this is not C# and rider and used to decide if the opened file
+     * is java,python etc.
+     *
+     * @return
+     */
+    boolean isIntellijPlatformPluginLanguage();
 }

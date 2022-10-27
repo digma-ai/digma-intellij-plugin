@@ -26,6 +26,7 @@ public class LanguageServiceLocator {
     }
 
     @SuppressWarnings("unchecked")
+    @NotNull
     public LanguageService locate(@NotNull Language language) {
 
         if (cache.contains(language)) {

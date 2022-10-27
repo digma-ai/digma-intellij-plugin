@@ -1,0 +1,26 @@
+<idea-plugin>
+
+    <!-- This file is meant to be included when running on all IDEs except rider   -->
+
+    <extensions defaultExtensionNs="com.intellij">
+
+        <fileBasedIndex implementation="org.digma.intellij.plugin.index.DocumentInfoIndex"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.index.DocumentInfoIndexBuilder"/>
+
+    </extensions>
+
+
+    <projectListeners>
+        <!--        <listener-->
+        <!--                class="org.digma.intellij.plugin.editor.EditorEventsHandler"-->
+        <!--                topic="com.intellij.openapi.wm.ex.ToolWindowManagerListener"/>-->
+        <!--        <listener-->
+        <!--                class="org.digma.intellij.plugin.editor.DocumentOpenHandler"-->
+        <!--                topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>-->
+        <listener
+                class="org.digma.intellij.plugin.editor.EditorEventsHandler"
+                topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
+    </projectListeners>
+
+
+</idea-plugin>

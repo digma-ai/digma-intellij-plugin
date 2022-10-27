@@ -12,6 +12,7 @@ import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.rider.protocol.CodeObjectHost;
 import org.jetbrains.annotations.NotNull;
 
+//todo: its not an Analyzer anymore, its more a 'document open handler', so change the name
 public class CSharpDocumentAnalyzer extends LifetimedProjectComponent {
 
     private final Logger LOGGER = Logger.getInstance(CSharpDocumentAnalyzer.class);

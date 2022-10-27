@@ -9,9 +9,10 @@ import com.intellij.psi.util.PsiTreeUtil;
 import com.jetbrains.python.PythonLanguage;
 import com.jetbrains.python.psi.PyFunction;
 import kotlin.Pair;
+import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.psi.LanguageService;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Map;
@@ -31,8 +32,7 @@ public class PythonLanguageService implements LanguageService {
     }
 
     @Override
-    @Nullable
-    public MethodUnderCaret detectMethodUnderCaret(Project project, PsiFile psiFile, int caretOffset) {
+    public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, int caretOffset) {
         PsiElement underCaret = findElementUnderCaret(project, psiFile, caretOffset);
         PyFunction psiMethod = PsiTreeUtil.getParentOfType(underCaret, PyFunction.class);
         if (psiMethod != null) {
@@ -66,4 +66,18 @@ public class PythonLanguageService implements LanguageService {
 
     }
 
+    @Override
+    public boolean isIndexedLanguage() {
+        return false; //todo: not yet, need to implement
+    }
+
+    @Override
+    public DocumentInfo buildDocumentInfo(PsiFile psiFile) {
+        throw new UnsupportedOperationException("should not be called, need to implement");
+    }
+
+    @Override
+    public boolean isIntellijPlatformPluginLanguage() {
+        return true;
+    }
 }

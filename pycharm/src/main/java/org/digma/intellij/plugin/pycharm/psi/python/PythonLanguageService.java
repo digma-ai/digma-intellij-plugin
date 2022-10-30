@@ -68,7 +68,7 @@ public class PythonLanguageService implements LanguageService {
 
     @Override
     public boolean isIndexedLanguage() {
-        return false; //todo: not yet, need to implement
+        return false; //todo: python is not yet indexed language, need to implement
     }
 
     @Override

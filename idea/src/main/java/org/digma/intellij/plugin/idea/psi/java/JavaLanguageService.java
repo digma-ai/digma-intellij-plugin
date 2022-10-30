@@ -3,38 +3,59 @@ package org.digma.intellij.plugin.idea.psi.java;
 import com.intellij.ide.highlighter.JavaFileType;
 import com.intellij.lang.Language;
 import com.intellij.lang.java.JavaLanguage;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.util.PsiTreeUtil;
 import kotlin.Pair;
+import org.digma.intellij.plugin.document.DocumentInfoService;
+import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.psi.PsiUtils;
+import org.digma.intellij.plugin.ui.CaretContextService;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
 public class JavaLanguageService implements LanguageService {
 
-    //used to find languages that should be indexed
-    public static final FileType FILE_TYPE = JavaFileType.INSTANCE;
+    private static final Logger LOGGER = Logger.getInstance(JavaLanguageService.class);
 
-    public static String createJavaMethodCodeObjectId(String packageName, PsiClass aClass, PsiMethod method) {
-        return packageName + "." + aClass.getName() + "$_$" + method.getName();
+    //used to find languages that should be indexed.
+    // (used with reflection so intellij can't find usages and reports the field is not used)
+    public static final FileType FILE_TYPE = JavaFileType.INSTANCE;
+    private final Project project;
+
+    private final DocumentInfoService documentInfoService;
+
+    private final CaretContextService caretContextService;
+
+    public JavaLanguageService(Project project) {
+        this.project = project;
+        documentInfoService = project.getService(DocumentInfoService.class);
+        caretContextService = project.getService(CaretContextService.class);
     }
+
 
     public static String createJavaMethodCodeObjectId(PsiMethod method) {
 
-        //usually this should be non-null fields but in case they are we can't build the method id
+        //usually these should be not null for java. but the PSI api declares them as null so we must check.
+        // they can be null for groovy/kotlin
         if (method.getContainingClass() == null || method.getContainingClass().getQualifiedName() == null) {
             return method.getName();
         }
 
+        //todo: change to $ between every inner class
         return method.getContainingClass().getQualifiedName() + "$_$" + method.getName();
     }
 
@@ -57,6 +78,9 @@ public class JavaLanguageService implements LanguageService {
     @Override
     public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, int caretOffset) {
         PsiElement underCaret = findElementUnderCaret(project, psiFile, caretOffset);
+        if (underCaret == null) {
+            return new MethodUnderCaret("", "", "", PsiUtils.psiFileToUri(psiFile), true);
+        }
         PsiMethod psiMethod = PsiTreeUtil.getParentOfType(underCaret, PsiMethod.class);
         if (psiMethod != null && psiMethod.getContainingClass() != null && psiMethod.getContainingClass().getName() != null) {
             return new MethodUnderCaret(createJavaMethodCodeObjectId(psiMethod), psiMethod.getName(),
@@ -65,10 +89,82 @@ public class JavaLanguageService implements LanguageService {
         return new MethodUnderCaret("", "", "", PsiUtils.psiFileToUri(psiFile), true);
     }
 
+
     @Override
     public void navigateToMethod(String codeObjectId) {
 
+        /*
+        There are few ways to navigate to a method.
+        the current implementation is the simplest, maybe not the best in performance but it doesn't seem to be noticed.
+        find the psi file in documentInfoService , then find the psi method and call psiMethod.navigate.
+        it proves to work ok for java files.
+
+        other possibilities:
+        1)
+        we have the method offset of the method in our MethodInfo, so we can find the MethodInfo in
+        documentInfoService. or the MethodInfo object can also be in listViewItem.moreData of the PreviewListCellRenderer.
+        then find the selected editor using FileEditorManager.getSelectedTextEditor
+        then selectedTextEditor.getCaretModel().moveToOffset();
+
+        2)
+        another way is to find the psi file through the selected editor then do the same , find the method and navigate.
+
+        another way could be to build an index of codeObjectId -> [an object that holds the file uri and method offset],
+        then find that object in the index and use the offset to move the caret in the selected editor
+
+        if the current implementation proves to be slow or not reliable we can try one of the other options.
+         */
+
+
+        PsiFile psiFile = documentInfoService.findPsiFileByMethodId(codeObjectId);
+        if (psiFile instanceof PsiJavaFile) {
+
+            //it must be a PsiJavaFile so casting should be ok
+            PsiJavaFile psiJavaFile = (PsiJavaFile) psiFile;
+            PsiClass[] classes = psiJavaFile.getClasses();
+            PsiMethod psiMethod = findMethod(classes, codeObjectId);
+
+            if (psiMethod != null && psiMethod.canNavigateToSource()) {
+                psiMethod.navigate(true);
+            } else if (psiMethod != null) {
+                //it's a fallback. sometimes the psiMethod.canNavigateToSource is false and really the
+                //navigation doesn't work. i can't say why. usually it happens when indexxing is not ready yet,
+                // and the user opens files, selects tabs or moves the caret. then when indexing is finished
+                // we have the list of methods but then psiMethod.navigate doesn't work.
+                // navigation to source using the editor does work in these circumstances.
+                var selectedEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+                if (selectedEditor != null) {
+                    selectedEditor.getCaretModel().moveToOffset(psiMethod.getTextOffset());
+                } else {
+                    Log.log(LOGGER::error, "could not find selected text editor, can't navigate to method  {}", codeObjectId);
+                }
+            } else {
+                Log.log(LOGGER::error, "could not navigate to method {}, can't fins PsiMethod in file {}", codeObjectId, psiFile.getVirtualFile());
+            }
+        }
     }
+
+    @Nullable
+    private PsiMethod findMethod(PsiClass[] classes, String codeObjectId) {
+
+        for (PsiClass aClass : classes) {
+            PsiMethod[] methods = aClass.getMethods();
+            for (PsiMethod method : methods) {
+                String id = createJavaMethodCodeObjectId(method);
+                if (id.equals(codeObjectId)) {
+                    return method;
+                }
+            }
+
+            var m = findMethod(aClass.getInnerClasses(), codeObjectId);
+            if (m != null) {
+                return m;
+            }
+        }
+
+        return null;
+    }
+
 
     @Override
     public boolean isServiceFor(Language language) {
@@ -89,7 +185,22 @@ public class JavaLanguageService implements LanguageService {
 
     @Override
     public void environmentChanged(String newEnv) {
-        //todo: implement
+
+        ApplicationManager.getApplication().invokeAndWait(() -> {
+            var fileEditor = FileEditorManager.getInstance(project).getSelectedEditor();
+            if (fileEditor != null) {
+                var file = fileEditor.getFile();
+                var psiFile = PsiManager.getInstance(project).findFile(file);
+                if (psiFile != null && isSupportedFile(project, psiFile)) {
+                    var selectedTextEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+                    if (selectedTextEditor != null) {
+                        int offset = selectedTextEditor.getCaretModel().getOffset();
+                        var methodUnderCaret = detectMethodUnderCaret(project, psiFile, offset);
+                        caretContextService.contextChanged(methodUnderCaret);
+                    }
+                }
+            }
+        });
     }
 
     @Override
@@ -103,12 +214,25 @@ public class JavaLanguageService implements LanguageService {
         String fileUri = PsiUtils.psiFileToUri(psiFile);
         Map<String, MethodInfo> methodInfoMap = new HashMap<>();
 
+
+        //currently we build an empty index for test sources, there is no easy way to exclude them from indexing
+        if (ProjectFileIndex.getInstance(project).isInTestSourceContent(psiFile.getVirtualFile())) {
+            return new DocumentInfo(fileUri, methodInfoMap);
+        }
+
         //it must be a PsiJavaFile so casting should be ok
         PsiJavaFile psiJavaFile = (PsiJavaFile) psiFile;
 
         String packageName = psiJavaFile.getPackageName();
 
         PsiClass[] classes = psiJavaFile.getClasses();
+
+        collectMethods(fileUri, classes, packageName, methodInfoMap);
+
+        return new DocumentInfo(fileUri, methodInfoMap);
+    }
+
+    private void collectMethods(String fileUri, PsiClass[] classes, String packageName, Map<String, MethodInfo> methodInfoMap) {
 
         for (PsiClass aClass : classes) {
 
@@ -120,7 +244,7 @@ public class JavaLanguageService implements LanguageService {
 
             PsiMethod[] methods = aClass.getMethods();
             for (PsiMethod method : methods) {
-                String id = createJavaMethodCodeObjectId(packageName, aClass, method);
+                String id = createJavaMethodCodeObjectId(method);
                 String name = method.getName();
                 String containingClass = aClass.getQualifiedName();
                 String containingNamespace = packageName;
@@ -130,11 +254,12 @@ public class JavaLanguageService implements LanguageService {
                 MethodInfo methodInfo = new MethodInfo(id, name, containingClass, containingNamespace, containingFileUri, offsetAtFileUri, spans);
                 methodInfoMap.put(id, methodInfo);
             }
+
+            collectMethods(fileUri, aClass.getInnerClasses(), packageName, methodInfoMap);
         }
 
-
-        return new DocumentInfo(fileUri, methodInfoMap);
     }
+
 
     @Override
     public boolean isIntellijPlatformPluginLanguage() {

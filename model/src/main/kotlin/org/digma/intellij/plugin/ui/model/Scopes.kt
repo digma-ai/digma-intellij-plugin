@@ -23,7 +23,7 @@ class EmptyScope(val text:String = ""): Scope{
 
 class MethodScope(private val methodInfo: MethodInfo) : Scope {
     override fun getScope(): String {
-        return "${methodInfo.containingClass}.${methodInfo.name}"
+        return "${methodInfo.containingClass.substringAfterLast('.')}.${methodInfo.name}"
     }
 
     override fun getScopeTooltip(): String {

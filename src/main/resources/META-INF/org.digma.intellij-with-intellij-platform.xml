@@ -11,12 +11,6 @@
 
 
     <projectListeners>
-        <!--        <listener-->
-        <!--                class="org.digma.intellij.plugin.editor.EditorEventsHandler"-->
-        <!--                topic="com.intellij.openapi.wm.ex.ToolWindowManagerListener"/>-->
-        <!--        <listener-->
-        <!--                class="org.digma.intellij.plugin.editor.DocumentOpenHandler"-->
-        <!--                topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>-->
         <listener
                 class="org.digma.intellij.plugin.editor.EditorEventsHandler"
                 topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>

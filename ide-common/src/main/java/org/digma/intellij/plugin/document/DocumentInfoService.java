@@ -49,6 +49,11 @@ public class DocumentInfoService {
     }
 
 
+    public boolean contains(PsiFile psiFile) {
+        return documents.containsKey(psiFile);
+    }
+
+
     public void environmentChanged(String newEnv) {
         Log.log(LOGGER::debug, "Got environmentChanged event {}", newEnv);
 
@@ -120,6 +125,14 @@ public class DocumentInfoService {
     }
 
 
+    public PsiFile findPsiFileByMethodId(String methodCodeObjectId) {
+        return this.documents.values().stream().
+                filter(documentInfoContainer -> documentInfoContainer.getDocumentInfo().getMethods().containsKey(methodCodeObjectId)).
+                findAny().map(documentInfoContainer -> documentInfoContainer.getPsiFile()).
+                orElse(null);
+    }
+
+
     //this method must return a result, this codeObjectId must exist. otherwise it's a bug
     @NotNull
     public Language getLanguageByMethodCodeObjectId(String codeObjectId) {
@@ -147,4 +160,5 @@ public class DocumentInfoService {
 
         return language;
     }
+
 }

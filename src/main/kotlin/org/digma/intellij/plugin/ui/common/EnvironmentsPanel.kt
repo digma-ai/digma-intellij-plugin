@@ -4,6 +4,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
+import com.intellij.util.Alarm
+import com.intellij.util.AlarmFactory
 import com.intellij.util.containers.stream
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.WrapLayout
@@ -35,7 +37,10 @@ class EnvironmentsPanel(
     private val environmentsSupplier: EnvironmentsSupplier, // assuming its a singleton
 ) : DigmaResettablePanel() {
 
+    private val changeEnvAlarm: Alarm
+
     init {
+        changeEnvAlarm = AlarmFactory.getInstance().create()
         isOpaque = false
         layout = WrapLayout(FlowLayout.LEFT, 2, 2)
         rebuild()
@@ -162,6 +167,7 @@ class EnvironmentsPanel(
             envLink.toolTipText = toolTip
 
             envLink.addActionListener() { event ->
+
                 val currentSelected: EnvLink? = getSelected()
 
                 if (currentSelected === event.source) {
@@ -172,7 +178,12 @@ class EnvironmentsPanel(
 
                 val clickedLink: EnvLink = event.source as EnvLink
                 clickedLink.select { buildLinkText(it, true) }
-                environmentsSupplier.setCurrent(clickedLink.env)
+
+                changeEnvAlarm.cancelAllRequests()
+                changeEnvAlarm.addRequest({
+                    environmentsSupplier.setCurrent(clickedLink.env)
+                }, 100)
+
             }
 
             val icon: Icon =

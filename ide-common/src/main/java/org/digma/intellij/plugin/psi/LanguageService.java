@@ -31,7 +31,7 @@ public interface LanguageService {
 
     //for use by language services that have a psi impl, python, java, Not rider
     @Nullable
-    default PsiElement findElementUnderCaret(Project project, PsiFile psiFile, int caretOffset) {
+    default PsiElement findElementUnderCaret(@NotNull Project project, PsiFile psiFile, int caretOffset) {
         if (psiFile != null) {
             PsiElement psiElement = psiFile.findElementAt(caretOffset);
             Log.log(LOGGER::debug, "got psi element {}", psiElement);
@@ -51,16 +51,25 @@ public interface LanguageService {
 
     void environmentChanged(String newEnv);
 
+    /**
+     * this method has kind of the same purpose as isIntellijPlatformPluginLanguage , to distinguish languages that are
+     * indexed in intellij FileBasedIndex
+     *
+     * @return true if this language in indexed in FileBasedIndex
+     */
     boolean isIndexedLanguage();
+
 
     DocumentInfo buildDocumentInfo(PsiFile psiFile);
 
     /**
-     * This method is meant to mark languages that are implemented as intellij platform plugin.
-     * the main reason is that we need to know if this is not C# and rider and used to decide if the opened file
-     * is java,python etc.
+     * This method is meant to distinguish languages that are implemented as intellij platform plugin.
+     * the main reason is that we need to know if this is not C# on rider. its used mainly to help in decisions about
+     * how to process swing editor events.
+     * for example, C# is not relevant for processing editor caret events or file open events because its implemented
+     * in resharper and the plugin is notified about these events from resharper.
      *
-     * @return
+     * @return true if this is an intellij platform event.
      */
     boolean isIntellijPlatformPluginLanguage();
 }

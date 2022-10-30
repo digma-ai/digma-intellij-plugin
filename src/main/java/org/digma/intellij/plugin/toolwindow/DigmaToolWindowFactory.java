@@ -67,13 +67,19 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
         toolWindow.getContentManager().setSelectedContent(contentToSelect, true);
 
 
-        new Task.Backgroundable(project, "Digma: Summary view reload...") {
-            //If SummaryViewService is initialized before the tool window is opened it will get the event when
+        new Task.Backgroundable(project, "Digma: update views") {
+            //sometimes the views models are updated before the tool window is initialized.
+            //it happens when files are re-opened early before the tool window, and CaretContextService.contextChanged
+            //is invoked and updates the models.
+            //SummaryViewService is also initialized before the tool window is opened, it will get the event when
             // the environment is loaded and will update its model but will not update the ui because the panel is
-            // not initialized yet. only at this stage the panels are constructed already. just calling
-            // SummaryViewService.updateUi() will do the job.
+            // not initialized yet.
+            //only at this stage the panels are constructed already. just calling updateUi() for all view services
+            // will actually update the UI.
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
+                project.getService(InsightsViewService.class).updateUi();
+                project.getService(ErrorsViewService.class).updateUi();
                 project.getService(SummaryViewService.class).updateUi();
             }
         }.queue();

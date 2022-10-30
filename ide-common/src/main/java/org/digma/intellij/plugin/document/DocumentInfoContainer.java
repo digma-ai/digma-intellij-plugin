@@ -167,6 +167,7 @@ public class DocumentInfoContainer {
     }
 
 
+    @NotNull
     public List<CodeObjectSummary> getAllSummaries() {
         //this method should not try to reload summaries because it happens too often
         List<CodeObjectSummary> summaries = new ArrayList<>();

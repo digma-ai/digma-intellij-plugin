@@ -1,8 +1,6 @@
 package org.digma.intellij.plugin.editor;
 
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
@@ -23,26 +21,27 @@ import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.psi.LanguageServiceLocator;
 import org.digma.intellij.plugin.ui.CaretContextService;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
+/**
+ * This is the main listener for file open , it will cache a selectionChanged on FileEditorManager and do
+ * the necessary actions when file is opened.
+ **/
 public class EditorEventsHandler implements FileEditorManagerListener {
+
+    //todo:
+    // start installing caret listener only after the tool window is opened
 
     private static final Logger LOGGER = Logger.getInstance(EditorEventsHandler.class);
 
-    private EditorListener editorListener;
     private final Project project;
     private final CaretContextService caretContextService;
-
     private final DocumentInfoService documentInfoService;
-
     private final LanguageServiceLocator languageServiceLocator;
-
     private final CaretListener caretListener;
-
     private final ProjectFileIndex projectFileIndex;
-
-    private boolean initialized = false;
 
 
     public EditorEventsHandler(Project project) {
@@ -54,90 +53,99 @@ public class EditorEventsHandler implements FileEditorManagerListener {
         projectFileIndex = ProjectFileIndex.getInstance(project);
     }
 
-//
-//    @Override
-//    public void fileOpenedSync(@NotNull FileEditorManager source, @NotNull VirtualFile file, @NotNull List<FileEditorWithProvider> editorsWithProviders) {
-//        FileEditorManagerListener.super.fileOpenedSync(source, file, editorsWithProviders);
-//    }
 
     @Override
-    public void fileOpened(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
-        //todo: check source.runWhenLoaded to execute the code when the editor is fully loaded
-        //todo: consider dumb mode on startup
-        //todo: check if file is actually a source file and not library source and not test file with ProjectFileIndex
+    public void selectionChanged(@NotNull FileEditorManagerEvent editorManagerEvent) {
+
+        //this method is executed on EDT.
+        //most of the code here,access to psi or to the index, needs to be executed on EDT or in Read/Write actions.
+        //only the code that adds documentInfo to documentInfoService and contextChanged needs to run on background.
+        //when calling contextChanged on EDT it will start a background thread when necessary.
+
+        FileEditorManager fileEditorManager = editorManagerEvent.getManager();
+        Log.log(LOGGER::debug, "selectionChanged: editor:{}, newFile:{}, oldFile:{}", fileEditorManager.getSelectedEditor(),
+                editorManagerEvent.getNewFile(), editorManagerEvent.getOldFile());
+
+        var newFile = editorManagerEvent.getNewFile();
+
+        //ignore non supported files. newFile may be null when the last editor is closed.
+        if (newFile != null && isRelevantFile(newFile)) {
+
+            PsiFile psiFile = PsiManager.getInstance(project).findFile(newFile);
+
+            if (psiFile != null) {
+                LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
+                var documentInfo = maybeSupportedFileOpened(languageService, psiFile);
+                var selectedTextEditor = fileEditorManager.getSelectedTextEditor();
+                if (selectedTextEditor != null) {
+                    MethodUnderCaret methodUnderCaret = languageService.detectMethodUnderCaret(project, psiFile, selectedTextEditor.getCaretModel().getOffset());
+                    caretListener.maybeAddCaretListener(selectedTextEditor, newFile);
+
+                    //if documentInfo is not null then its a new file that was opened, in that case the documentInfo needs
+                    // to be added to documentInfoService and then call contextChanged , otherwise only call contextChanged.
+                    if (documentInfo != null) {
+                        Backgroundable.ensureBackground(project, "File opened", () -> {
+                            //documentInfoService will add the discovery code objects, load backend data and call some event
+                            //so that code lens will be installed.
+                            //if it's a new file that was opened then contextChanged must run after
+                            // documentInfoService.addCodeObjects is finished
+                            documentInfoService.addCodeObjects(psiFile, documentInfo);
+                            caretContextService.contextChanged(methodUnderCaret);
+                        });
+                    } else {
+                        caretContextService.contextChanged(methodUnderCaret);
+                    }
+                }
+
+            } else {
+                caretContextService.contextEmptyNonSupportedFile(newFile.getPath());
+            }
+
+        } else if (newFile != null) {
+            caretContextService.contextEmptyNonSupportedFile(newFile.getPath());
+        } else {
+            caretContextService.contextEmpty();
+        }
+    }
 
 
-//        if (source.getSelectedTextEditor() == null){
-//            return;
-//        }
+    @Nullable
+    private DocumentInfo maybeSupportedFileOpened(@NotNull LanguageService languageService, @NotNull PsiFile psiFile) {
 
-        if (source.getSelectedTextEditor() == null || !isRelevantFile(file)) {
-            caretContextService.contextEmptyNonSupportedFile(file.getPath());
-            return;
+        //if documentInfoService already contains this PsiFile then this document was already opened before
+        if (documentInfoService.contains(psiFile)) {
+            return null;
         }
 
-        source.runWhenLoaded(source.getSelectedTextEditor(), () -> {
+        //this is actually a test if this is a supported file type
+        if (!languageService.isIndexedLanguage()) {
+            return null;
+        }
 
-            PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
-            if (psiFile == null) {
-                return;
-            }
-            //this is actually a test if this is a supported file type
-            LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
-            if (!languageService.isIndexedLanguage()) {
-                return;
-            }
+        DocumentInfo documentInfo;
+        try {
+            Map<Integer, DocumentInfo> documentInfoMap =
+                    FileBasedIndex.getInstance().getFileData(DocumentInfoIndex.DOCUMENT_INFO_INDEX_ID, psiFile.getVirtualFile(), project);
+            //there is only one DocumentInfo per file in the index.
+            //all relevant files must be indexed, so if we are here then DocumentInfo must be found in the index is ready,
+            // or we have a mistake somewhere else. java interfaces,enums and annotations are indexed but the DocumentInfo
+            // object is empty of methods, that's because currently we have no way to exclude those types from indexing.
+            documentInfo = documentInfoMap.values().stream().findFirst().orElse(null);
+        } catch (IndexNotReadyException e) {
+            //IndexNotReadyException will be thrown on dumb mode, when indexing is still in progress.
+            documentInfo = languageService.buildDocumentInfo(psiFile);
+        }
 
-            DocumentInfo documentInfo;
-            try {
-                Map<Integer, DocumentInfo> documentInfoMap = FileBasedIndex.getInstance().getFileData(DocumentInfoIndex.DOCUMENT_INFO_INDEX_ID, file, project);
-                //there is only one DocumentInfo per file in the index
-                documentInfo = documentInfoMap.values().stream().findFirst().orElse(null);
-            } catch (IndexNotReadyException e) {
-                //IndexNotReadyException will be thrown on dumb mode, when indexing is still in process.
-                documentInfo = languageService.buildDocumentInfo(psiFile);
-            }
+        if (documentInfo == null) {
+            Log.log(LOGGER::error, "Could not find DocumentInfo for file {}", psiFile.getVirtualFile());
+            throw new DocumentInfoIndexNotFoundException("Could not find DocumentInfo index for " + psiFile.getVirtualFile());
+        }
+        Log.log(LOGGER::debug, "Found DocumentInfo index for {},'{}'", psiFile.getVirtualFile(), documentInfo);
 
-            if (documentInfo == null) {
-                Log.log(LOGGER::error, "Could not find DocumentInfo for file {}", file);
-                return;
-            }
-            Log.log(LOGGER::debug, "Found document for {},{}", file, documentInfo);
+        return documentInfo;
 
-            Editor editor = source.getSelectedTextEditor();
-            MethodUnderCaret methodUnderCaret = languageService.detectMethodUnderCaret(project, psiFile, editor.getCaretModel().getOffset());
-            FileEditor fileEditor = source.getSelectedEditor();
-
-            DocumentInfo finalDocumentInfo = documentInfo;
-            Backgroundable.ensureBackground(project, "File opened", () -> {
-                //documentInfoService will add the discovery code objects, load backend data and call some event
-                //so that code lens will be installed
-                documentInfoService.addCodeObjects(psiFile, finalDocumentInfo);
-                if (fileEditor.getFile().equals(file)) {
-                    caretContextService.contextChanged(methodUnderCaret);
-                }
-            });
-        });
-
-
-//        Backgroundable.ensureBackground(project, "Document opened", new Runnable() {
-//            @Override
-//            public void run() {
-//                Map<Integer, DocumentInfo> documentInfoMap = FileBasedIndex.getInstance().getFileData(DocumentInfoIndex.DOCUMENT_INFO_INDEX_ID,file,project);
-//                //there is only one DocumentInfo per file in the index
-//                DocumentInfo documentInfo = documentInfoMap.values().stream().findFirst().orElse(null);
-//                //if a class has no methods then there is no DocumentInfo in the index
-//                if (documentInfo == null) {
-//                    Log.log(LOGGER::error, "Could not find document for file {}", file);
-//                    return;
-//                }
-//                Log.log(LOGGER::debug, "Found document for {},{}", file, documentInfo);
-//                //documentInfoService will add the discovery code objects, load backend data and call some event
-//                //so that code lens will be installed
-//                documentInfoService.addCodeObjects(psiFile, documentInfo);
-//            }
-//        });
     }
+
 
     @Override
     public void fileClosed(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
@@ -151,64 +159,12 @@ public class EditorEventsHandler implements FileEditorManagerListener {
         documentInfoService.removeDocumentInfo(psiFile);
     }
 
-    @Override
-    public void selectionChanged(@NotNull FileEditorManagerEvent editorManagerEvent) {
-        FileEditorManager fileEditorManager = editorManagerEvent.getManager();
-        Log.log(LOGGER::debug, "selectionChanged: editor:{}, newFile:{}, oldFile:{}", fileEditorManager.getSelectedEditor(),
-                editorManagerEvent.getNewFile(), editorManagerEvent.getOldFile());
-
-        var newFile = editorManagerEvent.getNewFile();
-        var editor = fileEditorManager.getSelectedTextEditor();
-
-        //ignore non supported files. newFile may be null when the last editor is closed.
-        if (newFile != null && editor != null && isRelevantFile(newFile)) {
-            Log.log(LOGGER::debug, "selectionChanged: updating with file:{}", newFile);
-            caretListener.maybeAddCaretListener(editor, newFile);
-            updateCurrentContext(editor.getCaretModel().getOffset(), newFile);
-        } else if (newFile != null) {
-            caretContextService.contextEmptyNonSupportedFile(newFile.getPath());
-        } else {
-            caretContextService.contextEmpty();
-        }
-    }
-
-    /**
-     * This event will be called every time the tool window is shows after it was hidden. but we want to initialize
-     * our listeners only once, and we check it with initialized flag.
-     * There is no need to synchronize access to initialized flag, showing the tool window can't happen by multiple
-     * threads simultaneously
-     */
-//    @Override
-//    public void toolWindowShown(@NotNull ToolWindow toolWindow) {
-//        if (PluginId.TOOL_WINDOW_ID.equals(toolWindow.getId()) && !initialized) {
-////            start();
-//            initialized = true;
-//        }
-//    }
-
-
-//    @Override
-//    public void dispose() {
-//        Log.log(LOGGER::debug, "disposing..");
-//        editorListener.stop();
-//    }
-
-
-//    public void start() {
-//        Log.log(LOGGER::debug, "starting..");
-//        editorListener = new EditorListener(project,caretContextService, this);
-//        editorListener.start();
-//    }
-
 
     boolean isRelevantFile(VirtualFile file) {
-        if (projectFileIndex.isInLibrary(file) ||
-                projectFileIndex.isInTestSourceContent(file) ||
-                !isSupportedFile(file) ||
-                DocumentInfoIndex.namesToExclude.contains(file.getName())) {
-            return false;
-        }
-        return true;
+        return !projectFileIndex.isInLibrary(file) &&
+                !projectFileIndex.isInTestSourceContent(file) &&
+                isSupportedFile(file) &&
+                !DocumentInfoIndex.namesToExclude.contains(file.getName());
     }
 
 
@@ -221,10 +177,6 @@ public class EditorEventsHandler implements FileEditorManagerListener {
         return languageService.isIntellijPlatformPluginLanguage();
     }
 
-
-//    void emptySelection() {
-//        caretContextService.contextEmpty();
-//    }
 
     void updateCurrentContext(int caretOffset, VirtualFile file) {
         PsiFile psiFile = PsiManager.getInstance(project).findFile(file);

@@ -146,7 +146,11 @@ public class AnalyticsService implements Disposable {
 
     private String getCurrentEnvironment() throws AnalyticsServiceException {
         String currentEnv = environment.getCurrent();
-        if (currentEnv == null || currentEnv.isEmpty()){
+        //todo: we probably don't need to refresh environments here
+//        if (currentEnv == null || currentEnv.isEmpty()){
+//            environment.refreshEnvironments();
+//        }
+        if (currentEnv == null || currentEnv.isEmpty()) {
             throw new AnalyticsServiceException("No selected environment");
         }
         return currentEnv;

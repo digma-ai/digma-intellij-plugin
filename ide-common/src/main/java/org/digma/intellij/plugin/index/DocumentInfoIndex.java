@@ -24,6 +24,9 @@ import java.util.*;
 
 public class DocumentInfoIndex extends SingleEntryFileBasedIndexExtension<DocumentInfo> {
 
+    //todo: rebuild the index on change
+    // see PsiManager.getInstance(project).addPsiTreeChangeListener
+
     public static final ID<Integer, DocumentInfo> DOCUMENT_INFO_INDEX_ID = ID.create("org.digma.intellij.plugin.index.documentInfo");
 
     public static final Set<String> namesToExclude = new HashSet<>();
@@ -31,10 +34,9 @@ public class DocumentInfoIndex extends SingleEntryFileBasedIndexExtension<Docume
     static {
         namesToExclude.add("package-info.java");
         namesToExclude.add("MavenWrapperDownloader.java");
+        //add more names that can't be excluded by other rules
     }
 
-    public DocumentInfoIndex() {
-    }
 
     /**
      * a Project reference is needed to get ProjectFileIndex service for filtering files.
@@ -61,10 +63,16 @@ public class DocumentInfoIndex extends SingleEntryFileBasedIndexExtension<Docume
                     return false;
                 }
 
-                //if we already have a reference to the project filter files with ProjectFileIndex.
+                //if we already have a reference to the project then filter files with ProjectFileIndex.
                 //otherwise filter in only writable files.
-                //this is the best effort , see comment on the project field. it may be that we index a non-necessary
-                // test file if it was the first in be computed in computeValue
+                //this is the best effort , see comment on the project field. it may be that we index many unnecessary
+                // files, test files , interfaces ,enums ,annotations.
+                // java language service will build an empty DocumentInfo for those types so it will not occupy too much
+                // disk space.
+                // when those types are opened they will be ignored by, see EditorEventsHandler.
+                //the way the indexing works is that is will call acceptInput for many files before it calls the
+                // computeValue for the first time. and only the first invocation of computeValue we can capture a
+                // reference to the project.
                 if (DocumentInfoIndex.this.project != null) {
                     ProjectFileIndex.getInstance(project).getModuleForFile(file);
                     boolean isInSourceContent = ProjectFileIndex.getInstance(project).isInSourceContent(file);
@@ -76,7 +84,6 @@ public class DocumentInfoIndex extends SingleEntryFileBasedIndexExtension<Docume
                 } else {
                     return file.isWritable();
                 }
-
             }
         };
     }
@@ -113,12 +120,17 @@ public class DocumentInfoIndex extends SingleEntryFileBasedIndexExtension<Docume
         return new SingleEntryIndexer<DocumentInfo>(false) {
             @Override
             protected @Nullable DocumentInfo computeValue(@NotNull FileContent inputData) {
-                //todo: exclude interfaces
+
+                //There is no easy way to exclude java interfaces,enums and annotations because the file may
+                // contain several classes and it must be query with the relevant language service. only the language
+                // service can decide if the psi file is an interface or a class or several classes.
+                // so java language service will build an empty map for those types.
+
                 PsiFile psiFile = inputData.getPsiFile();
-                Project project = inputData.getProject();
+                Project theProject = inputData.getProject();
                 //initialize the project when first time in this method
-                DocumentInfoIndex.this.project = project;
-                DocumentInfoIndexBuilder documentInfoIndexBuilder = project.getService(DocumentInfoIndexBuilder.class);
+                DocumentInfoIndex.this.project = theProject;
+                DocumentInfoIndexBuilder documentInfoIndexBuilder = theProject.getService(DocumentInfoIndexBuilder.class);
                 return documentInfoIndexBuilder.build(psiFile);
             }
         };

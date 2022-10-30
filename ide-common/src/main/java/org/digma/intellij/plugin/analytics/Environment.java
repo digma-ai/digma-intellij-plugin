@@ -160,7 +160,7 @@ public class Environment implements EnvironmentsSupplier {
 
 
     //this method should not be called on ui threads, it may hang and cause a freeze
-    private void refreshEnvironments() {
+    void refreshEnvironments() {
 
         var stopWatch = StopWatch.createStarted();
 

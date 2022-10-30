@@ -41,6 +41,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
     private final DocumentInfoService documentInfoService;
     private final LanguageServiceLocator languageServiceLocator;
     private final CaretListener caretListener;
+    private final DocumentChangeListener documentChangeListener;
     private final ProjectFileIndex projectFileIndex;
 
 
@@ -50,6 +51,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
         languageServiceLocator = project.getService(LanguageServiceLocator.class);
         documentInfoService = project.getService(DocumentInfoService.class);
         caretListener = new CaretListener(project, this);
+        documentChangeListener = new DocumentChangeListener(project, this);
         projectFileIndex = ProjectFileIndex.getInstance(project);
     }
 
@@ -80,6 +82,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                 if (selectedTextEditor != null) {
                     MethodUnderCaret methodUnderCaret = languageService.detectMethodUnderCaret(project, psiFile, selectedTextEditor.getCaretModel().getOffset());
                     caretListener.maybeAddCaretListener(selectedTextEditor, newFile);
+                    documentChangeListener.maybeAddDocumentListener(selectedTextEditor, psiFile, languageService);
 
                     //if documentInfo is not null then its a new file that was opened, in that case the documentInfo needs
                     // to be added to documentInfoService and then call contextChanged , otherwise only call contextChanged.
@@ -151,6 +154,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
     public void fileClosed(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
         Log.log(LOGGER::debug, "fileClosed: file:{}", file);
         caretListener.removeCaretListener(file);
+        documentChangeListener.removeDocumentListener(file);
         PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
         if (psiFile == null) {
             return;

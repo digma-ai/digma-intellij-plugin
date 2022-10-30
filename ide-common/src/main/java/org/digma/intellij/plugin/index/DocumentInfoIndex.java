@@ -24,9 +24,6 @@ import java.util.*;
 
 public class DocumentInfoIndex extends SingleEntryFileBasedIndexExtension<DocumentInfo> {
 
-    //todo: rebuild the index on change
-    // see PsiManager.getInstance(project).addPsiTreeChangeListener
-
     public static final ID<Integer, DocumentInfo> DOCUMENT_INFO_INDEX_ID = ID.create("org.digma.intellij.plugin.index.documentInfo");
 
     public static final Set<String> namesToExclude = new HashSet<>();

@@ -152,7 +152,7 @@ public class JavaLanguageService implements LanguageService {
                     Log.log(LOGGER::error, "could not find selected text editor, can't navigate to method  {}", codeObjectId);
                 }
             } else {
-                Log.log(LOGGER::error, "could not navigate to method {}, can't fins PsiMethod in file {}", codeObjectId, psiFile.getVirtualFile());
+                Log.log(LOGGER::error, "could not navigate to method {}, can't find PsiMethod in file {}", codeObjectId, psiFile.getVirtualFile());
             }
         }
     }

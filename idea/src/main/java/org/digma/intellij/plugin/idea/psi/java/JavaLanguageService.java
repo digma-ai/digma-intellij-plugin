@@ -11,6 +11,8 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
+import com.intellij.psi.impl.java.stubs.index.JavaFullClassNameIndex;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import kotlin.Pair;
 import org.digma.intellij.plugin.document.DocumentInfoService;
@@ -55,8 +57,19 @@ public class JavaLanguageService implements LanguageService {
             return method.getName();
         }
 
-        //todo: change to $ between every inner class
-        return method.getContainingClass().getQualifiedName() + "$_$" + method.getName();
+        var packageName = ((PsiJavaFile) method.getContainingFile()).getPackageName();
+
+        var className = "";
+        try {
+            className = method.getContainingClass().getQualifiedName().substring(packageName.length() + 1).replace('.', '$');
+        } catch (NullPointerException e) {
+            //there should not be a NPE for java method because in java a method must have a containing class.
+            // It's only to satisfy intellij warnings.
+            //the methods getContainingClass and getQualifiedName may return null, but it can only happen
+            //for other jvm languages like scala/groovy/kotlin
+        }
+
+        return packageName + "." + className + "$_$" + method.getName();
     }
 
 
@@ -173,9 +186,45 @@ public class JavaLanguageService implements LanguageService {
 
     @Override
     public Map<String, String> findWorkspaceUrisForCodeObjectIds(List<String> codeObjectIds) {
-        //todo: implement
-        return Collections.emptyMap();
+
+        /*
+        Use intellij index to find in which file a method exists.
+        We don't need to search for the method, only for the class. and we don't need offset because
+        the backend provides a line number to navigate to.
+
+        We could use the class name that is returned from the backend in org.digma.intellij.plugin.model.rest.errordetails.Frame.
+        but then we need to change the C# implementation too.
+        but codeObjectIds is usually our identifier all over the plugin so maybe its better to just use it for all languages.
+        the string parsing of codeObjectIds should not be expensive.
+         */
+
+
+        Map<String, String> workspaceUrls = new HashMap<>();
+
+        codeObjectIds.forEach(id -> {
+
+            var className = id.substring(0, id.indexOf("$_$"));
+
+            //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
+            className = className.replace('$', '.');
+
+            //searching in project scope will find only project classes
+            Collection<PsiClass> psiClasses =
+                    JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.projectScope(project));
+            if (!psiClasses.isEmpty()) {
+                //hopefully there is only one class by that name in the project
+                PsiClass psiClass = psiClasses.stream().findAny().get();
+                PsiFile psiFile = PsiTreeUtil.getParentOfType(psiClass, PsiFile.class);
+                if (psiFile != null) {
+                    String url = PsiUtils.psiFileToUri(psiFile);
+                    workspaceUrls.put(id, url);
+                }
+            }
+        });
+
+        return workspaceUrls;
     }
+
 
     @Override
     public Map<String, Pair<String, Integer>> findWorkspaceUrisForSpanIds(List<String> spanIds) {

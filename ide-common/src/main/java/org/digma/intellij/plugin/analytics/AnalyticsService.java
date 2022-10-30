@@ -3,10 +3,9 @@ package org.digma.intellij.plugin.analytics;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.progress.ProgressIndicator;
-import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import org.apache.commons.lang3.time.StopWatch;
+import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
@@ -25,7 +24,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.net.ssl.SSLException;
-import javax.swing.*;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InterruptedIOException;
@@ -67,7 +65,8 @@ public class AnalyticsService implements Disposable {
         this.project = project;
         myApiUrl = settingsState.apiUrl;
         myApiToken = settingsState.apiToken;
-        replaceClientAndFireChange(myApiUrl, myApiToken);
+        replaceClient(myApiUrl, myApiToken);
+        initializeEnvironmentsList();
         settingsState.addChangeListener(state -> {
             if (!Objects.equals(state.apiUrl, myApiUrl)) {
                 myApiUrl = state.apiUrl;
@@ -104,32 +103,27 @@ public class AnalyticsService implements Disposable {
     }
 
 
+    private void initializeEnvironmentsList() {
+        List<String> envs = getEnvironments();
+        if (envs == null) {
+            envs = new ArrayList<>();
+        }
+
+        environment.replaceEnvironmentsList(envs);
+    }
+
+
     private void replaceClientAndFireChange(String url, String token) {
 
-        replaceClient(url, token);
-
-        var r = new Runnable() {
-            @Override
-            public void run() {
-                List<String> envs = getEnvironments();
-                if (envs == null) {
-                    envs = new ArrayList<>();
-                }
-
-                environment.replaceEnvironmentsList(envs);
+        Backgroundable.ensureBackground(project, "Digma: Environments list changed", () -> {
+            replaceClient(url, token);
+            List<String> envs = getEnvironments();
+            if (envs == null) {
+                envs = new ArrayList<>();
             }
-        };
 
-        if (SwingUtilities.isEventDispatchThread()) {
-            new Task.Backgroundable(project, "Digma: Environments list changed...") {
-                @Override
-                public void run(@NotNull ProgressIndicator indicator) {
-                    r.run();
-                }
-            }.queue();
-        } else {
-            r.run();
-        }
+            environment.replaceEnvironmentsListAndFireChange(envs);
+        });
 
     }
 

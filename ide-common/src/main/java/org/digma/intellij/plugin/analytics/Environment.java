@@ -180,7 +180,7 @@ public class Environment implements EnvironmentsSupplier {
                 return;
             }
 
-            replaceEnvironmentsList(newEnvironments);
+            replaceEnvironmentsListAndFireChange(newEnvironments);
         } finally {
             stopWatch.stop();
             Log.log(LOGGER::debug, "Refresh environments took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS));
@@ -188,11 +188,8 @@ public class Environment implements EnvironmentsSupplier {
     }
 
 
-    //this method may be called from both ui threads or background threads
     void replaceEnvironmentsList(@NotNull List<String> envs) {
-        Log.log(LOGGER::debug, "replaceEnvironmentsList called");
         this.environments = envs;
-        var oldEnv = current;
 
         if (this.environments.contains(persistenceData.getCurrentEnv())) {
             current = persistenceData.getCurrentEnv();
@@ -205,6 +202,16 @@ public class Environment implements EnvironmentsSupplier {
             //so when connection is back the current env can be restored to the last one.
             persistenceData.setCurrentEnv(current);
         }
+    }
+
+
+    //this method may be called from both ui threads or background threads
+    void replaceEnvironmentsListAndFireChange(@NotNull List<String> envs) {
+        Log.log(LOGGER::debug, "replaceEnvironmentsListAndFireChange called");
+
+        var oldEnv = current;
+
+        replaceEnvironmentsList(envs);
 
         notifyEnvironmentsListChange();
 

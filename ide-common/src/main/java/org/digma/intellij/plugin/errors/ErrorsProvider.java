@@ -73,6 +73,9 @@ public class ErrorsProvider {
     @NotNull
     public ErrorDetailsModel getErrorDetails(@NotNull String uid) {
         try {
+
+            //todo: no language if no file was opened yet and clicking error in summary view
+
             var errorDetails = analyticsService.getErrorDetails(uid);
             var methodInfo = documentInfoService.findMethodInfo(MethodInfo.Companion.removeType(errorDetails.getSourceCodeObjectId()));
             //methodInfo may or may not exist already in documentInfoService, if exists get the language by methodInfo

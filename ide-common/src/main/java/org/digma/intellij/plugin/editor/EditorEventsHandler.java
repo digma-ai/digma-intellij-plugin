@@ -164,15 +164,17 @@ public class EditorEventsHandler implements FileEditorManagerListener {
     }
 
 
-    boolean isRelevantFile(VirtualFile file) {
-        return !projectFileIndex.isInLibrary(file) &&
-                !projectFileIndex.isInTestSourceContent(file) &&
+    private boolean isRelevantFile(VirtualFile file) {
+        //if file is not writable it is not supported even if it's a language we support, usually when we open vcs files.
+        return file.isWritable() &&
                 isSupportedFile(file) &&
+                !projectFileIndex.isInLibrary(file) &&
+                !projectFileIndex.isInTestSourceContent(file) &&
                 !DocumentInfoIndex.namesToExclude.contains(file.getName());
     }
 
 
-    boolean isSupportedFile(VirtualFile file) {
+    private boolean isSupportedFile(VirtualFile file) {
         PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
         if (psiFile == null) {
             return false;
@@ -190,7 +192,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
         updateCurrentContext(caretOffset, psiFile);
     }
 
-    void updateCurrentContext(int caretOffset, PsiFile psiFile) {
+    private void updateCurrentContext(int caretOffset, PsiFile psiFile) {
         LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
         MethodUnderCaret methodUnderCaret = languageService.detectMethodUnderCaret(project, psiFile, caretOffset);
         caretContextService.contextChanged(methodUnderCaret);

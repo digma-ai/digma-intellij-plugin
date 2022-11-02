@@ -125,6 +125,7 @@ public class DocumentInfoIndex extends SingleEntryFileBasedIndexExtension<Docume
 
                 PsiFile psiFile = inputData.getPsiFile();
                 Project theProject = inputData.getProject();
+                //todo: maybe return null for non relevant files like tests and library sources
                 //initialize the project when first time in this method
                 DocumentInfoIndex.this.project = theProject;
                 DocumentInfoIndexBuilder documentInfoIndexBuilder = theProject.getService(DocumentInfoIndexBuilder.class);

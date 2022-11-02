@@ -91,18 +91,27 @@ class CodeObjectHost(project: Project): LifetimedProjectComponent(project) {
         val result = HashMap<String, String>()
         val workspaceUriPairs = model.getWorkspaceUris.callSynchronously(codeObjectIds, model.protocol)
         workspaceUriPairs?.forEach {
-            result.put(it.codeObjectId, it.workspaceUri)
+            result[it.codeObjectId] = it.workspaceUri
         }
         return result
     }
 
-    fun findWorkspaceUrisForSpanIds(spanIds: MutableList<String>): Map<String, Pair<String,Int>> {
-        val result = HashMap<String,Pair<String,Int>>()
-        val workspaceUris = model.getSpansWorkspaceUris.callSynchronously(spanIds,model.protocol)
+    fun findWorkspaceUrisForSpanIds(spanIds: MutableList<String>): Map<String, Pair<String, Int>> {
+        val result = HashMap<String, Pair<String, Int>>()
+        val workspaceUris = model.getSpansWorkspaceUris.callSynchronously(spanIds, model.protocol)
         workspaceUris?.forEach {
-            result[it.codeObjectId] = Pair(it.workspaceUri,it.offset)
+            result[it.codeObjectId] = Pair(it.workspaceUri, it.offset)
         }
         return result
+    }
+
+
+    fun isCSharpMethod(methodCodeObjectId: String): Boolean {
+        val result = model.isCsharpMethod.callSynchronously(methodCodeObjectId, model.protocol)
+        result?.let {
+            return result
+        }
+        return false
     }
 
 

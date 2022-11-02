@@ -47,6 +47,7 @@ dependencyResolutionManagement {
             library("prettytime", "org.ocpsoft.prettytime", "prettytime").version("5.0.3.Final")
             library("threeten", "org.threeten", "threeten-extra").version("1.7.0")
             library("commons-lang3", "org.apache.commons", "commons-lang3").version("3.12.0")
+            library("commons-collections4", "org.apache.commons", "commons-collections4").version("4.4")
         }
     }
 }

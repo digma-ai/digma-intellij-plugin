@@ -68,6 +68,8 @@ object CodeObjectsModel : Ext(SolutionModel.Solution) {
             immutableList(PredefinedType.string), immutableList(CodeObjectIdUriOffsetTrouple)
         ).async
 
+        call("isCsharpMethod", PredefinedType.string, PredefinedType.bool).async
+
         setting(CSharp50Generator.Namespace, "Digma.Rider.Protocol")
         setting(Kotlin11Generator.Namespace, "org.digma.intellij.plugin.rider.protocol")
 
@@ -76,7 +78,8 @@ object CodeObjectsModel : Ext(SolutionModel.Solution) {
         source("refreshIncompleteDocuments", PredefinedType.void)
 
         //key: document file path, value: Document
-        map("documents",
+        map(
+            "documents",
             PredefinedType.string,
             classdef("Document") {
                 field("isComplete",PredefinedType.bool)

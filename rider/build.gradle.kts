@@ -14,6 +14,7 @@ plugins {
 
 
 dependencies {
+    implementation(libs.commons.collections4)
     compileOnly(project(":ide-common"))
     compileOnly(project(":model"))
 }

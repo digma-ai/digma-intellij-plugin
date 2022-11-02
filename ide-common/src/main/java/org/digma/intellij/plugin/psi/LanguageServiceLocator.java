@@ -64,16 +64,6 @@ public class LanguageServiceLocator {
     }
 
 
-    public LanguageService getDominantLanguageService() {
-        var dominantLanguage = documentInfoService.getDominantLanguage();
-        if (dominantLanguage == null) {
-            return NoOpLanguageService.INSTANCE;
-        }
-
-        return locate(dominantLanguage);
-    }
-
-
     private static class Cache {
 
         private final Map<String, LanguageService> languageServiceMap = new HashMap<>();

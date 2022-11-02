@@ -18,6 +18,12 @@ public class NoOpLanguageService implements LanguageService {
     public static final NoOpLanguageService INSTANCE = new NoOpLanguageService();
 
     @Override
+    public Language getLanguageForMethodCodeObjectId(@NotNull String methodId) {
+        return new Language("NoLang") {
+        };
+    }
+
+    @Override
     public boolean isSupportedFile(Project project, VirtualFile newFile) {
         return false;
     }

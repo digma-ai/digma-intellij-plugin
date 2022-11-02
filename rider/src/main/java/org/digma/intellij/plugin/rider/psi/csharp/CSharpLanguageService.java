@@ -8,6 +8,7 @@ import com.intellij.psi.PsiFile;
 import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent;
 import com.jetbrains.rider.ideaInterop.fileTypes.csharp.CSharpLanguage;
 import kotlin.Pair;
+import org.apache.commons.collections4.map.LRUMap;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
@@ -24,6 +25,7 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
 
     private final Logger LOGGER = Logger.getInstance(CSharpLanguageService.class);
 
+    private final LRUMap<String, Boolean> csharpMethodCache = new LRUMap<>();
     private final MethodNavigationHost methodNavigationHost;
 
     private final CodeObjectHost codeObjectHost;
@@ -37,11 +39,29 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
         riderEnvironmentChangedHandler = project.getService(RiderEnvironmentChangedHandler.class);
     }
 
+    @Override
+    public Language getLanguageForMethodCodeObjectId(@NotNull String methodId) {
+        //calls to this method with the same argument may happen many times.
+        // but codeObjectHost.isCSharpMethod is a call to resharper which is not the best performance,
+        // so keep all methods ids in a simple cache for later use.
+
+        if (csharpMethodCache.containsKey(methodId)) {
+            return csharpMethodCache.get(methodId) ? CSharpLanguage.INSTANCE : null;
+        }
+
+        if (codeObjectHost.isCSharpMethod(methodId)) {
+            csharpMethodCache.put(methodId, Boolean.TRUE);
+            return CSharpLanguage.INSTANCE;
+        }
+        csharpMethodCache.put(methodId, Boolean.FALSE);
+        return null;
+    }
+
     //should not be called !!
     @Override
     public boolean isSupportedFile(@NotNull Project project, @NotNull VirtualFile newFile) {
         PsiFile psiFile = com.intellij.psi.PsiManager.getInstance(project).findFile(newFile);
-        if (psiFile == null){
+        if (psiFile == null) {
             return false;
         }
         return CSharpLanguage.INSTANCE.equals(psiFile.getLanguage());

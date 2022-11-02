@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.analytics
 
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
+import com.intellij.util.messages.MessageBusConnection
 
 /**
  * This service keeps track of the analytics service connection status. it is used to decide when to show the
@@ -12,13 +13,17 @@ class BackendConnectionMonitor(val project: Project) : Disposable, AnalyticsServ
 
     private var hasConnectionError = false
 
+    private val analyticsConnectionEventsConnection: MessageBusConnection = project.messageBus.connect()
 
     init {
-        project.messageBus.connect(this)
-            .subscribe(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, this)
+        analyticsConnectionEventsConnection.subscribe(
+            AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC,
+            this
+        )
     }
 
     override fun dispose() {
+        analyticsConnectionEventsConnection.dispose()
         hasConnectionError = false
     }
 

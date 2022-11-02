@@ -21,6 +21,13 @@ public class PythonLanguageService implements LanguageService {
 
 
     @Override
+    public Language getLanguageForMethodCodeObjectId(@NotNull String methodId) {
+
+        //todo: implement
+        return null;
+    }
+
+    @Override
     public boolean isSupportedFile(Project project, VirtualFile newFile) {
         PsiFile psiFile = com.intellij.psi.PsiManager.getInstance(project).findFile(newFile);
         return PythonLanguage.INSTANCE.equals(psiFile.getLanguage());

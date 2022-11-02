@@ -111,6 +111,11 @@ public class RiderEditorEventsStarter implements ToolWindowManagerListener, Docu
                 if (!cSharpLanguageService.isSupportedFile(project, file) || !file.isWritable()) {
                     elementUnderCaretDetector.refresh();
                 }
+
+                //in any case if no file is opened then its the last file that was closed so empty the context
+                if (source.getOpenFiles().length == 0) {
+                    caretContextService.contextEmpty();
+                }
             }
         });
     }

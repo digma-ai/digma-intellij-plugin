@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.errors;
 
-import com.intellij.lang.Language;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
@@ -34,9 +33,11 @@ public class ErrorsProvider {
     private final AnalyticsService analyticsService;
     private final DocumentInfoService documentInfoService;
     private final LanguageServiceLocator languageServiceLocator;
+    private final Project project;
 
 
     public ErrorsProvider(@NotNull Project project) {
+        this.project = project;
         analyticsService = project.getService(AnalyticsService.class);
         documentInfoService = project.getService(DocumentInfoService.class);
         languageServiceLocator = project.getService(LanguageServiceLocator.class);
@@ -73,21 +74,18 @@ public class ErrorsProvider {
     @NotNull
     public ErrorDetailsModel getErrorDetails(@NotNull String uid) {
         try {
-
-            //todo: no language if no file was opened yet and clicking error in summary view
-
             var errorDetails = analyticsService.getErrorDetails(uid);
-            var methodInfo = documentInfoService.findMethodInfo(MethodInfo.Companion.removeType(errorDetails.getSourceCodeObjectId()));
-            //methodInfo may or may not exist already in documentInfoService, if exists get the language by methodInfo
-            // else get the dominant language. the dominant language will be found if there is at least one document
-            // already loaded which must be if we got to error details.
-            Language language;
-            if (methodInfo == null) {
-                language = documentInfoService.getDominantLanguage();
-            } else {
-                language = documentInfoService.getLanguageByMethodCodeObjectId(methodInfo.getId());
-            }
-            var languageService = languageServiceLocator.locate(language);
+            var methodCodeObjectId = MethodInfo.Companion.removeType(errorDetails.getSourceCodeObjectId());
+
+            //we need to find a languageService for this error.
+            //getErrorDetails may be called from few places.
+            //when clicked in errors insight then the document is probably opened and DocumentInfoService has the MethodInfo
+            //and the language.
+            //when clicked in summary view the document may or may not be opened in the editor
+            // and DocumentInfoService will not have the MethodInfo.
+            var languageService = LanguageService.findLanguageServiceByMethodCodeObjectId(project, methodCodeObjectId);
+
+            var methodInfo = documentInfoService.findMethodInfo(methodCodeObjectId);
 
             var model = new ErrorDetailsModel();
             model.setDelegate(errorDetails);

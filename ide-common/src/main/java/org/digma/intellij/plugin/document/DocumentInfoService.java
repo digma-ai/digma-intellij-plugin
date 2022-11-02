@@ -145,6 +145,14 @@ public class DocumentInfoService {
         throw new RuntimeException("could not find language by method id " + codeObjectId);
     }
 
+    /**
+     * getDominantLanguage should be used only if there is no better way to find the language of some code object.
+     * it will return something only after at least one document was already opened. if no document was opened yet
+     * it will return null.
+     *
+     * @return the current dominant language
+     */
+    @Nullable
     public Language getDominantLanguage() {
 
         Language language = null;

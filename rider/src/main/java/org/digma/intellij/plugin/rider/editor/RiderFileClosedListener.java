@@ -44,5 +44,6 @@ public class RiderFileClosedListener implements FileEditorManagerListener {
             documentInfoService.removeDocumentInfo(psiFile);
             codeObjectHost.removeDocument(psiFile);
         }
+
     }
 }

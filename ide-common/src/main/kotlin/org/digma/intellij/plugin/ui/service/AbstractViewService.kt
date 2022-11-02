@@ -4,6 +4,7 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.ui.content.Content
+import com.intellij.util.messages.MessageBusConnection
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.ui.model.NOT_SUPPORTED_OBJECT_MSG
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
@@ -17,23 +18,23 @@ abstract class AbstractViewService(val project: Project) : Disposable {
     var toolWindow: ToolWindow? = null
     var toolWindowContent: Content? = null
 
+    private val analyticsConnectionEventsConnection: MessageBusConnection = project.messageBus.connect()
+
     private val toolWindowTabsHelper: ToolWindowTabsHelper = project.getService(ToolWindowTabsHelper::class.java)
 
     init {
         //subscribe to connection lost/gained , call doUpdateUi() on each event so that the no connection card will show or hide
-        @Suppress("LeakingThis")// it's ok, it's only a parent disposable
-        project.messageBus.connect(this)
-            .subscribe(
-                AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC,
-                handler = object : AnalyticsServiceConnectionEvent {
-                    override fun connectionLost() {
-                        doConnectionLost()
-                        doUpdateUi()
-                    }
+        analyticsConnectionEventsConnection.subscribe(
+            AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC,
+            handler = object : AnalyticsServiceConnectionEvent {
+                override fun connectionLost() {
+                    doConnectionLost()
+                    doUpdateUi()
+                }
 
-                    override fun connectionGained() {
-                        doConnectionGained()
-                        doUpdateUi()
+                override fun connectionGained() {
+                    doConnectionGained()
+                    doUpdateUi()
                     }
                 }
             )
@@ -149,6 +150,6 @@ abstract class AbstractViewService(val project: Project) : Disposable {
 
 
     override fun dispose() {
-        //nothing to do here
+        analyticsConnectionEventsConnection.dispose()
     }
 }

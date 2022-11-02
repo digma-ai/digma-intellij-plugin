@@ -66,7 +66,8 @@ public class SummariesProvider {
             ListViewItem<GlobalInsight> item = new ListViewItem<>(insight, 1);
             if (insight instanceof SpanDurationChangeInsight) {
                 List<SpanInfo> spanInfos = ((SpanDurationChangeInsight) insight).getSpanDurationChanges().stream().map(SpanDurationChangeInsight.Change::getSpan).collect(Collectors.toList());
-                findWorkspaceUrisForSpans(project, item, spanInfos);
+                //todo: ask Asaf how to get the method code object id
+                findWorkspaceUrisForSpans(project, item, spanInfos, null);
             }
             items.add(item);
         }

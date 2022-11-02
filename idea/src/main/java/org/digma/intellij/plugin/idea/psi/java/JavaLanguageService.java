@@ -74,6 +74,30 @@ public class JavaLanguageService implements LanguageService {
 
 
     @Override
+    public Language getLanguageForMethodCodeObjectId(@NotNull String methodId) {
+
+        //try to parse the methodId as if it is java and try to find the language
+
+        var className = methodId.substring(0, methodId.indexOf("$_$"));
+
+        //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
+        className = className.replace('$', '.');
+
+        //searching in project scope will find only project classes
+        Collection<PsiClass> psiClasses =
+                JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.projectScope(project));
+        //todo: maybe also search in method index and compare to find the same file
+        // or try to verify that this class really has the method
+        if (!psiClasses.isEmpty()) {
+            PsiClass psiClass = psiClasses.stream().findAny().get();
+            return psiClass.getLanguage();
+        }
+
+        return null;
+    }
+
+
+    @Override
     public boolean isSupportedFile(Project project, VirtualFile newFile) {
         //maybe more correct to find view provider and find a java psi file
         PsiFile psiFile = com.intellij.psi.PsiManager.getInstance(project).findFile(newFile);

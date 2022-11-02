@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.ui.service
 
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import com.intellij.util.messages.MessageBusConnection
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.DumbAwareNotifier
@@ -22,6 +23,8 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
 
     val model = Model()
 
+    private val environmentChangeConnection: MessageBusConnection = project.messageBus.connect()
+
     companion object {
         fun getInstance(project: Project): SummaryViewService {
             return project.getService(SummaryViewService::class.java)
@@ -36,8 +39,9 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
         }
 
         //this is for when environment changes or connection lost and regained
-        project.messageBus.connect(this)
-            .subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, object : EnvironmentChanged {
+        environmentChangeConnection.subscribe(
+            EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC,
+            object : EnvironmentChanged {
 
                 override fun environmentChanged(newEnv: String?) {
                     Log.log(logger::debug, "environmentChanged called")
@@ -55,6 +59,11 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
             })
     }
 
+
+    override fun dispose() {
+        super.dispose()
+        environmentChangeConnection.dispose()
+    }
 
     //the summary view can always update its ui because it's not related to the current method
     //its triggered by environmentChanged and should always be ok to update

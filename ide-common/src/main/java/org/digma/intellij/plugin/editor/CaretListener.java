@@ -8,9 +8,15 @@ import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import com.intellij.util.Alarm;
 import com.intellij.util.AlarmFactory;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
+import org.digma.intellij.plugin.psi.LanguageService;
+import org.digma.intellij.plugin.psi.LanguageServiceLocator;
+import org.digma.intellij.plugin.ui.CaretContextService;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -18,12 +24,15 @@ import java.util.Map;
 
 /**
  * Listens to CaretEvents and updates view respectively.
+ * This class is only used from the current package by EditorEventsHandler so it and its methods are
+ * 'package' access.
  */
-public class CaretListener {
+class CaretListener {
 
     private static final Logger LOGGER = Logger.getInstance(CaretListener.class);
     private final Project project;
-    private final EditorEventsHandler editorEventsHandler;
+    private final CaretContextService caretContextService;
+    private final LanguageServiceLocator languageServiceLocator;
     private final Alarm caretEventAlarm;
 
 
@@ -37,9 +46,10 @@ public class CaretListener {
     private final Map<VirtualFile, Disposable> disposables = new HashMap<>();
 
 
-    public CaretListener(Project project, EditorEventsHandler editorEventsHandler) {
+    CaretListener(Project project) {
         this.project = project;
-        this.editorEventsHandler = editorEventsHandler;
+        caretContextService = project.getService(CaretContextService.class);
+        languageServiceLocator = project.getService(LanguageServiceLocator.class);
         caretEventAlarm = AlarmFactory.getInstance().create();
     }
 
@@ -60,7 +70,7 @@ public class CaretListener {
     }
 
 
-    void addCaretListener(@NotNull Editor editor, @NotNull VirtualFile file) {
+    private void addCaretListener(@NotNull Editor editor, @NotNull VirtualFile file) {
 
         /*
         We need to know where the caret is all the time.
@@ -91,7 +101,7 @@ public class CaretListener {
                     if (caretEvent.getCaret() != null) {
                         int caretOffset = caretEvent.getEditor().logicalPositionToOffset(caretEvent.getNewPosition());
                         var file = FileDocumentManager.getInstance().getFile(caretEvent.getEditor().getDocument());
-                        editorEventsHandler.updateCurrentContext(caretOffset, file);
+                        updateCurrentContext(caretOffset, file);
                     }
                 }, 300);
             }
@@ -99,12 +109,29 @@ public class CaretListener {
     }
 
 
-    public void removeCaretListener(VirtualFile file) {
+    private void updateCurrentContext(int caretOffset, VirtualFile file) {
+
+        //there is no need to check if file is supported, we install caret listener only on editors of supported files.
+
+        PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
+        if (psiFile == null) {
+            return;
+        }
+        updateCurrentContext(caretOffset, psiFile);
+    }
+
+    private void updateCurrentContext(int caretOffset, PsiFile psiFile) {
+        LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
+        MethodUnderCaret methodUnderCaret = languageService.detectMethodUnderCaret(project, psiFile, caretOffset);
+        caretContextService.contextChanged(methodUnderCaret);
+    }
+
+
+    void removeCaretListener(VirtualFile file) {
         if (disposables.containsKey(file)) {
             Log.log(LOGGER::debug, "disposing disposable for file:{}", file);
             Disposer.dispose(disposables.remove(file));
         }
     }
-
 
 }

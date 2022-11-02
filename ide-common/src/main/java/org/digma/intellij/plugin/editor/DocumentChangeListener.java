@@ -28,13 +28,16 @@ import org.jetbrains.annotations.NotNull;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DocumentChangeListener {
+/**
+ * Listens to documentChanged events and updates DocumentInfoService and the current context.
+ * This class is only used from the current package by EditorEventsHandler so it and its methods are
+ * 'package' access.
+ */
+class DocumentChangeListener {
 
     private static final Logger LOGGER = Logger.getInstance(DocumentChangeListener.class);
 
     private final Project project;
-    private final EditorEventsHandler editorEventsHandler;
-
     private final DocumentInfoService documentInfoService;
     private final CaretContextService caretContextService;
 
@@ -42,15 +45,14 @@ public class DocumentChangeListener {
 
     private final Map<VirtualFile, Disposable> disposables = new HashMap<>();
 
-    public DocumentChangeListener(Project project, EditorEventsHandler editorEventsHandler) {
+    DocumentChangeListener(Project project) {
         this.project = project;
-        this.editorEventsHandler = editorEventsHandler;
         documentInfoService = project.getService(DocumentInfoService.class);
         caretContextService = project.getService(CaretContextService.class);
         documentChangeAlarm = AlarmFactory.getInstance().create();
     }
 
-    public void maybeAddDocumentListener(Editor editor, PsiFile psiFile, LanguageService languageService) {
+    void maybeAddDocumentListener(Editor editor, PsiFile psiFile, LanguageService languageService) {
         if (disposables.containsKey(psiFile.getVirtualFile())) {
             return;
         }
@@ -76,9 +78,7 @@ public class DocumentChangeListener {
             public void documentChanged(@NotNull DocumentEvent event) {
 
                 documentChangeAlarm.cancelAllRequests();
-                documentChangeAlarm.addRequest(() -> {
-                    processDocumentChanged(editor, psiFile, languageService);
-                }, 300);
+                documentChangeAlarm.addRequest(() -> processDocumentChanged(editor, psiFile, languageService), 300);
 
             }
         }, parentDisposable);
@@ -134,7 +134,7 @@ public class DocumentChangeListener {
     }
 
 
-    public void removeDocumentListener(VirtualFile file) {
+    void removeDocumentListener(VirtualFile file) {
         if (disposables.containsKey(file)) {
             Log.log(LOGGER::debug, "disposing disposable for file:{}", file);
             Disposer.dispose(disposables.remove(file));

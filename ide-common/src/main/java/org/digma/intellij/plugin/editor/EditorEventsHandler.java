@@ -70,6 +70,20 @@ public class EditorEventsHandler implements FileEditorManagerListener {
         Log.log(LOGGER::debug, "selectionChanged: editor:{}, newFile:{}, oldFile:{}", fileEditorManager.getSelectedEditor(),
                 editorManagerEvent.getNewFile(), editorManagerEvent.getOldFile());
 
+
+        /*
+            caretListener.cancelAllCaretPositionChangedRequests
+            this comes to solve the following scenario:
+            caretListener waits for a quite period before actually processing the caretPositionChanged event.
+            when editor with class A is opened and clicking another class ,say B, a caretPositionChanged event is fired
+            for A, but will wait for the quite period to be processed. class B is opened and our UI context changes correctly,
+            but then the caretPositionChanged for A is processed and changes the context back to A.
+            canceling the request solves it.
+            and there should be no other effect for canceling all requests in any other scenario.
+         */
+        caretListener.cancelAllCaretPositionChangedRequests();
+
+
         var newFile = editorManagerEvent.getNewFile();
 
         //ignore non supported files. newFile may be null when the last editor is closed.

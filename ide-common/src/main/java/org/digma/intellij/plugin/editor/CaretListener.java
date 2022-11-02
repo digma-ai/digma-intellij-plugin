@@ -55,7 +55,21 @@ public class CaretListener {
     }
 
 
+    void cancelAllCaretPositionChangedRequests() {
+        caretEventAlarm.cancelAllRequests();
+    }
+
+
     void addCaretListener(@NotNull Editor editor, @NotNull VirtualFile file) {
+
+        /*
+        We need to know where the caret is all the time.
+        there are two options: a mouse listener or caret listener,each has advantages and disadvantages.
+        a mouse listener is more fine-grained in knowing whet the user is doing, if it's a click or a mouse movement.
+        but it fires too many events and forces thinking about left click,right click etc.
+        a caret listener is easier to process. but we need to consider a quite period before processing,if the user
+        clicks the editor quickly or moves around with the keyboard.
+         */
 
         if (editor.isDisposed()) {
             Log.log(LOGGER::debug, "not installing listener for {} because it is disposed", editor);

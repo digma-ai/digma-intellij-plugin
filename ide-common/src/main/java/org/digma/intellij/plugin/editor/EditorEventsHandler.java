@@ -28,6 +28,8 @@ import java.util.Map;
 /**
  * This is the main listener for file open , it will cache a selectionChanged on FileEditorManager and do
  * the necessary actions when file is opened.
+ * This listener is installed only when necessary,for example on Idea,Pycharm. usually it will not be installed on Rider
+ * unless python plugin is installed on Rider.
  **/
 public class EditorEventsHandler implements FileEditorManagerListener {
 
@@ -71,6 +73,11 @@ public class EditorEventsHandler implements FileEditorManagerListener {
         var newFile = editorManagerEvent.getNewFile();
 
         //ignore non supported files. newFile may be null when the last editor is closed.
+        //A relevant file is a source file that is supported by one of the language services. and also a language
+        // where the language plugin is intellij platform plugin. this is mainly meant to distinguish from C# on Rider,
+        // this listener should not handle C# files.
+        // usually this listener will not be installed on Rider unless another language plugin is installed on Rider,
+        // for example the python plugin can be installed on rider.
         if (newFile != null && isRelevantFile(newFile)) {
 
             PsiFile psiFile = PsiManager.getInstance(project).findFile(newFile);
@@ -134,6 +141,13 @@ public class EditorEventsHandler implements FileEditorManagerListener {
             // or we have a mistake somewhere else. java interfaces,enums and annotations are indexed but the DocumentInfo
             // object is empty of methods, that's because currently we have no way to exclude those types from indexing.
             documentInfo = documentInfoMap.values().stream().findFirst().orElse(null);
+
+            //usually we should find the document info in the index. on extreme cases, maybe is the index is corrupted
+            // the document info will not be found, try again to build it
+            if (documentInfo == null) {
+                documentInfo = languageService.buildDocumentInfo(psiFile);
+            }
+
         } catch (IndexNotReadyException e) {
             //IndexNotReadyException will be thrown on dumb mode, when indexing is still in progress.
             documentInfo = languageService.buildDocumentInfo(psiFile);

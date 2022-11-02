@@ -16,6 +16,7 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import kotlin.Pair;
 import org.digma.intellij.plugin.document.DocumentInfoService;
+import org.digma.intellij.plugin.index.DocumentInfoIndex;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
@@ -264,7 +265,7 @@ public class JavaLanguageService implements LanguageService {
             if (fileEditor != null) {
                 var file = fileEditor.getFile();
                 var psiFile = PsiManager.getInstance(project).findFile(file);
-                if (psiFile != null && isSupportedFile(project, psiFile)) {
+                if (psiFile != null && isRelevantFile(psiFile)) {
                     var selectedTextEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
                     if (selectedTextEditor != null) {
                         int offset = selectedTextEditor.getCaretModel().getOffset();
@@ -275,6 +276,17 @@ public class JavaLanguageService implements LanguageService {
             }
         });
     }
+
+
+    private boolean isRelevantFile(PsiFile psiFile) {
+        //if file is not writable it is not supported even if it's a language we support, usually when we open vcs files.
+        return psiFile.isWritable() &&
+                isSupportedFile(project, psiFile) &&
+                !ProjectFileIndex.getInstance(project).isInLibrary(psiFile.getVirtualFile()) &&
+                !ProjectFileIndex.getInstance(project).isInTestSourceContent(psiFile.getVirtualFile()) &&
+                !DocumentInfoIndex.namesToExclude.contains(psiFile.getVirtualFile().getName());
+    }
+
 
     @Override
     public boolean isIndexedLanguage() {

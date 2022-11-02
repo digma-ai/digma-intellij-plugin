@@ -76,8 +76,8 @@ public class CaretListener {
                     Log.log(LOGGER::debug, "caretPositionChanged for editor:{}", caretEvent.getEditor());
                     if (caretEvent.getCaret() != null) {
                         int caretOffset = caretEvent.getEditor().logicalPositionToOffset(caretEvent.getNewPosition());
-                        var file1 = FileDocumentManager.getInstance().getFile(caretEvent.getEditor().getDocument());
-                        editorEventsHandler.updateCurrentContext(caretOffset, file1);
+                        var file = FileDocumentManager.getInstance().getFile(caretEvent.getEditor().getDocument());
+                        editorEventsHandler.updateCurrentContext(caretOffset, file);
                     }
                 }, 300);
             }

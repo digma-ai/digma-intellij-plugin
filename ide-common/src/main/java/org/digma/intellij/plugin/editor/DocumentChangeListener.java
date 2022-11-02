@@ -86,6 +86,7 @@ public class DocumentChangeListener {
 
 
     private void processDocumentChanged(@NotNull Editor editor, @NotNull PsiFile psiFile, @NotNull LanguageService languageService) {
+
         PsiDocumentManager.getInstance(project).performLaterWhenAllCommitted(() -> {
             DocumentInfo documentInfo;
             try {
@@ -96,6 +97,13 @@ public class DocumentChangeListener {
                 // or we have a mistake somewhere else. java interfaces,enums and annotations are indexed but the DocumentInfo
                 // object is empty of methods, that's because currently we have no way to exclude those types from indexing.
                 documentInfo = documentInfoMap.values().stream().findFirst().orElse(null);
+
+                //usually we should find the document info in the index. on extreme cases, maybe is the index is corrupted
+                // the document info will not be found, try again to build it
+                if (documentInfo == null) {
+                    documentInfo = languageService.buildDocumentInfo(psiFile);
+                }
+
             } catch (IndexNotReadyException e) {
                 //IndexNotReadyException will be thrown on dumb mode, when indexing is still in progress.
                 documentInfo = languageService.buildDocumentInfo(psiFile);

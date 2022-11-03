@@ -44,7 +44,7 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
         Log.log(LOGGER::debug, "createToolWindowContent for project  {}", project);
 
-        var contentFactory = ContentFactory.SERVICE.getInstance();
+        var contentFactory = ContentFactory.getInstance();
 
         var toolWindowTabsHelper = project.getService(ToolWindowTabsHelper.class);
         toolWindowTabsHelper.setToolWindow(toolWindow);

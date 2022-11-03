@@ -101,6 +101,37 @@ public interface LanguageService {
     }
 
     /**
+     * This method is used by DocumentInfoIndex as another means to filter input files.
+     * it will try to find a static method called isFileInSourceContent on each language service and invoke it.
+     * we can't call JavaLanguageService directly because its not on the build classpath of this module. our language
+     * services are in isolated classpath intentionally.
+     */
+    static boolean isInSourceContent(VirtualFile file) {
+        for (SupportedLanguages value : SupportedLanguages.values()) {
+
+            try {
+                @SuppressWarnings("unchecked") // the unchecked cast should be ok here
+                Class<? extends LanguageService> clazz = (Class<? extends LanguageService>) Class.forName(value.getLanguageServiceClassName());
+                //the method isFileInSourceContent must return a value only if it knows how to handle the file type,otherwise
+                //it must throw an exception. this code relays on that the return value is correct.
+                var isFileInSourceContentMethod = clazz.getDeclaredMethod("isFileInSourceContent", VirtualFile.class);
+                return (boolean) isFileInSourceContentMethod.invoke(null, file);
+            } catch (Throwable e) {
+                //catch Throwable because there may be errors.
+                //ignore: some classes will fail to load , for example the CSharpLanguageService
+                //will fail to load if it's not rider because it depends on rider classes.
+                //and some will not have FILE_TYPE field
+                //don't log, it will happen too many times
+            }
+        }
+
+        //the default for this method is true because we must assume the file is in source unless we know otherwise.
+        //it's called from DocumentInfoIndex.getInputFilter as another means to filter input file in the index.
+        return true;
+    }
+
+
+    /**
      * try to find the language by method code object id.
      * each language service should implement it differently and may return null.
      * each language service can only check if this method's language is the language it supports.

@@ -51,11 +51,31 @@ public class DocumentInfoIndex extends SingleEntryFileBasedIndexExtension<Docume
     @Override
     public FileBasedIndex.@NotNull InputFilter getInputFilter() {
 
+        //currently supported file types are java and python
         return new DefaultFileTypeSpecificInputFilter(findSupportedFileTypes()) {
 
+            /**
+             * filters file that should be indexed.
+             * we only want to index production project files, not test and not library files and no ther file that is
+             * not source file.
+             * It's not easy because the FileBasedIndexExtension does not have a reference to the project, and it's not possible
+             * to use intellij platform utilities because they all require a project. see for example bellow ProjectFileIndex,
+             * ProjectFileIndex has utility methods to check information about a file,but it requires the project reference.
+             * we have a trick here that we capture the project reference in computeValue, and then we can use ProjectFileIndex.
+             * but usually it's very late in the indexing process because acceptInput will be called for many files before
+             * the first call to getInputFilter, and we may index some unnecessary files by then.
+             * another trick we use is calling LanguageService.isInSourceContent(file), it's a static method that will search
+             * for a static method called isFileInSourceContent in each LanguageService. if this static method exists it can
+             * test if a file is in source content. for example JavaLanguageService has a utility class JavaFileElementType
+             * that can test if a file is in source without requiring a project reference.
+             *
+             * @param file the file to filter
+             * @return true if the file should be included in the index
+             */
             @Override
             public boolean acceptInput(@NotNull VirtualFile file) {
 
+                //filter out some well known files like package-info.java and MavenWrapperDownloader.java
                 if (namesToExclude.contains(file.getName())) {
                     return false;
                 }
@@ -66,20 +86,21 @@ public class DocumentInfoIndex extends SingleEntryFileBasedIndexExtension<Docume
                 // files, test files , interfaces ,enums ,annotations.
                 // java language service will build an empty DocumentInfo for those types so it will not occupy too much
                 // disk space.
-                // when those types are opened they will be ignored by, see EditorEventsHandler.
-                //the way the indexing works is that is will call acceptInput for many files before it calls the
+                // when those types are opened they will be ignored, see EditorEventsHandler.
+                //the way the indexing works is that it will call acceptInput for many files before it calls the
                 // computeValue for the first time. and only the first invocation of computeValue we can capture a
                 // reference to the project.
                 if (DocumentInfoIndex.this.project != null) {
-                    ProjectFileIndex.getInstance(project).getModuleForFile(file);
                     boolean isInSourceContent = ProjectFileIndex.getInstance(project).isInSourceContent(file);
                     boolean isInTestSourceContent = ProjectFileIndex.getInstance(project).isInTestSourceContent(file);
+                    boolean isExcluded = ProjectFileIndex.getInstance(project).isExcluded(file);
                     boolean hasModule = ProjectFileIndex.getInstance(project).getModuleForFile(file) != null;
 
-                    return hasModule && isInSourceContent && !isInTestSourceContent;
+                    return hasModule && isInSourceContent && !isInTestSourceContent && !isExcluded;
 
                 } else {
-                    return file.isWritable();
+                    //LanguageService.isInSourceContent will call JavaFileElementType.isInSourceContent for java files
+                    return file.isWritable() && LanguageService.isInSourceContent(file);
                 }
             }
         };
@@ -100,7 +121,8 @@ public class DocumentInfoIndex extends SingleEntryFileBasedIndexExtension<Docume
                 FileType fileType = (FileType) clazz.getDeclaredField("FILE_TYPE").get(null);
                 fileTypes.add(fileType);
 
-            } catch (Exception e) {
+            } catch (Throwable e) {
+                //catch Throwable because there may be errors
                 //ignore: some classes will fail to load , for example the CSharpLanguageService
                 //will fail to load if it's not rider because it depends on rider classes.
                 //and some will not have FILE_TYPE field
@@ -126,7 +148,7 @@ public class DocumentInfoIndex extends SingleEntryFileBasedIndexExtension<Docume
                 PsiFile psiFile = inputData.getPsiFile();
                 Project theProject = inputData.getProject();
                 //todo: maybe return null for non relevant files like tests and library sources
-                //initialize the project when first time in this method
+                //capture the project reference when this method is invoked first time
                 DocumentInfoIndex.this.project = theProject;
                 DocumentInfoIndexBuilder documentInfoIndexBuilder = theProject.getService(DocumentInfoIndexBuilder.class);
                 return documentInfoIndexBuilder.build(psiFile);

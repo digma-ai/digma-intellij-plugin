@@ -12,6 +12,7 @@ import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.java.stubs.index.JavaFullClassNameIndex;
+import com.intellij.psi.impl.source.JavaFileElementType;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import kotlin.Pair;
@@ -23,6 +24,7 @@ import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.digma.intellij.plugin.psi.LanguageService;
+import org.digma.intellij.plugin.psi.NonSupportedFileException;
 import org.digma.intellij.plugin.psi.PsiUtils;
 import org.digma.intellij.plugin.ui.CaretContextService;
 import org.jetbrains.annotations.NotNull;
@@ -50,7 +52,23 @@ public class JavaLanguageService implements LanguageService {
     }
 
 
-    public static String createJavaMethodCodeObjectId(PsiMethod method) {
+    /**
+     * a utility method to test if a java file is in source content. this method don't need a reference to a project.
+     * It is used by reflection in LanguageService#isInSourceContent.
+     * This method must be implemented accurately, it should only return a result if it can handle the file type,
+     * otherwise it must throw a NonSupportedFileException.
+     */
+    @SuppressWarnings("unused")
+    public static boolean isFileInSourceContent(@NotNull VirtualFile file) throws NonSupportedFileException {
+        if (file.getFileType().equals(FILE_TYPE)) {
+            return JavaFileElementType.isInSourceContent(file);
+        } else {
+            throw new NonSupportedFileException("file " + file.getName() + " is not a java file");
+        }
+    }
+
+
+    public String createJavaMethodCodeObjectId(PsiMethod method) {
 
         //usually these should be not null for java. but the PSI api declares them as null so we must check.
         // they can be null for groovy/kotlin

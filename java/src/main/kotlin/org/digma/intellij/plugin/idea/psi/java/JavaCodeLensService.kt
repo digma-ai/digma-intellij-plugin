@@ -48,7 +48,7 @@ class JavaCodeLensService(private val project: Project): Disposable {
         documentInfoChangedConnection.subscribe(DocumentInfoChanged.DOCUMENT_INFO_CHANGED_TOPIC, DocumentInfoChanged {
             ApplicationManager.getApplication().runReadAction {
                 codeLensCache.remove(it)
-                DaemonCodeAnalyzer.getInstance(project).restart(it);
+                DaemonCodeAnalyzer.getInstance(project).restart(it)
             }
         })
     }
@@ -183,7 +183,7 @@ class JavaCodeLensService(private val project: Project): Disposable {
                 val file = fileEditor.file
                 val psiFile = PsiManager.getInstance(project).findFile(file)
                 if (psiFile != null) {
-                    DaemonCodeAnalyzer.getInstance(project).restart(psiFile);
+                    DaemonCodeAnalyzer.getInstance(project).restart(psiFile)
                 }
             }
         }

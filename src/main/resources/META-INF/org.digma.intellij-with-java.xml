@@ -6,6 +6,13 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaLanguageService"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService"/>
+
+        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.idea.psi.java.JavaCodeVisionProvider$ErrorHotspot"/>
+        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.idea.psi.java.JavaCodeVisionProvider$HighUsage"/>
+        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.idea.psi.java.JavaCodeVisionProvider$LowUsage"/>
+
     </extensions>
 
 

@@ -90,7 +90,7 @@ public class DocumentInfoIndex extends SingleEntryFileBasedIndexExtension<Docume
                 //the way the indexing works is that it will call acceptInput for many files before it calls the
                 // computeValue for the first time. and only the first invocation of computeValue we can capture a
                 // reference to the project.
-                if (DocumentInfoIndex.this.project != null) {
+                if (DocumentInfoIndex.this.project != null && !DocumentInfoIndex.this.project.isDisposed()) {
                     boolean isInSourceContent = ProjectFileIndex.getInstance(project).isInSourceContent(file);
                     boolean isInTestSourceContent = ProjectFileIndex.getInstance(project).isInTestSourceContent(file);
                     boolean isExcluded = ProjectFileIndex.getInstance(project).isExcluded(file);
@@ -147,6 +147,9 @@ public class DocumentInfoIndex extends SingleEntryFileBasedIndexExtension<Docume
 
                 PsiFile psiFile = inputData.getPsiFile();
                 Project theProject = inputData.getProject();
+                if (theProject.isDisposed()){
+                    return null;
+                }
                 //todo: maybe return null for non relevant files like tests and library sources
                 //capture the project reference when this method is invoked first time
                 DocumentInfoIndex.this.project = theProject;

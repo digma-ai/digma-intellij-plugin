@@ -78,7 +78,8 @@ class DocumentChangeListener {
             public void documentChanged(@NotNull DocumentEvent event) {
 
                 documentChangeAlarm.cancelAllRequests();
-                documentChangeAlarm.addRequest(() -> processDocumentChanged(editor, psiFile, languageService), 300);
+                documentChangeAlarm.addRequest(() ->
+                        processDocumentChanged(editor, psiFile, languageService), 300);
 
             }
         }, parentDisposable);

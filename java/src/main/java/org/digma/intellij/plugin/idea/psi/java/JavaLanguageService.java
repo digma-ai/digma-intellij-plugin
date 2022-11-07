@@ -68,7 +68,7 @@ public class JavaLanguageService implements LanguageService {
     }
 
 
-    public String createJavaMethodCodeObjectId(PsiMethod method) {
+    public static String createJavaMethodCodeObjectId(PsiMethod method) {
 
         //usually these should be not null for java. but the PSI api declares them as null so we must check.
         // they can be null for groovy/kotlin
@@ -184,7 +184,7 @@ public class JavaLanguageService implements LanguageService {
                 psiMethod.navigate(true);
             } else if (psiMethod != null) {
                 //it's a fallback. sometimes the psiMethod.canNavigateToSource is false and really the
-                //navigation doesn't work. i can't say why. usually it happens when indexxing is not ready yet,
+                //navigation doesn't work. i can't say why. usually it happens when indexing is not ready yet,
                 // and the user opens files, selects tabs or moves the caret. then when indexing is finished
                 // we have the list of methods but then psiMethod.navigate doesn't work.
                 // navigation to source using the editor does work in these circumstances.
@@ -293,6 +293,8 @@ public class JavaLanguageService implements LanguageService {
                 }
             }
         });
+
+        JavaCodeLensService.getInstance(project).environmentChanged(newEnv);
     }
 
 

@@ -40,7 +40,6 @@ public class CodeLensProvider {
         DocumentInfoContainer documentInfo = documentInfoService.getDocumentInfo(psiFile);
         if (documentInfo == null) {
             Log.log(LOGGER::debug, "Can't find DocumentInfo for {}", psiFile.getVirtualFile());
-            NotificationUtil.showNotification(project,"Could not find document info for code lens, will be refreshed soon");
             return new ArrayList<>();
         }
 

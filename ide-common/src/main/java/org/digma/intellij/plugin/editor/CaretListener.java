@@ -35,6 +35,11 @@ class CaretListener {
     private final LanguageServiceLocator languageServiceLocator;
     private final Alarm caretEventAlarm;
 
+    /*
+    keep the latest method under caret that was fired. it helps us to not call contextChange if the caret is on the same
+    method as before.
+     */
+    private MethodUnderCaret latestMethodUnderCaret;
 
     /**
      * CaretListener registers CaretListeners on editors, those listeners need to be removed from
@@ -123,6 +128,11 @@ class CaretListener {
     private void updateCurrentContext(int caretOffset, PsiFile psiFile) {
         LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
         MethodUnderCaret methodUnderCaret = languageService.detectMethodUnderCaret(project, psiFile, caretOffset);
+        //don't call contextChange if the caret is still on the same method
+        if (methodUnderCaret.equals(latestMethodUnderCaret) ){
+            return;
+        }
+        latestMethodUnderCaret = methodUnderCaret;
         caretContextService.contextChanged(methodUnderCaret);
     }
 

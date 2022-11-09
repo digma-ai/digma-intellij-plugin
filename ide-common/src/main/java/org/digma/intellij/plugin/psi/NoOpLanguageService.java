@@ -34,6 +34,7 @@ public class NoOpLanguageService implements LanguageService {
     }
 
     @Override
+    @NotNull
     public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, int caretOffset) {
         return MethodUnderCaret.getEMPTY();
     }

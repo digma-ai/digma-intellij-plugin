@@ -145,6 +145,7 @@ public interface LanguageService {
 
     boolean isSupportedFile(Project project, PsiFile psiFile);
 
+    @NotNull
     MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, int caretOffset);
 
 

@@ -39,6 +39,7 @@ public class PythonLanguageService implements LanguageService {
     }
 
     @Override
+    @NotNull
     public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, int caretOffset) {
         PsiElement underCaret = findElementUnderCaret(project, psiFile, caretOffset);
         PyFunction psiMethod = PsiTreeUtil.getParentOfType(underCaret, PyFunction.class);

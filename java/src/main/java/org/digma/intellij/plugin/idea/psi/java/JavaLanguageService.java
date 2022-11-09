@@ -121,6 +121,7 @@ public class JavaLanguageService implements LanguageService {
     }
 
     @Override
+    @NotNull
     public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, int caretOffset) {
         PsiElement underCaret = findElementUnderCaret(project, psiFile, caretOffset);
         if (underCaret == null) {
@@ -332,7 +333,7 @@ public class JavaLanguageService implements LanguageService {
 
             //don't collect methods for those types. if the file contains only those types then methodInfoMap
             //will be empty
-            if (aClass.isInterface() || aClass.isAnnotationType() || aClass.isEnum() || aClass.isRecord()) {
+            if (aClass.isAnnotationType() || aClass.isEnum() || aClass.isRecord()) {
                 continue;
             }
 
@@ -397,11 +398,9 @@ public class JavaLanguageService implements LanguageService {
         if (withSpanClass != null) {
             Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(withSpanClass, GlobalSearchScope.fileScope(psiFile));
             psiMethods.filtering(psiMethod -> {
-                //todo: ask Arik, do we want to support methods on interfaces?
-                // there is WithSpan on interfaces
                 var aClass = psiMethod.getContainingClass();
-
-                if (aClass.isInterface() || aClass.isAnnotationType() || aClass.isEnum() || aClass.isRecord()) {
+                if (aClass != null &&
+                        (aClass.isAnnotationType() || aClass.isEnum() || aClass.isRecord())) {
                     return false;
                 }
                 return true;

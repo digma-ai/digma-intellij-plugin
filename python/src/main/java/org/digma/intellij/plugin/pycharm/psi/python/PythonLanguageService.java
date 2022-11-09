@@ -87,4 +87,9 @@ public class PythonLanguageService implements LanguageService {
     public boolean isIntellijPlatformPluginLanguage() {
         return true;
     }
+
+    @Override
+    public void enrichDocumentInfo(DocumentInfo documentInfo, PsiFile psiFile) {
+        //TBD
+    }
 }

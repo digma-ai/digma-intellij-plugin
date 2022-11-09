@@ -4,9 +4,11 @@ import com.intellij.ide.highlighter.JavaFileType;
 import com.intellij.lang.Language;
 import com.intellij.lang.java.JavaLanguage;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileTypes.FileType;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -14,7 +16,10 @@ import com.intellij.psi.*;
 import com.intellij.psi.impl.java.stubs.index.JavaFullClassNameIndex;
 import com.intellij.psi.impl.source.JavaFileElementType;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.Query;
+import com.intellij.util.concurrency.NonUrgentExecutor;
 import kotlin.Pair;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.index.DocumentInfoIndex;
@@ -31,6 +36,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.concurrent.Callable;
+
+import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.*;
 
 public class JavaLanguageService implements LanguageService {
 
@@ -39,6 +47,7 @@ public class JavaLanguageService implements LanguageService {
     //used to find languages that should be indexed.
     // (used with reflection so intellij can't find usages and reports the field is not used)
     public static final FileType FILE_TYPE = JavaFileType.INSTANCE;
+
     private final Project project;
 
     private final DocumentInfoService documentInfoService;
@@ -68,28 +77,8 @@ public class JavaLanguageService implements LanguageService {
     }
 
 
-    public static String createJavaMethodCodeObjectId(PsiMethod method) {
 
-        //usually these should be not null for java. but the PSI api declares them as null so we must check.
-        // they can be null for groovy/kotlin
-        if (method.getContainingClass() == null || method.getContainingClass().getQualifiedName() == null) {
-            return method.getName();
-        }
 
-        var packageName = ((PsiJavaFile) method.getContainingFile()).getPackageName();
-
-        var className = "";
-        try {
-            className = method.getContainingClass().getQualifiedName().substring(packageName.length() + 1).replace('.', '$');
-        } catch (NullPointerException e) {
-            //there should not be a NPE for java method because in java a method must have a containing class.
-            // It's only to satisfy intellij warnings.
-            //the methods getContainingClass and getQualifiedName may return null, but it can only happen
-            //for other jvm languages like scala/groovy/kotlin
-        }
-
-        return packageName + "." + className + "$_$" + method.getName();
-    }
 
 
     @Override
@@ -351,24 +340,102 @@ public class JavaLanguageService implements LanguageService {
             for (PsiMethod method : methods) {
                 String id = createJavaMethodCodeObjectId(method);
                 String name = method.getName();
-                String containingClass = aClass.getQualifiedName();
+                String containingClassName = aClass.getQualifiedName();
+                @SuppressWarnings("UnnecessaryLocalVariable")
                 String containingNamespace = packageName;
+                @SuppressWarnings("UnnecessaryLocalVariable")
                 String containingFileUri = fileUri;
                 int offsetAtFileUri = method.getTextOffset();
                 List<SpanInfo> spans = new ArrayList<>();
-                MethodInfo methodInfo = new MethodInfo(id, name, containingClass, containingNamespace, containingFileUri, offsetAtFileUri, spans);
+                Objects.requireNonNull(containingClassName,"a class in java must have a qualified name");
+                MethodInfo methodInfo = new MethodInfo(id, name, containingClassName, containingNamespace, containingFileUri, offsetAtFileUri, spans);
                 methodInfoMap.put(id, methodInfo);
             }
 
             collectMethods(fileUri, aClass.getInnerClasses(), packageName, methodInfoMap);
         }
-
     }
+
+
+    @Override
+    public void enrichDocumentInfo(@NotNull DocumentInfo documentInfo,@NotNull PsiFile psiFile) {
+
+        /*
+        This method is called after loading the DocumentInfo from DocumentInfoIndex, and it is meant to
+        enrich the DocumentInfo with discovery that can not be done in file based index or dumb mode.
+        for example span discovery does not work in dumb mode, it must be done in smart mode.
+        it may happen that this method is called in dumb mode when files are re-opened on project startup.
+        in that case the code must wait for smart mode before trying to do span discovery and then do it in the
+        background.
+        if it's called in smart mode then span discovery will happen on the current thread blocking until its finished.
+
+        //todo: if documents are opened in dumb mode it may be that they don't have span infos in time because span discovery
+        // waits for smart mode,and thus no span insights.
+        // to fix it add a startup activity dumb aware that will call contextChange on the selected editor
+
+         */
+        if(DumbService.getInstance(project).isDumb()){
+            ReadAction.nonBlocking((Callable<Void>) () -> {
+                spanDiscovery(psiFile,documentInfo);
+                return null;
+            }).inSmartMode(project).submit(NonUrgentExecutor.getInstance());
+        }else{
+            ReadAction.run(() -> spanDiscovery(psiFile,documentInfo));
+        }
+    }
+
+
+
+    private void spanDiscovery(PsiFile psiFile, DocumentInfo documentInfo) {
+        withSpanAnnotationDiscovery(psiFile,documentInfo);
+        //todo other span discovery
+    }
+
+    private void withSpanAnnotationDiscovery(PsiFile psiFile, DocumentInfo documentInfo) {
+        PsiClass withSpanClass =  JavaPsiFacade.getInstance(project).findClass(WITH_SPAN_FQN,GlobalSearchScope.allScope(project));
+        //maybe the annotation is not in the classpath
+        if (withSpanClass != null) {
+            Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(withSpanClass, GlobalSearchScope.fileScope(psiFile));
+            psiMethods.filtering(psiMethod -> {
+                //todo: ask Arik, do we want to support methods on interfaces?
+                // there is WithSpan on interfaces
+                var aClass = psiMethod.getContainingClass();
+
+                if (aClass.isInterface() || aClass.isAnnotationType() || aClass.isEnum() || aClass.isRecord()) {
+                    return false;
+                }
+                return true;
+
+            }).forEach(psiMethod -> {
+                var methodId = createJavaMethodCodeObjectId(psiMethod);
+                var withSpanAnnotation = psiMethod.getAnnotation(WITH_SPAN_FQN);
+                var containingClass = psiMethod.getContainingClass();
+
+                //withSpanAnnotation and containingClass must not be null because we found this annotation in a search.
+                // and a method in java must have a containing class. (psiMethod.getContainingClass may return null because
+                // it supports groovy and kotlin)
+                Objects.requireNonNull(withSpanAnnotation,"withSpanAnnotation must not be null here");
+                Objects.requireNonNull(containingClass,"containingClass must not be null here");
+
+                var spanName = createWithSpanAnnotationSpanName(psiMethod, withSpanAnnotation, containingClass);
+                var spanId = createWithSpanAnnotationCodeObjectId(psiMethod, withSpanAnnotation, containingClass);
+
+                SpanInfo spanInfo = new SpanInfo(spanId, spanName, psiMethod.getName(), PsiUtils.psiFileToUri(psiFile));
+
+                //the document must contain this method, or we have a bug
+                documentInfo.getMethods().get(methodId).getSpans().add(spanInfo);
+            });
+        }
+    }
+
 
 
     @Override
     public boolean isIntellijPlatformPluginLanguage() {
         return true;
     }
+
+
+
 
 }

@@ -118,17 +118,20 @@ class DocumentChangeListener {
 
             MethodUnderCaret methodUnderCaret = languageService.detectMethodUnderCaret(project, psiFile, editor.getCaretModel().getOffset());
 
-            update(psiFile, documentInfo, methodUnderCaret);
+            update(languageService,psiFile, documentInfo, methodUnderCaret);
 
         });
     }
 
 
-    private void update(@NotNull PsiFile psiFile, DocumentInfo documentInfo, MethodUnderCaret methodUnderCaret) {
+    private void update(@NotNull LanguageService languageService, @NotNull PsiFile psiFile, DocumentInfo documentInfo, MethodUnderCaret methodUnderCaret) {
         Backgroundable.ensureBackground(project, "Document changed", () -> {
             //documentInfoService will update the discovery code objects, refresh backend data and call some event
             //so that code lens will be installed.
             //contextChanged will update the UI and must run after documentInfoService.addCodeObjects is finished
+            //enrichDocumentInfo is meant mainly to discover spans. the DocumentInfoIndex can
+            // not discover spans because there is no reference resolving during file based index.
+            languageService.enrichDocumentInfo(documentInfo,psiFile);
             documentInfoService.addCodeObjects(psiFile, documentInfo);
             caretContextService.contextChanged(methodUnderCaret);
         });

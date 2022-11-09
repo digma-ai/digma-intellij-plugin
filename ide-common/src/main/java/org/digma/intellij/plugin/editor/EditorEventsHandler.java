@@ -126,6 +126,9 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                         //so that code lens will be installed.
                         //if it's a new file that was opened then contextChanged must run after
                         // documentInfoService.addCodeObjects is finished
+                        //enrichDocumentInfo is meant mainly to discover spans. the DocumentInfoIndex can
+                        // not discover spans because there is no reference resolving during file based index.
+                        languageService.enrichDocumentInfo(documentInfo,psiFile);
                         documentInfoService.addCodeObjects(psiFile, documentInfo);
                         caretContextService.contextChanged(methodUnderCaret);
                     });

@@ -77,4 +77,9 @@ public class NoOpLanguageService implements LanguageService {
     public boolean isIntellijPlatformPluginLanguage() {
         return false;
     }
+
+    @Override
+    public void enrichDocumentInfo(DocumentInfo documentInfo, PsiFile psiFile) {
+
+    }
 }

@@ -44,6 +44,10 @@ public class DocumentInfoService {
     }
 
 
+    public static DocumentInfoService getInstance(Project project){
+        return project.getService(DocumentInfoService.class);
+    }
+
     public Set<PsiFile> allKeys() {
         return documents.keySet();
     }
@@ -59,10 +63,16 @@ public class DocumentInfoService {
 
         //refresh all backend data.
         //must run in background
+        refreshAll();
+    }
+
+
+    public void refreshAll(){
         documents.forEach((psiFile, container) -> {
             container.refresh();
         });
     }
+
 
     public void notifyDocumentInfoChanged(PsiFile psiFile) {
         Log.log(LOGGER::debug, "Notifying DocumentInfo changed for {}",psiFile.getVirtualFile());

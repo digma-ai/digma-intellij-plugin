@@ -119,4 +119,9 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     public boolean isIntellijPlatformPluginLanguage() {
         return false;
     }
+
+    @Override
+    public void enrichDocumentInfo(DocumentInfo documentInfo, PsiFile psiFile) {
+        //there is nothing to do here for C#
+    }
 }

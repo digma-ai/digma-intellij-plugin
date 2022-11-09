@@ -25,6 +25,11 @@ public class LanguageServiceLocator {
         documentInfoService = project.getService(DocumentInfoService.class);
     }
 
+    public static LanguageServiceLocator getInstance(Project project){
+        return project.getService(LanguageServiceLocator.class);
+    }
+
+
     @SuppressWarnings("unchecked")
     @NotNull
     public LanguageService locate(@NotNull Language language) {

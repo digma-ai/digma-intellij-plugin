@@ -161,7 +161,7 @@ class JavaCodeLensService(private val project: Project): Disposable {
             val traverser = SyntaxTraverser.psiTraverser(psiFile)
             for (element in traverser) {
                 if (element is PsiMethod) {
-                    val codeObjectId = JavaLanguageService.createJavaMethodCodeObjectId(element)
+                    val codeObjectId = JavaLanguageUtils.createJavaMethodCodeObjectId(element)
                     if (ids.contains(codeObjectId)) {
                         val textRange = InlayHintsUtils.getTextRangeWithoutLeadingCommentsAndWhitespaces(element)
                         methods[codeObjectId] = Pair(textRange,element)

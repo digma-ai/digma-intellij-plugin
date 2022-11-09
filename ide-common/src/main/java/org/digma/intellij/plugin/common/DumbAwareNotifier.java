@@ -32,6 +32,7 @@ public class DumbAwareNotifier {
     }
 }
 
+//todo: ask Asaf: should probably not be DumbAware
 class DumbAwareStartupActivity implements com.intellij.openapi.startup.StartupActivity.DumbAware {
 
     @Override

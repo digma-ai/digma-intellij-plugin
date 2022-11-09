@@ -191,4 +191,12 @@ public interface LanguageService {
      * @return true if this is an intellij platform event.
      */
     boolean isIntellijPlatformPluginLanguage();
+
+    /**
+     * enrichDocumentInfo is meant to add more data to document info, data that can not be calculated during file based
+     * index. mainly span discovery.
+     * @param documentInfo the document info to enrich
+     * @param psiFile the psi file
+     */
+    void enrichDocumentInfo(DocumentInfo documentInfo, PsiFile psiFile);
 }

@@ -4,10 +4,10 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
+import org.digma.intellij.plugin.document.CodeObjectsUtil;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationChangeInsight;
-import org.digma.intellij.plugin.model.rest.insights.SpanInfo;
 import org.digma.intellij.plugin.model.rest.usage.EnvironmentUsageStatus;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
@@ -17,7 +17,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.digma.intellij.plugin.insights.view.SlowestSpansHelper.findWorkspaceUrisForSpans;
+import static org.digma.intellij.plugin.insights.view.WorkspaceUrisHelper.findWorkspaceUrisForSpans;
 
 public class SummariesProvider {
 
@@ -71,8 +71,7 @@ public class SummariesProvider {
                     @SuppressWarnings("OptionalGetWithoutIsPresent")//no need ,it only happens if getSpanDurationChanges is not empty
                     SpanDurationChangeInsight.Change change = ((SpanDurationChangeInsight) insight).getSpanDurationChanges().stream().findAny().get();
                     var methodId = change.getCodeObjectId();
-                    List<SpanInfo> spanInfos = ((SpanDurationChangeInsight) insight).getSpanDurationChanges().stream().map(SpanDurationChangeInsight.Change::getSpan).collect(Collectors.toList());
-                    findWorkspaceUrisForSpans(project, item, spanInfos, methodId);
+                    findWorkspaceUrisForSpans(project, item, getSpanIds((SpanDurationChangeInsight) insight), methodId);
                 }
             }
 
@@ -81,4 +80,11 @@ public class SummariesProvider {
 
         return items;
     }
+
+    private List<String> getSpanIds(SpanDurationChangeInsight insight) {
+        return insight.getSpanDurationChanges().stream()
+                .map(it -> CodeObjectsUtil.createSpanId(it.getSpan().getInstrumentationLibrary(), it.getSpan().getName()))
+                .collect(Collectors.toList());
+    }
+
 }

@@ -1,30 +1,19 @@
 package org.digma.intellij.plugin.insights.view;
 
 import com.intellij.openapi.project.Project;
-import org.digma.intellij.plugin.document.CodeObjectsUtil;
-import org.digma.intellij.plugin.model.rest.insights.SpanInfo;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.List;
 
-public class SlowestSpansHelper {
+public class WorkspaceUrisHelper {
 
-    private SlowestSpansHelper() {
+    private WorkspaceUrisHelper() {
     }
 
-    public static void findWorkspaceUrisForSpans(Project project, ListViewItem<?> theListView, @NotNull List<SpanInfo> spanInfos, @Nullable String methodCodeObjectId) {
-
-        var spanIds = new ArrayList<String>();
-
-        spanInfos.forEach(spanInfo -> {
-            var spanId = CodeObjectsUtil.createSpanId(spanInfo.getInstrumentationLibrary(), spanInfo.getName());
-            spanIds.add(spanId);
-        });
-
+    public static void findWorkspaceUrisForSpans(Project project, ListViewItem<?> theListView, @NotNull List<String> spanIds, @Nullable String methodCodeObjectId) {
         //when this method is called there is not always a related file.
         //if called while building SlowestSpansInsight then there is a method id and the related file is probably opened
         //and DocumentInfoService should find the method info and by that the language.

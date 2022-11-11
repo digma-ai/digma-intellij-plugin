@@ -1,10 +1,8 @@
 package org.digma.intellij.plugin.insights.view;
 
 import com.intellij.openapi.project.Project;
-import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
-import org.digma.intellij.plugin.model.rest.insights.SlowSpanInfo;
-import org.digma.intellij.plugin.model.rest.insights.SlowestSpansInsight;
-import org.digma.intellij.plugin.model.rest.insights.SpanInfo;
+import org.digma.intellij.plugin.document.CodeObjectsUtil;
+import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupListViewItem;
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupType;
 import org.digma.intellij.plugin.ui.model.insights.InsightListViewItem;
@@ -37,8 +35,11 @@ public class GroupListViewItemBuilder<T extends CodeObjectInsight> implements Li
 
         switch (insight.getType()){
             case SlowestSpans:{
-                List<SpanInfo> spanInfos = ((SlowestSpansInsight) insight).getSpans().stream().map(SlowSpanInfo::getSpanInfo).collect(Collectors.toList());
-                SlowestSpansHelper.findWorkspaceUrisForSpans(project, theListView, spanInfos, insight.getCodeObjectId());
+                WorkspaceUrisHelper.findWorkspaceUrisForSpans(project, theListView, getSpanIds((SlowestSpansInsight) insight), insight.getCodeObjectId());
+                break;
+            }
+            case SpanDurationBreakdown:{
+                WorkspaceUrisHelper.findWorkspaceUrisForSpans(project,theListView, getSpanIds((SpanDurationBreakdownInsight) insight), insight.getCodeObjectId());
                 break;
             }
         }
@@ -48,7 +49,17 @@ public class GroupListViewItemBuilder<T extends CodeObjectInsight> implements Li
         return List.of();
     }
 
+    private List<String> getSpanIds(SlowestSpansInsight insight) {
+       return insight.getSpans().stream()
+                .map(it -> CodeObjectsUtil.createSpanId(it.getSpanInfo().getInstrumentationLibrary(), it.getSpanInfo().getName()))
+                .collect(Collectors.toList());
+    }
 
-
+    private List<String> getSpanIds(SpanDurationBreakdownInsight insight) {
+        return insight.getBreakdownEntries()
+                .stream().map(durationBreakdown ->
+                        CodeObjectsUtil.createSpanId(durationBreakdown.getSpanInstrumentationLibrary(), durationBreakdown.getSpanName()))
+                .collect(Collectors.toList());
+    }
 
 }

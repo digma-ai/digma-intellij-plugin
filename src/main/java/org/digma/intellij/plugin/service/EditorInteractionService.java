@@ -87,6 +87,10 @@ public class EditorInteractionService implements CaretContextService, Disposable
     @Override
     public void contextChanged(MethodUnderCaret methodUnderCaret) {
 
+        if (project.isDisposed()){
+            return;
+        }
+
         //There is no need to execute the contextChanged flow if there is no connection to the backend.
         // so testConnectionToBackend will detect a backend connection error , call contextEmptyNoConnection once
         // to clean the views, and will return. and will keep blocking until the connection is regained.

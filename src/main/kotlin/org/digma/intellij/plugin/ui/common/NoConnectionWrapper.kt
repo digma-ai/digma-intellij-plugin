@@ -93,6 +93,11 @@ class NoConnectionWrapper(private val project: Project, private val panel: Digma
     }
 
     override fun getPreferredFocusableComponent(): JComponent {
+
+        if (project.isDisposed){
+            return this;
+        }
+
         val backendConnectionMonitor = project.getService(BackendConnectionMonitor::class.java)
         return if (backendConnectionMonitor.isConnectionError()) {
             this

@@ -8,8 +8,8 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.testFramework.BinaryLightVirtualFile;
 import org.digma.intellij.plugin.document.DocumentInfoService;
-import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.rider.protocol.CodeObjectHost;
+import org.digma.intellij.plugin.rider.psi.csharp.CSharpLanguageService;
 import org.jetbrains.annotations.NotNull;
 
 public class RiderFileClosedListener implements FileEditorManagerListener {
@@ -17,14 +17,14 @@ public class RiderFileClosedListener implements FileEditorManagerListener {
     private final Project project;
     private final CodeObjectHost codeObjectHost;
     private final DocumentInfoService documentInfoService;
-    private final LanguageService cSharpLanguageService;
+    private final CSharpLanguageService cSharpLanguageService;
 
 
     public RiderFileClosedListener(Project project) {
         this.project = project;
         this.codeObjectHost = project.getService(CodeObjectHost.class);
         this.documentInfoService = project.getService(DocumentInfoService.class);
-        this.cSharpLanguageService = project.getService(LanguageService.class);
+        this.cSharpLanguageService = project.getService(CSharpLanguageService.class);
     }
 
     @Override
@@ -44,5 +44,6 @@ public class RiderFileClosedListener implements FileEditorManagerListener {
             documentInfoService.removeDocumentInfo(psiFile);
             codeObjectHost.removeDocument(psiFile);
         }
+
     }
 }

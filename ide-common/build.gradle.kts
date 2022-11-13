@@ -16,6 +16,7 @@ dependencies {
     api(libs.prettytime)
     api(libs.threeten)
     api(libs.commons.lang3)
+    api(libs.commons.collections4)
 
     implementation(project(":model"))
     implementation(project(":analytics-provider"))

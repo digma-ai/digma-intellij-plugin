@@ -6,12 +6,20 @@ data class MethodInfo(
     override val id: String, // CodeObjectId (without type (prefix of 'method:'))
     val name: String,
     val containingClass: String,
-    val containingNamespace: String,
+    val containingNamespace: String, //namespace for c# is namespace, for java its the package
     val containingFileUri: String,
     val offsetAtFileUri: Int,
     val spans: List<SpanInfo>
 ) : CodeObjectInfo {
 
+    companion object {
+        fun removeType(objectId: String): String {
+            if (objectId.startsWith("method:")) {
+                return objectId.substringAfter("method:", objectId)
+            }
+            return objectId
+        }
+    }
 
     fun getRelatedCodeObjectIds(): List<String> {
         return spans.stream().map(SpanInfo::idWithType).collect(Collectors.toList())
@@ -21,7 +29,7 @@ data class MethodInfo(
         return "method:$id"
     }
 
-    fun nameWithParams():String{
+    fun nameWithParams(): String {
         return name + getParamsPartFromId()
     }
 
@@ -32,4 +40,6 @@ data class MethodInfo(
         }
         return ""
     }
+
+
 }

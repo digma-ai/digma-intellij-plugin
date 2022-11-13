@@ -2,19 +2,29 @@ package org.digma.intellij.plugin.analytics
 
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
+import com.intellij.util.messages.MessageBusConnection
 
+/**
+ * This service keeps track of the analytics service connection status. it is used to decide when to show the
+ * no connection message in the plugin window.
+ * see also class NoConnectionWrapper
+ */
 class BackendConnectionMonitor(val project: Project) : Disposable, AnalyticsServiceConnectionEvent {
 
-    private var hasConnectionError = false;
+    private var hasConnectionError = false
 
+    private val analyticsConnectionEventsConnection: MessageBusConnection = project.messageBus.connect()
 
     init {
-        project.messageBus.connect(this)
-            .subscribe(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, this)
+        analyticsConnectionEventsConnection.subscribe(
+            AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC,
+            this
+        )
     }
 
     override fun dispose() {
-        hasConnectionError = false;
+        analyticsConnectionEventsConnection.dispose()
+        hasConnectionError = false
     }
 
     fun isConnectionError(): Boolean {
@@ -25,12 +35,12 @@ class BackendConnectionMonitor(val project: Project) : Disposable, AnalyticsServ
         return !hasConnectionError
     }
 
-    fun connectionError() {
+    private fun connectionError() {
         hasConnectionError = true
     }
 
-    fun connectionOk() {
-        hasConnectionError = false;
+    private fun connectionOk() {
+        hasConnectionError = false
     }
 
     override fun connectionLost() {

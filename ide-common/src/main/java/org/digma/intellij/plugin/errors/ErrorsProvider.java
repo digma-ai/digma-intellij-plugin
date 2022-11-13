@@ -13,13 +13,9 @@ import org.digma.intellij.plugin.model.rest.errordetails.Frame;
 import org.digma.intellij.plugin.model.rest.errordetails.FrameStack;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
-import org.digma.intellij.plugin.project.ProjectService;
-import org.digma.intellij.plugin.ui.model.errors.ErrorDetailsModel;
-import org.digma.intellij.plugin.ui.model.errors.FlowStacks;
-import org.digma.intellij.plugin.ui.model.errors.FrameItem;
-import org.digma.intellij.plugin.ui.model.errors.FrameListViewItem;
-import org.digma.intellij.plugin.ui.model.errors.FrameStackTitle;
-import org.digma.intellij.plugin.ui.model.errors.SpanTitle;
+import org.digma.intellij.plugin.psi.LanguageService;
+import org.digma.intellij.plugin.psi.LanguageServiceLocator;
+import org.digma.intellij.plugin.ui.model.errors.*;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
 import org.jetbrains.annotations.NotNull;
 
@@ -36,13 +32,15 @@ public class ErrorsProvider {
 
     private final AnalyticsService analyticsService;
     private final DocumentInfoService documentInfoService;
-    private final ProjectService projectService;
+    private final LanguageServiceLocator languageServiceLocator;
+    private final Project project;
 
 
     public ErrorsProvider(@NotNull Project project) {
+        this.project = project;
         analyticsService = project.getService(AnalyticsService.class);
         documentInfoService = project.getService(DocumentInfoService.class);
-        projectService = project.getService(ProjectService.class);
+        languageServiceLocator = project.getService(LanguageServiceLocator.class);
     }
 
     public ErrorsListContainer getErrors(@NotNull MethodInfo methodInfo) {
@@ -77,30 +75,41 @@ public class ErrorsProvider {
     public ErrorDetailsModel getErrorDetails(@NotNull String uid) {
         try {
             var errorDetails = analyticsService.getErrorDetails(uid);
-            var methodInfo = documentInfoService.findMethodInfo(errorDetails.getSourceCodeObjectId());
+            var methodCodeObjectId = MethodInfo.Companion.removeType(errorDetails.getSourceCodeObjectId());
+
+            //we need to find a languageService for this error.
+            //getErrorDetails may be called from few places.
+            //when clicked in errors insight then the document is probably opened and DocumentInfoService has the MethodInfo
+            //and the language.
+            //when clicked in summary view the document may or may not be opened in the editor
+            // and DocumentInfoService will not have the MethodInfo.
+            var languageService = LanguageService.findLanguageServiceByMethodCodeObjectId(project, methodCodeObjectId);
+
+            var methodInfo = documentInfoService.findMethodInfo(methodCodeObjectId);
+
             var model = new ErrorDetailsModel();
             model.setDelegate(errorDetails);
             model.setMethodInfo(methodInfo);
-            model.setFlowStacks(buildFlowStacks(errorDetails));
+            model.setFlowStacks(buildFlowStacks(errorDetails, languageService));
             return model;
         } catch (AnalyticsServiceException e) {
             return new ErrorDetailsModel();
         }
     }
 
-    private FlowStacks buildFlowStacks(CodeObjectErrorDetails errorDetails) {
+    private FlowStacks buildFlowStacks(CodeObjectErrorDetails errorDetails, LanguageService languageService) {
 
         FlowStacks flowStacks = new FlowStacks();
         errorDetails.getErrors().forEach(detailedErrorInfo ->
-                flowStacks.getStacks().add(buildFlowStack(detailedErrorInfo)));
+                flowStacks.getStacks().add(buildFlowStack(detailedErrorInfo, languageService)));
 
         flowStacks.setCurrent(0);
         return flowStacks;
     }
 
-    private List<ListViewItem<FrameListViewItem>> buildFlowStack(DetailedErrorInfo detailedErrorInfo) {
+    private List<ListViewItem<FrameListViewItem>> buildFlowStack(DetailedErrorInfo detailedErrorInfo, LanguageService languageService) {
 
-        Map<String,String> workspaceUris = findWorkspaceUriForFrames(detailedErrorInfo);
+        Map<String, String> workspaceUris = findWorkspaceUriForFrames(detailedErrorInfo, languageService);
 
         var viewItems = new ArrayList<ListViewItem<FrameListViewItem>>();
         var index = 0;
@@ -135,45 +144,14 @@ public class ErrorsProvider {
     }
 
 
-    ///do debug cal this method after the first iteration on etailedErrorInfo.getFrameStacks()
-    ///duplicateFrameStacksForDev(detailedErrorInfo, workspaceUris, viewItems, index);
-//    private void duplicateFrameStacksForDev(DetailedErrorInfo detailedErrorInfo, Map<String, String> workspaceUris, ArrayList<ListViewItem<FrameListViewItem>> viewItems, int index) {
-//        for (FrameStack frameStack : detailedErrorInfo.getFrameStacks()) {
-//
-//            var frameStackTitle = new FrameStackTitle(frameStack);
-//            var frameStackViewItem = new ListViewItem<FrameListViewItem>(frameStackTitle, index++);
-//            viewItems.add(frameStackViewItem);
-//
-//            boolean first = true;
-//            String currentSpan = null;
-//            for (Frame frame : frameStack.getFrames()) {
-//
-//                if (currentSpan == null || !currentSpan.equals(frame.getSpanName())){
-//                    currentSpan = frame.getSpanName();
-//                    var spanTitle = new SpanTitle(currentSpan);
-//                    var spanTitleViewItem = new ListViewItem<FrameListViewItem>(spanTitle, index++);
-//                    viewItems.add(spanTitleViewItem);
-//                }
-//
-//                var workspaceUri = workspaceUris.getOrDefault(frame.getCodeObjectId(),null);
-//                var frameItem = new FrameItem(frameStack,frame,first,workspaceUri, detailedErrorInfo.getLastInstanceCommitId());
-//                first = false;
-//
-//                var frameViewItem = new ListViewItem<FrameListViewItem>(frameItem, index++);
-//                viewItems.add(frameViewItem);
-//
-//            }
-//        }
-//    }
-
-    private Map<String, String> findWorkspaceUriForFrames(DetailedErrorInfo detailedErrorInfo) {
+    private Map<String, String> findWorkspaceUriForFrames(DetailedErrorInfo detailedErrorInfo, LanguageService languageService) {
 
         List<String> codeObjectIds = detailedErrorInfo.getFrameStacks().stream().
-                    flatMap((Function<FrameStack, Stream<String>>) frameStack -> frameStack.getFrames().stream().
-                            map(Frame::getCodeObjectId)).collect(Collectors.toList());
+                flatMap((Function<FrameStack, Stream<String>>) frameStack -> frameStack.getFrames().stream().
+                        map(Frame::getCodeObjectId)).collect(Collectors.toList());
 
 
-        return projectService.findWorkspaceUrisForCodeObjectIds(codeObjectIds);
+        return languageService.findWorkspaceUrisForCodeObjectIds(codeObjectIds);
 
     }
 }

@@ -34,6 +34,9 @@ version = project.semanticVersion.version.get()
 
 repositories {
     mavenCentral()
+// jetbrains artifacts repositories
+//    maven("https://www.jetbrains.com/intellij-repository/releases")
+//    maven("https://cache-redirector.jetbrains.com/intellij-dependencies")
 }
 
 configurations {

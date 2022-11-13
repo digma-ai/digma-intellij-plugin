@@ -10,11 +10,19 @@ data class MethodUnderCaret(
     override val isSupportedFile: Boolean = true,
 ): ElementUnderCaret {
 
-    constructor(id: String,
-                name:String,
-                className: String,
-                fileUri: String) : this(id,name,className,fileUri,true) {
+    constructor(
+        id: String,
+        name: String,
+        className: String,
+        fileUri: String
+    ) : this(id, name, className, fileUri, true) {
 
+    }
+
+
+    companion object {
+        @JvmStatic
+        val EMPTY = MethodUnderCaret("", "", "", "", false)
     }
 
     override val type: ElementUnderCaretType = ElementUnderCaretType.Method

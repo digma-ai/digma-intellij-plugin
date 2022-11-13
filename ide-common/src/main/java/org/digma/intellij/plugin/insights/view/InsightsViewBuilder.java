@@ -22,6 +22,7 @@ public class InsightsViewBuilder extends ListViewBuilder {
         this.buildersHolder = Objects.requireNonNull(buildersHolder, "buildersHolder must not be null");
     }
 
+    @SuppressWarnings("unchecked")
     @NotNull
     public List<ListViewItem<?>> build(Project project, @NotNull MethodInfo scope, List<? extends CodeObjectInsight> codeObjectInsights) {
 

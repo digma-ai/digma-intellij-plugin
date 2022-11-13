@@ -4,9 +4,12 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
+import com.intellij.util.Alarm
+import com.intellij.util.AlarmFactory
 import com.intellij.util.containers.stream
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.WrapLayout
+import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
 import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.common.CommonUtils.prettyTimeOf
@@ -34,12 +37,15 @@ class EnvironmentsPanel(
     private val environmentsSupplier: EnvironmentsSupplier, // assuming its a singleton
 ) : DigmaResettablePanel() {
 
+    private val changeEnvAlarm: Alarm
+
     init {
+        changeEnvAlarm = AlarmFactory.getInstance().create()
         isOpaque = false
         layout = WrapLayout(FlowLayout.LEFT, 2, 2)
         rebuild()
 
-        project.messageBus.connect(project)
+        project.messageBus.connect(project.getService(AnalyticsService::class.java))
             .subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, object : EnvironmentChanged {
                 //there are few instances of EnvironmentsPanel, if a button is clicked in the insights tab the selected button
                 //need to change also in the errors tab, and vice versa.
@@ -161,6 +167,7 @@ class EnvironmentsPanel(
             envLink.toolTipText = toolTip
 
             envLink.addActionListener() { event ->
+
                 val currentSelected: EnvLink? = getSelected()
 
                 if (currentSelected === event.source) {
@@ -171,7 +178,12 @@ class EnvironmentsPanel(
 
                 val clickedLink: EnvLink = event.source as EnvLink
                 clickedLink.select { buildLinkText(it, true) }
-                environmentsSupplier.setCurrent(clickedLink.env)
+
+                changeEnvAlarm.cancelAllRequests()
+                changeEnvAlarm.addRequest({
+                    environmentsSupplier.setCurrent(clickedLink.env)
+                }, 100)
+
             }
 
             val icon: Icon =

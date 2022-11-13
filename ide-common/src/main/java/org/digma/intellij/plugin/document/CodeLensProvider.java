@@ -9,6 +9,7 @@ import org.digma.intellij.plugin.model.lens.CodeLens;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.EndpointCodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.MethodCodeObjectSummary;
+import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -22,24 +23,48 @@ public class CodeLensProvider {
     private final Project project;
 
     public CodeLensProvider(Project project) {
-        documentInfoService = project.getService(DocumentInfoService.class);
         this.project = project;
+        documentInfoService = project.getService(DocumentInfoService.class);
     }
 
 
-    public List<CodeLens> provideCodeLens(@NotNull PsiFile psiFile){
-
-        Log.log(LOGGER::debug, "Got request for code lens for {}",psiFile.getVirtualFile());
-
-        List<CodeLens> codeLensList = new ArrayList<>();
+    /*
+    JavaCodeLensService may call for code lens before the document info is available.
+    it may happen because the daemon may run before we process the editor selectionChange event.
+    in that case we don't want to report an error. the daemon will run again after we process
+     the editor selectionChange event and then document info will be available
+     */
+    public List<CodeLens> provideCodeLensNoError(@NotNull PsiFile psiFile){
+        Log.log(LOGGER::debug, "Got request for code lens for {}", psiFile.getVirtualFile());
 
         DocumentInfoContainer documentInfo = documentInfoService.getDocumentInfo(psiFile);
-        if (documentInfo == null){
-            Log.log(LOGGER::error, "Can't find DocumentInfo for {}",psiFile.getVirtualFile());
+        if (documentInfo == null) {
+            Log.log(LOGGER::debug, "Can't find DocumentInfo for {}", psiFile.getVirtualFile());
             return new ArrayList<>();
         }
 
+        return buildCodeLens(psiFile,documentInfo);
+    }
+
+
+    public List<CodeLens> provideCodeLens(@NotNull PsiFile psiFile) {
+
+        Log.log(LOGGER::debug, "Got request for code lens for {}", psiFile.getVirtualFile());
+
+        DocumentInfoContainer documentInfo = documentInfoService.getDocumentInfo(psiFile);
+        if (documentInfo == null) {
+            Log.log(LOGGER::error, "Can't find DocumentInfo for {}", psiFile.getVirtualFile());
+            return new ArrayList<>();
+        }
+
+        return buildCodeLens(psiFile,documentInfo);
+    }
+
+    private List<CodeLens> buildCodeLens(@NotNull PsiFile psiFile,@NotNull DocumentInfoContainer documentInfo) {
+
         Log.log(LOGGER::debug, "Got DocumentInfo for {}: {}",psiFile.getVirtualFile(),documentInfo.getDocumentInfo());
+
+        List<CodeLens> codeLensList = new ArrayList<>();
 
         List<CodeObjectSummary> summaries = documentInfo.getAllSummaries();
 

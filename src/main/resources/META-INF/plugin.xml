@@ -11,22 +11,16 @@
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.vcs</depends>
 
-    <!--    <depends-->
-    <!--            optional="true"-->
-    <!--            config-file="org.digma.intellij-with-pycharm.xml">com.intellij.modules.python-->
-    <!--    </depends>-->
-    <!--    <depends-->
-    <!--            optional="true"-->
-    <!--            config-file="org.digma.intellij-with-idea.xml">com.intellij.modules.java-->
-<!--    </depends>-->
-    <depends
-            optional="true"
-            config-file="org.digma.intellij-with-rider.xml">com.intellij.modules.rider
-    </depends>
+
+
+    <depends optional="true" config-file="org.digma.intellij-with-python.xml">com.intellij.modules.python</depends>
+    <depends optional="true" config-file="org.digma.intellij-with-java.xml">com.intellij.modules.java</depends>
+    <depends optional="true" config-file="org.digma.intellij-with-rider.xml">com.intellij.modules.rider</depends>
 
 
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow id="Digma" secondary="true" icon="org.digma.intellij.plugin.icons.AppIcons.TOOL_WINDOW" anchor="left"
+        <toolWindow id="Digma" secondary="true" icon="org.digma.intellij.plugin.icons.AppIcons.TOOL_WINDOW"
+                    anchor="left"
                     factoryClass="org.digma.intellij.plugin.toolwindow.DigmaToolWindowFactory"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.ToolWindowShower"/>
@@ -66,6 +60,9 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.analytics.BackendConnectionMonitor"/>
 
+        <projectService serviceImplementation="org.digma.intellij.plugin.psi.LanguageServiceLocator"/>
+
+
         <notificationGroup id="Digma Notification Group"
                            displayType="BALLOON"
                            toolWindowId="Digma"/>
@@ -94,6 +91,9 @@
         <listener
                 class="org.digma.intellij.plugin.project.ProjectOpenedListener"
                 topic="com.intellij.openapi.project.ProjectManagerListener"/>
+        <listener
+                class="org.digma.intellij.plugin.emvironment.EnvironmentChangeHandler"
+                topic="org.digma.intellij.plugin.analytics.EnvironmentChanged"/>
     </projectListeners>
 
 

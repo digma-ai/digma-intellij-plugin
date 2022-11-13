@@ -2,15 +2,12 @@ package org.digma.intellij.plugin.service;
 
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.progress.ProgressIndicator;
-import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
-import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor;
+import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.document.DocumentInfoContainer;
 import org.digma.intellij.plugin.document.DocumentInfoService;
-import org.digma.intellij.plugin.editor.EditorEventsHandler;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
@@ -19,11 +16,8 @@ import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
 import org.digma.intellij.plugin.ui.service.SummaryViewService;
-import org.jetbrains.annotations.NotNull;
 
-import javax.swing.*;
 import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
 
 /**
  * A service to implement the interactions between listeners and UI components.
@@ -33,7 +27,7 @@ public class EditorInteractionService implements CaretContextService, Disposable
 
     private final Logger LOGGER = Logger.getInstance(EditorInteractionService.class);
 
-    private ProgressIndicator runningTask;
+//    private ProgressIndicator runningTask;
 
     private final Project project;
 
@@ -101,29 +95,35 @@ public class EditorInteractionService implements CaretContextService, Disposable
         }
 
 
-        if (runningTask != null) {
-            runningTask.cancel();
-        }
+//        if (runningTask != null) {
+//            runningTask.cancel();
+//        }
 
-        var stopWatch = StopWatch.createStarted();
+//        var stopWatch = StopWatch.createStarted();
 
-        if (SwingUtilities.isEventDispatchThread()) {
-
+        Backgroundable.ensureBackground(project, "Digma: Context change", () -> {
             Log.log(LOGGER::debug, "Executing contextChanged in background for {}", methodUnderCaret.getId());
-            new Task.Backgroundable(project, "Digma: Context change...") {
-                @Override
-                public void run(@NotNull ProgressIndicator indicator) {
-                    runningTask = indicator;
-                    contextChangedImpl(methodUnderCaret);
-                }
-            }.queue();
-        } else {
-            Log.log(LOGGER::debug, "Executing contextChanged in current thread for {}", methodUnderCaret.getId());
             contextChangedImpl(methodUnderCaret);
-        }
+        });
 
-        stopWatch.stop();
-        Log.log(LOGGER::debug, "contextChanged took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS));
+//        if (SwingUtilities.isEventDispatchThread()) {
+//
+//            Log.log(LOGGER::debug, "Executing contextChanged in background for {}", methodUnderCaret.getId());
+//            new Task.Backgroundable(project, "Digma: Context change...") {
+//                @Override
+//                public void run(@NotNull ProgressIndicator indicator) {
+//                    runningTask = indicator;
+//                    contextChangedImpl(methodUnderCaret);
+//                }
+//            }.queue();
+//
+//        } else {
+//            Log.log(LOGGER::debug, "Executing contextChanged in current thread for {}", methodUnderCaret.getId());
+//            contextChangedImpl(methodUnderCaret);
+//        }
+
+//        stopWatch.stop();
+//        Log.log(LOGGER::debug, "contextChanged took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS));
     }
 
     private void contextChangedImpl(MethodUnderCaret methodUnderCaret) {
@@ -208,13 +208,6 @@ public class EditorInteractionService implements CaretContextService, Disposable
     @Override
     public void dispose() {
         Log.log(LOGGER::debug, "disposing..");
-    }
-
-
-    public void start() {
-        Log.log(LOGGER::info, "Starting...");
-        EditorEventsHandler editorEventsHandler = project.getService(EditorEventsHandler.class);
-        editorEventsHandler.start(project);
     }
 
 }

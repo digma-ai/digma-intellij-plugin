@@ -38,7 +38,7 @@ public class GroupListViewItemBuilder<T extends CodeObjectInsight> implements Li
         switch (insight.getType()){
             case SlowestSpans:{
                 List<SpanInfo> spanInfos = ((SlowestSpansInsight) insight).getSpans().stream().map(SlowSpanInfo::getSpanInfo).collect(Collectors.toList());
-                SlowestSpansHelper.findWorkspaceUrisForSpans(project,theListView, spanInfos);
+                SlowestSpansHelper.findWorkspaceUrisForSpans(project, theListView, spanInfos, insight.getCodeObjectId());
                 break;
             }
         }

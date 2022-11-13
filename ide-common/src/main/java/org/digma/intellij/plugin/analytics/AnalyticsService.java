@@ -3,11 +3,10 @@ package org.digma.intellij.plugin.analytics;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.progress.ProgressIndicator;
-import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
 import org.apache.commons.lang3.time.StopWatch;
+import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
@@ -26,7 +25,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.net.ssl.SSLException;
-import javax.swing.*;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InterruptedIOException;
@@ -68,7 +66,8 @@ public class AnalyticsService implements Disposable {
         this.project = project;
         myApiUrl = settingsState.apiUrl;
         myApiToken = settingsState.apiToken;
-        replaceClientAndFireChange(myApiUrl, myApiToken);
+        replaceClient(myApiUrl, myApiToken);
+        initializeEnvironmentsList();
         settingsState.addChangeListener(state -> {
             if (!Objects.equals(state.apiUrl, myApiUrl)) {
                 myApiUrl = state.apiUrl;
@@ -105,32 +104,27 @@ public class AnalyticsService implements Disposable {
     }
 
 
+    private void initializeEnvironmentsList() {
+        List<String> envs = getEnvironments();
+        if (envs == null) {
+            envs = new ArrayList<>();
+        }
+
+        environment.replaceEnvironmentsList(envs);
+    }
+
+
     private void replaceClientAndFireChange(String url, String token) {
 
-        replaceClient(url, token);
-
-        var r = new Runnable() {
-            @Override
-            public void run() {
-                List<String> envs = getEnvironments();
-                if (envs == null) {
-                    envs = new ArrayList<>();
-                }
-
-                environment.replaceEnvironmentsList(envs);
+        Backgroundable.ensureBackground(project, "Digma: Environments list changed", () -> {
+            replaceClient(url, token);
+            List<String> envs = getEnvironments();
+            if (envs == null) {
+                envs = new ArrayList<>();
             }
-        };
 
-        if (SwingUtilities.isEventDispatchThread()) {
-            new Task.Backgroundable(project, "Digma: Environments list changed...") {
-                @Override
-                public void run(@NotNull ProgressIndicator indicator) {
-                    r.run();
-                }
-            }.queue();
-        } else {
-            r.run();
-        }
+            environment.replaceEnvironmentsListAndFireChange(envs);
+        });
 
     }
 
@@ -147,7 +141,11 @@ public class AnalyticsService implements Disposable {
 
     private String getCurrentEnvironment() throws AnalyticsServiceException {
         String currentEnv = environment.getCurrent();
-        if (currentEnv == null || currentEnv.isEmpty()){
+        //todo: we probably don't need to refresh environments here
+//        if (currentEnv == null || currentEnv.isEmpty()){
+//            environment.refreshEnvironments();
+//        }
+        if (currentEnv == null || currentEnv.isEmpty()) {
             throw new AnalyticsServiceException("No selected environment");
         }
         return currentEnv;
@@ -316,7 +314,7 @@ public class AnalyticsService implements Disposable {
                 } else if (!status.hadError(e)) {
                     status.error();
                     var message = getExceptionMessage(e);
-                    Log.log(LOGGER::warn, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
+                    Log.log(LOGGER::warn, "New Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
                     LOGGER.warn(e);
                 }
 
@@ -327,7 +325,7 @@ public class AnalyticsService implements Disposable {
 
                 throw new AnalyticsServiceException(e);
 
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 status.error();
                 Log.log(LOGGER::debug, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getMessage());
                 LOGGER.error(e);

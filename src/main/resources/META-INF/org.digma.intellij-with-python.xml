@@ -1,0 +1,11 @@
+<idea-plugin>
+
+
+    <depends config-file="org.digma.intellij-with-intellij-platform.xml">com.intellij.modules.python</depends>
+
+
+    <extensions defaultExtensionNs="com.intellij">
+        <projectService serviceImplementation="org.digma.intellij.plugin.pycharm.psi.python.PythonLanguageService"/>
+    </extensions>
+
+</idea-plugin>

@@ -29,10 +29,8 @@ the version alias where ever possible
 dependencyResolutionManagement {
     versionCatalogs {
         create("libs") {
-            //if necessary can be used as libs.versions.intellij.platform.get()
-            version("intellij-platform", "2022.2")
-            //rdgen version is not always the same as platform version
-            version("rider-rdgen", "2022.2.5")
+            //rdgen version is independent of rider version
+            version("rider-rdgen", "2022.2.6")
             //kotlin stdlib is not packaged with the plugin because intellij platform already contains it.
             //it's necessary for compilation in some cases for example rider protocol module.
             //it must target the lowest bundled stdlib version of the platform we support
@@ -49,6 +47,7 @@ dependencyResolutionManagement {
             library("prettytime", "org.ocpsoft.prettytime", "prettytime").version("5.0.3.Final")
             library("threeten", "org.threeten", "threeten-extra").version("1.7.0")
             library("commons-lang3", "org.apache.commons", "commons-lang3").version("3.12.0")
+            library("commons-collections4", "org.apache.commons", "commons-collections4").version("4.4")
         }
     }
 }
@@ -57,4 +56,4 @@ dependencyResolutionManagement {
 rootProject.name = "digma-intellij-plugin"
 include("rider:protocol")
 findProject(":rider:protocol")?.name = "protocol"
-include("model", "analytics-provider", "ide-common", "rider")
+include("model", "analytics-provider", "ide-common", "rider", "python", "java")

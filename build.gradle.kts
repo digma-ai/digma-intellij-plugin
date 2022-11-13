@@ -22,10 +22,8 @@ dependencies{
     implementation(project(":model"))
     implementation(project(":analytics-provider"))
     implementation(project(":ide-common"))
-    //todo: github builds fail for no space on device, we need a solution for that. maybe don't depend on the IDE but only on the
-    // python module?
-//    implementation(project(":idea"))
-//    implementation(project(":pycharm"))
+    implementation(project(":java"))
+    implementation(project(":python"))
     implementation(project(":rider"))
 }
 
@@ -72,8 +70,8 @@ project.afterEvaluate{
     //it can be written with task fqn like buildPlugin.dependsOn(":rider:buildPlugin")
     //but this syntax is not favorite by the gradle developers becasue it will cause eager initialization of the task.
     val buildPlugin = tasks.named("buildPlugin").get()
-//    project(":idea").afterEvaluate{ buildPlugin.dependsOn(tasks.getByName("buildPlugin"))   }
-//    project(":pycharm").afterEvaluate { buildPlugin.dependsOn(tasks.getByName("buildPlugin")) }
+    project(":java").afterEvaluate { buildPlugin.dependsOn(tasks.getByName("buildPlugin")) }
+    project(":python").afterEvaluate { buildPlugin.dependsOn(tasks.getByName("buildPlugin")) }
     project(":rider").afterEvaluate { buildPlugin.dependsOn(tasks.getByName("buildPlugin")) }
 }
 
@@ -164,9 +162,8 @@ tasks {
 
 
     listProductsReleases {
-//        types.set(listOf("RD","IC","PC","IU"))
-        types.set(listOf("RD"))
-        sinceVersion.set("2022.1.*")
+        types.set(listOf("RD","IC","IU"))
+        sinceVersion.set("2022.2")
         untilVersion.set("2022.2.*")
 //        sinceBuild.set("222.3739.36")
 //        untilBuild.set("222.4167.24")

@@ -65,30 +65,19 @@ public class SummariesProvider {
         for (GlobalInsight insight : insights) {
             ListViewItem<GlobalInsight> item = new ListViewItem<>(insight, 1);
             if (insight instanceof SpanDurationChangeInsight) {
-                List<SpanInfo> spanInfos = ((SpanDurationChangeInsight) insight).getSpanDurationChanges().stream().map(SpanDurationChangeInsight.Change::getSpan).collect(Collectors.toList());
-                findWorkspaceUrisForSpans(project, item, spanInfos);
+                //only call findWorkspaceUrisForSpans if there is at least one Change.
+                //take the method code object id from the first one,it is used to discover the language service.
+                if (!((SpanDurationChangeInsight) insight).getSpanDurationChanges().isEmpty()){
+                    @SuppressWarnings("OptionalGetWithoutIsPresent")//no need ,it only happens if getSpanDurationChanges is not empty
+                    SpanDurationChangeInsight.Change change = ((SpanDurationChangeInsight) insight).getSpanDurationChanges().stream().findAny().get();
+                    var methodId = change.getCodeObjectId();
+                    List<SpanInfo> spanInfos = ((SpanDurationChangeInsight) insight).getSpanDurationChanges().stream().map(SpanDurationChangeInsight.Change::getSpan).collect(Collectors.toList());
+                    findWorkspaceUrisForSpans(project, item, spanInfos, methodId);
+                }
             }
+
             items.add(item);
         }
-
-//        insights.forEach(insight -> {
-//            if (insight instanceof TopErrorFlowsInsight) {
-//                GroupListViewItem group = new GroupListViewItem(0, insight.getType().toString());
-//                int index = 0;
-//                ((TopErrorFlowsInsight) insight).getErrors().forEach(error -> {
-//                    group.addItem(new ListViewItem(error, index++));
-//                });
-//                items.add(group);
-//            } else if (insight instanceof SpanDurationChangeInsight) {
-//                GroupListViewItem group = new GroupListViewItem(1, insight.getType().toString());
-//                ((SpanDurationChangeInsight) insight).getSpanDurationChanges().forEach(change -> {
-//                    group.addItem(new ListViewItem(change, 0));
-//                });
-//                items.add(group);
-//            } else {
-//                Log.log(LOGGER::warn, "Unknown global : {}", insight.getType());
-//            }
-//        });
 
         return items;
     }

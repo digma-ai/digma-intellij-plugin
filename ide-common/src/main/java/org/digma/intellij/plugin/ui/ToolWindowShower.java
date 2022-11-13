@@ -4,13 +4,13 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
+import org.digma.intellij.plugin.PluginId;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.ui.service.ToolWindowTabsHelper;
 
 public class ToolWindowShower {
 
     private static final Logger LOGGER = Logger.getInstance(ToolWindowShower.class);
-
 
     private final Project project;
 
@@ -36,7 +36,7 @@ public class ToolWindowShower {
             show(toolWindow);
         }else{
             Log.log(LOGGER::debug, "Don't have reference to tool window, showing with ToolWindowManager..");
-            ToolWindow tw = ToolWindowManager.getInstance(project).getToolWindow("Digma");
+            ToolWindow tw = ToolWindowManager.getInstance(project).getToolWindow(PluginId.TOOL_WINDOW_ID);
             if (tw != null){
                 Log.log(LOGGER::debug, "Got tool window from ToolWindowManager");
                 show(tw);

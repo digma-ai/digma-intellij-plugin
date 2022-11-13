@@ -9,7 +9,6 @@ enum class CodeObjectSummaryType {
     Unmapped
 }
 
-//todo: add to CodeObjectInfo
 enum class CodeObjectType {
     Method, Span, Endpoint
 }

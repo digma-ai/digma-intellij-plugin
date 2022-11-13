@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.document;
 
+import com.intellij.lang.Language;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.PsiFile;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
@@ -25,11 +26,17 @@ import java.util.stream.Stream;
 
 import static org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult;
 
+/**
+ * A container for one document info, it holds the discovery info and the info from the analytics service.
+ */
 public class DocumentInfoContainer {
 
     private final Logger LOGGER = Logger.getInstance(DocumentInfoContainer.class);
 
     private final PsiFile psiFile;
+
+    private final Language language;
+
     private final AnalyticsService analyticsService;
     private DocumentInfo documentInfo;
     private Map<String, MethodCodeObjectSummary> methodSummaries;
@@ -41,8 +48,12 @@ public class DocumentInfoContainer {
     public DocumentInfoContainer(@NotNull PsiFile psiFile, @NotNull AnalyticsService analyticsService) {
         this.psiFile = psiFile;
         this.analyticsService = analyticsService;
+        language = psiFile.getLanguage();
     }
 
+    public Language getLanguage() {
+        return language;
+    }
 
     /**
      * update is invoked every time new code objects are available. usually when a document is opened in
@@ -156,6 +167,7 @@ public class DocumentInfoContainer {
     }
 
 
+    @NotNull
     public List<CodeObjectSummary> getAllSummaries() {
         //this method should not try to reload summaries because it happens too often
         List<CodeObjectSummary> summaries = new ArrayList<>();

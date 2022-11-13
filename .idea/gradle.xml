@@ -4,18 +4,17 @@
   <component name="GradleSettings">
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
-        <option name="delegatedBuild" value="true" />
-        <option name="testRunner" value="GRADLE" />
         <option name="distributionType" value="DEFAULT_WRAPPED" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="gradleJvm" value="17" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/analytics-provider" />
             <option value="$PROJECT_DIR$/buildSrc" />
             <option value="$PROJECT_DIR$/ide-common" />
+            <option value="$PROJECT_DIR$/java" />
             <option value="$PROJECT_DIR$/model" />
+            <option value="$PROJECT_DIR$/python" />
             <option value="$PROJECT_DIR$/rider" />
             <option value="$PROJECT_DIR$/rider/protocol" />
           </set>

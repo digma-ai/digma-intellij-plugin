@@ -21,7 +21,6 @@ import org.digma.intellij.plugin.log.Log;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.net.URL;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -40,20 +39,20 @@ public class VcsService {
         this.project = project;
     }
 
-    public boolean isFileUnderVcs(@NotNull URL workspaceUrl) {
-        var filePath = VcsUtil.getFilePath(workspaceUrl.getPath());
-        if (filePath.getVirtualFile() == null){
+    public boolean isFileUnderVcs(@NotNull VirtualFile workspaceFile) {
+        var filePath = VcsUtil.getFilePath(workspaceFile);
+        if (filePath.getVirtualFile() == null) {
             return false;
         }
         return VcsUtil.isFileUnderVcs(project, filePath);
     }
 
-    public boolean isLocalContentChanged(URL workspaceUrl, String lastInstanceCommitId, int lineNumber) throws VcsException {
-        if (isFileUnderVcs(workspaceUrl) && isRevisionExist(workspaceUrl,lastInstanceCommitId)) {
+    public boolean isLocalContentChanged(@NotNull VirtualFile workspaceFile, String lastInstanceCommitId, int lineNumber) throws VcsException {
+        if (isFileUnderVcs(workspaceFile) && isRevisionExist(workspaceFile, lastInstanceCommitId)) {
             try {
-                return isLocalContentLineChanged(workspaceUrl, lastInstanceCommitId, lineNumber);
-            }catch (VcsException e){
-                Log.log(LOGGER::warn, "Could not find revision {} for {}, {}",lastInstanceCommitId, workspaceUrl,e.getMessage());
+                return isLocalContentLineChanged(workspaceFile, lastInstanceCommitId, lineNumber);
+            } catch (VcsException e) {
+                Log.log(LOGGER::warn, "Could not find revision {} for {}, {}", lastInstanceCommitId, workspaceFile, e.getMessage());
                 throw e;
             }
         }
@@ -62,8 +61,8 @@ public class VcsService {
 
 
     @Nullable
-    public String getShortRevisionString(@NotNull URL workspaceUrl,String lastInstanceCommitId){
-        var revision = getRevisionFor(workspaceUrl,lastInstanceCommitId);
+    public String getShortRevisionString(@NotNull VirtualFile workspaceFile, String lastInstanceCommitId) {
+        var revision = getRevisionFor(workspaceFile, lastInstanceCommitId);
         return revision == null ? null : getShortRevisionString(revision);
     }
 
@@ -78,29 +77,29 @@ public class VcsService {
 
 
     //this method assumes that the file is under vcs and lastInstanceCommitId exists, otherwise there may be error dialogs from the vcs plugin.
-    private boolean isLocalContentLineChanged(URL workspaceUrl, String lastInstanceCommitId, int lineNumber) throws VcsException {
+    private boolean isLocalContentLineChanged(@NotNull VirtualFile workspaceFile, String lastInstanceCommitId, int lineNumber) throws VcsException {
 
         return ProgressManager.getInstance().run(new Task.WithResult<Boolean, VcsException>(project, "Check Local Changes", true) {
             @Override
             protected Boolean compute(@NotNull ProgressIndicator indicator) throws VcsException {
 
-                if (!isFileUnderVcs(workspaceUrl)) {
-                    Log.log(LOGGER::debug, "File {} is not under vcs", workspaceUrl);
+                if (!isFileUnderVcs(workspaceFile)) {
+                    Log.log(LOGGER::debug, "File {} is not under vcs", workspaceFile);
                     return false;
                 }
 
-                if (!isRevisionExist(workspaceUrl,lastInstanceCommitId)) {
-                    Log.log(LOGGER::debug, "Revision {} for File {} was not found",lastInstanceCommitId, workspaceUrl);
+                if (!isRevisionExist(workspaceFile, lastInstanceCommitId)) {
+                    Log.log(LOGGER::debug, "Revision {} for File {} was not found", lastInstanceCommitId, workspaceFile);
                     return false;
                 }
 
-                var filePath = VcsUtil.getFilePath(workspaceUrl.getPath());
+                var filePath = VcsUtil.getFilePath(workspaceFile);
                 var vcs = VcsUtil.getVcsFor(project, filePath);
 
                 //if any of the providers we need is null throw exception
                 if (vcs == null ||
                         vcs.getDiffProvider() == null) {
-                    throw new VcsException("Can not find vcs for file: " + workspaceUrl);
+                    throw new VcsException("Can not find vcs for file: " + workspaceFile);
                 }
 
                 Log.log(LOGGER::debug, "File {} is under vcs, trying to detect changes for revision {}", filePath, lastInstanceCommitId);
@@ -112,7 +111,7 @@ public class VcsService {
                 Log.log(LOGGER::debug, "Required revision for File {} is {}", filePath, requiredRevision);
 
                 if (requiredRevision == null || filePath.getVirtualFile() == null) {
-                    throw new VcsException("Can not find revision " + lastInstanceCommitId + " for file: " + workspaceUrl);
+                    throw new VcsException("Can not find revision " + lastInstanceCommitId + " for file: " + workspaceFile);
                 }
 
                 try {
@@ -182,7 +181,7 @@ public class VcsService {
 
     private String getLine(String text, int lineNumber) {
         try (Stream<String> lines = text.lines()) {
-            return lines.skip(lineNumber - 1).findFirst().orElse(null);
+            return lines.skip((long) lineNumber - 1).findFirst().orElse(null);
         }
     }
 
@@ -202,31 +201,30 @@ public class VcsService {
         return null;
     }
 
-    public @Nullable VirtualFile getRevisionVirtualFile(URL workspaceUrl, String lastInstanceCommitId) throws VcsException {
+    public @Nullable VirtualFile getRevisionVirtualFile(@NotNull VirtualFile workspaceFile, String lastInstanceCommitId) throws VcsException {
 
         return ProgressManager.getInstance().run(new Task.WithResult<VirtualFile, VcsException>(project, "Load Revision Content From VCS", true) {
             @Override
             protected VirtualFile compute(@NotNull ProgressIndicator indicator) throws VcsException {
 
-                if (!isFileUnderVcs(workspaceUrl)) {
-                    Log.log(LOGGER::debug, "File {} is not under vcs", workspaceUrl);
+                if (!isFileUnderVcs(workspaceFile)) {
+                    Log.log(LOGGER::debug, "File {} is not under vcs", workspaceFile);
                     return null;
                 }
 
-                if (!isRevisionExist(workspaceUrl,lastInstanceCommitId)) {
-                    Log.log(LOGGER::debug, "Revision {} for File {} was not found",lastInstanceCommitId, workspaceUrl);
+                if (!isRevisionExist(workspaceFile, lastInstanceCommitId)) {
+                    Log.log(LOGGER::debug, "Revision {} for File {} was not found", lastInstanceCommitId, workspaceFile);
                     return null;
                 }
 
 
-
-                var filePath = VcsUtil.getFilePath(workspaceUrl.getPath());
+                var filePath = VcsUtil.getFilePath(workspaceFile);
                 var vcs = VcsUtil.getVcsFor(project, filePath);
 
                 //if any of the providers we need is null return false coz we don't have a way to check revisions
                 if (vcs == null ||
                         vcs.getDiffProvider() == null) {
-                    throw new VcsException("Can not find vcs for file: " + workspaceUrl);
+                    throw new VcsException("Can not find vcs for file: " + workspaceFile);
                 }
 
                 var requiredRevision = lastInstanceCommitId == null || lastInstanceCommitId.isBlank() ?
@@ -236,7 +234,7 @@ public class VcsService {
                 Log.log(LOGGER::debug, "Required revision for File {} is {}", filePath, requiredRevision);
 
                 if (requiredRevision == null || filePath.getVirtualFile() == null) {
-                    throw new VcsException("Can not find revision " + lastInstanceCommitId + " for file: " + workspaceUrl);
+                    throw new VcsException("Can not find revision " + lastInstanceCommitId + " for file: " + workspaceFile);
                 }
 
 
@@ -285,19 +283,18 @@ public class VcsService {
     }
 
 
-    public boolean isRevisionExist(@NotNull URL workspaceUrl, @Nullable String lastInstanceCommitId) {
-
+    public boolean isRevisionExist(@NotNull VirtualFile workspaceFile, @Nullable String lastInstanceCommitId) {
 
         return ProgressManager.getInstance().run(new Task.WithResult<>(project, "Is Revision Exist", true) {
             @Override
             protected Boolean compute(@NotNull ProgressIndicator indicator) {
                 try {
 
-                    if (!isFileUnderVcs(workspaceUrl)) {
+                    if (!isFileUnderVcs(workspaceFile)) {
                         return false;
                     }
 
-                    var filePath = VcsUtil.getFilePath(workspaceUrl.getPath());
+                    var filePath = VcsUtil.getFilePath(workspaceFile);
                     var vcs = VcsUtil.getVcsFor(project, filePath);
                     if (vcs == null) {
                         return false;
@@ -312,7 +309,7 @@ public class VcsService {
 
                     return vcs.loadRevisions(filePath.getVirtualFile(), requiredRevision) != null;
                 } catch (VcsException e) {
-                    Log.log(LOGGER::warn, "Could not find revision {} for {}, {}", lastInstanceCommitId, workspaceUrl, e.getMessage());
+                    Log.log(LOGGER::warn, "Could not find revision {} for {}, {}", lastInstanceCommitId, workspaceFile, e.getMessage());
                     return false;
                 }
             }
@@ -323,16 +320,16 @@ public class VcsService {
 
 
     @Nullable
-    public VcsRevisionNumber getRevisionFor(@NotNull URL workspaceUrl, String lastInstanceCommitId) {
+    public VcsRevisionNumber getRevisionFor(@NotNull VirtualFile workspaceFile, String lastInstanceCommitId) {
 
         try {
-            if (lastInstanceCommitId != null && isFileUnderVcs(workspaceUrl)) {
-                var filePath = VcsUtil.getFilePath(workspaceUrl.getPath());
+            if (lastInstanceCommitId != null && isFileUnderVcs(workspaceFile)) {
+                var filePath = VcsUtil.getFilePath(workspaceFile);
                 var vcs = VcsUtil.getVcsFor(project, filePath);
                 return vcs != null ? vcs.parseRevisionNumber(lastInstanceCommitId) : null;
             }
-        }catch (Exception e){
-            Log.log(LOGGER::warn, "Could not parse revision {} for {}, {}", lastInstanceCommitId, workspaceUrl, e.getMessage());
+        } catch (Exception e) {
+            Log.log(LOGGER::warn, "Could not parse revision {} for {}, {}", lastInstanceCommitId, workspaceFile, e.getMessage());
         }
         return null;
     }

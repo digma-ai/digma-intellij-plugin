@@ -11,6 +11,7 @@ using JetBrains.Rd;
 using JetBrains.Rd.Tasks;
 using JetBrains.RdBackend.Common.Features;
 using JetBrains.ReSharper.Psi;
+using JetBrains.ReSharper.Psi.Caches;
 using JetBrains.ReSharper.Psi.Files;
 using JetBrains.ReSharper.Resources.Shell;
 using JetBrains.Util;
@@ -34,12 +35,14 @@ namespace Digma.Rider.Protocol
         public CodeObjectsHost(Lifetime lifetime, ISolution solution,
             CodeObjectsCache codeObjectsCache,
             IShellLocks shellLocks,
-            ILogger logger)
+            ILogger logger,
+            IPsiServices psiServices)
         {
             _lifetime = lifetime;
             _codeObjectsCache = codeObjectsCache;
             _shellLocks = shellLocks;
             _logger = logger;
+            var myPsiServices = psiServices;
             _codeObjectsModel = solution.GetProtocolSolution().GetCodeObjectsModel();
 
             
@@ -52,47 +55,31 @@ namespace Digma.Rider.Protocol
             _codeObjectsModel.RefreshIncompleteDocuments.Advise(lifetime, _ => { RefreshAllIncompleteDocuments(); });
 
 
-            _codeObjectsModel.GetWorkspaceUris.Set((_, list) =>
+            _codeObjectsModel.IsCsharpMethod.Set((_, methodCodeObjectId) =>
             {
-                RdTask<List<CodeObjectIdUriPair>> result = new RdTask<List<CodeObjectIdUriPair>>();
-                using (ReadLockCookie.Create())
+                var result = new RdTask<bool>();
+                result.Set(false);
+
+                using (CompilationContextCookie.GetExplicitUniversalContextIfNotSet())
                 {
-                    try
+                    var className = methodCodeObjectId.SubstringBefore("$_$");
+                    var methodName = methodCodeObjectId.SubstringAfter("$_$").SubstringBefore("(");
+                    var symbolScope = myPsiServices.Symbols.GetSymbolScope(LibrarySymbolScope.FULL, false);
+                    var elements = symbolScope.GetTypeElementsByCLRName(className);
+                    foreach (var typeElement in elements)
                     {
-                        var uris = new List<CodeObjectIdUriPair>();
-                        foreach (var document in _codeObjectsCache.Map.Values)
+                        if (typeElement.IsClassLike())
                         {
-                            foreach (var codeObjectId in list)
+                            foreach (var typeElementMethod in typeElement.Methods)
                             {
-                                //if a method found add its document's file uri
-                                //else try to search by class name
-                                if (document.Methods.Keys.Contains(codeObjectId))
+                                if (typeElementMethod.ShortName.Equals(methodName))
                                 {
-                                    uris.Add(new CodeObjectIdUriPair(codeObjectId, document.FileUri));
-                                }
-                                else
-                                {
-                                    var className = codeObjectId.SubstringBefore("$_$").SubstringAfterLast(".");
-                                    foreach (var riderMethodInfo in document.Methods.Values)
-                                    {
-                                        if (riderMethodInfo.ContainingClass.Equals(className))
-                                        {
-                                            //need to find the first method and break
-                                            uris.Add(new CodeObjectIdUriPair(codeObjectId, document.FileUri));
-                                            break;
-                                        }
-                                    }
+                                    result = new RdTask<bool>();
+                                    result.Set(true);
+                                    break;
                                 }
                             }
                         }
-
-                        result.Set(uris);
-                    }
-                    catch (Exception e)
-                    {
-                        //todo: maybe throw an error to notify the frontend ?
-                        _logger.Error(e, "Error searching documents uris");
-                        result.Set(new List<CodeObjectIdUriPair>());
                     }
                 }
 
@@ -100,6 +87,50 @@ namespace Digma.Rider.Protocol
             });
 
 
+            _codeObjectsModel.GetWorkspaceUris.Set((_, methodsCodeObjectIds) =>
+            {
+                
+                var result = new RdTask<List<CodeObjectIdUriPair>>();
+                var uris = new List<CodeObjectIdUriPair>();
+
+                using (CompilationContextCookie.GetExplicitUniversalContextIfNotSet())
+                {
+                    foreach (var methodId in methodsCodeObjectIds)
+                    {
+                        var className = methodId.SubstringBefore("$_$");
+                        var methodName = methodId.SubstringAfter("$_$").SubstringBefore("(");
+                        //LibrarySymbolScope.NONE means we'll find only workspace classes
+                        var symbolScope = myPsiServices.Symbols.GetSymbolScope(LibrarySymbolScope.NONE, false);
+                        var elements = symbolScope.GetTypeElementsByCLRName(className);
+                        foreach (var typeElement in elements)
+                        {
+                            if (typeElement.IsClassLike())
+                            {
+                                foreach (var typeElementMethod in typeElement.Methods)
+                                {
+                                    if (typeElementMethod.ShortName.Equals(methodName))
+                                    {
+                                        if (typeElementMethod.GetSourceFiles().SingleItem != null)
+                                        {
+                                            var fileUri = typeElementMethod.GetSourceFiles().SingleItem.GetLocation().ToUri().ToString();
+                                            uris.Add(new CodeObjectIdUriPair(methodId, fileUri));
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                result.Set(uris);
+                return result;
+            });
+
+
+
+
+            //todo: very bad performance. find a was to query resharper caches or build a cache for that
             _codeObjectsModel.GetSpansWorkspaceUris.Set((_, list) =>
             {
                 RdTask<List<CodeObjectIdUriOffsetTrouple>> result = new RdTask<List<CodeObjectIdUriOffsetTrouple>>();

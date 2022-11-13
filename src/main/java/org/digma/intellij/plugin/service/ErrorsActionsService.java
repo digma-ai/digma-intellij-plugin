@@ -12,8 +12,6 @@ import org.digma.intellij.plugin.ui.service.ToolWindowTabsHelper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.net.URL;
-
 public class ErrorsActionsService implements ContentManagerListener {
 
     private final Project project;
@@ -68,9 +66,9 @@ public class ErrorsActionsService implements ContentManagerListener {
         }
     }
 
-    public void openErrorFrameWorkspaceFile(@Nullable URL workspaceUrl, @Nullable String lastInstanceCommitId, int lineNumber) {
+    public void openErrorFrameWorkspaceFile(@Nullable String workspaceUrl, @Nullable String lastInstanceCommitId, int lineNumber) {
         if (workspaceUrl != null) {
-            editorService.openErrorFrameWorkspaceFileInEditor(workspaceUrl, lastInstanceCommitId,lineNumber);
+            editorService.openErrorFrameWorkspaceFileInEditor(workspaceUrl, lastInstanceCommitId, lineNumber);
         }
     }
 

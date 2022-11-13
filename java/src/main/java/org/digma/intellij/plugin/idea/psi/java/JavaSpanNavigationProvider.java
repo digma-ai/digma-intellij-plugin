@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.idea.psi.java;
 import com.intellij.lang.java.JavaLanguage;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ReadAction;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
@@ -16,6 +17,7 @@ import com.intellij.util.AlarmFactory;
 import com.intellij.util.Query;
 import kotlin.Pair;
 import org.digma.intellij.plugin.common.Backgroundable;
+import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,6 +31,8 @@ import static org.digma.intellij.plugin.idea.psi.java.SpanDiscoveryUtils.filterN
 
 @SuppressWarnings("UnstableApiUsage")
 public class JavaSpanNavigationProvider implements Disposable {
+
+    private static final Logger LOGGER = Logger.getInstance(JavaSpanNavigationProvider.class);
 
     private final Map<String, SpanLocation> spanLocations = new HashMap<>();
 
@@ -127,11 +131,17 @@ public class JavaSpanNavigationProvider implements Disposable {
             return;
         }
 
-        var psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
-        if (psiFile == null || !psiFile.isValid() ||
-                !JavaLanguage.INSTANCE.equals(psiFile.getLanguage())) {
+        try {
+            var psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
+            if (psiFile == null || !psiFile.isValid() ||
+                    !JavaLanguage.INSTANCE.equals(psiFile.getLanguage())) {
+                return;
+            }
+        }catch (Throwable e){
+            Log.log(LOGGER::debug, "could not find psi file for document {}", document);
             return;
         }
+
 
         //simple locking, should not be a problem, there are not so many threads working here.
         //It's only for copying the set when the update operation starts.

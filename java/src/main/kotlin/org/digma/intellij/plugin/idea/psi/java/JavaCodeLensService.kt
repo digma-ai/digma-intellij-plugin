@@ -17,6 +17,7 @@ import com.intellij.util.messages.MessageBusConnection
 import org.digma.intellij.plugin.document.CodeLensProvider
 import org.digma.intellij.plugin.document.DocumentInfoChanged
 import org.digma.intellij.plugin.model.lens.CodeLens
+import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import java.awt.event.MouseEvent
 import java.util.concurrent.ConcurrentHashMap
@@ -26,7 +27,7 @@ class JavaCodeLensService(private val project: Project): Disposable {
 
     private val codeLensProvider: CodeLensProvider = project.getService(CodeLensProvider::class.java)
 
-    private val codeLensCache: MutableMap<PsiFile, CodeLensContainer> = ConcurrentHashMap()
+    private val codeLensCache: MutableMap<String, CodeLensContainer> = ConcurrentHashMap()
 
     private val errorHotspotIcon = IconLoader.findIcon("icons/exclMark.svg", this.javaClass.classLoader)
 
@@ -45,10 +46,10 @@ class JavaCodeLensService(private val project: Project): Disposable {
     }
 
     init {
-        documentInfoChangedConnection.subscribe(DocumentInfoChanged.DOCUMENT_INFO_CHANGED_TOPIC, DocumentInfoChanged {
+        documentInfoChangedConnection.subscribe(DocumentInfoChanged.DOCUMENT_INFO_CHANGED_TOPIC, DocumentInfoChanged {psiFile: PsiFile ->
             ApplicationManager.getApplication().runReadAction {
-                codeLensCache.remove(it)
-                DaemonCodeAnalyzer.getInstance(project).restart(it)
+                codeLensCache.remove(PsiUtils.psiFileToUri(psiFile))
+                DaemonCodeAnalyzer.getInstance(project).restart(psiFile)
             }
         })
     }
@@ -63,27 +64,27 @@ class JavaCodeLensService(private val project: Project): Disposable {
 
 
     fun getErrorHotspotCodeLens(psiFile: PsiFile): List<Pair<TextRange, CodeVisionEntry>> {
-        if (!codeLensCache.containsKey(psiFile)){
+        if (!codeLensCache.containsKey(PsiUtils.psiFileToUri(psiFile))){
             buildCodeLens(psiFile)
         }
 
-        return codeLensCache[psiFile]!!.errorHotspot
+        return codeLensCache[PsiUtils.psiFileToUri(psiFile)]!!.errorHotspot
     }
 
     fun getLowUsageCodeLens(psiFile: PsiFile): List<Pair<TextRange, CodeVisionEntry>> {
-        if (!codeLensCache.containsKey(psiFile)){
+        if (!codeLensCache.containsKey(PsiUtils.psiFileToUri(psiFile))){
             buildCodeLens(psiFile)
         }
 
-        return codeLensCache[psiFile]!!.lowUsage
+        return codeLensCache[PsiUtils.psiFileToUri(psiFile)]!!.lowUsage
     }
 
     fun getHighUsageCodeLens(psiFile: PsiFile): List<Pair<TextRange, CodeVisionEntry>> {
-        if (!codeLensCache.containsKey(psiFile)){
+        if (!codeLensCache.containsKey(PsiUtils.psiFileToUri(psiFile))){
             buildCodeLens(psiFile)
         }
 
-        return codeLensCache[psiFile]!!.highUsage
+        return codeLensCache[PsiUtils.psiFileToUri(psiFile)]!!.highUsage
     }
 
 
@@ -93,7 +94,7 @@ class JavaCodeLensService(private val project: Project): Disposable {
 
         synchronized(psiFile){
 
-            val codeLensContainer = codeLensCache.computeIfAbsent(psiFile) { CodeLensContainer() }
+            val codeLensContainer = codeLensCache.computeIfAbsent(PsiUtils.psiFileToUri(psiFile)) { CodeLensContainer() }
             codeLensContainer.errorHotspot.clear()
             codeLensContainer.highUsage.clear()
             codeLensContainer.lowUsage.clear()

@@ -10,7 +10,6 @@ import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
-import org.digma.intellij.plugin.psi.PsiFileNotFountException;
 import org.digma.intellij.plugin.psi.PsiUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -30,13 +29,20 @@ public class DocumentInfoService {
     private final Project project;
     private final AnalyticsService analyticsService;
 
-    private final Map<PsiFile, DocumentInfoContainer> documents = Collections.synchronizedMap(new HashMap<>());
+    /**
+     * the main map of document infos.
+     * it would be better to use the PsiFile object as key but Psi elements may change while a project is opened,
+     * there are situations where intellij may decide to reparse a psi tree and in that case the psi file may not
+     * be valid anymore, the instance in intellij indexes will change. so we use the file uri as key and always convert
+     * from PsiFile to uri when necessary.
+     */
+    private final Map<String, DocumentInfoContainer> documents = Collections.synchronizedMap(new HashMap<>());
 
     //dominantLanguages keeps track of the most used programming language in the documents. it is used to decide which
     // language service to use when we don't have a method info.
     //using IdentityHashMap here because the key must and will always be different objects. the overhead of hashCode
     //and equals is not necessary here.
-    private final Map<Language, MutableInt> dominantLanguages = new IdentityHashMap<>();
+    private final Map<String, MutableInt> dominantLanguages = new IdentityHashMap<>();
 
     public DocumentInfoService(Project project) {
         this.project = project;
@@ -48,13 +54,13 @@ public class DocumentInfoService {
         return project.getService(DocumentInfoService.class);
     }
 
-    public Set<PsiFile> allKeys() {
+    public Set<String> allKeys() {
         return documents.keySet();
     }
 
 
     public boolean contains(PsiFile psiFile) {
-        return documents.containsKey(psiFile);
+        return documents.containsKey(PsiUtils.psiFileToUri(psiFile));
     }
 
 
@@ -68,13 +74,11 @@ public class DocumentInfoService {
 
 
     public void refreshAll(){
-        documents.forEach((psiFile, container) -> {
-            container.refresh();
-        });
+        documents.forEach((psiFileUri, container) -> container.refresh());
     }
 
     public void refresh(PsiFile psiFile) {
-        DocumentInfoContainer documentInfoContainer = documents.get(psiFile);
+        DocumentInfoContainer documentInfoContainer = documents.get(PsiUtils.psiFileToUri(psiFile));
         documentInfoContainer.refresh();
     }
 
@@ -90,31 +94,25 @@ public class DocumentInfoService {
     //called after a document is analyzed for code objects
     public void addCodeObjects(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
         Log.log(LOGGER::debug, "Adding DocumentInfo for {},{}",psiFile.getVirtualFile(),documentInfo);
-        DocumentInfoContainer documentInfoContainer = documents.computeIfAbsent(psiFile, file -> new DocumentInfoContainer(file, analyticsService));
+        DocumentInfoContainer documentInfoContainer = documents.computeIfAbsent(PsiUtils.psiFileToUri(psiFile), file -> new DocumentInfoContainer(psiFile, analyticsService));
         documentInfoContainer.update(documentInfo);
-        dominantLanguages.computeIfAbsent(documentInfoContainer.getLanguage(), key -> new MutableInt(0)).increment();
+        dominantLanguages.computeIfAbsent(documentInfoContainer.getLanguage().getID(), key -> new MutableInt(0)).increment();
         notifyDocumentInfoChanged(psiFile);
     }
 
     public void removeDocumentInfo(@NotNull PsiFile psiFile) {
         Log.log(LOGGER::debug, "Removing document for PsiFile {}", psiFile.getVirtualFile());
-        documents.remove(psiFile);
+        documents.remove(PsiUtils.psiFileToUri(psiFile));
     }
 
     @Nullable
     public DocumentInfoContainer getDocumentInfo(PsiFile psiFile) {
-        return documents.get(psiFile);
+        return documents.get(PsiUtils.psiFileToUri(psiFile));
     }
 
     @Nullable
     public DocumentInfoContainer getDocumentInfo(MethodUnderCaret methodUnderCaret) {
-        try {
-            PsiFile psiFile = PsiUtils.uriToPsiFile(methodUnderCaret.getFileUri(), project);
-            return getDocumentInfo(psiFile);
-        } catch (PsiFileNotFountException e) {
-            Log.log(LOGGER::error, "Could not locate psi file for uri {}", methodUnderCaret.getFileUri());
-            return null;
-        }
+        return documents.get(methodUnderCaret.getFileUri());
     }
 
 
@@ -123,14 +121,8 @@ public class DocumentInfoService {
      */
     @Nullable
     public MethodInfo getMethodInfo(MethodUnderCaret methodUnderCaret) {
-        try {
-            PsiFile psiFile = PsiUtils.uriToPsiFile(methodUnderCaret.getFileUri(), project);
-            DocumentInfoContainer documentInfoContainer = documents.get(psiFile);
+            DocumentInfoContainer documentInfoContainer = documents.get(methodUnderCaret.getFileUri());
             return documentInfoContainer == null ? null : documentInfoContainer.getMethodInfo(methodUnderCaret.getId());
-        } catch (PsiFileNotFountException e) {
-            Log.log(LOGGER::error, "Could not locate psi file for uri {}", methodUnderCaret.getFileUri());
-            return null;
-        }
     }
 
     public MethodInfo findMethodInfo(String sourceCodeObjectId) {
@@ -144,7 +136,7 @@ public class DocumentInfoService {
     public PsiFile findPsiFileByMethodId(String methodCodeObjectId) {
         return this.documents.values().stream().
                 filter(documentInfoContainer -> documentInfoContainer.getDocumentInfo().getMethods().containsKey(methodCodeObjectId)).
-                findAny().map(documentInfoContainer -> documentInfoContainer.getPsiFile()).
+                findAny().map(DocumentInfoContainer::getPsiFile).
                 orElse(null);
     }
 
@@ -161,6 +153,7 @@ public class DocumentInfoService {
         throw new RuntimeException("could not find language by method id " + codeObjectId);
     }
 
+
     /**
      * getDominantLanguage should be used only if there is no better way to find the language of some code object.
      * it will return something only after at least one document was already opened. if no document was opened yet
@@ -171,10 +164,10 @@ public class DocumentInfoService {
     @Nullable
     public Language getDominantLanguage() {
 
-        Language language = null;
+        String language = null;
         int max = 0;
-        for (Map.Entry<Language, MutableInt> entry : dominantLanguages.entrySet()) {
-            Language lang = entry.getKey();
+        for (Map.Entry<String, MutableInt> entry : dominantLanguages.entrySet()) {
+            String lang = entry.getKey();
             MutableInt mutableInt = entry.getValue();
             if (mutableInt.intValue() > max) {
                 max = mutableInt.intValue();
@@ -182,7 +175,7 @@ public class DocumentInfoService {
             }
         }
 
-        return language;
+        return language != null ? Language.findLanguageByID(language) : null;
     }
 
 }

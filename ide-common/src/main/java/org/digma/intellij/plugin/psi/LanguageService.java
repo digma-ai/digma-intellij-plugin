@@ -42,7 +42,7 @@ public interface LanguageService {
     static LanguageService findLanguageServiceByMethodCodeObjectId(@NotNull Project project, @Nullable String methodCodeObjectId) {
 
         //first try to find a methodInfo, it will exist in documentInfoService if the document is opened in the editor.
-        //it's the easiest way because from documentInfoService has the information of which language this MethodInfo is.
+        //it's the easiest way because documentInfoService has the information of which language this MethodInfo is.
         //if the document is not opened MethodInfo will be null.
         //if getErrorDetails is called from error insight then the document is opened for sure and MethodInfo will be found.
         MethodInfo methodInfo = null;

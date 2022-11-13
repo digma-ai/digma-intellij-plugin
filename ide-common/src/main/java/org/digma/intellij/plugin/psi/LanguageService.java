@@ -82,6 +82,7 @@ public interface LanguageService extends Disposable {
         return project.getService(LanguageServiceLocator.class).locate(language);
     }
 
+    @SuppressWarnings("unchecked")
     @Nullable
     static Language findLanguageByMethodCodeObjectId(@NotNull Project project, @NotNull String methodId) {
 

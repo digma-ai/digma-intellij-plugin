@@ -6,7 +6,6 @@ import com.intellij.openapi.fileEditor.impl.HTMLEditorProvider
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
-import com.intellij.util.containers.isNullOrEmpty
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight
@@ -42,6 +41,7 @@ import javax.swing.JPanel
 import javax.swing.SwingConstants
 import kotlin.math.abs
 import kotlin.math.max
+import kotlin.collections.isNullOrEmpty
 
 class SpanPanels {
 

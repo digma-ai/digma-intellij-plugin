@@ -88,6 +88,12 @@ class DocumentChangeListener {
 
     private void processDocumentChanged(@NotNull Editor editor, @NotNull PsiFile psiFile, @NotNull LanguageService languageService) {
 
+        if (project.isDisposed()){
+            return;
+        }
+
+
+
         PsiDocumentManager.getInstance(project).performLaterWhenAllCommitted(() -> {
             DocumentInfo documentInfo;
             try {

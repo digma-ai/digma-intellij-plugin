@@ -174,7 +174,6 @@ public class DocumentInfoIndex extends SingleEntryFileBasedIndexExtension<Docume
                     IOUtil.writeString(methodInfo.getContainingFileUri(), out);
                     IOUtil.writeString(methodInfo.getContainingNamespace(), out);
                     out.writeInt(methodInfo.getOffsetAtFileUri());
-                    //todo:write spans
                 });
             }
 
@@ -188,7 +187,6 @@ public class DocumentInfoIndex extends SingleEntryFileBasedIndexExtension<Docume
                     String containingFileUri = IOUtil.readString(in);
                     String containingNamespace = IOUtil.readString(in);
                     int offsetAtFileUri = in.readInt();
-                    //todo: read spans
                     return new MethodInfo(id, name, containingClass, containingNamespace, containingFileUri, offsetAtFileUri, new ArrayList<SpanInfo>());
                 });
 

@@ -128,53 +128,6 @@ namespace Digma.Rider.Protocol
             });
 
 
-            //old implementation: very bad performance.
-            // _codeObjectsModel.GetWorkspaceUris.Set((_, list) =>
-            // {
-            //     RdTask<List<CodeObjectIdUriPair>> result = new RdTask<List<CodeObjectIdUriPair>>();
-            //     using (ReadLockCookie.Create())
-            //     {
-            //         try
-            //         {
-            //             var uris = new List<CodeObjectIdUriPair>();
-            //             foreach (var document in _codeObjectsCache.Map.Values)
-            //             {
-            //                 foreach (var codeObjectId in list)
-            //                 {
-            //                     //if a method found add its document's file uri
-            //                     //else try to search by class name
-            //                     if (document.Methods.Keys.Contains(codeObjectId))
-            //                     {
-            //                         uris.Add(new CodeObjectIdUriPair(codeObjectId, document.FileUri));
-            //                     }
-            //                     else
-            //                     {
-            //                         var className = codeObjectId.SubstringBefore("$_$").SubstringAfterLast(".");
-            //                         foreach (var riderMethodInfo in document.Methods.Values)
-            //                         {
-            //                             if (riderMethodInfo.ContainingClass.Equals(className))
-            //                             {
-            //                                 //need to find the first method and break
-            //                                 uris.Add(new CodeObjectIdUriPair(codeObjectId, document.FileUri));
-            //                                 break;
-            //                             }
-            //                         }
-            //                     }
-            //                 }
-            //             }
-            //
-            //             result.Set(uris);
-            //         }
-            //         catch (Exception e)
-            //         {
-            //             //todo: maybe throw an error to notify the frontend ?
-            //             _logger.Error(e, "Error searching documents uris");
-            //             result.Set(new List<CodeObjectIdUriPair>());
-            //         }
-            //     }
-            //
-            //     return result;
-            // });
 
 
             //todo: very bad performance. find a was to query resharper caches or build a cache for that

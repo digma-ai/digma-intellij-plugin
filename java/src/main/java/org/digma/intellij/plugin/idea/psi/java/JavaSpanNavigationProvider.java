@@ -158,6 +158,10 @@ public class JavaSpanNavigationProvider implements Disposable {
 
     private void updateChangedDocuments() {
 
+        if (project.isDisposed()) {
+            return;
+        }
+
         PsiDocumentManager.getInstance(project).
                 performLaterWhenAllCommitted(() -> Backgroundable.ensureBackground(project, "Update Span Navigation", () -> {
 

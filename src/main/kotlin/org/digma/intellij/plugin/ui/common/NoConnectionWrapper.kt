@@ -117,6 +117,11 @@ class NoConnectionWrapper(private val project: Project, private val panel: Digma
 
 
     private fun showCardBasedOnConnectionStatus() {
+        if (project.isDisposed){
+            return
+        }
+
+
         val backendConnectionMonitor = project.getService(BackendConnectionMonitor::class.java)
         if (backendConnectionMonitor.isConnectionError()) {
             (layout as CardLayout).show(this, NO_CONNECTION_CARD)

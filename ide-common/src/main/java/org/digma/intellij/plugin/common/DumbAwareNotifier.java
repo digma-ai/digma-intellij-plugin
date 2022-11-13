@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.common;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.startup.StartupActivity;
 import org.digma.intellij.plugin.log.Log;
 import org.jetbrains.annotations.NotNull;
 
@@ -32,8 +33,7 @@ public class DumbAwareNotifier {
     }
 }
 
-//todo: ask Asaf: should probably not be DumbAware
-class DumbAwareStartupActivity implements com.intellij.openapi.startup.StartupActivity.DumbAware {
+class DumbAwareStartupActivity implements StartupActivity {
 
     @Override
     public void runActivity(@NotNull Project project) {

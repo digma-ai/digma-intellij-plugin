@@ -162,9 +162,8 @@ tasks {
 
 
     listProductsReleases {
-//        types.set(listOf("RD","IC","PC","IU"))
-        types.set(listOf("RD"))
-        sinceVersion.set("2022.1.*")
+        types.set(listOf("RD","IC","IU"))
+        sinceVersion.set("2022.2")
         untilVersion.set("2022.2.*")
 //        sinceBuild.set("222.3739.36")
 //        untilBuild.set("222.4167.24")

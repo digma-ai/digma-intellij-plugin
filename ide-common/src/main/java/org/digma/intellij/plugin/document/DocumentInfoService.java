@@ -73,6 +73,12 @@ public class DocumentInfoService {
         });
     }
 
+    public void refresh(PsiFile psiFile) {
+        DocumentInfoContainer documentInfoContainer = documents.get(psiFile);
+        documentInfoContainer.refresh();
+    }
+
+
 
     public void notifyDocumentInfoChanged(PsiFile psiFile) {
         Log.log(LOGGER::debug, "Notifying DocumentInfo changed for {}",psiFile.getVirtualFile());

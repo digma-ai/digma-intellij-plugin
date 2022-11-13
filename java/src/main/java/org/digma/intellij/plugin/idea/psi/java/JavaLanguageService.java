@@ -6,6 +6,7 @@ import com.intellij.lang.java.JavaLanguage;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.DumbService;
@@ -17,10 +18,12 @@ import com.intellij.psi.impl.java.stubs.index.JavaFullClassNameIndex;
 import com.intellij.psi.impl.source.JavaFileElementType;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
+import com.intellij.psi.search.searches.MethodReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Query;
 import com.intellij.util.concurrency.NonUrgentExecutor;
 import kotlin.Pair;
+import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.index.DocumentInfoIndex;
 import org.digma.intellij.plugin.log.Log;
@@ -38,8 +41,12 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.concurrent.Callable;
 
-import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.*;
+import static org.digma.intellij.plugin.idea.psi.java.Constants.SPAN_BUILDER_FQN;
+import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.createJavaMethodCodeObjectId;
+import static org.digma.intellij.plugin.idea.psi.java.SpanDiscoveryUtils.filterNonRelevantMethodsForSpanDiscovery;
+import static org.digma.intellij.plugin.idea.psi.java.SpanDiscoveryUtils.filterNonRelevantReferencesForSpanDiscovery;
 
+@SuppressWarnings("UnstableApiUsage")
 public class JavaLanguageService implements LanguageService {
 
     private static final Logger LOGGER = Logger.getInstance(JavaLanguageService.class);
@@ -77,10 +84,6 @@ public class JavaLanguageService implements LanguageService {
     }
 
 
-
-
-
-
     @Override
     public Language getLanguageForMethodCodeObjectId(@NotNull String methodId) {
 
@@ -97,8 +100,11 @@ public class JavaLanguageService implements LanguageService {
         //todo: maybe also search in method index and compare to find the same file
         // or try to verify that this class really has the method
         if (!psiClasses.isEmpty()) {
-            PsiClass psiClass = psiClasses.stream().findAny().get();
-            return psiClass.getLanguage();
+            Optional<PsiClass> psiClass = psiClasses.stream().findAny();
+            //noinspection ConstantConditions
+            if (psiClass.isPresent()) {
+                return psiClass.get().getLanguage();
+            }
         }
 
         return null;
@@ -348,7 +354,7 @@ public class JavaLanguageService implements LanguageService {
                 String containingFileUri = fileUri;
                 int offsetAtFileUri = method.getTextOffset();
                 List<SpanInfo> spans = new ArrayList<>();
-                Objects.requireNonNull(containingClassName,"a class in java must have a qualified name");
+                Objects.requireNonNull(containingClassName, "a class in java must have a qualified name");
                 MethodInfo methodInfo = new MethodInfo(id, name, containingClassName, containingNamespace, containingFileUri, offsetAtFileUri, spans);
                 methodInfoMap.put(id, methodInfo);
             }
@@ -359,7 +365,7 @@ public class JavaLanguageService implements LanguageService {
 
 
     @Override
-    public void enrichDocumentInfo(@NotNull DocumentInfo documentInfo,@NotNull PsiFile psiFile) {
+    public void enrichDocumentInfo(@NotNull DocumentInfo documentInfo, @NotNull PsiFile psiFile) {
 
         /*
         This method is called after loading the DocumentInfo from DocumentInfoIndex, and it is meant to
@@ -370,71 +376,105 @@ public class JavaLanguageService implements LanguageService {
         background.
         if it's called in smart mode then span discovery will happen on the current thread blocking until its finished.
 
-        //todo: if documents are opened in dumb mode it may be that they don't have span infos in time because span discovery
-        // waits for smart mode,and thus no span insights.
-        // to fix it add a startup activity dumb aware that will call contextChange on the selected editor
 
          */
-        if(DumbService.getInstance(project).isDumb()){
+        if (DumbService.getInstance(project).isDumb()) {
             ReadAction.nonBlocking((Callable<Void>) () -> {
-                spanDiscovery(psiFile,documentInfo);
+                spanDiscovery(psiFile, documentInfo);
+                refreshDocumentInfoAndNotifyContextChanged(psiFile);
                 return null;
             }).inSmartMode(project).submit(NonUrgentExecutor.getInstance());
-        }else{
-            ReadAction.run(() -> spanDiscovery(psiFile,documentInfo));
+        } else {
+            ReadAction.run(() -> spanDiscovery(psiFile, documentInfo));
         }
+    }
+
+
+    private void refreshDocumentInfoAndNotifyContextChanged(@NotNull PsiFile psiFile) {
+        //if documents are opened in dumb mode it may be that they don't have span infos in time because span discovery
+        // waits for smart mode,in that case they will not have span summaries and span insights.
+        // So after span discovery in smart mode ,refresh the document data and fire contextChange for the selected editor.
+
+        Backgroundable.ensureBackground(project,"Refresh document",() -> {
+
+            DocumentInfoService.getInstance(project).refresh(psiFile);
+
+            ApplicationManager.getApplication().invokeLater(() -> {
+                var editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+                if (editor != null){
+                    var virtualFile = FileDocumentManager.getInstance().getFile(editor.getDocument());
+                    if (virtualFile != null) {
+                        var selectedPsiFile = PsiManager.getInstance(project).findFile(virtualFile);
+                        if (selectedPsiFile != null && selectedPsiFile.equals(psiFile)){
+                            var offset = editor.getCaretModel().getOffset();
+                            var methodUnderCaret = detectMethodUnderCaret(project,psiFile,offset);
+                            caretContextService.contextChanged(methodUnderCaret);
+                        }
+                    }
+                }
+            });
+        });
     }
 
 
 
     private void spanDiscovery(PsiFile psiFile, DocumentInfo documentInfo) {
-        withSpanAnnotationDiscovery(psiFile,documentInfo);
-        //todo other span discovery
+        withSpanAnnotationSpanDiscovery(psiFile, documentInfo);
+        startSpanMethodSpanCallDiscovery(psiFile, documentInfo);
     }
 
-    private void withSpanAnnotationDiscovery(PsiFile psiFile, DocumentInfo documentInfo) {
-        PsiClass withSpanClass =  JavaPsiFacade.getInstance(project).findClass(WITH_SPAN_FQN,GlobalSearchScope.allScope(project));
-        //maybe the annotation is not in the classpath
-        if (withSpanClass != null) {
-            Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(withSpanClass, GlobalSearchScope.fileScope(psiFile));
-            psiMethods.filtering(psiMethod -> {
-                var aClass = psiMethod.getContainingClass();
-                if (aClass != null &&
-                        (aClass.isAnnotationType() || aClass.isEnum() || aClass.isRecord())) {
-                    return false;
+
+    private void startSpanMethodSpanCallDiscovery(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
+
+        PsiClass tracerBuilderClass = JavaPsiFacade.getInstance(project).findClass(SPAN_BUILDER_FQN, GlobalSearchScope.allScope(project));
+        if (tracerBuilderClass != null) {
+            PsiMethod startSpanMethod =
+                    JavaLanguageUtils.findMethodInClass(tracerBuilderClass, "startSpan", psiMethod -> psiMethod.getParameters().length == 0);
+            Objects.requireNonNull(startSpanMethod, "startSpan method must be found in SpanBuilder class");
+
+            Query<PsiReference> startSpanReferences = MethodReferencesSearch.search(startSpanMethod, GlobalSearchScope.fileScope(psiFile), true);
+            //filter classes that we don't support,which should not happen but just in case. we don't support Annotations,Enums and Records.
+            startSpanReferences = filterNonRelevantReferencesForSpanDiscovery(startSpanReferences);
+
+            startSpanReferences.forEach(psiReference -> {
+                SpanInfo spanInfo = SpanDiscoveryUtils.getSpanInfoFromStartSpanMethodReference(project, psiReference);
+                if (spanInfo != null) {
+                    MethodInfo methodInfo = documentInfo.getMethods().get(spanInfo.getContainingMethod());
+                    //this method must exist in the document info
+                    Objects.requireNonNull(methodInfo, "method info " + spanInfo.getContainingMethod() + " must exist in DocumentInfo for " + documentInfo.getFileUri());
+                    methodInfo.getSpans().add(spanInfo);
                 }
-                return true;
-
-            }).forEach(psiMethod -> {
-                var methodId = createJavaMethodCodeObjectId(psiMethod);
-                var withSpanAnnotation = psiMethod.getAnnotation(WITH_SPAN_FQN);
-                var containingClass = psiMethod.getContainingClass();
-
-                //withSpanAnnotation and containingClass must not be null because we found this annotation in a search.
-                // and a method in java must have a containing class. (psiMethod.getContainingClass may return null because
-                // it supports groovy and kotlin)
-                Objects.requireNonNull(withSpanAnnotation,"withSpanAnnotation must not be null here");
-                Objects.requireNonNull(containingClass,"containingClass must not be null here");
-
-                var spanName = createWithSpanAnnotationSpanName(psiMethod, withSpanAnnotation, containingClass);
-                var spanId = createWithSpanAnnotationCodeObjectId(psiMethod, withSpanAnnotation, containingClass);
-
-                SpanInfo spanInfo = new SpanInfo(spanId, spanName, psiMethod.getName(), PsiUtils.psiFileToUri(psiFile));
-
-                //the document must contain this method, or we have a bug
-                documentInfo.getMethods().get(methodId).getSpans().add(spanInfo);
             });
         }
     }
 
+
+    private void withSpanAnnotationSpanDiscovery(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
+        PsiClass withSpanClass = JavaPsiFacade.getInstance(project).findClass(Constants.WITH_SPAN_FQN, GlobalSearchScope.allScope(project));
+        //maybe the annotation is not in the classpath
+        if (withSpanClass != null) {
+            Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(withSpanClass, GlobalSearchScope.fileScope(psiFile));
+
+            psiMethods = filterNonRelevantMethodsForSpanDiscovery(psiMethods);
+
+            psiMethods.forEach(psiMethod -> {
+
+                SpanInfo spanInfo = SpanDiscoveryUtils.getSpanInfoFromWithSpanAnnotatedMethod(psiMethod);
+                if (spanInfo != null) {
+                    MethodInfo methodInfo = documentInfo.getMethods().get(spanInfo.getContainingMethod());
+                    //this method must exist in the document info
+                    Objects.requireNonNull(methodInfo, "method info " + spanInfo.getContainingMethod() + " must exist in DocumentInfo for " + documentInfo.getFileUri());
+                    methodInfo.getSpans().add(spanInfo);
+                }
+            });
+        }
+    }
 
 
     @Override
     public boolean isIntellijPlatformPluginLanguage() {
         return true;
     }
-
-
 
 
 }

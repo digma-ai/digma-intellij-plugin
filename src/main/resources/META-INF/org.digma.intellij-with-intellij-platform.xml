@@ -7,10 +7,6 @@
         <fileBasedIndex implementation="org.digma.intellij.plugin.index.DocumentInfoIndex"/>
         <projectService serviceImplementation="org.digma.intellij.plugin.index.DocumentInfoIndexBuilder"/>
 
-
-<!-- todo: try to make it run after all ReadAction.nonBlocking.inSmartMode
-    <postStartupActivity implementation="org.digma.intellij.plugin.editor.SmartModeContextUpdater"/>-->
-
     </extensions>
 
 

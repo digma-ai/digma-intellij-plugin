@@ -85,7 +85,7 @@ public class SpanDiscoveryUtils {
             String containingFileUri;
 
             PsiMethod containingMethod = PsiTreeUtil.getParentOfType(startSpanMethodReference.getElement(), PsiMethod.class);
-            PsiFile containingFile = PsiTreeUtil.getParentOfType(startSpanMethodReference.getElement(), PsiFile.class);
+            PsiFile containingFile = startSpanMethodReference.getElement().getContainingFile();
             //span is not relevant if there is no containing method. one can build a Span as a class member, we don't support that.
             if (containingMethod != null && containingFile != null) {
                 methodId = createJavaMethodCodeObjectId(containingMethod);

@@ -142,6 +142,10 @@ public class JavaLanguageService implements LanguageService {
     }
 
 
+    /**
+     * navigate to a method. this method is meant to be used only to navigate to a method in the current selected editor.
+     * it is used from the methods preview list. it will not navigate to any method in the project.
+     */
     @Override
     public void navigateToMethod(String codeObjectId) {
 
@@ -265,10 +269,10 @@ public class JavaLanguageService implements LanguageService {
     }
 
 
+    @NotNull
     @Override
-    public Map<String, Pair<String, Integer>> findWorkspaceUrisForSpanIds(List<String> spanIds) {
-        //todo: implement
-        return Collections.emptyMap();
+    public Map<String, Pair<String, Integer>> findWorkspaceUrisForSpanIds(@NotNull List<String> spanIds) {
+        return JavaSpanNavigationProvider.getInstance(project).getUrisForSpanIds(spanIds);
     }
 
     @Override
@@ -420,11 +424,11 @@ public class JavaLanguageService implements LanguageService {
 
     private void spanDiscovery(PsiFile psiFile, DocumentInfo documentInfo) {
         withSpanAnnotationSpanDiscovery(psiFile, documentInfo);
-        startSpanMethodSpanCallDiscovery(psiFile, documentInfo);
+        startSpanMethodCallSpanDiscovery(psiFile, documentInfo);
     }
 
 
-    private void startSpanMethodSpanCallDiscovery(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
+    private void startSpanMethodCallSpanDiscovery(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
 
         PsiClass tracerBuilderClass = JavaPsiFacade.getInstance(project).findClass(SPAN_BUILDER_FQN, GlobalSearchScope.allScope(project));
         if (tracerBuilderClass != null) {
@@ -475,6 +479,7 @@ public class JavaLanguageService implements LanguageService {
     public boolean isIntellijPlatformPluginLanguage() {
         return true;
     }
+
 
 
 }

@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.psi;
 
 import com.intellij.lang.Language;
+import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -18,10 +19,15 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Map;
 
-public interface LanguageService {
+public interface LanguageService extends Disposable {
 
     Logger LOGGER = Logger.getInstance(LanguageService.class);
 
+
+    @Override
+    default void dispose() {
+
+    }
 
     /**
      * there are a few services that need to guess which language service to use. usually when there is no related

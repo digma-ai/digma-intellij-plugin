@@ -85,9 +85,11 @@ class ElementUnderCaretDetector(project: Project) : LifetimedProjectComponent(pr
         id = fqn,
         name = name,
         className = className,
-        fileUri = fileUri,
+        fileUri = normalizeFileUri(fileUri,project),
         isSupportedFile = isSupportedFile
     )
+
+
 
 
 }

@@ -26,8 +26,12 @@ class CodeObjectHost(project: Project): LifetimedProjectComponent(project) {
 
     //Note: using the file uri as the document key in rider protocol proved to be unstable because of
     // differences in conversion between linux and windows.
-    // so the document key is just its full path without the URI schema 'file:///'
-    // the Document has a fileUri field which is a uri with schema and is used to find a psi file in rider the frontend.
+    //when running on windows the file:// schema has different number of slashes between resharper and the jvm,
+    // and so it's not possible to use it as a map key in both sides.
+    // so the document key is just its full path without the URI schema 'file:///', in resharper we use just the path
+    // as the map key and in java we take the path from the PsiFile.
+    // the Document has a fileUri field which is an uri with schema and is used to find a psi file in rider frontend.
+    // PsuUtil.uriToPsiFile work ok with both the uri from resharper and the uri in the jvm side.
 
 
     fun getDocument(psiFile: PsiFile): DocumentInfo? {
@@ -121,7 +125,7 @@ class CodeObjectHost(project: Project): LifetimedProjectComponent(project) {
 
 
     private fun Document.toDocumentInfo() = DocumentInfo(
-        fileUri = fileUri,
+        fileUri = normalizeFileUri(fileUri,project),
         methods = toMethodInfoMap(methods)
 
     )
@@ -140,7 +144,7 @@ class CodeObjectHost(project: Project): LifetimedProjectComponent(project) {
         name = name,
         containingClass = containingClass,
         containingNamespace = containingNamespace,
-        containingFileUri = containingFileUri,
+        containingFileUri = normalizeFileUri(containingFileUri,project),
         offsetAtFileUri = offsetAtFileUri,
         spans = toSpansList(spans)
     )
@@ -157,7 +161,7 @@ class CodeObjectHost(project: Project): LifetimedProjectComponent(project) {
         id = id,
         name = name,
         containingMethod = containingMethod,
-        containingFileUri = containingFileUri
+        containingFileUri = normalizeFileUri(containingFileUri,project)
     )
 
 

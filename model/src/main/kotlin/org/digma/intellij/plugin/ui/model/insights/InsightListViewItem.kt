@@ -19,6 +19,7 @@ open class InsightListViewItem<INSIGHT : CodeObjectInsight>(insight: INSIGHT) :
                 InsightType.SpanDurations -> 65
                 InsightType.SpanDurationChange -> 66
                 InsightType.SpanEndpointBottleneck -> 67
+                InsightType.SpanDurationBreakdown -> 68
                 // HTTP Endpoints
                 InsightType.SlowestSpans -> 40
                 InsightType.LowUsage -> 30

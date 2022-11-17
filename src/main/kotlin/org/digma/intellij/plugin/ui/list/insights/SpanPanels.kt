@@ -4,11 +4,14 @@ import com.google.common.io.CharStreams
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.fileEditor.impl.HTMLEditorProvider
 import com.intellij.openapi.project.Project
+import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.model.rest.insights.*
+import org.digma.intellij.plugin.service.InsightsActionsService
 import org.digma.intellij.plugin.settings.LinkMode
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.common.*
@@ -146,8 +149,6 @@ fun spanDurationPanel(
 }
 
 fun percentileRowPanel(percentile: SpanDurationsPercentile, panelsLayoutHelper: PanelsLayoutHelper, traceSamples: ArrayList<TraceSample>): JPanel {
-
-    @Suppress("VARIABLE_WITH_REDUNDANT_INITIALIZER")
 
     val durationsPanel = JBPanel<JBPanel<*>>()
     durationsPanel.layout = BorderLayout(5, 0)
@@ -322,14 +323,14 @@ private fun computeDurationText(percentile: SpanDurationsPercentile): String {
 }
 
 
-private fun getCurrentLargestWidthDurationPLabel(layoutHelper: PanelsLayoutHelper, width: Int): Int {
+fun getCurrentLargestWidthDurationPLabel(layoutHelper: PanelsLayoutHelper, width: Int): Int {
     //this method should never return null and never throw NPE
     val currentLargest: Int =
             (layoutHelper.getObjectAttribute("SpanDurationsDurationPLabel", "largestWidth") ?: 0) as Int
     return max(width, currentLargest)
 }
 
-private fun addCurrentLargestWidthDurationPLabel(layoutHelper: PanelsLayoutHelper, width: Int) {
+fun addCurrentLargestWidthDurationPLabel(layoutHelper: PanelsLayoutHelper, width: Int) {
     //this method should never throw NPE
     val currentLargest: Int =
             (layoutHelper.getObjectAttribute("SpanDurationsDurationPLabel", "largestWidth") ?: 0) as Int

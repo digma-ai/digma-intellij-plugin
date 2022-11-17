@@ -31,5 +31,6 @@ enum class InsightType {
     TopErrorFlows,
     SpanDurationChange,
     SpanEndpointBottleneck,
+    SpanDurationBreakdown,
     ;
 }

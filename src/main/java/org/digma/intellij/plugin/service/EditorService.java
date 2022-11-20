@@ -10,7 +10,6 @@ import com.intellij.openapi.ui.MessageConstants;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vcs.VcsException;
 import com.intellij.openapi.vcs.vfs.ContentRevisionVirtualFile;
-import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.testFramework.BinaryLightVirtualFile;
@@ -21,8 +20,6 @@ import org.digma.intellij.plugin.vcs.VcsService;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Arrays;
 
 public class EditorService implements Disposable {
@@ -174,18 +171,13 @@ public class EditorService implements Disposable {
 
     public void openSpanWorkspaceFileInEditor(@NotNull String workspaceUri, int offset) {
 
-        try {
-            var fileToOpen = VfsUtil.findFileByURL(new URL(workspaceUri));
-            if (fileToOpen == null) {
-                NotificationUtil.notifyError(project, "Could not find file " + workspaceUri);
-                return;
-            }
-            OpenFileDescriptor openFileDescriptor = new OpenFileDescriptor(project, fileToOpen, Math.max(offset, 0));
-            FileEditorManager.getInstance(project).openTextEditor(openFileDescriptor, true);
-        } catch (MalformedURLException e) {
-            Log.log(LOGGER::warn, "Could not open file " + workspaceUri + ", Exception" + e.getMessage());
-            NotificationUtil.notifyError(project, "Could not open file " + workspaceUri + ", Exception:" + e.getMessage());
+        var fileToOpen = VirtualFileManager.getInstance().findFileByUrl(workspaceUri);
+        if (fileToOpen == null) {
+            NotificationUtil.notifyError(project, "Could not find file " + workspaceUri);
+            return;
         }
+        OpenFileDescriptor openFileDescriptor = new OpenFileDescriptor(project, fileToOpen, Math.max(offset, 0));
+        FileEditorManager.getInstance(project).openTextEditor(openFileDescriptor, true);
     }
 
 

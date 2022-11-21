@@ -43,6 +43,7 @@ public interface LanguageService extends Disposable {
      * the method id and we can find the language because the document is probably opened and DocumentInfoService has the
      * knowledge of the language. but if called when clicking an error in summary view the document is probably not
      * opened and we have to guess.
+     * This method must be executed in ReadAction or EDT.
      */
     @NotNull
     static LanguageService findLanguageServiceByMethodCodeObjectId(@NotNull Project project, @Nullable String methodCodeObjectId) {

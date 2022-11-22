@@ -24,8 +24,15 @@ fun insightItemPanel(panel: JPanel): JPanel {
     return commonListItemPanel(panel)
 }
 
-
 fun createInsightPanel(title: String, description: String, icon: Icon, body: JComponent?, buttons: List<JButton?>?, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
+    return createInsightPanel(title, description, icon, body, buttons, null, panelsLayoutHelper)
+}
+
+fun createInsightPanel(title: String, description: String, icon: Icon, body: JComponent?, footer: JComponent?): JPanel {
+    return createInsightPanel(title, description, icon, body, null, footer, null)
+}
+
+fun createInsightPanel(title: String, description: String, icon: Icon, body: JComponent?, buttons: List<JButton?>?, footer: JComponent?, panelsLayoutHelper: PanelsLayoutHelper?): JPanel {
 
     // .-----------------------------------.
     // | title                     | icon  |
@@ -68,6 +75,17 @@ fun createInsightPanel(title: String, description: String, icon: Icon, body: JCo
                 buttonsList.add(it)
             }
             bodyWrapper.add(buttonsList, BorderLayout.SOUTH)
+        }
+
+        if(footer != null){
+            val footerComponent = JPanel(FlowLayout(FlowLayout.LEFT, 0 ,0))
+            footerComponent.isOpaque = false
+            footerComponent.border = empty()
+
+            footerComponent.add(Box.createHorizontalStrut(5))
+            footerComponent.add(footer)
+
+            bodyWrapper.add(footerComponent, BorderLayout.SOUTH)
         }
 
         result.add(bodyWrapper,BorderLayout.SOUTH)

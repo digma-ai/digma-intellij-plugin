@@ -10,15 +10,21 @@ import org.digma.intellij.plugin.model.rest.insights.SpanDurationBreakdownInsigh
 import org.digma.intellij.plugin.service.InsightsActionsService
 import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
+import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.BorderLayout
-import java.awt.Dimension
 import java.awt.GridLayout
-import javax.swing.JComponent
-import javax.swing.JLabel
-import javax.swing.JPanel
-import javax.swing.SwingConstants
+import javax.swing.*
 
-const val P_50: Float = 0.5F
+private const val P_50: Float = 0.5F
+private const val RECORDS_PER_PAGE = 3
+
+private var lastPageNum = 0
+private var currPageNum = 0
+private var prev: ActionLink? = null
+private var next: ActionLink? = null
+private var resultBreakdownPanel: DigmaResettablePanel? = null
+private val paginationPanel = JPanel()
+val durationBreakdownEntriesToDisplay = ArrayList<SpanDurationBreakdown>()
 
 fun spanDurationBreakdownPanel(
         project: Project,
@@ -27,25 +33,51 @@ fun spanDurationBreakdownPanel(
         panelsLayoutHelper: PanelsLayoutHelper
 ): JPanel {
 
-    val resultBreakdownPanel = JBPanel<JBPanel<*>>()
-    resultBreakdownPanel.layout = GridLayout(insight.breakdownEntries.size, 1, 0, 2)
-    resultBreakdownPanel.isOpaque = false
+    resultBreakdownPanel = object : DigmaResettablePanel() {
+        override fun reset() {
+            buildDurationBreakdownRowPanel(
+                    resultBreakdownPanel!!,
+                    durationBreakdownEntriesToDisplay,
+                    project,
+                    moreData,
+                    panelsLayoutHelper
+            )
+            buildPaginationPanel(paginationPanel)
+        }
+    }
 
-    insight.breakdownEntries
+    val validBreakdownEntries = insight.breakdownEntries
             .filter { entry -> entry.percentiles.any { breakdown -> breakdown.percentile.equals(P_50) } }
             .sortedWith(compareByDescending { getValueOfPercentile(it, P_50) })
-            .forEach { durationBreakdown: SpanDurationBreakdown ->
-                val durationBreakdownPanel = durationBreakdownRowPanel(durationBreakdown, project, moreData, panelsLayoutHelper)
-                resultBreakdownPanel.add(durationBreakdownPanel)
-            }
 
+    //calculate how many pages there are
+    lastPageNum = validBreakdownEntries.size / RECORDS_PER_PAGE + if (validBreakdownEntries.size % RECORDS_PER_PAGE != 0) 1 else 0
+    currPageNum = if (lastPageNum > 0) 1 else 0
+
+    updateDurationBreakdownPanel(validBreakdownEntries)
     return createInsightPanel(
             "Duration Breakdown",
             "",
             Laf.Icons.Insight.DURATION,
             resultBreakdownPanel,
-            null,
-            panelsLayoutHelper)
+            paginationRowPanel(validBreakdownEntries)
+    )
+}
+
+fun buildDurationBreakdownRowPanel(
+        durationBreakdownPanel: DigmaResettablePanel,
+        durationBreakdownEntries: List<SpanDurationBreakdown>,
+        project: Project,
+        moreData: HashMap<String, Any>,
+        layoutHelper: PanelsLayoutHelper
+) {
+    durationBreakdownPanel.removeAll()
+    resultBreakdownPanel!!.layout = GridLayout(durationBreakdownEntries.size, 1, 0, 2)
+    resultBreakdownPanel!!.isOpaque = false
+
+    durationBreakdownEntries.forEach { durationBreakdown: SpanDurationBreakdown ->
+        resultBreakdownPanel!!.add(durationBreakdownRowPanel(durationBreakdown, project, moreData, layoutHelper))
+    }
 }
 
 fun durationBreakdownRowPanel(
@@ -64,6 +96,65 @@ fun durationBreakdownRowPanel(
     durationBreakdownPanel.add(breakdownDurationLabelPanel, BorderLayout.EAST)
 
     return durationBreakdownPanel
+}
+
+fun paginationRowPanel(
+        durationBreakdownEntries: List<SpanDurationBreakdown>
+): JPanel? {
+    if (lastPageNum < 2) {
+        return null
+    }
+    prev = ActionLink("Prev")
+    prev!!.addActionListener {
+        if (--currPageNum <= 0) currPageNum = 1
+        updateDurationBreakdownPanel(durationBreakdownEntries)
+    }
+    next = ActionLink("Next")
+    next!!.addActionListener {
+        if (++currPageNum > lastPageNum) currPageNum = lastPageNum
+        updateDurationBreakdownPanel(durationBreakdownEntries)
+    }
+    buildPaginationPanel(paginationPanel)
+    return paginationPanel
+}
+
+fun buildPaginationPanel(paginationPanel: JPanel) {
+    paginationPanel.removeAll()
+
+    paginationPanel.layout = BorderLayout()
+    paginationPanel.border = empty()
+    paginationPanel.isOpaque = false
+
+    val paginationLabelText = "$currPageNum of $lastPageNum"
+    val paginationLabel = JLabel(asHtml(paginationLabelText), SwingConstants.LEFT)
+    paginationLabel.border = empty(0, 5, 0, 0)
+
+    prev?.let { paginationPanel.add(it, BorderLayout.WEST) }
+    next?.let { paginationPanel.add(it, BorderLayout.CENTER) }
+    paginationPanel.add(paginationLabel, BorderLayout.EAST)
+
+    val canGoBack = currPageNum > 1
+    val canGoFwd = currPageNum != lastPageNum
+    prev?.let { it.isEnabled = canGoBack }
+    next?.let { it.isEnabled = canGoFwd }
+}
+
+
+private fun updateDurationBreakdownPanel(durationBreakdownEntries: List<SpanDurationBreakdown>) {
+    durationBreakdownEntriesToDisplay.clear()
+
+    if (durationBreakdownEntries.isNotEmpty()) {
+        val start = (currPageNum - 1) * RECORDS_PER_PAGE
+        var end = start + RECORDS_PER_PAGE
+        if (end >= durationBreakdownEntries.size) {
+            end = durationBreakdownEntries.size
+        }
+        for (i in start until end) {
+            durationBreakdownEntriesToDisplay.add(durationBreakdownEntries[i])
+        }
+    }
+
+    resultBreakdownPanel!!.reset()
 }
 
 private fun getDurationBreakdownPanel(): JBPanel<JBPanel<*>> {
@@ -117,18 +208,7 @@ private fun getBreakdownDurationLabelPanel(
     pLabel.toolTipText = getTooltipForDurationLabel(durationBreakdown)
     boldFonts(pLabel)
 
-    val breakdownDurationLabelPanel = object : JPanel() {
-        override fun getPreferredSize(): Dimension {
-            val ps = super.getPreferredSize()
-            if (ps == null) {
-                return ps
-            }
-            val h = ps.height
-            val w = ps.width
-            addCurrentLargestWidthDurationPLabel(layoutHelper, w)
-            return Dimension(getCurrentLargestWidthDurationPLabel(layoutHelper, w), h)
-        }
-    }
+    val breakdownDurationLabelPanel = JPanel()
     breakdownDurationLabelPanel.layout = BorderLayout()
     breakdownDurationLabelPanel.border = empty()
     breakdownDurationLabelPanel.isOpaque = false
@@ -159,8 +239,8 @@ private fun getValueOfPercentile(breakdownEntry: SpanDurationBreakdown, requeste
 private fun getTooltipForDurationLabel(breakdownEntry: SpanDurationBreakdown): String {
     val sortedPercentiles = breakdownEntry.percentiles.sortedBy { it.percentile }
     var tooltip = "Percentage of time spent in span:".plus("<br>")
-    for(p in sortedPercentiles){
-        tooltip += "P${(p.percentile*100).toInt()}: ${p.duration.value} ${p.duration.unit}".plus("<br>")
+    for (p in sortedPercentiles) {
+        tooltip += "P${(p.percentile * 100).toInt()}: ${p.duration.value} ${p.duration.unit}".plus("<br>")
     }
     return asHtml(tooltip)
 }

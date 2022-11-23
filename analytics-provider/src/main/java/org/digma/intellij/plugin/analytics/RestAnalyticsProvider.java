@@ -6,6 +6,7 @@ import com.google.common.io.CharStreams;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
+import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
@@ -53,6 +54,10 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         return execute(client.analyticsProvider::getEnvironments);
     }
 
+
+    public void sendDebuggerEvent(DebuggerEventRequest debuggerEventRequest){
+        execute(() -> client.analyticsProvider.sendDebuggerEvent(debuggerEventRequest));
+    }
 
     public List<CodeObjectSummary> getSummaries(CodeObjectSummaryRequest summaryRequest) {
         return execute(() -> client.analyticsProvider.getSummaries(summaryRequest));
@@ -245,6 +250,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     //plus we have an AnalyticsProvider interface for the plugin code just because an interface is nice to have.
     //both have the same methods with different return type.
     private interface AnalyticsProviderRetrofit {
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/CodeAnalytics/instrumentation/event")
+        Call<Void> sendDebuggerEvent(@Body DebuggerEventRequest debuggerEventRequest);
 
 
         @Headers({

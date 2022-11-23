@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.analytics;
 
+import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
@@ -17,6 +18,8 @@ import java.util.List;
 public interface AnalyticsProvider extends Closeable {
 
     List<String> getEnvironments();
+
+    void sendDebuggerEvent(DebuggerEventRequest debuggerEventRequest);
 
     List<CodeObjectSummary> getSummaries(CodeObjectSummaryRequest summaryRequest);
 

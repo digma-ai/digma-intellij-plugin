@@ -9,6 +9,9 @@ import com.intellij.psi.*
 abstract class JavaCodeVisionProvider: JavaCodeVisionProviderBase() {
 
 
+    internal val empty: List<Pair<TextRange, CodeVisionEntry>> = listOf()
+
+
     override val defaultAnchor: CodeVisionAnchorKind
         get() = CodeVisionAnchorKind.Top
 
@@ -33,6 +36,11 @@ abstract class JavaCodeVisionProvider: JavaCodeVisionProviderBase() {
             get() = listOf(CodeVisionRelativeOrdering.CodeVisionRelativeOrderingFirst)
 
         override fun computeLenses(editor: Editor, psiFile: PsiFile): List<Pair<TextRange, CodeVisionEntry>> {
+
+            if (psiFile.virtualFile == null){
+                return empty
+            }
+
             editor.project?.let {
                 val javaCodeLensService = editor.project!!.getService(JavaCodeLensService::class.java)
                 return javaCodeLensService.getErrorHotspotCodeLens(psiFile)
@@ -63,6 +71,11 @@ abstract class JavaCodeVisionProvider: JavaCodeVisionProviderBase() {
             get() = listOf(CodeVisionRelativeOrdering.CodeVisionRelativeOrderingAfter(ErrorHotspot.ID))
 
         override fun computeLenses(editor: Editor, psiFile: PsiFile): List<Pair<TextRange, CodeVisionEntry>> {
+
+            if (psiFile.virtualFile == null){
+                return empty
+            }
+
             editor.project?.let {
                 val javaCodeLensService = editor.project!!.getService(JavaCodeLensService::class.java)
                 return javaCodeLensService.getHighUsageCodeLens(psiFile)
@@ -92,6 +105,11 @@ abstract class JavaCodeVisionProvider: JavaCodeVisionProviderBase() {
             get() = listOf(CodeVisionRelativeOrdering.CodeVisionRelativeOrderingAfter(HighUsage.ID))
 
         override fun computeLenses(editor: Editor, psiFile: PsiFile): List<Pair<TextRange, CodeVisionEntry>> {
+
+            if (psiFile.virtualFile == null){
+                return empty
+            }
+
             editor.project?.let {
                 val javaCodeLensService = editor.project!!.getService(JavaCodeLensService::class.java)
                 return javaCodeLensService.getLowUsageCodeLens(psiFile)

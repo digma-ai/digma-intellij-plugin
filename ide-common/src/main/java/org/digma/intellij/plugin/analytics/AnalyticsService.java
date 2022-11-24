@@ -7,7 +7,9 @@ import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.Backgroundable;
+import org.digma.intellij.plugin.common.CommonUtils;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
@@ -152,6 +154,14 @@ public class AnalyticsService implements Disposable {
     }
 
 
+    public void sendDebuggerEvent(int eventType) throws AnalyticsServiceException {
+        executeCatching(() -> {
+            analyticsProviderProxy.sendDebuggerEvent(new DebuggerEventRequest(String.valueOf(eventType), CommonUtils.getLocalHostname(), String.valueOf(System.currentTimeMillis())));
+            return null;
+        });
+    }
+
+
     public List<CodeObjectSummary> getSummaries(List<String> objectIds) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         return executeCatching(() -> analyticsProviderProxy.getSummaries(new CodeObjectSummaryRequest(env, objectIds)));
@@ -228,6 +238,8 @@ public class AnalyticsService implements Disposable {
                 new Class[]{AnalyticsProvider.class, Closeable.class},
                 new AnalyticsInvocationHandler(obj));
     }
+
+
 
 
     /**

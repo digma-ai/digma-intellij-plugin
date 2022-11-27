@@ -401,7 +401,7 @@ public class JavaLanguageService implements LanguageService {
 
         Backgroundable.ensureBackground(project,"Refresh document",() -> {
 
-            DocumentInfoService.getInstance(project).refresh(psiFile);
+            DocumentInfoService.getInstance(project).refreshIfExists(psiFile);
 
             ApplicationManager.getApplication().invokeLater(() -> {
                 var editor = FileEditorManager.getInstance(project).getSelectedTextEditor();

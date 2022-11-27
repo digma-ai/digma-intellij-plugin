@@ -77,9 +77,11 @@ public class DocumentInfoService {
         documents.forEach((psiFileUri, container) -> container.refresh());
     }
 
-    public void refresh(PsiFile psiFile) {
+    public void refreshIfExists(PsiFile psiFile) {
         DocumentInfoContainer documentInfoContainer = documents.get(PsiUtils.psiFileToUri(psiFile));
-        documentInfoContainer.refresh();
+        if (documentInfoContainer != null) {
+            documentInfoContainer.refresh();
+        }
     }
 
 

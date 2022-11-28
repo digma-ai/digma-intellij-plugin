@@ -10,11 +10,10 @@ import org.digma.intellij.plugin.service.InsightsActionsService
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.buildLinkTextWithGrayedAndDefaultLabelColorPart
 import org.digma.intellij.plugin.ui.list.ListItemActionButton
-import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import java.awt.GridLayout
 import javax.swing.JPanel
 
-fun errorsPanel(project: Project, modelObject: ErrorInsight, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
+fun errorsPanel(project: Project, modelObject: ErrorInsight): JPanel {
 
     val errorCount = modelObject.errorCount
     val unhandled = modelObject.unhandledCount
@@ -42,12 +41,13 @@ fun errorsPanel(project: Project, modelObject: ErrorInsight, panelsLayoutHelper:
     expandButton.addActionListener { project.getService(InsightsActionsService::class.java).showErrorsTab(modelObject) }
 
     return createInsightPanel(
-        "Errors",
-        "$errorCount errors($unhandled unhandled, $unexpected unexpected)",
-        Laf.Icons.Insight.ERRORS,
-        errorsListPanel,
-        listOf(expandButton),
-        panelsLayoutHelper)
-
-    //return insightItemPanel(result)
+            project = project,
+            insight = modelObject,
+            title = "Errors",
+            description = "$errorCount errors($unhandled unhandled, $unexpected unexpected)",
+            iconsList = listOf(Laf.Icons.Insight.ERRORS),
+            bodyPanel = errorsListPanel,
+            buttons = listOf(expandButton),
+            paginationComponent = null,
+    )
 }

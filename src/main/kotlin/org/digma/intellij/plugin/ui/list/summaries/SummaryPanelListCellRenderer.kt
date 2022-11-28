@@ -41,7 +41,7 @@ class SummaryPanelListCellRenderer : AbstractPanelListCellRenderer() {
             is SummaryTypeTitle -> buildTitle(model)
             is TopErrorFlowsInsight.Error -> commonListItemPanel(buildError(model, project))
             is SpanDurationChangeInsight.Change -> commonListItemPanel(buildSpanDuration(model, value.moreData, panelsLayoutHelper, project))
-            else -> genericPanelForSingleInsight(model, panelsLayoutHelper)
+            else -> genericPanelForSingleInsight(project, model)
         }
     }
 }

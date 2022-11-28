@@ -9,10 +9,7 @@ import okhttp3.ResponseBody;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
-import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
-import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
-import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
-import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
+import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
@@ -76,6 +73,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     @Override
     public List<CodeObjectError> getErrorsOfCodeObject(String environment, String codeObjectId) {
         return execute(() -> client.analyticsProvider.getErrorsOfCodeObject(environment, codeObjectId));
+    }
+
+    @Override
+    public void setInsightCustomStartTime(CustomStartTimeInsightRequest customStartTimeInsightRequest) {
+        execute(() -> client.analyticsProvider.setInsightCustomStartTime(customStartTimeInsightRequest));
     }
 
     @Override
@@ -318,6 +320,16 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         // @Streaming means ResponseBody as is, without conversion
         @Streaming
         Call<ResponseBody> getHtmlGraphForSpanPercentiles(@Body SpanHistogramQuery request);
+
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @PUT("/CodeAnalytics/insights/start-time")
+        Call<ResponseBody> setInsightCustomStartTime(
+                @Body CustomStartTimeInsightRequest customStartTimeInsightRequest
+        );
 
     }
 

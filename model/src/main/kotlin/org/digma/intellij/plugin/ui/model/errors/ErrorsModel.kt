@@ -45,6 +45,7 @@ class ErrorsModel : PanelModel {
     override fun getUsageStatus(): UsageStatusResult {
         return usageStatusResult
     }
+
 }
 
 

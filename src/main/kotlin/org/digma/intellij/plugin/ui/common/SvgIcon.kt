@@ -13,7 +13,7 @@ import javax.swing.Icon
 
 typealias ColorGetter = () -> Color
 
-class SvgIcon constructor(val path: String, val getColor : ColorGetter? = null) : Icon {
+open class SvgIcon constructor(val path: String, val getColor : ColorGetter? = null) : Icon {
 
     companion object {
         private val cache: MutableMap<String, Icon> = HashMap()
@@ -42,7 +42,7 @@ class SvgIcon constructor(val path: String, val getColor : ColorGetter? = null) 
 
     private fun getIcon(): Icon {
         if(getColor == null)
-            return IconLoader.getIcon(path, javaClass.classLoader);
+            return IconLoader.getIcon(path, javaClass.classLoader)
 
         val color = getColor.invoke()
         val key = "$path:${color.getHex()}"

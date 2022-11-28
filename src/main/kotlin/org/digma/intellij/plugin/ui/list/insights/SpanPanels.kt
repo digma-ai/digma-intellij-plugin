@@ -4,18 +4,16 @@ import com.google.common.io.CharStreams
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.fileEditor.impl.HTMLEditorProvider
 import com.intellij.openapi.project.Project
-import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI.Borders.empty
-import org.digma.intellij.plugin.analytics.AnalyticsService
-import org.digma.intellij.plugin.document.CodeObjectsUtil
-import org.digma.intellij.plugin.model.rest.insights.*
-import org.digma.intellij.plugin.service.InsightsActionsService
+import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
 import org.digma.intellij.plugin.settings.LinkMode
 import org.digma.intellij.plugin.settings.SettingsState
-import org.digma.intellij.plugin.ui.common.*
-import org.digma.intellij.plugin.ui.common.Html.ARROW_RIGHT
+import org.digma.intellij.plugin.ui.common.CopyableLabel
+import org.digma.intellij.plugin.ui.common.Laf
+import org.digma.intellij.plugin.ui.common.asHtml
+import org.digma.intellij.plugin.ui.common.spanGrayed
 import org.digma.intellij.plugin.ui.list.ListItemActionButton
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.model.TraceSample
@@ -23,18 +21,15 @@ import org.ocpsoft.prettytime.PrettyTime
 import org.threeten.extra.AmountFormats
 import java.awt.BorderLayout
 import java.awt.Dimension
-import java.awt.GridLayout
 import java.io.InputStreamReader
 import java.sql.Timestamp
-import java.util.Locale
+import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.swing.JButton
-import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.SwingConstants
 import kotlin.math.abs
 import kotlin.math.max
-import kotlin.collections.isNullOrEmpty
 
 class SpanPanels {
 
@@ -48,104 +43,6 @@ class SpanPanels {
             }
         }
     }
-
-}
-
-fun spanUsagesPanel(project: Project, spanUsagesInsight: SpanUsagesInsight): JPanel {
-
-    val title = JLabel(asHtml(spanBold("Top Usage")), SwingConstants.LEFT)
-    title.isOpaque = false
-
-    val flowsListPanel = JBPanel<JBPanel<*>>()
-    flowsListPanel.layout = GridLayout(spanUsagesInsight.flows.size, 1, 0, 3)
-    flowsListPanel.border = empty()
-    flowsListPanel.isOpaque = false
-
-    spanUsagesInsight.flows.forEach { spanFlow: SpanFlow ->
-
-        val line = JPanel(BorderLayout())
-        line.isOpaque = false
-
-        val percentageLabel = CopyableLabelHtml(asHtml("${span(String.format("%.1f", spanFlow.percentage))}% "))
-        percentageLabel.border = empty(0,0,0,5)
-
-        line.add(percentageLabel, BorderLayout.WEST)
-
-        val builder = StringBuilder()
-        var spanName = spanUsagesInsight.span // default, just in case first service is not found
-        spanFlow.firstService?.let { firstService ->
-            builder.append(spanGrayed(firstService.service + ": "))
-            builder.append(span(firstService.span))
-            spanName = firstService.span
-        }
-        spanFlow.intermediateSpan?.let { intermediateSpan ->
-            builder.append(" ${spanGrayed(ARROW_RIGHT)} ")
-            builder.append(span(intermediateSpan))
-        }
-        spanFlow.lastService?.let { lastService ->
-            builder.append(" ${spanGrayed(ARROW_RIGHT)} ")
-            builder.append(spanGrayed(lastService.service + ": "))
-            builder.append(span(lastService.span))
-        }
-        spanFlow.lastServiceSpan?.let { lastServiceSpan ->
-            builder.append(" ${spanGrayed(ARROW_RIGHT)} ")
-            builder.append(span(lastServiceSpan))
-        }
-        val spanFlowLabel = CopyableLabelHtml(asHtml(builder.toString()))
-        spanFlowLabel.alignmentX = 0.0f
-        line.add(spanFlowLabel, BorderLayout.CENTER)
-
-        var traceSample: TraceSample? = null
-        spanFlow.sampleTraceIds.firstOrNull()?.let { sampleTraceId ->
-            traceSample = TraceSample(spanName, sampleTraceId)
-        }
-        val buttonToJaeger = buildButtonToJaeger(project, "Trace", spanName, traceSample)
-        if (buttonToJaeger != null) {
-            val wrapper = JPanel(BorderLayout())
-            wrapper.isOpaque = false
-            wrapper.add(buttonToJaeger, BorderLayout.NORTH)
-            line.add(wrapper, BorderLayout.EAST)
-        }
-        flowsListPanel.add(line)
-    }
-
-    val result = JBPanel<JBPanel<*>>()
-    result.layout = BorderLayout()
-    result.add(title, BorderLayout.NORTH)
-    result.add(flowsListPanel, BorderLayout.CENTER)
-
-    return insightItemPanel(result)
-
-    }
-
-
-fun spanDurationPanel(
-    project: Project,
-    spanDurationsInsight: SpanDurationsInsight,
-    panelsLayoutHelper: PanelsLayoutHelper
-): JPanel {
-
-    if (spanDurationsInsight.percentiles.isEmpty()) {
-        return createInsightPanel("Duration", "Waiting for more data.", Laf.Icons.Insight.WAITING_DATA, null, null, panelsLayoutHelper)
-    }
-
-    val durationsListPanel = JBPanel<JBPanel<*>>()
-    durationsListPanel.layout = GridLayout(spanDurationsInsight.percentiles.size, 1, 0, 2)
-    durationsListPanel.isOpaque = false
-
-    val traceSamples = ArrayList<TraceSample>()
-
-    spanDurationsInsight.percentiles
-            .sortedBy(SpanDurationsPercentile::percentile)
-            .forEach { percentile: SpanDurationsPercentile ->
-                val durationsPanel = percentileRowPanel(percentile, panelsLayoutHelper, traceSamples)
-                durationsListPanel.add(durationsPanel)
-            }
-
-    val buttonToGraph = buildButtonToPercentilesGraph(project, spanDurationsInsight.span)
-    val buttonToJaeger = buildButtonToJaeger(project, "Compare", spanDurationsInsight.span.name, traceSamples)
-
-    return createInsightPanel("Duration", "", Laf.Icons.Insight.DURATION, durationsListPanel, listOf(buttonToGraph, buttonToJaeger), panelsLayoutHelper)
 }
 
 fun percentileRowPanel(percentile: SpanDurationsPercentile, panelsLayoutHelper: PanelsLayoutHelper, traceSamples: ArrayList<TraceSample>): JPanel {
@@ -264,27 +161,6 @@ fun buildButtonToJaeger(
         button.addActionListener {
             BrowserUtil.browse(jaegerUrl, project)
         }
-    }
-
-    return button
-}
-
-// if cannot create the button then would return null
-fun buildButtonToJaeger(
-    project: Project, linkCaption: String, spanName: String, traceSample: TraceSample?
-): JButton? {
-    if (traceSample == null) {
-        return null
-    }
-    return buildButtonToJaeger(project, linkCaption, spanName, listOf(traceSample))
-}
-
-fun buildButtonToPercentilesGraph(project: Project, span: SpanInfo): JButton {
-    val analyticsService = AnalyticsService.getInstance(project)
-    val button = ListItemActionButton("Histogram")
-    button.addActionListener {
-        val htmlContent = analyticsService.getHtmlGraphForSpanPercentiles(span.instrumentationLibrary, span.name, Laf.Colors.PLUGIN_BACKGROUND.getHex())
-        HTMLEditorProvider.openEditor(project, "Percentiles Graph of Span ${span.name}", htmlContent)
     }
 
     return button

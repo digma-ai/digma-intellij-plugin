@@ -5,6 +5,7 @@ import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.icons.IconsUtil
 import org.digma.intellij.plugin.ui.common.Laf.Sizes.Companion.INSIGHT_ICON_SIZE
+import org.digma.intellij.plugin.ui.list.insights.ThreeDotsIcon
 import java.awt.Color
 import java.awt.Font
 import javax.swing.Icon
@@ -96,6 +97,7 @@ object Laf  {
                 @JvmStatic val HIGH_USAGE = SvgIcon.asIs("/icons/traffic-high.svg")
                 @JvmStatic val WAITING_DATA = SvgIcon.asIs("/icons/sand-watch.svg")
                 @JvmStatic val SLOW = SvgIcon.asIs("/icons/snail.svg")
+                @JvmStatic val THREE_DOTS = ThreeDotsIcon.asIs("/icons/three-dots.svg")
 
                 @JvmStatic val QUESTION_MARK = AllIcons.General.QuestionDialog
                 @JvmStatic val SPAN_DURATION_DROPPED = loadAndScaleIconByWidth("/icons/dropped.png", 8)

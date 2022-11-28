@@ -11,13 +11,12 @@ import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.buildBoldTitleGrayedComment
 import org.digma.intellij.plugin.ui.common.buildLinkTextWithTitleAndGrayedComment
-import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import java.awt.GridLayout
 import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.swing.JPanel
 
-fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: HashMap<String, Any>, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
+fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: HashMap<String, Any>): JPanel {
 
     val spansListPanel = JPanel()
     spansListPanel.layout = GridLayout(insight.spans.size, 1, 0, 3)
@@ -48,15 +47,18 @@ fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: 
     }
 
     return createInsightPanel(
-            "Span Bottleneck",
-            "The following spans are slowing request handling",
-            Laf.Icons.Insight.BOTTLENECK,
-            spansListPanel,
-            null,
-            panelsLayoutHelper)
+            project = project,
+            insight = insight,
+            title = "Span Bottleneck",
+            description = "The following spans are slowing request handling",
+            iconsList = listOf(Laf.Icons.Insight.BOTTLENECK),
+            bodyPanel = spansListPanel,
+            buttons = null,
+            paginationComponent = null
+    )
 }
 
-fun spanSlowEndpointsPanel(project: Project, insight: SpanSlowEndpointsInsight, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
+fun spanSlowEndpointsPanel(project: Project, insight: SpanSlowEndpointsInsight): JPanel {
     val endpointsListPanel = JPanel()
     endpointsListPanel.layout = GridLayout(insight.slowEndpoints.size, 1, 0, 3)
     endpointsListPanel.border = JBUI.Borders.empty()
@@ -79,12 +81,15 @@ fun spanSlowEndpointsPanel(project: Project, insight: SpanSlowEndpointsInsight, 
     }
 
     return createInsightPanel(
-        "Bottleneck",
-        "The following trace sources spend a significant portion here:",
-        Laf.Icons.Insight.BOTTLENECK,
-        endpointsListPanel,
-        null,
-        panelsLayoutHelper)
+            project = project,
+            insight = insight,
+            title = "Bottleneck",
+            description = "The following trace sources spend a significant portion here:",
+            iconsList = listOf(Laf.Icons.Insight.BOTTLENECK),
+            bodyPanel = endpointsListPanel,
+            buttons = null,
+            paginationComponent = null
+    )
 }
 
 fun descriptionOf(sei: SlowEndpointInfo): String {

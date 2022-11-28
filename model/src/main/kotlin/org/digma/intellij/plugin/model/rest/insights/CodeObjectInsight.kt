@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import org.digma.intellij.plugin.model.InsightType
+import java.util.*
 
 
 /**
@@ -30,4 +31,7 @@ import org.digma.intellij.plugin.model.InsightType
 interface CodeObjectInsight {
     val type: InsightType
     val codeObjectId: String
+    val actualStartTime: Date?
+    val customStartTime: Date?
+    val prefixedCodeObjectId: String?
 }

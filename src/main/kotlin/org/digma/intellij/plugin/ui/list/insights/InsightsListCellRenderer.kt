@@ -40,27 +40,21 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
 
         val panel = when (value.modelObject) {
             is InsightsList.GroupTitleModel -> buildGroupTitle(value.modelObject as InsightsList.GroupTitleModel)
-            is HotspotInsight -> hotspotPanel(value.modelObject as HotspotInsight, panelsLayoutHelper)
-            is ErrorInsight -> errorsPanel(project, value.modelObject as ErrorInsight, panelsLayoutHelper)
-            is LowUsageInsight -> lowUsageInsightPanel(value.modelObject as LowUsageInsight, panelsLayoutHelper)
-            is NormalUsageInsight -> normalUsageInsightPanel(value.modelObject as NormalUsageInsight,
-                panelsLayoutHelper)
-            is HighUsageInsight -> highUsageInsightPanel(value.modelObject as HighUsageInsight,
-                panelsLayoutHelper)
-            is SlowEndpointInsight -> slowEndpointPanel(value.modelObject as SlowEndpointInsight,
-                panelsLayoutHelper)
+            is HotspotInsight -> hotspotPanel(project, value.modelObject as HotspotInsight)
+            is ErrorInsight -> errorsPanel(project, value.modelObject as ErrorInsight)
+            is LowUsageInsight -> lowUsageInsightPanel(project, value.modelObject as LowUsageInsight)
+            is NormalUsageInsight -> normalUsageInsightPanel(project, value.modelObject as NormalUsageInsight)
+            is HighUsageInsight -> highUsageInsightPanel(project, value.modelObject as HighUsageInsight)
+            is SlowEndpointInsight -> slowEndpointPanel(project, value.modelObject as SlowEndpointInsight)
             is SlowestSpansInsight -> slowestSpansPanel(project,
-                value.modelObject as SlowestSpansInsight, value.moreData, panelsLayoutHelper)
+                value.modelObject as SlowestSpansInsight, value.moreData)
             is SpanUsagesInsight -> spanUsagesPanel(project, value.modelObject as SpanUsagesInsight)
-            is SpanDurationsInsight -> spanDurationPanel(project, value.modelObject as SpanDurationsInsight,
-                panelsLayoutHelper)
+            is SpanDurationsInsight -> spanDurationPanel(project, value.modelObject as SpanDurationsInsight, panelsLayoutHelper)
             is SpanDurationBreakdownInsight -> spanDurationBreakdownPanel(project,
                 value.modelObject as SpanDurationBreakdownInsight, value.moreData, panelsLayoutHelper)
-            is SpanSlowEndpointsInsight -> spanSlowEndpointsPanel(project, value.modelObject as SpanSlowEndpointsInsight,
-                panelsLayoutHelper)
-            is UnmappedInsight -> unmappedInsightPanel(value.modelObject as UnmappedInsight,
-                panelsLayoutHelper)
-            else -> genericPanelForSingleInsight(value.modelObject, panelsLayoutHelper)
+            is SpanSlowEndpointsInsight -> spanSlowEndpointsPanel(project, value.modelObject as SpanSlowEndpointsInsight)
+            is UnmappedInsight -> unmappedInsightPanel(project, value.modelObject as UnmappedInsight)
+            else -> genericPanelForSingleInsight(project, value.modelObject)
         }
 
         return panel
@@ -123,5 +117,20 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
             return GroupViewModel("CONSUMER: ", asHtml(span(endpoint)),  Laf.Icons.Insight.MESSAGE)
         }
         return GroupViewModel("REST: ", asHtml(""),  Laf.Icons.Insight.INTERFACE)
+    }
+
+    private fun unmappedInsightPanel(project: Project, modelObject: UnmappedInsight): JPanel {
+
+        val methodName = modelObject.codeObjectId.substringAfterLast("\$_\$")
+        return createInsightPanel(
+                project = project,
+                insight = modelObject,
+                title = "Unmapped insight: '${modelObject.theType}'",
+                description = "unmapped insight type for '$methodName'",
+                iconsList = listOf(Laf.Icons.Insight.QUESTION_MARK),
+                bodyPanel = null,
+                buttons = null,
+                paginationComponent = null
+        )
     }
 }

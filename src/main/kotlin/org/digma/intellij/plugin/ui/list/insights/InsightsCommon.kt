@@ -1,18 +1,30 @@
 package org.digma.intellij.plugin.ui.list.insights
 
-import com.intellij.ui.components.JBPanel
+import com.intellij.codeInsight.hint.HintManager
+import com.intellij.codeInsight.hint.HintUtil
+import com.intellij.openapi.project.Project
+import com.intellij.ui.awt.RelativePoint
+import com.intellij.ui.components.ActionLink
 import com.intellij.util.ui.JBUI.Borders.empty
-import org.digma.intellij.plugin.model.rest.insights.UnmappedInsight
-import org.digma.intellij.plugin.ui.common.Laf
-import org.digma.intellij.plugin.ui.common.buildBoldTitleGrayedComment
+import io.ktor.util.reflect.*
+import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.model.InsightType
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
+import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.list.commonListItemPanel
-import java.awt.BorderLayout
-import java.awt.Dimension
-import java.awt.FlowLayout
+import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
+import org.digma.intellij.plugin.ui.service.InsightsViewService
+import java.awt.*
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
+import java.time.*
+import java.util.*
 import javax.swing.*
 import kotlin.math.max
 
+private const val RECALCULATE = "Recalculate"
+private const val REFRESH = "Refresh"
 
 fun insightTitlePanel(panel: JPanel): JPanel {
     panel.isOpaque = false
@@ -24,92 +36,313 @@ fun insightItemPanel(panel: JPanel): JPanel {
     return commonListItemPanel(panel)
 }
 
-fun createInsightPanel(title: String, description: String, icon: Icon, body: JComponent?, buttons: List<JButton?>?, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
-    return createInsightPanel(title, description, icon, body, buttons, null, panelsLayoutHelper)
-}
-
-fun createInsightPanel(title: String, description: String, icon: Icon, body: JComponent?, footer: JComponent?): JPanel {
-    return createInsightPanel(title, description, icon, body, null, footer, null)
-}
-
-fun createInsightPanel(title: String, description: String, icon: Icon, body: JComponent?, buttons: List<JButton?>?, footer: JComponent?, panelsLayoutHelper: PanelsLayoutHelper?): JPanel {
+fun createInsightPanel(
+        insight: CodeObjectInsight,
+        project: Project,
+        title: String,
+        description: String,
+        iconsList: List<Icon>?,
+        bodyPanel: JComponent?,
+        buttons: List<JButton?>?,
+        paginationComponent: JComponent?,
+): JPanel {
 
     // .-----------------------------------.
-    // | title                     | icon  |
+    // | title                     | icons |
     // | description               |       |
     // |-----------------------------------|
-    // | body                              |
+    // | timeInfoMessagePanel              |
+    // | bodyPanel                         |
+    // | paginationPanel                   |
     // |-----------------------------------|
     // |                           buttons |
     // '-----------------------------------'
 
-    val iconLabel = JLabel(icon, SwingConstants.RIGHT)
-    iconLabel.horizontalAlignment = SwingConstants.RIGHT
-    iconLabel.verticalAlignment = SwingConstants.TOP
-    iconLabel.isOpaque = false
-    iconLabel.border = empty(2)
+    val resultInsightPanel = buildInsightPanel(
+            insight = insight,
+            project = project,
+            title = title,
+            description = description,
+            iconsList = iconsList,
+            bodyPanel = bodyPanel,
+            buttons = buttons,
+            paginationComponent = paginationComponent,
+    )
 
-    val messageLabel = JLabel(buildBoldTitleGrayedComment(title,description), SwingConstants.LEFT)
-    messageLabel.isOpaque = false
-    messageLabel.verticalAlignment = SwingConstants.TOP
+    return insightItemPanel(resultInsightPanel as DigmaResettablePanel)
+}
 
-    val result = JBPanel<JBPanel<*>>()
+private fun buildInsightPanel(
+        insight: CodeObjectInsight,
+        project: Project,
+        title: String,
+        description: String,
+        iconsList: List<Icon>?,
+        bodyPanel: JComponent?,
+        buttons: List<JButton?>?,
+        paginationComponent: JComponent?,
+): JPanel {
+    val insightPanel = object : DigmaResettablePanel() {
+        override fun reset() {
+            rebuildPanel(
+                    insightPanel = this,
+                    insight = insight,
+                    project = project,
+                    title = title,
+                    description = description,
+                    iconsList = iconsList,
+                    bodyPanel = bodyPanel,
+                    buttons = buttons,
+                    paginationComponent = paginationComponent,
+                    isRecalculateButtonPressed = true
+            )
+        }
+    }
+    return rebuildPanel(
+            insightPanel = insightPanel,
+            insight = insight,
+            project = project,
+            title = title,
+            description = description,
+            iconsList = iconsList,
+            bodyPanel = bodyPanel,
+            buttons = buttons,
+            paginationComponent = paginationComponent,
+            isRecalculateButtonPressed = false
+    )
+}
 
-    result.layout = BorderLayout()
-    result.add(messageLabel,BorderLayout.CENTER)
-    result.add(iconLabel,BorderLayout.EAST)
+private fun rebuildPanel(
+        insightPanel: JComponent?,
+        insight: CodeObjectInsight,
+        project: Project,
+        title: String,
+        description: String,
+        iconsList: List<Icon>?,
+        bodyPanel: JComponent?,
+        buttons: List<JButton?>?,
+        paginationComponent: JComponent?,
+        isRecalculateButtonPressed: Boolean
+): JPanel {
+    insightPanel!!.layout = BorderLayout()
+    insightPanel.add(getMessageLabel(title, description), BorderLayout.WEST)
+    insightPanel.add(getIconsListPanel(
+            insight,
+            project,
+            iconsList,
+            insightPanel as DigmaResettablePanel
+    ), BorderLayout.EAST)
 
-    if(body != null || buttons != null){
+    if(bodyPanel != null || buttons != null){
         val bodyWrapper = JPanel(BorderLayout())
         bodyWrapper.isOpaque = false
 
-        if(body != null)
-            bodyWrapper.add(body, BorderLayout.CENTER)
+        if(insight.customStartTime != null || isRecalculateButtonPressed)
+            bodyWrapper.add(getTimeInfoMessagePanel(
+                    insightPanel = insightPanel,
+                    customStartTime = insight.customStartTime,
+                    actualStartTime = insight.actualStartTime,
+                    isRecalculateButtonPressed = isRecalculateButtonPressed,
+                    project = project
+            ), BorderLayout.NORTH)
+
+        if(bodyPanel != null)
+            bodyWrapper.add(bodyPanel, BorderLayout.CENTER)
 
         if(buttons != null){
-            val buttonsList = JPanel(FlowLayout(FlowLayout.RIGHT, 0 ,0))
-            buttonsList.isOpaque = false
-            buttonsList.border = empty()
+            val buttonsListPanel = getBasicEmptyListPanel()
             buttons.filterNotNull().forEach {
-                buttonsList.add(Box.createHorizontalStrut(5))
-                buttonsList.add(it)
+                buttonsListPanel.add(Box.createHorizontalStrut(5))
+                buttonsListPanel.add(it)
             }
-            bodyWrapper.add(buttonsList, BorderLayout.SOUTH)
+            bodyWrapper.add(buttonsListPanel, BorderLayout.SOUTH)
         }
 
-        if(footer != null){
-            val footerComponent = JPanel(FlowLayout(FlowLayout.LEFT, 0 ,0))
-            footerComponent.isOpaque = false
-            footerComponent.border = empty()
-
-            footerComponent.add(Box.createHorizontalStrut(5))
-            footerComponent.add(footer)
-
-            bodyWrapper.add(footerComponent, BorderLayout.SOUTH)
+        if(paginationComponent != null){
+            bodyWrapper.add(getPaginationPanel(paginationComponent), BorderLayout.SOUTH)
         }
 
-        result.add(bodyWrapper,BorderLayout.SOUTH)
+        insightPanel.add(bodyWrapper,BorderLayout.SOUTH)
+    }
+    return insightPanel
+}
+
+private fun getTimeInfoMessagePanel(
+        insightPanel: DigmaResettablePanel,
+        customStartTime: Date?,
+        actualStartTime: Date?,
+        isRecalculateButtonPressed: Boolean,
+        project: Project
+): JPanel {
+    val formattedActualStartTime = actualStartTime?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalDateTime()
+    val diff: Duration = Duration.between(formattedActualStartTime, LocalDateTime.now())
+
+    var formattedStartTime = ""
+    if (!diff.isNegative && !diff.isZero) {
+        formattedStartTime = getFormattedTimeDifference(diff)
     }
 
+    val identicalStartTimes = customStartTime != null && actualStartTime?.compareTo(customStartTime) == 0
 
-    return insightItemPanel(result)
+    val timeInfoMessage = if (shouldShowApplyNewTimeFilterLabel(isRecalculateButtonPressed, identicalStartTimes)) {
+        "Applying the new time filter. Wait a few minutes and then refresh."
+    } else {
+        "Data from: $formattedStartTime ago"
+    }
+
+    val timeInfoMessageLabel = JLabel(asHtml(timeInfoMessage), SwingConstants.LEFT)
+
+    val timeInfoMessageLabelPanel = JPanel()
+    timeInfoMessageLabelPanel.layout = GridLayout(2, 1,0,0)
+    timeInfoMessageLabelPanel.border = empty(2, 0)
+    timeInfoMessageLabelPanel.isOpaque = false
+    timeInfoMessageLabelPanel.add(timeInfoMessageLabel)
+    if (shouldShowApplyNewTimeFilterLabel(isRecalculateButtonPressed, identicalStartTimes)) {
+        timeInfoMessageLabelPanel.add(getRefreshButton(insightPanel, project))
+    }
+    return timeInfoMessageLabelPanel
 }
 
-
-fun unmappedInsightPanel(modelObject: UnmappedInsight, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
-
-    val methodName = modelObject.codeObjectId.substringAfterLast("\$_\$")
-    return createInsightPanel("Unmapped insight: '${modelObject.theType}'",
-        "unmapped insight type for '$methodName'",
-        Laf.Icons.Insight.QUESTION_MARK, null, null, panelsLayoutHelper)
+private fun shouldShowApplyNewTimeFilterLabel(isRecalculateButtonPressed: Boolean, identicalStartTimes: Boolean): Boolean {
+    return isRecalculateButtonPressed || !identicalStartTimes
 }
 
+private fun getFormattedTimeDifference(diff: Duration): String {
+    val builder = StringBuilder()
+    if (diff.toDays() > 0)
+        builder.append(diff.toDays()," days ")
+    if (diff.toHoursPart() > 0)
+        builder.append( diff.toHoursPart()," hours ")
+    if (diff.toMinutesPart() > 0)
+        builder.append(diff.toMinutesPart(), " minutes ")
+    else builder.append(1, " minute ")
+    return builder.toString()
+}
+private fun getBasicEmptyListPanel(): JPanel {
+    val listPanel = JPanel(FlowLayout(FlowLayout.RIGHT, 0 ,0))
+    listPanel.isOpaque = false
+    listPanel.border = empty()
+    return listPanel
+}
 
-fun genericPanelForSingleInsight(modelObject: Any?, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
+private fun getPaginationPanel(paginationComponent: JComponent?): JPanel {
+    val paginationPanel = JPanel(FlowLayout(FlowLayout.LEFT, 0 ,0))
+    paginationPanel.isOpaque = false
+    paginationPanel.border = empty()
 
-    return createInsightPanel("Generic insight panel",
-        "Insight named ${modelObject?.javaClass?.simpleName}",
-        Laf.Icons.Insight.QUESTION_MARK,null, null, panelsLayoutHelper)
+    paginationPanel.add(Box.createHorizontalStrut(5))
+    paginationPanel.add(paginationComponent)
+    return paginationPanel
+}
+
+private fun getMessageLabel(title: String, description: String): JLabel {
+    val messageLabel = JLabel(buildBoldTitleGrayedComment(title,description), SwingConstants.LEFT)
+    messageLabel.isOpaque = false
+    messageLabel.verticalAlignment = SwingConstants.TOP
+    return messageLabel
+}
+
+private fun getIconsListPanel(
+        insight: CodeObjectInsight,
+        project: Project,
+        iconsList: List<Icon>?,
+        insightPanel: DigmaResettablePanel
+): JPanel {
+    val icons = ArrayList<Icon>()
+    if (iconsList != null) {
+        icons.addAll(iconsList)
+    }
+    if(insight.prefixedCodeObjectId != null) {
+        icons.add(Laf.Icons.Insight.THREE_DOTS)
+    }
+
+    val iconsResultListPanel = getBasicEmptyListPanel()
+    icons.forEach {
+        iconsResultListPanel.add(Box.createHorizontalStrut(5))
+        val iconLabel = JLabel(it, SwingConstants.RIGHT)
+        iconLabel.horizontalAlignment = SwingConstants.RIGHT
+        iconLabel.verticalAlignment = SwingConstants.TOP
+        iconLabel.isOpaque = false
+        iconLabel.border = empty(2,2,2, 4)
+
+        if(it.instanceOf(ThreeDotsIcon::class)) {
+            iconLabel.addMouseListener(object : MouseAdapter() {
+                override fun mouseClicked(e: MouseEvent?) {
+                    showHintMessage(
+                            threeDotsIcon = iconLabel,
+                            insightPanel = insightPanel,
+                            codeObjectId = insight.prefixedCodeObjectId!!,
+                            insightType = insight.type,
+                            project = project
+                    )
+                }
+                override fun mouseEntered(e: MouseEvent?) {
+                    showHintMessage(
+                            threeDotsIcon = iconLabel,
+                            insightPanel = insightPanel,
+                            codeObjectId = insight.prefixedCodeObjectId!!,
+                            insightType = insight.type,
+                            project = project
+                    )
+                }
+                override fun mouseExited(e: MouseEvent?) {}
+                override fun mousePressed(e: MouseEvent?) {}
+            })
+        }
+
+        iconsResultListPanel.add(iconLabel)
+    }
+    return iconsResultListPanel
+}
+
+private fun showHintMessage(
+        threeDotsIcon: JComponent,
+        insightPanel: DigmaResettablePanel,
+        codeObjectId: String,
+        insightType: InsightType,
+        project: Project
+) {
+    val analyticsService = AnalyticsService.getInstance(project)
+    val recalculateAction = ActionLink(RECALCULATE)
+    recalculateAction.addActionListener {
+        analyticsService.setInsightCustomStartTime(codeObjectId, insightType)
+        rebuildInsightPanel(insightPanel)
+    }
+    recalculateAction.border = HintUtil.createHintBorder()
+    recalculateAction.background = HintUtil.getInformationColor()
+    recalculateAction.isOpaque = true
+    HintManager.getInstance().showHint(recalculateAction, RelativePoint.getSouthWestOf(threeDotsIcon), HintManager.HIDE_BY_ESCAPE, 2000)
+}
+
+private fun getRefreshButton(insightPanel: DigmaResettablePanel, project: Project): ActionLink {
+    val refreshAction = ActionLink(REFRESH)
+    refreshAction.addActionListener {
+        val actionListener: InsightsViewService = project.getService(InsightsViewService::class.java)
+        actionListener.refreshInsights()
+        rebuildInsightPanel(insightPanel)
+    }
+    refreshAction.border = empty()
+    refreshAction.isOpaque = false
+    return refreshAction
+}
+
+private fun rebuildInsightPanel(insightPanel: DigmaResettablePanel) {
+    insightPanel.removeAll()
+    insightPanel.reset()
+}
+
+fun genericPanelForSingleInsight(project: Project, modelObject: Any?): JPanel {
+
+    return createInsightPanel(
+            project = project,
+            insight = modelObject as CodeObjectInsight,
+            title = "Generic insight panel",
+            description = "Insight named ${modelObject.javaClass.simpleName}",
+            iconsList = listOf(Laf.Icons.Insight.QUESTION_MARK),
+            bodyPanel = null,
+            buttons = null,
+            paginationComponent = null
+    )
 }
 
 

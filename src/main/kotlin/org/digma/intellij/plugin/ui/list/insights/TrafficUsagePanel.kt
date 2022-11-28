@@ -1,39 +1,68 @@
 package org.digma.intellij.plugin.ui.list.insights
 
+import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.model.rest.insights.HighUsageInsight
 import org.digma.intellij.plugin.model.rest.insights.LowUsageInsight
 import org.digma.intellij.plugin.model.rest.insights.NormalUsageInsight
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
-import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import javax.swing.Icon
 import javax.swing.JLabel
 import javax.swing.JPanel
 
 
-private fun trafficUsagePanel(title: String, labelValue: String, countPerMinute: Int, icon: Icon, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
+private fun trafficUsagePanel(
+        project: Project,
+        insight: CodeObjectInsight,
+        title: String,
+        labelValue: String,
+        countPerMinute: Int,
+        iconsList: List<Icon>
+): JPanel {
     val callsPerMinuteLabel = JLabel("${countPerMinute}/min")
-    return createInsightPanel(title, asHtml(labelValue), icon, callsPerMinuteLabel, null, panelsLayoutHelper)
-}
-
-fun lowUsageInsightPanel(insight: LowUsageInsight, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
-    return trafficUsagePanel(
-        "Endpoint low traffic", "Servicing a low number of requests",
-        insight.maxCallsIn1Min, Laf.Icons.Insight.LOW_USAGE,panelsLayoutHelper
+    return createInsightPanel(
+            project = project,
+            insight = insight,
+            title = title,
+            description = asHtml(labelValue),
+            iconsList = iconsList,
+            bodyPanel = callsPerMinuteLabel,
+            buttons = null,
+            paginationComponent = null
     )
 }
 
-fun normalUsageInsightPanel(insight: NormalUsageInsight, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
+fun lowUsageInsightPanel(project: Project, insight: LowUsageInsight): JPanel {
     return trafficUsagePanel(
-        "Endpoint normal level of traffic", "Servicing an average number of requests",
-        insight.maxCallsIn1Min, Laf.Icons.Insight.NORMAL_USAGE,panelsLayoutHelper
+            project = project,
+            insight = insight,
+            title = "Endpoint low traffic",
+            labelValue = "Servicing a low number of requests",
+            countPerMinute = insight.maxCallsIn1Min,
+            iconsList = listOf(Laf.Icons.Insight.LOW_USAGE)
     )
 }
 
-fun highUsageInsightPanel(insight: HighUsageInsight, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
+fun normalUsageInsightPanel(project: Project, insight: NormalUsageInsight): JPanel {
     return trafficUsagePanel(
-        "Endpoint high traffic", "Servicing a high number of requests",
-        insight.maxCallsIn1Min, Laf.Icons.Insight.HIGH_USAGE,panelsLayoutHelper
+            project = project,
+            insight = insight,
+            title = "Endpoint normal level of traffic",
+            labelValue = "Servicing an average number of requests",
+            countPerMinute = insight.maxCallsIn1Min,
+            iconsList = listOf(Laf.Icons.Insight.NORMAL_USAGE)
+    )
+}
+
+fun highUsageInsightPanel(project: Project, insight: HighUsageInsight): JPanel {
+    return trafficUsagePanel(
+            project = project,
+            insight = insight,
+            title = "Endpoint high traffic",
+            labelValue = "Servicing a high number of requests",
+            countPerMinute = insight.maxCallsIn1Min,
+            iconsList = listOf(Laf.Icons.Insight.HIGH_USAGE)
     )
 }
 

@@ -1,21 +1,30 @@
 package org.digma.intellij.plugin.ui.list.insights
 
+import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.model.rest.insights.Duration
 import org.digma.intellij.plugin.model.rest.insights.SlowEndpointInsight
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.span
-import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.swing.JLabel
 import javax.swing.JPanel
 
 
-fun slowEndpointPanel(insight: SlowEndpointInsight, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
+fun slowEndpointPanel(project: Project, insight: SlowEndpointInsight): JPanel {
     val bodyContents = genContent(insight)
     val durationLabel = JLabel(evalDuration(insight.median))
-    val result = createInsightPanel("Slow Endpoint", bodyContents, Laf.Icons.Insight.SLOW, durationLabel, null, panelsLayoutHelper)
+    val result = createInsightPanel(
+            project = project,
+            insight = insight,
+            title = "Slow Endpoint",
+            description = bodyContents,
+            iconsList = listOf(Laf.Icons.Insight.SLOW),
+            bodyPanel = durationLabel,
+            buttons = null,
+            paginationComponent = null
+            )
     result.toolTipText = asHtml(genToolTip(insight))
     return result
 }

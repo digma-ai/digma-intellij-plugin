@@ -29,6 +29,10 @@ class MethodScope(private val methodInfo: MethodInfo) : Scope {
     override fun getScopeTooltip(): String {
         return "${methodInfo.containingClass}.${methodInfo.nameWithParams()}"
     }
+
+    fun getMethodInfo(): MethodInfo {
+        return methodInfo
+    }
 }
 
 class DocumentScope(private val documentInfo: DocumentInfo) : Scope {

@@ -9,13 +9,11 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.CommonUtils;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
-import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
-import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
-import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
-import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
+import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
 import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummaryRequest;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
@@ -37,6 +35,7 @@ import java.lang.reflect.UndeclaredThrowableException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.net.http.HttpTimeoutException;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -180,6 +179,21 @@ public class AnalyticsService implements Disposable {
     public List<CodeObjectError> getErrorsOfCodeObject(String codeObjectId) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         return executeCatching(() -> analyticsProviderProxy.getErrorsOfCodeObject(env, codeObjectId));
+    }
+
+    public void setInsightCustomStartTime(String codeObjectId, InsightType insightType) throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        String formattedActualDate = Instant.now().toString();//FYI: by UTC time zone
+        executeCatching(() -> {
+            analyticsProviderProxy.setInsightCustomStartTime(
+                    new CustomStartTimeInsightRequest(
+                            env,
+                        codeObjectId,
+                        insightType.name(),
+                        formattedActualDate
+                ));
+            return null;
+        });
     }
 
     public CodeObjectErrorDetails getErrorDetails(String errorUid) throws AnalyticsServiceException {

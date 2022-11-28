@@ -2,10 +2,15 @@ package org.digma.intellij.plugin.model.rest.insights
 
 import org.digma.intellij.plugin.model.rest.insights.EndpointSchema.Companion.adjustHttpRouteIfNeeded
 import org.digma.intellij.plugin.model.rest.insights.EndpointSchema.Companion.getRouteInfo
+import java.time.temporal.ChronoUnit
+import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 internal class EndpointSchemaTest {
+
+    private var actualStartTimeNow = Date()
+    private var customStartTimeFiveDaysBefore = Date.from(actualStartTimeNow.toInstant().minus(5, ChronoUnit.DAYS))
 
     @Test
     fun getShortRouteNameShouldWorkForHttpSchema() {
@@ -24,23 +29,29 @@ internal class EndpointSchemaTest {
 
     @Test
     fun adjustHttpRouteIfNeededShouldAdjustWhenNoSchema() {
-        val normalUsageInsight = NormalUsageInsight("123", "get /yes", 3)
+        val codeObjectId = "123"
+        val normalUsageInsight = NormalUsageInsight(codeObjectId, "get /yes", actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(codeObjectId), 3)
         adjustHttpRouteIfNeeded(normalUsageInsight)
         assertEquals("epHTTP:get /yes", normalUsageInsight.route)
     }
 
     @Test
     fun adjustHttpRouteIfNeededShouldSkipAdjustWhenHttpSchemaAlreadyExists() {
-        val normalUsageInsight = NormalUsageInsight("456", "epHTTP:post /letsgo", 8)
+        val codeObjectId = "456"
+        val normalUsageInsight = NormalUsageInsight(codeObjectId, "epHTTP:post /letsgo", actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(codeObjectId), 8)
         adjustHttpRouteIfNeeded(normalUsageInsight)
         assertEquals("epHTTP:post /letsgo", normalUsageInsight.route)
     }
 
     @Test
     fun adjustHttpRouteIfNeededShouldSkipAdjustWhenRpcSchemaAlreadyExists() {
-        val normalUsageInsight = NormalUsageInsight("789", "epRPC:serviceA.methodB", 4)
+        val codeObjectId = "789"
+        val normalUsageInsight = NormalUsageInsight(codeObjectId, "epRPC:serviceA.methodB", actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(codeObjectId), 4)
         adjustHttpRouteIfNeeded(normalUsageInsight)
         assertEquals("epRPC:serviceA.methodB", normalUsageInsight.route)
     }
 
+    private fun addPrefixToCodeObjectId(codeObjectId: String): String {
+        return "method:$codeObjectId"
+    }
 }

@@ -56,11 +56,14 @@ fun spanDurationBreakdownPanel(
 
     updateDurationBreakdownPanel(validBreakdownEntries)
     return createInsightPanel(
-            "Duration Breakdown",
-            "",
-            Laf.Icons.Insight.DURATION,
-            resultBreakdownPanel,
-            paginationRowPanel(validBreakdownEntries)
+            project = project,
+            insight = insight,
+            title = "Duration Breakdown",
+            description = "",
+            iconsList = listOf(Laf.Icons.Insight.DURATION),
+            bodyPanel = resultBreakdownPanel,
+            buttons = null,
+            paginationComponent = paginationRowPanel(validBreakdownEntries),
     )
 }
 

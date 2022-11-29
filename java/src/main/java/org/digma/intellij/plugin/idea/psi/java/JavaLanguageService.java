@@ -94,20 +94,21 @@ public class JavaLanguageService implements LanguageService {
         //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
         className = className.replace('$', '.');
 
-        //searching in project scope will find only project classes
-        Collection<PsiClass> psiClasses =
-                JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.projectScope(project));
-        //todo: maybe also search in method index and compare to find the same file
-        // or try to verify that this class really has the method
-        if (!psiClasses.isEmpty()) {
-            Optional<PsiClass> psiClass = psiClasses.stream().findAny();
-            //noinspection ConstantConditions
-            if (psiClass.isPresent()) {
-                return psiClass.get().getLanguage();
+        var finalClassName = className;
+        return ReadAction.compute(() -> {
+            Collection<PsiClass> psiClasses =
+                    JavaFullClassNameIndex.getInstance().get(finalClassName, project, GlobalSearchScope.projectScope(project));
+            //todo: maybe also search in method index and compare to find the same file
+            // or try to verify that this class really has the method
+            if (!psiClasses.isEmpty()) {
+                Optional<PsiClass> psiClass = psiClasses.stream().findAny();
+                //noinspection ConstantConditions
+                if (psiClass.isPresent()) {
+                    return psiClass.get().getLanguage();
+                }
             }
-        }
-
-        return null;
+            return null;
+        });
     }
 
 
@@ -421,7 +422,6 @@ public class JavaLanguageService implements LanguageService {
     }
 
 
-
     private void spanDiscovery(PsiFile psiFile, DocumentInfo documentInfo) {
         withSpanAnnotationSpanDiscovery(psiFile, documentInfo);
         startSpanMethodCallSpanDiscovery(psiFile, documentInfo);
@@ -479,7 +479,6 @@ public class JavaLanguageService implements LanguageService {
     public boolean isIntellijPlatformPluginLanguage() {
         return true;
     }
-
 
 
 }

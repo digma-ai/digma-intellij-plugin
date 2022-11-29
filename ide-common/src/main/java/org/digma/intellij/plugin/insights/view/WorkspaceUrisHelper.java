@@ -20,11 +20,9 @@ public class WorkspaceUrisHelper {
         //and DocumentInfoService should find the method info and by that the language.
         //but if called from SummariesProvider there is no related file and probably no method id.
 
-        var workspaceUris =
-                ReadAction.compute(() -> {
-                    var languageService = LanguageService.findLanguageServiceByMethodCodeObjectId(project, methodCodeObjectId);
-                    return languageService.findWorkspaceUrisForSpanIds(spanIds);
-                });
+        var languageService = LanguageService.findLanguageServiceByMethodCodeObjectId(project, methodCodeObjectId);
+
+        var workspaceUris = languageService.findWorkspaceUrisForSpanIds(spanIds);
 
         workspaceUris.forEach((k, v) -> theListView.getMoreData().put(k, v));
     }

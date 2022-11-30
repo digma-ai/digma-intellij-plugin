@@ -6,10 +6,8 @@ import com.intellij.lang.java.JavaLanguage;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileTypes.FileType;
-import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -21,9 +19,9 @@ import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.psi.search.searches.MethodReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Query;
+import com.intellij.util.RunnableCallable;
 import com.intellij.util.concurrency.NonUrgentExecutor;
 import kotlin.Pair;
-import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.index.DocumentInfoIndex;
 import org.digma.intellij.plugin.log.Log;
@@ -39,7 +37,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.concurrent.Callable;
 
 import static org.digma.intellij.plugin.idea.psi.java.Constants.SPAN_BUILDER_FQN;
 import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.createJavaMethodCodeObjectId;
@@ -315,7 +312,7 @@ public class JavaLanguageService implements LanguageService {
     }
 
     @Override
-    public DocumentInfo buildDocumentInfo(PsiFile psiFile) {
+    public @NotNull DocumentInfo buildDocumentInfo(PsiFile psiFile) {
 
         String fileUri = PsiUtils.psiFileToUri(psiFile);
         Map<String, MethodInfo> methodInfoMap = new HashMap<>();
@@ -380,49 +377,50 @@ public class JavaLanguageService implements LanguageService {
         in that case the code must wait for smart mode before trying to do span discovery and then do it in the
         background.
         if it's called in smart mode then span discovery will happen on the current thread blocking until its finished.
-
-
          */
-        if (DumbService.getInstance(project).isDumb()) {
-            ReadAction.nonBlocking((Callable<Void>) () -> {
-                spanDiscovery(psiFile, documentInfo);
-                refreshDocumentInfoAndNotifyContextChanged(psiFile);
-                return null;
-            }).inSmartMode(project).submit(NonUrgentExecutor.getInstance());
-        } else {
-            ReadAction.run(() -> spanDiscovery(psiFile, documentInfo));
-        }
+
+        //todo: no need to wait for smart mode because enrichDocumentInfo should not be called in dumb mode
+        // EditorEventsHandler and DocumentChangeListener will call this method only in smart mode
+//        if (DumbService.getInstance(project).isDumb()) {
+//            ReadAction.nonBlocking(new RunnableCallable(() -> {
+//                spanDiscovery(psiFile, documentInfo);
+//                refreshDocumentInfoAndNotifyContextChanged(psiFile);
+//            })).inSmartMode(project).submit(NonUrgentExecutor.getInstance());
+//        } else {
+            ReadAction.nonBlocking(new RunnableCallable(() -> spanDiscovery(psiFile, documentInfo))).submit(NonUrgentExecutor.getInstance());
+//        }
     }
 
 
-    private void refreshDocumentInfoAndNotifyContextChanged(@NotNull PsiFile psiFile) {
-        //if documents are opened in dumb mode it may be that they don't have span infos in time because span discovery
-        // waits for smart mode,in that case they will not have span summaries and span insights.
-        // So after span discovery in smart mode ,refresh the document data and fire contextChange for the selected editor.
-
-        Backgroundable.ensureBackground(project,"Refresh document",() -> {
-
-            DocumentInfoService.getInstance(project).refreshIfExists(psiFile);
-
-            ApplicationManager.getApplication().invokeLater(() -> {
-                var editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
-                if (editor != null){
-                    var virtualFile = FileDocumentManager.getInstance().getFile(editor.getDocument());
-                    if (virtualFile != null) {
-                        var selectedPsiFile = PsiManager.getInstance(project).findFile(virtualFile);
-                        if (selectedPsiFile != null && selectedPsiFile.equals(psiFile)){
-                            var offset = editor.getCaretModel().getOffset();
-                            var methodUnderCaret = detectMethodUnderCaret(project,psiFile,offset);
-                            caretContextService.contextChanged(methodUnderCaret);
-                        }
-                    }
-                }
-            });
-        });
-    }
+//    private void refreshDocumentInfoAndNotifyContextChanged(@NotNull PsiFile psiFile) {
+//        //if documents are opened in dumb mode it may be that they don't have span infos in time because span discovery
+//        // waits for smart mode,in that case they will not have span summaries and span insights.
+//        // So after span discovery in smart mode ,refresh the document data and fire contextChange for the selected editor.
+//
+//        Backgroundable.ensureBackground(project,"Refresh document",() -> {
+//
+//            DocumentInfoService.getInstance(project).refreshIfExists(psiFile);
+//
+//            ApplicationManager.getApplication().invokeLater(() -> {
+//                var editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+//                if (editor != null){
+//                    var virtualFile = FileDocumentManager.getInstance().getFile(editor.getDocument());
+//                    if (virtualFile != null) {
+//                        var selectedPsiFile = PsiManager.getInstance(project).findFile(virtualFile);
+//                        if (selectedPsiFile != null && selectedPsiFile.equals(psiFile)){
+//                            var offset = editor.getCaretModel().getOffset();
+//                            var methodUnderCaret = detectMethodUnderCaret(project,psiFile,offset);
+//                            caretContextService.contextChanged(methodUnderCaret);
+//                        }
+//                    }
+//                }
+//            });
+//        });
+//    }
 
 
     private void spanDiscovery(PsiFile psiFile, DocumentInfo documentInfo) {
+        Log.log(LOGGER::info, "Building spans for file {}", psiFile);
         withSpanAnnotationSpanDiscovery(psiFile, documentInfo);
         startSpanMethodCallSpanDiscovery(psiFile, documentInfo);
     }
@@ -458,11 +456,8 @@ public class JavaLanguageService implements LanguageService {
         //maybe the annotation is not in the classpath
         if (withSpanClass != null) {
             Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(withSpanClass, GlobalSearchScope.fileScope(psiFile));
-
             psiMethods = filterNonRelevantMethodsForSpanDiscovery(psiMethods);
-
             psiMethods.forEach(psiMethod -> {
-
                 SpanInfo spanInfo = SpanDiscoveryUtils.getSpanInfoFromWithSpanAnnotatedMethod(psiMethod);
                 if (spanInfo != null) {
                     MethodInfo methodInfo = documentInfo.getMethods().get(spanInfo.getContainingMethod());

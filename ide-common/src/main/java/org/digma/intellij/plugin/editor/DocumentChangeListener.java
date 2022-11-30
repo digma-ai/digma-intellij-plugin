@@ -12,6 +12,7 @@ import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiInvalidElementAccessException;
 import com.intellij.util.Alarm;
 import com.intellij.util.AlarmFactory;
 import com.intellij.util.indexing.FileBasedIndex;
@@ -22,6 +23,7 @@ import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.psi.LanguageService;
+import org.digma.intellij.plugin.psi.LanguageServiceLocator;
 import org.digma.intellij.plugin.ui.CaretContextService;
 import org.jetbrains.annotations.NotNull;
 
@@ -41,26 +43,15 @@ class DocumentChangeListener {
     private final DocumentInfoService documentInfoService;
     private final CaretContextService caretContextService;
 
-    private final Alarm documentChangeAlarm;
-
     private final Map<VirtualFile, Disposable> disposables = new HashMap<>();
 
     DocumentChangeListener(Project project) {
         this.project = project;
         documentInfoService = project.getService(DocumentInfoService.class);
         caretContextService = project.getService(CaretContextService.class);
-        documentChangeAlarm = AlarmFactory.getInstance().create();
     }
 
-    void maybeAddDocumentListener(Editor editor, PsiFile psiFile, LanguageService languageService) {
-        if (disposables.containsKey(psiFile.getVirtualFile())) {
-            return;
-        }
-
-        addDocumentListener(editor, psiFile, languageService);
-    }
-
-    private void addDocumentListener(@NotNull Editor editor, @NotNull PsiFile psiFile, @NotNull LanguageService languageService) {
+    void maybeAddDocumentListener(@NotNull Editor editor) {
 
         if (editor.isDisposed()) {
             Log.log(LOGGER::debug, "not installing document listener for {} because it is disposed", editor);
@@ -68,33 +59,75 @@ class DocumentChangeListener {
         }
 
         Document document = editor.getDocument();
+        PsiFile psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
+        //probably should never happen
+        if (psiFile == null) {
+            return;
+        }
+
+        VirtualFile virtualFile = psiFile.getVirtualFile();
+
+        //this is a check if this document already has a document listener
+        if (disposables.containsKey(virtualFile)) {
+            return;
+        }
+
+        addDocumentListener(editor, virtualFile);
+    }
+
+    private void addDocumentListener(@NotNull Editor editor, @NotNull VirtualFile virtualFile) {
+
+        Document document = editor.getDocument();
 
         Disposable parentDisposable = Disposer.newDisposable();
-        disposables.put(psiFile.getVirtualFile(), parentDisposable);
-        Log.log(LOGGER::debug, "adding document listener for file:{}", psiFile.getVirtualFile());
+        disposables.put(virtualFile, parentDisposable);
+        Log.log(LOGGER::debug, "adding document listener for file:{}", virtualFile);
 
         document.addDocumentListener(new DocumentListener() {
+
+            private final Alarm documentChangeAlarm = AlarmFactory.getInstance().create();
+
             @Override
             public void documentChanged(@NotNull DocumentEvent event) {
 
+                if (project.isDisposed()) {
+                    return;
+                }
+
                 documentChangeAlarm.cancelAllRequests();
                 documentChangeAlarm.addRequest(() ->
-                        processDocumentChanged(editor, psiFile, languageService), 300);
+                {
+                    //this code is always executed in smart mode because the listener is installed only in smart mode
+                    PsiFile fileToQuery = PsiDocumentManager.getInstance(project).getPsiFile(event.getDocument());
+                    //probably should never happen
+                    if (fileToQuery == null) {
+                        return;
+                    }
+                    try {
+
+                        processDocumentChanged(editor, fileToQuery);
+                    } catch (PsiInvalidElementAccessException e) {
+                        Log.debugWithException(LOGGER, e, "exception while processing file: {}, {}", fileToQuery.getVirtualFile(), e.getMessage());
+                    }
+
+                }, 500);
 
             }
         }, parentDisposable);
     }
 
 
-    private void processDocumentChanged(@NotNull Editor editor, @NotNull PsiFile psiFile, @NotNull LanguageService languageService) {
+    private void processDocumentChanged(@NotNull Editor editor, @NotNull PsiFile psiFile) {
 
-        if (project.isDisposed()){
+        if (project.isDisposed()) {
             return;
         }
 
 
-
         PsiDocumentManager.getInstance(project).performLaterWhenAllCommitted(() -> {
+
+            LanguageService languageService = LanguageServiceLocator.getInstance(project).locate(psiFile.getLanguage());
+
             DocumentInfo documentInfo;
             try {
                 Map<Integer, DocumentInfo> documentInfoMap =
@@ -113,6 +146,7 @@ class DocumentChangeListener {
 
             } catch (IndexNotReadyException e) {
                 //IndexNotReadyException will be thrown on dumb mode, when indexing is still in progress.
+                //usually it should not happen because the listener is installed only in smart mode.
                 documentInfo = languageService.buildDocumentInfo(psiFile);
             }
 
@@ -124,7 +158,7 @@ class DocumentChangeListener {
 
             MethodUnderCaret methodUnderCaret = languageService.detectMethodUnderCaret(project, psiFile, editor.getCaretModel().getOffset());
 
-            update(languageService,psiFile, documentInfo, methodUnderCaret);
+            update(languageService, psiFile, documentInfo, methodUnderCaret);
 
         });
     }
@@ -137,7 +171,7 @@ class DocumentChangeListener {
             //contextChanged will update the UI and must run after documentInfoService.addCodeObjects is finished
             //enrichDocumentInfo is meant mainly to discover spans. the DocumentInfoIndex can
             // not discover spans because there is no reference resolving during file based index.
-            languageService.enrichDocumentInfo(documentInfo,psiFile);
+            languageService.enrichDocumentInfo(documentInfo, psiFile);
             documentInfoService.addCodeObjects(psiFile, documentInfo);
             caretContextService.contextChanged(methodUnderCaret);
         });

@@ -80,7 +80,7 @@ public class PythonLanguageService implements LanguageService {
     }
 
     @Override
-    public DocumentInfo buildDocumentInfo(PsiFile psiFile) {
+    public @NotNull DocumentInfo buildDocumentInfo(PsiFile psiFile) {
         throw new UnsupportedOperationException("should not be called, need to implement");
     }
 

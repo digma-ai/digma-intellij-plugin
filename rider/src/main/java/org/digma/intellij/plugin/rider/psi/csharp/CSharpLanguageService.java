@@ -73,7 +73,7 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     }
 
     @Override
-    public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, int caretOffset) {
+    public @NotNull MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, int caretOffset) {
         throw new UnsupportedOperationException("should not be called, its in ElementUnderCaretDetector");
     }
 
@@ -111,7 +111,7 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     }
 
     @Override
-    public DocumentInfo buildDocumentInfo(PsiFile psiFile) {
+    public @NotNull DocumentInfo buildDocumentInfo(PsiFile psiFile) {
         throw new UnsupportedOperationException("should not be called, C# is indexed in resharper");
     }
 

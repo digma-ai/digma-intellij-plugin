@@ -12,16 +12,18 @@ import com.intellij.psi.*;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.psi.search.searches.MethodReferencesSearch;
-import com.intellij.util.Alarm;
-import com.intellij.util.AlarmFactory;
 import com.intellij.util.Query;
+import com.intellij.util.RunnableCallable;
+import com.intellij.util.concurrency.NonUrgentExecutor;
 import kotlin.Pair;
-import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
@@ -36,18 +38,13 @@ public class JavaSpanNavigationProvider implements Disposable {
 
     private final Map<String, SpanLocation> spanLocations = new HashMap<>();
 
-    private final Set<Document> changedDocuments = Collections.synchronizedSet(new HashSet<>());
-
-    private final Alarm documentChangeAlarm;
-
     //used to restrict one update thread at a time
-    private final ReentrantLock documentUpdateLock = new ReentrantLock();
+    private final ReentrantLock buildSpansLock = new ReentrantLock();
 
     private final Project project;
 
     public JavaSpanNavigationProvider(Project project) {
         this.project = project;
-        documentChangeAlarm = AlarmFactory.getInstance().create();
     }
 
     public static JavaSpanNavigationProvider getInstance(@NotNull Project project) {
@@ -76,11 +73,18 @@ public class JavaSpanNavigationProvider implements Disposable {
     }
 
 
-    public void build() {
-        Backgroundable.ensureBackground(project, "Build Span Navigation", () -> ReadAction.run(() -> {
-            buildWithSpanAnnotation();
-            buildStartSpanMethodCall();
-        }));
+    public void buildSpanNavigation() {
+        ReadAction.nonBlocking(new RunnableCallable(() -> {
+            buildSpansLock.lock();
+            try {
+                Log.log(LOGGER::info, "Building span navigation");
+                buildWithSpanAnnotation();
+                buildStartSpanMethodCall();
+            } finally {
+                buildSpansLock.unlock();
+            }
+        })).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance());
+
     }
 
 
@@ -131,66 +135,38 @@ public class JavaSpanNavigationProvider implements Disposable {
             return;
         }
 
-        try {
-            var psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
-            if (psiFile == null || !psiFile.isValid() ||
-                    !JavaLanguage.INSTANCE.equals(psiFile.getLanguage())) {
-                return;
-            }
-        }catch (Throwable e){
-            Log.log(LOGGER::debug, "could not find psi file for document {}", document);
+        var psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
+        if (psiFile == null || !psiFile.isValid() ||
+                !JavaLanguage.INSTANCE.equals(psiFile.getLanguage())) {
             return;
         }
 
-
-        //simple locking, should not be a problem, there are not so many threads working here.
-        //It's only for copying the set when the update operation starts.
-        //synchronized block is the simplest way here assuming there are not many threads, usually documents are added
-        // in EDT and read when the update operation start.
-        synchronized (changedDocuments) {
-            changedDocuments.add(document);
-        }
-
-        documentChangeAlarm.cancelAllRequests();
-        documentChangeAlarm.addRequest(this::updateChangedDocuments, 30000);
-    }
-
-
-    private void updateChangedDocuments() {
-
-        if (project.isDisposed()) {
-            return;
-        }
-
-        PsiDocumentManager.getInstance(project).
-                performLaterWhenAllCommitted(() -> Backgroundable.ensureBackground(project, "Update Span Navigation", () -> {
-
-            //lock the changedDocuments for very short time
-            Set<Document> documentsToUpdate;
-            synchronized (changedDocuments) {
-                documentsToUpdate = new HashSet<>(changedDocuments);
-                changedDocuments.clear();
+        ReadAction.nonBlocking(new RunnableCallable(() -> {
+            buildSpansLock.lock();
+            try {
+                processDocumentChange(document);
+            } finally {
+                buildSpansLock.unlock();
             }
-
-            ReadAction.run(() -> {
-
-                //prevent more than one update task at a time
-                documentUpdateLock.lock();
-                try {
-                    documentsToUpdate.forEach(document -> {
-                        var virtualFile = FileDocumentManager.getInstance().getFile(document);
-                        if (virtualFile != null && virtualFile.isValid()) {
-                            removeDocumentSpans(virtualFile);
-                            buildWithSpanAnnotation(virtualFile);
-                            buildStartSpanMethodCall(virtualFile);
-                        }
-                    });
-                } finally {
-                    documentUpdateLock.unlock();
-                }
-            });
-        }));
+        })).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance());
     }
+
+
+
+    private void processDocumentChange(@NotNull Document document){
+        var virtualFile = FileDocumentManager.getInstance().getFile(document);
+        if (virtualFile != null && virtualFile.isValid()) {
+            buildSpansLock.lock();
+            try {
+                removeDocumentSpans(virtualFile);
+                buildWithSpanAnnotation(virtualFile);
+                buildStartSpanMethodCall(virtualFile);
+            }finally {
+                buildSpansLock.unlock();
+            }
+        }
+    }
+
 
     private void removeDocumentSpans(@NotNull VirtualFile virtualFile) {
         //find all spans that are in virtualFile

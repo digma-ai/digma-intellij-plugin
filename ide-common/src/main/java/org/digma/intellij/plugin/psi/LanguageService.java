@@ -188,6 +188,7 @@ public interface LanguageService extends Disposable {
     boolean isIndexedLanguage();
 
 
+    @NotNull
     DocumentInfo buildDocumentInfo(PsiFile psiFile);
 
     /**

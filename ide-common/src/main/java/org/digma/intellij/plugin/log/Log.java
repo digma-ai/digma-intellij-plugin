@@ -20,6 +20,16 @@ public class Log {
         log(consumer, "Digma: " + String.format(format.replace("{}", "%s"), args));
     }
 
+    public static void debugWithException(Logger logger,Throwable e, String format, Object... args) {
+        logger.debug(String.format(format.replace("{}", "%s"), args),e);
+    }
+
+    public static void warnWithException(Logger logger,Throwable e, String format, Object... args) {
+        logger.warn(String.format(format.replace("{}", "%s"), args),e);
+    }
+
+
+
     public static void log(Consumer<String> consumer, String msg) {
         consumer.accept(msg);
     }

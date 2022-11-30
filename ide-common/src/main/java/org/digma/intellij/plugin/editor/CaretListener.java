@@ -8,6 +8,7 @@ import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.util.Alarm;
@@ -60,8 +61,21 @@ class CaretListener {
 
 
     //don't install listeners on non-supported files, this method shouldn't be called for non-supported files.
-    void maybeAddCaretListener(@NotNull Editor editor, @NotNull VirtualFile file) {
+    void maybeAddCaretListener(@NotNull Editor editor) {
 
+        if (editor.isDisposed()) {
+            Log.log(LOGGER::debug, "not installing listener for {} because it is disposed", editor);
+            return;
+        }
+
+        var psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.getDocument());
+        if (psiFile == null){
+            return;
+        }
+
+        var file = psiFile.getVirtualFile();
+
+        //this is a check if this editor already has a caret listener
         if (disposables.containsKey(file)) {
             return;
         }
@@ -86,10 +100,6 @@ class CaretListener {
         clicks the editor quickly or moves around with the keyboard.
          */
 
-        if (editor.isDisposed()) {
-            Log.log(LOGGER::debug, "not installing listener for {} because it is disposed", editor);
-            return;
-        }
 
         Disposable parentDisposable = Disposer.newDisposable();
         disposables.put(file, parentDisposable);

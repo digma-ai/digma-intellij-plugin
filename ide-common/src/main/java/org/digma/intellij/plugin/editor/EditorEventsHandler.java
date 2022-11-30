@@ -1,5 +1,7 @@
 package org.digma.intellij.plugin.editor;
 
+import com.intellij.openapi.application.ModalityState;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
@@ -9,12 +11,15 @@ import com.intellij.openapi.project.IndexNotReadyException;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
+import com.intellij.testFramework.LightVirtualFile;
 import com.intellij.util.Alarm;
 import com.intellij.util.AlarmFactory;
+import com.intellij.util.RunnableCallable;
+import com.intellij.util.concurrency.NonUrgentExecutor;
 import com.intellij.util.indexing.FileBasedIndex;
-import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.index.DocumentInfoIndex;
 import org.digma.intellij.plugin.log.Log;
@@ -24,7 +29,6 @@ import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.psi.LanguageServiceLocator;
 import org.digma.intellij.plugin.ui.CaretContextService;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
@@ -35,9 +39,6 @@ import java.util.Map;
  * unless python plugin is installed on Rider.
  **/
 public class EditorEventsHandler implements FileEditorManagerListener {
-
-    //todo:
-    // start installing caret listener only after the tool window is opened
 
     private static final Logger LOGGER = Logger.getInstance(EditorEventsHandler.class);
 
@@ -102,43 +103,60 @@ public class EditorEventsHandler implements FileEditorManagerListener {
         // usually this listener will not be installed on Rider unless another language plugin is installed on Rider,
         // for example the python plugin can be installed on rider.
 
-        //this code also follows file opened events. there is a dedicated file opened event but its invoked after
+        //this code also follows file opened events. there is a dedicated file opened event, but it's invoked after
         // selectionChanged and that causes some problems in managing the events. using selectionChanged to decide when
         // a new file is opened proves to be more reliable.
 
         if (newFile != null && isRelevantFile(newFile)) {
 
-            PsiFile psiFile = PsiManager.getInstance(project).findFile(newFile);
-            var selectedTextEditor = fileEditorManager.getSelectedTextEditor();
+            //wait for smart mode before loading document info and installing caret and document change listeners.
+            //if files are opened on startup before indexes are ready there is nothing we can do to build the document
+            //info or to discover spans. and anyway our tool window will not be shown on dumb mode.
+            ReadAction.nonBlocking(new RunnableCallable(() -> {
 
-            if (psiFile != null && selectedTextEditor != null) {
-                LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
-                var documentInfo = maybeSupportedFileOpened(languageService, psiFile);
-                MethodUnderCaret methodUnderCaret = languageService.detectMethodUnderCaret(project, psiFile, selectedTextEditor.getCaretModel().getOffset());
-                caretListener.maybeAddCaretListener(selectedTextEditor, newFile);
-                documentChangeListener.maybeAddDocumentListener(selectedTextEditor, psiFile, languageService);
-
-                //if documentInfo is not null then its a new file that was opened, in that case the documentInfo needs
-                // to be added to documentInfoService and then call contextChanged , otherwise only call contextChanged.
-                if (documentInfo != null) {
-                    Backgroundable.ensureBackground(project, "File opened", () -> {
-                        //documentInfoService will add the discovery code objects, load backend data and call some event
-                        //so that code lens will be installed.
-                        //if it's a new file that was opened then contextChanged must run after
-                        // documentInfoService.addCodeObjects is finished
-                        //enrichDocumentInfo is meant mainly to discover spans. the DocumentInfoIndex can
-                        // not discover spans because there is no reference resolving during file based index.
-                        languageService.enrichDocumentInfo(documentInfo,psiFile);
-                        documentInfoService.addCodeObjects(psiFile, documentInfo);
-                        caretContextService.contextChanged(methodUnderCaret);
-                    });
-                } else {
-                    caretContextService.contextChanged(methodUnderCaret);
+                if (editorManagerEvent.getNewEditor() == null || !editorManagerEvent.getNewEditor().isValid()){
+                    return;
                 }
 
-            } else {
-                caretContextService.contextEmptyNonSupportedFile(newFile.getPath());
-            }
+                PsiFile psiFile = PsiManager.getInstance(project).findFile(newFile);
+                if (psiFile == null){
+                    return;
+                }
+
+                //if documentInfoService contains this file then the file was already opened before and now its only
+                //selectionChanged when changing tabs
+                if (documentInfoService.contains(psiFile)) {
+                    return;
+                }
+
+                LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
+                //this is actually a test if this is a supported file type
+                if (!languageService.isIndexedLanguage()) {
+                    return;
+                }
+                //get DocumentInfo from the index, enrich it with span discovery and add it to DocumentInfoService
+                var documentInfo = getDocumentInfo(languageService, psiFile);
+                languageService.enrichDocumentInfo(documentInfo,psiFile);
+                documentInfoService.addCodeObjects(psiFile, documentInfo);
+            })).inSmartMode(project).withDocumentsCommitted(project).finishOnUiThread(ModalityState.defaultModalityState(), unused -> {
+
+                var selectedTextEditor = fileEditorManager.getSelectedTextEditor();
+                if (selectedTextEditor != null) {
+                    PsiFile psiFile = PsiDocumentManager.getInstance(project).getPsiFile(selectedTextEditor.getDocument());
+                    if (psiFile != null && isRelevantFile(psiFile.getVirtualFile())) {
+                        LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
+                        caretListener.maybeAddCaretListener(selectedTextEditor);
+                        documentChangeListener.maybeAddDocumentListener(selectedTextEditor);
+                        MethodUnderCaret methodUnderCaret = languageService.detectMethodUnderCaret(project, psiFile, selectedTextEditor.getCaretModel().getOffset());
+                        caretContextService.contextChanged(methodUnderCaret);
+                    }else if (psiFile != null){
+                        caretContextService.contextEmptyNonSupportedFile(psiFile.getVirtualFile().getPath());
+                    }else{
+                        caretContextService.contextEmpty();
+                    }
+                }
+
+            }).submit(NonUrgentExecutor.getInstance());
 
         } else if (newFile != null) {
             caretContextService.contextEmptyNonSupportedFile(newFile.getPath());
@@ -148,18 +166,8 @@ public class EditorEventsHandler implements FileEditorManagerListener {
     }
 
 
-    @Nullable
-    private DocumentInfo maybeSupportedFileOpened(@NotNull LanguageService languageService, @NotNull PsiFile psiFile) {
 
-        //if documentInfoService already contains this PsiFile then this document was already opened before
-        if (documentInfoService.contains(psiFile)) {
-            return null;
-        }
-
-        //this is actually a test if this is a supported file type
-        if (!languageService.isIndexedLanguage()) {
-            return null;
-        }
+    private DocumentInfo getDocumentInfo(@NotNull LanguageService languageService, @NotNull PsiFile psiFile) {
 
         DocumentInfo documentInfo;
         try {
@@ -171,7 +179,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
             // object is empty of methods, that's because currently we have no way to exclude those types from indexing.
             documentInfo = documentInfoMap.values().stream().findFirst().orElse(null);
 
-            //usually we should find the document info in the index. on extreme cases, maybe is the index is corrupted
+            //usually we should find the document info in the index. on extreme cases, maybe if the index is corrupted
             // the document info will not be found, try again to build it
             if (documentInfo == null) {
                 documentInfo = languageService.buildDocumentInfo(psiFile);
@@ -179,6 +187,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
         } catch (IndexNotReadyException e) {
             //IndexNotReadyException will be thrown on dumb mode, when indexing is still in progress.
+            //usually it should not happen because this method is called only in smart mode.
             documentInfo = languageService.buildDocumentInfo(psiFile);
         }
 
@@ -191,6 +200,8 @@ public class EditorEventsHandler implements FileEditorManagerListener {
         return documentInfo;
 
     }
+
+
 
 
     @Override
@@ -244,11 +255,14 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
     private boolean isRelevantFile(VirtualFile file) {
         //if file is not writable it is not supported even if it's a language we support, usually when we open vcs files.
-        return file.isWritable() &&
+        return !file.isDirectory() &&
+                file.isWritable() &&
                 isSupportedFile(file) &&
+                projectFileIndex.isInSourceContent(file) &&
                 !projectFileIndex.isInLibrary(file) &&
                 !projectFileIndex.isInTestSourceContent(file) &&
-                !DocumentInfoIndex.namesToExclude.contains(file.getName());
+                !DocumentInfoIndex.namesToExclude.contains(file.getName()) &&
+                !(file instanceof LightVirtualFile);
     }
 
 

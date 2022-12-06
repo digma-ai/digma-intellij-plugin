@@ -258,7 +258,7 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
 
     val currentLabel = JLabel("0/00 Flow Stacks")
 
-    val size = Laf.scalePanels(Laf.Sizes.ERROR_DETAILS_NAVIGATION_BUTTON_SIZE)
+    val size = Laf.scalePanels(Laf.Sizes.BUTTON_SIZE_24)
     val buttonsSize = Dimension(size + 2, size + 2)
 
     val backButton = IconButton(Laf.Icons.ErrorDetails.BACK)
@@ -394,7 +394,7 @@ fun getAffectedServicesTooltip(errorsModel: ErrorsModel): String {
 
 private fun backButton(project: Project): JPanel {
 
-    val size = Laf.scalePanels(Laf.Sizes.ERROR_DETAILS_BACK_BUTTON_SIZE)
+    val size = Laf.scalePanels(Laf.Sizes.BUTTON_SIZE_32)
     val buttonsSize = Dimension(size + 2, size + 3)
 
     val backButton = IconButton(Laf.Icons.ErrorDetails.BACK)

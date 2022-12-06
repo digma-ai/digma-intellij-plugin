@@ -4,7 +4,7 @@ import com.intellij.icons.AllIcons
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.icons.IconsUtil
-import org.digma.intellij.plugin.ui.common.Laf.Sizes.Companion.INSIGHT_ICON_SIZE
+import org.digma.intellij.plugin.ui.common.Laf.Sizes.Companion.INSIGHT_ICON_SIZE_32
 import org.digma.intellij.plugin.ui.list.insights.ThreeDotsIcon
 import java.awt.Color
 import java.awt.Font
@@ -98,6 +98,7 @@ object Laf  {
                 @JvmStatic val WAITING_DATA = SvgIcon.asIs("/icons/sand-watch.svg")
                 @JvmStatic val SLOW = SvgIcon.asIs("/icons/snail.svg")
                 @JvmStatic val THREE_DOTS = ThreeDotsIcon.asIs("/icons/three-dots.svg")
+                @JvmStatic val REFRESH = ThreeDotsIcon.asIs("/icons/repeat.svg")
 
                 @JvmStatic val QUESTION_MARK = AllIcons.General.QuestionDialog
                 @JvmStatic val SPAN_DURATION_DROPPED = loadAndScaleIconByWidth("/icons/dropped.png", 8)
@@ -110,7 +111,7 @@ object Laf  {
             }
 
             private fun loadAndScaleInsightIconByWidth(path: String): Icon {
-                val size = scaleIcons(INSIGHT_ICON_SIZE)
+                val size = scaleIcons(INSIGHT_ICON_SIZE_32)
                 return IconsUtil.loadAndScaleIconObjectByWidth(path, size)
             }
 
@@ -123,10 +124,11 @@ object Laf  {
     class Sizes{
         companion object {
             @JvmStatic
-            val INSIGHT_ICON_SIZE: Int = 32
-            const val ERROR_SCORE_PANEL_SIZE = 32
-            const val ERROR_DETAILS_BACK_BUTTON_SIZE = 32
-            const val ERROR_DETAILS_NAVIGATION_BUTTON_SIZE = 24
+            val INSIGHT_ICON_SIZE_32: Int = 32
+            const val PANEL_SIZE_32 = 32
+            const val BUTTON_SIZE_32 = 32
+            const val BUTTON_SIZE_24 = 24
+            const val BUTTON_SIZE_26 = 26
         }
     }
 

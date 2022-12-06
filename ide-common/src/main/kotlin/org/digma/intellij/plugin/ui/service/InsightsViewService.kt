@@ -51,7 +51,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
             Log.log(logger::debug, "contextChanged to {}. ", methodInfo)
 
             lock.tryLock()
-            Log.log(logger::debug, "Try lock acquired for contextChanged to {}. ", methodInfo)
+            Log.log(logger::debug, "TryLock acquired for contextChanged to {}. ", methodInfo)
 
             val insightsListContainer: InsightsListContainer = insightsProvider.getInsights(methodInfo)
 
@@ -65,7 +65,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
             updateUi()
         } finally {
             lock.unlock()
-            Log.log(logger::debug, "Try lock released for contextChanged to {}. ", methodInfo)
+            Log.log(logger::debug, "TryLock released for contextChanged to {}. ", methodInfo)
         }
     }
 

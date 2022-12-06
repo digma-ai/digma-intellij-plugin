@@ -11,7 +11,7 @@ import javax.swing.border.LineBorder
 
 fun createScorePanelNoArrows(model: CodeObjectError): JPanel {
 
-    val scorePanelSize = Laf.scalePanels(Laf.Sizes.ERROR_SCORE_PANEL_SIZE)
+    val scorePanelSize = Laf.scalePanels(Laf.Sizes.PANEL_SIZE_32)
     val scoreLabel = JLabel("${model.scoreInfo.score}", JLabel.CENTER)
     scoreLabel.toolTipText = genToolTipAsHtml(model.scoreInfo)
     scoreLabel.preferredSize = Dimension(scorePanelSize,scorePanelSize)

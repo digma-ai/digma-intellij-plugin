@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.ui.service
 
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.errors.ErrorsProvider
 import org.digma.intellij.plugin.log.Log
@@ -15,10 +16,13 @@ import org.digma.intellij.plugin.ui.model.errors.ErrorDetailsModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsTabCard
 import java.util.Collections
+import java.util.concurrent.locks.Lock
+import java.util.concurrent.locks.ReentrantLock
 
 class ErrorsViewService(project: Project) : AbstractViewService(project) {
 
     private val logger: Logger = Logger.getInstance(ErrorsViewService::class.java)
+    private val lock: Lock = ReentrantLock()
 
     //the model is single per the life of an open project in intellij. it shouldn't be created
     //elsewhere in the program. it can not be singleton.
@@ -40,17 +44,24 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
     fun contextChanged(
         methodInfo: MethodInfo
     ) {
+        try {
+            Log.log(logger::debug, "contextChanged to {}. ", methodInfo)
 
-        Log.log(logger::debug, "contextChanged to {}. ", methodInfo)
+            lock.tryLock()
+            Log.log(logger::debug, "TryLock acquired for contextChanged to {}. ", methodInfo)
 
-        val errorsListContainer = errorsProvider.getErrors(methodInfo)
-        model.listViewItems = errorsListContainer.listViewItems
-        model.usageStatusResult = errorsListContainer.usageStatus
-        model.scope = MethodScope(methodInfo)
-        model.card = ErrorsTabCard.ERRORS_LIST
-        model.errorsCount = errorsListContainer.count
+            val errorsListContainer = errorsProvider.getErrors(methodInfo)
+            model.listViewItems = errorsListContainer.listViewItems
+            model.usageStatusResult = errorsListContainer.usageStatus
+            model.scope = MethodScope(methodInfo)
+            model.card = ErrorsTabCard.ERRORS_LIST
+            model.errorsCount = errorsListContainer.count
 
-        updateUi()
+            updateUi()
+        } finally {
+            lock.unlock()
+            Log.log(logger::debug, "TryLock released for contextChanged to {}. ", methodInfo)
+        }
     }
 
 
@@ -158,5 +169,13 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         return emptyErrorDetails
     }
 
+    fun refreshErrors() {
+        val scope = model.scope
+        if (scope is MethodScope) {
+            Backgroundable.ensureBackground(project, "Refresh errors list") {
+                contextChanged(scope.getMethodInfo())
+            }
+        }
+    }
 
 }

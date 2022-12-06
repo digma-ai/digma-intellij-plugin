@@ -17,7 +17,7 @@ fun scopeLine(scopeNameProducer: Producer<String>,
               scopeIconProducer: Producer<Icon>): DialogPanel {
 
     return panel {
-        row(asHtml(spanGrayed("Scope: "))) {
+        row {
             icon(scopeIconProducer.produce()).bind(
                 JLabel::getIcon, JLabel::setIcon, MutableProperty(
                     getter = { scopeIconProducer.produce() },

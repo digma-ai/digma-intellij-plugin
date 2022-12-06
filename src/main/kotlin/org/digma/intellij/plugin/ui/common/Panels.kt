@@ -10,14 +10,22 @@ import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.ui.errors.IconButton
 import org.digma.intellij.plugin.ui.model.NOT_SUPPORTED_OBJECT_MSG
 import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
+import org.digma.intellij.plugin.ui.service.ErrorsViewService
+import org.digma.intellij.plugin.ui.service.InsightsViewService
 import java.awt.BorderLayout
-import javax.swing.JLabel
+import java.awt.Dimension
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
+import javax.swing.*
 
+
+private const val REFRESH_ALL_INSIGHTS_AND_ERRORS = "Refresh"
 
 fun noCodeObjectWarningPanel(model: PanelModel): DialogPanel {
 
@@ -77,9 +85,9 @@ fun createTopPanel(project: Project, model: PanelModel): DigmaResettablePanel {
     }
 
     result.isOpaque = false
-    result.border = JBUI.Borders.empty(0, 10, 0, 10)
+    result.border = JBUI.Borders.empty(0, 10)
     result.layout = BorderLayout()
-    result.add(scopeLine, BorderLayout.NORTH)
+    result.add(getScopeLineResultPanel(scopeLine, project), BorderLayout.NORTH)
     result.add(envsPanel, BorderLayout.CENTER)
     return result
 }
@@ -87,4 +95,33 @@ fun createTopPanel(project: Project, model: PanelModel): DigmaResettablePanel {
 
 fun wrapWithNoConnectionWrapper(project: Project, panel: DigmaTabPanel): DigmaTabPanel {
     return NoConnectionWrapper(project, panel)
+}
+
+private fun getGeneralRefreshButton(project: Project): JButton {
+    val insightsActionListener: InsightsViewService = project.getService(InsightsViewService::class.java)
+    val errorsActionListener: ErrorsViewService = project.getService(ErrorsViewService::class.java)
+
+    val size = Laf.scalePanels(Laf.Sizes.BUTTON_SIZE_26)
+    val buttonsSize = Dimension(size, size)
+    val generalRefreshIconButton = IconButton(Laf.Icons.Insight.REFRESH)
+    generalRefreshIconButton.preferredSize = buttonsSize
+    generalRefreshIconButton.maximumSize = buttonsSize
+    generalRefreshIconButton.toolTipText = asHtml(REFRESH_ALL_INSIGHTS_AND_ERRORS)
+
+    generalRefreshIconButton.addMouseListener(object : MouseAdapter() {
+        override fun mouseClicked(e: MouseEvent?) {
+            insightsActionListener.refreshInsights()
+            errorsActionListener.refreshErrors()
+        }
+    })
+    return generalRefreshIconButton
+}
+
+private fun getScopeLineResultPanel(scopeLine: DialogPanel, project: Project): JPanel {
+    val scopeLineResultPanel = JPanel()
+    scopeLineResultPanel.layout = BoxLayout(scopeLineResultPanel, BoxLayout.LINE_AXIS)
+    scopeLineResultPanel.add(scopeLine)
+    scopeLineResultPanel.add(Box.createHorizontalGlue())
+    scopeLineResultPanel.add(getGeneralRefreshButton(project))
+    return scopeLineResultPanel
 }

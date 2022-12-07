@@ -266,6 +266,7 @@ private fun getIconsListPanel(
         iconLabel.border = empty(2,2,2, 4)
 
         if(it.instanceOf(ThreeDotsIcon::class)) {
+            iconLabel.cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
             iconLabel.addMouseListener(object : MouseAdapter() {
                 override fun mouseClicked(e: MouseEvent?) {
                     showHintMessage(

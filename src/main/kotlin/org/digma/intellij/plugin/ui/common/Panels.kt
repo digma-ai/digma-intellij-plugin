@@ -19,6 +19,7 @@ import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import org.digma.intellij.plugin.ui.service.ErrorsViewService
 import org.digma.intellij.plugin.ui.service.InsightsViewService
 import java.awt.BorderLayout
+import java.awt.Cursor
 import java.awt.Dimension
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
@@ -107,6 +108,7 @@ private fun getGeneralRefreshButton(project: Project): JButton {
     generalRefreshIconButton.preferredSize = buttonsSize
     generalRefreshIconButton.maximumSize = buttonsSize
     generalRefreshIconButton.toolTipText = asHtml(REFRESH_ALL_INSIGHTS_AND_ERRORS)
+    generalRefreshIconButton.cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
 
     generalRefreshIconButton.addMouseListener(object : MouseAdapter() {
         override fun mouseClicked(e: MouseEvent?) {

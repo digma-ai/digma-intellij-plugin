@@ -8,12 +8,7 @@ import org.digma.intellij.plugin.model.rest.insights.*
 import org.digma.intellij.plugin.model.rest.insights.EndpointSchema.Companion.CONSUMER_SCHEMA
 import org.digma.intellij.plugin.model.rest.insights.EndpointSchema.Companion.HTTP_SCHEMA
 import org.digma.intellij.plugin.model.rest.insights.EndpointSchema.Companion.RPC_SCHEMA
-import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
-import org.digma.intellij.plugin.ui.common.Laf
-import org.digma.intellij.plugin.ui.common.asHtml
-import org.digma.intellij.plugin.ui.common.span
-import org.digma.intellij.plugin.ui.common.spanBold
-import org.digma.intellij.plugin.ui.common.spanGrayed
+import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupType.HttpEndpoint
@@ -33,7 +28,6 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
         return getOrCreatePanel(project, value, panelsLayoutHelper)
     }
 
-    @Suppress("UNCHECKED_CAST")
     private fun getOrCreatePanel(project: Project,
                                  value: ListViewItem<*>,
                                  panelsLayoutHelper: PanelsLayoutHelper): JPanel {
@@ -75,24 +69,24 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
 
 
     private fun defaultInsightGroupTitle(value: InsightsList.GroupTitleModel): JPanel {
-        return groupTitlePanel("Unknown: ", value.groupId, Laf.Icons.Insight.TELESCOPE)
+        return groupTitlePanel(value.groupId, Laf.Icons.Insight.TELESCOPE)
     }
 
 
     private fun spanGroupTitle(value: InsightsList.GroupTitleModel): JPanel {
-        return groupTitlePanel("Span: ", value.groupId, Laf.Icons.Insight.TELESCOPE)
+        return groupTitlePanel(value.groupId, Laf.Icons.Insight.TELESCOPE)
     }
 
     private fun endpointGroupTitle(value: InsightsList.GroupTitleModel): JPanel {
         val groupViewModel = createEndpointGroupViewModel(value.groupId)
-        return groupTitlePanel(groupViewModel.titleText, groupViewModel.labelText,groupViewModel.icon)
+        return groupTitlePanel(groupViewModel.labelText,groupViewModel.icon)
     }
 
 
 
-    private fun groupTitlePanel(titleText: String, labelText: String,icon: Icon): JPanel {
+    private fun groupTitlePanel(labelText: String,icon: Icon): JPanel {
         return panel {
-            row(asHtml(spanGrayed(titleText))) {
+            row {
                 icon(icon).applyToComponent {
                     toolTipText = labelText
                 }.horizontalAlign(HorizontalAlign.LEFT).gap(RightGap.SMALL)
@@ -108,15 +102,15 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
         val endpoint =  routeInfo.shortName
         if(routeInfo.schema == HTTP_SCHEMA){
             val split =endpoint.split(' ')
-            return GroupViewModel("REST: ", asHtml("${spanBold("HTTP")} ${span("${split[0].uppercase()} ${split[1]}")}"),  Laf.Icons.Insight.INTERFACE)
+            return GroupViewModel(asHtml("${spanBold("HTTP")} ${span("${split[0].uppercase()} ${split[1]}")}"),  Laf.Icons.Insight.INTERFACE)
         }
         if(routeInfo.schema == RPC_SCHEMA){
-            return GroupViewModel("RPC: ", asHtml(span(endpoint)),  Laf.Icons.Insight.INTERFACE)
+            return GroupViewModel(asHtml(span(endpoint)),  Laf.Icons.Insight.INTERFACE)
         }
         if(routeInfo.schema == CONSUMER_SCHEMA){
-            return GroupViewModel("CONSUMER: ", asHtml(span(endpoint)),  Laf.Icons.Insight.MESSAGE)
+            return GroupViewModel(asHtml(span(endpoint)),  Laf.Icons.Insight.MESSAGE)
         }
-        return GroupViewModel("REST: ", asHtml(""),  Laf.Icons.Insight.INTERFACE)
+        return GroupViewModel(asHtml(""),  Laf.Icons.Insight.INTERFACE)
     }
 
     private fun unmappedInsightPanel(project: Project, modelObject: UnmappedInsight): JPanel {

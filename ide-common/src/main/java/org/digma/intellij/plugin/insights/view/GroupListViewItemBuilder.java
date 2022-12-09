@@ -27,9 +27,8 @@ public class GroupListViewItemBuilder<T extends CodeObjectInsight> implements Li
     @Override
     public List<ListViewItem<?>> build(Project project, T insight, ListGroupManager groupManager) {
         final String groupId = groupByFunction.apply(insight);
-        final String groupKey = insightGroupType.name() + ":" + groupId;
         final InsightGroupListViewItem theGroup = (InsightGroupListViewItem)
-                groupManager.getOrCreateGroup(groupKey, () -> new InsightGroupListViewItem(groupId, insightGroupType));
+                groupManager.getOrCreateGroup(groupId, () -> new InsightGroupListViewItem(groupId, insightGroupType));
 
         final var theListView = new InsightListViewItem<>(insight);
 

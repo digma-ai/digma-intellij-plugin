@@ -32,7 +32,7 @@ public class InsightsViewBuilder extends ListViewBuilder {
 
         codeObjectInsights.forEach(insight -> {
             final ListViewItemBuilder<CodeObjectInsight> builder = (ListViewItemBuilder<CodeObjectInsight>) buildersHolder.getBuilder(insight.getType());
-            final List<ListViewItem<?>> insightListItems = builder.build(project,insight, groupManager);
+            final List<ListViewItem<?>> insightListItems = builder.build(project, insight, groupManager);
             allItems.addAll(insightListItems);
         });
 

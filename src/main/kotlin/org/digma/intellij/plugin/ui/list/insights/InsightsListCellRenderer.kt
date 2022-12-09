@@ -83,8 +83,7 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
     }
 
 
-
-    private fun groupTitlePanel(labelText: String,icon: Icon): JPanel {
+    private fun groupTitlePanel(labelText: String, icon: Icon): JPanel {
         return panel {
             row {
                 icon(icon).applyToComponent {

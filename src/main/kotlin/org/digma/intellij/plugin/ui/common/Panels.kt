@@ -13,6 +13,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.ui.errors.IconButton
 import org.digma.intellij.plugin.ui.model.NOT_SUPPORTED_OBJECT_MSG
 import org.digma.intellij.plugin.ui.model.PanelModel
+import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
@@ -63,8 +64,11 @@ private fun getNoInfoMessage(model: PanelModel): String {
 
 fun createTopPanel(project: Project, model: PanelModel): DigmaResettablePanel {
 
-    val scopeLine = scopeLine({ model.getScope() }, { model.getScopeTooltip() }, ScopeLineIconProducer(model))
-    scopeLine.isOpaque = false
+    var scopeLine: DialogPanel? = null
+    if (model is InsightsModel || model is ErrorsModel) {
+        scopeLine = scopeLine({ model.getScope() }, { model.getScopeTooltip() }, ScopeLineIconProducer(model))
+        scopeLine.isOpaque = false
+    }
 
     val envsPanel = EnvironmentsPanel(project, model, AnalyticsService.getInstance(project).environment)
     envsPanel.isOpaque = false
@@ -72,7 +76,7 @@ fun createTopPanel(project: Project, model: PanelModel): DigmaResettablePanel {
     val result = object : DigmaResettablePanel() {
 
         override fun reset() {
-            scopeLine.reset()
+            scopeLine?.reset()
             envsPanel.reset()
         }
 
@@ -88,7 +92,9 @@ fun createTopPanel(project: Project, model: PanelModel): DigmaResettablePanel {
     result.isOpaque = false
     result.border = JBUI.Borders.empty(0, 10)
     result.layout = BorderLayout()
-    result.add(getScopeLineResultPanel(scopeLine, project), BorderLayout.NORTH)
+    if (model is InsightsModel || model is ErrorsModel) {
+        result.add(getScopeLineResultPanel(scopeLine!!, project), BorderLayout.NORTH)
+    }
     result.add(envsPanel, BorderLayout.CENTER)
     return result
 }

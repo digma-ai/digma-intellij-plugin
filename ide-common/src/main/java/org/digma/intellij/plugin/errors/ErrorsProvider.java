@@ -59,7 +59,7 @@ public class ErrorsProvider {
             Log.log(LOGGER::debug, "UsageStatus for {}: {}", methodInfo.getId(), usageStatus);
 
             return new ErrorsListContainer(errorsListViewItems, usageStatus);
-        }catch (AnalyticsServiceException e){
+        } catch (AnalyticsServiceException e){
             //if analyticsService.getErrorsOfCodeObject throws exception it means errors could not be loaded, usually when
             //the backend is not available. return an empty ErrorsListContainer to keep everything running and don't
             //crash the plugin. don't log the exception, it was logged in AnalyticsService, keep the log quite because

@@ -74,11 +74,11 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
 
     private fun reload() {
         Log.log(logger::debug, "reload called")
-        val insights = summariesProvider.getGlobalInsights()
-        val environmentStatuses = summariesProvider.getEnvironmentStatuses()
+        val insights = summariesProvider.globalInsights
+        val environmentStatuses = summariesProvider.environmentStatuses
         model.insights = insights
         model.usageStatusResult = UsageStatusResult(emptyList(), environmentStatuses)
-        model.count = insights.sumOf { it.modelObject.count() }
+        model.count = insights.size
         updateUi()
     }
 

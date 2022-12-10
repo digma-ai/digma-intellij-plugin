@@ -17,6 +17,7 @@ import org.digma.intellij.plugin.ui.common.spanGrayed
 import org.digma.intellij.plugin.ui.list.ListItemActionButton
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.model.TraceSample
+import org.digma.intellij.plugin.ui.service.needToShowDurationChange
 import org.ocpsoft.prettytime.PrettyTime
 import org.threeten.extra.AmountFormats
 import java.awt.BorderLayout
@@ -101,17 +102,6 @@ fun percentileRowPanel(percentile: SpanDurationsPercentile, panelsLayoutHelper: 
     }
 
     return durationsPanel
-}
-
-fun needToShowDurationChange(percentile: SpanDurationsPercentile): Boolean {
-    val tolerationConstant: Long = 10000
-
-    if (percentile.previousDuration != null && percentile.changeTime != null) {
-        val rawDiff: Long = abs(percentile.currentDuration.raw - percentile.previousDuration!!.raw)
-        return ((rawDiff.toFloat() / percentile.previousDuration!!.raw) > 0.1) && (rawDiff > tolerationConstant)
-    }
-
-    return false
 }
 
 // if cannot create the button then would return null

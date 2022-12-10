@@ -8,8 +8,8 @@ import org.digma.intellij.plugin.model.rest.insights.SpanDurationChangeInsight
 import org.digma.intellij.plugin.model.rest.insights.TopErrorFlowsInsight
 import org.digma.intellij.plugin.ui.list.AbstractPanelListModel
 import org.digma.intellij.plugin.ui.list.PanelList
-import org.digma.intellij.plugin.ui.list.insights.needToShowDurationChange
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
+import org.digma.intellij.plugin.ui.service.needToShowDurationChange
 import java.util.Collections
 
 class SummaryPanelList(project: Project, listViewItems: List<ListViewItem<*>>) : PanelList(project, Model(listViewItems)) {

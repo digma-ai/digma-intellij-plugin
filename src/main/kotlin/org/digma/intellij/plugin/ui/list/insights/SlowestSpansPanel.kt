@@ -6,11 +6,11 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.model.rest.insights.*
-import org.digma.intellij.plugin.service.InsightsActionsService
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.buildBoldTitleGrayedComment
 import org.digma.intellij.plugin.ui.common.buildLinkTextWithTitleAndGrayedComment
+import org.digma.intellij.plugin.ui.list.openWorkspaceFileForSpan
 import java.awt.GridLayout
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -31,10 +31,7 @@ fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: 
         if (moreData.contains(spanId)) {
             val spanText = buildLinkTextWithTitleAndGrayedComment(displayName,description)
             val link = ActionLink(spanText) {
-                val actionListener: InsightsActionsService = project.getService(InsightsActionsService::class.java)
-                @Suppress("UNCHECKED_CAST")
-                val workspaceUri: Pair<String, Int> = moreData[spanId] as Pair<String, Int>
-                actionListener.openWorkspaceFileForSpan(workspaceUri.first, workspaceUri.second)
+                openWorkspaceFileForSpan(project, moreData, spanId)
             }
             link.toolTipText = genToolTip(slowSpan)
             spansListPanel.add(link)

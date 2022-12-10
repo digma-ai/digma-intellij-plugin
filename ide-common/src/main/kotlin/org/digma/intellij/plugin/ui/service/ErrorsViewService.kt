@@ -49,6 +49,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
             Log.log(logger::debug, "contextChanged to {}. ", methodInfo)
 
             val errorsListContainer = errorsProvider.getErrors(methodInfo)
+
             model.listViewItems = errorsListContainer.listViewItems
             model.usageStatusResult = errorsListContainer.usageStatus
             model.scope = MethodScope(methodInfo)

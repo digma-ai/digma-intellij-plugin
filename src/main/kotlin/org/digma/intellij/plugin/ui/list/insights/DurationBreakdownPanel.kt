@@ -7,9 +7,9 @@ import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationBreakdown
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationBreakdownInsight
-import org.digma.intellij.plugin.service.InsightsActionsService
 import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
+import org.digma.intellij.plugin.ui.list.openWorkspaceFileForSpan
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.BorderLayout
 import java.awt.GridLayout
@@ -186,11 +186,7 @@ private fun getSpanDisplayNameLabel(
 
     val messageLabel = if (moreData.contains(spanId)) {
         ActionLink(asHtml(displayName)) {
-            val actionListener: InsightsActionsService = project.getService(InsightsActionsService::class.java)
-
-            @Suppress("UNCHECKED_CAST")
-            val workspaceUri: Pair<String, Int> = moreData[spanId] as Pair<String, Int>
-            actionListener.openWorkspaceFileForSpan(workspaceUri.first, workspaceUri.second)
+            openWorkspaceFileForSpan(project, moreData, spanId)
         }
     } else {
         JLabel(asHtml(displayName), SwingConstants.LEFT)

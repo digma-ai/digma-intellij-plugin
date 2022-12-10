@@ -11,15 +11,11 @@ import org.digma.intellij.plugin.model.rest.insights.SpanDurationChangeInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
 import org.digma.intellij.plugin.model.rest.insights.TopErrorFlowsInsight
 import org.digma.intellij.plugin.service.ErrorsActionsService
-import org.digma.intellij.plugin.service.InsightsActionsService
 import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.buildLinkTextWithGrayedAndDefaultLabelColorPart
-import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
-import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
-import org.digma.intellij.plugin.ui.list.RoundedPanel
-import org.digma.intellij.plugin.ui.list.commonListItemPanel
+import org.digma.intellij.plugin.ui.list.*
 import org.digma.intellij.plugin.ui.list.errors.contentOfFirstAndLast
 import org.digma.intellij.plugin.ui.list.insights.genericPanelForSingleInsight
 import org.digma.intellij.plugin.ui.list.insights.percentileRowPanel
@@ -115,11 +111,7 @@ private fun buildSpanDuration(value: SpanDurationChangeInsight.Change, moreData:
     val spanId = CodeObjectsUtil.createSpanId(value.span.instrumentationLibrary, value.span.name)
     val title = if (moreData.contains(spanId)) {
         ActionLink(asHtml(value.span.displayName)) {
-            val actionListener: InsightsActionsService = project.getService(InsightsActionsService::class.java)
-
-            @Suppress("UNCHECKED_CAST")
-            val workspaceUri: Pair<String, Int> = moreData[spanId] as Pair<String, Int>
-            actionListener.openWorkspaceFileForSpan(workspaceUri.first, workspaceUri.second)
+            openWorkspaceFileForSpan(project, moreData, spanId)
         }
     } else{
         JLabel(asHtml(value.span.displayName), SwingConstants.LEFT)

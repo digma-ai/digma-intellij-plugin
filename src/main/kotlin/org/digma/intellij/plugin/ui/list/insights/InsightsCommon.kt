@@ -193,8 +193,8 @@ private fun getTimeInfoMessagePanel(
     val timeInfoMessageLabel = JLabel(asHtml(timeInfoMessage), SwingConstants.LEFT)
 
     val timeInfoMessageLabelPanel = JPanel()
-    timeInfoMessageLabelPanel.layout = GridLayout(2, 1,0,0)
-    timeInfoMessageLabelPanel.border = empty(2, 0)
+    timeInfoMessageLabelPanel.layout = BoxLayout(timeInfoMessageLabelPanel, BoxLayout.Y_AXIS)
+    timeInfoMessageLabelPanel.border = empty(0, 0, 5, 0)
     timeInfoMessageLabelPanel.isOpaque = false
     timeInfoMessageLabelPanel.add(timeInfoMessageLabel)
     if (shouldShowApplyNewTimeFilterLabel(isRecalculateButtonPressed, identicalStartTimes)) {
@@ -209,13 +209,15 @@ private fun shouldShowApplyNewTimeFilterLabel(isRecalculateButtonPressed: Boolea
 
 private fun getFormattedTimeDifference(diff: Duration): String {
     val builder = StringBuilder()
-    if (diff.toDays() > 0)
-        builder.append(diff.toDays()," days ")
-    if (diff.toHoursPart() > 0)
-        builder.append( diff.toHoursPart()," hours ")
-    if (diff.toMinutesPart() > 0)
+    if (diff.toDays() > 0) {
+        builder.append(diff.toDays(), " days ")
+    } else if (diff.toHoursPart() > 0) {
+        builder.append(diff.toHoursPart(), " hours ")
+    } else if (diff.toMinutesPart() > 0) {
         builder.append(diff.toMinutesPart(), " minutes ")
-    else builder.append(1, " minute ")
+    } else {
+        builder.append(1, " minute ")
+    }
     return builder.toString()
 }
 private fun getBasicEmptyListPanel(): JPanel {

@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
-import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationBreakdown
@@ -94,9 +93,10 @@ fun durationBreakdownRowPanel(
     val spanDisplayNameLabel = getSpanDisplayNameLabel(durationBreakdown, project, moreData)
     val breakdownDurationLabelPanel = getBreakdownDurationLabelPanel(durationBreakdown, layoutHelper)
 
-    durationBreakdownPanel.add(telescopeIconLabel, BorderLayout.WEST)
-    durationBreakdownPanel.add(spanDisplayNameLabel, BorderLayout.CENTER)
-    durationBreakdownPanel.add(breakdownDurationLabelPanel, BorderLayout.EAST)
+    durationBreakdownPanel.add(telescopeIconLabel)
+    durationBreakdownPanel.add(spanDisplayNameLabel)
+    durationBreakdownPanel.add(Box.createHorizontalGlue())
+    durationBreakdownPanel.add(breakdownDurationLabelPanel)
 
     return durationBreakdownPanel
 }
@@ -160,9 +160,9 @@ private fun updateDurationBreakdownPanel(durationBreakdownEntries: List<SpanDura
     resultBreakdownPanel!!.reset()
 }
 
-private fun getDurationBreakdownPanel(): JBPanel<JBPanel<*>> {
-    val durationBreakdownPanel = JBPanel<JBPanel<*>>()
-    durationBreakdownPanel.layout = BorderLayout(5, 0)
+private fun getDurationBreakdownPanel(): JPanel {
+    val durationBreakdownPanel = JPanel()
+    durationBreakdownPanel.layout = BoxLayout(durationBreakdownPanel, BoxLayout.LINE_AXIS)
     durationBreakdownPanel.border = empty()
     durationBreakdownPanel.isOpaque = false
     return durationBreakdownPanel
@@ -192,7 +192,7 @@ private fun getSpanDisplayNameLabel(
         JLabel(asHtml(displayName), SwingConstants.LEFT)
     }
     messageLabel.toolTipText = displayName
-    messageLabel.border = empty(0, 0, 5, 0)
+    messageLabel.border = empty(0, 5, 5, 0)
     messageLabel.isOpaque = false
 
     return messageLabel
@@ -208,10 +208,10 @@ private fun getBreakdownDurationLabelPanel(
     boldFonts(pLabel)
 
     val breakdownDurationLabelPanel = JPanel()
-    breakdownDurationLabelPanel.layout = BorderLayout()
-    breakdownDurationLabelPanel.border = empty()
+    breakdownDurationLabelPanel.layout = BoxLayout(breakdownDurationLabelPanel, BoxLayout.LINE_AXIS)
+    breakdownDurationLabelPanel.border = empty(0, 0, 0, 5)
     breakdownDurationLabelPanel.isOpaque = false
-    breakdownDurationLabelPanel.add(pLabel, BorderLayout.WEST)
+    breakdownDurationLabelPanel.add(pLabel)
     addCurrentLargestWidthDurationPLabel(layoutHelper, breakdownDurationLabelPanel.preferredSize.width)
 
     return breakdownDurationLabelPanel

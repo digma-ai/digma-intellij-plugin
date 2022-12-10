@@ -9,6 +9,8 @@ import org.digma.intellij.plugin.common.DumbAwareNotifier
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.Models
 import org.digma.intellij.plugin.model.rest.insights.GlobalInsight
+import org.digma.intellij.plugin.model.rest.insights.SpanDurationChangeInsight
+import org.digma.intellij.plugin.model.rest.insights.TopErrorFlowsInsight
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
 import org.digma.intellij.plugin.summary.SummariesProvider
 import org.digma.intellij.plugin.ui.model.PanelModel
@@ -78,7 +80,7 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
         val environmentStatuses = summariesProvider.environmentStatuses
         model.insights = insights
         model.usageStatusResult = UsageStatusResult(emptyList(), environmentStatuses)
-        model.count = insights.size
+        model.count = countElementsOnSummaryTab(insights)
         updateUi()
     }
 
@@ -112,6 +114,26 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
         override fun getUsageStatus(): UsageStatusResult = usageStatusResult
     }
 
-
+    private fun countElementsOnSummaryTab(insights: List<ListViewItem<*>>): Int {
+        var counter = 0
+        for (insight in insights) {
+            when (val model = insight.modelObject) {
+                is TopErrorFlowsInsight -> {
+                    for (error in model.errors) {
+                        counter ++
+                    }
+                }
+                is SpanDurationChangeInsight -> {
+                    for (change in model.spanDurationChanges) {
+                        val changedPercentiles = change.percentiles.filter { needToShowDurationChange(it) }
+                        if (changedPercentiles.isNotEmpty()) {
+                            counter ++
+                        }
+                    }
+                }
+            }
+        }
+        return counter
+    }
 }
 

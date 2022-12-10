@@ -87,8 +87,7 @@ private fun buildError(model: TopErrorFlowsInsight.Error, project: Project): JPa
 }
 
 private fun getCharacteristic(model: TopErrorFlowsInsight.Error): JPanel {
-    val maxScore = model.scoreMovingAvg.coerceAtLeast(model.scoreRecency).coerceAtLeast(model.scoreTrendSlope)
-    val text = when (maxScore) {
+    val text = when (model.scoreMovingAvg.coerceAtLeast(model.scoreRecency).coerceAtLeast(model.scoreTrendSlope)) {
         model.scoreRecency -> "Recent"
         model.scoreMovingAvg -> "Frequent"
         model.scoreTrendSlope -> "Escalating"

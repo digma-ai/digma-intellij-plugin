@@ -97,7 +97,7 @@ abstract class PanelList(val project: Project, private var model: PanelListModel
         if (model.size <= 0)
             return
 
-        for (i in 0 until model.getSize()) run {
+        for (i in 0 until model.size) run {
             cellRenderer.apply {
                 val newComp: JPanel = getListCellRendererComponent(project, this@PanelList,
                         model.getElementAt(i), i, this@PanelList.hasFocus(), panelsLayoutHelper)

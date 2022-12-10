@@ -3,6 +3,8 @@ package org.digma.intellij.plugin.ui.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.ui.content.Content
+import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
+import kotlin.math.abs
 
 class ToolWindowTabsHelper(val project: Project) {
 
@@ -62,5 +64,14 @@ class ToolWindowTabsHelper(val project: Project) {
         toolWindow.contentManager.setSelectedContent(insightsContent)
     }
 
+}
 
+fun needToShowDurationChange(percentile: SpanDurationsPercentile): Boolean {
+    val tolerationConstant: Long = 10000
+
+    if (percentile.previousDuration != null && percentile.changeTime != null) {
+        val rawDiff: Long = abs(percentile.currentDuration.raw - percentile.previousDuration!!.raw)
+        return ((rawDiff.toFloat() / percentile.previousDuration!!.raw) > 0.1) && (rawDiff > tolerationConstant)
+    }
+    return false
 }

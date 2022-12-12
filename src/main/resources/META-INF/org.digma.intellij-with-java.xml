@@ -17,8 +17,6 @@
 
         <postStartupActivity implementation="org.digma.intellij.plugin.idea.psi.java.JavaSpanNavigationStartupActivity"/>
 
-<!--        <fileDocumentManagerListener implementation="org.digma.intellij.plugin.idea.psi.java.FileDocumentManagerListenerForJavaSpanNavigation"/>-->
-
     </extensions>
 
 
@@ -26,9 +24,9 @@
         <listener
                 class="org.digma.intellij.plugin.idea.psi.java.DocumentsChangeListenerForJavaSpanNavigation"
                 topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
-<!--        <listener-->
-<!--                class="org.digma.intellij.plugin.idea.psi.java.BulkFileListenerForJavaSpanNavigation"-->
-<!--                topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>-->
+        <listener
+                class="org.digma.intellij.plugin.idea.psi.java.BulkFileChangeListenerForJavaSpanNavigation"
+                topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
     </projectListeners>
 
 

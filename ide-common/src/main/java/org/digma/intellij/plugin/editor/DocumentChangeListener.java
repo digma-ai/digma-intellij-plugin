@@ -104,7 +104,7 @@ class DocumentChangeListener {
                         return;
                     }
                     try {
-
+                        Log.log(LOGGER::debug, "Processing documentChanged event for {}", fileToQuery.getVirtualFile());
                         processDocumentChanged(editor, fileToQuery);
                     } catch (PsiInvalidElementAccessException e) {
                         Log.debugWithException(LOGGER, e, "exception while processing file: {}, {}", fileToQuery.getVirtualFile(), e.getMessage());

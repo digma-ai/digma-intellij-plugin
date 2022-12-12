@@ -127,6 +127,7 @@ public class JavaLanguageService implements LanguageService {
     @Override
     @NotNull
     public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, int caretOffset) {
+        //MethodUnderCaret.isSupportedFile is always true here because this method will only be called on supported files
         PsiElement underCaret = findElementUnderCaret(project, psiFile, caretOffset);
         if (underCaret == null) {
             return new MethodUnderCaret("", "", "", PsiUtils.psiFileToUri(psiFile), true);

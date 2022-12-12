@@ -13,7 +13,7 @@ object ElementUnderCaretModel : Ext(SolutionModel.Solution) {
         field("name", PredefinedType.string)
         field("className", PredefinedType.string)
         field("fileUri", PredefinedType.string)
-        field("isSupportedFile", PredefinedType.bool).default(true).documentation = "Used when a source file is not applicable for code objects, for example classes from external assemblies"
+        field("isSupportedFile", PredefinedType.bool).documentation = "Used when a source file is not applicable for code objects, for example classes from external assemblies"
     }
 
 

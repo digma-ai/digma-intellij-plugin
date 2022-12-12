@@ -2,6 +2,7 @@
 package org.digma.intellij.plugin.rider.protocol
 
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.psi.PsiFileNotFountException
 import org.digma.intellij.plugin.psi.PsiUtils
 
 
@@ -40,6 +41,13 @@ fun normalizeFileUri(fileUri: String,project:Project): String {
         return fileUri
     }
 
-    val psiFile = PsiUtils.uriToPsiFile(fileUri,project)
-    return PsiUtils.psiFileToUri(psiFile)
+    //when this method is called from ElementUnderCaretDetector.toModel the file uri may be a non supported file
+    //like json or a non-user file where there is no psi file. so in that case catch the exception and just return
+    //the original file uri
+    return try {
+        val psiFile = PsiUtils.uriToPsiFile(fileUri, project)
+        PsiUtils.psiFileToUri(psiFile)
+    }catch (e:PsiFileNotFountException){
+        fileUri
+    }
 }

@@ -61,8 +61,10 @@ namespace Digma.Rider.Util
         {
             var properties = psiSourceFile.Properties;
             var primaryPsiLanguage = psiSourceFile.PrimaryPsiLanguage;
-            var isApplicable = !primaryPsiLanguage.IsNullOrUnknown() &&
+            var isApplicable = psiSourceFile.IsValid() &&
+                               !primaryPsiLanguage.IsNullOrUnknown() &&
                                !properties.IsGeneratedFile &&
+                               !properties.IsNonUserFile &&
                                primaryPsiLanguage.Is<CSharpLanguage>() &&
                                properties.ShouldBuildPsi &&
                                properties.ProvidesCodeModel &&

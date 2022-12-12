@@ -420,7 +420,7 @@ public class JavaLanguageService implements LanguageService {
 
 
     private void spanDiscovery(PsiFile psiFile, DocumentInfo documentInfo) {
-        Log.log(LOGGER::info, "Building spans for file {}", psiFile);
+        Log.log(LOGGER::debug, "Building spans for file {}", psiFile);
         withSpanAnnotationSpanDiscovery(psiFile, documentInfo);
         startSpanMethodCallSpanDiscovery(psiFile, documentInfo);
     }
@@ -441,6 +441,7 @@ public class JavaLanguageService implements LanguageService {
             startSpanReferences.forEach(psiReference -> {
                 SpanInfo spanInfo = SpanDiscoveryUtils.getSpanInfoFromStartSpanMethodReference(project, psiReference);
                 if (spanInfo != null) {
+                    Log.log(LOGGER::debug, "Found span info {} for method {}",spanInfo.getId(),spanInfo.getContainingMethod());
                     MethodInfo methodInfo = documentInfo.getMethods().get(spanInfo.getContainingMethod());
                     //this method must exist in the document info
                     Objects.requireNonNull(methodInfo, "method info " + spanInfo.getContainingMethod() + " must exist in DocumentInfo for " + documentInfo.getFileUri());
@@ -460,6 +461,7 @@ public class JavaLanguageService implements LanguageService {
             psiMethods.forEach(psiMethod -> {
                 SpanInfo spanInfo = SpanDiscoveryUtils.getSpanInfoFromWithSpanAnnotatedMethod(psiMethod);
                 if (spanInfo != null) {
+                    Log.log(LOGGER::debug, "Found span info {} for method {}",spanInfo.getId(),spanInfo.getContainingMethod());
                     MethodInfo methodInfo = documentInfo.getMethods().get(spanInfo.getContainingMethod());
                     //this method must exist in the document info
                     Objects.requireNonNull(methodInfo, "method info " + spanInfo.getContainingMethod() + " must exist in DocumentInfo for " + documentInfo.getFileUri());

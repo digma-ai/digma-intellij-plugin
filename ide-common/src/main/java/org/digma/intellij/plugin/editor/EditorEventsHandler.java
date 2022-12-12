@@ -208,14 +208,16 @@ public class EditorEventsHandler implements FileEditorManagerListener {
     public void fileClosed(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
         var selectedEditor = source.getSelectedEditor();
         Log.log(LOGGER::debug, "fileClosed: file:{}, selected editor: {}", file, selectedEditor);
-        caretListener.removeCaretListener(file);
-        documentChangeListener.removeDocumentListener(file);
-        PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
-        if (psiFile == null) {
-            return;
+        if (isRelevantFile(file)) {
+            caretListener.removeCaretListener(file);
+            documentChangeListener.removeDocumentListener(file);
+            PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
+            if (psiFile == null) {
+                return;
+            }
+            //don't need to test if it's a supported file, if document info exists it will be removed.
+            documentInfoService.removeDocumentInfo(psiFile);
         }
-        //don't need to test if it's a supported file, if document info exists it will be removed.
-        documentInfoService.removeDocumentInfo(psiFile);
 
         //sometimes, can't say why, when a tab is closed and another tab becomes visible, selectionChanged is not called
         // until the tab is clicked. fileClosed is always called. most of the time it works ok, but sometimes not.
@@ -255,7 +257,8 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
     private boolean isRelevantFile(VirtualFile file) {
         //if file is not writable it is not supported even if it's a language we support, usually when we open vcs files.
-        return !file.isDirectory() &&
+        return file.isValid() &&
+                !file.isDirectory() &&
                 file.isWritable() &&
                 isSupportedFile(file) &&
                 projectFileIndex.isInSourceContent(file) &&

@@ -8,7 +8,7 @@ import java.util.*
 data class SlowEndpointInsight
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties(
-    "codeObjectId", "route", "actualStartTime", "customStartTime", "prefixedCodeObjectId",
+    "codeObjectId", "route", "actualStartTime", "customStartTime", "prefixedCodeObjectId", "endpointSpan",
     "endpointsMedian", "endpointsMedianOfMedians", "endpointsMedianOfP75", "endpointsP75",
     "min", "max", "mean", "median",
     "p75", "p95", "p99",
@@ -19,6 +19,7 @@ constructor(
         override val actualStartTime: Date?,
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
+        override var endpointSpan: String,
         val endpointsMedian: Duration,
         val endpointsMedianOfMedians: Duration,
         val endpointsMedianOfP75: Duration,

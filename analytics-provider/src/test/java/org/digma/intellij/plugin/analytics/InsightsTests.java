@@ -64,6 +64,9 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
     @Test
     void getInsights() throws JsonProcessingException {
 
+        final String ROUTE = "post transfer/transferfunds";
+        final String ENDPOINT_SPAN = "HTTP POST transfer/transferfunds";
+
         String codeObjectId = "Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$TransferFunds";
         String prefixedCodeObjectId = addPrefixToCodeObjectId(codeObjectId);
         Date actualStartTimeNow = new Date();
@@ -83,17 +86,17 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
 
         String expectedNormalUsageInsightCodeObjectId = "Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$TransferFunds";
         NormalUsageInsight expectedNormalUsageInsight = new NormalUsageInsight( expectedNormalUsageInsightCodeObjectId,
-                "post transfer/transferfunds", actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedNormalUsageInsightCodeObjectId), 40);
+                ROUTE, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedNormalUsageInsightCodeObjectId), ENDPOINT_SPAN, 40);
         expectedCodeObjectInsights.add(expectedNormalUsageInsight);
 
         String expectedLowUsageInsightCodeObjectId = "Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$Abc";
         LowUsageInsight expectedLowUsageInsight = new LowUsageInsight( expectedLowUsageInsightCodeObjectId,
-                "post transfer/transferfunds", actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedLowUsageInsightCodeObjectId), 13);
+                ROUTE, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedLowUsageInsightCodeObjectId), ENDPOINT_SPAN, 13);
         expectedCodeObjectInsights.add(expectedLowUsageInsight);
 
         String expectedHighUsageInsightCodeObjectId = "Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$Defg";
         HighUsageInsight expectedHighUsageInsight = new HighUsageInsight( expectedHighUsageInsightCodeObjectId,
-                "post transfer/transferfunds", actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedHighUsageInsightCodeObjectId), 98);
+                ROUTE, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedHighUsageInsightCodeObjectId), ENDPOINT_SPAN, 98);
         expectedCodeObjectInsights.add(expectedHighUsageInsight);
 
         SpanInfo spanInfo = new SpanInfo("Retrieving account", "Retrieving account", "MoneyTransferDomainService", "Sample.MoneyTransfer.API","Sample.MoneyTransfer.API.MoneyTransferDomainService$_$Error");
@@ -105,16 +108,17 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
 
         String expectedSlowestSpansInsightCodeObjectId = "Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$TransferFunds";
         SlowestSpansInsight expectedSlowestSpansInsight = new SlowestSpansInsight( expectedSlowestSpansInsightCodeObjectId,
-                "post transfer/transferfunds", actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedSlowestSpansInsightCodeObjectId), Collections.singletonList(slowSpanInfo));
+                ROUTE, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedSlowestSpansInsightCodeObjectId), ENDPOINT_SPAN, Collections.singletonList(slowSpanInfo));
         expectedCodeObjectInsights.add(expectedSlowestSpansInsight);
 
         String expectedSlowEndpointInsightCodeObjectId = "Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$TransferFunds";
         SlowEndpointInsight expectedSlowEndpointInsight = new SlowEndpointInsight(
                 expectedSlowEndpointInsightCodeObjectId
-                , "post transfer/transferfunds"
+                , ROUTE
                 , actualStartTimeNow
                 , customStartTimeFiveDaysBefore
                 , addPrefixToCodeObjectId(expectedSlowEndpointInsightCodeObjectId)
+                , ENDPOINT_SPAN
                 , new Duration(0.11D, "ms", 11000)
                 , new Duration(0.12D, "ms", 12000)
                 , new Duration(0.13D, "ms", 13000)

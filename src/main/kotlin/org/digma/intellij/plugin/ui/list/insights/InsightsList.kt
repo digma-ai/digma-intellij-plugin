@@ -7,7 +7,6 @@ import org.digma.intellij.plugin.ui.model.insights.InsightGroupListViewItem
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupType
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.util.*
-import javax.swing.Icon
 import kotlin.collections.ArrayList
 
 class InsightsList(project: Project, listViewItems: List<ListViewItem<*>>) :
@@ -33,7 +32,7 @@ class InsightsList(project: Project, listViewItems: List<ListViewItem<*>>) :
             var index = 0
             listViewItems.forEach { value ->
                 if (value is InsightGroupListViewItem) {
-                    val groupTitle = ListViewItem(GroupTitleModel(value.groupId,value.type),index++)
+                    val groupTitle = ListViewItem(GroupTitleModel(value.groupId, value.type, value.route), index++)
                     groupTitle.moreData.putAll(value.moreData)
                     newViewItems.add(groupTitle)// the group title item
 
@@ -59,6 +58,6 @@ class InsightsList(project: Project, listViewItems: List<ListViewItem<*>>) :
 
 
 
-    class GroupTitleModel(val groupId: String, val type: InsightGroupType)
+    class GroupTitleModel(val groupId: String, val type: InsightGroupType, val route: String)
 
 }

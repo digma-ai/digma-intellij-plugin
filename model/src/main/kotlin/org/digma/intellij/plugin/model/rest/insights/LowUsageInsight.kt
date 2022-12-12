@@ -7,13 +7,14 @@ import java.util.*
 
 data class LowUsageInsight
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@ConstructorProperties("codeObjectId", "route", "actualStartTime", "customStartTime", "prefixedCodeObjectId", "maxCallsIn1Min")
+@ConstructorProperties("codeObjectId", "route", "actualStartTime", "customStartTime", "prefixedCodeObjectId", "endpointSpan", "maxCallsIn1Min")
 constructor(
         override val codeObjectId: String,
         override var route: String,
         override val actualStartTime: Date?,
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
+        override var endpointSpan: String,
         val maxCallsIn1Min: Int,
 ) : EndpointInsight {
     override val type: InsightType = InsightType.LowUsage

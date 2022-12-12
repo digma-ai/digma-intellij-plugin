@@ -17,18 +17,21 @@ import java.util.stream.Collectors;
 public class GroupListViewItemBuilder<T extends CodeObjectInsight> implements ListViewItemBuilder<T> {
 
     private final InsightGroupType insightGroupType;
-    private final Function<T, String> groupByFunction;
+    private final Function<T, String> routeFunction;
+    private final Function<T, String> endpointSpan;
 
-    public GroupListViewItemBuilder(InsightGroupType insightGroupType, Function<T, String> groupByFunction) {
+    public GroupListViewItemBuilder(InsightGroupType insightGroupType, Function<T, String> routeFunction,  Function<T, String> endpointSpan) {
         this.insightGroupType = insightGroupType;
-        this.groupByFunction = groupByFunction;
+        this.routeFunction = routeFunction;
+        this.endpointSpan = endpointSpan;
     }
 
     @Override
     public List<ListViewItem<?>> build(Project project, T insight, ListGroupManager groupManager) {
-        final String groupId = groupByFunction.apply(insight);
+        final String route = routeFunction != null ? routeFunction.apply(insight) : "";
+        final String groupId = endpointSpan.apply(insight);
         final InsightGroupListViewItem theGroup = (InsightGroupListViewItem)
-                groupManager.getOrCreateGroup(groupId, () -> new InsightGroupListViewItem(groupId, insightGroupType));
+                groupManager.getOrCreateGroup(groupId, () -> new InsightGroupListViewItem(groupId, insightGroupType, route));
 
         final var theListView = new InsightListViewItem<>(insight);
 

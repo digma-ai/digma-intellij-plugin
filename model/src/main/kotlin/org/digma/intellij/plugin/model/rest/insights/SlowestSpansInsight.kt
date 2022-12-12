@@ -7,13 +7,14 @@ import java.util.*
 
 data class SlowestSpansInsight
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@ConstructorProperties("codeObjectId", "route", "actualStartTime", "customStartTime", "prefixedCodeObjectId", "spans")
+@ConstructorProperties("codeObjectId", "route", "actualStartTime", "customStartTime", "prefixedCodeObjectId", "endpointSpan", "spans")
 constructor(
         override val codeObjectId: String,
         override var route: String,
         override val actualStartTime: Date?,
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
+        override var endpointSpan: String,
         val spans: List<SlowSpanInfo>,
 ) : EndpointInsight {
     override val type: InsightType = InsightType.SlowestSpans

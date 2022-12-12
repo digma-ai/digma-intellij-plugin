@@ -155,8 +155,9 @@ namespace Digma.Rider.Protocol
                     using (WriteLockCookie.Create())
                     {
                         Log(_logger, "Resetting model to empty");
+                        //when clearing to empty values isSupportedFile should be true so the UI will be cleared but not show a non supported file message
                         _model.ElementUnderCaret.Value =
-                            new MethodUnderCaretEvent(string.Empty, string.Empty, string.Empty, string.Empty);
+                            new MethodUnderCaretEvent(string.Empty, string.Empty, string.Empty, string.Empty,true);
                     }
 
                     OnChange();
@@ -243,8 +244,9 @@ namespace Digma.Rider.Protocol
                     var methodName = PsiUtils.GetDeclaredName(functionDeclaration);
                     var className = PsiUtils.GetClassName(functionDeclaration);
                     var fileUri = Identities.ComputeFileUri(psiSourceFile);
+                    var isSupportedFile = PsiUtils.IsPsiSourceFileApplicable(psiSourceFile);
                     var newElementUnderCaret =
-                        new MethodUnderCaretEvent(methodFqn, methodName, className, fileUri);
+                        new MethodUnderCaretEvent(methodFqn, methodName, className, fileUri,isSupportedFile);
                     Log(_logger, "Creating MethodUnderCaretEvent {0} for function {1}", newElementUnderCaret,
                         functionDeclaration);
                     UpdateModelAndNotify(newElementUnderCaret);
@@ -293,8 +295,9 @@ namespace Digma.Rider.Protocol
             {
                 var fileUri = Identities.ComputeFileUri(psiSourceFile);
                 Log(_logger, "Updating model with fileUri {0}", fileUri);
+                var isSupportedFile = PsiUtils.IsPsiSourceFileApplicable(psiSourceFile);
                 var newElementUnderCaret =
-                    new MethodUnderCaretEvent(string.Empty, string.Empty, string.Empty, fileUri);
+                    new MethodUnderCaretEvent(string.Empty, string.Empty, string.Empty, fileUri,isSupportedFile);
                 UpdateModelAndNotify(newElementUnderCaret);
             }
         }
@@ -325,7 +328,8 @@ namespace Digma.Rider.Protocol
         private void ClearModel()
         {
             Log(_logger, "Clearing model to empty values");
-            UpdateModelAndNotify(new MethodUnderCaretEvent(string.Empty, string.Empty, string.Empty, string.Empty));
+            //when clearing to empty values isSupportedFile should be true so the UI will be cleared but not show a non supported file message
+            UpdateModelAndNotify(new MethodUnderCaretEvent(string.Empty, string.Empty, string.Empty, string.Empty,true));
         }
 
 

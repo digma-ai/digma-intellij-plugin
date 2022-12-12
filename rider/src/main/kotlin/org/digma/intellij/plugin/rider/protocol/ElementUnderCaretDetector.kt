@@ -53,7 +53,7 @@ class ElementUnderCaretDetector(project: Project) : LifetimedProjectComponent(pr
     fun emptyModel() {
         model.protocol.scheduler.invokeOrQueue {
             WriteAction.run<Exception> {
-                model.elementUnderCaret.set(MethodUnderCaretEvent("", "", "", ""))
+                model.elementUnderCaret.set(MethodUnderCaretEvent("", "", "", "",true))
             }
         }
     }

@@ -15,10 +15,14 @@ import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.buildLinkTextWithGrayedAndDefaultLabelColorPart
-import org.digma.intellij.plugin.ui.list.*
+import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
+import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
+import org.digma.intellij.plugin.ui.list.RoundedPanel
+import org.digma.intellij.plugin.ui.list.commonListItemPanel
 import org.digma.intellij.plugin.ui.list.errors.contentOfFirstAndLast
 import org.digma.intellij.plugin.ui.list.insights.genericPanelForSingleInsight
 import org.digma.intellij.plugin.ui.list.insights.percentileRowPanel
+import org.digma.intellij.plugin.ui.list.openWorkspaceFileForSpan
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.BorderLayout
 import java.awt.GridLayout

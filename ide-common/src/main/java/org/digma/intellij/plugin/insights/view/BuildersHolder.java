@@ -36,23 +36,23 @@ public class BuildersHolder {
             case Errors:
                 return new NoGroupListViewItemBuilder<ErrorInsight>();
             case SpanUsages:
-                return new GroupListViewItemBuilder<SpanUsagesInsight>(InsightGroupType.Span, SpanUsagesInsight::getSpan);
+                return new GroupListViewItemBuilder<SpanUsagesInsight>(InsightGroupType.Span, null, SpanUsagesInsight::getSpan);
             case SpanDurations:
-                return new GroupListViewItemBuilder<SpanDurationsInsight>(InsightGroupType.Span, spanDurationsInsight -> spanDurationsInsight.getSpan().getName());
+                return new GroupListViewItemBuilder<SpanDurationsInsight>(InsightGroupType.Span, null, spanDurationsInsight -> spanDurationsInsight.getSpan().getName());
             case SpanDurationBreakdown:
-                return new GroupListViewItemBuilder<SpanDurationBreakdownInsight>(InsightGroupType.Span, SpanDurationBreakdownInsight::getSpanName);
+                return new GroupListViewItemBuilder<SpanDurationBreakdownInsight>(InsightGroupType.Span, null, SpanDurationBreakdownInsight::getSpanName);
             case SpanEndpointBottleneck:
-                return new GroupListViewItemBuilder<SpanSlowEndpointsInsight>(InsightGroupType.Span, insight -> insight.getSpan().getName());
+                return new GroupListViewItemBuilder<SpanSlowEndpointsInsight>(InsightGroupType.Span, null, insight -> insight.getSpan().getName());
             case SlowestSpans:
-                return new GroupListViewItemBuilder<SlowestSpansInsight>(InsightGroupType.HttpEndpoint, SlowestSpansInsight::getRoute);
+                return new GroupListViewItemBuilder<SlowestSpansInsight>(InsightGroupType.HttpEndpoint, SlowestSpansInsight::getRoute, SlowestSpansInsight::getEndpointSpan);
             case LowUsage:
-                return new GroupListViewItemBuilder<LowUsageInsight>(InsightGroupType.HttpEndpoint, LowUsageInsight::getRoute);
+                return new GroupListViewItemBuilder<LowUsageInsight>(InsightGroupType.HttpEndpoint, LowUsageInsight::getRoute, LowUsageInsight::getEndpointSpan);
             case NormalUsage:
-                return new GroupListViewItemBuilder<NormalUsageInsight>(InsightGroupType.HttpEndpoint, NormalUsageInsight::getRoute);
+                return new GroupListViewItemBuilder<NormalUsageInsight>(InsightGroupType.HttpEndpoint, NormalUsageInsight::getRoute, NormalUsageInsight::getEndpointSpan);
             case HighUsage:
-                return new GroupListViewItemBuilder<HighUsageInsight>(InsightGroupType.HttpEndpoint, HighUsageInsight::getRoute);
+                return new GroupListViewItemBuilder<HighUsageInsight>(InsightGroupType.HttpEndpoint, HighUsageInsight::getRoute, HighUsageInsight::getEndpointSpan);
             case SlowEndpoint:
-                return new GroupListViewItemBuilder<SlowEndpointInsight>(InsightGroupType.HttpEndpoint, SlowEndpointInsight::getRoute);
+                return new GroupListViewItemBuilder<SlowEndpointInsight>(InsightGroupType.HttpEndpoint, SlowEndpointInsight::getRoute, SlowEndpointInsight::getEndpointSpan);
             case Unmapped:
                 return new NoGroupListViewItemBuilder<UnmappedInsight>();
             default:

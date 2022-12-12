@@ -18,6 +18,8 @@ import com.intellij.util.concurrency.NonUrgentExecutor;
 import kotlin.Pair;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
+import org.digma.intellij.plugin.ui.service.ErrorsViewService;
+import org.digma.intellij.plugin.ui.service.InsightsViewService;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -80,6 +82,15 @@ public class JavaSpanNavigationProvider implements Disposable {
                 Log.log(LOGGER::info, "Building span navigation");
                 buildWithSpanAnnotation();
                 buildStartSpanMethodCall();
+
+                //trigger a refresh after span navigation is built. this is necessary because the insights and errors
+                //views may be populated before span navigation is ready and spans links can not be built.
+                //for example is the IDE is closed when the cursor is on a method with Duration Breakdown that
+                // has span links, then start the IDE again, the insights view is populted already, without this refresh
+                // there will be no links.
+                project.getService(InsightsViewService.class).refreshInsights();
+                project.getService(ErrorsViewService.class).refreshErrors();
+
             } finally {
                 buildSpansLock.unlock();
             }
@@ -129,6 +140,10 @@ public class JavaSpanNavigationProvider implements Disposable {
     }
 
 
+    /*
+    This method must be called with a document that is relevant for span discovery and span navigation.
+    the tests should be done before calling this method.
+     */
     public void documentChanged(@NotNull Document document) {
 
         if (project.isDisposed()) {
@@ -141,30 +156,33 @@ public class JavaSpanNavigationProvider implements Disposable {
             return;
         }
 
-        ReadAction.nonBlocking(new RunnableCallable(() -> {
-            buildSpansLock.lock();
-            try {
-                processDocumentChange(document);
-            } finally {
-                buildSpansLock.unlock();
-            }
-        })).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance());
+        var virtualFile = FileDocumentManager.getInstance().getFile(document);
+        fileChanged(virtualFile);
     }
 
 
+    /*
+    This method must be called with a file that is relevant for span discovery and span navigation.
+    the tests should be done before calling this method.
+     */
+    public void fileChanged(VirtualFile virtualFile) {
 
-    private void processDocumentChange(@NotNull Document document){
-        var virtualFile = FileDocumentManager.getInstance().getFile(document);
-        if (virtualFile != null && virtualFile.isValid()) {
-            buildSpansLock.lock();
-            try {
-                removeDocumentSpans(virtualFile);
-                buildWithSpanAnnotation(virtualFile);
-                buildStartSpanMethodCall(virtualFile);
-            }finally {
-                buildSpansLock.unlock();
-            }
+        if (project.isDisposed()) {
+            return;
         }
+
+        ReadAction.nonBlocking(new RunnableCallable(() -> {
+            if (virtualFile != null && virtualFile.isValid()) {
+                buildSpansLock.lock();
+                try {
+                    removeDocumentSpans(virtualFile);
+                    buildWithSpanAnnotation(virtualFile);
+                    buildStartSpanMethodCall(virtualFile);
+                } finally {
+                    buildSpansLock.unlock();
+                }
+            }
+        })).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance());
     }
 
 
@@ -177,6 +195,7 @@ public class JavaSpanNavigationProvider implements Disposable {
         //remove all spans for virtualFile
         fileSpans.forEach(spanLocations::remove);
     }
+
 
     private void buildStartSpanMethodCall(VirtualFile virtualFile) {
         PsiClass tracerBuilderClass = JavaPsiFacade.getInstance(project).findClass(SPAN_BUILDER_FQN, GlobalSearchScope.allScope(project));
@@ -199,6 +218,7 @@ public class JavaSpanNavigationProvider implements Disposable {
             });
         }
     }
+
 
     private void buildWithSpanAnnotation(VirtualFile virtualFile) {
 

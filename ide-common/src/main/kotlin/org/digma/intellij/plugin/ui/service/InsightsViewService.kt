@@ -17,14 +17,13 @@ import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsTabCard
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.util.*
-import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 import java.util.stream.Collectors
 
 class InsightsViewService(project: Project) : AbstractViewService(project) {
 
     private val logger: Logger = Logger.getInstance(InsightsViewService::class.java)
-    private val lock: Lock = ReentrantLock()
+    private val lock: ReentrantLock = ReentrantLock()
 
     //the model is single per the life of an open project in intellij. it shouldn't be created
     //elsewhere in the program. it can not be singleton.
@@ -47,11 +46,11 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
     fun contextChanged(
         methodInfo: MethodInfo
     ) {
+
+        lock.lock()
+        Log.log(logger::debug, "Lock acquired for contextChanged to {}. ", methodInfo)
         try {
             Log.log(logger::debug, "contextChanged to {}. ", methodInfo)
-
-            lock.tryLock()
-            Log.log(logger::debug, "TryLock acquired for contextChanged to {}. ", methodInfo)
 
             val insightsListContainer: InsightsListContainer = insightsProvider.getInsights(methodInfo)
 
@@ -64,8 +63,10 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
 
             updateUi()
         } finally {
-            lock.unlock()
-            Log.log(logger::debug, "TryLock released for contextChanged to {}. ", methodInfo)
+            if (lock.isHeldByCurrentThread) {
+                lock.unlock()
+                Log.log(logger::debug, "Lock released for contextChanged to {}. ", methodInfo)
+            }
         }
     }
 

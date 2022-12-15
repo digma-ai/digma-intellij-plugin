@@ -27,18 +27,10 @@ object CodeObjectsModel : Ext(SolutionModel.Solution) {
         field("offset", PredefinedType.int)
     }
 
-
-    val CodeLensType = enum {
-        +"ErrorHotspot"
-        +"LowUsage"
-        +"HighUsage"
-    }
-
     private val RiderCodeLensInfo = structdef {
         field("codeObjectId", PredefinedType.string)
-        field("type", CodeLensType)
-        field("lensText", PredefinedType.string.nullable)
-        field("lensTooltip", PredefinedType.string.nullable)
+        field("lensTitle", PredefinedType.string.nullable)
+        field("lensDescription", PredefinedType.string.nullable)
         field("moreText", PredefinedType.string.nullable)
         field("anchor", PredefinedType.string.nullable)
         field("documentProtocolKey", PredefinedType.string)

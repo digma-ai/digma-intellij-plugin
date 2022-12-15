@@ -31,6 +31,10 @@ import java.util.*
 interface CodeObjectInsight {
     val type: InsightType
     val codeObjectId: String
+    val environment: String
+    val scope: String
+    val importance: Int
+    val decorators: List<CodeObjectDecorator>?
     val actualStartTime: Date?
     val customStartTime: Date?
     val prefixedCodeObjectId: String?

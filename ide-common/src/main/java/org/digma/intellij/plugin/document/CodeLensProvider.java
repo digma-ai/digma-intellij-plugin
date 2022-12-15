@@ -4,12 +4,10 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.CodeObjectType;
+import org.digma.intellij.plugin.model.InsightImportance;
 import org.digma.intellij.plugin.model.lens.CodeLens;
-import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
-import org.digma.intellij.plugin.model.rest.summary.EndpointCodeObjectSummary;
-import org.digma.intellij.plugin.model.rest.summary.MethodCodeObjectSummary;
-import org.digma.intellij.plugin.notifications.NotificationUtil;
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectDecorator;
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -34,7 +32,7 @@ public class CodeLensProvider {
     in that case we don't want to report an error. the daemon will run again after we process
      the editor selectionChange event and then document info will be available
      */
-    public List<CodeLens> provideCodeLensNoError(@NotNull PsiFile psiFile){
+    public List<CodeLens> provideCodeLensNoError(@NotNull PsiFile psiFile) {
         Log.log(LOGGER::debug, "Got request for code lens for {}", psiFile.getVirtualFile());
 
         DocumentInfoContainer documentInfo = documentInfoService.getDocumentInfo(psiFile);
@@ -43,7 +41,7 @@ public class CodeLensProvider {
             return new ArrayList<>();
         }
 
-        return buildCodeLens(psiFile,documentInfo);
+        return buildCodeLens(documentInfo, false);
     }
 
 
@@ -57,61 +55,48 @@ public class CodeLensProvider {
             return new ArrayList<>();
         }
 
-        return buildCodeLens(psiFile,documentInfo);
+        return buildCodeLens(documentInfo, false);
     }
 
-    private List<CodeLens> buildCodeLens(@NotNull PsiFile psiFile,@NotNull DocumentInfoContainer documentInfo) {
-
-        Log.log(LOGGER::debug, "Got DocumentInfo for {}: {}",psiFile.getVirtualFile(),documentInfo.getDocumentInfo());
-
+    private List<CodeLens> buildCodeLens(
+            @NotNull DocumentInfoContainer documentInfo,
+            @NotNull boolean environmentPrefix
+    ) {
         List<CodeLens> codeLensList = new ArrayList<>();
 
-        List<CodeObjectSummary> summaries = documentInfo.getAllSummaries();
+        List<CodeObjectInsight> insightsList = documentInfo.getAllInsights();
 
-        summaries.forEach(codeObjectSummary -> {
-            switch (codeObjectSummary.getType()){
-                case MethodSummary:{
+        insightsList.forEach(insight -> {
+                    if (insight.getDecorators() != null && insight.getDecorators().size() > 0) {
+                        for (CodeObjectDecorator decorator : insight.getDecorators()) {
+                            String envComponent = "";
+                            if (environmentPrefix) {
+                                envComponent = "[" + insight.getEnvironment() + "]";
+                            }
 
-                    MethodCodeObjectSummary methodCodeObjectSummary = (MethodCodeObjectSummary) codeObjectSummary;
-                    int score = methodCodeObjectSummary.getScore();
-                    if (score >= 70){
-                        Log.log(LOGGER::debug, "Collecting code lese for MethodCodeObjectSummary {}",codeObjectSummary.getCodeObjectId());
-                        CodeLens codeLens = new CodeLens(codeObjectSummary.getCodeObjectId(), CodeObjectType.Method, CodeLens.CodeLensType.ErrorHotspot, "Error Hotspot");
-                        codeLens.setLensTooltipText("Error Hotspot for "+codeObjectSummary.getCodeObjectId());
-                        codeLens.setLensMoreText("Go to Error Hotspot");
-                        codeLens.setAnchor("Top");
-                        codeLensList.add(codeLens);
-                    }else{
-                        Log.log(LOGGER::debug, "Not Collecting code lese for {} because score is less the 70",codeObjectSummary.getCodeObjectId());
+                            String priorityEmoji = "";
+                            if (isImportant(insight.getImportance())) {
+                                priorityEmoji = "❗️";
+                            }
+
+                            String title = priorityEmoji + decorator.getTitle() + " " + envComponent;
+
+                            CodeLens codeLen = new CodeLens(insight.getCodeObjectId(), title, insight.getImportance());
+                            codeLen.setLensDescription(decorator.getDescription());
+                            codeLen.setLensMoreText("Go to " + title);
+                            codeLen.setAnchor("Top");
+
+                            codeLensList.add(codeLen);
+                        }
                     }
-                    break;
                 }
-                case EndpointSummary:{
-
-                    EndpointCodeObjectSummary endpointCodeObjectSummary = (EndpointCodeObjectSummary) codeObjectSummary;
-                    if (endpointCodeObjectSummary.getLowUsage() || endpointCodeObjectSummary.getHighUsage()) {
-                        Log.log(LOGGER::debug, "Collecting code lese for EndpointCodeObjectSummary {}", codeObjectSummary.getCodeObjectId());
-                        var lensText = endpointCodeObjectSummary.getLowUsage() ? "Low Usage" : "High Usage";
-                        var lensType = endpointCodeObjectSummary.getLowUsage() ? CodeLens.CodeLensType.LowUsage : CodeLens.CodeLensType.HighUsage;
-                        CodeLens codeLens = new CodeLens(codeObjectSummary.getCodeObjectId(), CodeObjectType.Method, lensType, lensText);
-                        codeLens.setLensTooltipText("Maximum of " + endpointCodeObjectSummary.getMaxCallsIn1Min() + " requests per minute");
-                        codeLens.setLensMoreText("Go to " + lensText);
-                        codeLens.setAnchor("Top");
-                        codeLensList.add(codeLens);
-                    }
-                    break;
-                }
-                case SpanSummary:{
-
-                    break;
-                }
-            }});
-
-
-        Log.log(LOGGER::debug, "Collected code lens for {}: {}",psiFile.getVirtualFile(),codeLensList);
-
+        );
         return codeLensList;
+    }
 
+    private boolean isImportant(Integer importanceLevel) {
+        return importanceLevel <= InsightImportance.HighlyImportant.getPriority() &&
+                importanceLevel >= InsightImportance.ShowStopper.getPriority();
     }
 
 }

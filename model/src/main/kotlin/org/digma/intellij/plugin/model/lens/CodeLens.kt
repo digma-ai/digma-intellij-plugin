@@ -1,31 +1,25 @@
 package org.digma.intellij.plugin.model.lens
 
-import org.digma.intellij.plugin.model.CodeObjectType
 
 data class CodeLens(
-    val codeObjectId: String,
-    val codeObjectType: CodeObjectType,
-    val type: CodeLensType,
-    val lensText: String,
-    var lensTooltipText: String,
-    var lensMoreText: String,
-    var anchor: String
+        val codeObjectId: String,
+        val lensTitle: String,
+        var lensDescription: String,
+        var lensMoreText: String,
+        val importance: Int,
+        var anchor: String
 ) {
 
-    constructor(codeObjectId: String, codeObjectType: CodeObjectType, type: CodeLensType, lensText: String) : this(
-        codeObjectId,
-        codeObjectType,
-        type,
-        lensText,
-        "",
-        "",
-        ""
+    constructor(codeObjectId: String,
+                lensTitle: String,
+                importance: Int
+    ) : this(
+            codeObjectId,
+            lensTitle,
+            "",
+            "",
+            importance,
+            ""
     )
 
-
-    enum class CodeLensType {
-        ErrorHotspot,
-        LowUsage,
-        HighUsage
-    }
 }

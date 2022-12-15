@@ -8,6 +8,7 @@ import org.digma.intellij.plugin.errors.ErrorsProvider
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult
 import org.digma.intellij.plugin.model.discovery.MethodInfo
+import org.digma.intellij.plugin.model.rest.insights.ErrorInsight
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.ui.model.DocumentScope
 import org.digma.intellij.plugin.ui.model.EmptyScope
@@ -160,7 +161,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
 
 
     private fun computeErrorsPreviewCount(documentInfoContainer: DocumentInfoContainer): Int {
-        return documentInfoContainer.allSummaries.stream().mapToInt { it.errorsCount }.sum()
+        return documentInfoContainer.allInsights.stream().filter{ it is ErrorInsight }.count().toInt()
     }
 
     private fun createEmptyErrorDetails(): ErrorDetailsModel {

@@ -8,18 +8,13 @@ import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
-import org.digma.intellij.plugin.model.rest.summary.CodeObjectSummary;
-import org.digma.intellij.plugin.model.rest.summary.EndpointCodeObjectSummary;
-import org.digma.intellij.plugin.model.rest.summary.MethodCodeObjectSummary;
-import org.digma.intellij.plugin.model.rest.summary.SpanCodeObjectSummary;
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -39,9 +34,7 @@ public class DocumentInfoContainer {
 
     private final AnalyticsService analyticsService;
     private DocumentInfo documentInfo;
-    private Map<String, MethodCodeObjectSummary> methodSummaries;
-    private Map<String, SpanCodeObjectSummary> spanSummaries;
-    private Map<String, EndpointCodeObjectSummary> endpointSummaries;
+    private List<CodeObjectInsight> insights;
     private UsageStatusResult usageStatus = EmptyUsageStatusResult;
     private UsageStatusResult usageStatusOfErrors = EmptyUsageStatusResult;
 
@@ -68,49 +61,24 @@ public class DocumentInfoContainer {
         //maybe documentInfo already exists, override it anyway with a new one from analysis
         this.documentInfo = documentInfo;
 
-        loadSummaries();
+        loadAllInsightsForCurrentEnvironment();
     }
 
     public void refresh() {
         Log.log(LOGGER::debug, "Refreshing document backend data for {}: ", psiFile.getVirtualFile());
-        loadSummaries();
+        loadAllInsightsForCurrentEnvironment();
     }
 
-
-    private void loadSummaries() {
-
-        List<String> objectIds = this.documentInfo.getMethods().values().stream().flatMap((Function<MethodInfo, Stream<String>>) methodInfo -> {
-            var ids = new ArrayList<String>();
-            ids.add(methodInfo.idWithType());
-            ids.addAll(methodInfo.getRelatedCodeObjectIds());
-            return ids.stream();
-        }).collect(Collectors.toList());
-
+    private void loadAllInsightsForCurrentEnvironment() {
+        List<String> objectIds = getObjectIds();
         try {
-            Log.log(LOGGER::debug, "Requesting summaries for {}: with ids {}", psiFile.getVirtualFile(), objectIds);
-            List<CodeObjectSummary> summaries = analyticsService.getSummaries(objectIds);
-            Log.log(LOGGER::debug, "Got summaries for {}: {}", psiFile.getVirtualFile(), summaries);
-            methodSummaries = new HashMap<>();
-            spanSummaries = new HashMap<>();
-            endpointSummaries = new HashMap<>();
-
-            summaries.forEach(codeObjectSummary -> {
-
-                if (codeObjectSummary instanceof MethodCodeObjectSummary) {
-                    methodSummaries.put(codeObjectSummary.getCodeObjectId(), (MethodCodeObjectSummary) codeObjectSummary);
-                } else if (codeObjectSummary instanceof SpanCodeObjectSummary) {
-                    spanSummaries.put(codeObjectSummary.getCodeObjectId(), (SpanCodeObjectSummary) codeObjectSummary);
-                } else if (codeObjectSummary instanceof EndpointCodeObjectSummary) {
-                    endpointSummaries.put(codeObjectSummary.getCodeObjectId(), (EndpointCodeObjectSummary) codeObjectSummary);
-                }
-
-            });
+            Log.log(LOGGER::debug, "Requesting insights with ids {}", objectIds);
+            insights = analyticsService.getInsights(objectIds);
+            Log.log(LOGGER::debug, "Got next insights: {}", insights);
         } catch (AnalyticsServiceException e) {
-            //methodSummaries = null means there was an error loading summaries, usually if the backend is not available.
+            //insights = null means there was an error loading insights, usually if the backend is not available.
             //don't log the exception, it was logged in AnalyticsService, keep the log quite because it can happen many times.
-            methodSummaries = null;
-            spanSummaries = null;
-            endpointSummaries = null;
+            insights = null;
         }
 
         try {
@@ -127,6 +95,15 @@ public class DocumentInfoContainer {
         }
     }
 
+    private List<String> getObjectIds() {
+        return this.documentInfo.getMethods().values().stream().flatMap((Function<MethodInfo, Stream<String>>) methodInfo -> {
+            var ids = new ArrayList<String>();
+            ids.add(methodInfo.idWithType());
+            ids.addAll(methodInfo.getRelatedCodeObjectIds());
+            return ids.stream();
+        }).collect(Collectors.toList());
+    }
+
 
     public DocumentInfo getDocumentInfo() {
         return documentInfo;
@@ -136,45 +113,9 @@ public class DocumentInfoContainer {
         return psiFile;
     }
 
-    public Map<String, MethodCodeObjectSummary> getMethodsSummaries() {
-        //if methodSummaries is null try to recover
-        if (methodSummaries == null) {
-            loadSummaries();
-        }
-        //if methodSummaries is still null it means there is still an error loading, return an empty map to keep everything
-        //working and don't crash the plugin, the next request will try to recover again
-        return methodSummaries == null ? new HashMap<>() : methodSummaries;
-    }
-
-    public Map<String, SpanCodeObjectSummary> getSpanSummaries() {
-        //if methodSummaries is null try to recover
-        if (spanSummaries == null) {
-            loadSummaries();
-        }
-        //if methodSummaries is still null it means there is still an error loading, return an empty map to keep everything
-        //working and don't crash the plugin, the next request will try to recover again
-        return spanSummaries == null ? new HashMap<>() : spanSummaries;
-    }
-
-    public Map<String, EndpointCodeObjectSummary> getEndpointSummaries() {
-        //if methodSummaries is null try to recover
-        if (endpointSummaries == null) {
-            loadSummaries();
-        }
-        //if methodSummaries is still null it means there is still an error loading, return an empty map to keep everything
-        //working and don't crash the plugin, the next request will try to recover again
-        return endpointSummaries == null ? new HashMap<>() : endpointSummaries;
-    }
-
-
     @NotNull
-    public List<CodeObjectSummary> getAllSummaries() {
-        //this method should not try to reload summaries because it happens too often
-        List<CodeObjectSummary> summaries = new ArrayList<>();
-        summaries.addAll(methodSummaries == null ? new ArrayList<>() : methodSummaries.values());
-        summaries.addAll(spanSummaries == null ? new ArrayList<>() : spanSummaries.values());
-        summaries.addAll(endpointSummaries == null ? new ArrayList<>() : endpointSummaries.values());
-        return summaries;
+    public List<CodeObjectInsight> getAllInsights() {
+        return insights;
     }
 
     public UsageStatusResult getUsageStatus() {

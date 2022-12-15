@@ -11,9 +11,7 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaSpanNavigationProvider"/>
 
-        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.idea.psi.java.JavaCodeVisionProvider$ErrorHotspot"/>
-        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.idea.psi.java.JavaCodeVisionProvider$HighUsage"/>
-        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.idea.psi.java.JavaCodeVisionProvider$LowUsage"/>
+        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.idea.psi.java.JavaCodeVisionProvider$JavaCodeLens"/>
 
         <postStartupActivity implementation="org.digma.intellij.plugin.idea.psi.java.JavaSpanNavigationStartupActivity"/>
 

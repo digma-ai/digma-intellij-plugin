@@ -125,9 +125,8 @@ class CodeObjectHost(project: Project): LifetimedProjectComponent(project) {
 
 
     private fun Document.toDocumentInfo() = DocumentInfo(
-        fileUri = normalizeFileUri(fileUri,project),
+        fileUri = normalizeFileUri(fileUri, project),
         methods = toMethodInfoMap(methods)
-
     )
 
     private fun toMethodInfoMap(methods: IMutableViewableMap<String, RiderMethodInfo>): MutableMap<String, MethodInfo> {
@@ -167,21 +166,12 @@ class CodeObjectHost(project: Project): LifetimedProjectComponent(project) {
 
     private fun CodeLens.toRiderCodeLensInfo(docKey: String) = RiderCodeLensInfo(
         codeObjectId = codeObjectId,
-        type = toRiderCodeLensType(type),
-        lensText = lensText,
-        lensTooltip = lensTooltipText,
+        lensTitle = lensTitle,
+        lensDescription = lensDescription,
         moreText = lensMoreText,
         anchor = anchor,
         documentProtocolKey = docKey
     )
-
-    private fun toRiderCodeLensType(type: CodeLens.CodeLensType): CodeLensType {
-        return when (type) {
-            CodeLens.CodeLensType.ErrorHotspot -> CodeLensType.ErrorHotspot
-            CodeLens.CodeLensType.LowUsage -> CodeLensType.LowUsage
-            CodeLens.CodeLensType.HighUsage -> CodeLensType.HighUsage
-        }
-    }
 
 
 }

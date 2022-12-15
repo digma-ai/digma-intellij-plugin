@@ -1,10 +1,12 @@
 package org.digma.intellij.plugin.idea.psi.java
 
-import com.intellij.codeInsight.codeVision.*
+import com.intellij.codeInsight.codeVision.CodeVisionAnchorKind
+import com.intellij.codeInsight.codeVision.CodeVisionEntry
+import com.intellij.codeInsight.codeVision.CodeVisionRelativeOrdering
 import com.intellij.codeInsight.daemon.impl.JavaCodeVisionProviderBase
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.TextRange
-import com.intellij.psi.*
+import com.intellij.psi.PsiFile
 
 abstract class JavaCodeVisionProvider: JavaCodeVisionProviderBase() {
 
@@ -15,19 +17,17 @@ abstract class JavaCodeVisionProvider: JavaCodeVisionProviderBase() {
     override val defaultAnchor: CodeVisionAnchorKind
         get() = CodeVisionAnchorKind.Top
 
-
-
-    class ErrorHotspot: JavaCodeVisionProvider() {
+    class JavaCodeLens: JavaCodeVisionProvider() {
 
         companion object {
-            const val ID = "DigmaEH"
+            const val ID = "DigmaCL"
         }
 
         override val id: String
             get() = ID
 
         override val name: String
-            get() = "Digma error hotspot"
+            get() = "Digma code lens"
 
         override val groupId: String
             get() = ID
@@ -43,81 +43,10 @@ abstract class JavaCodeVisionProvider: JavaCodeVisionProviderBase() {
 
             editor.project?.let {
                 val javaCodeLensService = editor.project!!.getService(JavaCodeLensService::class.java)
-                return javaCodeLensService.getErrorHotspotCodeLens(psiFile)
+                return javaCodeLensService.getCodeLens(psiFile)
             }
             return emptyList()
         }
     }
-
-
-
-
-    class HighUsage: JavaCodeVisionProvider() {
-
-        companion object {
-            const val ID = "DigmaHU"
-        }
-
-        override val id: String
-            get() = ID
-
-        override val name: String
-            get() = "Digma high usage"
-
-        override val groupId: String
-            get() = ID
-
-        override val relativeOrderings: List<CodeVisionRelativeOrdering>
-            get() = listOf(CodeVisionRelativeOrdering.CodeVisionRelativeOrderingAfter(ErrorHotspot.ID))
-
-        override fun computeLenses(editor: Editor, psiFile: PsiFile): List<Pair<TextRange, CodeVisionEntry>> {
-
-            if (psiFile.virtualFile == null){
-                return empty
-            }
-
-            editor.project?.let {
-                val javaCodeLensService = editor.project!!.getService(JavaCodeLensService::class.java)
-                return javaCodeLensService.getHighUsageCodeLens(psiFile)
-            }
-            return emptyList()
-        }
-    }
-
-
-
-    class LowUsage: JavaCodeVisionProvider() {
-
-        companion object {
-            const val ID = "DigmaLU"
-        }
-
-        override val id: String
-            get() = ID
-
-        override val name: String
-            get() = "Digma low usage"
-
-        override val groupId: String
-            get() = ID
-
-        override val relativeOrderings: List<CodeVisionRelativeOrdering>
-            get() = listOf(CodeVisionRelativeOrdering.CodeVisionRelativeOrderingAfter(HighUsage.ID))
-
-        override fun computeLenses(editor: Editor, psiFile: PsiFile): List<Pair<TextRange, CodeVisionEntry>> {
-
-            if (psiFile.virtualFile == null){
-                return empty
-            }
-
-            editor.project?.let {
-                val javaCodeLensService = editor.project!!.getService(JavaCodeLensService::class.java)
-                return javaCodeLensService.getLowUsageCodeLens(psiFile)
-            }
-            return emptyList()
-        }
-    }
-
-
 
 }

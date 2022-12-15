@@ -12,16 +12,21 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.util.TextRange
-import com.intellij.psi.*
+import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiManager
+import com.intellij.psi.PsiMethod
+import com.intellij.psi.SmartPointerManager
+import com.intellij.psi.SyntaxTraverser
 import com.intellij.util.messages.MessageBusConnection
 import org.digma.intellij.plugin.document.CodeLensProvider
 import org.digma.intellij.plugin.document.DocumentInfoChanged
-import org.digma.intellij.plugin.model.lens.CodeLens
+import org.digma.intellij.plugin.model.InsightImportance
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import java.awt.event.MouseEvent
 import java.util.concurrent.ConcurrentHashMap
 import java.util.stream.Collectors
+import javax.swing.Icon
 
 class JavaCodeLensService(private val project: Project): Disposable {
 
@@ -57,37 +62,16 @@ class JavaCodeLensService(private val project: Project): Disposable {
 
 
     private class CodeLensContainer{
-        val errorHotspot :MutableList<Pair<TextRange, CodeVisionEntry>> = mutableListOf()
-        val lowUsage :MutableList<Pair<TextRange, CodeVisionEntry>> = mutableListOf()
-        val highUsage :MutableList<Pair<TextRange, CodeVisionEntry>> = mutableListOf()
+        val codeLensList :MutableList<Pair<TextRange, CodeVisionEntry>> = mutableListOf()
     }
 
-
-    fun getErrorHotspotCodeLens(psiFile: PsiFile): List<Pair<TextRange, CodeVisionEntry>> {
+    fun getCodeLens(psiFile: PsiFile): List<Pair<TextRange, CodeVisionEntry>> {
         if (!codeLensCache.containsKey(PsiUtils.psiFileToUri(psiFile))){
             buildCodeLens(psiFile)
         }
 
-        return codeLensCache[PsiUtils.psiFileToUri(psiFile)]!!.errorHotspot
+        return codeLensCache[PsiUtils.psiFileToUri(psiFile)]!!.codeLensList
     }
-
-    fun getLowUsageCodeLens(psiFile: PsiFile): List<Pair<TextRange, CodeVisionEntry>> {
-        if (!codeLensCache.containsKey(PsiUtils.psiFileToUri(psiFile))){
-            buildCodeLens(psiFile)
-        }
-
-        return codeLensCache[PsiUtils.psiFileToUri(psiFile)]!!.lowUsage
-    }
-
-    fun getHighUsageCodeLens(psiFile: PsiFile): List<Pair<TextRange, CodeVisionEntry>> {
-        if (!codeLensCache.containsKey(PsiUtils.psiFileToUri(psiFile))){
-            buildCodeLens(psiFile)
-        }
-
-        return codeLensCache[PsiUtils.psiFileToUri(psiFile)]!!.highUsage
-    }
-
-
 
 
     private fun buildCodeLens(psiFile: PsiFile) {
@@ -95,9 +79,7 @@ class JavaCodeLensService(private val project: Project): Disposable {
         synchronized(psiFile){
 
             val codeLensContainer = codeLensCache.computeIfAbsent(PsiUtils.psiFileToUri(psiFile)) { CodeLensContainer() }
-            codeLensContainer.errorHotspot.clear()
-            codeLensContainer.highUsage.clear()
-            codeLensContainer.lowUsage.clear()
+            codeLensContainer.codeLensList.clear()
 
             val codeLenses = codeLensProvider.provideCodeLensNoError(psiFile)
             val methods: Map<String, Pair<TextRange,PsiMethod>> =
@@ -109,44 +91,16 @@ class JavaCodeLensService(private val project: Project): Disposable {
                 methodPair?.let {
                     val method = methodPair.second
                     val textRange = methodPair.first
-                    when (lens.type) {
-                        CodeLens.CodeLensType.ErrorHotspot -> {
-                            val entry = ClickableTextCodeVisionEntry(
-                                "Error Hotspot",
-                                JavaCodeVisionProvider.ErrorHotspot.ID,
-                                ClickHandler(method, project),
-                                errorHotspotIcon,
-                                lens.lensMoreText,
-                                lens.lensTooltipText
-                            )
-                            codeLensContainer.errorHotspot.add(Pair(textRange, entry))
-                        }
 
-                        CodeLens.CodeLensType.HighUsage -> {
-                            val entry = ClickableTextCodeVisionEntry(
-                                "High Usage",
-                                JavaCodeVisionProvider.HighUsage.ID,
-                                ClickHandler(method, project),
-                                null,
-                                lens.lensMoreText,
-                                lens.lensTooltipText
-                            )
-                            codeLensContainer.highUsage.add(Pair(textRange, entry))
-                        }
-
-                        CodeLens.CodeLensType.LowUsage -> {
-                            val entry = ClickableTextCodeVisionEntry(
-                                "Low Usage",
-                                JavaCodeVisionProvider.LowUsage.ID,
-                                ClickHandler(method, project),
-                                null,
-                                lens.lensMoreText,
-                                lens.lensTooltipText
-                            )
-                            codeLensContainer.lowUsage.add(Pair(textRange, entry))
-                        }
-
-                    }
+                    val entry = ClickableTextCodeVisionEntry(
+                            lens.lensTitle,
+                            JavaCodeVisionProvider.JavaCodeLens.ID,
+                            ClickHandler(method, project),
+                            getIconByImportanceLevel(lens.importance),
+                            lens.lensMoreText,
+                            lens.lensDescription
+                    )
+                    codeLensContainer.codeLensList.add(Pair(textRange, entry))
                 }
             }
 
@@ -188,6 +142,18 @@ class JavaCodeLensService(private val project: Project): Disposable {
                 }
             }
         }
+    }
+
+    private fun getIconByImportanceLevel(importanceLevel: Int): Icon? {
+        return if (isImportant(importanceLevel)) {
+            errorHotspotIcon
+        } else {
+            null
+        }
+    }
+    private fun isImportant(importance: Int): Boolean {
+        return importance <= InsightImportance.HighlyImportant.priority &&
+                importance >= InsightImportance.ShowStopper.priority
     }
 
 

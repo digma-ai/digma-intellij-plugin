@@ -30,7 +30,7 @@ internal class EndpointSchemaTest {
     @Test
     fun adjustHttpRouteIfNeededShouldAdjustWhenNoSchema() {
         val codeObjectId = "123"
-        val normalUsageInsight = NormalUsageInsight(codeObjectId, "get /yes", actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(codeObjectId), "get /yes", 3)
+        val normalUsageInsight = NormalUsageInsight(codeObjectId, "env1", "scope1", 3, null, "get /yes", "endpointSpan1", actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(codeObjectId), 3)
         adjustHttpRouteIfNeeded(normalUsageInsight)
         assertEquals("epHTTP:get /yes", normalUsageInsight.route)
     }
@@ -38,7 +38,7 @@ internal class EndpointSchemaTest {
     @Test
     fun adjustHttpRouteIfNeededShouldSkipAdjustWhenHttpSchemaAlreadyExists() {
         val codeObjectId = "456"
-        val normalUsageInsight = NormalUsageInsight(codeObjectId, "epHTTP:post /letsgo", actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(codeObjectId), "post /letsgo", 8)
+        val normalUsageInsight = NormalUsageInsight(codeObjectId, "env2", "scope2", 2, null, "epHTTP:post /letsgo", "endpointSpan2", actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(codeObjectId), 8)
         adjustHttpRouteIfNeeded(normalUsageInsight)
         assertEquals("epHTTP:post /letsgo", normalUsageInsight.route)
     }
@@ -46,7 +46,7 @@ internal class EndpointSchemaTest {
     @Test
     fun adjustHttpRouteIfNeededShouldSkipAdjustWhenRpcSchemaAlreadyExists() {
         val codeObjectId = "789"
-        val normalUsageInsight = NormalUsageInsight(codeObjectId, "epRPC:serviceA.methodB", actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(codeObjectId), "serviceA.methodB", 4)
+        val normalUsageInsight = NormalUsageInsight(codeObjectId, "env3", "scope3", 5, null, "epRPC:serviceA.methodB", "endpointSpan3", actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(codeObjectId), 4)
         adjustHttpRouteIfNeeded(normalUsageInsight)
         assertEquals("epRPC:serviceA.methodB", normalUsageInsight.route)
     }

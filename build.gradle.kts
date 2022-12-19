@@ -1,6 +1,7 @@
 import common.properties
 import org.jetbrains.changelog.date
 import org.jetbrains.changelog.markdownToHTML
+import org.jetbrains.intellij.tasks.ListProductsReleasesTask
 import java.util.EnumSet
 
 fun properties(key: String) = properties(key,project)

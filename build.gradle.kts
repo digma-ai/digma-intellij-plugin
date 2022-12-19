@@ -162,6 +162,8 @@ tasks {
     }
 
 
+    //todo: we need to do something with github workflow so that we can verify all required versions,
+    // github fails with no space left on device for all versions
     listProductsReleases {
         types.set(listOf("RD","IC","IU"))
         sinceVersion.set("2022.3")

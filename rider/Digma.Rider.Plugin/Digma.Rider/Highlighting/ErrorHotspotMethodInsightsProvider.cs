@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Digma.Rider.Protocol;
 using JetBrains.ProjectModel;
-using JetBrains.ReSharper.Daemon.CodeInsights;
 using JetBrains.Rider.Model;
 using JetBrains.Util;
 
@@ -13,8 +12,7 @@ namespace Digma.Rider.Highlighting
         public ErrorHotspotMethodInsightsProvider(ISolution solution,ILogger logger,ShowToolWindowHost showToolWindowHost) 
             : base(solution,logger,showToolWindowHost)
         {}
-        
-        
+
 
         public override string ProviderId => nameof(ErrorHotspotMethodInsightsProvider);
         public override string DisplayName => "Error Hotspot Method Hints";

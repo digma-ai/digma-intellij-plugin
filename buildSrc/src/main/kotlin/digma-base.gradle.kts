@@ -23,8 +23,6 @@ tasks.incrementSemanticVersion {
     enabled = false
 }
 
-
-
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(properties("javaVersion", project)))

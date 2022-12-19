@@ -91,9 +91,6 @@
 
     <projectListeners>
         <listener
-                class="org.digma.intellij.plugin.project.ProjectOpenedListener"
-                topic="com.intellij.openapi.project.ProjectManagerListener"/>
-        <listener
                 class="org.digma.intellij.plugin.emvironment.EnvironmentChangeHandler"
                 topic="org.digma.intellij.plugin.analytics.EnvironmentChanged"/>
         <listener class="org.digma.intellij.plugin.debugger.DebuggerListener"

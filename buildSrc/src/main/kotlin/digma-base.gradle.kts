@@ -23,6 +23,8 @@ tasks.incrementSemanticVersion {
     enabled = false
 }
 
+
+
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(properties("javaVersion", project)))
@@ -100,6 +102,8 @@ tasks {
 
     withType<JavaCompile> {
         options.compilerArgs.addAll(listOf("-Xlint:unchecked,deprecation"))
+        //todo: after droping support for 2022.2.* we can remove 11 and start compiling for 17
+        options.release.set(11)
     }
 
 

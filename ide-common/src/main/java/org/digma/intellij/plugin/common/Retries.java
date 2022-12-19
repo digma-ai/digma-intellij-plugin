@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.common;
 import com.intellij.openapi.diagnostic.Logger;
 import org.digma.intellij.plugin.log.Log;
 
+@Deprecated(forRemoval = true)// we have no use for this class
 public class Retries {
 
     private Retries() {

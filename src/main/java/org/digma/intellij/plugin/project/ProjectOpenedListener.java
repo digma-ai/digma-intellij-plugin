@@ -6,6 +6,7 @@ import com.intellij.openapi.project.ProjectManagerListener;
 import org.digma.intellij.plugin.log.Log;
 import org.jetbrains.annotations.NotNull;
 
+@Deprecated(forRemoval = true) //not used, just an example
 public class ProjectOpenedListener implements ProjectManagerListener {
 
 

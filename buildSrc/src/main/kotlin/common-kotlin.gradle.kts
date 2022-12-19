@@ -37,7 +37,8 @@ dependencies {
 tasks {
     properties("javaVersion", project).let {
         withType<KotlinCompile> {
-            kotlinOptions.jvmTarget = it
+            //todo: after droping support for 2022.2.* we can remove 11 and start compiling for 17 (kotlinOptions.jvmTarget = it)
+            kotlinOptions.jvmTarget = "11"
         }
     }
 }

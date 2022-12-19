@@ -1,6 +1,7 @@
 import common.properties
 import org.jetbrains.changelog.date
 import org.jetbrains.changelog.markdownToHTML
+import java.util.EnumSet
 
 fun properties(key: String) = properties(key,project)
 
@@ -161,12 +162,15 @@ tasks {
     }
 
 
+    //todo: we need to do something with github workflow so that we can verify all required versions,
+    // github fails with no space left on device for all versions
     listProductsReleases {
         types.set(listOf("RD","IC","IU"))
-        sinceVersion.set("2022.2")
-        untilVersion.set("2022.2.*")
+        sinceVersion.set("2022.3")
+        untilVersion.set("2022.3.*")
 //        sinceBuild.set("222.3739.36")
 //        untilBuild.set("222.4167.24")
+        releaseChannels.set(EnumSet.of(org.jetbrains.intellij.tasks.ListProductsReleasesTask.Channel.RELEASE))
     }
 
 

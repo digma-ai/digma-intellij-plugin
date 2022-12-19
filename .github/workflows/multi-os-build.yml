@@ -10,8 +10,6 @@ name: Multi OS CI Build on main
 on:
   push:
     branches: [ 'main' ]
-#  pull_request:
-#    branches: [ 'main' ]
 
 jobs:
   build:
@@ -21,9 +19,11 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v3
 
-      - name: Set up JDK 11
+      - name: Fetch Sources
+        uses: actions/checkout@v3
+
+      - name: Setup Java
         uses: actions/setup-java@v3
         with:
           java-version: '11'
@@ -34,15 +34,12 @@ jobs:
         with:
           dotnet-version: |
             6.0.102
+
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1.0.4
 
-      - name: Build with Gradle
-        uses: gradle/gradle-build-action@v2.2.2
-        with:
-          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
-          arguments: build buildPlugin --no-daemon
-
+      - name: Build Plugin
+        run: ./gradlew buildPlugin --no-daemon
 
       # Collect Tests Result of failed tests
       ##todo: add other modules test reports
@@ -52,3 +49,4 @@ jobs:
         with:
           name: tests-result
           path: ${{ github.workspace }}/ide-common/build/reports/tests
+          retention-days: 5

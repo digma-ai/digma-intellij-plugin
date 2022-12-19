@@ -6,7 +6,7 @@
 # - run 'runPluginVerifier' task,
 # - create a draft release.
 #
-# Workflow is triggered on push and pull_request events.
+# Workflow is triggered on push to main.
 #
 # GitHub Actions reference: https://help.github.com/en/actions
 #
@@ -15,16 +15,13 @@
 
 name: Build, Verify and Prepare Release
 on:
-  # Trigger the workflow on pushes to only the 'main' branch (this avoids duplicate checks being run e.g. for dependabot pull requests)
   push:
     branches: [ main ]
 
 jobs:
 
-  # Run Gradle Wrapper Validation Action to verify the wrapper's checksum
-  # Run verifyPlugin, IntelliJ Plugin Verifier, and test Gradle tasks
-  # Build plugin and provide the artifact for the next workflow jobs
   build:
+
     name: Build and Verify
     runs-on: ubuntu-latest
     outputs:
@@ -33,25 +30,24 @@ jobs:
 
     steps:
 
-      # Check out current repository
       - name: Fetch Sources
         uses: actions/checkout@v3
 
-      # Validate wrapper
-      - name: Gradle Wrapper Validation
-        uses: gradle/wrapper-validation-action@v1.0.4
-
-      # Setup Java 11 environment for the next steps
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
           java-version: '11'
           distribution: 'corretto'
 
-      # All subsequent Gradle invocations will benefit from caching, build-scan capture and other features of the gradle-build-action.
-      # setup-java can also cache gradle, but we use gradle-build-action for gradle caching and should not mix between workflows.
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.2.2
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: |
+            6.0.102
+
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v1.0.4
+
 
       # Set environment variables
       # the original jetbrains template feeds the whole changelog history to the release draft. we don't need it,
@@ -66,13 +62,10 @@ jobs:
           
           echo "::set-output name=version::$VERSION"
           echo "::set-output name=name::$NAME"
-          echo "::set-output name=pluginVerifierHomeDir::~/.pluginVerifier"
-          
-          ./gradlew listProductsReleases -q # prepare list of IDEs for Plugin Verifier
 
-      # Run tests
-      - name: Run Tests
-        run: ./gradlew build
+
+      - name: Build Plugin
+        run: ./gradlew test buildPlugin --no-daemon
 
       # Collect Tests Result of failed tests
       ##todo: add other modules test reports
@@ -83,18 +76,10 @@ jobs:
           name: tests-result
           path: ${{ github.workspace }}/ide-common/build/reports/tests
 
-      # Cache Plugin Verifier IDEs
-      - name: Setup Plugin Verifier IDEs Cache
-        uses: actions/cache@v3.0.5
-        with:
-          path: ${{ steps.properties.outputs.pluginVerifierHomeDir }}/ides
-          key: plugin-verifier-${{ hashFiles('build/listProductsReleases.txt') }}
 
-      # Run Verify Plugin task and IntelliJ Plugin Verifier tool
-      - name: Run Plugin Verification tasks
-        run: ./gradlew buildPlugin runPluginVerifier -Pplugin.verifier.home.dir=${{ steps.properties.outputs.pluginVerifierHomeDir }}
+      - name: Run Plugin Verifier
+        run: ./gradlew runPluginVerifier --no-daemon
 
-      # Collect Plugin Verifier Result
       - name: Collect Plugin Verifier Result
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
@@ -107,7 +92,6 @@ jobs:
       #      - name: Qodana - Code Inspection
       #        uses: JetBrains/qodana-action@v4.2.5
 
-      # Prepare plugin archive content for creating artifact
       - name: Prepare Plugin Artifact
         id: artifact
         shell: bash
@@ -118,12 +102,12 @@ jobs:
 
           echo "::set-output name=filename::${FILENAME:0:-4}"
 
-      # Store already-built plugin as an artifact for downloading
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: ${{ steps.artifact.outputs.filename }}
           path: ./build/distributions/content/*/*
+
 
   # Prepare a draft release for GitHub Releases page for the manual verification
   # If accepted and published, release workflow would be triggered

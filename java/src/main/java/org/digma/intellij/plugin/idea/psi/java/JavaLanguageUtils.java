@@ -14,7 +14,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Predicate;
 
-import static org.digma.intellij.plugin.idea.psi.java.Constants.WITH_SPAN_INST_LIBRARY;
 
 /**
  * A collection of reusable utility methods for the java language, mostly PSI related.
@@ -63,9 +62,9 @@ public class JavaLanguageUtils {
 
 
     @NotNull
-    public static String createSpanIdForWithSpanAnnotation(@NotNull PsiMethod psiMethod, @NotNull PsiAnnotation withSpanAnnotation, @NotNull PsiClass containingClass) {
+    public static String createSpanIdForWithSpanAnnotation(@NotNull PsiMethod psiMethod, @NotNull PsiAnnotation withSpanAnnotation, @NotNull PsiClass containingClass, @NotNull String instLibrary) {
         var spanName = createSpanNameForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass);
-        return WITH_SPAN_INST_LIBRARY + "$_$" + spanName;
+        return instLibrary + "$_$" + spanName;
     }
 
     @NotNull

@@ -40,8 +40,8 @@ import java.util.*;
 
 import static org.digma.intellij.plugin.idea.psi.java.Constants.SPAN_BUILDER_FQN;
 import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.createJavaMethodCodeObjectId;
-import static org.digma.intellij.plugin.idea.psi.java.SpanDiscoveryUtils.filterNonRelevantMethodsForSpanDiscovery;
-import static org.digma.intellij.plugin.idea.psi.java.SpanDiscoveryUtils.filterNonRelevantReferencesForSpanDiscovery;
+import static org.digma.intellij.plugin.idea.psi.java.JavaSpanDiscoveryUtils.filterNonRelevantMethodsForSpanDiscovery;
+import static org.digma.intellij.plugin.idea.psi.java.JavaSpanDiscoveryUtils.filterNonRelevantReferencesForSpanDiscovery;
 
 @SuppressWarnings("UnstableApiUsage")
 public class JavaLanguageService implements LanguageService {
@@ -440,7 +440,7 @@ public class JavaLanguageService implements LanguageService {
             startSpanReferences = filterNonRelevantReferencesForSpanDiscovery(startSpanReferences);
 
             startSpanReferences.forEach(psiReference -> {
-                SpanInfo spanInfo = SpanDiscoveryUtils.getSpanInfoFromStartSpanMethodReference(project, psiReference);
+                SpanInfo spanInfo = JavaSpanDiscoveryUtils.getSpanInfoFromStartSpanMethodReference(project, psiReference);
                 if (spanInfo != null) {
                     Log.log(LOGGER::debug, "Found span info {} for method {}",spanInfo.getId(),spanInfo.getContainingMethod());
                     MethodInfo methodInfo = documentInfo.getMethods().get(spanInfo.getContainingMethod());
@@ -460,13 +460,15 @@ public class JavaLanguageService implements LanguageService {
             Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(withSpanClass, GlobalSearchScope.fileScope(psiFile));
             psiMethods = filterNonRelevantMethodsForSpanDiscovery(psiMethods);
             psiMethods.forEach(psiMethod -> {
-                SpanInfo spanInfo = SpanDiscoveryUtils.getSpanInfoFromWithSpanAnnotatedMethod(psiMethod);
-                if (spanInfo != null) {
-                    Log.log(LOGGER::debug, "Found span info {} for method {}",spanInfo.getId(),spanInfo.getContainingMethod());
-                    MethodInfo methodInfo = documentInfo.getMethods().get(spanInfo.getContainingMethod());
-                    //this method must exist in the document info
-                    Objects.requireNonNull(methodInfo, "method info " + spanInfo.getContainingMethod() + " must exist in DocumentInfo for " + documentInfo.getFileUri());
-                    methodInfo.getSpans().add(spanInfo);
+                List<SpanInfo> spanInfos = JavaSpanDiscoveryUtils.getSpanInfoFromWithSpanAnnotatedMethod(psiMethod);
+                if (spanInfos != null) {
+                    spanInfos.forEach(spanInfo -> {
+                        Log.log(LOGGER::debug, "Found span info {} for method {}",spanInfo.getId(),spanInfo.getContainingMethod());
+                        MethodInfo methodInfo = documentInfo.getMethods().get(spanInfo.getContainingMethod());
+                        //this method must exist in the document info
+                        Objects.requireNonNull(methodInfo, "method info " + spanInfo.getContainingMethod() + " must exist in DocumentInfo for " + documentInfo.getFileUri());
+                        methodInfo.getSpans().add(spanInfo);
+                    });
                 }
             });
         }

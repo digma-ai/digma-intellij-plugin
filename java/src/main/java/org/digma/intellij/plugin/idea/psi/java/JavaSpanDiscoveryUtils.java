@@ -12,6 +12,8 @@ import org.digma.intellij.plugin.psi.PsiUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import static org.digma.intellij.plugin.idea.psi.java.Constants.*;
@@ -22,8 +24,8 @@ import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.*;
  * all of those methods must be called in the scope of a ReadAction.
  */
 @SuppressWarnings("UnstableApiUsage")
-public class SpanDiscoveryUtils {
-    private SpanDiscoveryUtils() {
+public class JavaSpanDiscoveryUtils {
+    private JavaSpanDiscoveryUtils() {
     }
 
     /*
@@ -39,7 +41,7 @@ public class SpanDiscoveryUtils {
      * will return null.
      */
     @Nullable
-    public static SpanInfo getSpanInfoFromWithSpanAnnotatedMethod(@NotNull PsiMethod psiMethod) {
+    public static List<SpanInfo> getSpanInfoFromWithSpanAnnotatedMethod(@NotNull PsiMethod psiMethod) {
 
         var withSpanAnnotation = psiMethod.getAnnotation(Constants.WITH_SPAN_FQN);
         var containingClass = psiMethod.getContainingClass();
@@ -56,9 +58,12 @@ public class SpanDiscoveryUtils {
             Objects.requireNonNull(containingFileUri, "containingFileUri must not be null here");
 
             var spanName = createSpanNameForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass);
-            var spanId = createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass);
 
-            return new SpanInfo(spanId, spanName, methodId, containingFileUri);
+            List<SpanInfo> spanInfos = new ArrayList<>();
+            spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass,WITH_SPAN_INST_LIBRARY_1), spanName, methodId, containingFileUri));
+            spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass,WITH_SPAN_INST_LIBRARY_2), spanName, methodId, containingFileUri));
+            spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass,WITH_SPAN_INST_LIBRARY_3), spanName, methodId, containingFileUri));
+            return spanInfos;
         }
 
         //if here then we couldn't completely discover the span

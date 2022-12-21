@@ -153,9 +153,9 @@ public class AnalyticsService implements Disposable {
     }
 
 
-    public void sendDebuggerEvent(int eventType) throws AnalyticsServiceException {
+    public void sendDebuggerEvent(int eventType,String timestamp) throws AnalyticsServiceException {
         executeCatching(() -> {
-            analyticsProviderProxy.sendDebuggerEvent(new DebuggerEventRequest(String.valueOf(eventType), CommonUtils.getLocalHostname(), String.valueOf(System.currentTimeMillis())));
+            analyticsProviderProxy.sendDebuggerEvent(new DebuggerEventRequest(String.valueOf(eventType), CommonUtils.getLocalHostname(), timestamp));
             return null;
         });
     }

@@ -30,8 +30,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import static org.digma.intellij.plugin.idea.psi.java.Constants.SPAN_BUILDER_FQN;
-import static org.digma.intellij.plugin.idea.psi.java.SpanDiscoveryUtils.filterNonRelevantMethodsForSpanDiscovery;
-import static org.digma.intellij.plugin.idea.psi.java.SpanDiscoveryUtils.filterNonRelevantReferencesForSpanDiscovery;
+import static org.digma.intellij.plugin.idea.psi.java.JavaSpanDiscoveryUtils.filterNonRelevantMethodsForSpanDiscovery;
+import static org.digma.intellij.plugin.idea.psi.java.JavaSpanDiscoveryUtils.filterNonRelevantReferencesForSpanDiscovery;
 
 @SuppressWarnings("UnstableApiUsage")
 public class JavaSpanNavigationProvider implements Disposable {
@@ -111,7 +111,7 @@ public class JavaSpanNavigationProvider implements Disposable {
             startSpanReferences = filterNonRelevantReferencesForSpanDiscovery(startSpanReferences);
 
             startSpanReferences.forEach(psiReference -> {
-                SpanInfo spanInfo = SpanDiscoveryUtils.getSpanInfoFromStartSpanMethodReference(project, psiReference);
+                SpanInfo spanInfo = JavaSpanDiscoveryUtils.getSpanInfoFromStartSpanMethodReference(project, psiReference);
                 if (spanInfo != null) {
                     int lineNumber = psiReference.getElement().getTextOffset();
                     var location = new SpanLocation(spanInfo.getContainingFileUri(), lineNumber);
@@ -129,11 +129,14 @@ public class JavaSpanNavigationProvider implements Disposable {
             Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(withSpanClass, GlobalSearchScope.projectScope(project));
             psiMethods = filterNonRelevantMethodsForSpanDiscovery(psiMethods);
             psiMethods.forEach(psiMethod -> {
-                SpanInfo spanInfo = SpanDiscoveryUtils.getSpanInfoFromWithSpanAnnotatedMethod(psiMethod);
-                if (spanInfo != null) {
-                    int offset = psiMethod.getTextOffset();
-                    var location = new SpanLocation(spanInfo.getContainingFileUri(), offset);
-                    spanLocations.put(spanInfo.getId(), location);
+                List<SpanInfo> spanInfos = JavaSpanDiscoveryUtils.getSpanInfoFromWithSpanAnnotatedMethod(psiMethod);
+                if (spanInfos != null) {
+                    spanInfos.forEach(spanInfo -> {
+                        Log.log(LOGGER::debug, "Found span info {} for method {}",spanInfo.getId(),spanInfo.getContainingMethod());
+                        int offset = psiMethod.getTextOffset();
+                        var location = new SpanLocation(spanInfo.getContainingFileUri(), offset);
+                        spanLocations.put(spanInfo.getId(), location);
+                    });
                 }
             });
         }
@@ -209,8 +212,9 @@ public class JavaSpanNavigationProvider implements Disposable {
             startSpanReferences = filterNonRelevantReferencesForSpanDiscovery(startSpanReferences);
 
             startSpanReferences.forEach(psiReference -> {
-                SpanInfo spanInfo = SpanDiscoveryUtils.getSpanInfoFromStartSpanMethodReference(project, psiReference);
+                SpanInfo spanInfo = JavaSpanDiscoveryUtils.getSpanInfoFromStartSpanMethodReference(project, psiReference);
                 if (spanInfo != null) {
+                    Log.log(LOGGER::debug, "Found span info {} in method {}",spanInfo.getId(),spanInfo.getContainingMethod());
                     int lineNumber = psiReference.getElement().getTextOffset();
                     var location = new SpanLocation(spanInfo.getContainingFileUri(), lineNumber);
                     spanLocations.put(spanInfo.getId(), location);
@@ -228,11 +232,14 @@ public class JavaSpanNavigationProvider implements Disposable {
             Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(withSpanClass, GlobalSearchScope.fileScope(project, virtualFile));
             psiMethods = filterNonRelevantMethodsForSpanDiscovery(psiMethods);
             psiMethods.forEach(psiMethod -> {
-                SpanInfo spanInfo = SpanDiscoveryUtils.getSpanInfoFromWithSpanAnnotatedMethod(psiMethod);
-                if (spanInfo != null) {
-                    int offset = psiMethod.getTextOffset();
-                    var location = new SpanLocation(spanInfo.getContainingFileUri(), offset);
-                    spanLocations.put(spanInfo.getId(), location);
+                List<SpanInfo> spanInfos = JavaSpanDiscoveryUtils.getSpanInfoFromWithSpanAnnotatedMethod(psiMethod);
+                if (spanInfos != null) {
+                    spanInfos.forEach(spanInfo -> {
+                        Log.log(LOGGER::debug, "Found span info {} for method {}",spanInfo.getId(),spanInfo.getContainingMethod());
+                        int offset = psiMethod.getTextOffset();
+                        var location = new SpanLocation(spanInfo.getContainingFileUri(), offset);
+                        spanLocations.put(spanInfo.getId(), location);
+                    });
                 }
             });
         }

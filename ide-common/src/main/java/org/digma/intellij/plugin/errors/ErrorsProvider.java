@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.errors;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.document.DocumentInfoService;
@@ -44,6 +45,7 @@ public class ErrorsProvider {
     }
 
     public ErrorsListContainer getErrors(@NotNull MethodInfo methodInfo) {
+        var stopWatch = StopWatch.createStarted();
         try {
             final List<CodeObjectError> codeObjectErrors = analyticsService.getErrorsOfCodeObject(methodInfo.idWithType());
             Log.log(LOGGER::debug, "CodeObjectErrors for {}: {}", methodInfo.getId(), codeObjectErrors);
@@ -66,6 +68,9 @@ public class ErrorsProvider {
             //it may happen many times.
             Log.log(LOGGER::debug, "AnalyticsServiceException for getErrors for {}: {}", methodInfo.getId(), e.getMessage());
             return new ErrorsListContainer();
+        } finally {
+            stopWatch.stop();
+            Log.log(LOGGER::debug, "getErrors time took {} milliseconds", stopWatch.getTime(java.util.concurrent.TimeUnit.MILLISECONDS));
         }
     }
 

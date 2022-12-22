@@ -9,6 +9,7 @@ import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent;
 import com.jetbrains.rider.ideaInterop.fileTypes.csharp.CSharpLanguage;
 import kotlin.Pair;
 import org.apache.commons.collections4.map.LRUMap;
+import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
@@ -18,6 +19,7 @@ import org.digma.intellij.plugin.rider.protocol.CodeObjectHost;
 import org.digma.intellij.plugin.rider.protocol.MethodNavigationHost;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.concurrent.TimeUnit;
 import java.util.List;
 import java.util.Map;
 
@@ -96,7 +98,13 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
 
     @Override
     public Map<String, Pair<String, Integer>> findWorkspaceUrisForSpanIds(List<String> spanIds) {
-        return codeObjectHost.findWorkspaceUrisForSpanIds(spanIds);
+        var stopWatch = StopWatch.createStarted();
+        try {
+            return codeObjectHost.findWorkspaceUrisForSpanIds(spanIds);
+        } finally {
+            stopWatch.stop();
+            Log.log(LOGGER::debug, "findWorkspaceUrisForSpanIds time took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS));
+        }
     }
 
     @Override

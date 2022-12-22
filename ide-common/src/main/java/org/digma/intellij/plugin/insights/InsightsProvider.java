@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.insights;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.insights.view.BuildersHolder;
@@ -37,6 +38,7 @@ public class InsightsProvider {
         objectIds.add(methodInfo.idWithType());
         objectIds.addAll(methodInfo.getRelatedCodeObjectIds());
         Log.log(LOGGER::debug, "Got following code object ids for method {}: {}",methodInfo.getId(),objectIds);
+        var stopWatch = StopWatch.createStarted();
 
         try {
             List<? extends CodeObjectInsight> codeObjectInsights = analyticsService.getInsights(objectIds);
@@ -47,13 +49,16 @@ public class InsightsProvider {
             List<ListViewItem<?>> listViewItems = insightsViewBuilder.build(project,methodInfo, codeObjectInsights);
             Log.log(LOGGER::debug, "ListViewItems for {}: {}", methodInfo.getId(), listViewItems);
             return new InsightsListContainer(listViewItems, codeObjectInsights.size(), usageStatus);
-        }catch (AnalyticsServiceException e){
+        } catch (AnalyticsServiceException e) {
             //if analyticsService.getInsights throws exception it means insights could not be loaded, usually when
             //the backend is not available. return an empty InsightsListContainer to keep everything running and don't
             //crash the plugin. don't log the exception, it was logged in AnalyticsService, keep the log quite because
             //it may happen many times.
             Log.log(LOGGER::debug, "AnalyticsServiceException for getInsights for {}: {}", methodInfo.getId(), e.getMessage());
             return new InsightsListContainer();
+        } finally {
+            stopWatch.stop();
+            Log.log(LOGGER::debug, "getInsights time took {} milliseconds", stopWatch.getTime(java.util.concurrent.TimeUnit.MILLISECONDS));
         }
     }
 

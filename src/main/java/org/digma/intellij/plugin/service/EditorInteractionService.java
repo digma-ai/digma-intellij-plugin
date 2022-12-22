@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.service;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor;
 import org.digma.intellij.plugin.common.Backgroundable;
@@ -107,7 +108,13 @@ public class EditorInteractionService implements CaretContextService, Disposable
 
         Backgroundable.ensureBackground(project, "Digma: Context change", () -> {
             Log.log(LOGGER::debug, "Executing contextChanged in background for {}", methodUnderCaret.getId());
-            contextChangedImpl(methodUnderCaret);
+            var stopWatch = StopWatch.createStarted();
+            try {
+                contextChangedImpl(methodUnderCaret);
+            } finally {
+                stopWatch.stop();
+                Log.log(LOGGER::debug, "contextChangedImpl time took {} milliseconds", stopWatch.getTime(java.util.concurrent.TimeUnit.MILLISECONDS));
+            }
         });
 
 //        if (SwingUtilities.isEventDispatchThread()) {

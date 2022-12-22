@@ -36,6 +36,8 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1.0.4
 
+      - name: Run Plugin Verifier
+        run: ./gradlew runPluginVerifier --no-daemon
 
       - name: Export Properties
         id: properties

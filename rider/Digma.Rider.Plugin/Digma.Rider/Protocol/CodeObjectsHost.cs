@@ -99,22 +99,26 @@ namespace Digma.Rider.Protocol
                     {
                         var className = methodId.SubstringBefore("$_$");
                         var methodName = methodId.SubstringAfter("$_$").SubstringBefore("(");
-                        //LibrarySymbolScope.NONE means we'll find only workspace classes
-                        var symbolScope = myPsiServices.Symbols.GetSymbolScope(LibrarySymbolScope.NONE, false);
-                        var elements = symbolScope.GetTypeElementsByCLRName(className);
-                        foreach (var typeElement in elements)
+                        if (className != null && className.IsNotEmpty() && methodName != null && methodName.IsNotEmpty())
                         {
-                            if (typeElement.IsClassLike())
+                            //LibrarySymbolScope.NONE means we'll find only workspace classes
+                            var symbolScope = myPsiServices.Symbols.GetSymbolScope(LibrarySymbolScope.NONE, false);
+                            var elements = symbolScope.GetTypeElementsByCLRName(className);
+                            foreach (var typeElement in elements)
                             {
-                                foreach (var typeElementMethod in typeElement.Methods)
+                                if (typeElement.IsClassLike())
                                 {
-                                    if (typeElementMethod.ShortName.Equals(methodName))
+                                    foreach (var typeElementMethod in typeElement.Methods)
                                     {
-                                        if (typeElementMethod.GetSourceFiles().SingleItem != null)
+                                        if (typeElementMethod.ShortName.Equals(methodName))
                                         {
-                                            var fileUri = typeElementMethod.GetSourceFiles().SingleItem.GetLocation().ToUri().ToString();
-                                            uris.Add(new CodeObjectIdUriPair(methodId, fileUri));
-                                            break;
+                                            if (typeElementMethod.GetSourceFiles().SingleItem != null)
+                                            {
+                                                var fileUri = typeElementMethod.GetSourceFiles().SingleItem
+                                                    .GetLocation().ToUri().ToString();
+                                                uris.Add(new CodeObjectIdUriPair(methodId, fileUri));
+                                                break;
+                                            }
                                         }
                                     }
                                 }

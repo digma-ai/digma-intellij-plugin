@@ -19,8 +19,6 @@ import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.psi.search.searches.MethodReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Query;
-import com.intellij.util.RunnableCallable;
-import com.intellij.util.concurrency.NonUrgentExecutor;
 import kotlin.Pair;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.index.DocumentInfoIndex;
@@ -374,50 +372,12 @@ public class JavaLanguageService implements LanguageService {
         This method is called after loading the DocumentInfo from DocumentInfoIndex, and it is meant to
         enrich the DocumentInfo with discovery that can not be done in file based index or dumb mode.
         for example span discovery does not work in dumb mode, it must be done in smart mode.
-        it may happen that this method is called in dumb mode when files are re-opened on project startup.
-        in that case the code must wait for smart mode before trying to do span discovery and then do it in the
-        background.
-        if it's called in smart mode then span discovery will happen on the current thread blocking until its finished.
+        This method must be called in smart mode inside s ReadAction or UI thread.
          */
 
-        //todo: no need to wait for smart mode because enrichDocumentInfo should not be called in dumb mode
-        // EditorEventsHandler and DocumentChangeListener will call this method only in smart mode
-//        if (DumbService.getInstance(project).isDumb()) {
-//            ReadAction.nonBlocking(new RunnableCallable(() -> {
-//                spanDiscovery(psiFile, documentInfo);
-//                refreshDocumentInfoAndNotifyContextChanged(psiFile);
-//            })).inSmartMode(project).submit(NonUrgentExecutor.getInstance());
-//        } else {
-            ReadAction.nonBlocking(new RunnableCallable(() -> spanDiscovery(psiFile, documentInfo))).submit(NonUrgentExecutor.getInstance());
-//        }
+        spanDiscovery(psiFile, documentInfo);
     }
 
-
-//    private void refreshDocumentInfoAndNotifyContextChanged(@NotNull PsiFile psiFile) {
-//        //if documents are opened in dumb mode it may be that they don't have span infos in time because span discovery
-//        // waits for smart mode,in that case they will not have span summaries and span insights.
-//        // So after span discovery in smart mode ,refresh the document data and fire contextChange for the selected editor.
-//
-//        Backgroundable.ensureBackground(project,"Refresh document",() -> {
-//
-//            DocumentInfoService.getInstance(project).refreshIfExists(psiFile);
-//
-//            ApplicationManager.getApplication().invokeLater(() -> {
-//                var editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
-//                if (editor != null){
-//                    var virtualFile = FileDocumentManager.getInstance().getFile(editor.getDocument());
-//                    if (virtualFile != null) {
-//                        var selectedPsiFile = PsiManager.getInstance(project).findFile(virtualFile);
-//                        if (selectedPsiFile != null && selectedPsiFile.equals(psiFile)){
-//                            var offset = editor.getCaretModel().getOffset();
-//                            var methodUnderCaret = detectMethodUnderCaret(project,psiFile,offset);
-//                            caretContextService.contextChanged(methodUnderCaret);
-//                        }
-//                    }
-//                }
-//            });
-//        });
-//    }
 
 
     private void spanDiscovery(PsiFile psiFile, DocumentInfo documentInfo) {

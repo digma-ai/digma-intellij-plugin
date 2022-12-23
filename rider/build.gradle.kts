@@ -34,18 +34,6 @@ intellij {
 
 tasks {
 
-//    properties("javaVersion", project).let {
-//        withType<JavaCompile> {
-//            dependsOn(named("rdgen"))
-//            options.release.set(it.toInt())
-//        }
-//        withType<KotlinCompile> {
-//            dependsOn(named("rdgen"))
-//            kotlinOptions.jvmTarget = it
-//        }
-//    }
-
-
     withType<JavaCompile> {
         dependsOn(named("rdgen"))
     }

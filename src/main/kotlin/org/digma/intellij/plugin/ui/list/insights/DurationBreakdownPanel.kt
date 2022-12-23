@@ -7,12 +7,11 @@ import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationBreakdown
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationBreakdownInsight
 import org.digma.intellij.plugin.ui.common.*
-import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.list.openWorkspaceFileForSpan
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.BorderLayout
-import java.awt.GridLayout
 import javax.swing.*
+
 
 private const val P_50: Float = 0.5F
 private const val RECORDS_PER_PAGE = 3
@@ -28,8 +27,7 @@ val durationBreakdownEntriesToDisplay = ArrayList<SpanDurationBreakdown>()
 fun spanDurationBreakdownPanel(
         project: Project,
         insight: SpanDurationBreakdownInsight,
-        moreData: HashMap<String, Any>,
-        panelsLayoutHelper: PanelsLayoutHelper
+        moreData: HashMap<String, Any>
 ): JPanel {
 
     resultBreakdownPanel = object : DigmaResettablePanel() {
@@ -38,8 +36,7 @@ fun spanDurationBreakdownPanel(
                     resultBreakdownPanel!!,
                     durationBreakdownEntriesToDisplay,
                     project,
-                    moreData,
-                    panelsLayoutHelper
+                    moreData
             )
             buildPaginationPanel(paginationPanel)
         }
@@ -70,28 +67,26 @@ fun buildDurationBreakdownRowPanel(
         durationBreakdownPanel: DigmaResettablePanel,
         durationBreakdownEntries: List<SpanDurationBreakdown>,
         project: Project,
-        moreData: HashMap<String, Any>,
-        layoutHelper: PanelsLayoutHelper
+        moreData: HashMap<String, Any>
 ) {
     durationBreakdownPanel.removeAll()
-    resultBreakdownPanel!!.layout = GridLayout(durationBreakdownEntries.size, 1, 0, 2)
+    resultBreakdownPanel!!.layout = BoxLayout(durationBreakdownPanel, BoxLayout.Y_AXIS)
     resultBreakdownPanel!!.isOpaque = false
 
     durationBreakdownEntries.forEach { durationBreakdown: SpanDurationBreakdown ->
-        resultBreakdownPanel!!.add(durationBreakdownRowPanel(durationBreakdown, project, moreData, layoutHelper))
+        resultBreakdownPanel!!.add(durationBreakdownRowPanel(durationBreakdown, project, moreData))
     }
 }
 
 fun durationBreakdownRowPanel(
         durationBreakdown: SpanDurationBreakdown,
         project: Project,
-        moreData: HashMap<String, Any>,
-        layoutHelper: PanelsLayoutHelper
+        moreData: HashMap<String, Any>
 ): JPanel {
     val durationBreakdownPanel = getDurationBreakdownPanel()
     val telescopeIconLabel = getTelescopeIconLabel()
     val spanDisplayNameLabel = getSpanDisplayNameLabel(durationBreakdown, project, moreData)
-    val breakdownDurationLabelPanel = getBreakdownDurationLabelPanel(durationBreakdown, layoutHelper)
+    val breakdownDurationLabelPanel = getBreakdownDurationLabel(durationBreakdown)
 
     durationBreakdownPanel.add(telescopeIconLabel)
     durationBreakdownPanel.add(spanDisplayNameLabel)
@@ -182,39 +177,34 @@ private fun getSpanDisplayNameLabel(
         moreData: HashMap<String, Any>,
 ): JComponent {
     val spanId = CodeObjectsUtil.createSpanId(durationBreakdown.spanInstrumentationLibrary, durationBreakdown.spanName)
-    val displayName = durationBreakdown.spanDisplayName
+    val fullDisplayName = durationBreakdown.spanDisplayName
+    val limitedDisplayName = asHtml(takeOnlyFirstNCharactersFromString(fullDisplayName, 30))
 
     val messageLabel = if (moreData.contains(spanId)) {
-        ActionLink(asHtml(displayName)) {
+        ActionLink(limitedDisplayName) {
             openWorkspaceFileForSpan(project, moreData, spanId)
         }
     } else {
-        JLabel(asHtml(displayName), SwingConstants.LEFT)
+        JLabel(limitedDisplayName)
     }
-    messageLabel.toolTipText = displayName
+    messageLabel.toolTipText = asHtml(fullDisplayName)
     messageLabel.border = empty(0, 5, 5, 0)
     messageLabel.isOpaque = false
+
+    messageLabel.minimumSize = messageLabel.preferredSize
 
     return messageLabel
 }
 
-private fun getBreakdownDurationLabelPanel(
-        durationBreakdown: SpanDurationBreakdown,
-        layoutHelper: PanelsLayoutHelper
-): JPanel {
+private fun getBreakdownDurationLabel(
+        durationBreakdown: SpanDurationBreakdown
+): JComponent {
     val pLabelText = getDisplayValueOfPercentile(durationBreakdown, P_50)
     val pLabel = JLabel(pLabelText)
     pLabel.toolTipText = getTooltipForDurationLabel(durationBreakdown)
     boldFonts(pLabel)
 
-    val breakdownDurationLabelPanel = JPanel()
-    breakdownDurationLabelPanel.layout = BoxLayout(breakdownDurationLabelPanel, BoxLayout.LINE_AXIS)
-    breakdownDurationLabelPanel.border = empty(0, 0, 0, 5)
-    breakdownDurationLabelPanel.isOpaque = false
-    breakdownDurationLabelPanel.add(pLabel)
-    addCurrentLargestWidthDurationPLabel(layoutHelper, breakdownDurationLabelPanel.preferredSize.width)
-
-    return breakdownDurationLabelPanel
+    return pLabel
 }
 
 private fun getDisplayValueOfPercentile(breakdownEntry: SpanDurationBreakdown, requestedPercentile: Float): String {
@@ -242,4 +232,12 @@ private fun getTooltipForDurationLabel(breakdownEntry: SpanDurationBreakdown): S
         tooltip += "P${(p.percentile * 100).toInt()}: ${p.duration.value} ${p.duration.unit}".plus("<br>")
     }
     return asHtml(tooltip)
+}
+
+fun takeOnlyFirstNCharactersFromString(originalString: String, limit: Int): String {
+    return if (originalString.length > limit) {
+         originalString.trim().take(30) + " ..."
+    } else {
+        originalString
+    }
 }

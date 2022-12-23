@@ -45,7 +45,7 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
             is SpanUsagesInsight -> spanUsagesPanel(project, value.modelObject as SpanUsagesInsight)
             is SpanDurationsInsight -> spanDurationPanel(project, value.modelObject as SpanDurationsInsight, panelsLayoutHelper)
             is SpanDurationBreakdownInsight -> spanDurationBreakdownPanel(project,
-                value.modelObject as SpanDurationBreakdownInsight, value.moreData, panelsLayoutHelper)
+                value.modelObject as SpanDurationBreakdownInsight, value.moreData)
             is SpanSlowEndpointsInsight -> spanSlowEndpointsPanel(project, value.modelObject as SpanSlowEndpointsInsight)
             is UnmappedInsight -> unmappedInsightPanel(project, value.modelObject as UnmappedInsight)
             else -> genericPanelForSingleInsight(project, value.modelObject)

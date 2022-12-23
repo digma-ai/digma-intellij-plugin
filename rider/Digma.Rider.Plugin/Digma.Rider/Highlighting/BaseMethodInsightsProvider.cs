@@ -40,19 +40,6 @@ namespace Digma.Rider.Highlighting
             NavigateToMethod(highlightInfo.CodeInsightsHighlighting);
         }
 
-        //todo: this method implements the interface of 2022.2, can be removed after dropping support for 2022.2
-        public void OnClick(CodeInsightsHighlighting highlighting, ISolution solution)
-        {
-            Log(_logger, "OnClick invoked for {0}", highlighting.DeclaredElement.ShortName);
-            NavigateToMethod(highlighting);
-        }
-
-        //todo: this method implements the interface of 2022.2, can be removed after dropping support for 2022.2
-        public void OnExtraActionClick(CodeInsightsHighlighting highlighting, string actionId, ISolution solution)
-        {
-            Log(_logger, "OnExtraActionClick invoked for {0}", highlighting.DeclaredElement);
-            NavigateToMethod(highlighting);
-        }
 
         public abstract string ProviderId { get; }
         public abstract string DisplayName { get; }

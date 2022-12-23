@@ -168,7 +168,7 @@ tasks {
     // github fails with no space left on device for all versions
     listProductsReleases {
         types.set(listOf("RD","IC"))
-        sinceVersion.set("2022.2")
+        sinceVersion.set("2022.3")
         untilVersion.set("2022.3.*")
 //        sinceBuild.set("222.3739.36")
 //        untilBuild.set("222.4167.24")
@@ -177,7 +177,6 @@ tasks {
 
 
     runPluginVerifier {
-//        ideVersions.set(listOf())
         subsystemsToCheck.set("without-android")
     }
 

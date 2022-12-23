@@ -168,7 +168,7 @@ tasks {
     listProductsReleases {
         types.set(listOf("RD","IC"))
         sinceVersion.set("2022.2")
-        untilVersion.set("2022.3.*")
+        untilVersion.set("2022.2.*")
 //        sinceBuild.set("222.3739.36")
 //        untilBuild.set("222.4167.24")
         releaseChannels.set(EnumSet.of(org.jetbrains.intellij.tasks.ListProductsReleasesTask.Channel.RELEASE))

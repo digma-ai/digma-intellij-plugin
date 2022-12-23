@@ -32,7 +32,7 @@ fun spanDurationPanel(
     }
 
     val durationsListPanel = JBPanel<JBPanel<*>>()
-    durationsListPanel.layout = GridLayout(spanDurationsInsight.percentiles.size, 1, 0, 2)
+    durationsListPanel.layout = BoxLayout(durationsListPanel, BoxLayout.Y_AXIS)
     durationsListPanel.isOpaque = false
 
     val traceSamples = ArrayList<TraceSample>()

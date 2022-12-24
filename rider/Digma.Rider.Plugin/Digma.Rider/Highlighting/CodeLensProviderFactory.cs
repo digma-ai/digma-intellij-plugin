@@ -16,7 +16,6 @@ namespace Digma.Rider.Highlighting
         private readonly CodeLensMethodInsightsProvider3 _codeLensMethodInsightsProvider3;
         private readonly CodeLensMethodInsightsProvider4 _codeLensMethodInsightsProvider4;
         private readonly CodeLensMethodInsightsProvider5 _codeLensMethodInsightsProvider5;
-        private readonly List<string> _registeredProviders = new();
         private readonly Dictionary<string, BaseMethodInsightsProvider> _genericProvidersMap = new();
 
         public CodeLensProviderFactory(
@@ -43,7 +42,7 @@ namespace Digma.Rider.Highlighting
             InitializeGenericProvidersMap();
         }
 
-        public BaseMethodInsightsProvider GetFactory(string lensTitle)
+        public BaseMethodInsightsProvider GetProvider(string lensTitle, List<string> usedGenericProviders)
         {
             if (lensTitle != null)
             {
@@ -64,17 +63,22 @@ namespace Digma.Rider.Highlighting
                     return _slowEndpointMethodInsightsProvider;
                 }
             }
-            return GetNotUsedGenericMethodInsightsProvider(); 
+            return GetNotUsedGenericMethodInsightsProvider(usedGenericProviders); 
         }
 
-        private BaseMethodInsightsProvider GetNotUsedGenericMethodInsightsProvider()
+        private BaseMethodInsightsProvider GetNotUsedGenericMethodInsightsProvider(ICollection<string> usedGenericProviders)
         {
             var availableProvidersKeys = _genericProvidersMap.Where(p => 
-                _registeredProviders.All(p2 => !p2.Equals(p.Key)))
+                    usedGenericProviders.All(p2 => !p2.Equals(p.Key)))
                 .Select(x => x.Key).ToList();
 
+            if (availableProvidersKeys.Count == 0)
+            {
+                // skip the code lens if all 5 generic available providers are used already
+                return null;
+            }
             var availableProviderKey = availableProvidersKeys.Count > 0 ? availableProvidersKeys[0] : _genericProvidersMap.First().Key;
-            _registeredProviders.Add(availableProviderKey);
+            usedGenericProviders.Add(availableProviderKey);
             return _genericProvidersMap[availableProviderKey];
         }
 

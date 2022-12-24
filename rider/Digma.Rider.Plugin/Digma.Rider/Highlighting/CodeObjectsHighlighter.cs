@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Digma.Rider.Discovery;
 using Digma.Rider.Protocol;
 using JetBrains.ProjectModel;
@@ -42,12 +43,14 @@ namespace Digma.Rider.Highlighting
             var methodCodeLenses = _codeObjectsHost.GetRiderCodeLensInfo(methodFqn);
             if (methodCodeLenses is { Count: > 0 })
             {
+                
+                List<string> usedGenericProviders = new();
                 Log(_logger, "Found {0} code lens for method {1}", methodCodeLenses.Count, methodFqn);
                 foreach (var riderCodeLensInfo in methodCodeLenses)
                 {
                     Log(_logger, "Installing code lens for code method {0}: {1}", methodFqn, riderCodeLensInfo);
                     var codeLensMethodInsightsProvider =
-                        _codeLensProviderFactory.GetFactory(riderCodeLensInfo.LensTitle);
+                        _codeLensProviderFactory.GetProvider(riderCodeLensInfo.LensTitle,usedGenericProviders);
 
                     highlightingConsumer.AddHighlighting(
                         new CodeInsightsHighlighting(

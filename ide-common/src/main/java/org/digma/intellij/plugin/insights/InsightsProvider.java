@@ -5,6 +5,8 @@ import com.intellij.openapi.project.Project;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
+import org.digma.intellij.plugin.document.DocumentInfoContainer;
+import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.insights.view.BuildersHolder;
 import org.digma.intellij.plugin.insights.view.InsightsViewBuilder;
 import org.digma.intellij.plugin.log.Log;
@@ -23,12 +25,14 @@ public class InsightsProvider {
     private static final Logger LOGGER = Logger.getInstance(InsightsProvider.class);
 
     private final AnalyticsService analyticsService;
+    private final DocumentInfoService documentInfoService;
     private final Project project;
 
     private final BuildersHolder buildersHolder = new BuildersHolder();
 
     public InsightsProvider(Project project) {
         analyticsService = project.getService(AnalyticsService.class);
+        documentInfoService = project.getService(DocumentInfoService.class);
         this.project = project;
     }
 
@@ -41,14 +45,18 @@ public class InsightsProvider {
         var stopWatch = StopWatch.createStarted();
 
         try {
-            List<? extends CodeObjectInsight> codeObjectInsights = analyticsService.getInsights(objectIds);
-            codeObjectInsights = filterUnmapped(codeObjectInsights);
-            Log.log(LOGGER::debug, "CodeObjectInsights for {}: {}", methodInfo.getId(), codeObjectInsights);
+            DocumentInfoContainer documentInfoContainer = documentInfoService.getDocumentInfo(methodInfo.getContainingFileUri());
+            List<? extends CodeObjectInsight> allInsightsForCurrentDocument = new ArrayList<>();
+            if (documentInfoContainer != null) {
+                allInsightsForCurrentDocument = documentInfoContainer.getAllInsights();
+                allInsightsForCurrentDocument = filterUnmapped(allInsightsForCurrentDocument);
+            }
+            Log.log(LOGGER::debug, "CodeObjectInsights for {}: {}", methodInfo.getId(), allInsightsForCurrentDocument);
             final UsageStatusResult usageStatus = analyticsService.getUsageStatus(objectIds);
             InsightsViewBuilder insightsViewBuilder = new InsightsViewBuilder(buildersHolder);
-            List<ListViewItem<?>> listViewItems = insightsViewBuilder.build(project,methodInfo, codeObjectInsights);
+            List<ListViewItem<?>> listViewItems = insightsViewBuilder.build(project,methodInfo, allInsightsForCurrentDocument);
             Log.log(LOGGER::debug, "ListViewItems for {}: {}", methodInfo.getId(), listViewItems);
-            return new InsightsListContainer(listViewItems, codeObjectInsights.size(), usageStatus);
+            return new InsightsListContainer(listViewItems, allInsightsForCurrentDocument.size(), usageStatus);
         } catch (AnalyticsServiceException e) {
             //if analyticsService.getInsights throws exception it means insights could not be loaded, usually when
             //the backend is not available. return an empty InsightsListContainer to keep everything running and don't

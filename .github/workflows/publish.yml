@@ -24,7 +24,7 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
-          java-version: '11'
+          java-version: '17'
           distribution: 'corretto'
 
       - name: Setup dotnet
@@ -36,6 +36,8 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1.0.4
 
+      - name: Run Plugin Verifier
+        run: ./gradlew runPluginVerifier --no-daemon
 
       - name: Export Properties
         id: properties

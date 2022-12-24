@@ -2,8 +2,11 @@ package org.digma.intellij.plugin.test;
 
 import org.digma.intellij.plugin.common.Retries;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+@Deprecated(forRemoval = true) //we don't use Retries
+@Disabled
 class RetriesTests {
 
     private static class MyCounter{

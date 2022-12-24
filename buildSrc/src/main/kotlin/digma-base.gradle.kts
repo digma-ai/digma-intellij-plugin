@@ -100,6 +100,7 @@ tasks {
 
     withType<JavaCompile> {
         options.compilerArgs.addAll(listOf("-Xlint:unchecked,deprecation"))
+        options.release.set(17)
     }
 
 

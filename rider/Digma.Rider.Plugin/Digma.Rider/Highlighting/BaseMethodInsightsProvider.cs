@@ -28,17 +28,18 @@ namespace Digma.Rider.Highlighting
             return _solution == solution;
         }
 
-        public void OnClick(CodeInsightsHighlighting highlighting, ISolution solution)
+        public void OnClick(CodeInsightHighlightInfo highlightInfo, ISolution solution)
         {
-            Log(_logger, "OnClick invoked for {0}", highlighting.DeclaredElement.ShortName);
-            NavigateToMethod(highlighting);
+            Log(_logger, "OnClick invoked for {0}", highlightInfo.CodeInsightsHighlighting.DeclaredElement.ShortName);
+            NavigateToMethod(highlightInfo.CodeInsightsHighlighting);
         }
 
-        public void OnExtraActionClick(CodeInsightsHighlighting highlighting, string actionId, ISolution solution)
+        public void OnExtraActionClick(CodeInsightHighlightInfo highlightInfo, string actionId, ISolution solution)
         {
-            Log(_logger, "OnExtraActionClick invoked for {0}", highlighting.DeclaredElement);
-            NavigateToMethod(highlighting);
+            Log(_logger, "OnExtraActionClick invoked for {0}", highlightInfo.CodeInsightsHighlighting.DeclaredElement);
+            NavigateToMethod(highlightInfo.CodeInsightsHighlighting);
         }
+
 
         public abstract string ProviderId { get; }
         public abstract string DisplayName { get; }

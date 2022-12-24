@@ -12,7 +12,7 @@ namespace Digma.Rider.Highlighting
         public ErrorHotspotMethodInsightsProvider(ISolution solution,ILogger logger,ShowToolWindowHost showToolWindowHost) 
             : base(solution,logger,showToolWindowHost)
         {}
-        
+
 
         public override string ProviderId => nameof(ErrorHotspotMethodInsightsProvider);
         public override string DisplayName => "Error Hotspot Method Hints";

@@ -30,11 +30,12 @@ dependencyResolutionManagement {
     versionCatalogs {
         create("libs") {
             //rdgen version is independent of rider version
-            version("rider-rdgen", "2022.2.6")
+            version("rider-rdgen", "2022.3.4")
             //kotlin stdlib is not packaged with the plugin because intellij platform already contains it.
             //it's necessary for compilation in some cases for example rider protocol module.
             //it must target the lowest bundled stdlib version of the platform we support
-            version("kotlin-stdlib", "1.6.20")
+            //see: https://plugins.jetbrains.com/docs/intellij/using-kotlin.html#adding-kotlin-support
+            version("kotlin-stdlib", "1.6.21")
             library("kotlin-stdlib-jdk8", "org.jetbrains.kotlin", "kotlin-stdlib-jdk8").versionRef("kotlin-stdlib")
             library("guava", "com.google.guava", "guava").version("31.1-jre")
             version("retrofit", "2.9.0")

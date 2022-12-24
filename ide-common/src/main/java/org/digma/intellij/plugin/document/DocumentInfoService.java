@@ -117,6 +117,11 @@ public class DocumentInfoService {
         return documents.get(methodUnderCaret.getFileUri());
     }
 
+    @Nullable
+    public DocumentInfoContainer getDocumentInfo(String fileUri) {
+        return documents.get(fileUri);
+    }
+
 
     /*
      * getMethodInfo may return null. DocumentInfoService is just a container, it knows about what you feed it with.

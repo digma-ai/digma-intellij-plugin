@@ -46,6 +46,19 @@ jobs:
           retention-days: 5
 
 
+      - name: Run Plugin Verifier
+        run: ./gradlew runPluginVerifier --no-daemon
+
+      - name: Collect Plugin Verifier Result
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: pluginVerifier-result
+          path: ${{ github.workspace }}/build/reports/pluginVerifier
+          retention-days: 5
+
+
+
       - name: Prepare Plugin Artifact
         id: artifact
         shell: bash

@@ -21,8 +21,12 @@ data class MethodInfo(
         }
     }
 
-    fun getRelatedCodeObjectIds(): List<String> {
+    fun getRelatedCodeObjectIdsWithType(): List<String> {
         return spans.stream().map(SpanInfo::idWithType).collect(Collectors.toList())
+    }
+
+    fun getRelatedCodeObjectIds(): List<String> {
+        return spans.stream().map(SpanInfo::id).collect(Collectors.toList())
     }
 
     override fun idWithType(): String {

@@ -49,10 +49,7 @@ class SpanPanels {
 
 fun percentileRowPanel(percentile: SpanDurationsPercentile, panelsLayoutHelper: PanelsLayoutHelper, traceSamples: ArrayList<TraceSample>): JPanel {
 
-    val durationsPanel = JBPanel<JBPanel<*>>()
-    durationsPanel.layout = BoxLayout(durationsPanel, BoxLayout.LINE_AXIS)
-    durationsPanel.border = empty()
-    durationsPanel.isOpaque = false
+    val durationsPanel = createDefaultBoxLayoutLineAxisPanel()
 
     val percentileName = "P${(percentile.percentile * 100).toInt()}"
     traceSamples.add(buildTraceSample(percentile))
@@ -103,6 +100,22 @@ fun percentileRowPanel(percentile: SpanDurationsPercentile, panelsLayoutHelper: 
     }
 
     return durationsPanel
+}
+
+fun createDefaultBoxLayoutLineAxisPanel(): JPanel {
+    val defaultPanel = JBPanel<JBPanel<*>>()
+    defaultPanel.layout = BoxLayout(defaultPanel, BoxLayout.LINE_AXIS)
+    defaultPanel.border = empty()
+    defaultPanel.isOpaque = false
+    return defaultPanel
+}
+
+fun createDefaultBoxLayoutYAxisPanel(): JPanel {
+    val defaultPanel = JBPanel<JBPanel<*>>()
+    defaultPanel.layout = BoxLayout(defaultPanel, BoxLayout.Y_AXIS)
+    defaultPanel.border = empty()
+    defaultPanel.isOpaque = false
+    return defaultPanel
 }
 
 // if cannot create the button then would return null

@@ -9,7 +9,7 @@ import javax.swing.JTextPane
 
 open class BaseCopyableLabel(val myText: String) : JTextPane() {
 
-    protected fun construct(myText: String) {
+    protected fun construct(myText: String, foregroundColor: Color) {
         isEditable = false
         isOpaque = false
         background = null
@@ -20,12 +20,12 @@ open class BaseCopyableLabel(val myText: String) : JTextPane() {
         toolTipText = myText
         isFocusCycleRoot = false
         isFocusTraversalPolicyProvider = false
-        foreground = DEFAULT_FOREGROUND
+        foreground = foregroundColor
     }
 
     companion object {
         private var DEFAULT_FONT: Font = DEFAULT_LABEL_FONT
-        private var DEFAULT_FOREGROUND: Color = DEFAULT_LABEL_FOREGROUND
+        internal var DEFAULT_FOREGROUND: Color = DEFAULT_LABEL_FOREGROUND
     }
 
 
@@ -38,7 +38,7 @@ open class BaseCopyableLabel(val myText: String) : JTextPane() {
 
 class CopyableLabel(myText: String) : BaseCopyableLabel(myText) {
     init {
-        construct(myText)
+        construct(myText, DEFAULT_FOREGROUND)
     }
 }
 
@@ -46,6 +46,13 @@ class CopyableLabel(myText: String) : BaseCopyableLabel(myText) {
 class CopyableLabelHtml(myText: String) : BaseCopyableLabel(myText) {
     init {
         contentType = "text/html"
-        construct(myText)
+        construct(myText, DEFAULT_FOREGROUND)
+    }
+}
+
+class CopyableLabelHtmlWithForegroundColor(myText: String, foregroundColor: Color) : BaseCopyableLabel(myText) {
+    init {
+        contentType = "text/html"
+        construct(myText, foregroundColor)
     }
 }

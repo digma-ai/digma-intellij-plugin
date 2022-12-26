@@ -9,6 +9,7 @@ namespace Digma.Rider.Highlighting
     {
         private readonly ErrorHotspotMethodInsightsProvider _errorHotspotMethodInsightsProvider;
         private readonly UsageMethodInsightsProvider _usageMethodInsightsProvider;
+        private readonly ScaleFactorMethodInsightsProvider _scaleFactorMethodInsightsProvider;
         private readonly SlowEndpointMethodInsightsProvider _slowEndpointMethodInsightsProvider;
         private readonly CodeLensMethodInsightsProvider1 _codeLensMethodInsightsProvider1;
         private readonly CodeLensMethodInsightsProvider2 _codeLensMethodInsightsProvider2;
@@ -21,6 +22,7 @@ namespace Digma.Rider.Highlighting
         public CodeLensProviderFactory(
             ErrorHotspotMethodInsightsProvider errorHotspotMethodInsightsProvider,
             UsageMethodInsightsProvider usageMethodInsightsProvider,
+            ScaleFactorMethodInsightsProvider scaleFactorMethodInsightsProvider,
             SlowEndpointMethodInsightsProvider slowEndpointMethodInsightsProvider,
             CodeLensMethodInsightsProvider1 codeLensMethodInsightsProvider1, 
             CodeLensMethodInsightsProvider2 codeLensMethodInsightsProvider2,
@@ -31,6 +33,7 @@ namespace Digma.Rider.Highlighting
         {
             _errorHotspotMethodInsightsProvider = errorHotspotMethodInsightsProvider;
             _usageMethodInsightsProvider = usageMethodInsightsProvider;
+            _scaleFactorMethodInsightsProvider = scaleFactorMethodInsightsProvider;
             _slowEndpointMethodInsightsProvider = slowEndpointMethodInsightsProvider;
             _codeLensMethodInsightsProvider1 = codeLensMethodInsightsProvider1;
             _codeLensMethodInsightsProvider2 = codeLensMethodInsightsProvider2;
@@ -52,7 +55,10 @@ namespace Digma.Rider.Highlighting
                 {
                     return _usageMethodInsightsProvider;    
                 }
-
+                if (lensTitle.ToUpper().Contains("SCALE"))
+                {
+                    return _scaleFactorMethodInsightsProvider;    
+                }
                 if (lensTitle.ToUpper().Contains("SLOW ENDPOINT"))
                 {
                     return _slowEndpointMethodInsightsProvider;

@@ -310,9 +310,14 @@ public class JavaSpanDiscoveryUtils {
     @NotNull
     public static Query<PsiMethod> filterNonRelevantMethodsForSpanDiscovery(@NotNull Query<PsiMethod> psiMethods) {
         return psiMethods.filtering(psiMethod -> {
-            var aClass = PsiTreeUtil.getParentOfType(psiMethod, PsiClass.class);
-            return aClass == null ||
-                    (!aClass.isAnnotationType() && !aClass.isEnum() && !aClass.isRecord());
+            var file = PsiTreeUtil.getParentOfType(psiMethod,PsiFile.class);
+            //only java files are relevant
+            if (file instanceof PsiJavaFile) {
+                var aClass = PsiTreeUtil.getParentOfType(psiMethod, PsiClass.class);
+                return aClass == null ||
+                        (!aClass.isAnnotationType() && !aClass.isEnum() && !aClass.isRecord());
+            }
+            return false;
         });
     }
 }

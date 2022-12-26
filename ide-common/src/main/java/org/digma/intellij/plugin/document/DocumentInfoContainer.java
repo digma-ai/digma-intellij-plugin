@@ -70,6 +70,18 @@ public class DocumentInfoContainer {
         loadAllInsightsForCurrentEnvironment();
     }
 
+    public List<CodeObjectInsight> getMethodInsights(@NotNull MethodInfo methodInfo) {
+        Log.log(LOGGER::debug, "Requesting insights for MethodInfo {}", methodInfo.getId());
+
+        return insights.stream().filter(codeObjectInsight -> {
+            String codeObjectId = codeObjectInsight.getCodeObjectId();
+            return methodInfo.getId().equals(codeObjectId)
+                    || methodInfo.idWithType().equals(codeObjectId)
+                    || methodInfo.getRelatedCodeObjectIds().contains(codeObjectId)
+                    || methodInfo.getRelatedCodeObjectIdsWithType().contains(codeObjectId);
+        }).collect(Collectors.toList());
+    }
+
     private void loadAllInsightsForCurrentEnvironment() {
         List<String> objectIds = getObjectIds();
         try {
@@ -100,7 +112,7 @@ public class DocumentInfoContainer {
         return this.documentInfo.getMethods().values().stream().flatMap((Function<MethodInfo, Stream<String>>) methodInfo -> {
             var ids = new ArrayList<String>();
             ids.add(methodInfo.idWithType());
-            ids.addAll(methodInfo.getRelatedCodeObjectIds());
+            ids.addAll(methodInfo.getRelatedCodeObjectIdsWithType());
             return ids.stream();
         }).collect(Collectors.toList());
     }

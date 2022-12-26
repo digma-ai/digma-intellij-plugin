@@ -40,23 +40,23 @@ public class InsightsProvider {
 
         List<String> objectIds = new ArrayList<>();
         objectIds.add(methodInfo.idWithType());
-        objectIds.addAll(methodInfo.getRelatedCodeObjectIds());
-        Log.log(LOGGER::debug, "Got following code object ids for method {}: {}",methodInfo.getId(),objectIds);
+        objectIds.addAll(methodInfo.getRelatedCodeObjectIdsWithType());
+        Log.log(LOGGER::debug, "Got following code object ids for method {}: {}",methodInfo.getId(), objectIds);
         var stopWatch = StopWatch.createStarted();
 
         try {
             DocumentInfoContainer documentInfoContainer = documentInfoService.getDocumentInfo(methodInfo.getContainingFileUri());
-            List<? extends CodeObjectInsight> allInsightsForCurrentDocument = new ArrayList<>();
+            List<? extends CodeObjectInsight> codeObjectInsights = new ArrayList<>();
             if (documentInfoContainer != null) {
-                allInsightsForCurrentDocument = documentInfoContainer.getAllInsights();
-                allInsightsForCurrentDocument = filterUnmapped(allInsightsForCurrentDocument);
+                codeObjectInsights = documentInfoContainer.getMethodInsights(methodInfo);
+                codeObjectInsights = filterUnmapped(codeObjectInsights);
             }
-            Log.log(LOGGER::debug, "CodeObjectInsights for {}: {}", methodInfo.getId(), allInsightsForCurrentDocument);
+            Log.log(LOGGER::debug, "CodeObjectInsights for {}: {}", methodInfo.getId(), codeObjectInsights);
             final UsageStatusResult usageStatus = analyticsService.getUsageStatus(objectIds);
             InsightsViewBuilder insightsViewBuilder = new InsightsViewBuilder(buildersHolder);
-            List<ListViewItem<?>> listViewItems = insightsViewBuilder.build(project,methodInfo, allInsightsForCurrentDocument);
+            List<ListViewItem<?>> listViewItems = insightsViewBuilder.build(project,methodInfo, codeObjectInsights);
             Log.log(LOGGER::debug, "ListViewItems for {}: {}", methodInfo.getId(), listViewItems);
-            return new InsightsListContainer(listViewItems, allInsightsForCurrentDocument.size(), usageStatus);
+            return new InsightsListContainer(listViewItems, codeObjectInsights.size(), usageStatus);
         } catch (AnalyticsServiceException e) {
             //if analyticsService.getInsights throws exception it means insights could not be loaded, usually when
             //the backend is not available. return an empty InsightsListContainer to keep everything running and don't

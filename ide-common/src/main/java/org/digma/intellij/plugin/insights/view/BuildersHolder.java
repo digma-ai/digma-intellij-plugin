@@ -39,6 +39,8 @@ public class BuildersHolder {
                 return new GroupListViewItemBuilder<SpanUsagesInsight>(InsightGroupType.Span, null, SpanUsagesInsight::getSpan);
             case SpanDurations:
                 return new GroupListViewItemBuilder<SpanDurationsInsight>(InsightGroupType.Span, null, spanDurationsInsight -> spanDurationsInsight.getSpan().getName());
+            case SpanScaling:
+                return new GroupListViewItemBuilder<SpanScalingInsight>(InsightGroupType.Span, null, SpanScalingInsight::getSpanName);
             case SpanDurationBreakdown:
                 return new GroupListViewItemBuilder<SpanDurationBreakdownInsight>(InsightGroupType.Span, null, SpanDurationBreakdownInsight::getSpanName);
             case SpanEndpointBottleneck:

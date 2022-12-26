@@ -16,6 +16,7 @@ open class InsightListViewItem<INSIGHT : CodeObjectInsight>(insight: INSIGHT) :
                 InsightType.TopErrorFlows -> 3
                 // Span
                 InsightType.SpanUsages -> 60
+                InsightType.SpanScaling -> 63
                 InsightType.SpanDurations -> 65
                 InsightType.SpanDurationChange -> 66
                 InsightType.SpanEndpointBottleneck -> 67

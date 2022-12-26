@@ -99,6 +99,7 @@ object Laf  {
                 @JvmStatic val SLOW = SvgIcon.asIs("/icons/snail.svg")
                 @JvmStatic val THREE_DOTS = ThreeDotsIcon.asIs("/icons/three-dots.svg")
                 @JvmStatic val REFRESH = ThreeDotsIcon.asIs("/icons/repeat.svg")
+                @JvmStatic val SCALE = SvgIcon.asIs("/icons/scale.svg")
 
                 @JvmStatic val QUESTION_MARK = AllIcons.General.QuestionDialog
                 @JvmStatic val SPAN_DURATION_DROPPED = loadAndScaleIconByWidth("/icons/dropped.png", 8)

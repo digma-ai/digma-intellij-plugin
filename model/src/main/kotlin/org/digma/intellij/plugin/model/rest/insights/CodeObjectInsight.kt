@@ -24,6 +24,7 @@ import java.util.*
     JsonSubTypes.Type(value = NormalUsageInsight::class, name = "NormalUsage"),
     JsonSubTypes.Type(value = HighUsageInsight::class, name = "HighUsage"),
     JsonSubTypes.Type(value = SlowEndpointInsight::class, name = "SlowEndpoint"),
+    JsonSubTypes.Type(value = SpanScalingInsight::class, name = "SpanScaling"),
     JsonSubTypes.Type(value = SpanDurationsInsight::class, name = "SpanDurations"),
     JsonSubTypes.Type(value = SpanSlowEndpointsInsight::class, name = "SpanEndpointBottleneck"),
     JsonSubTypes.Type(value = SpanDurationBreakdownInsight::class, name = "SpanDurationBreakdown"),

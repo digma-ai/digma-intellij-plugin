@@ -14,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -76,9 +77,9 @@ public class DocumentInfoContainer {
             insights = analyticsService.getInsights(objectIds);
             Log.log(LOGGER::debug, "Got next insights: {}", insights);
         } catch (AnalyticsServiceException e) {
-            //insights = null means there was an error loading insights, usually if the backend is not available.
+            //insights = Collections.emptyList() means there was an error loading insights, usually if the backend is not available.
             //don't log the exception, it was logged in AnalyticsService, keep the log quite because it can happen many times.
-            insights = null;
+            insights = Collections.emptyList();
         }
 
         try {

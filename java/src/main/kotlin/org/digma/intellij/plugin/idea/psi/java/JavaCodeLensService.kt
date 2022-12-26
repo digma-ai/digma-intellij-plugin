@@ -10,31 +10,22 @@ import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.util.TextRange
-import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiManager
-import com.intellij.psi.PsiMethod
-import com.intellij.psi.SmartPointerManager
-import com.intellij.psi.SyntaxTraverser
+import com.intellij.psi.*
 import com.intellij.util.messages.MessageBusConnection
 import org.digma.intellij.plugin.document.CodeLensProvider
 import org.digma.intellij.plugin.document.DocumentInfoChanged
-import org.digma.intellij.plugin.model.InsightImportance
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import java.awt.event.MouseEvent
 import java.util.concurrent.ConcurrentHashMap
 import java.util.stream.Collectors
-import javax.swing.Icon
 
 class JavaCodeLensService(private val project: Project): Disposable {
 
     private val codeLensProvider: CodeLensProvider = project.getService(CodeLensProvider::class.java)
 
     private val codeLensCache: MutableMap<String, CodeLensContainer> = ConcurrentHashMap()
-
-    private val errorHotspotIcon = IconLoader.findIcon("icons/exclMark.svg", this.javaClass.classLoader)
 
     private val documentInfoChangedConnection: MessageBusConnection = project.messageBus.connect()
 
@@ -96,7 +87,7 @@ class JavaCodeLensService(private val project: Project): Disposable {
                             lens.lensTitle,
                             JavaCodeVisionProvider.JavaCodeLens.ID,
                             ClickHandler(method, project),
-                            getIconByImportanceLevel(lens.importance),
+                            null, // icon was set already on previous step inside CodeLensProvider.buildCodeLens()
                             lens.lensMoreText,
                             lens.lensDescription
                     )
@@ -143,19 +134,6 @@ class JavaCodeLensService(private val project: Project): Disposable {
             }
         }
     }
-
-    private fun getIconByImportanceLevel(importanceLevel: Int): Icon? {
-        return if (isImportant(importanceLevel)) {
-            errorHotspotIcon
-        } else {
-            null
-        }
-    }
-    private fun isImportant(importance: Int): Boolean {
-        return importance <= InsightImportance.HighlyImportant.priority &&
-                importance >= InsightImportance.ShowStopper.priority
-    }
-
 
     private class ClickHandler(
         element: PsiMethod,

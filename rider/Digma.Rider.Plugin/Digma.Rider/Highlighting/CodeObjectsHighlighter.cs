@@ -58,7 +58,7 @@ namespace Digma.Rider.Highlighting
                             riderCodeLensInfo.MoreText ?? string.Empty, //todo: can be null
                             codeLensMethodInsightsProvider,
                             functionDeclaration.DeclaredElement,
-                            null
+                            null // icon was set already on previous step inside CodeLensProvider.buildCodeLens()
                         )
                     );
                 }

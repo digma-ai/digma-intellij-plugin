@@ -2,7 +2,17 @@ package org.digma.intellij.plugin.idea.psi.java;
 
 
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.*;
+import com.intellij.psi.PsiAssignmentExpression;
+import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiExpression;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiJavaFile;
+import com.intellij.psi.PsiMethod;
+import com.intellij.psi.PsiMethodCallExpression;
+import com.intellij.psi.PsiReference;
+import com.intellij.psi.PsiReferenceExpression;
+import com.intellij.psi.PsiVariable;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -16,8 +26,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static org.digma.intellij.plugin.idea.psi.java.Constants.*;
-import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.*;
+import static org.digma.intellij.plugin.idea.psi.java.Constants.OPENTELEMETY_FQN;
+import static org.digma.intellij.plugin.idea.psi.java.Constants.SPAN_BUILDER_FQN;
+import static org.digma.intellij.plugin.idea.psi.java.Constants.TRACER_BUILDER_FQN;
+import static org.digma.intellij.plugin.idea.psi.java.Constants.TRACER_FQN;
+import static org.digma.intellij.plugin.idea.psi.java.Constants.WITH_SPAN_INST_LIBRARY_1;
+import static org.digma.intellij.plugin.idea.psi.java.Constants.WITH_SPAN_INST_LIBRARY_2;
+import static org.digma.intellij.plugin.idea.psi.java.Constants.WITH_SPAN_INST_LIBRARY_3;
+import static org.digma.intellij.plugin.idea.psi.java.Constants.WITH_SPAN_INST_LIBRARY_4;
+import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.createJavaMethodCodeObjectId;
+import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.createSpanIdForWithSpanAnnotation;
+import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.createSpanIdFromInstLibraryAndSpanName;
+import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.createSpanNameForWithSpanAnnotation;
+import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.getValueFromFirstArgument;
+import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.isMethodWithFirstArgumentString;
+import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.isMethodWithNoArguments;
 
 /**
  * Utility methods for span discovery.
@@ -63,6 +86,7 @@ public class JavaSpanDiscoveryUtils {
             spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass,WITH_SPAN_INST_LIBRARY_1), spanName, methodId, containingFileUri));
             spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass,WITH_SPAN_INST_LIBRARY_2), spanName, methodId, containingFileUri));
             spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass,WITH_SPAN_INST_LIBRARY_3), spanName, methodId, containingFileUri));
+            spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass,WITH_SPAN_INST_LIBRARY_4), spanName, methodId, containingFileUri));
             return spanInfos;
         }
 

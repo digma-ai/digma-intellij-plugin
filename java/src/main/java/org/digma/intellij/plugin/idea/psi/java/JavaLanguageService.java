@@ -11,7 +11,14 @@ import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.*;
+import com.intellij.psi.JavaPsiFacade;
+import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiJavaFile;
+import com.intellij.psi.PsiManager;
+import com.intellij.psi.PsiMethod;
+import com.intellij.psi.PsiReference;
 import com.intellij.psi.impl.java.stubs.index.JavaFullClassNameIndex;
 import com.intellij.psi.impl.source.JavaFileElementType;
 import com.intellij.psi.search.GlobalSearchScope;
@@ -34,7 +41,13 @@ import org.digma.intellij.plugin.ui.CaretContextService;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 import static org.digma.intellij.plugin.idea.psi.java.Constants.SPAN_BUILDER_FQN;
 import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.createJavaMethodCodeObjectId;
@@ -55,11 +68,13 @@ public class JavaLanguageService implements LanguageService {
     private final DocumentInfoService documentInfoService;
 
     private final CaretContextService caretContextService;
+    private final MicronautFramework micronautFramework;
 
     public JavaLanguageService(Project project) {
         this.project = project;
         documentInfoService = project.getService(DocumentInfoService.class);
         caretContextService = project.getService(CaretContextService.class);
+        this.micronautFramework = new MicronautFramework(project);
     }
 
 
@@ -376,14 +391,19 @@ public class JavaLanguageService implements LanguageService {
          */
 
         spanDiscovery(psiFile, documentInfo);
+        endpointDiscovery(psiFile, documentInfo);
     }
-
 
 
     private void spanDiscovery(PsiFile psiFile, DocumentInfo documentInfo) {
         Log.log(LOGGER::debug, "Building spans for file {}", psiFile);
         withSpanAnnotationSpanDiscovery(psiFile, documentInfo);
         startSpanMethodCallSpanDiscovery(psiFile, documentInfo);
+    }
+
+    private void endpointDiscovery(PsiFile psiFile, DocumentInfo documentInfo) {
+        Log.log(LOGGER::debug, "Building endpoints for file {}", psiFile);
+        micronautFramework.endpointDiscovery(psiFile, documentInfo);
     }
 
 
@@ -402,7 +422,7 @@ public class JavaLanguageService implements LanguageService {
             startSpanReferences.forEach(psiReference -> {
                 SpanInfo spanInfo = JavaSpanDiscoveryUtils.getSpanInfoFromStartSpanMethodReference(project, psiReference);
                 if (spanInfo != null) {
-                    Log.log(LOGGER::debug, "Found span info {} for method {}",spanInfo.getId(),spanInfo.getContainingMethod());
+                    Log.log(LOGGER::debug, "Found span info {} for method {}", spanInfo.getId(), spanInfo.getContainingMethod());
                     MethodInfo methodInfo = documentInfo.getMethods().get(spanInfo.getContainingMethod());
                     //this method must exist in the document info
                     Objects.requireNonNull(methodInfo, "method info " + spanInfo.getContainingMethod() + " must exist in DocumentInfo for " + documentInfo.getFileUri());
@@ -423,7 +443,7 @@ public class JavaLanguageService implements LanguageService {
                 List<SpanInfo> spanInfos = JavaSpanDiscoveryUtils.getSpanInfoFromWithSpanAnnotatedMethod(psiMethod);
                 if (spanInfos != null) {
                     spanInfos.forEach(spanInfo -> {
-                        Log.log(LOGGER::debug, "Found span info {} for method {}",spanInfo.getId(),spanInfo.getContainingMethod());
+                        Log.log(LOGGER::debug, "Found span info {} for method {}", spanInfo.getId(), spanInfo.getContainingMethod());
                         MethodInfo methodInfo = documentInfo.getMethods().get(spanInfo.getContainingMethod());
                         //this method must exist in the document info
                         Objects.requireNonNull(methodInfo, "method info " + spanInfo.getContainingMethod() + " must exist in DocumentInfo for " + documentInfo.getFileUri());

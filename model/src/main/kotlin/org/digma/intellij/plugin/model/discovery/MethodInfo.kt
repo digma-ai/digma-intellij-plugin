@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.model.discovery
 
 import java.util.stream.Collectors
+import java.util.stream.Stream
 
 data class MethodInfo(
     override val id: String, // CodeObjectId (without type (prefix of 'method:'))
@@ -9,8 +10,10 @@ data class MethodInfo(
     val containingNamespace: String, //namespace for c# is namespace, for java its the package
     val containingFileUri: String,
     val offsetAtFileUri: Int,
-    val spans: List<SpanInfo>
+    val spans: List<SpanInfo>,
 ) : CodeObjectInfo {
+
+    val endpoints: MutableList<EndpointInfo> = mutableListOf()
 
     companion object {
         fun removeType(objectId: String): String {
@@ -22,11 +25,17 @@ data class MethodInfo(
     }
 
     fun getRelatedCodeObjectIdsWithType(): List<String> {
-        return spans.stream().map(SpanInfo::idWithType).collect(Collectors.toList())
+        val spansStream = spans.stream().map(SpanInfo::idWithType)
+        val endpointsStream = endpoints.stream().map(EndpointInfo::idWithType)
+
+        return Stream.concat(spansStream, endpointsStream).collect(Collectors.toList())
     }
 
     fun getRelatedCodeObjectIds(): List<String> {
-        return spans.stream().map(SpanInfo::id).collect(Collectors.toList())
+        val spansStream = spans.stream().map(SpanInfo::id)
+        val endpointsStream = endpoints.stream().map(EndpointInfo::id)
+
+        return Stream.concat(spansStream, endpointsStream).collect(Collectors.toList())
     }
 
     override fun idWithType(): String {
@@ -37,13 +46,15 @@ data class MethodInfo(
         return name + getParamsPartFromId()
     }
 
-    private fun getParamsPartFromId():String{
+    private fun getParamsPartFromId(): String {
         val indexOf = id.indexOf('(')
-        if (indexOf > 0){
-            return id.substring(indexOf,id.length)
+        if (indexOf > 0) {
+            return id.substring(indexOf, id.length)
         }
         return ""
     }
 
-
+    fun addEndpoint(endpoint: EndpointInfo) {
+        endpoints.add(endpoint)
+    }
 }

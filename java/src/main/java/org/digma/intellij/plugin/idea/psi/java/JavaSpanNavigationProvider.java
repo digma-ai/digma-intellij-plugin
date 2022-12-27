@@ -88,7 +88,7 @@ public class JavaSpanNavigationProvider implements Disposable {
                 //for example is the IDE is closed when the cursor is on a method with Duration Breakdown that
                 // has span links, then start the IDE again, the insights view is populted already, without this refresh
                 // there will be no links.
-                project.getService(InsightsViewService.class).refreshInsights();
+                project.getService(InsightsViewService.class).refreshAllInsights();
                 project.getService(ErrorsViewService.class).refreshErrors();
 
             } finally {

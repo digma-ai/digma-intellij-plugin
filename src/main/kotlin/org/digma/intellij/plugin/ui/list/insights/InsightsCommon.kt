@@ -321,7 +321,7 @@ private fun getRefreshButton(insightPanel: DigmaResettablePanel, project: Projec
     val refreshAction = ActionLink(REFRESH)
     refreshAction.addActionListener {
         val actionListener: InsightsViewService = project.getService(InsightsViewService::class.java)
-        actionListener.refreshInsights()
+        actionListener.refreshAllInsights()
         rebuildInsightPanel(insightPanel)
     }
     refreshAction.border = empty()

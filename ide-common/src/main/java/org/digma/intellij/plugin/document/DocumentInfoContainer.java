@@ -62,15 +62,15 @@ public class DocumentInfoContainer {
         //maybe documentInfo already exists, override it anyway with a new one from analysis
         this.documentInfo = documentInfo;
 
-        loadAllInsightsForCurrentEnvironment();
+        loadAllInsightsForCurrentDocument();
     }
 
     public void refresh() {
         Log.log(LOGGER::debug, "Refreshing document backend data for {}: ", psiFile.getVirtualFile());
-        loadAllInsightsForCurrentEnvironment();
+        loadAllInsightsForCurrentDocument();
     }
 
-    public List<CodeObjectInsight> getMethodInsights(@NotNull MethodInfo methodInfo) {
+    public List<CodeObjectInsight> getMethodInsightsFromCache(@NotNull MethodInfo methodInfo) {
         Log.log(LOGGER::debug, "Requesting insights for MethodInfo {}", methodInfo.getId());
 
         return insights.stream().filter(codeObjectInsight -> {
@@ -82,8 +82,8 @@ public class DocumentInfoContainer {
         }).collect(Collectors.toList());
     }
 
-    private void loadAllInsightsForCurrentEnvironment() {
-        List<String> objectIds = getObjectIds();
+    private void loadAllInsightsForCurrentDocument() {
+        List<String> objectIds = getObjectIdsForCurrentDocument();
         try {
             Log.log(LOGGER::debug, "Requesting insights with ids {}", objectIds);
             insights = analyticsService.getInsights(objectIds);
@@ -108,7 +108,7 @@ public class DocumentInfoContainer {
         }
     }
 
-    private List<String> getObjectIds() {
+    private List<String> getObjectIdsForCurrentDocument() {
         return this.documentInfo.getMethods().values().stream().flatMap((Function<MethodInfo, Stream<String>>) methodInfo -> {
             var ids = new ArrayList<String>();
             ids.add(methodInfo.idWithType());

@@ -118,7 +118,7 @@ private fun getGeneralRefreshButton(project: Project): JButton {
 
     generalRefreshIconButton.addMouseListener(object : MouseAdapter() {
         override fun mouseClicked(e: MouseEvent?) {
-            insightsActionListener.refreshInsights()
+            insightsActionListener.refreshAllInsights()
             errorsActionListener.refreshErrors()
         }
     })

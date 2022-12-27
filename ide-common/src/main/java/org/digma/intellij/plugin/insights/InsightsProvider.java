@@ -5,7 +5,6 @@ import com.intellij.openapi.project.Project;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
-import org.digma.intellij.plugin.document.DocumentInfoContainer;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.insights.view.BuildersHolder;
 import org.digma.intellij.plugin.insights.view.InsightsViewBuilder;
@@ -45,12 +44,8 @@ public class InsightsProvider {
         var stopWatch = StopWatch.createStarted();
 
         try {
-            DocumentInfoContainer documentInfoContainer = documentInfoService.getDocumentInfo(methodInfo.getContainingFileUri());
-            List<? extends CodeObjectInsight> codeObjectInsights = new ArrayList<>();
-            if (documentInfoContainer != null) {
-                codeObjectInsights = documentInfoContainer.getMethodInsights(methodInfo);
-                codeObjectInsights = filterUnmapped(codeObjectInsights);
-            }
+            List<? extends CodeObjectInsight> codeObjectInsights = analyticsService.getInsights(objectIds);
+            codeObjectInsights = filterUnmapped(codeObjectInsights);
             Log.log(LOGGER::debug, "CodeObjectInsights for {}: {}", methodInfo.getId(), codeObjectInsights);
             final UsageStatusResult usageStatus = analyticsService.getUsageStatus(objectIds);
             InsightsViewBuilder insightsViewBuilder = new InsightsViewBuilder(buildersHolder);

@@ -165,7 +165,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
 
     }
 
-    fun refreshInsights() {
+    fun refreshAllInsights() {
         val scope = model.scope
         if (scope is MethodScope) {
             Backgroundable.ensureBackground(project, "Refresh insights list") {

@@ -5,7 +5,6 @@ import com.intellij.openapi.project.Project;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.persistence.PersistenceData;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
@@ -248,7 +247,7 @@ public class Environment implements EnvironmentsSupplier {
         if (project.isDisposed()) {
             return;
         }
-        NotificationUtil.notifyChangingEnvironment(project, oldEnv, newEnv);
+        Log.log(LOGGER::info, "Digma: Changing environment " + oldEnv + " to " + newEnv);
         EnvironmentChanged publisher = project.getMessageBus().syncPublisher(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC);
         publisher.environmentChanged(newEnv);
     }

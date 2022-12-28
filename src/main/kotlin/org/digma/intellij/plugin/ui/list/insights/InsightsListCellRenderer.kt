@@ -102,7 +102,9 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
         val endpoint =  routeInfo.shortName
         if(routeInfo.schema == HTTP_SCHEMA){
             val split =endpoint.split(' ')
-            return GroupViewModel(asHtml("${spanBold("HTTP")} ${span("${split[0].uppercase()} ${split[1]}")}"),  Laf.Icons.Insight.INTERFACE)
+            val lastElementIndex = split.size - 1
+            val schemaName = if (split.size < 3) { "HTTP" } else { split[lastElementIndex - 2].uppercase()}
+            return GroupViewModel(asHtml("${spanBold(schemaName)} ${span("${split[lastElementIndex - 1].uppercase()} ${split[lastElementIndex]}")}"),  Laf.Icons.Insight.INTERFACE)
         }
         if(routeInfo.schema == RPC_SCHEMA){
             return GroupViewModel(asHtml(span(endpoint)),  Laf.Icons.Insight.INTERFACE)

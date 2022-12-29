@@ -10,11 +10,13 @@ import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.psi.PsiUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * DocumentInfoService holds the open documents containers and has various services to query the documents containers.
@@ -105,6 +107,23 @@ public class DocumentInfoService {
     public void removeDocumentInfo(@NotNull PsiFile psiFile) {
         Log.log(LOGGER::debug, "Removing document for PsiFile {}", psiFile.getVirtualFile());
         documents.remove(PsiUtils.psiFileToUri(psiFile));
+    }
+
+    @NotNull
+    public List<CodeObjectInsight> getCachedMethodInsights(@NotNull MethodInfo methodInfo) {
+        Log.log(LOGGER::debug, "Requesting cached insights for MethodInfo {}", methodInfo.getId());
+
+        DocumentInfoContainer documentInfoContainer = documents.get(methodInfo.getContainingFileUri());
+        if (documentInfoContainer != null) {
+            return documentInfoContainer.getAllInsights().stream().filter(codeObjectInsight -> {
+                String codeObjectId = codeObjectInsight.getCodeObjectId();
+                return methodInfo.getId().equals(codeObjectId)
+                        || methodInfo.idWithType().equals(codeObjectId)
+                        || methodInfo.getRelatedCodeObjectIds().contains(codeObjectId)
+                        || methodInfo.getRelatedCodeObjectIdsWithType().contains(codeObjectId);
+            }).collect(Collectors.toList());
+        }
+        return new ArrayList<>();
     }
 
     @Nullable

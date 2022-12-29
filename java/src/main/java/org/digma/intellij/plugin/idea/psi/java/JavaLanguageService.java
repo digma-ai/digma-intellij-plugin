@@ -69,12 +69,14 @@ public class JavaLanguageService implements LanguageService {
 
     private final CaretContextService caretContextService;
     private final MicronautFramework micronautFramework;
+    private final JaxrsFramework jaxrsFramework;
 
     public JavaLanguageService(Project project) {
         this.project = project;
         documentInfoService = project.getService(DocumentInfoService.class);
         caretContextService = project.getService(CaretContextService.class);
         this.micronautFramework = new MicronautFramework(project);
+        this.jaxrsFramework = new JaxrsFramework(project);
     }
 
 
@@ -404,6 +406,7 @@ public class JavaLanguageService implements LanguageService {
     private void endpointDiscovery(PsiFile psiFile, DocumentInfo documentInfo) {
         Log.log(LOGGER::debug, "Building endpoints for file {}", psiFile);
         micronautFramework.endpointDiscovery(psiFile, documentInfo);
+        jaxrsFramework.endpointDiscovery(psiFile, documentInfo);
     }
 
 

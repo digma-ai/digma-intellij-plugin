@@ -72,18 +72,6 @@ public class DocumentInfoContainer {
         loadAllInsightsForCurrentDocument();
     }
 
-    public List<CodeObjectInsight> getMethodInsightsFromCache(@NotNull MethodInfo methodInfo) {
-        Log.log(LOGGER::debug, "Requesting insights for MethodInfo {}", methodInfo.getId());
-
-        return insights.stream().filter(codeObjectInsight -> {
-            String codeObjectId = codeObjectInsight.getCodeObjectId();
-            return methodInfo.getId().equals(codeObjectId)
-                    || methodInfo.idWithType().equals(codeObjectId)
-                    || methodInfo.getRelatedCodeObjectIds().contains(codeObjectId)
-                    || methodInfo.getRelatedCodeObjectIdsWithType().contains(codeObjectId);
-        }).collect(Collectors.toList());
-    }
-
     private void loadAllInsightsForCurrentDocument() {
         List<String> objectIds = getObjectIdsForCurrentDocument();
         try {

@@ -46,13 +46,17 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
     fun contextChanged(
         methodInfo: MethodInfo
     ) {
+        updateInsightsModel(methodInfo, insightsProvider.getCachedInsights(methodInfo))
+    }
 
+    private fun updateInsightsModel(
+        methodInfo: MethodInfo,
+        insightsListContainer: InsightsListContainer
+    ) {
         lock.lock()
-        Log.log(logger::debug, "Lock acquired for contextChanged to {}. ", methodInfo)
+        Log.log(logger::debug, "Lock acquired for updateInsightsModel to {}. ", methodInfo)
         try {
-            Log.log(logger::debug, "contextChanged to {}. ", methodInfo)
-
-            val insightsListContainer: InsightsListContainer = insightsProvider.getInsights(methodInfo)
+            Log.log(logger::debug, "updateInsightsModel to {}. ", methodInfo)
 
             model.listViewItems = insightsListContainer.listViewItems
             model.previewListViewItems = ArrayList()
@@ -65,7 +69,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
         } finally {
             if (lock.isHeldByCurrentThread) {
                 lock.unlock()
-                Log.log(logger::debug, "Lock released for contextChanged to {}. ", methodInfo)
+                Log.log(logger::debug, "Lock released for updateInsightsModel to {}. ", methodInfo)
             }
         }
     }
@@ -169,7 +173,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
         val scope = model.scope
         if (scope is MethodScope) {
             Backgroundable.ensureBackground(project, "Refresh insights list") {
-                contextChanged(scope.getMethodInfo())
+                updateInsightsModel(scope.getMethodInfo(), insightsProvider.getInsights(scope.getMethodInfo()))
             }
         }
     }

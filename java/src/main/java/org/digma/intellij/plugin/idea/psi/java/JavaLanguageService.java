@@ -70,6 +70,7 @@ public class JavaLanguageService implements LanguageService {
     private final CaretContextService caretContextService;
     private final MicronautFramework micronautFramework;
     private final JaxrsFramework jaxrsFramework;
+    private final GrpcFramework grpcFramework;
 
     public JavaLanguageService(Project project) {
         this.project = project;
@@ -77,6 +78,7 @@ public class JavaLanguageService implements LanguageService {
         caretContextService = project.getService(CaretContextService.class);
         this.micronautFramework = new MicronautFramework(project);
         this.jaxrsFramework = new JaxrsFramework(project);
+        this.grpcFramework = new GrpcFramework(project);
     }
 
 
@@ -407,6 +409,7 @@ public class JavaLanguageService implements LanguageService {
         Log.log(LOGGER::debug, "Building endpoints for file {}", psiFile);
         micronautFramework.endpointDiscovery(psiFile, documentInfo);
         jaxrsFramework.endpointDiscovery(psiFile, documentInfo);
+        grpcFramework.endpointDiscovery(psiFile, documentInfo);
     }
 
 

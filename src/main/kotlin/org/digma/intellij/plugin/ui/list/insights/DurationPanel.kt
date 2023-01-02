@@ -9,8 +9,9 @@ import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.list.ListItemActionButton
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.model.TraceSample
-import java.awt.GridLayout
-import javax.swing.*
+import javax.swing.BoxLayout
+import javax.swing.JButton
+import javax.swing.JPanel
 
 fun spanDurationPanel(
         project: Project,

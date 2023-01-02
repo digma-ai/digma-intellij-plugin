@@ -49,7 +49,10 @@ class SpanPanels {
 
 fun percentileRowPanel(percentile: SpanDurationsPercentile, panelsLayoutHelper: PanelsLayoutHelper, traceSamples: ArrayList<TraceSample>): JPanel {
 
-    val durationsPanel = createDefaultBoxLayoutLineAxisPanel()
+    val durationsPanel = JBPanel<JBPanel<*>>()
+    durationsPanel.layout = BorderLayout(5, 0)
+    durationsPanel.border = empty()
+    durationsPanel.isOpaque = false
 
     val percentileName = "P${(percentile.percentile * 100).toInt()}"
     traceSamples.add(buildTraceSample(percentile))
@@ -73,7 +76,7 @@ fun percentileRowPanel(percentile: SpanDurationsPercentile, panelsLayoutHelper: 
     pLabelPanel.isOpaque = false
     pLabelPanel.add(pLabel, BorderLayout.WEST)
     addCurrentLargestWidthDurationPLabel(panelsLayoutHelper, pLabelPanel.preferredSize.width)
-    durationsPanel.add(pLabelPanel)
+    durationsPanel.add(pLabelPanel, BorderLayout.WEST)
 
     if (needToShowDurationChange(percentile)) {
         val icon = if (percentile.previousDuration!!.raw > percentile.currentDuration.raw) Laf.Icons.Insight.SPAN_DURATION_DROPPED else Laf.Icons.Insight.SPAN_DURATION_ROSE
@@ -82,7 +85,7 @@ fun percentileRowPanel(percentile: SpanDurationsPercentile, panelsLayoutHelper: 
         val durationLabelText = asHtml(spanGrayed("$durationText,$whenText"))
         val durationLabel = JBLabel(durationLabelText, icon, SwingConstants.LEFT)
         durationLabel.toolTipText = durationLabelText
-        durationsPanel.add(durationLabel)
+        durationsPanel.add(durationLabel, BorderLayout.CENTER)
     }
 
     if (percentile.changeTime != null && (percentile.changeVerified == null || percentile.changeVerified == false)) {
@@ -96,7 +99,7 @@ fun percentileRowPanel(percentile: SpanDurationsPercentile, panelsLayoutHelper: 
         evalPanel.add(evalLabel, BorderLayout.CENTER)
         evalPanel.isOpaque = false
         addCurrentLargestWidthIconPanel(panelsLayoutHelper, evalPanel.preferredSize.width)
-        durationsPanel.add(evalPanel)
+        durationsPanel.add(evalPanel, BorderLayout.EAST)
     }
 
     return durationsPanel

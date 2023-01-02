@@ -8,7 +8,7 @@ import org.digma.intellij.plugin.model.rest.insights.SpanUsagesInsight
 import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.model.TraceSample
 import java.awt.BorderLayout
-import java.awt.GridLayout
+import javax.swing.BoxLayout
 import javax.swing.JButton
 import javax.swing.JLabel
 import javax.swing.JPanel
@@ -20,7 +20,7 @@ fun spanUsagesPanel(project: Project, spanUsagesInsight: SpanUsagesInsight): JPa
     title.isOpaque = false
 
     val flowsListPanel = JBPanel<JBPanel<*>>()
-    flowsListPanel.layout = GridLayout(spanUsagesInsight.flows.size, 1, 0, 3)
+    flowsListPanel.layout = BoxLayout(flowsListPanel, BoxLayout.Y_AXIS)
     flowsListPanel.border = JBUI.Borders.empty()
     flowsListPanel.isOpaque = false
 

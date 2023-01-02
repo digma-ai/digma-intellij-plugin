@@ -35,7 +35,9 @@ public class DocumentInfoContainer {
 
     private final AnalyticsService analyticsService;
     private DocumentInfo documentInfo;
-    private List<CodeObjectInsight> insights;
+
+    @NotNull
+    private List<CodeObjectInsight> insights = new ArrayList<>();
     private UsageStatusResult usageStatus = EmptyUsageStatusResult;
     private UsageStatusResult usageStatusOfErrors = EmptyUsageStatusResult;
 

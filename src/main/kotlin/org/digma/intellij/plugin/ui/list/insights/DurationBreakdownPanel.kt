@@ -2,11 +2,15 @@ package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
+import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI.Borders.empty
+import org.apache.commons.lang3.StringUtils
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationBreakdown
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationBreakdownInsight
-import org.digma.intellij.plugin.ui.common.*
+import org.digma.intellij.plugin.ui.common.Laf
+import org.digma.intellij.plugin.ui.common.asHtml
+import org.digma.intellij.plugin.ui.common.boldFonts
 import org.digma.intellij.plugin.ui.list.openWorkspaceFileForSpan
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.BorderLayout
@@ -88,10 +92,9 @@ fun durationBreakdownRowPanel(
     val spanDisplayNameLabel = getSpanDisplayNameLabel(durationBreakdown, project, moreData)
     val breakdownDurationLabelPanel = getBreakdownDurationLabel(durationBreakdown)
 
-    durationBreakdownPanel.add(telescopeIconLabel)
-    durationBreakdownPanel.add(spanDisplayNameLabel)
-    durationBreakdownPanel.add(Box.createHorizontalGlue())
-    durationBreakdownPanel.add(breakdownDurationLabelPanel)
+    durationBreakdownPanel.add(telescopeIconLabel, BorderLayout.WEST)
+    durationBreakdownPanel.add(spanDisplayNameLabel, BorderLayout.CENTER)
+    durationBreakdownPanel.add(breakdownDurationLabelPanel, BorderLayout.EAST)
 
     return durationBreakdownPanel
 }
@@ -156,8 +159,8 @@ private fun updateDurationBreakdownPanel(durationBreakdownEntries: List<SpanDura
 }
 
 private fun getDurationBreakdownPanel(): JPanel {
-    val durationBreakdownPanel = JPanel()
-    durationBreakdownPanel.layout = BoxLayout(durationBreakdownPanel, BoxLayout.LINE_AXIS)
+    val durationBreakdownPanel = JBPanel<JBPanel<*>>()
+    durationBreakdownPanel.layout = BorderLayout(5, 0)
     durationBreakdownPanel.border = empty()
     durationBreakdownPanel.isOpaque = false
     return durationBreakdownPanel
@@ -177,17 +180,16 @@ private fun getSpanDisplayNameLabel(
         moreData: HashMap<String, Any>,
 ): JComponent {
     val spanId = CodeObjectsUtil.createSpanId(durationBreakdown.spanInstrumentationLibrary, durationBreakdown.spanName)
-    val fullDisplayName = durationBreakdown.spanDisplayName
-    val limitedDisplayName = asHtml(takeOnlyFirstNCharactersFromString(fullDisplayName, 30))
+    val trimmedDisplayName = StringUtils.normalizeSpace(durationBreakdown.spanDisplayName)
 
     val messageLabel = if (moreData.contains(spanId)) {
-        ActionLink(limitedDisplayName) {
+        ActionLink(trimmedDisplayName) {
             openWorkspaceFileForSpan(project, moreData, spanId)
         }
     } else {
-        JLabel(limitedDisplayName)
+        JLabel(trimmedDisplayName)
     }
-    messageLabel.toolTipText = asHtml(fullDisplayName)
+    messageLabel.toolTipText = asHtml(trimmedDisplayName)
     messageLabel.border = empty(0, 5, 5, 0)
     messageLabel.isOpaque = false
 
@@ -232,12 +234,4 @@ private fun getTooltipForDurationLabel(breakdownEntry: SpanDurationBreakdown): S
         tooltip += "P${(p.percentile * 100).toInt()}: ${p.duration.value} ${p.duration.unit}".plus("<br>")
     }
     return asHtml(tooltip)
-}
-
-fun takeOnlyFirstNCharactersFromString(originalString: String, limit: Int): String {
-    return if (originalString.length > limit) {
-         originalString.trim().take(30) + " ..."
-    } else {
-        originalString
-    }
 }

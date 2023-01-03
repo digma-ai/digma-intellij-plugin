@@ -28,7 +28,7 @@ private const val REFRESH = "Refresh"
 
 fun insightTitlePanel(panel: JPanel): JPanel {
     panel.isOpaque = false
-    panel.border = empty(10, 5,0,5)
+    panel.border = empty( 0, 5)
     return panel
 }
 

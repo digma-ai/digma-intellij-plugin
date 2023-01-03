@@ -42,7 +42,7 @@ class EnvironmentsPanel(
     init {
         changeEnvAlarm = AlarmFactory.getInstance().create()
         isOpaque = false
-        layout = WrapLayout(FlowLayout.LEFT, 2, 2)
+        layout = WrapLayout(FlowLayout.LEFT, 2, 0)
         rebuild()
 
         project.messageBus.connect(project.getService(AnalyticsService::class.java))

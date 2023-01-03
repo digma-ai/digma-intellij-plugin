@@ -80,7 +80,7 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
 
     private fun endpointGroupTitle(value: InsightsList.GroupTitleModel): JPanel {
         val groupViewModel = createEndpointGroupViewModel(value.route)
-        return groupTitlePanel(groupViewModel.labelText,groupViewModel.icon)
+        return groupTitlePanel(groupViewModel.labelText, groupViewModel.icon)
     }
 
 

@@ -3,25 +3,23 @@ package org.digma.intellij.plugin.ui.list.insights
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
-import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.JBUI.Borders.empty
+import org.apache.commons.lang3.StringUtils
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.model.rest.insights.*
-import org.digma.intellij.plugin.ui.common.Laf
-import org.digma.intellij.plugin.ui.common.asHtml
-import org.digma.intellij.plugin.ui.common.buildBoldTitleGrayedComment
-import org.digma.intellij.plugin.ui.common.buildLinkTextWithTitleAndGrayedComment
+import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.list.openWorkspaceFileForSpan
+import java.awt.BorderLayout
 import java.awt.GridLayout
 import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.swing.JPanel
+import javax.swing.SwingConstants
 
 fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: HashMap<String, Any>): JPanel {
 
-    val spansListPanel = JPanel()
-    spansListPanel.layout = GridLayout(insight.spans.size, 1, 0, 3)
-    spansListPanel.border = JBUI.Borders.empty()
-    spansListPanel.isOpaque = false
+    val spansListPanel = createDefaultBoxLayoutYAxisPanel()
+
     insight.spans.forEach { slowSpan: SlowSpanInfo ->
 
         val displayName = slowSpan.spanInfo.displayName
@@ -29,17 +27,32 @@ fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: 
         val spanId = CodeObjectsUtil.createSpanId(slowSpan.spanInfo.instrumentationLibrary, slowSpan.spanInfo.name)
 
         if (moreData.contains(spanId)) {
-            val spanText = buildLinkTextWithTitleAndGrayedComment(displayName,description)
-            val link = ActionLink(spanText) {
+            val normalizedDisplayName = StringUtils.normalizeSpace(displayName)
+            val grayedDescription = asHtml(spanGrayed(description))
+            val descriptionLabel = JBLabel(grayedDescription, SwingConstants.LEFT)
+            val link = ActionLink(normalizedDisplayName) {
                 openWorkspaceFileForSpan(project, moreData, spanId)
             }
             link.toolTipText = genToolTip(slowSpan)
-            spansListPanel.add(link)
+
+            val spanOneRecordPanel = getDefaultSpanOneRecordPanel()
+            spanOneRecordPanel.add(link, BorderLayout.NORTH)
+            spanOneRecordPanel.add(descriptionLabel, BorderLayout.SOUTH)
+            spansListPanel.add(spanOneRecordPanel)
         } else {
-            val spanText = buildBoldTitleGrayedComment(displayName,description)
-            val label = JBLabel(spanText)
-            label.toolTipText = genToolTip(slowSpan)
-            spansListPanel.add(label)
+            val normalizedDisplayName = StringUtils.normalizeSpace(displayName)
+            val grayedDescription = asHtml(spanGrayed(description))
+            val descriptionLabel = JBLabel(grayedDescription, SwingConstants.LEFT)
+
+            val displayNameLabel = JBLabel(normalizedDisplayName, SwingConstants.TRAILING)
+            displayNameLabel.toolTipText = genToolTip(slowSpan)
+            displayNameLabel.horizontalAlignment = SwingConstants.LEFT
+
+            val spanOneRecordPanel = getDefaultSpanOneRecordPanel()
+            spanOneRecordPanel.add(displayNameLabel, BorderLayout.NORTH)
+            spanOneRecordPanel.add(descriptionLabel, BorderLayout.SOUTH)
+
+            spansListPanel.add(spanOneRecordPanel)
         }
     }
 
@@ -58,12 +71,12 @@ fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: 
 fun spanSlowEndpointsPanel(project: Project, insight: SpanSlowEndpointsInsight): JPanel {
     val endpointsListPanel = JPanel()
     endpointsListPanel.layout = GridLayout(insight.slowEndpoints.size, 1, 0, 3)
-    endpointsListPanel.border = JBUI.Borders.empty()
+    endpointsListPanel.border = empty()
     endpointsListPanel.isOpaque = false
 
     insight.slowEndpoints.forEach {slowEndpointInfo ->
         val currContainerPanel = JPanel(GridLayout(2, 1, 0, 3))
-        endpointsListPanel.border = JBUI.Borders.empty()
+        endpointsListPanel.border = empty()
         currContainerPanel.isOpaque = false
 
         val routeInfo = EndpointSchema.getRouteInfo(slowEndpointInfo.endpointInfo.route)
@@ -132,6 +145,13 @@ fun descriptionOf(span: SlowSpanInfo): String {
 private fun percentageForDisplaySlowSpanInfo(percentile: Percentile): String {
     val decimal = BigDecimal(percentile.fraction * 100).setScale(3, RoundingMode.HALF_DOWN)
     return decimal.toPlainString()
+}
+
+private fun getDefaultSpanOneRecordPanel(): JPanel {
+    val spanOneRecordPanel = JPanel(BorderLayout())
+    spanOneRecordPanel.border = empty(5, 0, 0, 0)
+    spanOneRecordPanel.isOpaque = false
+    return spanOneRecordPanel
 }
 
 fun genToolTip(span: SlowSpanInfo): String {

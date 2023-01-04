@@ -106,9 +106,13 @@ fun percentileRowPanel(percentile: SpanDurationsPercentile, panelsLayoutHelper: 
 }
 
 fun createDefaultBoxLayoutLineAxisPanel(): JPanel {
+    return createDefaultBoxLayoutLineAxisPanel(0, 0, 0, 0)
+}
+
+fun createDefaultBoxLayoutLineAxisPanel(top: Int, left: Int, bottom: Int, right: Int): JPanel {
     val defaultPanel = JBPanel<JBPanel<*>>()
     defaultPanel.layout = BoxLayout(defaultPanel, BoxLayout.LINE_AXIS)
-    defaultPanel.border = empty()
+    defaultPanel.border = empty(top, left, bottom, right)
     defaultPanel.isOpaque = false
     return defaultPanel
 }

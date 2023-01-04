@@ -173,7 +173,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
         val scope = model.scope
         if (scope is MethodScope) {
             Backgroundable.ensureBackground(project, "Refresh insights list") {
-                updateInsightsModel(scope.getMethodInfo(), insightsProvider.getInsights(scope.getMethodInfo()))
+                updateInsightsModel(scope.getMethodInfo(), insightsProvider.getUpdatedInsightsList(scope.getMethodInfo()))
             }
         }
     }

@@ -36,20 +36,15 @@ public class InsightsProvider {
         this.project = project;
     }
 
-    public InsightsListContainer getInsights(@NotNull MethodInfo methodInfo) {
+    public InsightsListContainer getUpdatedInsightsList(@NotNull MethodInfo methodInfo) {
         List<? extends CodeObjectInsight> upToDateInsightsList;
         List<String> objectIds = getObjectIds(methodInfo);
         Log.log(LOGGER::debug, "Got following code object ids for method {}: {}", methodInfo.getId(), objectIds);
         var stopWatch = StopWatch.createStarted();
         try {
-            upToDateInsightsList = analyticsService.getInsights(objectIds);
-        } catch (AnalyticsServiceException e) {
-            //if analyticsService.getInsights throws exception it means insights could not be loaded, usually when
-            //the backend is not available. return an empty InsightsListContainer to keep everything running and don't
-            //crash the plugin. don't log the exception, it was logged in AnalyticsService, keep the log quite because
-            //it may happen many times.
-            Log.log(LOGGER::debug, "AnalyticsServiceException for getInsights for {}: {}", methodInfo.getId(), e.getMessage());
-            return new InsightsListContainer();
+            //refresh insights cache
+            documentInfoService.refreshAll();
+            upToDateInsightsList = documentInfoService.getCachedMethodInsights(methodInfo);
         } finally {
             stopWatch.stop();
             Log.log(LOGGER::debug, "getInsights time took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS));

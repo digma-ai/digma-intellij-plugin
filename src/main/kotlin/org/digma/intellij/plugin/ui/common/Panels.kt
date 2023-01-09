@@ -17,13 +17,10 @@ import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
-import org.digma.intellij.plugin.ui.service.ErrorsViewService
-import org.digma.intellij.plugin.ui.service.InsightsViewService
+import org.digma.intellij.plugin.ui.service.RefreshService
 import java.awt.BorderLayout
 import java.awt.Cursor
 import java.awt.Dimension
-import java.awt.event.MouseAdapter
-import java.awt.event.MouseEvent
 import javax.swing.*
 
 
@@ -105,8 +102,7 @@ fun wrapWithNoConnectionWrapper(project: Project, panel: DigmaTabPanel): DigmaTa
 }
 
 private fun getGeneralRefreshButton(project: Project): JButton {
-    val insightsActionListener: InsightsViewService = project.getService(InsightsViewService::class.java)
-    val errorsActionListener: ErrorsViewService = project.getService(ErrorsViewService::class.java)
+    val refreshService: RefreshService = project.getService(RefreshService::class.java)
 
     val size = Laf.scalePanels(Laf.Sizes.BUTTON_SIZE_26)
     val buttonsSize = Dimension(size, size)
@@ -116,12 +112,9 @@ private fun getGeneralRefreshButton(project: Project): JButton {
     generalRefreshIconButton.toolTipText = asHtml(REFRESH_ALL_INSIGHTS_AND_ERRORS)
     generalRefreshIconButton.cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
 
-    generalRefreshIconButton.addMouseListener(object : MouseAdapter() {
-        override fun mouseClicked(e: MouseEvent?) {
-            insightsActionListener.refreshAllInsights()
-            errorsActionListener.refreshErrors()
-        }
-    })
+    generalRefreshIconButton.addActionListener {
+        refreshService.refreshAll()
+    }
     return generalRefreshIconButton
 }
 

@@ -4,7 +4,6 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
-import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.insights.view.BuildersHolder;
 import org.digma.intellij.plugin.insights.view.InsightsViewBuilder;
@@ -36,22 +35,6 @@ public class InsightsProvider {
         this.project = project;
     }
 
-    public InsightsListContainer getUpdatedInsightsList(@NotNull MethodInfo methodInfo) {
-        List<? extends CodeObjectInsight> upToDateInsightsList;
-        List<String> objectIds = getObjectIds(methodInfo);
-        Log.log(LOGGER::debug, "Got following code object ids for method {}: {}", methodInfo.getId(), objectIds);
-        var stopWatch = StopWatch.createStarted();
-        try {
-            //refresh insights cache
-            documentInfoService.refreshAll();
-            upToDateInsightsList = documentInfoService.getCachedMethodInsights(methodInfo);
-        } finally {
-            stopWatch.stop();
-            Log.log(LOGGER::debug, "getInsights time took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS));
-        }
-        return getInsightsListContainer(methodInfo, upToDateInsightsList);
-    }
-
     public InsightsListContainer getCachedInsights(@NotNull MethodInfo methodInfo) {
         List<? extends CodeObjectInsight> cachedMethodInsights = documentInfoService.getCachedMethodInsights(methodInfo);
         return getInsightsListContainer(methodInfo, cachedMethodInsights);
@@ -66,18 +49,11 @@ public class InsightsProvider {
             List<? extends CodeObjectInsight> codeObjectInsights = insightsList;
             codeObjectInsights = filterUnmapped(codeObjectInsights);
             Log.log(LOGGER::debug, "CodeObjectInsights for {}: {}", methodInfo.getId(), codeObjectInsights);
-            final UsageStatusResult usageStatus = analyticsService.getUsageStatus(objectIds);
+            final UsageStatusResult usageStatus = documentInfoService.getCachedUsageStatus(methodInfo, objectIds);
             InsightsViewBuilder insightsViewBuilder = new InsightsViewBuilder(buildersHolder);
             List<ListViewItem<?>> listViewItems = insightsViewBuilder.build(project,methodInfo, codeObjectInsights);
             Log.log(LOGGER::debug, "ListViewItems for {}: {}", methodInfo.getId(), listViewItems);
             return new InsightsListContainer(listViewItems, codeObjectInsights.size(), usageStatus);
-        } catch (AnalyticsServiceException e) {
-            //if analyticsService.getUsageStatus throws exception it means usageStatus could not be loaded, usually when
-            //the backend is not available. return an empty InsightsListContainer to keep everything running and don't
-            //crash the plugin. don't log the exception, it was logged in AnalyticsService, keep the log quite because
-            //it may happen many times.
-            Log.log(LOGGER::debug, "AnalyticsServiceException for getUsageStatus for {}: {}", methodInfo.getId(), e.getMessage());
-            return new InsightsListContainer();
         } finally {
             stopWatch.stop();
             Log.log(LOGGER::debug, "getUsageStatus time took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS));

@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
+import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
 import org.digma.intellij.plugin.psi.PsiUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -71,18 +72,24 @@ public class DocumentInfoService {
 
         //refresh all backend data.
         //must run in background
-        refreshAll();
+        updateCacheForAllOpenedDocuments();
     }
 
 
-    public void refreshAll(){
-        documents.forEach((psiFileUri, container) -> container.refresh());
+    public void updateCacheForAllOpenedDocuments(){
+        documents.forEach((psiFileUri, container) -> container.updateCache());
+    }
+
+    public void updateCacheForOtherOpenedDocuments(String selectedDocumentFileUri){
+        Map<String, DocumentInfoContainer> documentsToRefresh = new HashMap<>(documents);
+        documentsToRefresh.remove(selectedDocumentFileUri);
+        documentsToRefresh.forEach((psiFileUri, container) -> container.updateCache());
     }
 
     public void refreshIfExists(PsiFile psiFile) {
         DocumentInfoContainer documentInfoContainer = documents.get(PsiUtils.psiFileToUri(psiFile));
         if (documentInfoContainer != null) {
-            documentInfoContainer.refresh();
+            documentInfoContainer.updateCache();
         }
     }
 
@@ -109,7 +116,17 @@ public class DocumentInfoService {
         documents.remove(PsiUtils.psiFileToUri(psiFile));
     }
 
-    @NotNull
+    public UsageStatusResult getCachedUsageStatus(@NotNull MethodInfo methodInfo, List<String> objectIds) {
+        Log.log(LOGGER::debug, "Requesting cached usage status for MethodInfo {} and for objectIds {} ", methodInfo.getId(), objectIds);
+
+        DocumentInfoContainer documentInfoContainer = documents.get(methodInfo.getContainingFileUri());
+        if (documentInfoContainer == null) {
+            Log.log(LOGGER::debug, "DocumentInfoContainer is null ");
+            return new UsageStatusResult(Collections.emptyList(), Collections.emptyList());
+        }
+        return documentInfoContainer.getUsageStatus();
+    }
+
     public List<CodeObjectInsight> getCachedMethodInsights(@NotNull MethodInfo methodInfo) {
         Log.log(LOGGER::debug, "Requesting cached insights for MethodInfo {}", methodInfo.getId());
 
@@ -124,6 +141,10 @@ public class DocumentInfoService {
             }).collect(Collectors.toList());
         }
         return new ArrayList<>();
+    }
+
+    public DocumentInfoContainer getDocumentInfoByMethodInfo(@NotNull MethodInfo methodInfo) {
+        return documents.get(methodInfo.getContainingFileUri());
     }
 
     @Nullable

@@ -41,7 +41,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         return "Errors" + if (model.errorsCount > 0) " (${model.count()})" else ""
     }
 
-    fun contextChanged(
+    fun updateErrorsModel(
         methodInfo: MethodInfo
     ) {
         lock.lock()
@@ -171,11 +171,11 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         return emptyErrorDetails
     }
 
-    fun refreshErrors() {
+    fun refreshErrorsModel() {
         val scope = model.scope
         if (scope is MethodScope) {
-            Backgroundable.ensureBackground(project, "Refresh errors list") {
-                contextChanged(scope.getMethodInfo())
+            Backgroundable.ensureBackground(project, "Refresh errors model") {
+                updateErrorsModel(scope.getMethodInfo())
             }
         }
     }

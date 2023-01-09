@@ -1,9 +1,11 @@
 package org.digma.intellij.plugin.ui.service
 
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.document.DocumentInfoContainer
+import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.insights.InsightsListContainer
 import org.digma.intellij.plugin.insights.InsightsProvider
 import org.digma.intellij.plugin.log.Log
@@ -43,20 +45,15 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
         }
     }
 
-    fun contextChanged(
+    fun updateInsightsModel(
         methodInfo: MethodInfo
-    ) {
-        updateInsightsModel(methodInfo, insightsProvider.getCachedInsights(methodInfo))
-    }
-
-    private fun updateInsightsModel(
-        methodInfo: MethodInfo,
-        insightsListContainer: InsightsListContainer
     ) {
         lock.lock()
         Log.log(logger::debug, "Lock acquired for updateInsightsModel to {}. ", methodInfo)
         try {
             Log.log(logger::debug, "updateInsightsModel to {}. ", methodInfo)
+
+            val insightsListContainer = insightsProvider.getCachedInsights(methodInfo)
 
             model.listViewItems = insightsListContainer.listViewItems
             model.previewListViewItems = ArrayList()
@@ -169,11 +166,11 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
 
     }
 
-    fun refreshAllInsights() {
+    fun refreshInsightsModel() {
         val scope = model.scope
         if (scope is MethodScope) {
-            Backgroundable.ensureBackground(project, "Refresh insights list") {
-                updateInsightsModel(scope.getMethodInfo(), insightsProvider.getUpdatedInsightsList(scope.getMethodInfo()))
+            Backgroundable.ensureBackground(project, "Refresh insights model") {
+                updateInsightsModel(scope.getMethodInfo())
             }
         }
     }

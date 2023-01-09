@@ -10,15 +10,22 @@ import io.ktor.util.reflect.*
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
-import org.digma.intellij.plugin.ui.common.*
+import org.digma.intellij.plugin.ui.common.Laf
+import org.digma.intellij.plugin.ui.common.asHtml
+import org.digma.intellij.plugin.ui.common.buildBoldTitleGrayedComment
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.list.commonListItemPanel
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
-import org.digma.intellij.plugin.ui.service.InsightsViewService
-import java.awt.*
+import org.digma.intellij.plugin.ui.service.RefreshService
+import java.awt.BorderLayout
+import java.awt.Cursor
+import java.awt.Dimension
+import java.awt.FlowLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import java.time.*
+import java.time.Duration
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.*
 import javax.swing.*
 import kotlin.math.max
@@ -198,7 +205,7 @@ private fun getTimeInfoMessagePanel(
     timeInfoMessageLabelPanel.isOpaque = false
     timeInfoMessageLabelPanel.add(timeInfoMessageLabel)
     if (shouldShowApplyNewTimeFilterLabel(isRecalculateButtonPressed, identicalStartTimes)) {
-        timeInfoMessageLabelPanel.add(getRefreshButton(insightPanel, project))
+        timeInfoMessageLabelPanel.add(getRefreshInsightButton(insightPanel, project))
     }
     return timeInfoMessageLabelPanel
 }
@@ -317,11 +324,11 @@ private fun showHintMessage(
     HintManager.getInstance().showHint(recalculateAction, RelativePoint.getSouthWestOf(threeDotsIcon), HintManager.HIDE_BY_ESCAPE, 2000)
 }
 
-private fun getRefreshButton(insightPanel: DigmaResettablePanel, project: Project): ActionLink {
+private fun getRefreshInsightButton(insightPanel: DigmaResettablePanel, project: Project): ActionLink {
     val refreshAction = ActionLink(REFRESH)
     refreshAction.addActionListener {
-        val actionListener: InsightsViewService = project.getService(InsightsViewService::class.java)
-        actionListener.refreshAllInsights()
+        val refreshService: RefreshService = project.getService(RefreshService::class.java)
+        refreshService.refreshAll()
         rebuildInsightPanel(insightPanel)
     }
     refreshAction.border = empty()

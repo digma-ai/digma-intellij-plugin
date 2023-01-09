@@ -38,6 +38,8 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.service.InsightsViewService"/>
 
+        <projectService serviceImplementation="org.digma.intellij.plugin.ui.service.RefreshService"/>
+
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.service.ErrorsViewService"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.service.SummaryViewService"/>

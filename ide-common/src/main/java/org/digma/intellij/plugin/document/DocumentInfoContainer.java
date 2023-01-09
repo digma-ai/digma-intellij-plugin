@@ -67,7 +67,7 @@ public class DocumentInfoContainer {
         loadAllInsightsForCurrentDocument();
     }
 
-    public void refresh() {
+    public void updateCache() {
         Log.log(LOGGER::debug, "Refreshing document backend data for {}: ", psiFile.getVirtualFile());
         loadAllInsightsForCurrentDocument();
     }

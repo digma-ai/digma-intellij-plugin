@@ -173,7 +173,9 @@ public interface LanguageService extends Disposable {
 
     boolean isServiceFor(Language language);
 
-    Map<String, String> findWorkspaceUrisForCodeObjectIds(List<String> codeObjectIds);
+    Map<String, String> findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(List<String> methodCodeObjectIds);
+
+    Map<String, Pair<String, Integer>> findWorkspaceUrisForMethodCodeObjectIds(List<String> methodCodeObjectIds);
 
     Map<String, Pair<String, Integer>> findWorkspaceUrisForSpanIds(List<String> spanIds);
 

@@ -14,6 +14,7 @@ import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -60,8 +61,13 @@ public class PythonLanguageService implements LanguageService {
     }
 
     @Override
-    public Map<String, String> findWorkspaceUrisForCodeObjectIds(List<String> codeObjectIds) {
-        return null;
+    public Map<String, String> findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(List<String> codeObjectIds) {
+        return new HashMap<>();
+    }
+
+    @Override
+    public Map<String, Pair<String, Integer>> findWorkspaceUrisForMethodCodeObjectIds(List<String> methodCodeObjectIds) {
+        return new HashMap<>();
     }
 
     @Override

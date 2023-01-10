@@ -50,7 +50,12 @@ public class NoOpLanguageService implements LanguageService {
     }
 
     @Override
-    public Map<String, String> findWorkspaceUrisForCodeObjectIds(List<String> codeObjectIds) {
+    public Map<String, String> findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(List<String> codeObjectIds) {
+        return new HashMap<>();
+    }
+
+    @Override
+    public Map<String, Pair<String, Integer>> findWorkspaceUrisForMethodCodeObjectIds(List<String> methodCodeObjectIds) {
         return new HashMap<>();
     }
 

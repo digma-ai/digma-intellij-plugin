@@ -10,6 +10,7 @@ using JetBrains.ProjectModel;
 using JetBrains.Rd;
 using JetBrains.Rd.Tasks;
 using JetBrains.RdBackend.Common.Features;
+using JetBrains.ReSharper.Feature.Services.Navigation;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.Caches;
 using JetBrains.ReSharper.Psi.Files;
@@ -87,7 +88,7 @@ namespace Digma.Rider.Protocol
             });
 
 
-            _codeObjectsModel.GetWorkspaceUris.Set((_, methodsCodeObjectIds) =>
+            _codeObjectsModel.GetWorkspaceUrisForErrorStackTrace.Set((_, methodsCodeObjectIds) =>
             {
                 
                 var result = new RdTask<List<CodeObjectIdUriPair>>();
@@ -117,6 +118,54 @@ namespace Digma.Rider.Protocol
                                                 var fileUri = typeElementMethod.GetSourceFiles().SingleItem
                                                     .GetLocation().ToUri().ToString();
                                                 uris.Add(new CodeObjectIdUriPair(methodId, fileUri));
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                result.Set(uris);
+                return result;
+            });
+            
+            _codeObjectsModel.GetWorkspaceUris.Set((_, methodsCodeObjectIds) =>
+            {
+                
+                var result = new RdTask<List<CodeObjectIdUriOffsetTrouple>>();
+                var uris = new List<CodeObjectIdUriOffsetTrouple>();
+
+                using (CompilationContextCookie.GetExplicitUniversalContextIfNotSet())
+                {
+                    foreach (var methodId in methodsCodeObjectIds)
+                    {
+                        var className = methodId.SubstringBefore("$_$");
+                        var methodName = methodId.SubstringAfter("$_$").SubstringBefore("(");
+                        if (className != null && className.IsNotEmpty() && methodName != null && methodName.IsNotEmpty())
+                        {
+                            //LibrarySymbolScope.NONE means we'll find only workspace classes
+                            var symbolScope = myPsiServices.Symbols.GetSymbolScope(LibrarySymbolScope.NONE, false);
+                            var elements = symbolScope.GetTypeElementsByCLRName(className);
+                            foreach (var typeElement in elements)
+                            {
+                                if (typeElement.IsClassLike())
+                                {
+                                    foreach (var typeElementMethod in typeElement.Methods)
+                                    {
+                                        if (typeElementMethod.ShortName.Equals(methodName))
+                                        {
+                                            if (typeElementMethod.GetSourceFiles().SingleItem != null)
+                                            {
+                                                var fileUri = typeElementMethod.GetSourceFiles().SingleItem
+                                                    .GetLocation().ToUri().ToString();
+                                                uris.Add(new CodeObjectIdUriOffsetTrouple(
+                                                    methodId, 
+                                                    fileUri, 
+                                                    typeElementMethod.GetSingleDeclaration()!.GetTreeStartOffset().Offset + 1
+                                                ));
                                                 break;
                                             }
                                         }

@@ -156,7 +156,7 @@ public class ErrorsProvider {
                         map(Frame::getCodeObjectId)).collect(Collectors.toList());
 
 
-        return languageService.findWorkspaceUrisForCodeObjectIds(codeObjectIds);
+        return languageService.findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(codeObjectIds);
 
     }
 }

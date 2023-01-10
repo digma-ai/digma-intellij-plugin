@@ -8,6 +8,8 @@ import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightReque
 import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
+import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
+import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
 
@@ -35,4 +37,6 @@ public interface AnalyticsProvider extends Closeable {
     String getHtmlGraphForSpanPercentiles(SpanHistogramQuery request);
 
     String getHtmlGraphForSpanScaling(SpanHistogramQuery request);
+
+    RecentActivityResult getRecentActivity(RecentActivityRequest recentActivityRequest);
 }

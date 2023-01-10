@@ -21,9 +21,19 @@
 
 
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow id="Digma" secondary="true" icon="org.digma.intellij.plugin.icons.AppIcons.TOOL_WINDOW"
+        <toolWindow id="DigmaLeft"
+                    secondary="true"
+                    icon="org.digma.intellij.plugin.icons.AppIcons.TOOL_WINDOW"
                     anchor="left"
-                    factoryClass="org.digma.intellij.plugin.toolwindow.DigmaToolWindowFactory"/>
+                    factoryClass="org.digma.intellij.plugin.toolwindow.DigmaLeftToolWindowFactory"/>
+
+        <toolWindow id="DigmaBottom"
+                    secondary="false"
+                    icon="org.digma.intellij.plugin.icons.AppIcons.TOOL_WINDOW"
+                    anchor="bottom"
+                    factoryClass="org.digma.intellij.plugin.toolwindow.DigmaBottomToolWindowFactory"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.toolwindow.CustomViewerWindowService"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.ToolWindowShower"/>
 

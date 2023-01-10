@@ -12,14 +12,17 @@ import com.intellij.openapi.vcs.VcsException;
 import com.intellij.openapi.vcs.vfs.ContentRevisionVirtualFile;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
+import com.intellij.psi.PsiFile;
 import com.intellij.testFramework.BinaryLightVirtualFile;
 import com.intellij.testFramework.LightVirtualFile;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
+import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.vcs.VcsService;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
 
 public class EditorService implements Disposable {
@@ -38,7 +41,6 @@ public class EditorService implements Disposable {
         this.project = project;
         vcsService = project.getService(VcsService.class);
     }
-
 
     public void openErrorFrameWorkspaceFileInEditor(@NotNull String workspaceUrl, @Nullable String lastInstanceCommitId, int lineNumber) {
 
@@ -169,7 +171,7 @@ public class EditorService implements Disposable {
     }
 
 
-    public void openSpanWorkspaceFileInEditor(@NotNull String workspaceUri, int offset) {
+    public void openWorkspaceFileInEditor(@NotNull String workspaceUri, int offset) {
 
         var fileToOpen = VirtualFileManager.getInstance().findFileByUrl(workspaceUri);
         if (fileToOpen == null) {

@@ -51,8 +51,13 @@ object CodeObjectsModel : Ext(SolutionModel.Solution) {
 
     init {
         call(
-            "getWorkspaceUris",
+            "getWorkspaceUrisForErrorStackTrace",
             immutableList(PredefinedType.string), immutableList(CodeObjectIdUriPair)
+        ).async
+
+        call(
+            "getWorkspaceUris",
+            immutableList(PredefinedType.string), immutableList(CodeObjectIdUriOffsetTrouple)
         ).async
 
         call(

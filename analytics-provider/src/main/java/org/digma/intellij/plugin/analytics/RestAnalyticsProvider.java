@@ -14,6 +14,8 @@ import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightReque
 import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
+import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
+import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
 import retrofit2.Call;
@@ -110,6 +112,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     public String getHtmlGraphForSpanScaling(SpanHistogramQuery request) {
         final ResponseBody responseBody = execute(() -> client.analyticsProvider.getHtmlGraphForSpanScaling(request));
         return readEntire(responseBody);
+    }
+
+    @Override
+    public RecentActivityResult getRecentActivity(RecentActivityRequest recentActivityRequest) {
+        return execute(() -> client.analyticsProvider.getRecentActivity(recentActivityRequest));
     }
 
     protected static String readEntire(ResponseBody responseBody) {
@@ -347,6 +354,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         Call<ResponseBody> setInsightCustomStartTime(
                 @Body CustomStartTimeInsightRequest customStartTimeInsightRequest
         );
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/CodeAnalytics/codeObjects/recent_activity")
+        Call<RecentActivityResult> getRecentActivity(@Body RecentActivityRequest recentActivityRequest);
 
     }
 

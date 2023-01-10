@@ -18,6 +18,8 @@ import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightReque
 import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
+import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
+import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
@@ -139,7 +141,7 @@ public class AnalyticsService implements Disposable {
     }
 
 
-    List<String> getEnvironments() {
+    public List<String> getEnvironments() {
         try {
             return analyticsProviderProxy.getEnvironments();
         } catch (Exception e) {
@@ -208,6 +210,10 @@ public class AnalyticsService implements Disposable {
 
     public UsageStatusResult getUsageStatus(List<String> objectIds) throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getUsageStatus(new UsageStatusRequest(objectIds)));
+    }
+
+    public RecentActivityResult getRecentActivity(List<String> environments) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getRecentActivity(new RecentActivityRequest(environments)));
     }
 
     public UsageStatusResult getUsageStatusOfErrors(List<String> objectIds) throws AnalyticsServiceException {

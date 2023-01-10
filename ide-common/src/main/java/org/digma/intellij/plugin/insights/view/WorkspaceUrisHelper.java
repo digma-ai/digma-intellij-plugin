@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.insights.view;
 
-import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;

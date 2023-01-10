@@ -91,11 +91,20 @@ class CodeObjectHost(project: Project): LifetimedProjectComponent(project) {
     }
 
 
-    fun findWorkspaceUrisForCodeObjectIds(codeObjectIds: MutableList<String>): Map<String, String> {
+    fun findWorkspaceUrisForMethodCodeObjectIdsForErrorStackTrace(codeObjectIds: MutableList<String>): Map<String, String> {
         val result = HashMap<String, String>()
-        val workspaceUriPairs = model.getWorkspaceUris.callSynchronously(codeObjectIds, model.protocol)
+        val workspaceUriPairs = model.getWorkspaceUrisForErrorStackTrace.callSynchronously(codeObjectIds, model.protocol)
         workspaceUriPairs?.forEach {
             result[it.codeObjectId] = it.workspaceUri
+        }
+        return result
+    }
+
+    fun findWorkspaceUrisForMethodCodeObjectIds(methodCodeObjectIds: MutableList<String>): Map<String, Pair<String, Int>> {
+        val result = HashMap<String, Pair<String, Int>>()
+        val workspaceUriPairs = model.getWorkspaceUris.callSynchronously(methodCodeObjectIds, model.protocol)
+        workspaceUriPairs?.forEach {
+            result[it.codeObjectId] = Pair(it.workspaceUri, it.offset)
         }
         return result
     }

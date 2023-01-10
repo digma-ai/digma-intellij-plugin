@@ -1,12 +1,9 @@
 package org.digma.intellij.plugin.ui.service
 
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.document.DocumentInfoContainer
-import org.digma.intellij.plugin.document.DocumentInfoService
-import org.digma.intellij.plugin.insights.InsightsListContainer
 import org.digma.intellij.plugin.insights.InsightsProvider
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult

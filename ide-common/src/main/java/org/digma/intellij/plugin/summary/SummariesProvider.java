@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.document.CodeObjectsUtil;
+import org.digma.intellij.plugin.insights.view.WorkspaceUrisHelper;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationChangeInsight;
@@ -16,8 +17,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static org.digma.intellij.plugin.insights.view.WorkspaceUrisHelper.findWorkspaceUrisForSpans;
 
 public class SummariesProvider {
 
@@ -71,7 +70,7 @@ public class SummariesProvider {
                     @SuppressWarnings("OptionalGetWithoutIsPresent")//no need ,it only happens if getSpanDurationChanges is not empty
                     SpanDurationChangeInsight.Change change = ((SpanDurationChangeInsight) insight).getSpanDurationChanges().stream().findAny().get();
                     var methodId = change.getCodeObjectId();
-                    findWorkspaceUrisForSpans(project, item, getSpanIds((SpanDurationChangeInsight) insight), methodId);
+                    WorkspaceUrisHelper.findWorkspaceUrisForSpans(project, item, getSpanIds((SpanDurationChangeInsight) insight), methodId);
                 }
             }
 

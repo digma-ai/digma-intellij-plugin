@@ -19,9 +19,9 @@ import org.digma.intellij.plugin.rider.protocol.CodeObjectHost;
 import org.digma.intellij.plugin.rider.protocol.MethodNavigationHost;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.concurrent.TimeUnit;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class CSharpLanguageService extends LifetimedProjectComponent implements LanguageService {
 
@@ -92,8 +92,13 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
 
 
     @Override
-    public Map<String, String> findWorkspaceUrisForCodeObjectIds(List<String> codeObjectIds) {
-        return codeObjectHost.findWorkspaceUrisForCodeObjectIds(codeObjectIds);
+    public Map<String, String> findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(List<String> codeObjectIds) {
+        return codeObjectHost.findWorkspaceUrisForMethodCodeObjectIdsForErrorStackTrace(codeObjectIds);
+    }
+
+    @Override
+    public Map<String, Pair<String, Integer>> findWorkspaceUrisForMethodCodeObjectIds(List<String> methodCodeObjectIds) {
+        return codeObjectHost.findWorkspaceUrisForMethodCodeObjectIds(methodCodeObjectIds);
     }
 
     @Override

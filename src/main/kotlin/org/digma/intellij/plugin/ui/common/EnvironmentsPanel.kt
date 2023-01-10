@@ -170,7 +170,7 @@ class EnvironmentsPanel(
     }
 
     private fun rebuild() {
-        val buttonsInfo: MutableMap<String, MutableMap<String,Any>> = HashMap()
+        val buttonsInfo: MutableMap<String, MutableMap<String,Any>> = mutableMapOf()
         val usageStatusResult = model.getUsageStatus()
         val envsThatHaveUsageSet: Set<String> = buildEnvironmentWithUsages(usageStatusResult)
         val hasUsageFunction = fun(env: String): Boolean { return envsThatHaveUsageSet.contains(env) }
@@ -284,7 +284,7 @@ class EnvironmentsPanel(
 
         for (currEnv in envsSupplier.getEnvironments()) {
             if (isEnvironmentLocal(currEnv)) {
-                if (isLocalEnvironmentMine(currEnv)) {
+                if (isLocalEnvironmentMine(currEnv, localHostname)) {
                     mineLocalEnv = currEnv
                 } else {
                     // skip other local (not mine)
@@ -311,21 +311,13 @@ class EnvironmentsPanel(
 
     private fun buildLinkText(currEnv: String, isSelectedEnv: Boolean): String {
         var txtValue = currEnv
-        if (isLocalEnvironmentMine(currEnv)) {
-            txtValue = "LOCAL"
+        if (isLocalEnvironmentMine(currEnv, localHostname)) {
+            txtValue = LOCAL_ENV
         }
         if (isSelectedEnv) {
             return asHtml(spanBoldUnderLine(txtValue))
         }
         return asHtml(span(txtValue))
-    }
-
-    private fun isEnvironmentLocal(environment: String): Boolean {
-        return environment.endsWith("[local]", true)
-    }
-
-    private fun isLocalEnvironmentMine(environment: String): Boolean {
-        return environment.startsWith(localHostname, true)
     }
 
 

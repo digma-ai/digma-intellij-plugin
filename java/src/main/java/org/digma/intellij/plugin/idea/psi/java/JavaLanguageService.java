@@ -157,61 +157,29 @@ public class JavaLanguageService implements LanguageService {
         return new MethodUnderCaret("", "", "", PsiUtils.psiFileToUri(psiFile), true);
     }
 
-
     /**
-     * navigate to a method. this method is meant to be used only to navigate to a method in the current selected editor.
-     * it is used from the methods preview list. it will not navigate to any method in the project.
+     * Navigate to any method in the project even if the file is not opened
      */
     @Override
-    public void navigateToMethod(String codeObjectId) {
+    public void navigateToMethod(String methodCodeObjectId) {
 
-        /*
-        There are few ways to navigate to a method.
-        the current implementation is the simplest, maybe not the best in performance but it doesn't seem to be noticed.
-        find the psi file in documentInfoService , then find the psi method and call psiMethod.navigate.
-        it proves to work ok for java files.
+        var className = methodCodeObjectId.substring(0, methodCodeObjectId.indexOf("$_$"));
 
-        other possibilities:
-        1)
-        we have the method offset of the method in our MethodInfo, so we can find the MethodInfo in
-        documentInfoService. or the MethodInfo object can also be in listViewItem.moreData of the PreviewListCellRenderer.
-        then find the selected editor using FileEditorManager.getSelectedTextEditor
-        then selectedTextEditor.getCaretModel().moveToOffset();
+        //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
+        className = className.replace('$', '.');
 
-        2)
-        another way is to find the psi file through the selected editor then do the same , find the method and navigate.
-
-        another way could be to build an index of codeObjectId -> [an object that holds the file uri and method offset],
-        then find that object in the index and use the offset to move the caret in the selected editor
-
-        if the current implementation proves to be slow or not reliable we can try one of the other options.
-         */
-
-
-        PsiFile psiFile = documentInfoService.findPsiFileByMethodId(codeObjectId);
-        if (psiFile instanceof PsiJavaFile) {
-
-            //it must be a PsiJavaFile so casting should be ok
-            PsiJavaFile psiJavaFile = (PsiJavaFile) psiFile;
-            PsiClass[] classes = psiJavaFile.getClasses();
-            PsiMethod psiMethod = findMethod(classes, codeObjectId);
-
-            if (psiMethod != null && psiMethod.canNavigateToSource()) {
-                psiMethod.navigate(true);
-            } else if (psiMethod != null) {
-                //it's a fallback. sometimes the psiMethod.canNavigateToSource is false and really the
-                //navigation doesn't work. i can't say why. usually it happens when indexing is not ready yet,
-                // and the user opens files, selects tabs or moves the caret. then when indexing is finished
-                // we have the list of methods but then psiMethod.navigate doesn't work.
-                // navigation to source using the editor does work in these circumstances.
-                var selectedEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
-                if (selectedEditor != null) {
-                    selectedEditor.getCaretModel().moveToOffset(psiMethod.getTextOffset());
-                } else {
-                    Log.log(LOGGER::error, "could not find selected text editor, can't navigate to method  {}", codeObjectId);
+        //searching in project scope will find only project classes
+        Collection<PsiClass> psiClasses =
+                JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.allScope(project));
+        if (!psiClasses.isEmpty()) {
+            //hopefully there is only one class by that name in the project
+            PsiClass psiClass = psiClasses.stream().findAny().get();
+            for (PsiMethod method : psiClass.getMethods()) {
+                var id = JavaLanguageUtils.createJavaMethodCodeObjectId(method);
+                if (id.equals(methodCodeObjectId) && method.canNavigate()) {
+                    method.navigate(true);
+                    return;
                 }
-            } else {
-                Log.log(LOGGER::error, "could not navigate to method {}, can't find PsiMethod in file {}", codeObjectId, psiFile.getVirtualFile());
             }
         }
     }
@@ -244,7 +212,7 @@ public class JavaLanguageService implements LanguageService {
     }
 
     @Override
-    public Map<String, String> findWorkspaceUrisForCodeObjectIds(List<String> codeObjectIds) {
+    public Map<String, String> findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(List<String> codeObjectIds) {
 
         /*
         Use intellij index to find in which file a method exists.
@@ -277,6 +245,40 @@ public class JavaLanguageService implements LanguageService {
                 if (psiFile != null) {
                     String url = PsiUtils.psiFileToUri(psiFile);
                     workspaceUrls.put(id, url);
+                }
+            }
+        });
+
+        return workspaceUrls;
+    }
+
+    @Override
+    public Map<String, Pair<String, Integer>> findWorkspaceUrisForMethodCodeObjectIds(List<String> methodCodeObjectIds) {
+
+        Map<String, Pair<String, Integer>> workspaceUrls = new HashMap<>();
+
+        methodCodeObjectIds.forEach(id -> {
+
+            var className = id.substring(0, id.indexOf("$_$"));
+
+            //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
+            className = className.replace('$', '.');
+
+            //searching in project scope will find only project classes
+            Collection<PsiClass> psiClasses =
+                    JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.projectScope(project));
+            if (!psiClasses.isEmpty()) {
+                //hopefully there is only one class by that name in the project
+                PsiClass psiClass = psiClasses.stream().findAny().get();
+                PsiFile psiFile = PsiTreeUtil.getParentOfType(psiClass, PsiFile.class);
+                for (PsiMethod method : psiClass.getMethods()) {
+                    String javaMethodCodeObjectId = createJavaMethodCodeObjectId(method);
+                    if (javaMethodCodeObjectId.equals(id)) {
+                        if (psiFile != null) {
+                            String url = PsiUtils.psiFileToUri(psiFile);
+                            workspaceUrls.put(id, new Pair<>(url, method.getTextOffset()));
+                        }
+                    }
                 }
             }
         });
@@ -465,6 +467,5 @@ public class JavaLanguageService implements LanguageService {
     public boolean isIntellijPlatformPluginLanguage() {
         return true;
     }
-
 
 }

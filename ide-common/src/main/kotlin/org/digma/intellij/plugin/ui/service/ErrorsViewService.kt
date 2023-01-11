@@ -174,7 +174,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
     fun refreshErrorsModel() {
         val scope = model.scope
         if (scope is MethodScope) {
-            Backgroundable.ensureBackground(project, "Refresh errors model") {
+            Backgroundable.ensureBackground(project, "Refresh errors list") {
                 updateErrorsModel(scope.getMethodInfo())
             }
         }

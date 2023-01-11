@@ -23,7 +23,7 @@ class RefreshService(private val project: Project) {
         if (scope is MethodScope) {
             val documentInfoContainer = DocumentInfoService.getInstance(project).getDocumentInfoByMethodInfo(scope.getMethodInfo())
 
-            Backgroundable.ensureBackground(project, "Refresh insights and errors list") {
+            Backgroundable.ensureBackground(project, "Refreshing insights") {
                 val selectedDocument = selectedTextEditor?.document
 
                 if (selectedDocument != null) {

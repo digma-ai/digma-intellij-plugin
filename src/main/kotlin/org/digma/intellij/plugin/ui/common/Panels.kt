@@ -10,14 +10,14 @@ import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.analytics.AnalyticsService
-import org.digma.intellij.plugin.ui.errors.IconButton
+import org.digma.intellij.plugin.ui.errors.GeneralRefreshIconButton
 import org.digma.intellij.plugin.ui.model.NOT_SUPPORTED_OBJECT_MSG
 import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
-import org.digma.intellij.plugin.ui.service.RefreshService
+import org.digma.intellij.plugin.refreshInsightsTask.RefreshService
 import java.awt.BorderLayout
 import java.awt.Cursor
 import java.awt.Dimension
@@ -106,7 +106,7 @@ private fun getGeneralRefreshButton(project: Project): JButton {
 
     val size = Laf.scalePanels(Laf.Sizes.BUTTON_SIZE_26)
     val buttonsSize = Dimension(size, size)
-    val generalRefreshIconButton = IconButton(Laf.Icons.Insight.REFRESH)
+    val generalRefreshIconButton = GeneralRefreshIconButton(project, Laf.Icons.Insight.REFRESH)
     generalRefreshIconButton.preferredSize = buttonsSize
     generalRefreshIconButton.maximumSize = buttonsSize
     generalRefreshIconButton.toolTipText = asHtml(REFRESH_ALL_INSIGHTS_AND_ERRORS)

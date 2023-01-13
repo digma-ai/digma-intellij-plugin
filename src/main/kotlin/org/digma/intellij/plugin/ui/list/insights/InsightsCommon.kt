@@ -16,7 +16,7 @@ import org.digma.intellij.plugin.ui.common.buildBoldTitleGrayedComment
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.list.commonListItemPanel
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
-import org.digma.intellij.plugin.ui.service.RefreshService
+import org.digma.intellij.plugin.refreshInsightsTask.RefreshService
 import java.awt.BorderLayout
 import java.awt.Cursor
 import java.awt.Dimension

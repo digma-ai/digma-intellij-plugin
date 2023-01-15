@@ -6,6 +6,7 @@ import com.intellij.psi.PsiFile;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
@@ -76,7 +77,9 @@ public class DocumentInfoContainer {
         List<String> objectIds = getObjectIdsForCurrentDocument();
         try {
             Log.log(LOGGER::debug, "Requesting insights with ids {}", objectIds);
-            insights = analyticsService.getInsights(objectIds);
+            insights = analyticsService.getInsights(objectIds)
+                    .stream().filter(codeObjectInsight -> !codeObjectInsight.getType().equals(InsightType.Unmapped))
+                    .collect(Collectors.toList());
             Log.log(LOGGER::debug, "Got next insights: {}", insights);
         } catch (AnalyticsServiceException e) {
             //insights = Collections.emptyList() means there was an error loading insights, usually if the backend is not available.

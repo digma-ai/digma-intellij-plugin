@@ -7,6 +7,7 @@ import com.intellij.psi.PsiFile;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
@@ -134,10 +135,11 @@ public class DocumentInfoService {
         if (documentInfoContainer != null) {
             return documentInfoContainer.getAllInsights().stream().filter(codeObjectInsight -> {
                 String codeObjectId = codeObjectInsight.getCodeObjectId();
-                return methodInfo.getId().equals(codeObjectId)
+                return (!codeObjectInsight.getType().equals(InsightType.Unmapped)) &&
+                        (methodInfo.getId().equals(codeObjectId)
                         || methodInfo.idWithType().equals(codeObjectId)
                         || methodInfo.getRelatedCodeObjectIds().contains(codeObjectId)
-                        || methodInfo.getRelatedCodeObjectIdsWithType().contains(codeObjectId);
+                        || methodInfo.getRelatedCodeObjectIdsWithType().contains(codeObjectId));
             }).collect(Collectors.toList());
         }
         return new ArrayList<>();

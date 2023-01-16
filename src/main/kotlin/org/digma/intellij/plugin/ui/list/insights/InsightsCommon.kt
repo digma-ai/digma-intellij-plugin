@@ -146,7 +146,6 @@ private fun rebuildPanel(
 
         if(insight.customStartTime != null || isRecalculateButtonPressed)
             bodyWrapper.add(getTimeInfoMessagePanel(
-                    insightPanel = insightPanel,
                     customStartTime = insight.customStartTime,
                     actualStartTime = insight.actualStartTime,
                     isRecalculateButtonPressed = isRecalculateButtonPressed,
@@ -175,7 +174,6 @@ private fun rebuildPanel(
 }
 
 private fun getTimeInfoMessagePanel(
-        insightPanel: DigmaResettablePanel,
         customStartTime: Date?,
         actualStartTime: Date?,
         isRecalculateButtonPressed: Boolean,
@@ -205,7 +203,7 @@ private fun getTimeInfoMessagePanel(
     timeInfoMessageLabelPanel.isOpaque = false
     timeInfoMessageLabelPanel.add(timeInfoMessageLabel)
     if (shouldShowApplyNewTimeFilterLabel(isRecalculateButtonPressed, identicalStartTimes)) {
-        timeInfoMessageLabelPanel.add(getRefreshInsightButton(insightPanel, project))
+        timeInfoMessageLabelPanel.add(getRefreshInsightButton(project))
     }
     return timeInfoMessageLabelPanel
 }
@@ -324,12 +322,11 @@ private fun showHintMessage(
     HintManager.getInstance().showHint(recalculateAction, RelativePoint.getSouthWestOf(threeDotsIcon), HintManager.HIDE_BY_ESCAPE, 2000)
 }
 
-private fun getRefreshInsightButton(insightPanel: DigmaResettablePanel, project: Project): ActionLink {
+private fun getRefreshInsightButton(project: Project): ActionLink {
     val refreshAction = ActionLink(REFRESH)
     refreshAction.addActionListener {
         val refreshService: RefreshService = project.getService(RefreshService::class.java)
-        refreshService.refreshAll()
-        rebuildInsightPanel(insightPanel)
+        refreshService.refreshAllInBackground()
     }
     refreshAction.border = empty()
     refreshAction.isOpaque = false
@@ -354,34 +351,6 @@ fun genericPanelForSingleInsight(project: Project, modelObject: Any?): JPanel {
             paginationComponent = null
     )
 }
-
-
-
-
-
-internal fun insightsIconPanelBorder(icon: Icon, text: String, panelsLayoutHelper: PanelsLayoutHelper): JPanel {
-
-    val panel = InsightAlignedPanel(panelsLayoutHelper)
-    panel.layout = BorderLayout()
-    panel.isOpaque = false
-    panel.border = empty(2,0,0, getInsightIconPanelRightBorderSize())
-
-    val iconLabel = JLabel(icon)
-    iconLabel.horizontalAlignment = SwingConstants.CENTER
-    panel.add(iconLabel, BorderLayout.CENTER)
-
-    if (text.isNotBlank()) {
-        val textLabel = JLabel(text)
-        textLabel.horizontalAlignment = SwingConstants.CENTER
-        panel.add(textLabel, BorderLayout.SOUTH)
-    }
-
-    addCurrentLargestWidthIconPanel(panelsLayoutHelper,panel.preferredSize.width)
-
-    return panel
-}
-
-
 
 
 internal fun getInsightIconPanelRightBorderSize():Int{

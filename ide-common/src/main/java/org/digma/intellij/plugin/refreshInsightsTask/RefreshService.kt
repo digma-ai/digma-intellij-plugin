@@ -4,6 +4,8 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.rd.util.withUiContext
+import com.intellij.openapi.vfs.VirtualFile
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.document.DocumentInfoService
@@ -28,13 +30,28 @@ class RefreshService(private val project: Project) {
         }
     }
 
-    fun refreshAll() {
+    suspend fun refreshAllForCurrentFile(file: VirtualFile) {
+        Log.log(logger::debug, "Automatic refreshAllForCurrentFile started for file = {}", file.name)
+        val scope = insightsViewService.model.scope
+        val selectedTextEditor = withUiContext {
+            // this code is on the UI thread
+            FileEditorManager.getInstance(project).selectedTextEditor
+        }
+        if (scope is MethodScope) {
+            val documentInfoContainer = DocumentInfoService.getInstance(project).getDocumentInfoByMethodInfo(scope.getMethodInfo())
+
+            Log.log(logger::debug, "updateInsightsCacheForActiveDocument starts for file = {}", file.name)
+            updateInsightsCacheForActiveDocument(selectedTextEditor, documentInfoContainer, scope)
+            Log.log(logger::debug, "updateInsightsCacheForActiveDocument finished for file = {}", file.name)
+        }
+    }
+
+    fun refreshAllInBackground() {
         if (isGeneralRefreshButtonEnabled.getAndSet(false)) {
             val scope = insightsViewService.model.scope
             val selectedTextEditor = FileEditorManager.getInstance(project).selectedTextEditor
             if (scope is MethodScope) {
                 val documentInfoContainer = DocumentInfoService.getInstance(project).getDocumentInfoByMethodInfo(scope.getMethodInfo())
-
 
                 //updateInsightsCache must run in the background, the use of refreshInsightsTaskScheduledLock makes sure no two threads
                 //update InsightsCache at the same time.
@@ -43,7 +60,7 @@ class RefreshService(private val project: Project) {
                     Log.log(logger::debug, "Lock acquired for refreshAll to {}. ", documentInfoContainer?.documentInfo?.fileUri)
                     try {
                         notifyRefreshInsightsTaskStarted(documentInfoContainer?.documentInfo?.fileUri)
-                        updateInsightsCache(selectedTextEditor, documentInfoContainer, scope)
+                        updateInsightsCacheForActiveDocument(selectedTextEditor, documentInfoContainer, scope)
                     } finally {
                         refreshInsightsTaskScheduledLock.unlock()
                         Log.log(logger::debug, "Lock released for refreshAll to {}. ", documentInfoContainer?.documentInfo?.fileUri)
@@ -56,22 +73,13 @@ class RefreshService(private val project: Project) {
         }
     }
 
-    private fun updateInsightsCache(selectedTextEditor: Editor?, documentInfoContainer: DocumentInfoContainer?, scope: MethodScope) {
+    private fun updateInsightsCacheForActiveDocument(selectedTextEditor: Editor?, documentInfoContainer: DocumentInfoContainer?, scope: MethodScope) {
         val selectedDocument = selectedTextEditor?.document
-
-        // firstly update actual document that is opened
         if (selectedDocument != null) {
             documentInfoContainer?.updateCache()
         }
         insightsViewService.updateInsightsModel(scope.getMethodInfo())
         errorsViewService.updateErrorsModel(scope.getMethodInfo())
-
-        // update all our local cache in the background
-        if (selectedDocument != null) {
-            DocumentInfoService.getInstance(project).updateCacheForOtherOpenedDocuments(documentInfoContainer?.documentInfo?.fileUri)
-        } else {
-            DocumentInfoService.getInstance(project).updateCacheForAllOpenedDocuments()
-        }
     }
 
     private fun notifyRefreshInsightsTaskStarted(fileUri: String?) {

@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.common
 
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
@@ -11,8 +12,10 @@ import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.WrapLayout
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
+import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.common.CommonUtils.prettyTimeOf
+import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
 import org.digma.intellij.plugin.ui.common.Laf.Icons.Environment.Companion.ENVIRONMENT_HAS_NO_USAGE
 import org.digma.intellij.plugin.ui.common.Laf.Icons.Environment.Companion.ENVIRONMENT_HAS_USAGE
@@ -24,6 +27,7 @@ import java.awt.Dimension
 import java.awt.FlowLayout
 import java.lang.Integer.max
 import java.util.*
+import java.util.concurrent.locks.ReentrantLock
 import java.util.function.Function
 import javax.swing.Icon
 import javax.swing.JComponent
@@ -36,14 +40,20 @@ class EnvironmentsPanel(
     private val model: PanelModel,
     private val environmentsSupplier: EnvironmentsSupplier, // assuming its a singleton
 ) : DigmaResettablePanel() {
+    private val logger: Logger = Logger.getInstance(EnvironmentsPanel::class.java)
 
+    private val project: Project
     private val changeEnvAlarm: Alarm
+    private val localHostname: String
+    private val rebuildPanelLock = ReentrantLock()
 
     init {
+        this.project = project
         changeEnvAlarm = AlarmFactory.getInstance().create()
+        localHostname = CommonUtils.getLocalHostname()
         isOpaque = false
         layout = WrapLayout(FlowLayout.LEFT, 2, 0)
-        rebuild()
+        rebuildInBackground(project)
 
         project.messageBus.connect(project.getService(AnalyticsService::class.java))
             .subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, object : EnvironmentChanged {
@@ -61,10 +71,10 @@ class EnvironmentsPanel(
 
                 override fun environmentsListChanged(newEnvironments: MutableList<String>?) {
                     if (SwingUtilities.isEventDispatchThread()) {
-                        rebuild()
+                        rebuildInBackground(project)
                     } else {
                         SwingUtilities.invokeLater {
-                            rebuild()
+                            rebuildInBackground(project)
                         }
                     }
                 }
@@ -73,7 +83,7 @@ class EnvironmentsPanel(
 
 
     override fun reset() {
-        rebuild()
+        rebuildInBackground(project)
     }
 
     /*
@@ -143,6 +153,20 @@ class EnvironmentsPanel(
 
     }
 
+    private fun rebuildInBackground(project: Project) {
+        val task = Runnable {
+            rebuildPanelLock.lock()
+            Log.log(logger::debug, "Lock acquired for rebuild Envs panel process.")
+            try {
+                rebuild()
+            } finally {
+                rebuildPanelLock.unlock()
+                Log.log(logger::debug, "Lock released for rebuild Envs panel process.")
+            }
+        }
+        Backgroundable.ensureBackground(project, "Rebuilding environments panel", task)
+    }
+
     private fun rebuild() {
 
         if (components.isNotEmpty()) {
@@ -163,39 +187,50 @@ class EnvironmentsPanel(
             val isSelectedEnv = currEnv.contentEquals(environmentsSupplier.getCurrent())
             val toolTip = buildToolTip(usageStatusResult, currEnv)
             val linkText = buildLinkText(currEnv, isSelectedEnv)
-            val envLink = EnvLink(currEnv, linkText, isSelectedEnv)
-            envLink.toolTipText = toolTip
 
-            envLink.addActionListener() { event ->
-
-                val currentSelected: EnvLink? = getSelected()
-
-                if (currentSelected === event.source) {
-                    return@addActionListener
+            if (SwingUtilities.isEventDispatchThread()) {
+                buildEnvironmentsPanelButtons(currEnv, linkText, isSelectedEnv, toolTip, hasUsageFunction)
+            } else {
+                SwingUtilities.invokeLater {
+                    buildEnvironmentsPanelButtons(currEnv, linkText, isSelectedEnv, toolTip, hasUsageFunction)
                 }
-
-                currentSelected?.deselect { buildLinkText(it, false) }
-
-                val clickedLink: EnvLink = event.source as EnvLink
-                clickedLink.select { buildLinkText(it, true) }
-
-                changeEnvAlarm.cancelAllRequests()
-                changeEnvAlarm.addRequest({
-                    environmentsSupplier.setCurrent(clickedLink.env)
-                }, 100)
-
             }
-
-            val icon: Icon =
-                if (hasUsageFunction(currEnv)) ENVIRONMENT_HAS_USAGE else ENVIRONMENT_HAS_NO_USAGE
-            val iconComponent = JBLabel(icon)
-
-            val singlePanel = SingleEnvPanel(envLink, iconComponent)
-            singlePanel.toolTipText = toolTip
-
-            this.add(singlePanel)
         }
         revalidate()
+    }
+
+    private fun buildEnvironmentsPanelButtons(currEnv: String, linkText: String, isSelectedEnv: Boolean,
+                                              toolTip: String, hasUsageFunction: (String) -> Boolean) {
+        val envLink = EnvLink(currEnv, linkText, isSelectedEnv)
+        envLink.toolTipText = toolTip
+
+        envLink.addActionListener { event ->
+
+            val currentSelected: EnvLink? = getSelected()
+
+            if (currentSelected === event.source) {
+                return@addActionListener
+            }
+
+            currentSelected?.deselect { buildLinkText(it, false) }
+
+            val clickedLink: EnvLink = event.source as EnvLink
+            clickedLink.select { buildLinkText(it, true) }
+
+            changeEnvAlarm.cancelAllRequests()
+            changeEnvAlarm.addRequest({
+                environmentsSupplier.setCurrent(clickedLink.env)
+            }, 100)
+
+        }
+
+        val icon: Icon = if (hasUsageFunction(currEnv)) ENVIRONMENT_HAS_USAGE else ENVIRONMENT_HAS_NO_USAGE
+        val iconComponent = JBLabel(icon)
+
+        val singlePanel = SingleEnvPanel(envLink, iconComponent)
+        singlePanel.toolTipText = toolTip
+
+        this.add(singlePanel)
     }
 
     private fun getSelected(): EnvLink? {
@@ -205,8 +240,8 @@ class EnvironmentsPanel(
         return currentSelectedPanel?.myLink
     }
 
-    fun buildToolTip(usageStatusResult: UsageStatusResult, envName: String): String {
-        val envUsageStatus = usageStatusResult.environmentStatuses.firstOrNull { it.name.equals(envName) }
+    private fun buildToolTip(usageStatusResult: UsageStatusResult, envName: String): String {
+        val envUsageStatus = usageStatusResult.environmentStatuses.firstOrNull { it.name == envName }
         val sb = StringBuilder()
         sb.append(envName)
         if (envUsageStatus != null) {
@@ -220,13 +255,13 @@ class EnvironmentsPanel(
         return asHtml(sb.toString())
     }
 
-    fun buildEnvironmentWithUsages(usageStatusResult: UsageStatusResult): Set<String> {
+    private fun buildEnvironmentWithUsages(usageStatusResult: UsageStatusResult): Set<String> {
         return usageStatusResult.codeObjectStatuses
             .map { it.environment }
             .toSet()
     }
 
-    fun buildRelevantSortedEnvironments(
+    private fun buildRelevantSortedEnvironments(
         envsSupplier: EnvironmentsSupplier,
         hasUsageFun: (String) -> Boolean
     ): List<String> {
@@ -278,7 +313,6 @@ class EnvironmentsPanel(
     }
 
     private fun isLocalEnvironmentMine(environment: String): Boolean {
-        val localHostname = CommonUtils.getLocalHostname()
         return environment.startsWith(localHostname, true)
     }
 

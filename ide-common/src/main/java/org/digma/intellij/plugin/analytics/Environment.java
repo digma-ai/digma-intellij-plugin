@@ -137,11 +137,8 @@ public class Environment implements EnvironmentsSupplier {
 
 
     private void refreshOnBackground() {
-
         Log.log(LOGGER::debug, "Refreshing Environments on background thread.");
-
         Backgroundable.ensureBackground(project, "Refreshing Environments on background thread.", this::refreshEnvironments);
-
     }
 
 

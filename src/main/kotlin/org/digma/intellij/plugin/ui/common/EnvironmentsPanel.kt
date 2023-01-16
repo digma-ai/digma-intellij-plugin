@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.common
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
@@ -188,10 +189,9 @@ class EnvironmentsPanel(
             val toolTip = buildToolTip(usageStatusResult, currEnv)
             val linkText = buildLinkText(currEnv, isSelectedEnv)
 
-            if (SwingUtilities.isEventDispatchThread()) {
-                buildEnvironmentsPanelButtons(currEnv, linkText, isSelectedEnv, toolTip, hasUsageFunction)
-            } else {
-                SwingUtilities.invokeLater {
+            // Please use this method instead of javax.swing.SwingUtilities.invokeLater(Runnable) or com.intellij.util.ui.UIUtil methods for the reasons described in ModalityState documentation.
+            ApplicationManager.getApplication().invokeLater {
+                Runnable {
                     buildEnvironmentsPanelButtons(currEnv, linkText, isSelectedEnv, toolTip, hasUsageFunction)
                 }
             }

@@ -16,6 +16,7 @@ import org.digma.intellij.plugin.summary.SummariesProvider
 import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.util.*
+import java.util.concurrent.locks.ReentrantLock
 
 
 class SummaryViewService(project: Project) : AbstractViewService(project) {
@@ -25,6 +26,7 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
 
     val model = Model()
 
+    private val rebuildPanelLock = ReentrantLock()
     private val environmentChangeConnection: MessageBusConnection = project.messageBus.connect()
 
     companion object {
@@ -37,7 +39,7 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
 
         //this is for startup
         DumbAwareNotifier.getInstance(project).whenSmart {
-            reload()
+            reloadSummariesPanelInBackground(project)
         }
 
         //this is for when environment changes or connection lost and regained
@@ -47,16 +49,12 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
 
                 override fun environmentChanged(newEnv: String?) {
                     Log.log(logger::debug, "environmentChanged called")
-                    Backgroundable.ensureBackground(project, "Summary view Reload") {
-                        reload()
-                    }
+                    reloadSummariesPanelInBackground(project)
                 }
 
                 override fun environmentsListChanged(newEnvironments: MutableList<String>?) {
                     Log.log(logger::debug, "environmentsListChanged called")
-                    Backgroundable.ensureBackground(project, "Summary view Reload") {
-                        reload()
-                    }
+                    reloadSummariesPanelInBackground(project)
                 }
             })
     }
@@ -73,6 +71,19 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
         return true
     }
 
+    private fun reloadSummariesPanelInBackground(project: Project) {
+        val task = Runnable {
+            rebuildPanelLock.lock()
+            Log.log(logger::debug, "Lock acquired for reload Summaries panel process.")
+            try {
+                reload()
+            } finally {
+                rebuildPanelLock.unlock()
+                Log.log(logger::debug, "Lock released for reload Summaries panel process.")
+            }
+        }
+        Backgroundable.ensureBackground(project, "Summary view Reload", task)
+    }
 
     private fun reload() {
         Log.log(logger::debug, "reload called")

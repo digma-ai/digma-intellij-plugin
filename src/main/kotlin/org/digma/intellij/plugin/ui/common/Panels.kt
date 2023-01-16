@@ -113,7 +113,7 @@ private fun getGeneralRefreshButton(project: Project): JButton {
     generalRefreshIconButton.cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
 
     generalRefreshIconButton.addActionListener {
-        refreshService.refreshAll()
+        refreshService.refreshAllInBackground()
     }
     return generalRefreshIconButton
 }

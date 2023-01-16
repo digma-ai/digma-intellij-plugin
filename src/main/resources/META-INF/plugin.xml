@@ -95,8 +95,12 @@
         <listener
                 class="org.digma.intellij.plugin.emvironment.EnvironmentChangeHandler"
                 topic="org.digma.intellij.plugin.analytics.EnvironmentChanged"/>
-        <listener class="org.digma.intellij.plugin.debugger.DebuggerListener"
-                  topic="com.intellij.xdebugger.XDebuggerManagerListener"/>
+        <listener
+                class="org.digma.intellij.plugin.debugger.DebuggerListener"
+                topic="com.intellij.xdebugger.XDebuggerManagerListener"/>
+        <listener
+                class="org.digma.intellij.plugin.editor.GeneralFileEditorListener"
+                topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
     </projectListeners>
 
 

@@ -53,7 +53,7 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
     //@Test
     public void actualgetHtmlGraphForSpanPercentiles() {
         final SpanHistogramQuery query = new SpanHistogramQuery(
-                "ARIK-LAPTOP[LOCAL]", "SampleInsights/Error", "OpenTelemetry.Instrumentation.AspNetCore", "", "dark", null);
+                "ARIK-LAPTOP[LOCAL]", "SampleInsights/Error", "OpenTelemetry.Instrumentation.AspNetCore", "dark", null);
         AnalyticsProvider analyticsProvider = new RestAnalyticsProvider("https://localhost:5051");
 
         String htmlBody = analyticsProvider.getHtmlGraphForSpanPercentiles(query);

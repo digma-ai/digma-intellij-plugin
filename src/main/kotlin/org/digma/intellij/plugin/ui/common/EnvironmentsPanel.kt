@@ -193,7 +193,7 @@ class EnvironmentsPanel(
             ApplicationManager.getApplication().invokeLater {
                 Runnable {
                     buildEnvironmentsPanelButtons(currEnv, linkText, isSelectedEnv, toolTip, hasUsageFunction)
-                }
+                }.run()
             }
         }
         revalidate()

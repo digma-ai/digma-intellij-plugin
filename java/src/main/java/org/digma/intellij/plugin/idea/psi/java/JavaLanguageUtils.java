@@ -5,7 +5,20 @@ import com.intellij.lang.jvm.JvmMethod;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.*;
+import com.intellij.psi.PsiAnnotation;
+import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiExpression;
+import com.intellij.psi.PsiExpressionList;
+import com.intellij.psi.PsiField;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiJavaFile;
+import com.intellij.psi.PsiLiteral;
+import com.intellij.psi.PsiLiteralExpression;
+import com.intellij.psi.PsiLocalVariable;
+import com.intellij.psi.PsiManager;
+import com.intellij.psi.PsiMethod;
+import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.impl.source.PsiClassReferenceType;
 import com.intellij.testFramework.LightVirtualFile;
 import org.digma.intellij.plugin.index.DocumentInfoIndex;
@@ -190,8 +203,6 @@ public class JavaLanguageUtils {
     public static boolean isMethodWithNoArguments(@NotNull PsiElement psiElement,@NotNull String methodName,@NotNull String containingClassName) {
         return isMethod(psiElement,methodName,containingClassName, psiMethod -> psiMethod.getParameters().length == 0);
     }
-
-
 
 
     @Nullable

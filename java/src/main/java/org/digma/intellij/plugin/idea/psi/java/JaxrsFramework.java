@@ -8,14 +8,13 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.psi.search.searches.AnnotatedElementsSearch;
-import com.intellij.util.Query;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -77,39 +76,48 @@ public class JaxrsFramework {
             return;
         }
 
-        httpMethodsAnnotations.forEach(currAnnotation -> {
-            Query<PsiMethod> psiMethodsOfHttpMethodInFile = AnnotatedElementsSearch.searchPsiMethods(currAnnotation.getPsiClass(), GlobalSearchScope.fileScope(psiFile));
+        List<PsiClass> allClassesInFile = JavaPsiUtils.getClassesWithin(psiFile);
+        for (PsiClass currClass : allClassesInFile) {
+            final PsiAnnotation controllerPathAnnotation = JavaPsiUtils.findNearestAnnotation(currClass, JAX_RS_PATH_ANNOTATION_STR);
 
-            for (PsiMethod currPsiMethod : psiMethodsOfHttpMethodInFile) {
-                PsiClass controllerClass = currPsiMethod.getContainingClass();
-                if (controllerClass == null) {
-                    continue; // very unlikely
-                }
-                PsiAnnotation controllerAnnotation = controllerClass.getAnnotation(JAX_RS_PATH_ANNOTATION_STR);
-                if (controllerAnnotation == null) {
-                    continue; // skip this method, since its class is not a controller
-                }
-                String endpointUriPrefix = JavaLanguageUtils.getPsiAnnotationAttributeValue(controllerAnnotation, "value");
-
-                String endpointUriSuffix = "";
-                PsiAnnotation methodPathAnnotation = currPsiMethod.getAnnotation(JAX_RS_PATH_ANNOTATION_STR); // optional annotation on method
-                if (methodPathAnnotation != null) {
-                    endpointUriSuffix = JavaLanguageUtils.getPsiAnnotationAttributeValue(methodPathAnnotation, "value");
+            List<PsiMethod> methodsInClass = Arrays.asList(currClass.getMethods());
+            for (PsiMethod currPsiMethod : methodsInClass) {
+                final PsiAnnotation methodPathAnnotation = JavaPsiUtils.findNearestAnnotation(currPsiMethod, JAX_RS_PATH_ANNOTATION_STR);
+                if (methodPathAnnotation == null && controllerPathAnnotation == null) {
+                    continue; // skip since could not find annotation of @Path, in either class and or method
                 }
 
-                String endpointFullUri = JavaUtils.combineUri(endpointUriPrefix, endpointUriSuffix);
+                for (JavaAnnotation currExpectedAnnotation : httpMethodsAnnotations) {
+                    PsiAnnotation httpMethodAnnotation = JavaPsiUtils.findNearestAnnotation(currPsiMethod, currExpectedAnnotation.getClassNameFqn());
+                    if (httpMethodAnnotation == null) {
+                        continue; // skipping since could not find annotation of HTTP Method, such as @GET
+                    }
+                    String endpointFullUri = combinePaths(controllerPathAnnotation, methodPathAnnotation);
 
-                String httpEndpointCodeObjectId = createHttpEndpointCodeObjectId(currAnnotation, endpointFullUri);
+                    String httpEndpointCodeObjectId = createHttpEndpointCodeObjectId(currExpectedAnnotation, endpointFullUri);
 
-                EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, JavaLanguageUtils.createJavaMethodCodeObjectId(currPsiMethod), documentInfo.getFileUri());
-                Log.log(LOGGER::debug, "Found endpoint info '{}' for method '{}'", endpointInfo.getId(), endpointInfo.getContainingMethodId());
+                    EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, JavaLanguageUtils.createJavaMethodCodeObjectId(currPsiMethod), documentInfo.getFileUri());
+                    Log.log(LOGGER::debug, "Found endpoint info '{}' for method '{}'", endpointInfo.getId(), endpointInfo.getContainingMethodId());
 
-                MethodInfo methodInfo = documentInfo.getMethods().get(endpointInfo.getContainingMethodId());
-                //this method must exist in the document info
-                Objects.requireNonNull(methodInfo, "method info " + endpointInfo.getContainingMethodId() + " must exist in DocumentInfo for " + documentInfo.getFileUri());
-                methodInfo.addEndpoint(endpointInfo);
+                    MethodInfo methodInfo = documentInfo.getMethods().get(endpointInfo.getContainingMethodId());
+                    //this method must exist in the document info
+                    Objects.requireNonNull(methodInfo, "method info " + endpointInfo.getContainingMethodId() + " must exist in DocumentInfo for " + documentInfo.getFileUri());
+                    methodInfo.addEndpoint(endpointInfo);
+                }
             }
-        });
+        }
+    }
+
+    protected static String combinePaths(PsiAnnotation annotOfPrefix, PsiAnnotation annotOfSuffix) {
+        String prefixStr = "";
+        if (annotOfPrefix != null) {
+            prefixStr = JavaLanguageUtils.getPsiAnnotationAttributeValue(annotOfPrefix, "value");
+        }
+        String suffixStr = "";
+        if (annotOfSuffix != null) {
+            suffixStr = JavaLanguageUtils.getPsiAnnotationAttributeValue(annotOfSuffix, "value");
+        }
+        return JavaUtils.combineUri(prefixStr, suffixStr);
     }
 
     @NotNull

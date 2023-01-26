@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.ui.common
 
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.rd.util.launchBackground
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
@@ -10,9 +11,9 @@ import com.intellij.util.AlarmFactory
 import com.intellij.util.containers.stream
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.WrapLayout
+import com.jetbrains.rd.util.lifetime.LifetimeDefinition
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
-import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.common.CommonUtils.prettyTimeOf
 import org.digma.intellij.plugin.log.Log
@@ -53,7 +54,7 @@ class EnvironmentsPanel(
         localHostname = CommonUtils.getLocalHostname()
         isOpaque = false
         layout = WrapLayout(FlowLayout.LEFT, 2, 0)
-        rebuildInBackground(project)
+        rebuildInBackground()
 
         project.messageBus.connect(project.getService(AnalyticsService::class.java))
             .subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, object : EnvironmentChanged {
@@ -71,10 +72,10 @@ class EnvironmentsPanel(
 
                 override fun environmentsListChanged(newEnvironments: MutableList<String>?) {
                     if (SwingUtilities.isEventDispatchThread()) {
-                        rebuildInBackground(project)
+                        rebuildInBackground()
                     } else {
                         SwingUtilities.invokeLater {
-                            rebuildInBackground(project)
+                            rebuildInBackground()
                         }
                     }
                 }
@@ -83,7 +84,7 @@ class EnvironmentsPanel(
 
 
     override fun reset() {
-        rebuildInBackground(project)
+        rebuildInBackground()
     }
 
     /*
@@ -153,8 +154,9 @@ class EnvironmentsPanel(
 
     }
 
-    private fun rebuildInBackground(project: Project) {
-        val task = Runnable {
+    private fun rebuildInBackground() {
+        val lifetimeDefinition = LifetimeDefinition()
+        lifetimeDefinition.lifetime.launchBackground {
             rebuildPanelLock.lock()
             Log.log(logger::debug, "Lock acquired for rebuild Envs panel process.")
             try {
@@ -162,9 +164,9 @@ class EnvironmentsPanel(
             } finally {
                 rebuildPanelLock.unlock()
                 Log.log(logger::debug, "Lock released for rebuild Envs panel process.")
+                lifetimeDefinition.terminate()
             }
         }
-        Backgroundable.ensureBackground(project, "Rebuilding environments panel", task)
     }
 
     private fun rebuild() {

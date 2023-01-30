@@ -9,7 +9,6 @@ import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.model.TraceSample
 import java.awt.BorderLayout
 import javax.swing.BoxLayout
-import javax.swing.JButton
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.SwingConstants
@@ -30,7 +29,7 @@ fun spanUsagesPanel(project: Project, spanUsagesInsight: SpanUsagesInsight): JPa
         line.isOpaque = false
 
         val percentageLabel = CopyableLabelHtml(asHtml("${span(String.format("%.1f", spanFlow.percentage))}% "))
-        percentageLabel.border = JBUI.Borders.empty(0, 0, 0, 5)
+        percentageLabel.border = JBUI.Borders.emptyRight(5)
 
         line.add(percentageLabel, BorderLayout.WEST)
 
@@ -54,21 +53,11 @@ fun spanUsagesPanel(project: Project, spanUsagesInsight: SpanUsagesInsight): JPa
             builder.append(" ${spanGrayed(Html.ARROW_RIGHT)} ")
             builder.append(span(lastServiceSpan))
         }
-        val spanFlowLabel = CopyableLabelHtml(asHtml(builder.toString()))
-        spanFlowLabel.alignmentX = 0.0f
-        line.add(spanFlowLabel, BorderLayout.CENTER)
-
         var traceSample: TraceSample? = null
         spanFlow.sampleTraceIds.firstOrNull()?.let { sampleTraceId ->
             traceSample = TraceSample(spanName, sampleTraceId)
         }
-        val buttonToJaeger = buildButtonToJaeger(project, "Trace", spanName, traceSample)
-        if (buttonToJaeger != null) {
-            val wrapper = JPanel(BorderLayout())
-            wrapper.isOpaque = false
-            wrapper.add(buttonToJaeger, BorderLayout.NORTH)
-            line.add(wrapper, BorderLayout.EAST)
-        }
+        buildJPanelWithButtonToJaeger(builder, line, traceSample, project, spanName)
         flowsListPanel.add(line)
     }
 
@@ -78,14 +67,4 @@ fun spanUsagesPanel(project: Project, spanUsagesInsight: SpanUsagesInsight): JPa
     result.add(flowsListPanel, BorderLayout.CENTER)
 
     return insightItemPanel(result)
-}
-
-// if cannot create the button then would return null
-private fun buildButtonToJaeger(
-        project: Project, linkCaption: String, spanName: String, traceSample: TraceSample?
-): JButton? {
-    if (traceSample == null) {
-        return null
-    }
-    return buildButtonToJaeger(project, linkCaption, spanName, listOf(traceSample))
 }

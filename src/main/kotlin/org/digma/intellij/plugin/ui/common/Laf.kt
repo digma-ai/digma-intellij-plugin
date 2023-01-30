@@ -4,6 +4,7 @@ import com.intellij.icons.AllIcons
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.icons.IconsUtil
+import org.digma.intellij.plugin.ui.common.Laf.Sizes.Companion.BUTTON_SIZE_24
 import org.digma.intellij.plugin.ui.common.Laf.Sizes.Companion.INSIGHT_ICON_SIZE_32
 import org.digma.intellij.plugin.ui.list.insights.ThreeDotsIcon
 import java.awt.Color
@@ -93,6 +94,7 @@ object Laf  {
                 @JvmStatic val ERRORS = SvgIcon.asIs("/icons/errors.svg")
                 @JvmStatic val HOTSPOT = SvgIcon.asIs("/icons/hotspot.svg")
                 @JvmStatic val LOW_USAGE = SvgIcon.asIs("/icons/traffic-low.svg")
+                @JvmStatic val N_PLUS_ONE = loadAndScaleIconByWidth("/icons/sql.png", BUTTON_SIZE_24)
                 @JvmStatic val NORMAL_USAGE = SvgIcon.asIs("/icons/traffic-normal.svg")
                 @JvmStatic val HIGH_USAGE = SvgIcon.asIs("/icons/traffic-high.svg")
                 @JvmStatic val WAITING_DATA = SvgIcon.asIs("/icons/sand-watch.svg")

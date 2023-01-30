@@ -124,10 +124,10 @@ fun durationText(percentile: Percentile): String {
 }
 
 fun descriptionOf(span: SlowSpanInfo): String {
-    if (span.ProbabilityOfBeingBottleneck != null &&
-        span.AvgDurationWhenBeingBottleneck != null){
+    if (span.probabilityOfBeingBottleneck != null &&
+        span.avgDurationWhenBeingBottleneck != null){
 
-        return "Slowing ${(span.ProbabilityOfBeingBottleneck!!*100).toInt()}% of the requests (~${span.AvgDurationWhenBeingBottleneck!!.value}${span.AvgDurationWhenBeingBottleneck!!.unit})"
+        return "Slowing ${(span.probabilityOfBeingBottleneck!!*100).toInt()}% of the requests (~${span.avgDurationWhenBeingBottleneck!!.value}${span.avgDurationWhenBeingBottleneck!!.unit})"
 
     }
     else{ // Obsolete
@@ -145,13 +145,6 @@ fun descriptionOf(span: SlowSpanInfo): String {
 private fun percentageForDisplaySlowSpanInfo(percentile: Percentile): String {
     val decimal = BigDecimal(percentile.fraction * 100).setScale(3, RoundingMode.HALF_DOWN)
     return decimal.toPlainString()
-}
-
-private fun getDefaultSpanOneRecordPanel(): JPanel {
-    val spanOneRecordPanel = JPanel(BorderLayout())
-    spanOneRecordPanel.border = empty(5, 0, 0, 0)
-    spanOneRecordPanel.isOpaque = false
-    return spanOneRecordPanel
 }
 
 fun genToolTip(span: SlowSpanInfo): String {

@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.list.summaries
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBPanel
+import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.model.InsightType
@@ -72,7 +73,7 @@ private fun buildError(model: TopErrorFlowsInsight.Error, project: Project): JPa
         val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
         actionListener.showErrorDetails(model.uid)
     }
-    link.border = empty(0, 0, 10, 0)
+    link.border = JBUI.Borders.emptyBottom(10)
 
     // Characteristic
     val characteristic = getCharacteristic(model)
@@ -120,7 +121,7 @@ private fun buildSpanDuration(value: SpanDurationChangeInsight.Change, moreData:
         JLabel(asHtml(value.span.displayName), SwingConstants.LEFT)
     }
     title.toolTipText = value.span.displayName
-    title.border = empty(0, 0, 5, 0)
+    title.border = JBUI.Borders.emptyBottom(5)
 
     val durationsListPanel = JBPanel<JBPanel<*>>()
     durationsListPanel.layout = GridLayout(value.percentiles.size, 1, 0, 2)

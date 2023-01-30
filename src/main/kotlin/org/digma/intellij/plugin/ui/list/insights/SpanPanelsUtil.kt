@@ -10,10 +10,7 @@ import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
 import org.digma.intellij.plugin.settings.LinkMode
 import org.digma.intellij.plugin.settings.SettingsState
-import org.digma.intellij.plugin.ui.common.CopyableLabel
-import org.digma.intellij.plugin.ui.common.Laf
-import org.digma.intellij.plugin.ui.common.asHtml
-import org.digma.intellij.plugin.ui.common.spanGrayed
+import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.list.ListItemActionButton
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.model.TraceSample
@@ -32,6 +29,8 @@ import javax.swing.JPanel
 import javax.swing.SwingConstants
 import kotlin.math.abs
 import kotlin.math.max
+
+const val HTML_NON_BREAKING_SPACE: String = "&nbsp;"
 
 class SpanPanels {
 
@@ -56,8 +55,9 @@ fun percentileRowPanel(percentile: SpanDurationsPercentile, panelsLayoutHelper: 
 
     val percentileName = "P${(percentile.percentile * 100).toInt()}"
     traceSamples.add(buildTraceSample(percentile))
-    val pLabelText = "$percentileName ${percentile.currentDuration.value} ${percentile.currentDuration.unit}"
-    val pLabel = CopyableLabel(pLabelText)
+    val pLabelNumbersText = "${percentile.currentDuration.value} ${percentile.currentDuration.unit}"
+    val pLabelText = "$percentileName $HTML_NON_BREAKING_SPACE ${spanBold(pLabelNumbersText)}"
+    val pLabel = CopyableLabelHtml(pLabelText)
     pLabel.toolTipText = pLabelText
     val pLabelPanel = object : JPanel() {
         override fun getPreferredSize(): Dimension {
@@ -125,9 +125,32 @@ fun createDefaultBoxLayoutYAxisPanel(): JPanel {
     return defaultPanel
 }
 
+fun getDefaultSpanOneRecordPanel(): JPanel {
+    val spanOneRecordPanel = JPanel(BorderLayout())
+    spanOneRecordPanel.border = empty(5, 0)
+    spanOneRecordPanel.isOpaque = false
+    return spanOneRecordPanel
+}
+
+fun buildJPanelWithButtonToJaeger(builder: StringBuilder, line: JPanel, traceSample: TraceSample?,
+                                  project: Project, spanName: String): JPanel {
+    val spanFlowLabel = CopyableLabelHtml(asHtml(builder.toString()))
+    spanFlowLabel.alignmentX = 0.0f
+    line.add(spanFlowLabel, BorderLayout.CENTER)
+
+    val buttonToJaeger = buildButtonToJaeger(project, "Trace", spanName, listOf(traceSample))
+    if (buttonToJaeger != null) {
+        val wrapper = JPanel(BorderLayout())
+        wrapper.isOpaque = false
+        wrapper.add(buttonToJaeger, BorderLayout.NORTH)
+        line.add(wrapper, BorderLayout.EAST)
+    }
+    return line
+}
+
 // if cannot create the button then would return null
 fun buildButtonToJaeger(
-    project: Project, linkCaption: String, spanName: String, traceSamples: List<TraceSample>
+        project: Project, linkCaption: String, spanName: String, traceSamples: List<TraceSample?>
 ): JButton? {
 
     val settingsState = SettingsState.getInstance(project)
@@ -136,7 +159,7 @@ fun buildButtonToJaeger(
     if (jaegerBaseUrl.isNullOrBlank() || traceSamples.isNullOrEmpty()) {
         return null
     }
-    val filtered = traceSamples.filter { x -> x.hasTraceId() }
+    val filtered = traceSamples.filter { x -> x!!.hasTraceId() }
     if (filtered.isNullOrEmpty()) {
         return null
     }
@@ -145,14 +168,14 @@ fun buildButtonToJaeger(
     val jaegerUrl: String
     val embedPart = "&uiEmbed=v0"
 
-    val trace1 = filtered[0].traceId?.lowercase()
+    val trace1 = filtered[0]!!.traceId?.lowercase()
     if (filtered.size == 1) {
-        caption = "A sample ${filtered[0].traceName} trace"
+        caption = "A sample ${filtered[0]!!.traceName} trace"
         jaegerUrl = "${jaegerBaseUrl}/trace/${trace1}?cohort=${trace1}${embedPart}"
     } else {
         // assuming it has (at least) size of 2
-        val trace2 = filtered[1].traceId?.lowercase()
-        caption = "Comparing: A sample ${filtered[0].traceName} trace with a ${filtered[1].traceName} trace"
+        val trace2 = filtered[1]!!.traceId?.lowercase()
+        caption = "Comparing: A sample ${filtered[0]!!.traceName} trace with a ${filtered[1]!!.traceName} trace"
         jaegerUrl = "${jaegerBaseUrl}/trace/${trace1}...${trace2}?cohort=${trace1}&cohort=${trace2}${embedPart}"
     }
 
@@ -160,7 +183,7 @@ fun buildButtonToJaeger(
         .replace("__JAEGER_EMBEDDED_URL__", jaegerUrl)
         .replace("__CAPTION__", caption)
 
-    val editorTitle = "Jaeger sample traces of Span ${spanName}"
+    val editorTitle = "Jaeger sample traces of Span $spanName"
 
     val button = ListItemActionButton(linkCaption)
     if (settingsState.jaegerLinkMode == LinkMode.Internal) {

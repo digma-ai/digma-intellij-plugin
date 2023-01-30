@@ -55,6 +55,8 @@ public class BuildersHolder {
                 return new GroupListViewItemBuilder<HighUsageInsight>(InsightGroupType.HttpEndpoint, HighUsageInsight::getRoute, HighUsageInsight::getEndpointSpan);
             case SlowEndpoint:
                 return new GroupListViewItemBuilder<SlowEndpointInsight>(InsightGroupType.HttpEndpoint, SlowEndpointInsight::getRoute, SlowEndpointInsight::getEndpointSpan);
+            case EndpointSpaNPlusOne:
+                return new GroupListViewItemBuilder<EPNPlusSpansInsight>(InsightGroupType.HttpEndpoint, EPNPlusSpansInsight::getRoute, EPNPlusSpansInsight::getEndpointSpan);
             case Unmapped:
                 return new NoGroupListViewItemBuilder<UnmappedInsight>();
             default:

@@ -14,8 +14,8 @@ fun asHtmlNoBoby(value: String): String{
 }
 
 
-fun asHtml(content: String): String {
-    return "<html><body>${content}</body>"
+fun asHtml(content: String?): String {
+    return "<html><body>${content.orEmpty()}</body>"
 }
 
 

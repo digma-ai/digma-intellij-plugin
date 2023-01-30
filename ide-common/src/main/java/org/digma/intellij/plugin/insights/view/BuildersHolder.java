@@ -45,6 +45,8 @@ public class BuildersHolder {
                 return new GroupListViewItemBuilder<SpanDurationBreakdownInsight>(InsightGroupType.Span, null, SpanDurationBreakdownInsight::getSpanName);
             case SpanEndpointBottleneck:
                 return new GroupListViewItemBuilder<SpanSlowEndpointsInsight>(InsightGroupType.Span, null, insight -> insight.getSpan().getName());
+            case SpaNPlusOne:
+                return new GroupListViewItemBuilder<SpanNPlusOneInsight>(InsightGroupType.Span, null, insight -> insight.getSpan().getName());
             case SlowestSpans:
                 return new GroupListViewItemBuilder<SlowestSpansInsight>(InsightGroupType.HttpEndpoint, SlowestSpansInsight::getRoute, SlowestSpansInsight::getEndpointSpan);
             case LowUsage:

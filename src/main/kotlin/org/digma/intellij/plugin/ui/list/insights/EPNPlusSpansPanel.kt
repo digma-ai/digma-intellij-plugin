@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.ui.list.insights
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
-import com.intellij.util.ui.JBUI
 import org.apache.commons.lang3.StringUtils
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.editor.getCurrentPageNumberForInsight
@@ -71,10 +70,26 @@ fun ePNPlusSpansPanel(
 
 private fun getMainDescriptionPanel(span: HighlyOccurringSpanInfo, project: Project, moreData: HashMap<String, Any>): JPanel {
     val spanOneRecordPanel = getDefaultSpanOneRecordPanel()
-    val displayText: String
+    val displayText: String?
     if (span.internalSpan != null) {
         val spanId = CodeObjectsUtil.createSpanId(span.internalSpan!!.instrumentationLibrary, span.internalSpan!!.name)
-        displayText = span.internalSpan?.displayName.toString()
+        displayText = span.internalSpan?.displayName
+        addMainDescriptionLabelWithLink(spanOneRecordPanel, displayText, spanId, project, moreData)
+    } else {
+        displayText = span.clientSpan?.displayName
+        if (StringUtils.isNotEmpty(displayText)) {
+            val normalizedDisplayName = StringUtils.normalizeSpace(displayText)
+            val jbLabel = JBLabel(normalizedDisplayName, SwingConstants.TRAILING)
+            jbLabel.toolTipText = asHtml(displayText)
+            jbLabel.horizontalAlignment = SwingConstants.LEFT
+            spanOneRecordPanel.add(jbLabel, BorderLayout.NORTH)
+        }
+    }
+    return spanOneRecordPanel
+}
+
+private fun addMainDescriptionLabelWithLink(spanOneRecordPanel: JPanel, displayText: String?, spanId: String, project: Project, moreData: HashMap<String, Any>) {
+    if ( StringUtils.isNotEmpty(displayText)) {
         val normalizedDisplayName = StringUtils.normalizeSpace(displayText)
         if (moreData.contains(spanId)) {
             val actionLink = ActionLink(normalizedDisplayName) {
@@ -84,25 +99,16 @@ private fun getMainDescriptionPanel(span: HighlyOccurringSpanInfo, project: Proj
             actionLink.horizontalAlignment = SwingConstants.LEFT
             spanOneRecordPanel.add(actionLink, BorderLayout.NORTH)
         } else {
-            val jbLabel = JBLabel(displayText, SwingConstants.TRAILING)
+            val jbLabel = JBLabel(displayText!!, SwingConstants.TRAILING)
             jbLabel.toolTipText = asHtml(displayText)
             jbLabel.horizontalAlignment = SwingConstants.LEFT
             spanOneRecordPanel.add(jbLabel, BorderLayout.NORTH)
         }
-    } else {
-        displayText = span.clientSpan?.displayName.toString()
-        val normalizedDisplayName = StringUtils.normalizeSpace(displayText)
-        val jbLabel = JBLabel(normalizedDisplayName, SwingConstants.TRAILING)
-        jbLabel.toolTipText = asHtml(displayText)
-        jbLabel.horizontalAlignment = SwingConstants.LEFT
-        spanOneRecordPanel.add(jbLabel, BorderLayout.NORTH)
     }
-    return spanOneRecordPanel
 }
 
 private fun getRowPanel(span: HighlyOccurringSpanInfo): JPanel {
     val rowPanel = createDefaultBoxLayoutLineAxisPanel()
-    rowPanel.border = JBUI.Borders.emptyBottom(5)
 
     val repeatsValue = "${span.occurrences} (median)"
     val repeatsLabel = JLabel(asHtml("Repeats: ${spanBold(repeatsValue)}"))

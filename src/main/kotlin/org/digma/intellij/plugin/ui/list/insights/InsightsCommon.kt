@@ -158,6 +158,7 @@ private fun rebuildPanel(
 
         if(buttons != null){
             val buttonsListPanel = getBasicEmptyListPanel()
+            buttonsListPanel.border = JBUI.Borders.emptyTop(5)
             buttons.filterNotNull().forEach {
                 buttonsListPanel.add(Box.createHorizontalStrut(5))
                 buttonsListPanel.add(it)
@@ -376,7 +377,7 @@ internal fun addCurrentLargestWidthIconPanel(layoutHelper: PanelsLayoutHelper,wi
 class InsightAlignedPanel(private val layoutHelper: PanelsLayoutHelper): JPanel(){
 
     init {
-        border = empty(0,0,0, getInsightIconPanelRightBorderSize())
+        border = JBUI.Borders.emptyRight(getInsightIconPanelRightBorderSize())
     }
     override fun getPreferredSize(): Dimension {
         val ps = super.getPreferredSize()

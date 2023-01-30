@@ -5,7 +5,7 @@ import org.digma.intellij.plugin.model.InsightType
 import java.beans.ConstructorProperties
 import java.util.*
 
-data class EPNPlusSpansInsight
+class SpanNPlusOneInsight
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties(
         "codeObjectId",
@@ -13,12 +13,15 @@ data class EPNPlusSpansInsight
         "scope",
         "importance",
         "decorators",
-        "route",
-        "endpointSpan",
         "actualStartTime",
         "customStartTime",
         "prefixedCodeObjectId",
-        "spans"
+        "traceId",
+        "span",
+        "clientSpanName",
+        "occurrences",
+        "duration",
+        "endpoints"
 )
 constructor(
         override val codeObjectId: String,
@@ -26,12 +29,15 @@ constructor(
         override val scope: String,
         override val importance: Int,
         override val decorators: List<CodeObjectDecorator>?,
-        override var route: String,
-        override var endpointSpan: String,
         override val actualStartTime: Date?,
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
-        val spans: List<HighlyOccurringSpanInfo>,
-) : EndpointInsight {
-        override val type: InsightType = InsightType.EndpointSpaNPlusOne
+        val traceId: String?,
+        val span: SpanInfo,
+        val clientSpanName: String?,
+        val occurrences: Number,
+        val duration: Duration,
+        val endpoints: List<SpanNPlusEndpoints>
+) : CodeObjectInsight {
+    override val type: InsightType = InsightType.SpaNPlusOne
 }

@@ -39,6 +39,7 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
             is LowUsageInsight -> lowUsageInsightPanel(project, value.modelObject as LowUsageInsight)
             is NormalUsageInsight -> normalUsageInsightPanel(project, value.modelObject as NormalUsageInsight)
             is HighUsageInsight -> highUsageInsightPanel(project, value.modelObject as HighUsageInsight)
+            is EPNPlusSpansInsight -> ePNPlusSpansPanel(project, value.modelObject as EPNPlusSpansInsight)
             is SlowEndpointInsight -> slowEndpointPanel(project, value.modelObject as SlowEndpointInsight)
             is SlowestSpansInsight -> slowestSpansPanel(project,
                 value.modelObject as SlowestSpansInsight, value.moreData)

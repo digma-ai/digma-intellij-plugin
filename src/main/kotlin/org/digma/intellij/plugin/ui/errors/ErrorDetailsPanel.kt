@@ -43,7 +43,7 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
     val scorePanelWrapper = JPanel()
     scorePanelWrapper.isOpaque = false
     scorePanelWrapper.layout = GridLayout(1,1)
-    scorePanelWrapper.border = Borders.empty(5, 2, 5, 2)
+    scorePanelWrapper.border = Borders.empty(5, 2)
     scorePanelWrapper.add(scorePanel)
 
 
@@ -55,7 +55,7 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
     val titlePanelWrapper = JPanel()
     titlePanelWrapper.layout = GridLayout(1, 1)
     titlePanelWrapper.isOpaque = false
-    titlePanelWrapper.border = Borders.empty(0, 5, 0, 0)
+    titlePanelWrapper.border = Borders.emptyLeft(5)
     titlePanelWrapper.add(titlePanel)
 
 
@@ -69,7 +69,7 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
     val servicesPanelWrapper = JPanel()
     servicesPanelWrapper.layout = BorderLayout()
     servicesPanelWrapper.isOpaque = false
-    servicesPanelWrapper.border = Borders.empty(0, 5, 0, 0)
+    servicesPanelWrapper.border = Borders.emptyLeft(5)
     servicesPanelWrapper.add(affectedServicesLabel, BorderLayout.NORTH)
     servicesPanelWrapper.add(servicesPanel, BorderLayout.CENTER)
 
@@ -78,7 +78,7 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
     val timesPanelWrapper = JPanel()
     timesPanelWrapper.layout = GridLayout(1, 1)
     timesPanelWrapper.isOpaque = false
-    timesPanel.border = Borders.empty(0, 5, 0, 0)
+    timesPanel.border = Borders.emptyLeft(5)
     timesPanelWrapper.add(timesPanel)
 
 
@@ -91,7 +91,7 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
 
 
     val bottomPanel = bottomPanel(project,errorsModel,framesList)
-    bottomPanel.border = Borders.empty(0, 5, 0, 5)
+    bottomPanel.border = Borders.empty(0, 5)
 
     val result = object : DigmaTabPanel() {
         override fun getPreferredFocusableComponent(): JComponent {
@@ -285,7 +285,7 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
 
     val panel = JTransparentPanel()
     panel.layout = GridBagLayout()
-    panel.border = Borders.empty(0, 1, 0, 1)
+    panel.border = Borders.empty(0, 1)
     panel.background = Laf.Colors.LIST_ITEM_BACKGROUND
 
     val backButtonConstraints = GridBagConstraints()

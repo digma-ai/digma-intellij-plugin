@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.list.insights
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBPanel
+import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.apache.commons.lang3.StringUtils
 import org.digma.intellij.plugin.document.CodeObjectsUtil
@@ -128,7 +129,7 @@ fun buildPaginationPanel(paginationPanel: JPanel) {
 
     val paginationLabelText = "$currPageNum of $lastPageNum"
     val paginationLabel = JLabel(asHtml(paginationLabelText), SwingConstants.LEFT)
-    paginationLabel.border = empty(0, 5, 0, 0)
+    paginationLabel.border = JBUI.Borders.emptyLeft(5)
 
     prev?.let { paginationPanel.add(it, BorderLayout.WEST) }
     next?.let { paginationPanel.add(it, BorderLayout.CENTER) }

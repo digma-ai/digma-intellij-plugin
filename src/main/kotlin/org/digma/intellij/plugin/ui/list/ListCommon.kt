@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.list
 
+import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.ui.common.Laf
 import java.awt.*
@@ -18,7 +19,7 @@ fun commonListItemPanel(panel: JPanel): JPanel {
     panel.isOpaque = false
 
     val wrapper = RoundedPanel.wrap(panel, 7)
-    wrapper.border = empty(0, 2, 0, 2)
+    wrapper.border = empty(0, 2)
     wrapper.background = Laf.Colors.LIST_ITEM_BACKGROUND
     return wrapper
 }
@@ -44,7 +45,7 @@ class RoundedPanel(val radius: Int) : JPanel() {
         graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
         graphics.color = super.getBackground()
-        val border = super.getBorder()?.getBorderInsets(this)?: Insets(0,0,0,0)
+        val border = super.getBorder()?.getBorderInsets(this)?: JBUI.emptyInsets()
         graphics.fillRoundRect(border.left, border.top, width-border.left-border.right, height-border.top-border.bottom, radius, radius)
     }
 }

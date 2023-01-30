@@ -12,5 +12,5 @@ constructor(val spanInfo: SpanInfo,
             val p50: Percentile, // Obsolete
             val p95: Percentile, // Obsolete
             val p99: Percentile, // Obsolete
-            val ProbabilityOfBeingBottleneck: Double?,
-            val AvgDurationWhenBeingBottleneck: Duration?)
+            val probabilityOfBeingBottleneck: Double?,
+            val avgDurationWhenBeingBottleneck: Duration?)

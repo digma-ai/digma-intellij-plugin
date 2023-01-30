@@ -10,6 +10,6 @@ data class SpanInfo
 @ConstructorProperties("instrumentationLibrary", "name", "displayName", "serviceName", "codeObjectId")
 constructor(val instrumentationLibrary: String,
             val name: String,
-            val displayName: String,
+            val displayName: String?,
             val serviceName: String?,
             val codeObjectId: String?)

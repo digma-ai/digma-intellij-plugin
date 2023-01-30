@@ -62,7 +62,7 @@ private fun createSingleErrorPanel(project: Project, model: CodeObjectError ): J
 
     val scorePanel = createScorePanelNoArrows(model)
     val scorePanelWrapper = JPanel()
-    scorePanelWrapper.border = JBUI.Borders.empty(0,0,0,5)
+    scorePanelWrapper.border = JBUI.Borders.emptyRight(5)
     scorePanelWrapper.isOpaque = false
     scorePanelWrapper.layout = GridBagLayout()
     val constraints = GridBagConstraints()
@@ -72,7 +72,7 @@ private fun createSingleErrorPanel(project: Project, model: CodeObjectError ): J
     val leftPanel = JBPanel<JBPanel<*>>()
     leftPanel.layout = BorderLayout(0,3)
     leftPanel.isOpaque = false
-    leftPanel.border = JBUI.Borders.empty(0,0,0,10)
+    leftPanel.border = JBUI.Borders.emptyRight(10)
     leftPanel.add(link,BorderLayout.NORTH)
     leftPanel.add(content,BorderLayout.CENTER)
 

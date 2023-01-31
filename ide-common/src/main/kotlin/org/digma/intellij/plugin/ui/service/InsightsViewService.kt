@@ -181,21 +181,14 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
 
 
     private fun computeInsightsPreviewCount(documentInfoContainer: DocumentInfoContainer): Int {
-        return documentInfoContainer.allInsights.size
+        return documentInfoContainer.insightsCount
     }
 
     private fun getDocumentPreviewItems(documentInfoContainer: DocumentInfoContainer): List<ListViewItem<String>> {
 
         val listViewItems = ArrayList<ListViewItem<String>>()
-        val docSummariesIds: Set<String> =
-                documentInfoContainer.allInsights.stream().map { it.codeObjectId }.collect(Collectors.toSet())
-
         documentInfoContainer.documentInfo.methods.forEach { (id, methodInfo) ->
-            val ids = methodInfo.spans.stream().map { obj: SpanInfo -> obj.id }
-                    .collect(Collectors.toList())
-            ids.add(id)
-
-            if (docSummariesIds.any { ids.contains(it) }) {
+            if (documentInfoContainer.hasInsights(id)) {
                 listViewItems.add(ListViewItem(methodInfo.id, 0))
             }
         }

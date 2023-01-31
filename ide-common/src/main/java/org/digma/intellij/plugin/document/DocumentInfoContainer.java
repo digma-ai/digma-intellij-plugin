@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.document;
 import com.intellij.lang.Language;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.psi.PsiFile;
+import org.apache.commons.collections4.CollectionUtils;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.log.Log;
@@ -10,13 +11,16 @@ import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
+import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -37,8 +41,10 @@ public class DocumentInfoContainer {
     private final AnalyticsService analyticsService;
     private DocumentInfo documentInfo;
 
+    // map between methodId to its insights
     @NotNull
-    private List<CodeObjectInsight> insights = new ArrayList<>();
+    private Map<String, List<CodeObjectInsight>> insightsMap = Collections.emptyMap();
+
     private UsageStatusResult usageStatus = EmptyUsageStatusResult;
     private UsageStatusResult usageStatusOfErrors = EmptyUsageStatusResult;
 
@@ -75,17 +81,19 @@ public class DocumentInfoContainer {
 
     private void loadAllInsightsForCurrentDocument() {
         List<String> objectIds = getObjectIdsForCurrentDocument();
+        List<MethodInfo> methodInfos = getMethodInfos();
         try {
-            Log.log(LOGGER::debug, "Requesting insights with ids {}", objectIds);
-            insights = analyticsService.getInsights(objectIds)
-                    .stream().filter(codeObjectInsight -> !codeObjectInsight.getType().equals(InsightType.Unmapped))
-                    .collect(Collectors.toList());
-            Log.log(LOGGER::debug, "Got insights for {}: {}",psiFile.getVirtualFile(), insights);
+            Log.log(LOGGER::debug, "Requesting insights by methodInfos {}", methodInfos);
+            InsightsOfMethodsResponse response = analyticsService.getInsightsOfMethods(methodInfos);
+
+            insightsMap = createMapOfInsights(response); // replace the existing map with a new one
+
+            Log.log(LOGGER::debug, "Got insights for {}: {}", psiFile.getVirtualFile(), insightsMap.values());
         } catch (AnalyticsServiceException e) {
             //insights = Collections.emptyList() means there was an error loading insights, usually if the backend is not available.
             //don't log the exception, it was logged in AnalyticsService, keep the log quite because it can happen many times.
-            insights = Collections.emptyList();
-            Log.log(LOGGER::warn, "Cannot get insights with ids: {}. Because: {}", objectIds, e.getMessage());
+            insightsMap = Collections.emptyMap();
+            Log.log(LOGGER::warn, "Cannot get insights by methodInfos: {}. Because: {}", methodInfos, e.getMessage());
         }
 
         try {
@@ -103,6 +111,18 @@ public class DocumentInfoContainer {
         }
     }
 
+    private static Map<String, List<CodeObjectInsight>> createMapOfInsights(InsightsOfMethodsResponse response) {
+        Map<String, List<CodeObjectInsight>> result = new HashMap<>();
+        response.getMethodsWithInsights()
+                .forEach(methodWithInsights -> {
+                    if (CollectionUtils.isNotEmpty(methodWithInsights.getInsights())) {
+                        var methodId = MethodInfo.removeType(methodWithInsights.getMethodWithIds().getCodeObjectId()); // without type
+                        result.put(methodId, methodWithInsights.getInsights());
+                    }
+                });
+        return result;
+    }
+
     private List<String> getObjectIdsForCurrentDocument() {
         return this.documentInfo.getMethods().values().stream().flatMap((Function<MethodInfo, Stream<String>>) methodInfo -> {
             var ids = new ArrayList<String>();
@@ -110,6 +130,10 @@ public class DocumentInfoContainer {
             ids.addAll(methodInfo.getRelatedCodeObjectIdsWithType());
             return ids.stream();
         }).collect(Collectors.toList());
+    }
+
+    private List<MethodInfo> getMethodInfos() {
+        return new ArrayList<>(this.documentInfo.getMethods().values());
     }
 
 
@@ -121,9 +145,34 @@ public class DocumentInfoContainer {
         return psiFile;
     }
 
+    public int getInsightsCount() {
+        return (int) insightsMap.values()
+                .stream()
+                .mapToLong(List::size)
+                .sum();
+    }
+
+    public int countInsightsByType(InsightType insightType) {
+        return (int) insightsMap.values()
+                .stream()
+                .flatMap(List::stream)
+                .filter(it -> insightType.equals(it.getType()))
+                .count();
+    }
+
     @NotNull
-    public List<CodeObjectInsight> getAllInsights() {
-        return insights;
+    public List<CodeObjectInsight> getInsightsForMethod(String methodId) {
+        List<CodeObjectInsight> codeObjectInsights = insightsMap.get(methodId);
+        return CollectionUtils.isNotEmpty(codeObjectInsights) ? codeObjectInsights : Collections.emptyList();
+    }
+
+    public Map<String, List<CodeObjectInsight>> getAllMethodWithInsightsMapForCurrentDocument() {
+        return insightsMap;
+    }
+
+    public boolean hasInsights(String methodId) {
+        List<CodeObjectInsight> codeObjectInsights = insightsMap.get(methodId);
+        return CollectionUtils.isNotEmpty(codeObjectInsights);
     }
 
     public UsageStatusResult getUsageStatus() {

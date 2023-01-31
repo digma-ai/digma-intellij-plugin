@@ -6,6 +6,7 @@ import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.errors.ErrorsProvider
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsight
@@ -163,7 +164,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
 
 
     private fun computeErrorsPreviewCount(documentInfoContainer: DocumentInfoContainer): Int {
-        return documentInfoContainer.allInsights.stream().filter{ it is ErrorInsight }.count().toInt()
+        return documentInfoContainer.countInsightsByType(InsightType.Errors)
     }
 
     private fun createEmptyErrorDetails(): ErrorDetailsModel {

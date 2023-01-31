@@ -10,7 +10,7 @@ data class HighlyOccurringSpanInfo
 @ConstructorProperties("occurrences", "internalSpan", "clientSpan", "traceId", "duration", "fraction")
 constructor(
         val occurrences: Double,
-        val internalSpan: SpanInfo,
+        val internalSpan: SpanInfo?,
         val clientSpan: SpanInfo,
         val traceId: String,
         val duration: Duration,

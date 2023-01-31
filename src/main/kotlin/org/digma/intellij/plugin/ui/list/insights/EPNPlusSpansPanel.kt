@@ -41,7 +41,10 @@ fun ePNPlusSpansPanel(project: Project, insight: EPNPlusSpansInsight): JPanel {
 }
 
 private fun getSQLRowPanel(insight: EPNPlusSpansInsight): JPanel {
-    val sqlStatement = insight.spans.first().clientSpan.displayName
+    var sqlStatement = insight.spans.first().clientSpan?.displayName
+    if (sqlStatement == null) {
+        sqlStatement = insight.spans.first().internalSpan?.displayName
+    }
     val normalizedDisplayName = StringUtils.normalizeSpace(sqlStatement)
     val displayNameLabel = JBLabel(normalizedDisplayName, SwingConstants.TRAILING)
     displayNameLabel.toolTipText = asHtml(sqlStatement)

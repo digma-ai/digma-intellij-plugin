@@ -160,16 +160,19 @@ public class AnalyticsService implements Disposable {
 
     public List<GlobalInsight> getGlobalInsights() throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
+        Log.log(LOGGER::debug, "Requesting Global Insights for next environment {}", env);
         return executeCatching(() -> analyticsProviderProxy.getGlobalInsights(new InsightsRequest(env, Collections.emptyList())));
     }
 
     public List<CodeObjectInsight> getInsights(List<String> objectIds) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
+        Log.log(LOGGER::debug, "Requesting insights for next objectIds {} and next environment {}", objectIds, env);
         return executeCatching(() -> analyticsProviderProxy.getInsights(new InsightsRequest(env, objectIds)));
     }
 
     public List<CodeObjectError> getErrorsOfCodeObject(String codeObjectId) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
+        Log.log(LOGGER::debug, "Requesting insights for next codeObjectId {} and next environment {}", codeObjectId, env);
         return executeCatching(() -> analyticsProviderProxy.getErrorsOfCodeObject(env, codeObjectId));
     }
 

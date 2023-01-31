@@ -14,7 +14,8 @@ import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
 import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightRequest;
 import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
-import org.digma.intellij.plugin.model.rest.insights.InsightOfMethodsRequest;
+import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsRequest;
+import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
@@ -81,6 +82,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
+    public InsightsOfMethodsResponse getInsightsOfMethods(InsightsOfMethodsRequest insightsOfMethodsRequest) {
+        return execute(() -> client.analyticsProvider.getInsightsOfMethods(insightsOfMethodsRequest));
+    }
+
+    @Override
     public List<GlobalInsight> getGlobalInsights(InsightsRequest insightsRequest) {
         return execute(() -> client.analyticsProvider.getGlobalInsights(insightsRequest));
     }
@@ -91,7 +97,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public CodeObjectInsightsStatusResponse getCodeObjectInsightStatus(InsightOfMethodsRequest request) {
+    public CodeObjectInsightsStatusResponse getCodeObjectInsightStatus(InsightsOfMethodsRequest request) {
         return execute(() -> client.analyticsProvider.getCodeObjectInsightStatus(request));
     }
 
@@ -315,6 +321,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
+        @POST("/CodeAnalytics/codeObjects/insights_of_methods")
+        Call<InsightsOfMethodsResponse> getInsightsOfMethods(@Body InsightsOfMethodsRequest insightsOfMethodsRequest);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
         @POST("/CodeAnalytics/insights")
         Call<List<GlobalInsight>> getGlobalInsights(@Body InsightsRequest insightsRequest);
 
@@ -323,7 +336,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Content-Type:application/json"
         })
         @POST("/CodeAnalytics/codeObjects/insight_status")
-        Call<CodeObjectInsightsStatusResponse> getCodeObjectInsightStatus(@Body InsightOfMethodsRequest insightsRequest);
+        Call<CodeObjectInsightsStatusResponse> getCodeObjectInsightStatus(@Body InsightsOfMethodsRequest insightsRequest);
 
         @Headers({
                 "Accept: application/+json",

@@ -33,7 +33,7 @@ data class MethodInfo(
 
 
     //we need AdditionalIdsProvider only for python. this default implementation returns empty list
-    var additionalIdsProvider: AdditionalIdsProvider = object: AdditionalIdsProvider{
+    var additionalIdsProvider: AdditionalIdsProvider = object : AdditionalIdsProvider {
         override fun provideAdditionalIdsWithType(methodInfo: MethodInfo): List<String> {
             return listOf()
         }
@@ -44,6 +44,8 @@ data class MethodInfo(
     }
 
     companion object {
+
+        @JvmStatic
         fun removeType(objectId: String): String {
             if (objectId.startsWith("method:")) {
                 return objectId.substringAfter("method:", objectId)
@@ -75,20 +77,20 @@ data class MethodInfo(
         return "method:$id"
     }
 
-    private fun additionalIdsWithType():List<String>{
+    private fun additionalIdsWithType(): List<String> {
         return additionalIdsProvider.provideAdditionalIdsWithType(this)
     }
 
-    private fun additionalIdsWithoutType():List<String>{
+    private fun additionalIdsWithoutType(): List<String> {
         return additionalIdsProvider.provideAdditionalIdsWithoutType(this)
     }
 
     //for python, we need to send multiple ids,see PythonAdditionalIdsProvider
-    fun allIdsWithType():List<String>{
+    fun allIdsWithType(): List<String> {
         return mutableListOf(idWithType()).plus(additionalIdsWithType())
     }
 
-    fun allIdsWithoutType():List<String>{
+    fun allIdsWithoutType(): List<String> {
         return mutableListOf(id).plus(additionalIdsWithoutType())
     }
 
@@ -109,8 +111,8 @@ data class MethodInfo(
     }
 
 
-    interface AdditionalIdsProvider{
-        fun provideAdditionalIdsWithType(methodInfo: MethodInfo):List<String>
-        fun provideAdditionalIdsWithoutType(methodInfo: MethodInfo):List<String>
+    interface AdditionalIdsProvider {
+        fun provideAdditionalIdsWithType(methodInfo: MethodInfo): List<String>
+        fun provideAdditionalIdsWithoutType(methodInfo: MethodInfo): List<String>
     }
 }

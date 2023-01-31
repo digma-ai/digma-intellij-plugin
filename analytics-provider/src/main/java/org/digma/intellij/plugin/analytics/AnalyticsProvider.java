@@ -8,7 +8,8 @@ import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
 import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightRequest;
 import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
-import org.digma.intellij.plugin.model.rest.insights.InsightOfMethodsRequest;
+import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsRequest;
+import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
@@ -25,13 +26,20 @@ public interface AnalyticsProvider extends Closeable {
 
     void sendDebuggerEvent(DebuggerEventRequest debuggerEventRequest);
 
+    /**
+     * @deprecated This method is deprecated and will be removed in a future release.
+     * Use {@link #getInsightsOfMethods(InsightsOfMethodsRequest insightsOfMethodsRequest)} instead.
+     */
+    @Deprecated
     List<CodeObjectInsight> getInsights(InsightsRequest insightsRequest);
+
+    InsightsOfMethodsResponse getInsightsOfMethods(InsightsOfMethodsRequest insightsOfMethodsRequest);
 
     List<GlobalInsight> getGlobalInsights(InsightsRequest insightsRequest);
 
     List<CodeObjectError> getErrorsOfCodeObject(String environment, List<String> codeObjectIds);
 
-    CodeObjectInsightsStatusResponse getCodeObjectInsightStatus(InsightOfMethodsRequest request);
+    CodeObjectInsightsStatusResponse getCodeObjectInsightStatus(InsightsOfMethodsRequest request);
 
     void setInsightCustomStartTime(CustomStartTimeInsightRequest customStartTimeInsightRequest);
 

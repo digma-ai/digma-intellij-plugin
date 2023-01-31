@@ -13,7 +13,6 @@ import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
-import org.digma.intellij.plugin.model.rest.AboutResult;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
@@ -21,7 +20,8 @@ import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
 import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightRequest;
 import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
-import org.digma.intellij.plugin.model.rest.insights.InsightOfMethodsRequest;
+import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsRequest;
+import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.model.rest.insights.MethodWithCodeObjects;
 import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
@@ -130,7 +130,7 @@ public class AnalyticsService implements Disposable {
         return environment;
     }
 
-    public AnalyticsProvider getAnalyticsProvider(){
+    public AnalyticsProvider getAnalyticsProvider() {
         return analyticsProvider;
     }
 
@@ -215,24 +215,43 @@ public class AnalyticsService implements Disposable {
         return insights;
     }
 
+    /**
+     * @deprecated This method is deprecated and will be removed in a future release.
+     * Use {@link #getInsightsOfMethods(List<MethodInfo>)} instead.
+     */
+    @Deprecated
     public List<CodeObjectInsight> getInsights(List<String> objectIds) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         Log.log(LOGGER::debug, "Requesting insights for next objectIds {} and next environment {}", objectIds, env);
         var insights = executeCatching(() -> analyticsProviderProxy.getInsights(new InsightsRequest(env, objectIds)));
         if (insights == null) {
             insights = Collections.emptyList();
+        } else {
+            onInsightReceived(insights);
         }
-        onInsightReceived(insights);
         return insights;
     }
 
-    private <TInsight> void onInsightReceived(List<TInsight> insights) {
-        if (insights != null &&
-                !insights.isEmpty() &&
+    private <TInsight> void onInsightReceived(List<TInsight> insightsOrMethodsWithInsights) {
+        if (insightsOrMethodsWithInsights != null &&
+                !insightsOrMethodsWithInsights.isEmpty() &&
                 !PersistenceService.getInstance().getState().getFirstTimeInsightReceived()) {
             ActivityMonitor.getInstance(project).registerFirstInsightReceived();
             PersistenceService.getInstance().getState().setFirstTimeInsightReceived(true);
         }
+    }
+
+    public InsightsOfMethodsResponse getInsightsOfMethods(List<MethodInfo> methodInfos) throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        Log.log(LOGGER::debug, "Requesting insights for next methodInfos {} and next environment {}", methodInfos, env);
+        var methodWithCodeObjects = methodInfos.stream()
+                .map(AnalyticsService::toMethodWithCodeObjects)
+                .toList();
+        InsightsOfMethodsResponse insightsOfMethodsResponse = executeCatching(() -> analyticsProviderProxy.getInsightsOfMethods(new InsightsOfMethodsRequest(env, methodWithCodeObjects)));
+        if (insightsOfMethodsResponse != null && insightsOfMethodsResponse.getMethodsWithInsights().size() > 0) {
+            onInsightReceived(insightsOfMethodsResponse.getMethodsWithInsights());
+        }
+        return insightsOfMethodsResponse;
     }
 
     public List<CodeObjectError> getErrorsOfCodeObject(List<String> codeObjectIds) throws AnalyticsServiceException {
@@ -250,7 +269,7 @@ public class AnalyticsService implements Disposable {
         var methodWithCodeObjects = methodInfos.stream()
                 .map(AnalyticsService::toMethodWithCodeObjects)
                 .toList();
-        return executeCatching(() -> analyticsProviderProxy.getCodeObjectInsightStatus(new InsightOfMethodsRequest(env, methodWithCodeObjects)));
+        return executeCatching(() -> analyticsProviderProxy.getCodeObjectInsightStatus(new InsightsOfMethodsRequest(env, methodWithCodeObjects)));
     }
 
     @VisibleForTesting

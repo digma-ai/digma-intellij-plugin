@@ -11,8 +11,8 @@ data class HighlyOccurringSpanInfo
 constructor(
         val occurrences: Double,
         val internalSpan: SpanInfo?,
-        val clientSpan: SpanInfo,
-        val traceId: String,
+        val clientSpan: SpanInfo?,
+        val traceId: String?,
         val duration: Duration,
         val fraction: Double,
 )

@@ -32,7 +32,7 @@ constructor(
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
         val span: SpanInfo,
-        val slowEndpoints: List<SlowEndpointInfo>,
+        val slowEndpoints: List<SlowEndpointInfo>
 ) : CodeObjectInsight {
     override val type: InsightType = InsightType.SpanEndpointBottleneck
 }

@@ -9,9 +9,9 @@ data class CodeObjectDecorator
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties(
         "title",
-        "description",
+        "description"
 )
 constructor(
         val title: String,
-        val description: String,
+        val description: String
 )

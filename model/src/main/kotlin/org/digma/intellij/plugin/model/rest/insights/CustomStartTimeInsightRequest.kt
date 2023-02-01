@@ -8,5 +8,5 @@ constructor(
         val environment: String,
         val codeObjectId: String,
         val insightType: String,
-        val time: String,
+        val time: String
 )

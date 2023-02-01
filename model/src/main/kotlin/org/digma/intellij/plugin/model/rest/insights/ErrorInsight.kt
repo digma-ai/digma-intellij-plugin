@@ -34,7 +34,7 @@ constructor(
         val errorCount: Int = 0,
         val unhandledCount: Int = 0,
         val unexpectedCount: Int = 0,
-        val topErrors: List<ErrorInsightNamedError>,
+        val topErrors: List<ErrorInsightNamedError>
 ) : CodeObjectInsight {
 
     override val type: InsightType = InsightType.Errors

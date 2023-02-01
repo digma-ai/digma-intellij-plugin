@@ -30,7 +30,7 @@ constructor(
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
         val span: SpanInfo,
-        val percentiles: List<SpanDurationsPercentile>,
+        val percentiles: List<SpanDurationsPercentile>
 ) : CodeObjectInsight {
 
     override val type: InsightType = InsightType.SpanDurations

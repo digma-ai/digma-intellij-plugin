@@ -28,7 +28,7 @@ data class SlowEndpointInsight
         "median",
         "p75",
         "p95",
-        "p99",
+        "p99"
 )
 constructor(
         override val codeObjectId: String,
@@ -51,7 +51,7 @@ constructor(
         val median: Duration,
         val p75: Duration,
         val p95: Duration,
-        val p99: Duration,
+        val p99: Duration
 ) : EndpointInsight {
     override val type: InsightType = InsightType.SlowEndpoint
 }

@@ -28,7 +28,7 @@ constructor(
         override val actualStartTime: Date?,
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
-        val score: Int = 0,
+        val score: Int = 0
 ) : CodeObjectInsight {
 
     override val type: InsightType = InsightType.HotSpot

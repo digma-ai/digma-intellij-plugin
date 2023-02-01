@@ -16,7 +16,7 @@ import org.digma.intellij.plugin.model.InsightType
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type", visible = true, defaultImpl = UnmappedInsight::class)
 @JsonSubTypes(
     JsonSubTypes.Type(value = TopErrorFlowsInsight::class, name = "TopErrorFlows"),
-    JsonSubTypes.Type(value = SpanDurationChangeInsight::class, name = "SpanDurationChange"),
+    JsonSubTypes.Type(value = SpanDurationChangeInsight::class, name = "SpanDurationChange")
 )
 interface GlobalInsight {
     val type: InsightType

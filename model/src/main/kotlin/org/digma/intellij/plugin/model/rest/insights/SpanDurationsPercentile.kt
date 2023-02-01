@@ -15,5 +15,5 @@ constructor(
     val previousDuration: Duration?,
     val changeTime: Timestamp?,
     val changeVerified: Boolean?,
-    val traceIds: List<String>?,
+    val traceIds: List<String>?
 )

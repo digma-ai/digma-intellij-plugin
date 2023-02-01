@@ -14,7 +14,7 @@ constructor(
     val lastServiceSpan: String?,
     val firstService: Service?,
     val lastService: Service?,
-    val sampleTraceIds: List<String>,
+    val sampleTraceIds: List<String>
 ) {
 
     data class Service
@@ -22,7 +22,7 @@ constructor(
     @ConstructorProperties("service", "span")
     constructor(
         val service: String,
-        val span: String,
+        val span: String
     )
 
 }

@@ -30,7 +30,7 @@ constructor(
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
         val span: String,
-        val flows: List<SpanFlow>,
+        val flows: List<SpanFlow>
 ) : CodeObjectInsight {
 
     override val type: InsightType = InsightType.SpanUsages

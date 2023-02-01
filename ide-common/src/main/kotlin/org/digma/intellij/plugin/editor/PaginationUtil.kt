@@ -14,9 +14,9 @@ fun addInsightPaginationInfo(focusedDocumentName: String, uniqueInsightId: Strin
             filesAndInsightsPaginationInfosMap[uniqueInsightId] = activePage
             insightsPaginationInfo[focusedDocumentName] = filesAndInsightsPaginationInfosMap
         }
-    } else if (insightsPaginationInfo.contains(uniqueInsightId)) {
+    } else if (insightsPaginationInfo[focusedDocumentName] != null && insightsPaginationInfo[focusedDocumentName]!!.containsKey(uniqueInsightId)) {
         // remove pagination info for insights which had some page selected before
-        insightsPaginationInfo.remove(uniqueInsightId)
+        insightsPaginationInfo[focusedDocumentName]!!.remove(uniqueInsightId)
     }
 }
 
@@ -28,4 +28,32 @@ fun removeInsightsPaginationInfoForClosedDocument(documentName: String) {
     if (insightsPaginationInfo.isNotEmpty()) {
         insightsPaginationInfo.remove(documentName)
     }
+}
+
+fun <T> updateListOfEntriesToDisplay(
+        entries: List<T>,
+        entriesToDisplay: ArrayList<T>,
+        currPageNum: Int,
+        recordsPerPage: Int
+) {
+    entriesToDisplay.clear()
+    if (entries.isNotEmpty()) {
+        val start = (currPageNum - 1) * recordsPerPage
+        var end = start + recordsPerPage
+        if (end >= entries.size) {
+            end = entries.size
+        }
+        for (i in start until end) {
+            entriesToDisplay.add(entries[i])
+        }
+    }
+}
+
+fun getCurrentPageNumberForInsight(uniqueInsightId: String, lastPageNum: Int): Int {
+    var currPageNum = 0
+    getInsightPaginationInfo(uniqueInsightId)?.let { currPageNum = getInsightPaginationInfo(uniqueInsightId)!! }
+    if (currPageNum < 1) {
+        currPageNum = if (lastPageNum > 0) 1 else 0
+    }
+    return currPageNum
 }

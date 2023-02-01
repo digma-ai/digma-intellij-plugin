@@ -5,6 +5,7 @@ import com.intellij.codeInsight.hint.HintUtil
 import com.intellij.openapi.project.Project
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.ui.components.ActionLink
+import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.JBUI.Borders.empty
 import io.ktor.util.reflect.*
 import org.digma.intellij.plugin.analytics.AnalyticsService
@@ -141,7 +142,7 @@ private fun rebuildPanel(
     ), BorderLayout.EAST)
 
     if(bodyPanel != null || buttons != null){
-        val bodyWrapper = JPanel(BorderLayout())
+        val bodyWrapper = createDefaultBoxLayoutYAxisPanel()
         bodyWrapper.isOpaque = false
 
         if(insight.customStartTime != null || isRecalculateButtonPressed)
@@ -150,10 +151,10 @@ private fun rebuildPanel(
                     actualStartTime = insight.actualStartTime,
                     isRecalculateButtonPressed = isRecalculateButtonPressed,
                     project = project
-            ), BorderLayout.NORTH)
+            ))
 
         if(bodyPanel != null)
-            bodyWrapper.add(bodyPanel, BorderLayout.CENTER)
+            bodyWrapper.add(bodyPanel)
 
         if(buttons != null){
             val buttonsListPanel = getBasicEmptyListPanel()
@@ -161,11 +162,11 @@ private fun rebuildPanel(
                 buttonsListPanel.add(Box.createHorizontalStrut(5))
                 buttonsListPanel.add(it)
             }
-            bodyWrapper.add(buttonsListPanel, BorderLayout.SOUTH)
+            bodyWrapper.add(buttonsListPanel)
         }
 
         if(paginationComponent != null){
-            bodyWrapper.add(getPaginationPanel(paginationComponent), BorderLayout.SOUTH)
+            bodyWrapper.add(getPaginationPanel(paginationComponent))
         }
 
         insightPanel.add(bodyWrapper,BorderLayout.SOUTH)
@@ -199,7 +200,7 @@ private fun getTimeInfoMessagePanel(
 
     val timeInfoMessageLabelPanel = JPanel()
     timeInfoMessageLabelPanel.layout = BoxLayout(timeInfoMessageLabelPanel, BoxLayout.Y_AXIS)
-    timeInfoMessageLabelPanel.border = empty(0, 0, 5, 0)
+    timeInfoMessageLabelPanel.border = JBUI.Borders.emptyBottom(5)
     timeInfoMessageLabelPanel.isOpaque = false
     timeInfoMessageLabelPanel.add(timeInfoMessageLabel)
     if (shouldShowApplyNewTimeFilterLabel(isRecalculateButtonPressed, identicalStartTimes)) {

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import org.digma.intellij.plugin.model.InsightType
 import java.beans.ConstructorProperties
 import java.util.*
+import kotlin.collections.ArrayList
 
 data class SpanScalingInsight
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -37,7 +38,7 @@ constructor(
         val maxConcurrency: Int,
         val minDuration: Duration,
         val maxDuration: Duration,
-        val rootCauseSpans: List<RootCauseSpan>?
+        val rootCauseSpans: List<RootCauseSpan> = ArrayList()
 ) : CodeObjectInsight {
 
     override val type: InsightType = InsightType.SpanScaling

@@ -53,7 +53,9 @@ fun spanDurationBreakdownPanel(
 
     //calculate how many pages there are
     lastPageNum = validBreakdownEntries.size / RECORDS_PER_PAGE + if (validBreakdownEntries.size % RECORDS_PER_PAGE != 0) 1 else 0
-    currPageNum = if (lastPageNum > 0) 1 else 0
+    if (currPageNum == 0) {
+        currPageNum = if (lastPageNum > 0) 1 else 0
+    }
 
     updateDurationBreakdownPanel(validBreakdownEntries)
     return createInsightPanel(

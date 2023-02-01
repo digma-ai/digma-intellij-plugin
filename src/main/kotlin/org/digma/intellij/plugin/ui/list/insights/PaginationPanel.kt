@@ -2,39 +2,96 @@ package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.ui.components.ActionLink
 import com.intellij.util.ui.JBUI
+import org.digma.intellij.plugin.editor.*
 import org.digma.intellij.plugin.ui.common.asHtml
+import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.BorderLayout
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.SwingConstants
 
-const val RECORDS_PER_PAGE = 3
 
-fun rebuildPaginationPanel(paginationPanel: JPanel, currPageNum: Int, lastPageNum: Int, prev: ActionLink, next: ActionLink) {
+fun <T> rebuildPaginationPanel(
+        paginationPanel: JPanel,
+        lastPageNum: Int,
+        entries: List<T>,
+        resultInsightBodyPanel: DigmaResettablePanel?,
+        entriesToDisplay: ArrayList<T>,
+        uniqueInsightId: String,
+        recordsPerPage: Int
+) {
     if (lastPageNum > 1) {
         paginationPanel.removeAll()
-        buildPaginationPanel(paginationPanel, currPageNum, lastPageNum, prev, next)
+        buildPaginationPanel(paginationPanel, lastPageNum,
+                entries, resultInsightBodyPanel, entriesToDisplay, uniqueInsightId, recordsPerPage)
     }
 }
 
-fun buildPaginationRowPanel(
-        currPageNum: Int,
+fun <T> buildPaginationRowPanel(
         lastPageNum: Int,
         paginationPanel: JPanel,
-        prev: ActionLink,
-        next: ActionLink
+        entries: List<T>,
+        resultInsightBodyPanel: DigmaResettablePanel,
+        entriesToDisplay: ArrayList<T>,
+        uniqueInsightId: String,
+        recordsPerPage: Int
 ): JPanel? {
     if (lastPageNum < 2) {
         return null
     }
-    buildPaginationPanel(paginationPanel, currPageNum, lastPageNum, prev, next)
+    buildPaginationPanel(paginationPanel, lastPageNum,
+            entries, resultInsightBodyPanel, entriesToDisplay, uniqueInsightId, recordsPerPage)
     return paginationPanel
 }
 
-fun buildPaginationPanel(paginationPanel: JPanel, currPageNum: Int, lastPageNum: Int, prev: ActionLink, next: ActionLink) {
+private fun <T> updateInsightBodyPanelWithItemsToDisplay(
+        entries: List<T>,
+        entriesToDisplay: ArrayList<T>,
+        uniqueInsightId: String,
+        currPageNum: Int,
+        recordsPerPage: Int
+) {
+    val focusedDocumentName = getFocusedDocumentName()
+    addInsightPaginationInfo(focusedDocumentName, uniqueInsightId, currPageNum)
+    updateListOfEntriesToDisplay(entries, entriesToDisplay, currPageNum, recordsPerPage)
+}
+private fun <T> updateInsightBodyPanelWithItemsToDisplay(
+        entries: List<T>,
+        resultInsightBodyPanel: DigmaResettablePanel?,
+        entriesToDisplay: ArrayList<T>,
+        uniqueInsightId: String,
+        currPageNum: Int,
+        recordsPerPage: Int
+) {
+    updateInsightBodyPanelWithItemsToDisplay(entries, entriesToDisplay, uniqueInsightId, currPageNum, recordsPerPage)
+
+    resultInsightBodyPanel?.reset()
+}
+
+fun <T> buildPaginationPanel(
+        paginationPanel: JPanel,
+        lastPageNum: Int,
+        entries: List<T>,
+        resultInsightBodyPanel: DigmaResettablePanel?,
+        entriesToDisplay: ArrayList<T>,
+        uniqueInsightId: String,
+        recordsPerPage: Int
+) {
+    val prev = ActionLink("Prev")
+    val next = ActionLink("Next")
     paginationPanel.layout = BorderLayout()
     paginationPanel.border = JBUI.Borders.empty()
     paginationPanel.isOpaque = false
+    var currPageNum = getCurrentPageNumberForInsight(uniqueInsightId, lastPageNum)
+
+    prev.addActionListener {
+        if (--currPageNum <= 0) currPageNum = 1
+        updateInsightBodyPanelWithItemsToDisplay(entries, resultInsightBodyPanel, entriesToDisplay, uniqueInsightId, currPageNum, recordsPerPage)
+    }
+    next.addActionListener {
+        if (++currPageNum > lastPageNum) currPageNum = lastPageNum
+        updateInsightBodyPanelWithItemsToDisplay(entries, resultInsightBodyPanel, entriesToDisplay, uniqueInsightId, currPageNum, recordsPerPage)
+    }
 
     val paginationLabelText = "$currPageNum of $lastPageNum"
     val paginationLabel = JLabel(asHtml(paginationLabelText), SwingConstants.LEFT)

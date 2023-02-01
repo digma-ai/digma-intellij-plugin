@@ -1,71 +1,167 @@
 package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.openapi.project.Project
+import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
 import com.intellij.util.ui.JBUI
 import org.apache.commons.lang3.StringUtils
+import org.digma.intellij.plugin.document.CodeObjectsUtil
+import org.digma.intellij.plugin.editor.getCurrentPageNumberForInsight
+import org.digma.intellij.plugin.editor.updateListOfEntriesToDisplay
 import org.digma.intellij.plugin.model.rest.insights.EPNPlusSpansInsight
+import org.digma.intellij.plugin.model.rest.insights.HighlyOccurringSpanInfo
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.spanBold
+import org.digma.intellij.plugin.ui.list.openWorkspaceFileForSpan
 import org.digma.intellij.plugin.ui.model.TraceSample
+import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.BorderLayout
-import javax.swing.Box
-import javax.swing.JLabel
-import javax.swing.JPanel
-import javax.swing.SwingConstants
+import java.math.RoundingMode
+import javax.swing.*
 
-fun ePNPlusSpansPanel(project: Project, insight: EPNPlusSpansInsight): JPanel {
-    val resultPanel = createDefaultBoxLayoutYAxisPanel()
+private const val RECORDS_PER_PAGE_EPNPLUS = 1
 
-    resultPanel.add(getSQLRowPanel(insight))
-    resultPanel.add(getRowPanel(insight))
+fun ePNPlusSpansPanel(
+        project: Project,
+        insight: EPNPlusSpansInsight,
+        moreData: HashMap<String, Any>
+): JPanel {
 
-    val spanName = insight.endpointSpan
-    val sampleTraceId = insight.spans.first().traceId
-    val traceSample = TraceSample(spanName, sampleTraceId)
-    val buttonToJaeger = buildButtonToJaeger(project, "Trace", spanName, listOf(traceSample))
+    val uniqueInsightId = insight.codeObjectId + insight.type
+    val lastPageNum: Int
+    var resultNPOnePanel: DigmaResettablePanel? = null
+    val paginationPanel = JPanel()
+    val nPOneSpansToDisplay = ArrayList<HighlyOccurringSpanInfo>()
+    val spansOfInsight = insight.spans
+
+    //calculate how many pages there are (display only 1 span per page)
+    lastPageNum = spansOfInsight.size
+
+    resultNPOnePanel = object : DigmaResettablePanel() {
+        override fun reset() {
+            rebuildENPlusInsightRowsPanel(
+                    resultNPOnePanel!!,
+                    nPOneSpansToDisplay,
+                    project,
+                    moreData
+            )
+            rebuildPaginationPanel(paginationPanel, lastPageNum,
+                    spansOfInsight, resultNPOnePanel, nPOneSpansToDisplay, uniqueInsightId, RECORDS_PER_PAGE_EPNPLUS)
+        }
+    }
+
+    updateListOfEntriesToDisplay(spansOfInsight, nPOneSpansToDisplay, getCurrentPageNumberForInsight(uniqueInsightId, lastPageNum), RECORDS_PER_PAGE_EPNPLUS)
+    buildENPlusInsightRowsPanel(resultNPOnePanel, nPOneSpansToDisplay, project, moreData)
 
     val result = createInsightPanel(
             project = project,
             insight = insight,
             title = "Suspected N-Plus-1",
-            description = asHtml("Check the following SELECT statement"),
+            description = asHtml("Check the following locations"),
             iconsList = listOf(Laf.Icons.Insight.N_PLUS_ONE),
-            bodyPanel = resultPanel,
-            buttons = listOf(buttonToJaeger),
-            paginationComponent = null
+            bodyPanel = resultNPOnePanel,
+            buttons = listOf(getButtonToJaeger(project, insight)),
+            paginationComponent = buildPaginationRowPanel(lastPageNum, paginationPanel,
+                    spansOfInsight, resultNPOnePanel, nPOneSpansToDisplay, uniqueInsightId, RECORDS_PER_PAGE_EPNPLUS),
     )
     result.toolTipText = asHtml("Repeating select query pattern suggests N-Plus-One")
     return result
 }
 
-private fun getSQLRowPanel(insight: EPNPlusSpansInsight): JPanel {
-    var sqlStatement = insight.spans.first().clientSpan?.displayName
-    if (sqlStatement == null) {
-        sqlStatement = insight.spans.first().internalSpan?.displayName
-    }
-    val normalizedDisplayName = StringUtils.normalizeSpace(sqlStatement)
-    val displayNameLabel = JBLabel(normalizedDisplayName, SwingConstants.TRAILING)
-    displayNameLabel.toolTipText = asHtml(sqlStatement)
-    displayNameLabel.horizontalAlignment = SwingConstants.LEFT
-
+private fun getMainDescriptionPanel(span: HighlyOccurringSpanInfo, project: Project, moreData: HashMap<String, Any>): JPanel {
     val spanOneRecordPanel = getDefaultSpanOneRecordPanel()
-    spanOneRecordPanel.add(displayNameLabel, BorderLayout.NORTH)
+    val displayText: String
+    if (span.internalSpan != null) {
+        val spanId = CodeObjectsUtil.createSpanId(span.internalSpan!!.instrumentationLibrary, span.internalSpan!!.name)
+        displayText = span.internalSpan?.displayName.toString()
+        val normalizedDisplayName = StringUtils.normalizeSpace(displayText)
+        if (moreData.contains(spanId)) {
+            val actionLink = ActionLink(normalizedDisplayName) {
+                openWorkspaceFileForSpan(project, moreData, spanId)
+            }
+            actionLink.toolTipText = asHtml(displayText)
+            actionLink.horizontalAlignment = SwingConstants.LEFT
+            spanOneRecordPanel.add(actionLink, BorderLayout.NORTH)
+        } else {
+            val jbLabel = JBLabel(displayText, SwingConstants.TRAILING)
+            jbLabel.toolTipText = asHtml(displayText)
+            jbLabel.horizontalAlignment = SwingConstants.LEFT
+            spanOneRecordPanel.add(jbLabel, BorderLayout.NORTH)
+        }
+    } else {
+        displayText = span.clientSpan?.displayName.toString()
+        val normalizedDisplayName = StringUtils.normalizeSpace(displayText)
+        val jbLabel = JBLabel(normalizedDisplayName, SwingConstants.TRAILING)
+        jbLabel.toolTipText = asHtml(displayText)
+        jbLabel.horizontalAlignment = SwingConstants.LEFT
+        spanOneRecordPanel.add(jbLabel, BorderLayout.NORTH)
+    }
     return spanOneRecordPanel
 }
 
-private fun getRowPanel(insight: EPNPlusSpansInsight): JPanel {
+private fun getRowPanel(span: HighlyOccurringSpanInfo): JPanel {
     val rowPanel = createDefaultBoxLayoutLineAxisPanel()
     rowPanel.border = JBUI.Borders.emptyBottom(5)
 
-    val repeatsValue = "${insight.spans.first().occurrences} (median)"
+    val repeatsValue = "${span.occurrences} (median)"
     val repeatsLabel = JLabel(asHtml("Repeats: ${spanBold(repeatsValue)}"))
+    val impactLabel = getImpactLabel(span)
     val durationLabel = JLabel(asHtml("Duration: " +
-            spanBold("${insight.spans.first().duration.value} ${insight.spans.first().duration.unit}")))
+            spanBold("${span.duration.value} ${span.duration.unit}")))
 
     rowPanel.add(repeatsLabel)
     rowPanel.add(Box.createHorizontalGlue())
+    rowPanel.add(impactLabel)
+    rowPanel.add(Box.createHorizontalGlue())
     rowPanel.add(durationLabel)
     return rowPanel
+}
+
+private fun getImpactLabel(span: HighlyOccurringSpanInfo): JLabel {
+    val fraction = span.fraction
+    val fractionSt = if (fraction < 0.01) {
+        "minimal"
+    } else {
+        "${fraction.toBigDecimal().setScale(1, RoundingMode.UP).toDouble()} of request"
+    }
+    return JLabel(asHtml("Impact: ${spanBold(fractionSt)}"))
+}
+
+private fun buildENPlusInsightRowsPanel(
+        nPOnePanel: DigmaResettablePanel,
+        nPOneSpansToDisplay: List<HighlyOccurringSpanInfo>,
+        project: Project,
+        moreData: HashMap<String, Any>
+) {
+    nPOnePanel.layout = BoxLayout(nPOnePanel, BoxLayout.Y_AXIS)
+    nPOnePanel.isOpaque = false
+
+    nPOneSpansToDisplay.forEach { nPOneSpan: HighlyOccurringSpanInfo ->
+        nPOnePanel.add(nPOneSpanRowPanel(nPOneSpan, project, moreData))
+    }
+}
+
+private fun rebuildENPlusInsightRowsPanel(
+        nPOnePanel: DigmaResettablePanel,
+        nPOneSpansToDisplay: List<HighlyOccurringSpanInfo>,
+        project: Project,
+        moreData: HashMap<String, Any>
+) {
+    nPOnePanel.removeAll()
+    buildENPlusInsightRowsPanel(nPOnePanel, nPOneSpansToDisplay, project, moreData)
+}
+
+private fun nPOneSpanRowPanel(span: HighlyOccurringSpanInfo, project: Project, moreData: HashMap<String, Any>): JPanel {
+    val resultPanel = createDefaultBoxLayoutYAxisPanel()
+    resultPanel.add(getMainDescriptionPanel(span, project, moreData))
+    resultPanel.add(getRowPanel(span))
+    return resultPanel
+}
+
+private fun getButtonToJaeger(project: Project, insight: EPNPlusSpansInsight): JButton? {
+    val spanName = insight.endpointSpan
+    val sampleTraceId = insight.spans.first().traceId
+    val traceSample = TraceSample(spanName, sampleTraceId)
+    return buildButtonToJaeger(project, "Trace", spanName, listOf(traceSample))
 }

@@ -6,9 +6,8 @@ import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.apache.commons.lang3.StringUtils
 import org.digma.intellij.plugin.document.CodeObjectsUtil
-import org.digma.intellij.plugin.editor.addInsightPaginationInfo
-import org.digma.intellij.plugin.editor.getFocusedDocumentName
-import org.digma.intellij.plugin.editor.getInsightPaginationInfo
+import org.digma.intellij.plugin.editor.getCurrentPageNumberForInsight
+import org.digma.intellij.plugin.editor.updateListOfEntriesToDisplay
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationBreakdown
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationBreakdownInsight
 import org.digma.intellij.plugin.ui.common.Laf
@@ -21,6 +20,7 @@ import javax.swing.*
 
 
 private const val P_50: Float = 0.5F
+private const val RECORDS_PER_PAGE_DURATION_BREAKDOWN = 3
 
 fun spanDurationBreakdownPanel(
         project: Project,
@@ -30,48 +30,33 @@ fun spanDurationBreakdownPanel(
 
     val uniqueInsightId = insight.codeObjectId + insight.type
     val lastPageNum: Int
-    var currPageNum = 0
     var resultBreakdownPanel: DigmaResettablePanel? = null
     val paginationPanel = JPanel()
     val durationBreakdownEntriesToDisplay = ArrayList<SpanDurationBreakdown>()
-    val prev = ActionLink("Prev")
-    val next = ActionLink("Next")
 
     val validBreakdownEntries = insight.breakdownEntries
             .filter { entry -> entry.percentiles.any { breakdown -> breakdown.percentile.equals(P_50) } }
             .sortedWith(compareByDescending { getValueOfPercentile(it, P_50) })
 
     //calculate how many pages there are
-    lastPageNum = validBreakdownEntries.size / RECORDS_PER_PAGE + if (validBreakdownEntries.size % RECORDS_PER_PAGE != 0) 1 else 0
-    getInsightPaginationInfo(uniqueInsightId)?.let { currPageNum = getInsightPaginationInfo(uniqueInsightId)!! }
-    if (currPageNum < 1) {
-        currPageNum = if (lastPageNum > 0) 1 else 0
-    }
-
+    lastPageNum = validBreakdownEntries.size / RECORDS_PER_PAGE_DURATION_BREAKDOWN + if (validBreakdownEntries.size % RECORDS_PER_PAGE_DURATION_BREAKDOWN != 0) 1 else 0
 
     resultBreakdownPanel = object : DigmaResettablePanel() {
         override fun reset() {
-            buildDurationBreakdownRowPanel(
+            rebuildDurationBreakdownRowPanel(
                     resultBreakdownPanel!!,
                     durationBreakdownEntriesToDisplay,
                     project,
                     moreData
             )
-            rebuildPaginationPanel(paginationPanel, currPageNum, lastPageNum, prev, next)
+            rebuildPaginationPanel(paginationPanel, lastPageNum,
+                    validBreakdownEntries, resultBreakdownPanel, durationBreakdownEntriesToDisplay, uniqueInsightId, RECORDS_PER_PAGE_DURATION_BREAKDOWN)
         }
     }
 
-    prev.addActionListener {
-        if (--currPageNum <= 0) currPageNum = 1
-        updateDurationBreakdownPanel(validBreakdownEntries, resultBreakdownPanel, durationBreakdownEntriesToDisplay, uniqueInsightId, currPageNum)
-    }
-    next.addActionListener {
-        if (++currPageNum > lastPageNum) currPageNum = lastPageNum
-        updateDurationBreakdownPanel(validBreakdownEntries, resultBreakdownPanel, durationBreakdownEntriesToDisplay, uniqueInsightId, currPageNum)
-    }
+    updateListOfEntriesToDisplay(validBreakdownEntries, durationBreakdownEntriesToDisplay, getCurrentPageNumberForInsight(uniqueInsightId, lastPageNum), RECORDS_PER_PAGE_DURATION_BREAKDOWN)
+    buildDurationBreakdownRowPanel(resultBreakdownPanel, durationBreakdownEntriesToDisplay, project, moreData)
 
-    updateDurationBreakdownPanel(validBreakdownEntries, resultBreakdownPanel, durationBreakdownEntriesToDisplay,
-            uniqueInsightId, currPageNum)
     return createInsightPanel(
             project = project,
             insight = insight,
@@ -80,23 +65,33 @@ fun spanDurationBreakdownPanel(
             iconsList = listOf(Laf.Icons.Insight.DURATION),
             bodyPanel = resultBreakdownPanel,
             buttons = null,
-            paginationComponent = buildPaginationRowPanel(currPageNum, lastPageNum, paginationPanel, prev, next),
+            paginationComponent = buildPaginationRowPanel(lastPageNum, paginationPanel,
+                    validBreakdownEntries, resultBreakdownPanel, durationBreakdownEntriesToDisplay, uniqueInsightId, RECORDS_PER_PAGE_DURATION_BREAKDOWN),
     )
 }
 
 private fun buildDurationBreakdownRowPanel(
         durationBreakdownPanel: DigmaResettablePanel,
-        durationBreakdownEntries: List<SpanDurationBreakdown>,
+        durationBreakdownEntriesToDisplay: List<SpanDurationBreakdown>,
+        project: Project,
+        moreData: HashMap<String, Any>
+) {
+    durationBreakdownPanel.layout = BoxLayout(durationBreakdownPanel, BoxLayout.Y_AXIS)
+    durationBreakdownPanel.isOpaque = false
+
+    durationBreakdownEntriesToDisplay.forEach { durationBreakdown: SpanDurationBreakdown ->
+        durationBreakdownPanel.add(durationBreakdownRowPanel(durationBreakdown, project, moreData))
+    }
+}
+
+private fun rebuildDurationBreakdownRowPanel(
+        durationBreakdownPanel: DigmaResettablePanel,
+        durationBreakdownEntriesToDisplay: List<SpanDurationBreakdown>,
         project: Project,
         moreData: HashMap<String, Any>
 ) {
     durationBreakdownPanel.removeAll()
-    durationBreakdownPanel.layout = BoxLayout(durationBreakdownPanel, BoxLayout.Y_AXIS)
-    durationBreakdownPanel.isOpaque = false
-
-    durationBreakdownEntries.forEach { durationBreakdown: SpanDurationBreakdown ->
-        durationBreakdownPanel.add(durationBreakdownRowPanel(durationBreakdown, project, moreData))
-    }
+    buildDurationBreakdownRowPanel(durationBreakdownPanel, durationBreakdownEntriesToDisplay, project, moreData)
 }
 
 private fun durationBreakdownRowPanel(
@@ -114,31 +109,6 @@ private fun durationBreakdownRowPanel(
     durationBreakdownPanel.add(breakdownDurationLabelPanel, BorderLayout.EAST)
 
     return durationBreakdownPanel
-}
-
-private fun updateDurationBreakdownPanel(
-        durationBreakdownEntries: List<SpanDurationBreakdown>,
-        resultBreakdownPanel: DigmaResettablePanel,
-        durationBreakdownEntriesToDisplay: ArrayList<SpanDurationBreakdown>,
-        uniqueInsightId: String,
-        currPageNum: Int
-) {
-    val focusedDocumentName = getFocusedDocumentName()
-    addInsightPaginationInfo(focusedDocumentName, uniqueInsightId, currPageNum)
-    durationBreakdownEntriesToDisplay.clear()
-
-    if (durationBreakdownEntries.isNotEmpty()) {
-        val start = (currPageNum - 1) * RECORDS_PER_PAGE
-        var end = start + RECORDS_PER_PAGE
-        if (end >= durationBreakdownEntries.size) {
-            end = durationBreakdownEntries.size
-        }
-        for (i in start until end) {
-            durationBreakdownEntriesToDisplay.add(durationBreakdownEntries[i])
-        }
-    }
-
-    resultBreakdownPanel.reset()
 }
 
 private fun getDurationBreakdownPanel(): JPanel {

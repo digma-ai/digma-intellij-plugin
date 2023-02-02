@@ -44,11 +44,21 @@ public class GroupListViewItemBuilder<T extends CodeObjectInsight> implements Li
                 WorkspaceUrisHelper.findWorkspaceUrisForSpans(project,theListView, getSpanIds((SpanDurationBreakdownInsight) insight), insight.getCodeObjectId());
                 break;
             }
+            case SpanScaling:{
+                WorkspaceUrisHelper.findWorkspaceUrisForSpans(project,theListView, getSpanIds((SpanScalingInsight) insight), insight.getCodeObjectId());
+                break;
+            }
         }
 
         theGroup.addItem(theListView);
 
         return List.of();
+    }
+
+    private List<String> getSpanIds(SpanScalingInsight insight) {
+        return insight.getRootCauseSpans().stream()
+                .map(it -> CodeObjectsUtil.createSpanId(it.getInstrumentationLibrary(), it.getName()))
+                .collect(Collectors.toList());
     }
 
     private List<String> getSpanIds(SlowestSpansInsight insight) {

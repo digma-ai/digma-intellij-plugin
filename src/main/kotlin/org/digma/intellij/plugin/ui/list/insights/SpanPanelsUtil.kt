@@ -159,7 +159,7 @@ fun buildButtonToJaeger(
     if (jaegerBaseUrl.isNullOrBlank() || traceSamples.isNullOrEmpty()) {
         return null
     }
-    val filtered = traceSamples.filter { x -> x!!.hasTraceId() }
+    val filtered = traceSamples.filter { x -> x!=null &&  x.hasTraceId() }
     if (filtered.isNullOrEmpty()) {
         return null
     }

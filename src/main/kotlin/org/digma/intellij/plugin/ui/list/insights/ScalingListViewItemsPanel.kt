@@ -28,8 +28,7 @@ fun spanScalingListViewItemsPanel(project: Project, insight: SpanScalingInsight,
         scalingPanel.add(getRootCauseSpansPanel(project,moreData,insight))
     }
 
-    //todo: which instrumentation library to use?
-    val buttonToGraph = buildButtonToPercentilesGraph(project, insight.spanName,"")
+    val buttonToGraph = buildButtonToPercentilesGraph(project, insight.spanName,insight.spanInstrumentationLibrary)
 
     return createInsightPanel(
             project = project,

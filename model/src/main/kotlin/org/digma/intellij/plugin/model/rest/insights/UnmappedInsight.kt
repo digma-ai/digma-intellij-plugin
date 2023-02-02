@@ -30,7 +30,7 @@ constructor(
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
         @JsonProperty("type")
-        val theType: String
+        val theType: String,
 ) : CodeObjectInsight {
 
     override val type: InsightType = InsightType.Unmapped

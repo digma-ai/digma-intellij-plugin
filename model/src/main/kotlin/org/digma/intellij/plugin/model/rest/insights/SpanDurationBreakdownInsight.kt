@@ -30,7 +30,7 @@ constructor(
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
         val spanName: String,
-        val breakdownEntries: List<SpanDurationBreakdown>
+        val breakdownEntries: List<SpanDurationBreakdown>,
 ) : CodeObjectInsight {
 
     override val type: InsightType = InsightType.SpanDurationBreakdown

@@ -31,7 +31,7 @@ constructor(
         override val actualStartTime: Date?,
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
-        val maxCallsIn1Min: Int
+        val maxCallsIn1Min: Int,
 ) : EndpointInsight {
     override val type: InsightType = InsightType.NormalUsage
 }

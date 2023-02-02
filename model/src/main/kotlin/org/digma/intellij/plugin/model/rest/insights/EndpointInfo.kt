@@ -11,5 +11,5 @@ data class EndpointInfo
 constructor(
     val route: String,
     val serviceName: String,
-    val instrumentationLibrary: String
+    val instrumentationLibrary: String,
 )

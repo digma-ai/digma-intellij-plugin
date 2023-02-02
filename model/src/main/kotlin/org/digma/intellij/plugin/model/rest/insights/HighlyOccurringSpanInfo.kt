@@ -14,5 +14,5 @@ constructor(
         val clientSpan: SpanInfo?,
         val traceId: String?,
         val duration: Duration,
-        val fraction: Double
+        val fraction: Double,
 )

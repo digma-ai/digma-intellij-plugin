@@ -30,7 +30,7 @@ constructor(val errors: List<Error>) : GlobalInsight {
             "ScoreTrendSlope",
             "ScoreUnhandled",
             "ScoreRecency",
-            "dayAvg"
+            "dayAvg",
     )
     constructor(
             val uid: String,
@@ -45,6 +45,6 @@ constructor(val errors: List<Error>) : GlobalInsight {
             val scoreTrendSlope: Int,
             val scoreUnhandled: Int,
             val scoreRecency: Int,
-            val dayAvg: Double?
+            val dayAvg: Double?,
     )
 }

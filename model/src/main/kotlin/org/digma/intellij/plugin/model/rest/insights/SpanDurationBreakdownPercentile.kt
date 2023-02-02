@@ -10,5 +10,5 @@ data class SpanDurationBreakdownPercentile
 @ConstructorProperties("percentile", "duration")
 constructor(
         val percentile: Float,
-        val duration: Duration
+        val duration: Duration,
 )

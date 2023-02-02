@@ -9,5 +9,5 @@ constructor(
     val spanName: String,
     val instrumentationLibrary: String,
     val theme: String?,
-    val backgroundColor: String?
+    val backgroundColor: String?,
 )

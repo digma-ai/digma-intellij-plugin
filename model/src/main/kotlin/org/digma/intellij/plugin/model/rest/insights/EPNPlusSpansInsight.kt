@@ -18,7 +18,7 @@ data class EPNPlusSpansInsight
         "actualStartTime",
         "customStartTime",
         "prefixedCodeObjectId",
-        "spans"
+        "spans",
 )
 constructor(
         override val codeObjectId: String,
@@ -31,7 +31,7 @@ constructor(
         override val actualStartTime: Date?,
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
-        val spans: List<HighlyOccurringSpanInfo>
+        val spans: List<HighlyOccurringSpanInfo>,
 ) : EndpointInsight {
         override val type: InsightType = InsightType.EndpointSpaNPlusOne
 }

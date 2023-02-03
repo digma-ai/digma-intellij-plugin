@@ -28,7 +28,7 @@ fun spanScalingListViewItemsPanel(project: Project, insight: SpanScalingInsight,
         scalingPanel.add(getRootCauseSpansPanel(project,moreData,insight))
     }
 
-    val buttonToGraph = buildButtonToPercentilesGraph(project, insight.spanName,insight.spanInstrumentationLibrary)
+    val buttonToGraph = insight.spanInstrumentationLibrary?.let { buildButtonToPercentilesGraph(project, insight.spanName, it) }
 
     return createInsightPanel(
             project = project,
@@ -118,7 +118,7 @@ private fun getScalingCalculationsPanel(insight: SpanScalingInsight): JPanel {
 }
 
 
-private fun buildButtonToPercentilesGraph(project: Project, spanName: String,instLibrary: String): JButton {
+private fun buildButtonToPercentilesGraph(project: Project, spanName: String, instLibrary: String): JButton {
     val analyticsService = AnalyticsService.getInstance(project)
     val button = ListItemActionButton("Histogram")
     button.addActionListener {

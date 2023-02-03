@@ -35,7 +35,7 @@ constructor(
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
         val spanName: String,
-        val spanInstrumentationLibrary: String,
+        val spanInstrumentationLibrary: String?,
         val turningPointConcurrency: Int,
         val maxConcurrency: Int,
         val minDuration: Duration,

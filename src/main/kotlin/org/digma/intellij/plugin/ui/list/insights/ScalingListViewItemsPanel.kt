@@ -30,6 +30,8 @@ fun spanScalingListViewItemsPanel(project: Project, insight: SpanScalingInsight,
 
     val buttonToGraph = insight.spanInstrumentationLibrary?.let { buildButtonToPercentilesGraph(project, insight.spanName, it) }
 
+    val buttonList = if (buttonToGraph == null) null else listOf(buttonToGraph)
+
     return createInsightPanel(
             project = project,
             insight = insight,
@@ -37,7 +39,7 @@ fun spanScalingListViewItemsPanel(project: Project, insight: SpanScalingInsight,
             description = "",
             iconsList = listOf(Laf.Icons.Insight.SCALE),
             bodyPanel = scalingPanel,
-            buttons = listOf(buttonToGraph),
+            buttons = buttonList,
             paginationComponent = null
     )
 }

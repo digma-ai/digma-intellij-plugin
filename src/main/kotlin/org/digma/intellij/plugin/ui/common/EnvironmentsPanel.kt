@@ -170,65 +170,79 @@ class EnvironmentsPanel(
     }
 
     private fun rebuild() {
+        val buttonsInfo: MutableMap<String, MutableMap<String,Any>> = HashMap()
+        val usageStatusResult = model.getUsageStatus()
+        val envsThatHaveUsageSet: Set<String> = buildEnvironmentWithUsages(usageStatusResult)
+        val hasUsageFunction = fun(env: String): Boolean { return envsThatHaveUsageSet.contains(env) }
+        val relevantEnvs = buildRelevantSortedEnvironments(environmentsSupplier, hasUsageFunction)
+        for (currEnv in relevantEnvs) {
+            val currentButtonInfo: MutableMap<String,Any> = HashMap()
 
+            val isSelectedEnv: Boolean = currEnv.contentEquals(environmentsSupplier.getCurrent())
+            val toolTip = buildToolTip(usageStatusResult, currEnv)
+            val linkText = buildLinkText(currEnv, isSelectedEnv)
+
+            currentButtonInfo["isSelectedEnv"] = isSelectedEnv
+            currentButtonInfo["toolTip"] = toolTip
+            currentButtonInfo["linkText"] = linkText
+            buttonsInfo[currEnv] = currentButtonInfo
+
+        }
+        SwingUtilities.invokeLater{
+            removeExistingEnvironmentsPanelIfPresent()
+            buildEnvironmentsPanelButtons(buttonsInfo, hasUsageFunction)
+            revalidate()
+        }
+    }
+
+    private fun buildEnvironmentsPanelButtons(buttonsInfo: MutableMap<String, MutableMap<String, Any>>,
+                                              hasUsageFunction: (String) -> Boolean) {
+        buttonsInfo.forEach { button ->
+            val buttonData = button.value
+            val currEnv = button.key
+            val linkText = buttonData.getValue("linkText").toString()
+            val toolTip = buttonData.getValue("toolTip").toString()
+            val isSelectedEnv = buttonData.getValue("isSelectedEnv") as Boolean
+
+            val envLink = EnvLink(currEnv, linkText, isSelectedEnv)
+            envLink.toolTipText = toolTip
+
+            envLink.addActionListener { event ->
+
+                val currentSelected: EnvLink? = getSelected()
+
+                if (currentSelected === event.source) {
+                    return@addActionListener
+                }
+
+                currentSelected?.deselect { buildLinkText(it, false) }
+
+                val clickedLink: EnvLink = event.source as EnvLink
+                clickedLink.select { buildLinkText(it, true) }
+
+                changeEnvAlarm.cancelAllRequests()
+                changeEnvAlarm.addRequest({
+                    environmentsSupplier.setCurrent(clickedLink.env)
+                }, 100)
+
+            }
+
+            val icon: Icon = if (hasUsageFunction(currEnv)) ENVIRONMENT_HAS_USAGE else ENVIRONMENT_HAS_NO_USAGE
+            val iconComponent = JBLabel(icon)
+
+            val singlePanel = SingleEnvPanel(envLink, iconComponent)
+            singlePanel.toolTipText = toolTip
+
+            this.add(singlePanel)
+        }
+    }
+
+    private fun removeExistingEnvironmentsPanelIfPresent() {
         if (components.isNotEmpty()) {
             this.components.forEach {
                 this.remove(it)
             }
         }
-
-        val usageStatusResult = model.getUsageStatus()
-
-        val envsThatHaveUsageSet: Set<String> = buildEnvironmentWithUsages(usageStatusResult)
-        val hasUsageFunction = fun(env: String): Boolean { return envsThatHaveUsageSet.contains(env) }
-
-        val relevantEnvs = buildRelevantSortedEnvironments(environmentsSupplier, hasUsageFunction)
-
-
-        for (currEnv in relevantEnvs) {
-            val isSelectedEnv = currEnv.contentEquals(environmentsSupplier.getCurrent())
-            val toolTip = buildToolTip(usageStatusResult, currEnv)
-            val linkText = buildLinkText(currEnv, isSelectedEnv)
-
-            SwingUtilities.invokeLater {
-                buildEnvironmentsPanelButtons(currEnv, linkText, isSelectedEnv, toolTip, hasUsageFunction)
-            }
-        }
-        revalidate()
-    }
-
-    private fun buildEnvironmentsPanelButtons(currEnv: String, linkText: String, isSelectedEnv: Boolean,
-                                              toolTip: String, hasUsageFunction: (String) -> Boolean) {
-        val envLink = EnvLink(currEnv, linkText, isSelectedEnv)
-        envLink.toolTipText = toolTip
-
-        envLink.addActionListener { event ->
-
-            val currentSelected: EnvLink? = getSelected()
-
-            if (currentSelected === event.source) {
-                return@addActionListener
-            }
-
-            currentSelected?.deselect { buildLinkText(it, false) }
-
-            val clickedLink: EnvLink = event.source as EnvLink
-            clickedLink.select { buildLinkText(it, true) }
-
-            changeEnvAlarm.cancelAllRequests()
-            changeEnvAlarm.addRequest({
-                environmentsSupplier.setCurrent(clickedLink.env)
-            }, 100)
-
-        }
-
-        val icon: Icon = if (hasUsageFunction(currEnv)) ENVIRONMENT_HAS_USAGE else ENVIRONMENT_HAS_NO_USAGE
-        val iconComponent = JBLabel(icon)
-
-        val singlePanel = SingleEnvPanel(envLink, iconComponent)
-        singlePanel.toolTipText = toolTip
-
-        this.add(singlePanel)
     }
 
     private fun getSelected(): EnvLink? {

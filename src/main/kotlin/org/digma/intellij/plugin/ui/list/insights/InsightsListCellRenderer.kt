@@ -8,6 +8,8 @@ import org.digma.intellij.plugin.model.rest.insights.*
 import org.digma.intellij.plugin.model.rest.insights.EndpointSchema.Companion.CONSUMER_SCHEMA
 import org.digma.intellij.plugin.model.rest.insights.EndpointSchema.Companion.HTTP_SCHEMA
 import org.digma.intellij.plugin.model.rest.insights.EndpointSchema.Companion.RPC_SCHEMA
+import org.digma.intellij.plugin.model.rest.insights.EndpointSchema.Companion.SPAN_SCHEMA
+
 import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
@@ -112,6 +114,9 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
         }
         if(routeInfo.schema == CONSUMER_SCHEMA){
             return GroupViewModel(asHtml(span(endpoint)),  Laf.Icons.Insight.MESSAGE)
+        }
+        if(routeInfo.schema == SPAN_SCHEMA){
+            return GroupViewModel(asHtml(span(endpoint)),  Laf.Icons.Insight.TELESCOPE)
         }
         return GroupViewModel(asHtml(""),  Laf.Icons.Insight.INTERFACE)
     }

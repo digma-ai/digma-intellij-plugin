@@ -12,6 +12,8 @@ class EndpointSchema {
         const val HTTP_SCHEMA: String = "epHTTP"
         const val RPC_SCHEMA: String = "epRPC"
         const val CONSUMER_SCHEMA: String = "epConsumer"
+        const val SPAN_SCHEMA: String = "epSpan"
+
 
         @JvmStatic
         fun getRouteInfo(fullRouteName: String): RouteInfo {
@@ -34,6 +36,9 @@ class EndpointSchema {
             }
             if (isOfType(fullRouteName, CONSUMER_SCHEMA)) {
                 return CONSUMER_SCHEMA
+            }
+            if (isOfType(fullRouteName, SPAN_SCHEMA)) {
+                return SPAN_SCHEMA
             }
             return ""
         }
@@ -58,8 +63,9 @@ class EndpointSchema {
             if (isOfType(origValue, CONSUMER_SCHEMA)) {
                 return
             }
+            return
             // default behaviour, to be backward compatible, where did not have the scheme part of the route, so adding it as HTTP one
-            endpointInsight.route = "$HTTP_SCHEMA:$origValue"
+            //endpointInsight.route = "$HTTP_SCHEMA:$origValue"
         }
     }
 }

@@ -32,7 +32,7 @@ internal class EndpointSchemaTest {
         val codeObjectId = "123"
         val normalUsageInsight = NormalUsageInsight(codeObjectId, "env1", "scope1", 3, null, "get /yes", "endpointSpan1", actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(codeObjectId), 3)
         adjustHttpRouteIfNeeded(normalUsageInsight)
-        assertEquals("epHTTP:get /yes", normalUsageInsight.route)
+        assertEquals("get /yes", normalUsageInsight.route)
     }
 
     @Test

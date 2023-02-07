@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.editor
 
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.project.Project
@@ -27,8 +28,13 @@ class GeneralFileEditorListener(val project: Project) : FileEditorManagerListene
     override fun selectionChanged(event: FileEditorManagerEvent) {
         super.selectionChanged(event)
         refreshAllInsightsForActiveFile(event.oldFile, event.newFile)
+        setFocusedDocument(event.newFile)
     }
 
+    override fun fileClosed(source: FileEditorManager, file: VirtualFile) {
+        super.fileClosed(source, file)
+        removeInsightsPaginationInfoForClosedDocument(file.name)
+    }
 
     private fun refreshAllInsightsForActiveFile(oldFile: VirtualFile?, newFile: VirtualFile?) {
         if (newFile != null) {
@@ -62,6 +68,14 @@ class GeneralFileEditorListener(val project: Project) : FileEditorManagerListene
             lifetimeDefinitionMap[oldFile]?.terminate(true)
             // remove the lifetime for previously active file from the map
             lifetimeDefinitionMap.remove(oldFile)
+        }
+    }
+
+    private fun setFocusedDocument(newFile: VirtualFile?) {
+        if (newFile != null) {
+            setFocusedDocumentName(newFile.name)
+        } else {
+            setFocusedDocumentName("")
         }
     }
 }

@@ -106,6 +106,12 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         return readEntire(responseBody);
     }
 
+    @Override
+    public String getHtmlGraphForSpanScaling(SpanHistogramQuery request) {
+        final ResponseBody responseBody = execute(() -> client.analyticsProvider.getHtmlGraphForSpanScaling(request));
+        return readEntire(responseBody);
+    }
+
     protected static String readEntire(ResponseBody responseBody) {
         try (Reader reader = responseBody.charStream()) {
             return CharStreams.toString(reader);
@@ -321,6 +327,16 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         // @Streaming means ResponseBody as is, without conversion
         @Streaming
         Call<ResponseBody> getHtmlGraphForSpanPercentiles(@Body SpanHistogramQuery request);
+
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/Graphs/graphForSpanScaling")
+        // @Streaming means ResponseBody as is, without conversion
+        @Streaming
+        Call<ResponseBody> getHtmlGraphForSpanScaling(@Body SpanHistogramQuery request);
 
 
         @Headers({

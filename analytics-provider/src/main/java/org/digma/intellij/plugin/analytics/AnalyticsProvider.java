@@ -33,4 +33,6 @@ public interface AnalyticsProvider extends Closeable {
     UsageStatusResult getUsageStatus(UsageStatusRequest usageStatusRequest);
 
     String getHtmlGraphForSpanPercentiles(SpanHistogramQuery request);
+
+    String getHtmlGraphForSpanScaling(SpanHistogramQuery request);
 }

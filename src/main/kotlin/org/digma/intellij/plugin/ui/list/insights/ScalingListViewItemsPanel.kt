@@ -122,8 +122,8 @@ private fun buildButtonToPercentilesGraph(project: Project, spanName: String,ins
     val analyticsService = AnalyticsService.getInstance(project)
     val button = ListItemActionButton("Histogram")
     button.addActionListener {
-        val htmlContent = analyticsService.getHtmlGraphForSpanPercentiles(instLibrary, spanName, Laf.Colors.PLUGIN_BACKGROUND.getHex())
-        HTMLEditorProvider.openEditor(project, "Percentiles Graph of Span $spanName", htmlContent)
+        val htmlContent = analyticsService.getHtmlGraphForSpanScaling(instLibrary, spanName, Laf.Colors.PLUGIN_BACKGROUND.getHex())
+        HTMLEditorProvider.openEditor(project, "Scaling Graph of Span $spanName", htmlContent)
     }
 
     return button

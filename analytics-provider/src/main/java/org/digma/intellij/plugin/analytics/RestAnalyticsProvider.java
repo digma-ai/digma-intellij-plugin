@@ -9,32 +9,16 @@ import okhttp3.ResponseBody;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
-import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
-import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightRequest;
-import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
-import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
-import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
+import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
-import retrofit2.http.Body;
-import retrofit2.http.GET;
-import retrofit2.http.Headers;
-import retrofit2.http.POST;
-import retrofit2.http.PUT;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
-import retrofit2.http.Streaming;
+import retrofit2.http.*;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
+import javax.net.ssl.*;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.Reader;
@@ -103,6 +87,12 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     @Override
     public String getHtmlGraphForSpanPercentiles(SpanHistogramQuery request) {
         final ResponseBody responseBody = execute(() -> client.analyticsProvider.getHtmlGraphForSpanPercentiles(request));
+        return readEntire(responseBody);
+    }
+
+    @Override
+    public String getHtmlGraphForSpanScaling(SpanHistogramQuery request) {
+        final ResponseBody responseBody = execute(() -> client.analyticsProvider.getHtmlGraphForSpanScaling(request));
         return readEntire(responseBody);
     }
 
@@ -321,6 +311,16 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         // @Streaming means ResponseBody as is, without conversion
         @Streaming
         Call<ResponseBody> getHtmlGraphForSpanPercentiles(@Body SpanHistogramQuery request);
+
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/Graphs/graphForSpanScaling")
+        // @Streaming means ResponseBody as is, without conversion
+        @Streaming
+        Call<ResponseBody> getHtmlGraphForSpanScaling(@Body SpanHistogramQuery request);
 
 
         @Headers({

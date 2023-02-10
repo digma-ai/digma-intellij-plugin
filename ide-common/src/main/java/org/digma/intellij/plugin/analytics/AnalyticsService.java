@@ -13,7 +13,11 @@ import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
-import org.digma.intellij.plugin.model.rest.insights.*;
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
+import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightRequest;
+import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
+import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
+import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
@@ -34,8 +38,15 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.net.http.HttpTimeoutException;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -305,6 +316,9 @@ public class AnalyticsService implements Disposable {
 
                 //reset status on success call
                 if (status.isInConnectionError()) {
+                    // change status here because connectionGained() will trigger call to this invoke() again
+                    // and without changing the status Notification will be displayed several times in a loop
+                    status.ok();
                     NotificationUtil.showNotification(project, "Digma: Connection reestablished !");
                     project.getMessageBus().syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC).connectionGained();
                 }
@@ -463,15 +477,15 @@ public class AnalyticsService implements Disposable {
 
         private final Map<String, Boolean> errorsHistory = new HashMap<>();
 
-        private boolean hadConnectException = false;
+        private final AtomicBoolean hadConnectException = new AtomicBoolean(false);
         private boolean hadError = false;
 
         boolean isInError() {
-            return hadConnectException || hadError;
+            return hadConnectException.get() || hadError;
         }
 
         boolean isInConnectionError() {
-            return hadConnectException;
+            return hadConnectException.get();
         }
 
         boolean isOk() {
@@ -479,13 +493,13 @@ public class AnalyticsService implements Disposable {
         }
 
         public void ok() {
-            hadConnectException = false;
+            hadConnectException.set(false);
             hadError = false;
             errorsHistory.clear();
         }
 
         public void connectError() {
-            hadConnectException = true;
+            hadConnectException.set(true);
         }
 
 

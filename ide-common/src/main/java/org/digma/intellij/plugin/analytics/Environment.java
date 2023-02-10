@@ -55,7 +55,9 @@ public class Environment implements EnvironmentsSupplier {
 
             @Override
             public void connectionGained() {
-                //do nothing ,usually connectionGained will be a result of refresh environment
+                if (getCurrent() == null || getCurrent().isEmpty()) {
+                    refreshNowOnBackground();
+                }
             }
         });
     }

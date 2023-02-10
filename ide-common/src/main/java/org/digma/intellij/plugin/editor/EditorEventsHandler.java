@@ -263,7 +263,6 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                 isSupportedFile(file) &&
                 projectFileIndex.isInSourceContent(file) &&
                 !projectFileIndex.isInLibrary(file) &&
-                !projectFileIndex.isInTestSourceContent(file) &&
                 !DocumentInfoIndex.namesToExclude.contains(file.getName()) &&
                 !(file instanceof LightVirtualFile);
     }

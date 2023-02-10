@@ -231,7 +231,6 @@ public class JavaLanguageUtils {
                 !projectFileIndex.isExcluded(file) &&
                 projectFileIndex.isInSourceContent(file) &&
                 !projectFileIndex.isInLibrary(file) &&
-                !projectFileIndex.isInTestSourceContent(file) &&
                 isSupportedFile(project,file) &&
                 !DocumentInfoIndex.namesToExclude.contains(file.getName());
     }

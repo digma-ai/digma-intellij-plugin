@@ -17,6 +17,7 @@ data class SpanDurationBreakdownInsight
         "actualStartTime",
         "customStartTime",
         "prefixedCodeObjectId",
+        "shortDisplayInfo",
         "spanName",
         "breakdownEntries"
 )
@@ -29,6 +30,7 @@ constructor(
         override val actualStartTime: Date?,
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
+        override val shortDisplayInfo: ShortDisplayInfo?,
         val spanName: String,
         val breakdownEntries: List<SpanDurationBreakdown>,
 ) : CodeObjectInsight {

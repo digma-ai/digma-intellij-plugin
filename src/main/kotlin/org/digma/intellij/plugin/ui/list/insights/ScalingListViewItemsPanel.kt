@@ -20,7 +20,6 @@ import javax.swing.*
 
 fun spanScalingListViewItemsPanel(project: Project, insight: SpanScalingInsight, moreData: HashMap<String, Any>): JPanel {
     val scalingPanel = createDefaultBoxLayoutYAxisPanel()
-    scalingPanel.add(getScalingDescriptionPanel(insight))
     scalingPanel.add(getScalingCalculationsPanel(insight))
     scalingPanel.border = emptyBottom(2)
 
@@ -30,11 +29,14 @@ fun spanScalingListViewItemsPanel(project: Project, insight: SpanScalingInsight,
 
     val buttonToGraph = buildButtonToPercentilesGraph(project, insight.spanName,insight.spanInstrumentationLibrary)
 
+    val backwardsCompatibilityTitle = "Scaling Issue Found";
+    val backwardsCompatibilityDescription = "Significant performance degradation at ${insight.turningPointConcurrency} executions/second";
+
     return createInsightPanel(
             project = project,
             insight = insight,
-            title = "Scaling Issue Found",
-            description = "",
+            title = insight.shortDisplayInfo?.title ?: backwardsCompatibilityTitle,
+            description = insight.shortDisplayInfo?.description ?: backwardsCompatibilityDescription,
             iconsList = listOf(Laf.Icons.Insight.SCALE),
             bodyPanel = scalingPanel,
             buttons = listOf(buttonToGraph),
@@ -94,14 +96,6 @@ fun getRootCauseSpanPanel(project: Project, moreData: HashMap<String, Any>, root
     }
 
     return rootCausePanel
-}
-
-
-
-
-private fun getScalingDescriptionPanel(insight: SpanScalingInsight): CopyableLabelHtmlWithForegroundColor {
-    val description = "Significant performance degradation at ${insight.turningPointConcurrency} executions/second"
-    return CopyableLabelHtmlWithForegroundColor(description, Laf.Colors.GRAY)
 }
 
 private fun getScalingCalculationsPanel(insight: SpanScalingInsight): JPanel {

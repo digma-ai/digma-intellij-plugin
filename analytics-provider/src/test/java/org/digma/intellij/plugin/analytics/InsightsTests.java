@@ -76,7 +76,7 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
         Date customStartTimeFiveDaysBefore = Date.from(actualStartTimeNow.toInstant().minus(5, ChronoUnit.DAYS));
         List<CodeObjectInsight> expectedCodeObjectInsights = new ArrayList<>();
 
-        HotspotInsight expectedHotspotInsight = new HotspotInsight(codeObjectId, ENV_1, SCOPE_1, IMPORTANCE_3, null, actualStartTimeNow, customStartTimeFiveDaysBefore, prefixedCodeObjectId, 75);
+        HotspotInsight expectedHotspotInsight = new HotspotInsight(codeObjectId, ENV_1, SCOPE_1, IMPORTANCE_3, null, actualStartTimeNow, customStartTimeFiveDaysBefore, prefixedCodeObjectId, null, 75);
         expectedCodeObjectInsights.add(expectedHotspotInsight);
 
         ErrorInsightNamedError namedError1 = new ErrorInsightNamedError("e0a4d03c-c609-11ec-a9d6-0242ac130006", "System.NullReferenceException", codeObjectId, "Sample.MoneyTransfer.API.Controllers.TransferController$_$TransferFunds");
@@ -84,22 +84,22 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
         List<ErrorInsightNamedError> namedErrors = new ArrayList<>();
         namedErrors.add(namedError1);
         namedErrors.add(namedError2);
-        ErrorInsight expectedErrorInsight = new ErrorInsight(codeObjectId, ENV_1, SCOPE_1, IMPORTANCE_3, null, actualStartTimeNow, customStartTimeFiveDaysBefore, prefixedCodeObjectId, 1, 0, 0, namedErrors);
+        ErrorInsight expectedErrorInsight = new ErrorInsight(codeObjectId, ENV_1, SCOPE_1, IMPORTANCE_3, null, actualStartTimeNow, customStartTimeFiveDaysBefore, prefixedCodeObjectId, null, 1, 0, 0, namedErrors);
         expectedCodeObjectInsights.add(expectedErrorInsight);
 
         String expectedNormalUsageInsightCodeObjectId = "Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$TransferFunds";
         NormalUsageInsight expectedNormalUsageInsight = new NormalUsageInsight( expectedNormalUsageInsightCodeObjectId, ENV_1, SCOPE_1, IMPORTANCE_3, null,
-                ROUTE, ENDPOINT_SPAN, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedNormalUsageInsightCodeObjectId), 40);
+                ROUTE, ENDPOINT_SPAN, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedNormalUsageInsightCodeObjectId), null, 40);
         expectedCodeObjectInsights.add(expectedNormalUsageInsight);
 
         String expectedLowUsageInsightCodeObjectId = "Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$Abc";
         LowUsageInsight expectedLowUsageInsight = new LowUsageInsight( expectedLowUsageInsightCodeObjectId, ENV_1, SCOPE_1, IMPORTANCE_3, null,
-                ROUTE, ENDPOINT_SPAN, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedLowUsageInsightCodeObjectId), 13);
+                ROUTE, ENDPOINT_SPAN, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedLowUsageInsightCodeObjectId), null, 13);
         expectedCodeObjectInsights.add(expectedLowUsageInsight);
 
         String expectedHighUsageInsightCodeObjectId = "Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$Defg";
         HighUsageInsight expectedHighUsageInsight = new HighUsageInsight( expectedHighUsageInsightCodeObjectId, ENV_1, SCOPE_1, IMPORTANCE_3, null,
-                ROUTE, ENDPOINT_SPAN, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedHighUsageInsightCodeObjectId), 98);
+                ROUTE, ENDPOINT_SPAN, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedHighUsageInsightCodeObjectId), null, 98);
         expectedCodeObjectInsights.add(expectedHighUsageInsight);
 
         SpanInfo spanInfo = new SpanInfo("Retrieving account", "Retrieving account", "MoneyTransferDomainService", "Sample.MoneyTransfer.API","Sample.MoneyTransfer.API.MoneyTransferDomainService$_$Error");
@@ -111,7 +111,7 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
 
         String expectedSlowestSpansInsightCodeObjectId = "Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$TransferFunds";
         SlowestSpansInsight expectedSlowestSpansInsight = new SlowestSpansInsight( expectedSlowestSpansInsightCodeObjectId, ENV_1, SCOPE_1, IMPORTANCE_3, null,
-                ROUTE, ENDPOINT_SPAN, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedSlowestSpansInsightCodeObjectId), Collections.singletonList(slowSpanInfo));
+                ROUTE, ENDPOINT_SPAN, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedSlowestSpansInsightCodeObjectId), null, Collections.singletonList(slowSpanInfo));
         expectedCodeObjectInsights.add(expectedSlowestSpansInsight);
 
         String expectedSlowEndpointInsightCodeObjectId = "Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$TransferFunds";
@@ -126,6 +126,7 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
                 , actualStartTimeNow
                 , customStartTimeFiveDaysBefore
                 , addPrefixToCodeObjectId(expectedSlowEndpointInsightCodeObjectId)
+                , null
                 , new Duration(0.11D, "ms", 11000)
                 , new Duration(0.12D, "ms", 12000)
                 , new Duration(0.13D, "ms", 13000)

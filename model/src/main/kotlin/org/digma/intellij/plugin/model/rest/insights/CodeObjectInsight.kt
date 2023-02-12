@@ -41,4 +41,5 @@ interface CodeObjectInsight {
     val actualStartTime: Date?
     val customStartTime: Date?
     val prefixedCodeObjectId: String?
+    val shortDisplayInfo: ShortDisplayInfo?
 }

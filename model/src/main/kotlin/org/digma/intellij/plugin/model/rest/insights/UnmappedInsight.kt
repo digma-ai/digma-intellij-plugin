@@ -18,6 +18,7 @@ data class UnmappedInsight
         "actualStartTime",
         "customStartTime",
         "prefixedCodeObjectId",
+        "shortDisplayInfo",
         "type"
 )
 constructor(
@@ -29,6 +30,7 @@ constructor(
         override val actualStartTime: Date?,
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
+        override val shortDisplayInfo: ShortDisplayInfo?,
         @JsonProperty("type")
         val theType: String,
 ) : CodeObjectInsight {

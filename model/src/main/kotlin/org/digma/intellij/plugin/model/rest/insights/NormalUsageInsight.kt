@@ -18,6 +18,7 @@ data class NormalUsageInsight
         "actualStartTime",
         "customStartTime",
         "prefixedCodeObjectId",
+        "shortDisplayInfo",
         "maxCallsIn1Min"
 )
 constructor(
@@ -31,6 +32,7 @@ constructor(
         override val actualStartTime: Date?,
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
+        override val shortDisplayInfo: ShortDisplayInfo?,
         val maxCallsIn1Min: Int,
 ) : EndpointInsight {
     override val type: InsightType = InsightType.NormalUsage

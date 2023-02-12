@@ -18,6 +18,7 @@ data class SlowestSpansInsight
         "actualStartTime",
         "customStartTime",
         "prefixedCodeObjectId",
+        "shortDisplayInfo",
         "spans"
 )
 constructor(
@@ -31,6 +32,7 @@ constructor(
         override val actualStartTime: Date?,
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
+        override val shortDisplayInfo: ShortDisplayInfo?,
         val spans: List<SlowSpanInfo>,
 ) : EndpointInsight {
     override val type: InsightType = InsightType.SlowestSpans

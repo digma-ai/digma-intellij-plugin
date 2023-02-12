@@ -17,6 +17,7 @@ data class SpanDurationsInsight
         "actualStartTime",
         "customStartTime",
         "prefixedCodeObjectId",
+        "shortDisplayInfo",
         "span",
         "percentiles"
 )
@@ -29,6 +30,7 @@ constructor(
         override val actualStartTime: Date?,
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
+        override val shortDisplayInfo: ShortDisplayInfo?,
         val span: SpanInfo,
         val percentiles: List<SpanDurationsPercentile>,
 ) : CodeObjectInsight {

@@ -17,6 +17,7 @@ data class SpanUsagesInsight
         "actualStartTime",
         "customStartTime",
         "prefixedCodeObjectId",
+        "shortDisplayInfo",
         "span",
         "flows"
 )
@@ -29,6 +30,7 @@ constructor(
         override val actualStartTime: Date?,
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
+        override val shortDisplayInfo: ShortDisplayInfo?,
         val span: String,
         val flows: List<SpanFlow>,
 ) : CodeObjectInsight {

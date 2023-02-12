@@ -16,6 +16,7 @@ class SpanNPlusOneInsight
         "actualStartTime",
         "customStartTime",
         "prefixedCodeObjectId",
+        "shortDisplayInfo",
         "traceId",
         "span",
         "clientSpanName",
@@ -32,12 +33,13 @@ constructor(
         override val actualStartTime: Date?,
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
+        override val shortDisplayInfo: ShortDisplayInfo?,
         val traceId: String?,
         val span: SpanInfo,
         val clientSpanName: String?,
         val occurrences: Number,
         val duration: Duration,
-        val endpoints: List<SpanNPlusEndpoints>
+        val endpoints: List<SpanNPlusEndpoints>,
 ) : CodeObjectInsight {
     override val type: InsightType = InsightType.SpaNPlusOne
 }

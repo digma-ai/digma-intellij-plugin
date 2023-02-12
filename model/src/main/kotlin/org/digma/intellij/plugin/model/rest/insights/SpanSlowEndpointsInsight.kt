@@ -19,6 +19,7 @@ data class SpanSlowEndpointsInsight
         "actualStartTime",
         "customStartTime",
         "prefixedCodeObjectId",
+        "shortDisplayInfo",
         "span",
         "slowEndpoints"
 )
@@ -31,6 +32,7 @@ constructor(
         override val actualStartTime: Date?,
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
+        override val shortDisplayInfo: ShortDisplayInfo?,
         val span: SpanInfo,
         val slowEndpoints: List<SlowEndpointInfo>,
 ) : CodeObjectInsight {

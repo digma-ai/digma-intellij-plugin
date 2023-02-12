@@ -17,6 +17,7 @@ data class HotspotInsight
         "actualStartTime",
         "customStartTime",
         "prefixedCodeObjectId",
+        "shortDisplayInfo",
         "score"
 )
 constructor(
@@ -28,6 +29,7 @@ constructor(
         override val actualStartTime: Date?,
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
+        override val shortDisplayInfo: ShortDisplayInfo?,
         val score: Int = 0,
 ) : CodeObjectInsight {
 

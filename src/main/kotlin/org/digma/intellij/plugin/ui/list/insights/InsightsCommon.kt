@@ -11,13 +11,13 @@ import io.ktor.util.reflect.*
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
+import org.digma.intellij.plugin.refreshInsightsTask.RefreshService
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.buildBoldTitleGrayedComment
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.list.commonListItemPanel
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
-import org.digma.intellij.plugin.refreshInsightsTask.RefreshService
 import java.awt.BorderLayout
 import java.awt.Cursor
 import java.awt.Dimension
@@ -197,15 +197,12 @@ private fun getTimeInfoMessagePanel(
         "Data from: $formattedStartTime ago"
     }
 
-    val timeInfoMessageLabel = JLabel(asHtml(timeInfoMessage), SwingConstants.LEFT)
+    val timeInfoMessageLabel = JLabel(asHtml(timeInfoMessage))
 
-    val timeInfoMessageLabelPanel = JPanel()
-    timeInfoMessageLabelPanel.layout = BoxLayout(timeInfoMessageLabelPanel, BoxLayout.Y_AXIS)
-    timeInfoMessageLabelPanel.border = JBUI.Borders.emptyBottom(5)
-    timeInfoMessageLabelPanel.isOpaque = false
-    timeInfoMessageLabelPanel.add(timeInfoMessageLabel)
+    val timeInfoMessageLabelPanel = getDefaultSpanOneRecordPanel()
+    timeInfoMessageLabelPanel.add(timeInfoMessageLabel, BorderLayout.NORTH)
     if (shouldShowApplyNewTimeFilterLabel(isRecalculateButtonPressed, identicalStartTimes)) {
-        timeInfoMessageLabelPanel.add(getRefreshInsightButton(project))
+        timeInfoMessageLabelPanel.add(getRefreshInsightButton(project), BorderLayout.SOUTH)
     }
     return timeInfoMessageLabelPanel
 }

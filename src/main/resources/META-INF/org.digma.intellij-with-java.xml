@@ -11,7 +11,23 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaSpanNavigationProvider"/>
 
-        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.idea.psi.java.JavaCodeVisionProvider$JavaCodeLens"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaCodeLensProviderFactory"/>
+
+        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.idea.psi.java.codeLensProviders.ErrorHotspotCodeLensProvider"/>
+        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.idea.psi.java.codeLensProviders.HighUsageCodeLensProvider"/>
+        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.idea.psi.java.codeLensProviders.LowUsageCodeLensProvider"/>
+        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.idea.psi.java.codeLensProviders.ScaleFactorCodeLensProvider"/>
+        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.idea.psi.java.codeLensProviders.SlowEndpointCodeLensProvider"/>
+        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.idea.psi.java.codeLensProviders.CodeLensMethodInsightsProvider1"/>
+        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.idea.psi.java.codeLensProviders.CodeLensMethodInsightsProvider2"/>
+        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.idea.psi.java.codeLensProviders.CodeLensMethodInsightsProvider3"/>
+        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.idea.psi.java.codeLensProviders.CodeLensMethodInsightsProvider4"/>
+        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.idea.psi.java.codeLensProviders.CodeLensMethodInsightsProvider5"/>
+        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.idea.psi.java.codeLensProviders.CodeLensMethodInsightsProvider6"/>
+        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.idea.psi.java.codeLensProviders.CodeLensMethodInsightsProvider7"/>
+        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.idea.psi.java.codeLensProviders.CodeLensMethodInsightsProvider8"/>
+        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.idea.psi.java.codeLensProviders.CodeLensMethodInsightsProvider9"/>
+        <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.idea.psi.java.codeLensProviders.CodeLensMethodInsightsProvider10"/>
 
         <postStartupActivity implementation="org.digma.intellij.plugin.idea.psi.java.JavaSpanNavigationStartupActivity"/>
 

@@ -18,6 +18,7 @@ import org.digma.intellij.plugin.document.DocumentInfoChanged
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import java.awt.event.MouseEvent
+import java.util.ArrayList
 import java.util.concurrent.ConcurrentHashMap
 import java.util.stream.Collectors
 
@@ -28,6 +29,8 @@ class JavaCodeLensService(private val project: Project): Disposable {
     private val codeLensCache: MutableMap<String, CodeLensContainer> = ConcurrentHashMap()
 
     private val documentInfoChangedConnection: MessageBusConnection = project.messageBus.connect()
+
+    private val javaCodeLensProviderFactory: JavaCodeLensProviderFactory = project.getService(JavaCodeLensProviderFactory::class.java)
 
     companion object {
         @JvmStatic
@@ -76,6 +79,7 @@ class JavaCodeLensService(private val project: Project): Disposable {
             val methods: Map<String, Pair<TextRange,PsiMethod>> =
                 findMethodsByCodeObjectIds(psiFile, codeLenses.stream().map { it.codeObjectId }.collect(Collectors.toSet()))
 
+            val usedGenericProviders: MutableList<String> = ArrayList<String>()
             codeLenses.forEach { lens ->
 
                 val methodPair = methods[lens.codeObjectId]
@@ -85,7 +89,7 @@ class JavaCodeLensService(private val project: Project): Disposable {
 
                     val entry = ClickableTextCodeVisionEntry(
                             lens.lensTitle,
-                            JavaCodeVisionProvider.JavaCodeLens.ID,
+                            javaCodeLensProviderFactory.getProviderId(lens.lensTitle, usedGenericProviders),
                             ClickHandler(method, project),
                             null, // icon was set already on previous step inside CodeLensProvider.buildCodeLens()
                             lens.lensMoreText,

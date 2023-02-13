@@ -10,43 +10,22 @@ import com.intellij.psi.PsiFile
 
 abstract class JavaCodeVisionProvider: JavaCodeVisionProviderBase() {
 
-
     internal val empty: List<Pair<TextRange, CodeVisionEntry>> = listOf()
-
 
     override val defaultAnchor: CodeVisionAnchorKind
         get() = CodeVisionAnchorKind.Top
 
-    class JavaCodeLens: JavaCodeVisionProvider() {
+    override val relativeOrderings: List<CodeVisionRelativeOrdering>
+        get() = listOf(CodeVisionRelativeOrdering.CodeVisionRelativeOrderingFirst)
 
-        companion object {
-            const val ID = "DigmaCL"
+    override fun computeLenses(editor: Editor, psiFile: PsiFile): List<Pair<TextRange, CodeVisionEntry>> {
+        if (psiFile.virtualFile == null) {
+            return empty
         }
-
-        override val id: String
-            get() = ID
-
-        override val name: String
-            get() = "Digma code lens"
-
-        override val groupId: String
-            get() = ID
-
-        override val relativeOrderings: List<CodeVisionRelativeOrdering>
-            get() = listOf(CodeVisionRelativeOrdering.CodeVisionRelativeOrderingFirst)
-
-        override fun computeLenses(editor: Editor, psiFile: PsiFile): List<Pair<TextRange, CodeVisionEntry>> {
-
-            if (psiFile.virtualFile == null){
-                return empty
-            }
-
-            editor.project?.let {
-                val javaCodeLensService = editor.project!!.getService(JavaCodeLensService::class.java)
-                return javaCodeLensService.getCodeLens(psiFile)
-            }
-            return emptyList()
+        editor.project?.let {
+            val javaCodeLensService = editor.project!!.getService(JavaCodeLensService::class.java)
+            return javaCodeLensService.getCodeLens(psiFile)
         }
+        return emptyList()
     }
-
 }

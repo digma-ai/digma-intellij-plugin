@@ -11,14 +11,7 @@ import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.JavaPsiFacade;
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiJavaFile;
-import com.intellij.psi.PsiManager;
-import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiReference;
+import com.intellij.psi.*;
 import com.intellij.psi.impl.java.stubs.index.JavaFullClassNameIndex;
 import com.intellij.psi.impl.source.JavaFileElementType;
 import com.intellij.psi.search.GlobalSearchScope;
@@ -41,13 +34,7 @@ import org.digma.intellij.plugin.ui.CaretContextService;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import static org.digma.intellij.plugin.idea.psi.java.Constants.SPAN_BUILDER_FQN;
 import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.createJavaMethodCodeObjectId;
@@ -65,6 +52,8 @@ public class JavaLanguageService implements LanguageService {
 
     private final Project project;
 
+    private final ProjectFileIndex projectFileIndex;
+
     private final DocumentInfoService documentInfoService;
 
     private final CaretContextService caretContextService;
@@ -79,6 +68,7 @@ public class JavaLanguageService implements LanguageService {
         this.micronautFramework = new MicronautFramework(project);
         this.jaxrsFramework = new JaxrsFramework(project);
         this.grpcFramework = new GrpcFramework(project);
+        this.projectFileIndex = project.getService(ProjectFileIndex.class);
     }
 
 
@@ -98,6 +88,7 @@ public class JavaLanguageService implements LanguageService {
     }
 
 
+    @Nullable
     @Override
     public Language getLanguageForMethodCodeObjectId(@NotNull String methodId) {
 
@@ -127,24 +118,23 @@ public class JavaLanguageService implements LanguageService {
 
 
     @Override
-    public boolean isSupportedFile(Project project, VirtualFile newFile) {
+    public boolean isSupportedFile(@NotNull Project project, @NotNull VirtualFile newFile) {
         //maybe more correct to find view provider and find a java psi file
         PsiFile psiFile = com.intellij.psi.PsiManager.getInstance(project).findFile(newFile);
-        if (psiFile == null) {
-            return false;
-        }
-        return JavaLanguage.INSTANCE.equals(psiFile.getLanguage());
+        return psiFile != null && JavaLanguage.INSTANCE.equals(psiFile.getLanguage());
     }
 
     @Override
-    public boolean isSupportedFile(Project project, PsiFile psiFile) {
+    public boolean isSupportedFile(@NotNull Project project, @NotNull PsiFile psiFile) {
         return JavaLanguage.INSTANCE.equals(psiFile.getLanguage());
     }
 
     @Override
     @NotNull
     public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, int caretOffset) {
-        //MethodUnderCaret.isSupportedFile is always true here because this method will only be called on supported files
+        if (!isSupportedFile(project,psiFile)){
+            return new MethodUnderCaret("", "", "", PsiUtils.psiFileToUri(psiFile), false);
+        }
         PsiElement underCaret = findElementUnderCaret(project, psiFile, caretOffset);
         if (underCaret == null) {
             return new MethodUnderCaret("", "", "", PsiUtils.psiFileToUri(psiFile), true);
@@ -167,32 +157,16 @@ public class JavaLanguageService implements LanguageService {
 
         /*
         There are few ways to navigate to a method.
-        the current implementation is the simplest, maybe not the best in performance but it doesn't seem to be noticed.
+        the current implementation is the simplest, maybe not the best in performance, but it doesn't seem to be noticed.
         find the psi file in documentInfoService , then find the psi method and call psiMethod.navigate.
-        it proves to work ok for java files.
 
-        other possibilities:
-        1)
-        we have the method offset of the method in our MethodInfo, so we can find the MethodInfo in
-        documentInfoService. or the MethodInfo object can also be in listViewItem.moreData of the PreviewListCellRenderer.
-        then find the selected editor using FileEditorManager.getSelectedTextEditor
-        then selectedTextEditor.getCaretModel().moveToOffset();
-
-        2)
-        another way is to find the psi file through the selected editor then do the same , find the method and navigate.
-
-        another way could be to build an index of codeObjectId -> [an object that holds the file uri and method offset],
-        then find that object in the index and use the offset to move the caret in the selected editor
-
-        if the current implementation proves to be slow or not reliable we can try one of the other options.
+        another option is to search for the method in intellij index and navigate.
          */
 
 
         PsiFile psiFile = documentInfoService.findPsiFileByMethodId(codeObjectId);
-        if (psiFile instanceof PsiJavaFile) {
+        if (psiFile instanceof PsiJavaFile psiJavaFile) {
 
-            //it must be a PsiJavaFile so casting should be ok
-            PsiJavaFile psiJavaFile = (PsiJavaFile) psiFile;
             PsiClass[] classes = psiJavaFile.getClasses();
             PsiMethod psiMethod = findMethod(classes, codeObjectId);
 
@@ -236,6 +210,30 @@ public class JavaLanguageService implements LanguageService {
 
         return null;
     }
+
+
+//    public void navigateToMethod(String methodCodeObjectId) {
+//
+//        var className = methodCodeObjectId.substring(0, methodCodeObjectId.indexOf("$_$"));
+//
+//        //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
+//        className = className.replace('$', '.');
+//
+//        //searching in project scope will find only project classes
+//        Collection<PsiClass> psiClasses =
+//                JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.allScope(project));
+//        if (!psiClasses.isEmpty()) {
+//            //hopefully there is only one class by that name in the project
+//            PsiClass psiClass = psiClasses.stream().findAny().get();
+//            for (PsiMethod method : psiClass.getMethods()) {
+//                var id = JavaLanguageUtils.createJavaMethodCodeObjectId(method);
+//                if (id.equals(methodCodeObjectId) && method.canNavigate()) {
+//                    method.navigate(true);
+//                    return;
+//                }
+//            }
+//        }
+//    }
 
 
     @Override
@@ -299,7 +297,7 @@ public class JavaLanguageService implements LanguageService {
             if (fileEditor != null) {
                 var file = fileEditor.getFile();
                 var psiFile = PsiManager.getInstance(project).findFile(file);
-                if (psiFile != null && isRelevantFile(psiFile)) {
+                if (psiFile != null && isRelevant(psiFile.getVirtualFile())) {
                     var selectedTextEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
                     if (selectedTextEditor != null) {
                         int offset = selectedTextEditor.getCaretModel().getOffset();
@@ -313,15 +311,6 @@ public class JavaLanguageService implements LanguageService {
         JavaCodeLensService.getInstance(project).environmentChanged(newEnv);
     }
 
-
-    private boolean isRelevantFile(PsiFile psiFile) {
-        //if file is not writable it is not supported even if it's a language we support, usually when we open vcs files.
-        return psiFile.isWritable() &&
-                isSupportedFile(project, psiFile) &&
-                !ProjectFileIndex.getInstance(project).isInLibrary(psiFile.getVirtualFile()) &&
-                !ProjectFileIndex.getInstance(project).isInTestSourceContent(psiFile.getVirtualFile()) &&
-                !DocumentInfoIndex.namesToExclude.contains(psiFile.getVirtualFile().getName());
-    }
 
 
     @Override
@@ -465,6 +454,17 @@ public class JavaLanguageService implements LanguageService {
     public boolean isIntellijPlatformPluginLanguage() {
         return true;
     }
+
+    @Override
+    public boolean isRelevant(VirtualFile file) {
+        return file.isWritable() &&
+                projectFileIndex.isInSourceContent(file) &&
+                !projectFileIndex.isInLibrary(file) &&
+                isSupportedFile(project, file) &&
+                !DocumentInfoIndex.namesToExclude.contains(file.getName());
+    }
+
+
 
 
 }

@@ -62,7 +62,7 @@ public class InsightsProvider {
 
     private List<String> getObjectIds(@NotNull MethodInfo methodInfo) {
         List<String> objectIds = new ArrayList<>();
-        objectIds.add(methodInfo.idWithType());
+        objectIds.addAll(methodInfo.allIds());
         objectIds.addAll(methodInfo.getRelatedCodeObjectIdsWithType());
         return objectIds;
     }

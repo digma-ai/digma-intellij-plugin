@@ -83,4 +83,9 @@ public class NoOpLanguageService implements LanguageService {
     public void enrichDocumentInfo(DocumentInfo documentInfo, PsiFile psiFile) {
 
     }
+
+    @Override
+    public boolean isRelevant(VirtualFile file) {
+        return false;
+    }
 }

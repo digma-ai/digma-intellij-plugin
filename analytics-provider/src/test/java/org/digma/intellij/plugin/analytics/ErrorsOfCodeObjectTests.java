@@ -4,6 +4,7 @@ import okhttp3.mockwebserver.MockResponse;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.digma.intellij.plugin.analytics.UtilForTest.*;
@@ -20,7 +21,7 @@ class ErrorsOfCodeObjectTests extends AbstractAnalyticsProviderTest {
                 .addHeader(HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON));
 
         RestAnalyticsProvider analyticsProvider = instanceOfRestAnalyticsProvider();
-        List<CodeObjectError> errors = analyticsProvider.getErrorsOfCodeObject("a", "b");
+        List<CodeObjectError> errors = analyticsProvider.getErrorsOfCodeObject("a", Collections.singletonList("b"));
 
         assertEquals(2, errors.size(), "count of returned errors");
     }

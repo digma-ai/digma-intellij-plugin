@@ -6,6 +6,7 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <projectService serviceImplementation="org.digma.intellij.plugin.pycharm.psi.python.PythonLanguageService"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.pycharm.psi.python.PythonCodeLensService"/>
     </extensions>
 
 </idea-plugin>

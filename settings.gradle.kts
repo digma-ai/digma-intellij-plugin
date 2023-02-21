@@ -41,7 +41,6 @@ dependencyResolutionManagement {
             version("retrofit", "2.9.0")
             library("retrofit-client", "com.squareup.retrofit2", "retrofit").versionRef("retrofit")
             library("retrofit-jackson", "com.squareup.retrofit2", "converter-jackson").versionRef("retrofit")
-            library("logging-interceptor", "com.squareup.retrofit2", "converter-jackson").versionRef("retrofit")
             version("okhttp", "4.9.3")
             library("okhttp", "com.squareup.okhttp3", "okhttp").versionRef("okhttp")
             library("okhttp-mockwebserver", "com.squareup.okhttp3", "mockwebserver").versionRef("okhttp")

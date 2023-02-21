@@ -81,8 +81,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public List<CodeObjectError> getErrorsOfCodeObject(String environment, String codeObjectId) {
-        return execute(() -> client.analyticsProvider.getErrorsOfCodeObject(environment, codeObjectId));
+    public List<CodeObjectError> getErrorsOfCodeObject(String environment, List<String> codeObjectIds) {
+        return execute(() -> client.analyticsProvider.getErrorsOfCodeObject(environment, codeObjectIds));
     }
 
     @Override
@@ -303,7 +303,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Content-Type:application/json"
         })
         @GET("/CodeAnalytics/codeObjects/errors")
-        Call<List<CodeObjectError>> getErrorsOfCodeObject(@Query("environment") String environment, @Query("codeObjectId") String codeObjectId);
+        Call<List<CodeObjectError>> getErrorsOfCodeObject(@Query("environment") String environment, @Query("codeObjectId") List<String> codeObjectIds);
 
         @Headers({
                 "Content-Type:application/json"

@@ -35,7 +35,12 @@ public class InsightsActionsService {
         errorsViewService.setVisible();
     }
 
-    public void navigateToMethod(@NotNull String codeObjectId) {
+    /**
+     * This method is called from the functions list panel and should navigate to a function.
+     * it will not navigate to any method in the project.
+     * @param codeObjectId the method id to navigate
+     */
+    public void navigateToMethodFromFunctionsListPanel(@NotNull String codeObjectId) {
         Language language = documentInfoService.getLanguageByMethodCodeObjectId(codeObjectId);
         LanguageService languageService = languageServiceLocator.locate(language);
         languageService.navigateToMethod(codeObjectId);

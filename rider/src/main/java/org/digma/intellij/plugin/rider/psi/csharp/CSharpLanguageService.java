@@ -18,6 +18,7 @@ import org.digma.intellij.plugin.rider.env.RiderEnvironmentChangedHandler;
 import org.digma.intellij.plugin.rider.protocol.CodeObjectHost;
 import org.digma.intellij.plugin.rider.protocol.MethodNavigationHost;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.TimeUnit;
 import java.util.List;
@@ -41,6 +42,7 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
         riderEnvironmentChangedHandler = project.getService(RiderEnvironmentChangedHandler.class);
     }
 
+    @Nullable
     @Override
     public Language getLanguageForMethodCodeObjectId(@NotNull String methodId) {
         //calls to this method with the same argument may happen many times.
@@ -131,5 +133,10 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     @Override
     public void enrichDocumentInfo(DocumentInfo documentInfo, PsiFile psiFile) {
         //there is nothing to do here for C#
+    }
+
+    @Override
+    public boolean isRelevant(VirtualFile file) {
+        return isSupportedFile(getProject(),file);
     }
 }

@@ -24,7 +24,7 @@ public interface AnalyticsProvider extends Closeable {
 
     List<GlobalInsight> getGlobalInsights(InsightsRequest insightsRequest);
 
-    List<CodeObjectError> getErrorsOfCodeObject(String environment, String codeObjectId);
+    List<CodeObjectError> getErrorsOfCodeObject(String environment, List<String> codeObjectIds);
 
     void setInsightCustomStartTime(CustomStartTimeInsightRequest customStartTimeInsightRequest);
 

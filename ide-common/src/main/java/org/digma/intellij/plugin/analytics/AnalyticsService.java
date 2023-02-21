@@ -181,10 +181,10 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getInsights(new InsightsRequest(env, objectIds)));
     }
 
-    public List<CodeObjectError> getErrorsOfCodeObject(String codeObjectId) throws AnalyticsServiceException {
+    public List<CodeObjectError> getErrorsOfCodeObject(List<String> codeObjectIds) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
-        Log.log(LOGGER::debug, "Requesting insights for next codeObjectId {} and next environment {}", codeObjectId, env);
-        return executeCatching(() -> analyticsProviderProxy.getErrorsOfCodeObject(env, codeObjectId));
+        Log.log(LOGGER::debug, "Requesting insights for next codeObjectId {} and next environment {}", codeObjectIds, env);
+        return executeCatching(() -> analyticsProviderProxy.getErrorsOfCodeObject(env, codeObjectIds));
     }
 
     public void setInsightCustomStartTime(String codeObjectId, InsightType insightType) throws AnalyticsServiceException {

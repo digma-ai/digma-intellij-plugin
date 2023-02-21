@@ -169,6 +169,11 @@ public interface LanguageService extends Disposable {
     }
 
 
+    /**
+     * This method is called from the function list preview tab panel and is meant to navigate
+     * to a method of the current opened file. it will not navigate to any method in the project.
+     * @param codeObjectId
+     */
     void navigateToMethod(String codeObjectId);
 
     boolean isServiceFor(Language language);
@@ -209,4 +214,6 @@ public interface LanguageService extends Disposable {
      * @param psiFile the psi file
      */
     void enrichDocumentInfo(DocumentInfo documentInfo, PsiFile psiFile);
+
+    boolean isRelevant(VirtualFile file);
 }

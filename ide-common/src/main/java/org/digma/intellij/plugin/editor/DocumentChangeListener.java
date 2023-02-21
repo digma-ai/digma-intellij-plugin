@@ -146,37 +146,22 @@ class DocumentChangeListener {
 
         LanguageService languageService = LanguageServiceLocator.getInstance(project).locate(psiFile.getLanguage());
 
+        //todo: we don't build an index for python, its not an issue when a file is opened, but on document change
+        //it may happen too many times. consider building an index for python.
+        //the problem is that the enrich will happen every time anyway,
+        // but maybe keeping method discovery in index saves a lot of cpu and time.
         DocumentInfo documentInfo;
-        try {
-            Map<Integer, DocumentInfo> documentInfoMap =
-                    FileBasedIndex.getInstance().getFileData(DocumentInfoIndex.DOCUMENT_INFO_INDEX_ID, psiFile.getVirtualFile(), project);
-            //there is only one DocumentInfo per file in the index.
-            //all relevant files must be indexed, so if we are here then DocumentInfo must be found in the index is ready,
-            // or we have a mistake somewhere else. java interfaces,enums and annotations are indexed but the DocumentInfo
-            // object is empty of methods, that's because currently we have no way to exclude those types from indexing.
-            documentInfo = documentInfoMap.values().stream().findFirst().orElse(null);
-
-            //usually we should find the document info in the index. on extreme cases, maybe if the index is corrupted
-            // the document info will not be found, try again to build it
-            if (documentInfo == null) {
-                documentInfo = languageService.buildDocumentInfo(psiFile);
-            }
-
-        } catch (IndexNotReadyException e) {
-            //IndexNotReadyException will be thrown on dumb mode, when indexing is still in progress.
-            //usually it should not happen because the document listener is installed only in smart mode.
+        if (languageService.isIndexedLanguage()){
+            documentInfo = EditorEventsHandler.tryGetDocumentInfoFromIndex(project,languageService,psiFile);
+            languageService.enrichDocumentInfo(documentInfo, psiFile);
+        }else{
             documentInfo = languageService.buildDocumentInfo(psiFile);
         }
 
-        if (documentInfo == null) {
-            Log.log(LOGGER::error, "Could not find DocumentInfo for file {}", psiFile.getVirtualFile());
-            throw new DocumentInfoIndexNotFoundException("Could not find DocumentInfo index for " + psiFile.getVirtualFile());
-        }
-        Log.log(LOGGER::debug, "Found DocumentInfo index for {},'{}'", psiFile.getVirtualFile(), documentInfo);
-
-        languageService.enrichDocumentInfo(documentInfo, psiFile);
         documentInfoService.addCodeObjects(psiFile, documentInfo);
     }
+
+
 
 
     void removeDocumentListener(VirtualFile file) {

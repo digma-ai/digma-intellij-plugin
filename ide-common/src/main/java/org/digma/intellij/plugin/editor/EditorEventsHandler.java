@@ -130,13 +130,20 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                 }
 
                 LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
+
+                DocumentInfo documentInfo;
                 //this is actually a test if this is a supported file type
-                if (!languageService.isIndexedLanguage()) {
-                    return;
+                if (languageService.isIndexedLanguage()) {
+                    //get DocumentInfo from the index. documents that are indexed may be incomplete
+                    // that's why we need to enrich them. currently its java files.
+                    documentInfo = tryGetDocumentInfoFromIndex(project,languageService, psiFile);
+                    languageService.enrichDocumentInfo(documentInfo,psiFile);
+                }else{
+                    //if it's not an indexed language build the document info every time a document is opened
+                    // currently its only python
+                    documentInfo = languageService.buildDocumentInfo(psiFile);
                 }
-                //get DocumentInfo from the index, enrich it with span discovery and add it to DocumentInfoService
-                var documentInfo = getDocumentInfo(languageService, psiFile);
-                languageService.enrichDocumentInfo(documentInfo,psiFile);
+
                 documentInfoService.addCodeObjects(psiFile, documentInfo);
             })).inSmartMode(project).withDocumentsCommitted(project).finishOnUiThread(ModalityState.defaultModalityState(), unused -> {
 
@@ -167,7 +174,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
 
 
-    private DocumentInfo getDocumentInfo(@NotNull LanguageService languageService, @NotNull PsiFile psiFile) {
+    static DocumentInfo tryGetDocumentInfoFromIndex(Project project, @NotNull LanguageService languageService, @NotNull PsiFile psiFile) {
 
         DocumentInfo documentInfo;
         try {
@@ -261,8 +268,6 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                 !file.isDirectory() &&
                 file.isWritable() &&
                 isSupportedFile(file) &&
-                projectFileIndex.isInSourceContent(file) &&
-                !projectFileIndex.isInLibrary(file) &&
                 !DocumentInfoIndex.namesToExclude.contains(file.getName()) &&
                 !(file instanceof LightVirtualFile);
     }
@@ -274,7 +279,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
             return false;
         }
         LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
-        return languageService.isIntellijPlatformPluginLanguage();
+        return languageService.isIntellijPlatformPluginLanguage() && languageService.isRelevant(file);
     }
 
 

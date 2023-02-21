@@ -13,7 +13,14 @@ data class MethodInfo(
     val spans: List<SpanInfo>,
 ) : CodeObjectInfo {
 
-    val endpoints: MutableList<EndpointInfo> = mutableListOf()
+    private val endpoints: MutableList<EndpointInfo> = mutableListOf()
+
+    //we need AdditionalIdsProvider only for python. this default implementation returns empty list
+    var additionalIdsProvider: AdditionalIdsProvider = object: AdditionalIdsProvider{
+        override fun provideAdditionalIds(methodInfo: MethodInfo): List<String> {
+            return listOf()
+        }
+    }
 
     companion object {
         fun removeType(objectId: String): String {
@@ -42,6 +49,15 @@ data class MethodInfo(
         return "method:$id"
     }
 
+    fun additionalIdsWithType():List<String>{
+        return additionalIdsProvider.provideAdditionalIds(this)
+    }
+
+    //for python, we need to send multiple ids,see PythonAdditionalIdsProvider
+    fun allIds():List<String>{
+        return mutableListOf(idWithType()).plus(additionalIdsWithType())
+    }
+
     fun nameWithParams(): String {
         return name + getParamsPartFromId()
     }
@@ -56,5 +72,10 @@ data class MethodInfo(
 
     fun addEndpoint(endpoint: EndpointInfo) {
         endpoints.add(endpoint)
+    }
+
+
+    interface AdditionalIdsProvider{
+        fun provideAdditionalIds(methodInfo: MethodInfo):List<String>
     }
 }

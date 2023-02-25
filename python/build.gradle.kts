@@ -13,15 +13,23 @@ dependencies{
 }
 
 intellij {
-    //here we can depend on pycharm. but then pycharm needs to download. in github the build may fail with
-    // no space left on device. so it's possible to depend on IC with python plugin instead because IC is downloaded anyway..
-//    version.set("IC-" + properties("platformVersion", project))
-    //the python plugin version must be compatible with platformVersion
-//    plugins.set(listOf("PythonCore:223.7571.182"))
 
-    version.set("PY-" + properties("platformVersion", project))
-    plugins.set(listOf("PythonCore:223.7571.182"))
+    //there is no source code for pycharm or python plugin
     downloadSources.set(false)
+
+    //the best would be to depend on pycharm. but github build fails with no space left on device especially if running
+    //plugin verifier with PC.
+    //So it is possible not to depend on pycharm but to depend on IC with PythonCore plugin. that means we are limited
+    //to what PythonCore provides. if we ever need specific pycharm functionality we will need to depend on pycharm.
+
+    version.set("IC-" + properties("platformVersion", project))
+    //the python plugin version must be compatible with platformVersion
+    plugins.set(listOf("PythonCore:223.7571.182"))
+
+    //to depend on pycharm community:
+//    version.set("PC-" + properties("platformVersion", project))
+//    plugins.set(listOf("PythonCore:223.7571.182"))
+    //to depend on pycharm professional:
 //    version.set("PY-" + properties("platformVersion", project))
 //    plugins.set(listOf("Pythonid"))
 }

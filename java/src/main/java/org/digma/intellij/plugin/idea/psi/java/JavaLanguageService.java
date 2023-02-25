@@ -417,10 +417,10 @@ public class JavaLanguageService implements LanguageService {
             startSpanReferences.forEach(psiReference -> {
                 SpanInfo spanInfo = JavaSpanDiscoveryUtils.getSpanInfoFromStartSpanMethodReference(project, psiReference);
                 if (spanInfo != null) {
-                    Log.log(LOGGER::debug, "Found span info {} for method {}", spanInfo.getId(), spanInfo.getContainingMethod());
-                    MethodInfo methodInfo = documentInfo.getMethods().get(spanInfo.getContainingMethod());
+                    Log.log(LOGGER::debug, "Found span info {} for method {}", spanInfo.getId(), spanInfo.getContainingMethodId());
+                    MethodInfo methodInfo = documentInfo.getMethods().get(spanInfo.getContainingMethodId());
                     //this method must exist in the document info
-                    Objects.requireNonNull(methodInfo, "method info " + spanInfo.getContainingMethod() + " must exist in DocumentInfo for " + documentInfo.getFileUri());
+                    Objects.requireNonNull(methodInfo, "method info " + spanInfo.getContainingMethodId() + " must exist in DocumentInfo for " + documentInfo.getFileUri());
                     methodInfo.getSpans().add(spanInfo);
                 }
             });
@@ -438,10 +438,10 @@ public class JavaLanguageService implements LanguageService {
                 List<SpanInfo> spanInfos = JavaSpanDiscoveryUtils.getSpanInfoFromWithSpanAnnotatedMethod(psiMethod);
                 if (spanInfos != null) {
                     spanInfos.forEach(spanInfo -> {
-                        Log.log(LOGGER::debug, "Found span info {} for method {}", spanInfo.getId(), spanInfo.getContainingMethod());
-                        MethodInfo methodInfo = documentInfo.getMethods().get(spanInfo.getContainingMethod());
+                        Log.log(LOGGER::debug, "Found span info {} for method {}", spanInfo.getId(), spanInfo.getContainingMethodId());
+                        MethodInfo methodInfo = documentInfo.getMethods().get(spanInfo.getContainingMethodId());
                         //this method must exist in the document info
-                        Objects.requireNonNull(methodInfo, "method info " + spanInfo.getContainingMethod() + " must exist in DocumentInfo for " + documentInfo.getFileUri());
+                        Objects.requireNonNull(methodInfo, "method info " + spanInfo.getContainingMethodId() + " must exist in DocumentInfo for " + documentInfo.getFileUri());
                         methodInfo.getSpans().add(spanInfo);
                     });
                 }

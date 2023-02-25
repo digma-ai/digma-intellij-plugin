@@ -159,7 +159,7 @@ class CodeObjectHost(project: Project): LifetimedProjectComponent(project) {
     private fun RiderSpanInfo.toSpanInfo() = SpanInfo(
         id = id,
         name = name,
-        containingMethod = containingMethod,
+        containingMethodId = containingMethod,
         containingFileUri = normalizeFileUri(containingFileUri,project)
     )
 

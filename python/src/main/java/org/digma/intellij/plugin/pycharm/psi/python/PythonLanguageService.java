@@ -124,7 +124,7 @@ public class PythonLanguageService implements LanguageService {
         PsiFile psiFile = documentInfoService.findPsiFileByMethodId(codeObjectId);
         if (psiFile instanceof PyFile pyFile) {
 
-            PyFunction pyFunction = PythonCodeObjectsDiscovery.findMethodInFile(project,pyFile, codeObjectId);
+            PyFunction pyFunction = PythonLanguageUtils.findMethodInFile(project,pyFile, codeObjectId);
 
             if (pyFunction != null && pyFunction.canNavigateToSource()) {
                 pyFunction.navigate(true);
@@ -183,7 +183,7 @@ public class PythonLanguageService implements LanguageService {
 
     @Override
     public Map<String, Pair<String, Integer>> findWorkspaceUrisForSpanIds(List<String> spanIds) {
-        return new HashMap<>();
+        return PythonSpanNavigationProvider.getInstance(project).getUrisForSpanIds(spanIds);
     }
 
     @Override
@@ -217,7 +217,10 @@ public class PythonLanguageService implements LanguageService {
 
     @Override
     public @NotNull DocumentInfo buildDocumentInfo(PsiFile psiFile) {
-        return PythonCodeObjectsDiscovery.buildDocumentInfo(project, psiFile);
+        if (psiFile instanceof PyFile pyFile) {
+            return PythonCodeObjectsDiscovery.buildDocumentInfo(project, pyFile);
+        }
+        return new DocumentInfo(PsiUtils.psiFileToUri(psiFile),new HashMap<>());
     }
 
     @Override

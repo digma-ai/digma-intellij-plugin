@@ -132,7 +132,7 @@ public class JavaSpanNavigationProvider implements Disposable {
                 List<SpanInfo> spanInfos = JavaSpanDiscoveryUtils.getSpanInfoFromWithSpanAnnotatedMethod(psiMethod);
                 if (spanInfos != null) {
                     spanInfos.forEach(spanInfo -> {
-                        Log.log(LOGGER::debug, "Found span info {} for method {}",spanInfo.getId(),spanInfo.getContainingMethod());
+                        Log.log(LOGGER::debug, "Found span info {} for method {}",spanInfo.getId(),spanInfo.getContainingMethodId());
                         int offset = psiMethod.getTextOffset();
                         var location = new SpanLocation(spanInfo.getContainingFileUri(), offset);
                         spanLocations.put(spanInfo.getId(), location);
@@ -214,7 +214,7 @@ public class JavaSpanNavigationProvider implements Disposable {
             startSpanReferences.forEach(psiReference -> {
                 SpanInfo spanInfo = JavaSpanDiscoveryUtils.getSpanInfoFromStartSpanMethodReference(project, psiReference);
                 if (spanInfo != null) {
-                    Log.log(LOGGER::debug, "Found span info {} in method {}",spanInfo.getId(),spanInfo.getContainingMethod());
+                    Log.log(LOGGER::debug, "Found span info {} in method {}",spanInfo.getId(),spanInfo.getContainingMethodId());
                     int lineNumber = psiReference.getElement().getTextOffset();
                     var location = new SpanLocation(spanInfo.getContainingFileUri(), lineNumber);
                     spanLocations.put(spanInfo.getId(), location);
@@ -235,7 +235,7 @@ public class JavaSpanNavigationProvider implements Disposable {
                 List<SpanInfo> spanInfos = JavaSpanDiscoveryUtils.getSpanInfoFromWithSpanAnnotatedMethod(psiMethod);
                 if (spanInfos != null) {
                     spanInfos.forEach(spanInfo -> {
-                        Log.log(LOGGER::debug, "Found span info {} for method {}",spanInfo.getId(),spanInfo.getContainingMethod());
+                        Log.log(LOGGER::debug, "Found span info {} for method {}",spanInfo.getId(),spanInfo.getContainingMethodId());
                         int offset = psiMethod.getTextOffset();
                         var location = new SpanLocation(spanInfo.getContainingFileUri(), offset);
                         spanLocations.put(spanInfo.getId(), location);

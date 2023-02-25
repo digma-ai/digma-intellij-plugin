@@ -5,11 +5,13 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent;
 import com.jetbrains.rider.ideaInterop.fileTypes.csharp.CSharpLanguage;
 import kotlin.Pair;
 import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.lang3.time.StopWatch;
+import org.digma.intellij.plugin.index.DocumentInfoIndex;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
@@ -137,6 +139,24 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
 
     @Override
     public boolean isRelevant(VirtualFile file) {
-        return isSupportedFile(getProject(),file);
+        if (file.isDirectory()){
+            return false;
+        }
+
+        PsiFile psiFile = PsiManager.getInstance(getProject()).findFile(file);
+        if (psiFile == null) {
+            return false;
+        }
+
+        return isRelevant(psiFile);
+
+    }
+
+    @Override
+    public boolean isRelevant(PsiFile psiFile) {
+        return psiFile.isValid() &&
+                psiFile.isWritable() &&
+                isSupportedFile(getProject(), psiFile) &&
+                !DocumentInfoIndex.namesToExclude.contains(psiFile.getVirtualFile().getName());
     }
 }

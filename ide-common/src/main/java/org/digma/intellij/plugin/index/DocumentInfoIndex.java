@@ -51,7 +51,7 @@ public class DocumentInfoIndex extends SingleEntryFileBasedIndexExtension<Docume
     @Override
     public FileBasedIndex.@NotNull InputFilter getInputFilter() {
 
-        //currently supported file types are java and python
+        //currently supported file types are java , python is not indexed yet
         return new DefaultFileTypeSpecificInputFilter(findSupportedFileTypes()) {
 
             /**

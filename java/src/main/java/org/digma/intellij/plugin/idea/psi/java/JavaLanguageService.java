@@ -457,14 +457,28 @@ public class JavaLanguageService implements LanguageService {
 
     @Override
     public boolean isRelevant(VirtualFile file) {
-        return file.isWritable() &&
-                projectFileIndex.isInSourceContent(file) &&
-                !projectFileIndex.isInLibrary(file) &&
-                isSupportedFile(project, file) &&
-                !DocumentInfoIndex.namesToExclude.contains(file.getName());
+
+        if (file.isDirectory()){
+            return false;
+        }
+
+        PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
+        if (psiFile == null) {
+            return false;
+        }
+
+        return isRelevant(psiFile);
     }
 
 
-
-
+    @Override
+    public boolean isRelevant(PsiFile psiFile) {
+        return psiFile.isValid() &&
+                psiFile.isWritable() &&
+                projectFileIndex.isInSourceContent(psiFile.getVirtualFile()) &&
+                !projectFileIndex.isInLibrary(psiFile.getVirtualFile()) &&
+                !projectFileIndex.isExcluded(psiFile.getVirtualFile()) &&
+                isSupportedFile(project, psiFile) &&
+                !DocumentInfoIndex.namesToExclude.contains(psiFile.getVirtualFile().getName());
+    }
 }

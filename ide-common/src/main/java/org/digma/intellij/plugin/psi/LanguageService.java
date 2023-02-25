@@ -216,4 +216,5 @@ public interface LanguageService extends Disposable {
     void enrichDocumentInfo(DocumentInfo documentInfo, PsiFile psiFile);
 
     boolean isRelevant(VirtualFile file);
+    boolean isRelevant(PsiFile psiFile);
 }

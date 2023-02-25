@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.pycharm.psi.python;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
@@ -129,7 +130,7 @@ public class PythonCodeObjectsDiscovery {
      * the call expression is something like tracer.start_span("span name")
      */
     @NotNull
-    private static List<SpanInfo> discoverSpanFromStartSpanMethodCallExpression(@NotNull Project project, @NotNull PyFile pyFile, @NotNull PyCallExpression pyCallExpression, String fileUri) {
+    public static List<SpanInfo> discoverSpanFromStartSpanMethodCallExpression(@NotNull Project project, @NotNull PsiFile pyFile, @NotNull PyCallExpression pyCallExpression, String fileUri) {
 
         var result = new ArrayList<SpanInfo>();
         var args = pyCallExpression.getArguments();

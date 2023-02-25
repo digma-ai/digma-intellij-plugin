@@ -263,23 +263,16 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
 
     private boolean isRelevantFile(VirtualFile file) {
-        //if file is not writable it is not supported even if it's a language we support, usually when we open vcs files.
-        return file.isValid() &&
-                !file.isDirectory() &&
-                file.isWritable() &&
-                isSupportedFile(file) &&
-                !DocumentInfoIndex.namesToExclude.contains(file.getName()) &&
-                !(file instanceof LightVirtualFile);
-    }
 
-
-    private boolean isSupportedFile(VirtualFile file) {
         PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
         if (psiFile == null) {
             return false;
         }
         LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
-        return languageService.isIntellijPlatformPluginLanguage() && languageService.isRelevant(file);
+        return !(file instanceof LightVirtualFile) &&
+                languageService.isIntellijPlatformPluginLanguage() &&
+                languageService.isRelevant(file);
+
     }
 
 

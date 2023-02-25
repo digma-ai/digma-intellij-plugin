@@ -228,16 +228,6 @@ public class PythonLanguageService implements LanguageService {
         return true;
     }
 
-    @Override
-    public boolean isRelevant(VirtualFile file) {
-        //in java, we test with projectFileIndex.isInSourceContent(file) && !projectFileIndex.isInLibrary(file)
-        //it doesn't work in python
-        return file.isWritable() &&
-                !projectFileIndex.isInLibrary(file) &&
-                isSupportedFile(project, file) &&
-                !DocumentInfoIndex.namesToExclude.contains(file.getName());
-    }
-
 
 
 
@@ -249,4 +239,38 @@ public class PythonLanguageService implements LanguageService {
         //in python, we do all discovery every time the file is opened.
         throw new UnsupportedOperationException("This method should never be called for python");
     }
+
+
+
+
+    @Override
+    public boolean isRelevant(VirtualFile file) {
+
+        if (file.isDirectory()){
+            return false;
+        }
+
+        PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
+        if (psiFile == null) {
+            return false;
+        }
+
+        return isRelevant(psiFile);
+    }
+
+
+
+    @Override
+    public boolean isRelevant(PsiFile psiFile) {
+        return psiFile.isValid() &&
+                psiFile.isWritable() &&
+                !projectFileIndex.isInLibrary(psiFile.getVirtualFile()) &&
+                !projectFileIndex.isExcluded(psiFile.getVirtualFile()) &&
+                isSupportedFile(project, psiFile) &&
+                !DocumentInfoIndex.namesToExclude.contains(psiFile.getVirtualFile().getName());
+    }
+
+
+
+
 }

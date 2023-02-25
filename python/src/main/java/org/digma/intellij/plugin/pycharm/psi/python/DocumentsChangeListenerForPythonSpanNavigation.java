@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.idea.psi.java;
+package org.digma.intellij.plugin.pycharm.psi.python;
 
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ReadAction;
@@ -30,19 +30,19 @@ import java.util.Map;
  * when a document changes. waits for quite period before updating span navigation so to not call span navigation
  * processing too many times.
  */
-public class DocumentsChangeListenerForJavaSpanNavigation implements FileEditorManagerListener {
+public class DocumentsChangeListenerForPythonSpanNavigation implements FileEditorManagerListener {
 
-    private static final Logger LOGGER = Logger.getInstance(DocumentsChangeListenerForJavaSpanNavigation.class);
+    private static final Logger LOGGER = Logger.getInstance(DocumentsChangeListenerForPythonSpanNavigation.class);
 
     private final Project project;
 
-    private final JavaLanguageService javaLanguageService;
+    private final PythonLanguageService pythonLanguageService;
 
     private final Map<VirtualFile, Disposable> disposables = new HashMap<>();
 
-    public DocumentsChangeListenerForJavaSpanNavigation(@NotNull Project project) {
+    public DocumentsChangeListenerForPythonSpanNavigation(@NotNull Project project) {
         this.project = project;
-        javaLanguageService = project.getService(JavaLanguageService.class);
+        pythonLanguageService = project.getService(PythonLanguageService.class);
     }
 
 
@@ -53,7 +53,7 @@ public class DocumentsChangeListenerForJavaSpanNavigation implements FileEditorM
             return;
         }
 
-        if (!javaLanguageService.isRelevant(file)){
+        if (!pythonLanguageService.isRelevant(file)){
             return;
         }
 
@@ -79,9 +79,9 @@ public class DocumentsChangeListenerForJavaSpanNavigation implements FileEditorM
                             return;
                         }
 
-                        JavaSpanNavigationProvider javaSpanNavigationProvider = project.getService(JavaSpanNavigationProvider.class);
+                        PythonSpanNavigationProvider pythonSpanNavigationProvider = project.getService(PythonSpanNavigationProvider.class);
                         documentChangeAlarm.cancelAllRequests();
-                        documentChangeAlarm.addRequest(() -> ReadAction.nonBlocking(new RunnableCallable(() -> javaSpanNavigationProvider.documentChanged(event.getDocument())))
+                        documentChangeAlarm.addRequest(() -> ReadAction.nonBlocking(new RunnableCallable(() -> pythonSpanNavigationProvider.documentChanged(event.getDocument())))
                                 .inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance()), 5000);
                     }
                 },parentDisposable );

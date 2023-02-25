@@ -10,6 +10,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.psi.search.searches.MethodReferencesSearch;
 import com.intellij.util.Query;
@@ -80,13 +81,13 @@ public class JavaSpanNavigationProvider implements Disposable {
             buildSpansLock.lock();
             try {
                 Log.log(LOGGER::info, "Building span navigation");
-                buildWithSpanAnnotation();
-                buildStartSpanMethodCall();
+                buildWithSpanAnnotation(GlobalSearchScope.projectScope(project));
+                buildStartSpanMethodCall(GlobalSearchScope.projectScope(project));
 
                 //trigger a refresh after span navigation is built. this is necessary because the insights and errors
                 //views may be populated before span navigation is ready and spans links can not be built.
                 //for example is the IDE is closed when the cursor is on a method with Duration Breakdown that
-                // has span links, then start the IDE again, the insights view is populted already, without this refresh
+                // has span links, then start the IDE again, the insights view is populated already, without this refresh
                 // there will be no links.
                 project.getService(InsightsViewService.class).refreshInsightsModel();
                 project.getService(ErrorsViewService.class).refreshErrorsModel();
@@ -99,20 +100,21 @@ public class JavaSpanNavigationProvider implements Disposable {
     }
 
 
-    private void buildStartSpanMethodCall() {
+    private void buildStartSpanMethodCall( @NotNull SearchScope searchScope) {
         PsiClass tracerBuilderClass = JavaPsiFacade.getInstance(project).findClass(SPAN_BUILDER_FQN, GlobalSearchScope.allScope(project));
         if (tracerBuilderClass != null) {
             PsiMethod startSpanMethod =
                     JavaLanguageUtils.findMethodInClass(tracerBuilderClass, "startSpan", psiMethod -> psiMethod.getParameters().length == 0);
             Objects.requireNonNull(startSpanMethod, "startSpan method must be found in SpanBuilder class");
 
-            Query<PsiReference> startSpanReferences = MethodReferencesSearch.search(startSpanMethod, GlobalSearchScope.projectScope(project), true);
+            Query<PsiReference> startSpanReferences = MethodReferencesSearch.search(startSpanMethod, searchScope, true);
             //filter classes that we don't support,which should not happen but just in case. we don't support Annotations,Enums and Records.
             startSpanReferences = filterNonRelevantReferencesForSpanDiscovery(startSpanReferences);
 
             startSpanReferences.forEach(psiReference -> {
                 SpanInfo spanInfo = JavaSpanDiscoveryUtils.getSpanInfoFromStartSpanMethodReference(project, psiReference);
                 if (spanInfo != null) {
+                    Log.log(LOGGER::debug, "Found span info {} in method {}",spanInfo.getId(),spanInfo.getContainingMethodId());
                     int lineNumber = psiReference.getElement().getTextOffset();
                     var location = new SpanLocation(spanInfo.getContainingFileUri(), lineNumber);
                     spanLocations.put(spanInfo.getId(), location);
@@ -122,11 +124,11 @@ public class JavaSpanNavigationProvider implements Disposable {
     }
 
 
-    private void buildWithSpanAnnotation() {
+    private void buildWithSpanAnnotation( @NotNull SearchScope searchScope) {
         PsiClass withSpanClass = JavaPsiFacade.getInstance(project).findClass(Constants.WITH_SPAN_FQN, GlobalSearchScope.allScope(project));
         //maybe the annotation is not in the classpath
         if (withSpanClass != null) {
-            Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(withSpanClass, GlobalSearchScope.projectScope(project));
+            Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(withSpanClass, searchScope);
             psiMethods = filterNonRelevantMethodsForSpanDiscovery(psiMethods);
             psiMethods.forEach(psiMethod -> {
                 List<SpanInfo> spanInfos = JavaSpanDiscoveryUtils.getSpanInfoFromWithSpanAnnotatedMethod(psiMethod);
@@ -179,8 +181,8 @@ public class JavaSpanNavigationProvider implements Disposable {
                 buildSpansLock.lock();
                 try {
                     removeDocumentSpans(virtualFile);
-                    buildWithSpanAnnotation(virtualFile);
-                    buildStartSpanMethodCall(virtualFile);
+                    buildWithSpanAnnotation(GlobalSearchScope.fileScope(project, virtualFile));
+                    buildStartSpanMethodCall(GlobalSearchScope.fileScope(project, virtualFile));
                 } finally {
                     buildSpansLock.unlock();
                 }
@@ -199,51 +201,6 @@ public class JavaSpanNavigationProvider implements Disposable {
         fileSpans.forEach(spanLocations::remove);
     }
 
-
-    private void buildStartSpanMethodCall(VirtualFile virtualFile) {
-        PsiClass tracerBuilderClass = JavaPsiFacade.getInstance(project).findClass(SPAN_BUILDER_FQN, GlobalSearchScope.allScope(project));
-        if (tracerBuilderClass != null) {
-            PsiMethod startSpanMethod =
-                    JavaLanguageUtils.findMethodInClass(tracerBuilderClass, "startSpan", psiMethod -> psiMethod.getParameters().length == 0);
-            Objects.requireNonNull(startSpanMethod, "startSpan method must be found in SpanBuilder class");
-
-            Query<PsiReference> startSpanReferences = MethodReferencesSearch.search(startSpanMethod, GlobalSearchScope.fileScope(project, virtualFile), true);
-            //filter classes that we don't support,which should not happen but just in case. we don't support Annotations,Enums and Records.
-            startSpanReferences = filterNonRelevantReferencesForSpanDiscovery(startSpanReferences);
-
-            startSpanReferences.forEach(psiReference -> {
-                SpanInfo spanInfo = JavaSpanDiscoveryUtils.getSpanInfoFromStartSpanMethodReference(project, psiReference);
-                if (spanInfo != null) {
-                    Log.log(LOGGER::debug, "Found span info {} in method {}",spanInfo.getId(),spanInfo.getContainingMethodId());
-                    int lineNumber = psiReference.getElement().getTextOffset();
-                    var location = new SpanLocation(spanInfo.getContainingFileUri(), lineNumber);
-                    spanLocations.put(spanInfo.getId(), location);
-                }
-            });
-        }
-    }
-
-
-    private void buildWithSpanAnnotation(VirtualFile virtualFile) {
-
-        PsiClass withSpanClass = JavaPsiFacade.getInstance(project).findClass(Constants.WITH_SPAN_FQN, GlobalSearchScope.allScope(project));
-        //maybe the annotation is not in the classpath
-        if (withSpanClass != null) {
-            Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(withSpanClass, GlobalSearchScope.fileScope(project, virtualFile));
-            psiMethods = filterNonRelevantMethodsForSpanDiscovery(psiMethods);
-            psiMethods.forEach(psiMethod -> {
-                List<SpanInfo> spanInfos = JavaSpanDiscoveryUtils.getSpanInfoFromWithSpanAnnotatedMethod(psiMethod);
-                if (spanInfos != null) {
-                    spanInfos.forEach(spanInfo -> {
-                        Log.log(LOGGER::debug, "Found span info {} for method {}",spanInfo.getId(),spanInfo.getContainingMethodId());
-                        int offset = psiMethod.getTextOffset();
-                        var location = new SpanLocation(spanInfo.getContainingFileUri(), offset);
-                        spanLocations.put(spanInfo.getId(), location);
-                    });
-                }
-            });
-        }
-    }
 
 
     private static class SpanLocation {

@@ -10,6 +10,7 @@
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaSpanNavigationProvider"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.idea.psi.java.JavaSpanNavigationStartupActivity"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaCodeLensProviderFactory"/>
 
@@ -28,8 +29,6 @@
         <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.idea.psi.java.codeLensProviders.CodeLensMethodInsightsProvider8"/>
         <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.idea.psi.java.codeLensProviders.CodeLensMethodInsightsProvider9"/>
         <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.idea.psi.java.codeLensProviders.CodeLensMethodInsightsProvider10"/>
-
-        <postStartupActivity implementation="org.digma.intellij.plugin.idea.psi.java.JavaSpanNavigationStartupActivity"/>
 
     </extensions>
 

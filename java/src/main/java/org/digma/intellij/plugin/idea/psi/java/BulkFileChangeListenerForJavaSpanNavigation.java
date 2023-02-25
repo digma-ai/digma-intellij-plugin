@@ -17,16 +17,19 @@ public class BulkFileChangeListenerForJavaSpanNavigation implements BulkFileList
 
     private final Project project;
 
+    private final JavaLanguageService javaLanguageService;
+
 
     public BulkFileChangeListenerForJavaSpanNavigation(Project project) {
         this.project = project;
+        javaLanguageService = project.getService(JavaLanguageService.class);
     }
 
     @Override
-    public void after(@NotNull List<? extends @NotNull VFileEvent> events) {
+    public void after(@NotNull List<? extends VFileEvent> events) {
         events.forEach(vFileEvent -> {
             Log.log(LOGGER::debug, "got after bulk change for file  {}", vFileEvent.getFile());
-            if (JavaLanguageUtils.isRelevantFile(project,vFileEvent.getFile())) {
+            if (vFileEvent.getFile() != null && javaLanguageService.isRelevant(vFileEvent.getFile())) {
                 JavaSpanNavigationProvider javaSpanNavigationProvider = project.getService(JavaSpanNavigationProvider.class);
                 javaSpanNavigationProvider.fileChanged(vFileEvent.getFile());
             }

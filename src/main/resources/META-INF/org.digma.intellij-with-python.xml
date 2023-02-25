@@ -6,7 +6,23 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <projectService serviceImplementation="org.digma.intellij.plugin.pycharm.psi.python.PythonLanguageService"/>
+
         <projectService serviceImplementation="org.digma.intellij.plugin.pycharm.psi.python.PythonCodeLensService"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.pycharm.psi.python.PythonSpanNavigationProvider"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.pycharm.psi.python.PythonSpanNavigationStartupActivity"/>
+
     </extensions>
+
+
+
+    <projectListeners>
+        <listener
+                class="org.digma.intellij.plugin.pycharm.psi.python.DocumentsChangeListenerForPythonSpanNavigation"
+                topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
+        <listener
+                class="org.digma.intellij.plugin.pycharm.psi.python.BulkFileChangeListenerForPythonSpanNavigation"
+                topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
+    </projectListeners>
 
 </idea-plugin>

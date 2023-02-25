@@ -88,4 +88,9 @@ public class NoOpLanguageService implements LanguageService {
     public boolean isRelevant(VirtualFile file) {
         return false;
     }
+
+    @Override
+    public boolean isRelevant(PsiFile psiFile) {
+        return false;
+    }
 }

@@ -1,27 +1,8 @@
 package org.digma.intellij.plugin.idea.psi.java;
 
-import com.intellij.lang.java.JavaLanguage;
 import com.intellij.lang.jvm.JvmMethod;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.roots.ProjectFileIndex;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiAnnotation;
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiExpression;
-import com.intellij.psi.PsiExpressionList;
-import com.intellij.psi.PsiField;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiJavaFile;
-import com.intellij.psi.PsiLiteral;
-import com.intellij.psi.PsiLiteralExpression;
-import com.intellij.psi.PsiLocalVariable;
-import com.intellij.psi.PsiManager;
-import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiReferenceExpression;
+import com.intellij.psi.*;
 import com.intellij.psi.impl.source.PsiClassReferenceType;
-import com.intellij.testFramework.LightVirtualFile;
-import org.digma.intellij.plugin.index.DocumentInfoIndex;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -215,36 +196,6 @@ public class JavaLanguageUtils {
 
         return null;
     }
-
-
-    /**
-     * tests if a file is relevant for java language processing and java span discovery and navigation
-     */
-    public static boolean isRelevantFile(Project project, VirtualFile file) {
-
-        var projectFileIndex = ProjectFileIndex.getInstance(project);
-
-        //if file is not writable it is not supported even if it's a language we support, usually when we open vcs files.
-        return !(file instanceof LightVirtualFile) &&
-                !file.isDirectory() &&
-                file.isWritable() &&
-                !projectFileIndex.isExcluded(file) &&
-                projectFileIndex.isInSourceContent(file) &&
-                !projectFileIndex.isInLibrary(file) &&
-                isSupportedFile(project,file) &&
-                !DocumentInfoIndex.namesToExclude.contains(file.getName());
-    }
-
-
-    public static boolean isSupportedFile(Project project,VirtualFile file) {
-        PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
-        if (psiFile == null) {
-            return false;
-        }
-        return JavaLanguage.INSTANCE.equals(psiFile.getLanguage());
-    }
-
-
 
 
 }

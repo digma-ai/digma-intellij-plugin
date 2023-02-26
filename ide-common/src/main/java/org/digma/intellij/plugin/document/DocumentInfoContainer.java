@@ -105,7 +105,7 @@ public class DocumentInfoContainer {
     private List<String> getObjectIdsForCurrentDocument() {
         return this.documentInfo.getMethods().values().stream().flatMap((Function<MethodInfo, Stream<String>>) methodInfo -> {
             var ids = new ArrayList<String>();
-            ids.addAll(methodInfo.allIds());
+            ids.addAll(methodInfo.allIdsWithType());
             ids.addAll(methodInfo.getRelatedCodeObjectIdsWithType());
             return ids.stream();
         }).collect(Collectors.toList());

@@ -47,7 +47,7 @@ public class ErrorsProvider {
     public ErrorsListContainer getErrors(@NotNull MethodInfo methodInfo) {
         var stopWatch = StopWatch.createStarted();
         try {
-            final List<CodeObjectError> codeObjectErrors = analyticsService.getErrorsOfCodeObject(methodInfo.allIds());
+            final List<CodeObjectError> codeObjectErrors = analyticsService.getErrorsOfCodeObject(methodInfo.allIdsWithType());
             Log.log(LOGGER::debug, "CodeObjectErrors for {}: {}", methodInfo.getId(), codeObjectErrors);
 
             final List<ListViewItem<CodeObjectError>> errorsListViewItems = codeObjectErrors
@@ -57,7 +57,7 @@ public class ErrorsProvider {
 
             Log.log(LOGGER::debug, "ListViewItems for {}: {}", methodInfo.getId(), errorsListViewItems);
 
-            final UsageStatusResult usageStatus = analyticsService.getUsageStatusOfErrors(methodInfo.allIds());
+            final UsageStatusResult usageStatus = analyticsService.getUsageStatusOfErrors(methodInfo.allIdsWithType());
             Log.log(LOGGER::debug, "UsageStatus for {}: {}", methodInfo.getId(), usageStatus);
 
             return new ErrorsListContainer(errorsListViewItems, usageStatus);

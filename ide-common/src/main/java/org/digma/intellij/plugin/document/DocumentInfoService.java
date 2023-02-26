@@ -136,8 +136,8 @@ public class DocumentInfoService {
             return documentInfoContainer.getAllInsights().stream().filter(codeObjectInsight -> {
                 String codeObjectId = codeObjectInsight.getCodeObjectId();
                 return (!codeObjectInsight.getType().equals(InsightType.Unmapped)) &&
-                        (methodInfo.getId().equals(codeObjectId)
-                        || methodInfo.idWithType().equals(codeObjectId)
+                        (methodInfo.allIdsWithoutType().contains(codeObjectId)
+                        || methodInfo.allIdsWithType().contains(codeObjectId)
                         || methodInfo.getRelatedCodeObjectIds().contains(codeObjectId)
                         || methodInfo.getRelatedCodeObjectIdsWithType().contains(codeObjectId));
             }).collect(Collectors.toList());

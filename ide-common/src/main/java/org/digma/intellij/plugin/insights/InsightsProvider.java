@@ -41,7 +41,7 @@ public class InsightsProvider {
     }
 
     public InsightsListContainer getInsightsListContainer(@NotNull MethodInfo methodInfo, List<? extends CodeObjectInsight> insightsList) {
-        List<String> objectIds = getObjectIds(methodInfo);
+        List<String> objectIds = getObjectIdsWithType(methodInfo);
         Log.log(LOGGER::debug, "Got following code object ids for method {}: {}",methodInfo.getId(), objectIds);
         var stopWatch = StopWatch.createStarted();
 
@@ -60,9 +60,9 @@ public class InsightsProvider {
         }
     }
 
-    private List<String> getObjectIds(@NotNull MethodInfo methodInfo) {
+    private List<String> getObjectIdsWithType(@NotNull MethodInfo methodInfo) {
         List<String> objectIds = new ArrayList<>();
-        objectIds.addAll(methodInfo.allIds());
+        objectIds.addAll(methodInfo.allIdsWithType());
         objectIds.addAll(methodInfo.getRelatedCodeObjectIdsWithType());
         return objectIds;
     }

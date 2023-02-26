@@ -15,9 +15,30 @@ data class MethodInfo(
 
     private val endpoints: MutableList<EndpointInfo> = mutableListOf()
 
+
+    /*
+        Note about id:
+        a method has a code object id, its language dependent. and usually this id is used to get insights from
+        the backend and to match a method to insights when the cursor moves between methods.
+        in java, C# only this one id is necessary.
+        But in python we need to use few patterns for the id. so a method has a main id, but when sending insights request
+        we need to send multiple patters that are based on the main id. and when matching method is when the cursor moves
+        between methods we need to match to multiple patterns.
+        So we have an AdditionalIdsProvider , the default for java and C# does nothing and returns an empty list.
+        But PythonAdditionalIdsProvider returns multiple ids.
+        and MethodInfo has two corresponding methods: allIdsWithType and allIdsWithoutType.
+        care should be taken when using one or the other.
+
+     */
+
+
     //we need AdditionalIdsProvider only for python. this default implementation returns empty list
     var additionalIdsProvider: AdditionalIdsProvider = object: AdditionalIdsProvider{
-        override fun provideAdditionalIds(methodInfo: MethodInfo): List<String> {
+        override fun provideAdditionalIdsWithType(methodInfo: MethodInfo): List<String> {
+            return listOf()
+        }
+
+        override fun provideAdditionalIdsWithoutType(methodInfo: MethodInfo): List<String> {
             return listOf()
         }
     }
@@ -49,13 +70,21 @@ data class MethodInfo(
         return "method:$id"
     }
 
-    fun additionalIdsWithType():List<String>{
-        return additionalIdsProvider.provideAdditionalIds(this)
+    private fun additionalIdsWithType():List<String>{
+        return additionalIdsProvider.provideAdditionalIdsWithType(this)
+    }
+
+    private fun additionalIdsWithoutType():List<String>{
+        return additionalIdsProvider.provideAdditionalIdsWithoutType(this)
     }
 
     //for python, we need to send multiple ids,see PythonAdditionalIdsProvider
-    fun allIds():List<String>{
+    fun allIdsWithType():List<String>{
         return mutableListOf(idWithType()).plus(additionalIdsWithType())
+    }
+
+    fun allIdsWithoutType():List<String>{
+        return mutableListOf(id).plus(additionalIdsWithoutType())
     }
 
     fun nameWithParams(): String {
@@ -76,6 +105,7 @@ data class MethodInfo(
 
 
     interface AdditionalIdsProvider{
-        fun provideAdditionalIds(methodInfo: MethodInfo):List<String>
+        fun provideAdditionalIdsWithType(methodInfo: MethodInfo):List<String>
+        fun provideAdditionalIdsWithoutType(methodInfo: MethodInfo):List<String>
     }
 }

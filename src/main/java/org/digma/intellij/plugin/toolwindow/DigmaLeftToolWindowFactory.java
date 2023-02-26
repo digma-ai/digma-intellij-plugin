@@ -33,12 +33,6 @@ public class DigmaLeftToolWindowFactory implements ToolWindowFactory {
     private static final Logger LOGGER = Logger.getInstance(DigmaLeftToolWindowFactory.class);
     private static final String DIGMA_NAME = "DIGMA";
 
-    @Override
-    public void init(@NotNull ToolWindow toolWindow) {
-        toolWindow.setStripeTitle(ToolWindowUtil.TAB_NAME);
-        ToolWindowFactory.super.init(toolWindow);
-    }
-
     /**
      * this is the starting point of the plugin. this method is called when the tool window is opened.
      * before the window is opened there may be no reason to do anything, listen to events for example will be

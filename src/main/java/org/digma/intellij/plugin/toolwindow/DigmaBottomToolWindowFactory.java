@@ -48,6 +48,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import static org.digma.intellij.plugin.toolwindow.ToolWindowUtil.BOTTOM_TAB_NAME;
 import static org.digma.intellij.plugin.toolwindow.ToolWindowUtil.RECENT_ACTIVITY_GET_DATA;
 import static org.digma.intellij.plugin.toolwindow.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_SPAN;
 import static org.digma.intellij.plugin.toolwindow.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_TRACE;
@@ -63,7 +64,7 @@ import static org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt.openJaeger
  */
 public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
     private static final Logger LOGGER = Logger.getInstance(DigmaBottomToolWindowFactory.class);
-    private static final String DIGMA_LEFT_TOOL_WINDOW_NAME = "DigmaLeft";
+    private static final String DIGMA_LEFT_TOOL_WINDOW_NAME = "Digma";
     private static final String SUCCESSFULLY_PROCESSED_JCEF_REQUEST_MESSAGE = "Successfully processed JCEF request with action =";
     private final ObjectMapper objectMapper = new ObjectMapper();
     private EditorService editorService;
@@ -110,15 +111,6 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
             });
         }
 
-    }
-
-    /**
-     * Set tab name here
-     */
-    @Override
-    public void init(@NotNull ToolWindow toolWindow) {
-        toolWindow.setStripeTitle(ToolWindowUtil.TAB_NAME);
-        ToolWindowFactory.super.init(toolWindow);
     }
 
     private Content createCodeAnalyticsTab(Project project, ToolWindow toolWindow, ContentFactory contentFactory) {
@@ -170,7 +162,7 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
         jcefDigmaPanel.setLayout(new BorderLayout());
         jcefDigmaPanel.add(browserPanel, BorderLayout.CENTER);
 
-        var jcefContent = contentFactory.createContent(jcefDigmaPanel, "Code Analytics", false);
+        var jcefContent = contentFactory.createContent(jcefDigmaPanel, BOTTOM_TAB_NAME, false);
 
         toolWindow.getContentManager().addContent(jcefContent);
         return jcefContent;
@@ -181,20 +173,19 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
             String methodCodeObjectId = payload.getSpan().getMethodCodeObjectId();
 
             ApplicationManager.getApplication().invokeLater(() -> {
-                        LanguageService languageService = LanguageService.findLanguageServiceByMethodCodeObjectId(project, methodCodeObjectId);
-                        Map<String, Pair<String, Integer>> workspaceUrisForMethodCodeObjectIds = languageService.findWorkspaceUrisForMethodCodeObjectIds(Collections.singletonList(methodCodeObjectId));
-                        if (workspaceUrisForMethodCodeObjectIds.containsKey(methodCodeObjectId)) {
-                            Pair<String, Integer> result = workspaceUrisForMethodCodeObjectIds.get(methodCodeObjectId);
-                            editorService.openWorkspaceFileInEditor(result.getFirst(), result.getSecond());
-                            ToolWindow digmaLeftToolWindow = ToolWindowManager.getInstance(project).getToolWindow(DIGMA_LEFT_TOOL_WINDOW_NAME);
-                            if (digmaLeftToolWindow != null && !digmaLeftToolWindow.isVisible()) {
-                                digmaLeftToolWindow.show();
-                            } else {
-                                Log.log(LOGGER::debug, "digmaLeftToolWindow is empty OR is visible already");
-                            }
-                        }
+                LanguageService languageService = LanguageService.findLanguageServiceByMethodCodeObjectId(project, methodCodeObjectId);
+                Map<String, Pair<String, Integer>> workspaceUrisForMethodCodeObjectIds = languageService.findWorkspaceUrisForMethodCodeObjectIds(Collections.singletonList(methodCodeObjectId));
+                if (workspaceUrisForMethodCodeObjectIds.containsKey(methodCodeObjectId)) {
+                    Pair<String, Integer> result = workspaceUrisForMethodCodeObjectIds.get(methodCodeObjectId);
+                    editorService.openWorkspaceFileInEditor(result.getFirst(), result.getSecond());
+                    ToolWindow digmaLeftToolWindow = ToolWindowManager.getInstance(project).getToolWindow(DIGMA_LEFT_TOOL_WINDOW_NAME);
+                    if (digmaLeftToolWindow != null && !digmaLeftToolWindow.isVisible()) {
+                        digmaLeftToolWindow.show();
+                    } else {
+                        Log.log(LOGGER::debug, "digmaLeftToolWindow is empty OR is visible already");
                     }
-            );
+                }
+            });
             callback.success(SUCCESSFULLY_PROCESSED_JCEF_REQUEST_MESSAGE + " RECENT_ACTIVITY_GO_TO_SPAN at " + new Date());
             return true;
         } else {

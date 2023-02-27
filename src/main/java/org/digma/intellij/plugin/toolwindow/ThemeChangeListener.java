@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.toolwindow;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.ui.jcef.JBCefBrowser;
 import org.apache.commons.lang3.StringUtils;

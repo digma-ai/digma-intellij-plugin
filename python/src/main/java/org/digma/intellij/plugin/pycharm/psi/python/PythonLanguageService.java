@@ -10,6 +10,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.jetbrains.python.PythonLanguage;
 import com.jetbrains.python.psi.PyFile;
@@ -59,11 +60,13 @@ public class PythonLanguageService implements LanguageService {
         //try to find a function that produces the same code object id,
         // if found return its language, else null
         return ReadAction.compute(() -> {
-            var functions = PyFunctionNameIndex.find(functionName, project);
+            var functions = PyFunctionNameIndex.find(functionName, project,GlobalSearchScope.projectScope(project));
 
             for (PyFunction function : functions) {
-                var codeObjectId = PythonLanguageUtils.createPythonMethodCodeObjectId(project,function);
-                if (codeObjectId.equals(methodId)){
+                var codeObjectId = PythonLanguageUtils.createPythonMethodCodeObjectId(project, function);
+                //python method has multiple ids, we don't know what the backend will send so check with all possible ids
+                List<String> allIds = PythonAdditionalIdsProvider.getAdditionalIdsInclusive(codeObjectId, false);
+                if (allIds.contains(methodId)) {
                     return function.getLanguage();
                 }
             }
@@ -95,7 +98,7 @@ public class PythonLanguageService implements LanguageService {
         }
         PyFunction pyFunction = PsiTreeUtil.getParentOfType(underCaret, PyFunction.class);
         if (pyFunction != null) {
-            var methodId = PythonLanguageUtils.createPythonMethodCodeObjectId(project,pyFunction);
+            var methodId = PythonLanguageUtils.createPythonMethodCodeObjectId(project, pyFunction);
             var name = pyFunction.getName() == null ? "" : pyFunction.getName();
             var containingClass = pyFunction.getContainingClass();
             var className = containingClass == null ? "" : containingClass.getName() + ".";
@@ -124,7 +127,7 @@ public class PythonLanguageService implements LanguageService {
         PsiFile psiFile = documentInfoService.findPsiFileByMethodId(codeObjectId);
         if (psiFile instanceof PyFile pyFile) {
 
-            PyFunction pyFunction = PythonLanguageUtils.findMethodInFile(project,pyFile, codeObjectId);
+            PyFunction pyFunction = PythonLanguageUtils.findMethodInFile(project, pyFile, codeObjectId);
 
             if (pyFunction != null && pyFunction.canNavigateToSource()) {
                 pyFunction.navigate(true);
@@ -147,9 +150,6 @@ public class PythonLanguageService implements LanguageService {
     }
 
 
-
-
-
     @Override
     public boolean isServiceFor(Language language) {
         return language.getClass().equals(PythonLanguage.class);
@@ -164,15 +164,18 @@ public class PythonLanguageService implements LanguageService {
 
             var functionName = PythonLanguageUtils.extractFunctionNameFromCodeObjectId(methodId);
 
-            //try to find a function that produces the same code object id,
-            var functions = PyFunctionNameIndex.find(functionName, project);
+            var functions = PyFunctionNameIndex.find(functionName, project, GlobalSearchScope.projectScope(project));
 
             for (PyFunction function : functions) {
-                var codeObjectId = PythonLanguageUtils.createPythonMethodCodeObjectId(project,function);
-                if (codeObjectId.equals(methodId)) {
-                    PyFile pyFile = PsiTreeUtil.getParentOfType(function, PyFile.class);
-                    if (pyFile != null){
-                        workspaceUris.put(codeObjectId,PsiUtils.psiFileToUri(pyFile));
+                if (function.isValid()) {
+                    PsiFile psiFile = function.getContainingFile();
+                    if (PythonLanguageUtils.isProjectFile(project, psiFile)) {
+                        var codeObjectId = PythonLanguageUtils.createPythonMethodCodeObjectId(project, function);
+                        List<String> allIds = PythonAdditionalIdsProvider.getAdditionalIdsInclusive(codeObjectId, false);
+                        if (allIds.contains(methodId)) {
+                            String url = PsiUtils.psiFileToUri(psiFile);
+                            workspaceUris.put(codeObjectId, url);
+                        }
                     }
                 }
             }
@@ -220,15 +223,13 @@ public class PythonLanguageService implements LanguageService {
         if (psiFile instanceof PyFile pyFile) {
             return PythonCodeObjectsDiscovery.buildDocumentInfo(project, pyFile);
         }
-        return new DocumentInfo(PsiUtils.psiFileToUri(psiFile),new HashMap<>());
+        return new DocumentInfo(PsiUtils.psiFileToUri(psiFile), new HashMap<>());
     }
 
     @Override
     public boolean isIntellijPlatformPluginLanguage() {
         return true;
     }
-
-
 
 
     @Override
@@ -241,12 +242,10 @@ public class PythonLanguageService implements LanguageService {
     }
 
 
-
-
     @Override
     public boolean isRelevant(VirtualFile file) {
 
-        if (file.isDirectory()){
+        if (file.isDirectory() || !file.isValid()) {
             return false;
         }
 
@@ -259,18 +258,16 @@ public class PythonLanguageService implements LanguageService {
     }
 
 
-
     @Override
     public boolean isRelevant(PsiFile psiFile) {
         return psiFile.isValid() &&
                 psiFile.isWritable() &&
+                PythonLanguageUtils.isProjectFile(project, psiFile) &&
                 !projectFileIndex.isInLibrary(psiFile.getVirtualFile()) &&
                 !projectFileIndex.isExcluded(psiFile.getVirtualFile()) &&
                 isSupportedFile(project, psiFile) &&
                 !DocumentInfoIndex.namesToExclude.contains(psiFile.getVirtualFile().getName());
     }
-
-
 
 
 }

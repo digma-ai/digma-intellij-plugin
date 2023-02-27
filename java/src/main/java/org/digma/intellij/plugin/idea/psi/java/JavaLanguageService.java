@@ -458,7 +458,7 @@ public class JavaLanguageService implements LanguageService {
     @Override
     public boolean isRelevant(VirtualFile file) {
 
-        if (file.isDirectory()){
+        if (file.isDirectory() || !file.isValid()){
             return false;
         }
 

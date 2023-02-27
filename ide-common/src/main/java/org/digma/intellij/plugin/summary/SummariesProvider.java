@@ -67,11 +67,11 @@ public class SummariesProvider {
             if (insight instanceof SpanDurationChangeInsight) {
                 //only call findWorkspaceUrisForSpans if there is at least one Change.
                 //take the method code object id from the first one,it is used to discover the language service.
-                if (!((SpanDurationChangeInsight) insight).getSpanDurationChanges().isEmpty()){
+                if (!((SpanDurationChangeInsight) insight).getSpanDurationChanges().isEmpty()) {
                     @SuppressWarnings("OptionalGetWithoutIsPresent")//no need ,it only happens if getSpanDurationChanges is not empty
                     SpanDurationChangeInsight.Change change = ((SpanDurationChangeInsight) insight).getSpanDurationChanges().stream().findAny().get();
                     var methodId = change.getCodeObjectId();
-                    findWorkspaceUrisForSpans(project, item, getSpanIds((SpanDurationChangeInsight) insight), methodId);
+                    findWorkspaceUrisForSpans(project, item, getSpanIds((SpanDurationChangeInsight) insight), methodId == null ? "" : methodId);
                 }
             }
 

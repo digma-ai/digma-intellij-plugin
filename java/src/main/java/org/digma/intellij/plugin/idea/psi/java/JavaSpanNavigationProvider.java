@@ -191,6 +191,24 @@ public class JavaSpanNavigationProvider implements Disposable {
     }
 
 
+    public void fileDeleted(VirtualFile virtualFile) {
+
+        if (project.isDisposed()) {
+            return;
+        }
+
+        ReadAction.nonBlocking(new RunnableCallable(() -> {
+            if (virtualFile != null) {
+                buildSpansLock.lock();
+                try {
+                    removeDocumentSpans(virtualFile);
+                } finally {
+                    buildSpansLock.unlock();
+                }
+            }
+        })).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance());
+    }
+
     private void removeDocumentSpans(@NotNull VirtualFile virtualFile) {
         //find all spans that are in virtualFile
         var fileSpans = spanLocations.entrySet().stream().

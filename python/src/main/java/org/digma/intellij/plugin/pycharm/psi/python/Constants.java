@@ -9,4 +9,6 @@ public interface Constants {
     String OPENTELEMETRY_START_SPAN_FUNC_NAME = "start_span";
     String OPENTELEMETRY_GET_TRACER_FUNC_NAME = "get_tracer";
 
+    String SITE_PACKAGES_DIR_NAME = "site-packages";
+
 }

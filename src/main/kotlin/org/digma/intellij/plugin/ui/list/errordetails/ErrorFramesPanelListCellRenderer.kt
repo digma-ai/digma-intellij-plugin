@@ -93,7 +93,8 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
                         }
                         if(modelObject.isInWorkspace()){
                             link(modelObject.frame.executedCode) {
-                                //todo: action
+                                val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
+                                actionListener.openErrorFrameWorkspaceFile(modelObject.getWorkspaceUrl(),modelObject.lastInstanceCommitId,modelObject.frame.lineNumber)
                             }.gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL)
                         }else {
                             cell(CopyableLabel(modelObject.frame.executedCode))

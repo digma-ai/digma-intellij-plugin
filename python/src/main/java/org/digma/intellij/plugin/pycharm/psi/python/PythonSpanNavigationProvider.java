@@ -104,7 +104,7 @@ public class PythonSpanNavigationProvider implements Disposable {
 
     private void buildSpanNavigation(@NotNull Project project,@NotNull String tracerMethodName,@NotNull SearchScope searchScope) {
 
-        var functions = PyFunctionNameIndex.find(tracerMethodName, project);
+        var functions = PyFunctionNameIndex.find(tracerMethodName, project,GlobalSearchScope.allScope(project));
 
         //for some reason the search returns two identical functions, so just choose the first one.
         // I expect only one and don't know why there are two.
@@ -122,7 +122,7 @@ public class PythonSpanNavigationProvider implements Disposable {
             if (pyCallExpression != null) {
                 Log.log(LOGGER::debug, "call expression to {} function is {} ", tracerMethodName, pyCallExpression.getText());
                 var pyFile = pyCallExpression.getContainingFile();
-                if (!ProjectFileIndex.getInstance(project).isInLibrary(pyFile.getVirtualFile())) {
+                if (PythonLanguageUtils.isProjectFile(project,pyFile)) {
                     var fileUri = PsiUtils.psiFileToUri(pyFile);
                     List<SpanInfo> spanInfos = discoverSpanFromStartSpanMethodCallExpression(project, pyFile, pyCallExpression, fileUri);
                     spanInfos.forEach(spanInfo -> {
@@ -175,6 +175,24 @@ public class PythonSpanNavigationProvider implements Disposable {
                     removeDocumentSpans(virtualFile);
                     buildSpanNavigation(project,Constants.OPENTELEMETRY_START_AS_CURRENT_SPAN_FUNC_NAME,GlobalSearchScope.fileScope(project,virtualFile));
                     buildSpanNavigation(project,Constants.OPENTELEMETRY_START_SPAN_FUNC_NAME,GlobalSearchScope.fileScope(project,virtualFile));
+                } finally {
+                    buildSpansLock.unlock();
+                }
+            }
+        })).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance());
+    }
+
+    public void fileDeleted(VirtualFile virtualFile) {
+
+        if (project.isDisposed()) {
+            return;
+        }
+
+        ReadAction.nonBlocking(new RunnableCallable(() -> {
+            if (virtualFile != null) {
+                buildSpansLock.lock();
+                try {
+                    removeDocumentSpans(virtualFile);
                 } finally {
                     buildSpansLock.unlock();
                 }

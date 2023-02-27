@@ -96,7 +96,7 @@ public class PythonCodeObjectsDiscovery {
 
     private static void spanDiscovery(@NotNull Project project, @NotNull PyFile pyFile, String fileUri, @NotNull String tracerMethodName, @NotNull Map<String, MethodInfo> methodInfoMap) {
 
-        var functions = PyFunctionNameIndex.find(tracerMethodName, project);
+        var functions = PyFunctionNameIndex.find(tracerMethodName, project,GlobalSearchScope.allScope(project));
 
         //for some reason the search returns two identical functions, so just choose the first one.
         // I expect only one and don't know why there are two.
@@ -154,21 +154,16 @@ public class PythonCodeObjectsDiscovery {
                 var spanId = PythonLanguageUtils.createSpanId("__main__", spanName);
                 result.add(new SpanInfo(spanId, spanName, methodId, fileUri));
 
-                //second instrumentation library is the relative path from project root ,without the py extension.
-                var path = pyFile.getVirtualFile().getPath();
-                var index = path.lastIndexOf(project.getName());
-                path = path.substring(index + project.getName().length());
-                if (path.startsWith(File.separator)) {
-                    path = path.substring(1);
-                }
-                path = path.substring(0, path.lastIndexOf(".py")).replace(File.separator, "."); //should work on linux and windows
-                spanId = PythonLanguageUtils.createSpanId(path, spanName);
+                //second instrumentation library is the relative path from project root or site-packages ,without the py extension.
+                var relativePath = PythonLanguageUtils.getRelativePath(project,pyFile);
+                relativePath = relativePath.substring(0, relativePath.lastIndexOf(".py")).replace(File.separator, "."); //should work on linux and windows
+                spanId = PythonLanguageUtils.createSpanId(relativePath, spanName);
                 result.add(new SpanInfo(spanId, spanName, methodId, fileUri));
 
                 //third instrumentation library is the relative path without its first segment if any
-                if (path.indexOf(".") > 0) {
-                    path = path.substring(path.indexOf(".") + 1);
-                    spanId = PythonLanguageUtils.createSpanId(path, spanName);
+                if (relativePath.indexOf(".") > 0) {
+                    relativePath = relativePath.substring(relativePath.indexOf(".") + 1);
+                    spanId = PythonLanguageUtils.createSpanId(relativePath, spanName);
                     result.add(new SpanInfo(spanId, spanName, methodId, fileUri));
                 }
 
@@ -305,71 +300,5 @@ public class PythonCodeObjectsDiscovery {
         return stringLiteralExpression.getStringValue();
     }
 
-
-//    private static List<SpanInfo> discoverSpansTMP(Project project, PyFunction pyFunction) {
-//
-//
-//        var functions = PyFunctionNameIndex.find(Constants.OPENTELEMETRY_START_AS_CURRENT_SPAN_FUNC_NAME, project);
-//        functions.forEach(startSpanFunction -> {
-//            if (startSpanFunction.getContainingClass() != null &&
-//                    Constants.OPENTELEMETRY_TRACER_FQN.equals(startSpanFunction.getContainingClass().getQualifiedName())) {
-//                System.out.println("found my function");
-//                Query<PsiReference> references = ReferencesSearch.search(startSpanFunction, GlobalSearchScope.allScope(project));
-//                references.forEach(psiReference -> {
-//                    var pyCallExpression = PsiTreeUtil.getParentOfType(psiReference.getElement(), PyCallExpression.class);
-//                    var pyExpression = pyCallExpression.getReceiver(null);
-//                    var args = pyCallExpression.getArguments();
-//                    System.out.println();
-//
-//                });
-//            }
-//        });
-//
-//
-//        PyRecursiveElementVisitor pyRecursiveElementVisitor = new PyRecursiveElementVisitor() {
-//            @Override
-//            public void visitElement(@NotNull PsiElement element) {
-//                super.visitElement(element);
-//            }
-//
-//            @Override
-//            public void visitPyReferenceExpression(@NotNull PyReferenceExpression node) {
-//                super.visitPyReferenceExpression(node);
-//            }
-//
-//            @Override
-//            public void visitPyTargetExpression(@NotNull PyTargetExpression node) {
-//                super.visitPyTargetExpression(node);
-//            }
-//
-//            @Override
-//            public void visitPyCallExpression(@NotNull PyCallExpression node) {
-//                super.visitPyCallExpression(node);
-//                //((PyTargetExpression)((PyAssignmentStatement)node.getReceiver(null).getReference().resolve().getContext()).getLeftHandSideExpression())
-//            }
-//
-//            @Override
-//            public void visitPyAssignmentStatement(@NotNull PyAssignmentStatement node) {
-//                super.visitPyAssignmentStatement(node);
-//            }
-//        };
-//
-//        pyFunction.accept(pyRecursiveElementVisitor);
-//
-//
-//        //PsiTreeUtil
-////        ReferencesSearch.search()
-////        new PyStringReferenceSearch().processQuery();
-////        PySearchUtil.computeElementNameForStringSearch()
-////        PyPsiIndexUtil.findUsages()
-//
-//
-////        var traceClass = findTracerClass(project)
-//
-//        //PyFunction pyFunction1 = ((PyReferenceExpression)((PyWithStatement)pyFunction.getChildren()[2].getChildren()[0]).getWithItems()[0].getChildren()[0].getChildren()[0]).getReference().resolve();
-//
-//        //((((PyCallExpression)((PyWithStatement)pyFunction.getChildren()[2].getChildren()[0]).getWithItems()[0].getChildren()[0]).getCallee().getChildren()[0].getReference().resolve().getReference().resolve()).getContext().getChildren()[0]
-//        return new ArrayList<>();
-//    }
 
 }

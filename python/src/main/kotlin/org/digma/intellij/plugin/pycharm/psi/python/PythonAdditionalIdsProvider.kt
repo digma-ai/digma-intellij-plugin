@@ -13,18 +13,30 @@ class PythonAdditionalIdsProvider:MethodInfo.AdditionalIdsProvider {
         return provideAdditionalIds(methodInfo,false)
     }
 
-
-
     private fun provideAdditionalIds(methodInfo: MethodInfo, withType: Boolean): List<String>{
-        var id = methodInfo.id
-        val additionalIds = mutableListOf<String>()
-        var i = id.indexOf('/')
-        while (i >= 0){
-            id = id.substringAfter('/')
-            val additionalId = if(withType) "method:$id" else id
-            additionalIds.add(additionalId)
-            i = id.indexOf('/')
+        return getAdditionalIds(methodInfo.id,withType)
+    }
+
+    companion object {
+        @JvmStatic
+        fun getAdditionalIdsInclusive(codeObjectId: String, withType: Boolean): MutableList<String> {
+            val ids = getAdditionalIds(codeObjectId,withType)
+            ids.add(codeObjectId)
+            return ids
         }
-        return additionalIds
+
+        @JvmStatic
+        fun getAdditionalIds(codeObjectId: String, withType: Boolean): MutableList<String> {
+            var id = codeObjectId
+            val additionalIds = mutableListOf<String>()
+            var i = id.indexOf('/')
+            while (i >= 0){
+                id = id.substringAfter('/')
+                val additionalId = if(withType) "method:$id" else id
+                additionalIds.add(additionalId)
+                i = id.indexOf('/')
+            }
+            return additionalIds
+        }
     }
 }

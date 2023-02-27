@@ -264,6 +264,10 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
     private boolean isRelevantFile(VirtualFile file) {
 
+        if (file.isDirectory() || !file.isValid()){
+            return false;
+        }
+
         PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
         if (psiFile == null) {
             return false;

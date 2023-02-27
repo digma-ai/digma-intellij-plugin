@@ -24,7 +24,7 @@ public class InsightsViewBuilder extends ListViewBuilder {
 
     @SuppressWarnings("unchecked")
     @NotNull
-    public List<ListViewItem<?>> build(Project project, @NotNull MethodInfo scope, List<? extends CodeObjectInsight> codeObjectInsights) {
+    public List<ListViewItem<?>> build(Project project, @NotNull MethodInfo methodInfo, List<? extends CodeObjectInsight> codeObjectInsights) {
 
         adjustToHttpIfNeeded(codeObjectInsights);
 
@@ -32,7 +32,7 @@ public class InsightsViewBuilder extends ListViewBuilder {
 
         codeObjectInsights.forEach(insight -> {
             final ListViewItemBuilder<CodeObjectInsight> builder = (ListViewItemBuilder<CodeObjectInsight>) buildersHolder.getBuilder(insight.getType());
-            final List<ListViewItem<?>> insightListItems = builder.build(project, insight, groupManager);
+            final List<ListViewItem<?>> insightListItems = builder.build(project,methodInfo, insight, groupManager);
             allItems.addAll(insightListItems);
         });
 

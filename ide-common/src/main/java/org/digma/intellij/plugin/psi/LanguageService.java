@@ -29,22 +29,39 @@ public interface LanguageService extends Disposable {
 
     }
 
+
     /**
-     * there are a few services that need to guess which language service to use. usually when there is no related
-     * file.
-     * <p>
-     * examples are:
-     * SlowestSpansHelper.findWorkspaceUrisForSpans: when this method is called while building SlowestSpansInsight
-     * then we have the method id, and it will be found by DocumentInfoService because the related file is probably
-     * opened in the editor and DocumentInfoService has the knowledge of the language.
-     * but if it's called from SummariesProvider there is no method and we have to guess.
-     * <p>
-     * ErrorsProvider.getErrorDetails: if this method is called when the error is clicked in errors insight then we have
-     * the method id and we can find the language because the document is probably opened and DocumentInfoService has the
-     * knowledge of the language. but if called when clicking an error in summary view the document is probably not
-     * opened and we have to guess.
-     * This method must be executed in ReadAction or EDT.
+     * if we have MethodInfo it should be easy to find the language. it should always be the preferred way when there
+     * is a MethodInfo.
      */
+    @NotNull
+    static LanguageService findLanguageServiceByMethodInfo(@NotNull Project project, @NotNull MethodInfo methodInfo) {
+
+        try {
+            PsiFile psiFile = PsiUtils.uriToPsiFile(methodInfo.getContainingFileUri(),project);
+            if (psiFile.isValid()) {
+                Language language = psiFile.getLanguage();
+                return project.getService(LanguageServiceLocator.class).locate(language);
+            }
+        } catch (PsiFileNotFountException e) {
+            //ignore
+        }
+
+        //if not found above try another way
+        return findLanguageServiceByMethodCodeObjectId(project,methodInfo.getId());
+
+    }
+
+        /**
+         * there are a few services that need to guess which language service to use. usually when there is no related
+         * file or method.
+         * <p>
+         * ErrorsProvider.getErrorDetails: if this method is called when the error is clicked in errors insight then we have
+         * the method id, and we can find the language because the document is probably opened and DocumentInfoService has the
+         * knowledge of the language. but if called when clicking an error in summary view the document is probably not
+         * opened and we have to guess.
+         * This method must be executed in ReadAction or EDT.
+         */
     @NotNull
     static LanguageService findLanguageServiceByMethodCodeObjectId(@NotNull Project project, @Nullable String methodCodeObjectId) {
 
@@ -83,9 +100,13 @@ public interface LanguageService extends Disposable {
         return project.getService(LanguageServiceLocator.class).locate(language);
     }
 
+
+    /**
+     * This method should be used as last resort to find the language
+     */
     @SuppressWarnings("unchecked")
     @Nullable
-    static Language findLanguageByMethodCodeObjectId(@NotNull Project project, @NotNull String methodId) {
+    private static Language findLanguageByMethodCodeObjectId(@NotNull Project project, @NotNull String methodId) {
 
         for (SupportedLanguages value : SupportedLanguages.values()) {
 
@@ -140,6 +161,7 @@ public interface LanguageService extends Disposable {
 
 
     /**
+     * This method should be a last resort to find language as it is slow and not reliable.
      * try to find the language by method code object id.
      * each language service should implement it differently and may return null.
      * each language service can only check if this method's language is the language it supports.

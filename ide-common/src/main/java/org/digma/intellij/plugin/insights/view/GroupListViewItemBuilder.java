@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.insights.view;
 
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.document.CodeObjectsUtil;
+import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupListViewItem;
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupType;
@@ -9,6 +10,7 @@ import org.digma.intellij.plugin.ui.model.insights.InsightListViewItem;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
 import org.digma.intellij.plugin.view.ListGroupManager;
 import org.digma.intellij.plugin.view.ListViewItemBuilder;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.function.Function;
@@ -27,7 +29,7 @@ public class GroupListViewItemBuilder<T extends CodeObjectInsight> implements Li
     }
 
     @Override
-    public List<ListViewItem<?>> build(Project project, T insight, ListGroupManager groupManager) {
+    public List<ListViewItem<?>> build(Project project, @NotNull MethodInfo methodInfo, T insight, ListGroupManager groupManager) {
         final String route = routeFunction != null ? routeFunction.apply(insight) : "";
         final String groupId = endpointSpan.apply(insight);
         final InsightGroupListViewItem theGroup = (InsightGroupListViewItem)
@@ -37,19 +39,19 @@ public class GroupListViewItemBuilder<T extends CodeObjectInsight> implements Li
 
         switch (insight.getType()){
             case SlowestSpans:{
-                WorkspaceUrisHelper.findWorkspaceUrisForSpans(project, theListView, getSpanIds((SlowestSpansInsight) insight), insight.getCodeObjectId());
+                WorkspaceUrisHelper.findWorkspaceUrisForSpans(project, theListView, getSpanIds((SlowestSpansInsight) insight), methodInfo);
                 break;
             }
             case SpanDurationBreakdown:{
-                WorkspaceUrisHelper.findWorkspaceUrisForSpans(project, theListView, getSpanIds((SpanDurationBreakdownInsight) insight), insight.getCodeObjectId());
+                WorkspaceUrisHelper.findWorkspaceUrisForSpans(project, theListView, getSpanIds((SpanDurationBreakdownInsight) insight), methodInfo);
                 break;
             }
             case EndpointSpaNPlusOne:{
-                WorkspaceUrisHelper.findWorkspaceUrisForSpans(project, theListView, getSpanIds((EPNPlusSpansInsight) insight), insight.getCodeObjectId());
+                WorkspaceUrisHelper.findWorkspaceUrisForSpans(project, theListView, getSpanIds((EPNPlusSpansInsight) insight), methodInfo);
                 break;
             }
             case SpanScaling:{
-                WorkspaceUrisHelper.findWorkspaceUrisForSpans(project,theListView, getSpanIds((SpanScalingInsight) insight), insight.getCodeObjectId());
+                WorkspaceUrisHelper.findWorkspaceUrisForSpans(project,theListView, getSpanIds((SpanScalingInsight) insight), methodInfo);
                 break;
             }
         }

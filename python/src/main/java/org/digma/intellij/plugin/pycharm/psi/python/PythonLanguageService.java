@@ -151,8 +151,8 @@ public class PythonLanguageService implements LanguageService {
 
 
     @Override
-    public boolean isServiceFor(Language language) {
-        return language.getClass().equals(PythonLanguage.class);
+    public boolean isServiceFor(@NotNull Language language) {
+        return PythonLanguage.class.equals(language.getClass());
     }
 
     @Override
@@ -197,7 +197,7 @@ public class PythonLanguageService implements LanguageService {
             if (fileEditor != null) {
                 var file = fileEditor.getFile();
                 var psiFile = PsiManager.getInstance(project).findFile(file);
-                if (psiFile != null && isRelevant(psiFile.getVirtualFile())) {
+                if (psiFile != null && isRelevant(psiFile)) {
                     var selectedTextEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
                     if (selectedTextEditor != null) {
                         int offset = selectedTextEditor.getCaretModel().getOffset();

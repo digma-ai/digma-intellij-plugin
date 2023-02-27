@@ -53,13 +53,14 @@ public interface LanguageService extends Disposable {
     }
 
         /**
-         * there are a few services that need to guess which language service to use. usually when there is no related
-         * file or method.
-         * <p>
-         * ErrorsProvider.getErrorDetails: if this method is called when the error is clicked in errors insight then we have
-         * the method id, and we can find the language because the document is probably opened and DocumentInfoService has the
-         * knowledge of the language. but if called when clicking an error in summary view the document is probably not
-         * opened and we have to guess.
+         * This method is used to find the LanguageService to use in situations where we don't have a context like
+         * MethodInfo or a file.
+         * for example: ErrorsProvider.getErrorDetails may be clicked from the summary view, in that case there was no
+         * code object discovery and the file is probably not opened. in that case we have only methodCodeObjectId.
+         *
+         * Also, WorkspaceUrisHelper#findWorkspaceUrisForSpans calls this method if summary view has SpanDurationChangeInsight
+         * and there is no context like MethodInfo or file.
+         *
          * This method must be executed in ReadAction or EDT.
          */
     @NotNull
@@ -198,7 +199,7 @@ public interface LanguageService extends Disposable {
      */
     void navigateToMethod(String codeObjectId);
 
-    boolean isServiceFor(Language language);
+    boolean isServiceFor(@NotNull Language language);
 
     Map<String, String> findWorkspaceUrisForCodeObjectIds(List<String> codeObjectIds);
 

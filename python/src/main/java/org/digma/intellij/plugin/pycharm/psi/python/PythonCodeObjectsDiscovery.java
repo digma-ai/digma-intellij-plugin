@@ -73,6 +73,7 @@ public class PythonCodeObjectsDiscovery {
     }
 
 
+    @NotNull
     private static MethodInfo functionDiscovery(@NotNull Project project, @NotNull String fileUri, @NotNull PyFunction pyFunction) {
         Objects.requireNonNull(pyFunction);
         Objects.requireNonNull(pyFunction.getName());
@@ -81,7 +82,10 @@ public class PythonCodeObjectsDiscovery {
 
         var name = pyFunction.getName();
         var className = pyFunction.getContainingClass() == null ? "" : pyFunction.getContainingClass().getName() == null ? "" : pyFunction.getContainingClass().getName();
-        var namespace = pyFunction.getQualifiedName() == null ? "" : pyFunction.getQualifiedName().substring(0, pyFunction.getQualifiedName().lastIndexOf("."));
+        var namespace = pyFunction.getQualifiedName() == null ? "" : pyFunction.getQualifiedName();
+        if (namespace.lastIndexOf(".py") > 0){
+            namespace = namespace.substring(0, pyFunction.getQualifiedName().lastIndexOf(".py"));
+        }
 
         var methodInfo = new MethodInfo(methodId, name, className, namespace, fileUri, pyFunction.getTextOffset(), new ArrayList<>());
         methodInfo.setAdditionalIdsProvider(new PythonAdditionalIdsProvider());
@@ -118,7 +122,9 @@ public class PythonCodeObjectsDiscovery {
                 List<SpanInfo> spanInfos = discoverSpanFromStartSpanMethodCallExpression(project, pyFile, pyCallExpression, fileUri);
                 if (spanInfos.size() > 0) {
                     MethodInfo methodInfo = methodInfoMap.get(spanInfos.get(0).getContainingMethodId());
-                    methodInfo.getSpans().addAll(spanInfos);
+                    if (methodInfo != null) {
+                        methodInfo.getSpans().addAll(spanInfos);
+                    }
                 }
             }
         });
@@ -156,7 +162,10 @@ public class PythonCodeObjectsDiscovery {
 
                 //second instrumentation library is the relative path from project root or site-packages ,without the py extension.
                 var relativePath = PythonLanguageUtils.getRelativePath(project,pyFile);
-                relativePath = relativePath.substring(0, relativePath.lastIndexOf(".py")).replace(File.separator, "."); //should work on linux and windows
+                if (relativePath.lastIndexOf(".py") >= 0){
+                    relativePath = relativePath.substring(0, relativePath.lastIndexOf(".py"));
+                }
+                relativePath = relativePath.replace(File.separator, "."); //should work on linux and windows
                 spanId = PythonLanguageUtils.createSpanId(relativePath, spanName);
                 result.add(new SpanInfo(spanId, spanName, methodId, fileUri));
 
@@ -172,7 +181,6 @@ public class PythonCodeObjectsDiscovery {
                 result.add(new SpanInfo(spanId, spanName, methodId, fileUri));
             }
         }
-
 
         return result;
     }
@@ -192,7 +200,8 @@ public class PythonCodeObjectsDiscovery {
     }
 
 
-    private static String getInstLibraryFromReferenceExpression(PyReferenceExpression referenceExpression) {
+    @NotNull
+    private static String getInstLibraryFromReferenceExpression(@NotNull PyReferenceExpression referenceExpression) {
 
         var psiElement = referenceExpression.getReference().resolve();
         if (psiElement != null) {
@@ -206,7 +215,8 @@ public class PythonCodeObjectsDiscovery {
     }
 
     //assignmentStatement is the assignment in tracer = trace.get_tracer
-    private static String getInstLibraryFromAssignmentStatement(PyAssignmentStatement assignmentStatement) {
+    @NotNull
+    private static String getInstLibraryFromAssignmentStatement(@NotNull PyAssignmentStatement assignmentStatement) {
         var assignedValue = assignmentStatement.getAssignedValue();
         if (assignedValue instanceof PyCallExpression callExpression) {
             return getInstLibraryFromCallExpression(callExpression);
@@ -216,7 +226,8 @@ public class PythonCodeObjectsDiscovery {
     }
 
     //callExpression is the call to trace.get_tracer, we want the argument of get_tracer
-    private static String getInstLibraryFromCallExpression(PyCallExpression callExpression) {
+    @NotNull
+    private static String getInstLibraryFromCallExpression(@NotNull PyCallExpression callExpression) {
         var callee = callExpression.getCallee();
         if (callee != null && callee.getReference() != null) {
             var psiElement = callee.getReference().resolve();
@@ -233,7 +244,8 @@ public class PythonCodeObjectsDiscovery {
     }
 
 
-    private static String getInstLibraryFromGetTracerArgument(PyExpression arg) {
+    @NotNull
+    private static String getInstLibraryFromGetTracerArgument(@NotNull PyExpression arg) {
         if (arg instanceof PyStringLiteralExpression stringLiteralExpression) {
             return getStringFromStringLiteralExpression(stringLiteralExpression);
         } else if (arg instanceof PyReferenceExpression referenceExpression) {
@@ -244,7 +256,8 @@ public class PythonCodeObjectsDiscovery {
     }
 
 
-    private static String getInstLibraryFromArgumentReferenceExpression(PyReferenceExpression referenceExpression) {
+    @NotNull
+    private static String getInstLibraryFromArgumentReferenceExpression(@NotNull PyReferenceExpression referenceExpression) {
 
         if (Constants.PYTHON_MODULE_NAME_VARIABLE.equals(referenceExpression.getText())) {
             return Constants.PYTHON_MODULE_NAME_VARIABLE;
@@ -265,7 +278,7 @@ public class PythonCodeObjectsDiscovery {
 
 
     @NotNull
-    private static String getSpanNameFromNameArgument(PyExpression pyExpression) {
+    private static String getSpanNameFromNameArgument(@NotNull PyExpression pyExpression) {
         if (pyExpression instanceof PyStringLiteralExpression stringLiteralExpression) {
             return getStringFromStringLiteralExpression(stringLiteralExpression);
         }else if (pyExpression instanceof PyReferenceExpression referenceExpression){
@@ -275,7 +288,9 @@ public class PythonCodeObjectsDiscovery {
         return UNKNOWN_SPAN_NAME;
     }
 
-    private static String getSpanNameFromReferenceExpression(PyReferenceExpression referenceExpression) {
+
+    @NotNull
+    private static String getSpanNameFromReferenceExpression(@NotNull PyReferenceExpression referenceExpression) {
 
         if (Constants.PYTHON_MODULE_NAME_VARIABLE.equals(referenceExpression.getText())) {
             return Constants.PYTHON_MODULE_NAME_VARIABLE;
@@ -296,7 +311,7 @@ public class PythonCodeObjectsDiscovery {
 
 
     @NotNull
-    private static String getStringFromStringLiteralExpression(PyStringLiteralExpression stringLiteralExpression) {
+    private static String getStringFromStringLiteralExpression(@NotNull PyStringLiteralExpression stringLiteralExpression) {
         return stringLiteralExpression.getStringValue();
     }
 

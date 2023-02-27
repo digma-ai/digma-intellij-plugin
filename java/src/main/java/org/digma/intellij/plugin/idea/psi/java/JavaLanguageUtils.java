@@ -89,7 +89,7 @@ public class JavaLanguageUtils {
 
 
     @Nullable
-    public static String getPsiExpressionValue(PsiExpression expression) {
+    public static String getPsiExpressionValue(@NotNull PsiExpression expression) {
         if (expression instanceof PsiReferenceExpression) {
             return getPsiReferenceExpressionValue((PsiReferenceExpression) expression);
         }else if (expression instanceof PsiLiteralExpression) {
@@ -113,7 +113,7 @@ public class JavaLanguageUtils {
 
 
     @Nullable
-    private static String getPsiLocalVariableValue(PsiLocalVariable localVariable){
+    private static String getPsiLocalVariableValue(@NotNull PsiLocalVariable localVariable){
         PsiElement initializer = localVariable.getInitializer();
         if (initializer instanceof PsiLiteralExpression){
             return getPsiLiteralValue((PsiLiteral) initializer);
@@ -137,7 +137,7 @@ public class JavaLanguageUtils {
 
 
     @Nullable
-    public static PsiMethod findMethodInClass(@NotNull PsiClass psiClass, @NotNull String methodName, Predicate<PsiMethod> methodPredicate) {
+    public static PsiMethod findMethodInClass(@NotNull PsiClass psiClass, @NotNull String methodName,@NotNull  Predicate<PsiMethod> methodPredicate) {
         var methods = psiClass.findMethodsByName(methodName);
         for (JvmMethod method : methods) {
             if (method instanceof PsiMethod && methodPredicate.test((PsiMethod) method)){

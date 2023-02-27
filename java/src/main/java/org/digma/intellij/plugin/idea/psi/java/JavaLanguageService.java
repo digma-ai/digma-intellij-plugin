@@ -15,18 +15,13 @@ import com.intellij.psi.*;
 import com.intellij.psi.impl.java.stubs.index.JavaFullClassNameIndex;
 import com.intellij.psi.impl.source.JavaFileElementType;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.psi.search.searches.AnnotatedElementsSearch;
-import com.intellij.psi.search.searches.MethodReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.util.Query;
 import kotlin.Pair;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.index.DocumentInfoIndex;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
-import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
-import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.psi.NonSupportedFileException;
 import org.digma.intellij.plugin.psi.PsiUtils;
@@ -36,12 +31,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-import static org.digma.intellij.plugin.idea.psi.java.Constants.SPAN_BUILDER_FQN;
 import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.createJavaMethodCodeObjectId;
-import static org.digma.intellij.plugin.idea.psi.java.JavaSpanDiscoveryUtils.filterNonRelevantMethodsForSpanDiscovery;
-import static org.digma.intellij.plugin.idea.psi.java.JavaSpanDiscoveryUtils.filterNonRelevantReferencesForSpanDiscovery;
 
-@SuppressWarnings("UnstableApiUsage")
 public class JavaLanguageService implements LanguageService {
 
     private static final Logger LOGGER = Logger.getInstance(JavaLanguageService.class);
@@ -57,18 +48,22 @@ public class JavaLanguageService implements LanguageService {
     private final DocumentInfoService documentInfoService;
 
     private final CaretContextService caretContextService;
+
     private final MicronautFramework micronautFramework;
     private final JaxrsFramework jaxrsFramework;
     private final GrpcFramework grpcFramework;
+
+
 
     public JavaLanguageService(Project project) {
         this.project = project;
         documentInfoService = project.getService(DocumentInfoService.class);
         caretContextService = project.getService(CaretContextService.class);
+        this.projectFileIndex = project.getService(ProjectFileIndex.class);
         this.micronautFramework = new MicronautFramework(project);
         this.jaxrsFramework = new JaxrsFramework(project);
         this.grpcFramework = new GrpcFramework(project);
-        this.projectFileIndex = project.getService(ProjectFileIndex.class);
+
     }
 
 
@@ -237,12 +232,12 @@ public class JavaLanguageService implements LanguageService {
 
 
     @Override
-    public boolean isServiceFor(Language language) {
-        return language.getClass().equals(JavaLanguage.class);
+    public boolean isServiceFor(@NotNull Language language) {
+        return JavaLanguage.class.equals(language.getClass());
     }
 
     @Override
-    public Map<String, String> findWorkspaceUrisForCodeObjectIds(List<String> codeObjectIds) {
+    public Map<String, String> findWorkspaceUrisForCodeObjectIds(@NotNull List<String> codeObjectIds) {
 
         /*
         Use intellij index to find in which file a method exists.
@@ -258,9 +253,9 @@ public class JavaLanguageService implements LanguageService {
 
         Map<String, String> workspaceUrls = new HashMap<>();
 
-        codeObjectIds.forEach(id -> {
+        codeObjectIds.forEach(methodId -> {
 
-            var className = id.substring(0, id.indexOf("$_$"));
+            var className = methodId.substring(0, methodId.indexOf("$_$"));
 
             //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
             className = className.replace('$', '.');
@@ -274,7 +269,7 @@ public class JavaLanguageService implements LanguageService {
                 PsiFile psiFile = PsiTreeUtil.getParentOfType(psiClass, PsiFile.class);
                 if (psiFile != null) {
                     String url = PsiUtils.psiFileToUri(psiFile);
-                    workspaceUrls.put(id, url);
+                    workspaceUrls.put(methodId, url);
                 }
             }
         });
@@ -320,133 +315,13 @@ public class JavaLanguageService implements LanguageService {
 
     @Override
     public @NotNull DocumentInfo buildDocumentInfo(PsiFile psiFile) {
-
-        String fileUri = PsiUtils.psiFileToUri(psiFile);
-        Map<String, MethodInfo> methodInfoMap = new HashMap<>();
-
-
-        //currently we build an empty index for test sources, there is no easy way to exclude them from indexing
-        if (ProjectFileIndex.getInstance(project).isInTestSourceContent(psiFile.getVirtualFile())) {
-            return new DocumentInfo(fileUri, methodInfoMap);
-        }
-
-        //it must be a PsiJavaFile so casting should be ok
-        PsiJavaFile psiJavaFile = (PsiJavaFile) psiFile;
-
-        String packageName = psiJavaFile.getPackageName();
-
-        PsiClass[] classes = psiJavaFile.getClasses();
-
-        collectMethods(fileUri, classes, packageName, methodInfoMap);
-
-        return new DocumentInfo(fileUri, methodInfoMap);
-    }
-
-    private void collectMethods(String fileUri, PsiClass[] classes, String packageName, Map<String, MethodInfo> methodInfoMap) {
-
-        for (PsiClass aClass : classes) {
-
-            //don't collect methods for those types. if the file contains only those types then methodInfoMap
-            //will be empty
-            if (aClass.isAnnotationType() || aClass.isEnum() || aClass.isRecord()) {
-                continue;
-            }
-
-            PsiMethod[] methods = aClass.getMethods();
-            for (PsiMethod method : methods) {
-                String id = createJavaMethodCodeObjectId(method);
-                String name = method.getName();
-                String containingClassName = aClass.getQualifiedName();
-                @SuppressWarnings("UnnecessaryLocalVariable")
-                String containingNamespace = packageName;
-                @SuppressWarnings("UnnecessaryLocalVariable")
-                String containingFileUri = fileUri;
-                int offsetAtFileUri = method.getTextOffset();
-                List<SpanInfo> spans = new ArrayList<>();
-                Objects.requireNonNull(containingClassName, "a class in java must have a qualified name");
-                MethodInfo methodInfo = new MethodInfo(id, name, containingClassName, containingNamespace, containingFileUri, offsetAtFileUri, spans);
-                methodInfoMap.put(id, methodInfo);
-            }
-
-            collectMethods(fileUri, aClass.getInnerClasses(), packageName, methodInfoMap);
-        }
+        return JavaCodeObjectDiscovery.buildDocumentInfo(project, (PsiJavaFile) psiFile);
     }
 
 
     @Override
     public void enrichDocumentInfo(@NotNull DocumentInfo documentInfo, @NotNull PsiFile psiFile) {
-
-        /*
-        This method is called after loading the DocumentInfo from DocumentInfoIndex, and it is meant to
-        enrich the DocumentInfo with discovery that can not be done in file based index or dumb mode.
-        for example span discovery does not work in dumb mode, it must be done in smart mode.
-        This method must be called in smart mode inside s ReadAction or UI thread.
-         */
-
-        spanDiscovery(psiFile, documentInfo);
-        endpointDiscovery(psiFile, documentInfo);
-    }
-
-
-    private void spanDiscovery(PsiFile psiFile, DocumentInfo documentInfo) {
-        Log.log(LOGGER::debug, "Building spans for file {}", psiFile);
-        withSpanAnnotationSpanDiscovery(psiFile, documentInfo);
-        startSpanMethodCallSpanDiscovery(psiFile, documentInfo);
-    }
-
-    private void endpointDiscovery(PsiFile psiFile, DocumentInfo documentInfo) {
-        Log.log(LOGGER::debug, "Building endpoints for file {}", psiFile);
-        micronautFramework.endpointDiscovery(psiFile, documentInfo);
-        jaxrsFramework.endpointDiscovery(psiFile, documentInfo);
-        grpcFramework.endpointDiscovery(psiFile, documentInfo);
-    }
-
-
-    private void startSpanMethodCallSpanDiscovery(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
-
-        PsiClass tracerBuilderClass = JavaPsiFacade.getInstance(project).findClass(SPAN_BUILDER_FQN, GlobalSearchScope.allScope(project));
-        if (tracerBuilderClass != null) {
-            PsiMethod startSpanMethod =
-                    JavaLanguageUtils.findMethodInClass(tracerBuilderClass, "startSpan", psiMethod -> psiMethod.getParameters().length == 0);
-            Objects.requireNonNull(startSpanMethod, "startSpan method must be found in SpanBuilder class");
-
-            Query<PsiReference> startSpanReferences = MethodReferencesSearch.search(startSpanMethod, GlobalSearchScope.fileScope(psiFile), true);
-            //filter classes that we don't support,which should not happen but just in case. we don't support Annotations,Enums and Records.
-            startSpanReferences = filterNonRelevantReferencesForSpanDiscovery(startSpanReferences);
-
-            startSpanReferences.forEach(psiReference -> {
-                SpanInfo spanInfo = JavaSpanDiscoveryUtils.getSpanInfoFromStartSpanMethodReference(project, psiReference);
-                if (spanInfo != null) {
-                    Log.log(LOGGER::debug, "Found span info {} for method {}", spanInfo.getId(), spanInfo.getContainingMethodId());
-                    MethodInfo methodInfo = documentInfo.getMethods().get(spanInfo.getContainingMethodId());
-                    //this method must exist in the document info
-                    Objects.requireNonNull(methodInfo, "method info " + spanInfo.getContainingMethodId() + " must exist in DocumentInfo for " + documentInfo.getFileUri());
-                    methodInfo.getSpans().add(spanInfo);
-                }
-            });
-        }
-    }
-
-
-    private void withSpanAnnotationSpanDiscovery(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
-        PsiClass withSpanClass = JavaPsiFacade.getInstance(project).findClass(Constants.WITH_SPAN_FQN, GlobalSearchScope.allScope(project));
-        //maybe the annotation is not in the classpath
-        if (withSpanClass != null) {
-            Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(withSpanClass, GlobalSearchScope.fileScope(psiFile));
-            psiMethods = filterNonRelevantMethodsForSpanDiscovery(psiMethods);
-            psiMethods.forEach(psiMethod -> {
-                List<SpanInfo> spanInfos = JavaSpanDiscoveryUtils.getSpanInfoFromWithSpanAnnotatedMethod(psiMethod);
-                if (spanInfos != null) {
-                    spanInfos.forEach(spanInfo -> {
-                        Log.log(LOGGER::debug, "Found span info {} for method {}", spanInfo.getId(), spanInfo.getContainingMethodId());
-                        MethodInfo methodInfo = documentInfo.getMethods().get(spanInfo.getContainingMethodId());
-                        //this method must exist in the document info
-                        Objects.requireNonNull(methodInfo, "method info " + spanInfo.getContainingMethodId() + " must exist in DocumentInfo for " + documentInfo.getFileUri());
-                        methodInfo.getSpans().add(spanInfo);
-                    });
-                }
-            });
-        }
+        JavaCodeObjectDiscovery.enrichDocumentInfo(project,documentInfo, psiFile,micronautFramework,jaxrsFramework,grpcFramework);
     }
 
 

@@ -23,20 +23,28 @@ public class PythonLanguageUtils {
     }
 
 
+    @NotNull
     private static String buildFilePath(@NotNull Project project, @NotNull PyFunction pyFunction) {
         return getRelativePath(project, pyFunction.getContainingFile());
     }
 
 
+    @NotNull
     public static String createSpanId(@NotNull String instLibrary, @NotNull String spanName) {
         return instLibrary + "$_$" + spanName;
     }
 
+    @NotNull
     public static String extractFunctionNameFromCodeObjectId(@NotNull String methodId) {
-        return methodId.substring(methodId.lastIndexOf("$_$") + 3);
+
+        if (methodId.lastIndexOf("$_$") >= 0){
+            return methodId.substring(methodId.lastIndexOf("$_$") + 3);
+        }
+        return methodId;
     }
 
 
+    @NotNull
     public static String getRelativePath(@NotNull Project project, @NotNull PsiFile pyFile) {
         var spliterator = pyFile.getVirtualFile().toNioPath().spliterator();
         List<String> pathElements = StreamSupport.stream(spliterator, false).map(Path::toString).toList();

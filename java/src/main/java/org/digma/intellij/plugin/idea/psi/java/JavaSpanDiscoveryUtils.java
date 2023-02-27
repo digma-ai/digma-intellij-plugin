@@ -159,7 +159,7 @@ public class JavaSpanDiscoveryUtils {
 
 
     @Nullable
-    private static SpanInfo getSpanInfoFromSpanBuilderVariable(Project project, PsiVariable spanBuilderVariable, @NotNull String methodId, @NotNull String containingFileUri) {
+    private static SpanInfo getSpanInfoFromSpanBuilderVariable(@NotNull Project project,@NotNull  PsiVariable spanBuilderVariable, @NotNull String methodId, @NotNull String containingFileUri) {
 
         //search references to the variable, if an assignment is found use it to find the SpanInfo.
         //if no assignment is found use the variable initialization

@@ -65,7 +65,6 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
     private static final Logger LOGGER = Logger.getInstance(DigmaBottomToolWindowFactory.class);
     private static final String DIGMA_LEFT_TOOL_WINDOW_NAME = "Digma";
     private static final String SUCCESSFULLY_PROCESSED_JCEF_REQUEST_MESSAGE = "Successfully processed JCEF request with action =";
-    private final ObjectMapper objectMapper = new ObjectMapper();
     private EditorService editorService;
     private AnalyticsService analyticsService;
     private String localHostname;
@@ -123,6 +122,10 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
         JBCefClient jbCefClient = jbCefBrowser.getJBCefClient();
 
         CefMessageRouter msgRouter = CefMessageRouter.create();
+
+        ThemeChangeListener listener = new ThemeChangeListener(jbCefBrowser);
+        UIManager.addPropertyChangeListener(listener);
+
         msgRouter.addHandler(new CefMessageRouterHandlerAdapter() {
             @Override
             public boolean onQuery(CefBrowser browser, CefFrame frame, long queryId, String request, boolean persistent, CefQueryCallback callback) {
@@ -212,7 +215,7 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
         } catch (AnalyticsServiceException e) {
             Log.log(LOGGER::debug, "AnalyticsServiceException for getRecentActivity: {}", e.getMessage());
         }
-        String requestMessage = resultToString(new JcefMessageRequest(
+        String requestMessage = JBCefBrowserUtil.resultToString(new JcefMessageRequest(
                 REQUEST_MESSAGE_TYPE,
                 RECENT_ACTIVITY_SET_DATA,
                 new JcefMessagePayload(
@@ -221,7 +224,7 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
                 )
         ));
 
-        postJSMessage(requestMessage, jbCefBrowser);
+        JBCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser);
 
         callback.success(SUCCESSFULLY_PROCESSED_JCEF_REQUEST_MESSAGE + " RECENT_ACTIVITY_SET_DATA at " + new Date());
         return true;
@@ -244,22 +247,6 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
 
     private String getAdjustedEnvName(String environment) {
         return environment.toUpperCase().endsWith("["+ LOCAL_ENV + "]") ? LOCAL_ENV: environment;
-    }
-
-    private void postJSMessage(String jsonMessage, JBCefBrowser jbCefBrowser) {
-        jbCefBrowser.getCefBrowser().executeJavaScript(
-                "window.postMessage(" + jsonMessage + ");",
-                jbCefBrowser.getCefBrowser().getURL(),
-                0
-        );
-    }
-
-    private String resultToString(Object result) {
-        try {
-            return objectMapper.writeValueAsString(result);
-        } catch (Exception e) {
-            return "Error parsing object " + e.getMessage();
-        }
     }
 
     private <T> T parseJsonToObject(String jsonString, Class<T> jcefMessageRequestClass) {

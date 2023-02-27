@@ -22,9 +22,9 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow id="Digma"
-                    secondary="true"
+                    secondary="false"
                     icon="org.digma.intellij.plugin.icons.AppIcons.TOOL_WINDOW"
-                    anchor="left"
+                    anchor="right"
                     factoryClass="org.digma.intellij.plugin.toolwindow.DigmaLeftToolWindowFactory"/>
 
         <toolWindow id="Observability"

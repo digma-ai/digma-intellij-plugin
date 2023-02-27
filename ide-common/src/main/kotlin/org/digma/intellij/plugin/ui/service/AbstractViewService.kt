@@ -125,7 +125,8 @@ abstract class AbstractViewService(val project: Project) : Disposable {
                 panel?.reset()
 
                 if (toolWindowContent != null) {
-                    toolWindowContent?.displayName = getViewDisplayName()
+                    // there is no need to display the tab name for now as we have only one tab
+                    // toolWindowContent?.displayName = getViewDisplayName()
                     //reset focusable component methods, some panels are dynamic in what they return, see for example NoConnectionWrapper
                     toolWindowContent?.setPreferredFocusedComponent { panel?.getPreferredFocusedComponent() }
                     toolWindowContent?.preferredFocusableComponent = panel?.getPreferredFocusableComponent()

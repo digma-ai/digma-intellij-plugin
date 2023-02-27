@@ -48,7 +48,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import static org.digma.intellij.plugin.toolwindow.ToolWindowUtil.BOTTOM_TAB_NAME;
 import static org.digma.intellij.plugin.toolwindow.ToolWindowUtil.RECENT_ACTIVITY_GET_DATA;
 import static org.digma.intellij.plugin.toolwindow.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_SPAN;
 import static org.digma.intellij.plugin.toolwindow.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_TRACE;
@@ -162,7 +161,7 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
         jcefDigmaPanel.setLayout(new BorderLayout());
         jcefDigmaPanel.add(browserPanel, BorderLayout.CENTER);
 
-        var jcefContent = contentFactory.createContent(jcefDigmaPanel, BOTTOM_TAB_NAME, false);
+        var jcefContent = contentFactory.createContent(jcefDigmaPanel, null, false);
 
         toolWindow.getContentManager().addContent(jcefContent);
         return jcefContent;

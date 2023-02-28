@@ -1,6 +1,7 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin require-restart="true">
 
+    <change-notes/>
     <id>org.digma.intellij</id>
     <version>${project.version}</version>
     <name>Digma Continuous Feedback</name>

@@ -11,23 +11,20 @@ import com.jetbrains.rd.util.lifetime.LifetimeDefinition
 import kotlinx.coroutines.delay
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshService
+import java.util.concurrent.ConcurrentHashMap
 
 class GeneralFileEditorListener(val project: Project) : FileEditorManagerListener {
     private val logger: Logger = Logger.getInstance(GeneralFileEditorListener::class.java)
 
-    private val refreshService: RefreshService
+    private val refreshService: RefreshService = project.getService(RefreshService::class.java)
 
     // lifetimeDefinitionMap keeps info about the lifetime coroutine tasks of each opened file
-    private val lifetimeDefinitionMap: MutableMap<VirtualFile, LifetimeDefinition> = HashMap()
+    private val lifetimeDefinitionMap: ConcurrentHashMap<VirtualFile, LifetimeDefinition> = ConcurrentHashMap()
     private val lifetimeDefinitionMapLock = Object()
-
-    init {
-        refreshService = project.getService(RefreshService::class.java)
-    }
 
     override fun selectionChanged(event: FileEditorManagerEvent) {
         super.selectionChanged(event)
-        refreshAllInsightsForActiveFile(event.oldFile, event.newFile)
+        refreshAllInsightsForActiveFile(event.newFile)
         setFocusedDocument(event.newFile)
     }
 
@@ -36,13 +33,13 @@ class GeneralFileEditorListener(val project: Project) : FileEditorManagerListene
         removeInsightsPaginationInfoForClosedDocument(file.name)
     }
 
-    private fun refreshAllInsightsForActiveFile(oldFile: VirtualFile?, newFile: VirtualFile?) {
+    private fun refreshAllInsightsForActiveFile(newFile: VirtualFile?) {
         if (newFile != null) {
             Log.log(logger::debug, "Starting refreshAllInsightsForActiveFile = {}", newFile)
             // lock is required here to avoid access and modification of the same map from multiple threads
             synchronized(lifetimeDefinitionMapLock) {
+                terminateActualCoroutineTaskForPreviouslyFocusedOpenedFile()
                 createCoroutineTaskForActualFocusedFile(newFile)
-                terminateCoroutineTaskForPreviouslyFocusedOpenedFile(oldFile)
             }
             Log.log(logger::debug, "Finished refreshAllInsightsForActiveFile = {}", newFile)
         }
@@ -62,12 +59,12 @@ class GeneralFileEditorListener(val project: Project) : FileEditorManagerListene
         lifetimeDefinitionMap[newFile] = newLifetimeDefinition
     }
 
-    private fun terminateCoroutineTaskForPreviouslyFocusedOpenedFile(oldFile: VirtualFile?) {
-        if (lifetimeDefinitionMap[oldFile] != null) {
+    private fun terminateActualCoroutineTaskForPreviouslyFocusedOpenedFile() {
+        if (lifetimeDefinitionMap.isNotEmpty()) {
             // terminate the corresponding lifetime, first of all. this will also cancel current task execution
-            lifetimeDefinitionMap[oldFile]?.terminate(true)
+            lifetimeDefinitionMap.forEach { lifetimeDefinition -> lifetimeDefinition.value.terminate(true)}
             // remove the lifetime for previously active file from the map
-            lifetimeDefinitionMap.remove(oldFile)
+            lifetimeDefinitionMap.clear()
         }
     }
 

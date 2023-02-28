@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.idea.psi.java;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.psi.*;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
@@ -30,27 +29,31 @@ public class JavaCodeObjectDiscovery {
     private static final Logger LOGGER = Logger.getInstance(JavaCodeObjectDiscovery.class);
 
 
-    public static @NotNull DocumentInfo buildDocumentInfo(@NotNull Project project, @NotNull PsiJavaFile psiJavaFile) {
+    public static @NotNull DocumentInfo buildDocumentInfo(@NotNull Project project, @NotNull PsiJavaFile psiJavaFile, MicronautFramework micronautFramework, JaxrsFramework jaxrsFramework, GrpcFramework grpcFramework) {
         var stopWatch = StopWatch.createStarted();
 
         try {
-            return buildDocumentInfoImpl(project, psiJavaFile);
+            DocumentInfo documentInfo = JavaDocumentInfoIndex.tryGetDocumentInfoFromIndex(project, psiJavaFile);
+            if (documentInfo == null){
+                documentInfo = buildDocumentInfoImpl(project,psiJavaFile);
+            }
+            enrichDocumentInfo(project,documentInfo,psiJavaFile,micronautFramework,jaxrsFramework,grpcFramework);
+            return documentInfo;
+
         } finally {
             stopWatch.stop();
             Log.log(LOGGER::debug, "buildDocumentInfo for {} took {} milliseconds", psiJavaFile.getName(), stopWatch.getTime(TimeUnit.MILLISECONDS));
         }
     }
 
-    private static DocumentInfo buildDocumentInfoImpl(@NotNull Project project, @NotNull PsiJavaFile psiJavaFile) {
+
+
+
+
+    public static DocumentInfo buildDocumentInfoImpl(@NotNull Project project, @NotNull PsiJavaFile psiJavaFile) {
+
         String fileUri = PsiUtils.psiFileToUri(psiJavaFile);
         Map<String, MethodInfo> methodInfoMap = new HashMap<>();
-
-
-        //currently we build an empty index for test sources, there is no easy way to exclude them from indexing
-        if (ProjectFileIndex.getInstance(project).isInTestSourceContent(psiJavaFile.getVirtualFile())) {
-            return new DocumentInfo(fileUri, methodInfoMap);
-        }
-
 
         String packageName = psiJavaFile.getPackageName();
 

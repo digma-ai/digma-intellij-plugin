@@ -7,9 +7,7 @@ import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
-import com.intellij.openapi.project.IndexNotReadyException;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
@@ -19,9 +17,8 @@ import com.intellij.util.Alarm;
 import com.intellij.util.AlarmFactory;
 import com.intellij.util.RunnableCallable;
 import com.intellij.util.concurrency.NonUrgentExecutor;
-import com.intellij.util.indexing.FileBasedIndex;
+import org.digma.intellij.plugin.IDEUtils;
 import org.digma.intellij.plugin.document.DocumentInfoService;
-import org.digma.intellij.plugin.index.DocumentInfoIndex;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
@@ -29,8 +26,6 @@ import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.psi.LanguageServiceLocator;
 import org.digma.intellij.plugin.ui.CaretContextService;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Map;
 
 /**
  * This is the main listener for file open , it will cache a selectionChanged on FileEditorManager and do
@@ -48,7 +43,6 @@ public class EditorEventsHandler implements FileEditorManagerListener {
     private final LanguageServiceLocator languageServiceLocator;
     private final CaretListener caretListener;
     private final DocumentChangeListener documentChangeListener;
-    private final ProjectFileIndex projectFileIndex;
     private final Alarm contextChangeAlarmAfterFileClosed;
 
 
@@ -59,13 +53,21 @@ public class EditorEventsHandler implements FileEditorManagerListener {
         documentInfoService = project.getService(DocumentInfoService.class);
         caretListener = new CaretListener(project);
         documentChangeListener = new DocumentChangeListener(project);
-        projectFileIndex = ProjectFileIndex.getInstance(project);
         contextChangeAlarmAfterFileClosed = AlarmFactory.getInstance().create();
     }
 
 
+    /*
+    EditorEventsHandler is registered on all IDEs , it will do nothing on C# files because
+    CSharp languageService.isIntellijPlatformPluginLanguage is false.
+     */
+
     @Override
     public void selectionChanged(@NotNull FileEditorManagerEvent editorManagerEvent) {
+        //don't do anything here if Rider and the file is a C# file
+        if (IDEUtils.isRiderAndCSharpFile(project,editorManagerEvent.getNewFile())){
+            return;
+        }
 
         //this method is executed on EDT.
         //most of the code here,access to psi or to the index, needs to be executed on EDT or in Read/Write actions.
@@ -73,6 +75,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
         //when calling contextChanged on EDT it will start a background thread when necessary.
 
         FileEditorManager fileEditorManager = editorManagerEvent.getManager();
+
         Log.log(LOGGER::debug, "selectionChanged: editor:{}, newFile:{}, oldFile:{}", fileEditorManager.getSelectedEditor(),
                 editorManagerEvent.getNewFile(), editorManagerEvent.getOldFile());
 
@@ -131,18 +134,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
                 LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
 
-                DocumentInfo documentInfo;
-                //this is actually a test if this is a supported file type
-                if (languageService.isIndexedLanguage()) {
-                    //get DocumentInfo from the index. documents that are indexed may be incomplete
-                    // that's why we need to enrich them. currently its java files.
-                    documentInfo = tryGetDocumentInfoFromIndex(project,languageService, psiFile);
-                    languageService.enrichDocumentInfo(documentInfo,psiFile);
-                }else{
-                    //if it's not an indexed language build the document info every time a document is opened
-                    // currently its only python
-                    documentInfo = languageService.buildDocumentInfo(psiFile);
-                }
+                DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFile);
 
                 documentInfoService.addCodeObjects(psiFile, documentInfo);
             })).inSmartMode(project).withDocumentsCommitted(project).finishOnUiThread(ModalityState.defaultModalityState(), unused -> {
@@ -174,45 +166,13 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
 
 
-    static DocumentInfo tryGetDocumentInfoFromIndex(Project project, @NotNull LanguageService languageService, @NotNull PsiFile psiFile) {
-
-        DocumentInfo documentInfo;
-        try {
-            Map<Integer, DocumentInfo> documentInfoMap =
-                    FileBasedIndex.getInstance().getFileData(DocumentInfoIndex.DOCUMENT_INFO_INDEX_ID, psiFile.getVirtualFile(), project);
-            //there is only one DocumentInfo per file in the index.
-            //all relevant files must be indexed, so if we are here then DocumentInfo must be found in the index is ready,
-            // or we have a mistake somewhere else. java interfaces,enums and annotations are indexed but the DocumentInfo
-            // object is empty of methods, that's because currently we have no way to exclude those types from indexing.
-            documentInfo = documentInfoMap.values().stream().findFirst().orElse(null);
-
-            //usually we should find the document info in the index. on extreme cases, maybe if the index is corrupted
-            // the document info will not be found, try again to build it
-            if (documentInfo == null) {
-                documentInfo = languageService.buildDocumentInfo(psiFile);
-            }
-
-        } catch (IndexNotReadyException e) {
-            //IndexNotReadyException will be thrown on dumb mode, when indexing is still in progress.
-            //usually it should not happen because this method is called only in smart mode.
-            documentInfo = languageService.buildDocumentInfo(psiFile);
-        }
-
-        if (documentInfo == null) {
-            Log.log(LOGGER::error, "Could not find DocumentInfo for file {}", psiFile.getVirtualFile());
-            throw new DocumentInfoIndexNotFoundException("Could not find DocumentInfo index for " + psiFile.getVirtualFile());
-        }
-        Log.log(LOGGER::debug, "Found DocumentInfo index for {},'{}'", psiFile.getVirtualFile(), documentInfo);
-
-        return documentInfo;
-
-    }
-
-
-
-
     @Override
     public void fileClosed(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
+        //don't do anything here if Rider and the file is a C# file
+        if (IDEUtils.isRiderAndCSharpFile(project,file)){
+            return;
+        }
+
         var selectedEditor = source.getSelectedEditor();
         Log.log(LOGGER::debug, "fileClosed: file:{}, selected editor: {}", file, selectedEditor);
         if (isRelevantFile(file)) {
@@ -278,6 +238,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                 languageService.isRelevant(file);
 
     }
+
 
 
 }

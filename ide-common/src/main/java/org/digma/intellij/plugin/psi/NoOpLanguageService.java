@@ -45,7 +45,7 @@ public class NoOpLanguageService implements LanguageService {
     }
 
     @Override
-    public boolean isServiceFor(Language language) {
+    public boolean isServiceFor(@NotNull Language language) {
         return false;
     }
 
@@ -64,13 +64,9 @@ public class NoOpLanguageService implements LanguageService {
 
     }
 
-    @Override
-    public boolean isIndexedLanguage() {
-        return false;
-    }
 
     @Override
-    public @NotNull DocumentInfo buildDocumentInfo(PsiFile psiFile) {
+    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile) {
         throw new UnsupportedOperationException("should not be called");
     }
 
@@ -79,10 +75,6 @@ public class NoOpLanguageService implements LanguageService {
         return false;
     }
 
-    @Override
-    public void enrichDocumentInfo(DocumentInfo documentInfo, PsiFile psiFile) {
-
-    }
 
     @Override
     public boolean isRelevant(VirtualFile file) {

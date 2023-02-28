@@ -11,7 +11,6 @@ import com.jetbrains.rider.ideaInterop.fileTypes.csharp.CSharpLanguage;
 import kotlin.Pair;
 import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.lang3.time.StopWatch;
-import org.digma.intellij.plugin.index.DocumentInfoIndex;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
@@ -22,9 +21,9 @@ import org.digma.intellij.plugin.rider.protocol.MethodNavigationHost;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.concurrent.TimeUnit;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class CSharpLanguageService extends LifetimedProjectComponent implements LanguageService {
 
@@ -116,14 +115,9 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
         riderEnvironmentChangedHandler.environmentChanged(newEnv);
     }
 
-    @Override
-    public boolean isIndexedLanguage() {
-        //C# is not an indexed language, it's indexed in resharper
-        return false;
-    }
 
     @Override
-    public @NotNull DocumentInfo buildDocumentInfo(PsiFile psiFile) {
+    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile) {
         throw new UnsupportedOperationException("should not be called, C# is indexed in resharper");
     }
 
@@ -132,10 +126,6 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
         return false;
     }
 
-    @Override
-    public void enrichDocumentInfo(DocumentInfo documentInfo, PsiFile psiFile) {
-        //there is nothing to do here for C#
-    }
 
     @Override
     public boolean isRelevant(VirtualFile file) {
@@ -156,7 +146,6 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     public boolean isRelevant(PsiFile psiFile) {
         return psiFile.isValid() &&
                 psiFile.isWritable() &&
-                isSupportedFile(getProject(), psiFile) &&
-                !DocumentInfoIndex.namesToExclude.contains(psiFile.getVirtualFile().getName());
+                isSupportedFile(getProject(), psiFile);
     }
 }

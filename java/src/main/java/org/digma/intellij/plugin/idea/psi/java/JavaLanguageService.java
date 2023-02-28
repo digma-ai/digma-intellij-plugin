@@ -7,7 +7,6 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileEditor.FileEditorManager;
-import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -18,7 +17,6 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import kotlin.Pair;
 import org.digma.intellij.plugin.document.DocumentInfoService;
-import org.digma.intellij.plugin.index.DocumentInfoIndex;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
@@ -37,9 +35,6 @@ public class JavaLanguageService implements LanguageService {
 
     private static final Logger LOGGER = Logger.getInstance(JavaLanguageService.class);
 
-    //used to find languages that should be indexed.
-    // (used with reflection so intellij can't find usages and reports the field is not used)
-    public static final FileType FILE_TYPE = JavaFileType.INSTANCE;
 
     private final Project project;
 
@@ -75,7 +70,7 @@ public class JavaLanguageService implements LanguageService {
      */
     @SuppressWarnings("unused")
     public static boolean isFileInSourceContent(@NotNull VirtualFile file) throws NonSupportedFileException {
-        if (file.getFileType().equals(FILE_TYPE)) {
+        if (file.getFileType().equals(JavaFileType.INSTANCE)) {
             return JavaFileElementType.isInSourceContent(file);
         } else {
             throw new NonSupportedFileException("file " + file.getName() + " is not a java file");
@@ -130,7 +125,7 @@ public class JavaLanguageService implements LanguageService {
         if (!isSupportedFile(project,psiFile)){
             return new MethodUnderCaret("", "", "", PsiUtils.psiFileToUri(psiFile), false);
         }
-        PsiElement underCaret = findElementUnderCaret(project, psiFile, caretOffset);
+        PsiElement underCaret =  psiFile.findElementAt(caretOffset);
         if (underCaret == null) {
             return new MethodUnderCaret("", "", "", PsiUtils.psiFileToUri(psiFile), true);
         }
@@ -205,30 +200,6 @@ public class JavaLanguageService implements LanguageService {
 
         return null;
     }
-
-
-//    public void navigateToMethod(String methodCodeObjectId) {
-//
-//        var className = methodCodeObjectId.substring(0, methodCodeObjectId.indexOf("$_$"));
-//
-//        //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
-//        className = className.replace('$', '.');
-//
-//        //searching in project scope will find only project classes
-//        Collection<PsiClass> psiClasses =
-//                JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.allScope(project));
-//        if (!psiClasses.isEmpty()) {
-//            //hopefully there is only one class by that name in the project
-//            PsiClass psiClass = psiClasses.stream().findAny().get();
-//            for (PsiMethod method : psiClass.getMethods()) {
-//                var id = JavaLanguageUtils.createJavaMethodCodeObjectId(method);
-//                if (id.equals(methodCodeObjectId) && method.canNavigate()) {
-//                    method.navigate(true);
-//                    return;
-//                }
-//            }
-//        }
-//    }
 
 
     @Override
@@ -308,20 +279,11 @@ public class JavaLanguageService implements LanguageService {
 
 
 
-    @Override
-    public boolean isIndexedLanguage() {
-        return true;
-    }
 
     @Override
-    public @NotNull DocumentInfo buildDocumentInfo(PsiFile psiFile) {
-        return JavaCodeObjectDiscovery.buildDocumentInfo(project, (PsiJavaFile) psiFile);
-    }
-
-
-    @Override
-    public void enrichDocumentInfo(@NotNull DocumentInfo documentInfo, @NotNull PsiFile psiFile) {
-        JavaCodeObjectDiscovery.enrichDocumentInfo(project,documentInfo, psiFile,micronautFramework,jaxrsFramework,grpcFramework);
+    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile) {
+        //must be PsiJavaFile , this method should be called only for java files
+        return JavaCodeObjectDiscovery.buildDocumentInfo(project, (PsiJavaFile)psiFile,micronautFramework,jaxrsFramework,grpcFramework);
     }
 
 
@@ -354,6 +316,6 @@ public class JavaLanguageService implements LanguageService {
                 !projectFileIndex.isInLibrary(psiFile.getVirtualFile()) &&
                 !projectFileIndex.isExcluded(psiFile.getVirtualFile()) &&
                 isSupportedFile(project, psiFile) &&
-                !DocumentInfoIndex.namesToExclude.contains(psiFile.getVirtualFile().getName());
+                !JavaDocumentInfoIndex.namesToExclude.contains(psiFile.getVirtualFile().getName());
     }
 }

@@ -18,7 +18,6 @@ import com.jetbrains.python.psi.PyFunction;
 import com.jetbrains.python.psi.stubs.PyFunctionNameIndex;
 import kotlin.Pair;
 import org.digma.intellij.plugin.document.DocumentInfoService;
-import org.digma.intellij.plugin.index.DocumentInfoIndex;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
@@ -92,7 +91,7 @@ public class PythonLanguageService implements LanguageService {
         if (!isSupportedFile(project, psiFile)) {
             return new MethodUnderCaret("", "", "", PsiUtils.psiFileToUri(psiFile), false);
         }
-        PsiElement underCaret = findElementUnderCaret(project, psiFile, caretOffset);
+        PsiElement underCaret = psiFile.findElementAt(caretOffset);
         if (underCaret == null) {
             return new MethodUnderCaret("", "", "", PsiUtils.psiFileToUri(psiFile), true);
         }
@@ -211,15 +210,9 @@ public class PythonLanguageService implements LanguageService {
         PythonCodeLensService.getInstance(project).environmentChanged(newEnv);
     }
 
-    @Override
-    public boolean isIndexedLanguage() {
-        //python is not indexed language, we don't build an index for python.
-        // code object discovery happens every time a file is opened.
-        return false;
-    }
 
     @Override
-    public @NotNull DocumentInfo buildDocumentInfo(PsiFile psiFile) {
+    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile) {
         if (psiFile instanceof PyFile pyFile) {
             return PythonCodeObjectsDiscovery.buildDocumentInfo(project, pyFile);
         }
@@ -229,16 +222,6 @@ public class PythonLanguageService implements LanguageService {
     @Override
     public boolean isIntellijPlatformPluginLanguage() {
         return true;
-    }
-
-
-    @Override
-    public void enrichDocumentInfo(DocumentInfo documentInfo, PsiFile psiFile) {
-        //not necessary for python because we don't index python.
-        //java is indexed but the index does not contain spans because there are no references resolving during indexing.
-        //so for java when a file is opened we take the DocumentInfo from the index and enrich it with spans.
-        //in python, we do all discovery every time the file is opened.
-        throw new UnsupportedOperationException("This method should never be called for python");
     }
 
 
@@ -265,8 +248,7 @@ public class PythonLanguageService implements LanguageService {
                 PythonLanguageUtils.isProjectFile(project, psiFile) &&
                 !projectFileIndex.isInLibrary(psiFile.getVirtualFile()) &&
                 !projectFileIndex.isExcluded(psiFile.getVirtualFile()) &&
-                isSupportedFile(project, psiFile) &&
-                !DocumentInfoIndex.namesToExclude.contains(psiFile.getVirtualFile().getName());
+                isSupportedFile(project, psiFile);
     }
 
 

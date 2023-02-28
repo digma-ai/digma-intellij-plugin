@@ -9,7 +9,6 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.editor.event.DocumentListener;
 import com.intellij.openapi.fileEditor.FileEditorManager;
-import com.intellij.openapi.project.IndexNotReadyException;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -20,9 +19,7 @@ import com.intellij.util.Alarm;
 import com.intellij.util.AlarmFactory;
 import com.intellij.util.RunnableCallable;
 import com.intellij.util.concurrency.NonUrgentExecutor;
-import com.intellij.util.indexing.FileBasedIndex;
 import org.digma.intellij.plugin.document.DocumentInfoService;
-import org.digma.intellij.plugin.index.DocumentInfoIndex;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
@@ -146,17 +143,13 @@ class DocumentChangeListener {
 
         LanguageService languageService = LanguageServiceLocator.getInstance(project).locate(psiFile.getLanguage());
 
-        //todo: we don't build an index for python, its not an issue when a file is opened, but on document change
-        //it may happen too many times. consider building an index for python.
-        //the problem is that the enrich will happen every time anyway,
-        // but maybe keeping method discovery in index saves a lot of cpu and time.
-        DocumentInfo documentInfo;
-        if (languageService.isIndexedLanguage()){
-            documentInfo = EditorEventsHandler.tryGetDocumentInfoFromIndex(project,languageService,psiFile);
-            languageService.enrichDocumentInfo(documentInfo, psiFile);
-        }else{
-            documentInfo = languageService.buildDocumentInfo(psiFile);
-        }
+        //todo: try to improve.
+        // we call buildDocumentInfo for every document change event. and call
+        // documentInfoService.addCodeObjects that will actually reload all insights
+        // and update the current context.
+        // maybe we can improve it and only do that if something relevant was changed
+        // by checking the code block that was changed.
+        DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFile);
 
         documentInfoService.addCodeObjects(psiFile, documentInfo);
     }

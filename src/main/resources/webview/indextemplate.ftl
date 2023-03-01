@@ -1,46 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <style>
-      @font-face {
-        font-family: "Nunito";
-        src: url("/fonts/Nunito-Regular.ttf") format("truetype");
-        font-weight: 400;
-        font-style: normal;
-      }
-
-      @font-face {
-        font-family: "Nunito";
-        src: url("/fonts/Nunito-Medium.ttf") format("truetype");
-        font-weight: 500;
-        font-style: normal;
-      }
-
-      @font-face {
-        font-family: "Nunito";
-        src: url("/fonts/Nunito-SemiBold.ttf") format("truetype");
-        font-weight: 600;
-        font-style: normal;
-      }
-
-      @font-face {
-        font-family: "Nunito";
-        src: url("/fonts/Nunito-Bold.ttf") format("truetype");
-        font-weight: 700;
-        font-style: normal;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="root"></div>
-    <!-- Environment variables -->
-    <script>
-      window.theme = "${theme}"
-      window.recentActivityRefreshInterval;
-      window.recentActivityExpirationLimit;
-      window.recentActivityDocumentationURL = "https://github.com/digma-ai/digma-intellij-plugin/blob/main/README.md";
-    </script>
-    <script src="/main.js"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    @font-face {
+      font-family: "JetBrains Mono";
+      src: url("/fonts/JetBrainsMono-Medium.ttf") format("truetype");
+      font-weight: 500;
+      font-style: normal;
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<!-- Environment variables -->
+<script>
+  window.environment = "JetBrains";
+  window.theme = "${theme}";
+  window.mainFont;
+  window.codeFont;
+  window.recentActivityRefreshInterval;
+  window.recentActivityExpirationLimit;
+  window.recentActivityDocumentationURL;
+</script>
+<script src="/index.js"></script>
+</body>
 </html>

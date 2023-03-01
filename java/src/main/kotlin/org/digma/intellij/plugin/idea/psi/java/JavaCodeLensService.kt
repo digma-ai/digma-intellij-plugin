@@ -13,12 +13,12 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.*
 import com.intellij.util.messages.MessageBusConnection
+import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.document.CodeLensProvider
 import org.digma.intellij.plugin.document.DocumentInfoChanged
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import java.awt.event.MouseEvent
-import java.util.ArrayList
 import java.util.concurrent.ConcurrentHashMap
 import java.util.stream.Collectors
 
@@ -146,7 +146,7 @@ class JavaCodeLensService(private val project: Project): Disposable {
         private val elementPointer = SmartPointerManager.createPointer(element)
         private val toolWindowShower = project.getService(ToolWindowShower::class.java)
         override fun invoke(event: MouseEvent?, editor: Editor) {
-            toolWindowShower.showToolWindow()
+            toolWindowShower.showToolWindowById(PluginId.TOOL_WINDOW_ID)
             elementPointer.element?.let {
                 if (elementPointer.element?.canNavigateToSource() == true) {
                     elementPointer.element?.navigate(true)

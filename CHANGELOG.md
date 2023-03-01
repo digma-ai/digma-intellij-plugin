@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.35] - 2023-03-01
+### Changed
+- Applied new UI theme styles for Jetbrains
+
 ## [2.0.34] - 2023-03-01
 ### Changed
 - Configured CodeLens for Java project to open sidepane instead of "Recent Activity"
@@ -25,4 +29,5 @@ All notable changes to this project will be documented in this file.
 [2.0.32]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.31...v2.0.32
 [2.0.33]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.32...v2.0.33
 [2.0.34]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.33...v2.0.34
-[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.34...HEAD
+[2.0.35]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.34...v2.0.35
+[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.35...HEAD

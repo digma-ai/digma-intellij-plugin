@@ -1,7 +1,7 @@
 package org.digma.intellij.plugin.toolwindow;
 
 public enum UiTheme {
-    DARK("dark"),
+    DARK("dark-jetbrains"),
     LIGHT("light"),
     ;
 

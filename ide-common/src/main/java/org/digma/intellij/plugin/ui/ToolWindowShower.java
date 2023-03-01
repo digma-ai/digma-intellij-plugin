@@ -46,10 +46,21 @@ public class ToolWindowShower {
         }
     }
 
+    public void showToolWindowById(String id) {
+        Log.log(LOGGER::debug, "Don't have reference to tool window with id {}, showing with ToolWindowManager..", id);
+        ToolWindow tw = ToolWindowManager.getInstance(project).getToolWindow(id);
+        if (tw != null) {
+            Log.log(LOGGER::debug, "Got tool window from ToolWindowManager");
+            show(tw);
+        } else {
+            Log.log(LOGGER::debug, "Could not find tool window");
+        }
+    }
+
     private void show(ToolWindow toolWindow) {
-        if (toolWindow.isVisible()){
+        if (toolWindow.isVisible()) {
             Log.log(LOGGER::debug, "Tool window is already visible");
-        }else{
+        } else {
             Log.log(LOGGER::debug, "Calling toolWindow.show");
             toolWindow.show();
         }

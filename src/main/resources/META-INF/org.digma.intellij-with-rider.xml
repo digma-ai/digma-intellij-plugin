@@ -6,38 +6,25 @@
 
         <postStartupActivity implementation="org.digma.intellij.plugin.rider.ServicesStarter" id="rider-startup"/>
 
+        <projectService serviceImplementation="org.digma.intellij.plugin.rider.protocol.LanguageServiceHost"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.rider.protocol.CodeLensHost"/>
+
         <projectService serviceImplementation="org.digma.intellij.plugin.rider.protocol.ShowToolWindowHost"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.rider.psi.csharp.CSharpLanguageService"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.rider.protocol.ElementUnderCaretDetector"/>
-
-        <projectService serviceImplementation="org.digma.intellij.plugin.rider.protocol.CodeObjectHost"/>
-
-        <projectService serviceImplementation="org.digma.intellij.plugin.rider.protocol.MethodNavigationHost"/>
-
-        <projectService serviceImplementation="org.digma.intellij.plugin.rider.psi.csharp.CSharpDocumentAnalyzer"/>
-
-        <projectService serviceImplementation="org.digma.intellij.plugin.rider.protocol.DocumentCodeObjectsListener"/>
-
-        <projectService serviceImplementation="org.digma.intellij.plugin.rider.env.RiderEnvironmentChangedHandler"/>
 
     </extensions>
 
 
     <projectListeners>
         <listener
-                class="org.digma.intellij.plugin.rider.editor.RiderEditorEventsStarter"
-                topic="com.intellij.openapi.wm.ex.ToolWindowManagerListener"/>
-        <listener
                 class="org.digma.intellij.plugin.rider.document.RiderDocumentInfoConsumer"
                 topic="org.digma.intellij.plugin.document.DocumentInfoChanged"/>
         <listener
                 class="org.digma.intellij.plugin.rider.refreshInsightsTask.RefreshInsightsTaskScheduledHandler"
                 topic="org.digma.intellij.plugin.refreshInsightsTask.RefreshInsightsTaskScheduled"/>
-        <listener
-                class="org.digma.intellij.plugin.rider.editor.RiderFileClosedListener"
-                topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
 
     </projectListeners>
 

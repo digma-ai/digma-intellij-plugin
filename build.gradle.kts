@@ -145,6 +145,7 @@ tasks {
     }
 
     val deleteLog = create("deleteLogs", Delete::class.java) {
+        outputs.upToDateWhen { false }
         project.layout.buildDirectory.dir("idea-sandbox/system/log").get().asFile.walk().forEach {
             if (it.name.endsWith(".log")) {
                 delete(it)
@@ -161,6 +162,9 @@ tasks {
         // Rider's backend doesn't support dynamic plugins. It might be possible to work with auto-reload of the frontend
         // part of a plugin, but there are dangers about keeping plugins in sync
         autoReloadPlugins.set(false)
+        systemProperties(
+            "idea.log.debug.categories" to "#org.digma",
+        )
     }
 
 

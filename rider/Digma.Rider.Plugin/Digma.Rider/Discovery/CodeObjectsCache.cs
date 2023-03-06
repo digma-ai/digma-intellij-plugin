@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Digma.Rider.Protocol;
 using Digma.Rider.Util;
 using JetBrains.Application.Progress;
@@ -32,7 +33,7 @@ namespace Digma.Rider.Discovery
     /// 
     /// </summary>
     [PsiComponent]
-    public class CodeObjectsCache: SimpleICache<Document>
+    public class CodeObjectsCache: SimpleICache<RiderDocumentInfo>
     {
         private readonly ILogger _logger;
 
@@ -40,7 +41,7 @@ namespace Digma.Rider.Discovery
         /// Increment the version when the cache structure changes.
         /// it will set ClearOnLoad to true and the cache will be invalidated and rebuild.
         /// </summary>
-        public override string Version => "2";
+        public override string Version => "3";
 
         public CodeObjectsCache(ILogger logger,Lifetime lifetime, IShellLocks locks, IPersistentIndexManager persistentIndexManager) 
             : base(lifetime, locks, persistentIndexManager, new DocumentMarshaller())
@@ -85,10 +86,10 @@ namespace Digma.Rider.Discovery
                 Log(_logger,"Found code objects for IPsiSourceFile '{0}':",sourceFile);
 
                 var isComplete = !discoveryContext.HasReferenceResolvingErrors;
-                var document = new Document(isComplete, fileUri);
+                var document = new RiderDocumentInfo(isComplete, fileUri,new List<RiderMethodInfo>());
                 foreach (var (key, value) in discoveryContext.Methods)
                 {
-                    document.Methods.Add(key,value);
+                    document.Methods.Add(value);
                 }
                 Log(_logger,"Built code objects Document '{0}' for IPsiSourceFile '{1}':",document,sourceFile);
                 return document;

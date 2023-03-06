@@ -1,17 +1,12 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Digma.Rider.Protocol;
 using Digma.Rider.Util;
 using JetBrains.ReSharper.Psi.CSharp.Tree;
 using JetBrains.ReSharper.Psi.Tree;
-using JetBrains.ReSharper.Psi.VB.Tree;
 using JetBrains.Util;
 using static Digma.Rider.Logging.Logger;
 using static JetBrains.Util.Logging.Logger;
-using IBlock = JetBrains.ReSharper.Psi.CSharp.Tree.IBlock;
-using ILambdaExpression = JetBrains.ReSharper.Psi.CSharp.Tree.ILambdaExpression;
-using ILocalVariableDeclaration = JetBrains.ReSharper.Psi.CSharp.Tree.ILocalVariableDeclaration;
 
 namespace Digma.Rider.Discovery
 {

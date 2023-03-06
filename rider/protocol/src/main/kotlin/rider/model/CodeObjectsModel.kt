@@ -9,7 +9,15 @@ import com.jetbrains.rider.model.nova.ide.SolutionModel
 @Suppress("unused")
 object CodeObjectsModel : Ext(SolutionModel.Solution) {
 
-    private val RiderMethodInfo = structdef {
+
+    val RiderDocumentInfo = structdef {
+        field("isComplete", PredefinedType.bool)
+        field("fileUri", PredefinedType.string)
+        field("methods", immutableList(RiderMethodInfo))
+    }
+
+
+    val RiderMethodInfo = structdef {
         field("id", PredefinedType.string)
         field("name", PredefinedType.string)
         field("containingClass", PredefinedType.string)
@@ -19,7 +27,7 @@ object CodeObjectsModel : Ext(SolutionModel.Solution) {
         field("spans", immutableList(RiderSpanInfo))
     }
 
-    private val RiderSpanInfo = structdef {
+    val RiderSpanInfo = structdef {
         field("id", PredefinedType.string)
         field("name", PredefinedType.string)
         field("containingMethod", PredefinedType.string)
@@ -27,22 +35,22 @@ object CodeObjectsModel : Ext(SolutionModel.Solution) {
         field("offset", PredefinedType.int)
     }
 
-    private val RiderCodeLensInfo = structdef {
+    val RiderCodeLensInfo = structdef {
         field("codeObjectId", PredefinedType.string)
         field("lensTitle", PredefinedType.string.nullable)
         field("lensDescription", PredefinedType.string.nullable)
         field("moreText", PredefinedType.string.nullable)
         field("anchor", PredefinedType.string.nullable)
-        field("documentProtocolKey", PredefinedType.string)
+        field("psiUri", PredefinedType.string)
     }
 
 
-    private val CodeObjectIdUriPair = structdef{
+    val CodeObjectIdUriPair = structdef{
         field("codeObjectId", PredefinedType.string)
         field("workspaceUri", PredefinedType.string)
     }
 
-    private val CodeObjectIdUriOffsetTrouple = structdef {
+    val CodeObjectIdUriOffsetTrouple = structdef {
         field("codeObjectId", PredefinedType.string)
         field("workspaceUri", PredefinedType.string)
         field("offset", PredefinedType.int)
@@ -50,37 +58,9 @@ object CodeObjectsModel : Ext(SolutionModel.Solution) {
 
 
     init {
-        call(
-            "getWorkspaceUris",
-            immutableList(PredefinedType.string), immutableList(CodeObjectIdUriPair)
-        ).async
-
-        call(
-            "getSpansWorkspaceUris",
-            immutableList(PredefinedType.string), immutableList(CodeObjectIdUriOffsetTrouple)
-        ).async
-
-        call("isCsharpMethod", PredefinedType.string, PredefinedType.bool).async
-
         setting(CSharp50Generator.Namespace, "Digma.Rider.Protocol")
         setting(Kotlin11Generator.Namespace, "org.digma.intellij.plugin.rider.protocol")
-
         source("reanalyze", PredefinedType.string)
-        sink("documentAnalyzed", PredefinedType.string)
-        source("refreshIncompleteDocuments", PredefinedType.void)
-
-        //key: document file path, value: Document
-        map(
-            "documents",
-            PredefinedType.string,
-            classdef("Document") {
-                field("isComplete",PredefinedType.bool)
-                field("fileUri",PredefinedType.string)
-                //map<codeObjectId,MethodInfo>
-                map("methods", PredefinedType.string, RiderMethodInfo)
-            })
-
-
         map("codeLens", PredefinedType.string,
             classdef("lensPerObjectId") {
                 list("lens", RiderCodeLensInfo)

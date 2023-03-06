@@ -1,4 +1,5 @@
 using Digma.Rider.Protocol;
+using Digma.Rider.Util;
 using JetBrains.Lifetimes;
 using JetBrains.Platform.RdFramework.Impl;
 using JetBrains.ProjectModel;
@@ -15,29 +16,27 @@ namespace Digma.Rider.Highlighting
     {
         public DaemonReanalyze(Lifetime lifetime, ISolution solution,
             ShellRdDispatcher shellRdDispatcher,
-            CodeObjectsHost codeObjectsHost,
             ILogger logger, IDaemon daemon)
         {
             var codeObjectsModel = solution.GetProtocolSolution().GetCodeObjectsModel();
 
-            codeObjectsModel.Reanalyze.Advise(lifetime, documentKey =>
+            codeObjectsModel.Reanalyze.Advise(lifetime, psiUri =>
             {
-                Log(logger, "Reanalyze called for {0}", documentKey);
+                Log(logger, "Reanalyze called for {0}", psiUri);
                 shellRdDispatcher.Queue(() =>
                 {
                     using (ReadLockCookie.Create())
                     {
-                        //usually we should have the PsiSourceFile so we can call Invalidate(psiSourceFile.Document).
-                        //if PsiSourceFile not found fallback to Invalidate() 
-                        var psiSourceFile = codeObjectsHost.DocPathToPsiSourceFile.TryGetValue(documentKey);
+                        //if PsiSourceFile not found fallback to Invalidate() for all daemons 
+                        var psiSourceFile = PsiUtils.FindPsiSourceFile(new PsiFileID(null,psiUri),solution);
                         if (psiSourceFile != null && psiSourceFile.IsValid())
                         {
-                            Log(logger, "Found PsiSourceFile in local map for {0}, Calling Invalidate(psiSourceFile.Document) {0}",documentKey, psiSourceFile);
+                            Log(logger, "Found PsiSourceFile in local map for {0}, Calling Invalidate(psiSourceFile.Document) {0}",psiUri, psiSourceFile);
                             daemon.Invalidate(psiSourceFile.Document);
                         }
                         else
                         {
-                            Log(logger, "Could not find PsiSourceFile {0} in local map. calling Calling Invalidate()", documentKey);
+                            Log(logger, "Could not find PsiSourceFile {0} in local map. calling Calling Invalidate()", psiUri);
                             daemon.Invalidate();
                         }
                     }

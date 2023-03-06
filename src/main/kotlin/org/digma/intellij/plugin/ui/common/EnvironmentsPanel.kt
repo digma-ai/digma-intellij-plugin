@@ -16,6 +16,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
 import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.common.CommonUtils.prettyTimeOf
+import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
 import org.digma.intellij.plugin.ui.common.Laf.Icons.Environment.Companion.ENVIRONMENT_HAS_NO_USAGE
@@ -61,23 +62,11 @@ class EnvironmentsPanel(
                 //there are few instances of EnvironmentsPanel, if a button is clicked in the insights tab the selected button
                 //need to change also in the errors tab, and vice versa.
                 override fun environmentChanged(newEnv: String?) {
-                    if (SwingUtilities.isEventDispatchThread()) {
-                        select(newEnv)
-                    } else {
-                        SwingUtilities.invokeLater {
-                            select(newEnv)
-                        }
-                    }
+                    EDT.ensureEDT{select(newEnv)}
                 }
 
                 override fun environmentsListChanged(newEnvironments: MutableList<String>?) {
-                    if (SwingUtilities.isEventDispatchThread()) {
-                        rebuildInBackground()
-                    } else {
-                        SwingUtilities.invokeLater {
-                            rebuildInBackground()
-                        }
-                    }
+                    EDT.ensureEDT{rebuildInBackground()}
                 }
             })
     }

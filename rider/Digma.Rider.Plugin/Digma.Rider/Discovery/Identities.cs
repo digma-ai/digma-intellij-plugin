@@ -140,7 +140,7 @@ namespace Digma.Rider.Discovery
         }
 
         // computes MethodFqn supposed to equal CodeObjectId
-        public static string ComputeFqn(ICSharpFunctionDeclaration functionDeclaration,
+        public static string ComputeFqn([NotNull] ICSharpFunctionDeclaration functionDeclaration,
             out bool managedToResolveReferences)
         {
             managedToResolveReferences = true;

@@ -3,12 +3,14 @@
 package org.digma.intellij.plugin.ui.errors
 
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.MutableProperty
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBUI.Borders.empty
+import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.ui.common.createTopPanel
 import org.digma.intellij.plugin.ui.common.noCodeObjectWarningPanel
 import org.digma.intellij.plugin.ui.common.wrapWithNoConnectionWrapper
@@ -31,6 +33,8 @@ import javax.swing.JPanel
 private const val NO_INFO_CARD_NAME = "NO-INFO"
 private const val LIST_CARD_NAME = "LIST"
 private const val PREVIEW_LIST_CARD_NAME = "PREVIEW_LIST"
+
+private val logger: Logger = Logger.getInstance("org.digma.intellij.plugin.ui.insights.ErrorsTab")
 
 
 fun errorsPanel(project: Project): DigmaTabPanel {
@@ -139,10 +143,13 @@ fun errorsPanel(project: Project): DigmaTabPanel {
             cardLayout.show(cardsPanel, errorsModel.card.name)
 
             if (errorsList.getModel().size == 0 && previewList.getModel().size > 0 && insightsModel.card == InsightsTabCard.PREVIEW) {
+                Log.log(logger::debug,project, "Changing errors tab card to $PREVIEW_LIST_CARD_NAME")
                 errorsPanelListCardLayout.show(errorsPanelListCardPanel, PREVIEW_LIST_CARD_NAME)
             } else if (errorsList.getModel().size == 0) {
+                Log.log(logger::debug,project, "Changing errors tab card to $NO_INFO_CARD_NAME")
                 errorsPanelListCardLayout.show(errorsPanelListCardPanel, NO_INFO_CARD_NAME)
             } else {
+                Log.log(logger::debug,project, "Changing errors tab card to $LIST_CARD_NAME")
                 errorsPanelListCardLayout.show(errorsPanelListCardPanel, LIST_CARD_NAME)
             }
 

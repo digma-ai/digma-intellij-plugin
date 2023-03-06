@@ -17,20 +17,19 @@ namespace Digma.Rider.Highlighting
     public class CodeObjectsHighlighter : ElementProblemAnalyzer<ICSharpFunctionDeclaration>
     {
         private readonly ILogger _logger;
-        private readonly CodeObjectsHost _codeObjectsHost;
+        private readonly LanguageServiceHost _languageServiceHost;
         private readonly CodeLensProviderFactory _codeLensProviderFactory;
 
         public CodeObjectsHighlighter(ILogger logger,
-            CodeObjectsHost codeObjectsHost,
             ISolution solution,
             IconHost iconHost,
             ShowToolWindowHost showToolWindowHost,
-            CodeLensProviderFactory codeLensProviderFactory
-        )
+            CodeLensProviderFactory codeLensProviderFactory, 
+            LanguageServiceHost languageServiceHost)
         {
             _logger = logger;
-            _codeObjectsHost = codeObjectsHost;
             _codeLensProviderFactory = codeLensProviderFactory;
+            _languageServiceHost = languageServiceHost;
         }
 
         protected override void Run(ICSharpFunctionDeclaration functionDeclaration,
@@ -40,7 +39,7 @@ namespace Digma.Rider.Highlighting
             Log(_logger, "CodeObjectsHighlighter.Run invoked for {0}", functionDeclaration);
 
             var methodFqn = Identities.ComputeFqn(functionDeclaration);
-            var methodCodeLenses = _codeObjectsHost.GetRiderCodeLensInfo(methodFqn);
+            var methodCodeLenses = _languageServiceHost.GetRiderCodeLensInfo(methodFqn);
             if (methodCodeLenses is { Count: > 0 })
             {
                 

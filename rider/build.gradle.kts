@@ -129,6 +129,12 @@ tasks {
         delete("${projectDir}/Digma.Rider.Plugin/Digma.Rider/obj")
         delete("${projectDir}/Digma.Rider.Plugin/Digma.Rider.Tests/bin")
         delete("${projectDir}/Digma.Rider.Plugin/Digma.Rider.Tests/obj")
+        delete(fileTree("${projectDir}/src/main/kotlin/org/digma/intellij/plugin/rider/protocol/").matching {
+            include("*.Generated.kt")
+        })
+        delete(fileTree("${projectDir}/Digma.Rider.Plugin/Digma.Rider/Protocol/").matching {
+            include("*.Generated.cs")
+        })
     }
 }
 

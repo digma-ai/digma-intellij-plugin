@@ -80,12 +80,12 @@ public class DocumentInfoContainer {
             insights = analyticsService.getInsights(objectIds)
                     .stream().filter(codeObjectInsight -> !codeObjectInsight.getType().equals(InsightType.Unmapped))
                     .collect(Collectors.toList());
-            Log.log(LOGGER::debug, "Got next insights: {}", insights);
+            Log.log(LOGGER::debug, "Got insights for {}: {}",psiFile.getVirtualFile(), insights);
         } catch (AnalyticsServiceException e) {
             //insights = Collections.emptyList() means there was an error loading insights, usually if the backend is not available.
             //don't log the exception, it was logged in AnalyticsService, keep the log quite because it can happen many times.
             insights = Collections.emptyList();
-            Log.log(LOGGER::debug, "Cannot get insights with ids: {}. Because: {}", objectIds, e.getMessage());
+            Log.log(LOGGER::warn, "Cannot get insights with ids: {}. Because: {}", objectIds, e.getMessage());
         }
 
         try {
@@ -99,6 +99,7 @@ public class DocumentInfoContainer {
         } catch (AnalyticsServiceException e) {
             usageStatus = EmptyUsageStatusResult;
             usageStatusOfErrors = EmptyUsageStatusResult;
+            Log.log(LOGGER::warn, "Cannot get usage status with ids: {}. Because: {}", objectIds, e.getMessage());
         }
     }
 

@@ -1,6 +1,8 @@
 package org.digma.intellij.plugin.psi;
 
 import com.intellij.lang.Language;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
@@ -8,6 +10,7 @@ import kotlin.Pair;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +19,11 @@ import java.util.Map;
 public class NoOpLanguageService implements LanguageService {
 
     public static final NoOpLanguageService INSTANCE = new NoOpLanguageService();
+
+    @Override
+    public void ensureStartup(@NotNull Project project) {
+        //nothing to do
+    }
 
     @Override
     public Language getLanguageForMethodCodeObjectId(@NotNull String methodId) {
@@ -35,7 +43,7 @@ public class NoOpLanguageService implements LanguageService {
 
     @Override
     @NotNull
-    public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, int caretOffset) {
+    public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, Editor selectedEditor, int caretOffset) {
         return MethodUnderCaret.getEMPTY();
     }
 
@@ -65,8 +73,15 @@ public class NoOpLanguageService implements LanguageService {
     }
 
 
+    //this method should never be called on NoOpLanguageService, calling code must be aware of that
     @Override
     public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile) {
+        throw new UnsupportedOperationException("should not be called");
+    }
+
+    //this method should never be called on NoOpLanguageService, calling code must be aware of that
+    @Override
+    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, @Nullable FileEditor newEditor) {
         throw new UnsupportedOperationException("should not be called");
     }
 
@@ -84,5 +99,10 @@ public class NoOpLanguageService implements LanguageService {
     @Override
     public boolean isRelevant(PsiFile psiFile) {
         return false;
+    }
+
+    @Override
+    public void refreshMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int offset) {
+
     }
 }

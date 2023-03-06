@@ -17,6 +17,4 @@ class ShowToolWindowHost(project: Project) : LifetimedProjectComponent(project) 
             toolWindowShower.showToolWindow()
         }
     }
-
-
 }

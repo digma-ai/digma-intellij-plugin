@@ -12,12 +12,12 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
-import com.intellij.testFramework.LightVirtualFile;
 import com.intellij.util.Alarm;
 import com.intellij.util.AlarmFactory;
 import com.intellij.util.RunnableCallable;
 import com.intellij.util.concurrency.NonUrgentExecutor;
-import org.digma.intellij.plugin.IDEUtils;
+import org.digma.intellij.plugin.common.EDT;
+import org.digma.intellij.plugin.common.FileUtils;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
@@ -45,6 +45,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
     private final DocumentChangeListener documentChangeListener;
     private final Alarm contextChangeAlarmAfterFileClosed;
 
+    private boolean startupEnsured = false;
 
     public EditorEventsHandler(Project project) {
         this.project = project;
@@ -57,17 +58,28 @@ public class EditorEventsHandler implements FileEditorManagerListener {
     }
 
 
-    /*
-    EditorEventsHandler is registered on all IDEs , it will do nothing on C# files because
-    CSharp languageService.isIntellijPlatformPluginLanguage is false.
-     */
-
-    @Override
-    public void selectionChanged(@NotNull FileEditorManagerEvent editorManagerEvent) {
-        //don't do anything here if Rider and the file is a C# file
-        if (IDEUtils.isRiderAndCSharpFile(project,editorManagerEvent.getNewFile())){
+    private void ensureStartupOnEdt(Project project) {
+        if (startupEnsured){
             return;
         }
+        EDT.ensureEDT(() -> LanguageService.ensureStartupOnEdt(project));
+
+        startupEnsured = true;
+    }
+
+
+    /**
+    This is the central event that drives the plugin. if something goes wrong here the plugin will not function.
+     */
+    @Override
+    public void selectionChanged(@NotNull FileEditorManagerEvent editorManagerEvent) {
+
+        //this will make sure that all registered language services complete startup before they can be used.
+        // usually there is nothing to do, but rider for example need to load the protocol models on EDT.
+        // in mose cases this method will return immediately. Rider has a ServicesStartup StartupActivity that
+        // will already do it, this call is here in case this event is fired before all StartupActivitys completed.
+        ensureStartupOnEdt(project);
+
 
         //this method is executed on EDT.
         //most of the code here,access to psi or to the index, needs to be executed on EDT or in Read/Write actions.
@@ -100,17 +112,11 @@ public class EditorEventsHandler implements FileEditorManagerListener {
         var newFile = editorManagerEvent.getNewFile();
 
         //ignore non supported files. newFile may be null when the last editor is closed.
-        //A relevant file is a source file that is supported by one of the language services. and also a language
-        // where the language plugin is intellij platform plugin. this is mainly meant to distinguish from C# on Rider,
-        // this listener should not handle C# files.
-        // usually this listener will not be installed on Rider unless another language plugin is installed on Rider,
-        // for example the python plugin can be installed on rider.
-
-        //this code also follows file opened events. there is a dedicated file opened event, but it's invoked after
-        // selectionChanged and that causes some problems in managing the events. using selectionChanged to decide when
-        // a new file is opened proves to be more reliable.
+        //A relevant file is a source file that is supported by one of the language services.
 
         if (newFile != null && isRelevantFile(newFile)) {
+
+            Log.log(LOGGER::debug, "handling new open file:{}",newFile);
 
             //wait for smart mode before loading document info and installing caret and document change listeners.
             //if files are opened on startup before indexes are ready there is nothing we can do to build the document
@@ -123,67 +129,100 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
                 PsiFile psiFile = PsiManager.getInstance(project).findFile(newFile);
                 if (psiFile == null){
+                    Log.log(LOGGER::debug, "No psi file for :{}",newFile);
                     return;
                 }
 
                 //if documentInfoService contains this file then the file was already opened before and now its only
                 //selectionChanged when changing tabs
                 if (documentInfoService.contains(psiFile)) {
+                    Log.log(LOGGER::debug, "documentInfoService already contains :{}",newFile);
                     return;
                 }
 
                 LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
+                Log.log(LOGGER::debug, "Found language service {} for :{}",languageService,newFile);
 
-                DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFile);
+                //some language services need the selected editor , for example CSharpLanguageService need to take
+                // getProjectModelId from the selected editor. it may be null
+                var newEditor = editorManagerEvent.getNewEditor();
+                DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFile,newEditor);
+                Log.log(LOGGER::debug, "got DocumentInfo for :{}",newFile);
 
                 documentInfoService.addCodeObjects(psiFile, documentInfo);
+                Log.log(LOGGER::debug, "documentInfoService updated with DocumentInfo for :{}",newFile);
+
             })).inSmartMode(project).withDocumentsCommitted(project).finishOnUiThread(ModalityState.defaultModalityState(), unused -> {
+
+                Log.log(LOGGER::debug, "finishing on ui thread for :{}",newFile);
 
                 var selectedTextEditor = fileEditorManager.getSelectedTextEditor();
                 if (selectedTextEditor != null) {
+                    Log.log(LOGGER::debug, "Found selected editor for :{}",newFile);
                     PsiFile psiFile = PsiDocumentManager.getInstance(project).getPsiFile(selectedTextEditor.getDocument());
                     if (psiFile != null && isRelevantFile(psiFile.getVirtualFile())) {
+                        Log.log(LOGGER::debug, "Found relevant psi file for :{}",newFile);
                         LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
+                        Log.log(LOGGER::debug, "Found language service {} for :{}",languageService,newFile);
                         caretListener.maybeAddCaretListener(selectedTextEditor);
                         documentChangeListener.maybeAddDocumentListener(selectedTextEditor);
-                        MethodUnderCaret methodUnderCaret = languageService.detectMethodUnderCaret(project, psiFile, selectedTextEditor.getCaretModel().getOffset());
+                        MethodUnderCaret methodUnderCaret = languageService.detectMethodUnderCaret(project, psiFile, selectedTextEditor,selectedTextEditor.getCaretModel().getOffset());
+                        Log.log(LOGGER::debug, "Found MethodUnderCaret for :{}, '{}'",newFile,methodUnderCaret);
                         caretContextService.contextChanged(methodUnderCaret);
+                        Log.log(LOGGER::debug, "contextChanged for :{}, '{}'",newFile,methodUnderCaret);
                     }else if (psiFile != null){
+                        Log.log(LOGGER::debug, "file not supported :{}, calling contextEmptyNonSupportedFile",newFile);
                         caretContextService.contextEmptyNonSupportedFile(psiFile.getVirtualFile().getPath());
                     }else{
+                        Log.log(LOGGER::debug, "calling contextEmpty for {}",newFile);
                         caretContextService.contextEmpty();
                     }
+                }else{
+                    Log.log(LOGGER::debug, "No selected editor for :{}",newFile);
                 }
 
             }).submit(NonUrgentExecutor.getInstance());
 
         } else if (newFile != null) {
+            Log.log(LOGGER::debug, "new file is not relevant {}, calling contextEmptyNonSupportedFile",newFile);
             caretContextService.contextEmptyNonSupportedFile(newFile.getPath());
         } else {
+            Log.log(LOGGER::debug, "new file is null calling contextEmpty");
             caretContextService.contextEmpty();
         }
+
     }
+
+
 
 
 
     @Override
     public void fileClosed(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
-        //don't do anything here if Rider and the file is a C# file
-        if (IDEUtils.isRiderAndCSharpFile(project,file)){
-            return;
+
+        Log.log(LOGGER::debug, "fileClosed: file:{}", file);
+
+        PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
+        if (psiFile != null && !FileUtils.isVcsFile(file)) {
+
+            Log.log(LOGGER::debug, "found psi file for fileClosed {}",file);
+            //this PsiFile may be anything, it may be a supported language file or a non-supported file.
+            // in any case try to remove from documentInfoService.
+
+            documentInfoService.removeDocumentInfo(psiFile);
+
+            if (isRelevantFile(file)) {
+                Log.log(LOGGER::debug, "psi file is relevant for fileClosed {}",file);
+                caretListener.removeCaretListener(file);
+                documentChangeListener.removeDocumentListener(file);
+            }
+
         }
 
-        var selectedEditor = source.getSelectedEditor();
-        Log.log(LOGGER::debug, "fileClosed: file:{}, selected editor: {}", file, selectedEditor);
-        if (isRelevantFile(file)) {
-            caretListener.removeCaretListener(file);
-            documentChangeListener.removeDocumentListener(file);
-            PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
-            if (psiFile == null) {
-                return;
-            }
-            //don't need to test if it's a supported file, if document info exists it will be removed.
-            documentInfoService.removeDocumentInfo(psiFile);
+        if (!source.hasOpenFiles()){
+            Log.log(LOGGER::debug, "no more open editors , calling contextEmpty");
+            caretContextService.contextEmpty();
+            return;
         }
 
         //sometimes, can't say why, when a tab is closed and another tab becomes visible, selectionChanged is not called
@@ -192,31 +231,43 @@ public class EditorEventsHandler implements FileEditorManagerListener {
         // updating the context here with the selected editor file when a file is closed solves it. but then if
         // selectionChanged is called, which happens most of the time, then we will update the context twice.
         // so updateContextAfterFileClosed will add the contextChanged request in an Alarm with a delay of 200 millis,
-        // if selectionChanged is called right after that it will cancel the Alarm and hopefully we don't update twice.
+        // if selectionChanged is called right after that it will cancel the Alarm, and hopefully we don't update twice.
         // worst case is that sometimes there will be a delay of 200 millis in updating the context, which as said usually
         // it works ok.
-        updateContextAfterFileClosed(selectedEditor, source);
+        var selectedEditor = source.getSelectedEditor();
+        if (selectedEditor != null) {
+            Log.log(LOGGER::debug, "calling updateContextAfterFileClosed");
+            updateContextAfterFileClosed(selectedEditor, source);
+        }
     }
 
 
+
     private void updateContextAfterFileClosed(FileEditor selectedEditor, @NotNull FileEditorManager fileEditorManager) {
+        Log.log(LOGGER::debug, "updateContextAfterFileClosed called");
         contextChangeAlarmAfterFileClosed.cancelAllRequests();
         if (selectedEditor != null) {
             var selectedFile = selectedEditor.getFile();
-            if (isRelevantFile(selectedFile)) {
+            if ( isRelevantFile(selectedFile) && !FileUtils.isVcsFile(selectedFile)) {
+                Log.log(LOGGER::debug, "updateContextAfterFileClosed found selected file {}",selectedFile);
                 PsiFile psiFile = PsiManager.getInstance(project).findFile(selectedFile);
                 var selectedTextEditor = fileEditorManager.getSelectedTextEditor();
                 if (psiFile != null && selectedTextEditor != null) {
+                    Log.log(LOGGER::debug, "updateContextAfterFileClosed psi file {}",psiFile.getVirtualFile());
+                    //each language service may do the refresh differently, Rider is different from others.
                     LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
-                    MethodUnderCaret methodUnderCaret = languageService.detectMethodUnderCaret(project, psiFile, selectedTextEditor.getCaretModel().getOffset());
-                    contextChangeAlarmAfterFileClosed.addRequest(() -> caretContextService.contextChanged(methodUnderCaret), 200);
+                    Log.log(LOGGER::debug, "calling {}.refreshMethodUnderCaret for {}",languageService,psiFile.getVirtualFile());
+                    contextChangeAlarmAfterFileClosed.addRequest(() -> languageService.refreshMethodUnderCaret(project, psiFile,selectedTextEditor, selectedTextEditor.getCaretModel().getOffset()), 200);
                 } else {
+                    Log.log(LOGGER::debug, "updateContextAfterFileClosed no psi file for {}, calling contextEmptyNonSupportedFile",selectedFile);
                     contextChangeAlarmAfterFileClosed.addRequest(() -> caretContextService.contextEmptyNonSupportedFile(selectedFile.getPath()), 200);
                 }
-            } else {
+            }else {
+                Log.log(LOGGER::debug, "updateContextAfterFileClosed selected file is not relevant {}, calling contextEmptyNonSupportedFile",selectedFile);
                 contextChangeAlarmAfterFileClosed.addRequest(() -> caretContextService.contextEmptyNonSupportedFile(selectedFile.getPath()), 200);
             }
         } else {
+            Log.log(LOGGER::debug, "updateContextAfterFileClosed selected no selected editor, calling contextEmpty");
             contextChangeAlarmAfterFileClosed.addRequest(caretContextService::contextEmpty, 200);
         }
     }
@@ -233,8 +284,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
             return false;
         }
         LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
-        return !(file instanceof LightVirtualFile) &&
-                languageService.isIntellijPlatformPluginLanguage() &&
+        return !FileUtils.isLightVirtualFileBase(file) &&
                 languageService.isRelevant(file);
 
     }

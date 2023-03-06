@@ -2,9 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using Digma.Rider.Discovery;
 using JetBrains.Annotations;
 using JetBrains.DocumentManagers;
-using JetBrains.Lifetimes;
 using JetBrains.ProjectModel;
-using JetBrains.RdBackend.Common.Features;
 using JetBrains.ReSharper.Feature.Services.CSharp.CompleteStatement;
 using JetBrains.ReSharper.Feature.Services.Navigation;
 using JetBrains.ReSharper.Psi;
@@ -28,21 +26,16 @@ namespace Digma.Rider.Protocol
         private readonly DocumentManager _documentManager;
         private readonly ILogger _logger;
 
-        public MethodNavigator(Lifetime lifetime,
-            ISolution solution,
-            ITextControlManager textControlManager,
+        public MethodNavigator(ITextControlManager textControlManager,
             DocumentManager documentManager,
             ILogger logger)
         {
             _textControlManager = textControlManager;
             _documentManager = documentManager;
             _logger = logger;
-           
-            var methodNavigationModel = solution.GetProtocolSolution().GetMethodNavigationModel();
-            methodNavigationModel.NavigateToMethod.Advise(lifetime, Navigate);
         }
 
-        private void Navigate(string message)
+        public void Navigate(string message)
         {
             //the message needs to be unique. the frontend adds a unique string prefix to the method id 
             var methodId = message.SubstringAfter("}");
@@ -202,9 +195,6 @@ namespace Digma.Rider.Protocol
         }
         
     }
-    
-    
-    
     
     
 }

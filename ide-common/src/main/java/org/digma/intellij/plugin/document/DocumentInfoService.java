@@ -190,16 +190,12 @@ public class DocumentInfoService {
     }
 
 
-    //this method must return a result, this codeObjectId must exist. otherwise it's a bug
-    @NotNull
+    @Nullable
     public Language getLanguageByMethodCodeObjectId(String codeObjectId) {
         Optional<DocumentInfoContainer> optional = this.documents.values().stream().
                 filter(container -> container.getDocumentInfo().getMethods().containsKey(codeObjectId)).
                 findAny();
-        if (optional.isPresent()) {
-            return optional.get().getLanguage();
-        }
-        throw new RuntimeException("could not find language by method id " + codeObjectId);
+        return optional.map(DocumentInfoContainer::getLanguage).orElse(null);
     }
 
 

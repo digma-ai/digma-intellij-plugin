@@ -3,10 +3,13 @@ package org.digma.intellij.plugin.psi;
 import com.intellij.lang.Language;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import kotlin.Pair;
+import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
@@ -22,10 +25,35 @@ public interface LanguageService extends Disposable {
     Logger LOGGER = Logger.getInstance(LanguageService.class);
 
 
+
     @Override
     default void dispose() {
 
     }
+
+
+    static void ensureStartupOnEdt(@NotNull Project project) {
+        EDT.ensureEDT(() -> {
+            for (SupportedLanguages value : SupportedLanguages.values()) {
+
+                try {
+                    Class<? extends LanguageService> clazz = (Class<? extends LanguageService>) Class.forName(value.getLanguageServiceClassName());
+                    LanguageService languageService = project.getService(clazz);
+                    if (languageService != null) {
+                        languageService.ensureStartup(project);
+                    }
+                } catch (Throwable e) {
+                    //ignore: some classes will fail to load , for example the CSharpLanguageService
+                    //will fail to load if it's not rider because it depends on rider classes.
+                    //JavaLanguageService will fail to load on rider, etc.
+                    //don't log, it will happen too many times
+                }
+            }
+        });
+
+    }
+
+    void ensureStartup(@NotNull Project project);
 
 
     /**
@@ -138,12 +166,15 @@ public interface LanguageService extends Disposable {
     Language getLanguageForMethodCodeObjectId(@NotNull String methodId);
 
 
+    @SuppressWarnings("unused")
     boolean isSupportedFile(Project project, VirtualFile newFile);
 
     boolean isSupportedFile(Project project, PsiFile psiFile);
 
+    //some language services need the editor, for example CSharpLanguageService needs to take
+    // getProjectModelId from the selected editor which is the preferred way to find a IPsiSourceFile in resharper. it may be null.
     @NotNull
-    MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, int caretOffset);
+    MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile,@Nullable Editor selectedEditor, int caretOffset);
 
 
     /**
@@ -166,13 +197,16 @@ public interface LanguageService extends Disposable {
     @NotNull
     DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile);
 
+    //some language services need the selected editor , for example CSharpLanguageService need to take
+    // getProjectModelId from the selected editor. it may be null
+    @NotNull
+    DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, @Nullable FileEditor selectedTextEditor);
+
+
     /**
      * This method is meant to distinguish languages that are implemented as intellij platform plugin.
      * the main reason is that we need to know if this is not C# on rider. its used mainly to help in decisions about
      * how to process swing editor events.
-     * for example, C# is not relevant for processing editor caret events or file open events because its implemented
-     * in resharper and the plugin is notified about these events from resharper.
-     *
      * @return true if this is an intellij platform event.
      */
     boolean isIntellijPlatformPluginLanguage();
@@ -181,4 +215,7 @@ public interface LanguageService extends Disposable {
     boolean isRelevant(VirtualFile file);
 
     boolean isRelevant(PsiFile psiFile);
+
+    void refreshMethodUnderCaret(@NotNull Project project,@NotNull  PsiFile psiFile, @Nullable Editor selectedEditor, int offset);
+
 }

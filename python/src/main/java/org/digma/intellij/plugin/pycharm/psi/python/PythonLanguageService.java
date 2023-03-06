@@ -1,8 +1,9 @@
 package org.digma.intellij.plugin.pycharm.psi.python;
 
 import com.intellij.lang.Language;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ReadAction;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
@@ -17,6 +18,7 @@ import com.jetbrains.python.psi.PyFile;
 import com.jetbrains.python.psi.PyFunction;
 import com.jetbrains.python.psi.stubs.PyFunctionNameIndex;
 import kotlin.Pair;
+import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
@@ -49,6 +51,11 @@ public class PythonLanguageService implements LanguageService {
         caretContextService = project.getService(CaretContextService.class);
     }
 
+
+    @Override
+    public void ensureStartup(@NotNull Project project) {
+        //nothing to do
+    }
 
     @Nullable
     @Override
@@ -87,7 +94,7 @@ public class PythonLanguageService implements LanguageService {
 
     @Override
     @NotNull
-    public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, int caretOffset) {
+    public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, Editor selectedEditor, int caretOffset) {
         if (!isSupportedFile(project, psiFile)) {
             return new MethodUnderCaret("", "", "", PsiUtils.psiFileToUri(psiFile), false);
         }
@@ -191,7 +198,7 @@ public class PythonLanguageService implements LanguageService {
     @Override
     public void environmentChanged(String newEnv) {
 
-        ApplicationManager.getApplication().invokeAndWait(() -> {
+        EDT.ensureEDT(() -> {
             var fileEditor = FileEditorManager.getInstance(project).getSelectedEditor();
             if (fileEditor != null) {
                 var file = fileEditor.getFile();
@@ -200,7 +207,7 @@ public class PythonLanguageService implements LanguageService {
                     var selectedTextEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
                     if (selectedTextEditor != null) {
                         int offset = selectedTextEditor.getCaretModel().getOffset();
-                        var methodUnderCaret = detectMethodUnderCaret(project, psiFile, offset);
+                        var methodUnderCaret = detectMethodUnderCaret(project, psiFile, null, offset);
                         caretContextService.contextChanged(methodUnderCaret);
                     }
                 }
@@ -217,6 +224,11 @@ public class PythonLanguageService implements LanguageService {
             return PythonCodeObjectsDiscovery.buildDocumentInfo(project, pyFile);
         }
         return new DocumentInfo(PsiUtils.psiFileToUri(psiFile), new HashMap<>());
+    }
+
+    @Override
+    public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, @Nullable FileEditor newEditor) {
+        return buildDocumentInfo(psiFile);
     }
 
     @Override
@@ -249,6 +261,12 @@ public class PythonLanguageService implements LanguageService {
                 !projectFileIndex.isInLibrary(psiFile.getVirtualFile()) &&
                 !projectFileIndex.isExcluded(psiFile.getVirtualFile()) &&
                 isSupportedFile(project, psiFile);
+    }
+
+    @Override
+    public void refreshMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int offset) {
+        MethodUnderCaret methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedEditor, offset);
+        caretContextService.contextChanged(methodUnderCaret);
     }
 
 

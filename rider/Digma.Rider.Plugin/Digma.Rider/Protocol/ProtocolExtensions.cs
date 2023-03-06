@@ -8,7 +8,7 @@ namespace Digma.Rider.Protocol
         //Equals for Digma.Rider.Protocol.Document.
         // the RiderMethodInfo elements in Methods already have Equals.
         // the name is CheckEquals because can't override Equals in extension.
-        public static bool CheckEquals(this Document document,Document other)
+        public static bool CheckEquals(this RiderDocumentInfo document,RiderDocumentInfo other)
         {
             if (document == null && other == null)
                 return true;
@@ -23,10 +23,11 @@ namespace Digma.Rider.Protocol
         }
         
         
-        public static bool HasCodeObjects(this Document document)
+      
+        
+        public static bool HasCodeObjects(this RiderDocumentInfo document)
         {
             return !document.Methods.IsEmpty();
-            //add more code objects checks
         }
     }
 }

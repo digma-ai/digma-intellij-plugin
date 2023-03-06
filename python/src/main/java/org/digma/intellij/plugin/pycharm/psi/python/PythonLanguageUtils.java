@@ -6,6 +6,7 @@ import com.intellij.psi.PsiFile;
 import com.jetbrains.python.psi.PyClass;
 import com.jetbrains.python.psi.PyFile;
 import com.jetbrains.python.psi.PyFunction;
+import org.digma.intellij.plugin.common.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -84,6 +85,11 @@ public class PythonLanguageUtils {
 
 
     public static boolean isProjectFile(@NotNull Project project, @NotNull VirtualFile virtualFile) {
+
+        if (FileUtils.isLightVirtualFileBase(virtualFile)){
+            return false;
+        }
+
         var spliterator = virtualFile.toNioPath().spliterator();
         List<String> pathElements = StreamSupport.stream(spliterator, false).map(Path::toString).toList();
 

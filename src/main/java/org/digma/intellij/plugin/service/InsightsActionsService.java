@@ -42,6 +42,9 @@ public class InsightsActionsService {
      */
     public void navigateToMethodFromFunctionsListPanel(@NotNull String codeObjectId) {
         Language language = documentInfoService.getLanguageByMethodCodeObjectId(codeObjectId);
+        if (language == null){
+            language = documentInfoService.getDominantLanguage();
+        }
         LanguageService languageService = languageServiceLocator.locate(language);
         languageService.navigateToMethod(codeObjectId);
     }

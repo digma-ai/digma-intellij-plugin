@@ -13,6 +13,7 @@ import org.digma.intellij.plugin.analytics.BackendConnectionMonitor;
 import org.digma.intellij.plugin.analytics.EnvironmentChanged;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.service.ErrorsActionsService;
 import org.digma.intellij.plugin.ui.ToolWindowShower;
 import org.digma.intellij.plugin.ui.errors.ErrorsTabKt;
@@ -43,6 +44,8 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
         Log.log(LOGGER::debug, "createToolWindowContent for project  {}", project);
+
+        LanguageService.ensureStartupOnEdt(project);
 
         var contentFactory = ContentFactory.getInstance();
 

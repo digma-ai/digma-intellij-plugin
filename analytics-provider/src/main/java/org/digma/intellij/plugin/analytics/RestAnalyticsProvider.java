@@ -181,7 +181,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 });
             }
 
-            builder.callTimeout(5, TimeUnit.SECONDS)
+            builder.callTimeout(10, TimeUnit.SECONDS)
                     .connectTimeout(5, TimeUnit.SECONDS)
                     .readTimeout(5, TimeUnit.SECONDS);
 

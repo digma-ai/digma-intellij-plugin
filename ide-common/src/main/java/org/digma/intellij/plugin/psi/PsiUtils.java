@@ -1,12 +1,14 @@
 package org.digma.intellij.plugin.psi;
 
 import com.intellij.openapi.application.ReadAction;
+import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 
 public class PsiUtils {
@@ -53,6 +55,22 @@ public class PsiUtils {
                 throw new PsiFileNotFountException("could not locate PsiFile for uri "+uri+", virtual file:"+virtualFile);
             }
             return psiFile;
+        });
+    }
+
+
+
+    @Nullable
+    public static String tryFindSelectedPsiUri(Project project){
+        return ReadAction.compute(() -> {
+            String psiUri = null;
+            var selectedEditor = FileEditorManager.getInstance(project).getSelectedEditor();
+            if (selectedEditor != null){
+                var file = selectedEditor.getFile();
+                var psiFile = file == null ? null : PsiManager.getInstance(project).findFile(file);
+                psiUri = psiFile == null ? null : PsiUtils.psiFileToUri(psiFile);
+            }
+            return psiUri;
         });
     }
 

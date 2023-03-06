@@ -3,6 +3,7 @@ using JetBrains.Annotations;
 using JetBrains.ProjectModel;
 using JetBrains.Util;
 
+
 namespace Digma.Rider.Logging
 {
     public static class Logger
@@ -22,7 +23,7 @@ namespace Digma.Rider.Logging
         }
         
         
-        public static void LogFoundMethodsForDocument(ILogger logger,[NotNull] Document document)
+        public static void LogFoundMethodsForDocument(ILogger logger,[NotNull] RiderDocumentInfo document)
         {
             var methodInfos = document.Methods;
             if (methodInfos.IsEmpty())

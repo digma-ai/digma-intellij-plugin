@@ -21,17 +21,20 @@ public class Log {
     }
 
     public static void debugWithException(Logger logger,Throwable e, String format, Object... args) {
-        logger.debug(String.format(format.replace("{}", "%s"), args),e);
+        logger.debug("Digma: " + String.format(format.replace("{}", "%s"), args),e);
     }
 
     public static void warnWithException(Logger logger,Throwable e, String format, Object... args) {
-        logger.warn(String.format(format.replace("{}", "%s"), args),e);
+        logger.warn("Digma: " + String.format(format.replace("{}", "%s"), args),e);
     }
 
 
+    public static void log(Consumer<String> consumer,Project project, String msg) {
+        consumer.accept("Digma: Project:" + project.getName() + ": " + msg);
+    }
 
     public static void log(Consumer<String> consumer, String msg) {
-        consumer.accept(msg);
+        consumer.accept("Digma: " + msg);
     }
 
     public static void error(Logger logger,Project project, Exception exception, String format, Object... args) {
@@ -42,7 +45,7 @@ public class Log {
     }
 
     public static void error(Logger logger, Exception exception, String msg) {
-        logger.error(msg, exception);
+        logger.error("Digma: " + msg, exception);
     }
 
 

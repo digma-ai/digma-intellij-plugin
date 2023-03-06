@@ -3,10 +3,12 @@
 package org.digma.intellij.plugin.ui.insights
 
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.ui.dsl.builder.MutableProperty
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
+import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.ui.common.createTopPanel
 import org.digma.intellij.plugin.ui.common.noCodeObjectWarningPanel
 import org.digma.intellij.plugin.ui.common.wrapWithNoConnectionWrapper
@@ -25,6 +27,9 @@ import javax.swing.JPanel
 
 
 private const val NO_INFO_CARD_NAME = "NO-INFO"
+
+
+private val logger: Logger = Logger.getInstance("org.digma.intellij.plugin.ui.insights.InsightsTab")
 
 fun insightsPanel(project: Project): DigmaTabPanel {
 
@@ -98,11 +103,12 @@ fun insightsPanel(project: Project): DigmaTabPanel {
             insightsList.getModel().setListData(insightsModel.listViewItems)
             previewList.getModel().setListData(insightsModel.previewListViewItems)
 
-            if (insightsList.getModel().size == 0 && insightsModel.card.equals(InsightsTabCard.INSIGHTS)) {
+            if (insightsList.getModel().size == 0 && insightsModel.card == InsightsTabCard.INSIGHTS) {
                 cardLayout.show(cardsPanel, NO_INFO_CARD_NAME)
-            } else if (previewList.getModel().size == 0 && insightsModel.card.equals(InsightsTabCard.PREVIEW)) {
+            } else if (previewList.getModel().size == 0 && insightsModel.card == InsightsTabCard.PREVIEW) {
                 cardLayout.show(cardsPanel, NO_INFO_CARD_NAME)
             } else {
+                Log.log(logger::debug,project, "Changing insights tab card to ${insightsModel.card.name}")
                 cardLayout.show(cardsPanel, insightsModel.card.name)
             }
 

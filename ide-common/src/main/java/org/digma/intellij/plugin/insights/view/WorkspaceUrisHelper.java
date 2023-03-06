@@ -15,15 +15,16 @@ public class WorkspaceUrisHelper {
 
     public static void findWorkspaceUrisForSpans(@NotNull Project project, ListViewItem<?> theListView, @NotNull List<String> spanIds, @NotNull String methodCodeObjectId) {
         var languageService = LanguageService.findLanguageServiceByMethodCodeObjectId(project, methodCodeObjectId);
-        findWorkspaceUrisForSpans(theListView,spanIds,languageService);
+        findWorkspaceUrisForSpans(theListView, spanIds, languageService);
     }
+
     public static void findWorkspaceUrisForSpans(@NotNull Project project, ListViewItem<?> theListView, @NotNull List<String> spanIds, @NotNull MethodInfo methodInfo) {
         var languageService = LanguageService.findLanguageServiceByMethodInfo(project, methodInfo);
-        findWorkspaceUrisForSpans(theListView,spanIds,languageService);
+        findWorkspaceUrisForSpans(theListView, spanIds, languageService);
     }
 
 
-    public static void findWorkspaceUrisForSpans(ListViewItem<?> theListView, @NotNull List<String> spanIds,@NotNull LanguageService languageService){
+    public static void findWorkspaceUrisForSpans(ListViewItem<?> theListView, @NotNull List<String> spanIds, @NotNull LanguageService languageService) {
         var workspaceUris = languageService.findWorkspaceUrisForSpanIds(spanIds);
         workspaceUris.forEach((k, v) -> theListView.getMoreData().put(k, v));
     }

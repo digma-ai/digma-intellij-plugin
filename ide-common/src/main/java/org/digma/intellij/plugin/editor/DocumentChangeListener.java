@@ -1,20 +1,17 @@
 package org.digma.intellij.plugin.editor;
 
 import com.intellij.openapi.Disposable;
-import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.editor.event.DocumentListener;
-import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiInvalidElementAccessException;
 import com.intellij.util.Alarm;
 import com.intellij.util.AlarmFactory;
 import com.intellij.util.RunnableCallable;
@@ -22,10 +19,8 @@ import com.intellij.util.concurrency.NonUrgentExecutor;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
-import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.psi.LanguageServiceLocator;
-import org.digma.intellij.plugin.ui.CaretContextService;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -42,14 +37,11 @@ class DocumentChangeListener {
 
     private final Project project;
     private final DocumentInfoService documentInfoService;
-    private final CaretContextService caretContextService;
-
     private final Map<VirtualFile, Disposable> disposables = new HashMap<>();
 
     DocumentChangeListener(Project project) {
         this.project = project;
         documentInfoService = project.getService(DocumentInfoService.class);
-        caretContextService = project.getService(CaretContextService.class);
     }
 
     void maybeAddDocumentListener(@NotNull Editor editor) {
@@ -96,39 +88,22 @@ class DocumentChangeListener {
                 }
 
                 documentChangeAlarm.cancelAllRequests();
-                documentChangeAlarm.addRequest(() ->
-                {
-                    //this code is always executed in smart mode because the document listener is installed only in smart mode
-                    PsiFile changedPsiFile = PsiDocumentManager.getInstance(project).getPsiFile(event.getDocument());
-                    //probably should never happen
-                    if (changedPsiFile == null) {
-                        return;
+                documentChangeAlarm.addRequest(() -> ReadAction.nonBlocking(new RunnableCallable(() -> {
+                    try {
+                        Log.log(LOGGER::debug, "got documentChanged alarm for {}", event.getDocument());
+                        //this code is always executed in smart mode because the document listener is installed only in smart mode
+                        PsiFile changedPsiFile = PsiDocumentManager.getInstance(project).getPsiFile(event.getDocument());
+                        //probably should never happen
+                        if (changedPsiFile == null) {
+                            Log.log(LOGGER::debug, "changedPsiFile is null for {}", event.getDocument());
+                            return;
+                        }
+                        Log.log(LOGGER::debug, "Processing documentChanged event for {}", changedPsiFile.getVirtualFile());
+                        processDocumentChanged(changedPsiFile);
+                    } catch (Exception e) {
+                        Log.debugWithException(LOGGER, e, "exception while processing documentChanged event for file: {}, {}", event.getDocument(), e.getMessage());
                     }
-
-                    ReadAction.nonBlocking(new RunnableCallable(() -> {
-                        try {
-                            Log.log(LOGGER::debug, "Processing documentChanged event for {}", changedPsiFile.getVirtualFile());
-                            processDocumentChanged(changedPsiFile);
-                        } catch (PsiInvalidElementAccessException e) {
-                            Log.debugWithException(LOGGER, e, "exception while processing documentChanged event for file: {}, {}", changedPsiFile.getVirtualFile(), e.getMessage());
-                        }
-                    })).inSmartMode(project).withDocumentsCommitted(project).finishOnUiThread(ModalityState.defaultModalityState(), unused -> {
-
-                        var selectedTextEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
-                        if (selectedTextEditor != null) {
-                            PsiFile selectedPsiFile = PsiDocumentManager.getInstance(project).getPsiFile(selectedTextEditor.getDocument());
-                            //if the selected editor is still the file that was changed in this event then call contextChanged
-                            // otherwise do nothing
-                            if (selectedPsiFile != null && selectedPsiFile.equals(changedPsiFile)) {
-                                LanguageService languageService = LanguageServiceLocator.getInstance(project).locate(selectedPsiFile.getLanguage());
-                                MethodUnderCaret methodUnderCaret = languageService.detectMethodUnderCaret(project, selectedPsiFile, selectedTextEditor.getCaretModel().getOffset());
-                                caretContextService.contextChanged(methodUnderCaret);
-                            }
-                        }
-
-                    }).submit(NonUrgentExecutor.getInstance());
-
-                }, 500);
+                })).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance()), 2000);
 
             }
         }, parentDisposable);
@@ -150,11 +125,12 @@ class DocumentChangeListener {
         // maybe we can improve it and only do that if something relevant was changed
         // by checking the code block that was changed.
         DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFile);
+        Log.log(LOGGER::debug, "got DocumentInfo for {}", psiFile.getVirtualFile());
 
         documentInfoService.addCodeObjects(psiFile, documentInfo);
+        Log.log(LOGGER::debug, "documentInfoService updated with DocumentInfo for {}", psiFile.getVirtualFile());
+
     }
-
-
 
 
     void removeDocumentListener(VirtualFile file) {

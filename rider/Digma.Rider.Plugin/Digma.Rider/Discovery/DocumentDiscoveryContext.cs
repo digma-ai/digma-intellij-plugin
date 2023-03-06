@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Digma.Rider.Protocol;
 using JetBrains.ReSharper.Psi;
-using JetBrains.ReSharper.Psi.CSharp.Tree;
 
 namespace Digma.Rider.Discovery;
 

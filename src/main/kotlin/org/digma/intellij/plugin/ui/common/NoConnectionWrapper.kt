@@ -4,6 +4,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
+import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.list.commonListItemPanel
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
@@ -43,12 +44,8 @@ class NoConnectionWrapper(private val project: Project, private val panel: Digma
 
         //replace the label text for any settings change, although we need only on url change.
         settingsState.addChangeListener {
-            if (SwingUtilities.isEventDispatchThread()) {
+            EDT.ensureEDT{
                 messageLabel.text = createNoConnectionMessage()
-            } else {
-                SwingUtilities.invokeLater {
-                    messageLabel.text = createNoConnectionMessage()
-                }
             }
         }
 

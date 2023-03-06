@@ -6,6 +6,7 @@ import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.log.Log;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,7 +33,11 @@ public class LanguageServiceLocator {
 
     @SuppressWarnings("unchecked")
     @NotNull
-    public LanguageService locate(@NotNull Language language) {
+    public LanguageService locate(@Nullable Language language) {
+
+        if (language == null){
+            return NoOpLanguageService.INSTANCE;
+        }
 
         if (cache.contains(language)) {
             return cache.get(language);

@@ -43,7 +43,6 @@ public class EnvironmentChangeHandler implements EnvironmentChanged {
                 if (languageService != null) {
                     languageService.environmentChanged(newEnv);
                 }
-
             } catch (Throwable e) {
                 //ignore: some classes will fail to load , for example the CSharpLanguageService
                 //will fail to load if it's not rider because it depends on rider classes.

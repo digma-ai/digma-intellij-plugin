@@ -6,9 +6,9 @@ import com.intellij.openapi.wm.ToolWindow
 import com.intellij.ui.content.Content
 import com.intellij.util.messages.MessageBusConnection
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
+import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.ui.model.NOT_SUPPORTED_OBJECT_MSG
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
-import javax.swing.SwingUtilities
 
 
 abstract class AbstractViewService(val project: Project) : Disposable {
@@ -81,13 +81,7 @@ abstract class AbstractViewService(val project: Project) : Disposable {
             panel?.reset()
         }
 
-        if (SwingUtilities.isEventDispatchThread()) {
-            r.run()
-        } else {
-            SwingUtilities.invokeLater {
-                r.run()
-            }
-        }
+        EDT.ensureEDT(r)
     }
 
     @Suppress("unused")
@@ -134,13 +128,7 @@ abstract class AbstractViewService(val project: Project) : Disposable {
                 }
             }
 
-            if (SwingUtilities.isEventDispatchThread()) {
-                r.run()
-            } else {
-                SwingUtilities.invokeLater {
-                    r.run()
-                }
-            }
+            EDT.ensureEDT(r)
         }
     }
 

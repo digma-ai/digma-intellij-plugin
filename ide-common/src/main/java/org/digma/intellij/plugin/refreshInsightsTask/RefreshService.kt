@@ -6,10 +6,12 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.rd.util.withUiContext
 import com.intellij.openapi.vfs.VirtualFile
+import org.apache.commons.collections4.CollectionUtils
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.service.ErrorsViewService
 import org.digma.intellij.plugin.ui.service.InsightsViewService
@@ -75,11 +77,27 @@ class RefreshService(private val project: Project) {
 
     private fun updateInsightsCacheForActiveDocument(selectedTextEditor: Editor?, documentInfoContainer: DocumentInfoContainer?, scope: MethodScope) {
         val selectedDocument = selectedTextEditor?.document
-        if (selectedDocument != null) {
-            documentInfoContainer?.updateCache()
+        if (selectedDocument != null && documentInfoContainer != null) {
+            val oldInsights = documentInfoContainer.allInsights
+
+            documentInfoContainer.updateCache()
+
+            val newInsights = documentInfoContainer.allInsights
+
+            // refresh the UI ONLY if newInsights list is different from oldInsights
+            if (dataChanged(oldInsights, newInsights)) {
+                insightsViewService.updateInsightsModel(scope.getMethodInfo())
+                errorsViewService.updateErrorsModel(scope.getMethodInfo())
+            }
         }
-        insightsViewService.updateInsightsModel(scope.getMethodInfo())
-        errorsViewService.updateErrorsModel(scope.getMethodInfo())
+    }
+
+    private fun dataChanged(oldInsights: List<CodeObjectInsight?>, newInsights: List<CodeObjectInsight?>): Boolean {
+        val isEqual = CollectionUtils.isEqualCollection(
+                oldInsights,
+                newInsights
+        )
+        return !isEqual
     }
 
     private fun notifyRefreshInsightsTaskStarted(fileUri: String?) {

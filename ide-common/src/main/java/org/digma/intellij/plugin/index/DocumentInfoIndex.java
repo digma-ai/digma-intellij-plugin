@@ -92,11 +92,10 @@ public class DocumentInfoIndex extends SingleEntryFileBasedIndexExtension<Docume
                 // reference to the project.
                 if (DocumentInfoIndex.this.project != null && !DocumentInfoIndex.this.project.isDisposed()) {
                     boolean isInSourceContent = ProjectFileIndex.getInstance(project).isInSourceContent(file);
-                    boolean isInTestSourceContent = ProjectFileIndex.getInstance(project).isInTestSourceContent(file);
                     boolean isExcluded = ProjectFileIndex.getInstance(project).isExcluded(file);
                     boolean hasModule = ProjectFileIndex.getInstance(project).getModuleForFile(file) != null;
 
-                    return hasModule && isInSourceContent && !isInTestSourceContent && !isExcluded;
+                    return hasModule && isInSourceContent && !isExcluded;
 
                 } else {
                     //LanguageService.isInSourceContent will call JavaFileElementType.isInSourceContent for java files

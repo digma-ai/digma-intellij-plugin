@@ -321,7 +321,6 @@ public class JavaLanguageService implements LanguageService {
         return psiFile.isWritable() &&
                 isSupportedFile(project, psiFile) &&
                 !ProjectFileIndex.getInstance(project).isInLibrary(psiFile.getVirtualFile()) &&
-                !ProjectFileIndex.getInstance(project).isInTestSourceContent(psiFile.getVirtualFile()) &&
                 !DocumentInfoIndex.namesToExclude.contains(psiFile.getVirtualFile().getName());
     }
 
@@ -336,12 +335,6 @@ public class JavaLanguageService implements LanguageService {
 
         String fileUri = PsiUtils.psiFileToUri(psiFile);
         Map<String, MethodInfo> methodInfoMap = new HashMap<>();
-
-
-        //currently we build an empty index for test sources, there is no easy way to exclude them from indexing
-        if (ProjectFileIndex.getInstance(project).isInTestSourceContent(psiFile.getVirtualFile())) {
-            return new DocumentInfo(fileUri, methodInfoMap);
-        }
 
         //it must be a PsiJavaFile so casting should be ok
         PsiJavaFile psiJavaFile = (PsiJavaFile) psiFile;

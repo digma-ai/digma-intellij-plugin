@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.39] - 2023-03-17
+### Changed
+- Added Pycharm support
+- bugfix/link on span modifies the active env (#387)
+- Navigation schema change - environment selection #324
+
 ## [2.0.38] - 2023-03-08
 ### Changed
 - Repaint UI only when insights list was changed
@@ -45,4 +51,5 @@ All notable changes to this project will be documented in this file.
 [2.0.36]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.35...v2.0.36
 [2.0.37]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.36...v2.0.37
 [2.0.38]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.37...v2.0.38
-[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.38...HEAD
+[2.0.39]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.38...v2.0.39
+[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.39...HEAD

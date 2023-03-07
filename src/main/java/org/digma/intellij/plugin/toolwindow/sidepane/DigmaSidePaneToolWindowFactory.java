@@ -1,33 +1,32 @@
-package org.digma.intellij.plugin.toolwindow;
+package org.digma.intellij.plugin.toolwindow.sidepane;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
-import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.service.ErrorsActionsService;
 import org.digma.intellij.plugin.ui.ToolWindowShower;
-import org.digma.intellij.plugin.ui.errors.ErrorsTabKt;
-import org.digma.intellij.plugin.ui.insights.InsightsTabKt;
+import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
 import org.digma.intellij.plugin.ui.service.SummaryViewService;
 import org.digma.intellij.plugin.ui.service.ToolWindowTabsHelper;
-import org.digma.intellij.plugin.ui.summary.SummaryTabKt;
 import org.jetbrains.annotations.NotNull;
+
+import static org.digma.intellij.plugin.ui.common.MainSidePaneWindowPanelKt.createMainSidePaneWindowPanel;
 
 
 /**
  * The main Digma tool window on left panel
  */
-public class DigmaLeftToolWindowFactory implements ToolWindowFactory {
+public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
 
-    private static final Logger LOGGER = Logger.getInstance(DigmaLeftToolWindowFactory.class);
+    private static final Logger LOGGER = Logger.getInstance(DigmaSidePaneToolWindowFactory.class);
     private static final String DIGMA_NAME = "DIGMA";
 
     /**
@@ -39,7 +38,6 @@ public class DigmaLeftToolWindowFactory implements ToolWindowFactory {
      */
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
-
         Log.log(LOGGER::debug, "createToolWindowContent for project  {}", project);
 
         toolWindow.setTitle(DIGMA_NAME);
@@ -56,20 +54,16 @@ public class DigmaLeftToolWindowFactory implements ToolWindowFactory {
         //initialize AnalyticsService early so the UI can detect the connection status when created
         project.getService(AnalyticsService.class);
 
-
-        Content contentToSelect = createInsightsTab(project, toolWindow, contentFactory);
-        createErrorsTab(project, toolWindow, contentFactory);
-        createSummaryTab(project, toolWindow, contentFactory);
-
         ErrorsActionsService errorsActionsService = project.getService(ErrorsActionsService.class);
         toolWindow.getContentManager().addContentManagerListener(errorsActionsService);
 
+        DigmaResettablePanel mainSidePaneWindowPanel = createMainSidePaneWindowPanel(project);
+        var contentToDisplay = contentFactory.createContent(mainSidePaneWindowPanel, null, false);
 
         ToolWindowShower.getInstance(project).setToolWindow(toolWindow);
-        ToolWindowShower.getInstance(project).setInsightsTab(contentToSelect);
+        ToolWindowShower.getInstance(project).setInsightsTab(contentToDisplay);
 
-
-        toolWindow.getContentManager().setSelectedContent(contentToSelect, true);
+        toolWindow.getContentManager().addContent(contentToDisplay);
 
         //todo: runWhenSmart is ok for java,python , but in Rider runWhenSmart does not guarantee that the solution
         // is fully loaded. consider replacing that with LanguageService.runWhenSmartForAll so that C# language service
@@ -121,48 +115,5 @@ public class DigmaLeftToolWindowFactory implements ToolWindowFactory {
 //                publisher.environmentChanged(project.getService(AnalyticsService.class).getEnvironment().getCurrent());
 //            });
 //        }
-    }
-
-
-
-    private static void createSummaryTab(@NotNull Project project, @NotNull ToolWindow toolWindow, ContentFactory contentFactory) {
-        var summaryPanel = SummaryTabKt.summaryPanel(project);
-        var summaryViewService = project.getService(SummaryViewService.class);
-        summaryViewService.setPanel(summaryPanel);
-        var summaryContent = contentFactory.createContent(summaryPanel, "Summary", false);
-        summaryContent.setTabName(ToolWindowTabsHelper.SUMMARY_TAB_NAME);
-        summaryContent.setPreferredFocusedComponent(summaryPanel::getPreferredFocusedComponent);
-        summaryContent.setPreferredFocusableComponent(summaryPanel.getPreferredFocusableComponent());
-        toolWindow.getContentManager().addContent(summaryContent);
-        summaryViewService.setContent(toolWindow, summaryContent);
-    }
-
-    private static void createErrorsTab(@NotNull Project project, @NotNull ToolWindow toolWindow, ContentFactory contentFactory) {
-        var errorsPanel = ErrorsTabKt.errorsPanel(project);
-        var errorsViewService = project.getService(ErrorsViewService.class);
-        errorsViewService.setPanel(errorsPanel);
-        var errorsContent = contentFactory.createContent(errorsPanel, "Errors", false);
-        errorsContent.setTabName(ToolWindowTabsHelper.ERRORS_TAB_NAME); //we use tab name as a key , changing the name will break the plugin
-        errorsContent.setPreferredFocusedComponent(errorsPanel::getPreferredFocusedComponent);
-        errorsContent.setPreferredFocusableComponent(errorsPanel.getPreferredFocusableComponent());
-        toolWindow.getContentManager().addContent(errorsContent);
-        errorsViewService.setContent(toolWindow, errorsContent);
-        ToolWindowTabsHelper.getInstance(project).setErrorsContent(errorsContent);
-    }
-
-
-    @NotNull
-    private static Content createInsightsTab(@NotNull Project project, @NotNull ToolWindow toolWindow, ContentFactory contentFactory) {
-        var insightsPanel = InsightsTabKt.insightsPanel(project);
-        var insightsViewService = project.getService(InsightsViewService.class);
-        insightsViewService.setPanel(insightsPanel);
-        var insightsContent = contentFactory.createContent(insightsPanel, "Insights", false);
-        insightsContent.setTabName(ToolWindowTabsHelper.INSIGHTS_TAB_NAME);//we use tab name as a key , changing the name will break the plugin
-        insightsContent.setPreferredFocusedComponent(insightsPanel::getPreferredFocusedComponent);
-        insightsContent.setPreferredFocusableComponent(insightsPanel.getPreferredFocusableComponent());
-        toolWindow.getContentManager().addContent(insightsContent);
-        insightsViewService.setContent(toolWindow, insightsContent);
-        ToolWindowTabsHelper.getInstance(project).setInsightsContent(insightsContent);
-        return insightsContent;
     }
 }

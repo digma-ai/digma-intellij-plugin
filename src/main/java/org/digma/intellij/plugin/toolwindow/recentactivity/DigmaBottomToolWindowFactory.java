@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.toolwindow;
+package org.digma.intellij.plugin.toolwindow.recentactivity;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -46,11 +46,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import static org.digma.intellij.plugin.toolwindow.ToolWindowUtil.RECENT_ACTIVITY_GET_DATA;
-import static org.digma.intellij.plugin.toolwindow.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_SPAN;
-import static org.digma.intellij.plugin.toolwindow.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_TRACE;
-import static org.digma.intellij.plugin.toolwindow.ToolWindowUtil.RECENT_ACTIVITY_SET_DATA;
-import static org.digma.intellij.plugin.toolwindow.ToolWindowUtil.REQUEST_MESSAGE_TYPE;
+import static org.digma.intellij.plugin.toolwindow.recentactivity.ToolWindowUtil.RECENT_ACTIVITY_GET_DATA;
+import static org.digma.intellij.plugin.toolwindow.recentactivity.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_SPAN;
+import static org.digma.intellij.plugin.toolwindow.recentactivity.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_TRACE;
+import static org.digma.intellij.plugin.toolwindow.recentactivity.ToolWindowUtil.RECENT_ACTIVITY_SET_DATA;
+import static org.digma.intellij.plugin.toolwindow.recentactivity.ToolWindowUtil.REQUEST_MESSAGE_TYPE;
 import static org.digma.intellij.plugin.ui.common.EnvironmentUtilKt.LOCAL_ENV;
 import static org.digma.intellij.plugin.ui.common.EnvironmentUtilKt.SUFFIX_OF_LOCAL;
 import static org.digma.intellij.plugin.ui.common.EnvironmentUtilKt.getSortedEnvironments;
@@ -62,7 +62,7 @@ import static org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt.openJaeger
  */
 public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
     private static final Logger LOGGER = Logger.getInstance(DigmaBottomToolWindowFactory.class);
-    private static final String DIGMA_LEFT_TOOL_WINDOW_NAME = "Digma";
+    private static final String DIGMA_SIDE_PANE_TOOL_WINDOW_NAME = "Digma";
     private static final String SUCCESSFULLY_PROCESSED_JCEF_REQUEST_MESSAGE = "Successfully processed JCEF request with action =";
     private EditorService editorService;
     private AnalyticsService analyticsService;
@@ -178,11 +178,11 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
 
                     Pair<String, Integer> result = workspaceUrisForMethodCodeObjectIds.get(methodCodeObjectId);
                     editorService.openWorkspaceFileInEditor(result.getFirst(), result.getSecond());
-                    ToolWindow digmaLeftToolWindow = ToolWindowManager.getInstance(project).getToolWindow(DIGMA_LEFT_TOOL_WINDOW_NAME);
-                    if (digmaLeftToolWindow != null && !digmaLeftToolWindow.isVisible()) {
-                        digmaLeftToolWindow.show();
+                    ToolWindow digmaSidePaneToolWindow = ToolWindowManager.getInstance(project).getToolWindow(DIGMA_SIDE_PANE_TOOL_WINDOW_NAME);
+                    if (digmaSidePaneToolWindow != null && !digmaSidePaneToolWindow.isVisible()) {
+                        digmaSidePaneToolWindow.show();
                     } else {
-                        Log.log(LOGGER::debug, "digmaLeftToolWindow is empty OR is visible already");
+                        Log.log(LOGGER::debug, "digmaSidePaneToolWindow is empty OR is visible already");
                     }
                 }
             });

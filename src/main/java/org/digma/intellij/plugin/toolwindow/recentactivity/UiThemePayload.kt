@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.toolwindow
+package org.digma.intellij.plugin.toolwindow.recentactivity
 
 import com.fasterxml.jackson.annotation.JsonCreator
 

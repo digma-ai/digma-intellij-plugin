@@ -50,7 +50,6 @@ changelog {
     version.set(project.semanticVersion.version.get().toString())
     path.set("${project.projectDir}/CHANGELOG.md")
     groups.set(listOf("Added", "Changed", "Deprecated", "Removed", "Fixed", "Security"))
-//    groups.set(emptyList())
     header.set(provider { "[${version.get()}] - ${date()}" })
     keepUnreleasedSection.set(false)
 }

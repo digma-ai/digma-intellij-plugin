@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.common.Backgroundable
+import org.digma.intellij.plugin.common.modelChangeListener.ModelChangeListener
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.insights.InsightsProvider
 import org.digma.intellij.plugin.log.Log
@@ -59,7 +60,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
             model.insightsCount = insightsListContainer.count
             model.card = InsightsTabCard.INSIGHTS
 
-            updateUi()
+            notifyModelChangedAndUpdateUi()
         } finally {
             if (lock.isHeldByCurrentThread) {
                 lock.unlock()
@@ -80,7 +81,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
         model.insightsCount = 0
         model.card = InsightsTabCard.INSIGHTS
 
-        updateUi()
+        notifyModelChangedAndUpdateUi()
     }
 
 
@@ -95,7 +96,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
         model.insightsCount = 0
         model.card = InsightsTabCard.INSIGHTS
 
-        updateUi()
+        notifyModelChangedAndUpdateUi()
     }
 
     fun emptyNonSupportedFile(fileUri: String) {
@@ -109,7 +110,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
         model.insightsCount = 0
         model.card = InsightsTabCard.INSIGHTS
 
-        updateUi()
+        notifyModelChangedAndUpdateUi()
     }
 
     fun showDocumentPreviewList(
@@ -133,7 +134,8 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
 
         model.listViewItems = ArrayList()
         model.card = InsightsTabCard.PREVIEW
-        updateUi()
+
+        notifyModelChangedAndUpdateUi()
     }
 
 
@@ -170,6 +172,20 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
                 updateInsightsModel(scope.getMethodInfo())
             }
         }
+    }
+
+    private fun notifyModelChanged() {
+        Log.log(logger::debug, "Firing ModelChange event for {}", model)
+        if (project.isDisposed) {
+            return
+        }
+        val publisher = project.messageBus.syncPublisher(ModelChangeListener.MODEL_CHANGED_TOPIC)
+        publisher.modelChanged(model)
+    }
+
+    private fun notifyModelChangedAndUpdateUi() {
+        notifyModelChanged()
+        updateUi()
     }
 
 }

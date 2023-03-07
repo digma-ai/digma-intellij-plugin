@@ -15,9 +15,9 @@ class ToolWindowTabsHelper(val project: Project) {
     private var errorDetailsOn = false
 
     companion object {
-        const val INSIGHTS_TAB_NAME = "insights"
-        const val ERRORS_TAB_NAME = "errors"
-        const val SUMMARY_TAB_NAME = "summary"
+        const val INSIGHTS_TAB_NAME = "Insights"
+        const val ERRORS_TAB_NAME = "Errors"
+        const val SUMMARY_TAB_NAME = "Summary"
 
         @JvmStatic
         fun getInstance(project: Project):ToolWindowTabsHelper{

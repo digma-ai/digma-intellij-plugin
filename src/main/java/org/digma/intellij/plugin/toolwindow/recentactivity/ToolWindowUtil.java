@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.toolwindow;
+package org.digma.intellij.plugin.toolwindow.recentactivity;
 
 public class ToolWindowUtil {
     public static final String RECENT_ACTIVITY_SET_DATA = "RECENT_ACTIVITY/SET_DATA";

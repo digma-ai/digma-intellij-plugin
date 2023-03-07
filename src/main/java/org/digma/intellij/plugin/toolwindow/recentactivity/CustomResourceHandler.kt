@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.toolwindow
+package org.digma.intellij.plugin.toolwindow.recentactivity
 
 import freemarker.template.Configuration
 import org.cef.callback.CefCallback

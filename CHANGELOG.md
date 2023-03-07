@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.37] - 2023-03-08
+### Changed
+- Added support for wrong methodCodeObjectId
+
+## [2.0.36] - 2023-03-07
+### Changed
+- Add support for test files
+
 ## [2.0.35] - 2023-03-01
 ### Changed
 - Applied new UI theme styles for Jetbrains
@@ -30,4 +38,6 @@ All notable changes to this project will be documented in this file.
 [2.0.33]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.32...v2.0.33
 [2.0.34]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.33...v2.0.34
 [2.0.35]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.34...v2.0.35
-[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.35...HEAD
+[2.0.36]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.35...v2.0.36
+[2.0.37]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.36...v2.0.37
+[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.37...HEAD

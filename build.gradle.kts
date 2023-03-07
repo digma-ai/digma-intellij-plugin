@@ -1,4 +1,5 @@
 import common.properties
+import org.jetbrains.changelog.date
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.tasks.ListProductsReleasesTask
 import org.jetbrains.changelog.exceptions.MissingVersionException
@@ -44,6 +45,15 @@ intellij {
     }
 }
 
+// Configure Gradle Changelog Plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
+changelog {
+    version.set(project.semanticVersion.version.get().toString())
+    path.set("${project.projectDir}/CHANGELOG.md")
+    groups.set(listOf("Added", "Changed", "Deprecated", "Removed", "Fixed", "Security"))
+//    groups.set(emptyList())
+    header.set(provider { "[${version.get()}] - ${date()}" })
+    keepUnreleasedSection.set(false)
+}
 
 // Configure Gradle Qodana Plugin - read more: https://github.com/JetBrains/gradle-qodana-plugin
 qodana {

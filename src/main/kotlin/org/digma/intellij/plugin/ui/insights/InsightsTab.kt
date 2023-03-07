@@ -9,7 +9,7 @@ import com.intellij.ui.dsl.builder.MutableProperty
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.ui.common.createTopPanel
+import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.ui.common.noCodeObjectWarningPanel
 import org.digma.intellij.plugin.ui.common.wrapWithNoConnectionWrapper
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
@@ -39,9 +39,6 @@ fun insightsPanel(project: Project): DigmaTabPanel {
     //members change , like the various lists. or bind to a function of the mode like getScope.
     val insightsModel = InsightsViewService.getInstance(project).model
 
-    val topPanelWrapper = createTopPanel(project, insightsModel)
-
-
     val insightsList = ScrollablePanelList(InsightsList(project, insightsModel.listViewItems))
     val previewList = ScrollablePanelList(PreviewList(project, insightsModel.previewListViewItems))
 
@@ -70,12 +67,12 @@ fun insightsPanel(project: Project): DigmaTabPanel {
     previewPanel.add(previewList, BorderLayout.CENTER)
     previewPanel.isOpaque = false
 
-
     val noInfoWarningPanel = noCodeObjectWarningPanel(insightsModel)
 
     val cardLayout = CardLayout()
     val cardsPanel = JPanel(cardLayout)
     cardsPanel.isOpaque = false
+    cardsPanel.border = JBUI.Borders.empty()
     cardsPanel.add(insightsList, InsightsTabCard.INSIGHTS.name)
     cardsPanel.add(previewPanel, InsightsTabCard.PREVIEW.name)
     cardsPanel.add(noInfoWarningPanel, NO_INFO_CARD_NAME)
@@ -86,18 +83,17 @@ fun insightsPanel(project: Project): DigmaTabPanel {
 
     val result = object : DigmaTabPanel() {
         override fun getPreferredFocusableComponent(): JComponent {
-            return topPanelWrapper
+            return insightsList
         }
 
         override fun getPreferredFocusedComponent(): JComponent {
-            return topPanelWrapper
+            return insightsList
         }
 
         //reset must be called from EDT
         override fun reset() {
 
             noInfoWarningPanel.reset()
-            topPanelWrapper.reset()
             previewTitle.reset()
 
             insightsList.getModel().setListData(insightsModel.listViewItems)
@@ -118,15 +114,9 @@ fun insightsPanel(project: Project): DigmaTabPanel {
     }
 
     result.layout = BorderLayout()
-    result.add(topPanelWrapper, BorderLayout.NORTH)
     result.add(cardsPanel, BorderLayout.CENTER)
     result.background = listBackground()
+    result.isOpaque = false
 
     return wrapWithNoConnectionWrapper(project, result)
 }
-
-
-
-
-
-

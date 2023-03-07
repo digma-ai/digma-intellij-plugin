@@ -8,6 +8,7 @@ import com.intellij.ui.JBColor;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.CommonUtils;
+import org.digma.intellij.plugin.common.usageStatusChange.UsageStatusChangeListener;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
@@ -199,7 +200,18 @@ public class AnalyticsService implements Disposable {
     }
 
     public UsageStatusResult getUsageStatus(List<String> objectIds) throws AnalyticsServiceException {
-        return executeCatching(() -> analyticsProviderProxy.getUsageStatus(new UsageStatusRequest(objectIds)));
+        UsageStatusResult usageStatusResult = executeCatching(() -> analyticsProviderProxy.getUsageStatus(new UsageStatusRequest(objectIds)));
+        notifyUsageStatusChanged(usageStatusResult);
+        return usageStatusResult;
+    }
+
+    private void notifyUsageStatusChanged(UsageStatusResult newUsageStatusResult) {
+        Log.log(LOGGER::debug, "Firing UsageStatusChange event for {}", newUsageStatusResult);
+        if (project.isDisposed()) {
+            return;
+        }
+        UsageStatusChangeListener publisher = project.getMessageBus().syncPublisher(UsageStatusChangeListener.USAGE_STATUS_CHANGED_TOPIC);
+        publisher.usageStatusChanged(newUsageStatusResult);
     }
 
     public RecentActivityResult getRecentActivity(List<String> environments) throws AnalyticsServiceException {

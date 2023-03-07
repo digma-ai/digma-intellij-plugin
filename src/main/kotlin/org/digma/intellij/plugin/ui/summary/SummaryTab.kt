@@ -1,7 +1,7 @@
 package org.digma.intellij.plugin.ui.summary
 
 import com.intellij.openapi.project.Project
-import org.digma.intellij.plugin.ui.common.createTopPanel
+import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.ui.common.wrapWithNoConnectionWrapper
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.listBackground
@@ -15,12 +15,11 @@ fun summaryPanel(project: Project): DigmaTabPanel {
 
     val model = SummaryViewService.getInstance(project).model
 
-    val topPanelWrapper = createTopPanel(project, model)
     val summaryList = ScrollablePanelList(SummaryPanelList(project, model.insights))
 
     val result = object : DigmaTabPanel() {
         override fun getPreferredFocusableComponent(): JComponent {
-            return topPanelWrapper
+            return summaryList
         }
 
         override fun getPreferredFocusedComponent(): JComponent {
@@ -29,13 +28,13 @@ fun summaryPanel(project: Project): DigmaTabPanel {
 
         //reset must be called from EDT
         override fun reset() {
-            topPanelWrapper.reset()
             summaryList.getModel().setListData(model.insights)
         }
     }
 
+    result.isOpaque = false
+    result.border = JBUI.Borders.empty()
     result.layout = BorderLayout()
-    result.add(topPanelWrapper, BorderLayout.NORTH)
     result.add(summaryList, BorderLayout.CENTER)
     result.background = listBackground()
 

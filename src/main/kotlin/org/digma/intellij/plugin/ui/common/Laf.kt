@@ -50,6 +50,8 @@ object Laf  {
         companion object {
             @JvmStatic val DEFAULT_LABEL_FOREGROUND: Color = JBColor.foreground()
             @JvmStatic val PLUGIN_BACKGROUND: JBColor = JBColor.namedColor("Plugins.background", JBColor.PanelBackground)
+            @JvmStatic val NAVIGATION_TOP_BACKGROUND_DARK: Color = Color(0x1E1E1E)
+            @JvmStatic val DROP_DOWN_HEADER_TEXT_COLOR: Color = Color(0x7C7C94)
             @JvmStatic val LIST_ITEM_BACKGROUND: JBColor = JBColor(Color(0, 0, 50, 15), Color(200, 200, 255, 20))
             @JvmStatic val TRANSPARENT: Color = Color(0, 0, 0, 0)
             @JvmStatic val BLUE_LIGHT_SHADE: Color = Color(0x8f90ff)
@@ -62,6 +64,16 @@ object Laf  {
     }
 
     class Icons{
+        class General{
+            companion object {
+                @JvmStatic val HOME: Icon = SvgIcon.withColor("/icons/home.svg", Colors.NAVIGATION_TOP_BACKGROUND_DARK)
+                @JvmStatic val ARROW_UP: Icon = SvgIcon.withColor("/icons/arrow-up.svg", Colors.NAVIGATION_TOP_BACKGROUND_DARK)
+                @JvmStatic val ARROW_DOWN: Icon = SvgIcon.withColor("/icons/arrow-down.svg", Colors.NAVIGATION_TOP_BACKGROUND_DARK)
+                @JvmStatic val DIGMA_LOGO: Icon = SvgIcon.withColor("/icons/digma-logo.svg", Colors.NAVIGATION_TOP_BACKGROUND_DARK)
+                @JvmStatic val RELATED_INSIGHTS: Icon = SvgIcon.withColor("/icons/related-insights.svg", Colors.NAVIGATION_TOP_BACKGROUND_DARK)
+                @JvmStatic val POINTER: Icon = SvgIcon.withColor("/icons/pointer.svg", Colors.NAVIGATION_TOP_BACKGROUND_DARK)
+            }
+        }
         class ErrorDetails{
             companion object {
                 @JvmStatic val BACK: Icon = SvgIcon.withColor("/icons/arrow-left.svg", Colors.DEFAULT_LABEL_FOREGROUND)
@@ -72,9 +84,9 @@ object Laf  {
         }
         class Environment {
             companion object {
-                @JvmStatic val ENVIRONMENT_HAS_USAGE = loadAndScaleIconByWidth("/icons/used.png", 8)
+                @JvmStatic val ENVIRONMENT_HAS_USAGE = SvgIcon.asIs("/icons/active-env.svg")
                 @JvmStatic
-                val ENVIRONMENT_HAS_NO_USAGE = loadAndScaleIconByWidth("/icons/unused.png", 8)
+                val ENVIRONMENT_HAS_NO_USAGE = SvgIcon.asIs("/icons/disabled-env.svg")
                 @JvmStatic
                 val NO_CONNECTION_ICON = SvgIcon.asIs("/icons/no-signal.svg")
             }

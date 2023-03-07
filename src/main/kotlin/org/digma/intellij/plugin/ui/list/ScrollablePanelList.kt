@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.list
 
 import com.intellij.ui.components.JBScrollPane
+import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.JBUI.Borders.empty
 import java.awt.BorderLayout
 import java.awt.Insets
@@ -23,7 +24,7 @@ class ScrollablePanelList(private val panelList: PanelList) : JPanel() {
 
 
     override fun getInsets(): Insets {
-        return Insets(0,0,0,0)
+        return JBUI.emptyInsets()
     }
 
     fun getModel(): PanelListModel {

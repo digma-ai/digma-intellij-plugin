@@ -1,6 +1,6 @@
 package org.digma.intellij.plugin.ui.errors
 
-import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
 import com.intellij.util.messages.MessageBusConnection
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshInsightsTaskScheduled
@@ -13,7 +13,7 @@ import javax.swing.Icon
 import javax.swing.JButton
 
 
-internal class GeneralRefreshIconButton(project: Project, icon: Icon) : JButton(icon) {
+internal class GeneralRefreshIconButton(project: Project, icon: Icon) : JButton(icon), Disposable {
 
     private val analyticsConnectionEventsConnection: MessageBusConnection = project.messageBus.connect()
 
@@ -68,6 +68,10 @@ internal class GeneralRefreshIconButton(project: Project, icon: Icon) : JButton(
                 background = Laf.Colors.TRANSPARENT
             }
         })
+    }
+
+    override fun dispose() {
+        analyticsConnectionEventsConnection.dispose()
     }
 
     override fun paintComponent(g: Graphics) {

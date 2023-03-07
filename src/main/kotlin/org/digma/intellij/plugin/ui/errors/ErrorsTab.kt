@@ -11,7 +11,6 @@ import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.ui.common.createTopPanel
 import org.digma.intellij.plugin.ui.common.noCodeObjectWarningPanel
 import org.digma.intellij.plugin.ui.common.wrapWithNoConnectionWrapper
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
@@ -46,8 +45,6 @@ fun errorsPanel(project: Project): DigmaTabPanel {
     val errorsModel = ErrorsViewService.getInstance(project).model
     val insightsModel = InsightsViewService.getInstance(project).model
 
-    val topPanelWrapper = createTopPanel(project, errorsModel)
-
     val errorsList = ScrollablePanelList(ErrorsPanelList(project, errorsModel.listViewItems))
 
     val previewList = ScrollablePanelList(PreviewList(project, insightsModel.previewListViewItems))
@@ -69,6 +66,7 @@ fun errorsPanel(project: Project): DigmaTabPanel {
         }
     }
     previewTitle.isOpaque = false
+
     val previewPanel = JPanel(BorderLayout())
     previewPanel.add(previewTitle, BorderLayout.NORTH)
     previewPanel.add(previewList, BorderLayout.CENTER)
@@ -95,7 +93,6 @@ fun errorsPanel(project: Project): DigmaTabPanel {
     val errorsListPanel = JBPanel<JBPanel<*>>()
     errorsListPanel.layout = BorderLayout()
     errorsListPanel.isOpaque = false
-    errorsListPanel.add(topPanelWrapper, BorderLayout.NORTH)
     errorsListPanel.add(errorsPanelListCardPanel, BorderLayout.CENTER)
 
 
@@ -116,14 +113,14 @@ fun errorsPanel(project: Project): DigmaTabPanel {
             if (ErrorsTabCard.ERROR_DETAILS == errorsModel.card) {
                 return errorsDetailsPanel.getPreferredFocusableComponent()
             }
-            return topPanelWrapper
+            return errorsListPanel
         }
 
         override fun getPreferredFocusedComponent(): JComponent {
             if (ErrorsTabCard.ERROR_DETAILS == errorsModel.card) {
                 return errorsDetailsPanel.getPreferredFocusedComponent()
             }
-            return topPanelWrapper
+            return errorsListPanel
         }
 
         //reset must be called from EDT
@@ -133,7 +130,6 @@ fun errorsPanel(project: Project): DigmaTabPanel {
             //for others call inside SwingUtilities.invokeLater
 
             noInfoWarningPanel.reset()
-            topPanelWrapper.reset()
             previewTitle.reset()
 
 

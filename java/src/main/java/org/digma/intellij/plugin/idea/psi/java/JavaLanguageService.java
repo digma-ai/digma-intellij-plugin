@@ -338,10 +338,10 @@ public class JavaLanguageService implements LanguageService {
         Map<String, MethodInfo> methodInfoMap = new HashMap<>();
 
 
-        //currently we build an empty index for test sources, there is no easy way to exclude them from indexing
-        if (ProjectFileIndex.getInstance(project).isInTestSourceContent(psiFile.getVirtualFile())) {
-            return new DocumentInfo(fileUri, methodInfoMap);
-        }
+//        //currently we build an empty index for test sources, there is no easy way to exclude them from indexing
+//        if (ProjectFileIndex.getInstance(project).isInTestSourceContent(psiFile.getVirtualFile())) {
+//            return new DocumentInfo(fileUri, methodInfoMap);
+//        }
 
         //it must be a PsiJavaFile so casting should be ok
         PsiJavaFile psiJavaFile = (PsiJavaFile) psiFile;

@@ -259,24 +259,26 @@ public class JavaLanguageService implements LanguageService {
 
         methodCodeObjectIds.forEach(id -> {
 
-            var className = id.substring(0, id.indexOf("$_$"));
+            if (id.contains("$_$")) {
+                var className = id.substring(0, id.indexOf("$_$"));
 
-            //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
-            className = className.replace('$', '.');
+                //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
+                className = className.replace('$', '.');
 
-            //searching in project scope will find only project classes
-            Collection<PsiClass> psiClasses =
-                    JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.projectScope(project));
-            if (!psiClasses.isEmpty()) {
-                //hopefully there is only one class by that name in the project
-                PsiClass psiClass = psiClasses.stream().findAny().get();
-                PsiFile psiFile = PsiTreeUtil.getParentOfType(psiClass, PsiFile.class);
-                for (PsiMethod method : psiClass.getMethods()) {
-                    String javaMethodCodeObjectId = createJavaMethodCodeObjectId(method);
-                    if (javaMethodCodeObjectId.equals(id)) {
-                        if (psiFile != null) {
-                            String url = PsiUtils.psiFileToUri(psiFile);
-                            workspaceUrls.put(id, new Pair<>(url, method.getTextOffset()));
+                //searching in project scope will find only project classes
+                Collection<PsiClass> psiClasses =
+                        JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.projectScope(project));
+                if (!psiClasses.isEmpty()) {
+                    //hopefully there is only one class by that name in the project
+                    PsiClass psiClass = psiClasses.stream().findAny().get();
+                    PsiFile psiFile = PsiTreeUtil.getParentOfType(psiClass, PsiFile.class);
+                    for (PsiMethod method : psiClass.getMethods()) {
+                        String javaMethodCodeObjectId = createJavaMethodCodeObjectId(method);
+                        if (javaMethodCodeObjectId.equals(id)) {
+                            if (psiFile != null) {
+                                String url = PsiUtils.psiFileToUri(psiFile);
+                                workspaceUrls.put(id, new Pair<>(url, method.getTextOffset()));
+                            }
                         }
                     }
                 }

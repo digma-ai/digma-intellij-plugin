@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.38] - 2023-03-08
+### Changed
+- Repaint UI only when insights list was changed
+
 ## [2.0.37] - 2023-03-08
 ### Changed
 - Added support for wrong methodCodeObjectId
@@ -40,4 +44,5 @@ All notable changes to this project will be documented in this file.
 [2.0.35]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.34...v2.0.35
 [2.0.36]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.35...v2.0.36
 [2.0.37]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.36...v2.0.37
-[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.37...HEAD
+[2.0.38]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.37...v2.0.38
+[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.38...HEAD

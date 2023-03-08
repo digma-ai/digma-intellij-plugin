@@ -5,6 +5,10 @@
         <![CDATA[
       # Changelog
 
+      ## [2.0.38] - 2023-03-08
+      ### Changed
+      - Repaint UI only when insights list was changed
+
       ## [2.0.37] - 2023-03-08
       ### Changed
       - Added support for wrong methodCodeObjectId

@@ -16,7 +16,6 @@ import com.intellij.util.Alarm;
 import com.intellij.util.AlarmFactory;
 import com.intellij.util.RunnableCallable;
 import com.intellij.util.concurrency.NonUrgentExecutor;
-import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.FileUtils;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.log.Log;
@@ -43,6 +42,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
     private final LanguageServiceLocator languageServiceLocator;
     private final CaretListener caretListener;
     private final DocumentChangeListener documentChangeListener;
+    private final CurrentContextUpdater currentContextUpdater;
     private final Alarm contextChangeAlarmAfterFileClosed;
 
     private boolean startupEnsured = false;
@@ -52,8 +52,9 @@ public class EditorEventsHandler implements FileEditorManagerListener {
         caretContextService = project.getService(CaretContextService.class);
         languageServiceLocator = project.getService(LanguageServiceLocator.class);
         documentInfoService = project.getService(DocumentInfoService.class);
-        caretListener = new CaretListener(project);
-        documentChangeListener = new DocumentChangeListener(project);
+        currentContextUpdater = new CurrentContextUpdater(project);
+        caretListener = new CaretListener(project,currentContextUpdater);
+        documentChangeListener = new DocumentChangeListener(project,currentContextUpdater);
         contextChangeAlarmAfterFileClosed = AlarmFactory.getInstance().create();
     }
 
@@ -62,7 +63,8 @@ public class EditorEventsHandler implements FileEditorManagerListener {
         if (startupEnsured){
             return;
         }
-        EDT.ensureEDT(() -> LanguageService.ensureStartupOnEdt(project));
+
+        LanguageService.ensureStartupOnEDTForAll(project);
 
         startupEnsured = true;
     }
@@ -76,8 +78,8 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
         //this will make sure that all registered language services complete startup before they can be used.
         // usually there is nothing to do, but rider for example need to load the protocol models on EDT.
-        // in mose cases this method will return immediately. Rider has a ServicesStartup StartupActivity that
-        // will already do it, this call is here in case this event is fired before all StartupActivitys completed.
+        // in most cases this method will return immediately. Rider has a ServicesStartup StartupActivity that
+        // will already do it, this call is here in case this event is fired before all StartupActivity completed.
         ensureStartupOnEdt(project);
 
 
@@ -102,7 +104,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
             canceling the request solves it.
             and there should be no other effect for canceling all requests in any other scenario.
          */
-        caretListener.cancelAllCaretPositionChangedRequests();
+        currentContextUpdater.cancelAllCaretPositionChangedRequests();
 
         //see comment in fileClosed before calling updateContextAfterFileClosed
         // if we're here then we can cancel contextChangeAlarmAfterFileClosed
@@ -166,10 +168,14 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                         Log.log(LOGGER::debug, "Found language service {} for :{}",languageService,newFile);
                         caretListener.maybeAddCaretListener(selectedTextEditor);
                         documentChangeListener.maybeAddDocumentListener(selectedTextEditor);
-                        MethodUnderCaret methodUnderCaret = languageService.detectMethodUnderCaret(project, psiFile, selectedTextEditor,selectedTextEditor.getCaretModel().getOffset());
-                        Log.log(LOGGER::debug, "Found MethodUnderCaret for :{}, '{}'",newFile,methodUnderCaret);
-                        caretContextService.contextChanged(methodUnderCaret);
-                        Log.log(LOGGER::debug, "contextChanged for :{}, '{}'",newFile,methodUnderCaret);
+
+                        ReadAction.nonBlocking(new RunnableCallable(() -> {
+                            MethodUnderCaret methodUnderCaret = languageService.detectMethodUnderCaret(project, psiFile, selectedTextEditor,selectedTextEditor.getCaretModel().getOffset());
+                            Log.log(LOGGER::debug, "Found MethodUnderCaret for :{}, '{}'",newFile,methodUnderCaret);
+                            caretContextService.contextChanged(methodUnderCaret);
+                            Log.log(LOGGER::debug, "contextChanged for :{}, '{}'",newFile,methodUnderCaret);
+                        })).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance());
+
                     }else if (psiFile != null){
                         Log.log(LOGGER::debug, "file not supported :{}, calling contextEmptyNonSupportedFile",newFile);
                         caretContextService.contextEmptyNonSupportedFile(psiFile.getVirtualFile().getPath());

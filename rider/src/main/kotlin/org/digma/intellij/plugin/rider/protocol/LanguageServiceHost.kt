@@ -1,49 +1,156 @@
 package org.digma.intellij.plugin.rider.protocol
 
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ModalityState
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditor
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
+import com.intellij.openapi.progress.runBlockingCancellable
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
-import com.jetbrains.rd.framework.impl.RpcTimeouts
+import com.intellij.psi.PsiManager
+import com.intellij.util.RunnableCallable
+import com.intellij.util.concurrency.NonUrgentExecutor
 import com.jetbrains.rd.util.reactive.whenTrue
 import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent
+import com.jetbrains.rdclient.util.idea.callSynchronously
 import com.jetbrains.rider.editors.getProjectModelId
 import com.jetbrains.rider.projectView.SolutionLifecycleHost
+import com.jetbrains.rider.projectView.SolutionStartupService
 import com.jetbrains.rider.projectView.solution
+import org.apache.commons.collections4.map.LRUMap
+import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
 import org.digma.intellij.plugin.model.discovery.SpanInfo
+import org.digma.intellij.plugin.psi.LanguageServiceLocator
 import org.digma.intellij.plugin.psi.PsiUtils
+import org.digma.intellij.plugin.ui.CaretContextService
 import kotlin.random.Random
 
+@Suppress("UnstableApiUsage")
 class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project) {
 
     private val logger = Logger.getInstance(LanguageServiceHost::class.java)
 
+    private val csharpMethodCache = LRUMap<String, Boolean>()
 
     private var model: LanguageServiceModel = project.solution.languageServiceModel
 
-
-    init {
-        SolutionLifecycleHost.getInstance(project).isBackendLoaded.whenTrue(componentLifetime) {
-            Log.log(logger::debug, "Initializing model only when solution loaded")
-        }
-    }
+    private var solutionLoaded: Boolean = false
 
     //always use getInstance instead of injecting directly to other services.
     // this ensures lazy init only when this host is needed.
     // when injecting directly in constructor of other services it needs to load the solution model
-    // and that required EDT which is not always a good idea.
+    // and that required EDT which is not always the case.
     companion object {
         @JvmStatic
         fun getInstance(project: Project): LanguageServiceHost {
             return project.getService(LanguageServiceHost::class.java)
         }
     }
+
+    init {
+
+        SolutionLifecycleHost.getInstance(project).isBackendLoaded.whenTrue(componentLifetime) {
+            Log.log(logger::debug, "solution loaded, warm startup: {}, initializing {}",
+                SolutionStartupService.getInstance(project).isWarmStartup(),SolutionStartupService.getInstance(project).isInitializing())
+
+            solutionLoaded = true
+            csharpMethodCache.clear()
+            refreshCodeObjectsAndSelectedEditorOnSolutionLoaded(project,SolutionStartupService.getInstance(project).isWarmStartup())
+        }
+    }
+
+
+
+    /*
+        the IDE remembers open files on shutdown and reopens them on startup.
+        EditorEventsHandler.selectionChanged catches the opening of the files,
+        loads code objects and insights in smart mode and updates the UI.
+        while smart mode is good for java,python, it does not guarantee that Rider C# solution
+        is loaded, so it may be that code objects are not found for those files in smart mode and there will be no
+        insights for them.
+        only after the solution is loaded it is guaranteed to find code objects.
+        This method runs on solution loaded event, clears all documents from DocumentInfoService, that includes
+        code objects and insights. reloads code objects for the selected editor if any, and updates
+        the method context. the other documents will be forced to load code objects again in
+        EditorEventsHandler.selectionChanged when switching to them.
+     */
+    private fun refreshCodeObjectsAndSelectedEditorOnSolutionLoaded(project: Project, warmStartup: Boolean) {
+
+        Log.log(logger::debug, "refreshCodeObjectsAndSelectedEditorOnSolutionLoaded called")
+        ReadAction.nonBlocking(RunnableCallable {
+
+            //usually just a second or two is needed before all indexing is complete
+            if (!warmStartup){
+                Thread.sleep(1000)
+            }
+
+            val documentInfoService = project.getService(DocumentInfoService::class.java)
+            documentInfoService.clearAll()
+            val selectedEditor = FileEditorManager.getInstance(project).selectedEditor
+            selectedEditor?.let {
+                val virtualFile = it.file
+                virtualFile?.let {
+                    val psiFile = PsiManager.getInstance(project).findFile(virtualFile)
+                    psiFile?.let {
+                        var languageService = LanguageServiceLocator.getInstance(project).locate(psiFile.language)
+                        if (languageService.isRelevant(psiFile)) {
+                            val documentInfo = languageService.buildDocumentInfo(psiFile, selectedEditor)
+                            documentInfo?.let {
+                                documentInfoService.addCodeObjects(psiFile, it)
+                            }
+                        }
+                    }
+                }
+            }
+        }).inSmartMode(project).withDocumentsCommitted(project)
+            .finishOnUiThread(ModalityState.defaultModalityState()) {
+
+                Log.log(logger::debug,"in refreshCodeObjectsAndSelectedEditorOnSolutionLoaded , updating method context")
+                val selectedTextEditor = FileEditorManager.getInstance(project).selectedTextEditor
+                selectedTextEditor?.let {
+                    val selectedEditor = FileEditorManager.getInstance(project).selectedEditor
+                    selectedEditor?.let {
+                        val virtualFile = selectedEditor.file
+                        virtualFile?.let {
+                            val psiFile = PsiManager.getInstance(project).findFile(virtualFile)
+                            psiFile?.let {
+                                var languageService =
+                                    LanguageServiceLocator.getInstance(project).locate(psiFile.language)
+                                if (languageService.isRelevant(psiFile)) {
+                                    var offset = selectedTextEditor.logicalPositionToOffset(selectedTextEditor.caretModel.logicalPosition)
+                                    val methodUnderCaret =
+                                        detectMethodUnderCaret(psiFile,selectedTextEditor,offset)
+                                    CaretContextService.getInstance(project).contextChanged(methodUnderCaret)
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }.submit(NonUrgentExecutor.getInstance())
+    }
+
+
+
+
+    //will wait for solution to load, or execute immediately is solution is already loaded
+    fun runIfSolutionLoaded(r: Runnable) {
+        Log.log(logger::debug, "runIfSolutionLoaded called")
+        SolutionLifecycleHost.getInstance(project).isBackendLoaded.whenTrue(componentLifetime) {
+            Log.log(logger::debug, "executing task in solution loaded")
+            r.run()
+        }
+    }
+
+
 
 
     @Suppress("unused")
@@ -52,39 +159,38 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
         return getDocumentInfo(psiFile, null)
     }
 
+
+    //this method should never be called on EDT
     fun getDocumentInfo(psiFile: PsiFile, newEditor: FileEditor?): DocumentInfo? {
 
-        Log.log(
-            logger::debug,
-            "Got request for getDocumentInfo for PsiFile {}, selectedEditor",
-            psiFile.virtualFile,
-            newEditor
-        )
+        Log.log(logger::debug,"Got request for getDocumentInfo for PsiFile {}, selectedEditor {}, solution loaded {}",psiFile.virtualFile,newEditor,solutionLoaded)
 
-        val psiUri = PsiUtils.psiFileToUri(psiFile)
         var projectModelId: Int? = null
         if (newEditor != null && newEditor is TextEditor) {
             projectModelId = newEditor.editor.getProjectModelId()
         }
+        val psiUri = PsiUtils.psiFileToUri(psiFile)
+        val psiId = PsiFileID(projectModelId, psiUri)
 
-        return try {
-            val riderDocumentInfo =
-                model.getDocumentInfo.sync(PsiFileID(projectModelId, psiUri),RpcTimeouts.longRunning)
-            riderDocumentInfo?.let { toModel(riderDocumentInfo) }
-        } catch (e: Exception) {
-            Log.debugWithException(logger, e, "Got exception from getDocumentInfo {}", e.message)
-            null
+
+        val riderDocumentInfo: RiderDocumentInfo? =
+            runBlockingCancellable {
+                model.getDocumentInfo.startSuspending((psiId))
+            }
+
+        if (riderDocumentInfo == null){
+            Log.log(logger::debug,"Could not load RiderDocumentInfo for {}",psiFile.virtualFile)
+        }else{
+            Log.log(logger::debug,"RiderDocumentInfo for {} loaded '{}'",psiFile.virtualFile,riderDocumentInfo)
         }
+
+        return riderDocumentInfo?.let { toModel(riderDocumentInfo) }
     }
 
 
     fun detectMethodUnderCaret(psiFile: PsiFile, selectedEditor: Editor?, caretOffset: Int): MethodUnderCaret {
 
-        Log.log(
-            logger::debug,
-            "Got request to detectMethodUnderCaret for PsiFile {}, selectedEditor",
-            psiFile.virtualFile
-        )
+        Log.log(logger::debug,"Got request to detectMethodUnderCaret for PsiFile {}, selectedEditor {}, solution loaded {}",psiFile.virtualFile,selectedEditor,solutionLoaded)
 
 
         //projectModelId is the preferred way to find a IPsiSourceFile in rider backend. the backend will try to find
@@ -93,46 +199,108 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
         if (selectedEditor != null) {
             projectModelId = selectedEditor.getProjectModelId()
         }
-
         val psiUri = PsiUtils.psiFileToUri(psiFile)
-        return try {
-            val riderMethodUnderCaret =
-                model.detectMethodUnderCaret.sync(MethodUnderCaretRequest(PsiFileID(projectModelId, psiUri), caretOffset),RpcTimeouts.longRunning)
-            riderMethodUnderCaret?.toMethodUnderCaret() ?: MethodUnderCaret("", "", "", "")
-        } catch (e: Exception) {
-            Log.debugWithException(
-                logger,
-                e,
-                "Got exception from detectMethodUnderCaret for {}, {}. returning empty",
-                psiFile,
-                e.message
-            )
-            MethodUnderCaret("", "", "", "")
+        val psiId = PsiFileID(projectModelId, psiUri)
+
+        val riderMethodUnderCaret: RiderMethodUnderCaret? =
+            if (ApplicationManager.getApplication().isDispatchThread){
+                model.detectMethodUnderCaret.callSynchronously(MethodUnderCaretRequest(psiId, caretOffset),model.protocol)
+            }else{
+                runBlockingCancellable {
+                    model.detectMethodUnderCaret.startSuspending(MethodUnderCaretRequest(psiId, caretOffset))
+                }
+            }
+
+
+        if (riderMethodUnderCaret == null){
+            Log.log(logger::debug,"Could not load RiderMethodUnderCaret for {}",psiFile.virtualFile)
+        }else{
+            Log.log(logger::debug,"Found RiderMethodUnderCaret for {} , '{}'",psiFile.virtualFile,riderMethodUnderCaret)
         }
+
+        return riderMethodUnderCaret?.toMethodUnderCaret() ?: MethodUnderCaret("", "", "", "")
     }
 
 
     fun findWorkspaceUrisForCodeObjectIds(codeObjectIds: MutableList<String>): Map<String, String> {
+
+        Log.log(logger::debug,"Got request to findWorkspaceUrisForCodeObjectIds {}",codeObjectIds)
+
         val result = HashMap<String, String>()
-        val workspaceUriPairs = model.getWorkspaceUris.sync(codeObjectIds, RpcTimeouts.longRunning)
-        workspaceUriPairs.forEach {
+
+        val workspaceUriPairs =
+            if (ApplicationManager.getApplication().isDispatchThread){
+                model.getWorkspaceUris.callSynchronously(codeObjectIds,model.protocol)
+            }else{
+                runBlockingCancellable {
+                    model.getWorkspaceUris.startSuspending(codeObjectIds)
+                }
+            }
+
+        workspaceUriPairs?.forEach {
             result[it.codeObjectId] = it.workspaceUri
         }
+        Log.log(logger::debug,"Found WorkspaceUris {}",result)
         return result
     }
 
     fun findWorkspaceUrisForSpanIds(spanIds: MutableList<String>): Map<String, Pair<String, Int>> {
+
+        Log.log(logger::debug,"Got request to findWorkspaceUrisForSpanIds {}",spanIds)
+
         val result = HashMap<String, Pair<String, Int>>()
-        val workspaceUris = model.getSpansWorkspaceUris.sync(spanIds, RpcTimeouts.longRunning)
-        workspaceUris.forEach {
+
+        val workspaceUriTuples =
+            if (ApplicationManager.getApplication().isDispatchThread){
+                model.getSpansWorkspaceUris.callSynchronously(spanIds,model.protocol)
+            }else{
+                runBlockingCancellable {
+                    model.getSpansWorkspaceUris.startSuspending(spanIds)
+                }
+            }
+
+        workspaceUriTuples?.forEach {
             result[it.codeObjectId] = Pair(it.workspaceUri, it.offset)
         }
+        Log.log(logger::debug,"Found WorkspaceUrisForSpanIds {}",result)
         return result
     }
 
 
     fun isCSharpMethod(methodCodeObjectId: String): Boolean {
-        return model.isCsharpMethod.sync(methodCodeObjectId, RpcTimeouts.longRunning)
+
+        Log.log(logger::debug,"Got request for isCSharpMethod {}, solution loaded {}",methodCodeObjectId,solutionLoaded)
+
+        //calls to this method with the same argument may happen many times.
+        // but languageServiceHost.isCSharpMethod is a call to resharper which is not the best performance,
+        // so keep all methods ids in a simple cache for later use.
+        // use the cache only after backend is fully loaded,there may be a result that was stored in
+        // the cache before the backend was loaded, and it may be wrong because there was no reference
+        // resolving in resharper.
+        return if (SolutionLifecycleHost.getInstance(project).isBackendLoaded.value &&
+            csharpMethodCache.containsKey(methodCodeObjectId)) {
+            Log.log(logger::debug,"Returning isCSharpMethod for {} from local cache {}",methodCodeObjectId,csharpMethodCache[methodCodeObjectId])
+            csharpMethodCache[methodCodeObjectId] == true
+        }else{
+            val isCHarpMethod = isCSharpMethodImpl(methodCodeObjectId)
+            csharpMethodCache[methodCodeObjectId] = isCHarpMethod
+            isCHarpMethod
+        }
+    }
+
+
+    private fun isCSharpMethodImpl(methodCodeObjectId: String): Boolean {
+
+        val result =
+            if (ApplicationManager.getApplication().isDispatchThread){
+                model.isCsharpMethod.callSynchronously(methodCodeObjectId,model.protocol)
+            }else{
+                runBlockingCancellable {
+                    model.isCsharpMethod.startSuspending(methodCodeObjectId)
+                }
+            }
+
+        return result == true
     }
 
 
@@ -143,6 +311,8 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
             model.navigateToMethod.fire(message)
         }
     }
+
+
 
 
     private fun RiderMethodUnderCaret.toMethodUnderCaret() = MethodUnderCaret(
@@ -196,6 +366,7 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
         containingMethodId = containingMethod,
         containingFileUri = normalizeFileUri(containingFileUri, project)
     )
+
 
 
 }

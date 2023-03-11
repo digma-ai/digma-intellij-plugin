@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.editor
 
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent
@@ -7,6 +8,8 @@ import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.rd.util.launchBackground
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.util.RunnableCallable
+import com.intellij.util.concurrency.NonUrgentExecutor
 import com.jetbrains.rd.util.lifetime.LifetimeDefinition
 import kotlinx.coroutines.delay
 import org.digma.intellij.plugin.log.Log

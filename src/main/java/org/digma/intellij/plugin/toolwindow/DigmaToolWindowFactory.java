@@ -1,8 +1,7 @@
 package org.digma.intellij.plugin.toolwindow;
 
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.progress.ProgressIndicator;
-import com.intellij.openapi.progress.Task;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
@@ -43,16 +42,21 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
      */
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
+
         Log.log(LOGGER::debug, "createToolWindowContent for project  {}", project);
 
-        LanguageService.ensureStartupOnEdt(project);
+        //some language service should complete their startup on EDT,especially C# language service
+        // needs to initialize its models on EDT.
+        // startup may happen here if the tool window is opened on startup, or in EditorEventsHandler.selectionChanged
+        // when the first document is opened.
+        LanguageService.ensureStartupOnEDTForAll(project);
 
         var contentFactory = ContentFactory.getInstance();
 
         var toolWindowTabsHelper = project.getService(ToolWindowTabsHelper.class);
         toolWindowTabsHelper.setToolWindow(toolWindow);
 
-        //initialize AnalyticsService early so the UI already can detect the connection status when created
+        //initialize AnalyticsService early so the UI can detect the connection status when created
         project.getService(AnalyticsService.class);
 
 
@@ -69,36 +73,72 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
 
         toolWindow.getContentManager().setSelectedContent(contentToSelect, true);
 
+        //todo: runWhenSmart is ok for java,python , but in Rider runWhenSmart does not guarantee that the solution
+        // is fully loaded. consider replacing that with LanguageService.runWhenSmartForAll so that C# language service
+        // can run this task when the solution is fully loaded.
+        DumbService.getInstance(project).runWhenSmart(() -> initializeWhenSmart(project));
 
-        new Task.Backgroundable(project, "Digma: update views") {
-            //sometimes the views models are updated before the tool window is initialized.
-            //it happens when files are re-opened early before the tool window, and CaretContextService.contextChanged
-            //is invoked and updates the models.
-            //SummaryViewService is also initialized before the tool window is opened, it will get the event when
-            // the environment is loaded and will update its model but will not update the ui because the panel is
-            // not initialized yet.
-            //only at this stage the panels are constructed already. just calling updateUi() for all view services
-            // will actually update the UI.
-            @Override
-            public void run(@NotNull ProgressIndicator indicator) {
-                project.getService(InsightsViewService.class).updateUi();
-                project.getService(ErrorsViewService.class).updateUi();
-                project.getService(SummaryViewService.class).updateUi();
-            }
-        }.queue();
+    }
+
+
+    private void initializeWhenSmart(@NotNull Project project){
+
+        Log.log(LOGGER::debug,"in initializeWhenSmart, dumb mode is {}", DumbService.isDumb(project));
+
+        //sometimes the views models are updated before the tool window is initialized.
+        //it happens when files are re-opened early before the tool window, and CaretContextService.contextChanged
+        //is invoked and updates the models.
+        //SummaryViewService is also initialized before the tool window is opened, it will get the event when
+        // the environment is loaded and will update its model but will not update the ui because the panel is
+        // not initialized yet.
+        //only at this stage the panels are constructed already. just calling updateUi() for all view services
+        // will actually update the UI.
+        //todo: probably not necessary, EditorEventsHandler.selectionChanged loads DocumentInfo and
+        // calls contextChanged only in smart mode. and in smart mode the panels should be constructed already.
+        // needs some testing.
+        // on the other hand if the tool window is opened after EditorEventsHandler.selectionChanged then the
+        // models will be populated with data but updateUi was not invoked
+        project.getService(InsightsViewService.class).updateUi();
+        project.getService(ErrorsViewService.class).updateUi();
+        project.getService(SummaryViewService.class).updateUi();
 
 
         //sometimes there is a race condition on startup, a contextChange is fired before method info is available.
-        //calling environmentChanged will fix it
-        BackendConnectionMonitor backendConnectionMonitor = project.getService(BackendConnectionMonitor.class);
-        if (backendConnectionMonitor.isConnectionOk()) {
-            Backgroundable.ensureBackground(project, "change environment", () -> {
-                EnvironmentChanged publisher = project.getMessageBus().syncPublisher(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC);
-                publisher.environmentChanged(project.getService(AnalyticsService.class).getEnvironment().getCurrent());
-            });
-        }
-
+        //calling environmentChanged will fix it.
+        //todo: probably not necessary anymore because EditorEventsHandler.selectionChanged loads DocumentInfo and
+        // calls contextChanged only in smart mode. so even when documents are opened in dumb mode the loading of
+        // DocumentInfo, installing caret listener and change listener will occur in smart mode. so the situation
+        // mentioned above should not happen.
+        // on the other hand: in Rider, smart mode doesn't guarantee that the solution is fully loaded. so even if
+        // EditorEventsHandler.selectionChanged loads DocumentInfo in smart mode it does not guarantee that C# language
+        // service will have access to PSI references because the solution may still be loading. so calling that only
+        // after the solution is fully loaded will guarantee full PSi access. see above, calling initializeWhenSmart
+        // with LanguageService.runWhenSmartForAll will solve it.
+//        BackendConnectionMonitor backendConnectionMonitor = project.getService(BackendConnectionMonitor.class);
+//        if (backendConnectionMonitor.isConnectionOk()) {
+//            Log.log(LOGGER::debug,"calling environmentChanged in background");
+//            Backgroundable.ensureBackground(project, "change environment", () -> {
+//                EnvironmentChanged publisher = project.getMessageBus().syncPublisher(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC);
+//                Log.log(LOGGER::debug,"calling environmentChanged with current environment to cause refresh of views in smart mode");
+//                publisher.environmentChanged(project.getService(AnalyticsService.class).getEnvironment().getCurrent());
+//            });
+//        }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     private static void createSummaryTab(@NotNull Project project, @NotNull ToolWindow toolWindow, ContentFactory contentFactory) {

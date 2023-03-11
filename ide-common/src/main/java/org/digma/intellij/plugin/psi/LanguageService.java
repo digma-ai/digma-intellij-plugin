@@ -11,6 +11,7 @@ import com.intellij.psi.PsiFile;
 import kotlin.Pair;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.document.DocumentInfoService;
+import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
@@ -32,28 +33,83 @@ public interface LanguageService extends Disposable {
     }
 
 
-    static void ensureStartupOnEdt(@NotNull Project project) {
-        EDT.ensureEDT(() -> {
-            for (SupportedLanguages value : SupportedLanguages.values()) {
+    /**
+     * Some language services need to ensure some startup activity to be made on EDT.
+     * C# language service needs to initialize the protocol models on EDT and is the main reason for this method.
+     * although in Rider there is a ServicesStarter that is a StartupActivity, some language service methods may be
+     * called before StartupActivity, usually when documents are automatically opened on startup, documents that were
+     * opened on shutdown.
+     * This method must be called from EDT, it will not call invokeLater and shouldn't do it.
+     * This method should not be called often, it is a startup task, it is called when the tool window is created
+     * and once from EditorEventsHandler.selectionChanged.
+     * the language services should be ready for this method to be called few times during startup and should not do
+     * long-running tasks, or tasks that can not be performed more than once.
+     * as said it is mainly for C# language service to initialize the protocol models on EDT.
+     */
+    static void ensureStartupOnEDTForAll(@NotNull Project project) {
+        Log.log(LOGGER::debug, "ensureStartupOnEDTForAll invoked");
+        EDT.assertEDT("ensureStartupOnEDTForAll must be invoked on EDT");
+        for (SupportedLanguages value : SupportedLanguages.values()) {
 
-                try {
-                    Class<? extends LanguageService> clazz = (Class<? extends LanguageService>) Class.forName(value.getLanguageServiceClassName());
-                    LanguageService languageService = project.getService(clazz);
-                    if (languageService != null) {
-                        languageService.ensureStartup(project);
-                    }
-                } catch (Throwable e) {
-                    //ignore: some classes will fail to load , for example the CSharpLanguageService
-                    //will fail to load if it's not rider because it depends on rider classes.
-                    //JavaLanguageService will fail to load on rider, etc.
-                    //don't log, it will happen too many times
+            try {
+                @SuppressWarnings("unchecked")
+                Class<? extends LanguageService> clazz = (Class<? extends LanguageService>) Class.forName(value.getLanguageServiceClassName());
+                LanguageService languageService = project.getService(clazz);
+                if (languageService != null) {
+                    Log.log(LOGGER::debug, "calling ensureStartupOnEDT for {}", languageService);
+                    languageService.ensureStartupOnEDT(project);
                 }
+            } catch (Exception e) {
+                Log.debugWithException(LOGGER,e,"exception in ensureStartupOnEDTForAll {}",e.getMessage());
+                //ignore: some classes will fail to load , for example the CSharpLanguageService
+                //will fail to load if it's not rider because it depends on rider classes.
+                //JavaLanguageService will fail to load on rider, etc.
             }
-        });
+        }
 
     }
 
-    void ensureStartup(@NotNull Project project);
+    void ensureStartupOnEDT(@NotNull Project project);
+
+
+    /**
+     * Used for running a task in smart mode.
+     * Usually this is meant for startup initialization tasks that should run only in smart mode.
+     * generally in intellij platform we could just use DumbService.runWhenSmart, but in Rider
+     * the C# language service needs also to wait for the solution to fully load and DumbService.runWhenSmart
+     * does not guarantee that.
+     * this method will add the task to every registered language service, usually there is only one,
+     * but there could be two , for example if python plugin is installed on Rider there will be C# and
+     * python language services, or if python plugin is installed on idea, so the task will run twice.
+     * callers must take that into account.
+     * This is made specifically for the initialization of SummaryViewService that needs language services
+     * to be fully functioning on startup, in C# it means that the solution is fully loaded. actually supporting
+     * C# on Rider is the main reason for this method because only the C# language service has access to the solution
+     * and can test if it's fully loaded.
+     */
+    static void runWhenSmartForAll(@NotNull Project project,@NotNull Runnable task){
+        Log.log(LOGGER::debug,"runWhenSmartForAll invoked");
+        for (SupportedLanguages value : SupportedLanguages.values()) {
+
+            try {
+                @SuppressWarnings("unchecked")
+                Class<? extends LanguageService> clazz = (Class<? extends LanguageService>) Class.forName(value.getLanguageServiceClassName());
+                LanguageService languageService = project.getService(clazz);
+                if (languageService != null) {
+                    Log.log(LOGGER::debug,"calling runWhenSmart for {}",languageService);
+                    languageService.runWhenSmart(task);
+                }
+            } catch (Exception e) {
+                Log.debugWithException(LOGGER,e,"exception in runWhenSmartForAll {}",e.getMessage());
+                //ignore: some classes will fail to load , for example the CSharpLanguageService
+                //will fail to load if it's not rider because it depends on rider classes.
+                //JavaLanguageService will fail to load on rider, etc.
+                //This method is npt called a lot, only on startup.
+            }
+        }
+    }
+
+    void runWhenSmart(Runnable task);
 
 
     /**
@@ -201,15 +257,6 @@ public interface LanguageService extends Disposable {
     // getProjectModelId from the selected editor. it may be null
     @NotNull
     DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, @Nullable FileEditor selectedTextEditor);
-
-
-    /**
-     * This method is meant to distinguish languages that are implemented as intellij platform plugin.
-     * the main reason is that we need to know if this is not C# on rider. its used mainly to help in decisions about
-     * how to process swing editor events.
-     * @return true if this is an intellij platform event.
-     */
-    boolean isIntellijPlatformPluginLanguage();
 
 
     boolean isRelevant(VirtualFile file);

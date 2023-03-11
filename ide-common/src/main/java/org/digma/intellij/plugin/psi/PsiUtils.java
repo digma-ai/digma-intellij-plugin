@@ -44,7 +44,6 @@ public class PsiUtils {
      */
     @NotNull
     public static PsiFile uriToPsiFile(@NotNull String uri, @NotNull Project project) throws PsiFileNotFountException {
-        //todo: check if ReadAction is necessary
         return ReadAction.compute(() -> {
             VirtualFile virtualFile = VirtualFileManager.getInstance().findFileByUrl(uri);
             if (virtualFile == null) {
@@ -60,6 +59,7 @@ public class PsiUtils {
 
 
 
+    @SuppressWarnings("unused")
     @Nullable
     public static String tryFindSelectedPsiUri(Project project){
         return ReadAction.compute(() -> {

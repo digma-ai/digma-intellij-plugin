@@ -5,13 +5,15 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
+import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent;
 import com.jetbrains.rider.ideaInterop.fileTypes.csharp.CSharpLanguage;
+import com.jetbrains.rider.projectView.SolutionLifecycleHost;
 import kotlin.Pair;
-import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.log.Log;
@@ -30,45 +32,53 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class CSharpLanguageService implements LanguageService {
+public class CSharpLanguageService extends LifetimedProjectComponent implements LanguageService {
 
-    private final Logger LOGGER = Logger.getInstance(CSharpLanguageService.class);
+    private static final Logger LOGGER = Logger.getInstance(CSharpLanguageService.class);
 
     private final Project project;
 
-    private final LRUMap<String, Boolean> csharpMethodCache = new LRUMap<>();
 
-    private final CaretContextService caretContextService;
-
-
+    /*
+    It's better, as much as possible, in language services especially, not to initialize service dependencies in the constructor but use
+    a getInstance for services when they are first needed. that will minimize the possibility for cyclic dependencies.
+     */
     public CSharpLanguageService(Project project) {
-        caretContextService = project.getService(CaretContextService.class);
+        super(project);
         this.project = project;
     }
 
     @Override
-    public void ensureStartup(@NotNull Project project) {
-        //make sure LanguageServiceHost is initialized on EDT
+    public void ensureStartupOnEDT(@NotNull Project project) {
+        Log.log(LOGGER::debug, "ensureStartupOnEDT called, backend loaded: {}",SolutionLifecycleHost.Companion.getInstance(project).isBackendLoaded().getValue());
+        //make sure LanguageServiceHost is initialized on EDT, for example project.solution.languageServiceModel must be
+        // called on EDT
         LanguageServiceHost.getInstance(project);
         CodeLensHost.getInstance(project);
+    }
+
+    @Override
+    public void runWhenSmart(Runnable task) {
+
+        Runnable r = () -> {
+            if (DumbService.isDumb(project)) {
+                DumbService.getInstance(project).runWhenSmart(task);
+            } else {
+                task.run();
+            }
+        };
+
+        LanguageServiceHost.getInstance(project).runIfSolutionLoaded(r);
+
     }
 
     @Nullable
     @Override
     public Language getLanguageForMethodCodeObjectId(@NotNull String methodId) {
-        //calls to this method with the same argument may happen many times.
-        // but languageServiceHost.isCSharpMethod is a call to resharper which is not the best performance,
-        // so keep all methods ids in a simple cache for later use.
-
-        if (csharpMethodCache.containsKey(methodId)) {
-            return Boolean.TRUE.equals(csharpMethodCache.get(methodId)) ? CSharpLanguage.INSTANCE : null;
-        }
 
         if (LanguageServiceHost.getInstance(project).isCSharpMethod(methodId)) {
-            csharpMethodCache.put(methodId, Boolean.TRUE);
             return CSharpLanguage.INSTANCE;
         }
-        csharpMethodCache.put(methodId, Boolean.FALSE);
         return null;
     }
 
@@ -135,7 +145,7 @@ public class CSharpLanguageService implements LanguageService {
                     if (selectedTextEditor != null) {
                         int offset = selectedTextEditor.getCaretModel().getOffset();
                         var methodUnderCaret = detectMethodUnderCaret(project, psiFile, null, offset);
-                        caretContextService.contextChanged(methodUnderCaret);
+                        CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
                     }
                 }
             }
@@ -159,11 +169,6 @@ public class CSharpLanguageService implements LanguageService {
             documentInfo = new DocumentInfo(PsiUtils.psiFileToUri(psiFile),new HashMap<>());
         }
         return documentInfo;
-    }
-
-    @Override
-    public boolean isIntellijPlatformPluginLanguage() {
-        return false;
     }
 
 
@@ -192,6 +197,6 @@ public class CSharpLanguageService implements LanguageService {
     @Override
     public void refreshMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int offset) {
         MethodUnderCaret methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedEditor, offset);
-        caretContextService.contextChanged(methodUnderCaret);
+        CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
     }
 }

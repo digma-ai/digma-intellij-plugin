@@ -26,7 +26,7 @@ public class DumbAwareNotifier {
     }
 
     void trigger() {
-        Log.log(LOGGER::debug, "DumbAware event is triggered");
+        Log.log(LOGGER::debug, "runActivity event is triggered");
         for (Runnable runnable : runnableList) {
             runnable.run();
         }

@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.idea.psi.java;
 
-import com.intellij.ide.highlighter.JavaFileType;
 import com.intellij.lang.Language;
 import com.intellij.lang.java.JavaLanguage;
 import com.intellij.openapi.application.ReadAction;
@@ -8,12 +7,12 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.java.stubs.index.JavaFullClassNameIndex;
-import com.intellij.psi.impl.source.JavaFileElementType;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import kotlin.Pair;
@@ -23,7 +22,6 @@ import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.psi.LanguageService;
-import org.digma.intellij.plugin.psi.NonSupportedFileException;
 import org.digma.intellij.plugin.psi.PsiUtils;
 import org.digma.intellij.plugin.ui.CaretContextService;
 import org.jetbrains.annotations.NotNull;
@@ -42,20 +40,18 @@ public class JavaLanguageService implements LanguageService {
 
     private final ProjectFileIndex projectFileIndex;
 
-    private final DocumentInfoService documentInfoService;
-
-    private final CaretContextService caretContextService;
-
     private final MicronautFramework micronautFramework;
     private final JaxrsFramework jaxrsFramework;
     private final GrpcFramework grpcFramework;
 
 
 
+    /*
+    It's better, as much as possible, in language services especially, not to initialize service dependencies in the constructor but use
+    a getInstance for services when they are first needed. that will minimize the possibility for cyclic dependencies.
+     */
     public JavaLanguageService(Project project) {
         this.project = project;
-        documentInfoService = project.getService(DocumentInfoService.class);
-        caretContextService = project.getService(CaretContextService.class);
         this.projectFileIndex = project.getService(ProjectFileIndex.class);
         this.micronautFramework = new MicronautFramework(project);
         this.jaxrsFramework = new JaxrsFramework(project);
@@ -64,25 +60,19 @@ public class JavaLanguageService implements LanguageService {
     }
 
 
-    /**
-     * a utility method to test if a java file is in source content. this method don't need a reference to a project.
-     * It is used by reflection in LanguageService#isInSourceContent.
-     * This method must be implemented accurately, it should only return a result if it can handle the file type,
-     * otherwise it must throw a NonSupportedFileException.
-     */
-    @SuppressWarnings("unused")
-    public static boolean isFileInSourceContent(@NotNull VirtualFile file) throws NonSupportedFileException {
-        if (file.getFileType().equals(JavaFileType.INSTANCE)) {
-            return JavaFileElementType.isInSourceContent(file);
-        } else {
-            throw new NonSupportedFileException("file " + file.getName() + " is not a java file");
-        }
-    }
-
 
     @Override
-    public void ensureStartup(@NotNull Project project) {
+    public void ensureStartupOnEDT(@NotNull Project project) {
         //nothing to do
+    }
+
+    @Override
+    public void runWhenSmart(Runnable task) {
+        if (DumbService.isDumb(project)){
+            DumbService.getInstance(project).runWhenSmart(task);
+        }else{
+            task.run();
+        }
     }
 
     @Nullable
@@ -161,7 +151,7 @@ public class JavaLanguageService implements LanguageService {
          */
 
 
-        PsiFile psiFile = documentInfoService.findPsiFileByMethodId(codeObjectId);
+        PsiFile psiFile = DocumentInfoService.getInstance(project).findPsiFileByMethodId(codeObjectId);
         if (psiFile instanceof PsiJavaFile psiJavaFile) {
 
             PsiClass[] classes = psiJavaFile.getClasses();
@@ -275,7 +265,7 @@ public class JavaLanguageService implements LanguageService {
                     if (selectedTextEditor != null) {
                         int offset = selectedTextEditor.getCaretModel().getOffset();
                         var methodUnderCaret = detectMethodUnderCaret(project, psiFile, null, offset);
-                        caretContextService.contextChanged(methodUnderCaret);
+                        CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
                     }
                 }
             }
@@ -298,11 +288,6 @@ public class JavaLanguageService implements LanguageService {
         return buildDocumentInfo(psiFile);
     }
 
-
-    @Override
-    public boolean isIntellijPlatformPluginLanguage() {
-        return true;
-    }
 
     @Override
     public boolean isRelevant(VirtualFile file) {
@@ -334,6 +319,6 @@ public class JavaLanguageService implements LanguageService {
     @Override
     public void refreshMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int offset) {
         MethodUnderCaret methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedEditor, offset);
-        caretContextService.contextChanged(methodUnderCaret);
+        CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
     }
 }

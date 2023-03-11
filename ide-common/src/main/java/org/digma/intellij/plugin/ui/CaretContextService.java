@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui;
 
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 
 /**
@@ -8,6 +9,10 @@ import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
  * moving from method to method.
  */
 public interface CaretContextService extends Disposable {
+
+    static CaretContextService getInstance(Project project) {
+        return project.getService(CaretContextService.class);
+    }
 
     void contextChanged(MethodUnderCaret methodUnderCaret);
 

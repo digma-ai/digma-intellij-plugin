@@ -21,7 +21,12 @@ public class NoOpLanguageService implements LanguageService {
     public static final NoOpLanguageService INSTANCE = new NoOpLanguageService();
 
     @Override
-    public void ensureStartup(@NotNull Project project) {
+    public void ensureStartupOnEDT(@NotNull Project project) {
+        //nothing to do
+    }
+
+    @Override
+    public void runWhenSmart(Runnable task) {
         //nothing to do
     }
 
@@ -83,11 +88,6 @@ public class NoOpLanguageService implements LanguageService {
     @Override
     public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, @Nullable FileEditor newEditor) {
         throw new UnsupportedOperationException("should not be called");
-    }
-
-    @Override
-    public boolean isIntellijPlatformPluginLanguage() {
-        return false;
     }
 
 

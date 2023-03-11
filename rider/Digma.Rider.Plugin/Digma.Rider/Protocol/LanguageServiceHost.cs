@@ -74,6 +74,7 @@ namespace Digma.Rider.Protocol
         private RdTask<RiderDocumentInfo> GetDocumentInfoHandler(Lifetime _, PsiFileID psiFileId)
         {
             Log(_logger, "Got request for GetDocumentInfo for '{0}'", psiFileId.PsiUri);
+            
             var result = new RdTask<RiderDocumentInfo>();
 
             RiderDocumentInfo document = null;
@@ -98,8 +99,6 @@ namespace Digma.Rider.Protocol
                     {
                         Log(_logger, "Could not find IPsiSourceFile in GetDocumentInfo for '{0}', Aborting request",
                             psiFileId.PsiUri);
-                        throw new SystemException("Could not find IPsiSourceFile in GetDocumentInfo for " +
-                                                  psiFileId.PsiUri);
                     }
             }
 
@@ -156,20 +155,23 @@ namespace Digma.Rider.Protocol
                         //LibrarySymbolScope.NONE means we'll find only workspace classes
                         var symbolScope = _psiServices.Symbols.GetSymbolScope(LibrarySymbolScope.NONE, false);
                         var elements = symbolScope.GetTypeElementsByCLRName(className);
-                        foreach (var typeElement in elements)
+                        using (ReadLockCookie.Create())
                         {
-                            if (typeElement.IsClassLike())
+                            foreach (var typeElement in elements)
                             {
-                                foreach (var typeElementMethod in typeElement.Methods)
+                                if (typeElement.IsClassLike())
                                 {
-                                    if (typeElementMethod.ShortName.Equals(methodName))
+                                    foreach (var typeElementMethod in typeElement.Methods)
                                     {
-                                        if (typeElementMethod.GetSourceFiles().SingleItem != null)
+                                        if (typeElementMethod.ShortName.Equals(methodName))
                                         {
-                                            var fileUri = typeElementMethod.GetSourceFiles().SingleItem.GetLocation()
-                                                .ToUri().ToString();
-                                            uris.Add(new CodeObjectIdUriPair(methodId, fileUri));
-                                            break;
+                                            if (typeElementMethod.GetSourceFiles().SingleItem != null)
+                                            {
+                                                var fileUri = typeElementMethod.GetSourceFiles().SingleItem.GetLocation()
+                                                    .ToUri().ToString();
+                                                uris.Add(new CodeObjectIdUriPair(methodId, fileUri));
+                                                break;
+                                            }
                                         }
                                     }
                                 }
@@ -260,21 +262,28 @@ namespace Digma.Rider.Protocol
 
             using (CompilationContextCookie.GetExplicitUniversalContextIfNotSet())
             {
+                if (methodCodeObjectId.StartsWith("method:"))
+                {
+                    methodCodeObjectId = methodCodeObjectId.SubstringAfter("method:");
+                }
                 var className = methodCodeObjectId.SubstringBefore("$_$");
                 var methodName = methodCodeObjectId.SubstringAfter("$_$").SubstringBefore("(");
                 var symbolScope = _psiServices.Symbols.GetSymbolScope(LibrarySymbolScope.FULL, false);
                 var elements = symbolScope.GetTypeElementsByCLRName(className);
-                foreach (var typeElement in elements)
+                using (ReadLockCookie.Create())
                 {
-                    if (typeElement.IsClassLike())
+                    foreach (var typeElement in elements)
                     {
-                        foreach (var typeElementMethod in typeElement.Methods)
+                        if (typeElement.IsClassLike())
                         {
-                            if (typeElementMethod.ShortName.Equals(methodName))
+                            foreach (var typeElementMethod in typeElement.Methods)
                             {
-                                result = new RdTask<bool>();
-                                result.Set(true);
-                                break;
+                                if (typeElementMethod.ShortName.Equals(methodName))
+                                {
+                                    result = new RdTask<bool>();
+                                    result.Set(true);
+                                    break;
+                                }
                             }
                         }
                     }

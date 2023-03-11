@@ -16,6 +16,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
 import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.common.CommonUtils.prettyTimeOf
+import org.digma.intellij.plugin.common.DumbAwareNotifier
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
@@ -55,7 +56,11 @@ class EnvironmentsPanel(
         localHostname = CommonUtils.getLocalHostname()
         isOpaque = false
         layout = WrapLayout(FlowLayout.LEFT, 2, 0)
-        rebuildInBackground()
+
+        DumbAwareNotifier.getInstance(project).whenSmart {
+            rebuildInBackground()
+        }
+
 
         project.messageBus.connect(project.getService(AnalyticsService::class.java))
             .subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, object : EnvironmentChanged {

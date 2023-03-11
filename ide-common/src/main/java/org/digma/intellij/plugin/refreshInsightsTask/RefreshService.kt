@@ -1,11 +1,14 @@
 package org.digma.intellij.plugin.refreshInsightsTask
 
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.rd.util.withUiContext
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.util.RunnableCallable
+import com.intellij.util.concurrency.NonUrgentExecutor
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.document.DocumentInfoService
@@ -78,8 +81,10 @@ class RefreshService(private val project: Project) {
         if (selectedDocument != null) {
             documentInfoContainer?.updateCache()
         }
-        insightsViewService.updateInsightsModel(scope.getMethodInfo())
-        errorsViewService.updateErrorsModel(scope.getMethodInfo())
+        ReadAction.nonBlocking(RunnableCallable{
+            insightsViewService.updateInsightsModel(scope.getMethodInfo())
+            errorsViewService.updateErrorsModel(scope.getMethodInfo())
+        }).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance())
     }
 
     private fun notifyRefreshInsightsTaskStarted(fileUri: String?) {

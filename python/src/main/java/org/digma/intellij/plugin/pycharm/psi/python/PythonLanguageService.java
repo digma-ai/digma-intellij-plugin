@@ -2,9 +2,11 @@ package org.digma.intellij.plugin.pycharm.psi.python;
 
 import com.intellij.lang.Language;
 import com.intellij.openapi.application.ReadAction;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -35,26 +37,34 @@ import java.util.Map;
 
 public class PythonLanguageService implements LanguageService {
 
+    private static final Logger LOGGER = Logger.getInstance(PythonLanguageService.class);
 
     private final Project project;
 
-    private final DocumentInfoService documentInfoService;
-
     private final ProjectFileIndex projectFileIndex;
 
-    private final CaretContextService caretContextService;
-
+    /*
+    It's better, as much as possible, in language services especially, not to initialize service dependencies in the constructor but use
+    a getInstance for services when they are first needed. that will minimize the possibility for cyclic dependencies.
+     */
     public PythonLanguageService(Project project) {
         this.project = project;
-        documentInfoService = project.getService(DocumentInfoService.class);
         projectFileIndex = project.getService(ProjectFileIndex.class);
-        caretContextService = project.getService(CaretContextService.class);
     }
 
 
     @Override
-    public void ensureStartup(@NotNull Project project) {
+    public void ensureStartupOnEDT(@NotNull Project project) {
         //nothing to do
+    }
+
+    @Override
+    public void runWhenSmart(Runnable task) {
+        if (DumbService.isDumb(project)){
+            DumbService.getInstance(project).runWhenSmart(task);
+        }else{
+            task.run();
+        }
     }
 
     @Nullable
@@ -130,7 +140,7 @@ public class PythonLanguageService implements LanguageService {
          */
 
 
-        PsiFile psiFile = documentInfoService.findPsiFileByMethodId(codeObjectId);
+        PsiFile psiFile = DocumentInfoService.getInstance(project).findPsiFileByMethodId(codeObjectId);
         if (psiFile instanceof PyFile pyFile) {
 
             PyFunction pyFunction = PythonLanguageUtils.findMethodInFile(project, pyFile, codeObjectId);
@@ -208,7 +218,7 @@ public class PythonLanguageService implements LanguageService {
                     if (selectedTextEditor != null) {
                         int offset = selectedTextEditor.getCaretModel().getOffset();
                         var methodUnderCaret = detectMethodUnderCaret(project, psiFile, null, offset);
-                        caretContextService.contextChanged(methodUnderCaret);
+                        CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
                     }
                 }
             }
@@ -229,11 +239,6 @@ public class PythonLanguageService implements LanguageService {
     @Override
     public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, @Nullable FileEditor newEditor) {
         return buildDocumentInfo(psiFile);
-    }
-
-    @Override
-    public boolean isIntellijPlatformPluginLanguage() {
-        return true;
     }
 
 
@@ -266,7 +271,7 @@ public class PythonLanguageService implements LanguageService {
     @Override
     public void refreshMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int offset) {
         MethodUnderCaret methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedEditor, offset);
-        caretContextService.contextChanged(methodUnderCaret);
+        CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
     }
 
 

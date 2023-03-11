@@ -152,7 +152,6 @@ namespace Digma.Rider.Protocol
                 else
                 {
                     Log(_logger, "Could not find IPsiSourceFile for '{0}'.", methodUnderCaretRequest.PsiId.PsiUri);
-                    throw new SystemException("Could not find IPsiSourceFile in DetectByPsiFile for "+methodUnderCaretRequest.PsiId.PsiUri);
                 }
             }
 

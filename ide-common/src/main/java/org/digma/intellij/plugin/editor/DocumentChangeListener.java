@@ -1,12 +1,15 @@
 package org.digma.intellij.plugin.editor;
 
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.editor.event.DocumentListener;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -28,8 +31,6 @@ import java.util.Map;
 
 /**
  * Listens to documentChanged events and updates DocumentInfoService and the current context.
- * This class is only used from the current package by EditorEventsHandler so it and its methods are
- * 'package' access.
  */
 class DocumentChangeListener {
 
@@ -37,11 +38,13 @@ class DocumentChangeListener {
 
     private final Project project;
     private final DocumentInfoService documentInfoService;
+    private final CurrentContextUpdater currentContextUpdater;
     private final Map<VirtualFile, Disposable> disposables = new HashMap<>();
 
-    DocumentChangeListener(Project project) {
+    DocumentChangeListener(Project project, CurrentContextUpdater currentContextUpdater) {
         this.project = project;
         documentInfoService = project.getService(DocumentInfoService.class);
+        this.currentContextUpdater = currentContextUpdater;
     }
 
     void maybeAddDocumentListener(@NotNull Editor editor) {
@@ -103,7 +106,21 @@ class DocumentChangeListener {
                     } catch (Exception e) {
                         Log.debugWithException(LOGGER, e, "exception while processing documentChanged event for file: {}, {}", event.getDocument(), e.getMessage());
                     }
-                })).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance()), 2000);
+                })).inSmartMode(project).withDocumentsCommitted(project).finishOnUiThread(ModalityState.defaultModalityState(), unused -> {
+
+                    //caret event is not always fired while editing, but the document may change, and a caret
+                    // event will fire only when the caret moves but not while editing.
+                    // if the document changes and no caret event is fired the UI will not be updated.
+                    // so calling hare currentContextUpdater after document change will update the UI.
+                    var editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+                    if (editor != null){
+                        int caretOffset = editor.logicalPositionToOffset(editor.getCaretModel().getLogicalPosition());
+                        var file = FileDocumentManager.getInstance().getFile(editor.getDocument());
+                        currentContextUpdater.clearLatestMethod();
+                        currentContextUpdater.addRequest(editor,caretOffset,file);
+                    }
+
+                }).submit(NonUrgentExecutor.getInstance()), 2000);
 
             }
         }, parentDisposable);

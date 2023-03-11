@@ -9,6 +9,7 @@ import com.jetbrains.rd.util.reactive.whenTrue
 import com.jetbrains.rider.projectView.SolutionLifecycleHost
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.rider.protocol.CodeLensHost
 import org.digma.intellij.plugin.rider.protocol.LanguageServiceHost
 import org.digma.intellij.plugin.rider.protocol.ShowToolWindowHost
 import java.util.*
@@ -36,8 +37,9 @@ class ServicesStarter : StartupActivity, DumbAware {
                     Objects.requireNonNull(project.getService(ShowToolWindowHost::class.java))
 
                     //initialize LanguageServiceHost early on startup, so it can initialize its model early on EDT.
-                    // if called later it will require EDT which is not always what we want.
+                    // if called later it will require EDT which is not always the case.
                     Objects.requireNonNull(project.getService(LanguageServiceHost::class.java))
+                    Objects.requireNonNull(project.getService(CodeLensHost::class.java))
                 }
             }
         }

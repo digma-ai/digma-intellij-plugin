@@ -51,7 +51,7 @@ public class CodeLensProvider {
 
         DocumentInfoContainer documentInfo = documentInfoService.getDocumentInfo(psiFile);
         if (documentInfo == null) {
-            Log.log(LOGGER::error, "Can't find DocumentInfo for {}", psiFile.getVirtualFile());
+            Log.log(LOGGER::debug, "Can't find DocumentInfo for {}", psiFile.getVirtualFile());
             return new ArrayList<>();
         }
 

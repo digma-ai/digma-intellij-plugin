@@ -35,8 +35,6 @@ object LanguageServiceModel : Ext(SolutionModel.Solution) {
         setting(CSharp50Generator.Namespace, "Digma.Rider.Protocol")
         setting(Kotlin11Generator.Namespace, "org.digma.intellij.plugin.rider.protocol")
 
-        property("doc", CodeObjectsModel.RiderDocumentInfo)
-
         call(
             "getDocumentInfo",
             PsiFileID, CodeObjectsModel.RiderDocumentInfo.nullable

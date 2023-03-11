@@ -223,4 +223,10 @@ public class DocumentInfoService {
         return language != null ? Language.findLanguageByID(language) : null;
     }
 
+    /**
+     * this method will clear all documents. its main use if for rider to reload code objects on startup.
+     */
+    public void clearAll() {
+        documents.clear();
+    }
 }

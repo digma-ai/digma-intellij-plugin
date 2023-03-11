@@ -24,7 +24,7 @@ public class WorkspaceUrisHelper {
     }
 
 
-    public static void findWorkspaceUrisForSpans(ListViewItem<?> theListView, @NotNull List<String> spanIds, @NotNull LanguageService languageService) {
+    private static void findWorkspaceUrisForSpans(ListViewItem<?> theListView, @NotNull List<String> spanIds, @NotNull LanguageService languageService) {
         var workspaceUris = languageService.findWorkspaceUrisForSpanIds(spanIds);
         workspaceUris.forEach((k, v) -> theListView.getMoreData().put(k, v));
     }

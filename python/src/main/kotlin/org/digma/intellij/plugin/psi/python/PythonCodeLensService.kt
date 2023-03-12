@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.pycharm.psi.python
+package org.digma.intellij.plugin.psi.python
 
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project

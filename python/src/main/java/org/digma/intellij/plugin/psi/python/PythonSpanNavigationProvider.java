@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.pycharm.psi.python;
+package org.digma.intellij.plugin.psi.python;
 
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ReadAction;
@@ -34,7 +34,7 @@ import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
-import static org.digma.intellij.plugin.pycharm.psi.python.PythonCodeObjectsDiscovery.discoverSpanFromStartSpanMethodCallExpression;
+import static org.digma.intellij.plugin.psi.python.PythonCodeObjectsDiscovery.*;
 
 public class PythonSpanNavigationProvider implements Disposable {
 

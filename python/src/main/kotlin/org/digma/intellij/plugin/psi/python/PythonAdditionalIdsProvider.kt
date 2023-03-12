@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.pycharm.psi.python
+package org.digma.intellij.plugin.psi.python
 
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 

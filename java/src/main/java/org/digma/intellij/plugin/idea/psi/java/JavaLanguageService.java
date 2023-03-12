@@ -17,7 +17,6 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import kotlin.Pair;
 import org.digma.intellij.plugin.common.EDT;
-import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
@@ -80,6 +79,10 @@ public class JavaLanguageService implements LanguageService {
     public Language getLanguageForMethodCodeObjectId(@NotNull String methodId) {
 
         //try to parse the methodId as if it is java and try to find the language
+        if (methodId.indexOf("$_$") <= 0){
+            Log.log(LOGGER::debug, "method id in getLanguageForMethodCodeObjectId does not contain $_$ {}", methodId);
+            return null;
+        }
 
         var className = methodId.substring(0, methodId.indexOf("$_$"));
 
@@ -90,8 +93,6 @@ public class JavaLanguageService implements LanguageService {
         return ReadAction.compute(() -> {
             Collection<PsiClass> psiClasses =
                     JavaFullClassNameIndex.getInstance().get(finalClassName, project, GlobalSearchScope.projectScope(project));
-            //todo: maybe also search in method index and compare to find the same file
-            // or try to verify that this class really has the method
             if (!psiClasses.isEmpty()) {
                 Optional<PsiClass> psiClass = psiClasses.stream().findAny();
                 //noinspection ConstantConditions
@@ -136,43 +137,36 @@ public class JavaLanguageService implements LanguageService {
 
 
     /**
-     * navigate to a method. this method is meant to be used only to navigate to a method in the current selected editor.
-     * it is used from the methods preview list. it will not navigate to any method in the project.
+     * Navigate to any method in the project even if the file is not opened
      */
     @Override
-    public void navigateToMethod(String codeObjectId) {
+    public void navigateToMethod(String methodId) {
 
-        /*
-        There are few ways to navigate to a method.
-        the current implementation is the simplest, maybe not the best in performance, but it doesn't seem to be noticed.
-        find the psi file in documentInfoService , then find the psi method and call psiMethod.navigate.
+        Log.log(LOGGER::debug, "got navigate to method request {}", methodId);
+        if (methodId.indexOf("$_$") <= 0){
+            Log.log(LOGGER::debug, "method id in navigateToMethod does not contain $_$, can not navigate {}", methodId);
+            return;
+        }
 
-        another option is to search for the method in intellij index and navigate.
-         */
+        var className = methodId.substring(0, methodId.indexOf("$_$"));
 
+        //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
+        className = className.replace('$', '.');
 
-        PsiFile psiFile = DocumentInfoService.getInstance(project).findPsiFileByMethodId(codeObjectId);
-        if (psiFile instanceof PsiJavaFile psiJavaFile) {
-
-            PsiClass[] classes = psiJavaFile.getClasses();
-            PsiMethod psiMethod = findMethod(classes, codeObjectId);
-
-            if (psiMethod != null && psiMethod.canNavigateToSource()) {
-                psiMethod.navigate(true);
-            } else if (psiMethod != null) {
-                //it's a fallback. sometimes the psiMethod.canNavigateToSource is false and really the
-                //navigation doesn't work. i can't say why. usually it happens when indexing is not ready yet,
-                // and the user opens files, selects tabs or moves the caret. then when indexing is finished
-                // we have the list of methods but then psiMethod.navigate doesn't work.
-                // navigation to source using the editor does work in these circumstances.
-                var selectedEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
-                if (selectedEditor != null) {
-                    selectedEditor.getCaretModel().moveToOffset(psiMethod.getTextOffset());
-                } else {
-                    Log.log(LOGGER::error, "could not find selected text editor, can't navigate to method  {}", codeObjectId);
+        //searching in project scope will find only project classes
+        Collection<PsiClass> psiClasses =
+                JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.allScope(project));
+        if (!psiClasses.isEmpty()) {
+            //hopefully there is only one class by that name in the project
+            Optional<PsiClass> psiClassOptional = psiClasses.stream().findAny();
+            PsiClass psiClass = psiClassOptional.get();
+            for (PsiMethod method : psiClass.getMethods()) {
+                var id = JavaLanguageUtils.createJavaMethodCodeObjectId(method);
+                if (id.equals(methodId) && method.canNavigate()) {
+                    Log.log(LOGGER::debug, "navigating to method {}", method);
+                    method.navigate(true);
+                    return;
                 }
-            } else {
-                Log.log(LOGGER::error, "could not navigate to method {}, can't find PsiMethod in file {}", codeObjectId, psiFile.getVirtualFile());
             }
         }
     }
@@ -205,7 +199,7 @@ public class JavaLanguageService implements LanguageService {
     }
 
     @Override
-    public Map<String, String> findWorkspaceUrisForCodeObjectIds(@NotNull List<String> codeObjectIds) {
+    public Map<String, String> findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(List<String> codeObjectIds) {
 
         /*
         Use intellij index to find in which file a method exists.
@@ -214,7 +208,7 @@ public class JavaLanguageService implements LanguageService {
 
         We could use the class name that is returned from the backend in org.digma.intellij.plugin.model.rest.errordetails.Frame.
         but then we need to change the C# implementation too.
-        but codeObjectIds is usually our identifier all over the plugin so maybe its better to just use it for all languages.
+        but codeObjectIds is usually our identifier all over the plugin, so maybe it's better to just use it for all languages.
         the string parsing of codeObjectIds should not be expensive.
          */
 
@@ -223,22 +217,63 @@ public class JavaLanguageService implements LanguageService {
 
         codeObjectIds.forEach(methodId -> {
 
-            var className = methodId.substring(0, methodId.indexOf("$_$"));
+            if (methodId.contains("$_$")) {
+                var className = methodId.substring(0, methodId.indexOf("$_$"));
 
-            //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
-            className = className.replace('$', '.');
+                //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
+                className = className.replace('$', '.');
 
-            //searching in project scope will find only project classes
-            Collection<PsiClass> psiClasses =
-                    JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.projectScope(project));
-            if (!psiClasses.isEmpty()) {
-                //hopefully there is only one class by that name in the project
-                PsiClass psiClass = psiClasses.stream().findAny().get();
-                PsiFile psiFile = PsiTreeUtil.getParentOfType(psiClass, PsiFile.class);
-                if (psiFile != null) {
-                    String url = PsiUtils.psiFileToUri(psiFile);
-                    workspaceUrls.put(methodId, url);
+                //searching in project scope will find only project classes
+                Collection<PsiClass> psiClasses =
+                        JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.projectScope(project));
+                if (!psiClasses.isEmpty()) {
+                    //hopefully there is only one class by that name in the project
+                    PsiClass psiClass = psiClasses.stream().findAny().get();
+                    PsiFile psiFile = PsiTreeUtil.getParentOfType(psiClass, PsiFile.class);
+                    if (psiFile != null) {
+                        String url = PsiUtils.psiFileToUri(psiFile);
+                        workspaceUrls.put(methodId, url);
+                    }
                 }
+            }else{
+                Log.log(LOGGER::debug, "method id in findWorkspaceUrisForCodeObjectIdsForErrorStackTrace does not contain $_$ {}", methodId);
+            }
+        });
+
+        return workspaceUrls;
+    }
+
+    @Override
+    public Map<String, Pair<String, Integer>> findWorkspaceUrisForMethodCodeObjectIds(List<String> methodCodeObjectIds) {
+
+        Map<String, Pair<String, Integer>> workspaceUrls = new HashMap<>();
+
+        methodCodeObjectIds.forEach(methodId -> {
+
+            if (methodId.contains("$_$")) {
+                var className = methodId.substring(0, methodId.indexOf("$_$"));
+
+                //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
+                className = className.replace('$', '.');
+
+                //searching in project scope will find only project classes
+                Collection<PsiClass> psiClasses =
+                        JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.projectScope(project));
+                if (!psiClasses.isEmpty()) {
+                    //hopefully there is only one class by that name in the project
+                    PsiClass psiClass = psiClasses.stream().findAny().get();
+                    PsiFile psiFile = PsiTreeUtil.getParentOfType(psiClass, PsiFile.class);
+                    for (PsiMethod method : psiClass.getMethods()) {
+                        String javaMethodCodeObjectId = createJavaMethodCodeObjectId(method);
+                        if (javaMethodCodeObjectId.equals(methodId) && psiFile != null) {
+                            String url = PsiUtils.psiFileToUri(psiFile);
+                            workspaceUrls.put(methodId, new Pair<>(url, method.getTextOffset()));
+
+                        }
+                    }
+                }
+            }else{
+                Log.log(LOGGER::debug, "method id in findWorkspaceUrisForMethodCodeObjectIds does not contain $_$ {}", methodId);
             }
         });
 
@@ -279,8 +314,14 @@ public class JavaLanguageService implements LanguageService {
 
     @Override
     public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile) {
+        Log.log(LOGGER::debug, "got buildDocumentInfo request for {}", psiFile);
         //must be PsiJavaFile , this method should be called only for java files
-        return JavaCodeObjectDiscovery.buildDocumentInfo(project, (PsiJavaFile)psiFile,micronautFramework,jaxrsFramework,grpcFramework);
+        if (psiFile instanceof PsiJavaFile psiJavaFile) {
+            return JavaCodeObjectDiscovery.buildDocumentInfo(project, psiJavaFile, micronautFramework, jaxrsFramework, grpcFramework);
+        }else{
+            Log.log(LOGGER::debug, "psi file is noy java, returning empty DocumentInfo for {}", psiFile);
+            return new DocumentInfo(PsiUtils.psiFileToUri(psiFile), new HashMap<>());
+        }
     }
 
     @Override

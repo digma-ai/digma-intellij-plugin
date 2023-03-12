@@ -152,7 +152,7 @@ public interface LanguageService extends Disposable {
         //if getErrorDetails is called from error insight then the document is opened for sure and MethodInfo will be found.
         MethodInfo methodInfo = null;
         if (methodCodeObjectId != null) {
-            methodInfo = project.getService(DocumentInfoService.class).findMethodInfo(methodCodeObjectId);
+            methodInfo = DocumentInfoService.getInstance(project).findMethodInfo(methodCodeObjectId);
         }
 
         //methodInfo may or may not exist already in documentInfoService, if exists find the language by methodInfo.
@@ -168,7 +168,7 @@ public interface LanguageService extends Disposable {
             //dominant language will be null if no document was opened yet. it may happen if no document was opened and
             //user opens an error from the summary view.
             if (language == null) {
-                language = project.getService(DocumentInfoService.class).getDominantLanguage();
+                language = DocumentInfoService.getInstance(project).getDominantLanguage();
             }
         } else {
             language = project.getService(DocumentInfoService.class).getLanguageByMethodCodeObjectId(methodInfo.getId());
@@ -237,13 +237,15 @@ public interface LanguageService extends Disposable {
      * This method is called from the function list preview tab panel and is meant to navigate
      * to a method of the current opened file. it will not navigate to any method in the project.
      *
-     * @param codeObjectId the method id to navigate to
+     * @param methodId the method id to navigate to
      */
-    void navigateToMethod(String codeObjectId);
+    void navigateToMethod(String methodId);
 
     boolean isServiceFor(@NotNull Language language);
 
-    Map<String, String> findWorkspaceUrisForCodeObjectIds(List<String> codeObjectIds);
+    Map<String, String> findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(List<String> methodCodeObjectIds);
+
+    Map<String, Pair<String, Integer>> findWorkspaceUrisForMethodCodeObjectIds(List<String> methodCodeObjectIds);
 
     Map<String, Pair<String, Integer>> findWorkspaceUrisForSpanIds(List<String> spanIds);
 

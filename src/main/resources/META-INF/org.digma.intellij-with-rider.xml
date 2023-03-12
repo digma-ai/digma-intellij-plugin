@@ -22,10 +22,6 @@
         <listener
                 class="org.digma.intellij.plugin.rider.document.RiderDocumentInfoConsumer"
                 topic="org.digma.intellij.plugin.document.DocumentInfoChanged"/>
-        <listener
-                class="org.digma.intellij.plugin.rider.refreshInsightsTask.RefreshInsightsTaskScheduledHandler"
-                topic="org.digma.intellij.plugin.refreshInsightsTask.RefreshInsightsTaskScheduled"/>
-
     </projectListeners>
 
 

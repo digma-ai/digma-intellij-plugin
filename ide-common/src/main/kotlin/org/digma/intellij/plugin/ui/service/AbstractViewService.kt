@@ -15,12 +15,12 @@ abstract class AbstractViewService(val project: Project) : Disposable {
 
     //these may be null if the tool window did not open yet
     var panel: DigmaTabPanel? = null
-    var toolWindow: ToolWindow? = null
-    var toolWindowContent: Content? = null
+    private var toolWindow: ToolWindow? = null
+    private var toolWindowContent: Content? = null
 
     private val analyticsConnectionEventsConnection: MessageBusConnection = project.messageBus.connect()
 
-    private val toolWindowTabsHelper: ToolWindowTabsHelper = project.getService(ToolWindowTabsHelper::class.java)
+    private val toolWindowTabsHelper = ToolWindowTabsHelper.getInstance(project)
 
     init {
         //subscribe to connection lost/gained , call doUpdateUi() on each event so that the no connection card will show or hide
@@ -119,7 +119,8 @@ abstract class AbstractViewService(val project: Project) : Disposable {
                 panel?.reset()
 
                 if (toolWindowContent != null) {
-                    toolWindowContent?.displayName = getViewDisplayName()
+                    // there is no need to display the tab name for now as we have only one tab
+                    // toolWindowContent?.displayName = getViewDisplayName()
                     //reset focusable component methods, some panels are dynamic in what they return, see for example NoConnectionWrapper
                     toolWindowContent?.setPreferredFocusedComponent { panel?.getPreferredFocusedComponent() }
                     toolWindowContent?.preferredFocusableComponent = panel?.getPreferredFocusableComponent()

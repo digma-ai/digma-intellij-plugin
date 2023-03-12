@@ -49,11 +49,14 @@ namespace Digma.Rider.Protocol
 
             languageServiceModel.GetDocumentInfo.Set(GetDocumentInfoHandler);
             languageServiceModel.DetectMethodUnderCaret.Set(DetectMethodUnderCaret);
-            languageServiceModel.GetWorkspaceUris.Set(GetWorkspaceUris);
+            languageServiceModel.GetWorkspaceUrisForErrorStackTrace.Set(GetWorkspaceUrisForErrorStackTrace);
+            languageServiceModel.GetWorkspaceUrisForMethodCodeObjectIds.Set(GetWorkspaceUrisForMethodCodeObjectIds);
             languageServiceModel.GetSpansWorkspaceUris.Set(GetSpansWorkspaceUris);
             languageServiceModel.IsCsharpMethod.Set(IsCsharpMethod);
             languageServiceModel.NavigateToMethod.Advise(lifetime, NavigateToMethod);
         }
+
+
 
 
         [CanBeNull]
@@ -139,7 +142,7 @@ namespace Digma.Rider.Protocol
 
 
         [NotNull]
-        private RdTask<List<CodeObjectIdUriPair>> GetWorkspaceUris(Lifetime _, List<string> methodsCodeObjectIds)
+        private RdTask<List<CodeObjectIdUriPair>> GetWorkspaceUrisForErrorStackTrace(Lifetime _, List<string> methodsCodeObjectIds)
         {
             var result = new RdTask<List<CodeObjectIdUriPair>>();
             var uris = new List<CodeObjectIdUriPair>();
@@ -148,8 +151,15 @@ namespace Digma.Rider.Protocol
             {
                 foreach (var methodId in methodsCodeObjectIds)
                 {
-                    var className = methodId.SubstringBefore("$_$");
-                    var methodName = methodId.SubstringAfter("$_$").SubstringBefore("(");
+                    
+                    var methodIdToUse = methodId;
+                    if (methodIdToUse.StartsWith("method:"))
+                    {
+                        methodIdToUse = methodId.SubstringAfter("method:");
+                    }
+                    
+                    var className = methodIdToUse.SubstringBefore("$_$");
+                    var methodName = methodIdToUse.SubstringAfter("$_$").SubstringBefore("(");
                     if (className != null && className.IsNotEmpty() && methodName != null && methodName.IsNotEmpty())
                     {
                         //LibrarySymbolScope.NONE means we'll find only workspace classes
@@ -169,7 +179,7 @@ namespace Digma.Rider.Protocol
                                             {
                                                 var fileUri = typeElementMethod.GetSourceFiles().SingleItem.GetLocation()
                                                     .ToUri().ToString();
-                                                uris.Add(new CodeObjectIdUriPair(methodId, fileUri));
+                                                uris.Add(new CodeObjectIdUriPair(methodIdToUse, fileUri));
                                                 break;
                                             }
                                         }
@@ -185,6 +195,70 @@ namespace Digma.Rider.Protocol
             return result;
         }
 
+        
+        
+        
+        private RdTask<List<CodeObjectIdUriOffsetTrouple>> GetWorkspaceUrisForMethodCodeObjectIds(Lifetime arg1, List<string> methodsCodeObjectIds)
+        {
+            var result = new RdTask<List<CodeObjectIdUriOffsetTrouple>>();
+            var uris = new List<CodeObjectIdUriOffsetTrouple>();
+            
+            using (CompilationContextCookie.GetExplicitUniversalContextIfNotSet())
+            {
+                foreach (var methodId in methodsCodeObjectIds)
+                {
+
+                    var methodIdToUse = methodId;
+                    if (methodIdToUse.StartsWith("method:"))
+                    {
+                        methodIdToUse = methodId.SubstringAfter("method:");
+                    }
+                    
+                    var className = methodIdToUse.SubstringBefore("$_$");
+                    var methodName = methodIdToUse.SubstringAfter("$_$").SubstringBefore("(");
+                    if (className != null && className.IsNotEmpty() && methodName != null && methodName.IsNotEmpty())
+                    {
+                        //LibrarySymbolScope.NONE means we'll find only workspace classes
+                        var symbolScope = _psiServices.Symbols.GetSymbolScope(LibrarySymbolScope.NONE, false);
+                        var elements = symbolScope.GetTypeElementsByCLRName(className);
+                        using (ReadLockCookie.Create())
+                        {
+                            foreach (var typeElement in elements)
+                            {
+                                if (typeElement.IsClassLike())
+                                {
+                                    foreach (var typeElementMethod in typeElement.Methods)
+                                    {
+                                        if (typeElementMethod.ShortName.Equals(methodName))
+                                        {
+                                            if (typeElementMethod.GetSourceFiles().SingleItem != null)
+                                            {
+                                                if (typeElementMethod.GetSingleDeclaration() != null)
+                                                {
+                                                    var fileUri = typeElementMethod.GetSourceFiles().SingleItem.GetLocation()
+                                                        .ToUri().ToString();
+                                                    uris.Add(new CodeObjectIdUriOffsetTrouple(methodIdToUse, fileUri,
+                                                        typeElementMethod.GetSingleDeclaration()!.GetTreeStartOffset().Offset + 1));
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            
+            
+            
+            result.Set(uris);
+            return result;
+        }
+        
+        
 
         //todo: very bad performance. find a was to query resharper caches or build a cache for that
         [NotNull]
@@ -296,7 +370,13 @@ namespace Digma.Rider.Protocol
 
         private void NavigateToMethod(string message)
         {
-            _methodNavigator.Navigate(message);
+            //the message needs to be unique. the frontend adds a unique string prefix to the method id 
+            var methodId = message.SubstringAfter("}");
+            if (methodId.StartsWith("method:"))
+            {
+                methodId = methodId.SubstringAfter("method:");
+            }
+            _methodNavigator.Navigate(methodId);
         }
 
         

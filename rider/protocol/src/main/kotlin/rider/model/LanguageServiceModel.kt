@@ -47,8 +47,13 @@ object LanguageServiceModel : Ext(SolutionModel.Solution) {
         ).async
 
         call(
-            "getWorkspaceUris",
+            "getWorkspaceUrisForErrorStackTrace",
             immutableList(PredefinedType.string), immutableList(CodeObjectsModel.CodeObjectIdUriPair)
+        ).async
+
+        call(
+            "getWorkspaceUrisForMethodCodeObjectIds",
+            immutableList(PredefinedType.string), immutableList(CodeObjectsModel.CodeObjectIdUriOffsetTrouple)
         ).async
 
         call(

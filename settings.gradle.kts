@@ -48,6 +48,7 @@ dependencyResolutionManagement {
             library("threeten", "org.threeten", "threeten-extra").version("1.7.0")
             library("commons-lang3", "org.apache.commons", "commons-lang3").version("3.12.0")
             library("commons-collections4", "org.apache.commons", "commons-collections4").version("4.4")
+            library("freemarker", "org.freemarker", "freemarker").version("2.3.30")
         }
     }
 }

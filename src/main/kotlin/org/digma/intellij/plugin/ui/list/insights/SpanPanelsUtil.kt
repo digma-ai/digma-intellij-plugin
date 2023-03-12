@@ -1,30 +1,25 @@
 package org.digma.intellij.plugin.ui.list.insights
 
 import com.google.common.io.CharStreams
-import com.intellij.ide.BrowserUtil
-import com.intellij.openapi.fileEditor.impl.HTMLEditorProvider
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
-import org.digma.intellij.plugin.settings.LinkMode
-import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.common.*
-import org.digma.intellij.plugin.ui.list.ListItemActionButton
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.model.TraceSample
-import org.digma.intellij.plugin.ui.service.needToShowDurationChange
+import org.digma.intellij.plugin.ui.needToShowDurationChange
 import org.ocpsoft.prettytime.PrettyTime
 import org.threeten.extra.AmountFormats
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.io.InputStreamReader
 import java.sql.Timestamp
+import java.time.Duration
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.swing.BoxLayout
-import javax.swing.JButton
 import javax.swing.JPanel
 import javax.swing.SwingConstants
 import kotlin.math.abs
@@ -148,58 +143,6 @@ fun buildJPanelWithButtonToJaeger(builder: StringBuilder, line: JPanel, traceSam
     return line
 }
 
-// if cannot create the button then would return null
-fun buildButtonToJaeger(
-        project: Project, linkCaption: String, spanName: String, traceSamples: List<TraceSample?>
-): JButton? {
-
-    val settingsState = SettingsState.getInstance(project)
-
-    val jaegerBaseUrl = settingsState.jaegerUrl?.trim()?.trimEnd('/')
-    if (jaegerBaseUrl.isNullOrBlank() || traceSamples.isNullOrEmpty()) {
-        return null
-    }
-    val filtered = traceSamples.filter { x -> x!=null &&  x.hasTraceId() }
-    if (filtered.isNullOrEmpty()) {
-        return null
-    }
-
-    val caption: String
-    val jaegerUrl: String
-    val embedPart = "&uiEmbed=v0"
-
-    val trace1 = filtered[0]!!.traceId?.lowercase()
-    if (filtered.size == 1) {
-        caption = "A sample ${filtered[0]!!.traceName} trace"
-        jaegerUrl = "${jaegerBaseUrl}/trace/${trace1}?cohort=${trace1}${embedPart}"
-    } else {
-        // assuming it has (at least) size of 2
-        val trace2 = filtered[1]!!.traceId?.lowercase()
-        caption = "Comparing: A sample ${filtered[0]!!.traceName} trace with a ${filtered[1]!!.traceName} trace"
-        jaegerUrl = "${jaegerBaseUrl}/trace/${trace1}...${trace2}?cohort=${trace1}&cohort=${trace2}${embedPart}"
-    }
-
-    val htmlContent = SpanPanels.JAEGER_EMBEDDED_HTML_TEMPLATE
-        .replace("__JAEGER_EMBEDDED_URL__", jaegerUrl)
-        .replace("__CAPTION__", caption)
-
-    val editorTitle = "Jaeger sample traces of Span $spanName"
-
-    val button = ListItemActionButton(linkCaption)
-    if (settingsState.jaegerLinkMode == LinkMode.Internal) {
-        button.addActionListener {
-            HTMLEditorProvider.openEditor(project, editorTitle, htmlContent)
-        }
-    } else {
-        // handle LinkMode.External
-        button.addActionListener {
-            BrowserUtil.browse(jaegerUrl, project)
-        }
-    }
-
-    return button
-}
-
 fun buildTraceSample(percentile: SpanDurationsPercentile): TraceSample {
     val percentileName = "P${(percentile.percentile * 100).toInt()}"
     var traceId = ""
@@ -221,7 +164,7 @@ private fun computeDurationText(percentile: SpanDurationsPercentile): String {
                     abs(percentile.previousDuration!!.raw - percentile.currentDuration.raw),
                     TimeUnit.NANOSECONDS
             )
-    val javaDuration = java.time.Duration.ofMillis(durationMillis)
+    val javaDuration = Duration.ofMillis(durationMillis)
     if (javaDuration.isZero) {
         return "a few milliseconds"
     }

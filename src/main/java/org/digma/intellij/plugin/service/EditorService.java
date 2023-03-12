@@ -39,7 +39,6 @@ public class EditorService implements Disposable {
         vcsService = project.getService(VcsService.class);
     }
 
-
     public void openErrorFrameWorkspaceFileInEditor(@NotNull String workspaceUrl, @Nullable String lastInstanceCommitId, int lineNumber) {
 
         var workspaceFile = VirtualFileManager.getInstance().findFileByUrl(workspaceUrl);
@@ -169,7 +168,7 @@ public class EditorService implements Disposable {
     }
 
 
-    public void openSpanWorkspaceFileInEditor(@NotNull String workspaceUri, int offset) {
+    public void openWorkspaceFileInEditor(@NotNull String workspaceUri, int offset) {
 
         var fileToOpen = VirtualFileManager.getInstance().findFileByUrl(workspaceUri);
         if (fileToOpen == null) {

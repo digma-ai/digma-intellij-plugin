@@ -14,7 +14,6 @@ import java.awt.Component
 import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JPanel
-import javax.swing.SwingUtilities
 
 class NoConnectionWrapper(private val project: Project, private val panel: DigmaTabPanel) : DigmaTabPanel() {
 

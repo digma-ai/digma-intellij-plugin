@@ -12,6 +12,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent;
 import com.jetbrains.rider.ideaInterop.fileTypes.csharp.CSharpLanguage;
+import com.jetbrains.rider.ideaInterop.fileTypes.csharp.psi.CSharpFile;
 import com.jetbrains.rider.projectView.SolutionLifecycleHost;
 import kotlin.Pair;
 import org.apache.commons.lang3.time.StopWatch;
@@ -76,6 +77,11 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     @Override
     public Language getLanguageForMethodCodeObjectId(@NotNull String methodId) {
 
+        if (methodId.indexOf("$_$") <= 0){
+            Log.log(LOGGER::debug, "method id in getLanguageForMethodCodeObjectId does not contain $_$ {}", methodId);
+            return null;
+        }
+
         if (LanguageServiceHost.getInstance(project).isCSharpMethod(methodId)) {
             return CSharpLanguage.INSTANCE;
         }
@@ -97,7 +103,7 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     }
 
 
-    //CSharpLanguageService needs the Editor to tale the projectModelId which is the preferred way to find a IPsiSourceFile in reshrper.
+    //CSharpLanguageService needs the Editor to tale the projectModelId which is the preferred way to find a IPsiSourceFile in resharper.
     @Override
     @NotNull
     public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int caretOffset) {
@@ -105,9 +111,15 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     }
 
     @Override
-    public void navigateToMethod(String codeObjectId) {
-        Log.log(LOGGER::debug, "Navigating to method {}", codeObjectId);
-        LanguageServiceHost.getInstance(project).navigateToMethod(codeObjectId);
+    public void navigateToMethod(String methodId) {
+
+        Log.log(LOGGER::debug, "got navigate to method request {}", methodId);
+        if (methodId.indexOf("$_$") <= 0){
+            Log.log(LOGGER::debug, "method id in navigateToMethod does not contain $_$, can not navigate {}", methodId);
+            return;
+        }
+
+        LanguageServiceHost.getInstance(project).navigateToMethod(methodId);
     }
 
     @Override
@@ -117,8 +129,13 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
 
 
     @Override
-    public Map<String, String> findWorkspaceUrisForCodeObjectIds(List<String> codeObjectIds) {
-        return LanguageServiceHost.getInstance(project).findWorkspaceUrisForCodeObjectIds(codeObjectIds);
+    public Map<String, String> findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(List<String> codeObjectIds) {
+        return LanguageServiceHost.getInstance(project).findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(codeObjectIds);
+    }
+
+    @Override
+    public Map<String, Pair<String, Integer>> findWorkspaceUrisForMethodCodeObjectIds(List<String> methodCodeObjectIds) {
+        return LanguageServiceHost.getInstance(project).findWorkspaceUrisForMethodCodeObjectIds(methodCodeObjectIds);
     }
 
     @Override
@@ -163,12 +180,20 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
 
     @Override
     public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile, @Nullable FileEditor newEditor) {
-        DocumentInfo documentInfo =  LanguageServiceHost.getInstance(project).getDocumentInfo(psiFile,newEditor);
-        if (documentInfo == null) {
-            Log.log(LOGGER::warn, "DocumentInfo not found for {}, returning empty DocumentInfo", psiFile);
-            documentInfo = new DocumentInfo(PsiUtils.psiFileToUri(psiFile),new HashMap<>());
+
+        Log.log(LOGGER::debug, "got buildDocumentInfo request for {}", psiFile);
+        //must be PsiJavaFile , this method should be called only for java files
+        if (psiFile instanceof CSharpFile cSharpFile) {
+            DocumentInfo documentInfo =  LanguageServiceHost.getInstance(project).getDocumentInfo(cSharpFile,newEditor);
+            if (documentInfo == null) {
+                Log.log(LOGGER::warn, "DocumentInfo not found for {}, returning empty DocumentInfo", psiFile);
+                documentInfo = new DocumentInfo(PsiUtils.psiFileToUri(psiFile),new HashMap<>());
+            }
+            return documentInfo;
+        }else{
+            Log.log(LOGGER::debug, "psi file is noy CSharpFile, returning empty DocumentInfo for {}", psiFile);
+            return new DocumentInfo(PsiUtils.psiFileToUri(psiFile), new HashMap<>());
         }
-        return documentInfo;
     }
 
 

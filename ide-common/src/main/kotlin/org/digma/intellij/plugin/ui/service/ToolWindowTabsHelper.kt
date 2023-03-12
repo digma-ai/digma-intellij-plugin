@@ -3,8 +3,6 @@ package org.digma.intellij.plugin.ui.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.ui.content.Content
-import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
-import kotlin.math.abs
 
 class ToolWindowTabsHelper(val project: Project) {
 
@@ -13,13 +11,18 @@ class ToolWindowTabsHelper(val project: Project) {
     lateinit var insightsContent: Content
     lateinit var errorsContent: Content
 
-    var visibleTabBeforeErrorDetails: Content? = null
-    var errorDetailsOn = false
+    private var visibleTabBeforeErrorDetails: Content? = null
+    private var errorDetailsOn = false
 
     companion object {
         const val INSIGHTS_TAB_NAME = "insights"
         const val ERRORS_TAB_NAME = "errors"
         const val SUMMARY_TAB_NAME = "summary"
+
+        @JvmStatic
+        fun getInstance(project: Project):ToolWindowTabsHelper{
+            return project.getService(ToolWindowTabsHelper::class.java)
+        }
     }
 
     fun isInsightsTab(content: Content?): Boolean {
@@ -60,18 +63,5 @@ class ToolWindowTabsHelper(val project: Project) {
         return errorDetailsOn
     }
 
-    fun showInsightsTab() {
-        toolWindow.contentManager.setSelectedContent(insightsContent)
-    }
 
-}
-
-fun needToShowDurationChange(percentile: SpanDurationsPercentile): Boolean {
-    val tolerationConstant: Long = 10000
-
-    if (percentile.previousDuration != null && percentile.changeTime != null) {
-        val rawDiff: Long = abs(percentile.currentDuration.raw - percentile.previousDuration!!.raw)
-        return ((rawDiff.toFloat() / percentile.previousDuration!!.raw) > 0.1) && (rawDiff > tolerationConstant)
-    }
-    return false
 }

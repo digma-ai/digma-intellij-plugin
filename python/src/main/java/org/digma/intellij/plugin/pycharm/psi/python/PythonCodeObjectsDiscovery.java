@@ -52,7 +52,7 @@ public class PythonCodeObjectsDiscovery {
 
         classes.forEach(pyClass -> {
             for (PyFunction method : pyClass.getMethods()) {
-                //function name should probably never be null but the interface is Nullable so we need to check
+                //function name should probably never be null but the interface is Nullable, so we need to check
                 if (method.getName() != null) {
                     MethodInfo methodInfo = functionDiscovery(project, fileUri, method);
                     methods.put(methodInfo.getId(), methodInfo);
@@ -61,7 +61,7 @@ public class PythonCodeObjectsDiscovery {
         });
 
         functions.forEach(pyFunction -> {
-            //function name should probably never be null but the interface is Nullable so we need to check
+            //function name should probably never be null but the interface is Nullable, so we need to check
             if (pyFunction.getName() != null) {
                 MethodInfo methodInfo = functionDiscovery(project, fileUri, pyFunction);
                 methods.put(methodInfo.getId(), methodInfo);
@@ -170,7 +170,7 @@ public class PythonCodeObjectsDiscovery {
                 result.add(new SpanInfo(spanId, spanName, methodId, fileUri));
 
                 //third instrumentation library is the relative path without its first segment if any
-                if (relativePath.indexOf(".") > 0) {
+                if (relativePath.contains(".")) {
                     relativePath = relativePath.substring(relativePath.indexOf(".") + 1);
                     spanId = PythonLanguageUtils.createSpanId(relativePath, spanName);
                     result.add(new SpanInfo(spanId, spanName, methodId, fileUri));
@@ -231,7 +231,7 @@ public class PythonCodeObjectsDiscovery {
         var callee = callExpression.getCallee();
         if (callee != null && callee.getReference() != null) {
             var psiElement = callee.getReference().resolve();
-            if (psiElement instanceof PyFunction && Constants.OPENTELEMETRY_GET_TRACER_FUNC_NAME.equals(((PyFunction) psiElement).getName())) {
+            if (psiElement instanceof PyFunction pyFunction && Constants.OPENTELEMETRY_GET_TRACER_FUNC_NAME.equals(pyFunction.getName())) {
                 var arguments = callExpression.getArguments();
                 if (arguments.length >= 1) {
                     var arg = arguments[0];
@@ -268,8 +268,8 @@ public class PythonCodeObjectsDiscovery {
             var assignedValue = targetExpression.findAssignedValue();
             if (assignedValue instanceof PyStringLiteralExpression stringLiteralExpression){
                 return getStringFromStringLiteralExpression(stringLiteralExpression);
-            }else if (assignedValue instanceof PyReferenceExpression){
-                return getInstLibraryFromArgumentReferenceExpression((PyReferenceExpression) assignedValue);
+            }else if (assignedValue instanceof PyReferenceExpression pyReferenceExpressionAssignedValue){
+                return getInstLibraryFromArgumentReferenceExpression(pyReferenceExpressionAssignedValue);
             }
         }
 
@@ -301,8 +301,8 @@ public class PythonCodeObjectsDiscovery {
             var assignedValue = targetExpression.findAssignedValue();
             if (assignedValue instanceof PyStringLiteralExpression stringLiteralExpression){
                 return getStringFromStringLiteralExpression(stringLiteralExpression);
-            }else if (assignedValue instanceof PyReferenceExpression){
-                return getSpanNameFromReferenceExpression((PyReferenceExpression) assignedValue);
+            }else if (assignedValue instanceof PyReferenceExpression pyReferenceExpressionAssignedValue){
+                return getSpanNameFromReferenceExpression(pyReferenceExpressionAssignedValue);
             }
         }
 

@@ -7,7 +7,6 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.EditorNotificationPanel;
 import com.intellij.ui.EditorNotificationProvider;
 import org.digma.intellij.plugin.service.EditorService;
-import org.digma.intellij.plugin.ui.common.Laf;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;

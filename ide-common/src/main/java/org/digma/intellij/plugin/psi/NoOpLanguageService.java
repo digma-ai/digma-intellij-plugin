@@ -53,8 +53,8 @@ public class NoOpLanguageService implements LanguageService {
     }
 
     @Override
-    public void navigateToMethod(String codeObjectId) {
-
+    public void navigateToMethod(String methodId) {
+        //nothing to do
     }
 
     @Override
@@ -63,7 +63,12 @@ public class NoOpLanguageService implements LanguageService {
     }
 
     @Override
-    public Map<String, String> findWorkspaceUrisForCodeObjectIds(List<String> codeObjectIds) {
+    public Map<String, String> findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(List<String> codeObjectIds) {
+        return new HashMap<>();
+    }
+
+    @Override
+    public Map<String, Pair<String, Integer>> findWorkspaceUrisForMethodCodeObjectIds(List<String> methodCodeObjectIds) {
         return new HashMap<>();
     }
 
@@ -74,7 +79,7 @@ public class NoOpLanguageService implements LanguageService {
 
     @Override
     public void environmentChanged(String newEnv) {
-
+        //nothing to do
     }
 
 
@@ -103,6 +108,6 @@ public class NoOpLanguageService implements LanguageService {
 
     @Override
     public void refreshMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int offset) {
-
+        //nothing to do
     }
 }

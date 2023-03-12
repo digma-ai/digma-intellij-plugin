@@ -8,9 +8,6 @@ import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
-import org.digma.intellij.plugin.analytics.BackendConnectionMonitor;
-import org.digma.intellij.plugin.analytics.EnvironmentChanged;
-import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.service.ErrorsActionsService;
@@ -26,12 +23,12 @@ import org.jetbrains.annotations.NotNull;
 
 
 /**
- * The main Digma tool window
+ * The main Digma tool window on left panel
  */
-public class DigmaToolWindowFactory implements ToolWindowFactory {
+public class DigmaLeftToolWindowFactory implements ToolWindowFactory {
 
-    private static final Logger LOGGER = Logger.getInstance(DigmaToolWindowFactory.class);
-
+    private static final Logger LOGGER = Logger.getInstance(DigmaLeftToolWindowFactory.class);
+    private static final String DIGMA_NAME = "DIGMA";
 
     /**
      * this is the starting point of the plugin. this method is called when the tool window is opened.
@@ -45,6 +42,7 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
 
         Log.log(LOGGER::debug, "createToolWindowContent for project  {}", project);
 
+        toolWindow.setTitle(DIGMA_NAME);
         //some language service should complete their startup on EDT,especially C# language service
         // needs to initialize its models on EDT.
         // startup may happen here if the tool window is opened on startup, or in EditorEventsHandler.selectionChanged
@@ -53,23 +51,23 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
 
         var contentFactory = ContentFactory.getInstance();
 
-        var toolWindowTabsHelper = project.getService(ToolWindowTabsHelper.class);
-        toolWindowTabsHelper.setToolWindow(toolWindow);
+        ToolWindowTabsHelper.getInstance(project).setToolWindow(toolWindow);
 
         //initialize AnalyticsService early so the UI can detect the connection status when created
         project.getService(AnalyticsService.class);
 
 
-        Content contentToSelect = createInsightsTab(project, toolWindow, contentFactory, toolWindowTabsHelper);
-        createErrorsTab(project, toolWindow, contentFactory, toolWindowTabsHelper);
+        Content contentToSelect = createInsightsTab(project, toolWindow, contentFactory);
+        createErrorsTab(project, toolWindow, contentFactory);
         createSummaryTab(project, toolWindow, contentFactory);
-
 
         ErrorsActionsService errorsActionsService = project.getService(ErrorsActionsService.class);
         toolWindow.getContentManager().addContentManagerListener(errorsActionsService);
 
 
-        project.getService(ToolWindowShower.class).setToolWindow(toolWindow);
+        ToolWindowShower.getInstance(project).setToolWindow(toolWindow);
+        ToolWindowShower.getInstance(project).setInsightsTab(contentToSelect);
+
 
         toolWindow.getContentManager().setSelectedContent(contentToSelect, true);
 
@@ -127,20 +125,6 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     private static void createSummaryTab(@NotNull Project project, @NotNull ToolWindow toolWindow, ContentFactory contentFactory) {
         var summaryPanel = SummaryTabKt.summaryPanel(project);
         var summaryViewService = project.getService(SummaryViewService.class);
@@ -153,7 +137,7 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
         summaryViewService.setContent(toolWindow, summaryContent);
     }
 
-    private static void createErrorsTab(@NotNull Project project, @NotNull ToolWindow toolWindow, ContentFactory contentFactory, ToolWindowTabsHelper toolWindowTabsHelper) {
+    private static void createErrorsTab(@NotNull Project project, @NotNull ToolWindow toolWindow, ContentFactory contentFactory) {
         var errorsPanel = ErrorsTabKt.errorsPanel(project);
         var errorsViewService = project.getService(ErrorsViewService.class);
         errorsViewService.setPanel(errorsPanel);
@@ -163,12 +147,12 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
         errorsContent.setPreferredFocusableComponent(errorsPanel.getPreferredFocusableComponent());
         toolWindow.getContentManager().addContent(errorsContent);
         errorsViewService.setContent(toolWindow, errorsContent);
-        toolWindowTabsHelper.setErrorsContent(errorsContent);
+        ToolWindowTabsHelper.getInstance(project).setErrorsContent(errorsContent);
     }
 
 
     @NotNull
-    private static Content createInsightsTab(@NotNull Project project, @NotNull ToolWindow toolWindow, ContentFactory contentFactory, ToolWindowTabsHelper toolWindowTabsHelper) {
+    private static Content createInsightsTab(@NotNull Project project, @NotNull ToolWindow toolWindow, ContentFactory contentFactory) {
         var insightsPanel = InsightsTabKt.insightsPanel(project);
         var insightsViewService = project.getService(InsightsViewService.class);
         insightsViewService.setPanel(insightsPanel);
@@ -178,7 +162,7 @@ public class DigmaToolWindowFactory implements ToolWindowFactory {
         insightsContent.setPreferredFocusableComponent(insightsPanel.getPreferredFocusableComponent());
         toolWindow.getContentManager().addContent(insightsContent);
         insightsViewService.setContent(toolWindow, insightsContent);
-        toolWindowTabsHelper.setInsightsContent(insightsContent);
+        ToolWindowTabsHelper.getInstance(project).setInsightsContent(insightsContent);
         return insightsContent;
     }
 }

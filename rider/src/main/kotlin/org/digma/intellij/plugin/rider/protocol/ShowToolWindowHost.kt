@@ -10,11 +10,10 @@ class ShowToolWindowHost(project: Project) : LifetimedProjectComponent(project) 
 
     private val model: ShowToolWindowModel = project.solution.showToolWindowModel
 
-    private val toolWindowShower = project.getService(ToolWindowShower::class.java)
 
     init {
         model.showToolWindow.advise(project.lifetime){
-            toolWindowShower.showToolWindow()
+            ToolWindowShower.getInstance(project).showToolWindow()
         }
     }
 }

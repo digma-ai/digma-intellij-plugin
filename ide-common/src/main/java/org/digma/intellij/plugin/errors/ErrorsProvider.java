@@ -15,7 +15,6 @@ import org.digma.intellij.plugin.model.rest.errordetails.FrameStack;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
 import org.digma.intellij.plugin.psi.LanguageService;
-import org.digma.intellij.plugin.psi.LanguageServiceLocator;
 import org.digma.intellij.plugin.ui.model.errors.*;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
 import org.jetbrains.annotations.NotNull;
@@ -33,7 +32,6 @@ public class ErrorsProvider {
 
     private final AnalyticsService analyticsService;
     private final DocumentInfoService documentInfoService;
-    private final LanguageServiceLocator languageServiceLocator;
     private final Project project;
 
 
@@ -41,7 +39,6 @@ public class ErrorsProvider {
         this.project = project;
         analyticsService = project.getService(AnalyticsService.class);
         documentInfoService = project.getService(DocumentInfoService.class);
-        languageServiceLocator = project.getService(LanguageServiceLocator.class);
     }
 
     public ErrorsListContainer getErrors(@NotNull MethodInfo methodInfo) {
@@ -156,7 +153,7 @@ public class ErrorsProvider {
                         map(Frame::getCodeObjectId)).collect(Collectors.toList());
 
 
-        return languageService.findWorkspaceUrisForCodeObjectIds(codeObjectIds);
+        return languageService.findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(codeObjectIds);
 
     }
 }

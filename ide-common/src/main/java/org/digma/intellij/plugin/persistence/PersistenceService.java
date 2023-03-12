@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 )
 public class PersistenceService implements PersistentStateComponent<PersistenceData> {
 
-    private Project project;
+    private final Project project;
 
     private final PersistenceData myPersistenceData = new PersistenceData();
 

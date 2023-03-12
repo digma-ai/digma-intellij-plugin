@@ -28,7 +28,6 @@ public class BulkFileChangeListenerForPythonSpanNavigation implements BulkFileLi
     }
 
 
-    //todo: implement
     @Override
     public void after(@NotNull List<? extends VFileEvent> events) {
         events.forEach(vFileEvent -> {

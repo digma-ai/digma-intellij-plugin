@@ -2,6 +2,7 @@ import common.properties
 import org.jetbrains.changelog.date
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.tasks.ListProductsReleasesTask
+import org.jetbrains.changelog.exceptions.MissingVersionException
 import java.util.EnumSet
 
 fun properties(key: String) = properties(key,project)
@@ -12,7 +13,7 @@ fun properties(key: String) = properties(key,project)
 )
 plugins {
     id("plugin-project")
-    id("org.jetbrains.changelog") version "1.3.1"
+    id("org.jetbrains.changelog") version "2.0.0"
     id("org.jetbrains.qodana") version "0.1.13"
     id("common-kotlin")
 }
@@ -28,6 +29,7 @@ dependencies{
     implementation(project(":java"))
     implementation(project(":python"))
     implementation(project(":rider"))
+    implementation(libs.freemarker)
 }
 
 // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
@@ -47,12 +49,11 @@ intellij {
 changelog {
     version.set(project.semanticVersion.version.get().toString())
     path.set("${project.projectDir}/CHANGELOG.md")
-    //groups.set(listOf("Added", "Changed", "Deprecated", "Removed", "Fixed", "Security"))
-    groups.set(emptyList())
+    groups.set(listOf("Added", "Changed", "Deprecated", "Removed", "Fixed", "Security"))
+//    groups.set(emptyList())
     header.set(provider { "[${version.get()}] - ${date()}" })
     keepUnreleasedSection.set(false)
 }
-
 
 // Configure Gradle Qodana Plugin - read more: https://github.com/JetBrains/gradle-qodana-plugin
 qodana {
@@ -118,11 +119,18 @@ tasks {
             }.joinToString("\n").run { markdownToHTML(this) }
         )
 
-        // Get the latest available change notes from the changelog file
+        val latestChangelog = try {
+            changelog.getUnreleased()
+        } catch (_: MissingVersionException) {
+            changelog.getLatest()
+        }
         changeNotes.set(provider {
-            changelog.run {
-                getOrNull(project.semanticVersion.version.get().toString()) ?: getLatest()
-            }.toHTML()
+            changelog.renderItem(
+                    latestChangelog
+                            .withHeader(false)
+                            .withEmptySections(false),
+                    org.jetbrains.changelog.Changelog.OutputType.HTML
+            )
         })
     }
 

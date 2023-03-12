@@ -129,23 +129,43 @@ public class PythonLanguageService implements LanguageService {
      * it is used from the methods preview list. it will not navigate to any method in the project.
      */
     @Override
-    public void navigateToMethod(String codeObjectId) {
+    public void navigateToMethod(String methodId) {
 
-        /*
-        There are few ways to navigate to a method.
-        the current implementation is the simplest, maybe not the best in performance, but it doesn't seem to be noticed.
-        find the psi file in documentInfoService , then find the psi method and call psiMethod.navigate.
+        Log.log(LOGGER::debug, "got navigate to method request {}", methodId);
 
-        another option is to search for the method in intellij index and navigate.
-         */
+        var functionName = PythonLanguageUtils.extractFunctionNameFromCodeObjectId(methodId);
 
+        var functions = PyFunctionNameIndex.find(functionName, project, GlobalSearchScope.allScope(project));
 
-        PsiFile psiFile = DocumentInfoService.getInstance(project).findPsiFileByMethodId(codeObjectId);
+        //PyFunctionNameIndex may find many functions, we want only one, so if we found it break the loop
+        boolean found = false;
+        for (PyFunction function : functions) {
+            if (function.isValid()) {
+                var codeObjectId = PythonLanguageUtils.createPythonMethodCodeObjectId(project, function);
+                List<String> allIds = PythonAdditionalIdsProvider.getAdditionalIdsInclusive(codeObjectId, false);
+                if (allIds.contains(methodId) && (function.canNavigateToSource())) {
+                    Log.log(LOGGER::debug, "navigating to method {}", function);
+                    found = true;
+                    function.navigate(true);
+                    break;
+                }
+            }
+        }
+
+        if (!found) {
+            navigateToMethodFallback(methodId);
+        }
+    }
+
+    private void navigateToMethodFallback(String methodId) {
+
+        PsiFile psiFile = DocumentInfoService.getInstance(project).findPsiFileByMethodId(methodId);
         if (psiFile instanceof PyFile pyFile) {
 
-            PyFunction pyFunction = PythonLanguageUtils.findMethodInFile(project, pyFile, codeObjectId);
+            PyFunction pyFunction = PythonLanguageUtils.findMethodInFile(project, pyFile, methodId);
 
             if (pyFunction != null && pyFunction.canNavigateToSource()) {
+                Log.log(LOGGER::debug, "navigating to method {}", pyFunction);
                 pyFunction.navigate(true);
             } else if (pyFunction != null) {
                 //it's a fallback. sometimes the psiMethod.canNavigateToSource is false and really the
@@ -155,12 +175,13 @@ public class PythonLanguageService implements LanguageService {
                 // navigation to source using the editor does work in these circumstances.
                 var selectedEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
                 if (selectedEditor != null) {
+                    Log.log(LOGGER::debug, "moving caret to offset of function {}", pyFunction);
                     selectedEditor.getCaretModel().moveToOffset(pyFunction.getTextOffset());
                 } else {
-                    Log.log(LOGGER::error, "could not find selected text editor, can't navigate to method  {}", codeObjectId);
+                    Log.log(LOGGER::debug, "could not find selected text editor, can't navigate to method  {}", methodId);
                 }
             } else {
-                Log.log(LOGGER::error, "could not navigate to method {}, can't find PsiMethod in file {}", codeObjectId, psiFile.getVirtualFile());
+                Log.log(LOGGER::debug, "could not navigate to method {}, can't find PsiMethod in file {}", methodId, psiFile.getVirtualFile());
             }
         }
     }
@@ -172,7 +193,7 @@ public class PythonLanguageService implements LanguageService {
     }
 
     @Override
-    public Map<String, String> findWorkspaceUrisForCodeObjectIds(List<String> codeObjectIds) {
+    public Map<String, String> findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(List<String> codeObjectIds) {
 
         var workspaceUris = new HashMap<String, String>();
 
@@ -182,6 +203,8 @@ public class PythonLanguageService implements LanguageService {
 
             var functions = PyFunctionNameIndex.find(functionName, project, GlobalSearchScope.projectScope(project));
 
+            //PyFunctionNameIndex may find many functions, we want only one, so if we found it break the loop
+            // assuming that our createPythonMethodCodeObjectId returns a unique id
             for (PyFunction function : functions) {
                 if (function.isValid()) {
                     PsiFile psiFile = function.getContainingFile();
@@ -191,6 +214,39 @@ public class PythonLanguageService implements LanguageService {
                         if (allIds.contains(methodId)) {
                             String url = PsiUtils.psiFileToUri(psiFile);
                             workspaceUris.put(codeObjectId, url);
+                            break;
+                        }
+                    }
+                }
+            }
+        });
+
+        return workspaceUris;
+    }
+
+    @Override
+    public Map<String, Pair<String, Integer>> findWorkspaceUrisForMethodCodeObjectIds(List<String> methodCodeObjectIds) {
+
+        Map<String, Pair<String, Integer>> workspaceUris = new HashMap<>();
+
+        methodCodeObjectIds.forEach(methodId -> {
+
+            var functionName = PythonLanguageUtils.extractFunctionNameFromCodeObjectId(methodId);
+
+            var functions = PyFunctionNameIndex.find(functionName, project, GlobalSearchScope.projectScope(project));
+
+            //PyFunctionNameIndex may find many functions, we want only one, so if we found it break the loop.
+            // assuming that our createPythonMethodCodeObjectId returns a unique id
+            for (PyFunction function : functions) {
+                if (function.isValid()) {
+                    PsiFile psiFile = function.getContainingFile();
+                    if (PythonLanguageUtils.isProjectFile(project, psiFile)) {
+                        var codeObjectId = PythonLanguageUtils.createPythonMethodCodeObjectId(project, function);
+                        List<String> allIds = PythonAdditionalIdsProvider.getAdditionalIdsInclusive(codeObjectId, false);
+                        if (allIds.contains(methodId)) {
+                            String url = PsiUtils.psiFileToUri(psiFile);
+                            workspaceUris.put(methodId, new Pair<>(url, function.getTextOffset()));
+                            break;
                         }
                     }
                 }
@@ -230,10 +286,13 @@ public class PythonLanguageService implements LanguageService {
 
     @Override
     public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile) {
+        Log.log(LOGGER::debug, "got buildDocumentInfo request for {}", psiFile);
         if (psiFile instanceof PyFile pyFile) {
             return PythonCodeObjectsDiscovery.buildDocumentInfo(project, pyFile);
+        }else {
+            Log.log(LOGGER::debug, "psi file is noy python, returning empty DocumentInfo for {}", psiFile);
+            return new DocumentInfo(PsiUtils.psiFileToUri(psiFile), new HashMap<>());
         }
-        return new DocumentInfo(PsiUtils.psiFileToUri(psiFile), new HashMap<>());
     }
 
     @Override

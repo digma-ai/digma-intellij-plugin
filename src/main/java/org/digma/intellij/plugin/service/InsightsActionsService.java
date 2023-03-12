@@ -50,7 +50,7 @@ public class InsightsActionsService {
     }
 
     public void openWorkspaceFileForSpan(@NotNull String workspaceUri, int offset) {
-        editorService.openSpanWorkspaceFileInEditor(workspaceUri, offset);
+        editorService.openWorkspaceFileInEditor(workspaceUri, offset);
     }
 
 }

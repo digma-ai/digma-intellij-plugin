@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.psi;
 import com.intellij.lang.Language;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.log.Log;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -17,13 +16,10 @@ public class LanguageServiceLocator {
 
     private final Project project;
 
-    private final DocumentInfoService documentInfoService;
-
     private final Cache cache = new Cache();
 
     public LanguageServiceLocator(Project project) {
         this.project = project;
-        documentInfoService = project.getService(DocumentInfoService.class);
     }
 
     public static LanguageServiceLocator getInstance(Project project){
@@ -31,7 +27,6 @@ public class LanguageServiceLocator {
     }
 
 
-    @SuppressWarnings("unchecked")
     @NotNull
     public LanguageService locate(@Nullable Language language) {
 
@@ -46,14 +41,15 @@ public class LanguageServiceLocator {
         for (SupportedLanguages value : SupportedLanguages.values()) {
 
             try {
+                @SuppressWarnings("unchecked")
                 Class<? extends LanguageService> clazz = (Class<? extends LanguageService>) Class.forName(value.getLanguageServiceClassName());
                 LanguageService languageService = project.getService(clazz);
-                if (languageService.isServiceFor(language)) {
+                if (languageService != null && languageService.isServiceFor(language)) {
                     cache.put(language, languageService);
                     return languageService;
                 }
 
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 //catch Throwable because there may be errors.
                 //ignore: some classes will fail to load , for example the CSharpLanguageService
                 //will fail to load if it's not rider because it depends on rider classes.

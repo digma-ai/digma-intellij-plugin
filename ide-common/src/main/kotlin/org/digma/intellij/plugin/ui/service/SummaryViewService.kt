@@ -15,6 +15,7 @@ import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.summary.SummariesProvider
 import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
+import org.digma.intellij.plugin.ui.needToShowDurationChange
 import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 

@@ -34,10 +34,10 @@ class JavaUtils {
             adjusted = adjusted.replace("////", "/")
             adjusted = adjusted.replace("///", "/")
             adjusted = adjusted.replace("//", "/")
-            if (adjusted.startsWith("/")) {
-                return adjusted
+            return if (adjusted.startsWith("/")) {
+                adjusted
             } else {
-                return "/$adjusted"
+                "/$adjusted"
             }
         }
     }

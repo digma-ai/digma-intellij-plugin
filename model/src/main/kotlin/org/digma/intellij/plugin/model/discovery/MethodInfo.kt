@@ -20,9 +20,9 @@ data class MethodInfo(
         Note about id:
         a method has a code object id, its language dependent. and usually this id is used to get insights from
         the backend and to match a method to insights when the cursor moves between methods.
-        in java, C# only this one id is necessary.
+        in java and C# only this one id is necessary.
         But in python we need to use few patterns for the id. so a method has a main id, but when sending insights request
-        we need to send multiple patters that are based on the main id. and when matching method is when the cursor moves
+        we need to send multiple patters that are based on the main id. and when matching method id when the cursor moves
         between methods we need to match to multiple patterns.
         So we have an AdditionalIdsProvider , the default for java and C# does nothing and returns an empty list.
         But PythonAdditionalIdsProvider returns multiple ids.

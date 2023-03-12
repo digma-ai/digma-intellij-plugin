@@ -100,10 +100,10 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
                 virtualFile?.let {
                     val psiFile = PsiManager.getInstance(project).findFile(virtualFile)
                     psiFile?.let {
-                        var languageService = LanguageServiceLocator.getInstance(project).locate(psiFile.language)
+                        val languageService = LanguageServiceLocator.getInstance(project).locate(psiFile.language)
                         if (languageService.isRelevant(psiFile)) {
                             val documentInfo = languageService.buildDocumentInfo(psiFile, selectedEditor)
-                            documentInfo?.let {
+                            documentInfo.let {
                                 documentInfoService.addCodeObjects(psiFile, it)
                             }
                         }
@@ -122,10 +122,10 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
                         virtualFile?.let {
                             val psiFile = PsiManager.getInstance(project).findFile(virtualFile)
                             psiFile?.let {
-                                var languageService =
+                                val languageService =
                                     LanguageServiceLocator.getInstance(project).locate(psiFile.language)
                                 if (languageService.isRelevant(psiFile)) {
-                                    var offset = selectedTextEditor.logicalPositionToOffset(selectedTextEditor.caretModel.logicalPosition)
+                                    val offset = selectedTextEditor.logicalPositionToOffset(selectedTextEditor.caretModel.logicalPosition)
                                     val methodUnderCaret =
                                         detectMethodUnderCaret(psiFile,selectedTextEditor,offset)
                                     CaretContextService.getInstance(project).contextChanged(methodUnderCaret)
@@ -222,7 +222,7 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
     }
 
 
-    fun findWorkspaceUrisForCodeObjectIds(codeObjectIds: MutableList<String>): Map<String, String> {
+    fun findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(codeObjectIds: MutableList<String>): Map<String, String> {
 
         Log.log(logger::debug,"Got request to findWorkspaceUrisForCodeObjectIds {}",codeObjectIds)
 
@@ -230,17 +230,39 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
 
         val workspaceUriPairs =
             if (ApplicationManager.getApplication().isDispatchThread){
-                model.getWorkspaceUris.callSynchronously(codeObjectIds,model.protocol)
+                model.getWorkspaceUrisForErrorStackTrace.callSynchronously(codeObjectIds,model.protocol)
             }else{
                 runBlockingCancellable {
-                    model.getWorkspaceUris.startSuspending(codeObjectIds)
+                    model.getWorkspaceUrisForErrorStackTrace.startSuspending(codeObjectIds)
                 }
             }
 
         workspaceUriPairs?.forEach {
             result[it.codeObjectId] = it.workspaceUri
         }
-        Log.log(logger::debug,"Found WorkspaceUris {}",result)
+        Log.log(logger::debug,"Found WorkspaceUrisForErrorStackTrace {}",result)
+        return result
+    }
+
+
+    fun findWorkspaceUrisForMethodCodeObjectIds(methodCodeObjectIds: MutableList<String>): MutableMap<String, Pair<String, Int>> {
+        Log.log(logger::debug,"Got request to findWorkspaceUrisForMethodCodeObjectIds {}",methodCodeObjectIds)
+
+        val result = HashMap<String, Pair<String, Int>>()
+
+        val workspaceUriTuples =
+            if (ApplicationManager.getApplication().isDispatchThread){
+                model.getWorkspaceUrisForMethodCodeObjectIds.callSynchronously(methodCodeObjectIds,model.protocol)
+            }else{
+                runBlockingCancellable {
+                    model.getWorkspaceUrisForMethodCodeObjectIds.startSuspending(methodCodeObjectIds)
+                }
+            }
+
+        workspaceUriTuples?.forEach {
+            result[it.codeObjectId] = Pair(it.workspaceUri, it.offset)
+        }
+        Log.log(logger::debug,"Found WorkspaceUrisForMethodCodeObjectIds {}",result)
         return result
     }
 
@@ -304,10 +326,10 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
     }
 
 
-    fun navigateToMethod(codeObjectId: String) {
+    fun navigateToMethod(methodId: String) {
         model.protocol.scheduler.invokeOrQueue {
             //the message needs to be unique. if a message is the same as the previous one the event is not fired
-            val message = "{${Random.nextInt()}}$codeObjectId"
+            val message = "{${Random.nextInt()}}$methodId"
             model.navigateToMethod.fire(message)
         }
     }
@@ -366,6 +388,7 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
         containingMethodId = containingMethod,
         containingFileUri = normalizeFileUri(containingFileUri, project)
     )
+
 
 
 

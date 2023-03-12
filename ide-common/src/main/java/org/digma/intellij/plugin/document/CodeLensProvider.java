@@ -18,30 +18,9 @@ public class CodeLensProvider {
     private static final Logger LOGGER = Logger.getInstance(CodeLensProvider.class);
 
     private final DocumentInfoService documentInfoService;
-    private final Project project;
 
     public CodeLensProvider(Project project) {
-        this.project = project;
         documentInfoService = project.getService(DocumentInfoService.class);
-    }
-
-
-    /*
-    JavaCodeLensService may call for code lens before the document info is available.
-    it may happen because the daemon may run before we process the editor selectionChange event.
-    in that case we don't want to report an error. the daemon will run again after we process
-     the editor selectionChange event and then document info will be available
-     */
-    public List<CodeLens> provideCodeLensNoError(@NotNull PsiFile psiFile) {
-        Log.log(LOGGER::debug, "Got request for code lens for {}", psiFile.getVirtualFile());
-
-        DocumentInfoContainer documentInfo = documentInfoService.getDocumentInfo(psiFile);
-        if (documentInfo == null) {
-            Log.log(LOGGER::debug, "Can't find DocumentInfo for {}", psiFile.getVirtualFile());
-            return new ArrayList<>();
-        }
-
-        return buildCodeLens(documentInfo, false);
     }
 
 
@@ -55,12 +34,14 @@ public class CodeLensProvider {
             return new ArrayList<>();
         }
 
-        return buildCodeLens(documentInfo, false);
+        var codeLens = buildCodeLens(documentInfo, false);
+        Log.log(LOGGER::debug, "Got code lens for {}, {}", psiFile.getVirtualFile(),codeLens);
+        return codeLens;
     }
 
     private List<CodeLens> buildCodeLens(
             @NotNull DocumentInfoContainer documentInfo,
-            @NotNull boolean environmentPrefix
+            boolean environmentPrefix
     ) {
         List<CodeLens> codeLensList = new ArrayList<>();
 

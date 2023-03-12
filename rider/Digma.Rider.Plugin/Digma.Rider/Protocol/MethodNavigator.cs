@@ -6,6 +6,7 @@ using JetBrains.ProjectModel;
 using JetBrains.ReSharper.Feature.Services.CSharp.CompleteStatement;
 using JetBrains.ReSharper.Feature.Services.Navigation;
 using JetBrains.ReSharper.Psi;
+using JetBrains.ReSharper.Psi.Caches;
 using JetBrains.ReSharper.Psi.CSharp;
 using JetBrains.ReSharper.Psi.CSharp.Tree;
 using JetBrains.ReSharper.Psi.Files;
@@ -24,23 +25,70 @@ namespace Digma.Rider.Protocol
     {
         private readonly ITextControlManager _textControlManager;
         private readonly DocumentManager _documentManager;
+        private readonly IPsiServices _psiServices;
         private readonly ILogger _logger;
 
         public MethodNavigator(ITextControlManager textControlManager,
             DocumentManager documentManager,
+            IPsiServices psiServices,
             ILogger logger)
         {
             _textControlManager = textControlManager;
             _documentManager = documentManager;
+            _psiServices = psiServices;
             _logger = logger;
         }
 
-        public void Navigate(string message)
+        public void Navigate(string methodId)
         {
-            //the message needs to be unique. the frontend adds a unique string prefix to the method id 
-            var methodId = message.SubstringAfter("}");
-           
             Log(_logger, "Got navigate request to {0}",methodId);
+
+            var found = false;
+            using (CompilationContextCookie.GetExplicitUniversalContextIfNotSet())
+            {
+
+                var className = methodId.SubstringBefore("$_$");
+                var methodName = methodId.SubstringAfter("$_$").SubstringBefore("(");
+                var symbolScope = _psiServices.Symbols.GetSymbolScope(LibrarySymbolScope.FULL, false);
+                var elements = symbolScope.GetTypeElementsByCLRName(className);
+                using (ReadLockCookie.Create())
+                {
+                    foreach (var typeElement in elements)
+                    {
+                        if (typeElement.IsClassLike())
+                        {
+                            foreach (var typeElementMethod in typeElement.Methods)
+                            {
+                                if (typeElementMethod.ShortName.Equals(methodName))
+                                {
+                                    if (typeElementMethod.GetSingleDeclaration() != null &&
+                                        typeElementMethod.GetSingleDeclaration()!.DeclaredElement != null)
+                                    {
+                                        Log(_logger, "Navigating to method {0}",typeElementMethod);
+                                        typeElementMethod.GetSingleDeclaration()!.DeclaredElement!.Navigate(true);
+                                        found = true;
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!found)
+            {
+                Log(_logger, "Could not navigate to {0}, trying fallback",methodId);
+                NavigateFallback(methodId);
+            }
+
+        }
+        
+        
+        private void NavigateFallback(string methodId)
+        {
+           
+            Log(_logger, "Got NavigateFallback request to {0}",methodId);
 
             var textControl = _textControlManager.LastFocusedTextControlPerClient.ForCurrentClient();
             if (textControl == null )
@@ -102,9 +150,6 @@ namespace Digma.Rider.Protocol
                     declaration.DeclaredElement?.Navigate(true);
                 }
             }
-
-            // textControl.Caret.MoveTo(textControl.Coords.FromDocOffset(declaration.GetNavigationRange().StartOffset.Offset),
-            //     CaretVisualPlacement.DirectionalUp);
         }
 
 
@@ -149,7 +194,7 @@ namespace Digma.Rider.Protocol
                 ProcessingIsFinished = false;
             }
 
-            public bool ProcessingIsFinished { get; set; }
+            public bool ProcessingIsFinished { get; private set; }
 
             public ICSharpFunctionDeclaration FoundFunctionDeclaration { get; private set; }
 

@@ -6,7 +6,7 @@ public enum SupportedLanguages {
     PYTHON("org.digma.intellij.plugin.pycharm.psi.python.PythonLanguageService"),
     JAVA("org.digma.intellij.plugin.idea.psi.java.JavaLanguageService");
 
-    private String languageServiceClassName;
+    private final String languageServiceClassName;
 
     SupportedLanguages(String languageServiceClassName) {
         this.languageServiceClassName = languageServiceClassName;

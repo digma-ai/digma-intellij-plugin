@@ -18,9 +18,9 @@ import org.digma.intellij.plugin.document.DocumentInfoChanged
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import java.awt.event.MouseEvent
-import java.util.ArrayList
 import java.util.concurrent.ConcurrentHashMap
 import java.util.stream.Collectors
+
 
 class JavaCodeLensService(private val project: Project): Disposable {
 
@@ -75,7 +75,7 @@ class JavaCodeLensService(private val project: Project): Disposable {
             val codeLensContainer = codeLensCache.computeIfAbsent(PsiUtils.psiFileToUri(psiFile)) { CodeLensContainer() }
             codeLensContainer.codeLensList.clear()
 
-            val codeLenses = codeLensProvider.provideCodeLensNoError(psiFile)
+            val codeLenses = codeLensProvider.provideCodeLens(psiFile)
             val methods: Map<String, Pair<TextRange,PsiMethod>> =
                 findMethodsByCodeObjectIds(psiFile, codeLenses.stream().map { it.codeObjectId }.collect(Collectors.toSet()))
 
@@ -113,6 +113,7 @@ class JavaCodeLensService(private val project: Project): Disposable {
                 if (element is PsiMethod) {
                     val codeObjectId = JavaLanguageUtils.createJavaMethodCodeObjectId(element)
                     if (ids.contains(codeObjectId)) {
+                        @Suppress("UnstableApiUsage")
                         val textRange = InlayHintsUtils.getTextRangeWithoutLeadingCommentsAndWhitespaces(element)
                         methods[codeObjectId] = Pair(textRange,element)
                     }
@@ -125,6 +126,7 @@ class JavaCodeLensService(private val project: Project): Disposable {
 
 
 
+    @Suppress("UNUSED_PARAMETER")
     fun environmentChanged(newEnv: String) {
         codeLensCache.clear()
         ApplicationManager.getApplication().runReadAction {
@@ -144,9 +146,8 @@ class JavaCodeLensService(private val project: Project): Disposable {
         private val project: Project
     ) : (MouseEvent?, Editor) -> Unit {
         private val elementPointer = SmartPointerManager.createPointer(element)
-        private val toolWindowShower = project.getService(ToolWindowShower::class.java)
         override fun invoke(event: MouseEvent?, editor: Editor) {
-            toolWindowShower.showToolWindow()
+            ToolWindowShower.getInstance(project).showToolWindow()
             elementPointer.element?.let {
                 if (elementPointer.element?.canNavigateToSource() == true) {
                     elementPointer.element?.navigate(true)

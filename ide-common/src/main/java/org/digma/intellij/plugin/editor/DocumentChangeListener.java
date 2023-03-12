@@ -136,11 +136,7 @@ class DocumentChangeListener {
         LanguageService languageService = LanguageServiceLocator.getInstance(project).locate(psiFile.getLanguage());
 
         //todo: try to improve.
-        // we call buildDocumentInfo for every document change event. and call
-        // documentInfoService.addCodeObjects that will actually reload all insights
-        // and update the current context.
-        // maybe we can improve it and only do that if something relevant was changed
-        // by checking the code block that was changed.
+        // see : https://github.com/digma-ai/digma-intellij-plugin/issues/343
         DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFile);
         Log.log(LOGGER::debug, "got DocumentInfo for {}", psiFile.getVirtualFile());
 

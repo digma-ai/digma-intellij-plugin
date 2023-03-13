@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.idea.psi.java;
 
+import com.intellij.codeInsight.codeVision.CodeVisionEntry;
 import com.intellij.lang.Language;
 import com.intellij.lang.java.JavaLanguage;
 import com.intellij.openapi.application.ReadAction;
@@ -10,6 +11,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.java.stubs.index.JavaFullClassNameIndex;
@@ -361,5 +363,15 @@ public class JavaLanguageService implements LanguageService {
     public void refreshMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int offset) {
         MethodUnderCaret methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedEditor, offset);
         CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
+    }
+
+    @Override
+    public boolean isCodeVisionSupported() {
+        return true;
+    }
+
+    @Override
+    public @NotNull List<Pair<TextRange, CodeVisionEntry>> getCodeLens(@NotNull PsiFile psiFile) {
+        return JavaCodeLensService.getInstance(project).getCodeLens(psiFile);
     }
 }

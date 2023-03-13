@@ -1,8 +1,8 @@
-package org.digma.intellij.plugin.idea.psi.java.codeLensProviders
+package org.digma.intellij.plugin.codelens.providers
 
-import org.digma.intellij.plugin.idea.psi.java.JavaCodeVisionProvider
+import org.digma.intellij.plugin.codelens.DigmaCodeVisionProviderBase
 
-class CodeLensMethodInsightsProvider2: JavaCodeVisionProvider() {
+class CodeLensMethodInsightsProvider2: DigmaCodeVisionProviderBase() {
     companion object {
         const val ID = "DigmaGenericProvider2"
     }

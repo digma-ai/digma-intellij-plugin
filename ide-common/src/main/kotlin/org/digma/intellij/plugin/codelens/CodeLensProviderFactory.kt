@@ -1,8 +1,8 @@
-package org.digma.intellij.plugin.idea.psi.java
+package org.digma.intellij.plugin.codelens
 
-import org.digma.intellij.plugin.idea.psi.java.codeLensProviders.*
+import org.digma.intellij.plugin.codelens.providers.*
 
-class JavaCodeLensProviderFactory {
+class CodeLensProviderFactory {
     private val genericProvidersList: MutableList<String> = ArrayList()
 
     init {

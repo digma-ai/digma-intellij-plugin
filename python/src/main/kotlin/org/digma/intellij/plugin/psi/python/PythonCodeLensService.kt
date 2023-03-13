@@ -1,34 +1,46 @@
 package org.digma.intellij.plugin.psi.python
 
-import com.intellij.openapi.Disposable
+import com.intellij.codeInsight.hints.InlayHintsUtils
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.TextRange
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
+import com.intellij.psi.SyntaxTraverser
+import com.jetbrains.python.psi.PyFunction
+import org.digma.intellij.plugin.codelens.AbstractCodeLensService
 
-class PythonCodeLensService(private val project: Project): Disposable {
+class PythonCodeLensService(project: Project): AbstractCodeLensService(project) {
 
-    companion object {
+     companion object {
         @JvmStatic
         fun getInstance(project: Project): PythonCodeLensService {
             return project.getService(PythonCodeLensService::class.java)
         }
     }
+    override fun findMethodsByCodeObjectIds(psiFile: PsiFile, ids: Set<String>): Map<String, Pair<TextRange, PsiElement>> {
 
-    override fun dispose() {
+        if (ids.isEmpty()){
+            return emptyMap()
+        }
 
-    }
+        return ReadAction.compute<Map<String, Pair<TextRange,PsiElement>>,Exception> {
+            val methods = mutableMapOf<String, Pair<TextRange,PsiElement>>()
+            val traverser = SyntaxTraverser.psiTraverser(psiFile)
+            for (element in traverser) {
+                if (element is PyFunction) {
+                    val codeObjectId = PythonLanguageUtils.createPythonMethodCodeObjectId(psiFile.project, element)
+                    val methodIds = PythonAdditionalIdsProvider.getAdditionalIdsInclusive(codeObjectId,false)
+                    if (ids.intersect(methodIds.toSet()).any()) {
+                        @Suppress("UnstableApiUsage")
+                        val textRange = InlayHintsUtils.getTextRangeWithoutLeadingCommentsAndWhitespaces(element)
+                        methods[codeObjectId] = Pair(textRange, element)
+                    }
+                }
+            }
 
-
-    fun environmentChanged(newEnv: String) {
-//        codeLensCache.clear()
-//        ApplicationManager.getApplication().runReadAction {
-//            val fileEditor = FileEditorManager.getInstance(project).selectedEditor
-//            if (fileEditor != null) {
-//                val file = fileEditor.file
-//                val psiFile = PsiManager.getInstance(project).findFile(file)
-//                if (psiFile != null) {
-//                    DaemonCodeAnalyzer.getInstance(project).restart(psiFile)
-//                }
-//            }
-//        }
+            return@compute methods
+        }
     }
 
 }

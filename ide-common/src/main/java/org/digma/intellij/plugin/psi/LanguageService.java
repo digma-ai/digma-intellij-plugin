@@ -1,11 +1,13 @@
 package org.digma.intellij.plugin.psi;
 
+import com.intellij.codeInsight.codeVision.CodeVisionEntry;
 import com.intellij.lang.Language;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import kotlin.Pair;
@@ -59,8 +61,9 @@ public interface LanguageService extends Disposable {
                     Log.log(LOGGER::debug, "calling ensureStartupOnEDT for {}", languageService);
                     languageService.ensureStartupOnEDT(project);
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 Log.debugWithException(LOGGER,e,"exception in ensureStartupOnEDTForAll {}",e.getMessage());
+                //catch Throwable because there may be errors.
                 //ignore: some classes will fail to load , for example the CSharpLanguageService
                 //will fail to load if it's not rider because it depends on rider classes.
                 //JavaLanguageService will fail to load on rider, etc.
@@ -99,8 +102,9 @@ public interface LanguageService extends Disposable {
                     Log.log(LOGGER::debug,"calling runWhenSmart for {}",languageService);
                     languageService.runWhenSmart(task);
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 Log.debugWithException(LOGGER,e,"exception in runWhenSmartForAll {}",e.getMessage());
+                //catch Throwable because there may be errors.
                 //ignore: some classes will fail to load , for example the CSharpLanguageService
                 //will fail to load if it's not rider because it depends on rider classes.
                 //JavaLanguageService will fail to load on rider, etc.
@@ -199,6 +203,7 @@ public interface LanguageService extends Disposable {
                     return language;
                 }
             } catch (Throwable e) {
+                //catch Throwable because there may be errors.
                 //ignore: some classes will fail to load , for example the CSharpLanguageService
                 //will fail to load if it's not rider because it depends on rider classes.
                 //JavaLanguageService will fail to load on rider, etc.
@@ -267,4 +272,7 @@ public interface LanguageService extends Disposable {
 
     void refreshMethodUnderCaret(@NotNull Project project,@NotNull  PsiFile psiFile, @Nullable Editor selectedEditor, int offset);
 
+    boolean isCodeVisionSupported();
+
+    @NotNull List<Pair<TextRange, CodeVisionEntry>> getCodeLens(@NotNull PsiFile psiFile);
 }

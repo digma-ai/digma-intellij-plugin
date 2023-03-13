@@ -66,6 +66,7 @@ data class MethodInfo(
         return Stream.concat(spansStream, endpointsStream).collect(Collectors.toList())
     }
 
+    //Don't use idWithType, use allIdsWithType or allIdsWithoutType
     override fun idWithType(): String {
         return "method:$id"
     }

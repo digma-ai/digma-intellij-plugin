@@ -5,15 +5,10 @@
     <extensions defaultExtensionNs="com.intellij">
 
         <postStartupActivity implementation="org.digma.intellij.plugin.rider.ServicesStarter" id="rider-startup"/>
-
         <projectService serviceImplementation="org.digma.intellij.plugin.rider.protocol.LanguageServiceHost"/>
-
         <projectService serviceImplementation="org.digma.intellij.plugin.rider.protocol.CodeLensHost"/>
-
         <projectService serviceImplementation="org.digma.intellij.plugin.rider.protocol.ShowToolWindowHost"/>
-
         <projectService serviceImplementation="org.digma.intellij.plugin.rider.psi.csharp.CSharpLanguageService"/>
-
 
     </extensions>
 

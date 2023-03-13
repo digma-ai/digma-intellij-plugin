@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.rider.psi.csharp;
 
+import com.intellij.codeInsight.codeVision.CodeVisionEntry;
 import com.intellij.lang.Language;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
@@ -7,6 +8,7 @@ import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
@@ -223,5 +225,15 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     public void refreshMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int offset) {
         MethodUnderCaret methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedEditor, offset);
         CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
+    }
+
+    @Override
+    public boolean isCodeVisionSupported() {
+        return false;
+    }
+
+    @Override
+    public @NotNull List<Pair<TextRange, CodeVisionEntry>> getCodeLens(@NotNull PsiFile psiFile) {
+        throw new UnsupportedOperationException("should not be called for CSharpLanguageService");
     }
 }

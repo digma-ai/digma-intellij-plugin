@@ -18,7 +18,6 @@ import com.intellij.psi.*
 import com.intellij.util.RunnableCallable
 import com.intellij.util.concurrency.NonUrgentExecutor
 import com.intellij.util.messages.MessageBusConnection
-import org.apache.commons.collections4.map.LRUMap
 import org.digma.intellij.plugin.document.CodeLensProvider
 import org.digma.intellij.plugin.document.DocumentInfoChanged
 import org.digma.intellij.plugin.log.Log
@@ -27,9 +26,7 @@ import org.digma.intellij.plugin.ui.ToolWindowShower
 import java.awt.event.MouseEvent
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.locks.ReentrantLock
 import java.util.stream.Collectors
-import kotlin.concurrent.withLock
 
 
 abstract class AbstractCodeLensService(private val project: Project): Disposable {
@@ -44,7 +41,11 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
 
     private val codeLensProviderFactory: CodeLensProviderFactory = project.getService(CodeLensProviderFactory::class.java)
 
-    private val psiLocks = Collections.synchronizedMap(LRUMap<String, ReentrantLock>(30))
+
+    private class CodeLensContainer{
+        val codeLensList :MutableList<Pair<TextRange, CodeVisionEntry>> = mutableListOf()
+    }
+
 
     override fun dispose() {
         documentInfoChangedConnection.dispose()
@@ -59,11 +60,8 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
 
         documentInfoChangedConnection.subscribe(DocumentInfoChanged.DOCUMENT_INFO_CHANGED_TOPIC,DocumentInfoChanged { psiFile: PsiFile ->
             val psiUri = PsiUtils.psiFileToUri(psiFile)
-            val lock = psiLocks.computeIfAbsent(psiUri) { ReentrantLock() }
             Log.log(logger::debug, "got documentInfoChanged, restarting DaemonCodeAnalyzer for {}", psiUri)
-            lock.withLock {
-                codeLensCache.remove(PsiUtils.psiFileToUri(psiFile))
-            }
+            codeLensCache.remove(PsiUtils.psiFileToUri(psiFile))
             ReadAction.nonBlocking(RunnableCallable{
                 restartFile(psiFile)
             }).inSmartMode(project).submit(NonUrgentExecutor.getInstance())
@@ -72,9 +70,6 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
 
 
 
-    private class CodeLensContainer{
-        val codeLensList :MutableList<Pair<TextRange, CodeVisionEntry>> = mutableListOf()
-    }
 
     fun getCodeLens(psiFile: PsiFile): List<Pair<TextRange, CodeVisionEntry>> {
 
@@ -82,25 +77,19 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
 
         val psiUri = PsiUtils.psiFileToUri(psiFile)
 
-        //first try to get codeLensContainer without locking, if exists , return it,
-        // if some thread calls remove after that, we don't care, it will be re-populated.
-        val codeLensContainer = codeLensCache[psiUri]
-        if (codeLensContainer != null){
+        var codeLensContainer = codeLensCache[psiUri]
+        //testing also isNotEmpty to prevent cache misses,the cache may be empty but maybe the document info
+        // has changed and the cache was not notified, if It's still empty buildCodeLens will be fast anyway.
+        if (codeLensContainer != null && codeLensContainer.codeLensList.isNotEmpty()){
             Log.log(logger::debug,"returning code lens from cache for {}",psiFile.virtualFile)
             return codeLensContainer.codeLensList
         }
 
-        val lock = psiLocks.computeIfAbsent(psiUri) { ReentrantLock() }
-        lock.withLock {
-            if (!codeLensCache.containsKey(psiUri)) {
-                Log.log(logger::debug,"building code lens for {}",psiFile.virtualFile)
-                @Suppress("NAME_SHADOWING")
-                val codeLensContainer = buildCodeLens(psiFile)
-                codeLensCache[psiUri] = codeLensContainer
-            }
-
-            return codeLensCache[psiUri]!!.codeLensList
-        }
+        Log.log(logger::debug,"building code lens for {}",psiFile.virtualFile)
+        codeLensContainer = buildCodeLens(psiFile)
+        Log.log(logger::debug,"adding code lens to cache for {}",psiFile.virtualFile)
+        codeLensCache[psiUri] = codeLensContainer
+        return codeLensContainer.codeLensList
     }
 
 
@@ -151,10 +140,10 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
         ReadAction.nonBlocking(RunnableCallable{
             Log.log(logger::debug,"restarting DaemonCodeAnalyzer for all files ")
             codeLensCache.clear()
-            FileEditorManager.getInstance(project).openFiles.forEach {
-                val psiFile = PsiManager.getInstance(project).findFile(it)
-                psiFile?.let { psiFile ->
-                    restartFile(psiFile)
+            FileEditorManager.getInstance(project).openFiles.forEach {  virtualFile ->
+                val psiFile = PsiManager.getInstance(project).findFile(virtualFile)
+                psiFile?.let {
+                    restartFile(it)
                 }
             }
         }).inSmartMode(project).submit(NonUrgentExecutor.getInstance())
@@ -183,7 +172,7 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
                     it.navigate(true)
                 } else {
                     //it's a fallback. sometimes the psiMethod.canNavigateToSource is false and really the
-                    //navigation doesn't work. i can't say why. usually it happens when indexing is not ready yet,
+                    //navigation doesn't work. I can't say why. usually it happens when indexing is not ready yet,
                     // and the user opens files, selects tabs or moves the caret. then when indexing is finished
                     // we have the list of methods but then psiMethod.navigate doesn't work.
                     // navigation to source using the editor does work in these circumstances.

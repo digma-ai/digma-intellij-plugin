@@ -147,9 +147,9 @@
         <listener
                 class="org.digma.intellij.plugin.debugger.DebuggerListener"
                 topic="com.intellij.xdebugger.XDebuggerManagerListener"/>
-<!--        <listener-->
-<!--                class="org.digma.intellij.plugin.editor.GeneralFileEditorListener"-->
-<!--                topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>-->
+        <listener
+                class="org.digma.intellij.plugin.editor.GeneralFileEditorListener"
+                topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
     </projectListeners>
 
 

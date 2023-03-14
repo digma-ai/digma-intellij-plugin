@@ -137,7 +137,8 @@ class DocumentChangeListener {
 
         //todo: try to improve.
         // see : https://github.com/digma-ai/digma-intellij-plugin/issues/343
-        DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFile);
+        var editor =  FileEditorManager.getInstance(project).getSelectedEditor(psiFile.getVirtualFile());
+        DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFile,editor);
         Log.log(LOGGER::debug, "got DocumentInfo for {}", psiFile.getVirtualFile());
 
         documentInfoService.addCodeObjects(psiFile, documentInfo);

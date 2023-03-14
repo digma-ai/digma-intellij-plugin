@@ -1,4 +1,3 @@
-using System;
 using Digma.Rider.Discovery;
 using Digma.Rider.Util;
 using JetBrains.Annotations;
@@ -51,7 +50,7 @@ namespace Digma.Rider.Protocol
             // before LastFocusedTextControl is updated and it may still contain the previous text control.
             //This method will detect by finding the IPsiSourceFile and the offset sent from the frontend.
             
-            Log(_logger, "Detecting method under caret by psi file and offset for {0}",methodUnderCaretRequest.PsiId.PsiUri);
+            Log(_logger, "Detecting method under caret by psi file and offset for {0}",methodUnderCaretRequest.PsiId);
             return DetectByPsiFile(methodUnderCaretRequest);
             
             //an attempt to detect from the LastFocusedTextControlPerClient proves to be too early 
@@ -134,7 +133,7 @@ namespace Digma.Rider.Protocol
         [CanBeNull]
         private RiderMethodUnderCaret DetectByPsiFile(MethodUnderCaretRequest methodUnderCaretRequest)
         {
-            Log(_logger, "Trying to detect method under caret for by psi file {0}", methodUnderCaretRequest.PsiId.PsiUri);
+            Log(_logger, "Trying to detect method under caret for by psi file {0}", methodUnderCaretRequest.PsiId);
             RiderMethodUnderCaret methodUnderCaret = null;
             using (ReadLockCookie.Create())
             {
@@ -143,7 +142,7 @@ namespace Digma.Rider.Protocol
                 {
                     psiSourceFile.GetPsiServices().Files.DoOnCommitedPsi(_lifetime, () =>
                     {
-                        Log(_logger, "Found IPsiSourceFile for '{0}'", methodUnderCaretRequest.PsiId.PsiUri);
+                        Log(_logger, "Found IPsiSourceFile for {0}", methodUnderCaretRequest.PsiId);
                         var functionDeclaration = GetFunctionUnderCaret(psiSourceFile, methodUnderCaretRequest);
                         methodUnderCaret = GetMethodUnderCaretFromFunction(methodUnderCaretRequest, functionDeclaration,
                             psiSourceFile);
@@ -151,10 +150,18 @@ namespace Digma.Rider.Protocol
                 }
                 else
                 {
-                    Log(_logger, "Could not find IPsiSourceFile for '{0}'.", methodUnderCaretRequest.PsiId.PsiUri);
+                    Log(_logger, "Could not find IPsiSourceFile for {0}.", methodUnderCaretRequest.PsiId);
                 }
             }
 
+            if (methodUnderCaret == null)
+            {
+                Log(_logger, "Found RiderMethodUnderCaret for {0}, '{1}'", methodUnderCaretRequest.PsiId,methodUnderCaret);
+            }
+            else
+            {
+                Log(_logger, "Could not find RiderMethodUnderCaret for {0}", methodUnderCaretRequest.PsiId);
+            }
             return methodUnderCaret;
         }
 
@@ -168,7 +175,7 @@ namespace Digma.Rider.Protocol
             if (functionDeclaration != null)
             {
                 Log(_logger, "Found function under caret: {0} for {1}", functionDeclaration,
-                    methodUnderCaretRequest.PsiId.PsiUri);
+                    methodUnderCaretRequest.PsiId);
                 var methodFqn = Identities.ComputeFqn(functionDeclaration);
                 var methodName = PsiUtils.GetDeclaredName(functionDeclaration);
                 var className = PsiUtils.GetClassName(functionDeclaration);
@@ -182,7 +189,7 @@ namespace Digma.Rider.Protocol
             }
             else
             {
-                Log(_logger, "No function under caret for {0}", methodUnderCaretRequest.PsiId.PsiUri);
+                Log(_logger, "No function under caret for {0}", methodUnderCaretRequest.PsiId);
                 var fileUri = Identities.ComputeFileUri(psiSourceFile);
                 var isSupportedFile = PsiUtils.IsPsiSourceFileApplicable(psiSourceFile);
                 foundMethodUnderCaret = new RiderMethodUnderCaret("", "", "", fileUri, isSupportedFile);

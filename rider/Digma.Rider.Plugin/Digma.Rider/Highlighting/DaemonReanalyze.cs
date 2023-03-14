@@ -31,12 +31,12 @@ namespace Digma.Rider.Highlighting
                         var psiSourceFile = PsiUtils.FindPsiSourceFile(new PsiFileID(null,psiUri),solution);
                         if (psiSourceFile != null && psiSourceFile.IsValid())
                         {
-                            Log(logger, "Found PsiSourceFile in local map for {0}, Calling Invalidate(psiSourceFile.Document) {0}",psiUri, psiSourceFile);
+                            Log(logger, "Found PsiSourceFile for {0}, Calling Invalidate(psiSourceFile.Document) {1}",psiUri, psiSourceFile);
                             daemon.Invalidate(psiSourceFile.Document);
                         }
                         else
                         {
-                            Log(logger, "Could not find PsiSourceFile {0} in local map. calling Calling Invalidate()", psiUri);
+                            Log(logger, "Could not find PsiSourceFile {0}. calling Calling Invalidate() for all files.", psiUri);
                             daemon.Invalidate();
                         }
                     }

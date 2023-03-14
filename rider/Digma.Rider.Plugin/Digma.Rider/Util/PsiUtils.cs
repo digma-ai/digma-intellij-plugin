@@ -13,11 +13,14 @@ using JetBrains.ReSharper.Psi.CSharp.Tree;
 using JetBrains.ReSharper.Psi.Files;
 using JetBrains.RiderTutorials.Utils;
 using JetBrains.Util;
+using static Digma.Rider.Logging.Logger;
 
 namespace Digma.Rider.Util
 {
     public static class PsiUtils
     {
+        
+        private static readonly ILogger Logger = JetBrains.Util.Logging.Logger.GetLogger(typeof (PsiUtils));
 
         public static string GetNamespace(ICSharpFunctionDeclaration functionDeclaration)
         {
@@ -86,6 +89,7 @@ namespace Digma.Rider.Util
         [CanBeNull]
         public static IPsiSourceFile FindPsiSourceFile([NotNull] PsiFileID psiFileId, [NotNull] ISolution solution)
         {
+            Log(Logger, "Got request to find IPsiSourceFile for {0}",psiFileId);
             IPsiSourceFile psiSourceFile = null;
             Lifetime.Using(lifetime =>
             {
@@ -99,31 +103,51 @@ namespace Digma.Rider.Util
                 
             });
 
+            if (psiSourceFile != null)
+            {
+                Log(Logger, "Found IPsiSourceFile for {0}, {1}",psiFileId,psiSourceFile);
+            }
+            else
+            {
+                Log(Logger, "Could not find IPsiSourceFile for {0}",psiFileId);
+            }
             return psiSourceFile;
         }
 
         [CanBeNull]
         private static IPsiSourceFile FindPsiSourceFileByUri(PsiFileID psiFileId, ISolution solution)
         {
+            Log(Logger, "Trying to find IPsiSourceFile by uri for {0}",psiFileId);
             var uri = new Uri(psiFileId.PsiUri);
             if (uri.IsFile)
             {
+                Log(Logger, "Uri for {0} is file, trying to find it by absolute path {1}",psiFileId,uri.AbsolutePath);
                 var path = VirtualFileSystemPath.CreateByCanonicalPath(uri.AbsolutePath, InteractionContext.Local);
                 var projectFile = solution.FindProjectItemsByLocation(path).OfType<IProjectFile>().TryGetSingleItem();
                 var file = projectFile?.GetPrimaryPsiFile(file => file.PrimaryPsiLanguage.Equals(CSharpLanguage.Instance));
                 return file?.GetSourceFile();
             }
+            else
+            {
+                Log(Logger, "Uri for {0} is NOT file, uri {1} is {2}",psiFileId,uri,uri.GetType());
+            }
 
+            Log(Logger, "Could not find IPsiSourceFile by uri for {0}",psiFileId);
             return null;
         }
 
         [CanBeNull]
         private static IPsiSourceFile FindPsiSourceFileByProjectModelId(PsiFileID psiFileId, ISolution solution)
         {
+            Log(Logger, "Trying to find IPsiSourceFile with ProjectModelId for {0}",psiFileId);
             Debug.Assert(psiFileId.ProjectModelId != null, "psiFileId.ProjectModelId != null");
             var projectFile = solution.GetComponent<ProjectModelViewHost>().GetItemById<IProjectFile>((int)psiFileId.ProjectModelId);
             var file = projectFile?.GetPrimaryPsiFile(file => file.PrimaryPsiLanguage.Equals(CSharpLanguage.Instance));
             var psiSourceFile = file?.GetSourceFile();
+            if (psiSourceFile == null)
+            {
+                Log(Logger, "Could not find IPsiSourceFile with ProjectModelId for {0}, fallback to find by uri",psiFileId);  
+            }
             //if not found fall back to find by uri
             return psiSourceFile ?? FindPsiSourceFileByUri(psiFileId, solution);
         }

@@ -76,7 +76,7 @@ namespace Digma.Rider.Protocol
         [NotNull]
         private RdTask<RiderDocumentInfo> GetDocumentInfoHandler(Lifetime _, PsiFileID psiFileId)
         {
-            Log(_logger, "Got request for GetDocumentInfo for '{0}'", psiFileId.PsiUri);
+            Log(_logger, "Got request for GetDocumentInfo for {0}", psiFileId);
             
             var result = new RdTask<RiderDocumentInfo>();
 
@@ -89,7 +89,7 @@ namespace Digma.Rider.Protocol
                     {
                         psiSourceFile.GetPsiServices().Files.DoOnCommitedPsi(_lifetime, () =>
                         {
-                            Log(_logger, "Found IPsiSourceFile for '{0}'", psiFileId.PsiUri);
+                            Log(_logger, "Found IPsiSourceFile for {0}", psiFileId);
                             document = _codeObjectsCache.Map.TryGetValue(psiSourceFile);
 
                             if (document is { IsComplete: false })
@@ -100,17 +100,19 @@ namespace Digma.Rider.Protocol
                     }
                     else
                     {
-                        Log(_logger, "Could not find IPsiSourceFile in GetDocumentInfo for '{0}', Aborting request",
-                            psiFileId.PsiUri);
+                        Log(_logger, "Could not find IPsiSourceFile in GetDocumentInfo for {0}, Aborting request",
+                            psiFileId);
                     }
             }
 
             if (document == null)
             {
+                Log(_logger, "Could not get RiderDocumentInfo for {0}, returning null", psiFileId);
                 result.Set((RiderDocumentInfo)null);    
             }
             else
             {
+                Log(_logger, "Got RiderDocumentInfo for {0}, '{1}'", psiFileId,document);
                 result.Set(document);
             }
             
@@ -122,7 +124,7 @@ namespace Digma.Rider.Protocol
         private RdTask<RiderMethodUnderCaret> DetectMethodUnderCaret(Lifetime _,
             MethodUnderCaretRequest methodUnderCaretRequest)
         {
-            Log(_logger, "Got request for GetDocumentInfo for '{0}'", methodUnderCaretRequest.PsiId.PsiUri);
+            Log(_logger, "Got request for GetDocumentInfo for {0}", methodUnderCaretRequest.PsiId);
             var result = new RdTask<RiderMethodUnderCaret>();
             RiderMethodUnderCaret methodUnderCaret;
             using (ReadLockCookie.Create())

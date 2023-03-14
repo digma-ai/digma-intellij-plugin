@@ -20,23 +20,23 @@ namespace Digma.Rider.Highlighting
         {
             var codeObjectsModel = solution.GetProtocolSolution().GetCodeObjectsModel();
 
-            codeObjectsModel.Reanalyze.Advise(lifetime, psiUri =>
+            codeObjectsModel.Reanalyze.Advise(lifetime, psiFileId =>
             {
-                Log(logger, "Reanalyze called for {0}", psiUri);
+                Log(logger, "Reanalyze called for {0}", psiFileId);
                 shellRdDispatcher.Queue(() =>
                 {
                     using (ReadLockCookie.Create())
                     {
                         //if PsiSourceFile not found fallback to Invalidate() for all daemons 
-                        var psiSourceFile = PsiUtils.FindPsiSourceFile(new PsiFileID(null,psiUri),solution);
+                        var psiSourceFile = PsiUtils.FindPsiSourceFile(psiFileId,solution);
                         if (psiSourceFile != null && psiSourceFile.IsValid())
                         {
-                            Log(logger, "Found PsiSourceFile in local map for {0}, Calling Invalidate(psiSourceFile.Document) {0}",psiUri, psiSourceFile);
+                            Log(logger, "Found PsiSourceFile for {0}, Calling Invalidate(psiSourceFile.Document) {1}",psiFileId, psiSourceFile);
                             daemon.Invalidate(psiSourceFile.Document);
                         }
                         else
                         {
-                            Log(logger, "Could not find PsiSourceFile {0} in local map. calling Calling Invalidate()", psiUri);
+                            Log(logger, "Could not find PsiSourceFile {0}. calling Calling Invalidate() for all files.", psiFileId);
                             daemon.Invalidate();
                         }
                     }

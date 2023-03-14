@@ -10,14 +10,10 @@ import com.jetbrains.rider.model.nova.ide.SolutionModel
 object LanguageServiceModel : Ext(SolutionModel.Solution) {
 
 
-    //psi in back end can be found projectModelId if we have it, preferable. or by its uri
-    private val PsiFileID = structdef {
-        field("projectModelId", PredefinedType.int.nullable)
-        field("psiUri", PredefinedType.string)
-    }
+
 
     private val MethodUnderCaretRequest = structdef {
-        field("psiId", PsiFileID)
+        field("psiId", CodeObjectsModel.PsiFileID)
         field("offset", PredefinedType.int)
     }
 
@@ -37,7 +33,7 @@ object LanguageServiceModel : Ext(SolutionModel.Solution) {
 
         call(
             "getDocumentInfo",
-            PsiFileID, CodeObjectsModel.RiderDocumentInfo.nullable
+            CodeObjectsModel.PsiFileID, CodeObjectsModel.RiderDocumentInfo.nullable
         ).async
 
 

@@ -125,6 +125,10 @@ namespace Digma.Rider.Util
                 var path = VirtualFileSystemPath.CreateByCanonicalPath(uri.AbsolutePath, InteractionContext.Local);
                 var projectFile = solution.FindProjectItemsByLocation(path).OfType<IProjectFile>().TryGetSingleItem();
                 var file = projectFile?.GetPrimaryPsiFile(file => file.PrimaryPsiLanguage.Equals(CSharpLanguage.Instance));
+                if (file != null)
+                {
+                    Log(Logger, "Found File '{0}' by uri for {1}",file,psiFileId);
+                }
                 return file?.GetSourceFile();
             }
             else
@@ -143,6 +147,10 @@ namespace Digma.Rider.Util
             Debug.Assert(psiFileId.ProjectModelId != null, "psiFileId.ProjectModelId != null");
             var projectFile = solution.GetComponent<ProjectModelViewHost>().GetItemById<IProjectFile>((int)psiFileId.ProjectModelId);
             var file = projectFile?.GetPrimaryPsiFile(file => file.PrimaryPsiLanguage.Equals(CSharpLanguage.Instance));
+            if (file != null)
+            {
+                Log(Logger, "Found File '{0}' by ProjectModelId for {1}",file,psiFileId);
+            }
             var psiSourceFile = file?.GetSourceFile();
             if (psiSourceFile == null)
             {

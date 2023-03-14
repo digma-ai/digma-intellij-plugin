@@ -9,6 +9,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.editor.event.DocumentListener;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
@@ -90,19 +91,22 @@ class DocumentChangeListener {
                     return;
                 }
 
+                //must be executed on EDT
+                PsiFile changedPsiFile = PsiDocumentManager.getInstance(project).getPsiFile(event.getDocument());
+                if (changedPsiFile == null){
+                    Log.log(LOGGER::debug, "changedPsiFile is null for {}", event.getDocument());
+                    return;
+                }
+                var fileEditor =  FileEditorManager.getInstance(project).getSelectedEditor(changedPsiFile.getVirtualFile());
+
                 documentChangeAlarm.cancelAllRequests();
                 documentChangeAlarm.addRequest(() -> ReadAction.nonBlocking(new RunnableCallable(() -> {
                     try {
                         Log.log(LOGGER::debug, "got documentChanged alarm for {}", event.getDocument());
                         //this code is always executed in smart mode because the document listener is installed only in smart mode
-                        PsiFile changedPsiFile = PsiDocumentManager.getInstance(project).getPsiFile(event.getDocument());
-                        //probably should never happen
-                        if (changedPsiFile == null) {
-                            Log.log(LOGGER::debug, "changedPsiFile is null for {}", event.getDocument());
-                            return;
-                        }
+
                         Log.log(LOGGER::debug, "Processing documentChanged event for {}", changedPsiFile.getVirtualFile());
-                        processDocumentChanged(changedPsiFile);
+                        processDocumentChanged(changedPsiFile,fileEditor);
                     } catch (Exception e) {
                         Log.debugWithException(LOGGER, e, "exception while processing documentChanged event for file: {}, {}", event.getDocument(), e.getMessage());
                     }
@@ -127,7 +131,7 @@ class DocumentChangeListener {
     }
 
 
-    private void processDocumentChanged(@NotNull PsiFile psiFile) {
+    private void processDocumentChanged(@NotNull PsiFile psiFile, FileEditor fileEditor) {
 
         if (project.isDisposed()) {
             return;
@@ -137,8 +141,7 @@ class DocumentChangeListener {
 
         //todo: try to improve.
         // see : https://github.com/digma-ai/digma-intellij-plugin/issues/343
-        var editor =  FileEditorManager.getInstance(project).getSelectedEditor(psiFile.getVirtualFile());
-        DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFile,editor);
+        DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFile,fileEditor);
         Log.log(LOGGER::debug, "got DocumentInfo for {}", psiFile.getVirtualFile());
 
         documentInfoService.addCodeObjects(psiFile, documentInfo);

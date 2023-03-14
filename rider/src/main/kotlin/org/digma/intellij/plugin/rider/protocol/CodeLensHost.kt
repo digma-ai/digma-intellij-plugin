@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent
 import com.jetbrains.rider.projectView.solution
+import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.document.CodeLensProvider
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.log.Log
@@ -52,22 +53,27 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
 
 
     fun installCodeLens(@NotNull psiFile: PsiFile, @NotNull codeLenses: List<CodeLens>) {
-        org.digma.intellij.plugin.common.EDT.ensureEDT{
+        EDT.ensureEDT{
             installCodeLensOnEDT(psiFile,codeLenses)
         }
     }
 
     private fun installCodeLensOnEDT(@NotNull psiFile: PsiFile, @NotNull codeLenses: List<CodeLens>) {
 
+        Log.log(logger::debug, "got request to installCodeLensOnEDT for {}: {}", psiFile.virtualFile, codeLenses)
+
         //install code lens for a document. this code will also take care of clearing old
         //code lens of this document, necessary in environment change event.
 
-        Log.log(logger::debug, "Installing code lens for {}: {}", psiFile.virtualFile, codeLenses)
+        //always try to find ProjectModelId for the psi file, it is the preferred way to find a psi file in resharper
+        val projectModelId: Int? = tryGetProjectModelId(psiFile,project)
+        val psiUri = PsiUtils.psiFileToUri(psiFile)
+        val psiId = PsiFileID(projectModelId, psiUri)
+
+        Log.log(logger::debug, "Installing code lens for {}", psiId)
 
         val model: CodeObjectsModel = project.solution.codeObjectsModel
         model.protocol.scheduler.invokeOrQueue {
-
-            val psiUri = PsiUtils.psiFileToUri(psiFile)
 
             //first remove all code lens entries belonging to this document.
             //the map is not keyed by document, so we have to search
@@ -90,8 +96,8 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
                 model.codeLens[codeLens.codeObjectId]?.lens?.add(codeLens.toRiderCodeLensInfo(psiUri))
             })
 
-            Log.log(logger::debug, "Calling reanalyze for {}", psiUri)
-            model.reanalyze.fire(psiUri)
+            Log.log(logger::debug, "Calling reanalyze for {}", psiId)
+            model.reanalyze.fire(psiId)
         }
     }
 

@@ -25,4 +25,8 @@ public class EDT {
         // but this should be caught in development time.
         Log.log(LOGGER::error,message);
     }
+
+    public static boolean isEdt() {
+        return ApplicationManager.getApplication().isDispatchThread();
+    }
 }

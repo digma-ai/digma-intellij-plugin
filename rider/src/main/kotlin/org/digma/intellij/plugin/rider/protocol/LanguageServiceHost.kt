@@ -7,7 +7,6 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorManager
-import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.progress.runBlockingCancellable
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
@@ -17,11 +16,11 @@ import com.intellij.util.concurrency.NonUrgentExecutor
 import com.jetbrains.rd.util.reactive.whenTrue
 import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent
 import com.jetbrains.rdclient.util.idea.callSynchronously
-import com.jetbrains.rider.editors.getProjectModelId
 import com.jetbrains.rider.projectView.SolutionLifecycleHost
 import com.jetbrains.rider.projectView.SolutionStartupService
 import com.jetbrains.rider.projectView.solution
 import org.apache.commons.collections4.map.LRUMap
+import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
@@ -96,7 +95,7 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
             documentInfoService.clearAll()
             val selectedEditor = FileEditorManager.getInstance(project).selectedEditor
             selectedEditor?.let {
-                val virtualFile = it.file
+                val virtualFile = selectedEditor.file
                 virtualFile?.let {
                     val psiFile = PsiManager.getInstance(project).findFile(virtualFile)
                     psiFile?.let {
@@ -104,7 +103,7 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
                         if (languageService.isRelevant(psiFile)) {
                             val documentInfo = languageService.buildDocumentInfo(psiFile, selectedEditor)
                             documentInfo.let {
-                                documentInfoService.addCodeObjects(psiFile, it)
+                                documentInfoService.addCodeObjects(psiFile, documentInfo)
                             }
                         }
                     }
@@ -153,25 +152,28 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
 
 
 
+    //avoid using this method and always use overloaded with FileEditor because we need the ProjectModelId
     @Suppress("unused")
     fun getDocumentInfo(psiFile: PsiFile): DocumentInfo? {
         Log.log(logger::debug, "Got request for getDocumentInfo for PsiFile {}", psiFile.virtualFile)
-        return getDocumentInfo(psiFile, null)
+        var editor: FileEditor? = null
+        if (EDT.isEdt()){
+            editor = FileEditorManager.getInstance(project).getSelectedEditor(psiFile.virtualFile)
+        }
+        return getDocumentInfo(psiFile, editor)
     }
 
 
     //this method should never be called on EDT
-    fun getDocumentInfo(psiFile: PsiFile, newEditor: FileEditor?): DocumentInfo? {
+    fun getDocumentInfo(psiFile: PsiFile, fileEditor: FileEditor?): DocumentInfo? {
 
-        Log.log(logger::debug,"Got request for getDocumentInfo for PsiFile {}, selectedEditor {}, solution loaded {}",psiFile.virtualFile,newEditor,solutionLoaded)
+        Log.log(logger::debug,"Got request for getDocumentInfo for PsiFile {}, selectedEditor {}, solution loaded {}",psiFile.virtualFile,fileEditor,solutionLoaded)
 
-        var projectModelId: Int? = null
-        if (newEditor != null && newEditor is TextEditor) {
-            projectModelId = newEditor.editor.getProjectModelId()
-        }
+        val projectModelId: Int? = tryGetProjectModelId(psiFile,fileEditor,project)
         val psiUri = PsiUtils.psiFileToUri(psiFile)
         val psiId = PsiFileID(projectModelId, psiUri)
 
+        Log.log(logger::debug,"Sending request to getDocumentInfo with {}",psiId)
 
         val riderDocumentInfo: RiderDocumentInfo? =
             runBlockingCancellable {
@@ -188,19 +190,21 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
     }
 
 
+    //always try to send the editor to this method, or execute it on EDT, if the editor is null this method will try
+    // to find selected editor only if executed on EDT.
     fun detectMethodUnderCaret(psiFile: PsiFile, selectedEditor: Editor?, caretOffset: Int): MethodUnderCaret {
 
         Log.log(logger::debug,"Got request to detectMethodUnderCaret for PsiFile {}, selectedEditor {}, solution loaded {}",psiFile.virtualFile,selectedEditor,solutionLoaded)
 
-
+        //always try to find ProjectModelId.
         //projectModelId is the preferred way to find a IPsiSourceFile in rider backend. the backend will try to find
         // by projectModelId and will fall back to find by uri.
-        var projectModelId: Int? = null
-        if (selectedEditor != null) {
-            projectModelId = selectedEditor.getProjectModelId()
-        }
+        val projectModelId: Int? = tryGetProjectModelId(psiFile,selectedEditor,project)
+
         val psiUri = PsiUtils.psiFileToUri(psiFile)
         val psiId = PsiFileID(projectModelId, psiUri)
+
+        Log.log(logger::debug,"Sending request to detectMethodUnderCaret with {}",psiId)
 
         val riderMethodUnderCaret: RiderMethodUnderCaret? =
             if (ApplicationManager.getApplication().isDispatchThread){
@@ -220,6 +224,7 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
 
         return riderMethodUnderCaret?.toMethodUnderCaret() ?: MethodUnderCaret("", "", "", "")
     }
+
 
 
     fun findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(codeObjectIds: MutableList<String>): Map<String, String> {
@@ -299,6 +304,8 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
         // use the cache only after backend is fully loaded,there may be a result that was stored in
         // the cache before the backend was loaded, and it may be wrong because there was no reference
         // resolving in resharper.
+        // if there is a value in the cache that was stored before the solution fully loaded it will be cleared, this class
+        // listens to solution load event and clears the csharpMethodCache.
         return if (SolutionLifecycleHost.getInstance(project).isBackendLoaded.value &&
             csharpMethodCache.containsKey(methodCodeObjectId)) {
             Log.log(logger::debug,"Returning isCSharpMethod for {} from local cache {}",methodCodeObjectId,csharpMethodCache[methodCodeObjectId])

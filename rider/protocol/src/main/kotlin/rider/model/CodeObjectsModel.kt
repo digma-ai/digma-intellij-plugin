@@ -10,6 +10,12 @@ import com.jetbrains.rider.model.nova.ide.SolutionModel
 object CodeObjectsModel : Ext(SolutionModel.Solution) {
 
 
+    //psi in back end can be found projectModelId if we have it, preferable. or by its uri
+    val PsiFileID = structdef {
+        field("projectModelId", PredefinedType.int.nullable)
+        field("psiUri", PredefinedType.string)
+    }
+
     val RiderDocumentInfo = structdef {
         field("isComplete", PredefinedType.bool)
         field("fileUri", PredefinedType.string)
@@ -60,7 +66,7 @@ object CodeObjectsModel : Ext(SolutionModel.Solution) {
     init {
         setting(CSharp50Generator.Namespace, "Digma.Rider.Protocol")
         setting(Kotlin11Generator.Namespace, "org.digma.intellij.plugin.rider.protocol")
-        source("reanalyze", PredefinedType.string)
+        source("reanalyze", PsiFileID)
         map("codeLens", PredefinedType.string,
             classdef("lensPerObjectId") {
                 list("lens", RiderCodeLensInfo)

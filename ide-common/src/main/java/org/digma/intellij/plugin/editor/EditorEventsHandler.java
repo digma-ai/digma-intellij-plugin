@@ -249,6 +249,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
 
 
+    //must be executed on EDT
     private void updateContextAfterFileClosed(FileEditor selectedEditor, @NotNull FileEditorManager fileEditorManager) {
         Log.log(LOGGER::debug, "updateContextAfterFileClosed called");
         contextChangeAlarmAfterFileClosed.cancelAllRequests();

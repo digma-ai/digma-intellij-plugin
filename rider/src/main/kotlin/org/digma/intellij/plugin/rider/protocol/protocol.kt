@@ -1,7 +1,14 @@
 @file:JvmName("Protocol")
 package org.digma.intellij.plugin.rider.protocol
 
+import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.fileEditor.FileEditor
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiFile
+import com.jetbrains.rider.editors.getProjectModelId
+import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.psi.PsiFileNotFountException
 import org.digma.intellij.plugin.psi.PsiUtils
 
@@ -50,5 +57,41 @@ fun normalizeFileUri(fileUri: String,project:Project): String {
         PsiUtils.psiFileToUri(psiFile)
     }catch (e:PsiFileNotFountException){
         fileUri
+    }
+}
+
+
+
+
+
+fun tryGetProjectModelId(psiFile: PsiFile, fileEditor: FileEditor?,project: Project):Int?{
+    return if (fileEditor != null && fileEditor is TextEditor) {
+        fileEditor.editor.getProjectModelId()
+    }else{
+        tryGetProjectModelId(psiFile,project)
+    }
+}
+
+
+fun tryGetProjectModelId(psiFile: PsiFile, editor: Editor?,project: Project): Int? {
+    @Suppress("IfThenToElvis")
+    return if (editor != null) {
+        editor.getProjectModelId()
+    }else{
+        tryGetProjectModelId(psiFile,project)
+    }
+}
+
+
+fun tryGetProjectModelId(psiFile: PsiFile,project: Project): Int? {
+    return if (EDT.isEdt()) {
+        val fileEditor = FileEditorManager.getInstance(project).getSelectedEditor(psiFile.virtualFile)
+        if (fileEditor != null && fileEditor is TextEditor) {
+            fileEditor.editor.getProjectModelId()
+        }else{
+            null
+        }
+    }else{
+        null
     }
 }

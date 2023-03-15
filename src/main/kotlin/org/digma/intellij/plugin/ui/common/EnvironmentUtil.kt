@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.common
 
 const val LOCAL_ENV = "LOCAL"
+const val SUFFIX_OF_LOCAL = "[LOCAL]"
 
 fun getSortedEnvironments(
         envsList: List<String>,
@@ -31,7 +32,7 @@ fun getSortedEnvironments(
     return builtEnvs
 }
 fun isEnvironmentLocal(environment: String): Boolean {
-    return environment.endsWith("[$LOCAL_ENV]", true)
+    return environment.endsWith(SUFFIX_OF_LOCAL, true)
 }
 
 fun isLocalEnvironmentMine(environment: String, localHostname: String): Boolean {

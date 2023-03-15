@@ -27,18 +27,32 @@ import org.digma.intellij.plugin.analytics.EnvironmentChanged;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.CommonUtils;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.rest.recentactivity.*;
+import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityEntrySpanForTracePayload;
+import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityEntrySpanPayload;
+import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityGoToSpanRequest;
+import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityGoToTraceRequest;
+import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResponseEntry;
+import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.service.EditorService;
+import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
-import java.util.*;
+import java.util.Map;
 
-import static org.digma.intellij.plugin.toolwindow.ToolWindowUtil.*;
+import static org.digma.intellij.plugin.toolwindow.ToolWindowUtil.RECENT_ACTIVITY_GET_DATA;
+import static org.digma.intellij.plugin.toolwindow.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_SPAN;
+import static org.digma.intellij.plugin.toolwindow.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_TRACE;
+import static org.digma.intellij.plugin.toolwindow.ToolWindowUtil.RECENT_ACTIVITY_SET_DATA;
+import static org.digma.intellij.plugin.toolwindow.ToolWindowUtil.REQUEST_MESSAGE_TYPE;
 import static org.digma.intellij.plugin.ui.common.EnvironmentUtilKt.LOCAL_ENV;
+import static org.digma.intellij.plugin.ui.common.EnvironmentUtilKt.SUFFIX_OF_LOCAL;
 import static org.digma.intellij.plugin.ui.common.EnvironmentUtilKt.getSortedEnvironments;
 import static org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt.openJaegerFromRecentActivity;
 
@@ -157,6 +171,11 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
                 LanguageService languageService = LanguageService.findLanguageServiceByMethodCodeObjectId(project, methodCodeObjectId);
                 Map<String, Pair<String, Integer>> workspaceUrisForMethodCodeObjectIds = languageService.findWorkspaceUrisForMethodCodeObjectIds(Collections.singletonList(methodCodeObjectId));
                 if (workspaceUrisForMethodCodeObjectIds.containsKey(methodCodeObjectId)) {
+                    // modifying the selected environment
+                    EnvironmentsSupplier environmentsSupplier = analyticsService.getEnvironment();
+                    String actualEnvName = adjustBackEnvNameIfNeeded(payload.getEnvironment());
+                    environmentsSupplier.setCurrent(actualEnvName);
+
                     Pair<String, Integer> result = workspaceUrisForMethodCodeObjectIds.get(methodCodeObjectId);
                     editorService.openWorkspaceFileInEditor(result.getFirst(), result.getSecond());
                     ToolWindow digmaLeftToolWindow = ToolWindowManager.getInstance(project).getToolWindow(DIGMA_LEFT_TOOL_WINDOW_NAME);
@@ -225,7 +244,14 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
     }
 
     private String getAdjustedEnvName(String environment) {
-        return environment.toUpperCase().endsWith("["+ LOCAL_ENV + "]") ? LOCAL_ENV: environment;
+        return environment.toUpperCase().endsWith(SUFFIX_OF_LOCAL) ? LOCAL_ENV: environment;
+    }
+
+    private String adjustBackEnvNameIfNeeded(String environment) {
+        if (environment.equalsIgnoreCase(LOCAL_ENV)) {
+            return (localHostname + SUFFIX_OF_LOCAL).toUpperCase();
+        }
+        return environment;
     }
 
     private <T> T parseJsonToObject(String jsonString, Class<T> jcefMessageRequestClass) {

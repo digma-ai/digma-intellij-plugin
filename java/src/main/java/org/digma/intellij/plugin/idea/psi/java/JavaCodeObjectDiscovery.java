@@ -37,6 +37,16 @@ public class JavaCodeObjectDiscovery {
             if (documentInfo == null){
                 documentInfo = buildDocumentInfoImpl(project,psiJavaFile);
             }
+            /*
+            why do we need a separate enrichDocumentInfo stage?
+            when building the DocumentInfo index there is no guarantee that reference resolving will work, it depends on the
+            state of intellij index. so span discovery may not work during indexing.
+            JavaDocumentInfoIndex does not even try to run span discovery, it only does method discovery.
+            so when we take the DocumentInfo from the index we assume that it doesn't contain span discovery and endpoint discovery.
+            enrichDocumentInfo will run span discovery and endpoint discovery and add it to the methods of DocumentInfo.
+            buildDocumentInfo is always called in smart mode and so span discovery and endpoint discovery should work.
+
+             */
             enrichDocumentInfo(project,documentInfo,psiJavaFile,micronautFramework,jaxrsFramework,grpcFramework);
             return documentInfo;
 
@@ -96,13 +106,18 @@ public class JavaCodeObjectDiscovery {
     }
 
 
-    static void enrichDocumentInfo(Project project, @NotNull DocumentInfo documentInfo, @NotNull PsiFile psiFile, @NotNull MicronautFramework micronautFramework, @NotNull JaxrsFramework jaxrsFramework, @NotNull GrpcFramework grpcFramework) {
-         /*
-        This method is called after loading the DocumentInfo from DocumentInfoIndex, and it is meant to
-        enrich the DocumentInfo with discovery that can not be done in file based index or dumb mode.
-        for example span discovery does not work in dumb mode, it must be done in smart mode.
-        This method must be called in smart mode inside s ReadAction or UI thread.
+    private static void enrichDocumentInfo(Project project, @NotNull DocumentInfo documentInfo, @NotNull PsiFile psiFile, @NotNull MicronautFramework micronautFramework, @NotNull JaxrsFramework jaxrsFramework, @NotNull GrpcFramework grpcFramework) {
+        /*
+        need to make sure that spans and endpoints are cleared here.
+        why?
+        This DocumentInfo may have already been enriched before,when it was enriched it may already contain span and endpoints.
+        todo: not sure its necessary to remove because it seems that the index returns a copy, so when adding span and endpoint discovery
+         it is not saved to the index and the next time we take a DocumentInfo from the index it will not contain span and endpoint discovery.
          */
+        documentInfo.getMethods().forEach((id, methodInfo) -> {
+            methodInfo.getSpans().clear();
+            methodInfo.getEndpoints().clear();
+        });
 
         spanDiscovery(project, psiFile, documentInfo);
         endpointDiscovery(psiFile, documentInfo, micronautFramework, jaxrsFramework, grpcFramework);

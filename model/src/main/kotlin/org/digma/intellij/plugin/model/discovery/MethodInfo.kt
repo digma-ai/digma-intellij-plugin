@@ -13,7 +13,7 @@ data class MethodInfo(
     val spans: List<SpanInfo>,
 ) : CodeObjectInfo {
 
-    private val endpoints: MutableList<EndpointInfo> = mutableListOf()
+    val endpoints: MutableList<EndpointInfo> = mutableListOf()
 
 
     /*

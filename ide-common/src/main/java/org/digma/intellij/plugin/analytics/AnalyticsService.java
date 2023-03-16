@@ -11,10 +11,18 @@ import org.digma.intellij.plugin.common.CommonUtils;
 import org.digma.intellij.plugin.common.usageStatusChange.UsageStatusChangeListener;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
+import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
-import org.digma.intellij.plugin.model.rest.insights.*;
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
+import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightRequest;
+import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
+import org.digma.intellij.plugin.model.rest.insights.InsightOfMethodsRequest;
+import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
+import org.digma.intellij.plugin.model.rest.insights.MethodWithCodeObjects;
+import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
@@ -24,6 +32,7 @@ import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import javax.net.ssl.SSLException;
 import java.io.Closeable;
@@ -37,7 +46,13 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.net.http.HttpTimeoutException;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
@@ -178,6 +193,22 @@ public class AnalyticsService implements Disposable {
         var env = getCurrentEnvironment();
         Log.log(LOGGER::debug, "Requesting insights for next codeObjectId {} and next environment {}", codeObjectIds, env);
         return executeCatching(() -> analyticsProviderProxy.getErrorsOfCodeObject(env, codeObjectIds));
+    }
+
+    public CodeObjectInsightsStatusResponse getCodeObjectInsightStatus(List<MethodInfo> methodInfos) throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        var methodWithCodeObjects = methodInfos.stream()
+                .map(it -> toMethodWithCodeObjects(it))
+                .toList();
+        return executeCatching(() -> analyticsProviderProxy.getCodeObjectInsightStatus(new InsightOfMethodsRequest(env, methodWithCodeObjects)));
+    }
+
+    @VisibleForTesting
+    public static MethodWithCodeObjects toMethodWithCodeObjects(MethodInfo methodInfo) {
+        return new MethodWithCodeObjects(methodInfo.idWithType(),
+                methodInfo.getSpans().stream().map(it -> it.idWithType()).toList(),
+                methodInfo.getEndpoints().stream().map(it -> it.idWithType()).toList()
+        );
     }
 
     public void setInsightCustomStartTime(String codeObjectId, InsightType insightType) throws AnalyticsServiceException {

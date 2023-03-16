@@ -9,6 +9,9 @@ import com.intellij.ui.dsl.builder.MutableProperty
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.ui.common.createLoadingInsightsPanel
+import org.digma.intellij.plugin.ui.common.createNoDataYetPanel
+import org.digma.intellij.plugin.ui.common.createPendingInsightsPanel
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.ui.common.noCodeObjectWarningPanel
 import org.digma.intellij.plugin.ui.common.wrapWithNoConnectionWrapper
@@ -16,6 +19,7 @@ import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.insights.InsightsList
 import org.digma.intellij.plugin.ui.list.insights.PreviewList
 import org.digma.intellij.plugin.ui.list.listBackground
+import org.digma.intellij.plugin.ui.model.insights.UiInsightStatus
 import org.digma.intellij.plugin.ui.model.insights.InsightsTabCard
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import org.digma.intellij.plugin.ui.service.InsightsViewService
@@ -27,6 +31,7 @@ import javax.swing.JPanel
 
 
 private const val NO_INFO_CARD_NAME = "NO-INFO"
+private const val LOADING_INSIGHTS_CARD_NAME = "Loading-Insights"
 
 
 private val logger: Logger = Logger.getInstance("org.digma.intellij.plugin.ui.insights.InsightsTab")
@@ -68,6 +73,9 @@ fun insightsPanel(project: Project): DigmaTabPanel {
     previewPanel.isOpaque = false
 
     val noInfoWarningPanel = noCodeObjectWarningPanel(insightsModel)
+    val pendingInsightsPanel = createPendingInsightsPanel()
+    val loadingInsightsPanel = createLoadingInsightsPanel()
+    val noDataYetPanel = createNoDataYetPanel()
 
     val cardLayout = CardLayout()
     val cardsPanel = JPanel(cardLayout)
@@ -76,6 +84,9 @@ fun insightsPanel(project: Project): DigmaTabPanel {
     cardsPanel.add(insightsList, InsightsTabCard.INSIGHTS.name)
     cardsPanel.add(previewPanel, InsightsTabCard.PREVIEW.name)
     cardsPanel.add(noInfoWarningPanel, NO_INFO_CARD_NAME)
+    cardsPanel.add(loadingInsightsPanel, LOADING_INSIGHTS_CARD_NAME)
+    cardsPanel.add(pendingInsightsPanel, UiInsightStatus.InsightPending.name)
+    cardsPanel.add(noDataYetPanel, UiInsightStatus.NoSpanData.name)
     cardLayout.addLayoutComponent(insightsList, InsightsTabCard.INSIGHTS.name)
     cardLayout.addLayoutComponent(previewPanel, InsightsTabCard.PREVIEW.name)
     cardLayout.addLayoutComponent(noInfoWarningPanel, NO_INFO_CARD_NAME)
@@ -100,11 +111,17 @@ fun insightsPanel(project: Project): DigmaTabPanel {
             previewList.getModel().setListData(insightsModel.previewListViewItems)
 
             if (insightsList.getModel().size == 0 && insightsModel.card == InsightsTabCard.INSIGHTS) {
-                cardLayout.show(cardsPanel, NO_INFO_CARD_NAME)
+                val cardName = when (insightsModel.status) {
+                    UiInsightStatus.Unknown -> LOADING_INSIGHTS_CARD_NAME
+                    UiInsightStatus.InsightPending -> UiInsightStatus.InsightPending.name
+                    UiInsightStatus.NoSpanData -> UiInsightStatus.NoSpanData.name
+                    else -> NO_INFO_CARD_NAME
+                }
+                cardLayout.show(cardsPanel, cardName)
             } else if (previewList.getModel().size == 0 && insightsModel.card == InsightsTabCard.PREVIEW) {
                 cardLayout.show(cardsPanel, NO_INFO_CARD_NAME)
             } else {
-                Log.log(logger::debug,project, "Changing insights tab card to ${insightsModel.card.name}")
+                Log.log(logger::debug, project, "Changing insights tab card to ${insightsModel.card.name}")
                 cardLayout.show(cardsPanel, insightsModel.card.name)
             }
 

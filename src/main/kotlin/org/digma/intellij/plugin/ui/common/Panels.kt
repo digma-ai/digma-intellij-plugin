@@ -15,28 +15,72 @@ import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import javax.swing.JLabel
 
-fun noCodeObjectWarningPanel(model: PanelModel): DialogPanel {
 
+private const val NO_DATA_YET_DETAIL_DESCRIPTION = "Trigger actions that call this code object to learn more about its runtime behavior"
+
+fun noCodeObjectWarningPanel(model: PanelModel): DialogPanel {
     return panel {
         row {
             icon(AllIcons.General.BalloonInformation)
-                .horizontalAlign(HorizontalAlign.CENTER)
+                    .horizontalAlign(HorizontalAlign.CENTER)
         }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
         row {
             label(getNoInfoMessage(model)).bind(
-                JLabel::getText, JLabel::setText, MutableProperty(
+                    JLabel::getText, JLabel::setText, MutableProperty(
                     getter = { getNoInfoMessage(model) },
                     setter = {})
             ).bind(
-                JLabel::getToolTipText, JLabel::setToolTipText, MutableProperty(
+                    JLabel::getToolTipText, JLabel::setToolTipText, MutableProperty(
                     getter = { getNoInfoMessage(model) },
                     setter = {})
             )
-                .horizontalAlign(HorizontalAlign.CENTER)
+                    .horizontalAlign(HorizontalAlign.CENTER)
         }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
     }.andTransparent().withBorder(JBUI.Borders.empty())
 }
 
+fun createPendingInsightsPanel(): DialogPanel {
+    return panel {
+        row {
+            icon(Laf.Icons.Common.Mascot64)
+                    .horizontalAlign(HorizontalAlign.CENTER)
+        }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
+        row {
+            label("Processing Insights...")
+                    .horizontalAlign(HorizontalAlign.CENTER)
+        }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
+    }.andTransparent().withBorder(JBUI.Borders.empty())
+}
+
+fun createLoadingInsightsPanel(): DialogPanel {
+    return panel {
+        row {
+            icon(Laf.Icons.Common.Loading)
+                    .horizontalAlign(HorizontalAlign.CENTER)
+        }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
+        row {
+            label("Loading...")
+                    .horizontalAlign(HorizontalAlign.CENTER)
+        }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
+    }.andTransparent().withBorder(JBUI.Borders.empty())
+}
+
+fun createNoDataYetPanel(): DialogPanel {
+    return panel {
+        row {
+            icon(Laf.Icons.Common.NoDataYet)
+                    .horizontalAlign(HorizontalAlign.CENTER)
+        }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.SMALL)
+        row {
+            label("No Data Yet")
+                    .horizontalAlign(HorizontalAlign.CENTER)
+        }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
+        row {
+            label(asHtml(NO_DATA_YET_DETAIL_DESCRIPTION))
+                    .horizontalAlign(HorizontalAlign.CENTER)
+        }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
+    }.andTransparent().withBorder(JBUI.Borders.empty())
+}
 
 private fun getNoInfoMessage(model: PanelModel): String {
     var msg = if (model is InsightsModel) "No insights" else "No errors"

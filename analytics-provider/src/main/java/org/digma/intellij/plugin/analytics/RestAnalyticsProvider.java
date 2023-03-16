@@ -10,8 +10,10 @@ import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
 import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightRequest;
 import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
+import org.digma.intellij.plugin.model.rest.insights.InsightOfMethodsRequest;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
@@ -68,7 +70,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
 
-    public void sendDebuggerEvent(DebuggerEventRequest debuggerEventRequest){
+    public void sendDebuggerEvent(DebuggerEventRequest debuggerEventRequest) {
         execute(() -> client.analyticsProvider.sendDebuggerEvent(debuggerEventRequest));
     }
 
@@ -85,6 +87,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     @Override
     public List<CodeObjectError> getErrorsOfCodeObject(String environment, List<String> codeObjectIds) {
         return execute(() -> client.analyticsProvider.getErrorsOfCodeObject(environment, codeObjectIds));
+    }
+
+    @Override
+    public CodeObjectInsightsStatusResponse getCodeObjectInsightStatus(InsightOfMethodsRequest request) {
+        return execute(() -> client.analyticsProvider.getCodeObjectInsightStatus(request));
     }
 
     @Override
@@ -304,6 +311,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @POST("/CodeAnalytics/insights")
         Call<List<GlobalInsight>> getGlobalInsights(@Body InsightsRequest insightsRequest);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/CodeAnalytics/codeObjects/insight_status")
+        Call<CodeObjectInsightsStatusResponse> getCodeObjectInsightStatus(@Body InsightOfMethodsRequest insightsRequest);
 
         @Headers({
                 "Accept: application/+json",

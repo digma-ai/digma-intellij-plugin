@@ -66,6 +66,10 @@ data class MethodInfo(
         return Stream.concat(spansStream, endpointsStream).collect(Collectors.toList())
     }
 
+    fun hasRelatedCodeObjectIds(): Boolean {
+        return spans.isNotEmpty() || endpoints.isNotEmpty()
+    }
+
     //Don't use idWithType, use allIdsWithType or allIdsWithoutType
     override fun idWithType(): String {
         return "method:$id"

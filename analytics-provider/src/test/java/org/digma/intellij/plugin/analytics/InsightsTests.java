@@ -61,6 +61,22 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
         System.out.println("htmlBody:" + htmlBody);
     }
 
+//    @Test
+    public void actualGetCodeObjectInsightStatus() {
+        final InsightOfMethodsRequest request = new InsightOfMethodsRequest(
+                "ARIKS-MACBOOK-PRO.LOCAL[LOCAL]",
+                List.of(
+                        new MethodWithCodeObjects("method:org.springframework.samples.petclinic.sample.SampleInsightsController$_$doWorkForBottleneck2", List.of(), List.of())
+                )
+        );
+        AnalyticsProvider analyticsProvider = new RestAnalyticsProvider("https://localhost:5051");
+
+
+        CodeObjectInsightsStatusResponse response = analyticsProvider.getCodeObjectInsightStatus(request);
+
+        System.out.println("response:" + response);
+    }
+
     @Test
     void getInsights() throws JsonProcessingException {
 
@@ -88,29 +104,29 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
         expectedCodeObjectInsights.add(expectedErrorInsight);
 
         String expectedNormalUsageInsightCodeObjectId = "Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$TransferFunds";
-        NormalUsageInsight expectedNormalUsageInsight = new NormalUsageInsight( expectedNormalUsageInsightCodeObjectId, ENV_1, SCOPE_1, IMPORTANCE_3, null,
+        NormalUsageInsight expectedNormalUsageInsight = new NormalUsageInsight(expectedNormalUsageInsightCodeObjectId, ENV_1, SCOPE_1, IMPORTANCE_3, null,
                 ROUTE, ENDPOINT_SPAN, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedNormalUsageInsightCodeObjectId), null, 40);
         expectedCodeObjectInsights.add(expectedNormalUsageInsight);
 
         String expectedLowUsageInsightCodeObjectId = "Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$Abc";
-        LowUsageInsight expectedLowUsageInsight = new LowUsageInsight( expectedLowUsageInsightCodeObjectId, ENV_1, SCOPE_1, IMPORTANCE_3, null,
+        LowUsageInsight expectedLowUsageInsight = new LowUsageInsight(expectedLowUsageInsightCodeObjectId, ENV_1, SCOPE_1, IMPORTANCE_3, null,
                 ROUTE, ENDPOINT_SPAN, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedLowUsageInsightCodeObjectId), null, 13);
         expectedCodeObjectInsights.add(expectedLowUsageInsight);
 
         String expectedHighUsageInsightCodeObjectId = "Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$Defg";
-        HighUsageInsight expectedHighUsageInsight = new HighUsageInsight( expectedHighUsageInsightCodeObjectId, ENV_1, SCOPE_1, IMPORTANCE_3, null,
+        HighUsageInsight expectedHighUsageInsight = new HighUsageInsight(expectedHighUsageInsightCodeObjectId, ENV_1, SCOPE_1, IMPORTANCE_3, null,
                 ROUTE, ENDPOINT_SPAN, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedHighUsageInsightCodeObjectId), null, 98);
         expectedCodeObjectInsights.add(expectedHighUsageInsight);
 
-        SpanInfo spanInfo = new SpanInfo("Retrieving account", "Retrieving account", "MoneyTransferDomainService", "Sample.MoneyTransfer.API","Sample.MoneyTransfer.API.MoneyTransferDomainService$_$Error");
+        SpanInfo spanInfo = new SpanInfo("Retrieving account", "Retrieving account", "MoneyTransferDomainService", "Sample.MoneyTransfer.API", "Sample.MoneyTransfer.API.MoneyTransferDomainService$_$Error");
         SlowSpanInfo slowSpanInfo = new SlowSpanInfo(spanInfo,
-                new Percentile(0.10970134022722634D,new Duration(3.44D,"ms",3441700L)),
-                new Percentile(0.2566821090980162D,new Duration(3.44D,"ms",3441700L)),
-                new Percentile(0.4407383382867023D,new Duration(5.64D,"ms",5643900L)),
+                new Percentile(0.10970134022722634D, new Duration(3.44D, "ms", 3441700L)),
+                new Percentile(0.2566821090980162D, new Duration(3.44D, "ms", 3441700L)),
+                new Percentile(0.4407383382867023D, new Duration(5.64D, "ms", 5643900L)),
                 null, null);
 
         String expectedSlowestSpansInsightCodeObjectId = "Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$TransferFunds";
-        SlowestSpansInsight expectedSlowestSpansInsight = new SlowestSpansInsight( expectedSlowestSpansInsightCodeObjectId, ENV_1, SCOPE_1, IMPORTANCE_3, null,
+        SlowestSpansInsight expectedSlowestSpansInsight = new SlowestSpansInsight(expectedSlowestSpansInsightCodeObjectId, ENV_1, SCOPE_1, IMPORTANCE_3, null,
                 ROUTE, ENDPOINT_SPAN, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedSlowestSpansInsightCodeObjectId), null, Collections.singletonList(slowSpanInfo));
         expectedCodeObjectInsights.add(expectedSlowestSpansInsight);
 

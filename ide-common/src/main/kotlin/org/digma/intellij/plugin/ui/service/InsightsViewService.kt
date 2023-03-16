@@ -2,6 +2,8 @@ package org.digma.intellij.plugin.ui.service
 
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.rd.util.launchBackground
+import com.jetbrains.rd.util.lifetime.LifetimeDefinition
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.modelChangeListener.ModelChangeListener
 import org.digma.intellij.plugin.document.DocumentInfoContainer
@@ -10,13 +12,16 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.SpanInfo
+import org.digma.intellij.plugin.model.rest.insights.InsightStatus
 import org.digma.intellij.plugin.ui.model.DocumentScope
 import org.digma.intellij.plugin.ui.model.EmptyScope
 import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsTabCard
+import org.digma.intellij.plugin.ui.model.insights.UiInsightStatus
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
-import java.util.*
+import org.jetbrains.annotations.VisibleForTesting
+import java.util.Collections
 import java.util.concurrent.locks.ReentrantLock
 import java.util.stream.Collectors
 
@@ -44,7 +49,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
     }
 
     fun updateInsightsModel(
-        methodInfo: MethodInfo
+            methodInfo: MethodInfo
     ) {
         lock.lock()
         Log.log(logger::debug, "Lock acquired for updateInsightsModel to {}. ", methodInfo)
@@ -60,6 +65,16 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
             model.insightsCount = insightsListContainer.count
             model.card = InsightsTabCard.INSIGHTS
 
+            if (!insightsListContainer.listViewItems.isNullOrEmpty()) {
+                model.status = UiInsightStatus.InsightExist
+            } else {
+                model.status = UiInsightStatus.Unknown
+                val newLifetimeDefinition = LifetimeDefinition()
+                newLifetimeDefinition.lifetime.launchBackground {
+                    fetchForInsightStatusAndUpdateUi(methodInfo, model)
+                }
+            }
+
             notifyModelChangedAndUpdateUi()
         } finally {
             if (lock.isHeldByCurrentThread) {
@@ -69,6 +84,29 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
         }
     }
 
+    fun fetchForInsightStatusAndUpdateUi(methodInfo: MethodInfo, model: InsightsModel) {
+        val insightStatus = insightsProvider.getInsightStatus(methodInfo)
+        val uiInsightStatus = toUiInsightStatus(insightStatus, methodInfo.hasRelatedCodeObjectIds())
+
+        model.status = uiInsightStatus
+
+        notifyModelChangedAndUpdateUi()
+    }
+
+    @VisibleForTesting
+    fun toUiInsightStatus(status: InsightStatus, methodHasRelatedCodeObjectIds: Boolean): UiInsightStatus {
+        return when (status) {
+            InsightStatus.InsightExist -> UiInsightStatus.InsightExist
+            InsightStatus.InsightPending -> UiInsightStatus.InsightPending
+            InsightStatus.NoSpanData -> {
+                if (methodHasRelatedCodeObjectIds)
+                    return UiInsightStatus.NoSpanData
+                else
+                    return UiInsightStatus.InsightExist // really no insights
+            }
+            else -> UiInsightStatus.Unknown
+        }
+    }
 
     fun contextChangeNoMethodInfo(dummy: MethodInfo) {
 
@@ -114,8 +152,8 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
     }
 
     fun showDocumentPreviewList(
-        documentInfoContainer: DocumentInfoContainer?,
-        fileUri: String
+            documentInfoContainer: DocumentInfoContainer?,
+            fileUri: String
     ) {
 
         Log.log(logger::debug, "showDocumentPreviewList for {}. ", fileUri)
@@ -146,11 +184,12 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
     private fun getDocumentPreviewItems(documentInfoContainer: DocumentInfoContainer): List<ListViewItem<String>> {
 
         val listViewItems = ArrayList<ListViewItem<String>>()
-        val docSummariesIds: Set<String> = documentInfoContainer.allInsights.stream().map { it.codeObjectId }.collect(Collectors.toSet())
+        val docSummariesIds: Set<String> =
+                documentInfoContainer.allInsights.stream().map { it.codeObjectId }.collect(Collectors.toSet())
 
         documentInfoContainer.documentInfo.methods.forEach { (id, methodInfo) ->
             val ids = methodInfo.spans.stream().map { obj: SpanInfo -> obj.id }
-                .collect(Collectors.toList())
+                    .collect(Collectors.toList())
             ids.add(id)
 
             if (docSummariesIds.any { ids.contains(it) }) {

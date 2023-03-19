@@ -7,6 +7,8 @@ import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 open class InsightListViewItem<INSIGHT : CodeObjectInsight>(insight: INSIGHT) :
     ListViewItem<INSIGHT>(insight, sortIndexOf(insight.type)) {
 
+    val insightType get() = modelObject.type
+
     companion object {
         fun sortIndexOf(insightType: InsightType): Int {
             return when (insightType) {

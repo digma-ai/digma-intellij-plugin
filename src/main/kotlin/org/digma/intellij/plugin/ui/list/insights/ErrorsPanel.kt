@@ -7,6 +7,7 @@ import org.digma.intellij.plugin.model.rest.insights.ErrorInsight
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsightNamedError
 import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.service.InsightsActionsService
+import org.digma.intellij.plugin.ui.ActivityMonitor
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.buildLinkTextWithGrayedAndDefaultLabelColorPart
 import org.digma.intellij.plugin.ui.list.ListItemActionButton
@@ -38,7 +39,10 @@ fun errorsPanel(project: Project, modelObject: ErrorInsight): JPanel {
     }
 
     val expandButton = ListItemActionButton("Expand")
-    expandButton.addActionListener { project.getService(InsightsActionsService::class.java).showErrorsTab(modelObject) }
+    expandButton.addActionListener {
+        project.getService(InsightsActionsService::class.java).showErrorsTab(modelObject)
+        ActivityMonitor.getInstance(project).RegisterInsightButtonClicked("expand-errors")
+    }
 
     return createInsightPanel(
             project = project,

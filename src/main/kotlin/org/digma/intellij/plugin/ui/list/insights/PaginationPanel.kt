@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.list.insights
 import com.intellij.ui.components.ActionLink
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.editor.*
+import org.digma.intellij.plugin.ui.ActivityMonitor
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.BorderLayout
@@ -87,10 +88,12 @@ fun <T> buildPaginationPanel(
     prev.addActionListener {
         if (--currPageNum <= 0) currPageNum = 1
         updateInsightBodyPanelWithItemsToDisplay(entries, resultInsightBodyPanel, entriesToDisplay, uniqueInsightId, currPageNum, recordsPerPage)
+        ActivityMonitor.getInstance( project).RegisterInsightButtonClicked("previous-page")
     }
     next.addActionListener {
         if (++currPageNum > lastPageNum) currPageNum = lastPageNum
         updateInsightBodyPanelWithItemsToDisplay(entries, resultInsightBodyPanel, entriesToDisplay, uniqueInsightId, currPageNum, recordsPerPage)
+        ActivityMonitor.getInstance(project).RegisterInsightButtonClicked("next-page")
     }
 
     val paginationLabelText = "$currPageNum of $lastPageNum"

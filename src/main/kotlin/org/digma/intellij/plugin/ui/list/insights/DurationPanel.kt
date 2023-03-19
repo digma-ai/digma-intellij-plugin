@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBPanel
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.model.rest.insights.*
+import org.digma.intellij.plugin.ui.ActivityMonitor
 import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.list.ListItemActionButton
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
@@ -45,7 +46,7 @@ fun spanDurationPanel(
                 durationsListPanel.add(durationsPanel)
             }
 
-    val buttonToGraph = buildButtonToPercentilesGraph(project, spanDurationsInsight.span)
+    val buttonToGraph = buildButtonToScalingGraph(project, spanDurationsInsight.span)
     val buttonToJaeger = buildButtonToJaeger(project, "Compare", spanDurationsInsight.span.name, traceSamples)
 
     return createInsightPanel(
@@ -60,12 +61,13 @@ fun spanDurationPanel(
     )
 }
 
-private fun buildButtonToPercentilesGraph(project: Project, span: SpanInfo): JButton {
+private fun buildButtonToScalingGraph(project: Project, span: SpanInfo): JButton {
     val analyticsService = AnalyticsService.getInstance(project)
     val button = ListItemActionButton("Histogram")
     button.addActionListener {
         val htmlContent = analyticsService.getHtmlGraphForSpanPercentiles(span.instrumentationLibrary, span.name, Laf.Colors.PLUGIN_BACKGROUND.getHex())
         HTMLEditorProvider.openEditor(project, "Percentiles Graph of Span ${span.name}", htmlContent)
+        ActivityMonitor.getInstance(project).RegisterInsightButtonClicked("duration-histogram")
     }
 
     return button

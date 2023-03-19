@@ -12,6 +12,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshService
+import org.digma.intellij.plugin.ui.ActivityMonitor
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.buildBoldTitleGrayedComment
@@ -314,6 +315,7 @@ private fun showHintMessage(
     recalculateAction.addActionListener {
         analyticsService.setInsightCustomStartTime(codeObjectId, insightType)
         rebuildInsightPanel(insightPanel)
+        ActivityMonitor.getInstance(project).RegisterInsightButtonClicked("recalculate")
     }
     recalculateAction.border = HintUtil.createHintBorder()
     recalculateAction.background = HintUtil.getInformationColor()
@@ -326,6 +328,7 @@ private fun getRefreshInsightButton(project: Project): ActionLink {
     refreshAction.addActionListener {
         val refreshService: RefreshService = project.getService(RefreshService::class.java)
         refreshService.refreshAllInBackground()
+        ActivityMonitor.getInstance(project).RegisterInsightButtonClicked("refresh")
     }
     refreshAction.border = empty()
     refreshAction.isOpaque = false

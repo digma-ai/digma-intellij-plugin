@@ -8,6 +8,7 @@ import com.intellij.openapi.extensions.PluginDescriptor;
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.PluginId;
 import org.digma.intellij.plugin.common.CommonUtils;
+import org.digma.intellij.plugin.model.InsightType;
 import org.jetbrains.annotations.NotNull;
 import com.posthog.java.PostHog;
 import java.io.PrintWriter;
@@ -16,7 +17,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
-
+import java.util.List;
 
 
 public class ActivityMonitor implements Disposable {
@@ -94,21 +95,35 @@ public class ActivityMonitor implements Disposable {
         posthog.capture(clientId, "insight first-received");
     }
 
-    @Override
-    public void dispose() {
-        posthog.shutdown();
-    }
-
     public void RegisterError(Exception exception, String message) {
         var stringWriter = new StringWriter();
         exception.printStackTrace(new PrintWriter(stringWriter));
 
         posthog.capture(clientId, "error", new HashMap<>() {
+            {
+                put("message", message);
+                put("exception.type", exception.getClass().getName());
+                put("exception.message", exception.getMessage());
+                put("exception.stack-trace", stringWriter.toString());
+            }});
+    }
+
+    public void RegisterInsightsViewed(@NotNull List<? extends InsightType> insightTypes) {
+        posthog.capture(clientId, "insights viewed", new HashMap<>() {
         {
-            put("message", message);
-            put("exception.type", exception.getClass().getName());
-            put("exception.message", exception.getMessage());
-            put("exception.stack-trace", stringWriter.toString());
+            put("insights", insightTypes);
+        }});
+    }
+
+    @Override
+    public void dispose() {
+        posthog.shutdown();
+    }
+
+    public void RegisterInsightButtonClicked(@NotNull String button) {
+        posthog.capture(clientId, "insights button-clicked", new HashMap<>() {
+        {
+            put("button", button);
         }});
     }
 }

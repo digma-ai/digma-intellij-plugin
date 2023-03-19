@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.model.rest.insights.RootCauseSpan
 import org.digma.intellij.plugin.model.rest.insights.SpanScalingInsight
+import org.digma.intellij.plugin.ui.ActivityMonitor
 import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.list.ListItemActionButton
 import org.digma.intellij.plugin.ui.list.openWorkspaceFileForSpan
@@ -27,7 +28,7 @@ fun spanScalingListViewItemsPanel(project: Project, insight: SpanScalingInsight,
         scalingPanel.add(getRootCauseSpansPanel(project,moreData,insight))
     }
 
-    val buttonToGraph = buildButtonToPercentilesGraph(project, insight.spanName,insight.spanInstrumentationLibrary)
+    val buttonToGraph = buildButtonToScalingGraph(project, insight.spanName,insight.spanInstrumentationLibrary)
 
     val backwardsCompatibilityTitle = "Scaling Issue Found";
     val backwardsCompatibilityDescription = "Significant performance degradation at ${insight.turningPointConcurrency} executions/second";
@@ -112,12 +113,13 @@ private fun getScalingCalculationsPanel(insight: SpanScalingInsight): JPanel {
 }
 
 
-private fun buildButtonToPercentilesGraph(project: Project, spanName: String,instLibrary: String): JButton {
+private fun buildButtonToScalingGraph(project: Project, spanName: String, instLibrary: String): JButton {
     val analyticsService = AnalyticsService.getInstance(project)
     val button = ListItemActionButton("Histogram")
     button.addActionListener {
         val htmlContent = analyticsService.getHtmlGraphForSpanScaling(instLibrary, spanName, Laf.Colors.PLUGIN_BACKGROUND.getHex())
         HTMLEditorProvider.openEditor(project, "Scaling Graph of Span $spanName", htmlContent)
+        ActivityMonitor.getInstance(project).RegisterInsightButtonClicked("scaling-histogram")
     }
 
     return button

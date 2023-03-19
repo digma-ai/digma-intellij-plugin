@@ -93,6 +93,8 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.psi.LanguageServiceLocator"/>
 
+        <projectService serviceImplementation="org.digma.intellij.plugin.ui.ActivityMonitor"/>
+
 
         <notificationGroup id="Digma Notification Group"
                            displayType="NONE"
@@ -150,8 +152,10 @@
         <listener
                 class="org.digma.intellij.plugin.editor.GeneralFileEditorListener"
                 topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
+        <listener
+                class="org.digma.intellij.plugin.toolwindow.DigmaLeftToolWindowListener"
+                topic="com.intellij.openapi.wm.ex.ToolWindowManagerListener"/>
     </projectListeners>
-
 
 
 </idea-plugin>

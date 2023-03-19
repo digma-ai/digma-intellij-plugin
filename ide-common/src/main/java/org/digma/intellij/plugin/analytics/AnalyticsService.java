@@ -21,6 +21,7 @@ import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.settings.SettingsState;
+import org.digma.intellij.plugin.ui.ActivityMonitor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -164,13 +165,25 @@ public class AnalyticsService implements Disposable {
     public List<GlobalInsight> getGlobalInsights() throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         Log.log(LOGGER::debug, "Requesting Global Insights for next environment {}", env);
-        return executeCatching(() -> analyticsProviderProxy.getGlobalInsights(new InsightsRequest(env, Collections.emptyList())));
+        List<GlobalInsight> insights = executeCatching(() -> analyticsProviderProxy.getGlobalInsights(new InsightsRequest(env, Collections.emptyList())));
+        registerInsightReceivedActivity(insights);
+        return insights;
     }
 
     public List<CodeObjectInsight> getInsights(List<String> objectIds) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         Log.log(LOGGER::debug, "Requesting insights for next objectIds {} and next environment {}", objectIds, env);
-        return executeCatching(() -> analyticsProviderProxy.getInsights(new InsightsRequest(env, objectIds)));
+        var insights = executeCatching(() -> analyticsProviderProxy.getInsights(new InsightsRequest(env, objectIds)));
+        registerInsightReceivedActivity(insights);
+        return insights;
+    }
+
+    private <TInsight> void registerInsightReceivedActivity(List<TInsight> insights){
+        if(!insights.isEmpty() && !SettingsState.getInstance(project).firstTimeInsightReceived) {
+            ActivityMonitor.getInstance(project).RegisterFirstInsightReceived();
+            SettingsState.getInstance(project).firstTimeInsightReceived = true;
+            SettingsState.getInstance(project).fireChanged();
+        }
     }
 
     public List<CodeObjectError> getErrorsOfCodeObject(List<String> codeObjectIds) throws AnalyticsServiceException {
@@ -272,7 +285,6 @@ public class AnalyticsService implements Disposable {
     private class AnalyticsInvocationHandler implements InvocationHandler {
 
         private final AnalyticsProvider analyticsProvider;
-
         //ObjectMapper here is only used for printing the result to log as json
         private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -310,11 +322,18 @@ public class AnalyticsService implements Disposable {
                             "Result '{}'",method.getName(), argsToString(args),resultToString(result));
                 }
 
+                if(!SettingsState.getInstance(project).firstTimeConnectionEstablished){
+                    ActivityMonitor.getInstance(project).RegisterFirstConnectionEstablished();
+                    SettingsState.getInstance(project).firstTimeConnectionEstablished = true;
+                    SettingsState.getInstance(project).fireChanged();
+                }
+
                 //reset status on success call
                 if (status.isInConnectionError()) {
                     // change status here because connectionGained() will trigger call to this invoke() again
                     // and without changing the status Notification will be displayed several times in a loop
                     status.ok();
+                    ActivityMonitor.getInstance(project).RegisterConnectionReestablished();
                     NotificationUtil.showNotification(project, "Digma: Connection reestablished !");
                     project.getMessageBus().syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC).connectionGained();
                 }
@@ -334,6 +353,7 @@ public class AnalyticsService implements Disposable {
                 boolean isConnectionException = isConnectionException(e) || isSslConnectionException(e);
                 if (status.isOk() && isConnectionException) {
                     status.connectError();
+                    ActivityMonitor.getInstance(project).RegisterConnectionLost();
                     project.getMessageBus().syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC).connectionLost();
                     var message = isConnectionException(e) ? getConnectExceptionMessage(e) : getSslExceptionMessage(e);
                     Log.log(LOGGER::warn, "Connection exception: error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);

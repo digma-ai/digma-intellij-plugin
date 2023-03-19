@@ -20,4 +20,5 @@ dependencies {
 
     implementation(project(":model"))
     implementation(project(":analytics-provider"))
+    implementation("com.posthog.java:posthog:+")
 }

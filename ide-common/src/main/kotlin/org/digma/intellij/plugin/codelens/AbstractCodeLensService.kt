@@ -22,6 +22,7 @@ import org.digma.intellij.plugin.document.CodeLensProvider
 import org.digma.intellij.plugin.document.DocumentInfoChanged
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.psi.PsiUtils
+import org.digma.intellij.plugin.ui.ActivityMonitor
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import java.awt.event.MouseEvent
 import java.util.*
@@ -166,6 +167,7 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
     ) : (MouseEvent?, Editor) -> Unit {
         private val elementPointer = SmartPointerManager.createPointer(element)
         override fun invoke(event: MouseEvent?, editor: Editor) {
+            ActivityMonitor.getInstance(project).RegisterLensClicked()
             ToolWindowShower.getInstance(project).showToolWindow()
             elementPointer.element?.let {
                 if (it is Navigatable && it.canNavigateToSource()) {

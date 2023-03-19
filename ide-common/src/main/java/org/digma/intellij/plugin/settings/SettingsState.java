@@ -35,6 +35,8 @@ public class SettingsState implements PersistentStateComponent<SettingsState> , 
   public String jaegerUrl = DEFAULT_JAEGER_URL;
   public LinkMode jaegerLinkMode = DEFAULT_JAEGER_LINK_MODE;
   private final List<SettingsChangeListener> listeners = new ArrayList<>();
+  public boolean firstTimeConnectionEstablished;
+  public boolean firstTimeInsightReceived;
 
   public static SettingsState getInstance(Project project) {
     return project.getService(SettingsState.class);

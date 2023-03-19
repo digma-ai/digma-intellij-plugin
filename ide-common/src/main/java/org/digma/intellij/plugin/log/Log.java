@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.log;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+import org.digma.intellij.plugin.ui.ActivityMonitor;
 
 import java.util.function.Consumer;
 
@@ -38,7 +39,9 @@ public class Log {
     }
 
     public static void error(Logger logger,Project project, Exception exception, String format, Object... args) {
-        error(logger, exception,"Digma: Project:" + project.getName() + ": " + String.format(format.replace("{}", "%s"), args));
+        var msg = String.format(format.replace("{}", "%s"), args);
+        error(logger, exception, "Digma: Project:" + project.getName() + ": " + msg);
+        ActivityMonitor.getInstance(project).RegisterError(exception, msg);
     }
     public static void error(Logger logger, Exception exception, String format, Object... args) {
         error(logger, exception, "Digma: " + String.format(format.replace("{}", "%s"), args));

@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.common
 
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.editor.colors.GlobalEditorScheme
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.icons.IconsUtil
@@ -50,7 +51,7 @@ object Laf  {
         companion object {
             @JvmStatic val DEFAULT_LABEL_FOREGROUND: Color = JBColor.foreground()
             @JvmStatic val PLUGIN_BACKGROUND: JBColor = JBColor.namedColor("Plugins.background", JBColor.PanelBackground)
-            @JvmStatic val NAVIGATION_TOP_BACKGROUND_DARK: Color = Color(0x1E1E1E)
+            @JvmStatic val EDITOR_BACKGROUND: JBColor = JBColor.namedColor("Editor.background", GlobalEditorScheme.getDefaultBackground())
             @JvmStatic val DROP_DOWN_HEADER_TEXT_COLOR: Color = Color(0x7C7C94)
             @JvmStatic val LIST_ITEM_BACKGROUND: JBColor = JBColor(Color(0, 0, 50, 15), Color(200, 200, 255, 20))
             @JvmStatic val TRANSPARENT: Color = Color(0, 0, 0, 0)
@@ -66,12 +67,12 @@ object Laf  {
     class Icons{
         class General{
             companion object {
-                @JvmStatic val HOME: Icon = SvgIcon.withColor("/icons/home.svg", Colors.NAVIGATION_TOP_BACKGROUND_DARK)
-                @JvmStatic val ARROW_UP: Icon = SvgIcon.withColor("/icons/arrow-up.svg", Colors.NAVIGATION_TOP_BACKGROUND_DARK)
-                @JvmStatic val ARROW_DOWN: Icon = SvgIcon.withColor("/icons/arrow-down.svg", Colors.NAVIGATION_TOP_BACKGROUND_DARK)
-                @JvmStatic val DIGMA_LOGO: Icon = SvgIcon.withColor("/icons/digma-logo.svg", Colors.NAVIGATION_TOP_BACKGROUND_DARK)
-                @JvmStatic val RELATED_INSIGHTS: Icon = SvgIcon.withColor("/icons/related-insights.svg", Colors.NAVIGATION_TOP_BACKGROUND_DARK)
-                @JvmStatic val POINTER: Icon = SvgIcon.withColor("/icons/pointer.svg", Colors.NAVIGATION_TOP_BACKGROUND_DARK)
+                @JvmStatic val HOME: Icon = SvgIcon.asIs("/icons/home.svg")
+                @JvmStatic val ARROW_UP: Icon = SvgIcon.asIs("/icons/arrow-up.svg")
+                @JvmStatic val ARROW_DOWN: Icon = SvgIcon.asIs("/icons/arrow-down.svg")
+                @JvmStatic val DIGMA_LOGO: Icon = SvgIcon.asIs("/icons/digma-logo.svg")
+                @JvmStatic val RELATED_INSIGHTS: Icon = SvgIcon.asIs("/icons/related-insights.svg")
+                @JvmStatic val POINTER: Icon = SvgIcon.asIs("/icons/pointer.svg")
             }
         }
         class ErrorDetails{

@@ -168,8 +168,13 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
         configuration: RunConfigurationBase<*>,
         executor: Executor
     ): ConsoleView {
-        //that only works for java and maven run configurations.
-        console.print("This process is enhanced by Digma OTEL agent !\n", ConsoleViewContentType.LOG_WARNING_OUTPUT)
+        val project = configuration.project
+        if (enabled(project)  &&
+            (isMavenConfiguration(configuration) || isJavaConfiguration(configuration))){
+            //that only works for java and maven run configurations.
+            console.print("This process is enhanced by Digma OTEL agent !\n", ConsoleViewContentType.LOG_WARNING_OUTPUT)
+        }
+
         return console
     }
 

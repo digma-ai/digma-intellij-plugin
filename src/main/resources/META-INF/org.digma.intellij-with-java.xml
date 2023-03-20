@@ -1,5 +1,8 @@
 <idea-plugin>
 
+    <depends>org.jetbrains.idea.maven</depends>
+    <depends>org.jetbrains.plugins.gradle</depends>
+
     <extensions defaultExtensionNs="com.intellij">
 
         <fileBasedIndex implementation="org.digma.intellij.plugin.idea.psi.java.JavaDocumentInfoIndex"/>
@@ -9,7 +12,9 @@
         <postStartupActivity implementation="org.digma.intellij.plugin.idea.psi.java.JavaSpanNavigationStartupActivity"/>
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService"/>
 
-
+        <runConfigurationExtension implementation="org.digma.intellij.plugin.idea.runcfg.AutoOtelAgentRunConfigurationExtension"/>
+        <applicationService serviceImplementation="org.digma.intellij.plugin.idea.runcfg.OTELJarProvider"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.idea.runcfg.OTELJarProviderStartup"/>
     </extensions>
 
 

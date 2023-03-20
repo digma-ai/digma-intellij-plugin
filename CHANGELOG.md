@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.40] - 2023-03-21
+### Changed
+- Quick instrumentation java code (#395)
+- Decreased and fixed height for navigation panel rows (#392)
+- Change background color of navigation panel dynamically (#392)
+- Applied new background color for navigation panel (#392)
+- Used ComboBox for environment selector (#392)
+- Fixed flickering of environment selector (#392)
+
 ## [2.0.39] - 2023-03-17
 ### Changed
 - Added Pycharm support
@@ -52,4 +61,5 @@ All notable changes to this project will be documented in this file.
 [2.0.37]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.36...v2.0.37
 [2.0.38]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.37...v2.0.38
 [2.0.39]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.38...v2.0.39
-[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.39...HEAD
+[2.0.39]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.39...v2.0.40
+[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.40...HEAD

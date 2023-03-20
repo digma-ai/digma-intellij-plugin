@@ -6,6 +6,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.rd.util.launchBackground
 import com.intellij.openapi.ui.DialogPanel
+import com.intellij.ui.JBColor
 import com.intellij.util.messages.MessageBusConnection
 import com.intellij.util.ui.JBUI
 import com.jetbrains.rd.util.lifetime.LifetimeDefinition
@@ -17,6 +18,7 @@ import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
+import java.awt.Color
 import java.awt.Cursor
 import java.awt.Dimension
 import java.util.concurrent.locks.ReentrantLock
@@ -50,7 +52,7 @@ class ScopeLineResultPanel(
         this.model = model
         this.layout = BoxLayout(this, BoxLayout.LINE_AXIS)
         this.border = JBUI.Borders.emptyLeft(5)
-        this.background = Laf.Colors.NAVIGATION_TOP_BACKGROUND_DARK
+        this.background = Laf.Colors.EDITOR_BACKGROUND
         this.isOpaque = true
 
         rebuildInBackground(model)
@@ -70,6 +72,16 @@ class ScopeLineResultPanel(
 
     override fun reset() {
         rebuildInBackground(model)
+    }
+
+    private fun getDefaultBgColor() = Laf.Colors.PLUGIN_BACKGROUND
+
+    private fun getBgColor(): Color
+    {
+        return if (JBColor.isBright())
+            getDefaultBgColor().brighter()
+        else
+            getDefaultBgColor().darker()
     }
 
     private fun rebuildInBackground(model: PanelModel) {

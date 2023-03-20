@@ -5,8 +5,9 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.rd.util.launchBackground
-import com.intellij.ui.Gray
+import com.intellij.openapi.ui.ComboBox
 import com.intellij.ui.JBColor
+import com.intellij.ui.SimpleListCellRenderer
 import com.intellij.util.Alarm
 import com.intellij.util.AlarmFactory
 import com.intellij.util.messages.MessageBusConnection
@@ -20,15 +21,21 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
-import java.awt.*
+import java.awt.Cursor
+import java.awt.Dimension
+import java.awt.event.ComponentAdapter
+import java.awt.event.ComponentEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
-import javax.swing.*
+import javax.swing.BoxLayout
+import javax.swing.Icon
+import javax.swing.JList
 import javax.swing.event.PopupMenuEvent
 import javax.swing.event.PopupMenuListener
+import javax.swing.plaf.basic.BasicComboPopup
 
 class EnvironmentsDropdownPanel(
         project: Project,
@@ -39,17 +46,14 @@ class EnvironmentsDropdownPanel(
     private val logger: Logger = Logger.getInstance(EnvironmentsDropdownPanel::class.java)
 
     private val usageStatusChangeConnection: MessageBusConnection = project.messageBus.connect()
-    private val usageStatusResult: UsageStatusResult
+    private var usageStatusResult: UsageStatusResult
     private val project: Project
     private val rebuildPanelLock = ReentrantLock()
     private var selectedItem: String
     private val localHostname: String
     private val changeEnvAlarm: Alarm
     private val popupMenuOpened: AtomicBoolean = AtomicBoolean(false)
-    // Determine the background color of the dark theme editor (example value used)
-    private val darkThemeEditorBackgroundColor = JBColor.namedColor("Editor.background", Gray._50)
-    // Create a new color object using the background color of the dark theme editor
-    private val menuItemBackgroundColor = JBColor(darkThemeEditorBackgroundColor, darkThemeEditorBackgroundColor)
+    private val wasNotInitializedYet: AtomicBoolean = AtomicBoolean(true)
 
     init {
         usageStatusChangeConnection.subscribe(
@@ -91,16 +95,23 @@ class EnvironmentsDropdownPanel(
     }
 
     private fun rebuildInBackground(usageStatus: UsageStatusResult) {
-        val lifetimeDefinition = LifetimeDefinition()
-        lifetimeDefinition.lifetime.launchBackground {
-            rebuildPanelLock.lock()
-            Log.log(logger::debug, "Lock acquired for rebuild EnvironmentsDropdownPanel process.")
-            try {
-                rebuild(usageStatus)
-            } finally {
-                rebuildPanelLock.unlock()
-                Log.log(logger::debug, "Lock released for rebuild EnvironmentsDropdownPanel process.")
-                lifetimeDefinition.terminate()
+        if (!popupMenuOpened.get()) {
+            if (usageStatus.environmentStatuses.size != usageStatusResult.environmentStatuses.size
+                    || usageStatusResult.codeObjectStatuses.isEmpty() || wasNotInitializedYet.get()) {
+                usageStatusResult = usageStatus
+
+                val lifetimeDefinition = LifetimeDefinition()
+                lifetimeDefinition.lifetime.launchBackground {
+                    rebuildPanelLock.lock()
+                    Log.log(logger::debug, "Lock acquired for rebuild EnvironmentsDropdownPanel process.")
+                    try {
+                        rebuild(usageStatus)
+                    } finally {
+                        rebuildPanelLock.unlock()
+                        Log.log(logger::debug, "Lock released for rebuild EnvironmentsDropdownPanel process.")
+                        lifetimeDefinition.terminate()
+                    }
+                }
             }
         }
     }
@@ -180,74 +191,102 @@ class EnvironmentsDropdownPanel(
             environmentsInfo: MutableMap<String, MutableMap<String, Any>>,
             hasUsageFunction: (String) -> Boolean
     ) {
-        val dropdownLabel = object : JLabel() {
-            override fun getPreferredSize(): Dimension {
-                val size = super.getPreferredSize()
-                size.width += 20 // Add some extra space to fit the "Select an item" text
-                return size
-            }
-        }
-        dropdownLabel.icon = getDropDownIcon()
-        dropdownLabel.text = selectedItem
-        dropdownLabel.horizontalTextPosition = SwingConstants.LEFT
-        dropdownLabel.verticalTextPosition = SwingConstants.CENTER
-        val popupMenu = JPopupMenu()
-        // Add header to the popupMenu
-        val header = createHeader("Environment", "Data")
-        popupMenu.add(header)
+        val items = mutableListOf<String>()
+        val icons = mutableListOf<Icon>()
+        val environmentsInfo = environmentsInfo
 
         for (envInfo in environmentsInfo) {
             val buttonData = envInfo.value
             val currEnv = envInfo.key
             val linkText = buttonData.getValue("linkText").toString()
-//            val isSelectedEnv = buttonData.getValue("isSelectedEnv") as Boolean
-
-//            val icon: Icon = if (isSelectedEnv) Laf.Icons.Environment.ENVIRONMENT_HAS_USAGE else Laf.Icons.Environment.ENVIRONMENT_HAS_NO_USAGE
             val icon: Icon = if (hasUsageFunction(currEnv)) Laf.Icons.Environment.ENVIRONMENT_HAS_USAGE else Laf.Icons.Environment.ENVIRONMENT_HAS_NO_USAGE
-
-            val menuItem = createMenuItem(linkText, icon)
-
-            menuItem.addActionListener { event ->
-                selectedItem = linkText // Update the selected item
-                dropdownLabel.text = linkText
-
-                val currentSelected: String = getSelected()
-
-                if (currentSelected === event.source) {
-                    return@addActionListener
-                }
-
-                changeEnvAlarm.cancelAllRequests()
-                changeEnvAlarm.addRequest({
-                    environmentsSupplier.setCurrent(currEnv)
-                }, 100)
-            }
-            popupMenu.add(menuItem)
+            items.add(linkText)
+            icons.add(icon)
         }
-        popupMenu.addPopupMenuListener(object : PopupMenuListener {
-            override fun popupMenuWillBecomeVisible(e: PopupMenuEvent?) {
-                dropdownLabel.icon = Laf.Icons.General.ARROW_UP
-                popupMenuOpened.set(true)
+
+        if (items.size > 0) {
+            // this flag fixes initial load issue
+            wasNotInitializedYet.set(false)
+        }
+        val comboBox = ComboBox(items.toTypedArray())
+        comboBox.renderer = object : SimpleListCellRenderer<String>() {
+            override fun customize(list: JList<out String>, value: String, index: Int, selected: Boolean, hasFocus: Boolean) {
+                text = value
+                icon = icons.getOrElse(index) { null }
+                foreground = if (selected) JBColor.WHITE else JBColor.BLACK
+                background = if (selected) JBColor.BLUE else JBColor.WHITE
             }
+        }
+
+        comboBox.addPopupMenuListener(object : PopupMenuListener {
+            override fun popupMenuWillBecomeVisible(e: PopupMenuEvent?) {
+                popupMenuOpened.set(true)
+                // Set the width of the ComboBox to the width of the widest item when the popup menu is opened
+                val popup = comboBox.getUI().getAccessibleChild(comboBox, 0)
+                val popupList = (popup as? BasicComboPopup)?.list
+                if (popupList != null) {
+                    val popupWidth = items.maxOfOrNull { comboBox.getFontMetrics(comboBox.font).stringWidth(it) } ?: 0
+                    comboBox.preferredSize = Dimension(popupWidth + 40, comboBox.preferredSize.height)
+                }
+            }
+
             override fun popupMenuWillBecomeInvisible(e: PopupMenuEvent?) {
-                dropdownLabel.icon = Laf.Icons.General.ARROW_DOWN
+                // Reset the width of the ComboBox to the fixed width when the popup menu is closed
+                comboBox.preferredSize = Dimension(30, comboBox.preferredSize.height)
                 popupMenuOpened.set(false)
             }
+
             override fun popupMenuCanceled(e: PopupMenuEvent?) {
-                // Do nothing
-            }
-        })
-        dropdownLabel.addMouseListener(object : MouseAdapter() {
-            override fun mousePressed(e: MouseEvent) {
-                popupMenu.show(dropdownLabel, 0, dropdownLabel.height)
+                // Reset the width of the ComboBox to the fixed width when the popup menu is canceled
+                comboBox.preferredSize = Dimension(30, comboBox.preferredSize.height)
             }
         })
 
-        this.add(dropdownLabel)
+        comboBox.addActionListener { event ->
+            selectedItem = comboBox.selectedItem?.toString() ?: "" // Update the selected item
+
+            val currentSelected: String = getSelected()
+
+            if (currentSelected === event.source) {
+                return@addActionListener
+            }
+
+            changeEnvAlarm.cancelAllRequests()
+            changeEnvAlarm.addRequest({
+                environmentsSupplier.setCurrent(adjustBackEnvNameIfNeeded(selectedItem))
+            }, 100)
+        }
+
+        // Remove the border around the ComboBox
+        comboBox.background = Laf.Colors.EDITOR_BACKGROUND
+        comboBox.isOpaque = false
+        // Set a fixed width for the closed ComboBox
+        comboBox.preferredSize = Dimension(30, comboBox.preferredSize.height)
+        comboBox.selectedItem = getSelected()
+
+        this.add(comboBox)
+
+        // Add ComponentListener to detect resizing of parent component
+        addComponentListener(object : ComponentAdapter() {
+            override fun componentResized(e: ComponentEvent) {
+                comboBox.hidePopup()
+            }
+        })
+
+        // Add MouseListener to detect click outside of ComboBox
+        addMouseListener(object : MouseAdapter() {
+            override fun mouseClicked(e: MouseEvent) {
+                if (!comboBox.bounds.contains(e.point)) {
+                    comboBox.hidePopup()
+                }
+            }
+        })
     }
 
-    private fun getDropDownIcon(): Icon {
-        return if (popupMenuOpened.get()) Laf.Icons.General.ARROW_UP else Laf.Icons.General.ARROW_DOWN
+    private fun adjustBackEnvNameIfNeeded(environment: String): String {
+        return if (environment.equals(LOCAL_ENV, ignoreCase = true)) {
+            (localHostname + SUFFIX_OF_LOCAL).uppercase(Locale.getDefault())
+        } else environment
     }
 
     private fun removeExistingComponentsIfPresent() {
@@ -282,78 +321,5 @@ class EnvironmentsDropdownPanel(
             txtValue = LOCAL_ENV
         }
         return txtValue
-    }
-
-    private fun createMenuItem(text: String, icon: Icon): JMenuItem {
-        val menuItem = JMenuItem()
-        menuItem.layout = BorderLayout()
-
-        // Create a panel for the text and icon labels with a flexible horizontal gap
-        val panel = JPanel()
-        panel.layout = BoxLayout(panel, BoxLayout.LINE_AXIS)
-
-        val textLabel = JLabel(text)
-        textLabel.horizontalAlignment = SwingConstants.LEFT
-        textLabel.font = Font("Helvetica", Font.PLAIN, 12)
-        textLabel.border = JBUI.Borders.empty(0, 5)
-
-        val iconLabel = JLabel(icon)
-        iconLabel.horizontalAlignment = SwingConstants.RIGHT
-        iconLabel.border = JBUI.Borders.empty(0, 5)
-
-        panel.add(textLabel)
-        panel.add(Box.createHorizontalGlue())
-        panel.add(iconLabel)
-
-        menuItem.add(panel, BorderLayout.CENTER)
-
-        // Set the background color of the menu item to the dark theme editor background color
-        menuItem.background = menuItemBackgroundColor
-        panel.background = menuItemBackgroundColor
-
-        // Add a mouse listener to highlight the menu item on mouse over
-        menuItem.addMouseListener(object : MouseAdapter() {
-            override fun mouseEntered(e: MouseEvent) {
-                menuItem.cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
-                menuItem.background = Color.DARK_GRAY
-                panel.background = Color.DARK_GRAY
-            }
-
-            override fun mouseExited(e: MouseEvent) {
-                menuItem.background = menuItemBackgroundColor
-                panel.background = menuItemBackgroundColor
-            }
-        })
-        // Remove the border around the focused menu item
-        menuItem.border = BorderFactory.createEmptyBorder()
-
-        return menuItem
-    }
-
-    private fun createHeader(leftText: String, rightText: String): JComponent {
-        val headerPanel = JPanel()
-        headerPanel.layout = BoxLayout(headerPanel, BoxLayout.LINE_AXIS)
-
-        val leftLabel = JLabel(leftText)
-        leftLabel.font = Font("SF Pro Text", Font.TRUETYPE_FONT, 10)
-        leftLabel.horizontalAlignment = SwingConstants.LEFT
-        leftLabel.border = JBUI.Borders.empty(0, 5)
-        leftLabel.foreground = Laf.Colors.DROP_DOWN_HEADER_TEXT_COLOR
-
-        val minGapSize = maxOf(10, SwingUtilities.computeStringWidth(leftLabel.getFontMetrics(leftLabel.font), leftText))
-
-        headerPanel.add(leftLabel)
-
-        headerPanel.add(Box.createHorizontalStrut(minGapSize)) // Add flexible horizontal gap
-
-        val rightLabel = JLabel(rightText)
-        rightLabel.font = Font("SF Pro Text", Font.TRUETYPE_FONT, 10)
-        rightLabel.horizontalAlignment = SwingConstants.RIGHT
-        rightLabel.border = JBUI.Borders.empty(0, 5)
-        rightLabel.foreground = Laf.Colors.DROP_DOWN_HEADER_TEXT_COLOR
-
-        headerPanel.add(rightLabel)
-        headerPanel.background = menuItemBackgroundColor
-        return headerPanel
     }
 }

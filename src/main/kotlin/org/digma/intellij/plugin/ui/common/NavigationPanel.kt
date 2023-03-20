@@ -14,7 +14,7 @@ import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.ui.errors.IconButton
-import org.digma.intellij.plugin.ui.list.insights.createDefaultBoxLayoutLineAxisPanelWithBackground
+import org.digma.intellij.plugin.ui.list.insights.createDefaultBoxLayoutLineAxisPanelWithBackgroundWithFixedHeight
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
@@ -92,29 +92,57 @@ class NavigationPanel(
     }
 
     private fun getFirstRowPanel(): JPanel {
-        val rowPanel = createDefaultBoxLayoutLineAxisPanelWithBackground(5, 5, 5, 5, Laf.Colors.NAVIGATION_TOP_BACKGROUND_DARK)
-        rowPanel.add(getLogoIconLabel())
-        rowPanel.add(EnvironmentsDropdownPanel(project, insightsModel.getUsageStatus(), environmentsSupplier, localHostname))
-        rowPanel.add(Box.createHorizontalGlue())
-        rowPanel.border = BorderFactory.createMatteBorder(0, 0, 1, 0, Laf.Colors.PLUGIN_BACKGROUND) // create 1px border in JetBrains dark gray color
+        val logoIconLabel = getLogoIconLabel()
+        val comboBox = EnvironmentsDropdownPanel(project, insightsModel.getUsageStatus(), environmentsSupplier, localHostname)
+
+        val parentPanel = JPanel(GridBagLayout())
+        // Add the logo icon label to the parent panel with relative constraints
+        val cLogo = GridBagConstraints()
+        cLogo.gridx = 0
+        cLogo.gridy = 0
+        cLogo.anchor = GridBagConstraints.LINE_START
+        parentPanel.add(logoIconLabel, cLogo)
+
+        // Add the ComboBox to the parent panel with relative constraints
+        val cComboBox = GridBagConstraints()
+        cComboBox.gridx = 1
+        cComboBox.gridy = 0
+        cComboBox.weightx = 1.0
+        cComboBox.anchor = GridBagConstraints.LINE_START
+        cComboBox.fill = GridBagConstraints.HORIZONTAL
+        parentPanel.add(comboBox, cComboBox)
+
 //        rowPanel.add(getPointerButton()) // will be used later
 
-
-        return if (IDEUtilsService.getInstance(project).isJavaProject){
-            val wrapper = JPanel()
-            wrapper.layout = BorderLayout()
-            wrapper.isOpaque = true
-            wrapper.background = Laf.Colors.NAVIGATION_TOP_BACKGROUND_DARK
-            wrapper.add(rowPanel,BorderLayout.CENTER)
-            wrapper.add(getSettingsButton(),BorderLayout.EAST)
-            wrapper
-        }else{
-            rowPanel
+        if (IDEUtilsService.getInstance(project).isJavaProject) {
+            val cSettingsButton = GridBagConstraints()
+            cSettingsButton.gridx = 2
+            cSettingsButton.gridy = 0
+            cSettingsButton.anchor = GridBagConstraints.LINE_START
+            cSettingsButton.fill = GridBagConstraints.NONE
+            parentPanel.add(getSettingsButton(), cSettingsButton)
         }
+
+        parentPanel.border = BorderFactory.createMatteBorder(0, 0, 1, 0, Laf.Colors.PLUGIN_BACKGROUND) // create 1px border in JetBrains dark gray color
+
+        // Set the background color of the parent panel
+        parentPanel.background = Laf.Colors.EDITOR_BACKGROUND
+
+        // Set the preferred height of the parent panel based on the ComboBox
+        val comboBoxSize = comboBox.preferredSize
+        parentPanel.preferredSize = Dimension(parentPanel.width, comboBoxSize.height)
+
+        return parentPanel
     }
 
     private fun getSecondRowPanel(): JPanel {
-        val rowPanel = createDefaultBoxLayoutLineAxisPanelWithBackground(5, 5, 5, 5, Laf.Colors.NAVIGATION_TOP_BACKGROUND_DARK)
+        val bgColor: Color = Laf.Colors.EDITOR_BACKGROUND
+
+        val rowPanel = createDefaultBoxLayoutLineAxisPanelWithBackgroundWithFixedHeight(
+                0, 5, 0, 5,
+                bgColor,
+                Laf.scalePanels(Laf.Sizes.PANEL_SIZE_32)
+        )
 //        rowPanel.add(getDashboardButton()) // will be used later
 //        rowPanel.add(Box.createHorizontalGlue())
         rowPanel.add(ScopeLineResultPanel(project, insightsModel))
@@ -168,7 +196,7 @@ class NavigationPanel(
         iconLabel.horizontalAlignment = SwingConstants.RIGHT
         iconLabel.verticalAlignment = SwingConstants.TOP
         iconLabel.isOpaque = false
-        iconLabel.border = JBUI.Borders.empty(10, 5, 5, 5)
+        iconLabel.border = JBUI.Borders.empty(2, 5)
         iconLabel.cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
         iconLabel.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent?) {
@@ -181,9 +209,9 @@ class NavigationPanel(
             override fun mousePressed(e: MouseEvent?) {}
         })
 
-        var wrapper = JPanel()
+        val wrapper = JPanel()
         wrapper.isOpaque = false
-        wrapper.layout = FlowLayout(FlowLayout.CENTER, 10, 10)
+        wrapper.layout = FlowLayout(FlowLayout.CENTER, 10, 5)
         wrapper.add(iconLabel)
         return wrapper
     }

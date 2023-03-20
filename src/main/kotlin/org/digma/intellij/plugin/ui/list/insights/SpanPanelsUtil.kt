@@ -126,6 +126,21 @@ fun createDefaultBoxLayoutLineAxisPanelWithBackground(top: Int, left: Int, botto
     return defaultPanel
 }
 
+fun createDefaultBoxLayoutLineAxisPanelWithBackgroundWithFixedHeight(top: Int, left: Int, bottom: Int, right: Int, color: Color, height: Int): JPanel {
+    val defaultPanel = object : JBPanel<JBPanel<*>>() {
+        override fun getPreferredSize(): Dimension {
+            val size = super.getPreferredSize()
+            size.height = height
+            return size
+        }
+    }
+    defaultPanel.layout = BoxLayout(defaultPanel, BoxLayout.LINE_AXIS)
+    defaultPanel.border = empty(top, left, bottom, right)
+    defaultPanel.background = color
+    defaultPanel.isOpaque = true
+    return defaultPanel
+}
+
 fun createDefaultBoxLayoutYAxisPanel(): JPanel {
     val defaultPanel = JBPanel<JBPanel<*>>()
     defaultPanel.layout = BoxLayout(defaultPanel, BoxLayout.Y_AXIS)

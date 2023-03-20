@@ -72,7 +72,6 @@ class OTELJarProvider {
     fun ensureDownloaded(project: Project,startup: Boolean = false): Boolean {
         lock.lock()
         try {
-            //don't download if exists, it's in temp folder, but maybe it was not deleted yet.
             if (filesExist(project)){
                 return true
             }

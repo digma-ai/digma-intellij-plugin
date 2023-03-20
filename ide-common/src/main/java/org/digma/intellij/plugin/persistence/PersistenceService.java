@@ -21,6 +21,11 @@ public class PersistenceService implements PersistentStateComponent<PersistenceD
         this.project = project;
     }
 
+    public static PersistenceService getInstance(Project project){
+        return project.getService(PersistenceService.class);
+    }
+
+
     @Override
     public @NotNull PersistenceData getState() {
         return myPersistenceData;

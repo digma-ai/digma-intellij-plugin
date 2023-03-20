@@ -76,6 +76,8 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.psi.LanguageServiceLocator"/>
 
+        <projectService serviceImplementation="org.digma.intellij.plugin.common.IDEUtilsService"/>
+
 
         <notificationGroup id="Digma Notification Group"
                            displayType="NONE"

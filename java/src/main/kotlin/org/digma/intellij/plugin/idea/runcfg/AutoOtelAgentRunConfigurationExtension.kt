@@ -149,6 +149,7 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
 
                 private fun cleanGradleSettings(configuration: RunConfigurationBase<*>) {
                     configuration as GradleRunConfiguration
+                    Log.log(logger::debug,"Cleaning gradle configuration {}",configuration)
                     if (configuration.settings.env.containsKey(ORG_GRADLE_JAVA_TOOL_OPTIONS)){
                         val orgJavaToolOptions = configuration.settings.env[ORG_GRADLE_JAVA_TOOL_OPTIONS]
                         configuration.settings.env[JAVA_TOOL_OPTIONS] = orgJavaToolOptions

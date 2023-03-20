@@ -177,12 +177,6 @@ class NavigationPanel(
                     project = project
                 )
             }
-            override fun mouseEntered(e: MouseEvent?) {
-                showSettingsMessage(
-                    threeDotsIcon = iconLabel,
-                    project = project
-                )
-            }
             override fun mouseExited(e: MouseEvent?) {}
             override fun mousePressed(e: MouseEvent?) {}
         })
@@ -195,6 +189,6 @@ class NavigationPanel(
     }
 
     private fun showSettingsMessage(threeDotsIcon: JLabel, project: Project) {
-        HintManager.getInstance().showHint(SettingsHintPanel(project), RelativePoint.getSouthWestOf(threeDotsIcon), HintManager.HIDE_BY_ESCAPE, 4000)
+        HintManager.getInstance().showHint(SettingsHintPanel(project), RelativePoint.getSouthWestOf(threeDotsIcon), HintManager.HIDE_BY_ESCAPE, 5000)
     }
 }

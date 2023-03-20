@@ -11,6 +11,8 @@ import org.digma.intellij.plugin.log.Log
 import java.io.File
 import java.util.concurrent.locks.ReentrantLock
 
+private const val TEMP_JARS_DIR_PREFIX = "temp-digma-otel-jars"
+
 class OTELJarProvider {
 
     private val logger: Logger = Logger.getInstance(OTELJarProvider::class.java)
@@ -76,7 +78,8 @@ class OTELJarProvider {
                 return true
             }
             if (downloadDir == null || !filesExist(project)) {
-                downloadDir = FileUtil.createTempDirectory("digma-otel-jars", null, true)
+                downloadDir = FileUtil.createTempDirectory(TEMP_JARS_DIR_PREFIX, null, true)
+                deleteOldDirsThatMayStillBeThere(downloadDir)
                 Log.log(logger::debug,"downloading otel agent jar to {}", downloadDir)
                 downloadJars(project,downloadDir!!,startup)
                 //on startup the download is in background so just return true
@@ -94,6 +97,20 @@ class OTELJarProvider {
             lock.unlock()
         }
         return true
+    }
+
+    private fun deleteOldDirsThatMayStillBeThere(nextDownloadDir: File?) {
+        nextDownloadDir?.let { dir ->
+            val parentDir = dir.parentFile
+            parentDir?.let {parentDir ->
+                parentDir.listFiles { file ->
+                    !file.name.equals(nextDownloadDir.name) && file.isDirectory && file.name.contains(TEMP_JARS_DIR_PREFIX)
+                }.forEach { dirToDelete ->
+                    Log.log(logger::debug,"deleting old temp dir {}", dirToDelete)
+                    dirToDelete.delete()
+                }
+            }
+        }
     }
 
     private fun filesExist(project: Project): Boolean {

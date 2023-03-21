@@ -2,11 +2,11 @@ package org.digma.intellij.plugin.model.rest.insights
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import org.digma.intellij.plugin.model.InsightImportance
 import org.digma.intellij.plugin.model.InsightType
 import java.beans.ConstructorProperties
-import java.util.*
+import java.util.Date
 
+// TODO: rename to SpanEndpointsBottleneckInsight
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class SpanSlowEndpointsInsight
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -20,7 +20,7 @@ data class SpanSlowEndpointsInsight
         "customStartTime",
         "prefixedCodeObjectId",
         "shortDisplayInfo",
-        "span",
+        "spanInfo",
         "slowEndpoints"
 )
 constructor(
@@ -33,8 +33,8 @@ constructor(
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
         override val shortDisplayInfo: ShortDisplayInfo?,
-        val span: SpanInfo,
+        override val spanInfo: SpanInfo,
         val slowEndpoints: List<SlowEndpointInfo>,
-) : CodeObjectInsight {
+) : SpanInsight {
     override val type: InsightType = InsightType.SpanEndpointBottleneck
 }

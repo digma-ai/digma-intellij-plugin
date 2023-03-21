@@ -1,6 +1,10 @@
 package org.digma.intellij.plugin.model.rest.insights
 
-interface EndpointInsight : CodeObjectInsight {
+interface EndpointInsight : SpanInsight {
     var route: String
-    var endpointSpan: String
+    var serviceName: String
+
+    fun endpointSpanName(): String {
+        return spanInfo.name
+    }
 }

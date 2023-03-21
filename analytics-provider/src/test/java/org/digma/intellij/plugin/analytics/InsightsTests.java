@@ -3,7 +3,24 @@ package org.digma.intellij.plugin.analytics;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import okhttp3.mockwebserver.MockResponse;
-import org.digma.intellij.plugin.model.rest.insights.*;
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
+import org.digma.intellij.plugin.model.rest.insights.Duration;
+import org.digma.intellij.plugin.model.rest.insights.ErrorInsight;
+import org.digma.intellij.plugin.model.rest.insights.ErrorInsightNamedError;
+import org.digma.intellij.plugin.model.rest.insights.HighUsageInsight;
+import org.digma.intellij.plugin.model.rest.insights.HotspotInsight;
+import org.digma.intellij.plugin.model.rest.insights.InsightOfMethodsRequest;
+import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
+import org.digma.intellij.plugin.model.rest.insights.LowUsageInsight;
+import org.digma.intellij.plugin.model.rest.insights.MethodWithCodeObjects;
+import org.digma.intellij.plugin.model.rest.insights.NormalUsageInsight;
+import org.digma.intellij.plugin.model.rest.insights.Percentile;
+import org.digma.intellij.plugin.model.rest.insights.SlowEndpointInsight;
+import org.digma.intellij.plugin.model.rest.insights.SlowSpanInfo;
+import org.digma.intellij.plugin.model.rest.insights.SlowestSpansInsight;
+import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
+import org.digma.intellij.plugin.model.rest.insights.SpanInfo;
 import org.junit.jupiter.api.Test;
 
 import java.time.temporal.ChronoUnit;
@@ -61,7 +78,7 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
         System.out.println("htmlBody:" + htmlBody);
     }
 
-//    @Test
+    //    @Test
     public void actualGetCodeObjectInsightStatus() {
         final InsightOfMethodsRequest request = new InsightOfMethodsRequest(
                 "ARIKS-MACBOOK-PRO.LOCAL[LOCAL]",
@@ -81,6 +98,7 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
     void getInsights() throws JsonProcessingException {
 
         final String ROUTE = "post transfer/transferfunds";
+        final String SERVICE = "MyService";
         final String ENDPOINT_SPAN = "HTTP POST transfer/transferfunds";
         final String ENV_1 = "Env1";
         final String SCOPE_1 = "Scope1";
@@ -105,21 +123,27 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
 
         String expectedNormalUsageInsightCodeObjectId = "Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$TransferFunds";
         NormalUsageInsight expectedNormalUsageInsight = new NormalUsageInsight(expectedNormalUsageInsightCodeObjectId, ENV_1, SCOPE_1, IMPORTANCE_3, null,
-                ROUTE, ENDPOINT_SPAN, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedNormalUsageInsightCodeObjectId), null, 40);
+                actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedNormalUsageInsightCodeObjectId), null,
+                createSpanInfo(ENDPOINT_SPAN, expectedNormalUsageInsightCodeObjectId), ROUTE, SERVICE,
+                40);
         expectedCodeObjectInsights.add(expectedNormalUsageInsight);
 
         String expectedLowUsageInsightCodeObjectId = "Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$Abc";
         LowUsageInsight expectedLowUsageInsight = new LowUsageInsight(expectedLowUsageInsightCodeObjectId, ENV_1, SCOPE_1, IMPORTANCE_3, null,
-                ROUTE, ENDPOINT_SPAN, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedLowUsageInsightCodeObjectId), null, 13);
+                actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedLowUsageInsightCodeObjectId), null,
+                createSpanInfo(ENDPOINT_SPAN, expectedLowUsageInsightCodeObjectId), ROUTE, SERVICE,
+                13);
         expectedCodeObjectInsights.add(expectedLowUsageInsight);
 
         String expectedHighUsageInsightCodeObjectId = "Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$Defg";
         HighUsageInsight expectedHighUsageInsight = new HighUsageInsight(expectedHighUsageInsightCodeObjectId, ENV_1, SCOPE_1, IMPORTANCE_3, null,
-                ROUTE, ENDPOINT_SPAN, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedHighUsageInsightCodeObjectId), null, 98);
+                actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedHighUsageInsightCodeObjectId), null,
+                createSpanInfo(ENDPOINT_SPAN, expectedHighUsageInsightCodeObjectId), ROUTE, SERVICE,
+                98);
         expectedCodeObjectInsights.add(expectedHighUsageInsight);
 
-        SpanInfo spanInfo = new SpanInfo("Retrieving account", "Retrieving account", "MoneyTransferDomainService", "Sample.MoneyTransfer.API", "Sample.MoneyTransfer.API.MoneyTransferDomainService$_$Error");
-        SlowSpanInfo slowSpanInfo = new SlowSpanInfo(spanInfo,
+        SlowSpanInfo slowSpanInfo = new SlowSpanInfo(
+                createSpanInfo("SomeSpan", "Sample.MoneyTransfer.API.MoneyTransferDomainService$_$Error"),
                 new Percentile(0.10970134022722634D, new Duration(3.44D, "ms", 3441700L)),
                 new Percentile(0.2566821090980162D, new Duration(3.44D, "ms", 3441700L)),
                 new Percentile(0.4407383382867023D, new Duration(5.64D, "ms", 5643900L)),
@@ -127,7 +151,9 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
 
         String expectedSlowestSpansInsightCodeObjectId = "Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$TransferFunds";
         SlowestSpansInsight expectedSlowestSpansInsight = new SlowestSpansInsight(expectedSlowestSpansInsightCodeObjectId, ENV_1, SCOPE_1, IMPORTANCE_3, null,
-                ROUTE, ENDPOINT_SPAN, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedSlowestSpansInsightCodeObjectId), null, Collections.singletonList(slowSpanInfo));
+                actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedSlowestSpansInsightCodeObjectId), null,
+                createSpanInfo(ENDPOINT_SPAN, expectedSlowestSpansInsightCodeObjectId), ROUTE, SERVICE,
+                Collections.singletonList(slowSpanInfo));
         expectedCodeObjectInsights.add(expectedSlowestSpansInsight);
 
         String expectedSlowEndpointInsightCodeObjectId = "Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$TransferFunds";
@@ -137,12 +163,13 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
                 , SCOPE_1
                 , IMPORTANCE_3
                 , null
-                , ROUTE
-                , ENDPOINT_SPAN
                 , actualStartTimeNow
                 , customStartTimeFiveDaysBefore
                 , addPrefixToCodeObjectId(expectedSlowEndpointInsightCodeObjectId)
                 , null
+                , createSpanInfo(ENDPOINT_SPAN, expectedSlowEndpointInsightCodeObjectId)
+                , ROUTE
+                , SERVICE
                 , new Duration(0.11D, "ms", 11000)
                 , new Duration(0.12D, "ms", 12000)
                 , new Duration(0.13D, "ms", 13000)
@@ -197,6 +224,11 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
 
     }
 
+    private SpanInfo createSpanInfo(String spanName, String methodCodeObjectId) {
+        String instLib = "il";
+        return new SpanInfo(instLib, spanName, "span:$instLib$_$" + spanName, "disp_" + spanName,
+                methodCodeObjectId, "Internal");
+    }
 
     @Test
     void getInsightsEmptyResultTest() throws JsonProcessingException {

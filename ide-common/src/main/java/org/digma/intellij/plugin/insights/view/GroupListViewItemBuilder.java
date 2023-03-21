@@ -12,6 +12,8 @@ import org.digma.intellij.plugin.view.ListGroupManager;
 import org.digma.intellij.plugin.view.ListViewItemBuilder;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -54,11 +56,37 @@ public class GroupListViewItemBuilder<T extends CodeObjectInsight> implements Li
                 WorkspaceUrisHelper.findWorkspaceUrisForSpans(project,theListView, getSpanIds((SpanScalingInsight) insight), methodInfo);
                 break;
             }
+            case SpanEndpointBottleneck: {
+                WorkspaceUrisHelper.findWorkspaceUrisForMethodCodeObjectIds(project, theListView, getCodeObjectIds((SpanSlowEndpointsInsight) insight), methodInfo);
+                break;
+            }
+            case SpanUsages: {
+                WorkspaceUrisHelper.findWorkspaceUrisForMethodCodeObjectIds(project, theListView, getCodeObjectIds((SpanUsagesInsight) insight), methodInfo);
+            }
         }
 
         theGroup.addItem(theListView);
 
         return List.of();
+    }
+
+    private List<String> getCodeObjectIds(SpanUsagesInsight insight) {
+        var codeObjectIds = new ArrayList<String>();
+        for (SpanFlow ins: insight.getFlows()) {
+            var firstServiceId = ins.getFirstService();
+            if (firstServiceId != null)
+                codeObjectIds.add(firstServiceId.getCodeObjectId());
+            var lastServiceId = ins.getLastService();
+            if (lastServiceId != null)
+                codeObjectIds.add(lastServiceId.getCodeObjectId());
+        }
+        return codeObjectIds;
+    }
+
+    private List<String> getCodeObjectIds(SpanSlowEndpointsInsight insight) {
+        return insight.getSlowEndpoints().stream()
+                .map(it -> it.getEndpointInfo().getCodeObjectId())
+                .collect(Collectors.toList());
     }
 
     private List<String> getSpanIds(SpanScalingInsight insight) {

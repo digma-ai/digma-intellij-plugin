@@ -15,7 +15,6 @@ import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
 import org.digma.intellij.plugin.ui.service.SummaryViewService;
-import org.digma.intellij.plugin.ui.service.ToolWindowTabsHelper;
 import org.jetbrains.annotations.NotNull;
 
 import static org.digma.intellij.plugin.ui.common.MainSidePaneWindowPanelKt.createMainSidePaneWindowPanel;
@@ -48,8 +47,6 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         LanguageService.ensureStartupOnEDTForAll(project);
 
         var contentFactory = ContentFactory.getInstance();
-
-        ToolWindowTabsHelper.getInstance(project).setToolWindow(toolWindow);
 
         //initialize AnalyticsService early so the UI can detect the connection status when created
         project.getService(AnalyticsService.class);

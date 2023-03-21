@@ -8,8 +8,11 @@ import com.intellij.openapi.rd.util.launchBackground
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.util.Alarm
 import com.intellij.util.AlarmFactory
+import com.intellij.util.messages.MessageBusConnection
 import com.intellij.util.ui.JBUI
 import com.jetbrains.rd.util.lifetime.LifetimeDefinition
+import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.log.Log
@@ -32,10 +35,12 @@ class NavigationPanel(
 ) : DigmaResettablePanel() {
     private val logger: Logger = Logger.getInstance(NavigationPanel::class.java)
 
+    private val analyticsServiceStatusConnection: MessageBusConnection = project.messageBus.connect()
     private val project: Project
     private val insightsModel: InsightsModel
     private val changeEnvAlarm: Alarm
     private val localHostname: String
+    private var analyticsService: AnalyticsService? = null
     private val rebuildPanelLock = ReentrantLock()
 
     init {
@@ -46,8 +51,19 @@ class NavigationPanel(
         isOpaque = false
         layout = GridLayout(2, 1)
         border = JBUI.Borders.empty()
+        analyticsService = project.getService(AnalyticsService::class.java)
 
         rebuildInBackground()
+
+        analyticsServiceStatusConnection.subscribe(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, object : AnalyticsServiceConnectionEvent {
+            override fun connectionLost() {
+                rebuildInBackground()
+            }
+
+            override fun connectionGained() {
+                rebuildInBackground()
+            }
+        })
     }
 
 

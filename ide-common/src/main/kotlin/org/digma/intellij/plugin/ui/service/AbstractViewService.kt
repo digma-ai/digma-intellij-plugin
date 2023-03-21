@@ -20,7 +20,7 @@ abstract class AbstractViewService(val project: Project) : Disposable {
 
     private val analyticsConnectionEventsConnection: MessageBusConnection = project.messageBus.connect()
 
-    private val toolWindowTabsHelper = ToolWindowTabsHelper.getInstance(project)
+    private val tabsHelper = TabsHelper.getInstance(project)
 
     init {
         //subscribe to connection lost/gained , call doUpdateUi() on each event so that the no connection card will show or hide
@@ -43,12 +43,12 @@ abstract class AbstractViewService(val project: Project) : Disposable {
 
     fun doConnectionLost() {
         //if a view needs to do something when connection lost can override this method and don't forget to call super
-        if (toolWindowTabsHelper.isErrorDetailsOn()) {
-            toolWindowTabsHelper.errorDetailsOff()
+        if (tabsHelper.isErrorDetailsOn()) {
+            tabsHelper.errorDetailsOff()
             if (this is ErrorsViewService) {
                 this.closeErrorDetails()
             }
-            toolWindowTabsHelper.errorDetailsClosed()
+            tabsHelper.errorDetailsClosed()
         }
     }
 
@@ -62,11 +62,11 @@ abstract class AbstractViewService(val project: Project) : Disposable {
     //in the view until its closed. there may be exceptions, for example the summary view can reload while error details
     // is on but setVisible should not run.
     open fun canUpdateUI(): Boolean {
-        return !toolWindowTabsHelper.isErrorDetailsOn()
+        return !tabsHelper.isErrorDetailsOn()
     }
 
     open fun canSetVisible(): Boolean {
-        return !toolWindowTabsHelper.isErrorDetailsOn()
+        return !tabsHelper.isErrorDetailsOn()
     }
 
 

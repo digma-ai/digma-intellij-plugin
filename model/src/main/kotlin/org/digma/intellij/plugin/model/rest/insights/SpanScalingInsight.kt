@@ -3,8 +3,7 @@ package org.digma.intellij.plugin.model.rest.insights
 import com.fasterxml.jackson.annotation.JsonCreator
 import org.digma.intellij.plugin.model.InsightType
 import java.beans.ConstructorProperties
-import java.util.*
-import kotlin.collections.ArrayList
+import java.util.Date
 
 data class SpanScalingInsight
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -18,6 +17,7 @@ data class SpanScalingInsight
         "customStartTime",
         "prefixedCodeObjectId",
         "shortDisplayInfo",
+        "spanInfo",
         "spanName",
         "spanInstrumentationLibrary",
         "turningPointConcurrency",
@@ -36,6 +36,7 @@ constructor(
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
         override val shortDisplayInfo: ShortDisplayInfo?,
+        override val spanInfo: SpanInfo,
         val spanName: String,
         val spanInstrumentationLibrary: String,
         val turningPointConcurrency: Int,
@@ -43,7 +44,7 @@ constructor(
         val minDuration: Duration,
         val maxDuration: Duration,
         val rootCauseSpans: List<RootCauseSpan> = ArrayList()
-) : CodeObjectInsight {
+) : SpanInsight {
 
     override val type: InsightType = InsightType.SpanScaling
 }

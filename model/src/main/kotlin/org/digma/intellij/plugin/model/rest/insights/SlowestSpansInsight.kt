@@ -1,10 +1,12 @@
 package org.digma.intellij.plugin.model.rest.insights
 
 import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.digma.intellij.plugin.model.InsightType
 import java.beans.ConstructorProperties
-import java.util.*
+import java.util.Date
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class SlowestSpansInsight
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties(
@@ -13,12 +15,13 @@ data class SlowestSpansInsight
         "scope",
         "importance",
         "decorators",
-        "route",
-        "endpointSpan",
         "actualStartTime",
         "customStartTime",
         "prefixedCodeObjectId",
         "shortDisplayInfo",
+        "spanInfo",
+        "route",
+        "serviceName",
         "spans"
 )
 constructor(
@@ -27,12 +30,13 @@ constructor(
         override val scope: String,
         override val importance: Int,
         override val decorators: List<CodeObjectDecorator>?,
-        override var route: String,
-        override var endpointSpan: String,
         override val actualStartTime: Date?,
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
         override val shortDisplayInfo: ShortDisplayInfo?,
+        override val spanInfo: SpanInfo,
+        override var route: String,
+        override var serviceName: String,
         val spans: List<SlowSpanInfo>,
 ) : EndpointInsight {
     override val type: InsightType = InsightType.SlowestSpans

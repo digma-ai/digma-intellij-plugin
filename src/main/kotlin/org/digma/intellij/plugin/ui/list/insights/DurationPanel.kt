@@ -4,8 +4,11 @@ import com.intellij.openapi.fileEditor.impl.HTMLEditorProvider
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBPanel
 import org.digma.intellij.plugin.analytics.AnalyticsService
-import org.digma.intellij.plugin.model.rest.insights.*
-import org.digma.intellij.plugin.ui.common.*
+import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight
+import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
+import org.digma.intellij.plugin.model.rest.insights.SpanInfo
+import org.digma.intellij.plugin.ui.common.Laf
+import org.digma.intellij.plugin.ui.common.getHex
 import org.digma.intellij.plugin.ui.list.ListItemActionButton
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.model.TraceSample
@@ -45,8 +48,8 @@ fun spanDurationPanel(
                 durationsListPanel.add(durationsPanel)
             }
 
-    val buttonToGraph = buildButtonToPercentilesGraph(project, spanDurationsInsight.span)
-    val buttonToJaeger = buildButtonToJaeger(project, "Compare", spanDurationsInsight.span.name, traceSamples)
+    val buttonToGraph = buildButtonToPercentilesGraph(project, spanDurationsInsight.spanInfo)
+    val buttonToJaeger = buildButtonToJaeger(project, "Compare", spanDurationsInsight.spanInfo.name, traceSamples)
 
     return createInsightPanel(
             project = project,

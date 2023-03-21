@@ -3,7 +3,7 @@ package org.digma.intellij.plugin.model.rest.insights
 import org.digma.intellij.plugin.model.rest.insights.EndpointSchema.Companion.adjustHttpRouteIfNeeded
 import org.digma.intellij.plugin.model.rest.insights.EndpointSchema.Companion.getRouteInfo
 import java.time.temporal.ChronoUnit
-import java.util.*
+import java.util.Date
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -30,7 +30,9 @@ internal class EndpointSchemaTest {
     @Test
     fun adjustHttpRouteIfNeededShouldAdjustWhenNoSchema() {
         val codeObjectId = "123"
-        val normalUsageInsight = NormalUsageInsight(codeObjectId, "env1", "scope1", 3, null, "get /yes", "endpointSpan1", actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(codeObjectId), null, 3)
+        val normalUsageInsight = NormalUsageInsight(codeObjectId, "env1", "scope1", 3, null, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(codeObjectId), null,
+                createSpanInfo("endpointSpan1"), "get /yes", "myService",
+                3)
         adjustHttpRouteIfNeeded(normalUsageInsight)
         assertEquals("get /yes", normalUsageInsight.route)
     }
@@ -38,7 +40,9 @@ internal class EndpointSchemaTest {
     @Test
     fun adjustHttpRouteIfNeededShouldSkipAdjustWhenHttpSchemaAlreadyExists() {
         val codeObjectId = "456"
-        val normalUsageInsight = NormalUsageInsight(codeObjectId, "env2", "scope2", 2, null, "epHTTP:post /letsgo", "endpointSpan2", actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(codeObjectId), null, 8)
+        val normalUsageInsight = NormalUsageInsight(codeObjectId, "env2", "scope2", 2, null, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(codeObjectId), null,
+                createSpanInfo("endpointSpan1"), "epHTTP:post /letsgo", "myService",
+                8)
         adjustHttpRouteIfNeeded(normalUsageInsight)
         assertEquals("epHTTP:post /letsgo", normalUsageInsight.route)
     }
@@ -46,9 +50,16 @@ internal class EndpointSchemaTest {
     @Test
     fun adjustHttpRouteIfNeededShouldSkipAdjustWhenRpcSchemaAlreadyExists() {
         val codeObjectId = "789"
-        val normalUsageInsight = NormalUsageInsight(codeObjectId, "env3", "scope3", 5, null, "epRPC:serviceA.methodB", "endpointSpan3", actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(codeObjectId), null, 4)
+        val normalUsageInsight = NormalUsageInsight(codeObjectId, "env3", "scope3", 5, null, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(codeObjectId), null,
+                createSpanInfo("endpointSpan3"), "epRPC:serviceA.methodB", "MyService",
+                4)
         adjustHttpRouteIfNeeded(normalUsageInsight)
         assertEquals("epRPC:serviceA.methodB", normalUsageInsight.route)
+    }
+
+    private fun createSpanInfo(spanName: String): SpanInfo {
+        val instLib = "il"
+        return SpanInfo(instLib, spanName, "span:$instLib\$_\$$spanName", "disp_$spanName", null, "Internal")
     }
 
     private fun addPrefixToCodeObjectId(codeObjectId: String): String {

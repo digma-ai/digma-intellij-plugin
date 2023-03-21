@@ -14,6 +14,7 @@ import com.intellij.util.messages.MessageBusConnection
 import com.intellij.util.ui.JBUI
 import com.jetbrains.rd.util.lifetime.LifetimeDefinition
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.usageStatusChange.UsageStatusChangeListener
@@ -37,6 +38,8 @@ import javax.swing.event.PopupMenuEvent
 import javax.swing.event.PopupMenuListener
 import javax.swing.plaf.basic.BasicComboPopup
 
+const val NO_ENVIRONMENTS_MESSAGE: String = "No Environments"
+
 class EnvironmentsDropdownPanel(
         project: Project,
         usageStatusResult: UsageStatusResult,
@@ -46,6 +49,7 @@ class EnvironmentsDropdownPanel(
     private val logger: Logger = Logger.getInstance(EnvironmentsDropdownPanel::class.java)
 
     private val usageStatusChangeConnection: MessageBusConnection = project.messageBus.connect()
+    private val backendConnectionMonitor: BackendConnectionMonitor
     private var usageStatusResult: UsageStatusResult
     private val project: Project
     private val rebuildPanelLock = ReentrantLock()
@@ -84,6 +88,7 @@ class EnvironmentsDropdownPanel(
                         EDT.ensureEDT{rebuildInBackground(usageStatusResult)}
                     }
                 })
+        backendConnectionMonitor = project.getService(BackendConnectionMonitor::class.java)
     }
 
     override fun reset() {
@@ -94,18 +99,20 @@ class EnvironmentsDropdownPanel(
         usageStatusChangeConnection.dispose()
     }
 
-    private fun rebuildInBackground(usageStatus: UsageStatusResult) {
+    private fun rebuildInBackground(newUsageStatus: UsageStatusResult) {
         if (!popupMenuOpened.get()) {
-            if (usageStatus.environmentStatuses.size != usageStatusResult.environmentStatuses.size
-                    || usageStatusResult.codeObjectStatuses.isEmpty() || wasNotInitializedYet.get()) {
-                usageStatusResult = usageStatus
+            if (newUsageStatus.environmentStatuses.size != usageStatusResult.environmentStatuses.size
+                    || (usageStatusResult.codeObjectStatuses.isEmpty() && newUsageStatus.environmentStatuses.isNotEmpty())
+                    || wasNotInitializedYet.get()
+                    || backendConnectionMonitor.isConnectionError()) {
+                usageStatusResult = newUsageStatus
 
                 val lifetimeDefinition = LifetimeDefinition()
                 lifetimeDefinition.lifetime.launchBackground {
                     rebuildPanelLock.lock()
                     Log.log(logger::debug, "Lock acquired for rebuild EnvironmentsDropdownPanel process.")
                     try {
-                        rebuild(usageStatus)
+                        rebuild(newUsageStatus)
                     } finally {
                         rebuildPanelLock.unlock()
                         Log.log(logger::debug, "Lock released for rebuild EnvironmentsDropdownPanel process.")
@@ -193,7 +200,6 @@ class EnvironmentsDropdownPanel(
     ) {
         val items = mutableListOf<String>()
         val icons = mutableListOf<Icon>()
-        val environmentsInfo = environmentsInfo
 
         for (envInfo in environmentsInfo) {
             val buttonData = envInfo.value
@@ -204,17 +210,18 @@ class EnvironmentsDropdownPanel(
             icons.add(icon)
         }
 
+        val comboBox = ComboBox(items.toTypedArray())
         if (items.size > 0) {
             // this flag fixes initial load issue
             wasNotInitializedYet.set(false)
-        }
-        val comboBox = ComboBox(items.toTypedArray())
-        comboBox.renderer = object : SimpleListCellRenderer<String>() {
-            override fun customize(list: JList<out String>, value: String, index: Int, selected: Boolean, hasFocus: Boolean) {
-                text = value
-                icon = icons.getOrElse(index) { null }
-                foreground = if (selected) JBColor.WHITE else JBColor.BLACK
-                background = if (selected) JBColor.BLUE else JBColor.WHITE
+
+            comboBox.renderer = object : SimpleListCellRenderer<String>() {
+                override fun customize(list: JList<out String>, value: String, index: Int, selected: Boolean, hasFocus: Boolean) {
+                    text = value
+                    icon = icons.getOrElse(index) { null }
+                    foreground = if (selected) JBColor.WHITE else JBColor.BLACK
+                    background = if (selected) JBColor.BLUE else JBColor.WHITE
+                }
             }
         }
 
@@ -263,6 +270,16 @@ class EnvironmentsDropdownPanel(
         // Set a fixed width for the closed ComboBox
         comboBox.preferredSize = Dimension(30, comboBox.preferredSize.height)
         comboBox.selectedItem = getSelected()
+        comboBox.isEditable = false
+
+        if (comboBox.itemCount == 0) {
+            // display default value
+            comboBox.addItem(NO_ENVIRONMENTS_MESSAGE)
+        }
+        if (backendConnectionMonitor.isConnectionError()) {
+            comboBox.removeAllItems()
+            comboBox.addItem(NO_ENVIRONMENTS_MESSAGE)
+        }
 
         this.add(comboBox)
 

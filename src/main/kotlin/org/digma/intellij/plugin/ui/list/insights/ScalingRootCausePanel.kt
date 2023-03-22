@@ -24,7 +24,7 @@ fun spanScalingRootCauseItemsPanel(project: Project, insight: SpanScalingRootCau
 
     val buttonToGraph = buildButtonToPercentilesGraph(project, insight.spanInfo.name,insight.spanInfo.instrumentationLibrary)
 
-    val backwardsCompatibilityTitle = "Scaling Issue Root Cause Found";
+    val backwardsCompatibilityTitle = "Scaling Issue Root Cause";
     val backwardsCompatibilityDescription = "Significant performance degradation here";
 
     val uniqueInsightId = insight.codeObjectId + insight.type

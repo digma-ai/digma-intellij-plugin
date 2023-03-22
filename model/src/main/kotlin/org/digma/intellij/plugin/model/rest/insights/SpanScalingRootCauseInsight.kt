@@ -31,9 +31,9 @@ constructor(
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
         override val shortDisplayInfo: ShortDisplayInfo?,
-        val spanInfo: SpanInfo,
+        override val spanInfo: SpanInfo,
         val affectedEndpoints: List<EndpointInfo> = ArrayList()
-) : CodeObjectInsight {
+) : SpanInsight {
 
     override val type: InsightType = InsightType.SpanScalingRootCause
 }

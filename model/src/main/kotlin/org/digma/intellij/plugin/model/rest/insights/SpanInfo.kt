@@ -22,5 +22,5 @@ constructor(
         val spanCodeObjectId: String?, //TODO: should be not null, somehow the backend returns nulls on endpoints
         val displayName: String,
         val methodCodeObjectId: String?,
-        val kind: String,
+        val kind: String?,
 )

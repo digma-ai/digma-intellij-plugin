@@ -35,6 +35,7 @@ enum class InsightType {
     SpanEndpointBottleneck,
     SpanDurationBreakdown,
     SpanScaling,
+    SpanScalingRootCause,
     ;
 }
 

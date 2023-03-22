@@ -17,6 +17,7 @@ import org.digma.intellij.plugin.model.rest.insights.SpanScalingInsight;
 import org.digma.intellij.plugin.model.rest.insights.SpanSlowEndpointsInsight;
 import org.digma.intellij.plugin.model.rest.insights.SpanUsagesInsight;
 import org.digma.intellij.plugin.model.rest.insights.UnmappedInsight;
+import org.digma.intellij.plugin.model.rest.insights.SpanScalingRootCauseInsight;
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupType;
 import org.digma.intellij.plugin.view.EmptyListViewItemBuilder;
 import org.digma.intellij.plugin.view.ListViewItemBuilder;
@@ -56,6 +57,8 @@ public class BuildersHolder {
                 return new GroupListViewItemBuilder<SpanDurationsInsight>(InsightGroupType.Span, null, spanDurationsInsight -> spanDurationsInsight.spanName());
             case SpanScaling:
                 return new GroupListViewItemBuilder<SpanScalingInsight>(InsightGroupType.Span, null, SpanScalingInsight::spanName);
+            case SpanScalingRootCause:
+                return new GroupListViewItemBuilder<SpanScalingRootCauseInsight>(InsightGroupType.Span, null, SpanScalingRootCauseInsight::spanName);
             case SpanDurationBreakdown:
                 return new GroupListViewItemBuilder<SpanDurationBreakdownInsight>(InsightGroupType.Span, null, SpanDurationBreakdownInsight::spanName);
             case SpanEndpointBottleneck:

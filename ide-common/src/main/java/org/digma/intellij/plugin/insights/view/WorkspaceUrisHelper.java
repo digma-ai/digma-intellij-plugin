@@ -23,9 +23,18 @@ public class WorkspaceUrisHelper {
         findWorkspaceUrisForSpans(theListView, spanIds, languageService);
     }
 
+    public static void findWorkspaceUrisForMethodCodeObjectIds(@NotNull Project project, ListViewItem<?> theListView, @NotNull List<String> codeObjectIds, @NotNull MethodInfo methodInfo) {
+        var languageService = LanguageService.findLanguageServiceByMethodInfo(project, methodInfo);
+        findWorkspaceUrisMethodCodeObjectIds(theListView, codeObjectIds, languageService);
+    }
 
     private static void findWorkspaceUrisForSpans(ListViewItem<?> theListView, @NotNull List<String> spanIds, @NotNull LanguageService languageService) {
         var workspaceUris = languageService.findWorkspaceUrisForSpanIds(spanIds);
+        workspaceUris.forEach((k, v) -> theListView.getMoreData().put(k, v));
+    }
+
+    private static void findWorkspaceUrisMethodCodeObjectIds(ListViewItem<?> theListView, @NotNull List<String> codeObjectIds, @NotNull LanguageService languageService) {
+        var workspaceUris = languageService.findWorkspaceUrisForMethodCodeObjectIds(codeObjectIds);
         workspaceUris.forEach((k, v) -> theListView.getMoreData().put(k, v));
     }
 }

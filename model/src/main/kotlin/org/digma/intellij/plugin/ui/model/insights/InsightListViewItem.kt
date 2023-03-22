@@ -17,6 +17,7 @@ open class InsightListViewItem<INSIGHT : CodeObjectInsight>(insight: INSIGHT) :
                 // Span
                 InsightType.SpanDurations -> 60
                 InsightType.SpanUsages -> 61
+                InsightType.SpanScalingRootCause -> 62
                 InsightType.SpanScaling -> 63
                 InsightType.SpaNPlusOne -> 65
                 InsightType.SpanDurationChange -> 66

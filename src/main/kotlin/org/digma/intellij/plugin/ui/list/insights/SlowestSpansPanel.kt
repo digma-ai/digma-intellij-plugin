@@ -68,7 +68,7 @@ fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: 
     )
 }
 
-fun spanSlowEndpointsPanel(project: Project, insight: SpanSlowEndpointsInsight): JPanel {
+fun spanSlowEndpointsPanel(project: Project, insight: SpanSlowEndpointsInsight, moreData: HashMap<String, Any>): JPanel {
     val endpointsListPanel = JPanel()
     endpointsListPanel.layout = GridLayout(insight.slowEndpoints.size, 1, 0, 3)
     endpointsListPanel.border = empty()
@@ -80,12 +80,24 @@ fun spanSlowEndpointsPanel(project: Project, insight: SpanSlowEndpointsInsight):
         currContainerPanel.isOpaque = false
 
         val routeInfo = EndpointSchema.getRouteInfo(slowEndpointInfo.endpointInfo.route)
+        var routeCodeObjectId = slowEndpointInfo.endpointInfo.codeObjectId;
         val shortRouteName =  routeInfo.shortName
 
-        val line1 = JBLabel(asHtml("${slowEndpointInfo.endpointInfo.serviceName}: <b>$shortRouteName</b>"))
-        val line2 = JBLabel(asHtml(descriptionOf(slowEndpointInfo)))
+        if (routeCodeObjectId != null && moreData.contains(routeCodeObjectId)) {
+            val normalizedDisplayName = StringUtils.normalizeSpace(shortRouteName)
+            val link = ActionLink(normalizedDisplayName) {
+                openWorkspaceFileForSpan(project, moreData, routeCodeObjectId!!)
+            }
+            var targetClass = routeCodeObjectId?.substringBeforeLast("\$_\$");
 
-        currContainerPanel.add(line1)
+            link.toolTipText = asHtml("$targetClass: $shortRouteName")
+            currContainerPanel.add(link, BorderLayout.NORTH)
+        } else {
+            val line1 = JBLabel(asHtml("${slowEndpointInfo.endpointInfo.serviceName}: <b>$shortRouteName</b>"))
+            currContainerPanel.add(line1)
+        }
+
+        val line2 = JBLabel(asHtml(descriptionOf(slowEndpointInfo)))
         currContainerPanel.add(line2)
         endpointsListPanel.add(currContainerPanel)
     }

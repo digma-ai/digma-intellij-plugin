@@ -238,7 +238,7 @@ public class AnalyticsService implements Disposable {
         try {
             analyticsProviderProxy.close();
         } catch (Exception e) {
-            Log.log(LOGGER::error, "exception while closing AnalyticsProvider {}", e.getMessage());
+            Log.error(LOGGER, project, e, "exception while closing AnalyticsProvider {}", e.getMessage());
         }
     }
 
@@ -385,6 +385,7 @@ public class AnalyticsService implements Disposable {
                 status.error();
                 Log.log(LOGGER::debug, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getMessage());
                 LOGGER.error(e);
+                ActivityMonitor.getInstance(project).registerError(e, "Error invoking AnalyticsProvider");
                 throw e;
             } finally {
                 stopWatch.stop();

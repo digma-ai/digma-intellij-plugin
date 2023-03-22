@@ -3,13 +3,16 @@ package org.digma.intellij.plugin.ui;
 import com.intellij.ide.plugins.PluginManagerCore;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationInfo;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.extensions.PluginDescriptor;
 import com.intellij.openapi.project.Project;
+import com.posthog.java.PostHog;
 import org.digma.intellij.plugin.PluginId;
 import org.digma.intellij.plugin.common.CommonUtils;
 import org.digma.intellij.plugin.model.InsightType;
+import org.digma.intellij.plugin.log.Log;
 import org.jetbrains.annotations.NotNull;
-import com.posthog.java.PostHog;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.Duration;
@@ -19,43 +22,15 @@ import java.util.*;
 
 public class ActivityMonitor implements Disposable {
 
-    //private static final Logger LOGGER = Logger.getInstance(ActivityMonitor.class);
-    private static final String POSTHOG_API_KEY = System.getenv("POSTHOG_API_KEY");
-    private static final String POSTHOG_HOST = "https://app.posthog.com";
-    private final PostHog posthog;
+    private static final Logger LOGGER = Logger.getInstance(ActivityMonitor.class);
     private final String clientId;
+    private final PosthogClientProvider clientProvider;
     private LocalDateTime lastLensClick;
     private HashSet<InsightType> lastInsightsViewed;
 
     public ActivityMonitor() {
-        posthog = new PostHog.Builder(POSTHOG_API_KEY).host(POSTHOG_HOST).build();
         clientId = Integer.toHexString(CommonUtils.getLocalHostname().hashCode());
-
-//        String apiToken = System.getProperty("token");
-//        String platformType = System.getProperty("platformType");
-//
-//        InputStream is = getClass().getClassLoader().getResourceAsStream("generated.txt");
-//
-//        try {
-//            String result = IOUtils.toString(is, StandardCharsets.UTF_8);
-//        } catch (IOException e) {
-//            Log.error(LOGGER, e, "");
-//        }
-
-        var osType = System.getProperty("os.name");
-
-        var ideVersion = ApplicationInfo.getInstance().getBuild().asString();
-
-        var pluginVersion = Optional.ofNullable(PluginManagerCore.getPlugin(com.intellij.openapi.extensions.PluginId.getId(PluginId.PLUGIN_ID)))
-                .map(PluginDescriptor::getVersion)
-                .orElse("unknown");
-
-        posthog.set(clientId, new HashMap<>() {
-        {
-            put("os.type", osType);
-            put("ide.version", ideVersion);
-            put("plugin.version", pluginVersion);
-        }});
+        clientProvider = new PosthogClientProvider(p -> registerSessionDetails(p, clientId));
     }
 
     public static ActivityMonitor getInstance(@NotNull Project project){
@@ -71,33 +46,33 @@ public class ActivityMonitor implements Disposable {
             ? "lens click"
             : "unknown";
 
-        posthog.capture(clientId, "side-panel opened", new HashMap<>() {
+        capture(clientId, "side-panel opened", new HashMap<>() {
         {
             put("reason", reason);
         }});
     }
 
     public void registerFirstConnectionEstablished() {
-        posthog.capture(clientId, "connection first-established");
+        capture(clientId, "connection first-established");
     }
 
     public void registerConnectionReestablished() {
-        posthog.capture(clientId, "connection reestablished");
+        capture(clientId, "connection reestablished");
     }
 
     public void registerConnectionLost() {
-        posthog.capture(clientId, "connection lost");
+        capture(clientId, "connection lost");
     }
 
     public void registerFirstInsightReceived() {
-        posthog.capture(clientId, "insight first-received");
+        capture(clientId, "insight first-received");
     }
 
     public void registerError(Exception exception, String message) {
         var stringWriter = new StringWriter();
         exception.printStackTrace(new PrintWriter(stringWriter));
 
-        posthog.capture(clientId, "error", new HashMap<>() {
+        capture(clientId, "error", new HashMap<>() {
             {
                 put("message", message);
                 put("exception.type", exception.getClass().getName());
@@ -112,21 +87,49 @@ public class ActivityMonitor implements Disposable {
             return;
 
         lastInsightsViewed = newInsightsViewed;
-        posthog.capture(clientId, "insights viewed", new HashMap<>() {
+        capture(clientId, "insights viewed", new HashMap<>() {
         {
             put("insights", insightTypes);
         }});
     }
 
     public void registerInsightButtonClicked(@NotNull String button) {
-        posthog.capture(clientId, "insights button-clicked", new HashMap<>() {
-            {
-                put("button", button);
-            }});
+        capture(clientId, "insights button-clicked", new HashMap<>() {
+        {
+            put("button", button);
+        }});
+    }
+
+    private static void registerSessionDetails(PostHog postHog, String clientId){
+        var osType = System.getProperty("os.name");
+        var ideVersion = ApplicationInfo.getInstance().getBuild().asString();
+        var pluginVersion = Optional.ofNullable(PluginManagerCore.getPlugin(com.intellij.openapi.extensions.PluginId.getId(PluginId.PLUGIN_ID)))
+                .map(PluginDescriptor::getVersion)
+                .orElse("unknown");
+
+        postHog.set(clientId, new HashMap<>() {
+        {
+            put("os.type", osType);
+            put("ide.version", ideVersion);
+            put("plugin.version", pluginVersion);
+        }});
+    }
+
+    private void capture(String distinctId, String event) {
+        capture(distinctId, event, null);
+    }
+
+    private void capture(String distinctId, String event, Map<String, Object> properties) {
+        var posthog = clientProvider.getCurrent();
+        if(posthog == null) {
+            Log.log(LOGGER::debug, "Skipping posthog event registration \"{}\" (reason: client is null)", event);
+            return;
+        }
+        posthog.capture(distinctId, event, properties);
     }
 
     @Override
     public void dispose() {
-        posthog.shutdown();
+        clientProvider.dispose();
     }
 }

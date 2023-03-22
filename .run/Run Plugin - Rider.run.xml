@@ -2,11 +2,6 @@
   <configuration default="false" name="Run Plugin - Rider" type="GradleRunConfiguration" factoryName="Gradle">
     <log_file alias="idea.log" path="$PROJECT_DIR$/build/idea-sandbox/system/log/idea_RD.log" />
     <ExternalSystemSettings>
-      <option name="env">
-        <map>
-          <entry key="POSTHOG_API_KEY" value="phc_T86fSgmN9GRyCjHRXKrbGkNEJrYyCcFMkQaoFHpaGk7" />
-        </map>
-      </option>
       <option name="executionName" />
       <option name="externalProjectPath" value="$PROJECT_DIR$" />
       <option name="externalSystemIdString" value="GRADLE" />

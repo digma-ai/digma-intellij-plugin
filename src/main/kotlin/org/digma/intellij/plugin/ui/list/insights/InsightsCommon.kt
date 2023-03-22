@@ -28,8 +28,14 @@ import java.awt.event.MouseEvent
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.util.*
-import javax.swing.*
+import java.util.Date
+import javax.swing.Box
+import javax.swing.Icon
+import javax.swing.JButton
+import javax.swing.JComponent
+import javax.swing.JLabel
+import javax.swing.JPanel
+import javax.swing.SwingConstants
 import kotlin.math.max
 
 private const val RECALCULATE = "Recalculate"
@@ -37,7 +43,7 @@ private const val REFRESH = "Refresh"
 
 fun insightTitlePanel(panel: JPanel): JPanel {
     panel.isOpaque = false
-    panel.border = empty( 0, 5)
+    panel.border = empty(0, 5)
     return panel
 }
 
@@ -142,11 +148,11 @@ private fun rebuildPanel(
             insightPanel as DigmaResettablePanel
     ), BorderLayout.EAST)
 
-    if(bodyPanel != null || buttons != null){
+    if (bodyPanel != null || buttons != null) {
         val bodyWrapper = createDefaultBoxLayoutYAxisPanel()
         bodyWrapper.isOpaque = false
 
-        if(insight.customStartTime != null || isRecalculateButtonPressed)
+        if (insight.customStartTime != null || isRecalculateButtonPressed)
             bodyWrapper.add(getTimeInfoMessagePanel(
                     customStartTime = insight.customStartTime,
                     actualStartTime = insight.actualStartTime,
@@ -154,10 +160,10 @@ private fun rebuildPanel(
                     project = project
             ))
 
-        if(bodyPanel != null)
+        if (bodyPanel != null)
             bodyWrapper.add(bodyPanel)
 
-        if(buttons != null){
+        if (buttons != null) {
             val buttonsListPanel = getBasicEmptyListPanel()
             buttonsListPanel.border = JBUI.Borders.emptyTop(5)
             buttons.filterNotNull().forEach {
@@ -167,11 +173,11 @@ private fun rebuildPanel(
             bodyWrapper.add(buttonsListPanel)
         }
 
-        if(paginationComponent != null){
+        if (paginationComponent != null) {
             bodyWrapper.add(getPaginationPanel(paginationComponent))
         }
 
-        insightPanel.add(bodyWrapper,BorderLayout.SOUTH)
+        insightPanel.add(bodyWrapper, BorderLayout.SOUTH)
     }
     return insightPanel
 }
@@ -225,15 +231,16 @@ private fun getFormattedTimeDifference(diff: Duration): String {
     }
     return builder.toString()
 }
+
 private fun getBasicEmptyListPanel(): JPanel {
-    val listPanel = JPanel(FlowLayout(FlowLayout.RIGHT, 0 ,0))
+    val listPanel = JPanel(FlowLayout(FlowLayout.RIGHT, 0, 0))
     listPanel.isOpaque = false
     listPanel.border = empty()
     return listPanel
 }
 
 private fun getPaginationPanel(paginationComponent: JComponent?): JPanel {
-    val paginationPanel = JPanel(FlowLayout(FlowLayout.LEFT, 0 ,0))
+    val paginationPanel = JPanel(FlowLayout(FlowLayout.LEFT, 0, 0))
     paginationPanel.isOpaque = false
     paginationPanel.border = empty()
 
@@ -243,7 +250,7 @@ private fun getPaginationPanel(paginationComponent: JComponent?): JPanel {
 }
 
 private fun getMessageLabel(title: String, description: String): JLabel {
-    val messageLabel = JLabel(buildBoldTitleGrayedComment(title,description), SwingConstants.LEFT)
+    val messageLabel = JLabel(buildBoldTitleGrayedComment(title, description), SwingConstants.LEFT)
     messageLabel.isOpaque = false
     messageLabel.verticalAlignment = SwingConstants.TOP
     return messageLabel
@@ -259,7 +266,7 @@ private fun getIconsListPanel(
     if (iconsList != null) {
         icons.addAll(iconsList)
     }
-    if(insight.prefixedCodeObjectId != null) {
+    if (insight.prefixedCodeObjectId != null) {
         icons.add(Laf.Icons.Insight.THREE_DOTS)
     }
 
@@ -270,9 +277,9 @@ private fun getIconsListPanel(
         iconLabel.horizontalAlignment = SwingConstants.RIGHT
         iconLabel.verticalAlignment = SwingConstants.TOP
         iconLabel.isOpaque = false
-        iconLabel.border = empty(2,2,2, 4)
+        iconLabel.border = empty(2, 2, 2, 4)
 
-        if(it.instanceOf(ThreeDotsIcon::class)) {
+        if (it.instanceOf(ThreeDotsIcon::class)) {
             iconLabel.cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
             iconLabel.addMouseListener(object : MouseAdapter() {
                 override fun mouseClicked(e: MouseEvent?) {
@@ -284,6 +291,7 @@ private fun getIconsListPanel(
                             project = project
                     )
                 }
+
                 override fun mouseEntered(e: MouseEvent?) {
                     showHintMessage(
                             threeDotsIcon = iconLabel,
@@ -293,6 +301,7 @@ private fun getIconsListPanel(
                             project = project
                     )
                 }
+
                 override fun mouseExited(e: MouseEvent?) {}
                 override fun mousePressed(e: MouseEvent?) {}
             })
@@ -355,38 +364,54 @@ fun genericPanelForSingleInsight(project: Project, modelObject: Any?): JPanel {
 }
 
 
-internal fun getInsightIconPanelRightBorderSize():Int{
+internal fun getInsightIconPanelRightBorderSize(): Int {
     return 5
 }
-internal fun getCurrentLargestWidthIconPanel(layoutHelper: PanelsLayoutHelper, width: Int):Int{
+
+internal fun getCurrentLargestWidthIconPanel(layoutHelper: PanelsLayoutHelper, width: Int): Int {
     //this method should never return null and never throw NPE
     val currentLargest: Int =
-        (layoutHelper.getObjectAttribute("insightsIconPanelBorder","largestWidth")?: 0) as Int
-    return max(width,currentLargest)
+            (layoutHelper.getObjectAttribute("insightsIconPanelBorder", "largestWidth") ?: 0) as Int
+    return max(width, currentLargest)
 }
-internal fun addCurrentLargestWidthIconPanel(layoutHelper: PanelsLayoutHelper,width: Int){
+
+internal fun addCurrentLargestWidthIconPanel(layoutHelper: PanelsLayoutHelper, width: Int) {
     //this method should never throw NPE
     val currentLargest: Int =
-        (layoutHelper.getObjectAttribute("insightsIconPanelBorder","largestWidth")?: 0) as Int
-    layoutHelper.addObjectAttribute("insightsIconPanelBorder","largestWidth",
-        max(currentLargest,width))
+            (layoutHelper.getObjectAttribute("insightsIconPanelBorder", "largestWidth") ?: 0) as Int
+    layoutHelper.addObjectAttribute("insightsIconPanelBorder", "largestWidth",
+            max(currentLargest, width))
 }
 
+const val NoDataYetDescription = "No data received yet for this span, please trigger some actions using this code to see more insights."
 
+fun noDataYetInsightPanel(): JPanel {
 
-class InsightAlignedPanel(private val layoutHelper: PanelsLayoutHelper): JPanel(){
+    val thePanel = object : DigmaResettablePanel() {
+        override fun reset() {
+        }
+    }
+    thePanel.layout = BorderLayout()
+    thePanel.add(getMessageLabel("No Data Yet", ""), BorderLayout.WEST)
+    thePanel.add(JLabel(asHtml(NoDataYetDescription)), BorderLayout.SOUTH)
+
+    return insightItemPanel(thePanel as DigmaResettablePanel)
+}
+
+class InsightAlignedPanel(private val layoutHelper: PanelsLayoutHelper) : JPanel() {
 
     init {
         border = JBUI.Borders.emptyRight(getInsightIconPanelRightBorderSize())
     }
+
     override fun getPreferredSize(): Dimension {
         val ps = super.getPreferredSize()
-        if (ps == null){
+        if (ps == null) {
             return ps
         }
         val h = ps.height
         val w = ps.width
-        addCurrentLargestWidthIconPanel(layoutHelper,w)
-        return Dimension(getCurrentLargestWidthIconPanel(layoutHelper,w), h)
+        addCurrentLargestWidthIconPanel(layoutHelper, w)
+        return Dimension(getCurrentLargestWidthIconPanel(layoutHelper, w), h)
     }
 }

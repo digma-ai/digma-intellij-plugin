@@ -13,7 +13,6 @@ import org.digma.intellij.plugin.view.ListViewItemBuilder;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -91,25 +90,25 @@ public class GroupListViewItemBuilder<T extends CodeObjectInsight> implements Li
     private List<String> getCodeObjectIds(SpanScalingRootCauseInsight insight) {
         return insight.getAffectedEndpoints().stream().filter(it -> it.getCodeObjectId() != null)
                 .map(it -> it.getCodeObjectId())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private List<String> getCodeObjectIds(SpanSlowEndpointsInsight insight) {
         return insight.getSlowEndpoints().stream().filter(it -> it.getEndpointInfo().getCodeObjectId() != null)
                 .map(it -> it.getEndpointInfo().getCodeObjectId())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private List<String> getSpanIds(SpanScalingInsight insight) {
         return insight.getRootCauseSpans().stream()
                 .map(it -> CodeObjectsUtil.createSpanId(it.getInstrumentationLibrary(), it.getName()))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private List<String> getSpanIds(SlowestSpansInsight insight) {
        return insight.getSpans().stream()
                 .map(it -> CodeObjectsUtil.createSpanId(it.getSpanInfo().getInstrumentationLibrary(), it.getSpanInfo().getName()))
-                .collect(Collectors.toList());
+               .toList();
     }
 
     private List<String> getSpanIds(SpanDurationBreakdownInsight insight) {

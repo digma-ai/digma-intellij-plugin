@@ -3,7 +3,8 @@ package org.digma.intellij.plugin.model.rest.insights
 import com.fasterxml.jackson.annotation.JsonCreator
 import org.digma.intellij.plugin.model.InsightType
 import java.beans.ConstructorProperties
-import java.util.*
+import java.util.Date
+import kotlin.collections.ArrayList
 
 
 data class SpanScalingRootCauseInsight

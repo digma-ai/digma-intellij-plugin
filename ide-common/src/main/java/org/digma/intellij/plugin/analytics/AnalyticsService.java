@@ -43,6 +43,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.net.http.HttpTimeoutException;
 import java.time.Instant;
@@ -373,6 +374,11 @@ public class AnalyticsService implements Disposable {
                 //log connection exceptions only the first time and show an error notification.
                 // while status is in error the following connection exceptions will not be logged, other exceptions
                 // will be logged only once.
+
+                if (e.getTargetException().getCause() instanceof SocketTimeoutException) {
+                    Log.log(LOGGER::warn, "SocketTimeoutException for {} request => {}", method.getName(), e.getTargetException().getCause());
+                    return null;
+                }
 
                 boolean isConnectionException = isConnectionException(e) || isSslConnectionException(e);
                 if (status.isOk() && isConnectionException) {

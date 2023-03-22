@@ -24,6 +24,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor;
 import org.digma.intellij.plugin.analytics.EnvironmentChanged;
+import org.digma.intellij.plugin.common.AsynchronousBackgroundTask;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.CommonUtils;
 import org.digma.intellij.plugin.log.Log;
@@ -42,9 +43,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static org.digma.intellij.plugin.toolwindow.recentactivity.ToolWindowUtil.RECENT_ACTIVITY_GET_DATA;
 import static org.digma.intellij.plugin.toolwindow.recentactivity.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_SPAN;
@@ -67,6 +68,8 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
     private EditorService editorService;
     private AnalyticsService analyticsService;
     private String localHostname;
+
+    private ReentrantLock recentActivityGetDataLock = new ReentrantLock();
 
     /**
      * this is the starting point of the plugin. this method is called when the tool window is opened.
@@ -125,15 +128,16 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
                 Log.log(LOGGER::debug, "request: {}", request);
                 JcefMessageRequest reactMessageRequest = parseJsonToObject(request, JcefMessageRequest.class);
                 if (RECENT_ACTIVITY_GET_DATA.equalsIgnoreCase(reactMessageRequest.getAction())) {
-                    return processRecentActivityGetDataRequest(analyticsService, jbCefBrowser, callback);
+                    new AsynchronousBackgroundTask(recentActivityGetDataLock,
+                            () -> processRecentActivityGetDataRequest(analyticsService, jbCefBrowser)).queue();
                 }
                 if (RECENT_ACTIVITY_GO_TO_SPAN.equalsIgnoreCase(reactMessageRequest.getAction())) {
                     RecentActivityGoToSpanRequest recentActivityGoToSpanRequest = parseJsonToObject(request, RecentActivityGoToSpanRequest.class);
-                    return processRecentActivityGoToSpanRequest(recentActivityGoToSpanRequest.getPayload(), project, callback);
+                    processRecentActivityGoToSpanRequest(recentActivityGoToSpanRequest.getPayload(), project);
                 }
                 if (RECENT_ACTIVITY_GO_TO_TRACE.equalsIgnoreCase(reactMessageRequest.getAction())) {
                     RecentActivityGoToTraceRequest recentActivityGoToTraceRequest = parseJsonToObject(request, RecentActivityGoToTraceRequest.class);
-                    return processRecentActivityGoToTraceRequest(recentActivityGoToTraceRequest, project, callback);
+                    processRecentActivityGoToTraceRequest(recentActivityGoToTraceRequest, project);
                 }
 
                 callback.success("");
@@ -163,7 +167,7 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
         return jcefContent;
     }
 
-    private boolean processRecentActivityGoToSpanRequest(RecentActivityEntrySpanPayload payload, Project project, CefQueryCallback callback) {
+    private void processRecentActivityGoToSpanRequest(RecentActivityEntrySpanPayload payload, Project project) {
         if (payload != null) {
             String methodCodeObjectId = payload.getSpan().getMethodCodeObjectId();
 
@@ -186,46 +190,39 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
                     }
                 }
             });
-            callback.success(SUCCESSFULLY_PROCESSED_JCEF_REQUEST_MESSAGE + " RECENT_ACTIVITY_GO_TO_SPAN at " + new Date());
-            return true;
-        } else {
-            return false;
         }
     }
 
-    private boolean processRecentActivityGoToTraceRequest(RecentActivityGoToTraceRequest recentActivityGoToTraceRequest, Project project, CefQueryCallback callback) {
+    private void processRecentActivityGoToTraceRequest(RecentActivityGoToTraceRequest recentActivityGoToTraceRequest, Project project) {
         RecentActivityEntrySpanForTracePayload payload = recentActivityGoToTraceRequest.getPayload();
         if (payload != null) {
             openJaegerFromRecentActivity(project, payload.getTraceId(), payload.getSpan().getScopeId());
         } else {
             Log.log(LOGGER::debug, "processRecentActivityGoToTraceRequest payload is empty");
         }
-        callback.success(SUCCESSFULLY_PROCESSED_JCEF_REQUEST_MESSAGE + " RECENT_ACTIVITY_GO_TO_TRACE at " + new Date());
-        return true;
     }
 
-    private boolean processRecentActivityGetDataRequest(AnalyticsService analyticsService, JBCefBrowser jbCefBrowser, CefQueryCallback callback) {
+    private void processRecentActivityGetDataRequest(AnalyticsService analyticsService, JBCefBrowser jbCefBrowser) {
         List<String> allEnvironments = analyticsService.getEnvironments();
         List<String> sortedEnvironments = getSortedEnvironments(allEnvironments, localHostname);
         RecentActivityResult recentActivityData = null;
         try {
             recentActivityData = analyticsService.getRecentActivity(allEnvironments);
         } catch (AnalyticsServiceException e) {
-            Log.log(LOGGER::debug, "AnalyticsServiceException for getRecentActivity: {}", e.getMessage());
+            Log.log(LOGGER::warn, "AnalyticsServiceException for getRecentActivity: {}", e.getMessage());
         }
-        String requestMessage = JBCefBrowserUtil.resultToString(new JcefMessageRequest(
-                REQUEST_MESSAGE_TYPE,
-                RECENT_ACTIVITY_SET_DATA,
-                new JcefMessagePayload(
-                        sortedEnvironments,
-                        getEntriesWithAdjustedLocalEnvs(recentActivityData)
-                )
-        ));
+        if (recentActivityData != null) {
+            String requestMessage = JBCefBrowserUtil.resultToString(new JcefMessageRequest(
+                    REQUEST_MESSAGE_TYPE,
+                    RECENT_ACTIVITY_SET_DATA,
+                    new JcefMessagePayload(
+                            sortedEnvironments,
+                            getEntriesWithAdjustedLocalEnvs(recentActivityData)
+                    )
+            ));
 
-        JBCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser);
-
-        callback.success(SUCCESSFULLY_PROCESSED_JCEF_REQUEST_MESSAGE + " RECENT_ACTIVITY_SET_DATA at " + new Date());
-        return true;
+            JBCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser);
+        }
     }
 
     private List<RecentActivityResponseEntry> getEntriesWithAdjustedLocalEnvs(RecentActivityResult recentActivityData) {
@@ -244,7 +241,7 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
     }
 
     private String getAdjustedEnvName(String environment) {
-        return environment.toUpperCase().endsWith(SUFFIX_OF_LOCAL) ? LOCAL_ENV: environment;
+        return environment.toUpperCase().endsWith(SUFFIX_OF_LOCAL) ? LOCAL_ENV : environment;
     }
 
     private String adjustBackEnvNameIfNeeded(String environment) {

@@ -6,4 +6,4 @@ import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRespons
 
 data class JcefMessagePayload
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-constructor(val environments: MutableList<String>, val entries: MutableList<RecentActivityResponseEntry>)
+constructor(val environments: List<String>, val entries: List<RecentActivityResponseEntry>)

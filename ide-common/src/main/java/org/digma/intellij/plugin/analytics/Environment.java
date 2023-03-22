@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.analytics;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.log.Log;
@@ -22,6 +23,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Environment implements EnvironmentsSupplier {
 
     private static final Logger LOGGER = Logger.getInstance(Environment.class);
+    private static final String NO_ENVIRONMENTS_MESSAGE = "No Environments";
 
     private String current;
     private final SettingsState settingsState;
@@ -74,8 +76,8 @@ public class Environment implements EnvironmentsSupplier {
 
         Log.log(LOGGER::debug, "Setting current environment , old={},new={}", this.current, newEnv);
 
-        //don't change or fire the event if it's the same env. it happens because we have two combobox, one on each tab
-        if (Objects.equals(this.current, newEnv)) {
+        //don't change or fire the event if it's the same env.
+        if (Objects.equals(this.current, newEnv) || StringUtils.isEmpty(newEnv) || NO_ENVIRONMENTS_MESSAGE.equals(newEnv)) {
             return;
         }
 
@@ -98,10 +100,12 @@ public class Environment implements EnvironmentsSupplier {
 
 
     private void changeEnvironment(@NotNull String newEnv) {
-        var oldEnv = this.current;
-        this.current = newEnv;
-        persistenceData.setCurrentEnv(newEnv);
-        notifyEnvironmentChanged(oldEnv, newEnv);
+        if (StringUtils.isNotEmpty(newEnv)) {
+            var oldEnv = this.current;
+            this.current = newEnv;
+            persistenceData.setCurrentEnv(newEnv);
+            notifyEnvironmentChanged(oldEnv, newEnv);
+        }
     }
 
 

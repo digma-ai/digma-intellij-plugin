@@ -10,7 +10,6 @@ import org.digma.intellij.plugin.ui.ActivityMonitor
 import org.digma.intellij.plugin.ui.list.ListItemActionButton
 import org.digma.intellij.plugin.ui.model.TraceSample
 import javax.swing.JButton
-import javax.swing.SwingUtilities
 
 // if cannot create the button then would return null
 fun buildButtonToJaeger(
@@ -53,13 +52,13 @@ fun buildButtonToJaeger(
     if (settingsState.jaegerLinkMode == LinkMode.Internal) {
         button.addActionListener {
             HTMLEditorProvider.openEditor(project, editorTitle, htmlContent)
-            ActivityMonitor.getInstance(project).RegisterInsightButtonClicked("show-in-jaeger")
+            ActivityMonitor.getInstance(project).registerInsightButtonClicked("show-in-jaeger")
         }
     } else {
         // handle LinkMode.External
         button.addActionListener {
             BrowserUtil.browse(jaegerUrl, project)
-            ActivityMonitor.getInstance(project).RegisterInsightButtonClicked("show-in-jaeger")
+            ActivityMonitor.getInstance(project).registerInsightButtonClicked("show-in-jaeger")
         }
     }
 

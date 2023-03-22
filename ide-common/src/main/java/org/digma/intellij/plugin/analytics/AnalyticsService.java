@@ -180,7 +180,7 @@ public class AnalyticsService implements Disposable {
 
     private <TInsight> void registerInsightReceivedActivity(List<TInsight> insights){
         if(!insights.isEmpty() && !SettingsState.getInstance(project).firstTimeInsightReceived) {
-            ActivityMonitor.getInstance(project).RegisterFirstInsightReceived();
+            ActivityMonitor.getInstance(project).registerFirstInsightReceived();
             SettingsState.getInstance(project).firstTimeInsightReceived = true;
             SettingsState.getInstance(project).fireChanged();
         }
@@ -323,7 +323,7 @@ public class AnalyticsService implements Disposable {
                 }
 
                 if(!SettingsState.getInstance(project).firstTimeConnectionEstablished){
-                    ActivityMonitor.getInstance(project).RegisterFirstConnectionEstablished();
+                    ActivityMonitor.getInstance(project).registerFirstConnectionEstablished();
                     SettingsState.getInstance(project).firstTimeConnectionEstablished = true;
                     SettingsState.getInstance(project).fireChanged();
                 }
@@ -333,7 +333,7 @@ public class AnalyticsService implements Disposable {
                     // change status here because connectionGained() will trigger call to this invoke() again
                     // and without changing the status Notification will be displayed several times in a loop
                     status.ok();
-                    ActivityMonitor.getInstance(project).RegisterConnectionReestablished();
+                    ActivityMonitor.getInstance(project).registerConnectionReestablished();
                     NotificationUtil.showNotification(project, "Digma: Connection reestablished !");
                     project.getMessageBus().syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC).connectionGained();
                 }
@@ -353,7 +353,7 @@ public class AnalyticsService implements Disposable {
                 boolean isConnectionException = isConnectionException(e) || isSslConnectionException(e);
                 if (status.isOk() && isConnectionException) {
                     status.connectError();
-                    ActivityMonitor.getInstance(project).RegisterConnectionLost();
+                    ActivityMonitor.getInstance(project).registerConnectionLost();
                     project.getMessageBus().syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC).connectionLost();
                     var message = isConnectionException(e) ? getConnectExceptionMessage(e) : getSslExceptionMessage(e);
                     Log.log(LOGGER::warn, "Connection exception: error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);

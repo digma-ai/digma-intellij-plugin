@@ -11,7 +11,7 @@ public class DigmaLeftToolWindowListener implements ToolWindowManagerListener {
     @Override
     public void toolWindowShown(@NotNull ToolWindow toolWindow) {
         if (toolWindow.getId().equals(PluginId.TOOL_WINDOW_ID)){
-            ActivityMonitor.getInstance(toolWindow.getProject()).RegisterSidePanelOpened();
+            ActivityMonitor.getInstance(toolWindow.getProject()).registerSidePanelOpened();
         }
     }
 }

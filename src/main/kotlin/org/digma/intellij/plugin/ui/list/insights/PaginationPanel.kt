@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.list.insights
 
+import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.editor.*
@@ -19,29 +20,33 @@ fun <T> rebuildPaginationPanel(
         resultInsightBodyPanel: DigmaResettablePanel?,
         entriesToDisplay: ArrayList<T>,
         uniqueInsightId: String,
-        recordsPerPage: Int
+        recordsPerPage: Int,
+        project: Project
 ) {
     if (lastPageNum > 1) {
         paginationPanel.removeAll()
-        buildPaginationPanel(paginationPanel, lastPageNum,
-                entries, resultInsightBodyPanel, entriesToDisplay, uniqueInsightId, recordsPerPage)
+        buildPaginationPanel(
+            paginationPanel, lastPageNum,
+            entries, resultInsightBodyPanel, entriesToDisplay, uniqueInsightId, recordsPerPage, project
+        )
     }
 }
 
 fun <T> buildPaginationRowPanel(
-        lastPageNum: Int,
-        paginationPanel: JPanel,
-        entries: List<T>,
-        resultInsightBodyPanel: DigmaResettablePanel,
-        entriesToDisplay: ArrayList<T>,
-        uniqueInsightId: String,
-        recordsPerPage: Int
+    lastPageNum: Int,
+    paginationPanel: JPanel,
+    entries: List<T>,
+    resultInsightBodyPanel: DigmaResettablePanel,
+    entriesToDisplay: ArrayList<T>,
+    uniqueInsightId: String,
+    recordsPerPage: Int,
+    project: Project,
 ): JPanel? {
     if (lastPageNum < 2) {
         return null
     }
     buildPaginationPanel(paginationPanel, lastPageNum,
-            entries, resultInsightBodyPanel, entriesToDisplay, uniqueInsightId, recordsPerPage)
+            entries, resultInsightBodyPanel, entriesToDisplay, uniqueInsightId, recordsPerPage, project)
     return paginationPanel
 }
 
@@ -70,13 +75,14 @@ private fun <T> updateInsightBodyPanelWithItemsToDisplay(
 }
 
 fun <T> buildPaginationPanel(
-        paginationPanel: JPanel,
-        lastPageNum: Int,
-        entries: List<T>,
-        resultInsightBodyPanel: DigmaResettablePanel?,
-        entriesToDisplay: ArrayList<T>,
-        uniqueInsightId: String,
-        recordsPerPage: Int
+    paginationPanel: JPanel,
+    lastPageNum: Int,
+    entries: List<T>,
+    resultInsightBodyPanel: DigmaResettablePanel?,
+    entriesToDisplay: ArrayList<T>,
+    uniqueInsightId: String,
+    recordsPerPage: Int,
+    project: Project
 ) {
     val prev = ActionLink("Prev")
     val next = ActionLink("Next")
@@ -88,12 +94,12 @@ fun <T> buildPaginationPanel(
     prev.addActionListener {
         if (--currPageNum <= 0) currPageNum = 1
         updateInsightBodyPanelWithItemsToDisplay(entries, resultInsightBodyPanel, entriesToDisplay, uniqueInsightId, currPageNum, recordsPerPage)
-        ActivityMonitor.getInstance( project).RegisterInsightButtonClicked("previous-page")
+        ActivityMonitor.getInstance( project).registerInsightButtonClicked("previous-page")
     }
     next.addActionListener {
         if (++currPageNum > lastPageNum) currPageNum = lastPageNum
         updateInsightBodyPanelWithItemsToDisplay(entries, resultInsightBodyPanel, entriesToDisplay, uniqueInsightId, currPageNum, recordsPerPage)
-        ActivityMonitor.getInstance(project).RegisterInsightButtonClicked("next-page")
+        ActivityMonitor.getInstance(project).registerInsightButtonClicked("next-page")
     }
 
     val paginationLabelText = "$currPageNum of $lastPageNum"

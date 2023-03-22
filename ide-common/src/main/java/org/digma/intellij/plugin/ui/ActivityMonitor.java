@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.ui;
 import com.intellij.ide.plugins.PluginManagerCore;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationInfo;
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.extensions.PluginDescriptor;
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.PluginId;
@@ -15,9 +14,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 
 public class ActivityMonitor implements Disposable {
@@ -28,6 +25,7 @@ public class ActivityMonitor implements Disposable {
     private final PostHog posthog;
     private final String clientId;
     private LocalDateTime lastLensClick;
+    private HashSet<InsightType> lastInsightsViewed;
 
     public ActivityMonitor() {
         posthog = new PostHog.Builder(POSTHOG_API_KEY).host(POSTHOG_HOST).build();
@@ -44,17 +42,17 @@ public class ActivityMonitor implements Disposable {
 //            Log.error(LOGGER, e, "");
 //        }
 
-        // Get the version of the JetBrains IDE
+        var osType = System.getProperty("os.name");
+
         var ideVersion = ApplicationInfo.getInstance().getBuild().asString();
 
-        // Get a list of all installed plugins and their versions
-        var pluginVersion = Arrays.stream(PluginManagerCore.getPlugins())
-                .filter(x -> x.getPluginId().toString().equals(PluginId.PLUGIN_ID))
+        var pluginVersion = Optional.ofNullable(PluginManagerCore.getPlugin(com.intellij.openapi.extensions.PluginId.getId(PluginId.PLUGIN_ID)))
                 .map(PluginDescriptor::getVersion)
-                .findFirst().orElse("unknown");
+                .orElse("unknown");
 
         posthog.set(clientId, new HashMap<>() {
         {
+            put("os.type", osType);
             put("ide.version", ideVersion);
             put("plugin.version", pluginVersion);
         }});
@@ -64,11 +62,11 @@ public class ActivityMonitor implements Disposable {
         return project.getService(ActivityMonitor.class);
     }
 
-    public void RegisterLensClicked(){
+    public void registerLensClicked(){
         lastLensClick = LocalDateTime.now();
     }
 
-    public void RegisterSidePanelOpened(){
+    public void registerSidePanelOpened(){
         var reason = lastLensClick != null && Duration.between(lastLensClick, LocalDateTime.now()).getSeconds() < 2
             ? "lens click"
             : "unknown";
@@ -79,23 +77,23 @@ public class ActivityMonitor implements Disposable {
         }});
     }
 
-    public void RegisterFirstConnectionEstablished() {
+    public void registerFirstConnectionEstablished() {
         posthog.capture(clientId, "connection first-established");
     }
 
-    public void RegisterConnectionReestablished() {
+    public void registerConnectionReestablished() {
         posthog.capture(clientId, "connection reestablished");
     }
 
-    public void RegisterConnectionLost() {
+    public void registerConnectionLost() {
         posthog.capture(clientId, "connection lost");
     }
 
-    public void RegisterFirstInsightReceived() {
+    public void registerFirstInsightReceived() {
         posthog.capture(clientId, "insight first-received");
     }
 
-    public void RegisterError(Exception exception, String message) {
+    public void registerError(Exception exception, String message) {
         var stringWriter = new StringWriter();
         exception.printStackTrace(new PrintWriter(stringWriter));
 
@@ -108,22 +106,27 @@ public class ActivityMonitor implements Disposable {
             }});
     }
 
-    public void RegisterInsightsViewed(@NotNull List<? extends InsightType> insightTypes) {
+    public void registerInsightsViewed(@NotNull List<? extends InsightType> insightTypes) {
+        var newInsightsViewed = new HashSet<InsightType>(insightTypes);
+        if(lastInsightsViewed != null && lastInsightsViewed.equals(newInsightsViewed))
+            return;
+
+        lastInsightsViewed = newInsightsViewed;
         posthog.capture(clientId, "insights viewed", new HashMap<>() {
         {
             put("insights", insightTypes);
         }});
     }
 
+    public void registerInsightButtonClicked(@NotNull String button) {
+        posthog.capture(clientId, "insights button-clicked", new HashMap<>() {
+            {
+                put("button", button);
+            }});
+    }
+
     @Override
     public void dispose() {
         posthog.shutdown();
-    }
-
-    public void RegisterInsightButtonClicked(@NotNull String button) {
-        posthog.capture(clientId, "insights button-clicked", new HashMap<>() {
-        {
-            put("button", button);
-        }});
     }
 }

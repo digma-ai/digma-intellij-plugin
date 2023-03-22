@@ -50,7 +50,8 @@ fun spanDurationBreakdownPanel(
                     moreData
             )
             rebuildPaginationPanel(paginationPanel, lastPageNum,
-                    validBreakdownEntries, resultBreakdownPanel, durationBreakdownEntriesToDisplay, uniqueInsightId, RECORDS_PER_PAGE_DURATION_BREAKDOWN)
+                    validBreakdownEntries, resultBreakdownPanel, durationBreakdownEntriesToDisplay, uniqueInsightId, RECORDS_PER_PAGE_DURATION_BREAKDOWN,
+                project)
         }
     }
 
@@ -66,7 +67,8 @@ fun spanDurationBreakdownPanel(
             bodyPanel = resultBreakdownPanel,
             buttons = null,
             paginationComponent = buildPaginationRowPanel(lastPageNum, paginationPanel,
-                    validBreakdownEntries, resultBreakdownPanel, durationBreakdownEntriesToDisplay, uniqueInsightId, RECORDS_PER_PAGE_DURATION_BREAKDOWN),
+                    validBreakdownEntries, resultBreakdownPanel, durationBreakdownEntriesToDisplay, uniqueInsightId, RECORDS_PER_PAGE_DURATION_BREAKDOWN,
+                project),
     )
 }
 

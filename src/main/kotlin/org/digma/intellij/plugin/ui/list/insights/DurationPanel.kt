@@ -67,7 +67,7 @@ private fun buildButtonToScalingGraph(project: Project, span: SpanInfo): JButton
     button.addActionListener {
         val htmlContent = analyticsService.getHtmlGraphForSpanPercentiles(span.instrumentationLibrary, span.name, Laf.Colors.PLUGIN_BACKGROUND.getHex())
         HTMLEditorProvider.openEditor(project, "Percentiles Graph of Span ${span.name}", htmlContent)
-        ActivityMonitor.getInstance(project).RegisterInsightButtonClicked("duration-histogram")
+        ActivityMonitor.getInstance(project).registerInsightButtonClicked("duration-histogram")
     }
 
     return button

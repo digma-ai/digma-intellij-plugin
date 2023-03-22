@@ -167,7 +167,7 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
     ) : (MouseEvent?, Editor) -> Unit {
         private val elementPointer = SmartPointerManager.createPointer(element)
         override fun invoke(event: MouseEvent?, editor: Editor) {
-            ActivityMonitor.getInstance(project).RegisterLensClicked()
+            ActivityMonitor.getInstance(project).registerLensClicked()
             ToolWindowShower.getInstance(project).showToolWindow()
             elementPointer.element?.let {
                 if (it is Navigatable && it.canNavigateToSource()) {

@@ -17,6 +17,7 @@ import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.insights.InsightsList
 import org.digma.intellij.plugin.ui.list.insights.PreviewList
 import org.digma.intellij.plugin.ui.list.listBackground
+import org.digma.intellij.plugin.ui.model.insights.InsightGroupListViewItem
 import org.digma.intellij.plugin.ui.model.insights.InsightListViewItem
 import org.digma.intellij.plugin.ui.model.insights.InsightsTabCard
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
@@ -117,12 +118,14 @@ fun insightsPanel(project: Project): DigmaTabPanel {
             revalidate()
             repaint()
 
-            var insightTypes = insightsModel.listViewItems
-                .filter { it is InsightListViewItem }
-                .map { (it as InsightListViewItem).insightType }
+            val insightTypes = insightsModel.listViewItems
+                .filter { it is InsightGroupListViewItem }
+                .flatMap { (it as InsightGroupListViewItem).modelObject }
+                .filter { it is InsightListViewItem<*> }
+                .map { (it as InsightListViewItem<*>).insightType }
                 .distinct()
             if(!insightTypes.isEmpty()){
-                ActivityMonitor.getInstance(project).RegisterInsightsViewed(insightTypes)
+                ActivityMonitor.getInstance(project).registerInsightsViewed(insightTypes)
             }
         }
     }

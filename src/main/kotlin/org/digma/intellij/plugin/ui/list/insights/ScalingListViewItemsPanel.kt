@@ -119,7 +119,7 @@ private fun buildButtonToScalingGraph(project: Project, spanName: String, instLi
     button.addActionListener {
         val htmlContent = analyticsService.getHtmlGraphForSpanScaling(instLibrary, spanName, Laf.Colors.PLUGIN_BACKGROUND.getHex())
         HTMLEditorProvider.openEditor(project, "Scaling Graph of Span $spanName", htmlContent)
-        ActivityMonitor.getInstance(project).RegisterInsightButtonClicked("scaling-histogram")
+        ActivityMonitor.getInstance(project).registerInsightButtonClicked("scaling-histogram")
     }
 
     return button

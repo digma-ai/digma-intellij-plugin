@@ -315,7 +315,7 @@ private fun showHintMessage(
     recalculateAction.addActionListener {
         analyticsService.setInsightCustomStartTime(codeObjectId, insightType)
         rebuildInsightPanel(insightPanel)
-        ActivityMonitor.getInstance(project).RegisterInsightButtonClicked("recalculate")
+        ActivityMonitor.getInstance(project).registerInsightButtonClicked("recalculate")
     }
     recalculateAction.border = HintUtil.createHintBorder()
     recalculateAction.background = HintUtil.getInformationColor()
@@ -328,7 +328,7 @@ private fun getRefreshInsightButton(project: Project): ActionLink {
     refreshAction.addActionListener {
         val refreshService: RefreshService = project.getService(RefreshService::class.java)
         refreshService.refreshAllInBackground()
-        ActivityMonitor.getInstance(project).RegisterInsightButtonClicked("refresh")
+        ActivityMonitor.getInstance(project).registerInsightButtonClicked("refresh")
     }
     refreshAction.border = empty()
     refreshAction.isOpaque = false

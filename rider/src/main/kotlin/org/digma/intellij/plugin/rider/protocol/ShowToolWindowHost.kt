@@ -14,7 +14,7 @@ class ShowToolWindowHost(project: Project) : LifetimedProjectComponent(project) 
 
     init {
         model.showToolWindow.advise(project.lifetime){
-            ActivityMonitor.getInstance(project).RegisterLensClicked()
+            ActivityMonitor.getInstance(project).registerLensClicked()
             ToolWindowShower.getInstance(project).showToolWindow()
         }
     }

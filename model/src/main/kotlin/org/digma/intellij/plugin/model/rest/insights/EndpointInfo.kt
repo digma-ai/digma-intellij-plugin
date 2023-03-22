@@ -12,5 +12,5 @@ constructor(
     val route: String,
     val serviceName: String,
     val instrumentationLibrary: String,
-    val codeObjectId: String,
+    val codeObjectId: String?,
 )

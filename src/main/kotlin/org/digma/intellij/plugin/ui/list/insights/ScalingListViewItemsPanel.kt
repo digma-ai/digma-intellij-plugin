@@ -9,14 +9,14 @@ import com.intellij.util.ui.JBUI.Borders.emptyBottom
 import org.apache.commons.lang3.StringUtils
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.document.CodeObjectsUtil
-import org.digma.intellij.plugin.model.rest.insights.RootCauseSpan
-import org.digma.intellij.plugin.model.rest.insights.SpanScalingInsight
+import org.digma.intellij.plugin.model.rest.insights.*
 import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.list.ListItemActionButton
 import org.digma.intellij.plugin.ui.list.openWorkspaceFileForSpan
 import org.digma.intellij.plugin.ui.model.TraceSample
 import java.awt.BorderLayout
 import javax.swing.*
+
 
 fun spanScalingListViewItemsPanel(project: Project, insight: SpanScalingInsight, moreData: HashMap<String, Any>): JPanel {
     val scalingPanel = createDefaultBoxLayoutYAxisPanel()
@@ -44,6 +44,8 @@ fun spanScalingListViewItemsPanel(project: Project, insight: SpanScalingInsight,
     )
 }
 
+
+
 fun getRootCauseSpansPanel(project: Project, moreData: HashMap<String, Any>, insight: SpanScalingInsight): JPanel {
 
     val rootCauseSpansPanel = createDefaultBoxLayoutYAxisPanel()
@@ -64,6 +66,8 @@ fun getRootCauseSpansPanel(project: Project, moreData: HashMap<String, Any>, ins
 
     return rootCauseSpansPanel
 }
+
+
 
 fun getRootCauseSpanPanel(project: Project, moreData: HashMap<String, Any>, rootCauseSpan: RootCauseSpan): JPanel {
 
@@ -110,7 +114,6 @@ private fun getScalingCalculationsPanel(insight: SpanScalingInsight): JPanel {
     scalingBodyPanel.add(durationLabel)
     return scalingBodyPanel
 }
-
 
 private fun buildButtonToPercentilesGraph(project: Project, spanName: String,instLibrary: String): JButton {
     val analyticsService = AnalyticsService.getInstance(project)

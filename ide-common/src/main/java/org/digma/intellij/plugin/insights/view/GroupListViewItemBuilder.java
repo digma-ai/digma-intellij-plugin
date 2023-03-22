@@ -62,6 +62,11 @@ public class GroupListViewItemBuilder<T extends CodeObjectInsight> implements Li
             }
             case SpanUsages: {
                 WorkspaceUrisHelper.findWorkspaceUrisForMethodCodeObjectIds(project, theListView, getCodeObjectIds((SpanUsagesInsight) insight), methodInfo);
+                break;
+            }
+            case SpanScalingRootCause: {
+                WorkspaceUrisHelper.findWorkspaceUrisForMethodCodeObjectIds(project, theListView, getCodeObjectIds((SpanScalingRootCauseInsight) insight), methodInfo);
+                break;
             }
         }
 
@@ -83,8 +88,14 @@ public class GroupListViewItemBuilder<T extends CodeObjectInsight> implements Li
         return codeObjectIds;
     }
 
+    private List<String> getCodeObjectIds(SpanScalingRootCauseInsight insight) {
+        return insight.getAffectedEndpoints().stream().filter(it -> it.getCodeObjectId() != null)
+                .map(it -> it.getCodeObjectId())
+                .collect(Collectors.toList());
+    }
+
     private List<String> getCodeObjectIds(SpanSlowEndpointsInsight insight) {
-        return insight.getSlowEndpoints().stream()
+        return insight.getSlowEndpoints().stream().filter(it -> it.getEndpointInfo().getCodeObjectId() != null)
                 .map(it -> it.getEndpointInfo().getCodeObjectId())
                 .collect(Collectors.toList());
     }

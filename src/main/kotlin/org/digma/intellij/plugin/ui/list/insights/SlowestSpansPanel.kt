@@ -83,12 +83,12 @@ fun spanSlowEndpointsPanel(project: Project, insight: SpanSlowEndpointsInsight, 
         var routeCodeObjectId = slowEndpointInfo.endpointInfo.codeObjectId;
         val shortRouteName =  routeInfo.shortName
 
-        if (moreData.contains(routeCodeObjectId)) {
+        if (routeCodeObjectId != null && moreData.contains(routeCodeObjectId)) {
             val normalizedDisplayName = StringUtils.normalizeSpace(shortRouteName)
             val link = ActionLink(normalizedDisplayName) {
-                openWorkspaceFileForSpan(project, moreData, routeCodeObjectId)
+                openWorkspaceFileForSpan(project, moreData, routeCodeObjectId!!)
             }
-            var targetClass = routeCodeObjectId.substringBeforeLast("\$_\$");
+            var targetClass = routeCodeObjectId?.substringBeforeLast("\$_\$");
 
             link.toolTipText = asHtml("$targetClass: $shortRouteName")
             currContainerPanel.add(link, BorderLayout.NORTH)

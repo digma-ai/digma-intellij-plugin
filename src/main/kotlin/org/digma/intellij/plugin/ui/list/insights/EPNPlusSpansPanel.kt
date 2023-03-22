@@ -19,7 +19,7 @@ import java.awt.BorderLayout
 import java.math.RoundingMode
 import javax.swing.*
 
-private const val RECORDS_PER_PAGE_EPNPLUS = 1
+private const val RECORDS_PER_PAGE_EPNPLUS = 3
 
 fun ePNPlusSpansPanel(
         project: Project,

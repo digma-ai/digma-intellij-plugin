@@ -3,7 +3,7 @@ package org.digma.intellij.plugin.model.rest.insights
 import com.fasterxml.jackson.annotation.JsonCreator
 import org.digma.intellij.plugin.model.InsightType
 import java.beans.ConstructorProperties
-import java.util.*
+import java.util.Date
 
 class SpanNPlusOneInsight
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -17,8 +17,8 @@ class SpanNPlusOneInsight
         "customStartTime",
         "prefixedCodeObjectId",
         "shortDisplayInfo",
+        "spanInfo",
         "traceId",
-        "span",
         "clientSpanName",
         "occurrences",
         "duration",
@@ -34,12 +34,12 @@ constructor(
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
         override val shortDisplayInfo: ShortDisplayInfo?,
+        override val spanInfo: SpanInfo,
         val traceId: String?,
-        val span: SpanInfo,
         val clientSpanName: String?,
         val occurrences: Number,
         val duration: Duration,
         val endpoints: List<SpanNPlusEndpoints>,
-) : CodeObjectInsight {
+) : SpanInsight {
     override val type: InsightType = InsightType.SpaNPlusOne
 }

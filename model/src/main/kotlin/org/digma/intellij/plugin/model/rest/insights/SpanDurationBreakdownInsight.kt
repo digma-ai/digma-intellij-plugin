@@ -1,10 +1,9 @@
 package org.digma.intellij.plugin.model.rest.insights
 
 import com.fasterxml.jackson.annotation.JsonCreator
-import org.digma.intellij.plugin.model.InsightImportance
 import org.digma.intellij.plugin.model.InsightType
 import java.beans.ConstructorProperties
-import java.util.*
+import java.util.Date
 
 data class SpanDurationBreakdownInsight
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -18,6 +17,7 @@ data class SpanDurationBreakdownInsight
         "customStartTime",
         "prefixedCodeObjectId",
         "shortDisplayInfo",
+        "spanInfo",
         "spanName",
         "breakdownEntries"
 )
@@ -31,9 +31,10 @@ constructor(
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
         override val shortDisplayInfo: ShortDisplayInfo?,
+        override val spanInfo: SpanInfo,
         val spanName: String,
         val breakdownEntries: List<SpanDurationBreakdown>,
-) : CodeObjectInsight {
+) : SpanInsight {
 
     override val type: InsightType = InsightType.SpanDurationBreakdown
 }

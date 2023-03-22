@@ -166,7 +166,7 @@ private fun nPOneSpanRowPanel(span: HighlyOccurringSpanInfo, project: Project, m
 }
 
 private fun getButtonToJaeger(project: Project, insight: EPNPlusSpansInsight): JButton? {
-    val spanName = insight.endpointSpan
+    val spanName = insight.endpointSpanName()
     val sampleTraceId = insight.spans.first().traceId
     val traceSample = TraceSample(spanName, sampleTraceId)
     return buildButtonToJaeger(project, "Trace", spanName, listOf(traceSample))

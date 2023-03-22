@@ -1,7 +1,22 @@
 package org.digma.intellij.plugin.insights.view;
 
 import org.digma.intellij.plugin.model.InsightType;
-import org.digma.intellij.plugin.model.rest.insights.*;
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
+import org.digma.intellij.plugin.model.rest.insights.EPNPlusSpansInsight;
+import org.digma.intellij.plugin.model.rest.insights.ErrorInsight;
+import org.digma.intellij.plugin.model.rest.insights.HighUsageInsight;
+import org.digma.intellij.plugin.model.rest.insights.HotspotInsight;
+import org.digma.intellij.plugin.model.rest.insights.LowUsageInsight;
+import org.digma.intellij.plugin.model.rest.insights.NormalUsageInsight;
+import org.digma.intellij.plugin.model.rest.insights.SlowEndpointInsight;
+import org.digma.intellij.plugin.model.rest.insights.SlowestSpansInsight;
+import org.digma.intellij.plugin.model.rest.insights.SpanDurationBreakdownInsight;
+import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight;
+import org.digma.intellij.plugin.model.rest.insights.SpanNPlusOneInsight;
+import org.digma.intellij.plugin.model.rest.insights.SpanScalingInsight;
+import org.digma.intellij.plugin.model.rest.insights.SpanSlowEndpointsInsight;
+import org.digma.intellij.plugin.model.rest.insights.SpanUsagesInsight;
+import org.digma.intellij.plugin.model.rest.insights.UnmappedInsight;
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupType;
 import org.digma.intellij.plugin.view.EmptyListViewItemBuilder;
 import org.digma.intellij.plugin.view.ListViewItemBuilder;
@@ -36,31 +51,31 @@ public class BuildersHolder {
             case Errors:
                 return new NoGroupListViewItemBuilder<ErrorInsight>();
             case SpanUsages:
-                return new GroupListViewItemBuilder<SpanUsagesInsight>(InsightGroupType.Span, null, SpanUsagesInsight::getSpan);
+                return new GroupListViewItemBuilder<SpanUsagesInsight>(InsightGroupType.Span, null, SpanUsagesInsight::spanName);
             case SpanDurations:
-                return new GroupListViewItemBuilder<SpanDurationsInsight>(InsightGroupType.Span, null, spanDurationsInsight -> spanDurationsInsight.getSpan().getName());
+                return new GroupListViewItemBuilder<SpanDurationsInsight>(InsightGroupType.Span, null, spanDurationsInsight -> spanDurationsInsight.spanName());
             case SpanScaling:
-                return new GroupListViewItemBuilder<SpanScalingInsight>(InsightGroupType.Span, null, SpanScalingInsight::getSpanName);
+                return new GroupListViewItemBuilder<SpanScalingInsight>(InsightGroupType.Span, null, SpanScalingInsight::spanName);
             case SpanScalingRootCause:
                 return new GroupListViewItemBuilder<SpanScalingRootCauseInsight>(InsightGroupType.Span, null, spanScalingRootCauseInsight -> spanScalingRootCauseInsight.getSpanInfo().getName());
             case SpanDurationBreakdown:
-                return new GroupListViewItemBuilder<SpanDurationBreakdownInsight>(InsightGroupType.Span, null, SpanDurationBreakdownInsight::getSpanName);
+                return new GroupListViewItemBuilder<SpanDurationBreakdownInsight>(InsightGroupType.Span, null, SpanDurationBreakdownInsight::spanName);
             case SpanEndpointBottleneck:
-                return new GroupListViewItemBuilder<SpanSlowEndpointsInsight>(InsightGroupType.Span, null, insight -> insight.getSpan().getName());
+                return new GroupListViewItemBuilder<SpanSlowEndpointsInsight>(InsightGroupType.Span, null, insight -> insight.spanName());
             case SpaNPlusOne:
-                return new GroupListViewItemBuilder<SpanNPlusOneInsight>(InsightGroupType.Span, null, insight -> insight.getSpan().getName());
+                return new GroupListViewItemBuilder<SpanNPlusOneInsight>(InsightGroupType.Span, null, insight -> insight.spanName());
             case SlowestSpans:
-                return new GroupListViewItemBuilder<SlowestSpansInsight>(InsightGroupType.HttpEndpoint, SlowestSpansInsight::getRoute, SlowestSpansInsight::getEndpointSpan);
+                return new GroupListViewItemBuilder<SlowestSpansInsight>(InsightGroupType.HttpEndpoint, SlowestSpansInsight::getRoute, SlowestSpansInsight::endpointSpanName);
             case LowUsage:
-                return new GroupListViewItemBuilder<LowUsageInsight>(InsightGroupType.HttpEndpoint, LowUsageInsight::getRoute, LowUsageInsight::getEndpointSpan);
+                return new GroupListViewItemBuilder<LowUsageInsight>(InsightGroupType.HttpEndpoint, LowUsageInsight::getRoute, LowUsageInsight::endpointSpanName);
             case NormalUsage:
-                return new GroupListViewItemBuilder<NormalUsageInsight>(InsightGroupType.HttpEndpoint, NormalUsageInsight::getRoute, NormalUsageInsight::getEndpointSpan);
+                return new GroupListViewItemBuilder<NormalUsageInsight>(InsightGroupType.HttpEndpoint, NormalUsageInsight::getRoute, NormalUsageInsight::endpointSpanName);
             case HighUsage:
-                return new GroupListViewItemBuilder<HighUsageInsight>(InsightGroupType.HttpEndpoint, HighUsageInsight::getRoute, HighUsageInsight::getEndpointSpan);
+                return new GroupListViewItemBuilder<HighUsageInsight>(InsightGroupType.HttpEndpoint, HighUsageInsight::getRoute, HighUsageInsight::endpointSpanName);
             case SlowEndpoint:
-                return new GroupListViewItemBuilder<SlowEndpointInsight>(InsightGroupType.HttpEndpoint, SlowEndpointInsight::getRoute, SlowEndpointInsight::getEndpointSpan);
+                return new GroupListViewItemBuilder<SlowEndpointInsight>(InsightGroupType.HttpEndpoint, SlowEndpointInsight::getRoute, SlowEndpointInsight::endpointSpanName);
             case EndpointSpaNPlusOne:
-                return new GroupListViewItemBuilder<EPNPlusSpansInsight>(InsightGroupType.HttpEndpoint, EPNPlusSpansInsight::getRoute, EPNPlusSpansInsight::getEndpointSpan);
+                return new GroupListViewItemBuilder<EPNPlusSpansInsight>(InsightGroupType.HttpEndpoint, EPNPlusSpansInsight::getRoute, EPNPlusSpansInsight::endpointSpanName);
             case Unmapped:
                 return new NoGroupListViewItemBuilder<UnmappedInsight>();
             default:

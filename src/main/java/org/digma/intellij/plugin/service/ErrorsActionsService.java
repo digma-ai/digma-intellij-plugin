@@ -8,7 +8,7 @@ import org.digma.intellij.plugin.model.rest.insights.ErrorInsightNamedError;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
 import org.digma.intellij.plugin.ui.service.SummaryViewService;
-import org.digma.intellij.plugin.ui.service.ToolWindowTabsHelper;
+import org.digma.intellij.plugin.ui.service.TabsHelper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -18,7 +18,7 @@ public class ErrorsActionsService implements ContentManagerListener {
     private final InsightsViewService insightsViewService;
     private final ErrorsViewService errorsViewService;
     private final SummaryViewService summaryViewService;
-    private final ToolWindowTabsHelper toolWindowTabsHelper;
+    private final TabsHelper tabsHelper;
 
     private final EditorService editorService;
 
@@ -27,7 +27,7 @@ public class ErrorsActionsService implements ContentManagerListener {
         insightsViewService = project.getService(InsightsViewService.class);
         errorsViewService = project.getService(ErrorsViewService.class);
         summaryViewService = project.getService(SummaryViewService.class);
-        toolWindowTabsHelper = project.getService(ToolWindowTabsHelper.class);
+        tabsHelper = project.getService(TabsHelper.class);
         editorService = project.getService(EditorService.class);
     }
 
@@ -42,24 +42,24 @@ public class ErrorsActionsService implements ContentManagerListener {
     }
 
     public void showErrorDetails(@NotNull String uid) {
-        toolWindowTabsHelper.showingErrorDetails();
+        tabsHelper.showingErrorDetails();
         errorsViewService.setVisible();
         errorsViewService.showErrorDetails(uid);
-        toolWindowTabsHelper.errorDetailsOn();
+        tabsHelper.errorDetailsOn();
     }
 
     public void closeErrorDetailsBackButton() {
-        toolWindowTabsHelper.errorDetailsOff();
+        tabsHelper.errorDetailsOff();
         errorsViewService.closeErrorDetails();
         insightsViewService.updateUi();
-        toolWindowTabsHelper.errorDetailsClosed();
+        tabsHelper.errorDetailsClosed();
     }
 
     @Override
     public void selectionChanged(@NotNull ContentManagerEvent event) {
-        if (toolWindowTabsHelper.isErrorDetailsOn() &&
-                (toolWindowTabsHelper.isInsightsTab(event.getContent()) || toolWindowTabsHelper.isSummaryTab(event.getContent()))) {
-            toolWindowTabsHelper.errorDetailsOff();
+        if (tabsHelper.isErrorDetailsOn() &&
+                (tabsHelper.isInsightsTab(event.getContent()) || tabsHelper.isSummaryTab(event.getContent()))) {
+            tabsHelper.errorDetailsOff();
             errorsViewService.closeErrorDetails();
             insightsViewService.updateUi();
             summaryViewService.updateUi();

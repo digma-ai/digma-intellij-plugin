@@ -7,17 +7,16 @@ import com.intellij.openapi.rd.util.launchBackground
 import com.intellij.ui.components.JBTabbedPane
 import com.intellij.util.ui.JBUI
 import com.jetbrains.rd.util.lifetime.LifetimeDefinition
+import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.analytics.TabsChanged
+import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.ui.errors.errorsPanel
 import org.digma.intellij.plugin.ui.insights.insightsPanel
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
-import org.digma.intellij.plugin.ui.service.ErrorsViewService
-import org.digma.intellij.plugin.ui.service.InsightsViewService
-import org.digma.intellij.plugin.ui.service.SummaryViewService
-import org.digma.intellij.plugin.ui.service.ToolWindowTabsHelper
+import org.digma.intellij.plugin.ui.service.*
 import org.digma.intellij.plugin.ui.summary.summaryPanel
-import java.awt.BorderLayout
 import java.util.concurrent.locks.ReentrantLock
 import javax.swing.BorderFactory
 import javax.swing.BoxLayout
@@ -29,13 +28,28 @@ class TabsPanel(
 
     private val project: Project
     private val rebuildPanelLock = ReentrantLock()
+    private val tabsHelper = TabsHelper.getInstance(project)
+    private val tabbedPane = JBTabbedPane()
 
     init {
         this.project = project
         isOpaque = false
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
         border = JBUI.Borders.empty()
+
         rebuildInBackground()
+
+        project.messageBus.connect(project.getService(AnalyticsService::class.java))
+                .subscribe(TabsChanged.TABS_CHANGED_TOPIC, TabsChanged { newTabIndex ->
+                    EDT.ensureEDT {
+                        if (1 == newTabIndex) {
+                            tabbedPane.setTitleAt(1, TabsHelper.DETAILED_ERRORS_TAB_NAME)
+                        } else {
+                            tabbedPane.setTitleAt(1, TabsHelper.DEFAULT_ERRORS_TAB_NAME)
+                        }
+                        tabbedPane.selectedIndex = newTabIndex
+                    }
+                })
     }
 
     override fun reset() {
@@ -78,20 +92,33 @@ class TabsPanel(
     }
 
     private fun getTabsPanel(): JBTabbedPane {
-        val tabbedPane = JBTabbedPane()
         tabbedPane.isOpaque = false
         tabbedPane.border = JBUI.Borders.empty()
         val insightsPanel = createInsightsPanel(project)
 
         insightsPanel.border = BorderFactory.createEmptyBorder(0, 0, 0, 0) // Set the border of the panel to empty
-        tabbedPane.addTab(ToolWindowTabsHelper.INSIGHTS_TAB_NAME, insightsPanel)
+        tabbedPane.addTab(TabsHelper.INSIGHTS_TAB_NAME, insightsPanel)
 
         val errorsPanel = createErrorsPanel(project)
-        tabbedPane.addTab(ToolWindowTabsHelper.ERRORS_TAB_NAME, errorsPanel)
+        if (tabsHelper.isErrorDetailsOn()) {
+            tabbedPane.addTab(TabsHelper.DETAILED_ERRORS_TAB_NAME, errorsPanel)
+        } else {
+            tabbedPane.addTab(TabsHelper.DEFAULT_ERRORS_TAB_NAME, errorsPanel)
+        }
         val summaryPanel = createSummaryPanel(project);
-        tabbedPane.addTab(ToolWindowTabsHelper.SUMMARY_TAB_NAME, summaryPanel)
+        tabbedPane.addTab(TabsHelper.SUMMARY_TAB_NAME, summaryPanel)
 
         tabbedPane.border = BorderFactory.createEmptyBorder(); // Set the border of the tabbed pane to empty
+
+        var currentTabIndex: Int
+
+        // Add a listener to the JBTabbedPane to track tab changes
+        tabbedPane.addChangeListener {
+            // Get the index of the currently selected tab
+            currentTabIndex = tabbedPane.selectedIndex
+            // Do something with the tab indexes, such as update UI or perform logic
+            tabsHelper.currentTabIndex = currentTabIndex
+        }
 
         return tabbedPane
     }

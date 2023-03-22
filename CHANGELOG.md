@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [2.0.40] - 2023-03-21
+## [2.0.40] - 2023-03-22
 ### Changed
 - Quick instrumentation java code (#395)
 - Decreased and fixed height for navigation panel rows (#392)
@@ -9,6 +9,14 @@ All notable changes to this project will be documented in this file.
 - Applied new background color for navigation panel (#392)
 - Used ComboBox for environment selector (#392)
 - Fixed flickering of environment selector (#392)
+- Feature/Insights pending and no data yet (#396)
+- Set default value for ComboBox when connection was lost and when there are no environments
+- Add links to TopUsage/Bottleneck insights
+- Fixed Error links (#394)
+- Add Scaling Root Cause Insight
+- Feature/Add SpanInfo to SpanInsights - as in backend (#403)
+- Fixed UI freeze issue on SocketTimeoutException
+- Fixed setting of correct env in combobox after click on goToSpan link in RecentActivity tab
 
 ## [2.0.39] - 2023-03-17
 ### Changed

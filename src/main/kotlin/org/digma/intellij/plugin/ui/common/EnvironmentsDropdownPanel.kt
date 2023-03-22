@@ -32,6 +32,7 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import javax.swing.BoxLayout
+import javax.swing.DefaultComboBoxModel
 import javax.swing.Icon
 import javax.swing.JList
 import javax.swing.event.PopupMenuEvent
@@ -58,6 +59,7 @@ class EnvironmentsDropdownPanel(
     private val changeEnvAlarm: Alarm
     private val popupMenuOpened: AtomicBoolean = AtomicBoolean(false)
     private val wasNotInitializedYet: AtomicBoolean = AtomicBoolean(true)
+    private val comboBox = ComboBox<String>()
 
     init {
         usageStatusChangeConnection.subscribe(
@@ -81,11 +83,11 @@ class EnvironmentsDropdownPanel(
                     //there are few instances of EnvironmentsPanel, if a button is clicked in the insights tab the selected button
                     //need to change also in the errors tab, and vice versa.
                     override fun environmentChanged(newEnv: String?) {
-                        EDT.ensureEDT{select(newEnv)}
+                        EDT.ensureEDT { select(newEnv) }
                     }
 
                     override fun environmentsListChanged(newEnvironments: MutableList<String>?) {
-                        EDT.ensureEDT{rebuildInBackground(usageStatusResult)}
+                        EDT.ensureEDT { rebuildInBackground(usageStatusResult) }
                     }
                 })
         backendConnectionMonitor = project.getService(BackendConnectionMonitor::class.java)
@@ -198,27 +200,27 @@ class EnvironmentsDropdownPanel(
             environmentsInfo: MutableMap<String, MutableMap<String, Any>>,
             hasUsageFunction: (String) -> Boolean
     ) {
-        val items = mutableListOf<String>()
-        val icons = mutableListOf<Icon>()
+        val itemsWithIcons = mutableMapOf<String, Icon>()
 
         for (envInfo in environmentsInfo) {
             val buttonData = envInfo.value
             val currEnv = envInfo.key
             val linkText = buttonData.getValue("linkText").toString()
             val icon: Icon = if (hasUsageFunction(currEnv)) Laf.Icons.Environment.ENVIRONMENT_HAS_USAGE else Laf.Icons.Environment.ENVIRONMENT_HAS_NO_USAGE
-            items.add(linkText)
-            icons.add(icon)
+            itemsWithIcons[linkText] = icon
         }
 
-        val comboBox = ComboBox(items.toTypedArray())
-        if (items.size > 0) {
+        // initialize comboBox with items list
+        comboBox.model = DefaultComboBoxModel(itemsWithIcons.keys.toTypedArray())
+
+        if (itemsWithIcons.keys.size > 0) {
             // this flag fixes initial load issue
             wasNotInitializedYet.set(false)
 
             comboBox.renderer = object : SimpleListCellRenderer<String>() {
                 override fun customize(list: JList<out String>, value: String, index: Int, selected: Boolean, hasFocus: Boolean) {
                     text = value
-                    icon = icons.getOrElse(index) { null }
+                    icon = if (itemsWithIcons.size >= index && index >= 0) { itemsWithIcons.values.elementAt(index) } else { null }
                     foreground = if (selected) JBColor.WHITE else JBColor.BLACK
                     background = if (selected) JBColor.BLUE else JBColor.WHITE
                 }
@@ -232,7 +234,7 @@ class EnvironmentsDropdownPanel(
                 val popup = comboBox.getUI().getAccessibleChild(comboBox, 0)
                 val popupList = (popup as? BasicComboPopup)?.list
                 if (popupList != null) {
-                    val popupWidth = items.maxOfOrNull { comboBox.getFontMetrics(comboBox.font).stringWidth(it) } ?: 0
+                    val popupWidth = itemsWithIcons.keys.maxOfOrNull { comboBox.getFontMetrics(comboBox.font).stringWidth(it) } ?: 0
                     comboBox.preferredSize = Dimension(popupWidth + 40, comboBox.preferredSize.height)
                 }
             }
@@ -329,7 +331,8 @@ class EnvironmentsDropdownPanel(
             return
         }
 
-        buildLinkText(newSelectedEnv)
+        selectedItem = buildLinkText(newSelectedEnv)
+        comboBox.selectedItem = selectedItem
     }
 
     private fun buildLinkText(currEnv: String): String {

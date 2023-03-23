@@ -38,7 +38,12 @@ class ActivityMonitor(private val project: Project) : Runnable, Disposable {
         clientId =
             if (System.getenv("devenv") == "digma") hostname
             else Integer.toHexString(hostname.hashCode())
-        postHog = PostHog.Builder(getCachedToken(project)).build()
+
+        val cachedToken = getCachedToken(project)
+        postHog =
+            if (cachedToken != null) PostHog.Builder(cachedToken).build()
+            else null
+
         tokenFetcherThread.start()
     }
 
@@ -48,8 +53,8 @@ class ActivityMonitor(private val project: Project) : Runnable, Disposable {
         if (latestToken != null && latestToken != cachedToken) {
             postHog = PostHog.Builder(latestToken).build()
             setCachedToken(project, latestToken)
-            registerSessionDetails()
         }
+        registerSessionDetails()
     }
 
     fun registerLensClicked() {

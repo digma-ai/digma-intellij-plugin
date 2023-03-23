@@ -3,7 +3,10 @@ package org.digma.intellij.plugin.idea.runcfg
 import com.intellij.execution.CommonJavaRunConfigurationParameters
 import com.intellij.execution.Executor
 import com.intellij.execution.RunConfigurationExtension
-import com.intellij.execution.configurations.*
+import com.intellij.execution.configurations.JavaParameters
+import com.intellij.execution.configurations.ModuleRunConfiguration
+import com.intellij.execution.configurations.RunConfigurationBase
+import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.execution.process.ProcessEvent
 import com.intellij.execution.process.ProcessHandler
 import com.intellij.execution.process.ProcessListener
@@ -16,7 +19,6 @@ import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.settings.SettingsState
 import org.jetbrains.idea.maven.execution.MavenRunConfiguration
 import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
-import java.net.URL
 
 private const val ORG_GRADLE_JAVA_TOOL_OPTIONS="ORG_GRADLE_JAVA_TOOL_OPTIONS"
 
@@ -196,7 +198,7 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
             .plus(" ")
             .plus("-Dotel.metrics.exporter=none")
             .plus(" ")
-            .plus("-Dotel.exporter.otlp.traces.endpoint=${getDigmaUrl(project)}")
+            .plus("-Dotel.exporter.otlp.traces.endpoint=${getExporterUrl(project)}")
             .plus(" ")
             .plus("-Dotel.service.name=${getServiceName(configuration)}")
             .plus(" ")
@@ -211,14 +213,9 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
         }
     }
 
-    private fun getDigmaUrl(project: Project): String {
-       val url = URL(SettingsState.getInstance(project).apiUrl)
-       val host = url.host
-       val port = "5050"
-       return "http://$host:$port"
+    private fun getExporterUrl(project: Project): String {
+       return SettingsState.getInstance(project).runtimeObservabilityBackendUrl
     }
-
-
 
 
     private fun isJavaConfiguration(configuration: RunConfigurationBase<*>): Boolean {

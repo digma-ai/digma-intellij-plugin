@@ -20,6 +20,8 @@ import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.insights.InsightsList
 import org.digma.intellij.plugin.ui.list.insights.PreviewList
 import org.digma.intellij.plugin.ui.list.listBackground
+import org.digma.intellij.plugin.ui.model.insights.InsightGroupListViewItem
+import org.digma.intellij.plugin.ui.model.insights.InsightListViewItem
 import org.digma.intellij.plugin.ui.model.insights.UiInsightStatus
 import org.digma.intellij.plugin.ui.model.insights.InsightsTabCard
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel

@@ -366,12 +366,13 @@ public class AnalyticsService implements Disposable {
                     NotificationUtil.notifyError(project, "<html>Error with Digma backend api for method " + method.getName() + ".<br> "
                             + message + ".<br> See logs for details.");
                     LOGGER.warn(e);
+                    ActivityMonitor.getInstance(project).registerError(e, message);
                 } else if (!status.hadError(e)) {
                     status.error();
                     var message = getExceptionMessage(e);
                     Log.log(LOGGER::warn, "New Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
                     LOGGER.warn(e);
-                    ActivityMonitor.getInstance(project).registerConnectionError(method.getName(), message);
+                    ActivityMonitor.getInstance(project).registerError(e, message);
                 }
 
 

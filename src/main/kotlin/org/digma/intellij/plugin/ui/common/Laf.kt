@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.common
 
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.editor.colors.GlobalEditorScheme
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.icons.IconsUtil
@@ -50,6 +51,8 @@ object Laf  {
         companion object {
             @JvmStatic val DEFAULT_LABEL_FOREGROUND: Color = JBColor.foreground()
             @JvmStatic val PLUGIN_BACKGROUND: JBColor = JBColor.namedColor("Plugins.background", JBColor.PanelBackground)
+            @JvmStatic val EDITOR_BACKGROUND: JBColor = JBColor.namedColor("Editor.background", GlobalEditorScheme.getDefaultBackground())
+            @JvmStatic val DROP_DOWN_HEADER_TEXT_COLOR: Color = Color(0x7C7C94)
             @JvmStatic val LIST_ITEM_BACKGROUND: JBColor = JBColor(Color(0, 0, 50, 15), Color(200, 200, 255, 20))
             @JvmStatic val TRANSPARENT: Color = Color(0, 0, 0, 0)
             @JvmStatic val BLUE_LIGHT_SHADE: Color = Color(0x8f90ff)
@@ -62,6 +65,16 @@ object Laf  {
     }
 
     class Icons{
+        class General{
+            companion object {
+                @JvmStatic val HOME: Icon = SvgIcon.asIs("/icons/home.svg")
+                @JvmStatic val ARROW_UP: Icon = SvgIcon.asIs("/icons/arrow-up.svg")
+                @JvmStatic val ARROW_DOWN: Icon = SvgIcon.asIs("/icons/arrow-down.svg")
+                @JvmStatic val DIGMA_LOGO: Icon = SvgIcon.asIs("/icons/digma-logo.svg")
+                @JvmStatic val RELATED_INSIGHTS: Icon = SvgIcon.asIs("/icons/related-insights.svg")
+                @JvmStatic val POINTER: Icon = SvgIcon.asIs("/icons/pointer.svg")
+            }
+        }
         class ErrorDetails{
             companion object {
                 @JvmStatic val BACK: Icon = SvgIcon.withColor("/icons/arrow-left.svg", Colors.DEFAULT_LABEL_FOREGROUND)
@@ -72,9 +85,9 @@ object Laf  {
         }
         class Environment {
             companion object {
-                @JvmStatic val ENVIRONMENT_HAS_USAGE = loadAndScaleIconByWidth("/icons/used.png", 8)
+                @JvmStatic val ENVIRONMENT_HAS_USAGE = SvgIcon.asIs("/icons/active-env.svg")
                 @JvmStatic
-                val ENVIRONMENT_HAS_NO_USAGE = loadAndScaleIconByWidth("/icons/unused.png", 8)
+                val ENVIRONMENT_HAS_NO_USAGE = SvgIcon.asIs("/icons/disabled-env.svg")
                 @JvmStatic
                 val NO_CONNECTION_ICON = SvgIcon.asIs("/icons/no-signal.svg")
             }
@@ -108,6 +121,15 @@ object Laf  {
                 @JvmStatic val SPAN_DURATION_ROSE = loadAndScaleIconByWidth("/icons/rose.png", 8)
             }
         }
+
+        class Common {
+            companion object {
+                @JvmStatic val Loading = AllIcons.Actions.BuildLoadChanges
+                @JvmStatic val NoDataYet = SvgIcon.asIs("/icons/no_data_yet.svg")
+                @JvmStatic val Mascot64 = loadAndScaleIconByWidth("/icons/digma.png", 64)
+            }
+        }
+
         companion object {
             private fun loadAndScaleInsightIcon(path: String): Icon {
                 return loadAndScaleInsightIconByWidth(path)

@@ -254,6 +254,9 @@ public interface LanguageService extends Disposable {
 
     Map<String, Pair<String, Integer>> findWorkspaceUrisForSpanIds(List<String> spanIds);
 
+    /**
+     * let language services do something on environmentChanged. for example to update the current method context.
+     */
     void environmentChanged(String newEnv);
 
 

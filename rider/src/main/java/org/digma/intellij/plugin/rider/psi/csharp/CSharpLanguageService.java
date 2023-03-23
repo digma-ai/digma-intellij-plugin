@@ -105,7 +105,8 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     }
 
 
-    //CSharpLanguageService needs the Editor to tale the projectModelId which is the preferred way to find a IPsiSourceFile in resharper.
+    //CSharpLanguageService needs the Editor to take the projectModelId which is the preferred way to find a IPsiSourceFile in resharper.
+    // so try to always send the editor to this method.
     @Override
     @NotNull
     public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int caretOffset) {
@@ -163,7 +164,7 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
                     var selectedTextEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
                     if (selectedTextEditor != null) {
                         int offset = selectedTextEditor.getCaretModel().getOffset();
-                        var methodUnderCaret = detectMethodUnderCaret(project, psiFile, null, offset);
+                        var methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset);
                         CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
                     }
                 }

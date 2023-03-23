@@ -1,24 +1,7 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin require-restart="true" xmlns:xi="http://www.w3.org/2001/XInclude">
 
-    <change-notes>
-        <![CDATA[
-      # Changelog
-
-      ## [2.0.38] - 2023-03-08
-      ### Changed
-      - Repaint UI only when insights list was changed
-
-      ## [2.0.37] - 2023-03-08
-      ### Changed
-      - Added support for wrong methodCodeObjectId
-
-      ## [2.0.36] - 2023-03-07
-      ### Changed
-      - Add support for test files
-
-      ]]>
-    </change-notes>
+    <change-notes/>
     <id>org.digma.intellij</id>
     <version>${project.version}</version>
     <name>Digma Continuous Feedback</name>
@@ -42,15 +25,15 @@
                     secondary="false"
                     icon="org.digma.intellij.plugin.icons.AppIcons.TOOL_WINDOW"
                     anchor="right"
-                    factoryClass="org.digma.intellij.plugin.toolwindow.DigmaLeftToolWindowFactory"/>
+                    factoryClass="org.digma.intellij.plugin.toolwindow.sidepane.DigmaSidePaneToolWindowFactory"/>
 
         <toolWindow id="Observability"
                     secondary="false"
                     icon="org.digma.intellij.plugin.icons.AppIcons.TOOL_WINDOW"
                     anchor="bottom"
-                    factoryClass="org.digma.intellij.plugin.toolwindow.DigmaBottomToolWindowFactory"/>
+                    factoryClass="org.digma.intellij.plugin.toolwindow.recentactivity.DigmaBottomToolWindowFactory"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.toolwindow.CustomViewerWindowService"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.toolwindow.recentactivity.CustomViewerWindowService"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.ToolWindowShower"/>
 
@@ -81,7 +64,7 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.service.ErrorsActionsService"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.ui.service.ToolWindowTabsHelper"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.ui.service.TabsHelper"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.service.EditorService"/>
 
@@ -92,6 +75,8 @@
         <projectService serviceImplementation="org.digma.intellij.plugin.analytics.BackendConnectionMonitor"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.psi.LanguageServiceLocator"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.common.IDEUtilsService"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.posthog.ActivityMonitor"/>
 
@@ -147,11 +132,20 @@
                 class="org.digma.intellij.plugin.emvironment.EnvironmentChangeHandler"
                 topic="org.digma.intellij.plugin.analytics.EnvironmentChanged"/>
         <listener
+                class="org.digma.intellij.plugin.tab.TabChangeHandler"
+                topic="org.digma.intellij.plugin.analytics.TabsChanged"/>
+        <listener
                 class="org.digma.intellij.plugin.debugger.DebuggerListener"
                 topic="com.intellij.xdebugger.XDebuggerManagerListener"/>
         <listener
                 class="org.digma.intellij.plugin.editor.GeneralFileEditorListener"
                 topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
+        <listener
+                class="org.digma.intellij.plugin.common.modelChangeListener.ModelChangeHandler"
+                topic="org.digma.intellij.plugin.common.modelChangeListener.ModelChangeListener"/>
+        <listener
+                class="org.digma.intellij.plugin.common.usageStatusChange.UsageStatusChangeHandler"
+                topic="org.digma.intellij.plugin.common.usageStatusChange.UsageStatusChangeListener"/>
         <listener
                 class="org.digma.intellij.plugin.toolwindow.DigmaLeftToolWindowListener"
                 topic="com.intellij.openapi.wm.ex.ToolWindowManagerListener"/>

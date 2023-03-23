@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.ui.common
 
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
+import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.EDT
@@ -26,7 +27,7 @@ class NoConnectionWrapper(private val project: Project, private val panel: Digma
 
     init {
         layout = CardLayout()
-        isOpaque = false
+        isOpaque = true
 
         val noConnectionPanel = createNoConnectionPanel()
 

@@ -13,7 +13,7 @@ data class MethodInfo(
     val spans: List<SpanInfo>,
 ) : CodeObjectInfo {
 
-    private val endpoints: MutableList<EndpointInfo> = mutableListOf()
+    val endpoints: MutableList<EndpointInfo> = mutableListOf()
 
 
     /*
@@ -64,6 +64,10 @@ data class MethodInfo(
         val endpointsStream = endpoints.stream().map(EndpointInfo::id)
 
         return Stream.concat(spansStream, endpointsStream).collect(Collectors.toList())
+    }
+
+    fun hasRelatedCodeObjectIds(): Boolean {
+        return spans.isNotEmpty() || endpoints.isNotEmpty()
     }
 
     //Don't use idWithType, use allIdsWithType or allIdsWithoutType

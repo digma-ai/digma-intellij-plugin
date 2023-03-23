@@ -275,7 +275,7 @@ public class PythonLanguageService implements LanguageService {
                     var selectedTextEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
                     if (selectedTextEditor != null) {
                         int offset = selectedTextEditor.getCaretModel().getOffset();
-                        var methodUnderCaret = detectMethodUnderCaret(project, psiFile, null, offset);
+                        var methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset);
                         CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
                     }
                 }

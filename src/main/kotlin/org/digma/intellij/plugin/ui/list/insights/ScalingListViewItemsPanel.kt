@@ -19,6 +19,7 @@ import org.digma.intellij.plugin.ui.model.TraceSample
 import java.awt.BorderLayout
 import javax.swing.*
 
+
 fun spanScalingListViewItemsPanel(project: Project, insight: SpanScalingInsight, moreData: HashMap<String, Any>): JPanel {
     val scalingPanel = createDefaultBoxLayoutYAxisPanel()
     scalingPanel.add(getScalingCalculationsPanel(insight))
@@ -45,6 +46,8 @@ fun spanScalingListViewItemsPanel(project: Project, insight: SpanScalingInsight,
     )
 }
 
+
+
 fun getRootCauseSpansPanel(project: Project, moreData: HashMap<String, Any>, insight: SpanScalingInsight): JPanel {
 
     val rootCauseSpansPanel = createDefaultBoxLayoutYAxisPanel()
@@ -65,6 +68,8 @@ fun getRootCauseSpansPanel(project: Project, moreData: HashMap<String, Any>, ins
 
     return rootCauseSpansPanel
 }
+
+
 
 fun getRootCauseSpanPanel(project: Project, moreData: HashMap<String, Any>, rootCauseSpan: RootCauseSpan): JPanel {
 

@@ -5,6 +5,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.digma.intellij.plugin.model.rest.insights.Duration
 import java.beans.ConstructorProperties
 
+/**
+ * Contracts Definition.
+ *
+ * @see [Contracts Definition](https://docs.google.com/document/d/10W8dJHXXxVXe2kI52NQjlu9LNsT4lp94AUogQ64IZ58)
+ */
+
 data class RecentActivityResult
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -64,7 +70,8 @@ data class RecentActivityEntrySpanPayload
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ConstructorProperties("span")
 constructor(
-        val span: EntrySpan
+        val span: EntrySpan,
+        val environment: String,
 )
 
 data class RecentActivityEntrySpanForTracePayload

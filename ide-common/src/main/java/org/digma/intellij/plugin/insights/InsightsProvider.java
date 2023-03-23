@@ -4,6 +4,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
+import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.insights.view.BuildersHolder;
 import org.digma.intellij.plugin.insights.view.InsightsViewBuilder;
@@ -11,6 +12,9 @@ import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
+import org.digma.intellij.plugin.model.rest.insights.InsightStatus;
+import org.digma.intellij.plugin.model.rest.insights.MethodWithInsightStatus;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
 import org.jetbrains.annotations.NotNull;
@@ -42,7 +46,7 @@ public class InsightsProvider {
 
     public InsightsListContainer getInsightsListContainer(@NotNull MethodInfo methodInfo, List<? extends CodeObjectInsight> insightsList) {
         List<String> objectIds = getObjectIdsWithType(methodInfo);
-        Log.log(LOGGER::debug, "Got following code object ids for method {}: {}",methodInfo.getId(), objectIds);
+        Log.log(LOGGER::debug, "Got following code object ids for method {}: {}", methodInfo.getId(), objectIds);
         var stopWatch = StopWatch.createStarted();
 
         try {
@@ -51,12 +55,23 @@ public class InsightsProvider {
             Log.log(LOGGER::debug, "CodeObjectInsights for {}: {}", methodInfo.getId(), codeObjectInsights);
             final UsageStatusResult usageStatus = documentInfoService.getCachedUsageStatus(methodInfo, objectIds);
             InsightsViewBuilder insightsViewBuilder = new InsightsViewBuilder(buildersHolder);
-            List<ListViewItem<?>> listViewItems = insightsViewBuilder.build(project,methodInfo, codeObjectInsights);
+            List<ListViewItem<?>> listViewItems = insightsViewBuilder.build(project, methodInfo, codeObjectInsights);
             Log.log(LOGGER::debug, "ListViewItems for {}: {}", methodInfo.getId(), listViewItems);
             return new InsightsListContainer(listViewItems, codeObjectInsights.size(), usageStatus);
         } finally {
             stopWatch.stop();
             Log.log(LOGGER::debug, "getUsageStatus time took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS));
+        }
+    }
+
+    public InsightStatus getInsightStatus(@NotNull MethodInfo methodInfo) {
+        try {
+            CodeObjectInsightsStatusResponse response = analyticsService.getCodeObjectInsightStatus(List.of(methodInfo));
+            MethodWithInsightStatus methodResp = response.getCodeObjectsWithInsightsStatus().iterator().next();
+            return methodResp.getInsightStatus();
+        } catch (AnalyticsServiceException e) {
+            Log.log(LOGGER::debug, "AnalyticsServiceException for getCodeObjectInsightStatus for {}: {}", methodInfo.getId(), e.getMessage());
+            return InsightStatus.Unknown;
         }
     }
 
@@ -70,7 +85,7 @@ public class InsightsProvider {
     private List<? extends CodeObjectInsight> filterUnmapped(List<? extends CodeObjectInsight> codeObjectInsights) {
         var filteredInsights = new ArrayList<CodeObjectInsight>();
         codeObjectInsights.forEach(codeObjectInsight -> {
-            if (!codeObjectInsight.getType().equals(InsightType.Unmapped)){
+            if (!codeObjectInsight.getType().equals(InsightType.Unmapped)) {
                 filteredInsights.add(codeObjectInsight);
             }
         });

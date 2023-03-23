@@ -13,6 +13,7 @@ import org.digma.intellij.plugin.ui.needToShowDurationChange
 import org.ocpsoft.prettytime.PrettyTime
 import org.threeten.extra.AmountFormats
 import java.awt.BorderLayout
+import java.awt.Color
 import java.awt.Dimension
 import java.io.InputStreamReader
 import java.sql.Timestamp
@@ -109,6 +110,34 @@ fun createDefaultBoxLayoutLineAxisPanel(top: Int, left: Int, bottom: Int, right:
     defaultPanel.layout = BoxLayout(defaultPanel, BoxLayout.LINE_AXIS)
     defaultPanel.border = empty(top, left, bottom, right)
     defaultPanel.isOpaque = false
+    return defaultPanel
+}
+
+fun createDefaultBoxLayoutLineAxisPanelWithBackground(color: Color): JPanel {
+    return createDefaultBoxLayoutLineAxisPanelWithBackground(0, 0, 0, 0, color)
+}
+
+fun createDefaultBoxLayoutLineAxisPanelWithBackground(top: Int, left: Int, bottom: Int, right: Int, color: Color): JPanel {
+    val defaultPanel = JBPanel<JBPanel<*>>()
+    defaultPanel.layout = BoxLayout(defaultPanel, BoxLayout.LINE_AXIS)
+    defaultPanel.border = empty(top, left, bottom, right)
+    defaultPanel.background = color
+    defaultPanel.isOpaque = true
+    return defaultPanel
+}
+
+fun createDefaultBoxLayoutLineAxisPanelWithBackgroundWithFixedHeight(top: Int, left: Int, bottom: Int, right: Int, color: Color, height: Int): JPanel {
+    val defaultPanel = object : JBPanel<JBPanel<*>>() {
+        override fun getPreferredSize(): Dimension {
+            val size = super.getPreferredSize()
+            size.height = height
+            return size
+        }
+    }
+    defaultPanel.layout = BoxLayout(defaultPanel, BoxLayout.LINE_AXIS)
+    defaultPanel.border = empty(top, left, bottom, right)
+    defaultPanel.background = color
+    defaultPanel.isOpaque = true
     return defaultPanel
 }
 

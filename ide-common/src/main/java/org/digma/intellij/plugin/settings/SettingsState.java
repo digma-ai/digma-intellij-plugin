@@ -21,7 +21,7 @@ import java.util.List;
         name = "org.digma.intellij.plugin.settings.SettingsState",
         storages = @Storage("DigmaPlugin.xml")
 )
-public class SettingsState implements PersistentStateComponent<SettingsState> , Disposable {
+public class SettingsState implements PersistentStateComponent<SettingsState>, Disposable {
 
   public static final String DEFAULT_API_URL = "https://localhost:5051";
   public static final int DEFAULT_REFRESH_DELAY = 30;

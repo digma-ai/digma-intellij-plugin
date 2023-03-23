@@ -42,19 +42,20 @@ public class ProjectSettings implements Configurable {
     public boolean isModified() {
         SettingsState settings = SettingsState.getInstance(project);
         return isUrlChanged(settings) || isApiTokenChanged(settings) || isRefreshDelayChanged(settings)
-                || isJaegerUrlChanged(settings) || isJaegerLinkModeChanged(settings);
+                || isJaegerUrlChanged(settings) || isJaegerLinkModeChanged(settings)
+                || isRuntimeObservabilityBackendUrl(settings);
     }
 
     private boolean isRefreshDelayChanged(SettingsState settings) {
-        return !Objects.equals(String.valueOf(settings.refreshDelay),mySettingsComponent.getRefreshDelayText());
+        return !Objects.equals(String.valueOf(settings.refreshDelay), mySettingsComponent.getRefreshDelayText());
     }
 
-    private boolean isUrlChanged(SettingsState settings){
-        return !Objects.equals(settings.apiUrl,mySettingsComponent.getApiUrlText());
+    private boolean isUrlChanged(SettingsState settings) {
+        return !Objects.equals(settings.apiUrl, mySettingsComponent.getApiUrlText());
     }
 
-    private boolean isApiTokenChanged(SettingsState settings){
-        return !Objects.equals(settings.apiToken,mySettingsComponent.getApiToken());
+    private boolean isApiTokenChanged(SettingsState settings) {
+        return !Objects.equals(settings.apiToken, mySettingsComponent.getApiToken());
     }
 
     private boolean isJaegerUrlChanged(SettingsState settings) {
@@ -65,22 +66,26 @@ public class ProjectSettings implements Configurable {
         return !Objects.equals(settings.jaegerLinkMode, mySettingsComponent.getJaegerLinkMode());
     }
 
+    private boolean isRuntimeObservabilityBackendUrl(SettingsState settings) {
+        return !Objects.equals(settings.runtimeObservabilityBackendUrl, mySettingsComponent.getRuntimeObservabilityBackendUrl());
+    }
+
     @Override
     public void apply() throws ConfigurationException {
         SettingsState settings = SettingsState.getInstance(project);
         try {
-            Objects.requireNonNull(mySettingsComponent.getApiUrlText(),"api url can not be null");
+            Objects.requireNonNull(mySettingsComponent.getApiUrlText(), "api url can not be null");
             new URL(mySettingsComponent.getApiUrlText());
         } catch (Exception e) {
-            throw new ConfigurationException(e.getMessage(),e,e.getClass().getSimpleName());
+            throw new ConfigurationException(e.getMessage(), e, e.getClass().getSimpleName());
         }
 
-        if (mySettingsComponent.getApiUrlText().isBlank()){
+        if (mySettingsComponent.getApiUrlText().isBlank()) {
             throw new ConfigurationException("Api url can not be blank");
         }
 
         var theApiToken = mySettingsComponent.getApiToken();
-        if (theApiToken != null && theApiToken.isBlank()){
+        if (theApiToken != null && theApiToken.isBlank()) {
             theApiToken = null;
         }
 
@@ -90,6 +95,7 @@ public class ProjectSettings implements Configurable {
         settings.refreshDelay = Integer.parseInt(mySettingsComponent.getRefreshDelayText());
         settings.jaegerUrl = mySettingsComponent.getJaegerUrl();
         settings.jaegerLinkMode = mySettingsComponent.getJaegerLinkMode();
+        settings.runtimeObservabilityBackendUrl = mySettingsComponent.getRuntimeObservabilityBackendUrl();
         settings.fireChanged();
     }
 
@@ -101,6 +107,7 @@ public class ProjectSettings implements Configurable {
         mySettingsComponent.setRefreshDelayText(String.valueOf(settings.refreshDelay));
         mySettingsComponent.setJaegerUrl(settings.jaegerUrl);
         mySettingsComponent.setJaegerLinkMode(settings.jaegerLinkMode);
+        mySettingsComponent.setRuntimeObservabilityBackendUrl(settings.runtimeObservabilityBackendUrl);
     }
 
     @Override

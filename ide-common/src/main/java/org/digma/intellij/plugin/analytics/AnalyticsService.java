@@ -28,6 +28,7 @@ import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.persistence.PersistenceService;
+import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -180,13 +181,25 @@ public class AnalyticsService implements Disposable {
     public List<GlobalInsight> getGlobalInsights() throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         Log.log(LOGGER::debug, "Requesting Global Insights for next environment {}", env);
-        return executeCatching(() -> analyticsProviderProxy.getGlobalInsights(new InsightsRequest(env, Collections.emptyList())));
+        var insights = executeCatching(() -> analyticsProviderProxy.getGlobalInsights(new InsightsRequest(env, Collections.emptyList())));
+        onInsightReceived(insights);
+        return insights;
     }
 
     public List<CodeObjectInsight> getInsights(List<String> objectIds) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         Log.log(LOGGER::debug, "Requesting insights for next objectIds {} and next environment {}", objectIds, env);
-        return executeCatching(() -> analyticsProviderProxy.getInsights(new InsightsRequest(env, objectIds)));
+        var insights =  executeCatching(() -> analyticsProviderProxy.getInsights(new InsightsRequest(env, objectIds)));
+        onInsightReceived(insights);
+        return insights;
+    }
+
+    private <TInsight> void onInsightReceived(List<TInsight> insights){
+        if(!insights.isEmpty() && !SettingsState.getInstance(project).firstTimeInsightReceived) {
+            ActivityMonitor.getInstance(project).registerFirstInsightReceived();
+            SettingsState.getInstance(project).firstTimeInsightReceived = true;
+            SettingsState.getInstance(project).fireChanged();
+        }
     }
 
     public List<CodeObjectError> getErrorsOfCodeObject(List<String> codeObjectIds) throws AnalyticsServiceException {
@@ -257,7 +270,7 @@ public class AnalyticsService implements Disposable {
         try {
             analyticsProviderProxy.close();
         } catch (Exception e) {
-            Log.log(LOGGER::error, "exception while closing AnalyticsProvider {}", e.getMessage());
+            Log.error(LOGGER, project, e, "exception while closing AnalyticsProvider {}", e.getMessage());
         }
     }
 
@@ -342,6 +355,12 @@ public class AnalyticsService implements Disposable {
                             "Result '{}'",method.getName(), argsToString(args),resultToString(result));
                 }
 
+                if(!SettingsState.getInstance(project).firstTimeConnectionEstablished){
+                    ActivityMonitor.getInstance(project).registerFirstConnectionEstablished();
+                    SettingsState.getInstance(project).firstTimeConnectionEstablished = true;
+                    SettingsState.getInstance(project).fireChanged();
+                }
+
                 //reset status on success call
                 if (status.isInConnectionError()) {
                     // change status here because connectionGained() will trigger call to this invoke() again
@@ -375,6 +394,7 @@ public class AnalyticsService implements Disposable {
                     var message = isConnectionException(e) ? getConnectExceptionMessage(e) : getSslExceptionMessage(e);
                     Log.log(LOGGER::warn, "Connection exception: error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
                     LOGGER.warn(e);
+                    ActivityMonitor.getInstance(project).registerConnectionError(method.getName(), message);
                     NotificationUtil.notifyError(project, "<html>Connection error with Digma backend api for method " + method.getName() + ".<br> "
                             + message + ".<br> See logs for details.");
                 } else if (status.isOk()) {
@@ -384,11 +404,13 @@ public class AnalyticsService implements Disposable {
                     NotificationUtil.notifyError(project, "<html>Error with Digma backend api for method " + method.getName() + ".<br> "
                             + message + ".<br> See logs for details.");
                     LOGGER.warn(e);
+                    ActivityMonitor.getInstance(project).registerError(e, message);
                 } else if (!status.hadError(e)) {
                     status.error();
                     var message = getExceptionMessage(e);
                     Log.log(LOGGER::warn, "New Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
                     LOGGER.warn(e);
+                    ActivityMonitor.getInstance(project).registerError(e, message);
                 }
 
 
@@ -402,6 +424,7 @@ public class AnalyticsService implements Disposable {
                 status.error();
                 Log.log(LOGGER::debug, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getMessage());
                 LOGGER.error(e);
+                ActivityMonitor.getInstance(project).registerError(e, "Error invoking AnalyticsProvider");
                 throw e;
             } finally {
                 stopWatch.stop();

@@ -4,6 +4,7 @@ import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.fileEditor.impl.HTMLEditorProvider
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.settings.LinkMode
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.list.ListItemActionButton
@@ -52,11 +53,13 @@ fun buildButtonToJaeger(
     if (settingsState.jaegerLinkMode == LinkMode.Internal) {
         button.addActionListener {
             HTMLEditorProvider.openEditor(project, editorTitle, htmlContent)
+            ActivityMonitor.getInstance(project).registerInsightButtonClicked("show-in-jaeger")
         }
     } else {
         // handle LinkMode.External
         button.addActionListener {
             BrowserUtil.browse(jaegerUrl, project)
+            ActivityMonitor.getInstance(project).registerInsightButtonClicked("show-in-jaeger")
         }
     }
 

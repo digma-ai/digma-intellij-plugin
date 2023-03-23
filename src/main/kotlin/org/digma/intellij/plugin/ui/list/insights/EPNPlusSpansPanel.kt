@@ -46,11 +46,11 @@ fun ePNPlusSpansPanel(
                     moreData
             )
             rebuildPaginationPanel(paginationPanel, lastPageNum,
-                    spansOfInsight, resultNPOnePanel, nPOneSpansToDisplay, uniqueInsightId, RECORDS_PER_PAGE_EPNPLUS)
+                    spansOfInsight, resultNPOnePanel, nPOneSpansToDisplay, uniqueInsightId, RECORDS_PER_PAGE_EPNPLUS, project)
         }
     }
 
-    updateListOfEntriesToDisplay(spansOfInsight, nPOneSpansToDisplay, getCurrentPageNumberForInsight(uniqueInsightId, lastPageNum), RECORDS_PER_PAGE_EPNPLUS)
+    updateListOfEntriesToDisplay(spansOfInsight, nPOneSpansToDisplay, getCurrentPageNumberForInsight(uniqueInsightId, lastPageNum), RECORDS_PER_PAGE_EPNPLUS, project)
     buildENPlusInsightRowsPanel(resultNPOnePanel, nPOneSpansToDisplay, project, moreData)
 
     val result = createInsightPanel(
@@ -62,7 +62,7 @@ fun ePNPlusSpansPanel(
             bodyPanel = resultNPOnePanel,
             buttons = listOf(getButtonToJaeger(project, insight)),
             paginationComponent = buildPaginationRowPanel(lastPageNum, paginationPanel,
-                    spansOfInsight, resultNPOnePanel, nPOneSpansToDisplay, uniqueInsightId, RECORDS_PER_PAGE_EPNPLUS),
+                    spansOfInsight, resultNPOnePanel, nPOneSpansToDisplay, uniqueInsightId, RECORDS_PER_PAGE_EPNPLUS, project),
     )
     result.toolTipText = asHtml("Repeating select query pattern suggests N-Plus-One")
     return result

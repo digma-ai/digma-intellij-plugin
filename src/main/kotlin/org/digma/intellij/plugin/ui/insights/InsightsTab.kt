@@ -10,6 +10,7 @@ import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.common.createLoadingInsightsPanel
 import org.digma.intellij.plugin.ui.common.createNoDataYetPanel
 import org.digma.intellij.plugin.ui.common.createNoObservabilityPanel
@@ -20,6 +21,8 @@ import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.insights.InsightsList
 import org.digma.intellij.plugin.ui.list.insights.PreviewList
 import org.digma.intellij.plugin.ui.list.listBackground
+import org.digma.intellij.plugin.ui.model.insights.InsightGroupListViewItem
+import org.digma.intellij.plugin.ui.model.insights.InsightListViewItem
 import org.digma.intellij.plugin.ui.model.insights.InsightsTabCard
 import org.digma.intellij.plugin.ui.model.insights.UiInsightStatus
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
@@ -131,6 +134,16 @@ fun insightsPanel(project: Project): DigmaTabPanel {
 
             revalidate()
             repaint()
+
+            val insightTypes = insightsModel.listViewItems
+                .filter { it is InsightGroupListViewItem }
+                .flatMap { (it as InsightGroupListViewItem).modelObject }
+                .filter { it is InsightListViewItem<*> }
+                .map { (it as InsightListViewItem<*>).insightType }
+                .distinct()
+            if(!insightTypes.isEmpty()){
+                ActivityMonitor.getInstance(project).registerInsightsViewed(insightTypes)
+            }
         }
     }
 

@@ -93,7 +93,7 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.psi.LanguageServiceLocator"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.ui.ActivityMonitor"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.posthog.ActivityMonitor"/>
 
 
         <notificationGroup id="Digma Notification Group"

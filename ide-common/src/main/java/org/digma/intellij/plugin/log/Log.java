@@ -2,7 +2,7 @@ package org.digma.intellij.plugin.log;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import org.digma.intellij.plugin.ui.ActivityMonitor;
+import org.digma.intellij.plugin.posthog.ActivityMonitor;
 
 import java.util.function.Consumer;
 

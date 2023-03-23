@@ -22,7 +22,7 @@ import org.digma.intellij.plugin.document.CodeLensProvider
 import org.digma.intellij.plugin.document.DocumentInfoChanged
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.psi.PsiUtils
-import org.digma.intellij.plugin.ui.ActivityMonitor
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import java.awt.event.MouseEvent
 import java.util.*

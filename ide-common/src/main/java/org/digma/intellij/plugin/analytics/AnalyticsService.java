@@ -21,7 +21,7 @@ import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.settings.SettingsState;
-import org.digma.intellij.plugin.ui.ActivityMonitor;
+import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -333,7 +333,6 @@ public class AnalyticsService implements Disposable {
                     // change status here because connectionGained() will trigger call to this invoke() again
                     // and without changing the status Notification will be displayed several times in a loop
                     status.ok();
-                    ActivityMonitor.getInstance(project).registerConnectionReestablished();
                     NotificationUtil.showNotification(project, "Digma: Connection reestablished !");
                     project.getMessageBus().syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC).connectionGained();
                 }
@@ -353,11 +352,11 @@ public class AnalyticsService implements Disposable {
                 boolean isConnectionException = isConnectionException(e) || isSslConnectionException(e);
                 if (status.isOk() && isConnectionException) {
                     status.connectError();
-                    ActivityMonitor.getInstance(project).registerConnectionLost();
                     project.getMessageBus().syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC).connectionLost();
                     var message = isConnectionException(e) ? getConnectExceptionMessage(e) : getSslExceptionMessage(e);
                     Log.log(LOGGER::warn, "Connection exception: error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
                     LOGGER.warn(e);
+                    ActivityMonitor.getInstance(project).registerConnectionError(method.getName(), message);
                     NotificationUtil.notifyError(project, "<html>Connection error with Digma backend api for method " + method.getName() + ".<br> "
                             + message + ".<br> See logs for details.");
                 } else if (status.isOk()) {
@@ -372,6 +371,7 @@ public class AnalyticsService implements Disposable {
                     var message = getExceptionMessage(e);
                     Log.log(LOGGER::warn, "New Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
                     LOGGER.warn(e);
+                    ActivityMonitor.getInstance(project).registerConnectionError(method.getName(), message);
                 }
 
 

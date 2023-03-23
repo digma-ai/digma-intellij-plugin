@@ -10,11 +10,14 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.RunnableCallable
 import com.intellij.util.concurrency.NonUrgentExecutor
 import org.apache.commons.collections4.CollectionUtils
+import org.digma.intellij.plugin.analytics.BackendConnectionUtil
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
+import org.digma.intellij.plugin.ui.model.DocumentScope
+import org.digma.intellij.plugin.ui.model.EmptyScope
 import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.service.ErrorsViewService
 import org.digma.intellij.plugin.ui.service.InsightsViewService
@@ -27,6 +30,7 @@ class RefreshService(private val project: Project) {
     private val errorsViewService: ErrorsViewService = project.getService(ErrorsViewService::class.java)
     private val insightsViewService: InsightsViewService = project.getService(InsightsViewService::class.java)
     private val documentInfoService: DocumentInfoService = project.getService(DocumentInfoService::class.java)
+    private val backendConnectionUtil = project.getService(BackendConnectionUtil::class.java)
     private val refreshInsightsTaskScheduledLock: ReentrantLock = ReentrantLock()
     private val isGeneralRefreshButtonEnabled = AtomicBoolean(true)
 
@@ -49,6 +53,9 @@ class RefreshService(private val project: Project) {
             Log.log(logger::debug, "updateInsightsCacheForActiveDocument starts for file = {}", file.name)
             updateInsightsCacheForActiveDocument(selectedTextEditor, documentInfoContainer, scope)
             Log.log(logger::debug, "updateInsightsCacheForActiveDocument finished for file = {}", file.name)
+        } else if (scope is DocumentScope || scope is EmptyScope) {
+            Log.log(logger::debug, "testConnectionToBackend was triggered")
+            backendConnectionUtil.testConnectionToBackend()
         }
     }
 

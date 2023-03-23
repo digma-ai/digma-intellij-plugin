@@ -74,6 +74,8 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.analytics.BackendConnectionMonitor"/>
 
+        <projectService serviceImplementation="org.digma.intellij.plugin.analytics.BackendConnectionUtil"/>
+
         <projectService serviceImplementation="org.digma.intellij.plugin.psi.LanguageServiceLocator"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.common.IDEUtilsService"/>

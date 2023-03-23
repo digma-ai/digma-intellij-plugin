@@ -183,7 +183,7 @@ public class AnalyticsService implements Disposable {
         var env = getCurrentEnvironment();
         Log.log(LOGGER::debug, "Requesting Global Insights for next environment {}", env);
         List<GlobalInsight> insights = executeCatching(() -> analyticsProviderProxy.getGlobalInsights(new InsightsRequest(env, Collections.emptyList())));
-        registerInsightReceivedActivity(insights);
+        onInsightReceived(insights);
         return insights;
     }
 
@@ -191,11 +191,11 @@ public class AnalyticsService implements Disposable {
         var env = getCurrentEnvironment();
         Log.log(LOGGER::debug, "Requesting insights for next objectIds {} and next environment {}", objectIds, env);
         var insights = executeCatching(() -> analyticsProviderProxy.getInsights(new InsightsRequest(env, objectIds)));
-        registerInsightReceivedActivity(insights);
+        onInsightReceived(insights);
         return insights;
     }
 
-    private <TInsight> void registerInsightReceivedActivity(List<TInsight> insights){
+    private <TInsight> void onInsightReceived(List<TInsight> insights){
         if(!insights.isEmpty() && !SettingsState.getInstance(project).firstTimeInsightReceived) {
             ActivityMonitor.getInstance(project).registerFirstInsightReceived();
             SettingsState.getInstance(project).firstTimeInsightReceived = true;

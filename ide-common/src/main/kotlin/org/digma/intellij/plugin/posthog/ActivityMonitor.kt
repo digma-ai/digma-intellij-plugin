@@ -34,19 +34,21 @@ class ActivityMonitor(private val project: Project) : Runnable, Disposable {
     private var lastInsightsViewed: HashSet<InsightType>? = null
 
     init {
-        tokenFetcherThread.start()
         val hostname = CommonUtils.getLocalHostname()
         clientId =
             if (System.getenv("devenv") == "digma") hostname
             else Integer.toHexString(hostname.hashCode())
+        postHog = PostHog.Builder(getCachedToken(project)).build()
+        tokenFetcherThread.start()
     }
 
     override fun run() {
-        val token = getToken(project)
-        if (token != null) {
-            postHog = PostHog.Builder(token).build()
+        val cachedToken = getCachedToken(project)
+        val latestToken = getLatestToken()
+        if (latestToken != null && latestToken != cachedToken) {
+            postHog = PostHog.Builder(latestToken).build()
+            setCachedToken(project, latestToken)
             registerSessionDetails()
-            registerPluginLoaded()
         }
     }
 
@@ -114,10 +116,6 @@ class ActivityMonitor(private val project: Project) : Runnable, Disposable {
             "insights button-clicked",
             mapOf("button" to button)
         )
-    }
-
-    private fun registerPluginLoaded() {
-        postHog?.capture(clientId, "plugin loaded")
     }
 
     private fun registerSessionDetails(){

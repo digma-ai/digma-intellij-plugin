@@ -37,6 +37,8 @@ public class SettingsState implements PersistentStateComponent<SettingsState> , 
   private final List<SettingsChangeListener> listeners = new ArrayList<>();
   public boolean firstTimeConnectionEstablished;
   public boolean firstTimeInsightReceived;
+  @Nullable
+  public String posthogToken;
 
   public static SettingsState getInstance(Project project) {
     return project.getService(SettingsState.class);

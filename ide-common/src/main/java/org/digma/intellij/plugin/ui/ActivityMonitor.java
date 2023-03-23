@@ -12,6 +12,7 @@ import org.digma.intellij.plugin.common.CommonUtils;
 import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.log.Log;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -20,25 +21,45 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 
-public class ActivityMonitor implements Disposable {
+public class ActivityMonitor implements Runnable, Disposable {
 
     private static final Logger LOGGER = Logger.getInstance(ActivityMonitor.class);
     private final String clientId;
-    private final PosthogClientProvider clientProvider;
+    private final Project project;
+    private final Thread tokenFetcherThread;
+    @Nullable
+    private PostHog postHog;
     private LocalDateTime lastLensClick;
     private HashSet<InsightType> lastInsightsViewed;
 
-    public ActivityMonitor() {
+    public ActivityMonitor(Project project) {
+        this.project = project;
         clientId = Integer.toHexString(CommonUtils.getLocalHostname().hashCode());
-        clientProvider = new PosthogClientProvider(p -> registerSessionDetails(p, clientId));
+        tokenFetcherThread = new Thread(this, "Token fetcher thread");
+        tokenFetcherThread.start();
     }
 
     public static ActivityMonitor getInstance(@NotNull Project project){
         return project.getService(ActivityMonitor.class);
     }
 
+    @Override
+    public void run() {
+        var token = PostHogTokenProvider.GetToken(project);
+        if(token != null)
+        {
+            postHog = new PostHog.Builder(token).build();
+            registerSessionDetails();
+            registerPluginLoaded();
+        }
+    }
+
     public void registerLensClicked(){
         lastLensClick = LocalDateTime.now();
+    }
+
+    public void registerPluginLoaded(){
+        capture(clientId, "plugin loaded");
     }
 
     public void registerSidePanelOpened(){
@@ -100,12 +121,15 @@ public class ActivityMonitor implements Disposable {
         }});
     }
 
-    private static void registerSessionDetails(PostHog postHog, String clientId){
+    private void registerSessionDetails(){
         var osType = System.getProperty("os.name");
         var ideVersion = ApplicationInfo.getInstance().getBuild().asString();
         var pluginVersion = Optional.ofNullable(PluginManagerCore.getPlugin(com.intellij.openapi.extensions.PluginId.getId(PluginId.PLUGIN_ID)))
                 .map(PluginDescriptor::getVersion)
                 .orElse("unknown");
+
+        if(postHog == null)
+            return;
 
         postHog.set(clientId, new HashMap<>() {
         {
@@ -120,16 +144,20 @@ public class ActivityMonitor implements Disposable {
     }
 
     private void capture(String distinctId, String event, Map<String, Object> properties) {
-        var posthog = clientProvider.getCurrent();
-        if(posthog == null) {
+
+        if(postHog == null) {
             Log.log(LOGGER::debug, "Skipping posthog event registration \"{}\" (reason: client is null)", event);
             return;
         }
-        posthog.capture(distinctId, event, properties);
+        postHog.capture(distinctId, event, properties);
     }
 
     @Override
     public void dispose() {
-        clientProvider.dispose();
+        try {
+            tokenFetcherThread.join();
+        } catch (InterruptedException e) {
+            Log.debugWithException(LOGGER, e, "Failed waiting for tokenFetcherThread");
+        }
     }
 }

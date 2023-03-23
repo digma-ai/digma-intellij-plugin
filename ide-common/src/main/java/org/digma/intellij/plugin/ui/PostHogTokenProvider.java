@@ -1,10 +1,10 @@
 package org.digma.intellij.plugin.ui;
 
-import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
-import com.posthog.java.PostHog;
+import com.intellij.openapi.project.Project;
 import org.apache.commons.io.IOUtils;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.settings.SettingsState;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.InputStream;
@@ -13,59 +13,39 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.function.Consumer;
 
-public class PosthogClientProvider extends TimerTask implements Disposable {
+public class PostHogTokenProvider {
 
     private static final Logger LOGGER = Logger.getInstance(ActivityMonitor.class);
-    private final Consumer<PostHog> onFirstConnection;
-    private String token;
-    private PostHog posthog;
 
-    public PosthogClientProvider(Consumer<PostHog> onFirstConnection){
-        this.onFirstConnection = onFirstConnection;
-        new Timer().scheduleAtFixedRate(this, 0, 1000*60*5 /*5min*/ );
-    }
+    public static @Nullable String GetToken(Project project) {
+        var storedToken = SettingsState.getInstance(project).posthogToken;
 
-    public @Nullable PostHog getCurrent(){
-        return posthog;
-    }
-
-    @Override
-    public void run() {
         var url = getUrlToTokenFile();
         if(url == null)
-            return;
+            return storedToken;
 
         var newToken = readTokenFromUrl(url);
         if(newToken == null)
-            return;
+            return storedToken;
 
-        if(newToken.equals(token))
-            return;
-
-        var prevPosthog = posthog;
-        posthog = new PostHog.Builder(newToken).build();
-        token = newToken;
-
-        if(prevPosthog == null){
-            onFirstConnection.accept(posthog);
+        if(newToken.equals(storedToken)){
+            Log.log(LOGGER::debug, "Token hasn't changed");
+            return storedToken;
         }
+
+        Log.log(LOGGER::debug, "Token has changed");
+        SettingsState.getInstance(project).posthogToken = newToken;
+        SettingsState.getInstance(project).fireChanged();
+        return newToken;
     }
 
-    @Override
-    public void dispose() {
-        cancel();
-        if(posthog != null)
-            posthog.shutdown();
-    }
-
-    private @Nullable String readTokenFromUrl(String tokenFileUrl){
+    private static @Nullable String readTokenFromUrl(String tokenFileUrl){
         var httpClient = HttpClient.newHttpClient();
         try {
-            var response = httpClient.send(HttpRequest.newBuilder().GET().uri(URI.create(tokenFileUrl)).build(), HttpResponse.BodyHandlers.ofString());
+            var response = httpClient.send(
+                    HttpRequest.newBuilder().GET().uri(URI.create(tokenFileUrl)).build(),
+                    HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200)
             {
                 Log.log(LOGGER::debug, "Failed to read posthog token file form url (status: {})", response.statusCode());
@@ -78,9 +58,9 @@ public class PosthogClientProvider extends TimerTask implements Disposable {
         }
     }
 
-    private @Nullable String getUrlToTokenFile(){
+    private static @Nullable String getUrlToTokenFile(){
         try {
-            InputStream is = getClass().getClassLoader().getResourceAsStream("posthog-token-url.txt");
+            InputStream is = PostHogTokenProvider.class.getClassLoader().getResourceAsStream("posthog-token-url.txt");
             if(is == null)
             {
                 Log.log(LOGGER::debug, "Missing posthog token resource file");

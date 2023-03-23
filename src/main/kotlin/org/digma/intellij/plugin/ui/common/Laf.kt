@@ -21,22 +21,22 @@ import javax.swing.Icon
  * projects in the jvm and can not consider per-project settings.
  *
  */
-object Laf  {
+object Laf {
 
     fun panelsListBackground(): Color {
         return Colors.PLUGIN_BACKGROUND
     }
 
-    fun getLabelGrayedColor():Color{
+    fun getLabelGrayedColor(): Color {
         return Colors.GRAY
     }
 
-    fun scalePanels(size: Int):Int{
+    fun scalePanels(size: Int): Int {
         //todo:need to consider if to scale panels always
         return JBUI.scale(size)
     }
 
-    fun scaleBorders(size: Int):Int{
+    fun scaleBorders(size: Int): Int {
         return size
         //todo: need to consider if to scale borders
         //JBUI.scale(size)
@@ -47,7 +47,7 @@ object Laf  {
         return JBUI.scale(size)
     }
 
-    class Colors{
+    class Colors {
         companion object {
             @JvmStatic val DEFAULT_LABEL_FOREGROUND: Color = JBColor.foreground()
             @JvmStatic val PLUGIN_BACKGROUND: JBColor = JBColor.namedColor("Plugins.background", JBColor.PanelBackground)
@@ -75,6 +75,7 @@ object Laf  {
                 @JvmStatic val POINTER: Icon = SvgIcon.asIs("/icons/pointer.svg")
             }
         }
+
         class ErrorDetails{
             companion object {
                 @JvmStatic val BACK: Icon = SvgIcon.withColor("/icons/arrow-left.svg", Colors.DEFAULT_LABEL_FOREGROUND)
@@ -83,6 +84,7 @@ object Laf  {
                 @JvmStatic val TELESCOPE_BLUE_LIGHT_SHADE: Icon = SvgIcon.withColor("/icons/telescope.svg", Colors.BLUE_LIGHT_SHADE)
             }
         }
+
         class Environment {
             companion object {
                 @JvmStatic val ENVIRONMENT_HAS_USAGE = SvgIcon.asIs("/icons/active-env.svg")
@@ -92,6 +94,7 @@ object Laf  {
                 val NO_CONNECTION_ICON = SvgIcon.asIs("/icons/no-signal.svg")
             }
         }
+
         class Insight{
             companion object {
                 // Scope icons
@@ -126,6 +129,7 @@ object Laf  {
             companion object {
                 @JvmStatic val Loading = AllIcons.Actions.BuildLoadChanges
                 @JvmStatic val NoDataYet = SvgIcon.asIs("/icons/no_data_yet.svg")
+                @JvmStatic val NoObservability = SvgIcon.asIs("/icons/disabled-env.svg") // TODO: bring the right icon
                 @JvmStatic val Mascot64 = loadAndScaleIconByWidth("/icons/digma.png", 64)
             }
         }
@@ -146,7 +150,7 @@ object Laf  {
         }
     }
 
-    class Sizes{
+    class Sizes {
         companion object {
             @JvmStatic
             val INSIGHT_ICON_SIZE_32: Int = 32
@@ -157,23 +161,10 @@ object Laf  {
         }
     }
 
-    class Fonts{
+    class Fonts {
         companion object {
             val DEFAULT_LABEL_FONT: Font = com.intellij.util.ui.UIUtil.getLabelFont()
         }
     }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -36,6 +36,7 @@ import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupType.HttpEndpoint
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupType.Span
 import org.digma.intellij.plugin.ui.model.insights.NoDataYet
+import org.digma.intellij.plugin.ui.model.insights.NoObservability
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import javax.swing.Icon
 import javax.swing.JPanel
@@ -74,6 +75,7 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
             is SpanScalingRootCauseInsight -> spanScalingRootCauseItemsPanel(project, value.modelObject as SpanScalingRootCauseInsight, value.moreData)
             is UnmappedInsight -> unmappedInsightPanel(project, value.modelObject as UnmappedInsight)
             is NoDataYet -> noDataYetInsightPanel()
+            is NoObservability -> noObservabilityInsightPanel()
             else -> genericPanelForSingleInsight(project, value.modelObject)
         }
 

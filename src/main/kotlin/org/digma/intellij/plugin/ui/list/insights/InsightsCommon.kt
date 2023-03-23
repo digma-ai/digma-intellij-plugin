@@ -380,7 +380,7 @@ internal fun addCurrentLargestWidthIconPanel(layoutHelper: PanelsLayoutHelper, w
             max(currentLargest, width))
 }
 
-const val NoDataYetDescription = "No data received yet for this span, please trigger some actions using this code to see more insights."
+private const val NoDataYetDescription = "No data received yet for this span, please trigger some actions using this code to see more insights."
 
 fun noDataYetInsightPanel(): JPanel {
 
@@ -391,6 +391,21 @@ fun noDataYetInsightPanel(): JPanel {
     thePanel.layout = BorderLayout()
     thePanel.add(getMessageLabel("No Data Yet", ""), BorderLayout.WEST)
     thePanel.add(JLabel(asHtml(NoDataYetDescription)), BorderLayout.SOUTH)
+
+    return insightItemPanel(thePanel as DigmaResettablePanel)
+}
+
+private const val NoObservabilityDescription = "Add an annotation to observe this method and collect data about its runtime behavior"
+
+fun noObservabilityInsightPanel(): JPanel {
+
+    val thePanel = object : DigmaResettablePanel() {
+        override fun reset() {
+        }
+    }
+    thePanel.layout = BorderLayout()
+    thePanel.add(getMessageLabel("No Observability", ""), BorderLayout.WEST)
+    thePanel.add(JLabel(asHtml(NoObservabilityDescription)), BorderLayout.SOUTH)
 
     return insightItemPanel(thePanel as DigmaResettablePanel)
 }

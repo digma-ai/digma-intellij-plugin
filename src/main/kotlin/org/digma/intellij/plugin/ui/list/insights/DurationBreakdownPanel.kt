@@ -50,11 +50,11 @@ fun spanDurationBreakdownPanel(
                     moreData
             )
             rebuildPaginationPanel(paginationPanel, lastPageNum,
-                    validBreakdownEntries, resultBreakdownPanel, durationBreakdownEntriesToDisplay, uniqueInsightId, RECORDS_PER_PAGE_DURATION_BREAKDOWN)
+                    validBreakdownEntries, resultBreakdownPanel, durationBreakdownEntriesToDisplay, uniqueInsightId, RECORDS_PER_PAGE_DURATION_BREAKDOWN, project)
         }
     }
 
-    updateListOfEntriesToDisplay(validBreakdownEntries, durationBreakdownEntriesToDisplay, getCurrentPageNumberForInsight(uniqueInsightId, lastPageNum), RECORDS_PER_PAGE_DURATION_BREAKDOWN)
+    updateListOfEntriesToDisplay(validBreakdownEntries, durationBreakdownEntriesToDisplay, getCurrentPageNumberForInsight(uniqueInsightId, lastPageNum), RECORDS_PER_PAGE_DURATION_BREAKDOWN, project)
     buildDurationBreakdownRowPanel(resultBreakdownPanel, durationBreakdownEntriesToDisplay, project, moreData)
 
     return createInsightPanel(
@@ -66,7 +66,7 @@ fun spanDurationBreakdownPanel(
             bodyPanel = resultBreakdownPanel,
             buttons = null,
             paginationComponent = buildPaginationRowPanel(lastPageNum, paginationPanel,
-                    validBreakdownEntries, resultBreakdownPanel, durationBreakdownEntriesToDisplay, uniqueInsightId, RECORDS_PER_PAGE_DURATION_BREAKDOWN),
+                    validBreakdownEntries, resultBreakdownPanel, durationBreakdownEntriesToDisplay, uniqueInsightId, RECORDS_PER_PAGE_DURATION_BREAKDOWN, project),
     )
 }
 

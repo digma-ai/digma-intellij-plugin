@@ -80,6 +80,7 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.common.IDEUtilsService"/>
 
+        <projectService serviceImplementation="org.digma.intellij.plugin.posthog.ActivityMonitor"/>
 
         <notificationGroup id="Digma Notification Group"
                            displayType="NONE"
@@ -143,6 +144,9 @@
         <listener
                 class="org.digma.intellij.plugin.common.modelChangeListener.ModelChangeHandler"
                 topic="org.digma.intellij.plugin.common.modelChangeListener.ModelChangeListener"/>
+        <listener
+                class="org.digma.intellij.plugin.toolwindow.sidepane.DigmaSidePaneToolWindowListener"
+                topic="com.intellij.openapi.wm.ex.ToolWindowManagerListener"/>
     </projectListeners>
 
 

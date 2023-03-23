@@ -44,11 +44,11 @@ fun spanScalingRootCauseItemsPanel(project: Project, insight: SpanScalingRootCau
                     moreData
             )
             rebuildPaginationPanel(paginationPanel, lastPageNum,
-                    affectedEndpoints, rootCausePanel, affectedEndpointsToDisplay, uniqueInsightId, RECORDS_PER_PAGE_AFFECTED_ENDPOINTS)
+                    affectedEndpoints, rootCausePanel, affectedEndpointsToDisplay, uniqueInsightId, RECORDS_PER_PAGE_AFFECTED_ENDPOINTS, project)
         }
     }
 
-    updateListOfEntriesToDisplay(affectedEndpoints, affectedEndpointsToDisplay, getCurrentPageNumberForInsight(uniqueInsightId, lastPageNum), RECORDS_PER_PAGE_AFFECTED_ENDPOINTS)
+    updateListOfEntriesToDisplay(affectedEndpoints, affectedEndpointsToDisplay, getCurrentPageNumberForInsight(uniqueInsightId, lastPageNum), RECORDS_PER_PAGE_AFFECTED_ENDPOINTS, project)
     buildRootCauseAffectedEndpointPanel(rootCausePanel, affectedEndpointsToDisplay, project, moreData)
 
     return createInsightPanel(
@@ -60,7 +60,7 @@ fun spanScalingRootCauseItemsPanel(project: Project, insight: SpanScalingRootCau
             bodyPanel = rootCausePanel,
             buttons = listOf(buttonToGraph),
             paginationComponent = buildPaginationRowPanel(lastPageNum, paginationPanel,
-                    affectedEndpoints, rootCausePanel, affectedEndpointsToDisplay, uniqueInsightId, RECORDS_PER_PAGE_AFFECTED_ENDPOINTS)
+                    affectedEndpoints, rootCausePanel, affectedEndpointsToDisplay, uniqueInsightId, RECORDS_PER_PAGE_AFFECTED_ENDPOINTS, project)
     )
 }
 

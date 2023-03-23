@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.editor
 
+import com.intellij.openapi.project.Project
 import java.util.concurrent.ConcurrentHashMap
 
 private val insightsPaginationInfo: ConcurrentHashMap<String, ConcurrentHashMap<String, Int>> = ConcurrentHashMap()
@@ -34,7 +35,8 @@ fun <T> updateListOfEntriesToDisplay(
         entries: List<T>,
         entriesToDisplay: ArrayList<T>,
         currPageNum: Int,
-        recordsPerPage: Int
+        recordsPerPage: Int,
+        project: Project
 ) {
     entriesToDisplay.clear()
     if (entries.isNotEmpty()) {

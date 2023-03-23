@@ -51,5 +51,4 @@ class BackendConnectionMonitor(val project: Project) : Disposable, AnalyticsServ
         connectionOk()
     }
 
-
 }

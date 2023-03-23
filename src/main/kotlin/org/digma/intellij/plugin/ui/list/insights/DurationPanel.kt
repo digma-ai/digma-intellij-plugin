@@ -5,7 +5,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBPanel
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.model.rest.insights.*
-import org.digma.intellij.plugin.ui.ActivityMonitor
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile

@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.43] - 2023-03-23
+### Changed
+
 ## [2.0.42] - 2023-03-23
 ### Changed
 - Feature/Panels for No Observability (#415)

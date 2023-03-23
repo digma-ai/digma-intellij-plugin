@@ -26,6 +26,7 @@ class RefreshService(private val project: Project) {
 
     private val errorsViewService: ErrorsViewService = project.getService(ErrorsViewService::class.java)
     private val insightsViewService: InsightsViewService = project.getService(InsightsViewService::class.java)
+    private val documentInfoService: DocumentInfoService = project.getService(DocumentInfoService::class.java)
     private val refreshInsightsTaskScheduledLock: ReentrantLock = ReentrantLock()
     private val isGeneralRefreshButtonEnabled = AtomicBoolean(true)
 
@@ -95,6 +96,7 @@ class RefreshService(private val project: Project) {
                 ReadAction.nonBlocking(RunnableCallable {
                     insightsViewService.updateInsightsModel(scope.getMethodInfo())
                     errorsViewService.updateErrorsModel(scope.getMethodInfo())
+                    documentInfoService.notifyDocumentInfoChanged(documentInfoContainer.psiFile)
                 }).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance())
             }
         }

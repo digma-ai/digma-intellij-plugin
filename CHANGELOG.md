@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [2.0.41] - 2023-03-23
+## [2.0.42] - 2023-03-23
 ### Changed
 - Feature/no data yet panel per span (#408)
 - Feature/setting for Runtime Observability Backend (exporter) (#410)
@@ -79,5 +79,5 @@ All notable changes to this project will be documented in this file.
 [2.0.38]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.37...v2.0.38
 [2.0.39]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.38...v2.0.39
 [2.0.40]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.39...v2.0.40
-[2.0.41]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.40...v2.0.41
-[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.41...HEAD
+[2.0.42]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.40...v2.0.42
+[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.42...HEAD

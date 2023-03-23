@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.insights.view;
 
 import com.google.common.collect.Sets;
 import com.intellij.openapi.project.Project;
+import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
@@ -11,6 +12,7 @@ import org.digma.intellij.plugin.model.rest.insights.SpanInsight;
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupListViewItem;
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupType;
 import org.digma.intellij.plugin.ui.model.insights.NoDataYet;
+import org.digma.intellij.plugin.ui.model.insights.NoObservability;
 import org.digma.intellij.plugin.ui.model.listview.GroupListViewItem;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
 import org.digma.intellij.plugin.view.ListViewBuilder;
@@ -24,6 +26,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class InsightsViewBuilder extends ListViewBuilder {
+
+    private static final int SORT_INDEX_HIGHEST_IRRELEVANT = 999;
 
     private final BuildersHolder buildersHolder;
 
@@ -49,6 +53,8 @@ public class InsightsViewBuilder extends ListViewBuilder {
         if (!spansThatHaveNoInsight.isEmpty()) {
             buildItemsForNoDataYet(spansThatHaveNoInsight);
         }
+
+        buildNoObservabilityPanelIfNeed(methodInfo, codeObjectInsights, allItems);
 
         allItems.addAll(groupManager.getGroupItems());
 
@@ -79,8 +85,27 @@ public class InsightsViewBuilder extends ListViewBuilder {
             GroupListViewItem theGroup = groupManager.getOrCreateGroup(
                     groupId, () -> new InsightGroupListViewItem(currSpanName, InsightGroupType.Span, ""));
 
-            ListViewItem<NoDataYet> itemOfNoDataYet = new ListViewItem<>(new NoDataYet(), 222);
+            ListViewItem<NoDataYet> itemOfNoDataYet = new ListViewItem<>(new NoDataYet(), SORT_INDEX_HIGHEST_IRRELEVANT);
             theGroup.addItem(itemOfNoDataYet);
+        }
+    }
+
+    protected void buildNoObservabilityPanelIfNeed(MethodInfo methodInfo, List<? extends CodeObjectInsight> codeObjectInsights, List<ListViewItem<?>> dest) {
+        if (methodInfo.hasRelatedCodeObjectIds()) return;
+
+        Set<InsightType> insightTypes = codeObjectInsights.stream()
+                .map(it -> it.getType())
+                .collect(Collectors.toSet());
+
+        boolean hasInsightOfErrors = insightTypes.remove(InsightType.Errors);
+        boolean hasInsightOfHotSpot = insightTypes.remove(InsightType.HotSpot);
+
+        if (hasInsightOfErrors || hasInsightOfHotSpot) {
+            boolean onlyErrorInsights = insightTypes.isEmpty();
+            if (onlyErrorInsights) {
+                ListViewItem<NoObservability> itemOfNoObservability = new ListViewItem<>(new NoObservability(), SORT_INDEX_HIGHEST_IRRELEVANT);
+                dest.add(itemOfNoObservability);
+            }
         }
     }
 

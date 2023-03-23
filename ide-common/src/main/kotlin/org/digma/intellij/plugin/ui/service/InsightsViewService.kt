@@ -100,10 +100,11 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
             InsightStatus.InsightPending -> UiInsightStatus.InsightPending
             InsightStatus.NoSpanData -> {
                 if (methodHasRelatedCodeObjectIds)
-                    return UiInsightStatus.NoSpanData
+                    return UiInsightStatus.NoSpanData // the client(this plugin) is aware of code objects, but server is not (yet)
                 else
-                    return UiInsightStatus.InsightExist // really no insights
+                    return UiInsightStatus.NoObservability
             }
+
             else -> UiInsightStatus.Unknown
         }
     }

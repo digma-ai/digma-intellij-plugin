@@ -17,6 +17,7 @@ import javax.swing.JLabel
 
 
 private const val NO_DATA_YET_DETAIL_DESCRIPTION = "Trigger actions that call this code object to learn more about its runtime behavior"
+private const val NO_OBSERVABILITY_DETAIL_DESCRIPTION = "Add an annotation to observe this method and collect data about its runtime behavior"
 
 fun noCodeObjectWarningPanel(model: PanelModel): DialogPanel {
     return panel {
@@ -77,6 +78,23 @@ fun createNoDataYetPanel(): DialogPanel {
         }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
         row {
             label(asHtml(NO_DATA_YET_DETAIL_DESCRIPTION))
+                    .horizontalAlign(HorizontalAlign.CENTER)
+        }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
+    }.andTransparent().withBorder(JBUI.Borders.empty())
+}
+
+fun createNoObservabilityPanel(): DialogPanel {
+    return panel {
+        row {
+            icon(Laf.Icons.Common.NoObservability)
+                    .horizontalAlign(HorizontalAlign.CENTER)
+        }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.SMALL)
+        row {
+            label("No Observability")
+                    .horizontalAlign(HorizontalAlign.CENTER)
+        }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
+        row {
+            label(asHtml(NO_OBSERVABILITY_DETAIL_DESCRIPTION))
                     .horizontalAlign(HorizontalAlign.CENTER)
         }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
     }.andTransparent().withBorder(JBUI.Borders.empty())

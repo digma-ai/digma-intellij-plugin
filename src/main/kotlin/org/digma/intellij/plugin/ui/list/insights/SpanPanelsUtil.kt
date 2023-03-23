@@ -4,6 +4,7 @@ import com.google.common.io.CharStreams
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
+import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
 import org.digma.intellij.plugin.ui.common.*
@@ -156,18 +157,15 @@ fun getDefaultSpanOneRecordPanel(): JPanel {
     return spanOneRecordPanel
 }
 
-fun buildJPanelWithButtonToJaeger(builder: StringBuilder, line: JPanel, traceSample: TraceSample?,
+fun buildJPanelWithButtonToJaeger(line: JPanel, traceSample: TraceSample?,
                                   project: Project, spanName: String): JPanel {
-    val spanFlowLabel = CopyableLabelHtml(asHtml(builder.toString()))
-    spanFlowLabel.alignmentX = 0.0f
-    line.add(spanFlowLabel, BorderLayout.CENTER)
-
     val buttonToJaeger = buildButtonToJaeger(project, "Trace", spanName, listOf(traceSample))
     if (buttonToJaeger != null) {
         val wrapper = JPanel(BorderLayout())
         wrapper.isOpaque = false
-        wrapper.add(buttonToJaeger, BorderLayout.NORTH)
-        line.add(wrapper, BorderLayout.EAST)
+        wrapper.border = JBUI.Borders.emptyTop(5)
+        wrapper.add(buttonToJaeger, BorderLayout.LINE_END)
+        line.add(wrapper)
     }
     return line
 }

@@ -32,7 +32,6 @@ fun spanUsagesPanel(project: Project, spanUsagesInsight: SpanUsagesInsight, more
 
         line.add(percentageLabel, BorderLayout.WEST)
 
-        val builder = StringBuilder()
         var spanName = spanUsagesInsight.span // default, just in case first service is not found
         spanFlow.firstService?.let { firstService ->
             line.add(CopyableLabelHtml(asHtml(spanGrayed(firstService.service + ": "))))
@@ -54,7 +53,7 @@ fun spanUsagesPanel(project: Project, spanUsagesInsight: SpanUsagesInsight, more
             traceSample = TraceSample(spanName, sampleTraceId)
         }
         flowsListPanel.add(line)
-        buildJPanelWithButtonToJaeger(builder, flowsListPanel, traceSample, project, spanName)
+        buildJPanelWithButtonToJaeger(flowsListPanel, traceSample, project, spanName)
     }
 
     val result = JBPanel<JBPanel<*>>()

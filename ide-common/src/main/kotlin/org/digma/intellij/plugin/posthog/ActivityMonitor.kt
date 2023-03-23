@@ -27,7 +27,7 @@ class ActivityMonitor(private val project: Project) : Runnable, Disposable {
         }
     }
 
-    private val clientId: String = Integer.toHexString(CommonUtils.getLocalHostname().hashCode())
+    private val clientId: String
     private val tokenFetcherThread = Thread(this, "Token fetcher thread")
     private var postHog: PostHog? = null
     private var lastLensClick: LocalDateTime? = null
@@ -35,6 +35,10 @@ class ActivityMonitor(private val project: Project) : Runnable, Disposable {
 
     init {
         tokenFetcherThread.start()
+        val hostname = CommonUtils.getLocalHostname()
+        clientId =
+            if (System.getenv("devenv") == "digma") hostname
+            else Integer.toHexString(hostname.hashCode())
     }
 
     override fun run() {

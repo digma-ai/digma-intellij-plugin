@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.common
 
 import com.intellij.codeInsight.hint.HintManager
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
@@ -15,13 +16,13 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.common.IDEUtilsService
+import org.digma.intellij.plugin.common.modelChangeListener.ModelChangeListener
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.ui.errors.IconButton
 import org.digma.intellij.plugin.ui.list.insights.createDefaultBoxLayoutLineAxisPanelWithBackgroundWithFixedHeight
+import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
-import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
-import org.digma.intellij.plugin.ui.service.InsightsViewService
 import java.awt.*
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
@@ -31,13 +32,14 @@ import javax.swing.*
 
 class NavigationPanel(
         project: Project,
+        model: PanelModel,
         private val environmentsSupplier: EnvironmentsSupplier // assuming its a singleton
-) : DigmaResettablePanel() {
+) : DigmaResettablePanel(), Disposable {
     private val logger: Logger = Logger.getInstance(NavigationPanel::class.java)
 
-    private val analyticsServiceStatusConnection: MessageBusConnection = project.messageBus.connect()
+    private val messageBusConnection: MessageBusConnection = project.messageBus.connect()
     private val project: Project
-    private val insightsModel: InsightsModel
+    private val model: PanelModel
     private val changeEnvAlarm: Alarm
     private val localHostname: String
     private var analyticsService: AnalyticsService? = null
@@ -45,7 +47,7 @@ class NavigationPanel(
 
     init {
         this.project = project
-        this.insightsModel = InsightsViewService.getInstance(project).model
+        this.model = model
         changeEnvAlarm = AlarmFactory.getInstance().create()
         localHostname = CommonUtils.getLocalHostname()
         isOpaque = false
@@ -53,31 +55,35 @@ class NavigationPanel(
         border = JBUI.Borders.empty()
         analyticsService = project.getService(AnalyticsService::class.java)
 
-        rebuildInBackground()
+        rebuildInBackground(model)
 
-        analyticsServiceStatusConnection.subscribe(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, object : AnalyticsServiceConnectionEvent {
+        messageBusConnection.subscribe(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, object : AnalyticsServiceConnectionEvent {
             override fun connectionLost() {
-                rebuildInBackground()
+                rebuildInBackground(model)
             }
 
             override fun connectionGained() {
-                rebuildInBackground()
+                rebuildInBackground(model)
             }
         })
+        messageBusConnection.subscribe(
+                ModelChangeListener.MODEL_CHANGED_TOPIC,
+                ModelChangeListener { newModel -> rebuildInBackground(newModel) }
+        )
     }
 
 
     override fun reset() {
-        rebuildInBackground()
+        rebuildInBackground(model)
     }
 
-    private fun rebuildInBackground() {
+    private fun rebuildInBackground(model: PanelModel) {
         val lifetimeDefinition = LifetimeDefinition()
         lifetimeDefinition.lifetime.launchBackground {
             rebuildPanelLock.lock()
             Log.log(logger::debug, "Lock acquired for rebuild Navigation panel process.")
             try {
-                rebuild()
+                rebuild(model)
             } finally {
                 rebuildPanelLock.unlock()
                 Log.log(logger::debug, "Lock released for rebuild Navigation panel process.")
@@ -86,17 +92,17 @@ class NavigationPanel(
         }
     }
 
-    private fun rebuild() {
+    private fun rebuild(model: PanelModel) {
         ApplicationManager.getApplication().invokeLater {
             removeExistingComponentsIfPresent()
-            buildNavigationPanelComponents()
+            buildNavigationPanelComponents(model)
             revalidate()
         }
     }
 
-    private fun buildNavigationPanelComponents() {
-        this.add(getFirstRowPanel())
-        this.add(getSecondRowPanel())
+    private fun buildNavigationPanelComponents(model: PanelModel) {
+        this.add(getFirstRowPanel(model))
+        this.add(getSecondRowPanel(model))
     }
 
     private fun removeExistingComponentsIfPresent() {
@@ -107,9 +113,9 @@ class NavigationPanel(
         }
     }
 
-    private fun getFirstRowPanel(): JPanel {
+    private fun getFirstRowPanel(model: PanelModel): JPanel {
         val logoIconLabel = getLogoIconLabel()
-        val comboBox = EnvironmentsDropdownPanel(project, insightsModel.getUsageStatus(), environmentsSupplier, localHostname)
+        val comboBox = EnvironmentsDropdownPanel(project, model, environmentsSupplier, localHostname)
 
         val parentPanel = JPanel(GridBagLayout())
         // Add the logo icon label to the parent panel with relative constraints
@@ -151,7 +157,7 @@ class NavigationPanel(
         return parentPanel
     }
 
-    private fun getSecondRowPanel(): JPanel {
+    private fun getSecondRowPanel(model: PanelModel): JPanel {
         val bgColor: Color = Laf.Colors.EDITOR_BACKGROUND
 
         val rowPanel = createDefaultBoxLayoutLineAxisPanelWithBackgroundWithFixedHeight(
@@ -161,7 +167,7 @@ class NavigationPanel(
         )
 //        rowPanel.add(getDashboardButton()) // will be used later
 //        rowPanel.add(Box.createHorizontalGlue())
-        rowPanel.add(ScopeLineResultPanel(project, insightsModel))
+        rowPanel.add(ScopeLineResultPanel(project, model))
         rowPanel.add(Box.createHorizontalGlue())
 //        rowPanel.add(getRelatedInsightsIconLabel()) // will be used later
         return rowPanel
@@ -217,10 +223,11 @@ class NavigationPanel(
         iconLabel.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent?) {
                 showSettingsMessage(
-                    threeDotsIcon = iconLabel,
-                    project = project
+                        threeDotsIcon = iconLabel,
+                        project = project
                 )
             }
+
             override fun mouseExited(e: MouseEvent?) {}
             override fun mousePressed(e: MouseEvent?) {}
         })
@@ -234,5 +241,9 @@ class NavigationPanel(
 
     private fun showSettingsMessage(threeDotsIcon: JLabel, project: Project) {
         HintManager.getInstance().showHint(SettingsHintPanel(project), RelativePoint.getSouthWestOf(threeDotsIcon), HintManager.HIDE_BY_ESCAPE, 5000)
+    }
+
+    override fun dispose() {
+        messageBusConnection.dispose()
     }
 }

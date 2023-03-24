@@ -143,9 +143,6 @@
         <listener
                 class="org.digma.intellij.plugin.common.modelChangeListener.ModelChangeHandler"
                 topic="org.digma.intellij.plugin.common.modelChangeListener.ModelChangeListener"/>
-        <listener
-                class="org.digma.intellij.plugin.common.usageStatusChange.UsageStatusChangeHandler"
-                topic="org.digma.intellij.plugin.common.usageStatusChange.UsageStatusChangeListener"/>
     </projectListeners>
 
 

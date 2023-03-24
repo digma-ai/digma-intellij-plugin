@@ -4,11 +4,13 @@ import com.intellij.openapi.project.Project
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
+import org.digma.intellij.plugin.ui.service.InsightsViewService
 import java.awt.BorderLayout
 
 fun createMainSidePaneWindowPanel(project: Project): DigmaResettablePanel {
 
-    val navigationPanel = NavigationPanel(project, AnalyticsService.getInstance(project).environment)
+    val insightsModel = InsightsViewService.getInstance(project).model
+    val navigationPanel = NavigationPanel(project, insightsModel, AnalyticsService.getInstance(project).environment)
     val tabsPanel = TabsPanel(project)
 
     val result = object : DigmaResettablePanel() {

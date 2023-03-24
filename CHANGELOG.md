@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.44] - 2023-03-25
+### Changed
+- Fixed #420 - List of environments incorrectly shows data for environment
+
 ## [2.0.43] - 2023-03-23
 ### Changed
 
@@ -88,4 +92,5 @@ All notable changes to this project will be documented in this file.
 [2.0.41-pre]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.40...v2.0.41-pre
 [2.0.42]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.41-pre...v2.0.42
 [2.0.43]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.42...v2.0.43
-[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.43...HEAD
+[2.0.43]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.43...v2.0.44
+[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.44...HEAD

@@ -95,7 +95,7 @@ class EnvironmentsDropdownPanel(
     }
 
     private fun rebuildInBackground() {
-        if (!popupMenuOpened.get()) {
+        if (!popupMenuOpened.get() || wasNotInitializedYet.get() || backendConnectionMonitor.isConnectionError()) {
             val lifetimeDefinition = LifetimeDefinition()
             lifetimeDefinition.lifetime.launchBackground {
                 rebuildPanelLock.lock()

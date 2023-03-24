@@ -13,13 +13,12 @@ import com.intellij.util.AlarmFactory
 import com.intellij.util.messages.MessageBusConnection
 import com.intellij.util.ui.JBUI
 import com.jetbrains.rd.util.lifetime.LifetimeDefinition
-import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
 import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.common.usageStatusChange.UsageStatusChangeListener
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
+import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.Cursor
@@ -43,15 +42,14 @@ const val NO_ENVIRONMENTS_MESSAGE: String = "No Environments"
 
 class EnvironmentsDropdownPanel(
         project: Project,
-        usageStatusResult: UsageStatusResult,
+        private val model: PanelModel,
         private val environmentsSupplier: EnvironmentsSupplier, // assuming its a singleton
         localHostname: String
 ) : DigmaResettablePanel(), Disposable {
     private val logger: Logger = Logger.getInstance(EnvironmentsDropdownPanel::class.java)
 
-    private val usageStatusChangeConnection: MessageBusConnection = project.messageBus.connect()
+    private val messageBusConnection: MessageBusConnection = project.messageBus.connect()
     private val backendConnectionMonitor: BackendConnectionMonitor
-    private var usageStatusResult: UsageStatusResult
     private val project: Project
     private val rebuildPanelLock = ReentrantLock()
     private var selectedItem: String
@@ -62,11 +60,6 @@ class EnvironmentsDropdownPanel(
     private val comboBox = ComboBox<String>()
 
     init {
-        usageStatusChangeConnection.subscribe(
-                UsageStatusChangeListener.USAGE_STATUS_CHANGED_TOPIC,
-                UsageStatusChangeListener { newUsageStatus -> rebuildInBackground(newUsageStatus) }
-        )
-        this.usageStatusResult = usageStatusResult
         this.project = project
         this.localHostname = localHostname
         this.changeEnvAlarm = AlarmFactory.getInstance().create()
@@ -75,11 +68,11 @@ class EnvironmentsDropdownPanel(
         isOpaque = false
         cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
 
-        rebuildInBackground(usageStatusResult)
+        rebuildInBackground()
         selectedItem = getSelected()
 
-        project.messageBus.connect(project.getService(AnalyticsService::class.java))
-                .subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, object : EnvironmentChanged {
+        messageBusConnection.subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC,
+                object : EnvironmentChanged {
                     //there are few instances of EnvironmentsPanel, if a button is clicked in the insights tab the selected button
                     //need to change also in the errors tab, and vice versa.
                     override fun environmentChanged(newEnv: String?) {
@@ -87,59 +80,45 @@ class EnvironmentsDropdownPanel(
                     }
 
                     override fun environmentsListChanged(newEnvironments: MutableList<String>?) {
-                        EDT.ensureEDT { rebuildInBackground(usageStatusResult) }
+                        EDT.ensureEDT { rebuildInBackground() }
                     }
                 })
         backendConnectionMonitor = project.getService(BackendConnectionMonitor::class.java)
     }
 
     override fun reset() {
-        rebuildInBackground(usageStatusResult)
+        rebuildInBackground()
     }
 
     override fun dispose() {
-        usageStatusChangeConnection.dispose()
+        messageBusConnection.dispose()
     }
 
-    private fun rebuildInBackground(newUsageStatus: UsageStatusResult) {
+    private fun rebuildInBackground() {
         if (!popupMenuOpened.get()) {
-            if (newUsageStatus.environmentStatuses.size != usageStatusResult.environmentStatuses.size
-                    || (usageStatusResult.codeObjectStatuses.isEmpty() && newUsageStatus.environmentStatuses.isNotEmpty())
-                    || wasNotInitializedYet.get()
-                    || backendConnectionMonitor.isConnectionError()) {
-                usageStatusResult = newUsageStatus
-
-                val lifetimeDefinition = LifetimeDefinition()
-                lifetimeDefinition.lifetime.launchBackground {
-                    rebuildPanelLock.lock()
-                    Log.log(logger::debug, "Lock acquired for rebuild EnvironmentsDropdownPanel process.")
-                    try {
-                        rebuild(newUsageStatus)
-                    } finally {
-                        rebuildPanelLock.unlock()
-                        Log.log(logger::debug, "Lock released for rebuild EnvironmentsDropdownPanel process.")
-                        lifetimeDefinition.terminate()
-                    }
+            val lifetimeDefinition = LifetimeDefinition()
+            lifetimeDefinition.lifetime.launchBackground {
+                rebuildPanelLock.lock()
+                Log.log(logger::debug, "Lock acquired for rebuild EnvironmentsDropdownPanel process.")
+                try {
+                    rebuild()
+                } finally {
+                    rebuildPanelLock.unlock()
+                    Log.log(logger::debug, "Lock released for rebuild EnvironmentsDropdownPanel process.")
+                    lifetimeDefinition.terminate()
                 }
             }
         }
     }
 
-    private fun rebuild(usageStatus: UsageStatusResult) {
-        ApplicationManager.getApplication().invokeLater {
-            removeExistingComponentsIfPresent()
-            buildEnvironmentsComponent(usageStatus)
-            revalidate()
-        }
-    }
-
-    private fun buildEnvironmentsComponent(usageStatus: UsageStatusResult) {
-        val environmentsInfo: MutableMap<String, MutableMap<String,Any>> = mutableMapOf()
-        val envsThatHaveUsageSet: Set<String> = buildEnvironmentWithUsages(usageStatus)
+    private fun rebuild() {
+        val environmentsInfo: MutableMap<String, MutableMap<String, Any>> = mutableMapOf()
+        val usageStatusResult = model.getUsageStatus()
+        val envsThatHaveUsageSet: Set<String> = buildEnvironmentWithUsages(usageStatusResult)
         val hasUsageFunction = fun(env: String): Boolean { return envsThatHaveUsageSet.contains(env) }
         val relevantEnvs = buildRelevantSortedEnvironments(environmentsSupplier, hasUsageFunction)
         for (currEnv in relevantEnvs) {
-            val currentButtonInfo: MutableMap<String,Any> = HashMap()
+            val currentButtonInfo: MutableMap<String, Any> = HashMap()
 
             val isSelectedEnv: Boolean = currEnv.contentEquals(environmentsSupplier.getCurrent())
             val linkText = buildLinkText(currEnv)
@@ -151,7 +130,11 @@ class EnvironmentsDropdownPanel(
             currentButtonInfo["linkText"] = linkText
             environmentsInfo[currEnv] = currentButtonInfo
         }
-        buildEnvironmentsDropdownPanelComponents(environmentsInfo, hasUsageFunction)
+        ApplicationManager.getApplication().invokeLater {
+            removeExistingComponentsIfPresent()
+            buildEnvironmentsDropdownPanelComponents(environmentsInfo, hasUsageFunction)
+            revalidate()
+        }
     }
 
     private fun buildEnvironmentWithUsages(usageStatusResult: UsageStatusResult): Set<String> {
@@ -220,7 +203,11 @@ class EnvironmentsDropdownPanel(
             comboBox.renderer = object : SimpleListCellRenderer<String>() {
                 override fun customize(list: JList<out String>, value: String, index: Int, selected: Boolean, hasFocus: Boolean) {
                     text = value
-                    icon = if (itemsWithIcons.size >= index && index >= 0) { itemsWithIcons.values.elementAt(index) } else { null }
+                    icon = if (itemsWithIcons.size >= index && index >= 0) {
+                        itemsWithIcons.values.elementAt(index)
+                    } else {
+                        null
+                    }
                     foreground = if (selected) JBColor.WHITE else JBColor.BLACK
                     background = if (selected) JBColor.BLUE else JBColor.WHITE
                 }
@@ -234,7 +221,8 @@ class EnvironmentsDropdownPanel(
                 val popup = comboBox.getUI().getAccessibleChild(comboBox, 0)
                 val popupList = (popup as? BasicComboPopup)?.list
                 if (popupList != null) {
-                    val popupWidth = itemsWithIcons.keys.maxOfOrNull { comboBox.getFontMetrics(comboBox.font).stringWidth(it) } ?: 0
+                    val popupWidth = itemsWithIcons.keys.maxOfOrNull { comboBox.getFontMetrics(comboBox.font).stringWidth(it) }
+                            ?: 0
                     comboBox.preferredSize = Dimension(popupWidth + 40, comboBox.preferredSize.height)
                 }
             }
@@ -252,8 +240,6 @@ class EnvironmentsDropdownPanel(
         })
 
         comboBox.addActionListener { event ->
-            selectedItem = comboBox.selectedItem?.toString() ?: "" // Update the selected item
-
             val currentSelected: String = getSelected()
 
             if (currentSelected === event.source) {

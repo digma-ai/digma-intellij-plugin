@@ -204,14 +204,19 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
 
     private void processRecentActivityGetDataRequest(AnalyticsService analyticsService, JBCefBrowser jbCefBrowser) {
         List<String> allEnvironments = analyticsService.getEnvironments();
-        List<String> sortedEnvironments = getSortedEnvironments(allEnvironments, localHostname);
+        if(allEnvironments == null) {
+            Log.log(LOGGER::warn, "error while getting environments from server");
+            return;
+        }
         RecentActivityResult recentActivityData = null;
         try {
             recentActivityData = analyticsService.getRecentActivity(allEnvironments);
         } catch (AnalyticsServiceException e) {
             Log.log(LOGGER::warn, "AnalyticsServiceException for getRecentActivity: {}", e.getMessage());
         }
+
         if (recentActivityData != null) {
+            List<String> sortedEnvironments = getSortedEnvironments(allEnvironments, localHostname);
             String requestMessage = JBCefBrowserUtil.resultToString(new JcefMessageRequest(
                     REQUEST_MESSAGE_TYPE,
                     RECENT_ACTIVITY_SET_DATA,

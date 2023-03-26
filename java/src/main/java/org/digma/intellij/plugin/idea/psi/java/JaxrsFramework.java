@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class JaxrsFramework {
+public class JaxrsFramework implements IEndpointDiscovery {
 
     private static final Logger LOGGER = Logger.getInstance(JaxrsFramework.class);
     private static final String JAX_RS_PATH_ANNOTATION_STR = "javax.ws.rs.Path";

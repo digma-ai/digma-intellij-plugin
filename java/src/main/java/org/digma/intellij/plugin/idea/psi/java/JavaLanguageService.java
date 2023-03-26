@@ -44,7 +44,8 @@ public class JavaLanguageService implements LanguageService {
     private final MicronautFramework micronautFramework;
     private final JaxrsFramework jaxrsFramework;
     private final GrpcFramework grpcFramework;
-
+    private final SpringBootFramework springBootFramework;
+    private List<IEndpointDiscovery> endpointDiscoveryList;
 
 
     /*
@@ -57,9 +58,9 @@ public class JavaLanguageService implements LanguageService {
         this.micronautFramework = new MicronautFramework(project);
         this.jaxrsFramework = new JaxrsFramework(project);
         this.grpcFramework = new GrpcFramework(project);
-
+        this.springBootFramework = new SpringBootFramework(project);
+        endpointDiscoveryList = List.of(micronautFramework, jaxrsFramework, grpcFramework, springBootFramework);
     }
-
 
 
     @Override
@@ -319,7 +320,7 @@ public class JavaLanguageService implements LanguageService {
         Log.log(LOGGER::debug, "got buildDocumentInfo request for {}", psiFile);
         //must be PsiJavaFile , this method should be called only for java files
         if (psiFile instanceof PsiJavaFile psiJavaFile) {
-            return JavaCodeObjectDiscovery.buildDocumentInfo(project, psiJavaFile, micronautFramework, jaxrsFramework, grpcFramework);
+            return JavaCodeObjectDiscovery.buildDocumentInfo(project, psiJavaFile, endpointDiscoveryList);
         }else{
             Log.log(LOGGER::debug, "psi file is noy java, returning empty DocumentInfo for {}", psiFile);
             return new DocumentInfo(PsiUtils.psiFileToUri(psiFile), new HashMap<>());

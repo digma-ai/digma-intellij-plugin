@@ -1,11 +1,24 @@
 package org.digma.intellij.plugin.idea.psi.java;
 
 import com.intellij.lang.jvm.JvmMethod;
-import com.intellij.psi.*;
+import com.intellij.lang.jvm.annotation.JvmAnnotationAttribute;
+import com.intellij.psi.PsiAnnotation;
+import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiExpression;
+import com.intellij.psi.PsiExpressionList;
+import com.intellij.psi.PsiField;
+import com.intellij.psi.PsiJavaFile;
+import com.intellij.psi.PsiLiteral;
+import com.intellij.psi.PsiLiteralExpression;
+import com.intellij.psi.PsiLocalVariable;
+import com.intellij.psi.PsiMethod;
+import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.impl.source.PsiClassReferenceType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.function.Predicate;
 
 
@@ -132,7 +145,7 @@ public class JavaLanguageUtils {
         }else if (initializer instanceof PsiReferenceExpression) {
             return getPsiReferenceExpressionValue((PsiReferenceExpression) initializer);
         }
-        return null;
+        return psiField.getText();
     }
 
 
@@ -148,7 +161,18 @@ public class JavaLanguageUtils {
     }
 
 
+    @Nullable
+    public static String getValueOfFirstMatchingAnnotationAttribute(@NotNull PsiAnnotation psiAnnotation, @NotNull List<String> attributeList, @Nullable String defaultValue) {
+        List<JvmAnnotationAttribute> annotationAttributes = psiAnnotation.getAttributes();
 
+        for (JvmAnnotationAttribute curr : annotationAttributes) {
+            if (attributeList.contains(curr.getAttributeName())) {
+                String theValue = JavaLanguageUtils.getPsiAnnotationAttributeValue(psiAnnotation, curr.getAttributeName());
+                return theValue;
+            }
+        }
+        return defaultValue;
+    }
 
     /**
      * test if the psiElement is a method with methodName and containingClassName.

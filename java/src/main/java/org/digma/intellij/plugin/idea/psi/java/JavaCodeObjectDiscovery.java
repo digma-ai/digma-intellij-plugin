@@ -2,7 +2,12 @@ package org.digma.intellij.plugin.idea.psi.java;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.*;
+import com.intellij.psi.JavaPsiFacade;
+import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiJavaFile;
+import com.intellij.psi.PsiMethod;
+import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.psi.search.searches.MethodReferencesSearch;
@@ -15,7 +20,11 @@ import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.digma.intellij.plugin.psi.PsiUtils;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import static org.digma.intellij.plugin.idea.psi.java.Constants.SPAN_BUILDER_FQN;
@@ -29,7 +38,7 @@ public class JavaCodeObjectDiscovery {
     private static final Logger LOGGER = Logger.getInstance(JavaCodeObjectDiscovery.class);
 
 
-    public static @NotNull DocumentInfo buildDocumentInfo(@NotNull Project project, @NotNull PsiJavaFile psiJavaFile, MicronautFramework micronautFramework, JaxrsFramework jaxrsFramework, GrpcFramework grpcFramework) {
+    public static @NotNull DocumentInfo buildDocumentInfo(@NotNull Project project, @NotNull PsiJavaFile psiJavaFile, @NotNull List<IEndpointDiscovery> endpointDiscoveryList) {
         var stopWatch = StopWatch.createStarted();
 
         try {
@@ -47,7 +56,7 @@ public class JavaCodeObjectDiscovery {
             buildDocumentInfo is always called in smart mode and so span discovery and endpoint discovery should work.
 
              */
-            enrichDocumentInfo(project,documentInfo,psiJavaFile,micronautFramework,jaxrsFramework,grpcFramework);
+            enrichDocumentInfo(project, documentInfo, psiJavaFile, endpointDiscoveryList);
             return documentInfo;
 
         } finally {
@@ -106,7 +115,7 @@ public class JavaCodeObjectDiscovery {
     }
 
 
-    private static void enrichDocumentInfo(Project project, @NotNull DocumentInfo documentInfo, @NotNull PsiFile psiFile, @NotNull MicronautFramework micronautFramework, @NotNull JaxrsFramework jaxrsFramework, @NotNull GrpcFramework grpcFramework) {
+    private static void enrichDocumentInfo(Project project, @NotNull DocumentInfo documentInfo, @NotNull PsiFile psiFile, @NotNull List<IEndpointDiscovery> endpointDiscoveryList) {
         /*
         need to make sure that spans and endpoints are cleared here.
         why?
@@ -120,7 +129,7 @@ public class JavaCodeObjectDiscovery {
         });
 
         spanDiscovery(project, psiFile, documentInfo);
-        endpointDiscovery(psiFile, documentInfo, micronautFramework, jaxrsFramework, grpcFramework);
+        endpointDiscovery(psiFile, documentInfo, endpointDiscoveryList);
     }
 
     private static void spanDiscovery(@NotNull Project project, @NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
@@ -129,11 +138,9 @@ public class JavaCodeObjectDiscovery {
         startSpanMethodCallSpanDiscovery(project, psiFile, documentInfo);
     }
 
-    private static void endpointDiscovery(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo, @NotNull MicronautFramework micronautFramework, @NotNull JaxrsFramework jaxrsFramework, @NotNull GrpcFramework grpcFramework) {
+    private static void endpointDiscovery(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo, @NotNull List<IEndpointDiscovery> endpointDiscoveryList) {
         Log.log(LOGGER::debug, "Building endpoints for file {}", psiFile);
-        micronautFramework.endpointDiscovery(psiFile, documentInfo);
-        jaxrsFramework.endpointDiscovery(psiFile, documentInfo);
-        grpcFramework.endpointDiscovery(psiFile, documentInfo);
+        endpointDiscoveryList.forEach(it -> it.endpointDiscovery(psiFile, documentInfo));
     }
 
 

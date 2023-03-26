@@ -37,6 +37,8 @@ jobs:
         uses: gradle/wrapper-validation-action@v1.0.4
 
       - name: Build Plugin
+        env:
+          POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL}}
         run: ./gradlew buildPlugin --no-daemon
 
       # Collect Tests Result of failed tests

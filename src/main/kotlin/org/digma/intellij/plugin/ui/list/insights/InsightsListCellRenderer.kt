@@ -75,7 +75,7 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
             is SpanScalingRootCauseInsight -> spanScalingRootCauseItemsPanel(project, value.modelObject as SpanScalingRootCauseInsight, value.moreData)
             is UnmappedInsight -> unmappedInsightPanel(project, value.modelObject as UnmappedInsight)
             is NoDataYet -> noDataYetInsightPanel()
-            is NoObservability -> noObservabilityInsightPanel()
+            is NoObservability -> noObservabilityInsightPanel(project, value.modelObject as NoObservability)
             else -> genericPanelForSingleInsight(project, value.modelObject)
         }
 

@@ -3,21 +3,24 @@ package org.digma.intellij.plugin.ui.common
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogPanel
-import com.intellij.ui.dsl.builder.BottomGap
-import com.intellij.ui.dsl.builder.MutableProperty
-import com.intellij.ui.dsl.builder.TopGap
-import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.components.JBTextArea
+import com.intellij.ui.dsl.builder.*
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBUI
+import org.digma.intellij.plugin.notifications.NotificationUtil
+import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.model.NOT_SUPPORTED_OBJECT_MSG
 import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
+import javax.swing.JButton
 import javax.swing.JLabel
 
 
-private const val NO_DATA_YET_DETAIL_DESCRIPTION = "Trigger actions that call this code object to learn more about its runtime behavior"
-private const val NO_OBSERVABILITY_DETAIL_DESCRIPTION = "Add an annotation to observe this method and collect data about its runtime behavior"
+const val NO_DATA_YET_DETAIL_DESCRIPTION = "Trigger actions that call this code object to learn more about its runtime behavior"
+const val NO_OBSERVABILITY_DETAIL_DESCRIPTION = "Add an annotation to observe this method and collect data about its runtime behavior"
+const val NO_OBSERVABILITY_MISSING_DEPENDENCY_DESCRIPTION = "Before adding annotations, please add the following dependency:";
+
 
 fun noCodeObjectWarningPanel(model: PanelModel): DialogPanel {
     return panel {
@@ -83,7 +86,14 @@ fun createNoDataYetPanel(): DialogPanel {
     }.andTransparent().withBorder(JBUI.Borders.empty())
 }
 
-fun createNoObservabilityPanel(): DialogPanel {
+fun createNoObservabilityPanel(project: Project, insightsModel: InsightsModel): DialogPanel {
+
+    val model = MethodInstrumentationPresenter(project)
+
+    lateinit var addButton: Cell<JButton>
+    lateinit var autoFixRow: Row
+    lateinit var dependencyName: Cell<JBTextArea>
+
     return panel {
         row {
             icon(Laf.Icons.Common.NoObservability)
@@ -97,8 +107,44 @@ fun createNoObservabilityPanel(): DialogPanel {
             label(asHtml(NO_OBSERVABILITY_DETAIL_DESCRIPTION))
                     .horizontalAlign(HorizontalAlign.CENTER)
         }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
+        autoFixRow = row {
+             panel {
+                row {
+                    label(asHtml(NO_OBSERVABILITY_MISSING_DEPENDENCY_DESCRIPTION))
+                }
+                row {
+                    dependencyName = textArea()
+                    dependencyName.component.isEditable = false
+                    dependencyName.component.background = Laf.Colors.EDITOR_BACKGROUND
+                    dependencyName.component.lineWrap = true
+                    dependencyName.horizontalAlign(HorizontalAlign.FILL)
+                }
+            }
+        }.visible(false)
+        row {
+            addButton = button("Add Annotation"){
+                val succeeded = model.instrumentMethod()
+                if(succeeded){
+                    NotificationUtil.notifyError(project, "Failed to add annotation")
+                }
+            }.horizontalAlign(HorizontalAlign.CENTER)
+        }
+        onReset {
+            model.update((insightsModel.scope as? MethodScope)?.getMethodInfo()?.id)
+            if(model.canInstrumentMethod){
+                addButton.component.isEnabled = true
+                autoFixRow.visible(false)
+            }
+            else {
+                addButton.component.isEnabled = false
+                autoFixRow.visible(model.cannotBecauseMissingDependency)
+                dependencyName.text(model.missingDependency ?: "")
+            }
+        }
     }.andTransparent().withBorder(JBUI.Borders.empty())
 }
+
+
 
 private fun getNoInfoMessage(model: PanelModel): String {
     var msg = if (model is InsightsModel) "No insights" else "No errors"

@@ -278,4 +278,12 @@ public interface LanguageService extends Disposable {
     boolean isCodeVisionSupported();
 
     @NotNull List<Pair<TextRange, CodeVisionEntry>> getCodeLens(@NotNull PsiFile psiFile);
+
+    default CanInstrumentMethodResult canInstrumentMethod(@NotNull Project project, String methodId){
+        return CanInstrumentMethodResult.Failure();
+    }
+
+    default boolean instrumentMethod(@NotNull CanInstrumentMethodResult result){
+        return false;
+    }
 }

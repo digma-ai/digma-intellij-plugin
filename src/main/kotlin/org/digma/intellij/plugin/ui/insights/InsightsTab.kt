@@ -80,7 +80,7 @@ fun insightsPanel(project: Project): DigmaTabPanel {
     val pendingInsightsPanel = createPendingInsightsPanel()
     val loadingInsightsPanel = createLoadingInsightsPanel()
     val noDataYetPanel = createNoDataYetPanel()
-    val noObservabilityPanel = createNoObservabilityPanel()
+    val noObservabilityPanel = createNoObservabilityPanel(project, insightsModel)
 
     val cardLayout = CardLayout()
     val cardsPanel = JPanel(cardLayout)
@@ -121,7 +121,10 @@ fun insightsPanel(project: Project): DigmaTabPanel {
                     UiInsightStatus.Unknown -> LOADING_INSIGHTS_CARD_NAME
                     UiInsightStatus.InsightPending -> UiInsightStatus.InsightPending.name
                     UiInsightStatus.NoSpanData -> UiInsightStatus.NoSpanData.name
-                    UiInsightStatus.NoObservability -> UiInsightStatus.NoObservability.name
+                    UiInsightStatus.NoObservability ->{
+                        noObservabilityPanel.reset()
+                        UiInsightStatus.NoObservability.name
+                    }
                     else -> NO_INFO_CARD_NAME
                 }
                 cardLayout.show(cardsPanel, cardName)

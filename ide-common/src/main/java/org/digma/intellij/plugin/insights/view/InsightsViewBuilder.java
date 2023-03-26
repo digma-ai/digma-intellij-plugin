@@ -105,7 +105,7 @@ public class InsightsViewBuilder extends ListViewBuilder {
         if (hasInsightOfErrors || hasInsightOfHotSpot) {
             boolean onlyErrorInsights = insightTypes.isEmpty();
             if (onlyErrorInsights) {
-                ListViewItem<NoObservability> itemOfNoObservability = new ListViewItem<>(new NoObservability(), SORT_INDEX_HIGHEST_IRRELEVANT);
+                ListViewItem<NoObservability> itemOfNoObservability = new ListViewItem<>(new NoObservability(methodInfo.getId()), SORT_INDEX_HIGHEST_IRRELEVANT);
                 dest.add(itemOfNoObservability);
             }
         }

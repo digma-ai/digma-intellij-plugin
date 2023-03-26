@@ -5,19 +5,23 @@ import com.intellij.codeInsight.hint.HintUtil
 import com.intellij.openapi.project.Project
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.ui.components.ActionLink
+import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.dsl.builder.text
+import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.JBUI.Borders.empty
 import io.ktor.util.reflect.*
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
+import org.digma.intellij.plugin.notifications.NotificationUtil
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshService
-import org.digma.intellij.plugin.ui.common.Laf
-import org.digma.intellij.plugin.ui.common.asHtml
-import org.digma.intellij.plugin.ui.common.buildBoldTitleGrayedComment
+import org.digma.intellij.plugin.ui.common.*
+import org.digma.intellij.plugin.ui.list.ListItemActionButton
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.list.commonListItemPanel
+import org.digma.intellij.plugin.ui.model.insights.NoObservability
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.BorderLayout
 import java.awt.Cursor
@@ -29,13 +33,7 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.Date
-import javax.swing.Box
-import javax.swing.Icon
-import javax.swing.JButton
-import javax.swing.JComponent
-import javax.swing.JLabel
-import javax.swing.JPanel
-import javax.swing.SwingConstants
+import javax.swing.*
 import kotlin.math.max
 
 private const val RECALCULATE = "Recalculate"
@@ -52,7 +50,7 @@ fun insightItemPanel(panel: JPanel): JPanel {
 }
 
 fun createInsightPanel(
-        insight: CodeObjectInsight,
+        insight: CodeObjectInsight?,
         project: Project,
         title: String,
         description: String,
@@ -88,7 +86,7 @@ fun createInsightPanel(
 }
 
 private fun buildInsightPanel(
-        insight: CodeObjectInsight,
+        insight: CodeObjectInsight?,
         project: Project,
         title: String,
         description: String,
@@ -129,7 +127,7 @@ private fun buildInsightPanel(
 
 private fun rebuildPanel(
         insightPanel: JComponent?,
-        insight: CodeObjectInsight,
+        insight: CodeObjectInsight?,
         project: Project,
         title: String,
         description: String,
@@ -152,7 +150,7 @@ private fun rebuildPanel(
         val bodyWrapper = createDefaultBoxLayoutYAxisPanel()
         bodyWrapper.isOpaque = false
 
-        if (insight.customStartTime != null || isRecalculateButtonPressed)
+        if (insight != null && (insight.customStartTime != null || isRecalculateButtonPressed))
             bodyWrapper.add(getTimeInfoMessagePanel(
                     customStartTime = insight.customStartTime,
                     actualStartTime = insight.actualStartTime,
@@ -257,7 +255,7 @@ private fun getMessageLabel(title: String, description: String): JLabel {
 }
 
 private fun getIconsListPanel(
-        insight: CodeObjectInsight,
+        insight: CodeObjectInsight?,
         project: Project,
         iconsList: List<Icon>?,
         insightPanel: DigmaResettablePanel
@@ -266,7 +264,7 @@ private fun getIconsListPanel(
     if (iconsList != null) {
         icons.addAll(iconsList)
     }
-    if (insight.prefixedCodeObjectId != null) {
+    if (insight?.prefixedCodeObjectId != null) {
         icons.add(Laf.Icons.Insight.THREE_DOTS)
     }
 
@@ -286,7 +284,7 @@ private fun getIconsListPanel(
                     showHintMessage(
                             threeDotsIcon = iconLabel,
                             insightPanel = insightPanel,
-                            codeObjectId = insight.prefixedCodeObjectId!!,
+                            codeObjectId = insight!!.prefixedCodeObjectId!!,
                             insightType = insight.type,
                             project = project
                     )
@@ -296,7 +294,7 @@ private fun getIconsListPanel(
                     showHintMessage(
                             threeDotsIcon = iconLabel,
                             insightPanel = insightPanel,
-                            codeObjectId = insight.prefixedCodeObjectId!!,
+                            codeObjectId = insight!!.prefixedCodeObjectId!!,
                             insightType = insight.type,
                             project = project
                     )
@@ -398,19 +396,54 @@ fun noDataYetInsightPanel(): JPanel {
     return insightItemPanel(thePanel as DigmaResettablePanel)
 }
 
-private const val NoObservabilityDescription = "Add an annotation to observe this method and collect data about its runtime behavior"
+fun noObservabilityInsightPanel(project: Project, insight: NoObservability): JPanel {
 
-fun noObservabilityInsightPanel(): JPanel {
+    val methodId = insight.methodId
+    val model = MethodInstrumentationPresenter(project)
+    model.update(methodId)
 
-    val thePanel = object : DigmaResettablePanel() {
-        override fun reset() {
+    val body = panel {
+        row {
+            label(asHtml(NO_OBSERVABILITY_MISSING_DEPENDENCY_DESCRIPTION))
+        }
+        row {
+            val textArea = textArea().text(model.missingDependency ?: "")
+            textArea.component.isEditable = false
+            textArea.component.background = Laf.Colors.EDITOR_BACKGROUND
+            textArea.component.lineWrap = true
+            textArea.horizontalAlign(HorizontalAlign.FILL)
         }
     }
-    thePanel.layout = BorderLayout()
-    thePanel.add(getMessageLabel("No Observability", ""), BorderLayout.WEST)
-    thePanel.add(JLabel(asHtml(NoObservabilityDescription)), BorderLayout.SOUTH)
+    body.isOpaque = false
 
-    return insightItemPanel(thePanel as DigmaResettablePanel)
+    val addAnnotationButton = ListItemActionButton("Add Annotation")
+    addAnnotationButton.addActionListener{
+        ActivityMonitor.getInstance(project).registerInsightButtonClicked("add-annotation")
+        val succeeded =  model.instrumentMethod()
+        if(!succeeded){
+            NotificationUtil.notifyError(project, "Failed to add annotation")
+        }
+    }
+
+    if(model.canInstrumentMethod){
+        addAnnotationButton.isEnabled = true
+        body.isVisible = false
+    }
+    else {
+        addAnnotationButton.isEnabled = false
+        body.isVisible = model.cannotBecauseMissingDependency
+    }
+
+    return createInsightPanel(
+        project = project,
+        insight = null,
+        title = "No Observability",
+        description = NO_OBSERVABILITY_DETAIL_DESCRIPTION,
+        iconsList = emptyList(),
+        bodyPanel = body,
+        buttons = listOf(addAnnotationButton),
+        paginationComponent = null
+    )
 }
 
 class InsightAlignedPanel(private val layoutHelper: PanelsLayoutHelper) : JPanel() {

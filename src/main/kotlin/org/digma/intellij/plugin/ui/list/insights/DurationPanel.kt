@@ -10,7 +10,6 @@ import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
 import org.digma.intellij.plugin.model.rest.insights.SpanInfo
-import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.getHex
 import org.digma.intellij.plugin.ui.list.ListItemActionButton
@@ -52,8 +51,8 @@ fun spanDurationPanel(
                 durationsListPanel.add(durationsPanel)
             }
 
-    val buttonToGraph = buildButtonToScalingGraph(project, spanDurationsInsight.span)
-    val buttonToJaeger = buildButtonToJaeger(project, "Compare", spanDurationsInsight.span.name, traceSamples)
+    val buttonToGraph = buildButtonToScalingGraph(project, spanDurationsInsight.spanInfo)
+    val buttonToJaeger = buildButtonToJaeger(project, "Compare", spanDurationsInsight.spanInfo.name, traceSamples)
 
     return createInsightPanel(
             project = project,

@@ -112,10 +112,12 @@ class NavigationPanel(
             }
         }
     }
-
+    private var environmentsDropdownPanel:EnvironmentsDropdownPanel ? = null
     private fun getFirstRowPanel(model: PanelModel): JPanel {
         val logoIconLabel = getLogoIconLabel()
-        val comboBox = EnvironmentsDropdownPanel(project, model, environmentsSupplier, localHostname)
+
+        environmentsDropdownPanel?.dispose()
+        environmentsDropdownPanel = EnvironmentsDropdownPanel(project, model, environmentsSupplier, localHostname)
 
         val parentPanel = JPanel(GridBagLayout())
         // Add the logo icon label to the parent panel with relative constraints
@@ -132,7 +134,7 @@ class NavigationPanel(
         cComboBox.weightx = 1.0
         cComboBox.anchor = GridBagConstraints.LINE_START
         cComboBox.fill = GridBagConstraints.HORIZONTAL
-        parentPanel.add(comboBox, cComboBox)
+        parentPanel.add(environmentsDropdownPanel, cComboBox)
 
 //        rowPanel.add(getPointerButton()) // will be used later
 
@@ -151,7 +153,7 @@ class NavigationPanel(
         parentPanel.background = Laf.Colors.EDITOR_BACKGROUND
 
         // Set the preferred height of the parent panel based on the ComboBox
-        val comboBoxSize = comboBox.preferredSize
+        val comboBoxSize = environmentsDropdownPanel!!.preferredSize
         parentPanel.preferredSize = Dimension(parentPanel.width, comboBoxSize.height)
 
         return parentPanel

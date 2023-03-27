@@ -13,6 +13,7 @@ import com.intellij.util.AlarmFactory
 import com.intellij.util.messages.MessageBusConnection
 import com.intellij.util.ui.JBUI
 import com.jetbrains.rd.util.lifetime.LifetimeDefinition
+import org.apache.commons.lang3.StringUtils
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
 import org.digma.intellij.plugin.common.EDT
@@ -52,7 +53,6 @@ class EnvironmentsDropdownPanel(
     private val backendConnectionMonitor: BackendConnectionMonitor
     private val project: Project
     private val rebuildPanelLock = ReentrantLock()
-    private var selectedItem: String
     private val localHostname: String
     private val changeEnvAlarm: Alarm
     private val popupMenuOpened: AtomicBoolean = AtomicBoolean(false)
@@ -69,7 +69,6 @@ class EnvironmentsDropdownPanel(
         cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
 
         rebuildInBackground()
-        selectedItem = getSelected()
 
         messageBusConnection.subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC,
                 object : EnvironmentChanged {
@@ -122,10 +121,6 @@ class EnvironmentsDropdownPanel(
 
             val isSelectedEnv: Boolean = currEnv.contentEquals(environmentsSupplier.getCurrent())
             val linkText = buildLinkText(currEnv)
-            if (isSelectedEnv) {
-                selectedItem = linkText
-            }
-
             currentButtonInfo["isSelectedEnv"] = isSelectedEnv
             currentButtonInfo["linkText"] = linkText
             environmentsInfo[currEnv] = currentButtonInfo
@@ -240,16 +235,19 @@ class EnvironmentsDropdownPanel(
         })
 
         comboBox.addActionListener { event ->
-            val currentSelected: String = getSelected()
+            val cb = event.source as ComboBox<String>
+            var selectedEnv = cb.selectedItem as String
+            if(selectedEnv == NO_ENVIRONMENTS_MESSAGE) return@addActionListener
+            selectedEnv = adjustBackEnvNameIfNeeded(selectedEnv)
+            val currEnv : String ? = environmentsSupplier.getCurrent()
 
-            if (currentSelected === event.source) {
-                return@addActionListener
+            if (!StringUtils.equals(selectedEnv, currEnv)) {
+                changeEnvAlarm.cancelAllRequests()
+                changeEnvAlarm.addRequest({
+                    environmentsSupplier.setCurrent(selectedEnv)
+                }, 100)
             }
 
-            changeEnvAlarm.cancelAllRequests()
-            changeEnvAlarm.addRequest({
-                environmentsSupplier.setCurrent(adjustBackEnvNameIfNeeded(selectedItem))
-            }, 100)
         }
 
         // Remove the border around the ComboBox
@@ -257,7 +255,9 @@ class EnvironmentsDropdownPanel(
         comboBox.isOpaque = false
         // Set a fixed width for the closed ComboBox
         comboBox.preferredSize = Dimension(30, comboBox.preferredSize.height)
-        comboBox.selectedItem = getSelected()
+        val currentEnv = environmentsSupplier.getCurrent()
+        if(currentEnv != null) comboBox.selectedItem = buildLinkText(currentEnv)
+
         comboBox.isEditable = false
 
         if (comboBox.itemCount == 0) {
@@ -302,12 +302,8 @@ class EnvironmentsDropdownPanel(
         }
     }
 
-    private fun getSelected(): String {
-        return selectedItem
-    }
-
     private fun select(newSelectedEnv: String?) {
-        val currentSelected: String = getSelected()
+        val currentSelected: String = comboBox.selectedItem as String
         //both panels will catch the event,the one that generated the event will be ignored and not changed.
         if (Objects.equals(currentSelected, newSelectedEnv)) {
             return
@@ -316,9 +312,7 @@ class EnvironmentsDropdownPanel(
         if (newSelectedEnv == null) {
             return
         }
-
-        selectedItem = buildLinkText(newSelectedEnv)
-        comboBox.selectedItem = selectedItem
+        comboBox.selectedItem = buildLinkText(newSelectedEnv)
     }
 
     private fun buildLinkText(currEnv: String): String {

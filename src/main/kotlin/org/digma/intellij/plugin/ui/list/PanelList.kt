@@ -5,8 +5,10 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI.Borders
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.common.Laf.scaleBorders
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
+import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.Graphics
@@ -99,14 +101,20 @@ abstract class PanelList(val project: Project, private var model: PanelListModel
 
         for (i in 0 until model.size) run {
             cellRenderer.apply {
-                val newComp: JPanel = getListCellRendererComponent(project, this@PanelList,
+                try {
+                    val newComp: JPanel = getListCellRendererComponent(project, this@PanelList,
                         model.getElementAt(i), i, this@PanelList.hasFocus(), panelsLayoutHelper)
-                add(newComp)
-                if (gapBetweenItems) {
-                    add(Box.createVerticalStrut(scaleBorders(5)))
+                    add(newComp)
+                    if (gapBetweenItems) {
+                        add(Box.createVerticalStrut(scaleBorders(5)))
+                    }
+                }
+                catch (ex: Exception) {
+                    // If we dont handle case with broken data we do not show any insights at all
+                    // In this case we just hide it from the user
+                    ActivityMonitor.getInstance(project).registerError(ex, "Error during the insight panel creation")
                 }
             }
-
         }
 
         revalidate()

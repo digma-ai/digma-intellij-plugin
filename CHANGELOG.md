@@ -1,7 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [2.0.44] - 2023-03-25
+## [2.0.45] - 2023-03-27
+### Changed
+- Add general exception handler to avoid displaying of insights with corrupted data from BE
+- Add null check while getting environments
+- Fix memory leak
+
+## [2.0.44] - 2023-03-26
 ### Changed
 - Posthog plugin analytics
 - Feature/SpringBoot discovery of HTTP endpoints (#426)
@@ -96,4 +102,5 @@ All notable changes to this project will be documented in this file.
 [2.0.42]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.41-pre...v2.0.42
 [2.0.43]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.42...v2.0.43
 [2.0.44]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.43...v2.0.44
-[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.44...HEAD
+[2.0.45]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.44...v2.0.45
+[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.45...HEAD

@@ -129,7 +129,7 @@ object Laf {
             companion object {
                 @JvmStatic val Loading = AllIcons.Actions.BuildLoadChanges
                 @JvmStatic val NoDataYet = SvgIcon.asIs("/icons/no_data_yet.svg")
-                @JvmStatic val NoObservability = SvgIcon.asIs("/icons/disabled-env.svg") // TODO: bring the right icon
+                @JvmStatic val NoObservability = SvgIcon.asIs("/icons/no_observability.svg")
                 @JvmStatic val Mascot64 = loadAndScaleIconByWidth("/icons/digma.png", 64)
             }
         }

@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.46] - 2023-03-28
+### Changed
+- Fix null cannot be cast to non-null type kotlin.String (#434)
+
 ## [2.0.45] - 2023-03-27
 ### Changed
 - Add general exception handler to avoid displaying of insights with corrupted data from BE
@@ -103,4 +107,5 @@ All notable changes to this project will be documented in this file.
 [2.0.43]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.42...v2.0.43
 [2.0.44]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.43...v2.0.44
 [2.0.45]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.44...v2.0.45
-[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.45...HEAD
+[2.0.46]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.45...v2.0.46
+[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.46...HEAD

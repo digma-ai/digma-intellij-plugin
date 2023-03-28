@@ -80,6 +80,9 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         updateUi()
     }
 
+    fun showErrorList() {
+        tabsHelper.notifyTabChanged(1)
+    }
 
     fun showErrorDetails(uid: String) {
 

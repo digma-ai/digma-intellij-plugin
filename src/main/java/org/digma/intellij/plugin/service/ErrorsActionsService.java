@@ -49,11 +49,16 @@ public class ErrorsActionsService implements ContentManagerListener {
     }
 
     public void closeErrorDetailsBackButton() {
+        closeErrorDetailsWithoutNotify();
+        tabsHelper.errorDetailsClosed();
+    }
+
+    public void closeErrorDetailsWithoutNotify() {
         tabsHelper.errorDetailsOff();
         errorsViewService.closeErrorDetails();
         insightsViewService.updateUi();
-        tabsHelper.errorDetailsClosed();
     }
+
 
     @Override
     public void selectionChanged(@NotNull ContentManagerEvent event) {

@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.TabsChanged
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.errors.errorsPanel
 import org.digma.intellij.plugin.ui.insights.insightsPanel
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
@@ -42,12 +43,14 @@ class TabsPanel(
         project.messageBus.connect(project.getService(AnalyticsService::class.java))
                 .subscribe(TabsChanged.TABS_CHANGED_TOPIC, TabsChanged { newTabIndex ->
                     EDT.ensureEDT {
-                        if (1 == newTabIndex) {
+                        var index = newTabIndex
+                        if (-1 == newTabIndex) {
                             tabbedPane.setTitleAt(1, TabsHelper.DETAILED_ERRORS_TAB_NAME)
+                            index = 1;
                         } else {
                             tabbedPane.setTitleAt(1, TabsHelper.DEFAULT_ERRORS_TAB_NAME)
                         }
-                        tabbedPane.selectedIndex = newTabIndex
+                        tabbedPane.selectedIndex = index
                     }
                 })
     }
@@ -116,6 +119,13 @@ class TabsPanel(
         tabbedPane.addChangeListener {
             // Get the index of the currently selected tab
             currentTabIndex = tabbedPane.selectedIndex
+            if (tabsHelper.isErrorDetailsOn() && currentTabIndex != 1) {
+                // close the detailed error view and change error tab name if we navigate to different tab
+                val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
+                actionListener.closeErrorDetailsWithoutNotify()
+                tabbedPane.setTitleAt(1, TabsHelper.DEFAULT_ERRORS_TAB_NAME)
+            }
+
             // Do something with the tab indexes, such as update UI or perform logic
             tabsHelper.currentTabIndex = currentTabIndex
         }

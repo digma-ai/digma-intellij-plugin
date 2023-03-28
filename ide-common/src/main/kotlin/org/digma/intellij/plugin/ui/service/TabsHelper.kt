@@ -44,11 +44,13 @@ class TabsHelper(val project: Project) {
     }
 
     fun errorDetailsClosed() {
-        visibleTabBeforeErrorDetails?.let { notifyTabChanged(it) }
+        visibleTabBeforeErrorDetails?.let {
+            notifyTabChanged(it)
+        }
         visibleTabBeforeErrorDetails = null
     }
 
-    private fun notifyTabChanged(newTabIndex: Int) {
+    fun notifyTabChanged(newTabIndex: Int) {
         Log.log(logger::info, "Firing TabChanged event for {}", newTabIndex)
         if (project.isDisposed) {
             return
@@ -59,7 +61,7 @@ class TabsHelper(val project: Project) {
 
     fun errorDetailsOn() {
         errorDetailsOn = true
-        notifyTabChanged(1)
+        notifyTabChanged(-1)
     }
 
     fun errorDetailsOff() {

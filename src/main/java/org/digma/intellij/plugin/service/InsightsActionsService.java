@@ -17,7 +17,6 @@ public class InsightsActionsService {
     private final ErrorsViewService errorsViewService;
     private final EditorService editorService;
     private final DocumentInfoService documentInfoService;
-
     private final LanguageServiceLocator languageServiceLocator;
 
 
@@ -32,7 +31,7 @@ public class InsightsActionsService {
 
 
     public void showErrorsTab(@NotNull ErrorInsight modelObject) {
-        errorsViewService.setVisible();
+        errorsViewService.showErrorList();
     }
 
     /**

@@ -20,7 +20,7 @@ abstract class AbstractViewService(val project: Project) : Disposable {
 
     private val analyticsConnectionEventsConnection: MessageBusConnection = project.messageBus.connect()
 
-    private val tabsHelper = TabsHelper.getInstance(project)
+    protected val tabsHelper = TabsHelper.getInstance(project)
 
     init {
         //subscribe to connection lost/gained , call doUpdateUi() on each event so that the no connection card will show or hide

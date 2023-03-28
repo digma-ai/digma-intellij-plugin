@@ -88,9 +88,11 @@ class EnvironmentsDropdownPanel(
     override fun reset() {
         rebuildInBackground()
     }
-
+    private var isDisposed = false;
     override fun dispose() {
+        if(isDisposed) return;
         messageBusConnection.dispose()
+        isDisposed = true;
     }
 
     private fun rebuildInBackground() {
@@ -236,8 +238,8 @@ class EnvironmentsDropdownPanel(
 
         comboBox.addActionListener { event ->
             val cb = event.source as ComboBox<String>
-            var selectedEnv = cb.selectedItem as String
-            if(selectedEnv == NO_ENVIRONMENTS_MESSAGE) return@addActionListener
+            var selectedEnv = cb.selectedItem as String ?  // can be null if connection error and all item being removed from list (current logic)
+            if(selectedEnv == null || selectedEnv == NO_ENVIRONMENTS_MESSAGE) return@addActionListener
             selectedEnv = adjustBackEnvNameIfNeeded(selectedEnv)
             val currEnv : String ? = environmentsSupplier.getCurrent()
 
@@ -259,14 +261,15 @@ class EnvironmentsDropdownPanel(
         if(currentEnv != null) comboBox.selectedItem = buildLinkText(currentEnv)
 
         comboBox.isEditable = false
-
-        if (comboBox.itemCount == 0) {
-            // display default value
-            comboBox.addItem(NO_ENVIRONMENTS_MESSAGE)
-        }
         if (backendConnectionMonitor.isConnectionError()) {
             comboBox.removeAllItems()
             comboBox.addItem(NO_ENVIRONMENTS_MESSAGE)
+        }
+        else{
+            if (comboBox.itemCount == 0) {
+                // display default value
+                comboBox.addItem(NO_ENVIRONMENTS_MESSAGE)
+            }
         }
 
         this.add(comboBox)

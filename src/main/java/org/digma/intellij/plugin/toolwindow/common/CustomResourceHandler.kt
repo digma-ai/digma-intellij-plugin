@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.toolwindow.recentactivity
+package org.digma.intellij.plugin.toolwindow.common
 
 import freemarker.template.Configuration
 import org.cef.callback.CefCallback
@@ -15,10 +15,11 @@ import java.io.StringWriter
 import java.net.URLConnection
 
 const val INDEX_TEMPLATE_FILE: String = "indextemplate.ftl"
-const val BASE_PACKAGE_PATH: String = "/webview"
+const val BASE_PACKAGE_PATH: String = "/webview/"
 const val ENV_VARIABLE_THEME: String = "theme"
+const val COMMON_FILES_FOLDER_NAME: String = "common"
 
-class CustomResourceHandler : CefResourceHandler {
+class CustomResourceHandler(private var resourceFolderName: String) : CefResourceHandler {
     private var state: ResourceHandlerState = ClosedConnection
     override fun processRequest(
             cefRequest: CefRequest,
@@ -26,11 +27,16 @@ class CustomResourceHandler : CefResourceHandler {
     ): Boolean {
         val processedUrl = cefRequest.url
         return if (processedUrl != null) {
-            if (processedUrl == "http://myapp/index.html") {
-                val html = loadFreemarkerTemplate()
+            if (processedUrl.equals("http://$resourceFolderName/index.html", true)) {
+                val html = loadFreemarkerTemplate(resourceFolderName)
                 state = StringData(html)
             } else {
-                val pathToResource = processedUrl.replace("http://myapp", "webview/")
+                val pathToResource: String =
+                        if (processedUrl.contains("fonts") || processedUrl.contains("images")) {
+                            processedUrl.replace("http://$resourceFolderName", "webview/$COMMON_FILES_FOLDER_NAME")
+                        } else {
+                            processedUrl.replace("http://$resourceFolderName", "webview/$resourceFolderName")
+                        }
                 val newUrl = javaClass.classLoader.getResource(pathToResource)
                 if (newUrl != null) {
                     state = OpenedConnection(newUrl.openConnection())
@@ -166,9 +172,9 @@ data class StringData(val data: String) : ResourceHandlerState {
     }
 }
 
-private fun loadFreemarkerTemplate(): String {
+private fun loadFreemarkerTemplate(resourceFolderName: String): String {
     val cfg = Configuration(Configuration.VERSION_2_3_30)
-    cfg.setClassForTemplateLoading(CustomResourceHandler::class.java, BASE_PACKAGE_PATH)
+    cfg.setClassForTemplateLoading(CustomResourceHandler::class.java, BASE_PACKAGE_PATH + resourceFolderName)
     val template = cfg.getTemplate(INDEX_TEMPLATE_FILE)
     val data = mapOf(ENV_VARIABLE_THEME to ThemeUtil.getCurrentThemeName())
     val writer = StringWriter()

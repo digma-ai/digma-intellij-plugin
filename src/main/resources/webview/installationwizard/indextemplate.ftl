@@ -9,6 +9,9 @@
       font-weight: 500;
       font-style: normal;
     }
+    body {
+      background: #5A5A5A;
+    }
   </style>
 </head>
 <body>
@@ -19,9 +22,6 @@
   window.theme = "${theme}";
   window.mainFont;
   window.codeFont;
-  window.recentActivityRefreshInterval;
-  window.recentActivityExpirationLimit;
-  window.recentActivityDocumentationURL;
 </script>
 <script src="/index.js"></script>
 </body>

@@ -15,7 +15,7 @@ public class ToolWindowShower {
     private Content insightsTab;
 
 
-    public static ToolWindowShower getInstance(@NotNull Project project){
+    public static ToolWindowShower getInstance(@NotNull Project project) {
         return project.getService(ToolWindowShower.class);
     }
 
@@ -37,26 +37,26 @@ public class ToolWindowShower {
     }
 
 
-    public void showToolWindow(){
+    public void showToolWindow() {
 
         Log.log(LOGGER::debug, "showToolWindow invoked");
 
-        if (toolWindow != null){
+        if (toolWindow != null) {
             Log.log(LOGGER::debug, "Got reference to tool window, showing..");
             show(toolWindow);
             if (insightsTab != null) {
                 toolWindow.getContentManager().setSelectedContent(insightsTab);
             }
-        }else{
+        } else {
             Log.log(LOGGER::debug, "Don't have reference to tool window, showing with ToolWindowManager..");
             ToolWindow tw = ToolWindowManager.getInstance(project).getToolWindow(PluginId.TOOL_WINDOW_ID);
-            if (tw != null){
+            if (tw != null) {
                 Log.log(LOGGER::debug, "Got tool window from ToolWindowManager");
                 show(tw);
                 if (insightsTab != null) {
                     tw.getContentManager().setSelectedContent(insightsTab);
                 }
-            }else{
+            } else {
                 Log.log(LOGGER::debug, "Could not find tool window");
             }
         }

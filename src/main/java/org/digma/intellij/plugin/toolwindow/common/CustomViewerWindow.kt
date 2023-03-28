@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.toolwindow.recentactivity
+package org.digma.intellij.plugin.toolwindow.common
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
@@ -6,7 +6,7 @@ import com.intellij.ui.jcef.JBCefBrowser
 import com.intellij.ui.jcef.JBCefBrowserBuilder
 import org.cef.CefApp
 
-class CustomViewerWindow(project: Project) {
+class CustomViewerWindow(project: Project, private var resourceFolderName: String) {
     private val webView: JBCefBrowser = getBrowser(project)
     private fun getBrowser(project: Project): JBCefBrowser {
         val jbCefBrowserBuilder = JBCefBrowserBuilder()
@@ -16,7 +16,7 @@ class CustomViewerWindow(project: Project) {
         val jbCefBrowser = jbCefBrowserBuilder.build()
 
         registerAppSchemeHandler()
-        jbCefBrowser.loadURL("http://myapp/index.html")
+        jbCefBrowser.loadURL("http://$resourceFolderName/index.html")
         Disposer.register(project, jbCefBrowser)
         return jbCefBrowser
     }
@@ -24,12 +24,11 @@ class CustomViewerWindow(project: Project) {
     fun getWebView(): JBCefBrowser = webView
 
     private fun registerAppSchemeHandler(): Boolean {
-        return CefApp
-                .getInstance()
+        return CefApp.getInstance()
                 .registerSchemeHandlerFactory(
                         "http",
-                        "myapp",
-                        CustomSchemeHandlerFactory()
+                        resourceFolderName,
+                        CustomSchemeHandlerFactory(resourceFolderName)
                 )
     }
 }

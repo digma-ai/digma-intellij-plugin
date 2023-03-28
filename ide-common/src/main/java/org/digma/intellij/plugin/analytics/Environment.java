@@ -89,6 +89,10 @@ public class Environment implements EnvironmentsSupplier {
         Runnable task = () -> {
             envChangeLock.lock();
             try {
+                if (environments.isEmpty() || !environments.contains(newEnv)) {
+                    // we got here to changeEnv but list is empty, probably first run/call
+                    refreshEnvironments();
+                }
                 changeEnvironment(newEnv);
             } finally {
                 envChangeLock.unlock();

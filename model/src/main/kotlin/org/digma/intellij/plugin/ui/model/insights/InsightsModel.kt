@@ -17,7 +17,7 @@ class InsightsModel : PanelModel {
     var previewListViewItems: List<ListViewItem<String>> = Collections.emptyList()
     var usageStatusResult: UsageStatusResult = EmptyUsageStatusResult
     var card: InsightsTabCard = InsightsTabCard.INSIGHTS
-    var status: UiInsightStatus = UiInsightStatus.Unknown
+    var status: UiInsightStatus = UiInsightStatus.InsightExist
     var scope: Scope = EmptyScope("")
 
 

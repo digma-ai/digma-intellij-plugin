@@ -54,6 +54,13 @@ class ActivityMonitor(private val project: Project) : Runnable, Disposable {
             postHog = PostHog.Builder(latestToken).build()
             setCachedToken(project, latestToken)
         }
+        if(postHog != null){
+            Log.log(LOGGER::info, "Posthog was configured successfully with " +
+                    (if (latestToken != null) "latest token" else "cached token"))
+        }
+        else{
+            Log.log(LOGGER::info, "Posthog failed to be configured")
+        }
         registerSessionDetails()
     }
 

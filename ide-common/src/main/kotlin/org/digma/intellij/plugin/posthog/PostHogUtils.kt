@@ -36,12 +36,12 @@ private fun readTokenFromUrl(tokenFileUrl: String): String? {
             HttpResponse.BodyHandlers.ofString()
         )
         if (response.statusCode() != 200) {
-            Log.log(LOGGER::debug, "Failed to read posthog token file form url (status: {})", response.statusCode())
+            Log.log(LOGGER::warn, "Failed to read posthog token file form url (status: {})", response.statusCode())
             return null;
         }
         return response.body()
     } catch (e: Exception) {
-        Log.debugWithException(LOGGER, e, "Failed to read posthog token file form url")
+        Log.warnWithException(LOGGER, e, "Failed to read posthog token file form url")
     }
     return null
 }
@@ -50,11 +50,11 @@ private fun urlToTokenFile(): String? {
     try {
         val content = object{}.javaClass.classLoader.getResource(POSTHOG_TOKEN_URL_RESOURCE_FILE_PATH)?.readText()
         if (content == null) {
-            Log.log(LOGGER::debug, "Missing posthog token resource file")
+            Log.log(LOGGER::warn, "Missing posthog token resource file")
         }
         return content
     } catch (e: Exception) {
-        Log.debugWithException(LOGGER, e, "Failed to get posthog token resource file")
+        Log.warnWithException(LOGGER, e, "Failed to get posthog token resource file")
         return null
     }
 }

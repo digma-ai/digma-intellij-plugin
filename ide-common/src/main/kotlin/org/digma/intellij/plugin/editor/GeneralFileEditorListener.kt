@@ -11,12 +11,16 @@ import com.jetbrains.rd.util.lifetime.LifetimeDefinition
 import kotlinx.coroutines.delay
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshService
+import org.digma.intellij.plugin.settings.SettingsState
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.time.Duration
 
 class GeneralFileEditorListener(val project: Project) : FileEditorManagerListener {
     private val logger: Logger = Logger.getInstance(GeneralFileEditorListener::class.java)
 
     private val refreshService: RefreshService = project.getService(RefreshService::class.java)
+
+    private val settingsState: SettingsState = project.getService(SettingsState::class.java)
 
     // lifetimeDefinitionMap keeps info about the lifetime coroutine tasks of each opened file
     private val lifetimeDefinitionMap: ConcurrentHashMap<VirtualFile, LifetimeDefinition> = ConcurrentHashMap()
@@ -52,7 +56,7 @@ class GeneralFileEditorListener(val project: Project) : FileEditorManagerListene
         newLifetimeDefinition.lifetime.launchBackground {
             // next logic is the Coroutine's body
             while (true) {
-                delay(10000)// 10 seconds
+                delay(settingsState.refreshDelay.toLong() * 1000)// 10 seconds
                 refreshService.refreshAllForCurrentFile(newFile)
             }
         }

@@ -24,7 +24,7 @@ import java.util.List;
 public class SettingsState implements PersistentStateComponent<SettingsState>, Disposable {
 
     public static final String DEFAULT_API_URL = "https://localhost:5051";
-    public static final int DEFAULT_REFRESH_DELAY = 30;
+    public static final int DEFAULT_REFRESH_DELAY = 10;
     public static final String DEFAULT_JAEGER_URL = ""; // http://localhost:16686
     public static final LinkMode DEFAULT_JAEGER_LINK_MODE = LinkMode.Internal;
     public static final String DEFAULT_RUNTIME_OBSERVABILITY_BACKEND_URL = "http://localhost:5050";

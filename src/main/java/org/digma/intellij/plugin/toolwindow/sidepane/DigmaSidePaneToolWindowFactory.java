@@ -1,15 +1,34 @@
 package org.digma.intellij.plugin.toolwindow.sidepane;
 
+import com.intellij.ide.BrowserUtil;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
+import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
+import com.intellij.ui.jcef.JBCefApp;
+import com.intellij.ui.jcef.JBCefBrowser;
+import com.intellij.ui.jcef.JBCefClient;
+import org.cef.browser.CefBrowser;
+import org.cef.browser.CefFrame;
+import org.cef.browser.CefMessageRouter;
+import org.cef.callback.CefQueryCallback;
+import org.cef.handler.CefMessageRouterHandlerAdapter;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
+import org.digma.intellij.plugin.analytics.BackendConnectionUtil;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.rest.installationwizard.OpenInBrowserRequest;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.service.ErrorsActionsService;
+import org.digma.intellij.plugin.settings.SettingsState;
+import org.digma.intellij.plugin.toolwindow.recentactivity.ConnectionCheckResult;
+import org.digma.intellij.plugin.toolwindow.recentactivity.JBCefBrowserUtil;
+import org.digma.intellij.plugin.toolwindow.recentactivity.JcefConnectionCheckMessagePayload;
+import org.digma.intellij.plugin.toolwindow.recentactivity.JcefConnectionCheckMessageRequest;
+import org.digma.intellij.plugin.toolwindow.recentactivity.JcefMessageRequest;
 import org.digma.intellij.plugin.ui.ToolWindowShower;
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
@@ -17,6 +36,15 @@ import org.digma.intellij.plugin.ui.service.InsightsViewService;
 import org.digma.intellij.plugin.ui.service.SummaryViewService;
 import org.jetbrains.annotations.NotNull;
 
+import javax.swing.*;
+import java.awt.*;
+
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.INSTALLATION_WIZARD_CHECK_CONNECTION;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.INSTALLATION_WIZARD_FINISH;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.INSTALLATION_WIZARD_SET_CHECK_CONNECTION;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.OPEN_URL_IN_DEFAULT_BROWSER;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.REQUEST_MESSAGE_TYPE;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.parseJsonToObject;
 import static org.digma.intellij.plugin.ui.common.MainSidePaneWindowPanelKt.createMainSidePaneWindowPanel;
 
 
@@ -52,27 +80,132 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         project.getService(AnalyticsService.class);
 
         ErrorsActionsService errorsActionsService = project.getService(ErrorsActionsService.class);
+        BackendConnectionUtil backendConnectionUtil = project.getService(BackendConnectionUtil.class);
         toolWindow.getContentManager().addContentManagerListener(errorsActionsService);
 
-        DigmaResettablePanel mainSidePaneWindowPanel = createMainSidePaneWindowPanel(project);
-        var contentToDisplay = contentFactory.createContent(mainSidePaneWindowPanel, null, false);
-
-        ToolWindowShower.getInstance(project).setToolWindow(toolWindow);
-        ToolWindowShower.getInstance(project).setInsightsTab(contentToDisplay);
-
-        toolWindow.getContentManager().addContent(contentToDisplay);
+        if (SettingsState.getInstance(project).alreadyPassedTheInstallationWizard) {
+            displayMainSidePaneWindowPanel(project, toolWindow, contentFactory);
+        } else {
+            displayInstallationWizard(project, toolWindow, contentFactory, backendConnectionUtil);
+        }
 
         //todo: runWhenSmart is ok for java,python , but in Rider runWhenSmart does not guarantee that the solution
         // is fully loaded. consider replacing that with LanguageService.runWhenSmartForAll so that C# language service
         // can run this task when the solution is fully loaded.
         DumbService.getInstance(project).runWhenSmart(() -> initializeWhenSmart(project));
+    }
 
+    private void displayMainSidePaneWindowPanel(@NotNull Project project, ToolWindow toolWindow, ContentFactory contentFactory) {
+        DigmaResettablePanel mainSidePaneWindowPanel = createMainSidePaneWindowPanel(project);
+        Content contentToDisplay = contentFactory.createContent(mainSidePaneWindowPanel, null, false);
+        ToolWindowShower.getInstance(project).setToolWindow(toolWindow);
+        ToolWindowShower.getInstance(project).setInsightsTab(contentToDisplay);
+
+        toolWindow.getContentManager().addContent(contentToDisplay);
+    }
+
+    private void displayInstallationWizard(
+            @NotNull Project project,
+            ToolWindow toolWindow,
+            ContentFactory contentFactory,
+            BackendConnectionUtil backendConnectionUtil
+    ) {
+        Content codeAnalyticsTab = createInstallationWizardTab(project, toolWindow, contentFactory, backendConnectionUtil);
+        if (codeAnalyticsTab != null) {
+            toolWindow.getContentManager().addContent(codeAnalyticsTab);
+        }
+    }
+
+    private Content createInstallationWizardTab(
+            Project project,
+            ToolWindow toolWindow,
+            ContentFactory contentFactory,
+            BackendConnectionUtil backendConnectionUtil
+    ) {
+        if (!JBCefApp.isSupported()) {
+            // Fallback to an alternative browser-less solution
+            return null;
+        }
+        var customViewerWindow = project.getService(InstallationWizardCustomViewerWindowService.class).getCustomViewerWindow();
+        JBCefBrowser jbCefBrowser = customViewerWindow.getWebView();
+
+        JBCefClient jbCefClient = jbCefBrowser.getJBCefClient();
+
+        CefMessageRouter msgRouter = CefMessageRouter.create();
+
+        msgRouter.addHandler(new CefMessageRouterHandlerAdapter() {
+            @Override
+            public boolean onQuery(CefBrowser browser, CefFrame frame, long queryId, String request, boolean persistent, CefQueryCallback callback) {
+                Log.log(LOGGER::debug, "request: {}", request);
+                JcefMessageRequest reactMessageRequest = parseJsonToObject(request, JcefMessageRequest.class);
+                if (INSTALLATION_WIZARD_FINISH.equalsIgnoreCase(reactMessageRequest.getAction())) {
+                    ApplicationManager.getApplication().invokeLater(() ->
+                            changeToolWindowContent(project, toolWindow, contentFactory));
+                }
+                if (OPEN_URL_IN_DEFAULT_BROWSER.equalsIgnoreCase(reactMessageRequest.getAction())) {
+                    OpenInBrowserRequest openInBrowserRequest = parseJsonToObject(request, OpenInBrowserRequest.class);
+                    if (openInBrowserRequest.getPayload() != null) {
+                        ApplicationManager.getApplication().invokeLater(() ->
+                                BrowserUtil.browse(openInBrowserRequest.getPayload().getUrl()));
+                    }
+                }
+                if (INSTALLATION_WIZARD_CHECK_CONNECTION.equalsIgnoreCase(reactMessageRequest.getAction())) {
+                    JcefConnectionCheckMessagePayload jcefConnectionCheckMessagePayload;
+                    if (backendConnectionUtil.testConnectionToBackend()) {
+                        jcefConnectionCheckMessagePayload = new JcefConnectionCheckMessagePayload(ConnectionCheckResult.SUCCESS.getValue());
+                    } else {
+                        jcefConnectionCheckMessagePayload = new JcefConnectionCheckMessagePayload(ConnectionCheckResult.FAILURE.getValue());
+                    }
+
+                    String requestMessage = JBCefBrowserUtil.resultToString(new JcefConnectionCheckMessageRequest(
+                            REQUEST_MESSAGE_TYPE,
+                            INSTALLATION_WIZARD_SET_CHECK_CONNECTION,
+                            jcefConnectionCheckMessagePayload
+                    ));
+
+                    JBCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser);
+                }
+                callback.success("");
+                return true;
+            }
+        }, true);
+
+        jbCefClient.getCefClient().addMessageRouter(msgRouter);
+
+        JPanel browserPanel = new JPanel();
+        browserPanel.setLayout(new BorderLayout());
+        browserPanel.add(jbCefBrowser.getComponent(), BorderLayout.CENTER);
+
+
+        JPanel jcefDigmaPanel = new JPanel();
+        jcefDigmaPanel.setLayout(new BorderLayout());
+        jcefDigmaPanel.add(browserPanel, BorderLayout.CENTER);
+
+        return contentFactory.createContent(jcefDigmaPanel, null, false);
+    }
+
+    private void changeToolWindowContent(@NotNull Project project, ToolWindow toolWindow, ContentFactory contentFactory) {
+        // Get the content of the tool window
+        Content content = toolWindow.getContentManager().getContent(0);
+
+        // Create a new content with the updated content
+        Content newContent = contentFactory.createContent(createMainSidePaneWindowPanel(project), "", false);
+
+        // Replace the old content with the new one
+        toolWindow.getContentManager().removeContent(content, true);
+        toolWindow.getContentManager().addContent(newContent);
+
+        if (!SettingsState.getInstance(project).alreadyPassedTheInstallationWizard) {
+            // set flag that this use has already passed the installation wizard
+            SettingsState.getInstance(project).alreadyPassedTheInstallationWizard = true;
+            SettingsState.getInstance(project).fireChanged();
+        }
     }
 
 
-    private void initializeWhenSmart(@NotNull Project project){
+    private void initializeWhenSmart(@NotNull Project project) {
 
-        Log.log(LOGGER::debug,"in initializeWhenSmart, dumb mode is {}", DumbService.isDumb(project));
+        Log.log(LOGGER::debug, "in initializeWhenSmart, dumb mode is {}", DumbService.isDumb(project));
 
         //sometimes the views models are updated before the tool window is initialized.
         //it happens when files are re-opened early before the tool window, and CaretContextService.contextChanged

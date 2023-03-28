@@ -33,7 +33,9 @@
                     anchor="bottom"
                     factoryClass="org.digma.intellij.plugin.toolwindow.recentactivity.DigmaBottomToolWindowFactory"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.toolwindow.recentactivity.CustomViewerWindowService"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.toolwindow.recentactivity.RecentActivityCustomViewerWindowService"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.toolwindow.sidepane.InstallationWizardCustomViewerWindowService"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.ToolWindowShower"/>
 

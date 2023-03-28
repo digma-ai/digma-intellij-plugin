@@ -14,3 +14,13 @@ constructor(
         val action: String,
         val payload: JcefMessagePayload?
 )
+
+data class JcefConnectionCheckMessageRequest
+@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+@JsonIgnoreProperties(ignoreUnknown = true)
+@ConstructorProperties("type", "action", "payload")
+constructor(
+        val type: String?,
+        val action: String,
+        val payload: JcefConnectionCheckMessagePayload?
+)

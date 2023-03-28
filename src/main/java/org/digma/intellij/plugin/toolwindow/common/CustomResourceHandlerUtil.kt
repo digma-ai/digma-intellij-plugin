@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.toolwindow.recentactivity
+package org.digma.intellij.plugin.toolwindow.common
 
 import org.cef.callback.CefCallback
 import org.cef.misc.IntRef

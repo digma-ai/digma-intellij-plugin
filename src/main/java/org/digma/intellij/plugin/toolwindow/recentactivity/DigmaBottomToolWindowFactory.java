@@ -36,6 +36,7 @@ import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRespons
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.service.EditorService;
+import org.digma.intellij.plugin.toolwindow.common.ThemeChangeListener;
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
 import org.jetbrains.annotations.NotNull;
 
@@ -47,11 +48,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static org.digma.intellij.plugin.toolwindow.recentactivity.ToolWindowUtil.RECENT_ACTIVITY_GET_DATA;
-import static org.digma.intellij.plugin.toolwindow.recentactivity.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_SPAN;
-import static org.digma.intellij.plugin.toolwindow.recentactivity.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_TRACE;
-import static org.digma.intellij.plugin.toolwindow.recentactivity.ToolWindowUtil.RECENT_ACTIVITY_SET_DATA;
-import static org.digma.intellij.plugin.toolwindow.recentactivity.ToolWindowUtil.REQUEST_MESSAGE_TYPE;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_GET_DATA;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_SPAN;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_TRACE;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_SET_DATA;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.REQUEST_MESSAGE_TYPE;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.parseJsonToObject;
 import static org.digma.intellij.plugin.ui.common.EnvironmentUtilKt.LOCAL_ENV;
 import static org.digma.intellij.plugin.ui.common.EnvironmentUtilKt.SUFFIX_OF_LOCAL;
 import static org.digma.intellij.plugin.ui.common.EnvironmentUtilKt.getSortedEnvironments;
@@ -112,7 +114,7 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
             // Fallback to an alternative browser-less solution
             return null;
         }
-        var customViewerWindow = project.getService(CustomViewerWindowService.class).getCustomViewerWindow();
+        var customViewerWindow = project.getService(RecentActivityCustomViewerWindowService.class).getCustomViewerWindow();
         JBCefBrowser jbCefBrowser = customViewerWindow.getWebView();
 
         JBCefClient jbCefClient = jbCefBrowser.getJBCefClient();
@@ -254,11 +256,6 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
             return (localHostname + SUFFIX_OF_LOCAL).toUpperCase();
         }
         return environment;
-    }
-
-    private <T> T parseJsonToObject(String jsonString, Class<T> jcefMessageRequestClass) {
-        JsonObject object = JsonParser.parseString(jsonString).getAsJsonObject();
-        return new Gson().fromJson(object, jcefMessageRequestClass);
     }
 
 }

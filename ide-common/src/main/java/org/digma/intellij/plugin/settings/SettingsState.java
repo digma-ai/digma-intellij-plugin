@@ -41,6 +41,7 @@ public class SettingsState implements PersistentStateComponent<SettingsState>, D
     public boolean firstTimeInsightReceived;
     @Nullable
     public String posthogToken;
+    public boolean alreadyPassedTheInstallationWizard;
 
     private final List<SettingsChangeListener> listeners = new ArrayList<>();
 

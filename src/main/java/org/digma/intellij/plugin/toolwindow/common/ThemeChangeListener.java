@@ -1,15 +1,16 @@
-package org.digma.intellij.plugin.toolwindow.recentactivity;
+package org.digma.intellij.plugin.toolwindow.common;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.ui.jcef.JBCefBrowser;
 import org.apache.commons.lang3.StringUtils;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.toolwindow.recentactivity.JBCefBrowserUtil;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-import static org.digma.intellij.plugin.toolwindow.recentactivity.ToolWindowUtil.RECENT_ACTIVITY_SET_UI_THEME;
-import static org.digma.intellij.plugin.toolwindow.recentactivity.ToolWindowUtil.REQUEST_MESSAGE_TYPE;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_SET_UI_THEME;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.REQUEST_MESSAGE_TYPE;
 
 public class ThemeChangeListener implements PropertyChangeListener {
     private static final Logger LOGGER = Logger.getInstance(ThemeChangeListener.class);

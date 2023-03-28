@@ -73,6 +73,7 @@ object Laf {
                 @JvmStatic val DIGMA_LOGO: Icon = SvgIcon.asIs("/icons/digma-logo.svg")
                 @JvmStatic val RELATED_INSIGHTS: Icon = SvgIcon.asIs("/icons/related-insights.svg")
                 @JvmStatic val POINTER: Icon = SvgIcon.asIs("/icons/pointer.svg")
+                @JvmStatic val SLACK: Icon = SvgIcon.asIs("/icons/slack.svg")
             }
         }
 

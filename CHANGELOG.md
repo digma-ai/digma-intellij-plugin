@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.47] - 2023-03-28
+### Changed
+- Added posthot-token-url to publish action
+- Fixed & Added posthog logs level
+
 ## [2.0.46] - 2023-03-28
 ### Changed
 - Fix null cannot be cast to non-null type kotlin.String (#434)
@@ -108,4 +113,5 @@ All notable changes to this project will be documented in this file.
 [2.0.44]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.43...v2.0.44
 [2.0.45]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.44...v2.0.45
 [2.0.46]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.45...v2.0.46
-[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.46...HEAD
+[2.0.47]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.46...v2.0.47
+[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.47...HEAD

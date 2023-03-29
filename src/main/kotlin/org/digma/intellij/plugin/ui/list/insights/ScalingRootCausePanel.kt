@@ -114,7 +114,7 @@ fun getRootCauseAffectedEndpointPanel(project: Project, moreData: HashMap<String
         val link = ActionLink(normalizedDisplayName) {
             openWorkspaceFileForSpan(project, moreData, routeCodeObjectId)
         }
-        var targetClass = routeCodeObjectId?.substringBeforeLast("\$_\$");
+        var targetClass = routeCodeObjectId.substringBeforeLast("\$_\$");
 
         link.toolTipText = asHtml("$targetClass: $shortRouteName")
         endPointPanel.add(link, BorderLayout.NORTH)

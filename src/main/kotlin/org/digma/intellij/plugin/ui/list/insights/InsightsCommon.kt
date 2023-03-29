@@ -5,9 +5,9 @@ import com.intellij.codeInsight.hint.HintUtil
 import com.intellij.openapi.project.Project
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.ui.components.ActionLink
+import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.builder.text
-import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.JBUI.Borders.empty
 import io.ktor.util.reflect.*
@@ -32,7 +32,7 @@ import java.awt.event.MouseEvent
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.util.Date
+import java.util.*
 import javax.swing.*
 import kotlin.math.max
 
@@ -411,7 +411,7 @@ fun noObservabilityInsightPanel(project: Project, insight: NoObservability): JPa
             textArea.component.isEditable = false
             textArea.component.background = Laf.Colors.EDITOR_BACKGROUND
             textArea.component.lineWrap = true
-            textArea.horizontalAlign(HorizontalAlign.FILL)
+            textArea.align(Align.FILL)
         }
     }
     body.isOpaque = false

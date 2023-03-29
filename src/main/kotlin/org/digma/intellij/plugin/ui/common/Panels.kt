@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.common
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogPanel
+import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.dsl.builder.*
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
@@ -26,7 +27,7 @@ fun noCodeObjectWarningPanel(model: PanelModel): DialogPanel {
     return panel {
         row {
             icon(AllIcons.General.BalloonInformation)
-                    .horizontalAlign(HorizontalAlign.CENTER)
+                    .align(Align.CENTER)
         }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
         row {
             label(getNoInfoMessage(model)).bind(
@@ -38,7 +39,7 @@ fun noCodeObjectWarningPanel(model: PanelModel): DialogPanel {
                     getter = { getNoInfoMessage(model) },
                     setter = {})
             )
-                    .horizontalAlign(HorizontalAlign.CENTER)
+                    .align(Align.CENTER)
         }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
     }.andTransparent().withBorder(JBUI.Borders.empty())
 }
@@ -47,11 +48,11 @@ fun createPendingInsightsPanel(): DialogPanel {
     return panel {
         row {
             icon(Laf.Icons.Common.Mascot64)
-                    .horizontalAlign(HorizontalAlign.CENTER)
+                    .align(Align.CENTER)
         }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
         row {
             label("Processing Insights...")
-                    .horizontalAlign(HorizontalAlign.CENTER)
+                    .align(Align.CENTER)
         }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
     }.andTransparent().withBorder(JBUI.Borders.empty())
 }
@@ -60,11 +61,11 @@ fun createLoadingInsightsPanel(): DialogPanel {
     return panel {
         row {
             icon(Laf.Icons.Common.Loading)
-                    .horizontalAlign(HorizontalAlign.CENTER)
+                    .align(Align.CENTER)
         }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
         row {
             label("Loading...")
-                    .horizontalAlign(HorizontalAlign.CENTER)
+                    .align(Align.CENTER)
         }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
     }.andTransparent().withBorder(JBUI.Borders.empty())
 }
@@ -73,15 +74,15 @@ fun createNoDataYetPanel(): DialogPanel {
     return panel {
         row {
             icon(Laf.Icons.Common.NoDataYet)
-                    .horizontalAlign(HorizontalAlign.CENTER)
+                    .align(Align.CENTER)
         }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.SMALL)
         row {
             label("No Data Yet")
-                    .horizontalAlign(HorizontalAlign.CENTER)
+                    .align(Align.CENTER)
         }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
         row {
             label(asHtml(NO_DATA_YET_DETAIL_DESCRIPTION))
-                    .horizontalAlign(HorizontalAlign.CENTER)
+                    .align(Align.CENTER)
         }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
     }.andTransparent().withBorder(JBUI.Borders.empty())
 }
@@ -97,15 +98,15 @@ fun createNoObservabilityPanel(project: Project, insightsModel: InsightsModel): 
     return panel {
         row {
             icon(Laf.Icons.Common.NoObservability)
-                    .horizontalAlign(HorizontalAlign.CENTER)
+                    .align(Align.CENTER)
         }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.SMALL)
         row {
             label("No Observability")
-                    .horizontalAlign(HorizontalAlign.CENTER)
+                    .align(Align.CENTER)
         }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
         row {
             label(asHtml(NO_OBSERVABILITY_DETAIL_DESCRIPTION))
-                    .horizontalAlign(HorizontalAlign.CENTER)
+                    .align(Align.CENTER)
         }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
         autoFixRow = row {
              panel {
@@ -117,7 +118,7 @@ fun createNoObservabilityPanel(project: Project, insightsModel: InsightsModel): 
                     dependencyName.component.isEditable = false
                     dependencyName.component.background = Laf.Colors.EDITOR_BACKGROUND
                     dependencyName.component.lineWrap = true
-                    dependencyName.horizontalAlign(HorizontalAlign.FILL)
+                    dependencyName.align(Align.FILL)
                 }
             }
         }.visible(false)
@@ -130,7 +131,7 @@ fun createNoObservabilityPanel(project: Project, insightsModel: InsightsModel): 
                 else{
                     NotificationUtil.notifyError(project, "Failed to add annotation")
                 }
-            }.horizontalAlign(HorizontalAlign.CENTER)
+            }.align(Align.CENTER)
         }
         onReset {
             model.update((insightsModel.scope as? MethodScope)?.getMethodInfo()?.id)

@@ -6,6 +6,7 @@ import com.intellij.icons.AllIcons
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBPanel
+import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.MutableProperty
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
@@ -51,11 +52,11 @@ fun errorsPanel(project: Project): DigmaTabPanel {
     val previewTitle = panel {
         row {
             icon(AllIcons.Ide.FatalErrorRead)
-                .horizontalAlign(HorizontalAlign.CENTER)
+                .align(Align.CENTER)
         }
         row {
             label("No code object was selected")
-                .horizontalAlign(HorizontalAlign.CENTER)
+                .align(Align.CENTER)
         }
         row {
             label("").bind(

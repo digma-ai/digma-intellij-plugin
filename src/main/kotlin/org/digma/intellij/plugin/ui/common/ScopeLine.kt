@@ -3,6 +3,7 @@
 package org.digma.intellij.plugin.ui.common
 
 import com.intellij.openapi.ui.DialogPanel
+import com.intellij.ui.dsl.builder.AlignX
 import com.intellij.ui.dsl.builder.MutableProperty
 import com.intellij.ui.dsl.builder.RowLayout
 import com.intellij.ui.dsl.builder.panel
@@ -22,7 +23,7 @@ fun scopeLine(scopeNameProducer: Producer<String>,
                 JLabel::getIcon, JLabel::setIcon, MutableProperty(
                     getter = { scopeIconProducer.produce() },
                     setter = {}))
-                .horizontalAlign(HorizontalAlign.RIGHT)
+                .align(AlignX.RIGHT)
             cell(CopyableLabel("")).bind(
                 CopyableLabel::getText, CopyableLabel::setText, MutableProperty(
                     getter = { scopeNameProducer.produce() },
@@ -30,7 +31,7 @@ fun scopeLine(scopeNameProducer: Producer<String>,
             ).bind(
                 CopyableLabel::getToolTipText, CopyableLabel::setToolTipText, MutableProperty(
                     getter = { scopeTooltipProducer.produce() },
-                    setter = {})).horizontalAlign(HorizontalAlign.FILL)
+                    setter = {})).align(AlignX.FILL)
         }.layout(RowLayout.PARENT_GRID)
     }.andTransparent()
 }

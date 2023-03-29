@@ -221,7 +221,7 @@ fun bottomPanel(project: Project,errorsModel: ErrorsModel, framesList: Scrollabl
     return panel {
         row {
             checkBox("Workspace only")
-                .horizontalAlign(HorizontalAlign.LEFT).applyToComponent {
+                .align(AlignX.LEFT).applyToComponent {
                     isOpaque = false
                     isContentAreaFilled = false
                     isBorderPainted = false
@@ -240,7 +240,7 @@ fun bottomPanel(project: Project,errorsModel: ErrorsModel, framesList: Scrollabl
                 val stackTrace = errorsModel.errorDetails.delegate?.errors?.get(currentStack)?.stackTrace
                 actionListener.openRawStackTrace(stackTrace)
                 ActivityMonitor.getInstance(project).registerInsightButtonClicked("open-raw-trace")
-            }.horizontalAlign(HorizontalAlign.RIGHT).gap(RightGap.SMALL)
+            }.align(AlignX.RIGHT).gap(RightGap.SMALL)
 
 
         }.layout(RowLayout.INDEPENDENT).topGap(TopGap.SMALL)
@@ -318,7 +318,7 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
                 val stackSize = errorsModel.errorDetails.flowStacks.stacks.size
                 val currentStack = errorsModel.errorDetails.flowStacks.current.plus(1)
                 currentLabel.text = "${currentStack}/${stackSize} Flow Stacks"
-            }.horizontalAlign(HorizontalAlign.FILL)
+            }.align(Align.FILL)
         }
     }.andTransparent()
 
@@ -338,7 +338,7 @@ fun timesPanel(errorsModel: ErrorsModel): DialogPanel {
                                 buildTimeSpanHtml("Started:",
                                     errorsModel.errorDetails.delegate?.firstOccurenceTime)
                             },
-                            setter = {})).verticalAlign(VerticalAlign.TOP)
+                            setter = {})).align(AlignY.TOP)
                 }
             }
             panel {
@@ -428,7 +428,7 @@ private fun namePanel(errorsModel: ErrorsModel): DialogPanel {
         indent {
             row {
                 cell(CopyableLabelHtml(""))
-                    .horizontalAlign(HorizontalAlign.FILL).bind(
+                    .align(Align.FILL).bind(
                         CopyableLabelHtml::getText, CopyableLabelHtml::setText, MutableProperty(
                             getter = { buildErrorNameHtml(errorsModel) },
                             setter = {})
@@ -467,7 +467,7 @@ private fun scorePanel(errorsModel: ErrorsModel): DialogPanel {
                     scorePanel.isOpaque = false
                     scorePanelWrapper.add(scorePanel)
                 }
-            }.horizontalAlign(HorizontalAlign.FILL).gap(RightGap.SMALL)
+            }.align(Align.FILL).gap(RightGap.SMALL)
         }
     }.andTransparent()
 }

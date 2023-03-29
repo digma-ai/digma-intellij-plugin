@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.list.errordetails
 
 import com.intellij.openapi.project.Project
+import com.intellij.ui.dsl.builder.AlignX
 import com.intellij.ui.dsl.builder.BottomGap
 import com.intellij.ui.dsl.builder.RightGap
 import com.intellij.ui.dsl.builder.TopGap
@@ -57,13 +58,13 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
                 if (modelObject.frame.executedCode.isBlank()){
                     row {
                         if (modelObject.first) {
-                            icon(Laf.Icons.ErrorDetails.EVENT_RED).horizontalAlign(HorizontalAlign.LEFT)
+                            icon(Laf.Icons.ErrorDetails.EVENT_RED).align(AlignX.LEFT)
                         }
                         if(modelObject.isInWorkspace()){
                             link(frameText) {
                                 val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
                                 actionListener.openErrorFrameWorkspaceFile(modelObject.getWorkspaceUrl(),modelObject.lastInstanceCommitId,modelObject.frame.lineNumber)
-                            }.gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL).applyToComponent {
+                            }.gap(RightGap.COLUMNS).align(AlignX.FILL).applyToComponent {
                                 toolTipText = "$frameText line ${modelObject.frame.lineNumber}"
                             }
                         }else {
@@ -71,9 +72,9 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
                                   .applyToComponent {
                                   foreground = Laf.getLabelGrayedColor()
                                   toolTipText = "$frameText line ${modelObject.frame.lineNumber}"
-                              }.gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL)
+                              }.gap(RightGap.COLUMNS).align(AlignX.FILL)
                         }
-                        label("line ${modelObject.frame.lineNumber}").horizontalAlign(HorizontalAlign.RIGHT)
+                        label("line ${modelObject.frame.lineNumber}").align(AlignX.RIGHT)
                             .gap(RightGap.SMALL)
                             .applyToComponent {
                             foreground = Laf.getLabelGrayedColor()
@@ -83,26 +84,26 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
                     //todo: this is relevant for python only where we have executed code, check it when doing pycharm
                     row {
                         cell(CopyableLabel(frameText))
-                            .gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL).applyToComponent {
+                            .gap(RightGap.COLUMNS).align(AlignX.FILL).applyToComponent {
                                 toolTipText = "$frameText line ${modelObject.frame.lineNumber}"
                             }
                     }
                     row{
                         if (modelObject.first) {
-                            icon(Laf.Icons.ErrorDetails.EVENT_RED).horizontalAlign(HorizontalAlign.LEFT)
+                            icon(Laf.Icons.ErrorDetails.EVENT_RED).align(AlignX.LEFT)
                         }
                         if(modelObject.isInWorkspace()){
                             link(modelObject.frame.executedCode) {
                                 val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
                                 actionListener.openErrorFrameWorkspaceFile(modelObject.getWorkspaceUrl(),modelObject.lastInstanceCommitId,modelObject.frame.lineNumber)
-                            }.gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL)
+                            }.gap(RightGap.COLUMNS).align(AlignX.FILL)
                         }else {
                             cell(CopyableLabel(modelObject.frame.executedCode))
-                                .gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL).applyToComponent {
+                                .gap(RightGap.COLUMNS).align(AlignX.FILL).applyToComponent {
                                     foreground = Laf.getLabelGrayedColor()
                                 }
                         }
-                        label("line ${modelObject.frame.lineNumber}").horizontalAlign(HorizontalAlign.RIGHT).applyToComponent {
+                        label("line ${modelObject.frame.lineNumber}").align(AlignX.RIGHT).applyToComponent {
                             foreground = Laf.getLabelGrayedColor()
                         }
                     }

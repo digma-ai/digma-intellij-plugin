@@ -1,6 +1,8 @@
 package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.openapi.project.Project
+import com.intellij.ui.dsl.builder.Align
+import com.intellij.ui.dsl.builder.AlignX
 import com.intellij.ui.dsl.builder.RightGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
@@ -116,10 +118,10 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
             row {
                 icon(icon).applyToComponent {
                     toolTipText = labelText
-                }.horizontalAlign(HorizontalAlign.LEFT).gap(RightGap.SMALL)
+                }.align(AlignX.LEFT).gap(RightGap.SMALL)
                 cell(CopyableLabelHtml(labelText)).applyToComponent {
                     toolTipText = labelText
-                }.horizontalAlign(HorizontalAlign.LEFT)
+                }.align(AlignX.LEFT)
             }
         }
     }

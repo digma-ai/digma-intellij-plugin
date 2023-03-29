@@ -181,8 +181,8 @@ tasks {
     // but it would be better if we did.
     listProductsReleases {
         types.set(listOf("RD","IC"))
-        sinceVersion.set("2022.3")
-        untilVersion.set("2022.3.*")
+        sinceVersion.set("2023.1")
+        untilVersion.set("2023.1.*")
 //        sinceBuild.set("222.3739.36")
 //        untilBuild.set("222.4167.24")
         releaseChannels.set(EnumSet.of(ListProductsReleasesTask.Channel.RELEASE))

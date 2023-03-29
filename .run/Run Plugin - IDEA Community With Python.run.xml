@@ -5,7 +5,7 @@
       <option name="executionName" />
       <option name="externalProjectPath" value="$PROJECT_DIR$" />
       <option name="externalSystemIdString" value="GRADLE" />
-      <option name="scriptParameters" value="-PplatformType=IC -PplatformPlugins=com.intellij.java,PythonCore:223.7571.182" />
+      <option name="scriptParameters" value="-PplatformType=IC -PplatformPlugins=com.intellij.java,PythonCore:231.8109.144" />
       <option name="taskDescriptions">
         <list />
       </option>

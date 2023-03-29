@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.rd.util.launchBackground
 import com.jetbrains.rd.util.lifetime.LifetimeDefinition
 import org.digma.intellij.plugin.common.Backgroundable
+import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.common.modelChangeListener.ModelChangeListener
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.insights.InsightsProvider
@@ -102,7 +103,10 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
                 if (methodHasRelatedCodeObjectIds)
                     return UiInsightStatus.NoSpanData // the client(this plugin) is aware of code objects, but server is not (yet)
                 else
-                    return UiInsightStatus.NoObservability
+                    if (IDEUtilsService.getInstance(project).isJavaProject)
+                        return UiInsightStatus.NoObservability
+                    else
+                        return UiInsightStatus.InsightExist
             }
 
             else -> UiInsightStatus.Unknown

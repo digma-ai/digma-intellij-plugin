@@ -1,6 +1,15 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.48] - 2023-03-29
+### Changed
+- Fix detailed error tab navigation + Fix `Expand` error button
+- Bugfix/Initial state is not unknown (#433)
+- bring and use icon of no_observability
+- Refresh env list if it is empty on RecentAct call + Add check for the new envs
+- Feature/panels of no observability are shown only for java (#443)
+- Implement first time installation Wizard #369
+
 ## [2.0.47] - 2023-03-28
 ### Changed
 - Added posthot-token-url to publish action
@@ -114,4 +123,5 @@ All notable changes to this project will be documented in this file.
 [2.0.45]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.44...v2.0.45
 [2.0.46]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.45...v2.0.46
 [2.0.47]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.46...v2.0.47
-[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.47...HEAD
+[2.0.48]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.47...v2.0.48
+[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.48...HEAD

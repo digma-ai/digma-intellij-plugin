@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.insights.view;
 
 import com.google.common.collect.Sets;
 import com.intellij.openapi.project.Project;
+import org.digma.intellij.plugin.common.IDEUtilsService;
 import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
@@ -54,7 +55,7 @@ public class InsightsViewBuilder extends ListViewBuilder {
             buildItemsForNoDataYet(spansThatHaveNoInsight);
         }
 
-        buildNoObservabilityPanelIfNeed(methodInfo, codeObjectInsights, allItems);
+        buildNoObservabilityPanelIfNeed(project, methodInfo, codeObjectInsights, allItems);
 
         allItems.addAll(groupManager.getGroupItems());
 
@@ -90,7 +91,8 @@ public class InsightsViewBuilder extends ListViewBuilder {
         }
     }
 
-    protected void buildNoObservabilityPanelIfNeed(MethodInfo methodInfo, List<? extends CodeObjectInsight> codeObjectInsights, List<ListViewItem<?>> dest) {
+    protected void buildNoObservabilityPanelIfNeed(Project project, MethodInfo methodInfo, List<? extends CodeObjectInsight> codeObjectInsights, List<ListViewItem<?>> dest) {
+        if (!IDEUtilsService.getInstance(project).isJavaProject()) return;
         if (methodInfo.hasRelatedCodeObjectIds()) return;
 
         Set<InsightType> insightTypes = codeObjectInsights.stream()

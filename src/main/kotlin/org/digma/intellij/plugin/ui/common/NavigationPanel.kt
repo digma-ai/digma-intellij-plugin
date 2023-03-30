@@ -94,9 +94,11 @@ class NavigationPanel(
 
     private fun rebuild(model: PanelModel) {
         ApplicationManager.getApplication().invokeLater {
-            removeExistingComponentsIfPresent()
-            buildNavigationPanelComponents(model)
-            revalidate()
+            if (!project.isDisposed) {
+                removeExistingComponentsIfPresent()
+                buildNavigationPanelComponents(model)
+                revalidate()
+            }
         }
     }
 

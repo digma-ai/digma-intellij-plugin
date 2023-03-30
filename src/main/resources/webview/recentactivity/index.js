@@ -217,6 +217,10 @@
     /* stylelint-disable-next-line font-family-no-missing-generic-family-keyword */
     font-family: ${[e,t,"monospace"].filter(Boolean).join(", ")};
   `},t.GlobalStyle=r.createGlobalStyle`
+  :root {
+    color-scheme: ${({theme:e})=>{switch(e.mode){case"light":return"light";case"dark":case"dark-jetbrains":return"dark"}}};
+  }
+
   html, body, #root {
     height: 100%;
   }

@@ -420,7 +420,9 @@ fun noObservabilityInsightPanel(project: Project, insight: NoObservability): JPa
     addAnnotationButton.addActionListener{
         ActivityMonitor.getInstance(project).registerInsightButtonClicked("add-annotation")
         val succeeded =  model.instrumentMethod()
-        if(!succeeded){
+        if (succeeded) {
+            addAnnotationButton.isEnabled = false
+        } else {
             NotificationUtil.notifyError(project, "Failed to add annotation")
         }
     }

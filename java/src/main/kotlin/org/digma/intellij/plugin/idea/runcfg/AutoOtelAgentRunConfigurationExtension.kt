@@ -19,6 +19,8 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.settings.SettingsState
+import org.gradle.tooling.GradleConnector
+import org.gradle.tooling.model.GradleProject
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.idea.maven.execution.MavenRunConfiguration
 import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
@@ -44,8 +46,10 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
 
 
     override fun isApplicableFor(configuration: RunConfigurationBase<*>): Boolean {
-        Log.log(logger::debug, "isApplicableFor, project:{}, id:{}, name:{}, type:{}",
-                configuration.project, configuration.id, configuration.name, configuration.type)
+        Log.log(
+            logger::debug, "isApplicableFor, project:{}, id:{}, name:{}, type:{}",
+            configuration.project, configuration.id, configuration.name, configuration.type
+        )
 
         val runConfigType = evalRunConfigType(configuration)
 
@@ -59,8 +63,10 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
         runnerSettings: RunnerSettings?,
     ) {
 
-        Log.log(logger::debug, "updateJavaParameters, project:{}, id:{}, name:{}, type:{}",
-                configuration.project, configuration.id, configuration.name, configuration.type)
+        Log.log(
+            logger::debug, "updateJavaParameters, project:{}, id:{}, name:{}, type:{}",
+            configuration.project, configuration.id, configuration.name, configuration.type
+        )
 
         val project = configuration.project
         val runConfigType = evalRunConfigType(configuration)
@@ -201,7 +207,10 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
         val otelAgentPath = OTELJarProvider.getInstance().getOtelAgentJarPath(project)
         val digmaExtensionPath = OTELJarProvider.getInstance().getDigmaAgentExtensionJarPath(project)
         if (otelAgentPath == null || digmaExtensionPath == null) {
-            Log.log(logger::debug, "could not build $JAVA_TOOL_OPTIONS because otel agent or digma extension jar are not available. please check the logs")
+            Log.log(
+                logger::debug,
+                "could not build $JAVA_TOOL_OPTIONS because otel agent or digma extension jar are not available. please check the logs"
+            )
             return null
         }
 
@@ -298,6 +307,7 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
          */
         if (configuration is GradleRunConfiguration) {
             val taskNames = configuration.settings.taskNames
+
             val isMainMethod = taskNames.any {
                 it.contains(".main")
             }
@@ -307,8 +317,23 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
             val hasBootRun = taskNames.any {
                 it.contains(":bootRun") || it.equals("bootRun")
             }
+
             if (isMainMethod || hasTestTask || hasBootRun) {
                 return true
+            } else {
+                val taskName = taskNames.firstOrNull()
+                if (taskName != null) {
+                    val projectFile = configuration.project.projectFile
+                    val newConnector = GradleConnector.newConnector()
+                    newConnector.forProjectDirectory(projectFile?.parent?.parent?.toNioPath()?.toFile())
+                    val projectConn = newConnector.connect()
+                    val gradleProj = projectConn.getModel(GradleProject::class.java)
+                    val taskRef = gradleProj.tasks.firstOrNull() { it.name == taskName }
+                    System.out.println("taskRef = " + taskRef + ", group = " + taskRef?.group)
+                    if (taskRef?.group == "Execution") {
+                        return true
+                    }
+                }
             }
         }
 

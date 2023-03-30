@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.document;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
+import org.apache.commons.lang3.StringUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightImportance;
 import org.digma.intellij.plugin.model.lens.CodeLens;
@@ -35,19 +36,21 @@ public class CodeLensProvider {
         }
 
         var codeLens = buildCodeLens(documentInfo, false);
-        Log.log(LOGGER::debug, "Got code lens for {}, {}", psiFile.getVirtualFile(),codeLens);
+        Log.log(LOGGER::debug, "Got code lens for {}, {}", psiFile.getVirtualFile(), codeLens);
         return codeLens;
     }
 
     private List<CodeLens> buildCodeLens(
-            @NotNull DocumentInfoContainer documentInfo,
+            @NotNull DocumentInfoContainer documentInfoContainer,
             boolean environmentPrefix
     ) {
         List<CodeLens> codeLensList = new ArrayList<>();
 
-        List<CodeObjectInsight> insightsList = documentInfo.getAllInsights();
+        List<CodeObjectInsight> methodInsightsList = documentInfoContainer.getDocumentInfo().getMethods().values().stream()
+                .flatMap(methodInfo -> documentInfoService.getCachedMethodInsights(methodInfo).stream())
+                .toList();
 
-        insightsList.forEach(insight -> {
+        methodInsightsList.forEach(insight -> {
                     if (insight.getDecorators() != null && insight.getDecorators().size() > 0) {
                         for (CodeObjectDecorator decorator : insight.getDecorators()) {
                             String envComponent = "";
@@ -62,7 +65,7 @@ public class CodeLensProvider {
 
                             String title = priorityEmoji + decorator.getTitle() + " " + envComponent;
 
-                            CodeLens codeLen = new CodeLens(insight.getCodeObjectId(), title, insight.getImportance());
+                            CodeLens codeLen = new CodeLens(getMethodCodeObjectId(insight), title, insight.getImportance());
                             codeLen.setLensDescription(decorator.getDescription());
                             codeLen.setLensMoreText("Go to " + title);
                             codeLen.setAnchor("Top");
@@ -73,6 +76,14 @@ public class CodeLensProvider {
                 }
         );
         return codeLensList;
+    }
+
+    private String getMethodCodeObjectId(CodeObjectInsight insight) {
+        if (StringUtils.isNotEmpty(insight.getPrefixedCodeObjectId())) {
+            return insight.getPrefixedCodeObjectId().replace("method:", "");
+        } else {
+            return insight.getCodeObjectId();
+        }
     }
 
     private boolean isImportant(Integer importanceLevel) {

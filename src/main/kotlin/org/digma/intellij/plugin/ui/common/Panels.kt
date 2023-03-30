@@ -125,6 +125,9 @@ fun createNoObservabilityPanel(project: Project, insightsModel: InsightsModel): 
             addButton = button("Add Annotation"){
                 val succeeded = model.instrumentMethod()
                 if(succeeded){
+                    addButton.enabled(false)
+                }
+                else{
                     NotificationUtil.notifyError(project, "Failed to add annotation")
                 }
             }.horizontalAlign(HorizontalAlign.CENTER)

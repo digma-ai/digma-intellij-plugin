@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.49] - 2023-03-30
+### Changed
+- Add Annotation for java
+- Fixed local bad uri error
+- Fixed adding annotation multiple time
+- Fix trying app to update nav panel on disposed instance
+- Add null check
+- Fixed CodeLens displaying for Java project #455
+- Fixed scrollbars displaying inside React app
+
 ## [2.0.48] - 2023-03-29
 ### Changed
 - Fix detailed error tab navigation + Fix `Expand` error button
@@ -124,4 +134,5 @@ All notable changes to this project will be documented in this file.
 [2.0.46]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.45...v2.0.46
 [2.0.47]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.46...v2.0.47
 [2.0.48]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.47...v2.0.48
-[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.48...HEAD
+[2.0.49]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.48...v2.0.49
+[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.49...HEAD

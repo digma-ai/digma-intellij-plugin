@@ -195,7 +195,7 @@ public class AnalyticsService implements Disposable {
     }
 
     private <TInsight> void onInsightReceived(List<TInsight> insights){
-        if(!insights.isEmpty() && !SettingsState.getInstance(project).firstTimeInsightReceived) {
+        if(insights != null && !insights.isEmpty() && !SettingsState.getInstance(project).firstTimeInsightReceived) {
             ActivityMonitor.getInstance(project).registerFirstInsightReceived();
             SettingsState.getInstance(project).firstTimeInsightReceived = true;
             SettingsState.getInstance(project).fireChanged();

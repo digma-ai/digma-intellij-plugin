@@ -21,9 +21,9 @@ import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.BackendConnectionUtil;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.rest.installationwizard.OpenInBrowserRequest;
-import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.service.ErrorsActionsService;
+import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.toolwindow.recentactivity.ConnectionCheckResult;
 import org.digma.intellij.plugin.toolwindow.recentactivity.JBCefBrowserUtil;
 import org.digma.intellij.plugin.toolwindow.recentactivity.JcefConnectionCheckMessagePayload;
@@ -83,7 +83,7 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         BackendConnectionUtil backendConnectionUtil = project.getService(BackendConnectionUtil.class);
         toolWindow.getContentManager().addContentManagerListener(errorsActionsService);
 
-        if (PersistenceService.getInstance().getState().getAlreadyPassedTheInstallationWizard()) {
+        if (SettingsState.getInstance(project).alreadyPassedTheInstallationWizard) {
             displayMainSidePaneWindowPanel(project, toolWindow, contentFactory);
         } else {
             displayInstallationWizard(project, toolWindow, contentFactory, backendConnectionUtil);
@@ -195,9 +195,10 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         toolWindow.getContentManager().removeContent(content, true);
         toolWindow.getContentManager().addContent(newContent);
 
-        if (!PersistenceService.getInstance().getState().getAlreadyPassedTheInstallationWizard()) {
-            // set global flag that this user has already passed the installation wizard
-            PersistenceService.getInstance().getState().setAlreadyPassedTheInstallationWizard(true);
+        if (!SettingsState.getInstance(project).alreadyPassedTheInstallationWizard) {
+            // set flag that this use has already passed the installation wizard
+            SettingsState.getInstance(project).alreadyPassedTheInstallationWizard = true;
+            SettingsState.getInstance(project).fireChanged();
         }
     }
 

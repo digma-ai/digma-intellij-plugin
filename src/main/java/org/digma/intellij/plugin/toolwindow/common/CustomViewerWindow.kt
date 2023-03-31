@@ -15,7 +15,7 @@ class CustomViewerWindow(project: Project, private var resourceFolderName: Strin
         jbCefBrowserBuilder.setEnableOpenDevToolsMenuItem(true)
         val jbCefBrowser = jbCefBrowserBuilder.build()
 
-        registerAppSchemeHandler()
+        registerAppSchemeHandler(project)
         jbCefBrowser.loadURL("http://$resourceFolderName/index.html")
         Disposer.register(project, jbCefBrowser)
         return jbCefBrowser
@@ -23,12 +23,12 @@ class CustomViewerWindow(project: Project, private var resourceFolderName: Strin
 
     fun getWebView(): JBCefBrowser = webView
 
-    private fun registerAppSchemeHandler(): Boolean {
+    private fun registerAppSchemeHandler(project: Project): Boolean {
         return CefApp.getInstance()
                 .registerSchemeHandlerFactory(
                         "http",
                         resourceFolderName,
-                        CustomSchemeHandlerFactory(resourceFolderName)
+                        CustomSchemeHandlerFactory(project, resourceFolderName)
                 )
     }
 }

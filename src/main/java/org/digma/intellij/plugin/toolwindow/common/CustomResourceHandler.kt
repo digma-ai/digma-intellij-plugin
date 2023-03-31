@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.toolwindow.common
 
+import com.intellij.openapi.project.Project
 import freemarker.template.Configuration
 import org.cef.callback.CefCallback
 import org.cef.handler.CefLoadHandler
@@ -8,18 +9,20 @@ import org.cef.misc.IntRef
 import org.cef.misc.StringRef
 import org.cef.network.CefRequest
 import org.cef.network.CefResponse
+import org.digma.intellij.plugin.analytics.BackendConnectionUtil
 import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.StringWriter
 import java.net.URLConnection
 
-const val INDEX_TEMPLATE_FILE: String = "indextemplate.ftl"
+const val INDEX_TEMPLATE_FILE_NAME: String = "indextemplate.ftl"
 const val BASE_PACKAGE_PATH: String = "/webview/"
 const val ENV_VARIABLE_THEME: String = "theme"
+const val WIZARD_SKIP_INSTALLATION_STEP_VARIABLE: String = "wizardSkipInstallationStep"
 const val COMMON_FILES_FOLDER_NAME: String = "common"
 
-class CustomResourceHandler(private var resourceFolderName: String) : CefResourceHandler {
+class CustomResourceHandler(private var project: Project, private var resourceFolderName: String) : CefResourceHandler {
     private var state: ResourceHandlerState = ClosedConnection
     override fun processRequest(
             cefRequest: CefRequest,
@@ -28,7 +31,7 @@ class CustomResourceHandler(private var resourceFolderName: String) : CefResourc
         val processedUrl = cefRequest.url
         return if (processedUrl != null) {
             if (processedUrl.equals("http://$resourceFolderName/index.html", true)) {
-                val html = loadFreemarkerTemplate(resourceFolderName)
+                val html = loadFreemarkerTemplate(project, resourceFolderName)
                 state = StringData(html)
             } else {
                 val pathToResource: String =
@@ -172,12 +175,18 @@ data class StringData(val data: String) : ResourceHandlerState {
     }
 }
 
-private fun loadFreemarkerTemplate(resourceFolderName: String): String {
+private fun loadFreemarkerTemplate(project: Project, resourceFolderName: String): String {
+    val isServerConnectedAlready = project.getService(BackendConnectionUtil::class.java).testConnectionToBackend()
     val cfg = Configuration(Configuration.VERSION_2_3_30)
     cfg.setClassForTemplateLoading(CustomResourceHandler::class.java, BASE_PACKAGE_PATH + resourceFolderName)
-    val template = cfg.getTemplate(INDEX_TEMPLATE_FILE)
-    val data = mapOf(ENV_VARIABLE_THEME to ThemeUtil.getCurrentThemeName())
+    val data = mapOf(
+            ENV_VARIABLE_THEME to ThemeUtil.getCurrentThemeName(),
+            WIZARD_SKIP_INSTALLATION_STEP_VARIABLE to isServerConnectedAlready
+    )
     val writer = StringWriter()
-    template.process(data, writer)
+    writer.use {
+        val template = cfg.getTemplate(INDEX_TEMPLATE_FILE_NAME)
+        template.process(data, it)
+    }
     return writer.toString()
 }

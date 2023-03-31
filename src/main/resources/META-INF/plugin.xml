@@ -89,7 +89,7 @@
                            toolWindowId="Digma"/>
 
 
-        <applicationConfigurable
+        <projectConfigurable
                 parentId="tools"
                 instance="org.digma.intellij.plugin.settings.ProjectSettings"
                 id="org.digma.intellij.plugin.settings.ProjectSettings"

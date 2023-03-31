@@ -68,11 +68,20 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
 
             if (!insightsListContainer.listViewItems.isNullOrEmpty()) {
                 model.status = UiInsightStatus.InsightExist
-            } else {
+            }
+            else {
                 model.status = UiInsightStatus.Unknown
                 val newLifetimeDefinition = LifetimeDefinition()
                 newLifetimeDefinition.lifetime.launchBackground {
-                    fetchForInsightStatusAndUpdateUi(methodInfo, model)
+                    fetchForInsightStatus(methodInfo, model)
+
+                    // Unknown status displays 'loading...' msg on ui. But we cannot do that if there is no envs at all,
+                    // meaning client hasnt started loading data into the system, so we should show 'No data'
+                    if (model.status == UiInsightStatus.Unknown && insightsListContainer.usageStatus.environmentStatuses.isNullOrEmpty()) {
+                        model.status = UiInsightStatus.NoSpanData
+                    }
+
+                    notifyModelChangedAndUpdateUi()
                 }
             }
 
@@ -85,13 +94,11 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
         }
     }
 
-    fun fetchForInsightStatusAndUpdateUi(methodInfo: MethodInfo, model: InsightsModel) {
+    fun fetchForInsightStatus(methodInfo: MethodInfo, model: InsightsModel) {
         val insightStatus = insightsProvider.getInsightStatus(methodInfo)
         val uiInsightStatus = toUiInsightStatus(insightStatus, methodInfo.hasRelatedCodeObjectIds())
 
         model.status = uiInsightStatus
-
-        notifyModelChangedAndUpdateUi()
     }
 
     @VisibleForTesting

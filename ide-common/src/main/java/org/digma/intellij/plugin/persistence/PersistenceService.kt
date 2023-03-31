@@ -8,7 +8,7 @@ import com.intellij.openapi.components.Storage
 
 // the @State annotation helps IntelliJ automatically serialize and save our state
 @State(
-        name = "PersistenceService",
+        name = "org.digma.intellij.plugin.persistence.PersistenceService",
         storages = [Storage("DigmaPersistence.xml")]
 )
 open class PersistenceService : PersistentStateComponent<PersistenceData> {

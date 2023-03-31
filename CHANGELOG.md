@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.50] - 2023-03-31
+### Changed
+- Fix showing 'Loading...' when digma has no envs yet
+- Save Installation Wizard state globally on application level #459
+- If the server is already connected, don't show the first page of the wizard, only show the second page.#462
+- #36 Update button styles in Installation Wizard
+
 ## [2.0.49] - 2023-03-30
 ### Changed
 - Add Annotation for java
@@ -135,4 +142,5 @@ All notable changes to this project will be documented in this file.
 [2.0.47]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.46...v2.0.47
 [2.0.48]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.47...v2.0.48
 [2.0.49]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.48...v2.0.49
-[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.49...HEAD
+[2.0.50]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.49...v2.0.50
+[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.50...HEAD

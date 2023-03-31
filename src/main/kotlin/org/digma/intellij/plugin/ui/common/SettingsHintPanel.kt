@@ -48,10 +48,10 @@ class SettingsHintPanel(project: Project) : JPanel() {
         togglePanel.background = Laf.Colors.EDITOR_BACKGROUND
         togglePanel.isOpaque = true
         togglePanel.add(JLabel("Observability"))
-        val toggle = SwitchButton(40, 20, PersistenceService.getInstance().state.isAutoOtel)
+        val toggle = SwitchButton(40, 20, PersistenceService.getInstance(project).state.isAutoOtel)
         toggle.addEventSelected(object : SwitchButton.EventSwitchSelected {
             override fun onSelected(selected: Boolean) {
-                PersistenceService.getInstance().state.isAutoOtel = selected
+                PersistenceService.getInstance(project).state.isAutoOtel = selected
             }
         })
         togglePanel.add(toggle)

@@ -138,7 +138,7 @@ private fun rebuildPanel(
         isRecalculateButtonPressed: Boolean
 ): JPanel {
     insightPanel!!.layout = BorderLayout()
-    insightPanel.add(getMessageLabel(title, description), BorderLayout.WEST)
+    insightPanel.add(getMessageLabel(title, description), BorderLayout.CENTER)
     insightPanel.add(getIconsListPanel(
             insight,
             project,

@@ -26,8 +26,8 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
 
     private val logger: Logger = Logger.getInstance(AutoOtelAgentRunConfigurationExtension::class.java)
 
-    private fun enabled(project: Project): Boolean{
-        return PersistenceService.getInstance(project).state.isAutoOtel
+    private fun enabled(): Boolean{
+        return PersistenceService.getInstance().state.isAutoOtel
     }
 
     /*
@@ -68,7 +68,7 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
         val project = configuration.project
 
         //testing if enabled must be done here just before running.
-        if (!enabled(project)){
+        if (!enabled()){
             Log.log(logger::debug,"AutoOtelAgentRunConfigurationExtension is not enabled")
             return
         }
@@ -171,8 +171,7 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
         configuration: RunConfigurationBase<*>,
         executor: Executor
     ): ConsoleView {
-        val project = configuration.project
-        if (enabled(project)  &&
+        if (enabled()  &&
             (isMavenConfiguration(configuration) || isJavaConfiguration(configuration))){
             //that only works for java and maven run configurations.
             console.print("This process is enhanced by Digma OTEL agent !\n", ConsoleViewContentType.LOG_WARNING_OUTPUT)

@@ -80,8 +80,7 @@ public class AnalyticsService implements Disposable {
         //initialize BackendConnectionMonitor when starting, so it is aware early on connection statuses
         project.getService(BackendConnectionMonitor.class);
         SettingsState settingsState = project.getService(SettingsState.class);
-        PersistenceService persistenceService = project.getService(PersistenceService.class);
-        environment = new Environment(project, this, persistenceService.getState(), settingsState);
+        environment = new Environment(project, this, PersistenceService.getInstance().getState(), settingsState);
         this.project = project;
         myApiUrl = settingsState.apiUrl;
         myApiToken = settingsState.apiToken;

@@ -89,16 +89,16 @@
                            toolWindowId="Digma"/>
 
 
-        <projectConfigurable
+        <applicationConfigurable
                 parentId="tools"
                 instance="org.digma.intellij.plugin.settings.ProjectSettings"
                 id="org.digma.intellij.plugin.settings.ProjectSettings"
                 displayName="Digma Plugin"
                 nonDefaultProject="true"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.settings.SettingsState"/>
+        <applicationService serviceImplementation="org.digma.intellij.plugin.settings.SettingsState"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.persistence.PersistenceService"/>
+        <applicationService serviceImplementation="org.digma.intellij.plugin.persistence.PersistenceService"/>
 
         <editorNotificationProvider implementation="org.digma.intellij.plugin.notifications.DigmaEditorNotificationProvider"
                                     id="org.digma.intellij.plugin.notifications.DigmaEditorNotificationProvider"/>

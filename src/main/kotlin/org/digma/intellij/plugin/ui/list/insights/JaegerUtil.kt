@@ -10,20 +10,19 @@ import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.list.ListItemActionButton
 import org.digma.intellij.plugin.ui.model.TraceSample
 import javax.swing.JButton
-import javax.swing.SwingUtilities
 
 // if cannot create the button then would return null
 fun buildButtonToJaeger(
         project: Project, linkCaption: String, spanName: String, traceSamples: List<TraceSample?>
 ): JButton? {
 
-    val settingsState = SettingsState.getInstance(project)
+    val settingsState = SettingsState.getInstance()
 
     val jaegerBaseUrl = settingsState.jaegerUrl?.trim()?.trimEnd('/')
     if (jaegerBaseUrl.isNullOrBlank() || traceSamples.isNullOrEmpty()) {
         return null
     }
-    val filtered = traceSamples.filter { x -> x!=null &&  x.hasTraceId() }
+    val filtered = traceSamples.filter { x -> x != null && x.hasTraceId() }
     if (filtered.isNullOrEmpty()) {
         return null
     }
@@ -71,7 +70,7 @@ fun openJaegerFromRecentActivity(
         traceId: String,
         spanName: String
 ) {
-    val settingsState = SettingsState.getInstance(project)
+    val settingsState = SettingsState.getInstance()
 
     val jaegerBaseUrl = settingsState.jaegerUrl?.trim()?.trimEnd('/')
     if (jaegerBaseUrl.isNullOrBlank() || traceId.isNullOrBlank()) {

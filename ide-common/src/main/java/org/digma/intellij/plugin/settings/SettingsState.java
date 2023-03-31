@@ -1,10 +1,10 @@
 package org.digma.intellij.plugin.settings;
 
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
-import com.intellij.openapi.project.Project;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -41,11 +41,10 @@ public class SettingsState implements PersistentStateComponent<SettingsState>, D
     public boolean firstTimeInsightReceived;
     @Nullable
     public String posthogToken;
-    public boolean alreadyPassedTheInstallationWizard;
     private final List<SettingsChangeListener> listeners = new ArrayList<>();
 
-    public static SettingsState getInstance(Project project) {
-        return project.getService(SettingsState.class);
+    public static SettingsState getInstance() {
+        return ApplicationManager.getApplication().getService(SettingsState.class);
     }
 
     @Nullable

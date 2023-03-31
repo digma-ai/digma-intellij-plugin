@@ -13,14 +13,13 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshService
 import org.digma.intellij.plugin.settings.SettingsState
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.time.Duration
 
 class GeneralFileEditorListener(val project: Project) : FileEditorManagerListener {
     private val logger: Logger = Logger.getInstance(GeneralFileEditorListener::class.java)
 
     private val refreshService: RefreshService = project.getService(RefreshService::class.java)
 
-    private val settingsState: SettingsState = project.getService(SettingsState::class.java)
+    private val settingsState: SettingsState = SettingsState.getInstance()
 
     // lifetimeDefinitionMap keeps info about the lifetime coroutine tasks of each opened file
     private val lifetimeDefinitionMap: ConcurrentHashMap<VirtualFile, LifetimeDefinition> = ConcurrentHashMap()

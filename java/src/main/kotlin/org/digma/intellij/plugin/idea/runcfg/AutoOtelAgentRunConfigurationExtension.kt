@@ -20,14 +20,14 @@ import org.digma.intellij.plugin.settings.SettingsState
 import org.jetbrains.idea.maven.execution.MavenRunConfiguration
 import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
 
-private const val ORG_GRADLE_JAVA_TOOL_OPTIONS="ORG_GRADLE_JAVA_TOOL_OPTIONS"
+private const val ORG_GRADLE_JAVA_TOOL_OPTIONS = "ORG_GRADLE_JAVA_TOOL_OPTIONS"
 
 class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
 
     private val logger: Logger = Logger.getInstance(AutoOtelAgentRunConfigurationExtension::class.java)
 
-    private fun enabled(project: Project): Boolean{
-        return PersistenceService.getInstance(project).state.isAutoOtel
+    private fun enabled(): Boolean {
+        return PersistenceService.getInstance().state.isAutoOtel
     }
 
     /*
@@ -40,13 +40,11 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
      */
 
 
-
-
     override fun isApplicableFor(configuration: RunConfigurationBase<*>): Boolean {
-        Log.log(logger::debug,"isApplicableFor, project:{}, id:{}, name:{}, type:{}",
-            configuration.project,configuration.id,configuration.name,configuration.type)
+        Log.log(logger::debug, "isApplicableFor, project:{}, id:{}, name:{}, type:{}",
+                configuration.project, configuration.id, configuration.name, configuration.type)
 
-        if (isJavaConfiguration(configuration) || isGradleConfiguration(configuration) || isMavenConfiguration(configuration)){
+        if (isJavaConfiguration(configuration) || isGradleConfiguration(configuration) || isMavenConfiguration(configuration)) {
             return true
         }
 
@@ -54,36 +52,34 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
     }
 
 
-
-
     override fun <T : RunConfigurationBase<*>?> updateJavaParameters(
-        configuration: T & Any,
-        params: JavaParameters,
-        runnerSettings: RunnerSettings?
+            configuration: T & Any,
+            params: JavaParameters,
+            runnerSettings: RunnerSettings?
     ) {
 
-        Log.log(logger::debug,"updateJavaParameters, project:{}, id:{}, name:{}, type:{}",
-            configuration.project,configuration.id,configuration.name,configuration.type)
+        Log.log(logger::debug, "updateJavaParameters, project:{}, id:{}, name:{}, type:{}",
+                configuration.project, configuration.id, configuration.name, configuration.type)
 
         val project = configuration.project
 
         //testing if enabled must be done here just before running.
-        if (!enabled(project)){
-            Log.log(logger::debug,"AutoOtelAgentRunConfigurationExtension is not enabled")
+        if (!enabled()) {
+            Log.log(logger::debug, "AutoOtelAgentRunConfigurationExtension is not enabled")
             return
         }
 
 
-        if (isJavaConfiguration(configuration)){
+        if (isJavaConfiguration(configuration)) {
             //this also works for: CommonJavaRunConfigurationParameters
             //params.vmParametersList.addParametersString("-verbose:class -javaagent:/home/shalom/tmp/run-configuration/opentelemetry-javaagent.jar")
             //params.vmParametersList.addProperty("myprop","myvalue")
-            val javaToolOptions = buildJavaToolOptions(configuration,project)
+            val javaToolOptions = buildJavaToolOptions(configuration, project)
             javaToolOptions?.let {
-                mergeJavaToolOptions(params,it)
+                mergeJavaToolOptions(params, it)
             }
 
-        }else if (isGradleConfiguration(configuration)){
+        } else if (isGradleConfiguration(configuration)) {
             //when injecting JAVA_TOOL_OPTIONS to GradleRunConfiguration the GradleRunConfiguration will also run with
             // JAVA_TOOL_OPTIONS which is not ideal. for example, gradle will execute with JAVA_TOOL_OPTIONS and then fork
             // a process for the main method or unit test with JAVA_TOOL_OPTIONS. ideally we want only the forked process
@@ -95,15 +91,15 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
             //when gradle runs the :test task it's not possible to pass system properties to the task.
             // JAVA_TOOL_OPTIONS is not the best as said above, but it works.
             configuration as GradleRunConfiguration
-            val javaToolOptions = buildJavaToolOptions(configuration,project)
+            val javaToolOptions = buildJavaToolOptions(configuration, project)
             javaToolOptions?.let {
-                mergeGradleJavaToolOptions(configuration,javaToolOptions)
+                mergeGradleJavaToolOptions(configuration, javaToolOptions)
             }
-        }else if (isMavenConfiguration(configuration)){
+        } else if (isMavenConfiguration(configuration)) {
             configuration as MavenRunConfiguration
-            val javaToolOptions = buildJavaToolOptions(configuration,project)
+            val javaToolOptions = buildJavaToolOptions(configuration, project)
             javaToolOptions?.let {
-                mergeJavaToolOptions(params,it)
+                mergeJavaToolOptions(params, it)
             }
         }
     }
@@ -115,7 +111,7 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
         var javaToolOptions = myJavaToolOptions
         //need to replace the env because it may be immutable map
         val newEnv = mutableMapOf<String, String>()
-        if (configuration.settings.env.containsKey(JAVA_TOOL_OPTIONS)){
+        if (configuration.settings.env.containsKey(JAVA_TOOL_OPTIONS)) {
             val currentJavaToolOptions = configuration.settings.env[JAVA_TOOL_OPTIONS]
             javaToolOptions = "$myJavaToolOptions $currentJavaToolOptions"
             newEnv[ORG_GRADLE_JAVA_TOOL_OPTIONS] = currentJavaToolOptions!!
@@ -128,7 +124,7 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
     //this is for java and maven run configurations. merge in case users have their own JAVA_TOOL_OPTIONS
     private fun mergeJavaToolOptions(params: JavaParameters, myJavaToolOptions: String) {
         var javaToolOptions = myJavaToolOptions
-        if (params.env.containsKey(JAVA_TOOL_OPTIONS)){
+        if (params.env.containsKey(JAVA_TOOL_OPTIONS)) {
             val currentJavaToolOptions = params.env[JAVA_TOOL_OPTIONS]
             javaToolOptions = "$myJavaToolOptions $currentJavaToolOptions"
         }
@@ -137,9 +133,9 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
 
 
     override fun attachToProcess(
-        configuration: RunConfigurationBase<*>,
-        handler: ProcessHandler,
-        runnerSettings: RunnerSettings?
+            configuration: RunConfigurationBase<*>,
+            handler: ProcessHandler,
+            runnerSettings: RunnerSettings?
     ) {
         //we need to clean gradle configuration from our JAVA_TOOL_OPTIONS
         if (isGradleConfiguration(configuration)) {
@@ -151,12 +147,12 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
 
                 private fun cleanGradleSettings(configuration: RunConfigurationBase<*>) {
                     configuration as GradleRunConfiguration
-                    Log.log(logger::debug,"Cleaning gradle configuration {}",configuration)
-                    if (configuration.settings.env.containsKey(ORG_GRADLE_JAVA_TOOL_OPTIONS)){
+                    Log.log(logger::debug, "Cleaning gradle configuration {}", configuration)
+                    if (configuration.settings.env.containsKey(ORG_GRADLE_JAVA_TOOL_OPTIONS)) {
                         val orgJavaToolOptions = configuration.settings.env[ORG_GRADLE_JAVA_TOOL_OPTIONS]
                         configuration.settings.env[JAVA_TOOL_OPTIONS] = orgJavaToolOptions
                         configuration.settings.env.remove(ORG_GRADLE_JAVA_TOOL_OPTIONS)
-                    }else if (configuration.settings.env.containsKey(JAVA_TOOL_OPTIONS)){
+                    } else if (configuration.settings.env.containsKey(JAVA_TOOL_OPTIONS)) {
                         configuration.settings.env.remove(JAVA_TOOL_OPTIONS)
                     }
                 }
@@ -167,13 +163,12 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
 
 
     override fun decorate(
-        console: ConsoleView,
-        configuration: RunConfigurationBase<*>,
-        executor: Executor
+            console: ConsoleView,
+            configuration: RunConfigurationBase<*>,
+            executor: Executor
     ): ConsoleView {
-        val project = configuration.project
-        if (enabled(project)  &&
-            (isMavenConfiguration(configuration) || isJavaConfiguration(configuration))){
+        if (enabled() &&
+                (isMavenConfiguration(configuration) || isJavaConfiguration(configuration))) {
             //that only works for java and maven run configurations.
             console.print("This process is enhanced by Digma OTEL agent !\n", ConsoleViewContentType.LOG_WARNING_OUTPUT)
         }
@@ -185,36 +180,36 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
 
         val otelAgentPath = OTELJarProvider.getInstance().getOtelAgentJarPath(project)
         val digmaExtensionPath = OTELJarProvider.getInstance().getDigmaAgentExtensionJarPath(project)
-        if (otelAgentPath == null || digmaExtensionPath == null){
-            Log.log(logger::debug,"could not build $JAVA_TOOL_OPTIONS because otel agent or digma extension jar are not available. please check the logs")
+        if (otelAgentPath == null || digmaExtensionPath == null) {
+            Log.log(logger::debug, "could not build $JAVA_TOOL_OPTIONS because otel agent or digma extension jar are not available. please check the logs")
             return null
         }
 
         return "".plus("-javaagent:$otelAgentPath")
-            .plus(" ")
-            .plus("-Dotel.javaagent.extensions=$digmaExtensionPath")
-            .plus(" ")
-            .plus("-Dotel.traces.exporter=otlp")
-            .plus(" ")
-            .plus("-Dotel.metrics.exporter=none")
-            .plus(" ")
-            .plus("-Dotel.exporter.otlp.traces.endpoint=${getExporterUrl(project)}")
-            .plus(" ")
-            .plus("-Dotel.service.name=${getServiceName(configuration)}")
-            .plus(" ")
+                .plus(" ")
+                .plus("-Dotel.javaagent.extensions=$digmaExtensionPath")
+                .plus(" ")
+                .plus("-Dotel.traces.exporter=otlp")
+                .plus(" ")
+                .plus("-Dotel.metrics.exporter=none")
+                .plus(" ")
+                .plus("-Dotel.exporter.otlp.traces.endpoint=${getExporterUrl()}")
+                .plus(" ")
+                .plus("-Dotel.service.name=${getServiceName(configuration)}")
+                .plus(" ")
     }
 
     private fun getServiceName(configuration: RunConfigurationBase<*>): String {
-        return if (configuration is ModuleRunConfiguration && configuration.modules.isNotEmpty()){
+        return if (configuration is ModuleRunConfiguration && configuration.modules.isNotEmpty()) {
             val moduleName = configuration.modules.first().name
-            moduleName.replace(" ","").trim()
-        }else{
-            configuration.project.name.replace(" ","").trim()
+            moduleName.replace(" ", "").trim()
+        } else {
+            configuration.project.name.replace(" ", "").trim()
         }
     }
 
-    private fun getExporterUrl(project: Project): String {
-        return SettingsState.getInstance(project).runtimeObservabilityBackendUrl
+    private fun getExporterUrl(): String {
+        return SettingsState.getInstance().runtimeObservabilityBackendUrl
     }
 
 
@@ -233,18 +228,18 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
         this will catch gradle running a main method or a unit test or spring bootRun.
         all other gradle tasks are ignored.
          */
-        if (configuration is GradleRunConfiguration){
+        if (configuration is GradleRunConfiguration) {
             val taskNames = configuration.settings.taskNames
-            val isMainMethod = taskNames.any{
+            val isMainMethod = taskNames.any {
                 it.contains(".main")
             }
-            val hasTestTask = taskNames.any{
+            val hasTestTask = taskNames.any {
                 it.contains(":test") || it.equals("test")
             }
             val hasBootRun = taskNames.any {
                 it.contains(":bootRun") || it.equals("bootRun")
             }
-            if (isMainMethod || hasTestTask || hasBootRun){
+            if (isMainMethod || hasTestTask || hasBootRun) {
                 return true
             }
         }
@@ -255,13 +250,13 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
 
     private fun isMavenConfiguration(configuration: RunConfigurationBase<*>): Boolean {
         //will catch maven exec plugin goals, bootRun and uni tests
-        if (configuration is MavenRunConfiguration){
+        if (configuration is MavenRunConfiguration) {
             val goals = configuration.runnerParameters.goals
             val isExecExecJava = goals.contains("exec:exec") && goals.contains("-Dexec.executable=java")
             if (isExecExecJava ||
-                goals.contains("spring-boot:run") ||
-                goals.contains("exec:java") ||
-                goals.contains("surefire:test")) {
+                    goals.contains("spring-boot:run") ||
+                    goals.contains("exec:java") ||
+                    goals.contains("surefire:test")) {
                 return true
             }
         }

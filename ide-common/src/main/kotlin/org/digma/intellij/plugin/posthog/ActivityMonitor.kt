@@ -21,6 +21,7 @@ class ActivityMonitor(private val project: Project) : Runnable, Disposable {
 
     companion object {
         private val LOGGER = Logger.getInstance(ActivityMonitor::class.java)
+
         @JvmStatic
         fun getInstance(project: Project): ActivityMonitor {
             return project.getService(ActivityMonitor::class.java)
@@ -36,29 +37,28 @@ class ActivityMonitor(private val project: Project) : Runnable, Disposable {
     init {
         val hostname = CommonUtils.getLocalHostname()
         clientId =
-            if (System.getenv("devenv") == "digma") hostname
-            else Integer.toHexString(hostname.hashCode())
+                if (System.getenv("devenv") == "digma") hostname
+                else Integer.toHexString(hostname.hashCode())
 
-        val cachedToken = getCachedToken(project)
+        val cachedToken = getCachedToken()
         postHog =
-            if (cachedToken != null) PostHog.Builder(cachedToken).build()
-            else null
+                if (cachedToken != null) PostHog.Builder(cachedToken).build()
+                else null
 
         tokenFetcherThread.start()
     }
 
     override fun run() {
-        val cachedToken = getCachedToken(project)
+        val cachedToken = getCachedToken()
         val latestToken = getLatestToken()
         if (latestToken != null && latestToken != cachedToken) {
             postHog = PostHog.Builder(latestToken).build()
-            setCachedToken(project, latestToken)
+            setCachedToken(latestToken)
         }
-        if(postHog != null){
+        if (postHog != null) {
             Log.log(LOGGER::info, "Posthog was configured successfully with " +
                     (if (latestToken != null) "latest token" else "cached token"))
-        }
-        else{
+        } else {
             Log.log(LOGGER::info, "Posthog failed to be configured")
         }
         registerSessionDetails()
@@ -75,9 +75,9 @@ class ActivityMonitor(private val project: Project) : Runnable, Disposable {
             "unknown"
 
         postHog?.capture(
-            clientId,
-            "side-panel opened",
-            mapOf("reason" to reason)
+                clientId,
+                "side-panel opened",
+                mapOf("reason" to reason)
         )
     }
 
@@ -98,14 +98,14 @@ class ActivityMonitor(private val project: Project) : Runnable, Disposable {
         exception.printStackTrace(PrintWriter(stringWriter))
 
         postHog?.capture(
-            clientId,
-            "error",
-            mapOf(
-                "message" to message,
-                "exception.type" to exception.javaClass.name,
-                "exception.message" to exception.message,
-                "exception.stack-trace" to stringWriter.toString()
-            )
+                clientId,
+                "error",
+                mapOf(
+                        "message" to message,
+                        "exception.type" to exception.javaClass.name,
+                        "exception.message" to exception.message,
+                        "exception.stack-trace" to stringWriter.toString()
+                )
         )
     }
 
@@ -116,41 +116,41 @@ class ActivityMonitor(private val project: Project) : Runnable, Disposable {
 
         lastInsightsViewed = newInsightsViewed
         postHog?.capture(
-            clientId,
-            "insights viewed",
-            mapOf("insights" to insightTypes)
+                clientId,
+                "insights viewed",
+                mapOf("insights" to insightTypes)
         )
     }
 
     fun registerInsightButtonClicked(button: String) {
         postHog?.capture(
-            clientId,
-            "insights button-clicked",
-            mapOf("button" to button)
+                clientId,
+                "insights button-clicked",
+                mapOf("button" to button)
         )
     }
 
-    private fun registerSessionDetails(){
-        val osType = System.getProperty("os.name");
-        val ideVersion = ApplicationInfo.getInstance().build.asString();
+    private fun registerSessionDetails() {
+        val osType = System.getProperty("os.name")
+        val ideVersion = ApplicationInfo.getInstance().build.asString()
         val pluginVersion = Optional.ofNullable(PluginManagerCore.getPlugin(com.intellij.openapi.extensions.PluginId.getId(PluginId.PLUGIN_ID)))
-            .map(PluginDescriptor::getVersion)
-            .orElse("unknown");
+                .map(PluginDescriptor::getVersion)
+                .orElse("unknown")
 
         postHog?.set(
-            clientId,
-            mapOf(
-                "os.type" to osType,
-                "ide.version" to ideVersion,
-                "plugin.version" to pluginVersion
-            ));
+                clientId,
+                mapOf(
+                        "os.type" to osType,
+                        "ide.version" to ideVersion,
+                        "plugin.version" to pluginVersion
+                ))
     }
 
     override fun dispose() {
         try {
-            tokenFetcherThread.join();
+            tokenFetcherThread.join()
         } catch (e: InterruptedException) {
-            Log.debugWithException(LOGGER, e, "Failed waiting for tokenFetcherThread");
+            Log.debugWithException(LOGGER, e, "Failed waiting for tokenFetcherThread")
         }
     }
 }

@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.settings;
 
-import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.EnumComboBoxModel;
 import com.intellij.ui.JBColor;
@@ -27,7 +26,7 @@ public class SettingsComponent {
     private final JBTextField myRuntimeObservabilityBackendUrlText = new JBTextField();
     private final ComboBox<LinkMode> myJaegerLinkModeComboBox = new ComboBox<>(new EnumComboBoxModel<>(LinkMode.class));
 
-    public SettingsComponent(Project project) {
+    public SettingsComponent() {
 
         var myUrlLabel = new JBLabel("Digma API URL: ");
         var myUrlLabelForeground = myUrlLabel.getForeground();

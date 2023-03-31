@@ -79,9 +79,8 @@ public class AnalyticsService implements Disposable {
     public AnalyticsService(@NotNull Project project) {
         //initialize BackendConnectionMonitor when starting, so it is aware early on connection statuses
         project.getService(BackendConnectionMonitor.class);
-        SettingsState settingsState = project.getService(SettingsState.class);
-        PersistenceService persistenceService = project.getService(PersistenceService.class);
-        environment = new Environment(project, this, persistenceService.getState(), settingsState);
+        SettingsState settingsState = SettingsState.getInstance();
+        environment = new Environment(project, this, PersistenceService.getInstance().getState(), settingsState);
         this.project = project;
         myApiUrl = settingsState.apiUrl;
         myApiToken = settingsState.apiToken;
@@ -171,7 +170,7 @@ public class AnalyticsService implements Disposable {
     }
 
 
-    public void sendDebuggerEvent(int eventType,String timestamp) throws AnalyticsServiceException {
+    public void sendDebuggerEvent(int eventType, String timestamp) throws AnalyticsServiceException {
         executeCatching(() -> {
             analyticsProviderProxy.sendDebuggerEvent(new DebuggerEventRequest(String.valueOf(eventType), CommonUtils.getLocalHostname(), timestamp));
             return null;
@@ -189,16 +188,16 @@ public class AnalyticsService implements Disposable {
     public List<CodeObjectInsight> getInsights(List<String> objectIds) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         Log.log(LOGGER::debug, "Requesting insights for next objectIds {} and next environment {}", objectIds, env);
-        var insights =  executeCatching(() -> analyticsProviderProxy.getInsights(new InsightsRequest(env, objectIds)));
+        var insights = executeCatching(() -> analyticsProviderProxy.getInsights(new InsightsRequest(env, objectIds)));
         onInsightReceived(insights);
         return insights;
     }
 
-    private <TInsight> void onInsightReceived(List<TInsight> insights){
-        if(insights != null && !insights.isEmpty() && !SettingsState.getInstance(project).firstTimeInsightReceived) {
+    private <TInsight> void onInsightReceived(List<TInsight> insights) {
+        if (insights != null && !insights.isEmpty() && !SettingsState.getInstance().firstTimeInsightReceived) {
             ActivityMonitor.getInstance(project).registerFirstInsightReceived();
-            SettingsState.getInstance(project).firstTimeInsightReceived = true;
-            SettingsState.getInstance(project).fireChanged();
+            SettingsState.getInstance().firstTimeInsightReceived = true;
+            SettingsState.getInstance().fireChanged();
         }
     }
 
@@ -231,10 +230,10 @@ public class AnalyticsService implements Disposable {
             analyticsProviderProxy.setInsightCustomStartTime(
                     new CustomStartTimeInsightRequest(
                             env,
-                        codeObjectId,
-                        insightType.name(),
-                        formattedActualDate
-                ));
+                            codeObjectId,
+                            insightType.name(),
+                            formattedActualDate
+                    ));
             return null;
         });
     }
@@ -306,8 +305,6 @@ public class AnalyticsService implements Disposable {
     }
 
 
-
-
     /**
      * A proxy for cross-cutting concerns across all api methods.
      * In a proxy it's easier to log events, we have the method name, parameters etc.
@@ -352,13 +349,13 @@ public class AnalyticsService implements Disposable {
 
                 if (LOGGER.isDebugEnabled()) {
                     Log.log(LOGGER::debug, "Got response from {}: args '{}', -----------------" +
-                            "Result '{}'",method.getName(), argsToString(args),resultToString(result));
+                            "Result '{}'", method.getName(), argsToString(args), resultToString(result));
                 }
 
-                if(!SettingsState.getInstance(project).firstTimeConnectionEstablished){
+                if (!SettingsState.getInstance().firstTimeConnectionEstablished) {
                     ActivityMonitor.getInstance(project).registerFirstConnectionEstablished();
-                    SettingsState.getInstance(project).firstTimeConnectionEstablished = true;
-                    SettingsState.getInstance(project).fireChanged();
+                    SettingsState.getInstance().firstTimeConnectionEstablished = true;
+                    SettingsState.getInstance().fireChanged();
                 }
 
                 //reset status on success call
@@ -438,7 +435,7 @@ public class AnalyticsService implements Disposable {
             while (ex != null && !(isConnectionUnavailableException(ex))) {
                 ex = ex.getCause();
             }
-            if (ex != null){
+            if (ex != null) {
                 return true;
             }
 
@@ -484,45 +481,44 @@ public class AnalyticsService implements Disposable {
 
         private String getSslExceptionMessage(InvocationTargetException e) {
             var ex = e.getCause();
-            while (ex != null && !(ex instanceof SSLException)){
+            while (ex != null && !(ex instanceof SSLException)) {
                 ex = ex.getCause();
             }
-            if (ex != null){
+            if (ex != null) {
                 return ex.getMessage();
             }
 
-            return e.getCause() != null? e.getCause().getMessage():e.getMessage();
+            return e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
         }
 
 
         private String getExceptionMessage(InvocationTargetException e) {
             var ex = e.getCause();
-            while (ex != null && !(ex instanceof AnalyticsProviderException)){
+            while (ex != null && !(ex instanceof AnalyticsProviderException)) {
                 ex = ex.getCause();
             }
-            if (ex != null){
+            if (ex != null) {
                 return ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage();
             }
 
-            return e.getCause() != null? e.getCause().getMessage():e.getMessage();
+            return e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
         }
-
-
 
 
         private String resultToString(Object result) {
-            try{
+            try {
                 //pretty print doesn't work in intellij logs, line end cause the text to disappear.
                 return objectMapper.writeValueAsString(result);
-            }catch (Exception e){
-                return "Error parsing object "+e.getMessage();
+            } catch (Exception e) {
+                return "Error parsing object " + e.getMessage();
             }
         }
-        private String argsToString(Object[] args){
+
+        private String argsToString(Object[] args) {
             try {
                 return (args == null || args.length == 0) ? "" : Arrays.stream(args).map(Object::toString).collect(Collectors.joining(","));
-            }catch (Exception e){
-                return "Error parsing args "+e.getMessage();
+            } catch (Exception e) {
+                return "Error parsing args " + e.getMessage();
             }
         }
 

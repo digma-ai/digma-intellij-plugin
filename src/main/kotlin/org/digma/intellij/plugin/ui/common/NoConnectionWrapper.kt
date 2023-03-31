@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.ui.common
 
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
-import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.EDT
@@ -18,7 +17,7 @@ import javax.swing.JPanel
 
 class NoConnectionWrapper(private val project: Project, private val panel: DigmaTabPanel) : DigmaTabPanel() {
 
-    private val settingsState: SettingsState = project.getService(SettingsState::class.java)
+    private val settingsState: SettingsState = SettingsState.getInstance()
 
     companion object {
         const val WRAPPED_PANEL_CARD = "WRAPPED_PANE"
@@ -92,7 +91,7 @@ class NoConnectionWrapper(private val project: Project, private val panel: Digma
     override fun getPreferredFocusableComponent(): JComponent {
 
         if (project.isDisposed){
-            return this;
+            return this
         }
 
         val backendConnectionMonitor = project.getService(BackendConnectionMonitor::class.java)

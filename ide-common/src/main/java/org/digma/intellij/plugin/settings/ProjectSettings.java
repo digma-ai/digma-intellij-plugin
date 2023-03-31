@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.settings;
 
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
-import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.NlsContexts;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,12 +13,10 @@ public class ProjectSettings implements Configurable {
 
     public static final String DISPLAY_NAME = "Digma Plugin";
 
-    private final Project project;
-
     private SettingsComponent mySettingsComponent;
 
-    public ProjectSettings(Project project) {
-        this.project = project;
+    public ProjectSettings() {
+        super();
     }
 
     @Override
@@ -34,13 +31,13 @@ public class ProjectSettings implements Configurable {
 
     @Override
     public @Nullable JComponent createComponent() {
-        mySettingsComponent = new SettingsComponent(project);
+        mySettingsComponent = new SettingsComponent();
         return mySettingsComponent.getPanel();
     }
 
     @Override
     public boolean isModified() {
-        SettingsState settings = SettingsState.getInstance(project);
+        SettingsState settings = SettingsState.getInstance();
         return isUrlChanged(settings) || isApiTokenChanged(settings) || isRefreshDelayChanged(settings)
                 || isJaegerUrlChanged(settings) || isJaegerLinkModeChanged(settings)
                 || isRuntimeObservabilityBackendUrl(settings);
@@ -72,7 +69,7 @@ public class ProjectSettings implements Configurable {
 
     @Override
     public void apply() throws ConfigurationException {
-        SettingsState settings = SettingsState.getInstance(project);
+        SettingsState settings = SettingsState.getInstance();
         try {
             Objects.requireNonNull(mySettingsComponent.getApiUrlText(), "api url can not be null");
             new URL(mySettingsComponent.getApiUrlText());
@@ -101,7 +98,7 @@ public class ProjectSettings implements Configurable {
 
     @Override
     public void reset() {
-        SettingsState settings = SettingsState.getInstance(project);
+        SettingsState settings = SettingsState.getInstance();
         mySettingsComponent.setApiUrlText(settings.apiUrl);
         mySettingsComponent.setApiToken(settings.apiToken);
         mySettingsComponent.setRefreshDelayText(String.valueOf(settings.refreshDelay));

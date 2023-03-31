@@ -9,9 +9,6 @@
       font-weight: 500;
       font-style: normal;
     }
-    body {
-      background: ${(theme == 'light')?then('#F1F5FA','#383838')};
-    }
   </style>
 </head>
 <body>
@@ -24,7 +21,7 @@
   window.codeFont;
   window.recentActivityRefreshInterval;
   window.recentActivityExpirationLimit;
-  window.recentActivityDocumentationURL;
+  window.recentActivityDocumentationURL = "https://github.com/digma-ai/digma-intellij-plugin/blob/main/README.md";
 </script>
 <script src="/index.js"></script>
 </body>

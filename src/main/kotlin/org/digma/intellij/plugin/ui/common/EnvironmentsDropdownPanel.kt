@@ -28,7 +28,8 @@ import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import java.util.*
+import java.util.Locale
+import java.util.Objects
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import javax.swing.BoxLayout
@@ -88,11 +89,12 @@ class EnvironmentsDropdownPanel(
     override fun reset() {
         rebuildInBackground()
     }
-    private var isDisposed = false;
+
+    private var isDisposed = false
     override fun dispose() {
-        if(isDisposed) return;
+        if (isDisposed) return
         messageBusConnection.dispose()
-        isDisposed = true;
+        isDisposed = true
     }
 
     private fun rebuildInBackground() {
@@ -200,7 +202,7 @@ class EnvironmentsDropdownPanel(
             comboBox.renderer = object : SimpleListCellRenderer<String>() {
                 override fun customize(list: JList<out String>, value: String, index: Int, selected: Boolean, hasFocus: Boolean) {
                     text = value
-                    icon = if (itemsWithIcons.size >= index && index >= 0) {
+                    icon = if (itemsWithIcons.size > index && index >= 0) {
                         itemsWithIcons.values.elementAt(index)
                     } else {
                         null
@@ -238,10 +240,10 @@ class EnvironmentsDropdownPanel(
 
         comboBox.addActionListener { event ->
             val cb = event.source as ComboBox<String>
-            var selectedEnv = cb.selectedItem as String ?  // can be null if connection error and all item being removed from list (current logic)
-            if(selectedEnv == null || selectedEnv == NO_ENVIRONMENTS_MESSAGE) return@addActionListener
+            var selectedEnv = cb.selectedItem as String?  // can be null if connection error and all item being removed from list (current logic)
+            if (selectedEnv == null || selectedEnv == NO_ENVIRONMENTS_MESSAGE) return@addActionListener
             selectedEnv = adjustBackEnvNameIfNeeded(selectedEnv)
-            val currEnv : String ? = environmentsSupplier.getCurrent()
+            val currEnv: String? = environmentsSupplier.getCurrent()
 
             if (!StringUtils.equals(selectedEnv, currEnv)) {
                 changeEnvAlarm.cancelAllRequests()
@@ -258,14 +260,13 @@ class EnvironmentsDropdownPanel(
         // Set a fixed width for the closed ComboBox
         comboBox.preferredSize = Dimension(30, comboBox.preferredSize.height)
         val currentEnv = environmentsSupplier.getCurrent()
-        if(currentEnv != null) comboBox.selectedItem = buildLinkText(currentEnv)
+        if (currentEnv != null) comboBox.selectedItem = buildLinkText(currentEnv)
 
         comboBox.isEditable = false
         if (backendConnectionMonitor.isConnectionError()) {
             comboBox.removeAllItems()
             comboBox.addItem(NO_ENVIRONMENTS_MESSAGE)
-        }
-        else{
+        } else {
             if (comboBox.itemCount == 0) {
                 // display default value
                 comboBox.addItem(NO_ENVIRONMENTS_MESSAGE)

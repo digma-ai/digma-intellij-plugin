@@ -25,6 +25,9 @@
         <listener
                 class="org.digma.intellij.plugin.idea.psi.java.BulkFileChangeListenerForJavaSpanNavigation"
                 topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
+        <listener
+                class="org.digma.intellij.plugin.idea.gradle.GradleFileChangeListener"
+                topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
     </projectListeners>
 
 

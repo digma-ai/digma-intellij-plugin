@@ -181,6 +181,9 @@ public class AnalyticsService implements Disposable {
         var env = getCurrentEnvironment();
         Log.log(LOGGER::debug, "Requesting Global Insights for next environment {}", env);
         var insights = executeCatching(() -> analyticsProviderProxy.getGlobalInsights(new InsightsRequest(env, Collections.emptyList())));
+        if (insights == null) {
+            insights = Collections.emptyList();
+        }
         onInsightReceived(insights);
         return insights;
     }
@@ -189,6 +192,9 @@ public class AnalyticsService implements Disposable {
         var env = getCurrentEnvironment();
         Log.log(LOGGER::debug, "Requesting insights for next objectIds {} and next environment {}", objectIds, env);
         var insights = executeCatching(() -> analyticsProviderProxy.getInsights(new InsightsRequest(env, objectIds)));
+        if (insights == null) {
+            insights = Collections.emptyList();
+        }
         onInsightReceived(insights);
         return insights;
     }
@@ -204,7 +210,11 @@ public class AnalyticsService implements Disposable {
     public List<CodeObjectError> getErrorsOfCodeObject(List<String> codeObjectIds) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         Log.log(LOGGER::debug, "Requesting insights for next codeObjectId {} and next environment {}", codeObjectIds, env);
-        return executeCatching(() -> analyticsProviderProxy.getErrorsOfCodeObject(env, codeObjectIds));
+        var errors = executeCatching(() -> analyticsProviderProxy.getErrorsOfCodeObject(env, codeObjectIds));
+        if (errors == null) {
+            errors = Collections.emptyList();
+        }
+        return errors;
     }
 
     public CodeObjectInsightsStatusResponse getCodeObjectInsightStatus(List<MethodInfo> methodInfos) throws AnalyticsServiceException {

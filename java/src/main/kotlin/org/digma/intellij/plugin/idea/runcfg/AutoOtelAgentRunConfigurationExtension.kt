@@ -10,6 +10,7 @@ import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.execution.ui.ConsoleView
 import com.intellij.execution.ui.ConsoleViewContentType
 import com.intellij.openapi.diagnostic.Logger
+import kotlinx.collections.immutable.toImmutableMap
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.settings.SettingsState
@@ -69,6 +70,8 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
         } else if (isGradleConfiguration(configuration)) {
             configuration as GradleRunConfiguration
 
+            fillPropertiesAndEnvIfNeeded(params, configuration)
+
             adjustWithOtelAndDigma(configuration, params)
 
             //when injecting JAVA_TOOL_OPTIONS to GradleRunConfiguration the GradleRunConfiguration will also run with
@@ -86,6 +89,25 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
             configuration as MavenRunConfiguration
 
             adjustWithOtelAndDigma(configuration, params)
+        }
+    }
+
+    /**
+     * temp method and is used so JavaParameters would be ready for next call, which check for existent systemProperty or environmentVariable
+     * apparently for gradle the systemProperty and environmentVariable are not set during the hook of updateXxx.
+     * opened an issue to track it https://youtrack.jetbrains.com/issue/IDEA-317118
+     * so once issue is solved can remove this method
+     */
+    private fun fillPropertiesAndEnvIfNeeded(params: JavaParameters, configuration: GradleRunConfiguration) {
+        if (params.env.isNullOrEmpty()) {
+            if (!configuration.settings.env.isNullOrEmpty()) {
+                params.env = configuration.settings.env.toImmutableMap()
+            }
+        }
+        if (params.vmParametersList.parametersCount <= 0) {
+            if (!configuration.settings.vmOptions.isNullOrBlank()) {
+                params.vmParametersList.addParametersString(configuration.settings.vmOptions)
+            }
         }
     }
 
@@ -117,7 +139,26 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
         params.vmParametersList.addProperty("otel.traces.exporter", "otlp")
         params.vmParametersList.addProperty("otel.metrics.exporter", "none")
         params.vmParametersList.addProperty("otel.exporter.otlp.traces.endpoint", getExporterUrl())
-        params.vmParametersList.addProperty("otel.service.name", evalServiceName(configuration))
+
+        if (!isOtelServiceNameAlreadyDefined(params)) {
+            params.vmParametersList.addProperty("otel.service.name", evalServiceName(configuration))
+        }
+    }
+
+    private fun isOtelEntryDefined(javaConfParams: JavaParameters, environmentVariable: String, systemProperty: String): Boolean {
+        return javaConfParams.env.containsKey(environmentVariable)
+                || isVmEntryExists(javaConfParams, systemProperty)
+    }
+
+    /**
+     * see <a href="https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/autoconfigure/README.md#opentelemetry-resource"></a>
+     */
+    private fun isOtelServiceNameAlreadyDefined(javaConfParams: JavaParameters): Boolean {
+        return isOtelEntryDefined(javaConfParams, "OTEL_SERVICE_NAME", "otel.service.name")
+    }
+
+    private fun isVmEntryExists(javaConfParams: JavaParameters, entryName: String): Boolean {
+        return javaConfParams.vmParametersList.hasProperty(entryName)
     }
 
     private fun evalServiceName(configuration: RunConfigurationBase<*>): String {

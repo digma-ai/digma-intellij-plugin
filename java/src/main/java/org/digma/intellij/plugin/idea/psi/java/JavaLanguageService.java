@@ -48,7 +48,7 @@ public class JavaLanguageService implements LanguageService {
     private final JaxrsFramework jaxrsFramework;
     private final GrpcFramework grpcFramework;
     private final SpringBootFramework springBootFramework;
-    private List<IEndpointDiscovery> endpointDiscoveryList;
+    private final List<IEndpointDiscovery> endpointDiscoveryList;
 
 
     /*
@@ -62,7 +62,7 @@ public class JavaLanguageService implements LanguageService {
         this.jaxrsFramework = new JaxrsFramework(project);
         this.grpcFramework = new GrpcFramework(project);
         this.springBootFramework = new SpringBootFramework(project);
-        endpointDiscoveryList = List.of(micronautFramework, jaxrsFramework, grpcFramework, springBootFramework);
+        this.endpointDiscoveryList = List.of(micronautFramework, jaxrsFramework, grpcFramework, springBootFramework);
     }
 
 
@@ -141,7 +141,8 @@ public class JavaLanguageService implements LanguageService {
         return new MethodUnderCaret("", "", "", PsiUtils.psiFileToUri(psiFile), true);
     }
 
-    public CanInstrumentMethodResult canInstrumentMethod(@NotNull Project project, String methodId){
+    @NotNull
+    public CanInstrumentMethodResult canInstrumentMethod(@NotNull Project project, @Nullable String methodId){
 
         var psiMethod = findPsiMethodByMethodCodeObjectId(methodId);
         if (psiMethod == null) {
@@ -149,7 +150,7 @@ public class JavaLanguageService implements LanguageService {
             return CanInstrumentMethodResult.Failure();
         }
 
-        var psiFile =  psiMethod.getContainingFile();
+        var psiFile = psiMethod.getContainingFile();
         if (!(psiFile instanceof PsiJavaFile psiJavaFile)) {
             Log.log(LOGGER::warn, "PsiMethod's file is not java file (methodId: {})", methodId);
             return CanInstrumentMethodResult.Failure();
@@ -328,7 +329,9 @@ public class JavaLanguageService implements LanguageService {
         return workspaceUrls;
     }
 
-    private @Nullable PsiMethod findPsiMethodByMethodCodeObjectId(String methodId){
+    private @Nullable PsiMethod findPsiMethodByMethodCodeObjectId(@Nullable String methodId) {
+        if (methodId == null) return null;
+
         if (methodId.contains("$_$")) {
             var className = methodId.substring(0, methodId.indexOf("$_$"));
 

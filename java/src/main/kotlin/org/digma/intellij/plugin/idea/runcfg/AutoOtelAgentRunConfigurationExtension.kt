@@ -323,13 +323,14 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
             } else {
                 val taskName = taskNames.firstOrNull()
                 if (taskName != null) {
+                    val modulePathStr = configuration.settings.externalProjectPath
                     val projectFile = configuration.project.projectFile
                     val newConnector = GradleConnector.newConnector()
                     newConnector.forProjectDirectory(projectFile?.parent?.parent?.toNioPath()?.toFile())
                     val projectConn = newConnector.connect()
                     val gradleProj = projectConn.getModel(GradleProject::class.java)
-                    val taskRef = gradleProj.tasks.firstOrNull() { it.name == taskName }
-                    System.out.println("taskRef = " + taskRef + ", group = " + taskRef?.group)
+                    val taskRef = gradleProj.tasks.firstOrNull { it.name == taskName }
+                    System.out.println("taskName = $taskName, taskRef = $taskRef, group = ${taskRef?.group}")
                     if (taskRef?.group == "Execution") {
                         return true
                     }

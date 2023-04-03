@@ -41,7 +41,13 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import java.awt.*;
 
-import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.*;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.INSTALLATION_WIZARD_CHECK_CONNECTION;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.INSTALLATION_WIZARD_FINISH;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.INSTALLATION_WIZARD_SEND_TRACKING_EVENT;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.INSTALLATION_WIZARD_SET_CHECK_CONNECTION;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.REQUEST_MESSAGE_TYPE;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.parseJsonToObject;
 import static org.digma.intellij.plugin.ui.common.MainSidePaneWindowPanelKt.createMainSidePaneWindowPanel;
 
 
@@ -145,7 +151,7 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
                     ApplicationManager.getApplication().invokeLater(() ->
                             changeToolWindowContent(project, toolWindow, contentFactory));
                 }
-                if (OPEN_URL_IN_DEFAULT_BROWSER.equalsIgnoreCase(reactMessageRequest.getAction())) {
+                if (GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER.equalsIgnoreCase(reactMessageRequest.getAction())) {
                     OpenInBrowserRequest openInBrowserRequest = parseJsonToObject(request, OpenInBrowserRequest.class);
                     if (openInBrowserRequest.getPayload() != null) {
                         ApplicationManager.getApplication().invokeLater(() ->

@@ -110,7 +110,7 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
     private fun mergeGradleJavaToolOptions(configuration: GradleRunConfiguration, myJavaToolOptions: String) {
         var javaToolOptions = myJavaToolOptions
         //need to replace the env because it may be immutable map
-        val newEnv = mutableMapOf<String, String>()
+        val newEnv = configuration.settings.env.toMutableMap()
         if (configuration.settings.env.containsKey(JAVA_TOOL_OPTIONS)) {
             val currentJavaToolOptions = configuration.settings.env[JAVA_TOOL_OPTIONS]
             javaToolOptions = "$myJavaToolOptions $currentJavaToolOptions"

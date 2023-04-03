@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.icons;
 
 import javax.swing.*;
 
+import static org.digma.intellij.plugin.icons.IconsUtil.loadAndScaleIconObjectByFactor;
 import static org.digma.intellij.plugin.icons.IconsUtil.loadAndScaleIconObjectByWidth;
 
 /**
@@ -13,6 +14,7 @@ public final class AppIcons {
     }
 
     public static final Icon TOOL_WINDOW = loadAndScaleIconObjectByWidth("/icons/digma.png", 13);
+    public static final Icon TOOL_WINDOW_OBSERVABILITY = loadAndScaleIconObjectByFactor("/icons/active-env.svg", 1);
 
 
 }

@@ -29,7 +29,7 @@
 
         <toolWindow id="Observability"
                     secondary="false"
-                    icon="org.digma.intellij.plugin.icons.AppIcons.TOOL_WINDOW"
+                    icon="org.digma.intellij.plugin.icons.AppIcons.TOOL_WINDOW_OBSERVABILITY"
                     anchor="bottom"
                     factoryClass="org.digma.intellij.plugin.toolwindow.recentactivity.DigmaBottomToolWindowFactory"/>
 

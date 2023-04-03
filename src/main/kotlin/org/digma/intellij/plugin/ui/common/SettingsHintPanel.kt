@@ -7,6 +7,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import java.awt.Cursor
 import java.awt.FlowLayout
 import java.awt.GridLayout
@@ -52,6 +53,11 @@ class SettingsHintPanel(project: Project) : JPanel() {
         toggle.addEventSelected(object : SwitchButton.EventSwitchSelected {
             override fun onSelected(selected: Boolean) {
                 PersistenceService.getInstance().state.isAutoOtel = selected
+                if (selected) {
+                    ActivityMonitor.getInstance(project).registerObservabilityOn()
+                } else {
+                    ActivityMonitor.getInstance(project).registerObservabilityOff()
+                }
             }
         })
         togglePanel.add(toggle)

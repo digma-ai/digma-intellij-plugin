@@ -7,7 +7,9 @@ import com.intellij.ui.jcef.JBCefBrowserBuilder
 import org.cef.CefApp
 
 class CustomViewerWindow(project: Project, private var resourceFolderName: String) {
+    private val browserDisposer = Disposer.newDisposable()
     private val webView: JBCefBrowser = getBrowser(project)
+
     private fun getBrowser(project: Project): JBCefBrowser {
         val jbCefBrowserBuilder = JBCefBrowserBuilder()
         jbCefBrowserBuilder.setOffScreenRendering(false)
@@ -16,8 +18,8 @@ class CustomViewerWindow(project: Project, private var resourceFolderName: Strin
         val jbCefBrowser = jbCefBrowserBuilder.build()
 
         registerAppSchemeHandler(project)
-        jbCefBrowser.loadURL("http://$resourceFolderName/index.html")
-        Disposer.register(project, jbCefBrowser)
+        jbCefBrowser.loadURL("https://$resourceFolderName/index.html")
+        Disposer.register(browserDisposer, jbCefBrowser)
         return jbCefBrowser
     }
 
@@ -26,9 +28,13 @@ class CustomViewerWindow(project: Project, private var resourceFolderName: Strin
     private fun registerAppSchemeHandler(project: Project): Boolean {
         return CefApp.getInstance()
                 .registerSchemeHandlerFactory(
-                        "http",
+                        "https",
                         resourceFolderName,
                         CustomSchemeHandlerFactory(project, resourceFolderName)
                 )
+    }
+
+    fun dispose() {
+        Disposer.dispose(browserDisposer)
     }
 }

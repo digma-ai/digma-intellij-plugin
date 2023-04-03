@@ -101,3 +101,9 @@ fun openJaegerFromRecentActivity(
         }
     }
 }
+
+fun isJaegerUrlPresentInUserSettings(): Boolean {
+    val settingsState = SettingsState.getInstance()
+    val jaegerBaseUrl = settingsState.jaegerUrl?.trim()?.trimEnd('/')
+    return !jaegerBaseUrl.isNullOrBlank()
+}

@@ -1,8 +1,5 @@
 package org.digma.intellij.plugin.toolwindow.recentactivity;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
@@ -15,6 +12,7 @@ import com.intellij.ui.jcef.JBCefApp;
 import com.intellij.ui.jcef.JBCefBrowser;
 import com.intellij.ui.jcef.JBCefClient;
 import kotlin.Pair;
+import org.apache.commons.lang3.StringUtils;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.browser.CefMessageRouter;
@@ -24,6 +22,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor;
 import org.digma.intellij.plugin.analytics.EnvironmentChanged;
+import org.digma.intellij.plugin.analytics.JaegerUrlChanged;
 import org.digma.intellij.plugin.common.AsynchronousBackgroundTask;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.CommonUtils;
@@ -36,6 +35,8 @@ import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRespons
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.service.EditorService;
+import org.digma.intellij.plugin.toolwindow.common.JaegerUrlChangedPayload;
+import org.digma.intellij.plugin.toolwindow.common.JaegerUrlChangedRequest;
 import org.digma.intellij.plugin.toolwindow.common.ThemeChangeListener;
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
 import org.jetbrains.annotations.NotNull;
@@ -48,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.GLOBAL_SET_IS_JAEGER_ENABLED;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_GET_DATA;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_SPAN;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_TRACE;
@@ -66,7 +68,6 @@ import static org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt.openJaeger
 public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
     private static final Logger LOGGER = Logger.getInstance(DigmaBottomToolWindowFactory.class);
     private static final String DIGMA_SIDE_PANE_TOOL_WINDOW_NAME = "Digma";
-    private static final String SUCCESSFULLY_PROCESSED_JCEF_REQUEST_MESSAGE = "Successfully processed JCEF request with action =";
     private EditorService editorService;
     private AnalyticsService analyticsService;
     private String localHostname;
@@ -123,6 +124,12 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
 
         ThemeChangeListener listener = new ThemeChangeListener(jbCefBrowser);
         UIManager.addPropertyChangeListener(listener);
+
+        project.getMessageBus().connect().subscribe(
+                JaegerUrlChanged.JAEGER_URL_CHANGED_TOPIC,
+                (JaegerUrlChanged) newJaegerUrl -> Backgroundable.ensureBackground(project, "Jaeger Url was changed", () ->
+                        sendRequestToChangeTraceButtonDisplaying(jbCefBrowser, newJaegerUrl))
+        );
 
         msgRouter.addHandler(new CefMessageRouterHandlerAdapter() {
             @Override
@@ -206,7 +213,7 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
 
     private void processRecentActivityGetDataRequest(AnalyticsService analyticsService, JBCefBrowser jbCefBrowser) {
         List<String> allEnvironments = analyticsService.getEnvironments();
-        if(allEnvironments == null) {
+        if (allEnvironments == null) {
             Log.log(LOGGER::warn, "error while getting environments from server");
             return;
         }
@@ -256,6 +263,16 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
             return (localHostname + SUFFIX_OF_LOCAL).toUpperCase();
         }
         return environment;
+    }
+
+    private void sendRequestToChangeTraceButtonDisplaying(JBCefBrowser jbCefBrowser, String newJaegerUrl) {
+        String requestMessage = JBCefBrowserUtil.resultToString(
+                new JaegerUrlChangedRequest(
+                        REQUEST_MESSAGE_TYPE,
+                        GLOBAL_SET_IS_JAEGER_ENABLED,
+                        new JaegerUrlChangedPayload(StringUtils.isNotEmpty(newJaegerUrl) && StringUtils.isNotBlank(newJaegerUrl))
+                ));
+        JBCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser);
     }
 
 }

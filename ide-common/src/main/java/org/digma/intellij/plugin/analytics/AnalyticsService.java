@@ -68,6 +68,8 @@ public class AnalyticsService implements Disposable {
     private String myApiUrl;
     @Nullable
     private String myApiToken;
+    @Nullable
+    private String myJaegerUrl;
     private final Project project;
 
     private AnalyticsProvider analyticsProviderProxy;
@@ -84,6 +86,7 @@ public class AnalyticsService implements Disposable {
         this.project = project;
         myApiUrl = settingsState.apiUrl;
         myApiToken = settingsState.apiToken;
+        myJaegerUrl = settingsState.jaegerUrl;
         replaceClient(myApiUrl, myApiToken);
         initializeEnvironmentsList();
         settingsState.addChangeListener(state -> {
@@ -96,7 +99,21 @@ public class AnalyticsService implements Disposable {
                 myApiToken = state.apiToken;
                 replaceClient(myApiUrl, myApiToken);
             }
+            if (!Objects.equals(state.jaegerUrl, myJaegerUrl)) {
+                notifyJaegerUrlChanged(myJaegerUrl, state.jaegerUrl);
+                myJaegerUrl = state.jaegerUrl;
+            }
         });
+    }
+
+    private void notifyJaegerUrlChanged(String oldJaegerUrl, String newJaegerUrl) {
+        Log.log(LOGGER::debug, "Firing JaegerUrlChanged event for {}", newJaegerUrl);
+        if (project.isDisposed()) {
+            return;
+        }
+        Log.log(LOGGER::info, "Digma: Changing JaegerUrl from " + oldJaegerUrl + " to " + newJaegerUrl);
+        JaegerUrlChanged publisher = project.getMessageBus().syncPublisher(JaegerUrlChanged.JAEGER_URL_CHANGED_TOPIC);
+        publisher.jaegerUrlChanged(newJaegerUrl);
     }
 
     public static AnalyticsService getInstance(@NotNull Project project) {

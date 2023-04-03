@@ -22,6 +22,7 @@
   window.recentActivityRefreshInterval;
   window.recentActivityExpirationLimit;
   window.recentActivityDocumentationURL = "https://github.com/digma-ai/digma-intellij-plugin/blob/main/README.md";
+  window.isJaegerEnabled = ${isJaegerEnabled?string('true', 'false')};
 </script>
 <script src="/index.js"></script>
 </body>

@@ -9,7 +9,7 @@ import org.digma.intellij.plugin.toolwindow.recentactivity.JBCefBrowserUtil;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_SET_UI_THEME;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.GLOBAL_SET_UI_THEME;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.REQUEST_MESSAGE_TYPE;
 
 public class ThemeChangeListener implements PropertyChangeListener {
@@ -30,19 +30,20 @@ public class ThemeChangeListener implements PropertyChangeListener {
     private void changeUiThemeForRecentActivity() {
         String theme = ThemeUtil.getCurrentThemeName();
         if (StringUtils.isNotEmpty(theme)) {
-            changeUiThemeForRecentActivityTab(jbCefBrowser, theme);
+            sendRequestToChangeUiTheme(jbCefBrowser, theme);
             Log.log(LOGGER::debug, "UI theme changed to " + theme);
         } else {
             Log.log(LOGGER::debug, "UI theme was not changed because theme was null or empty.");
         }
     }
 
-    private void changeUiThemeForRecentActivityTab(JBCefBrowser jbCefBrowser, String uiTheme) {
-        String requestMessage = JBCefBrowserUtil.resultToString(new UIThemeRequest(
-                REQUEST_MESSAGE_TYPE,
-                RECENT_ACTIVITY_SET_UI_THEME,
-                new UiThemePayload(uiTheme)
-        ));
+    private void sendRequestToChangeUiTheme(JBCefBrowser jbCefBrowser, String uiTheme) {
+        String requestMessage = JBCefBrowserUtil.resultToString(
+                new UIThemeRequest(
+                        REQUEST_MESSAGE_TYPE,
+                        GLOBAL_SET_UI_THEME,
+                        new UiThemePayload(uiTheme)
+                ));
         JBCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser);
     }
 }

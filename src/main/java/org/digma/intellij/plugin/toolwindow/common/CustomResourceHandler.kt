@@ -10,6 +10,7 @@ import org.cef.misc.StringRef
 import org.cef.network.CefRequest
 import org.cef.network.CefResponse
 import org.digma.intellij.plugin.analytics.BackendConnectionUtil
+import org.digma.intellij.plugin.ui.list.insights.isJaegerUrlPresentInUserSettings
 import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.io.InputStream
@@ -19,6 +20,7 @@ import java.net.URLConnection
 const val INDEX_TEMPLATE_FILE_NAME: String = "indextemplate.ftl"
 const val BASE_PACKAGE_PATH: String = "/webview/"
 const val ENV_VARIABLE_THEME: String = "theme"
+const val IS_JAEGER_ENABLED: String = "isJaegerEnabled"
 const val WIZARD_SKIP_INSTALLATION_STEP_VARIABLE: String = "wizardSkipInstallationStep"
 const val COMMON_FILES_FOLDER_NAME: String = "common"
 
@@ -30,15 +32,15 @@ class CustomResourceHandler(private var project: Project, private var resourceFo
     ): Boolean {
         val processedUrl = cefRequest.url
         return if (processedUrl != null) {
-            if (processedUrl.equals("http://$resourceFolderName/index.html", true)) {
+            if (processedUrl.equals("https://$resourceFolderName/index.html", true)) {
                 val html = loadFreemarkerTemplate(project, resourceFolderName)
                 state = StringData(html)
             } else {
                 val pathToResource: String =
                         if (processedUrl.contains("fonts") || processedUrl.contains("images")) {
-                            processedUrl.replace("http://$resourceFolderName", "webview/$COMMON_FILES_FOLDER_NAME")
+                            processedUrl.replace("https://$resourceFolderName", "webview/$COMMON_FILES_FOLDER_NAME")
                         } else {
-                            processedUrl.replace("http://$resourceFolderName", "webview/$resourceFolderName")
+                            processedUrl.replace("https://$resourceFolderName", "webview/$resourceFolderName")
                         }
                 val newUrl = javaClass.classLoader.getResource(pathToResource)
                 if (newUrl != null) {
@@ -181,6 +183,7 @@ private fun loadFreemarkerTemplate(project: Project, resourceFolderName: String)
     cfg.setClassForTemplateLoading(CustomResourceHandler::class.java, BASE_PACKAGE_PATH + resourceFolderName)
     val data = mapOf(
             ENV_VARIABLE_THEME to ThemeUtil.getCurrentThemeName(),
+            IS_JAEGER_ENABLED to isJaegerUrlPresentInUserSettings(),
             WIZARD_SKIP_INSTALLATION_STEP_VARIABLE to isServerConnectedAlready
     )
     val writer = StringWriter()

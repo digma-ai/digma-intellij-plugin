@@ -93,6 +93,14 @@ class ActivityMonitor(private val project: Project) : Runnable, Disposable {
         postHog?.capture(clientId, "insight first-received")
     }
 
+    fun registerObservabilityOn() {
+        postHog?.capture(clientId, "observability is turned on")
+    }
+
+    fun registerObservabilityOff() {
+        postHog?.capture(clientId, "observability is turned off")
+    }
+
     fun registerError(exception: Exception, message: String) {
         val stringWriter = StringWriter()
         exception.printStackTrace(PrintWriter(stringWriter))

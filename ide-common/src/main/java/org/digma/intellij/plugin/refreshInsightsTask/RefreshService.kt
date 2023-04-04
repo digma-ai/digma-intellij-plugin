@@ -16,8 +16,6 @@ import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
-import org.digma.intellij.plugin.ui.model.DocumentScope
-import org.digma.intellij.plugin.ui.model.EmptyScope
 import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.service.ErrorsViewService
 import org.digma.intellij.plugin.ui.service.InsightsViewService
@@ -48,45 +46,56 @@ class RefreshService(private val project: Project) {
             FileEditorManager.getInstance(project).selectedTextEditor
         }
         if (scope is MethodScope) {
-            val documentInfoContainer = DocumentInfoService.getInstance(project).getDocumentInfoByMethodInfo(scope.getMethodInfo())
+            val documentInfoContainer = documentInfoService.getDocumentInfoByMethodInfo(scope.getMethodInfo())
 
             Log.log(logger::debug, "updateInsightsCacheForActiveDocument starts for file = {}", file.name)
-            updateInsightsCacheForActiveDocument(selectedTextEditor, documentInfoContainer, scope)
+            updateInsightsCacheForActiveDocumentAndRefreshViewIfNeeded(selectedTextEditor, documentInfoContainer, scope)
             Log.log(logger::debug, "updateInsightsCacheForActiveDocument finished for file = {}", file.name)
-        } else if (scope is DocumentScope || scope is EmptyScope) {
+        } else {
+            val documentInfoContainer = documentInfoService.getDocumentInfo(file)
+            updateInsightsCacheForActiveDocument(selectedTextEditor, documentInfoContainer)
+
             Log.log(logger::debug, "testConnectionToBackend was triggered")
             backendConnectionUtil.testConnectionToBackend()
         }
     }
 
     fun refreshAllInBackground() {
-        if (isGeneralRefreshButtonEnabled.getAndSet(false)) {
-            val scope = insightsViewService.model.scope
-            val selectedTextEditor = FileEditorManager.getInstance(project).selectedTextEditor
-            if (scope is MethodScope) {
-                val documentInfoContainer = DocumentInfoService.getInstance(project).getDocumentInfoByMethodInfo(scope.getMethodInfo())
-
-                //updateInsightsCache must run in the background, the use of refreshInsightsTaskScheduledLock makes sure no two threads
-                //update InsightsCache at the same time.
-                val task = Runnable {
-                    refreshInsightsTaskScheduledLock.lock()
-                    Log.log(logger::debug, "Lock acquired for refreshAll to {}. ", documentInfoContainer?.documentInfo?.fileUri)
-                    try {
-                        notifyRefreshInsightsTaskStarted(documentInfoContainer?.documentInfo?.fileUri)
-                        updateInsightsCacheForActiveDocument(selectedTextEditor, documentInfoContainer, scope)
-                    } finally {
-                        refreshInsightsTaskScheduledLock.unlock()
-                        Log.log(logger::debug, "Lock released for refreshAll to {}. ", documentInfoContainer?.documentInfo?.fileUri)
-                        notifyRefreshInsightsTaskFinished(documentInfoContainer?.documentInfo?.fileUri)
-                        isGeneralRefreshButtonEnabled.set(true)
-                    }
+        val scope = insightsViewService.model.scope
+        val selectedTextEditor = FileEditorManager.getInstance(project).selectedTextEditor
+        val documentInfoContainer =
+                if (scope is MethodScope) {
+                    documentInfoService.getDocumentInfoByMethodInfo(scope.getMethodInfo())
+                } else {
+                    documentInfoService.documentInfoOfFocusedFile
                 }
-                Backgroundable.ensureBackground(project, "Refreshing insights", task)
+
+        if (isGeneralRefreshButtonEnabled.getAndSet(false)) {
+            //updateInsightsCache must run in the background, the use of refreshInsightsTaskScheduledLock makes sure no two threads
+            //update InsightsCache at the same time.
+            val task = Runnable {
+                refreshInsightsTaskScheduledLock.lock()
+                Log.log(logger::debug, "Lock acquired for refreshAll to {}. ", documentInfoContainer?.documentInfo?.fileUri)
+                try {
+                    notifyRefreshInsightsTaskStarted(documentInfoContainer?.documentInfo?.fileUri)
+                    if (scope is MethodScope) {
+                        updateInsightsCacheForActiveDocumentAndRefreshViewIfNeeded(selectedTextEditor, documentInfoContainer, scope)
+                    } else {
+                        updateInsightsCacheForActiveDocument(selectedTextEditor, documentInfoContainer)
+                    }
+                } finally {
+                    refreshInsightsTaskScheduledLock.unlock()
+                    isGeneralRefreshButtonEnabled.set(true)
+                    Log.log(logger::debug, "Lock released for refreshAll to {}. ", documentInfoContainer?.documentInfo?.fileUri)
+                    notifyRefreshInsightsTaskFinished(documentInfoContainer?.documentInfo?.fileUri)
+                }
             }
+            Backgroundable.ensureBackground(project, "Refreshing insights", task)
         }
     }
 
-    private fun updateInsightsCacheForActiveDocument(selectedTextEditor: Editor?, documentInfoContainer: DocumentInfoContainer?, scope: MethodScope) {
+    // returns true if data has changed, else false
+    private fun updateInsightsCacheForActiveDocument(selectedTextEditor: Editor?, documentInfoContainer: DocumentInfoContainer?): Boolean {
         val selectedDocument = selectedTextEditor?.document
         if (selectedDocument != null && documentInfoContainer != null) {
             val oldInsights = documentInfoContainer.allInsights
@@ -95,21 +104,28 @@ class RefreshService(private val project: Project) {
 
             val newInsights = documentInfoContainer.allInsights
 
-            // refresh the UI ONLY if newInsights list is different from oldInsights
-            if (dataChanged(oldInsights, newInsights)) {
-                //needs a ReadAction because InsightsViewBuilder will call LanguageService.findWorkspaceUrisForSpanIds or
-                // findWorkspaceUrisForCodeObjectIdsForErrorStackTrace or findWorkspaceUrisForMethodCodeObjectIds
-                // and those require a ReadAction.
-                ReadAction.nonBlocking(RunnableCallable {
-                    insightsViewService.updateInsightsModel(scope.getMethodInfo())
-                    errorsViewService.updateErrorsModel(scope.getMethodInfo())
-                    documentInfoService.notifyDocumentInfoChanged(documentInfoContainer.psiFile)
-                }).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance())
-            }
+            return checkIfDataChanged(oldInsights, newInsights)
+        }
+        return false
+    }
+
+    private fun updateInsightsCacheForActiveDocumentAndRefreshViewIfNeeded(selectedTextEditor: Editor?, documentInfoContainer: DocumentInfoContainer?, scope: MethodScope) {
+        val isDataChanged = updateInsightsCacheForActiveDocument(selectedTextEditor, documentInfoContainer)
+
+        // refresh the UI ONLY if newInsights list is different from oldInsights
+        if (isDataChanged) {
+            //needs a ReadAction because InsightsViewBuilder will call LanguageService.findWorkspaceUrisForSpanIds or
+            // findWorkspaceUrisForCodeObjectIdsForErrorStackTrace or findWorkspaceUrisForMethodCodeObjectIds
+            // and those require a ReadAction.
+            ReadAction.nonBlocking(RunnableCallable {
+                insightsViewService.updateInsightsModel(scope.getMethodInfo())
+                errorsViewService.updateErrorsModel(scope.getMethodInfo())
+                documentInfoService.notifyDocumentInfoChanged(documentInfoContainer!!.psiFile)
+            }).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance())
         }
     }
 
-    private fun dataChanged(oldInsights: List<CodeObjectInsight?>, newInsights: List<CodeObjectInsight?>): Boolean {
+    private fun checkIfDataChanged(oldInsights: List<CodeObjectInsight?>, newInsights: List<CodeObjectInsight?>): Boolean {
         val isEqual = CollectionUtils.isEqualCollection(
                 oldInsights,
                 newInsights

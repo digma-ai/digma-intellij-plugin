@@ -9,6 +9,7 @@ import com.intellij.openapi.rd.util.launchBackground
 import com.intellij.openapi.vfs.VirtualFile
 import com.jetbrains.rd.util.lifetime.LifetimeDefinition
 import kotlinx.coroutines.delay
+import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshService
 import org.digma.intellij.plugin.settings.SettingsState
@@ -17,7 +18,8 @@ import java.util.concurrent.ConcurrentHashMap
 class GeneralFileEditorListener(val project: Project) : FileEditorManagerListener {
     private val logger: Logger = Logger.getInstance(GeneralFileEditorListener::class.java)
 
-    private val refreshService: RefreshService = project.getService(RefreshService::class.java)
+    private val refreshService: RefreshService = RefreshService.getInstance(project)
+    private val documentInfoService: DocumentInfoService = DocumentInfoService.getInstance(project)
 
     private val settingsState: SettingsState = SettingsState.getInstance()
 
@@ -27,6 +29,8 @@ class GeneralFileEditorListener(val project: Project) : FileEditorManagerListene
 
     override fun selectionChanged(event: FileEditorManagerEvent) {
         super.selectionChanged(event)
+        // note: event.newFile might null - if it is the last file that been closed, and editor holds no files
+        documentInfoService.notifyFocusedDocument(event.newFile)
         refreshAllInsightsForActiveFile(event.newFile)
         setFocusedDocument(event.newFile)
     }
@@ -65,7 +69,7 @@ class GeneralFileEditorListener(val project: Project) : FileEditorManagerListene
     private fun terminateActualCoroutineTaskForPreviouslyFocusedOpenedFile() {
         if (lifetimeDefinitionMap.isNotEmpty()) {
             // terminate the corresponding lifetime, first of all. this will also cancel current task execution
-            lifetimeDefinitionMap.forEach { lifetimeDefinition -> lifetimeDefinition.value.terminate(true)}
+            lifetimeDefinitionMap.forEach { lifetimeDefinition -> lifetimeDefinition.value.terminate(true) }
             // remove the lifetime for previously active file from the map
             lifetimeDefinitionMap.clear()
         }

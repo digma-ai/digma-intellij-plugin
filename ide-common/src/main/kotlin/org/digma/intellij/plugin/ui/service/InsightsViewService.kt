@@ -68,8 +68,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
 
             if (!insightsListContainer.listViewItems.isNullOrEmpty()) {
                 model.status = UiInsightStatus.InsightExist
-            }
-            else {
+            } else {
                 model.status = UiInsightStatus.Unknown
                 val newLifetimeDefinition = LifetimeDefinition()
                 newLifetimeDefinition.lifetime.launchBackground {

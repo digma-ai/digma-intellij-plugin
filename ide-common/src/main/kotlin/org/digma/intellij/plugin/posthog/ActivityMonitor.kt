@@ -64,6 +64,10 @@ class ActivityMonitor(private val project: Project) : Runnable, Disposable {
         registerSessionDetails()
     }
 
+    fun registerCustomEvent(eventName: String){
+        postHog?.capture(clientId, eventName)
+    }
+
     fun registerLensClicked() {
         lastLensClick = LocalDateTime.now()
     }

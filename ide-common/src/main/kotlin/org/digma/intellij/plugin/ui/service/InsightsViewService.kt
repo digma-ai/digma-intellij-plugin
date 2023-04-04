@@ -79,8 +79,6 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
                     if (model.status == UiInsightStatus.Unknown && insightsListContainer.usageStatus.environmentStatuses.isNullOrEmpty()) {
                         model.status = UiInsightStatus.NoSpanData
                     }
-
-                    notifyModelChangedAndUpdateUi()
                 }
             }
 

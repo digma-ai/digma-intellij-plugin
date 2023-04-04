@@ -10,7 +10,9 @@ import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.CommonUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
+import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
+import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
@@ -237,7 +239,7 @@ public class AnalyticsService implements Disposable {
     public CodeObjectInsightsStatusResponse getCodeObjectInsightStatus(List<MethodInfo> methodInfos) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         var methodWithCodeObjects = methodInfos.stream()
-                .map(it -> toMethodWithCodeObjects(it))
+                .map(AnalyticsService::toMethodWithCodeObjects)
                 .toList();
         return executeCatching(() -> analyticsProviderProxy.getCodeObjectInsightStatus(new InsightOfMethodsRequest(env, methodWithCodeObjects)));
     }
@@ -245,8 +247,8 @@ public class AnalyticsService implements Disposable {
     @VisibleForTesting
     public static MethodWithCodeObjects toMethodWithCodeObjects(MethodInfo methodInfo) {
         return new MethodWithCodeObjects(methodInfo.idWithType(),
-                methodInfo.getSpans().stream().map(it -> it.idWithType()).toList(),
-                methodInfo.getEndpoints().stream().map(it -> it.idWithType()).toList()
+                methodInfo.getSpans().stream().map(SpanInfo::idWithType).toList(),
+                methodInfo.getEndpoints().stream().map(EndpointInfo::idWithType).toList()
         );
     }
 

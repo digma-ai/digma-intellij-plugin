@@ -191,6 +191,11 @@ public class DocumentInfoService {
         return getDocumentInfo(selectedFile);
     }
 
+    @Nullable
+    public VirtualFile getFocusedFile() {
+        return selectedFileRef.get();
+    }
+
     // allow null, when it is null, it means that editor holds no file
     public void notifyFocusedDocument(@Nullable VirtualFile virtualFile) {
         selectedFileRef.set(virtualFile);

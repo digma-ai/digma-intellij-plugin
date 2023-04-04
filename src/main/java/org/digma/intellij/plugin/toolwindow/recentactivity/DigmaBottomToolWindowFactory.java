@@ -2,7 +2,9 @@ package org.digma.intellij.plugin.toolwindow.recentactivity;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.openapi.wm.ToolWindowManager;
@@ -12,6 +14,7 @@ import com.intellij.ui.jcef.JBCefApp;
 import com.intellij.ui.jcef.JBCefBrowser;
 import com.intellij.ui.jcef.JBCefClient;
 import kotlin.Pair;
+import kotlin.Triple;
 import org.apache.commons.lang3.StringUtils;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
@@ -34,6 +37,7 @@ import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityGoToTra
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResponseEntry;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.psi.LanguageService;
+import org.digma.intellij.plugin.refreshInsightsTask.RefreshService;
 import org.digma.intellij.plugin.service.EditorService;
 import org.digma.intellij.plugin.toolwindow.common.JaegerUrlChangedPayload;
 import org.digma.intellij.plugin.toolwindow.common.JaegerUrlChangedRequest;
@@ -72,7 +76,7 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
     private AnalyticsService analyticsService;
     private String localHostname;
 
-    private ReentrantLock recentActivityGetDataLock = new ReentrantLock();
+    private final ReentrantLock recentActivityGetDataLock = new ReentrantLock();
 
     /**
      * this is the starting point of the plugin. this method is called when the tool window is opened.
@@ -183,14 +187,24 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
             ApplicationManager.getApplication().invokeLater(() -> {
                 LanguageService languageService = LanguageService.findLanguageServiceByMethodCodeObjectId(project, methodCodeObjectId);
                 Map<String, Pair<String, Integer>> workspaceUrisForMethodCodeObjectIds = languageService.findWorkspaceUrisForMethodCodeObjectIds(Collections.singletonList(methodCodeObjectId));
-                if (workspaceUrisForMethodCodeObjectIds.containsKey(methodCodeObjectId)) {
+                final Pair<String, Integer> fileAndOffset = workspaceUrisForMethodCodeObjectIds.get(methodCodeObjectId);
+                if (fileAndOffset != null) {
                     // modifying the selected environment
                     EnvironmentsSupplier environmentsSupplier = analyticsService.getEnvironment();
                     String actualEnvName = adjustBackEnvNameIfNeeded(payload.getEnvironment());
                     environmentsSupplier.setCurrent(actualEnvName);
 
-                    Pair<String, Integer> result = workspaceUrisForMethodCodeObjectIds.get(methodCodeObjectId);
-                    editorService.openWorkspaceFileInEditor(result.getFirst(), result.getSecond());
+                    Triple<VirtualFile, Editor, Boolean> openedFileAndEditor = editorService.openWorkspaceFileInEditor(fileAndOffset.getFirst(), fileAndOffset.getSecond());
+
+                    if (openedFileAndEditor != null) {
+                        boolean fileWasAlreadyOpen = openedFileAndEditor.component3();
+                        if (fileWasAlreadyOpen) {
+                            // if file already opened then refresh for faster insight getting (issue 474)
+                            RefreshService refreshService = RefreshService.getInstance(project);
+                            refreshService.refreshAllInBackground();
+                        }
+                    }
+
                     ToolWindow digmaSidePaneToolWindow = ToolWindowManager.getInstance(project).getToolWindow(DIGMA_SIDE_PANE_TOOL_WINDOW_NAME);
                     if (digmaSidePaneToolWindow != null && !digmaSidePaneToolWindow.isVisible()) {
                         digmaSidePaneToolWindow.show();

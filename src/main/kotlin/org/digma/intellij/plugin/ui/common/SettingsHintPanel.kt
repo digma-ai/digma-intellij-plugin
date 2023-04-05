@@ -52,12 +52,7 @@ class SettingsHintPanel(project: Project) : JPanel() {
         val toggle = SwitchButton(40, 20, PersistenceService.getInstance().state.isAutoOtel)
         toggle.addEventSelected(object : SwitchButton.EventSwitchSelected {
             override fun onSelected(selected: Boolean) {
-                PersistenceService.getInstance().state.isAutoOtel = selected
-                if (selected) {
-                    ActivityMonitor.getInstance(project).registerObservabilityOn()
-                } else {
-                    ActivityMonitor.getInstance(project).registerObservabilityOff()
-                }
+                ObservabilityUtil.updateObservabilityValue(project, selected)
             }
         })
         togglePanel.add(toggle)

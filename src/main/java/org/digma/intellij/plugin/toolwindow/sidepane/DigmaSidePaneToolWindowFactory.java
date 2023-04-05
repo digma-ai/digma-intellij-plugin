@@ -22,6 +22,7 @@ import org.digma.intellij.plugin.analytics.BackendConnectionUtil;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.rest.installationwizard.OpenInBrowserRequest;
 import org.digma.intellij.plugin.model.rest.installationwizard.SendTrackingEventRequest;
+import org.digma.intellij.plugin.model.rest.installationwizard.SetObservabilityRequest;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.psi.LanguageService;
@@ -32,6 +33,7 @@ import org.digma.intellij.plugin.toolwindow.recentactivity.JcefConnectionCheckMe
 import org.digma.intellij.plugin.toolwindow.recentactivity.JcefConnectionCheckMessageRequest;
 import org.digma.intellij.plugin.toolwindow.recentactivity.JcefMessageRequest;
 import org.digma.intellij.plugin.ui.ToolWindowShower;
+import org.digma.intellij.plugin.ui.common.ObservabilityUtil;
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
@@ -46,6 +48,7 @@ import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.INSTALL
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.INSTALLATION_WIZARD_SEND_TRACKING_EVENT;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.INSTALLATION_WIZARD_SET_CHECK_CONNECTION;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.INSTALLATION_WIZARD_SET_OBSERVABILITY;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.REQUEST_MESSAGE_TYPE;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.parseJsonToObject;
 import static org.digma.intellij.plugin.ui.common.MainSidePaneWindowPanelKt.createMainSidePaneWindowPanel;
@@ -141,10 +144,16 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
             public boolean onQuery(CefBrowser browser, CefFrame frame, long queryId, String request, boolean persistent, CefQueryCallback callback) {
                 Log.log(LOGGER::debug, "request: {}", request);
                 JcefMessageRequest reactMessageRequest = parseJsonToObject(request, JcefMessageRequest.class);
-                if(INSTALLATION_WIZARD_SEND_TRACKING_EVENT.equalsIgnoreCase(reactMessageRequest.getAction())){
+                if (INSTALLATION_WIZARD_SEND_TRACKING_EVENT.equalsIgnoreCase(reactMessageRequest.getAction())) {
                     SendTrackingEventRequest eventRequest = parseJsonToObject(request, SendTrackingEventRequest.class);
-                    if(eventRequest.getPayload() != null){
+                    if (eventRequest.getPayload() != null) {
                         ActivityMonitor.getInstance(project).registerCustomEvent(eventRequest.getPayload().getEventName());
+                    }
+                }
+                if (INSTALLATION_WIZARD_SET_OBSERVABILITY.equalsIgnoreCase(reactMessageRequest.getAction())) {
+                    SetObservabilityRequest observabilityRequest = parseJsonToObject(request, SetObservabilityRequest.class);
+                    if (observabilityRequest.getPayload() != null) {
+                        ObservabilityUtil.updateObservabilityValue(project, observabilityRequest.getPayload().isObservabilityEnabled());
                     }
                 }
                 if (INSTALLATION_WIZARD_FINISH.equalsIgnoreCase(reactMessageRequest.getAction())) {

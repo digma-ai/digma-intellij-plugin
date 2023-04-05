@@ -17,6 +17,7 @@ public class ToolWindowUtil {
     public static final String INSTALLATION_WIZARD_CHECK_CONNECTION = "INSTALLATION_WIZARD/CHECK_CONNECTION";
     public static final String INSTALLATION_WIZARD_SET_CHECK_CONNECTION = "INSTALLATION_WIZARD/SET_CONNECTION_CHECK_RESULT";
     public static final String INSTALLATION_WIZARD_SEND_TRACKING_EVENT = "GLOBAL/SEND_TRACKING_EVENT";
+    public static final String INSTALLATION_WIZARD_SET_OBSERVABILITY = "INSTALLATION_WIZARD/SET_OBSERVABILITY";
 
     public static <T> T parseJsonToObject(String jsonString, Class<T> jcefMessageRequestClass) {
         JsonObject object = JsonParser.parseString(jsonString).getAsJsonObject();

@@ -18,7 +18,7 @@ import java.io.StringWriter
 import java.net.URLConnection
 
 const val INDEX_TEMPLATE_FILE_NAME: String = "indextemplate.ftl"
-const val BASE_PACKAGE_PATH: String = "/webview/"
+const val BASE_PACKAGE_PATH: String = "webview/"
 const val ENV_VARIABLE_THEME: String = "theme"
 const val IS_JAEGER_ENABLED: String = "isJaegerEnabled"
 const val WIZARD_SKIP_INSTALLATION_STEP_VARIABLE: String = "wizardSkipInstallationStep"
@@ -26,25 +26,32 @@ const val COMMON_FILES_FOLDER_NAME: String = "common"
 
 class CustomResourceHandler(private var project: Project, private var resourceFolderName: String) : CefResourceHandler {
     private var state: ResourceHandlerState = ClosedConnection
+
     override fun processRequest(
             cefRequest: CefRequest,
             cefCallback: CefCallback
     ): Boolean {
+        val resourceUrlPrefix = "https://$resourceFolderName"
         val processedUrl = cefRequest.url
         return if (processedUrl != null) {
-            if (processedUrl.equals("https://$resourceFolderName/index.html", true)) {
-                val html = loadFreemarkerTemplate(project, resourceFolderName)
-                state = StringData(html)
-            } else {
-                val pathToResource: String =
-                        if (processedUrl.contains("fonts") || processedUrl.contains("images")) {
-                            processedUrl.replace("https://$resourceFolderName", "webview/$COMMON_FILES_FOLDER_NAME")
-                        } else {
-                            processedUrl.replace("https://$resourceFolderName", "webview/$resourceFolderName")
-                        }
-                val newUrl = javaClass.classLoader.getResource(pathToResource)
-                if (newUrl != null) {
-                    state = OpenedConnection(newUrl.openConnection())
+            when {
+                processedUrl.equals("$resourceUrlPrefix/index.html", true) -> {
+                    val html = loadFreemarkerTemplate(project, resourceFolderName)
+                    state = StringData(html)
+                }
+                processedUrl.contains("fonts") || processedUrl.contains("images") -> {
+                    val pathToResource = processedUrl.replace(resourceUrlPrefix, "${BASE_PACKAGE_PATH}${COMMON_FILES_FOLDER_NAME}")
+                    val newUrl = javaClass.classLoader.getResource(pathToResource)
+                    if (newUrl != null) {
+                        state = OpenedConnection(newUrl.openConnection())
+                    }
+                }
+                else -> {
+                    val pathToResource = processedUrl.replace(resourceUrlPrefix, "${BASE_PACKAGE_PATH}${resourceFolderName}")
+                    val newUrl = javaClass.classLoader.getResource(pathToResource)
+                    if (newUrl != null) {
+                        state = OpenedConnection(newUrl.openConnection())
+                    }
                 }
             }
             cefCallback.Continue()
@@ -91,10 +98,13 @@ sealed interface ResourceHandlerState {
     fun close(): Unit
 }
 
+fun readResponse(inputStream: InputStream, dataOut: ByteArray, designedBytesToRead: Int, bytesRead: IntRef, callback: CefCallback): Boolean {
+    return CustomResourceHandlerUtil.readResponse(inputStream, dataOut, designedBytesToRead, bytesRead, callback)
+}
+
 data class OpenedConnection(val connection: URLConnection) : ResourceHandlerState {
     private val inputStream: InputStream = connection.getInputStream()
-    override fun getResponseHeaders(cefResponse: CefResponse, responseLength: IntRef, redirectUrl: StringRef
-    ): Unit {
+    override fun getResponseHeaders(cefResponse: CefResponse, responseLength: IntRef, redirectUrl: StringRef): Unit {
         try {
             cefResponse.mimeType = URLConnection.guessContentTypeFromName(connection.url.file)
             responseLength.set(inputStream.available())
@@ -105,25 +115,27 @@ data class OpenedConnection(val connection: URLConnection) : ResourceHandlerStat
             cefResponse.status = 404
         }
     }
-
-    override fun readResponse(
-            dataOut: ByteArray,
-            designedBytesToRead: Int,
-            bytesRead: IntRef,
-            callback: CefCallback
-    ): Boolean {
-        return CustomResourceHandlerUtil.readResponse(
-                inputStream,
-                dataOut,
-                designedBytesToRead,
-                bytesRead,
-                callback
-        )
+    override fun readResponse(dataOut: ByteArray, designedBytesToRead: Int, bytesRead: IntRef, callback: CefCallback): Boolean {
+        return readResponse(inputStream, dataOut, designedBytesToRead, bytesRead, callback)
     }
-
     override fun close(): Unit = inputStream.close()
-
 }
+
+data class StringData(val data: String) : ResourceHandlerState {
+    private val inputStream = ByteArrayInputStream(data.toByteArray(Charsets.UTF_8))
+    override fun getResponseHeaders(cefResponse: CefResponse, responseLength: IntRef, redirectUrl: StringRef) {
+        cefResponse.mimeType = "text/html"
+        responseLength.set(inputStream.available())
+        cefResponse.status = 200
+    }
+    override fun readResponse(dataOut: ByteArray, designedBytesToRead: Int, bytesRead: IntRef, callback: CefCallback): Boolean {
+        return readResponse(inputStream, dataOut, designedBytesToRead, bytesRead, callback)
+    }
+    override fun close() {
+        inputStream.close()
+    }
+}
+
 
 object ClosedConnection : ResourceHandlerState {
     override fun getResponseHeaders(
@@ -144,43 +156,10 @@ object ClosedConnection : ResourceHandlerState {
     override fun close() {}
 }
 
-data class StringData(val data: String) : ResourceHandlerState {
-    private val inputStream = ByteArrayInputStream(data.toByteArray(Charsets.UTF_8))
-
-    override fun getResponseHeaders(
-            cefResponse: CefResponse,
-            responseLength: IntRef,
-            redirectUrl: StringRef
-    ) {
-        cefResponse.mimeType = "text/html"
-        responseLength.set(inputStream.available())
-        cefResponse.status = 200
-    }
-
-    override fun readResponse(
-            dataOut: ByteArray,
-            designedBytesToRead: Int,
-            bytesRead: IntRef,
-            callback: CefCallback
-    ): Boolean {
-        return CustomResourceHandlerUtil.readResponse(
-                inputStream,
-                dataOut,
-                designedBytesToRead,
-                bytesRead,
-                callback
-        )
-    }
-
-    override fun close() {
-        inputStream.close()
-    }
-}
-
 private fun loadFreemarkerTemplate(project: Project, resourceFolderName: String): String {
     val isServerConnectedAlready = project.getService(BackendConnectionUtil::class.java).testConnectionToBackend()
     val cfg = Configuration(Configuration.VERSION_2_3_30)
-    cfg.setClassForTemplateLoading(CustomResourceHandler::class.java, BASE_PACKAGE_PATH + resourceFolderName)
+    cfg.setClassForTemplateLoading(CustomResourceHandler::class.java, "/$BASE_PACKAGE_PATH$resourceFolderName")
     val data = mapOf(
             ENV_VARIABLE_THEME to ThemeUtil.getCurrentThemeName(),
             IS_JAEGER_ENABLED to isJaegerUrlPresentInUserSettings(),

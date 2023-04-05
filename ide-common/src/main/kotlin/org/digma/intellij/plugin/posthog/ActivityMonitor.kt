@@ -17,7 +17,7 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.util.Optional
 
-class ActivityMonitor(private val project: Project) : Runnable, Disposable {
+class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
 
     companion object {
         private val LOGGER = Logger.getInstance(ActivityMonitor::class.java)
@@ -29,7 +29,7 @@ class ActivityMonitor(private val project: Project) : Runnable, Disposable {
     }
 
     private val clientId: String
-    private val tokenFetcherThread = Thread(this, "Token fetcher thread")
+//    private val tokenFetcherThread = Thread(this, "Token fetcher thread")
     private var postHog: PostHog? = null
     private var lastLensClick: LocalDateTime? = null
     private var lastInsightsViewed: HashSet<InsightType>? = null
@@ -40,29 +40,33 @@ class ActivityMonitor(private val project: Project) : Runnable, Disposable {
                 if (System.getenv("devenv") == "digma") hostname
                 else Integer.toHexString(hostname.hashCode())
 
-        val cachedToken = getCachedToken()
-        postHog =
-                if (cachedToken != null) PostHog.Builder(cachedToken).build()
-                else null
+//        val cachedToken = getCachedToken()
+//        postHog =
+//                if (cachedToken != null) PostHog.Builder(cachedToken).build()
+//                else null
+//
+//        tokenFetcherThread.start()
 
-        tokenFetcherThread.start()
-    }
-
-    override fun run() {
-        val cachedToken = getCachedToken()
-        val latestToken = getLatestToken()
-        if (latestToken != null && latestToken != cachedToken) {
-            postHog = PostHog.Builder(latestToken).build()
-            setCachedToken(latestToken)
-        }
-        if (postHog != null) {
-            Log.log(LOGGER::info, "Posthog was configured successfully with " +
-                    (if (latestToken != null) "latest token" else "cached token"))
-        } else {
-            Log.log(LOGGER::info, "Posthog failed to be configured")
-        }
+        val token = "phc_5sy6Kuv1EYJ9GAdWPeGl7gx31RAw7BR7NHnOuLCUQZK"
+        postHog = PostHog.Builder(token).build()
         registerSessionDetails()
     }
+
+//    override fun run() {
+//        val cachedToken = getCachedToken()
+//        val latestToken = getLatestToken()
+//        if (latestToken != null && latestToken != cachedToken) {
+//            postHog = PostHog.Builder(latestToken).build()
+//            setCachedToken(latestToken)
+//        }
+//        if (postHog != null) {
+//            Log.log(LOGGER::info, "Posthog was configured successfully with " +
+//                    (if (latestToken != null) "latest token" else "cached token"))
+//        } else {
+//            Log.log(LOGGER::info, "Posthog failed to be configured")
+//        }
+//        registerSessionDetails()
+//    }
 
     fun registerCustomEvent(eventName: String){
         postHog?.capture(clientId, eventName)
@@ -158,11 +162,11 @@ class ActivityMonitor(private val project: Project) : Runnable, Disposable {
                 ))
     }
 
-    override fun dispose() {
-        try {
-            tokenFetcherThread.join()
-        } catch (e: InterruptedException) {
-            Log.debugWithException(LOGGER, e, "Failed waiting for tokenFetcherThread")
-        }
-    }
+//    override fun dispose() {
+//        try {
+//            tokenFetcherThread.join()
+//        } catch (e: InterruptedException) {
+//            Log.debugWithException(LOGGER, e, "Failed waiting for tokenFetcherThread")
+//        }
+//    }
 }

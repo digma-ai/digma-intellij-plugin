@@ -1,6 +1,35 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.56] - 2023-04-06
+### Changed
+- Added tmp posthog token to code
+
+## [2.0.55] - 2023-04-05
+### Changed
+- Bug fix/do not override OTEL service name if already defined (#479)
+- Pass events from react installation wizard to Posthog
+- Recent activity should not show 'Trace' button if there is no settings for Jaeger#484
+- Feature/refresh refactoring - refresh file even if scope is not method (#494)
+- Integrate Installation Wizard changes with new dark theme + toggle button #497
+- Fixed NPE for getCodeObjectsWithInsightsStatus
+- Removed redundant notifyModelChangedAndUpdateUi call (duplicated call)
+
+## [2.0.54] - 2023-04-04
+### Changed
+- Add analytics for the 'observablity' toggle button in IntelliJ
+- Bug fix/make a copy of env map (#488)
+- Update the icon for the Observability panel (use telescope icon) #485
+- Feature/RunConfig - simply modify the (System) properties
+
+## [2.0.53] - 2023-04-03
+### Changed
+- Fixed insight item description word wrapping (#457)
+- Feature/settings at application level instead of project level (#475)
+- Bug fix/range check (#476)
+- Bug fix/avoid nulls and instead return empty list (#477)
+- Bug fix/handle possible null methodId (#478)
+
 ## [2.0.50] - 2023-03-31
 ### Changed
 - Fix showing 'Loading...' when digma has no envs yet
@@ -143,4 +172,8 @@ All notable changes to this project will be documented in this file.
 [2.0.48]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.47...v2.0.48
 [2.0.49]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.48...v2.0.49
 [2.0.50]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.49...v2.0.50
-[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.50...HEAD
+[2.0.53]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.50...v2.0.53
+[2.0.54]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.53...v2.0.54
+[2.0.55]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.54...v2.0.55
+[2.0.56]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.55...v2.0.56
+[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.56...HEAD

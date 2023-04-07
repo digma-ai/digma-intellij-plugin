@@ -27,6 +27,7 @@ import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.service.ErrorsActionsService;
+import org.digma.intellij.plugin.toolwindow.common.ThemeChangeListener;
 import org.digma.intellij.plugin.toolwindow.recentactivity.ConnectionCheckResult;
 import org.digma.intellij.plugin.toolwindow.recentactivity.JBCefBrowserUtil;
 import org.digma.intellij.plugin.toolwindow.recentactivity.JcefConnectionCheckMessagePayload;
@@ -138,6 +139,9 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         JBCefClient jbCefClient = jbCefBrowser.getJBCefClient();
 
         CefMessageRouter msgRouter = CefMessageRouter.create();
+
+        ThemeChangeListener listener = new ThemeChangeListener(jbCefBrowser);
+        UIManager.addPropertyChangeListener(listener);
 
         msgRouter.addHandler(new CefMessageRouterHandlerAdapter() {
             @Override

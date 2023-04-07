@@ -23,11 +23,11 @@ public class ThemeChangeListener implements PropertyChangeListener {
     public void propertyChange(PropertyChangeEvent evt) {
         if ("lookAndFeel".equals(evt.getPropertyName())) {
             // The UI theme has been changed
-            changeUiThemeForRecentActivity();
+            changeUiTheme();
         }
     }
 
-    private void changeUiThemeForRecentActivity() {
+    private void changeUiTheme() {
         String theme = ThemeUtil.getCurrentThemeName();
         if (StringUtils.isNotEmpty(theme)) {
             sendRequestToChangeUiTheme(jbCefBrowser, theme);

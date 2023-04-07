@@ -21,6 +21,7 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
 import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
+import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.Cursor
 import java.awt.Dimension
@@ -118,7 +119,12 @@ class EnvironmentsDropdownPanel(
         val environmentsInfo: MutableMap<String, MutableMap<String, Any>> = mutableMapOf()
         val usageStatusResult = model.getUsageStatus()
         val envsThatHaveUsageSet: Set<String> = buildEnvironmentWithUsages(usageStatusResult)
-        val hasUsageFunction = fun(env: String): Boolean { return envsThatHaveUsageSet.contains(env) }
+        val hasUsageFunction = fun(env: String): Boolean {
+            if (model is InsightsModel) {
+                return envsThatHaveUsageSet.contains(env) && model.insightsCount > 0
+            }
+            return envsThatHaveUsageSet.contains(env)
+        }
         val relevantEnvs = buildRelevantSortedEnvironments(environmentsSupplier, hasUsageFunction)
         for (currEnv in relevantEnvs) {
             val currentButtonInfo: MutableMap<String, Any> = HashMap()

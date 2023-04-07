@@ -245,7 +245,7 @@ class EnvironmentsDropdownPanel(
         })
 
         comboBox.addActionListener { event ->
-            val cb = event.source as ComboBox<String>
+            val cb = event.source as ComboBox<*>
             var selectedEnv = cb.selectedItem as String?  // can be null if connection error and all item being removed from list (current logic)
             if (selectedEnv == null || selectedEnv == NO_ENVIRONMENTS_MESSAGE) return@addActionListener
             selectedEnv = adjustBackEnvNameIfNeeded(selectedEnv)

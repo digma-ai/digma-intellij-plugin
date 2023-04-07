@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -48,8 +49,9 @@ public class DocumentInfoService {
      * there are situations where intellij may decide to reparse a psi tree and in that case the psi file may not
      * be valid anymore, the instance in intellij indexes will change. so we use the file uri as key and always convert
      * from PsiFile to uri when necessary.
+     * By using ConcurrentHashMap, we can avoid blocking the UI thread and improve the concurrency of our application.
      */
-    private final Map<String, DocumentInfoContainer> documents = Collections.synchronizedMap(new HashMap<>());
+    private final Map<String, DocumentInfoContainer> documents = new ConcurrentHashMap<>();
 
     //dominantLanguages keeps track of the most used programming language in the documents. it is used to decide which
     // language service to use when we don't have a method info.

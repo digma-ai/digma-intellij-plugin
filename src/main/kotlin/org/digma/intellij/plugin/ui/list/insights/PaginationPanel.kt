@@ -116,3 +116,7 @@ fun <T> buildPaginationPanel(
     prev.isEnabled = canGoBack
     next.isEnabled = canGoFwd
 }
+
+fun countNumberOfPages(numberOfObjects: Int, pageSize: Int) : Int {
+    return numberOfObjects / pageSize + ( if (numberOfObjects % pageSize == 0) 0 else 1)
+}

@@ -33,7 +33,8 @@ fun spanScalingRootCauseItemsPanel(project: Project, insight: SpanScalingRootCau
     val paginationPanel = JPanel()
     val affectedEndpointsToDisplay = ArrayList<EndpointInfo>()
     val affectedEndpoints = insight.affectedEndpoints
-    lastPageNum = affectedEndpoints.size
+    
+    lastPageNum = countNumberOfPages(affectedEndpoints.size, RECORDS_PER_PAGE_AFFECTED_ENDPOINTS)
 
     rootCausePanel = object : DigmaResettablePanel() {
         override fun reset() {

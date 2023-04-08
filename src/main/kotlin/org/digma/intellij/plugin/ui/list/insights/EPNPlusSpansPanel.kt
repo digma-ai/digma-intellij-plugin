@@ -34,8 +34,7 @@ fun ePNPlusSpansPanel(
     val nPOneSpansToDisplay = ArrayList<HighlyOccurringSpanInfo>()
     val spansOfInsight = insight.spans
 
-    //calculate how many pages there are (display only 1 span per page)
-    lastPageNum = spansOfInsight.size
+    lastPageNum = countNumberOfPages(spansOfInsight.size, RECORDS_PER_PAGE_EPNPLUS)
 
     resultNPOnePanel = object : DigmaResettablePanel() {
         override fun reset() {

@@ -1,27 +1,38 @@
 package org.digma.intellij.plugin.ui.common
 
+import com.intellij.ide.BrowserUtil
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.list.commonListItemPanel
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import java.awt.BorderLayout
 import java.awt.CardLayout
 import java.awt.Component
+import java.awt.Cursor
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JPanel
 
 class NoConnectionWrapper(private val project: Project, private val panel: DigmaTabPanel) : DigmaTabPanel() {
 
+    private val logger = Logger.getInstance(SettingsHintPanel::class.java)
+
     private val settingsState: SettingsState = SettingsState.getInstance()
 
     companion object {
         const val WRAPPED_PANEL_CARD = "WRAPPED_PANE"
         const val NO_CONNECTION_CARD = "NO_CONNECTION"
+        const val DIGMA_DOCKER_APP_URL = "https://open.docker.com/extensions/marketplace?extensionId=digmaai/digma-docker-extension";
+
     }
 
     init {
@@ -55,12 +66,30 @@ class NoConnectionWrapper(private val project: Project, private val panel: Digma
         val iconPanel = JPanel()
         iconPanel.layout = BorderLayout()
         val iconLabel = JLabel(Laf.Icons.Environment.NO_CONNECTION_ICON)
-        val button = ActionLink("Refresh")
-        button.addActionListener {
+        val refreshButton = ActionLink("Refresh")
+        refreshButton.addActionListener {
             project.getService(AnalyticsService::class.java).environment.refreshNowOnBackground()
         }
         iconPanel.add(iconLabel, BorderLayout.NORTH)
-        iconPanel.add(button, BorderLayout.SOUTH)
+
+        val refreshOrInstallPanel = JPanel()
+
+        refreshOrInstallPanel.add(refreshButton, BorderLayout.EAST)
+
+
+        val setupButton = ActionLink("Install")
+
+        setupButton.addActionListener {
+            try {
+                ApplicationManager.getApplication().invokeLater {
+                    BrowserUtil.browse(DIGMA_DOCKER_APP_URL, project)
+                }
+            } catch (ex: Exception) {
+                Log.log(logger::debug, "exception opening 'Digma Channel' link = {}, message: {}. ", DIGMA_DOCKER_APP_URL, ex.message)
+            }        }
+        refreshOrInstallPanel.add(setupButton, BorderLayout.WEST)
+        iconPanel.add(refreshOrInstallPanel, BorderLayout.SOUTH)
+
 
         val noConnectionPanel = JPanel()
         noConnectionPanel.layout = BorderLayout()

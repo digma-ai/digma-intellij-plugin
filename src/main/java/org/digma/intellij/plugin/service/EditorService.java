@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.service;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.Project;
@@ -14,6 +15,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.testFramework.BinaryLightVirtualFile;
 import com.intellij.testFramework.LightVirtualFile;
+import kotlin.Triple;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.vcs.VcsService;
@@ -77,12 +79,12 @@ public class EditorService implements Disposable {
                         if (vcsFile != null) {
                             maybeOpenVcsFile(workspaceFile, (ContentRevisionVirtualFile) vcsFile, lineNumber);
                             return;
-                        }else{
-                            Messages.showWarningDialog(project,"Could not load vcs file for  "+workspaceFile+", Opening workspace file.","");
+                        } else {
+                            Messages.showWarningDialog(project, "Could not load vcs file for  " + workspaceFile + ", Opening workspace file.", "");
                         }
                     }
-                }else{
-                    Messages.showWarningDialog(project,"Revision "+lastInstanceCommitId+" for "+workspaceFile+" was not found, Opening workspace file.","");
+                } else {
+                    Messages.showWarningDialog(project, "Revision " + lastInstanceCommitId + " for " + workspaceFile + " was not found, Opening workspace file.", "");
                 }
             }
         } catch (VcsException e) {
@@ -152,7 +154,7 @@ public class EditorService implements Disposable {
 
     private boolean showIfAlreadyOpen(String name, int lineNumber) {
 
-        if (name == null){
+        if (name == null) {
             return false;
         }
 
@@ -168,15 +170,19 @@ public class EditorService implements Disposable {
     }
 
 
-    public void openWorkspaceFileInEditor(@NotNull String workspaceUri, int offset) {
+    @Nullable
+    public Triple<VirtualFile, Editor, Boolean> openWorkspaceFileInEditor(@NotNull String workspaceUri, int offset) {
 
         var fileToOpen = VirtualFileManager.getInstance().findFileByUrl(workspaceUri);
         if (fileToOpen == null) {
             NotificationUtil.notifyError(project, "Could not find file " + workspaceUri);
-            return;
+            return null;
         }
         OpenFileDescriptor openFileDescriptor = new OpenFileDescriptor(project, fileToOpen, Math.max(offset, 0));
-        FileEditorManager.getInstance(project).openTextEditor(openFileDescriptor, true);
+        FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
+        boolean fileWasAlreadyOpen = fileEditorManager.isFileOpen(fileToOpen);
+        Editor editor = fileEditorManager.openTextEditor(openFileDescriptor, true);
+        return new Triple<>(fileToOpen, editor, fileWasAlreadyOpen);
     }
 
 
@@ -201,7 +207,7 @@ public class EditorService implements Disposable {
 
         } catch (Exception e) {
             Log.log(LOGGER::warn, "Could not open stack trace. " + e.getMessage());
-            NotificationUtil.notifyError(project,"Could not open stack trace. " + e.getMessage());
+            NotificationUtil.notifyError(project, "Could not open stack trace. " + e.getMessage());
         }
     }
 

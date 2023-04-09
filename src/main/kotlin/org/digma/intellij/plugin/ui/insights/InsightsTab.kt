@@ -119,12 +119,12 @@ fun insightsPanel(project: Project): DigmaTabPanel {
             if (insightsList.getModel().size == 0 && insightsModel.card == InsightsTabCard.INSIGHTS) {
                 val cardName = when (insightsModel.status) {
                     UiInsightStatus.Unknown -> LOADING_INSIGHTS_CARD_NAME
-                    UiInsightStatus.InsightPending -> UiInsightStatus.InsightPending.name
-                    UiInsightStatus.NoSpanData -> UiInsightStatus.NoSpanData.name
                     UiInsightStatus.NoObservability ->{
                         noObservabilityPanel.reset()
                         UiInsightStatus.NoObservability.name
                     }
+                    UiInsightStatus.InsightPending -> UiInsightStatus.InsightPending.name
+                    UiInsightStatus.NoSpanData -> UiInsightStatus.NoSpanData.name
                     else -> NO_INFO_CARD_NAME
                 }
                 cardLayout.show(cardsPanel, cardName)

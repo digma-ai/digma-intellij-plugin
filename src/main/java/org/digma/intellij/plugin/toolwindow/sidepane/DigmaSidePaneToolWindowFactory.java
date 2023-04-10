@@ -9,6 +9,7 @@ import com.intellij.ui.content.ContentFactory;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.persistence.PersistenceService;
+import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.service.ErrorsActionsService;
 import org.digma.intellij.plugin.ui.ToolWindowShower;

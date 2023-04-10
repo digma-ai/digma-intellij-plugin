@@ -30,8 +30,6 @@ public class EditorInteractionService implements CaretContextService, Disposable
     private final InsightsViewService insightsViewService;
     private final ErrorsViewService errorsViewService;
     private final DocumentInfoService documentInfoService;
-    private final BackendConnectionUtil backendConnectionUtil;
-
 
     /*
     EditorInteractionService has many dependencies. but EditorInteractionService should not be a dependency of too many
@@ -43,7 +41,6 @@ public class EditorInteractionService implements CaretContextService, Disposable
         insightsViewService = project.getService(InsightsViewService.class);
         errorsViewService = project.getService(ErrorsViewService.class);
         documentInfoService = project.getService(DocumentInfoService.class);
-        backendConnectionUtil = project.getService(BackendConnectionUtil.class);
     }
 
     public static CaretContextService getInstance(Project project) {
@@ -63,7 +60,7 @@ public class EditorInteractionService implements CaretContextService, Disposable
         //There is no need to execute the contextChanged flow if there is no connection to the backend.
         // so testConnectionToBackend will detect a backend connection error , call contextEmptyNoConnection once
         // to clean the views, and will return. and will keep blocking until the connection is regained.
-        if (!backendConnectionUtil.testConnectionToBackend()) {
+        if (!BackendConnectionUtil.getInstance(project).testConnectionToBackend()) {
             Log.log(logger::debug, "No connection to backend, not executing contextChanged for '{}'", methodUnderCaret.getId());
             return;
         }

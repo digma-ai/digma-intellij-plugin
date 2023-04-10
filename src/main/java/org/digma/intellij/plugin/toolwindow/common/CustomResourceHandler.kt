@@ -157,7 +157,7 @@ object ClosedConnection : ResourceHandlerState {
 }
 
 private fun loadFreemarkerTemplate(project: Project, resourceFolderName: String): String {
-    val isServerConnectedAlready = project.getService(BackendConnectionUtil::class.java).testConnectionToBackend()
+    val isServerConnectedAlready = BackendConnectionUtil.getInstance(project).testConnectionToBackend()
     val cfg = Configuration(Configuration.VERSION_2_3_30)
     cfg.setClassForTemplateLoading(CustomResourceHandler::class.java, "/$BASE_PACKAGE_PATH$resourceFolderName")
     val data = mapOf(

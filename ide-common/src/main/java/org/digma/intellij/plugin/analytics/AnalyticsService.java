@@ -61,6 +61,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult;
+
 
 public class AnalyticsService implements Disposable {
 
@@ -273,7 +275,10 @@ public class AnalyticsService implements Disposable {
     }
 
     public UsageStatusResult getUsageStatus(List<String> objectIds) throws AnalyticsServiceException {
-        return executeCatching(() -> analyticsProviderProxy.getUsageStatus(new UsageStatusRequest(objectIds)));
+        return executeCatching(() -> {
+            UsageStatusResult usageStatus = analyticsProviderProxy.getUsageStatus(new UsageStatusRequest(objectIds));
+            return usageStatus == null ? EmptyUsageStatusResult : usageStatus;
+        });
     }
 
     public RecentActivityResult getRecentActivity(List<String> environments) throws AnalyticsServiceException {
@@ -281,7 +286,10 @@ public class AnalyticsService implements Disposable {
     }
 
     public UsageStatusResult getUsageStatusOfErrors(List<String> objectIds) throws AnalyticsServiceException {
-        return executeCatching(() -> analyticsProviderProxy.getUsageStatus(new UsageStatusRequest(objectIds, List.of("Error"))));
+        return executeCatching(() -> {
+            UsageStatusResult usageStatus = analyticsProviderProxy.getUsageStatus(new UsageStatusRequest(objectIds, List.of("Error")));
+            return usageStatus == null ? EmptyUsageStatusResult : usageStatus;
+        });
     }
 
     public String getHtmlGraphForSpanPercentiles(String instrumentationLibrary, String spanName, String backgroundColor) throws AnalyticsServiceException {

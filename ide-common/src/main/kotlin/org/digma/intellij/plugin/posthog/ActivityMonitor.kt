@@ -146,6 +146,10 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
         )
     }
 
+    fun registerFirstTimePluginLoaded() {
+        postHog?.capture(clientId,"plugin first-loaded")
+    }
+
     private fun registerSessionDetails() {
         val osType = System.getProperty("os.name")
         val ideVersion = ApplicationInfo.getInstance().build.asString()

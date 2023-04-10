@@ -37,8 +37,6 @@ public class SettingsState implements PersistentStateComponent<SettingsState>, D
     public String jaegerUrl = DEFAULT_JAEGER_URL;
     public LinkMode jaegerLinkMode = DEFAULT_JAEGER_LINK_MODE;
     public String runtimeObservabilityBackendUrl = DEFAULT_RUNTIME_OBSERVABILITY_BACKEND_URL;
-    public boolean firstTimeConnectionEstablished;
-    public boolean firstTimeInsightReceived;
     @Nullable
     public String posthogToken;
     private final List<SettingsChangeListener> listeners = new ArrayList<>();

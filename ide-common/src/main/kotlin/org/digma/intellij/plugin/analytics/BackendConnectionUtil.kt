@@ -19,8 +19,9 @@ class BackendConnectionUtil(project: Project) {
     private var environmentsSupplier: EnvironmentsSupplier
 
     companion object {
-        fun getInstance(project: Project): RefreshService {
-            return project.getService(RefreshService::class.java)
+        @JvmStatic
+        fun getInstance(project: Project): BackendConnectionUtil {
+            return project.getService(BackendConnectionUtil::class.java)
         }
     }
 

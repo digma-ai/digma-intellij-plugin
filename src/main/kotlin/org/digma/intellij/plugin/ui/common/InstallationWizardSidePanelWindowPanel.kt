@@ -98,18 +98,18 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): JPanel? {
                 if (payload != null) {
                     ApplicationManager.getApplication().invokeLater {
                         BrowserUtil.browse(
-                            payload!!.url
+                            payload.url
                         )
                     }
                 }
             }
             if (ToolWindowUtil.INSTALLATION_WIZARD_CHECK_CONNECTION.equals(action, ignoreCase = true)) {
-                val jcefConnectionCheckMessagePayload: JcefConnectionCheckMessagePayload
-                jcefConnectionCheckMessagePayload = if (BackendConnectionUtil.getInstance(project).testConnectionToBackend()) {
-                    JcefConnectionCheckMessagePayload(ConnectionCheckResult.SUCCESS.value)
-                } else {
-                    JcefConnectionCheckMessagePayload(ConnectionCheckResult.FAILURE.value)
-                }
+                val jcefConnectionCheckMessagePayload: JcefConnectionCheckMessagePayload =
+                        if (BackendConnectionUtil.getInstance(project).testConnectionToBackend()) {
+                            JcefConnectionCheckMessagePayload(ConnectionCheckResult.SUCCESS.value)
+                        } else {
+                            JcefConnectionCheckMessagePayload(ConnectionCheckResult.FAILURE.value)
+                        }
                 val requestMessage = JBCefBrowserUtil.resultToString(
                     JcefConnectionCheckMessageRequest(
                         ToolWindowUtil.REQUEST_MESSAGE_TYPE,

@@ -476,8 +476,7 @@
   border-radius: 8px;
   width: 28px;
   height: 16px;
-  transition-property: background;
-  transition-duration: 0.3s;
+  transition: background 300ms;
   display: flex;
   align-items: center;
 
@@ -487,7 +486,7 @@
   height: 8px;
   border-radius: 50%;
   transition-property: background, margin-left;
-  transition-duration: 0.3s;
+  transition-duration: 300ms;
 
   margin-left: ${({isChecked:e})=>e?"16px":"4px"};
   background: ${({isChecked:e,theme:t})=>{switch(t.mode){case"light":return e?"#fbfdff":"#f1f5fa";case"dark":case"dark-jetbrains":return e?"#fbfdff":"#b9c0d4"}}};

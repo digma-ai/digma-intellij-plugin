@@ -28,7 +28,6 @@ class RefreshService(private val project: Project) {
     private val errorsViewService: ErrorsViewService = project.getService(ErrorsViewService::class.java)
     private val insightsViewService: InsightsViewService = project.getService(InsightsViewService::class.java)
     private val documentInfoService: DocumentInfoService = project.getService(DocumentInfoService::class.java)
-    private val backendConnectionUtil = project.getService(BackendConnectionUtil::class.java)
     private val refreshInsightsTaskScheduledLock: ReentrantLock = ReentrantLock()
     private val isGeneralRefreshButtonEnabled = AtomicBoolean(true)
 
@@ -58,7 +57,7 @@ class RefreshService(private val project: Project) {
             updateInsightsCacheForActiveDocument(selectedTextEditor, documentInfoContainer)
 
             Log.log(logger::debug, "testConnectionToBackend was triggered")
-            backendConnectionUtil.testConnectionToBackend()
+            BackendConnectionUtil.getInstance(project).testConnectionToBackend()
         }
     }
 

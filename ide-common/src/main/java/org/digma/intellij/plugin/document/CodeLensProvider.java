@@ -11,8 +11,8 @@ import org.digma.intellij.plugin.model.rest.insights.CodeObjectDecorator;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.ArrayList;
 
 public class CodeLensProvider {
 
@@ -46,9 +46,22 @@ public class CodeLensProvider {
     ) {
         List<CodeLens> codeLensList = new ArrayList<>();
 
-        List<CodeObjectInsight> methodInsightsList = documentInfoContainer.getDocumentInfo().getMethods().values().stream()
+        var methodsInfo = documentInfoContainer.getDocumentInfo().getMethods().values();
+
+        List<CodeObjectInsight> methodInsightsList = methodsInfo.stream()
                 .flatMap(methodInfo -> documentInfoService.getCachedMethodInsights(methodInfo).stream())
                 .toList();
+
+        methodsInfo.stream().forEach(methodInfo -> {
+            if (documentInfoService.getCachedMethodInsights(methodInfo).stream().count() == 0){
+                var codeObjectId = methodInfo.getId();
+                CodeLens codeLen = new CodeLens(codeObjectId, "Never Reached", 7);
+                codeLen.setLensDescription("No tracing data for this code object");
+                codeLen.setAnchor("Top");
+
+                codeLensList.add(codeLen);
+            }
+        });
 
         methodInsightsList.forEach(insight -> {
                     if (insight.getDecorators() != null && insight.getDecorators().size() > 0) {

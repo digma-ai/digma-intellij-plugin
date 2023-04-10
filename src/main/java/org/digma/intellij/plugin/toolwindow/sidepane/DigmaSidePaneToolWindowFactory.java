@@ -100,6 +100,11 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         // is fully loaded. consider replacing that with LanguageService.runWhenSmartForAll so that C# language service
         // can run this task when the solution is fully loaded.
         DumbService.getInstance(project).runWhenSmart(() -> initializeWhenSmart(project));
+
+        if(!PersistenceService.getInstance().getState().getFirstTimePluginLoaded()){
+            ActivityMonitor.getInstance(project).registerFirstTimePluginLoaded();
+            PersistenceService.getInstance().getState().setFirstTimePluginLoaded(true);
+        }
     }
 
     private void displayMainSidePaneWindowPanel(@NotNull Project project, ToolWindow toolWindow, ContentFactory contentFactory) {

@@ -219,10 +219,11 @@ public class AnalyticsService implements Disposable {
     }
 
     private <TInsight> void onInsightReceived(List<TInsight> insights) {
-        if (insights != null && !insights.isEmpty() && !SettingsState.getInstance().firstTimeInsightReceived) {
+        if (insights != null &&
+                !insights.isEmpty() &&
+                !PersistenceService.getInstance().getState().getFirstTimeInsightReceived()) {
             ActivityMonitor.getInstance(project).registerFirstInsightReceived();
-            SettingsState.getInstance().firstTimeInsightReceived = true;
-            SettingsState.getInstance().fireChanged();
+            PersistenceService.getInstance().getState().setFirstTimeInsightReceived(true);
         }
     }
 
@@ -381,10 +382,9 @@ public class AnalyticsService implements Disposable {
                             "Result '{}'", method.getName(), argsToString(args), resultToString(result));
                 }
 
-                if (!SettingsState.getInstance().firstTimeConnectionEstablished) {
+                if (!PersistenceService.getInstance().getState().getFirstTimeConnectionEstablished()) {
                     ActivityMonitor.getInstance(project).registerFirstConnectionEstablished();
-                    SettingsState.getInstance().firstTimeConnectionEstablished = true;
-                    SettingsState.getInstance().fireChanged();
+                    PersistenceService.getInstance().getState().setFirstTimeConnectionEstablished(true);
                 }
 
                 //reset status on success call

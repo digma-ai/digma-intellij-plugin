@@ -12,7 +12,8 @@ import org.jetbrains.annotations.NotNull;
 public class ToolWindowShower {
 
     private static final Logger LOGGER = Logger.getInstance(ToolWindowShower.class);
-    private Content insightsTab;
+    private Content mainContent;
+    private Content installationWizardContent;
 
 
     public static ToolWindowShower getInstance(@NotNull Project project) {
@@ -31,11 +32,32 @@ public class ToolWindowShower {
         this.toolWindow = toolWindow;
     }
 
-
-    public void setInsightsTab(Content insightsTab) {
-        this.insightsTab = insightsTab;
+    public void setMainContent(Content mainContent) {
+        this.mainContent = mainContent;
     }
 
+    public void setInstallationWizardContent(Content installationWizardContent) {
+        this.installationWizardContent = installationWizardContent;
+    }
+
+    public void displayMainSidePaneWindowPanel(){
+        setToolWindowContent(mainContent);
+        showToolWindow();
+    }
+
+    public void displayInstallationWizard(){
+        setToolWindowContent(installationWizardContent);
+        showToolWindow();
+    }
+
+    public void setToolWindowContent(Content newContent){
+        Content currentContent = toolWindow.getContentManager().getContent(0);
+        if(currentContent != null){
+            toolWindow.getContentManager().removeContent(currentContent, true);
+        }
+
+        toolWindow.getContentManager().addContent(newContent);
+    }
 
     public void showToolWindow() {
 
@@ -44,18 +66,12 @@ public class ToolWindowShower {
         if (toolWindow != null) {
             Log.log(LOGGER::debug, "Got reference to tool window, showing..");
             show(toolWindow);
-            if (insightsTab != null) {
-                toolWindow.getContentManager().setSelectedContent(insightsTab);
-            }
         } else {
             Log.log(LOGGER::debug, "Don't have reference to tool window, showing with ToolWindowManager..");
             ToolWindow tw = ToolWindowManager.getInstance(project).getToolWindow(PluginId.TOOL_WINDOW_ID);
             if (tw != null) {
                 Log.log(LOGGER::debug, "Got tool window from ToolWindowManager");
                 show(tw);
-                if (insightsTab != null) {
-                    tw.getContentManager().setSelectedContent(insightsTab);
-                }
             } else {
                 Log.log(LOGGER::debug, "Could not find tool window");
             }
@@ -81,5 +97,4 @@ public class ToolWindowShower {
             toolWindow.show();
         }
     }
-
 }

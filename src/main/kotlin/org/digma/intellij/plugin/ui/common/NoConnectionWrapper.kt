@@ -5,19 +5,19 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
+import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.settings.SettingsState
+import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.list.commonListItemPanel
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import java.awt.BorderLayout
 import java.awt.CardLayout
 import java.awt.Component
-import java.awt.Cursor
-import java.awt.event.MouseAdapter
-import java.awt.event.MouseEvent
+import javax.swing.BoxLayout
 import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JPanel
@@ -59,26 +59,30 @@ class NoConnectionWrapper(private val project: Project, private val panel: Digma
             }
         }
 
-        val messagePanel = JPanel()
-        messagePanel.layout = BorderLayout()
+        val messagePanel = JPanel( BorderLayout())
+        messagePanel.isOpaque = false
         messagePanel.add(messageLabel, BorderLayout.CENTER)
 
-        val iconPanel = JPanel()
-        iconPanel.layout = BorderLayout()
+        val iconPanel = JPanel(BorderLayout())
+        iconPanel.isOpaque = false
+
         val iconLabel = JLabel(Laf.Icons.Environment.NO_CONNECTION_ICON)
+        iconPanel.add(iconLabel, BorderLayout.NORTH)
+
+        val buttonsPanel = JPanel()
+        buttonsPanel.layout = BoxLayout(buttonsPanel, BoxLayout.Y_AXIS)
+        buttonsPanel.isOpaque = false
+        iconPanel.add(buttonsPanel, BorderLayout.SOUTH)
+
         val refreshButton = ActionLink("Refresh")
+        refreshButton.border = JBUI.Borders.emptyTop(10)
         refreshButton.addActionListener {
             project.getService(AnalyticsService::class.java).environment.refreshNowOnBackground()
         }
-        iconPanel.add(iconLabel, BorderLayout.NORTH)
-
-        val refreshOrInstallPanel = JPanel()
-
-        refreshOrInstallPanel.add(refreshButton, BorderLayout.EAST)
-
+        buttonsPanel.add(refreshButton)
 
         val setupButton = ActionLink("Install")
-
+        setupButton.border = JBUI.Borders.emptyTop(10)
         setupButton.addActionListener {
             try {
                 ApplicationManager.getApplication().invokeLater {
@@ -87,12 +91,18 @@ class NoConnectionWrapper(private val project: Project, private val panel: Digma
             } catch (ex: Exception) {
                 Log.log(logger::debug, "exception opening 'Digma Channel' link = {}, message: {}. ", DIGMA_DOCKER_APP_URL, ex.message)
             }        }
-        refreshOrInstallPanel.add(setupButton, BorderLayout.WEST)
-        iconPanel.add(refreshOrInstallPanel, BorderLayout.SOUTH)
+        buttonsPanel.add(setupButton)
+
+        val wizardButton = ActionLink("Set up Digma")
+        wizardButton.border = JBUI.Borders.emptyTop(10)
+        wizardButton.addActionListener{
+            ToolWindowShower.getInstance(project).displayInstallationWizard()
+        }
+        buttonsPanel.add(wizardButton,)
 
 
-        val noConnectionPanel = JPanel()
-        noConnectionPanel.layout = BorderLayout()
+        val noConnectionPanel = JPanel(BorderLayout())
+        noConnectionPanel.isOpaque = false
         noConnectionPanel.add(messagePanel, BorderLayout.CENTER)
         noConnectionPanel.add(iconPanel, BorderLayout.EAST)
 

@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.ui.common
 
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ApplicationNamesInfo
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.ui.jcef.JBCefApp
@@ -11,6 +12,7 @@ import org.cef.browser.CefMessageRouter
 import org.cef.callback.CefQueryCallback
 import org.cef.handler.CefMessageRouterHandlerAdapter
 import org.digma.intellij.plugin.analytics.BackendConnectionUtil
+import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.installationwizard.OpenInBrowserRequest
 import org.digma.intellij.plugin.model.rest.installationwizard.SendTrackingEventRequest
@@ -68,7 +70,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): JPanel? {
                     SendTrackingEventRequest::class.java
                 )
                 if (payload != null) {
-                    getInstance(project).registerCustomEvent(payload!!.eventName)
+                    getInstance(project).registerCustomEvent(payload.eventName)
                 }
             }
             if (ToolWindowUtil.INSTALLATION_WIZARD_SET_OBSERVABILITY.equals(action, ignoreCase = true)) {
@@ -77,16 +79,12 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): JPanel? {
                     SetObservabilityRequest::class.java
                 )
                 if (payload != null) {
-                    updateObservabilityValue(project, payload!!.isObservabilityEnabled)
+                    updateObservabilityValue(project, payload.isObservabilityEnabled)
                 }
             }
             if (ToolWindowUtil.INSTALLATION_WIZARD_FINISH.equals(action, ignoreCase = true)) {
                 ApplicationManager.getApplication().invokeLater {
-                    if (!PersistenceService.getInstance().state.alreadyPassedTheInstallationWizard) {
-                        // set global flag that this user has already passed the installation wizard
-                        PersistenceService.getInstance().state.alreadyPassedTheInstallationWizard = true
-                    }
-
+                    updateInstallationWizardFlag()
                     ToolWindowShower.getInstance(project).displayMainSidePaneWindowPanel()
                 }
             }
@@ -136,4 +134,24 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): JPanel? {
     jcefDigmaPanel.add(browserPanel, BorderLayout.CENTER)
 
     return jcefDigmaPanel
+}
+
+/**
+ * Set global flag that this user has already passed the installation wizard
+ */
+private fun updateInstallationWizardFlag() {
+    val productName = ApplicationNamesInfo.getInstance().productName
+    if (IDEUtilsService.isIdeaIDE(productName)) {
+        if (!PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForIdeaIDE) {
+            PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForIdeaIDE = true
+        }
+    } else if (IDEUtilsService.isRiderIDE(productName)) {
+        if (!PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForRiderIDE) {
+            PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForRiderIDE = true
+        }
+    } else if (IDEUtilsService.isPyCharmIDE(productName)) {
+        if (!PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForPyCharmIDE) {
+            PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForPyCharmIDE = true
+        }
+    }
 }

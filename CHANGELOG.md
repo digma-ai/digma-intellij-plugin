@@ -1,6 +1,30 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.58] - 2023-04-11
+### Changed
+- Added plugin loaded analytics event
+- Added link to go back to installation wizard
+- Add pagination to TopUsage panel
+- Fixed usageStatus must not be null #508
+- Applied new style for Recent activity environments selector
+- Add `Never Reached` code lens for code objects with no data
+- Show `Runtime data` on any method if we have any non-critical insights
+- Support showing wizard in different versions for Pycharm, Rider #519
+
+## [2.0.57] - 2023-04-09
+### Changed
+- Disable env icon if current method does not have insights #420
+- UI update: light theme for wizard + new animations
+- Fixed Rider is not responding #311
+- Feature/refresh faster when clicking recent activity (#495)
+- Users can now navigate back to steps they skipped over in the onbo… (#506)
+- Users can now navigate back to steps they skipped over in the onboarding wizard. 2. Added a direct link to the Docker app from the 'connection error' page 
+- Added better styling for navigation into steps in the wizard 
+- Switched order of empty states to ensure we show the no observability panel even when we don't have insights data 
+- improved previous commit 
+- fixed some statuses not being shown
+
 ## [2.0.56] - 2023-04-06
 ### Changed
 - Added tmp posthog token to code
@@ -176,4 +200,6 @@ All notable changes to this project will be documented in this file.
 [2.0.54]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.53...v2.0.54
 [2.0.55]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.54...v2.0.55
 [2.0.56]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.55...v2.0.56
-[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.56...HEAD
+[2.0.57]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.56...v2.0.57
+[2.0.58]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.57...v2.0.58
+[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.58...HEAD

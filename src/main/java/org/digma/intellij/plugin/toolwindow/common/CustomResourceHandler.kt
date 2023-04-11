@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.toolwindow.common
 
+import com.intellij.openapi.application.ApplicationNamesInfo
 import com.intellij.openapi.project.Project
 import freemarker.template.Configuration
 import org.cef.callback.CefCallback
@@ -20,6 +21,7 @@ import java.net.URLConnection
 const val INDEX_TEMPLATE_FILE_NAME: String = "indextemplate.ftl"
 const val BASE_PACKAGE_PATH: String = "webview/"
 const val ENV_VARIABLE_THEME: String = "theme"
+const val ENV_VARIABLE_IDE: String = "ide"
 const val IS_JAEGER_ENABLED: String = "isJaegerEnabled"
 const val WIZARD_SKIP_INSTALLATION_STEP_VARIABLE: String = "wizardSkipInstallationStep"
 const val COMMON_FILES_FOLDER_NAME: String = "common"
@@ -163,7 +165,8 @@ private fun loadFreemarkerTemplate(project: Project, resourceFolderName: String)
     val data = mapOf(
             ENV_VARIABLE_THEME to ThemeUtil.getCurrentThemeName(),
             IS_JAEGER_ENABLED to isJaegerUrlPresentInUserSettings(),
-            WIZARD_SKIP_INSTALLATION_STEP_VARIABLE to isServerConnectedAlready
+            WIZARD_SKIP_INSTALLATION_STEP_VARIABLE to isServerConnectedAlready,
+            ENV_VARIABLE_IDE to ApplicationNamesInfo.getInstance().productName //Available values: "IDEA", "Rider", "PyCharm"
     )
     val writer = StringWriter()
     writer.use {

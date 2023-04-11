@@ -126,4 +126,16 @@ public class IDEUtilsService {
         }
     }
 
+    public static boolean isIdeaIDE(String productName) {
+        return SupportedIDETypes.IDEA.getProductName().equals(productName);
+    }
+
+    public static boolean isRiderIDE(String productName) {
+        return SupportedIDETypes.RIDER.getProductName().equals(productName);
+    }
+
+    public static boolean isPyCharmIDE(String productName) {
+        return SupportedIDETypes.PYCHARM.getProductName().equals(productName);
+    }
+
 }

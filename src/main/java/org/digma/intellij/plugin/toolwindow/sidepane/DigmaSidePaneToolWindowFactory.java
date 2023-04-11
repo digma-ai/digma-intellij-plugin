@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.toolwindow.sidepane;
 
+import com.intellij.openapi.application.ApplicationNamesInfo;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
@@ -7,7 +8,9 @@ import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.ContentFactory;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
+import org.digma.intellij.plugin.common.IDEUtilsService;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.persistence.PersistenceData;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.psi.LanguageService;
@@ -66,7 +69,14 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         ErrorsActionsService errorsActionsService = project.getService(ErrorsActionsService.class);
         toolWindow.getContentManager().addContentManagerListener(errorsActionsService);
 
-        if (PersistenceService.getInstance().getState().getAlreadyPassedTheInstallationWizard()) {
+        String productName = ApplicationNamesInfo.getInstance().getProductName();
+        PersistenceData persistenceDataState = PersistenceService.getInstance().getState();
+
+        if (IDEUtilsService.isIdeaIDE(productName) && persistenceDataState.getAlreadyPassedTheInstallationWizardForIdeaIDE() ||
+                IDEUtilsService.isRiderIDE(productName) && persistenceDataState.getAlreadyPassedTheInstallationWizardForRiderIDE() ||
+                IDEUtilsService.isPyCharmIDE(productName) && persistenceDataState.getAlreadyPassedTheInstallationWizardForPyCharmIDE()
+
+        ) {
             ToolWindowShower.getInstance(project).displayMainSidePaneWindowPanel();
         } else {
             ToolWindowShower.getInstance(project).displayInstallationWizard();
@@ -77,9 +87,9 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         // can run this task when the solution is fully loaded.
         DumbService.getInstance(project).runWhenSmart(() -> initializeWhenSmart(project));
 
-        if(!PersistenceService.getInstance().getState().getFirstTimePluginLoaded()){
+        if(!persistenceDataState.getFirstTimePluginLoaded()){
             ActivityMonitor.getInstance(project).registerFirstTimePluginLoaded();
-            PersistenceService.getInstance().getState().setFirstTimePluginLoaded(true);
+            persistenceDataState.setFirstTimePluginLoaded(true);
         }
     }
     

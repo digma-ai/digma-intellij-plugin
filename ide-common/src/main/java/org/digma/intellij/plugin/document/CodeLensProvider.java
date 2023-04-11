@@ -53,7 +53,7 @@ public class CodeLensProvider {
                 .toList();
 
         methodsInfo.stream().forEach(methodInfo -> {
-            if (documentInfoService.getCachedMethodInsights(methodInfo).stream().count() == 0){
+            if (documentInfoService.getCachedMethodInsights(methodInfo).stream().count() == 0) {
                 var codeObjectId = methodInfo.getId();
                 CodeLens codeLen = new CodeLens(codeObjectId, "Never Reached", 7);
                 codeLen.setLensDescription("No tracing data for this code object");
@@ -88,6 +88,21 @@ public class CodeLensProvider {
                     }
                 }
         );
+
+        // add Runtime Data code lens only after all previous code lenses were added
+        methodInsightsList.forEach(insight -> {
+            if (insight.getDecorators() != null && insight.getDecorators().size() == 0) {
+                var codeObjectId = getMethodCodeObjectId(insight);
+                if (!codeLensList.stream().anyMatch(x -> x.getCodeObjectId().equals(codeObjectId))){
+                    CodeLens codeLen = new CodeLens(codeObjectId, "Runtime Data", 8);
+                    codeLen.setLensDescription("Code object has basic insights");
+                    codeLen.setAnchor("Top");
+
+                    codeLensList.add(codeLen);
+                }
+            }
+        });
+
         return codeLensList;
     }
 

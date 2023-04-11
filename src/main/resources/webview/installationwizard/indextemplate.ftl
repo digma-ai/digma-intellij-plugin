@@ -15,7 +15,8 @@
 <div id="root"></div>
 <!-- Environment variables -->
 <script>
-  window.environment = "JetBrains";
+  window.platform = "JetBrains";
+  window.ide = "${ide}";
   window.theme = "${theme}";
   window.mainFont;
   window.codeFont;

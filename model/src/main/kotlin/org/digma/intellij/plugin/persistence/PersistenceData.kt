@@ -4,7 +4,9 @@ data class PersistenceData(
         var currentEnv: String? = null,
         var isWorkspaceOnly: Boolean = false,
         var isAutoOtel: Boolean = false,
-        var alreadyPassedTheInstallationWizard: Boolean = false,
+        var alreadyPassedTheInstallationWizardForIdeaIDE: Boolean = false,
+        var alreadyPassedTheInstallationWizardForRiderIDE: Boolean = false,
+        var alreadyPassedTheInstallationWizardForPyCharmIDE: Boolean = false,
         var firstTimeConnectionEstablished: Boolean = false,
         var firstTimePluginLoaded: Boolean = false,
         var firstTimeInsightReceived: Boolean = false

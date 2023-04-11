@@ -5,7 +5,7 @@
     <id>org.digma.intellij</id>
     <version>${project.version}</version>
     <name>Digma Continuous Feedback</name>
-    <vendor>digma.ai</vendor>
+    <vendor>digma</vendor>
     <description>
         Please write plugin description in README.md , see <!-- Plugin description --> section
     </description>

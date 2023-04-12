@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.59] - 2023-04-11
+### Changed
+- changed org key in plugin xml (#524)
+
 ## [2.0.58] - 2023-04-11
 ### Changed
 - Added plugin loaded analytics event
@@ -202,4 +206,5 @@ All notable changes to this project will be documented in this file.
 [2.0.56]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.55...v2.0.56
 [2.0.57]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.56...v2.0.57
 [2.0.58]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.57...v2.0.58
-[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.58...HEAD
+[2.0.59]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.58...v2.0.59
+[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.59...HEAD

@@ -15,7 +15,7 @@ import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.BorderLayout
 import javax.swing.*
 
-private const val RECORDS_PER_PAGE = 2
+private const val RECORDS_PER_PAGE = 4
 
 fun spanUsagesPanel(project: Project, insight: SpanUsagesInsight, moreData: HashMap<String, Any>): JPanel {
 

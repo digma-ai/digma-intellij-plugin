@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.analytics;
 
+import org.digma.intellij.plugin.model.rest.AboutResult;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
@@ -43,4 +44,6 @@ public interface AnalyticsProvider extends Closeable {
     String getHtmlGraphForSpanScaling(SpanHistogramQuery request);
 
     RecentActivityResult getRecentActivity(RecentActivityRequest recentActivityRequest);
+    
+    AboutResult getAbout();
 }

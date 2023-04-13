@@ -16,4 +16,12 @@ public class ReadActions {
         }
     }
 
+    public static void ensureReadAction(Runnable runnable){
+        if (ApplicationManager.getApplication().isReadAccessAllowed()){
+            runnable.run();
+        }else{
+            ReadAction.run(runnable::run);
+        }
+    }
+
 }

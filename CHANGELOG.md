@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.61] - 2023-04-13
+### Changed
+- Show `Not Reached` only for instrumented endpoints/spans
+- Fixed TopUsages insight flows layouts
+- Ensure read action issue 526 (#534)
+
 ## [2.0.60] - 2023-04-13
 ### Changed
 - Show 4 Top Usage insights per page
@@ -214,4 +220,5 @@ All notable changes to this project will be documented in this file.
 [2.0.58]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.57...v2.0.58
 [2.0.59]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.58...v2.0.59
 [2.0.60]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.59...v2.0.60
-[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.60...HEAD
+[2.0.61]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.60...v2.0.61
+[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.61...HEAD

@@ -21,6 +21,7 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import kotlin.Pair;
 import org.digma.intellij.plugin.common.EDT;
+import org.digma.intellij.plugin.common.ReadActions;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
@@ -332,28 +333,31 @@ public class JavaLanguageService implements LanguageService {
     private @Nullable PsiMethod findPsiMethodByMethodCodeObjectId(@Nullable String methodId) {
         if (methodId == null) return null;
 
+
         if (methodId.contains("$_$")) {
-            var className = methodId.substring(0, methodId.indexOf("$_$"));
 
-            //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
-            className = className.replace('$', '.');
+            return ReadActions.ensureReadAction(() -> {
+                var className = methodId.substring(0, methodId.indexOf("$_$"));
+                //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
+                className = className.replace('$', '.');
 
-            //searching in project scope will find only project classes
-            Collection<PsiClass> psiClasses =
-                    JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.projectScope(project));
-            if (!psiClasses.isEmpty()) {
-                //hopefully there is only one class by that name in the project
-                PsiClass psiClass = psiClasses.stream().findAny().get();
-                PsiFile psiFile = PsiTreeUtil.getParentOfType(psiClass, PsiFile.class);
-                for (PsiMethod method : psiClass.getMethods()) {
-                    String javaMethodCodeObjectId = createJavaMethodCodeObjectId(method);
-                    if (javaMethodCodeObjectId.equals(methodId) && psiFile != null) {
-//                        String url = PsiUtils.psiFileToUri(psiFile);
-//                        workspaceUrls.put(methodId, new Pair<>(url, method.getTextOffset()));
-                        return method;
+                //searching in project scope will find only project classes
+                Collection<PsiClass> psiClasses =
+                        JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.projectScope(project));
+                if (!psiClasses.isEmpty()) {
+                    //hopefully there is only one class by that name in the project
+                    PsiClass psiClass = psiClasses.stream().findAny().get();
+                    PsiFile psiFile = PsiTreeUtil.getParentOfType(psiClass, PsiFile.class);
+                    for (PsiMethod method : psiClass.getMethods()) {
+                        String javaMethodCodeObjectId = createJavaMethodCodeObjectId(method);
+                        if (javaMethodCodeObjectId.equals(methodId) && psiFile != null) {
+                            return method;
+                        }
                     }
                 }
-            }
+                return null;
+            });
+
         }else{
             Log.log(LOGGER::debug, "method id in findWorkspaceUrisForMethodCodeObjectIds does not contain $_$ {}", methodId);
         }

@@ -53,7 +53,7 @@ public class CodeLensProvider {
                 .toList();
 
         methodsInfo.stream().forEach(methodInfo -> {
-            if (documentInfoService.getCachedMethodInsights(methodInfo).stream().count() == 0) {
+            if (documentInfoService.getCachedMethodInsights(methodInfo).stream().count() == 0 && methodInfo.hasRelatedCodeObjectIds()) {
                 var codeObjectId = methodInfo.getId();
                 CodeLens codeLen = new CodeLens(codeObjectId, "Never Reached", 7);
                 codeLen.setLensDescription("No tracing data for this code object");

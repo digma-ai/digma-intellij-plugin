@@ -157,19 +157,6 @@ fun getDefaultSpanOneRecordPanel(): JPanel {
     return spanOneRecordPanel
 }
 
-fun buildJPanelWithButtonToJaeger(line: JPanel, traceSample: TraceSample?,
-                                  project: Project, spanName: String): JPanel {
-    val buttonToJaeger = buildButtonToJaeger(project, "Trace", spanName, listOf(traceSample))
-    if (buttonToJaeger != null) {
-        val wrapper = JPanel(BorderLayout())
-        wrapper.isOpaque = false
-        wrapper.border = JBUI.Borders.emptyTop(5)
-        wrapper.add(buttonToJaeger, BorderLayout.LINE_END)
-        line.add(wrapper)
-    }
-    return line
-}
-
 fun buildTraceSample(percentile: SpanDurationsPercentile): TraceSample {
     val percentileName = "P${(percentile.percentile * 100).toInt()}"
     var traceId = ""

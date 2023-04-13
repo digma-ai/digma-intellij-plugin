@@ -1,6 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.60] - 2023-04-13
+### Changed
+- Show 4 Top Usage insights per page
+- Show arrow buttons only if content is bigger then environment panel Close #50 + Fix scroll
+- Added server version to analytics
+
 ## [2.0.59] - 2023-04-11
 ### Changed
 - changed org key in plugin xml (#524)
@@ -207,4 +213,5 @@ All notable changes to this project will be documented in this file.
 [2.0.57]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.56...v2.0.57
 [2.0.58]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.57...v2.0.58
 [2.0.59]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.58...v2.0.59
-[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.59...HEAD
+[2.0.60]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.59...v2.0.60
+[Unreleased]: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.60...HEAD

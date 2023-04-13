@@ -13,6 +13,7 @@ import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
+import org.digma.intellij.plugin.model.rest.AboutResult;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
@@ -81,6 +82,7 @@ public class AnalyticsService implements Disposable {
     //this status is used to keep track of connection errors, and for helping with reporting messages only when necessary
     // and keep the log clean
     private final Status status = new Status();
+    private RestAnalyticsProvider analyticsProvider;
 
     public AnalyticsService(@NotNull Project project) {
         //initialize BackendConnectionMonitor when starting, so it is aware early on connection statuses
@@ -128,6 +130,10 @@ public class AnalyticsService implements Disposable {
         return environment;
     }
 
+    public AnalyticsProvider getAnalyticsProvider(){
+        return analyticsProvider;
+    }
+
     //just replace the client and do not fire any events
     //this method should be synchronized, and it shouldn't be a problem that really doesn't happen too often.
     private synchronized void replaceClient(String url, String token) {
@@ -138,8 +144,8 @@ public class AnalyticsService implements Disposable {
                 Log.log(LOGGER::warn, e.getMessage());
             }
         }
-
-        analyticsProviderProxy = newAnalyticsProviderProxy(new RestAnalyticsProvider(url, token));
+        analyticsProvider = new RestAnalyticsProvider(url, token);
+        analyticsProviderProxy = newAnalyticsProviderProxy(analyticsProvider);
     }
 
 

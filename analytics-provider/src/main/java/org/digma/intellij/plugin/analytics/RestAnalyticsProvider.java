@@ -6,6 +6,7 @@ import com.google.common.io.CharStreams;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
+import org.digma.intellij.plugin.model.rest.AboutResult;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
@@ -124,6 +125,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     @Override
     public RecentActivityResult getRecentActivity(RecentActivityRequest recentActivityRequest) {
         return execute(() -> client.analyticsProvider.getRecentActivity(recentActivityRequest));
+    }
+
+    @Override
+    public AboutResult getAbout() {
+        return execute(() -> client.analyticsProvider.getAbout());
     }
 
     protected static String readEntire(ResponseBody responseBody) {
@@ -376,6 +382,12 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         @POST("/CodeAnalytics/codeObjects/recent_activity")
         Call<RecentActivityResult> getRecentActivity(@Body RecentActivityRequest recentActivityRequest);
 
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("/about")
+        Call<AboutResult> getAbout();
     }
 
 }

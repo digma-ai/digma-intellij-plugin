@@ -50,6 +50,8 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
         val token = "phc_5sy6Kuv1EYJ9GAdWPeGl7gx31RAw7BR7NHnOuLCUQZK"
         postHog = PostHog.Builder(token).build()
         registerSessionDetails()
+
+        ConnectionActivityMonitor.loadInstance(project)
     }
 
 //    override fun run() {
@@ -150,9 +152,18 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
         postHog?.capture(clientId,"plugin first-loaded")
     }
 
+    fun registerServerVersion(applicationVersion: String) {
+        postHog?.set(
+            clientId,
+            mapOf("server.version" to applicationVersion))
+    }
+
     private fun registerSessionDetails() {
         val osType = System.getProperty("os.name")
-        val ideVersion = ApplicationInfo.getInstance().build.asString()
+        val ideInfo = ApplicationInfo.getInstance()
+        val ideName = ideInfo.versionName
+        val ideVersion = ideInfo.fullVersion
+        val ideBuildNumber = ideInfo.build.asString()
         val pluginVersion = Optional.ofNullable(PluginManagerCore.getPlugin(com.intellij.openapi.extensions.PluginId.getId(PluginId.PLUGIN_ID)))
                 .map(PluginDescriptor::getVersion)
                 .orElse("unknown")
@@ -161,7 +172,9 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
                 clientId,
                 mapOf(
                         "os.type" to osType,
+                        "ide.name" to ideName,
                         "ide.version" to ideVersion,
+                        "ide.build" to ideBuildNumber,
                         "plugin.version" to pluginVersion
                 ))
     }

@@ -23,6 +23,7 @@ import com.jetbrains.python.psi.PyFunction;
 import com.jetbrains.python.psi.stubs.PyFunctionNameIndex;
 import kotlin.Pair;
 import org.digma.intellij.plugin.common.EDT;
+import org.digma.intellij.plugin.common.ReadActions;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
@@ -235,24 +236,26 @@ public class PythonLanguageService implements LanguageService {
 
             var functionName = PythonLanguageUtils.extractFunctionNameFromCodeObjectId(methodId);
 
-            var functions = PyFunctionNameIndex.find(functionName, project, GlobalSearchScope.projectScope(project));
+            ReadActions.ensureReadAction(() -> {
+                var functions = PyFunctionNameIndex.find(functionName, project, GlobalSearchScope.projectScope(project));
 
-            //PyFunctionNameIndex may find many functions, we want only one, so if we found it break the loop.
-            // assuming that our createPythonMethodCodeObjectId returns a unique id
-            for (PyFunction function : functions) {
-                if (function.isValid()) {
-                    PsiFile psiFile = function.getContainingFile();
-                    if (PythonLanguageUtils.isProjectFile(project, psiFile)) {
-                        var codeObjectId = PythonLanguageUtils.createPythonMethodCodeObjectId(project, function);
-                        List<String> allIds = PythonAdditionalIdsProvider.getAdditionalIdsInclusive(codeObjectId, false);
-                        if (allIds.contains(methodId)) {
-                            String url = PsiUtils.psiFileToUri(psiFile);
-                            workspaceUris.put(methodId, new Pair<>(url, function.getTextOffset()));
-                            break;
+                //PyFunctionNameIndex may find many functions, we want only one, so if we found it break the loop.
+                // assuming that our createPythonMethodCodeObjectId returns a unique id
+                for (PyFunction function : functions) {
+                    if (function.isValid()) {
+                        PsiFile psiFile = function.getContainingFile();
+                        if (PythonLanguageUtils.isProjectFile(project, psiFile)) {
+                            var codeObjectId = PythonLanguageUtils.createPythonMethodCodeObjectId(project, function);
+                            List<String> allIds = PythonAdditionalIdsProvider.getAdditionalIdsInclusive(codeObjectId, false);
+                            if (allIds.contains(methodId)) {
+                                String url = PsiUtils.psiFileToUri(psiFile);
+                                workspaceUris.put(methodId, new Pair<>(url, function.getTextOffset()));
+                                break;
+                            }
                         }
                     }
                 }
-            }
+            });
         });
 
         return workspaceUris;

@@ -9,11 +9,13 @@ import org.digma.intellij.plugin.editor.updateListOfEntriesToDisplay
 import org.digma.intellij.plugin.model.rest.insights.SpanFlow
 import org.digma.intellij.plugin.model.rest.insights.SpanUsagesInsight
 import org.digma.intellij.plugin.ui.common.*
+import org.digma.intellij.plugin.ui.layouts.ResizableFlowLayout
 import org.digma.intellij.plugin.ui.list.openWorkspaceFileForSpan
 import org.digma.intellij.plugin.ui.model.TraceSample
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
-import java.awt.BorderLayout
+import java.awt.*
 import javax.swing.*
+
 
 private const val RECORDS_PER_PAGE = 4
 
@@ -81,25 +83,23 @@ private fun buildTopUsagePanel(
 
     flowsToDisplay.forEach { flow: SpanFlow ->
         topUsagePanel.add(getTopUsagePanel(project, moreData, flow, spanName))
+        topUsagePanel.add(Box.createRigidArea(Dimension(0, 5)))
     }
 }
 
 fun getTopUsagePanel(project: Project, moreData: HashMap<String, Any>,
                      spanFlow: SpanFlow, spanName: String): JPanel {
 
-    val flowsListPanel = JBPanel<JBPanel<*>>()
-    flowsListPanel.layout = BoxLayout(flowsListPanel, BoxLayout.Y_AXIS)
-    flowsListPanel.border = JBUI.Borders.empty()
-    flowsListPanel.isOpaque = false
-
-    val line = createDefaultBoxLayoutLineAxisPanel()
-    line.isOpaque = false
+    val flowPanel = JBPanel<JBPanel<*>>(BorderLayout())
+    flowPanel.border = JBUI.Borders.empty()
+    flowPanel.isOpaque = false
 
     val percentageLabel = CopyableLabelHtml(asHtml("${span(String.format("%.1f", spanFlow.percentage))}% "))
-    percentageLabel.border = JBUI.Borders.emptyRight(5)
+    percentageLabel.preferredSize = Dimension(40, 1)
+    flowPanel.add(percentageLabel, BorderLayout.WEST)
 
-    line.add(percentageLabel, BorderLayout.WEST)
-
+    val line = JBPanel<JBPanel<*>>(ResizableFlowLayout(FlowLayout.LEFT, 5, 0))
+    line.isOpaque = false
     var spanName = spanName // default, just in case first service is not found
     spanFlow.firstService?.let { firstService ->
         line.add(CopyableLabelHtml(asHtml(spanGrayed(firstService.service + ": "))))
@@ -120,15 +120,18 @@ fun getTopUsagePanel(project: Project, moreData: HashMap<String, Any>,
     spanFlow.sampleTraceIds.firstOrNull()?.let { sampleTraceId ->
         traceSample = TraceSample(spanName, sampleTraceId)
     }
-    flowsListPanel.add(line)
-    buildJPanelWithButtonToJaeger(flowsListPanel, traceSample, project, spanName)
+    flowPanel.add(line, BorderLayout.CENTER)
 
-    val result = JBPanel<JBPanel<*>>()
-    result.layout = BorderLayout()
-    result.add(flowsListPanel, BorderLayout.CENTER)
-    result.isOpaque = false
+    val buttonToJaeger = buildButtonToJaeger(project, "Trace", spanName, listOf(traceSample))
+    if(buttonToJaeger != null){
+        val wrapper = JPanel(BorderLayout())
+        wrapper.isOpaque = false
+        wrapper.border = JBUI.Borders.emptyTop(5)
+        wrapper.add(buttonToJaeger, BorderLayout.LINE_END)
+        flowPanel.add(wrapper, BorderLayout.SOUTH)
+    }
 
-    return result;
+    return flowPanel
 }
 
 fun addSpanLinkIfPossible(project: Project, service: SpanFlow.Service, moreData: HashMap<String, Any>, panel: JPanel) {

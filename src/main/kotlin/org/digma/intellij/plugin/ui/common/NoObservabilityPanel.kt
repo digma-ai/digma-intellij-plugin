@@ -154,12 +154,17 @@ private fun addNoObservabilityDetailsPart(text: String, panel: JPanel, gridy: In
 
 private class AddAnnotationButton: JButton(){
 
+    companion object{
+        val bg = ColorHexUtil.fromHex("#3638CD")
+    }
+
+
     init {
         text = "Add Annotation"
         boldFonts(this)
         isContentAreaFilled = false
         horizontalAlignment = SwingConstants.CENTER
-        background = JBColor.BLUE.darker().darker()
+        background = bg
         isOpaque = true
         border = JBUI.Borders.empty(2)
         margin = JBUI.emptyInsets()
@@ -167,7 +172,7 @@ private class AddAnnotationButton: JButton(){
         addMouseListener(object : MouseAdapter() {
             override fun mouseEntered(e: MouseEvent?) {
                 if (!isEnabled) return
-                border = JBUI.Borders.customLine(Color.GRAY,2)
+                border = JBUI.Borders.customLine(JBColor.GRAY,2)
             }
 
             override fun mouseExited(e: MouseEvent?) {
@@ -181,7 +186,7 @@ private class AddAnnotationButton: JButton(){
 
             override fun mouseReleased(e: MouseEvent?) {
                 if (!isEnabled) return
-                background = JBColor.BLUE.darker().darker()
+                background = bg
             }
         })
 
@@ -190,7 +195,7 @@ private class AddAnnotationButton: JButton(){
     override fun setEnabled(b: Boolean) {
         super.setEnabled(b)
         if (b){
-            background = JBColor.BLUE.darker().darker()
+            background = bg
             isBorderPainted = true
         }else{
             background = JBColor.LIGHT_GRAY

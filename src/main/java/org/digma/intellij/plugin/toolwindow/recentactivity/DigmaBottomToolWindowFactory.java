@@ -36,6 +36,7 @@ import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityGoToSpa
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityGoToTraceRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResponseEntry;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
+import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshService;
 import org.digma.intellij.plugin.service.EditorService;
@@ -45,8 +46,9 @@ import org.digma.intellij.plugin.toolwindow.common.ThemeChangeListener;
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
 import org.jetbrains.annotations.NotNull;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JPanel;
+import javax.swing.UIManager;
+import java.awt.BorderLayout;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -188,29 +190,32 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
                 LanguageService languageService = LanguageService.findLanguageServiceByMethodCodeObjectId(project, methodCodeObjectId);
                 Map<String, Pair<String, Integer>> workspaceUrisForMethodCodeObjectIds = languageService.findWorkspaceUrisForMethodCodeObjectIds(Collections.singletonList(methodCodeObjectId));
                 final Pair<String, Integer> fileAndOffset = workspaceUrisForMethodCodeObjectIds.get(methodCodeObjectId);
-                if (fileAndOffset != null) {
-                    // modifying the selected environment
-                    EnvironmentsSupplier environmentsSupplier = analyticsService.getEnvironment();
-                    String actualEnvName = adjustBackEnvNameIfNeeded(payload.getEnvironment());
-                    environmentsSupplier.setCurrent(actualEnvName);
+                if (fileAndOffset == null) {
+                    NotificationUtil.showNotification(project, "code object could not be found in the workspace");
+                    return;
+                }
 
-                    Triple<VirtualFile, Editor, Boolean> openedFileAndEditor = editorService.openWorkspaceFileInEditor(fileAndOffset.getFirst(), fileAndOffset.getSecond());
+                // modifying the selected environment
+                EnvironmentsSupplier environmentsSupplier = analyticsService.getEnvironment();
+                String actualEnvName = adjustBackEnvNameIfNeeded(payload.getEnvironment());
+                environmentsSupplier.setCurrent(actualEnvName);
 
-                    if (openedFileAndEditor != null) {
-                        boolean fileWasAlreadyOpen = openedFileAndEditor.component3();
-                        if (fileWasAlreadyOpen) {
-                            // if file already opened then refresh for faster insight getting (issue 474)
-                            RefreshService refreshService = RefreshService.getInstance(project);
-                            refreshService.refreshAllInBackground();
-                        }
+                Triple<VirtualFile, Editor, Boolean> openedFileAndEditor = editorService.openWorkspaceFileInEditor(fileAndOffset.getFirst(), fileAndOffset.getSecond());
+
+                if (openedFileAndEditor != null) {
+                    boolean fileWasAlreadyOpen = openedFileAndEditor.component3();
+                    if (fileWasAlreadyOpen) {
+                        // if file already opened then refresh for faster insight getting (issue 474)
+                        RefreshService refreshService = RefreshService.getInstance(project);
+                        refreshService.refreshAllInBackground();
                     }
+                }
 
-                    ToolWindow digmaSidePaneToolWindow = ToolWindowManager.getInstance(project).getToolWindow(DIGMA_SIDE_PANE_TOOL_WINDOW_NAME);
-                    if (digmaSidePaneToolWindow != null && !digmaSidePaneToolWindow.isVisible()) {
-                        digmaSidePaneToolWindow.show();
-                    } else {
-                        Log.log(LOGGER::debug, "digmaSidePaneToolWindow is empty OR is visible already");
-                    }
+                ToolWindow digmaSidePaneToolWindow = ToolWindowManager.getInstance(project).getToolWindow(DIGMA_SIDE_PANE_TOOL_WINDOW_NAME);
+                if (digmaSidePaneToolWindow != null && !digmaSidePaneToolWindow.isVisible()) {
+                    digmaSidePaneToolWindow.show();
+                } else {
+                    Log.log(LOGGER::debug, "digmaSidePaneToolWindow is empty OR is visible already");
                 }
             });
         }

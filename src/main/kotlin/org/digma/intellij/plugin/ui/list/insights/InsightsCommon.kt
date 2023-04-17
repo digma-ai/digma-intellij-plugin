@@ -18,6 +18,8 @@ import org.digma.intellij.plugin.notifications.NotificationUtil
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshService
 import org.digma.intellij.plugin.ui.common.*
+import org.digma.intellij.plugin.ui.common.Text.NO_OBSERVABILITY_DETAIL_DESCRIPTION
+import org.digma.intellij.plugin.ui.common.Text.NO_OBSERVABILITY_MISSING_DEPENDENCY_DESCRIPTION
 import org.digma.intellij.plugin.ui.list.ListItemActionButton
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.list.commonListItemPanel

@@ -8,13 +8,12 @@ import org.digma.intellij.plugin.notifications.NotificationUtil
 import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
-import java.awt.*
+import java.awt.BorderLayout
+import java.awt.GridBagConstraints
+import java.awt.GridBagLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import javax.swing.*
-import kotlin.math.pow
-import kotlin.math.roundToInt
-import kotlin.math.sqrt
 
 fun createNoObservabilityPanel(project: Project, insightsModel: InsightsModel): DigmaResettablePanel {
 
@@ -30,7 +29,7 @@ fun createNoObservabilityPanel(project: Project, insightsModel: InsightsModel): 
     constraints.gridheight = 1
     constraints.anchor = GridBagConstraints.CENTER
     constraints.insets = JBUI.insets(10, 5)
-    val icon = JLabel(NoObservabilityIcon())
+    val icon = JLabel(getIcon())
     icon.horizontalAlignment = SwingConstants.CENTER
     panel.add(icon,constraints)
 
@@ -149,7 +148,13 @@ private fun addNoObservabilityDetailsPart(text: String, panel: JPanel, gridy: In
     panel.add(noObservabilityDetailsLabel,constraints)
 }
 
-
+private fun getIcon():Icon{
+    return if (JBColor.isBright()){
+        Laf.Icons.Common.NoObservabilityLight
+    }else{
+        Laf.Icons.Common.NoObservabilityDark
+    }
+}
 
 
 private class AddAnnotationButton: JButton(){
@@ -204,39 +209,3 @@ private class AddAnnotationButton: JButton(){
     }
 }
 
-
-
-
-
-
-
-
-private class NoObservabilityIcon: Icon {
-
-    private val icon = Laf.Icons.Common.NoObservability
-    private val w: Int
-    private val h: Int
-    init {
-        val d = sqrt(icon.iconWidth.toDouble().pow(2.0) + icon.iconHeight.toDouble().pow(2.0))
-        w = d.roundToInt()
-        h = d.roundToInt()
-    }
-
-
-    override fun paintIcon(c: Component?, g: Graphics?, x: Int, y: Int) {
-        val g2d = g as Graphics2D
-        g2d.color = ColorHexUtil.fromHex("#323334")
-        g2d.fillOval(x,y,iconWidth,iconHeight)
-        val iconX = (w - icon.iconWidth) / 2
-        val iconY = (h - icon.iconHeight) / 2
-        icon.paintIcon(c,g,iconX,iconY)
-    }
-
-    override fun getIconWidth(): Int {
-        return w
-    }
-
-    override fun getIconHeight(): Int {
-        return w
-    }
-}

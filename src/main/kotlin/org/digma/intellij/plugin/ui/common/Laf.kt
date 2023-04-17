@@ -129,8 +129,10 @@ object Laf {
         class Common {
             companion object {
                 @JvmStatic val Loading = AllIcons.Actions.BuildLoadChanges
-                @JvmStatic val NoDataYet = SvgIcon.asIs("/icons/no_data_yet.svg")
-                @JvmStatic val NoObservability = SvgIcon.asIs("/icons/no_observability.svg")
+                @JvmStatic val NoDataYetLight = SvgIcon.asIs("/icons/no_data_yet-light.svg")
+                @JvmStatic val NoDataYetDark = SvgIcon.asIs("/icons/no_data_yet-dark.svg")
+                @JvmStatic val NoObservabilityLight = SvgIcon.asIs("/icons/no_observability-light.svg")
+                @JvmStatic val NoObservabilityDark = SvgIcon.asIs("/icons/no_observability-dark.svg")
                 @JvmStatic val Mascot64 = loadAndScaleIconByWidth("/icons/digma.png", 64)
             }
         }

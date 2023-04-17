@@ -1,18 +1,15 @@
 package org.digma.intellij.plugin.ui.common
 
-import com.intellij.ui.ColorHexUtil
+import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
-import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
-import java.awt.*
+import java.awt.GridBagConstraints
+import java.awt.GridBagLayout
 import javax.swing.Icon
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.SwingConstants
-import kotlin.math.pow
-import kotlin.math.roundToInt
-import kotlin.math.sqrt
 
-fun createNoDataYetPanel(): DigmaResettablePanel {
+fun createNoDataYetPanel(): JPanel {
 
     val panel = JPanel(GridBagLayout())
 
@@ -24,7 +21,7 @@ fun createNoDataYetPanel(): DigmaResettablePanel {
     constraints.gridheight = 1
     constraints.anchor = GridBagConstraints.CENTER
     constraints.insets = JBUI.insets(10, 5)
-    val icon = JLabel(NoDataYetIcon())
+    val icon = JLabel(getIcon())
     icon.horizontalAlignment = SwingConstants.CENTER
     panel.add(icon,constraints)
 
@@ -46,14 +43,7 @@ fun createNoDataYetPanel(): DigmaResettablePanel {
     panel.isOpaque = false
     panel.border = JBUI.Borders.empty()
 
-    val resettablePanel = object: DigmaResettablePanel(){
-        override fun reset() {
-        }
-    }
-    resettablePanel.layout = BorderLayout()
-    resettablePanel.add(panel, BorderLayout.CENTER)
-
-    return resettablePanel
+    return panel
 }
 
 
@@ -71,33 +61,11 @@ private fun addNoDataYetDetailsPart(text: String, panel: JPanel, gridy: Int){
 }
 
 
-
-private class NoDataYetIcon: Icon {
-
-    private val icon = Laf.Icons.Common.NoDataYet
-    private val w: Int
-    private val h: Int
-    init {
-        val d = sqrt(icon.iconWidth.toDouble().pow(2.0) + icon.iconHeight.toDouble().pow(2.0))
-        w = d.roundToInt()
-        h = d.roundToInt()
-    }
-
-
-    override fun paintIcon(c: Component?, g: Graphics?, x: Int, y: Int) {
-        val g2d = g as Graphics2D
-        g2d.color = ColorHexUtil.fromHex("#323334")
-        g2d.fillOval(x,y,iconWidth,iconHeight)
-        val iconX = (w - icon.iconWidth) / 2
-        val iconY = (h - icon.iconHeight) / 2
-        icon.paintIcon(c,g,iconX,iconY)
-    }
-
-    override fun getIconWidth(): Int {
-        return w
-    }
-
-    override fun getIconHeight(): Int {
-        return w
+private fun getIcon():Icon{
+    return if (JBColor.isBright()){
+        Laf.Icons.Common.NoDataYetLight
+    }else{
+        Laf.Icons.Common.NoDataYetDark
     }
 }
+

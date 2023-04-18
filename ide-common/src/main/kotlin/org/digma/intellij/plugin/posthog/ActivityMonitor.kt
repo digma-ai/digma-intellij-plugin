@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.posthog
 
 import com.intellij.ide.plugins.PluginManagerCore
-import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.extensions.PluginDescriptor
@@ -9,7 +8,6 @@ import com.intellij.openapi.project.Project
 import com.posthog.java.PostHog
 import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.common.CommonUtils
-import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.InsightType
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -29,16 +27,22 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
     }
 
     private val clientId: String
-//    private val tokenFetcherThread = Thread(this, "Token fetcher thread")
+    private val isDevUser: Boolean
+
+    //    private val tokenFetcherThread = Thread(this, "Token fetcher thread")
     private var postHog: PostHog? = null
     private var lastLensClick: LocalDateTime? = null
     private var lastInsightsViewed: HashSet<InsightType>? = null
 
     init {
         val hostname = CommonUtils.getLocalHostname()
-        clientId =
-                if (System.getenv("devenv") == "digma") hostname
-                else Integer.toHexString(hostname.hashCode())
+        if (System.getenv("devenv") == "digma") {
+            clientId = hostname
+            isDevUser = true
+        } else {
+            clientId = Integer.toHexString(hostname.hashCode())
+            isDevUser = false
+        }
 
 //        val cachedToken = getCachedToken()
 //        postHog =
@@ -70,7 +74,7 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
 //        registerSessionDetails()
 //    }
 
-    fun registerCustomEvent(eventName: String){
+    fun registerCustomEvent(eventName: String) {
         postHog?.capture(clientId, eventName)
     }
 
@@ -85,9 +89,9 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
             "unknown"
 
         postHog?.capture(
-                clientId,
-                "side-panel opened",
-                mapOf("reason" to reason)
+            clientId,
+            "side-panel opened",
+            mapOf("reason" to reason)
         )
     }
 
@@ -116,14 +120,14 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
         exception.printStackTrace(PrintWriter(stringWriter))
 
         postHog?.capture(
-                clientId,
-                "error",
-                mapOf(
-                        "message" to message,
-                        "exception.type" to exception.javaClass.name,
-                        "exception.message" to exception.message,
-                        "exception.stack-trace" to stringWriter.toString()
-                )
+            clientId,
+            "error",
+            mapOf(
+                "message" to message,
+                "exception.type" to exception.javaClass.name,
+                "exception.message" to exception.message,
+                "exception.stack-trace" to stringWriter.toString()
+            )
         )
     }
 
@@ -134,28 +138,29 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
 
         lastInsightsViewed = newInsightsViewed
         postHog?.capture(
-                clientId,
-                "insights viewed",
-                mapOf("insights" to insightTypes)
+            clientId,
+            "insights viewed",
+            mapOf("insights" to insightTypes)
         )
     }
 
     fun registerInsightButtonClicked(button: String) {
         postHog?.capture(
-                clientId,
-                "insights button-clicked",
-                mapOf("button" to button)
+            clientId,
+            "insights button-clicked",
+            mapOf("button" to button)
         )
     }
 
     fun registerFirstTimePluginLoaded() {
-        postHog?.capture(clientId,"plugin first-loaded")
+        postHog?.capture(clientId, "plugin first-loaded")
     }
 
     fun registerServerVersion(applicationVersion: String) {
         postHog?.set(
             clientId,
-            mapOf("server.version" to applicationVersion))
+            mapOf("server.version" to applicationVersion)
+        )
     }
 
     private fun registerSessionDetails() {
@@ -164,19 +169,22 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
         val ideName = ideInfo.versionName
         val ideVersion = ideInfo.fullVersion
         val ideBuildNumber = ideInfo.build.asString()
-        val pluginVersion = Optional.ofNullable(PluginManagerCore.getPlugin(com.intellij.openapi.extensions.PluginId.getId(PluginId.PLUGIN_ID)))
+        val pluginVersion =
+            Optional.ofNullable(PluginManagerCore.getPlugin(com.intellij.openapi.extensions.PluginId.getId(PluginId.PLUGIN_ID)))
                 .map(PluginDescriptor::getVersion)
                 .orElse("unknown")
 
         postHog?.set(
-                clientId,
-                mapOf(
-                        "os.type" to osType,
-                        "ide.name" to ideName,
-                        "ide.version" to ideVersion,
-                        "ide.build" to ideBuildNumber,
-                        "plugin.version" to pluginVersion
-                ))
+            clientId,
+            mapOf(
+                "os.type" to osType,
+                "ide.name" to ideName,
+                "ide.version" to ideVersion,
+                "ide.build" to ideBuildNumber,
+                "plugin.version" to pluginVersion,
+                "user.type" to if (isDevUser) "internal" else "external"
+            )
+        )
     }
 
 //    override fun dispose() {

@@ -154,8 +154,12 @@ class OTELJarProvider {
 
     private fun downloadWithProgress(downloader: FileDownloader, project: Project, downloadDir: File) {
         try {
-            val files = downloader.downloadFilesWithProgress(downloadDir.absolutePath, project, null)
-            if (files != null && files.size == 2) {
+            if (ApplicationManager.getApplication().isReadAccessAllowed){
+                downloader.download(downloadDir)
+            }else{
+                downloader.downloadFilesWithProgress(downloadDir.absolutePath, project, null)
+            }
+            if (filesExist(project)) {
                 Log.log(logger::debug, "otel agent jars downloaded to {}", downloadDir)
             } else {
                 Log.log(logger::debug, "Could not download otel agent jars")

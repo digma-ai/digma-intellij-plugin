@@ -61,6 +61,7 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         ToolWindowShower.getInstance(project).setMainContent(content);
 
         var jcefDigmaPanel = createInstallationWizardSidePanelWindowPanel(project);
+        //todo: what happens if returns null ? there is no null check in ToolWindowShower.displayInstallationWizard
         if(jcefDigmaPanel != null){
             content =  ContentFactory.getInstance().createContent(jcefDigmaPanel, null, false);
             ToolWindowShower.getInstance(project).setInstallationWizardContent(content);

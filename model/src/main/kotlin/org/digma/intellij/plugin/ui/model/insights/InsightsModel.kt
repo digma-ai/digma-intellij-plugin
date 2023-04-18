@@ -17,9 +17,8 @@ class InsightsModel : PanelModel {
     var previewListViewItems: List<ListViewItem<String>> = Collections.emptyList()
     var usageStatusResult: UsageStatusResult = EmptyUsageStatusResult
     var card: InsightsTabCard = InsightsTabCard.INSIGHTS
-    var status: UiInsightStatus = UiInsightStatus.InsightExist
+    var status: UiInsightStatus = UiInsightStatus.NoInsights
     var scope: Scope = EmptyScope("")
-
 
     override fun count(): String {
         return insightsCount.toString()
@@ -64,6 +63,7 @@ enum class InsightsTabCard {
 enum class UiInsightStatus {
     Unknown, // initial state, when insights is 0, might be changed to something else
     InsightExist, // insight count is greater than 0
+    NoInsights,
     InsightPending, // backend is aware of the code objects, but still no insights, soon there will be
     NoSpanData, // backend is not aware of code objects
     NoObservability, // method has no insights and has no related code object ids (spans and/or endpoints)

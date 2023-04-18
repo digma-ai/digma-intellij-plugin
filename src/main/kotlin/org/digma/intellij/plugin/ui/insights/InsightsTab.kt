@@ -115,7 +115,6 @@ fun insightsPanel(project: Project): DigmaTabPanel {
 
             insightsList.getModel().setListData(insightsModel.listViewItems)
             previewList.getModel().setListData(insightsModel.previewListViewItems)
-
             if (insightsList.getModel().size == 0 && insightsModel.card == InsightsTabCard.INSIGHTS) {
                 val cardName = when (insightsModel.status) {
                     UiInsightStatus.InsightPending -> UiInsightStatus.InsightPending.name
@@ -124,6 +123,10 @@ fun insightsPanel(project: Project): DigmaTabPanel {
                         noObservabilityPanel.reset()
                         UiInsightStatus.NoObservability.name
                     }
+                    // because of sync issues between the model (updating in the background) and the current backend call.
+                    // model has no insights and the current backend call returns insights exists, the model will be updated in x seconds (with insights) so its ok to show no insights for this period of time
+                    UiInsightStatus.InsightExist -> UiInsightStatus.InsightPending.name
+                    UiInsightStatus.NoInsights -> NO_INFO_CARD_NAME
                     UiInsightStatus.Unknown -> LOADING_INSIGHTS_CARD_NAME
                     else -> NO_INFO_CARD_NAME
                 }

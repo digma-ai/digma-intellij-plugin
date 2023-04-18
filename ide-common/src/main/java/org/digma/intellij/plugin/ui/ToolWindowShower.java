@@ -53,7 +53,7 @@ public class ToolWindowShower {
     public void setToolWindowContent(Content newContent){
         Content currentContent = toolWindow.getContentManager().getContent(0);
         if(currentContent != null){
-            toolWindow.getContentManager().removeContent(currentContent, true);
+            toolWindow.getContentManager().removeContent(currentContent, false);
         }
 
         toolWindow.getContentManager().addContent(newContent);

@@ -16,7 +16,8 @@ constructor(
 data class SendTrackingEventRequestPayload
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@ConstructorProperties("eventName")
+@ConstructorProperties("eventName", "data")
 constructor(
-    val eventName: String
+    val eventName: String,
+    val data: Map<String, Any>
 )

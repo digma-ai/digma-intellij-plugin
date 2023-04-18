@@ -4,4 +4,5 @@ public interface PluginId {
 
     String PLUGIN_ID = "org.digma.intellij";
     String TOOL_WINDOW_ID = "Digma";
+    String OBSERVABILITY_WINDOW_ID = "Observability";
 }

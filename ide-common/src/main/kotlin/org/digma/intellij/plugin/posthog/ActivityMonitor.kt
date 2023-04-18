@@ -74,8 +74,8 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
 //        registerSessionDetails()
 //    }
 
-    fun registerCustomEvent(eventName: String) {
-        postHog?.capture(clientId, eventName)
+    fun registerCustomEvent(eventName: String, tags: Map<String, Any>) {
+        postHog?.capture(clientId, eventName, tags)
     }
 
     fun registerLensClicked() {
@@ -93,6 +93,10 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
             "side-panel opened",
             mapOf("reason" to reason)
         )
+    }
+
+    fun registerObservabilityPanelOpened() {
+        postHog?.capture(clientId, "observability-panel opened")
     }
 
     fun registerFirstConnectionEstablished() {

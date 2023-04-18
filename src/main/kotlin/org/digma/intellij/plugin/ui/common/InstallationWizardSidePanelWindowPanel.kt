@@ -70,7 +70,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): JPanel? {
                     SendTrackingEventRequest::class.java
                 )
                 if (payload != null) {
-                    getInstance(project).registerCustomEvent(payload.eventName)
+                    getInstance(project).registerCustomEvent(payload.eventName, payload.data)
                 }
             }
             if (ToolWindowUtil.INSTALLATION_WIZARD_SET_OBSERVABILITY.equals(action, ignoreCase = true)) {

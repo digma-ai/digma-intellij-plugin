@@ -23,6 +23,7 @@ testing {
                 implementation(libs.kotlin.stdlib.jdk8)
                 implementation(libs.okhttp)
                 implementation(libs.okhttp.mockwebserver)
+                implementation("com.google.code.gson:gson:2.10.1")
             }
 
             targets {

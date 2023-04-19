@@ -152,7 +152,7 @@
                 class="org.digma.intellij.plugin.common.modelChangeListener.ModelChangeHandler"
                 topic="org.digma.intellij.plugin.common.modelChangeListener.ModelChangeListener"/>
         <listener
-                class="org.digma.intellij.plugin.toolwindow.sidepane.DigmaSidePaneToolWindowListener"
+                class="org.digma.intellij.plugin.toolwindow.common.DigmaToolWindowsListener"
                 topic="com.intellij.openapi.wm.ex.ToolWindowManagerListener"/>
     </projectListeners>
 

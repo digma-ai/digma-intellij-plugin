@@ -33,7 +33,7 @@ constructor(
         override val prefixedCodeObjectId: String?,
         override val shortDisplayInfo: ShortDisplayInfo?,
         override val spanInfo: SpanInfo,
-        val affectedEndpoints: List<EndpointInfo> = ArrayList()
+        val affectedEndpoints: List<AffectedEndpointInfo> = ArrayList()
 ) : SpanInsight {
 
     override val type: InsightType = InsightType.SpanScalingRootCause

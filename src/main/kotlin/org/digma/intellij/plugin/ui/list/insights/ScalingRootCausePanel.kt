@@ -9,12 +9,14 @@ import org.apache.commons.lang3.StringUtils
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.editor.getCurrentPageNumberForInsight
 import org.digma.intellij.plugin.editor.updateListOfEntriesToDisplay
+import org.digma.intellij.plugin.model.rest.insights.AffectedEndpointInfo
 import org.digma.intellij.plugin.model.rest.insights.EndpointInfo
 import org.digma.intellij.plugin.model.rest.insights.EndpointSchema
 import org.digma.intellij.plugin.model.rest.insights.SpanScalingRootCauseInsight
 import org.digma.intellij.plugin.ui.common.*
 import org.digma.intellij.plugin.ui.list.ListItemActionButton
 import org.digma.intellij.plugin.ui.list.openWorkspaceFileForSpan
+import org.digma.intellij.plugin.ui.model.TraceSample
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.BorderLayout
 import javax.swing.*
@@ -31,7 +33,7 @@ fun spanScalingRootCauseItemsPanel(project: Project, insight: SpanScalingRootCau
     val lastPageNum: Int
     var rootCausePanel: DigmaResettablePanel? = null
     val paginationPanel = JPanel()
-    val affectedEndpointsToDisplay = ArrayList<EndpointInfo>()
+    val affectedEndpointsToDisplay = ArrayList<AffectedEndpointInfo>()
     val affectedEndpoints = insight.affectedEndpoints
     
     lastPageNum = countNumberOfPages(affectedEndpoints.size, RECORDS_PER_PAGE_AFFECTED_ENDPOINTS)
@@ -67,7 +69,7 @@ fun spanScalingRootCauseItemsPanel(project: Project, insight: SpanScalingRootCau
 
 private fun rebuildRootCauseAffectedEndpointRowsPanel(
         rootCausePanel: DigmaResettablePanel,
-        affectedEndpointToDisplay: List<EndpointInfo>,
+        affectedEndpointToDisplay: List<AffectedEndpointInfo>,
         project: Project,
         moreData: HashMap<String, Any>
 ) {
@@ -77,7 +79,7 @@ private fun rebuildRootCauseAffectedEndpointRowsPanel(
 
 private fun buildRootCauseAffectedEndpointPanel(
         rootCausePanel: DigmaResettablePanel,
-        affectedEndpointToDisplay: List<EndpointInfo>,
+        affectedEndpointToDisplay: List<AffectedEndpointInfo>,
         project: Project,
         moreData: HashMap<String, Any>
 ) {
@@ -96,12 +98,12 @@ private fun buildRootCauseAffectedEndpointPanel(
 
     rootCausePanel.add(labelPanel)
 
-    affectedEndpointToDisplay.forEach { affEndpoint: EndpointInfo ->
+    affectedEndpointToDisplay.forEach { affEndpoint: AffectedEndpointInfo ->
         rootCausePanel.add(getRootCauseAffectedEndpointPanel(project, moreData, affEndpoint))
     }
 }
 
-fun getRootCauseAffectedEndpointPanel(project: Project, moreData: HashMap<String, Any>, affectedEndpoint: EndpointInfo): JPanel{
+fun getRootCauseAffectedEndpointPanel(project: Project, moreData: HashMap<String, Any>, affectedEndpoint: AffectedEndpointInfo): JPanel{
     val endPointPanel = JPanel(BorderLayout())
     endPointPanel.border = JBUI.Borders.empty()
     endPointPanel.isOpaque = false
@@ -119,6 +121,13 @@ fun getRootCauseAffectedEndpointPanel(project: Project, moreData: HashMap<String
 
         link.toolTipText = asHtml("$targetClass: $shortRouteName")
         endPointPanel.add(link, BorderLayout.NORTH)
+
+        val sampleTraceId = affectedEndpoint.sampleTraceId
+        val traceSample = TraceSample(affectedEndpoint.name, sampleTraceId)
+        val buttonToJaeger = buildButtonToJaeger(project, "Trace", affectedEndpoint.name, listOf(traceSample))
+        if (buttonToJaeger != null) {
+            endPointPanel.add(buttonToJaeger, BorderLayout.EAST)
+        }
     } else {
         val line1 = JBLabel(asHtml("${affectedEndpoint.serviceName}: <b>$shortRouteName</b>"))
         endPointPanel.add(line1)

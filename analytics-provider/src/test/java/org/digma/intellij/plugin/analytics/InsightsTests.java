@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.analytics;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+import com.google.gson.Gson;
 import okhttp3.mockwebserver.MockResponse;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
@@ -199,31 +200,37 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
 
         assertEquals(HotspotInsight.class, codeObjectInsights.get(0).getClass());
         HotspotInsight hotspotInsight = (HotspotInsight) codeObjectInsights.get(0);
-        assertEquals(expectedHotspotInsight, hotspotInsight);
+        AssertObjectsAreEqual(expectedHotspotInsight, hotspotInsight);
 
         assertEquals(ErrorInsight.class, codeObjectInsights.get(1).getClass());
         ErrorInsight errorInsight = (ErrorInsight) codeObjectInsights.get(1);
-        assertEquals(expectedErrorInsight, errorInsight);
+        AssertObjectsAreEqual(expectedErrorInsight, errorInsight);
 
         assertEquals(NormalUsageInsight.class, codeObjectInsights.get(2).getClass());
         NormalUsageInsight normalUsageInsight = (NormalUsageInsight) codeObjectInsights.get(2);
-        assertEquals(expectedNormalUsageInsight, normalUsageInsight);
+        AssertObjectsAreEqual(expectedNormalUsageInsight, normalUsageInsight);
 
         assertEquals(LowUsageInsight.class, codeObjectInsights.get(3).getClass());
         LowUsageInsight lowUsageInsight = (LowUsageInsight) codeObjectInsights.get(3);
-        assertEquals(expectedLowUsageInsight, lowUsageInsight);
+        AssertObjectsAreEqual(expectedLowUsageInsight, lowUsageInsight);
 
         assertEquals(HighUsageInsight.class, codeObjectInsights.get(4).getClass());
         HighUsageInsight highUsageInsight = (HighUsageInsight) codeObjectInsights.get(4);
-        assertEquals(expectedHighUsageInsight, highUsageInsight);
+        AssertObjectsAreEqual(expectedHighUsageInsight, highUsageInsight);
 
         assertEquals(SlowestSpansInsight.class, codeObjectInsights.get(5).getClass());
         SlowestSpansInsight slowestSpansInsight = (SlowestSpansInsight) codeObjectInsights.get(5);
-        assertEquals(expectedSlowestSpansInsight, slowestSpansInsight);
+        AssertObjectsAreEqual(expectedSlowestSpansInsight, slowestSpansInsight);
 
         assertEquals(SlowEndpointInsight.class, codeObjectInsights.get(6).getClass());
         SlowEndpointInsight slowEndpointInsight = (SlowEndpointInsight) codeObjectInsights.get(6);
-        assertEquals(expectedSlowEndpointInsight, slowEndpointInsight);
+        AssertObjectsAreEqual(expectedSlowEndpointInsight, slowEndpointInsight);
+    }
+
+    private void AssertObjectsAreEqual(Object expected, Object actual) {
+        String actualJson = new Gson().toJson(actual);
+        String expectedJson = new Gson().toJson(expected);
+        assertEquals(expectedJson, actualJson);
     }
 
     private SpanInfo createSpanInfo(String spanName, String methodCodeObjectId) {
@@ -385,31 +392,31 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
 
         assertEquals(HotspotInsight.class, actualCodeObjectInsights.get(0).getClass());
         HotspotInsight hotspotInsight = (HotspotInsight) actualCodeObjectInsights.get(0);
-        assertEquals(expectedHotspotInsight, hotspotInsight);
+        AssertObjectsAreEqual(expectedHotspotInsight, hotspotInsight);
 
         assertEquals(ErrorInsight.class, actualCodeObjectInsights.get(1).getClass());
         ErrorInsight errorInsight = (ErrorInsight) actualCodeObjectInsights.get(1);
-        assertEquals(expectedErrorInsight, errorInsight);
+        AssertObjectsAreEqual(expectedErrorInsight, errorInsight);
 
         assertEquals(NormalUsageInsight.class, actualCodeObjectInsights.get(2).getClass());
         NormalUsageInsight normalUsageInsight = (NormalUsageInsight) actualCodeObjectInsights.get(2);
-        assertEquals(expectedNormalUsageInsight, normalUsageInsight);
+        AssertObjectsAreEqual(expectedNormalUsageInsight, normalUsageInsight);
 
         assertEquals(LowUsageInsight.class, actualCodeObjectInsights.get(3).getClass());
         LowUsageInsight lowUsageInsight = (LowUsageInsight) actualCodeObjectInsights.get(3);
-        assertEquals(expectedLowUsageInsight, lowUsageInsight);
+        AssertObjectsAreEqual(expectedLowUsageInsight, lowUsageInsight);
 
         assertEquals(HighUsageInsight.class, actualCodeObjectInsights.get(4).getClass());
         HighUsageInsight highUsageInsight = (HighUsageInsight) actualCodeObjectInsights.get(4);
-        assertEquals(expectedHighUsageInsight, highUsageInsight);
+        AssertObjectsAreEqual(expectedHighUsageInsight, highUsageInsight);
 
         assertEquals(SlowestSpansInsight.class, actualCodeObjectInsights.get(5).getClass());
         SlowestSpansInsight slowestSpansInsight = (SlowestSpansInsight) actualCodeObjectInsights.get(5);
-        assertEquals(expectedSlowestSpansInsight, slowestSpansInsight);
+        AssertObjectsAreEqual(expectedSlowestSpansInsight, slowestSpansInsight);
 
         assertEquals(SlowEndpointInsight.class, actualCodeObjectInsights.get(6).getClass());
         SlowEndpointInsight slowEndpointInsight = (SlowEndpointInsight) actualCodeObjectInsights.get(6);
-        assertEquals(expectedSlowEndpointInsight, slowEndpointInsight);
+        AssertObjectsAreEqual(expectedSlowEndpointInsight, slowEndpointInsight);
     }
 
     @Test

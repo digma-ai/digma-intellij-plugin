@@ -72,7 +72,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
                 model.status = UiInsightStatus.Unknown
                 val newLifetimeDefinition = LifetimeDefinition()
                 newLifetimeDefinition.lifetime.launchBackground {
-                    updateModelInsightStatus(methodInfo, model)
+                    fetchAndUpdateModelInsightStatus(methodInfo, model)
                     notifyModelChangedAndUpdateUi()
                 }
             }
@@ -85,15 +85,10 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
         }
     }
 
-    fun updateModelInsightStatus(methodInfo: MethodInfo, model: InsightsModel) {
+    fun fetchAndUpdateModelInsightStatus(methodInfo: MethodInfo, model: InsightsModel) {
         val insightStatus = insightsProvider.getInsightStatus(methodInfo)
         val uiInsightStatus = toUiInsightStatus(insightStatus, methodInfo.hasRelatedCodeObjectIds())
-        // Unknown status returned on any backend exception. Unknown status displays 'loading...' msg on ui, so for now the default state when insight list empty and status unknown will be NoInsights
-        if (uiInsightStatus == UiInsightStatus.Unknown) {
-            model.status = UiInsightStatus.NoInsights
-        }else{
-            model.status = uiInsightStatus
-        }
+        model.status = uiInsightStatus
 
     }
 
@@ -111,8 +106,8 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
                     else
                         return UiInsightStatus.NoInsights
             }
-
-            else -> UiInsightStatus.Unknown
+             // Unknown status returned on any backend exception. Unknown status displays 'loading...' msg on ui, so for now the default state when insight list empty and status unknown will be NoInsights
+            else -> UiInsightStatus.NoInsights
         }
     }
 

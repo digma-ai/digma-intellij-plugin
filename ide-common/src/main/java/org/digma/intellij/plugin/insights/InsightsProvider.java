@@ -67,12 +67,8 @@ public class InsightsProvider {
     public InsightStatus getInsightStatus(@NotNull MethodInfo methodInfo) {
         try {
             CodeObjectInsightsStatusResponse response = analyticsService.getCodeObjectInsightStatus(List.of(methodInfo));
-            if (response != null) {
-                MethodWithInsightStatus methodResp = response.getCodeObjectsWithInsightsStatus().iterator().next();
-                return methodResp.getInsightStatus();
-            } else {
-                return InsightStatus.Unknown;
-            }
+            MethodWithInsightStatus methodResp = response.getCodeObjectsWithInsightsStatus().iterator().next();
+            return methodResp.getInsightStatus();
         } catch (AnalyticsServiceException e) {
             Log.log(LOGGER::debug, "AnalyticsServiceException for getCodeObjectInsightStatus for {}: {}", methodInfo.getId(), e.getMessage());
             return InsightStatus.Unknown;

@@ -22,7 +22,7 @@ import org.digma.intellij.plugin.ui.model.insights.InsightsTabCard
 import org.digma.intellij.plugin.ui.model.insights.UiInsightStatus
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import org.jetbrains.annotations.VisibleForTesting
-import java.util.Collections
+import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 import java.util.stream.Collectors
 
@@ -72,18 +72,10 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
                 model.status = UiInsightStatus.Unknown
                 val newLifetimeDefinition = LifetimeDefinition()
                 newLifetimeDefinition.lifetime.launchBackground {
-                    fetchForInsightStatus(methodInfo, model)
-
-                    // Unknown status displays 'loading...' msg on ui. But we cannot do that if there is no envs at all,
-                    // meaning client hasnt started loading data into the system, so we should show 'No data'
-                    if (model.status == UiInsightStatus.Unknown && insightsListContainer.usageStatus.environmentStatuses.isNullOrEmpty()) {
-                        model.status = UiInsightStatus.NoSpanData
-                    }
-
+                    fetchAndUpdateModelInsightStatus(methodInfo, model)
                     notifyModelChangedAndUpdateUi()
                 }
             }
-
             notifyModelChangedAndUpdateUi()
         } finally {
             if (lock.isHeldByCurrentThread) {
@@ -93,11 +85,11 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
         }
     }
 
-    fun fetchForInsightStatus(methodInfo: MethodInfo, model: InsightsModel) {
+    fun fetchAndUpdateModelInsightStatus(methodInfo: MethodInfo, model: InsightsModel) {
         val insightStatus = insightsProvider.getInsightStatus(methodInfo)
         val uiInsightStatus = toUiInsightStatus(insightStatus, methodInfo.hasRelatedCodeObjectIds())
-
         model.status = uiInsightStatus
+
     }
 
     @VisibleForTesting
@@ -112,10 +104,10 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
                     if (IDEUtilsService.getInstance(project).isJavaProject)
                         return UiInsightStatus.NoObservability
                     else
-                        return UiInsightStatus.InsightExist
+                        return UiInsightStatus.NoInsights
             }
-
-            else -> UiInsightStatus.Unknown
+             // Unknown status returned on any backend exception. Unknown status displays 'loading...' msg on ui, so for now the default state when insight list empty and status unknown will be NoInsights
+            else -> UiInsightStatus.NoInsights
         }
     }
 

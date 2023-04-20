@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import org.digma.intellij.plugin.model.InsightType
-import java.util.*
+import java.util.Date
 
 
 /**
@@ -14,7 +14,13 @@ import java.util.*
  * so that it can be showed in the GUI but is not mapped in any other subtype, instead there is an enum type.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type", visible = true, defaultImpl = UnmappedInsight::class)
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.PROPERTY,
+    property = "type",
+    visible = true,
+    defaultImpl = UnmappedInsight::class
+)
 @JsonSubTypes(
     JsonSubTypes.Type(value = HotspotInsight::class, name = "HotSpot"),
     JsonSubTypes.Type(value = ErrorInsight::class, name = "Errors"),
@@ -43,4 +49,8 @@ interface CodeObjectInsight {
     val customStartTime: Date?
     val prefixedCodeObjectId: String?
     val shortDisplayInfo: ShortDisplayInfo?
+
+    fun hasDecorators(): Boolean {
+        return !decorators.isNullOrEmpty()
+    }
 }

@@ -1,3 +1,4 @@
+import common.platformVersion
 import common.properties
 import org.jetbrains.changelog.date
 import org.jetbrains.changelog.markdownToHTML
@@ -35,7 +36,7 @@ dependencies{
 // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
 intellij {
     pluginName.set(properties("pluginName"))
-    version.set(properties("platformVersion"))
+    version.set(platformVersion(project))
     type.set(properties("platformType"))
     plugins.set(properties("platformPlugins").split(',').map(String::trim).filter(String::isNotEmpty))
 
@@ -180,9 +181,10 @@ tasks {
     // currently we compile python with IC plus python plugin so no real need to verify pycharm
     // but it would be better if we did.
     listProductsReleases {
-        types.set(listOf("RD","IC"))
+        val typesToVerify = properties("typesToVerifyPlugin").split(",")
+        types.set(typesToVerify)
         sinceVersion.set("2022.3")
-        untilVersion.set("2022.3.*")
+        untilVersion.set("2023.1")
 //        sinceBuild.set("222.3739.36")
 //        untilBuild.set("222.4167.24")
         releaseChannels.set(EnumSet.of(ListProductsReleasesTask.Channel.RELEASE))

@@ -1,4 +1,5 @@
-import common.properties
+import common.platformVersion
+import common.pythonPluginVersion
 
 plugins {
     id("plugin-library")
@@ -22,14 +23,14 @@ intellij {
     //So it is possible not to depend on pycharm but to depend on IC with PythonCore plugin. that means we are limited
     //to what PythonCore provides. if we ever need specific pycharm functionality we will need to depend on pycharm.
 
-    version.set("IC-" + properties("platformVersion", project))
+    version.set("IC-" + platformVersion(project))
     //the python plugin version must be compatible with platformVersion
-    plugins.set(listOf("PythonCore:223.7571.182"))
+    plugins.set(listOf("PythonCore:" + pythonPluginVersion(project)))
 
     //to depend on pycharm community:
-//    version.set("PC-" + properties("platformVersion", project))
+//    version.set("PC-" + platformVersion(project))
 //    plugins.set(listOf("PythonCore:223.7571.182"))
     //to depend on pycharm professional:
-//    version.set("PY-" + properties("platformVersion", project))
+//    version.set("PY-" + platformVersion(project))
 //    plugins.set(listOf("Pythonid"))
 }

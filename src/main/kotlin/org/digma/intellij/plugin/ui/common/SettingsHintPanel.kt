@@ -7,7 +7,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
-import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.ui.ToolWindowShower
 import java.awt.Cursor
 import java.awt.FlowLayout
 import java.awt.GridLayout
@@ -28,7 +28,7 @@ class SettingsHintPanel(project: Project) : JPanel() {
         background = Laf.Colors.EDITOR_BACKGROUND
         isOpaque = true
 
-        layout = GridLayout(4, 1, 5, 2)
+        layout = GridLayout(5, 1, 5, 2)
 
         val settingsLabel = JLabel("Settings")
         settingsLabel.foreground = Laf.Colors.DROP_DOWN_HEADER_TEXT_COLOR
@@ -57,9 +57,31 @@ class SettingsHintPanel(project: Project) : JPanel() {
         })
         togglePanel.add(toggle)
         secondPanel.add(togglePanel)
-        secondPanel.add(Box.createHorizontalStrut(5))
-        secondPanel.border = BorderFactory.createMatteBorder(0, 0, 1, 0, Laf.Colors.PLUGIN_BACKGROUND)
         add(secondPanel)
+
+        val onboardingPanel = Box.createHorizontalBox()
+        onboardingPanel.background = Laf.Colors.EDITOR_BACKGROUND
+        onboardingPanel.isOpaque = true
+        onboardingPanel.add(Box.createHorizontalStrut(5))
+        onboardingPanel.add(JLabel(Laf.Icons.Common.Mascot16))
+        onboardingPanel.add(Box.createHorizontalStrut(15))
+
+        val onboardingLinkLabel = JLabel("Onboarding Digma")
+        onboardingLinkLabel.cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        onboardingLinkLabel.addMouseListener(object : MouseAdapter() {
+            override fun mouseClicked(e: MouseEvent?) {
+                try {
+                    ToolWindowShower.getInstance(project).displayInstallationWizard()
+                } catch (ex: Exception) {
+                    Log.log(logger::debug, "exception opening 'Onboarding Digma' message: {}. ", ex.message)
+                }
+            }
+        })
+
+        onboardingPanel.add(onboardingLinkLabel)
+        onboardingPanel.add(Box.createHorizontalStrut(5))
+        onboardingPanel.border = BorderFactory.createMatteBorder(0, 0, 1, 0, Laf.Colors.PLUGIN_BACKGROUND)
+        add(onboardingPanel)
 
         val feedbackLabel = JLabel("Feedback")
         feedbackLabel.foreground = Laf.Colors.DROP_DOWN_HEADER_TEXT_COLOR

@@ -1,34 +1,24 @@
-# Digma Jetbrain Plugin
+# Code Runtime Analysis for Non-Trivial Java  Code
 
 <!-- https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax -->
 <!-- Plugin description -->
 
-**Digma is a Continuous Feedback platform. It integrates with your observability
-backend to provide meaningful code insights in the IDE. While coding,
-you can be aware of how the code behaves in runtime in various staging and production environments**
+Digma is an IDE plugin for analyzing code runtime data.
+It enables rapid development in complex
+projects by linting and detecting issues as their appear, highlighting possible risks in code and providing code change analysis and context
 
-### Digma provides integrated insights multiple code behaviour topics including:
+### Digma lints common code smells and issues as you code
 
 - Error hotspots
-- Usage bottlenecks and concurrency
+- Bottlenecks and concurrency
+- Query anti-patterns
+- Identify risks and affected code for code changes
 - Performance trends
 
 For more info check out the Digma [main repo](https://github.com/digma-ai/digma)
 
 <!-- Plugin description end -->
 
-## Supported jetbrains IDEs
-
-Rider</br>
-more to come soon...
-
-## Build
-
-The project must be built with jdk 11 or later as the gradle jdk.</br>
-
-./gradlew buildPlugin -Porg.gradle.java.home=<PATH TO JDK 11></br>
-or</br>
-gradlew.bat buildPlugin -Porg.gradle.java.home=<PATH TO JDK 11></br>
 
 ## Load to Idea
 

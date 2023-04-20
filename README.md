@@ -5,7 +5,7 @@
 
 Digma is an IDE plugin for analyzing code runtime data.
 It enables rapid development in complex
-projects by linting and detecting issues as their appear, highlighting possible risks in code and providing code change analysis and context
+projects by linting and detecting issues as they appear, highlighting possible risks in code and providing code change analysis and context
 
 ### Digma lints common code smells and issues as you code
 

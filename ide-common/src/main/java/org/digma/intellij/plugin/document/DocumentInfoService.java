@@ -19,6 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -146,16 +147,9 @@ public class DocumentInfoService {
 
         DocumentInfoContainer documentInfoContainer = documents.get(methodInfo.getContainingFileUri());
         if (documentInfoContainer != null) {
-            return documentInfoContainer.getAllInsights().stream().filter(codeObjectInsight -> {
-                String codeObjectId = codeObjectInsight.getCodeObjectId();
-                return (!codeObjectInsight.getType().equals(InsightType.Unmapped)) &&
-                        (methodInfo.allIdsWithoutType().contains(codeObjectId)
-                                || methodInfo.allIdsWithType().contains(codeObjectId)
-                                || methodInfo.getRelatedCodeObjectIds().contains(codeObjectId)
-                                || methodInfo.getRelatedCodeObjectIdsWithType().contains(codeObjectId));
-            }).collect(Collectors.toList());
+            return documentInfoContainer.getInsightsForMethod(methodInfo.getId());
         }
-        return new ArrayList<>();
+        return Collections.emptyList();
     }
 
     public DocumentInfoContainer getDocumentInfoByMethodInfo(@NotNull MethodInfo methodInfo) {

@@ -3,16 +3,18 @@ package org.digma.intellij.plugin.document;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightImportance;
+import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.lens.CodeLens;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectDecorator;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 public class CodeLensProvider {
 
@@ -48,73 +50,74 @@ public class CodeLensProvider {
 
         var methodsInfo = documentInfoContainer.getDocumentInfo().getMethods().values();
 
-        List<CodeObjectInsight> methodInsightsList = methodsInfo.stream()
-                .flatMap(methodInfo -> documentInfoService.getCachedMethodInsights(methodInfo).stream())
-                .toList();
+        for (MethodInfo methodInfo : methodsInfo) {
+            final var insights = documentInfoContainer.getInsightsForMethod(methodInfo.getId());
+            final var hasInsights = CollectionUtils.isNotEmpty(insights);
 
-        methodsInfo.stream().forEach(methodInfo -> {
-            if (documentInfoService.getCachedMethodInsights(methodInfo).stream().count() == 0 && methodInfo.hasRelatedCodeObjectIds()) {
-                var codeObjectId = methodInfo.getId();
-                CodeLens codeLen = new CodeLens(codeObjectId, "Never Reached", 7);
-                codeLen.setLensDescription("No tracing data for this code object");
-                codeLen.setAnchor("Top");
-
-                codeLensList.add(codeLen);
-            }
-        });
-
-        methodInsightsList.forEach(insight -> {
-                    if (insight.getDecorators() != null && insight.getDecorators().size() > 0) {
-                        for (CodeObjectDecorator decorator : insight.getDecorators()) {
-                            String envComponent = "";
-                            if (environmentPrefix) {
-                                envComponent = "[" + insight.getEnvironment() + "]";
-                            }
-
-                            String priorityEmoji = "";
-                            if (isImportant(insight.getImportance())) {
-                                priorityEmoji = "❗️";
-                            }
-
-                            String title = priorityEmoji + decorator.getTitle() + " " + envComponent;
-
-                            CodeLens codeLen = new CodeLens(getMethodCodeObjectId(insight), title, insight.getImportance());
-                            codeLen.setLensDescription(decorator.getDescription());
-                            codeLen.setLensMoreText("Go to " + title);
-                            codeLen.setAnchor("Top");
-
-                            codeLensList.add(codeLen);
-                        }
-                    }
-                }
-        );
-
-        // add Runtime Data code lens only after all previous code lenses were added
-        methodInsightsList.forEach(insight -> {
-            if (insight.getDecorators() != null && insight.getDecorators().size() == 0) {
-                var codeObjectId = getMethodCodeObjectId(insight);
-                if (!codeLensList.stream().anyMatch(x -> x.getCodeObjectId().equals(codeObjectId))){
-                    CodeLens codeLen = new CodeLens(codeObjectId, "Runtime Data", 8);
-                    codeLen.setLensDescription("Code object has basic insights");
+            if (!hasInsights) {
+                if (methodInfo.hasRelatedCodeObjectIds()) {
+                    CodeLens codeLen = new CodeLens(methodInfo.getId(), "Never Reached", 7);
+                    codeLen.setLensDescription("No tracing data for this code object");
                     codeLen.setAnchor("Top");
 
                     codeLensList.add(codeLen);
                 }
+                continue; // to next method
             }
-        });
+
+            final boolean haveDecorators = evalHaveDecorators(insights);
+            if (!haveDecorators) {
+                CodeLens codeLens = new CodeLens(methodInfo.getId(), "Runtime Data", 8);
+                codeLens.setLensDescription("Code object has basic insights");
+                codeLens.setAnchor("Top");
+
+                codeLensList.add(codeLens);
+                continue; // to next method
+            }
+
+            for (CodeObjectInsight insight : insights) {
+                if (!insight.hasDecorators()) {
+                    continue;
+                }
+
+                for (CodeObjectDecorator decorator : insight.getDecorators()) {
+                    String envComponent = "";
+                    if (environmentPrefix) {
+                        envComponent = "[" + insight.getEnvironment() + "]";
+                    }
+
+                    String priorityEmoji = "";
+                    if (isImportant(insight.getImportance())) {
+                        priorityEmoji = "❗️";
+                    }
+
+                    String title = priorityEmoji + decorator.getTitle() + " " + envComponent;
+
+                    CodeLens codeLens = new CodeLens(methodInfo.getId(), title, insight.getImportance());
+                    codeLens.setLensDescription(decorator.getDescription());
+                    codeLens.setLensMoreText("Go to " + title);
+                    codeLens.setAnchor("Top");
+
+                    codeLensList.add(codeLens);
+                }
+            }
+        } // end of forEach method
 
         return codeLensList;
     }
 
-    private String getMethodCodeObjectId(CodeObjectInsight insight) {
-        if (StringUtils.isNotEmpty(insight.getPrefixedCodeObjectId())) {
-            return insight.getPrefixedCodeObjectId().replace("method:", "");
-        } else {
-            return insight.getCodeObjectId();
+    private static boolean evalHaveDecorators(List<CodeObjectInsight> insights) {
+        if (CollectionUtils.isEmpty(insights)) {
+            return false;
         }
+
+        Optional<CodeObjectInsight> optional = insights.stream()
+                .filter(CodeObjectInsight::hasDecorators)
+                .findFirst();
+        return optional.isPresent();
     }
 
-    private boolean isImportant(Integer importanceLevel) {
+    private static boolean isImportant(Integer importanceLevel) {
         return importanceLevel <= InsightImportance.HighlyImportant.getPriority() &&
                 importanceLevel >= InsightImportance.ShowStopper.getPriority();
     }

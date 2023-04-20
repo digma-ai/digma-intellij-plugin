@@ -9,7 +9,6 @@ import com.intellij.openapi.rd.util.withUiContext
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.RunnableCallable
 import com.intellij.util.concurrency.NonUrgentExecutor
-import org.apache.commons.collections4.CollectionUtils
 import org.digma.intellij.plugin.analytics.BackendConnectionUtil
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.document.DocumentInfoContainer
@@ -99,11 +98,11 @@ class RefreshService(private val project: Project) {
     private fun updateInsightsCacheForActiveDocument(selectedTextEditor: Editor?, documentInfoContainer: DocumentInfoContainer?): Boolean {
         val selectedDocument = selectedTextEditor?.document
         if (selectedDocument != null && documentInfoContainer != null) {
-            val oldInsights = documentInfoContainer.allInsights
+            val oldInsights = documentInfoContainer.allMethodWithInsightsMapForCurrentDocument
 
             documentInfoContainer.updateCache()
 
-            val newInsights = documentInfoContainer.allInsights
+            val newInsights = documentInfoContainer.allMethodWithInsightsMapForCurrentDocument
 
             return checkIfDataChanged(oldInsights, newInsights)
         }
@@ -126,12 +125,10 @@ class RefreshService(private val project: Project) {
         }
     }
 
-    private fun checkIfDataChanged(oldInsights: List<CodeObjectInsight?>, newInsights: List<CodeObjectInsight?>): Boolean {
-        val isEqual = CollectionUtils.isEqualCollection(
-                oldInsights,
-                newInsights
-        )
-        return !isEqual
+    private fun checkIfDataChanged(oldInsights: Map<String, List<CodeObjectInsight>>, newInsights: Map<String, List<CodeObjectInsight>>): Boolean {
+        // In Kotlin, you can compare two maps for equality using the == operator.
+        // The == operator checks if the two maps have the same size, the same keys, and the same values for each key.
+        return oldInsights != newInsights
     }
 
     private fun notifyRefreshInsightsTaskStarted(fileUri: String?) {

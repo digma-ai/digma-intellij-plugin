@@ -183,8 +183,11 @@ tasks {
     listProductsReleases {
         val typesToVerify = properties("typesToVerifyPlugin").split(",")
         types.set(typesToVerify)
-        sinceVersion.set("2022.3")
-        untilVersion.set("2023.1")
+        val versionsToVerify = properties("versionsToVerifyPlugin").split(",")
+        val lowestVersion = versionsToVerify[0]
+        sinceVersion.set(lowestVersion)
+        val latestVersion = if(versionsToVerify.size == 1)  versionsToVerify[0] else versionsToVerify[1]
+        untilVersion.set(latestVersion)
 //        sinceBuild.set("222.3739.36")
 //        untilBuild.set("222.4167.24")
         releaseChannels.set(EnumSet.of(ListProductsReleasesTask.Channel.RELEASE))

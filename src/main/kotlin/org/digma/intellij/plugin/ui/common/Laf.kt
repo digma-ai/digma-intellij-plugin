@@ -136,6 +136,7 @@ object Laf {
                 @JvmStatic val SummaryEmptyLight = SvgIcon.asIs("/icons/summary_empty_light.svg")
                 @JvmStatic val SummaryEmptyDark = SvgIcon.asIs("/icons/summary_empty_dark.svg")
                 @JvmStatic val Mascot64 = loadAndScaleIconByWidth("/icons/digma.png", 64)
+                @JvmStatic val Mascot16 = loadAndScaleIconByWidth("/icons/digma.png", 16)
             }
         }
 

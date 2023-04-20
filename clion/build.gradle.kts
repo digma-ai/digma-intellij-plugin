@@ -1,3 +1,4 @@
+import common.platformVersion
 import common.properties
 
 plugins {
@@ -9,5 +10,5 @@ dependencies{
 }
 
 intellij {
-    version.set("CL-"+ common.properties("platformVersion", project))
+    version.set("CL-"+ platformVersion(project))
 }

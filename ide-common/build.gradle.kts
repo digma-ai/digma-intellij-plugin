@@ -1,4 +1,4 @@
-import common.properties
+import common.platformVersion
 
 plugins {
     id("plugin-library")
@@ -6,7 +6,7 @@ plugins {
 }
 
 intellij {
-    version.set("IC-" + properties("platformVersion", project))
+    version.set("IC-" + platformVersion(project))
     plugins.set(listOf("Git4Idea"))
 }
 

@@ -5,12 +5,14 @@
       <option name="executionName" />
       <option name="externalProjectPath" value="$PROJECT_DIR$" />
       <option name="externalSystemIdString" value="GRADLE" />
-      <option name="scriptParameters" value="" />
+      <option name="scriptParameters" value="-PtypesToVerifyPlugin=IC,IU,RD,PC,PY -PversionsToVerifyPlugin=2022.3,2023.1" />
       <option name="taskDescriptions">
         <list />
       </option>
       <option name="taskNames">
         <list>
+          <option value="clean" />
+          <option value="buildPlugin" />
           <option value="runPluginVerifier" />
         </list>
       </option>
@@ -19,8 +21,7 @@
     <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
     <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
     <DebugAllEnabled>false</DebugAllEnabled>
-    <method v="2">
-      <option name="Gradle.BeforeRunTask" enabled="true" tasks="clean" externalProjectPath="$PROJECT_DIR$" vmOptions="" scriptParameters="" />
-    </method>
+    <ForceTestExec>false</ForceTestExec>
+    <method v="2" />
   </configuration>
 </component>

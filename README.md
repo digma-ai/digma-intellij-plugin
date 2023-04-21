@@ -12,7 +12,7 @@ projects by linting and detecting issues as they appear, highlighting possible r
 - Error hotspots
 - Bottlenecks and concurrency
 - Query anti-patterns
-- Identify risks and affected code for code changes
+  - Identify risks and affected code for code changes
 - Performance trends
 
 For more info check out the Digma [main repo](https://github.com/digma-ai/digma)

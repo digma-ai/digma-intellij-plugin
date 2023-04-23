@@ -266,7 +266,7 @@ private fun getIconsListPanel(
     if (iconsList != null) {
         icons.addAll(iconsList)
     }
-    if (insight?.prefixedCodeObjectId != null) {
+    if (insight?.isRecalculateEnabled == true) {
         icons.add(Laf.Icons.Insight.THREE_DOTS)
     }
 

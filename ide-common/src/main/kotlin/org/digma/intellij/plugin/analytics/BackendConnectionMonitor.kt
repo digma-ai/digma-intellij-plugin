@@ -11,6 +11,13 @@ import com.intellij.util.messages.MessageBusConnection
  */
 class BackendConnectionMonitor(val project: Project) : Disposable, AnalyticsServiceConnectionEvent {
 
+    companion object {
+        @JvmStatic
+        fun getInstance(project: Project): BackendConnectionMonitor {
+            return project.getService(BackendConnectionMonitor::class.java)
+        }
+    }
+
     private var hasConnectionError = false
 
     private val analyticsConnectionEventsConnection: MessageBusConnection = project.messageBus.connect()

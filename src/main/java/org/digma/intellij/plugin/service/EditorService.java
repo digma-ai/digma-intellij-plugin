@@ -41,6 +41,10 @@ public class EditorService implements Disposable {
         vcsService = project.getService(VcsService.class);
     }
 
+    public static EditorService getInstance(Project project) {
+        return project.getService(EditorService.class);
+    }
+
     public void openErrorFrameWorkspaceFileInEditor(@NotNull String workspaceUrl, @Nullable String lastInstanceCommitId, int lineNumber) {
 
         var workspaceFile = VirtualFileManager.getInstance().findFileByUrl(workspaceUrl);
@@ -145,12 +149,14 @@ public class EditorService implements Disposable {
         }
     }
 
-
-    private void openVirtualFile(VirtualFile virtualFile, int lineNumber) {
+    private Editor openVirtualFile(VirtualFile virtualFile, int lineNumber) {
         OpenFileDescriptor navigable = new OpenFileDescriptor(project, virtualFile, Math.max(0, lineNumber - 1), 0);
-        FileEditorManager.getInstance(project).openTextEditor(navigable, true);
+        return FileEditorManager.getInstance(project).openTextEditor(navigable, true);
     }
 
+    public void openVirtualFile(@NotNull VirtualFile virtualFile) {
+        openVirtualFile(virtualFile, 1);
+    }
 
     private boolean showIfAlreadyOpen(String name, int lineNumber) {
 

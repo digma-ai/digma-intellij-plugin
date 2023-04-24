@@ -59,6 +59,7 @@ object Laf {
             @JvmStatic val ERROR_RED: Color = Color(0xf95959)      // same as in VS Code plugin
             @JvmStatic val ERROR_ORANGE: Color = Color(0xfdb44b)   // same as in VS Code plugin
             @JvmStatic val ERROR_GREEN: Color = Color(0x7dd87d)    // same as in VS Code plugin
+            @JvmStatic val BUTTON_BACKGROUND: Color = Color(0x3638CD) // suppose to be dark purple
             //@JvmStatic val SIMPLE_ICON_COLOR: JBColor = JBColor(0x222222, 0xDDDDDD)
             @JvmStatic val GRAY: Color = Color(0x8A8A8A)
         }
@@ -135,6 +136,8 @@ object Laf {
                 @JvmStatic val NoObservabilityDark = SvgIcon.asIs("/icons/no_observability-dark.svg")
                 @JvmStatic val SummaryEmptyLight = SvgIcon.asIs("/icons/summary_empty_light.svg")
                 @JvmStatic val SummaryEmptyDark = SvgIcon.asIs("/icons/summary_empty_dark.svg")
+                @JvmStatic val UpdateProductDark = SvgIcon.asIs("/icons/update-product-dark.svg")
+                @JvmStatic val UpdateProductLight = SvgIcon.asIs("/icons/update-product-light.svg")
                 @JvmStatic val Mascot64 = loadAndScaleIconByWidth("/icons/digma.png", 64)
                 @JvmStatic val Mascot16 = loadAndScaleIconByWidth("/icons/digma.png", 16)
             }

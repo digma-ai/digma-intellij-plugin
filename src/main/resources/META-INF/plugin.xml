@@ -84,6 +84,8 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.posthog.PluginActivityMonitor"/>
 
+        <projectService serviceImplementation="org.digma.intellij.plugin.updates.UpdatesService"/>
+
         <notificationGroup id="Digma Notification Group"
                            displayType="NONE"
                            toolWindowId="Digma"/>

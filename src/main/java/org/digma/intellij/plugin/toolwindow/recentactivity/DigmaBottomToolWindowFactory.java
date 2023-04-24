@@ -43,6 +43,7 @@ import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshService;
 import org.digma.intellij.plugin.service.EditorService;
+import org.digma.intellij.plugin.toolwindow.common.CustomViewerWindow;
 import org.digma.intellij.plugin.toolwindow.common.JaegerUrlChangedPayload;
 import org.digma.intellij.plugin.toolwindow.common.JaegerUrlChangedRequest;
 import org.digma.intellij.plugin.toolwindow.common.ThemeChangeListener;
@@ -58,6 +59,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
@@ -82,12 +84,14 @@ import static org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt.openJaeger
 public class DigmaBottomToolWindowFactory implements ToolWindowFactory, Disposable {
     private static final Logger LOGGER = Logger.getInstance(DigmaBottomToolWindowFactory.class);
     private static final String DIGMA_SIDE_PANE_TOOL_WINDOW_NAME = "Digma";
+    private static final String RESOURCE_FOLDER_NAME = "recentactivity";
+    private static final String RECENT_EXPIRATION_LIMIT_VARIABLE = "recentActivityExpirationLimit";
     private static final int FETCHING_LOOP_INTERVAL = 10 * 1000; // 10sec
     private static final int RECENT_EXPIRATION_LIMIT = 10 * 60 * 1000; // 10min
 
     private final Icon icon = AppIcons.TOOL_WINDOW_OBSERVABILITY;
     private final Icon iconWithGreenDot = ExecutionUtil.getLiveIndicator(icon);
-    private final Timer myTimer = new Timer();
+    private final Timer timer = new Timer();
 
     private AnalyticsService analyticsService;
     private String localHostname;
@@ -112,7 +116,7 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory, Disposab
                 fetchRecentActivities();
             }
         };
-        myTimer.scheduleAtFixedRate(activityFetchingTask, 0, FETCHING_LOOP_INTERVAL);
+        timer.scheduleAtFixedRate(activityFetchingTask, 0, FETCHING_LOOP_INTERVAL);
     }
 
     /**
@@ -150,7 +154,9 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory, Disposab
             return null;
         }
         var editorService = project.getService(EditorService.class);
-        var customViewerWindow = project.getService(RecentActivityCustomViewerWindowService.class).getCustomViewerWindow(RECENT_EXPIRATION_LIMIT);
+        var customViewerWindow = new CustomViewerWindow(project, RESOURCE_FOLDER_NAME, new HashMap<>() {{
+            put(RECENT_EXPIRATION_LIMIT_VARIABLE, RECENT_EXPIRATION_LIMIT);
+        }});
         jbCefBrowser = customViewerWindow.getWebView();
 
         JBCefClient jbCefClient = jbCefBrowser.getJBCefClient();
@@ -361,6 +367,6 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory, Disposab
 
     @Override
     public void dispose() {
-        myTimer.cancel();
+        timer.cancel();
     }
 }

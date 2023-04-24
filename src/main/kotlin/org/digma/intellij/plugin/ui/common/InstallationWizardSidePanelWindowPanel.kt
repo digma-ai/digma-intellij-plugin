@@ -19,17 +19,26 @@ import org.digma.intellij.plugin.model.rest.installationwizard.SendTrackingEvent
 import org.digma.intellij.plugin.model.rest.installationwizard.SetObservabilityRequest
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor.Companion.getInstance
+import org.digma.intellij.plugin.toolwindow.common.CustomViewerWindow
 import org.digma.intellij.plugin.toolwindow.common.ThemeChangeListener
 import org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil
-import org.digma.intellij.plugin.toolwindow.recentactivity.*
-import org.digma.intellij.plugin.toolwindow.sidepane.InstallationWizardCustomViewerWindowService
+import org.digma.intellij.plugin.toolwindow.recentactivity.ConnectionCheckResult
+import org.digma.intellij.plugin.toolwindow.recentactivity.JBCefBrowserUtil
+import org.digma.intellij.plugin.toolwindow.recentactivity.JcefConnectionCheckMessagePayload
+import org.digma.intellij.plugin.toolwindow.recentactivity.JcefConnectionCheckMessageRequest
+import org.digma.intellij.plugin.toolwindow.recentactivity.JcefMessageRequest
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.common.ObservabilityUtil.Companion.updateObservabilityValue
 import java.awt.BorderLayout
 import javax.swing.JPanel
 import javax.swing.UIManager
 
-private val logger: Logger = Logger.getInstance("org.digma.intellij.plugin.ui.common.InstallationWizardSidePanelWindowPanel")
+private const val RESOURCE_FOLDER_NAME = "installationwizard"
+private const val ENV_VARIABLE_IDE: String = "ide"
+private const val WIZARD_SKIP_INSTALLATION_STEP_VARIABLE: String = "wizardSkipInstallationStep"
+
+private val logger: Logger =
+    Logger.getInstance("org.digma.intellij.plugin.ui.common.InstallationWizardSidePanelWindowPanel")
 
 fun createInstallationWizardSidePanelWindowPanel(project: Project): JPanel? {
     if (!JBCefApp.isSupported()) {
@@ -37,9 +46,14 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): JPanel? {
         return null
     }
 
-    val customViewerWindow = project.getService(
-        InstallationWizardCustomViewerWindowService::class.java
-    ).getCustomViewerWindow()
+    val isServerConnectedAlready = BackendConnectionUtil.getInstance(project).testConnectionToBackend()
+    val customViewerWindow = CustomViewerWindow(
+        project, RESOURCE_FOLDER_NAME,
+        mapOf(
+            WIZARD_SKIP_INSTALLATION_STEP_VARIABLE to isServerConnectedAlready,
+            ENV_VARIABLE_IDE to ApplicationNamesInfo.getInstance().productName //Available values: "IDEA", "Rider", "PyCharm"
+        )
+    )
     val jbCefBrowser = customViewerWindow.getWebView()
 
     val jbCefClient = jbCefBrowser.jbCefClient
@@ -103,11 +117,11 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): JPanel? {
             }
             if (ToolWindowUtil.INSTALLATION_WIZARD_CHECK_CONNECTION.equals(action, ignoreCase = true)) {
                 val jcefConnectionCheckMessagePayload: JcefConnectionCheckMessagePayload =
-                        if (BackendConnectionUtil.getInstance(project).testConnectionToBackend()) {
-                            JcefConnectionCheckMessagePayload(ConnectionCheckResult.SUCCESS.value)
-                        } else {
-                            JcefConnectionCheckMessagePayload(ConnectionCheckResult.FAILURE.value)
-                        }
+                    if (BackendConnectionUtil.getInstance(project).testConnectionToBackend()) {
+                        JcefConnectionCheckMessagePayload(ConnectionCheckResult.SUCCESS.value)
+                    } else {
+                        JcefConnectionCheckMessagePayload(ConnectionCheckResult.FAILURE.value)
+                    }
                 val requestMessage = JBCefBrowserUtil.resultToString(
                     JcefConnectionCheckMessageRequest(
                         ToolWindowUtil.REQUEST_MESSAGE_TYPE,

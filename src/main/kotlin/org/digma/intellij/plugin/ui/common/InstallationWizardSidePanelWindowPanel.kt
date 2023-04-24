@@ -5,12 +5,14 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ApplicationNamesInfo
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.jcef.JBCefApp
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.browser.CefMessageRouter
 import org.cef.callback.CefQueryCallback
 import org.cef.handler.CefMessageRouterHandlerAdapter
+import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.analytics.BackendConnectionUtil
 import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.log.Log
@@ -86,6 +88,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): JPanel? {
                 ApplicationManager.getApplication().invokeLater {
                     updateInstallationWizardFlag()
                     ToolWindowShower.getInstance(project).displayMainSidePaneWindowPanel()
+                    ToolWindowManager.getInstance(project).getToolWindow(PluginId.OBSERVABILITY_WINDOW_ID)!!.show()
                 }
             }
             if (ToolWindowUtil.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER.equals(action, ignoreCase = true)) {

@@ -1,5 +1,7 @@
 package org.digma.intellij.plugin.toolwindow.recentactivity;
 
+import com.intellij.execution.runners.ExecutionUtil;
+import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
@@ -26,9 +28,10 @@ import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor;
 import org.digma.intellij.plugin.analytics.EnvironmentChanged;
 import org.digma.intellij.plugin.analytics.JaegerUrlChanged;
-import org.digma.intellij.plugin.common.AsynchronousBackgroundTask;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.CommonUtils;
+import org.digma.intellij.plugin.common.EDT;
+import org.digma.intellij.plugin.icons.AppIcons;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityEntrySpanForTracePayload;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityEntrySpanPayload;
@@ -46,19 +49,24 @@ import org.digma.intellij.plugin.toolwindow.common.ThemeChangeListener;
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
 import org.jetbrains.annotations.NotNull;
 
+import javax.swing.Icon;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
 import java.awt.BorderLayout;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.GLOBAL_SET_IS_JAEGER_ENABLED;
-import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_GET_DATA;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_SPAN;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_TRACE;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_INITIALIZE;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_SET_DATA;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.REQUEST_MESSAGE_TYPE;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.parseJsonToObject;
@@ -71,14 +79,41 @@ import static org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt.openJaeger
 /**
  * Digma tool window inside bottom panel
  */
-public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
+public class DigmaBottomToolWindowFactory implements ToolWindowFactory, Disposable {
     private static final Logger LOGGER = Logger.getInstance(DigmaBottomToolWindowFactory.class);
     private static final String DIGMA_SIDE_PANE_TOOL_WINDOW_NAME = "Digma";
-    private EditorService editorService;
+    private static final int FETCHING_LOOP_INTERVAL = 10 * 1000; // 10sec
+    private static final int RECENT_EXPIRATION_LIMIT = 10 * 60 * 1000; // 10min
+
+    private final Icon icon = AppIcons.TOOL_WINDOW_OBSERVABILITY;
+    private final Icon iconWithGreenDot = ExecutionUtil.getLiveIndicator(icon);
+    private final Timer myTimer = new Timer();
+
     private AnalyticsService analyticsService;
     private String localHostname;
+    private ToolWindow toolWindow;
+    private JBCefBrowser jbCefBrowser;
+    private RecentActivityResult latestActivityResult;
+    private boolean webAppInitialized;
 
-    private final ReentrantLock recentActivityGetDataLock = new ReentrantLock();
+    @Override
+    public void init(@NotNull ToolWindow toolWindow) {
+        var project = toolWindow.getProject();
+
+        this.toolWindow = toolWindow;
+        //initialize AnalyticsService early so the UI already can detect the connection status when created
+        this.analyticsService = project.getService(AnalyticsService.class);
+        this.localHostname = CommonUtils.getLocalHostname();
+        this.latestActivityResult = new RecentActivityResult(null, new ArrayList<>());
+
+        var activityFetchingTask = new TimerTask() {
+            @Override
+            public void run() {
+                fetchRecentActivities();
+            }
+        };
+        myTimer.scheduleAtFixedRate(activityFetchingTask, 0, FETCHING_LOOP_INTERVAL);
+    }
 
     /**
      * this is the starting point of the plugin. this method is called when the tool window is opened.
@@ -90,18 +125,11 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
         Log.log(LOGGER::debug, "createToolWindowContent for project  {}", project);
-        this.editorService = project.getService(EditorService.class);
-        //initialize AnalyticsService early so the UI already can detect the connection status when created
-        this.analyticsService = project.getService(AnalyticsService.class);
-
-        this.localHostname = CommonUtils.getLocalHostname();
 
         var contentFactory = ContentFactory.getInstance();
-
-        Content codeAnalyticsTab = createCodeAnalyticsTab(project, toolWindow, contentFactory);
-
+        var codeAnalyticsTab = createCodeAnalyticsTab(project, toolWindow, contentFactory);
         if (codeAnalyticsTab != null) {
-            toolWindow.getContentManager().setSelectedContent(codeAnalyticsTab, true);
+            toolWindow.getContentManager().addContent(codeAnalyticsTab);
         }
 
         //sometimes there is a race condition on startup, a contextChange is fired before method info is available.
@@ -121,10 +149,13 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
             // Fallback to an alternative browser-less solution
             return null;
         }
-        var customViewerWindow = project.getService(RecentActivityCustomViewerWindowService.class).getCustomViewerWindow();
-        JBCefBrowser jbCefBrowser = customViewerWindow.getWebView();
+        var editorService = project.getService(EditorService.class);
+        var customViewerWindow = project.getService(RecentActivityCustomViewerWindowService.class).getCustomViewerWindow(RECENT_EXPIRATION_LIMIT);
+        jbCefBrowser = customViewerWindow.getWebView();
 
         JBCefClient jbCefClient = jbCefBrowser.getJBCefClient();
+
+        jbCefBrowser.getCefBrowser().setFocus(true);
 
         CefMessageRouter msgRouter = CefMessageRouter.create();
 
@@ -142,13 +173,12 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
             public boolean onQuery(CefBrowser browser, CefFrame frame, long queryId, String request, boolean persistent, CefQueryCallback callback) {
                 Log.log(LOGGER::debug, "request: {}", request);
                 JcefMessageRequest reactMessageRequest = parseJsonToObject(request, JcefMessageRequest.class);
-                if (RECENT_ACTIVITY_GET_DATA.equalsIgnoreCase(reactMessageRequest.getAction())) {
-                    new AsynchronousBackgroundTask(recentActivityGetDataLock,
-                            () -> processRecentActivityGetDataRequest(analyticsService, jbCefBrowser)).queue();
+                if (RECENT_ACTIVITY_INITIALIZE.equalsIgnoreCase(reactMessageRequest.getAction())) {
+                    processRecentActivityInitialized();
                 }
                 if (RECENT_ACTIVITY_GO_TO_SPAN.equalsIgnoreCase(reactMessageRequest.getAction())) {
                     RecentActivityGoToSpanRequest recentActivityGoToSpanRequest = parseJsonToObject(request, RecentActivityGoToSpanRequest.class);
-                    processRecentActivityGoToSpanRequest(recentActivityGoToSpanRequest.getPayload(), project);
+                    processRecentActivityGoToSpanRequest(recentActivityGoToSpanRequest.getPayload(), project, editorService);
                 }
                 if (RECENT_ACTIVITY_GO_TO_TRACE.equalsIgnoreCase(reactMessageRequest.getAction())) {
                     RecentActivityGoToTraceRequest recentActivityGoToTraceRequest = parseJsonToObject(request, RecentActivityGoToTraceRequest.class);
@@ -176,13 +206,16 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
         jcefDigmaPanel.setLayout(new BorderLayout());
         jcefDigmaPanel.add(browserPanel, BorderLayout.CENTER);
 
-        var jcefContent = contentFactory.createContent(jcefDigmaPanel, null, false);
-
-        toolWindow.getContentManager().addContent(jcefContent);
-        return jcefContent;
+        return contentFactory.createContent(jcefDigmaPanel, null, false);
     }
 
-    private void processRecentActivityGoToSpanRequest(RecentActivityEntrySpanPayload payload, Project project) {
+    private void processRecentActivityInitialized() {
+        webAppInitialized = true;
+        List<String> allEnvironments = analyticsService.getEnvironment().getEnvironments();
+        sendLatestActivities(allEnvironments);
+    }
+
+    private void processRecentActivityGoToSpanRequest(RecentActivityEntrySpanPayload payload, Project project, EditorService editorService) {
         if (payload != null) {
             String methodCodeObjectId = payload.getSpan().getMethodCodeObjectId();
 
@@ -230,12 +263,8 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
         }
     }
 
-    private void processRecentActivityGetDataRequest(AnalyticsService analyticsService, JBCefBrowser jbCefBrowser) {
-        List<String> allEnvironments = analyticsService.getEnvironments();
-        if (allEnvironments == null) {
-            Log.log(LOGGER::warn, "error while getting environments from server");
-            return;
-        }
+    private void fetchRecentActivities() {
+        List<String> allEnvironments = analyticsService.getEnvironment().getEnvironments();
         RecentActivityResult recentActivityData = null;
         try {
             recentActivityData = analyticsService.getRecentActivity(allEnvironments);
@@ -244,18 +273,42 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
         }
 
         if (recentActivityData != null) {
-            List<String> sortedEnvironments = getSortedEnvironments(allEnvironments, localHostname);
-            String requestMessage = JBCefBrowserUtil.resultToString(new JcefMessageRequest(
-                    REQUEST_MESSAGE_TYPE,
-                    RECENT_ACTIVITY_SET_DATA,
-                    new JcefMessagePayload(
-                            sortedEnvironments,
-                            getEntriesWithAdjustedLocalEnvs(recentActivityData)
-                    )
-            ));
+            latestActivityResult = recentActivityData;
 
-            JBCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser);
+            // Tool window may not be opened yet
+            if (webAppInitialized) {
+                sendLatestActivities(allEnvironments);
+            }
         }
+
+        if (hasRecentActivity()) {
+            showGreenDot();
+        } else {
+            hideGreenDot();
+        }
+    }
+
+    private void sendLatestActivities(List<String> allEnvironments) {
+        List<String> sortedEnvironments = getSortedEnvironments(allEnvironments, localHostname);
+        String requestMessage = JBCefBrowserUtil.resultToString(new JcefMessageRequest(
+                REQUEST_MESSAGE_TYPE,
+                RECENT_ACTIVITY_SET_DATA,
+                new JcefMessagePayload(
+                        sortedEnvironments,
+                        getEntriesWithAdjustedLocalEnvs(latestActivityResult)
+                )
+        ));
+
+        JBCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser);
+    }
+
+    private boolean hasRecentActivity() {
+        var latestActivity = latestActivityResult.getEntries().stream()
+                .map(RecentActivityResponseEntry::getLatestTraceTimestamp)
+                .max(Date::compareTo);
+
+        return latestActivity.isPresent() &&
+                latestActivity.get().toInstant().plus(RECENT_EXPIRATION_LIMIT, ChronoUnit.MILLIS).isAfter(Instant.now());
     }
 
     private List<RecentActivityResponseEntry> getEntriesWithAdjustedLocalEnvs(RecentActivityResult recentActivityData) {
@@ -294,4 +347,20 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
         JBCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser);
     }
 
+    private void showGreenDot() {
+        EDT.ensureEDT(() -> {
+            toolWindow.setIcon(iconWithGreenDot);
+        });
+    }
+
+    private void hideGreenDot() {
+        EDT.ensureEDT(() -> {
+            toolWindow.setIcon(icon);
+        });
+    }
+
+    @Override
+    public void dispose() {
+        myTimer.cancel();
+    }
 }

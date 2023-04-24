@@ -39,7 +39,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): JPanel? {
 
     val customViewerWindow = project.getService(
         InstallationWizardCustomViewerWindowService::class.java
-    ).customViewerWindow
+    ).getCustomViewerWindow()
     val jbCefBrowser = customViewerWindow.getWebView()
 
     val jbCefClient = jbCefBrowser.jbCefClient

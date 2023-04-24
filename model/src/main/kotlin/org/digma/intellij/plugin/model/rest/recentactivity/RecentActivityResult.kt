@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.digma.intellij.plugin.model.rest.insights.Duration
 import java.beans.ConstructorProperties
+import java.util.Date
 
 /**
  * Contracts Definition.
@@ -30,10 +31,11 @@ constructor(
         val firstEntrySpan: EntrySpan,
         val lastEntrySpan: EntrySpan?,
         val latestTraceId: String,
-        val latestTraceTimestamp: String,
+        val latestTraceTimestamp: Date,
         val latestTraceDuration: Duration,
         val slimAggregatedInsights: List<SlimAggregatedInsight>
 )
+
 
 data class EntrySpan
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)

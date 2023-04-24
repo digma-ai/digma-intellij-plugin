@@ -6,18 +6,22 @@ import com.intellij.ui.jcef.JBCefBrowser
 import com.intellij.ui.jcef.JBCefBrowserBuilder
 import org.cef.CefApp
 
-class CustomViewerWindow(project: Project, private var resourceFolderName: String) {
+class CustomViewerWindow(
+    val project: Project,
+    private val resourceFolderName: String,
+    private val indexTemplateData: Map<String, Any>?
+) {
     private val browserDisposer = Disposer.newDisposable()
-    private val webView: JBCefBrowser = getBrowser(project)
+    private val webView: JBCefBrowser = getBrowser()
 
-    private fun getBrowser(project: Project): JBCefBrowser {
+    private fun getBrowser(): JBCefBrowser {
         val jbCefBrowserBuilder = JBCefBrowserBuilder()
         jbCefBrowserBuilder.setOffScreenRendering(false)
         // this provides us an opportunity to open DevTools
         jbCefBrowserBuilder.setEnableOpenDevToolsMenuItem(true)
         val jbCefBrowser = jbCefBrowserBuilder.build()
 
-        registerAppSchemeHandler(project)
+        registerAppSchemeHandler()
         jbCefBrowser.loadURL("https://$resourceFolderName/index.html")
         Disposer.register(browserDisposer, jbCefBrowser)
         return jbCefBrowser
@@ -25,13 +29,13 @@ class CustomViewerWindow(project: Project, private var resourceFolderName: Strin
 
     fun getWebView(): JBCefBrowser = webView
 
-    private fun registerAppSchemeHandler(project: Project): Boolean {
+    private fun registerAppSchemeHandler(): Boolean {
         return CefApp.getInstance()
-                .registerSchemeHandlerFactory(
-                        "https",
-                        resourceFolderName,
-                        CustomSchemeHandlerFactory(project, resourceFolderName)
-                )
+            .registerSchemeHandlerFactory(
+                "https",
+                resourceFolderName,
+                CustomSchemeHandlerFactory(resourceFolderName, indexTemplateData)
+            )
     }
 
     fun dispose() {

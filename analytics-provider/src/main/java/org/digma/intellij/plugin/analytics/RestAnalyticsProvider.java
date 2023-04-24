@@ -22,6 +22,8 @@ import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
+import org.digma.intellij.plugin.model.rest.version.VersionRequest;
+import org.digma.intellij.plugin.model.rest.version.VersionResponse;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -131,6 +133,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     @Override
     public RecentActivityResult getRecentActivity(RecentActivityRequest recentActivityRequest) {
         return execute(() -> client.analyticsProvider.getRecentActivity(recentActivityRequest));
+    }
+
+    @Override
+    public VersionResponse getVersions(VersionRequest request) {
+        return execute(() -> client.analyticsProvider.getVersions(request));
     }
 
     @Override
@@ -394,6 +401,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @POST("/CodeAnalytics/codeObjects/recent_activity")
         Call<RecentActivityResult> getRecentActivity(@Body RecentActivityRequest recentActivityRequest);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/Version/verifyVersion")
+        Call<VersionResponse> getVersions(@Body VersionRequest versionRequest);
 
         @Headers({
                 "Accept: application/+json",

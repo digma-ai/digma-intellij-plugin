@@ -24,6 +24,8 @@ import org.digma.intellij.plugin.model.rest.insights.SlowSpanInfo;
 import org.digma.intellij.plugin.model.rest.insights.SlowestSpansInsight;
 import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
 import org.digma.intellij.plugin.model.rest.insights.SpanInfo;
+import org.digma.intellij.plugin.model.rest.version.VersionRequest;
+import org.digma.intellij.plugin.model.rest.version.VersionResponse;
 import org.junit.jupiter.api.Test;
 
 import java.time.temporal.ChronoUnit;
@@ -94,6 +96,20 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
 
 
         CodeObjectInsightsStatusResponse response = analyticsProvider.getCodeObjectInsightStatus(request);
+
+        System.out.println("response:" + response);
+    }
+
+//    @Test
+    public void actual_getVersions() {
+        final VersionRequest request = new VersionRequest(
+                "1.2.3",
+                "IC",
+                "4.5.6"
+        );
+        AnalyticsProvider analyticsProvider = new RestAnalyticsProvider("https://localhost:5051");
+
+        VersionResponse response = analyticsProvider.getVersions(request);
 
         System.out.println("response:" + response);
     }

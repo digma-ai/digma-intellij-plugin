@@ -1,10 +1,12 @@
 package org.digma.intellij.plugin.model.rest.insights
 
 import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.digma.intellij.plugin.model.InsightType
 import java.beans.ConstructorProperties
 import java.util.Date
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class SpanDurationsInsight
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties(
@@ -16,6 +18,7 @@ data class SpanDurationsInsight
         "actualStartTime",
         "customStartTime",
         "prefixedCodeObjectId",
+      //  "isRecalculateEnabled",
         "shortDisplayInfo",
         "spanInfo",
         "percentiles"
@@ -31,8 +34,10 @@ constructor(
         override val prefixedCodeObjectId: String?,
         override val shortDisplayInfo: ShortDisplayInfo?,
         override val spanInfo: SpanInfo,
-        val percentiles: List<SpanDurationsPercentile>,
+        val percentiles: List<SpanDurationsPercentile>
 ) : SpanInsight {
 
     override val type: InsightType = InsightType.SpanDurations
+    override val isRecalculateEnabled: Boolean = true // should remove the setter = true later ...support backward compatibility
+
 }

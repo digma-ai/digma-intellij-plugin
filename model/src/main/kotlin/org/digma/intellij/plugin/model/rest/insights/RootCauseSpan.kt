@@ -14,7 +14,7 @@ data class RootCauseSpan
                         "serviceName",
                         "codeObjectId",
                         "kind")
-constructor(val sampleTraceId: String,
+constructor(val sampleTraceId: String?,
             val name: String,
             val displayName: String,
             val instrumentationLibrary: String,

@@ -30,7 +30,7 @@ internal class EndpointSchemaTest {
     @Test
     fun adjustHttpRouteIfNeededShouldAdjustWhenNoSchema() {
         val codeObjectId = "123"
-        val normalUsageInsight = NormalUsageInsight(codeObjectId, "env1", "scope1", 3, null, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(codeObjectId), null,
+        val normalUsageInsight = NormalUsageInsight(codeObjectId, "env1", "scope1", 3, null, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(codeObjectId), false,null,
                 createSpanInfo("endpointSpan1"), "get /yes", "myService",
                 3)
         adjustHttpRouteIfNeeded(normalUsageInsight)
@@ -40,7 +40,7 @@ internal class EndpointSchemaTest {
     @Test
     fun adjustHttpRouteIfNeededShouldSkipAdjustWhenHttpSchemaAlreadyExists() {
         val codeObjectId = "456"
-        val normalUsageInsight = NormalUsageInsight(codeObjectId, "env2", "scope2", 2, null, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(codeObjectId), null,
+        val normalUsageInsight = NormalUsageInsight(codeObjectId, "env2", "scope2", 2, null, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(codeObjectId), false,null,
                 createSpanInfo("endpointSpan1"), "epHTTP:post /letsgo", "myService",
                 8)
         adjustHttpRouteIfNeeded(normalUsageInsight)
@@ -50,7 +50,7 @@ internal class EndpointSchemaTest {
     @Test
     fun adjustHttpRouteIfNeededShouldSkipAdjustWhenRpcSchemaAlreadyExists() {
         val codeObjectId = "789"
-        val normalUsageInsight = NormalUsageInsight(codeObjectId, "env3", "scope3", 5, null, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(codeObjectId), null,
+        val normalUsageInsight = NormalUsageInsight(codeObjectId, "env3", "scope3", 5, null, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(codeObjectId), false,null,
                 createSpanInfo("endpointSpan3"), "epRPC:serviceA.methodB", "MyService",
                 4)
         adjustHttpRouteIfNeeded(normalUsageInsight)

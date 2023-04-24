@@ -48,6 +48,7 @@ interface CodeObjectInsight {
     val actualStartTime: Date?
     val customStartTime: Date?
     val prefixedCodeObjectId: String?
+    val isRecalculateEnabled: Boolean
     val shortDisplayInfo: ShortDisplayInfo?
 
     fun hasDecorators(): Boolean {

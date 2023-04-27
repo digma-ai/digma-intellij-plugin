@@ -56,6 +56,7 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
         registerSessionDetails()
 
         ConnectionActivityMonitor.loadInstance(project)
+        PluginActivityMonitor.loadInstance(project)
     }
 
 //    override fun run() {
@@ -159,6 +160,11 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
     fun registerFirstTimePluginLoaded() {
         postHog?.capture(clientId, "plugin first-loaded")
     }
+
+    fun registerPluginUninstalled() {
+        postHog?.capture(clientId, "plugin uninstalled")
+    }
+
 
     fun registerServerVersion(applicationVersion: String) {
         postHog?.set(

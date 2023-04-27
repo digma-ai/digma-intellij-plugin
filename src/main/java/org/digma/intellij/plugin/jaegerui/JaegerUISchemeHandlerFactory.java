@@ -30,6 +30,8 @@ public class JaegerUISchemeHandlerFactory implements CefSchemeHandlerFactory {
                 var resource = getClass().getResource(resourceName);
                 if (resource != null) {
                     return new JaegerUIResourceHandler(project, resourceName);
+                }else{
+                    return new JaegerUIResourceHandler(project, JaegerUIService.RESOURCE_FOLDER_NAME+"/index.html");
                 }
             }
         }

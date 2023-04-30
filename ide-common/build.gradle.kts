@@ -17,21 +17,20 @@ dependencies {
     api(libs.threeten)
     api(libs.commons.lang3)
     api(libs.commons.collections4)
+    api(libs.posthog)
 
     implementation(project(":model"))
     implementation(project(":analytics-provider"))
-    implementation("com.posthog.java:posthog:+")
 }
 
 tasks{
 
-    task("injectPosthogTokenUrl") {
+    val injectPosthogTokenUrlTask = task("injectPosthogTokenUrl") {
         doLast{
             val url = System.getenv("POSTHOG_TOKEN_URL") ?: ""
-            file("../build/resources/main/posthog-token-url.txt").writeText(url)
+            file("${project.rootProject.sourceSets.main.get().output.resourcesDir?.absolutePath}/posthog-token-url.txt").writeText(url)
         }
     }
-    buildPlugin {
-        dependsOn("injectPosthogTokenUrl")
-    }
+
+    processResources.get().finalizedBy(injectPosthogTokenUrlTask)
 }

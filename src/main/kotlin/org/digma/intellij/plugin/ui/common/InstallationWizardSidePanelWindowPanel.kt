@@ -16,11 +16,12 @@ import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.analytics.BackendConnectionUtil
 import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.rest.installationwizard.FinishRequest
 import org.digma.intellij.plugin.model.rest.installationwizard.OpenInBrowserRequest
 import org.digma.intellij.plugin.model.rest.installationwizard.SendTrackingEventRequest
 import org.digma.intellij.plugin.model.rest.installationwizard.SetObservabilityRequest
 import org.digma.intellij.plugin.persistence.PersistenceService
-import org.digma.intellij.plugin.posthog.ActivityMonitor.Companion.getInstance
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.toolwindow.common.CustomViewerWindow
 import org.digma.intellij.plugin.toolwindow.common.ThemeChangeListener
 import org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil
@@ -86,7 +87,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): JPanel? {
                     SendTrackingEventRequest::class.java
                 )
                 if (payload != null) {
-                    getInstance(project).registerCustomEvent(payload.eventName, payload.data)
+                    ActivityMonitor.getInstance(project).registerCustomEvent(payload.eventName, payload.data)
                 }
             }
             if (ToolWindowUtil.INSTALLATION_WIZARD_SET_OBSERVABILITY.equals(action, ignoreCase = true)) {
@@ -99,6 +100,13 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): JPanel? {
                 }
             }
             if (ToolWindowUtil.INSTALLATION_WIZARD_FINISH.equals(action, ignoreCase = true)) {
+                val (_, payload) = ToolWindowUtil.parseJsonToObject(
+                    request,
+                    FinishRequest::class.java
+                )
+                if (payload?.email != null) {
+                    ActivityMonitor.getInstance(project).registerEmail( payload.email!!)
+                }
                 ApplicationManager.getApplication().invokeLater {
                     updateInstallationWizardFlag()
                     ToolWindowShower.getInstance(project).displayMainSidePaneWindowPanel()

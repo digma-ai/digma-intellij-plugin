@@ -7,16 +7,20 @@ import com.intellij.execution.configurations.JavaParameters
 import com.intellij.execution.configurations.ModuleRunConfiguration
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunnerSettings
+import com.intellij.execution.process.ProcessEvent
+import com.intellij.execution.process.ProcessHandler
+import com.intellij.execution.process.ProcessListener
 import com.intellij.execution.ui.ConsoleView
 import com.intellij.execution.ui.ConsoleViewContentType
 import com.intellij.openapi.diagnostic.Logger
-import kotlinx.collections.immutable.toImmutableMap
+import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.settings.SettingsState
 import org.jetbrains.idea.maven.execution.MavenRunConfiguration
 import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
 
+private const val ORG_GRADLE_JAVA_TOOL_OPTIONS = "ORG_GRADLE_JAVA_TOOL_OPTIONS"
 
 class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
 
@@ -57,23 +61,25 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
         Log.log(logger::debug, "updateJavaParameters, project:{}, id:{}, name:{}, type:{}",
                 configuration.project, configuration.id, configuration.name, configuration.type)
 
+        val project = configuration.project
+
         //testing if enabled must be done here just before running.
         if (!enabled()) {
             Log.log(logger::debug, "AutoOtelAgentRunConfigurationExtension is not enabled")
             return
         }
 
+
         if (isJavaConfiguration(configuration)) {
-            configuration as CommonJavaRunConfigurationParameters
+            //this also works for: CommonJavaRunConfigurationParameters
+            //params.vmParametersList.addParametersString("-verbose:class -javaagent:/home/shalom/tmp/run-configuration/opentelemetry-javaagent.jar")
+            //params.vmParametersList.addProperty("myprop","myvalue")
+            val javaToolOptions = buildJavaToolOptions(configuration, project)
+            javaToolOptions?.let {
+                mergeJavaToolOptions(params, it)
+            }
 
-            adjustWithOtelAndDigma(configuration, params)
         } else if (isGradleConfiguration(configuration)) {
-            configuration as GradleRunConfiguration
-
-            fillPropertiesAndEnvIfNeeded(params, configuration)
-
-            adjustWithOtelAndDigma(configuration, params)
-
             //when injecting JAVA_TOOL_OPTIONS to GradleRunConfiguration the GradleRunConfiguration will also run with
             // JAVA_TOOL_OPTIONS which is not ideal. for example, gradle will execute with JAVA_TOOL_OPTIONS and then fork
             // a process for the main method or unit test with JAVA_TOOL_OPTIONS. ideally we want only the forked process
@@ -84,84 +90,116 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
             // to learn how gradle does it see GradleTaskManager and GradleExecutionHelper.
             //when gradle runs the :test task it's not possible to pass system properties to the task.
             // JAVA_TOOL_OPTIONS is not the best as said above, but it works.
-
+            configuration as GradleRunConfiguration
+            val javaToolOptions = buildJavaToolOptions(configuration, project)
+            javaToolOptions?.let {
+                mergeGradleJavaToolOptions(configuration, javaToolOptions)
+            }
         } else if (isMavenConfiguration(configuration)) {
             configuration as MavenRunConfiguration
-
-            adjustWithOtelAndDigma(configuration, params)
-        }
-    }
-
-    /**
-     * temp method and is used so JavaParameters would be ready for next call, which check for existent systemProperty or environmentVariable
-     * apparently for gradle the systemProperty and environmentVariable are not set during the hook of updateXxx.
-     * opened an issue to track it https://youtrack.jetbrains.com/issue/IDEA-317118
-     * so once issue is solved can remove this method
-     */
-    private fun fillPropertiesAndEnvIfNeeded(params: JavaParameters, configuration: GradleRunConfiguration) {
-        if (params.env.isNullOrEmpty()) {
-            if (!configuration.settings.env.isNullOrEmpty()) {
-                params.env = configuration.settings.env.toImmutableMap()
-            }
-        }
-        if (params.vmParametersList.parametersCount <= 0) {
-            if (!configuration.settings.vmOptions.isNullOrBlank()) {
-                params.vmParametersList.addParametersString(configuration.settings.vmOptions)
+            val javaToolOptions = buildJavaToolOptions(configuration, project)
+            javaToolOptions?.let {
+                mergeJavaToolOptions(params, it)
             }
         }
     }
+
+
+    //this is only for gradle. we need to keep original JAVA_TOOL_OPTIONS if exists and restore when the process is
+    // finished, anyway we need to clean our JAVA_TOOL_OPTIONS because it will be saved in the run configuration settings.
+    private fun mergeGradleJavaToolOptions(configuration: GradleRunConfiguration, myJavaToolOptions: String) {
+        var javaToolOptions = myJavaToolOptions
+        //need to replace the env because it may be immutable map
+        val newEnv = configuration.settings.env.toMutableMap()
+        if (configuration.settings.env.containsKey(JAVA_TOOL_OPTIONS)) {
+            val currentJavaToolOptions = configuration.settings.env[JAVA_TOOL_OPTIONS]
+            javaToolOptions = "$myJavaToolOptions $currentJavaToolOptions"
+            newEnv[ORG_GRADLE_JAVA_TOOL_OPTIONS] = currentJavaToolOptions!!
+        }
+        newEnv[JAVA_TOOL_OPTIONS] = javaToolOptions
+        configuration.settings.env = newEnv
+    }
+
+
+    //this is for java and maven run configurations. merge in case users have their own JAVA_TOOL_OPTIONS
+    private fun mergeJavaToolOptions(params: JavaParameters, myJavaToolOptions: String) {
+        var javaToolOptions = myJavaToolOptions
+        if (params.env.containsKey(JAVA_TOOL_OPTIONS)) {
+            val currentJavaToolOptions = params.env[JAVA_TOOL_OPTIONS]
+            javaToolOptions = "$myJavaToolOptions $currentJavaToolOptions"
+        }
+        params.env[JAVA_TOOL_OPTIONS] = javaToolOptions
+    }
+
+
+    override fun attachToProcess(
+            configuration: RunConfigurationBase<*>,
+            handler: ProcessHandler,
+            runnerSettings: RunnerSettings?
+    ) {
+        //we need to clean gradle configuration from our JAVA_TOOL_OPTIONS
+        if (isGradleConfiguration(configuration)) {
+            handler.addProcessListener(object : ProcessListener {
+
+                override fun processWillTerminate(event: ProcessEvent, willBeDestroyed: Boolean) {
+                    cleanGradleSettings(configuration)
+                }
+
+                private fun cleanGradleSettings(configuration: RunConfigurationBase<*>) {
+                    configuration as GradleRunConfiguration
+                    Log.log(logger::debug, "Cleaning gradle configuration {}", configuration)
+                    if (configuration.settings.env.containsKey(ORG_GRADLE_JAVA_TOOL_OPTIONS)) {
+                        val orgJavaToolOptions = configuration.settings.env[ORG_GRADLE_JAVA_TOOL_OPTIONS]
+                        configuration.settings.env[JAVA_TOOL_OPTIONS] = orgJavaToolOptions
+                        configuration.settings.env.remove(ORG_GRADLE_JAVA_TOOL_OPTIONS)
+                    } else if (configuration.settings.env.containsKey(JAVA_TOOL_OPTIONS)) {
+                        configuration.settings.env.remove(JAVA_TOOL_OPTIONS)
+                    }
+                }
+            })
+        }
+
+    }
+
 
     override fun decorate(
             console: ConsoleView,
             configuration: RunConfigurationBase<*>,
             executor: Executor
     ): ConsoleView {
-
-        if (enabled()) {
-            console.print("Observability - this process is enhanced by Digma OTEL agent\n", ConsoleViewContentType.LOG_WARNING_OUTPUT)
+        if (enabled() &&
+                (isMavenConfiguration(configuration) || isJavaConfiguration(configuration))) {
+            //that only works for java and maven run configurations.
+            console.print("This process is enhanced by Digma OTEL agent !\n", ConsoleViewContentType.LOG_WARNING_OUTPUT)
         }
 
         return console
     }
 
-    private fun adjustWithOtelAndDigma(configuration: RunConfigurationBase<*>, params: JavaParameters) {
+    private fun buildJavaToolOptions(configuration: RunConfigurationBase<*>, project: Project): String? {
 
-        val otelAgentPath = OTELJarProvider.getInstance().getOtelAgentJarPath(configuration.project)
-        val digmaExtensionPath = OTELJarProvider.getInstance().getDigmaAgentExtensionJarPath(configuration.project)
-
+        val otelAgentPath = OTELJarProvider.getInstance().getOtelAgentJarPath(project)
+        val digmaExtensionPath = OTELJarProvider.getInstance().getDigmaAgentExtensionJarPath(project)
         if (otelAgentPath == null || digmaExtensionPath == null) {
-            Log.log(logger::debug, "could not adjust process because OTEL agent and Digma extension are not available. please check the logs")
-            return
+            Log.log(logger::debug, "could not build $JAVA_TOOL_OPTIONS because otel agent or digma extension jar are not available. please check the logs")
+            return null
         }
 
-        params.vmParametersList.addParametersString("-javaagent:$otelAgentPath")
-        params.vmParametersList.addProperty("otel.javaagent.extensions", digmaExtensionPath)
-        params.vmParametersList.addProperty("otel.traces.exporter", "otlp")
-        params.vmParametersList.addProperty("otel.metrics.exporter", "none")
-        params.vmParametersList.addProperty("otel.exporter.otlp.traces.endpoint", getExporterUrl())
-
-        if (!isOtelServiceNameAlreadyDefined(params)) {
-            params.vmParametersList.addProperty("otel.service.name", evalServiceName(configuration))
-        }
+        return "".plus("-javaagent:$otelAgentPath")
+                .plus(" ")
+                .plus("-Dotel.javaagent.extensions=$digmaExtensionPath")
+                .plus(" ")
+                .plus("-Dotel.traces.exporter=otlp")
+                .plus(" ")
+                .plus("-Dotel.metrics.exporter=none")
+                .plus(" ")
+                .plus("-Dotel.exporter.otlp.traces.endpoint=${getExporterUrl()}")
+                .plus(" ")
+                .plus("-Dotel.service.name=${getServiceName(configuration)}")
+                .plus(" ")
     }
 
-    private fun isOtelEntryDefined(javaConfParams: JavaParameters, environmentVariable: String, systemProperty: String): Boolean {
-        return javaConfParams.env.containsKey(environmentVariable)
-                || isVmEntryExists(javaConfParams, systemProperty)
-    }
-
-    /**
-     * see <a href="https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/autoconfigure/README.md#opentelemetry-resource"></a>
-     */
-    private fun isOtelServiceNameAlreadyDefined(javaConfParams: JavaParameters): Boolean {
-        return isOtelEntryDefined(javaConfParams, "OTEL_SERVICE_NAME", "otel.service.name")
-    }
-
-    private fun isVmEntryExists(javaConfParams: JavaParameters, entryName: String): Boolean {
-        return javaConfParams.vmParametersList.hasProperty(entryName)
-    }
-
-    private fun evalServiceName(configuration: RunConfigurationBase<*>): String {
+    private fun getServiceName(configuration: RunConfigurationBase<*>): String {
         return if (configuration is ModuleRunConfiguration && configuration.modules.isNotEmpty()) {
             val moduleName = configuration.modules.first().name
             moduleName.replace(" ", "").trim()

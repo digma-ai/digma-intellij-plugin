@@ -26,7 +26,7 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
         }
     }
 
-    private val clientId: String
+    private val userId: String
     private val isDevUser: Boolean
 
     //    private val tokenFetcherThread = Thread(this, "Token fetcher thread")
@@ -37,10 +37,10 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
     init {
         val hostname = CommonUtils.getLocalHostname()
         if (System.getenv("devenv") == "digma") {
-            clientId = hostname
+            userId = hostname
             isDevUser = true
         } else {
-            clientId = Integer.toHexString(hostname.hashCode())
+            userId = Integer.toHexString(hostname.hashCode())
             isDevUser = false
         }
 
@@ -75,8 +75,12 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
 //        registerSessionDetails()
 //    }
 
+    fun registerEmail(email: String) {
+        postHog?.alias(userId, email)
+    }
+
     fun registerCustomEvent(eventName: String, tags: Map<String, Any>) {
-        postHog?.capture(clientId, eventName, tags)
+        postHog?.capture(userId, eventName, tags)
     }
 
     fun registerLensClicked() {
@@ -90,34 +94,34 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
             "unknown"
 
         postHog?.capture(
-            clientId,
+            userId,
             "side-panel opened",
             mapOf("reason" to reason)
         )
     }
 
     fun registerObservabilityPanelOpened() {
-        postHog?.capture(clientId, "observability-panel opened")
+        postHog?.capture(userId, "observability-panel opened")
     }
 
     fun registerFirstConnectionEstablished() {
-        postHog?.capture(clientId, "connection first-established")
+        postHog?.capture(userId, "connection first-established")
     }
 
     fun registerConnectionError(action: String, message: String) {
-        postHog?.capture(clientId, "connection error", mapOf("reason" to message, "action" to action))
+        postHog?.capture(userId, "connection error", mapOf("reason" to message, "action" to action))
     }
 
     fun registerFirstInsightReceived() {
-        postHog?.capture(clientId, "insight first-received")
+        postHog?.capture(userId, "insight first-received")
     }
 
     fun registerObservabilityOn() {
-        postHog?.capture(clientId, "observability is turned on")
+        postHog?.capture(userId, "observability is turned on")
     }
 
     fun registerObservabilityOff() {
-        postHog?.capture(clientId, "observability is turned off")
+        postHog?.capture(userId, "observability is turned off")
     }
 
     fun registerError(exception: Exception, message: String) {
@@ -125,7 +129,7 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
         exception.printStackTrace(PrintWriter(stringWriter))
 
         postHog?.capture(
-            clientId,
+            userId,
             "error",
             mapOf(
                 "message" to message,
@@ -143,7 +147,7 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
 
         lastInsightsViewed = newInsightsViewed
         postHog?.capture(
-            clientId,
+            userId,
             "insights viewed",
             mapOf("insights" to insightTypes)
         )
@@ -151,24 +155,24 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
 
     fun registerInsightButtonClicked(button: String) {
         postHog?.capture(
-            clientId,
+            userId,
             "insights button-clicked",
             mapOf("button" to button)
         )
     }
 
     fun registerFirstTimePluginLoaded() {
-        postHog?.capture(clientId, "plugin first-loaded")
+        postHog?.capture(userId, "plugin first-loaded")
     }
 
     fun registerPluginUninstalled() {
-        postHog?.capture(clientId, "plugin uninstalled")
+        postHog?.capture(userId, "plugin uninstalled")
     }
 
 
     fun registerServerVersion(applicationVersion: String) {
         postHog?.set(
-            clientId,
+            userId,
             mapOf("server.version" to applicationVersion)
         )
     }
@@ -185,7 +189,7 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
                 .orElse("unknown")
 
         postHog?.set(
-            clientId,
+            userId,
             mapOf(
                 "os.type" to osType,
                 "ide.name" to ideName,

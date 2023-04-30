@@ -33,13 +33,9 @@
                     anchor="bottom"
                     factoryClass="org.digma.intellij.plugin.toolwindow.recentactivity.DigmaBottomToolWindowFactory"/>
 
-        <toolWindow id="TempJaeger"
-                    secondary="false"
-                    icon="org.digma.intellij.plugin.icons.AppIcons.TOOL_WINDOW"
-                    anchor="bottom"
-                    factoryClass="org.digma.intellij.plugin.jaegerui.TempJaegerToolWindow"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.jaegerui.JaegerUIService"/>
+        <fileEditorProvider implementation="org.digma.intellij.plugin.jaegerui.JaegerUIFileEditorProvider"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.ToolWindowShower"/>
 

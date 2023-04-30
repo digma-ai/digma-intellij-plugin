@@ -4,6 +4,7 @@ import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.fileEditor.impl.HTMLEditorProvider
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.jaegerui.JaegerUIService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.settings.LinkMode
 import org.digma.intellij.plugin.settings.SettingsState
@@ -54,6 +55,11 @@ fun buildButtonToJaeger(
             HTMLEditorProvider.openEditor(project, editorTitle, htmlContent)
             ActivityMonitor.getInstance(project).registerInsightButtonClicked("show-in-jaeger")
         }
+    } else if (settingsState.jaegerLinkMode == LinkMode.Embedded) {
+        button.addActionListener {
+            JaegerUIService.getInstance(project).openEmbeddedJaeger(filtered,spanName)
+            ActivityMonitor.getInstance(project).registerInsightButtonClicked("show-in-jaeger")
+        }
     } else {
         // handle LinkMode.External
         button.addActionListener {
@@ -94,6 +100,8 @@ fun openJaegerFromRecentActivity(
         ApplicationManager.getApplication().invokeLater {
             HTMLEditorProvider.openEditor(project, editorTitle, htmlContent)
         }
+    } else if (settingsState.jaegerLinkMode == LinkMode.Embedded) {
+        JaegerUIService.getInstance(project).openEmbeddedJaeger(traceId,spanName)
     } else {
         // handle LinkMode.External - open Jaeger in Web browser
         ApplicationManager.getApplication().invokeLater {

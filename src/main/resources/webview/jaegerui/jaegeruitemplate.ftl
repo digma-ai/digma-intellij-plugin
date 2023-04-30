@@ -39,9 +39,10 @@
       window.global = {};
     </script>
     <script>
-      window.apiBaseUrl="http://192.168.122.74:17686";
-      window.initialRoutePath;
-      window.embeddedMode;
+      window.platform = "JetBrains";
+      window.apiBaseUrl = "${jaeger_url}";
+      window.initialRoutePath = "${initial_route}";
+      window.embeddedMode = "true";
       window.staticPath;
     </script>
     <script type="module" crossorigin src="./static/index-7d469fb7.js"></script>

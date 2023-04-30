@@ -13,9 +13,11 @@ import java.net.URL;
 
 public class JaegerUISchemeHandlerFactory implements CefSchemeHandlerFactory {
     private final Project project;
+    private final JaegerUIVirtualFile jaegerUIVirtualFile;
 
-    public JaegerUISchemeHandlerFactory(Project project) {
+    public JaegerUISchemeHandlerFactory(Project project, JaegerUIVirtualFile file) {
         this.project = project;
+        this.jaegerUIVirtualFile = file;
     }
 
     @Override
@@ -24,14 +26,14 @@ public class JaegerUISchemeHandlerFactory implements CefSchemeHandlerFactory {
         if (url != null) {
             var host = url.getHost();
             var file = url.getFile();
-            if (JaegerUIService.DOMAIN_NAME.equals(host) &&
-                    JaegerUIService.SCHEMA_NAME.equals(schemeName)){
-                var resourceName = JaegerUIService.RESOURCE_FOLDER_NAME+file;
+            if (JaegerUIFileEditor.DOMAIN_NAME.equals(host) &&
+                    JaegerUIFileEditor.SCHEMA_NAME.equals(schemeName)){
+                var resourceName = JaegerUIFileEditor.RESOURCE_FOLDER_NAME+file;
                 var resource = getClass().getResource(resourceName);
                 if (resource != null) {
-                    return new JaegerUIResourceHandler(project, resourceName);
+                    return new JaegerUIResourceHandler(project, resourceName,jaegerUIVirtualFile);
                 }else{
-                    return new JaegerUIResourceHandler(project, JaegerUIService.RESOURCE_FOLDER_NAME+"/index.html");
+                    return new JaegerUIResourceHandler(project, JaegerUIFileEditor.RESOURCE_FOLDER_NAME+"/index.html",jaegerUIVirtualFile);
                 }
             }
         }

@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.jaegerui;
 
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.cef.callback.CefCallback;
 import org.cef.handler.CefLoadHandler;
@@ -8,29 +9,50 @@ import org.cef.misc.IntRef;
 import org.cef.misc.StringRef;
 import org.cef.network.CefRequest;
 import org.cef.network.CefResponse;
+import org.digma.intellij.plugin.log.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
 
 public class JaegerUIResourceHandler implements CefResourceHandler {
+
+    private static final Logger LOGGER = Logger.getInstance(JaegerUIResourceHandler.class);
+
+
     private final Project project;
     private final String path;
+    private final JaegerUIVirtualFile jaegerUIVirtualFile;
     private InputStream inputStream;
 
     private CefRequest.ResourceType resourceType;
 
-    public JaegerUIResourceHandler(Project project, String path) {
+    public JaegerUIResourceHandler(Project project, String path, JaegerUIVirtualFile file) {
         this.project = project;
         this.path = path;
+        this.jaegerUIVirtualFile = file;
     }
 
     @Override
     public boolean processRequest(CefRequest request, CefCallback callback) {
-        inputStream = getClass().getResourceAsStream(path);
+
+        if (JaegerUIService.getInstance(project).isIndexHtml(path)){
+            inputStream = JaegerUIService.getInstance(project).buildIndexFromTemplate(path,jaegerUIVirtualFile);
+        }else{
+            inputStream = getClass().getResourceAsStream(path);
+        }
+
+        if (inputStream == null){
+            Log.log(LOGGER::warn,"inputStream is null , canceling request "+request.getURL());
+            callback.cancel();
+            return false;
+        }
+
         resourceType = request.getResourceType();
         callback.Continue();
         return true;
     }
+
+
 
     @Override
     public void getResponseHeaders(CefResponse response, IntRef responseLength, StringRef redirectUrl) {
@@ -98,7 +120,9 @@ public class JaegerUIResourceHandler implements CefResourceHandler {
     @Override
     public void cancel() {
         try {
-            inputStream.close();
+            if (inputStream != null) {
+                inputStream.close();
+            }
         } catch (IOException e) {
             //ignore
         }

@@ -9,12 +9,12 @@ import freemarker.template.TemplateExceptionHandler;
 import kotlin.Pair;
 import org.apache.commons.collections.CollectionUtils;
 import org.digma.intellij.plugin.common.EDT;
-import org.digma.intellij.plugin.idea.psi.java.JavaLanguageService;
-import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils;
 import org.digma.intellij.plugin.jaegerui.model.GoToSpanMessage;
 import org.digma.intellij.plugin.jaegerui.model.Importance;
 import org.digma.intellij.plugin.jaegerui.model.SpansMessage;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.psi.LanguageService;
+import org.digma.intellij.plugin.psi.SupportedLanguages;
 import org.digma.intellij.plugin.service.EditorService;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.model.TraceSample;
@@ -190,38 +190,44 @@ public class JaegerUIService {
 
 
     public void goToSpan(GoToSpanMessage goToSpanMessage) {
-        JavaLanguageService javaLanguageService = project.getService(JavaLanguageService.class);
-        if (javaLanguageService != null) {
-            var spanId = JavaLanguageUtils.createSpanIdFromInstLibraryAndSpanName(goToSpanMessage.payload().instrumentationLibrary(), goToSpanMessage.payload().name());
-            var workspaceUris = javaLanguageService.findWorkspaceUrisForSpanIds(Collections.singletonList(spanId));
-            Pair<String, Integer> location =  workspaceUris.get(spanId);
-            EditorService editorService = project.getService(EditorService.class);
-            EDT.ensureEDT(() -> editorService.openWorkspaceFileInEditor(location.getFirst(),location.getSecond()));
+
+        //todo: implemented only for java, there is no information about the language
+
+        var languageService = LanguageService.findLanguageServiceByName(project, SupportedLanguages.JAVA.getLanguageServiceClassName());
+        if (languageService == null){
+            return;
         }
+        var spanId = goToSpanMessage.payload().instrumentationLibrary() + "$_$" + goToSpanMessage.payload().name();
+        var workspaceUris = languageService.findWorkspaceUrisForSpanIds(Collections.singletonList(spanId));
+        Pair<String, Integer> location = workspaceUris.get(spanId);
+        EditorService editorService = project.getService(EditorService.class);
+        EDT.ensureEDT(() -> editorService.openWorkspaceFileInEditor(location.getFirst(), location.getSecond()));
     }
 
     public Map<String, Importance> getResolvedSpans(SpansMessage spansMessage) {
+
         //todo: implemented only for java, there is no information about the language
-        JavaLanguageService javaLanguageService = project.getService(JavaLanguageService.class);
-        if (javaLanguageService != null){
-            var spanIds = spansMessage.payload().spans().stream()
-                    .map(span -> JavaLanguageUtils.createSpanIdFromInstLibraryAndSpanName(span.instrumentationLibrary(),span.name()))
-                    .toList();
 
-            var workspaceUris = javaLanguageService.findWorkspaceUrisForSpanIds(spanIds);
-
-            var resolvedSpans = new HashMap<String,Importance>();
-            spansMessage.payload().spans().forEach(span -> {
-                var spanId = JavaLanguageUtils.createSpanIdFromInstLibraryAndSpanName(span.instrumentationLibrary(),span.name() );
-                if (workspaceUris.containsKey(spanId)){
-                    resolvedSpans.put(span.id(),new Importance(1));
-                }
-            });
-
-            return resolvedSpans;
+        var languageService = LanguageService.findLanguageServiceByName(project,SupportedLanguages.JAVA.getLanguageServiceClassName());
+        if (languageService == null){
+            return Collections.emptyMap();
         }
 
-        return Collections.emptyMap();
+        var spanIds = spansMessage.payload().spans().stream()
+                .map(span -> span.instrumentationLibrary() + "$_$" + span.name()).toList();
+
+        var workspaceUris = languageService.findWorkspaceUrisForSpanIds(spanIds);
+
+        var resolvedSpans = new HashMap<String, Importance>();
+        spansMessage.payload().spans().forEach(span -> {
+            var spanId = span.instrumentationLibrary() + "$_$" + span.name();
+            if (workspaceUris.containsKey(spanId)) {
+                resolvedSpans.put(span.id(), new Importance(1));
+            }
+        });
+
+        return resolvedSpans;
+
     }
 }
 

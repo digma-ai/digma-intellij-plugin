@@ -32,7 +32,7 @@ public class JaegerUIFileEditor extends UserDataHolderBase implements FileEditor
         jbCefBrowser = JBCefBrowser.createBuilder()
                 .setOffScreenRendering(true)
                 .setUrl("http://" + DOMAIN_NAME + "/index.html")
-                .setEnableOpenDevToolsMenuItem(true)
+                .setEnableOpenDevToolsMenuItem(false)
                 .build();
 
         registerAppSchemeHandler(project, (JaegerUIVirtualFile) file);

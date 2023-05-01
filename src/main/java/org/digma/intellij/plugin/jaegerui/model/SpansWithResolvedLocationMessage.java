@@ -10,9 +10,9 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonSerialize
-public record SpansWithResolvedLocationMessage(@JsonProperty("type") String type,
-                                               @JsonProperty("action")  String action,
-                                               @JsonProperty("payload") Map<String,Importance> payload ) {
+public record SpansWithResolvedLocationMessage(@JsonProperty(value = "type",required = true) String type,
+                                               @JsonProperty(value = "action",required = true)  String action,
+                                               @JsonProperty(value = "payload",required = true) Map<String,Importance> payload ) {
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     public SpansWithResolvedLocationMessage {

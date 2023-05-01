@@ -218,10 +218,10 @@ public class AnalyticsService implements Disposable {
     }
 
     /**
-     * @deprecated This method is deprecated and will be removed in a future release.
-     * Use {@link #getInsightsOfMethods(List<MethodInfo>)} instead.
+     * removed deprecation because its necessary for JaegerUIService#getImportance(java.util.List)
      */
-    @Deprecated
+     //@deprecated This method is deprecated and will be removed in a future release.
+     //Use {@link #getInsightsOfMethods(List<MethodInfo>)} instead.
     public List<CodeObjectInsight> getInsights(List<String> objectIds) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         Log.log(LOGGER::debug, "Requesting insights for next objectIds {} and next environment {}", objectIds, env);

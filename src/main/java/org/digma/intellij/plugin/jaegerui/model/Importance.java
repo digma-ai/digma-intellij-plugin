@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonSerialize
-public record Importance(@JsonProperty("importance")int importance) {
+public record Importance(@JsonProperty(value = "importance",required = true)int importance) {
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     public Importance {

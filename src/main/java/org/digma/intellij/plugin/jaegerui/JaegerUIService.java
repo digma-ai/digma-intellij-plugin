@@ -8,6 +8,8 @@ import freemarker.template.Template;
 import freemarker.template.TemplateExceptionHandler;
 import kotlin.Pair;
 import org.apache.commons.collections.CollectionUtils;
+import org.digma.intellij.plugin.analytics.AnalyticsService;
+import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.jaegerui.model.GoToSpanMessage;
 import org.digma.intellij.plugin.jaegerui.model.Importance;
@@ -36,7 +38,6 @@ public class JaegerUIService {
     private final Configuration freemarketConfiguration = new Configuration(Configuration.VERSION_2_3_30);
 
     private static final String INDEX_TEMPLATE_NAME = "jaegeruitemplate.ftl";
-    private static final String TRACE_PATH_EMBED_TO_END = "&uiEmbed=v0";
 
     private static final String INITIAL_ROUTE_PARAM_NAME = "initial_route";
     private static final String JAEGER_URL_PARAM_NAME = "jaeger_url";
@@ -91,7 +92,7 @@ public class JaegerUIService {
 
                     var trace1 = Objects.requireNonNull(jaegerUIVirtualFile.getTraceSamples().get(0).getTraceId()).toLowerCase();
                     var trace2 = Objects.requireNonNull(jaegerUIVirtualFile.getTraceSamples().get(1).getTraceId()).toLowerCase();
-                    var initialRoutePath = "/trace/"+trace1+"..."+trace2+"?cohort="+trace1+"&cohort="+trace2+TRACE_PATH_EMBED_TO_END;
+                    var initialRoutePath = "/trace/"+trace1+"..."+trace2+"?cohort="+trace1+"&cohort="+trace2;
                     data.put(INITIAL_ROUTE_PARAM_NAME,initialRoutePath);
                 }
             }
@@ -113,7 +114,7 @@ public class JaegerUIService {
 
     private String buildInitialRoutePath(String traceId) {
         var traceLowerCase = traceId.toLowerCase();
-        return  "/trace/"+traceLowerCase+"?cohort="+traceLowerCase+TRACE_PATH_EMBED_TO_END;
+        return  "/trace/"+traceLowerCase+"?cohort="+traceLowerCase;
     }
 
 
@@ -164,6 +165,7 @@ public class JaegerUIService {
             if (file != null && JaegerUIVirtualFile.isJaegerUIVirtualFile(file)) {
                 JaegerUIVirtualFile openFile = (JaegerUIVirtualFile) file;
                 if (Objects.equals(openFile.getSpanName(),spanName) &&
+                        openFile.getTraceSamples() != null &&
                         CollectionUtils.isEqualCollection(openFile.getTraceSamples(),traceSamples)) {
                     EDT.ensureEDT(() -> FileEditorManager.getInstance(project).openFile(file, true, true));
                     return true;
@@ -191,43 +193,84 @@ public class JaegerUIService {
 
     public void goToSpan(GoToSpanMessage goToSpanMessage) {
 
-        //todo: implemented only for java, there is no information about the language
+        var span = goToSpanMessage.payload();
 
-        var languageService = LanguageService.findLanguageServiceByName(project, SupportedLanguages.JAVA.getLanguageServiceClassName());
-        if (languageService == null){
-            return;
+        for (SupportedLanguages value : SupportedLanguages.values()) {
+            var languageService = LanguageService.findLanguageServiceByName(project,value.getLanguageServiceClassName());
+            if (languageService != null){
+                var spanId = span.instrumentationLibrary() + "$_$" + span.name();
+                var spanWorkspaceUris = languageService.findWorkspaceUrisForSpanIds(Collections.singletonList(spanId));
+                if (spanWorkspaceUris.containsKey(spanId)) {
+                    Pair<String, Integer> location = spanWorkspaceUris.get(spanId);
+                    EditorService editorService = project.getService(EditorService.class);
+                    EDT.ensureEDT(() -> editorService.openWorkspaceFileInEditor(location.getFirst(), location.getSecond()));
+                    return;
+                }else if (span.function() != null && span.namespace() != null){
+                    var methodId = span.namespace() + "$_$" + span.function();
+                    var methodWorkspaceUris = languageService.findWorkspaceUrisForMethodCodeObjectIds(Collections.singletonList(methodId));
+                    if (methodWorkspaceUris.containsKey(methodId)){
+                        Pair<String, Integer> location = methodWorkspaceUris.get(methodId);
+                        EditorService editorService = project.getService(EditorService.class);
+                        EDT.ensureEDT(() -> editorService.openWorkspaceFileInEditor(location.getFirst(), location.getSecond()));
+                        return;
+                    }
+                }
+            }
         }
-        var spanId = goToSpanMessage.payload().instrumentationLibrary() + "$_$" + goToSpanMessage.payload().name();
-        var workspaceUris = languageService.findWorkspaceUrisForSpanIds(Collections.singletonList(spanId));
-        Pair<String, Integer> location = workspaceUris.get(spanId);
-        EditorService editorService = project.getService(EditorService.class);
-        EDT.ensureEDT(() -> editorService.openWorkspaceFileInEditor(location.getFirst(), location.getSecond()));
     }
 
     public Map<String, Importance> getResolvedSpans(SpansMessage spansMessage) {
 
-        //todo: implemented only for java, there is no information about the language
-
-        var languageService = LanguageService.findLanguageServiceByName(project,SupportedLanguages.JAVA.getLanguageServiceClassName());
-        if (languageService == null){
-            return Collections.emptyMap();
-        }
+        var resolvedSpans = new HashMap<String, Importance>();
 
         var spanIds = spansMessage.payload().spans().stream()
                 .map(span -> span.instrumentationLibrary() + "$_$" + span.name()).toList();
+        var methodIds = spansMessage.payload().spans().stream()
+                .filter(span -> span.function() != null && span.namespace() != null)
+                .map(span -> span.namespace() + "$_$" + span.function()).toList();
 
-        var workspaceUris = languageService.findWorkspaceUrisForSpanIds(spanIds);
+        Map<String,Integer> importanceMap = getImportance(spanIds);
 
-        var resolvedSpans = new HashMap<String, Importance>();
-        spansMessage.payload().spans().forEach(span -> {
-            var spanId = span.instrumentationLibrary() + "$_$" + span.name();
-            if (workspaceUris.containsKey(spanId)) {
-                resolvedSpans.put(span.id(), new Importance(1));
+        for (SupportedLanguages value : SupportedLanguages.values()) {
+            var languageService = LanguageService.findLanguageServiceByName(project,value.getLanguageServiceClassName());
+            if (languageService != null){
+                var spanWorkspaceUris = languageService.findWorkspaceUrisForSpanIds(spanIds);
+                var methodWorkspaceUris = languageService.findWorkspaceUrisForMethodCodeObjectIds(methodIds);
+                spansMessage.payload().spans().forEach(span -> {
+                    var spanId = span.instrumentationLibrary() + "$_$" + span.name();
+                    var methodId = (span.function() == null || span.namespace() == null) ? "" : span.namespace() + "$_$" + span.function();
+                    if (spanWorkspaceUris.containsKey(spanId)) {
+                        resolvedSpans.put(span.id(), new Importance(importanceMap.getOrDefault(spanId, 9)));
+                    }else if(methodWorkspaceUris.containsKey(methodId)){
+                        resolvedSpans.put(span.id(), new Importance(importanceMap.getOrDefault(spanId, 9)));
+                    }
+                });
             }
-        });
+        }
 
         return resolvedSpans;
 
+    }
+
+    private Map<String, Integer> getImportance(List<String> spanIds) {
+
+        if (spanIds.size() > 500){
+            return Collections.emptyMap();
+        }
+
+        var importance = new HashMap<String,Integer>();
+
+        try {
+            var insights = AnalyticsService.getInstance(project).getInsights(spanIds.stream().map(s -> "span:"+s).toList());
+            insights.forEach(codeObjectInsight -> {
+                var spanId = codeObjectInsight.getCodeObjectId();
+                importance.put(spanId,codeObjectInsight.getImportance());
+            });
+            return importance;
+        } catch (AnalyticsServiceException e) {
+            Log.debugWithException(LOGGER,e,"Exception in getInsights {}",e.getMessage());
+            return Collections.emptyMap();
+        }
     }
 }
 

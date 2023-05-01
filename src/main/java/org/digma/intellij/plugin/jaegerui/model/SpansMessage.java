@@ -8,8 +8,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonSerialize
-public record SpansMessage(@JsonProperty("action") String action,
-                           @JsonProperty("payload") SpanListPayload payload) {
+public record SpansMessage(@JsonProperty(value = "action",required = true) String action,
+                           @JsonProperty(value = "payload",required = true) SpanListPayload payload) {
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     public SpansMessage {

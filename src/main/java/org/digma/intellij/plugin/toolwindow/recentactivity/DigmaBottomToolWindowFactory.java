@@ -270,7 +270,11 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory, Disposab
     }
 
     private void fetchRecentActivities() {
-        List<String> allEnvironments = analyticsService.getEnvironment().getEnvironments();
+        List<String> allEnvironments = analyticsService.getEnvironments();
+        if (allEnvironments == null) {
+            Log.log(LOGGER::warn, "error while getting environments from server");
+            return;
+        }
         RecentActivityResult recentActivityData = null;
         try {
             recentActivityData = analyticsService.getRecentActivity(allEnvironments);

@@ -16,7 +16,7 @@ class CustomViewerWindow(
 
     private fun getBrowser(): JBCefBrowser {
         val jbCefBrowserBuilder = JBCefBrowserBuilder()
-        jbCefBrowserBuilder.setOffScreenRendering(false)
+        jbCefBrowserBuilder.setOffScreenRendering(false) // setting it to false may cause focus issues on some linux os
         // this provides us an opportunity to open DevTools
         jbCefBrowserBuilder.setEnableOpenDevToolsMenuItem(true)
         val jbCefBrowser = jbCefBrowserBuilder.build()

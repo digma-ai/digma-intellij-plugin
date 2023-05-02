@@ -6,6 +6,7 @@ data class MethodUnderCaret(
     override val id: String,
     val name:String,
     val className: String,
+    val namespace: String,
     override val fileUri: String,
     override val isSupportedFile: Boolean = true,
 ): ElementUnderCaret {
@@ -14,15 +15,16 @@ data class MethodUnderCaret(
         id: String,
         name: String,
         className: String,
+        namespace: String,
         fileUri: String
-    ) : this(id, name, className, fileUri, true) {
+    ) : this(id, name, className, namespace, fileUri, true) {
 
     }
 
 
     companion object {
         @JvmStatic
-        val EMPTY = MethodUnderCaret("", "", "", "", false)
+        val EMPTY = MethodUnderCaret("", "", "", "","", false)
     }
 
     override val type: ElementUnderCaretType = ElementUnderCaretType.Method
@@ -31,6 +33,7 @@ data class MethodUnderCaret(
         return "$id, " +
                 "$name, " +
                 "$className, " +
+                "$namespace, " +
                 "$fileUri, " +
                 "$isSupportedFile";
     }

@@ -10,15 +10,34 @@ import org.digma.intellij.plugin.ui.model.Scope
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.util.Collections
 
+class PreviewListItem(val name: String, val hasInsights: Boolean, val hasRelatedCodeObjects: Boolean )
+
 class InsightsModel : PanelModel {
 
     var insightsCount: Int = 0
     var listViewItems: List<ListViewItem<*>> = Collections.emptyList()
-    var previewListViewItems: List<ListViewItem<String>> = Collections.emptyList()
+    var previewListViewItems: List<PreviewListItem> = Collections.emptyList()
     var usageStatusResult: UsageStatusResult = EmptyUsageStatusResult
     var card: InsightsTabCard = InsightsTabCard.INSIGHTS
     var status: UiInsightStatus = UiInsightStatus.NoInsights
     var scope: Scope = EmptyScope("")
+
+    fun getMethodNamesWithInsights(): List<ListViewItem<String>>{
+        val methodsWithInsights = mutableListOf<ListViewItem<String>>();
+
+        var index = 0
+        previewListViewItems.filter { o -> o.hasInsights }.forEach {
+            methodsWithInsights.add(ListViewItem(it.name, index++));
+        }
+        return methodsWithInsights;
+    }
+    fun hasInsights(): Boolean{
+        return previewListViewItems.any { o->o.hasInsights };
+    }
+
+    fun hasDiscoverableCodeObjects(): Boolean{
+        return previewListViewItems.any{o->o.hasRelatedCodeObjects}
+    }
 
     override fun count(): String {
         return insightsCount.toString()
@@ -47,8 +66,6 @@ class InsightsModel : PanelModel {
     fun getPreviewListMessage(): String {
         if (scope is EmptyScope) {
             return "No code objects found for this document"
-        } else if (previewListViewItems.isEmpty()) {
-            return "No insights found for this document"
         } else {
             return "Try to click one of the following code objects"
         }

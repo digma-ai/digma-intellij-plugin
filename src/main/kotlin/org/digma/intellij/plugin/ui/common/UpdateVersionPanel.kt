@@ -6,6 +6,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.JBColor
@@ -17,7 +18,7 @@ import org.digma.intellij.plugin.updates.UpdateState
 import org.digma.intellij.plugin.updates.UpdatesService
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import java.io.File
+import java.nio.file.Path
 import javax.swing.BorderFactory
 import javax.swing.Box
 import javax.swing.BoxLayout
@@ -36,6 +37,7 @@ class UpdateVersionPanel(
 
     private val updatesService: UpdatesService = UpdatesService.getInstance(project)
     private val updateGuideDockerCompose: VirtualFile = loadFile("guides/upgrade_docker_compose.md")
+    private val updateGuideForHelm: VirtualFile = loadFile("guides/upgrade_helm.md")
 
     init {
         updatesService.affectedPanel = this
@@ -49,10 +51,13 @@ class UpdateVersionPanel(
     }
 
     companion object {
+
+        protected val tempDirForGuides = FileUtil.createTempDirectory("digma_", "_guides", true)
+
         fun loadFile(resourceName: String): VirtualFile {
             val resourceInputStream = UpdateVersionPanel.javaClass.classLoader.getResourceAsStream(resourceName)
-            val suffix = "." + resourceName.substringAfter('.', "txt")
-            val ioFile = File.createTempFile("guide_", suffix)
+            val ioFile = Path.of(tempDirForGuides.absolutePath, resourceName).toFile()
+            FileUtil.createParentDirs(ioFile)
             ioFile.deleteOnExit()
 
             resourceInputStream.use { input ->
@@ -124,6 +129,9 @@ class UpdateVersionPanel(
             // the update action itself
             if (updateState.shouldUpdateBackend) {
                 when (updateState.backendDeploymentType) {
+                    BackendDeploymentType.Helm -> {
+                        EditorService.getInstance(project).openVirtualFile(updateGuideForHelm)
+                    }
 
                     BackendDeploymentType.DockerCompose -> {
                         EditorService.getInstance(project).openVirtualFile(updateGuideDockerCompose)

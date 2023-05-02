@@ -47,6 +47,7 @@ constructor(
 
 enum class BackendDeploymentType {
     SAAS,
+    Helm,
     DockerCompose,
     DockerExtension,
 

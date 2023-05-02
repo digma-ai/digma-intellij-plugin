@@ -44,7 +44,8 @@ fun insightsPanel(project: Project): DigmaTabPanel {
     val insightsModel = InsightsViewService.getInstance(project).model
 
     val insightsList = ScrollablePanelList(InsightsList(project, insightsModel.listViewItems))
-    val previewList = ScrollablePanelList(PreviewList(project, insightsModel.previewListViewItems))
+
+    val previewList = ScrollablePanelList(PreviewList(project,insightsModel.getMethodNamesWithInsights()))
 
     val previewTitle = panel {
         row {
@@ -109,7 +110,7 @@ fun insightsPanel(project: Project): DigmaTabPanel {
             previewTitle.reset()
 
             insightsList.getModel().setListData(insightsModel.listViewItems)
-            previewList.getModel().setListData(insightsModel.previewListViewItems)
+            previewList.getModel().setListData(insightsModel.getMethodNamesWithInsights())
             if (insightsList.getModel().size == 0 && insightsModel.card == InsightsTabCard.INSIGHTS) {
                 val cardName = when (insightsModel.status) {
                     UiInsightStatus.InsightPending -> UiInsightStatus.InsightPending.name
@@ -126,8 +127,15 @@ fun insightsPanel(project: Project): DigmaTabPanel {
                     else -> NO_INFO_CARD_NAME
                 }
                 cardLayout.show(cardsPanel, cardName)
-            } else if (previewList.getModel().size == 0 && insightsModel.card == InsightsTabCard.PREVIEW) {
-                cardLayout.show(cardsPanel, NO_INFO_CARD_NAME)
+            } else if (!insightsModel.hasInsights()
+                    && insightsModel.card == InsightsTabCard.PREVIEW) {
+                if(insightsModel.hasDiscoverableCodeObjects()){
+                    cardLayout.show(cardsPanel, UiInsightStatus.NoSpanData.name)  //show no data yet
+                }
+                else{
+                    cardLayout.show(cardsPanel, NO_INFO_CARD_NAME)
+                }
+
             } else {
                 Log.log(logger::debug, project, "Changing insights tab card to ${insightsModel.card.name}")
                 cardLayout.show(cardsPanel, insightsModel.card.name)

@@ -12,19 +12,17 @@ import org.digma.intellij.plugin.insights.InsightsProvider
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult
 import org.digma.intellij.plugin.model.discovery.MethodInfo
-import org.digma.intellij.plugin.model.discovery.SpanInfo
 import org.digma.intellij.plugin.model.rest.insights.InsightStatus
 import org.digma.intellij.plugin.ui.model.DocumentScope
 import org.digma.intellij.plugin.ui.model.EmptyScope
 import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsTabCard
+import org.digma.intellij.plugin.ui.model.insights.PreviewListItem
 import org.digma.intellij.plugin.ui.model.insights.UiInsightStatus
-import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import org.jetbrains.annotations.VisibleForTesting
 import java.util.*
 import java.util.concurrent.locks.ReentrantLock
-import java.util.stream.Collectors
 
 class InsightsViewService(project: Project) : AbstractViewService(project) {
 
@@ -184,18 +182,16 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
         return documentInfoContainer.insightsCount
     }
 
-    private fun getDocumentPreviewItems(documentInfoContainer: DocumentInfoContainer): List<ListViewItem<String>> {
+    private fun getDocumentPreviewItems(documentInfoContainer: DocumentInfoContainer): List<PreviewListItem> {
 
-        val listViewItems = ArrayList<ListViewItem<String>>()
+        val listViewItems = ArrayList<PreviewListItem>()
         documentInfoContainer.documentInfo.methods.forEach { (id, methodInfo) ->
-            if (documentInfoContainer.hasInsights(id)) {
-                listViewItems.add(ListViewItem(methodInfo.id, 0))
-            }
+            listViewItems.add(PreviewListItem(methodInfo.id, documentInfoContainer.hasInsights(id), methodInfo.getRelatedCodeObjectIdsWithType().any()))
         }
 
         //sort by name of the function, it will be sorted later by sortIndex when added to a PanelListModel, but
         // because they all have the same sortIndex then positions will not change
-        Collections.sort(listViewItems, Comparator.comparing { it.modelObject })
+        Collections.sort(listViewItems, Comparator.comparing { it.name })
         return listViewItems
 
     }

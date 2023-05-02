@@ -47,7 +47,7 @@ fun errorsPanel(project: Project): DigmaTabPanel {
 
     val errorsList = ScrollablePanelList(ErrorsPanelList(project, errorsModel.listViewItems))
 
-    val previewList = ScrollablePanelList(PreviewList(project, insightsModel.previewListViewItems))
+    val previewList = ScrollablePanelList(PreviewList(project, insightsModel.getMethodNamesWithInsights()))
     val previewTitle = panel {
         row {
             icon(AllIcons.Ide.FatalErrorRead)
@@ -134,7 +134,7 @@ fun errorsPanel(project: Project): DigmaTabPanel {
 
 
             errorsList.getModel().setListData(errorsModel.listViewItems)
-            previewList.getModel().setListData(insightsModel.previewListViewItems)
+            previewList.getModel().setListData(insightsModel.getMethodNamesWithInsights())
             errorsDetailsPanel.reset()
             cardLayout.show(cardsPanel, errorsModel.card.name)
 

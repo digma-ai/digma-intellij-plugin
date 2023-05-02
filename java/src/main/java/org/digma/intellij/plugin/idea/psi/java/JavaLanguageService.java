@@ -127,19 +127,32 @@ public class JavaLanguageService implements LanguageService {
     @Override
     @NotNull
     public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int caretOffset) {
+        String fileUri = PsiUtils.psiFileToUri(psiFile);
         if (!isSupportedFile(project,psiFile)){
-            return new MethodUnderCaret("", "", "", PsiUtils.psiFileToUri(psiFile), false);
+            return new MethodUnderCaret("", "", "", "", fileUri, false);
         }
+        PsiJavaFile psiJavaFile = (PsiJavaFile)psiFile;
+        String packageName = psiJavaFile.getPackageName();
         PsiElement underCaret =  psiFile.findElementAt(caretOffset);
         if (underCaret == null) {
-            return new MethodUnderCaret("", "", "", PsiUtils.psiFileToUri(psiFile), true);
+            return new MethodUnderCaret("", "", "", packageName, fileUri, true);
         }
         PsiMethod psiMethod = PsiTreeUtil.getParentOfType(underCaret, PsiMethod.class);
-        if (psiMethod != null && psiMethod.getContainingClass() != null && psiMethod.getContainingClass().getName() != null) {
-            return new MethodUnderCaret(createJavaMethodCodeObjectId(psiMethod), psiMethod.getName(),
-                    psiMethod.getContainingClass().getName(), PsiUtils.psiFileToUri(psiFile));
+        String className = safelyTryGetClassName(underCaret);
+        if (psiMethod != null) {
+            return new MethodUnderCaret(createJavaMethodCodeObjectId(psiMethod), psiMethod.getName(), className, packageName, fileUri);
         }
-        return new MethodUnderCaret("", "", "", PsiUtils.psiFileToUri(psiFile), true);
+
+        return new MethodUnderCaret("", "", className, packageName, fileUri);
+    }
+    private String safelyTryGetClassName(PsiElement element){
+        PsiClass psiClass =  PsiTreeUtil.getParentOfType(element, PsiClass.class);
+        if (psiClass != null)
+        {
+            String className = psiClass.getName();
+            if(className != null) return className;
+        }
+        return "";
     }
 
     @NotNull

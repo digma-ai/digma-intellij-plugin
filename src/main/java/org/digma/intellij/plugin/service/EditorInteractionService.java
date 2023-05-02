@@ -91,44 +91,47 @@ public class EditorInteractionService implements CaretContextService, Disposable
         if (!methodUnderCaret.isSupportedFile()) {
             Log.log(logger::debug, "methodUnderCaret is non supported file {}. ", methodUnderCaret);
             contextEmptyNonSupportedFile(methodUnderCaret.getFileUri());
-        } else if (methodUnderCaret.getId().isBlank()) {
-            Log.log(logger::debug, "No id in methodUnderCaret,trying fileUri {}. ", methodUnderCaret);
-            //if no id then try to show a preview for the document
-            if (methodUnderCaret.getFileUri().isBlank()) {
-                Log.log(logger::debug, "No id and no fileUri in methodUnderCaret,clearing context {}. ", methodUnderCaret);
-                contextEmpty();
-            } else {
-                Log.log(logger::debug, "Showing document preview for {}. ", methodUnderCaret);
-                DocumentInfoContainer documentInfoContainer = documentInfoService.getDocumentInfo(methodUnderCaret);
-                if (documentInfoContainer == null) {
-                    Log.log(logger::debug, "Could not find document info for {}, Showing empty preview.", methodUnderCaret);
-                } else {
-                    Log.log(logger::debug, "Found document info for {}. document: {}", methodUnderCaret, documentInfoContainer.getPsiFile());
-                }
-
-                insightsViewService.showDocumentPreviewList(documentInfoContainer, methodUnderCaret.getFileUri());
-                errorsViewService.showDocumentPreviewList(documentInfoContainer, methodUnderCaret.getFileUri());
-            }
-        } else {
-            MethodInfo methodInfo = documentInfoService.getMethodInfo(methodUnderCaret);
-            if (methodInfo == null) {
-                Log.log(logger::warn, "Could not find MethodInfo for MethodUnderCaret {}. ", methodUnderCaret);
-                //this happens when we don't have method info for a real method, usually when a class doesn't have
-                //code objects found during discovery, it can be synthetic or auto-generated methods.
-                //pass a dummy method info just to populate the view,the view is aware and will not try to query for insights.
-                var dummyMethodInfo = new MethodInfo(methodUnderCaret.getId(), methodUnderCaret.getName(), methodUnderCaret.getClassName(), "",
-                        methodUnderCaret.getFileUri(), 0, new ArrayList<>());
-                Log.log(logger::warn, "Using dummy MethodInfo for to update views {}. ", dummyMethodInfo);
-                insightsViewService.contextChangeNoMethodInfo(dummyMethodInfo);
-                errorsViewService.contextChangeNoMethodInfo(dummyMethodInfo);
-            } else {
-                Log.log(logger::debug, "Context changed to {}. ", methodInfo);
-                insightsViewService.updateInsightsModel(methodInfo);
-                errorsViewService.updateErrorsModel(methodInfo);
-            }
-
+            return;
+        }
+        if (methodUnderCaret.getFileUri().isBlank()) {
+            Log.log(logger::debug, "No fileUri in methodUnderCaret,clearing context {}. ", methodUnderCaret);
+            contextEmpty();
+            return;
         }
 
+        String className = methodUnderCaret.getClassName();
+
+
+        if (methodUnderCaret.getId().isBlank()) { // caret not under method
+            Log.log(logger::debug, "No id in methodUnderCaret, Showing document preview  {}. ", methodUnderCaret);
+            //if no id then try to show a preview for the document
+            /*if(!className.isEmpty()){ // caret under class }*/
+            DocumentInfoContainer documentInfoContainer = documentInfoService.getDocumentInfo(methodUnderCaret);
+            if (documentInfoContainer == null) {
+                Log.log(logger::debug, "Could not find document info for {}, Showing empty preview.", methodUnderCaret);
+            } else {
+                Log.log(logger::debug, "Found document info for {}. document: {}", methodUnderCaret, documentInfoContainer.getPsiFile());
+            }
+            insightsViewService.showDocumentPreviewList(documentInfoContainer, methodUnderCaret.getFileUri());
+            errorsViewService.showDocumentPreviewList(documentInfoContainer, methodUnderCaret.getFileUri());
+            return;
+        }
+        MethodInfo methodInfo = documentInfoService.getMethodInfo(methodUnderCaret);
+        if (methodInfo == null) {
+            Log.log(logger::warn, "Could not find MethodInfo for MethodUnderCaret {}. ", methodUnderCaret);
+            //this happens when we don't have method info for a real method, usually when a class doesn't have
+            //code objects found during discovery, it can be synthetic or auto-generated methods.
+            //pass a dummy method info just to populate the view,the view is aware and will not try to query for insights.
+            var dummyMethodInfo = new MethodInfo(methodUnderCaret.getId(), methodUnderCaret.getName(), className, "",
+                    methodUnderCaret.getFileUri(), 0, new ArrayList<>());
+            Log.log(logger::warn, "Using dummy MethodInfo for to update views {}. ", dummyMethodInfo);
+            insightsViewService.contextChangeNoMethodInfo(dummyMethodInfo);
+            errorsViewService.contextChangeNoMethodInfo(dummyMethodInfo);
+        } else {
+            Log.log(logger::debug, "Context changed to {}. ", methodInfo);
+            insightsViewService.updateInsightsModel(methodInfo);
+            errorsViewService.updateErrorsModel(methodInfo);
+        }
     }
 
     public void contextEmptyNonSupportedFile(String fileUri) {

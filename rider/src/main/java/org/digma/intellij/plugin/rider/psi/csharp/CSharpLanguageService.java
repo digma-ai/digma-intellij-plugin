@@ -6,6 +6,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
@@ -133,19 +134,23 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
 
     @Override
     public Map<String, String> findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(List<String> codeObjectIds) {
-        return LanguageServiceHost.getInstance(project).findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(codeObjectIds);
+        return ProgressManager.getInstance().
+                computeInNonCancelableSection(() ->  LanguageServiceHost.getInstance(project).findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(codeObjectIds));
     }
 
     @Override
     public Map<String, Pair<String, Integer>> findWorkspaceUrisForMethodCodeObjectIds(List<String> methodCodeObjectIds) {
-        return LanguageServiceHost.getInstance(project).findWorkspaceUrisForMethodCodeObjectIds(methodCodeObjectIds);
+        return ProgressManager.getInstance().
+                computeInNonCancelableSection(() ->  LanguageServiceHost.getInstance(project).findWorkspaceUrisForMethodCodeObjectIds(methodCodeObjectIds));
     }
 
     @Override
     public Map<String, Pair<String, Integer>> findWorkspaceUrisForSpanIds(List<String> spanIds) {
         var stopWatch = StopWatch.createStarted();
         try {
-            return LanguageServiceHost.getInstance(project).findWorkspaceUrisForSpanIds(spanIds);
+            return ProgressManager.getInstance().
+                    computeInNonCancelableSection(() -> LanguageServiceHost.getInstance(project).findWorkspaceUrisForSpanIds(spanIds));
+
         } finally {
             stopWatch.stop();
             Log.log(LOGGER::debug, "findWorkspaceUrisForSpanIds time took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS));

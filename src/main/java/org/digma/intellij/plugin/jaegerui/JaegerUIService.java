@@ -29,6 +29,8 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import static org.digma.intellij.plugin.document.CodeObjectsUtil.*;
+
 public class JaegerUIService {
 
     private static final Logger LOGGER = Logger.getInstance(JaegerUIService.class);
@@ -199,7 +201,7 @@ public class JaegerUIService {
         for (SupportedLanguages value : SupportedLanguages.values()) {
             var languageService = LanguageService.findLanguageServiceByName(project,value.getLanguageServiceClassName());
             if (languageService != null){
-                var spanId = span.instrumentationLibrary() + "$_$" + span.name();
+                var spanId = createSpanId(span.instrumentationLibrary(),span.name());
                 var spanWorkspaceUris = ReadActions.ensureReadAction(() -> languageService.findWorkspaceUrisForSpanIds(Collections.singletonList(spanId)));
 
                 if (spanWorkspaceUris.containsKey(spanId)) {
@@ -208,7 +210,7 @@ public class JaegerUIService {
                     EDT.ensureEDT(() -> editorService.openWorkspaceFileInEditor(location.getFirst(), location.getSecond()));
                     return;
                 }else if (span.function() != null && span.namespace() != null){
-                    var methodId = span.namespace() + "$_$" + span.function();
+                    var methodId = createMethodCodeObjectId(span.namespace(),span.function());
                     var methodWorkspaceUris = ReadActions.ensureReadAction(() -> languageService.findWorkspaceUrisForMethodCodeObjectIds(Collections.singletonList(methodId)));
 
                     if (methodWorkspaceUris.containsKey(methodId)){
@@ -227,25 +229,24 @@ public class JaegerUIService {
         var resolvedSpans = new HashMap<String, Importance>();
 
         var spanIds = spansMessage.payload().spans().stream()
-                .map(span -> span.instrumentationLibrary() + "$_$" + span.name()).toList();
+                .map(span -> createSpanId(span.instrumentationLibrary(),span.name())).toList();
         var methodIds = spansMessage.payload().spans().stream()
                 .filter(span -> span.function() != null && span.namespace() != null)
-                .map(span -> span.namespace() + "$_$" + span.function()).toList();
+                .map(span -> createMethodCodeObjectId(span.namespace(),span.function())).toList();
 
-        Map<String,Integer> importanceMap = getImportance(spanIds);
+        Map<String,Integer> importanceMap = getImportance(spanIds,methodIds);
 
         for (SupportedLanguages value : SupportedLanguages.values()) {
             var languageService = LanguageService.findLanguageServiceByName(project,value.getLanguageServiceClassName());
             if (languageService != null){
-                var spanWorkspaceUris = languageService.findWorkspaceUrisForSpanIds(spanIds);
-                var methodWorkspaceUris = languageService.findWorkspaceUrisForMethodCodeObjectIds(methodIds);
+                var spanWorkspaceUris = ReadActions.ensureReadAction(() -> languageService.findWorkspaceUrisForSpanIds(spanIds));
+                var methodWorkspaceUris = ReadActions.ensureReadAction(() -> languageService.findWorkspaceUrisForMethodCodeObjectIds(methodIds));
                 spansMessage.payload().spans().forEach(span -> {
-                    var spanId = span.instrumentationLibrary() + "$_$" + span.name();
-                    var methodId = (span.function() == null || span.namespace() == null) ? "" : span.namespace() + "$_$" + span.function();
-                    if (spanWorkspaceUris.containsKey(spanId)) {
-                        resolvedSpans.put(span.id(), new Importance(importanceMap.getOrDefault(spanId, 9)));
-                    }else if(methodWorkspaceUris.containsKey(methodId)){
-                        resolvedSpans.put(span.id(), new Importance(importanceMap.getOrDefault(spanId, 9)));
+                    var spanId = createSpanId(span.instrumentationLibrary(),span.name());
+                    var methodId = (span.function() == null || span.namespace() == null) ? "" : createMethodCodeObjectId(span.namespace(),span.function());
+                    if (spanWorkspaceUris.containsKey(spanId) || methodWorkspaceUris.containsKey(methodId)) {
+                        Integer importance = importanceMap.getOrDefault(spanId,importanceMap.getOrDefault(methodId,9));
+                        resolvedSpans.put(span.id(), new Importance(importance));
                     }
                 });
             }
@@ -255,19 +256,22 @@ public class JaegerUIService {
 
     }
 
-    private Map<String, Integer> getImportance(List<String> spanIds) {
+    private Map<String, Integer> getImportance(List<String> spanIds, List<String> methodIds) {
 
         if (spanIds.size() > 500){
             return Collections.emptyMap();
         }
 
+        var ids = new ArrayList<>(addSpanTypeToIds(spanIds));
+        ids.addAll(addMethodTypeToIds(methodIds));
+
         var importance = new HashMap<String,Integer>();
 
         try {
-            var insights = AnalyticsService.getInstance(project).getInsights(spanIds.stream().map(s -> "span:"+s).toList());
+            var insights = AnalyticsService.getInstance(project).getInsights(ids);
             insights.forEach(codeObjectInsight -> {
-                var spanId = codeObjectInsight.getCodeObjectId();
-                importance.put(spanId,codeObjectInsight.getImportance());
+                var id = codeObjectInsight.getCodeObjectId();
+                importance.merge(id,codeObjectInsight.getImportance(), Math::min);
             });
             return importance;
         } catch (AnalyticsServiceException e) {

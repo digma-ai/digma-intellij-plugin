@@ -42,7 +42,7 @@
       window.platform = "JetBrains";
       window.apiBaseUrl = "${jaeger_url}";
       window.initialRoutePath = "${initial_route}";
-      window.embeddedMode = "true";
+      window.embeddedMode = true;
       window.staticPath;
     </script>
     <script type="module" crossorigin src="./static/index-0cb35993.js"></script>

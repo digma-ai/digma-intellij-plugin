@@ -17,7 +17,6 @@ import com.intellij.ui.jcef.JBCefBrowser;
 import com.intellij.ui.jcef.JBCefClient;
 import kotlin.Pair;
 import kotlin.Triple;
-import org.apache.commons.lang3.StringUtils;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.browser.CefMessageRouter;
@@ -27,54 +26,35 @@ import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor;
 import org.digma.intellij.plugin.analytics.EnvironmentChanged;
-import org.digma.intellij.plugin.analytics.JaegerUrlChanged;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.CommonUtils;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.icons.AppIcons;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityEntrySpanForTracePayload;
-import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityEntrySpanPayload;
-import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityGoToSpanRequest;
-import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityGoToTraceRequest;
-import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResponseEntry;
-import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
+import org.digma.intellij.plugin.model.rest.recentactivity.*;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshService;
 import org.digma.intellij.plugin.service.EditorService;
+import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.toolwindow.common.CustomViewerWindow;
 import org.digma.intellij.plugin.toolwindow.common.JaegerUrlChangedPayload;
 import org.digma.intellij.plugin.toolwindow.common.JaegerUrlChangedRequest;
 import org.digma.intellij.plugin.toolwindow.common.ThemeChangeListener;
+import org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt;
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
 import org.jetbrains.annotations.NotNull;
 
-import javax.swing.Icon;
-import javax.swing.JPanel;
-import javax.swing.UIManager;
-import java.awt.BorderLayout;
+import javax.swing.*;
+import java.awt.*;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
-import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.GLOBAL_SET_IS_JAEGER_ENABLED;
-import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_SPAN;
-import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_TRACE;
-import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_INITIALIZE;
-import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_SET_DATA;
-import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.REQUEST_MESSAGE_TYPE;
-import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.parseJsonToObject;
-import static org.digma.intellij.plugin.ui.common.EnvironmentUtilKt.LOCAL_ENV;
-import static org.digma.intellij.plugin.ui.common.EnvironmentUtilKt.SUFFIX_OF_LOCAL;
-import static org.digma.intellij.plugin.ui.common.EnvironmentUtilKt.getSortedEnvironments;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.*;
+import static org.digma.intellij.plugin.ui.common.EnvironmentUtilKt.*;
 import static org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt.openJaegerFromRecentActivity;
 
 
@@ -168,11 +148,7 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory, Disposab
         ThemeChangeListener listener = new ThemeChangeListener(jbCefBrowser);
         UIManager.addPropertyChangeListener(listener);
 
-        project.getMessageBus().connect().subscribe(
-                JaegerUrlChanged.JAEGER_URL_CHANGED_TOPIC,
-                (JaegerUrlChanged) newJaegerUrl -> Backgroundable.ensureBackground(project, "Jaeger Url was changed", () ->
-                        sendRequestToChangeTraceButtonDisplaying(jbCefBrowser, newJaegerUrl))
-        );
+        SettingsState.getInstance().addChangeListener(settingsState1 -> sendRequestToChangeTraceButtonDisplaying(jbCefBrowser));
 
         msgRouter.addHandler(new CefMessageRouterHandlerAdapter() {
             @Override
@@ -347,12 +323,12 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory, Disposab
         return environment;
     }
 
-    private void sendRequestToChangeTraceButtonDisplaying(JBCefBrowser jbCefBrowser, String newJaegerUrl) {
+    private void sendRequestToChangeTraceButtonDisplaying(JBCefBrowser jbCefBrowser) {
         String requestMessage = JBCefBrowserUtil.resultToString(
                 new JaegerUrlChangedRequest(
                         REQUEST_MESSAGE_TYPE,
                         GLOBAL_SET_IS_JAEGER_ENABLED,
-                        new JaegerUrlChangedPayload(StringUtils.isNotEmpty(newJaegerUrl) && StringUtils.isNotBlank(newJaegerUrl))
+                        new JaegerUrlChangedPayload(JaegerUtilKt.isJaegerButtonEnabled())
                 ));
         JBCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser);
     }

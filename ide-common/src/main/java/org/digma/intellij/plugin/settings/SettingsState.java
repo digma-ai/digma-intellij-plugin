@@ -6,11 +6,16 @@ import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.util.xmlb.XmlSerializerUtil;
+import org.digma.intellij.plugin.common.CommonUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.intellij.util.net.NetUtils.isLocalhost;
 
 /**
  * Supports storing the application settings in a persistent way.
@@ -25,20 +30,27 @@ public class SettingsState implements PersistentStateComponent<SettingsState>, D
 
     public static final String DEFAULT_API_URL = "https://localhost:5051";
     public static final int DEFAULT_REFRESH_DELAY = 10;
-    public static final String DEFAULT_JAEGER_URL = ""; // http://localhost:16686
-    public static final LinkMode DEFAULT_JAEGER_LINK_MODE = LinkMode.Internal;
+    public static final String DEFAULT_JAEGER_URL = "http://localhost:16686";
+    public static final String DEFAULT_JAEGER_QUERY_URL = "http://localhost:16686";
+    public static final LinkMode DEFAULT_JAEGER_LINK_MODE = LinkMode.Embedded;
     public static final String DEFAULT_RUNTIME_OBSERVABILITY_BACKEND_URL = "http://localhost:5050";
 
+    @NotNull
     public String apiUrl = DEFAULT_API_URL;
     public int refreshDelay = DEFAULT_REFRESH_DELAY;
     @Nullable
     public String apiToken = null;
     @Nullable
-    public String jaegerUrl = DEFAULT_JAEGER_URL;
+    public String jaegerUrl = "";
+    @NotNull
+    public String jaegerQueryUrl = DEFAULT_JAEGER_QUERY_URL;
+    @NotNull
     public LinkMode jaegerLinkMode = DEFAULT_JAEGER_LINK_MODE;
+    @NotNull
     public String runtimeObservabilityBackendUrl = DEFAULT_RUNTIME_OBSERVABILITY_BACKEND_URL;
     @Nullable
     public String posthogToken;
+
     private final List<SettingsChangeListener> listeners = new ArrayList<>();
 
     public static SettingsState getInstance() {
@@ -54,6 +66,25 @@ public class SettingsState implements PersistentStateComponent<SettingsState>, D
     @Override
     public void loadState(@NotNull SettingsState state) {
         XmlSerializerUtil.copyBean(state, this);
+        if (jaegerUrlIsNotSet(jaegerUrl) &&
+                apiUrlIsLocalhost(apiUrl)){
+            jaegerLinkMode = LinkMode.Embedded;
+        }
+    }
+
+
+    private boolean apiUrlIsLocalhost(@NotNull String apiUrl) {
+        try {
+            var url = new URL(apiUrl);
+            return isLocalhost(url.getHost());
+        } catch (MalformedURLException e) {
+            return false;
+        }
+    }
+
+
+    private boolean jaegerUrlIsNotSet(String jaegerUrl) {
+        return !CommonUtils.isWelFormedUrl(jaegerUrl);
     }
 
 
@@ -66,9 +97,7 @@ public class SettingsState implements PersistentStateComponent<SettingsState>, D
     }
 
     public void fireChanged() {
-        listeners.forEach(listener -> {
-            listener.settingsChanged(this);
-        });
+        listeners.forEach(listener -> listener.settingsChanged(this));
     }
 
     @Override

@@ -16,15 +16,7 @@ import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
-import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
-import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
-import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightRequest;
-import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
-import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsRequest;
-import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
-import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
-import org.digma.intellij.plugin.model.rest.insights.MethodWithCodeObjects;
-import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
+import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
@@ -52,13 +44,7 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.net.http.HttpTimeoutException;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
@@ -75,8 +61,6 @@ public class AnalyticsService implements Disposable {
     private String myApiUrl;
     @Nullable
     private String myApiToken;
-    @Nullable
-    private String myJaegerUrl;
     private final Project project;
 
     private AnalyticsProvider analyticsProviderProxy;
@@ -94,7 +78,6 @@ public class AnalyticsService implements Disposable {
         this.project = project;
         myApiUrl = settingsState.apiUrl;
         myApiToken = settingsState.apiToken;
-        myJaegerUrl = settingsState.jaegerUrl;
         replaceClient(myApiUrl, myApiToken);
         initializeEnvironmentsList();
         settingsState.addChangeListener(state -> {
@@ -107,22 +90,9 @@ public class AnalyticsService implements Disposable {
                 myApiToken = state.apiToken;
                 replaceClient(myApiUrl, myApiToken);
             }
-            if (!Objects.equals(state.jaegerUrl, myJaegerUrl)) {
-                notifyJaegerUrlChanged(myJaegerUrl, state.jaegerUrl);
-                myJaegerUrl = state.jaegerUrl;
-            }
         });
     }
 
-    private void notifyJaegerUrlChanged(String oldJaegerUrl, String newJaegerUrl) {
-        Log.log(LOGGER::debug, "Firing JaegerUrlChanged event for {}", newJaegerUrl);
-        if (project.isDisposed()) {
-            return;
-        }
-        Log.log(LOGGER::info, "Digma: Changing JaegerUrl from " + oldJaegerUrl + " to " + newJaegerUrl);
-        JaegerUrlChanged publisher = project.getMessageBus().syncPublisher(JaegerUrlChanged.JAEGER_URL_CHANGED_TOPIC);
-        publisher.jaegerUrlChanged(newJaegerUrl);
-    }
 
     public static AnalyticsService getInstance(@NotNull Project project) {
         return project.getService(AnalyticsService.class);

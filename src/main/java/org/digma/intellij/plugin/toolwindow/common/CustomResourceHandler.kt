@@ -8,7 +8,7 @@ import org.cef.misc.IntRef
 import org.cef.misc.StringRef
 import org.cef.network.CefRequest
 import org.cef.network.CefResponse
-import org.digma.intellij.plugin.ui.list.insights.isJaegerUrlPresentInUserSettings
+import org.digma.intellij.plugin.ui.list.insights.isJaegerButtonEnabled
 import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.io.InputStream
@@ -189,7 +189,7 @@ private fun loadFreemarkerTemplate(
     cfg.setClassForTemplateLoading(CustomResourceHandler::class.java, "/$BASE_PACKAGE_PATH$resourceFolderName")
     val data: MutableMap<String, Any> = mutableMapOf(
         ENV_VARIABLE_THEME to ThemeUtil.getCurrentThemeName(),
-        IS_JAEGER_ENABLED to isJaegerUrlPresentInUserSettings()
+        IS_JAEGER_ENABLED to isJaegerButtonEnabled()
     )
     if (indexTemplateData != null)
         data += indexTemplateData;

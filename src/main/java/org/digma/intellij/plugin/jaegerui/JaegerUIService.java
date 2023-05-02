@@ -11,6 +11,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.common.EDT;
+import org.digma.intellij.plugin.common.ReadActions;
 import org.digma.intellij.plugin.jaegerui.model.GoToSpanMessage;
 import org.digma.intellij.plugin.jaegerui.model.Importance;
 import org.digma.intellij.plugin.jaegerui.model.SpansMessage;
@@ -124,13 +125,13 @@ public class JaegerUIService {
             return;
         }
 
-        var jaegerBaseUrl = SettingsState.getInstance().jaegerUrl;
-        if (jaegerBaseUrl == null || jaegerBaseUrl.isBlank()) {
+        var jaegerQueryUrl = SettingsState.getInstance().jaegerQueryUrl;
+        if (jaegerQueryUrl.isBlank()) {
             return;
         }
 
         EDT.ensureEDT(() -> {
-            var file = JaegerUIVirtualFile.createVirtualFile(jaegerBaseUrl, traceId, spanName);
+            var file = JaegerUIVirtualFile.createVirtualFile(jaegerQueryUrl, traceId, spanName);
             FileEditorManager.getInstance(project).openFile(file, true, true);
         });
 
@@ -143,8 +144,8 @@ public class JaegerUIService {
             return;
         }
 
-        var jaegerBaseUrl = SettingsState.getInstance().jaegerUrl;
-        if (jaegerBaseUrl == null || jaegerBaseUrl.isBlank()) {
+        var jaegerQueryUrl = SettingsState.getInstance().jaegerQueryUrl;
+        if (jaegerQueryUrl.isBlank()) {
             return;
         }
 
@@ -153,7 +154,7 @@ public class JaegerUIService {
         }
 
         EDT.ensureEDT(() -> {
-            var file = JaegerUIVirtualFile.createVirtualFile(jaegerBaseUrl, traceSamples,spanName);
+            var file = JaegerUIVirtualFile.createVirtualFile(jaegerQueryUrl, traceSamples,spanName);
             FileEditorManager.getInstance(project).openFile(file, true, true);
         });
 
@@ -199,7 +200,8 @@ public class JaegerUIService {
             var languageService = LanguageService.findLanguageServiceByName(project,value.getLanguageServiceClassName());
             if (languageService != null){
                 var spanId = span.instrumentationLibrary() + "$_$" + span.name();
-                var spanWorkspaceUris = languageService.findWorkspaceUrisForSpanIds(Collections.singletonList(spanId));
+                var spanWorkspaceUris = ReadActions.ensureReadAction(() -> languageService.findWorkspaceUrisForSpanIds(Collections.singletonList(spanId)));
+
                 if (spanWorkspaceUris.containsKey(spanId)) {
                     Pair<String, Integer> location = spanWorkspaceUris.get(spanId);
                     EditorService editorService = project.getService(EditorService.class);
@@ -207,7 +209,8 @@ public class JaegerUIService {
                     return;
                 }else if (span.function() != null && span.namespace() != null){
                     var methodId = span.namespace() + "$_$" + span.function();
-                    var methodWorkspaceUris = languageService.findWorkspaceUrisForMethodCodeObjectIds(Collections.singletonList(methodId));
+                    var methodWorkspaceUris = ReadActions.ensureReadAction(() -> languageService.findWorkspaceUrisForMethodCodeObjectIds(Collections.singletonList(methodId)));
+
                     if (methodWorkspaceUris.containsKey(methodId)){
                         Pair<String, Integer> location = methodWorkspaceUris.get(methodId);
                         EditorService editorService = project.getService(EditorService.class);

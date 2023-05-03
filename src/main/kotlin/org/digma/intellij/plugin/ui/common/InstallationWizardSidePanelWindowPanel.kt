@@ -39,6 +39,8 @@ import javax.swing.UIManager
 private const val RESOURCE_FOLDER_NAME = "installationwizard"
 private const val ENV_VARIABLE_IDE: String = "ide"
 private const val WIZARD_SKIP_INSTALLATION_STEP_VARIABLE: String = "wizardSkipInstallationStep"
+private const val USER_EMAIL_VARIABLE: String = "userEmail"
+private const val IS_OBSERVABILITY_ENABLED_VARIABLE: String = "isObservabilityEnabled"
 
 private val logger: Logger =
     Logger.getInstance("org.digma.intellij.plugin.ui.common.InstallationWizardSidePanelWindowPanel")
@@ -54,7 +56,9 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): JPanel? {
         project, RESOURCE_FOLDER_NAME,
         mapOf(
             WIZARD_SKIP_INSTALLATION_STEP_VARIABLE to isServerConnectedAlready,
-            ENV_VARIABLE_IDE to ApplicationNamesInfo.getInstance().productName //Available values: "IDEA", "Rider", "PyCharm"
+            ENV_VARIABLE_IDE to ApplicationNamesInfo.getInstance().productName, //Available values: "IDEA", "Rider", "PyCharm"
+            USER_EMAIL_VARIABLE to (PersistenceService.getInstance().state.userEmail ?: ""),
+            IS_OBSERVABILITY_ENABLED_VARIABLE to PersistenceService.getInstance().state.isAutoOtel,
         )
     )
     val jbCefBrowser = customViewerWindow.getWebView()
@@ -104,8 +108,10 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): JPanel? {
                     request,
                     FinishRequest::class.java
                 )
-                if (payload?.email != null) {
-                    ActivityMonitor.getInstance(project).registerEmail( payload.email!!)
+                val email = payload?.email
+                PersistenceService.getInstance().state.userEmail = email
+                if (email != null) {
+                    ActivityMonitor.getInstance(project).registerEmail(email)
                 }
                 ApplicationManager.getApplication().invokeLater {
                     updateInstallationWizardFlag()

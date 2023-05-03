@@ -34,4 +34,20 @@ public class Backgroundable {
             task.run();
         }
     }
+
+
+    public static void runInNewBackgroundThread(Project project, String name, Runnable task) {
+
+        new Task.Backgroundable(project, name) {
+            @Override
+            public void run(@NotNull ProgressIndicator indicator) {
+                task.run();
+            }
+        }.queue();
+
+    }
+
+
+
+
 }

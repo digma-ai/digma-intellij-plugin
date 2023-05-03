@@ -30,14 +30,14 @@ public class JaegerUIMessageRouterHandler extends CefMessageRouterHandlerAdapter
     @Override
     public boolean onQuery(CefBrowser browser, CefFrame frame, long queryId, String request, boolean persistent, CefQueryCallback callback) {
 
-        var objectMapper = new ObjectMapper();
-
-        Backgroundable.ensureBackground(project, "JaegerUI message", () -> {
+        Backgroundable.runInNewBackgroundThread(project, "Processing JaegerUI message", () -> {
             try {
+                var objectMapper = new ObjectMapper();
                 var jsonNode = objectMapper.readTree(request);
                 String action = jsonNode.get("action").asText();
                 switch (action) {
                     case "GET_SPANS_WITH_RESOLVED_LOCATION" -> {
+
                         SpansMessage spansMessage = objectMapper.treeToValue(jsonNode, SpansMessage.class);
 
                         var resolvedSpans = JaegerUIService.getInstance(project).getResolvedSpans(spansMessage);

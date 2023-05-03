@@ -23,12 +23,20 @@ public class CodeObjectsUtil {
         return "method:"+createMethodCodeObjectId(className,methodName);
     }
 
+    public static String addSpanTypeToId(@NotNull String spanId) {
+        return spanId.startsWith("span:") ? spanId : "span:"+spanId;
+    }
+
     public static List<String> addSpanTypeToIds(@NotNull Collection<String> spanIds) {
-        return spanIds.stream().map(id -> "span:"+id).toList();
+        return spanIds.stream().map(id -> id.startsWith("span:") ? id : "span:"+id).toList();
+    }
+
+    public static String addMethodTypeToId(@NotNull String methodId) {
+        return methodId.startsWith("method:") ? methodId : "method:"+methodId;
     }
 
     public static List<String> addMethodTypeToIds(@NotNull Collection<String> methodIds) {
-        return methodIds.stream().map(id -> "method:"+id).toList();
+        return methodIds.stream().map(id -> id.startsWith("method:") ? id : "method:"+id).toList();
     }
 
 

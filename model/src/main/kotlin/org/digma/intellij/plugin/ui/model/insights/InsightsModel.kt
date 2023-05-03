@@ -81,6 +81,7 @@ enum class UiInsightStatus {
     Unknown, // initial state, when insights is 0, might be changed to something else
     InsightExist, // insight count is greater than 0
     NoInsights,
+    LoadingInsights,
     InsightPending, // backend is aware of the code objects, but still no insights, soon there will be
     NoSpanData, // backend is not aware of code objects
     NoObservability, // method has no insights and has no related code object ids (spans and/or endpoints)

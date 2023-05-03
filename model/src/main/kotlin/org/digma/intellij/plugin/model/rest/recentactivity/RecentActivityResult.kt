@@ -52,9 +52,10 @@ constructor(
 data class SlimAggregatedInsight
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@ConstructorProperties("type", "codeObjectIds")
+@ConstructorProperties("type", "importance", "codeObjectIds")
 constructor(
         val type: String,
+        val importance: Int,
         val codeObjectIds: List<String>
 )
 

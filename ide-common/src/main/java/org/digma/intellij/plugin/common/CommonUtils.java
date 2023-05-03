@@ -3,6 +3,8 @@ package org.digma.intellij.plugin.common;
 import org.ocpsoft.prettytime.PrettyTime;
 
 import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.Date;
 
@@ -37,5 +39,18 @@ public final class CommonUtils {
     public static String prettyTimeOf(Date date) {
         PrettyTime ptNow = new PrettyTime();
         return ptNow.format(date);
+    }
+
+
+    public static boolean isWelFormedUrl(String url){
+        if (url == null || url.isBlank()){
+            return false;
+        }
+        try {
+            new URL(url);
+            return true;
+        } catch (MalformedURLException e) {
+            return false;
+        }
     }
 }

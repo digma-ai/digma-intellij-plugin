@@ -186,6 +186,16 @@ public interface LanguageService extends Disposable {
     }
 
 
+
+    static LanguageService findLanguageServiceByName(Project project, String languageServiceClassName) {
+        try {
+            return (LanguageService) project.getService(Class.forName(languageServiceClassName));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+
     /**
      * This method should be used as last resort to find the language
      */

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- prevent caching of this HTML by any server, Go or otherwise -->
+    <meta http-equiv="cache-control" content="max-age=0" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
+    <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
+    <meta http-equiv="pragma" content="no-cache" />
+
+    <!-- NOTE: The document MUST have a <base> element. package.json#homepage is set to "." as part of resolving https://github.com/jaegertracing/jaeger-ui/issues/42 and therefore static assets are linked via relative URLs. This will break on many document URLs, e.g. /trace/abc, unless a valid base URL is provided. The base href defaults to "/" but the query-service can inject an override. -->
+    <base href="/" data-inject-target="BASE_URL" />
+    <link rel="shortcut icon" href="data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAu9Xm/4qEYP/ZynL/28tz/+TZqP/k2qj/5Nqn/+Laqf/j2qj/3c51/93Nc//dzXT/m5Re/7TP4/9fX1//AAAAALvV4//j0Wr/3c10/9zNc//ezXT/3M11/93Ndf/ezXT/3sx0/93NdP/dzHT/3c10/628t/+70+X/AAAAAAAAAACds8T/2Mt6/93NdP/dzXT/389v//7+/P/BsnD/3c10/9/NdP/dzXT/3c10/7vGtv+51uX/qcDR/wAAAAAAAAAAAAAAAN/NdP/dznP/vsiw/73V5/+61OX/udPn/5irtP/dzXT/3c10/93NdP/ZzHj/j5Fx/wAAAAAAAAAAAAAAANXOo//fznH/5uHJ/8i9g/87QDz/Kycn/7jP4P+6uYf/3c10/93NdP/dzXT/2sx4/5mQXf8AAAAAAAAAAAAAAADazHb//Pz8/xsdHf/9/v//0sd+/9fKev/Yynr//fz///f3///czXX/3c10/9vLeP+Vjlv/AAAAAAAAAAAAAAAA381x//Lv3v///v///v///6WbZf/dzXT////9/xcXF///////39/b/93Mdf/SxHT/oJxx/wAAAAAAAAAAAAAAANrKc//dzHT/9PLo/9zb0v/ay3r/2ct3//z89P///////////9LT0//dzHX/pJpW/+Xjzf8AAAAAAAAAAAAAAAAAAAAA0L5t/46DXP9nhHH/dZ6M/26TgP8lNCv/urGS/9jSsf/dzXT/2811/52UXP8AAAAAAAAAAAAAAAAAAAAAd6CK/3Gdiv92n43/dZ+O/3eejv9woY3/cKCO/1RsYv9pd1T/sKNe/6eaV/+elFz/AAAAAAAAAAAAAAAAAAAAANzOc//Fum//RXZf/0p7Z/9Kf2r/TYZu/zxxW/9AeGH/a5WF/22ajf9lclP/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHKfjv9yn47/cp+O/3Kfjv9yn47/c6CO/1uJdv/ay3b/xL51/2WJeP9ZfGz/AAAAAAAAAAAAAAAAAAAAAAAAAABxnoz/cp+O/3Kfjv9yn47/cp+O/3Kfjv9vkYf/pKqE/7qsXf8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGmUhP9yn47/caCO/3Gejf9tjYL/gJmi/7LEy/8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAd52O/3Ggjv+uw7v/AAAAAAAAAAAAAAAA0uDj/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==">
+    <title>Jaeger UI</title>
+    <script>
+      // Jaeger UI config data is embedded by the query-service via search-replace.
+      // This is later merged with defaults into the redux `state.config` via
+      // src/utils/config/get-config.js.
+      // JAEGER_CONFIG_JS
+      // the line above may be replaced by user-provided JS file that should define a UIConfig function.
+      function getJaegerUiConfig() {
+        if(typeof window.UIConfig === 'function') {
+          return UIConfig();
+        }
+        const DEFAULT_CONFIG = null;
+        const JAEGER_CONFIG = DEFAULT_CONFIG;
+        return JAEGER_CONFIG;
+      }
+      // Jaeger version data is embedded by the query-service via search/replace.
+      function getJaegerVersion() {
+        const DEFAULT_VERSION = {"gitCommit":"", "gitVersion":"", "buildDate":""};
+        const JAEGER_VERSION = DEFAULT_VERSION;
+        return JAEGER_VERSION;
+      }
+
+      // Workaround some legacy NPM dependencies that assume this is always defined.
+      window.global = {};
+    </script>
+    <script>
+      window.platform = "JetBrains";
+      window.apiBaseUrl = "${jaeger_url}";
+      window.initialRoutePath = "${initial_route}";
+      window.embeddedMode = true;
+      window.staticPath;
+    </script>
+    <script type="module" crossorigin src="./static/index-0cb35993.js"></script>
+    <link rel="stylesheet" href="./static/index-9ae2264a.css">
+    <script type="module">import.meta.url;import("_").catch(()=>1);async function* g(){};window.__vite_is_modern_browser=true;</script>
+    <script type="module">!function(){if(window.__vite_is_modern_browser)return;console.warn("vite: loading legacy chunks, syntax error above and the same error below should be ignored");var e=document.getElementById("vite-legacy-polyfill"),n=document.createElement("script");n.src=e.src,n.onload=function(){System.import(document.getElementById('vite-legacy-entry').getAttribute('data-src'))},document.body.appendChild(n)}();</script>
+  </head>
+  <body>
+    <div id="jaeger-ui-root"></div>
+    <!--
+      This file is the main entry point for the Jaeger UI application.
+      See https://vitejs.dev/guide/#index-html-and-project-root for more information
+      on how asset references are managed by the build system.
+    -->
+
+    <script nomodule>!function(){var e=document,t=e.createElement("script");if(!("noModule"in t)&&"onbeforeload"in t){var n=!1;e.addEventListener("beforeload",(function(e){if(e.target===t)n=!0;else if(!e.target.hasAttribute("nomodule")||!n)return;e.preventDefault()}),!0),t.type="module",t.src=".",e.head.appendChild(t),t.remove()}}();</script>
+    <script nomodule crossorigin id="vite-legacy-polyfill" src="./static/polyfills-legacy-9486af1f.js"></script>
+    <script nomodule crossorigin id="vite-legacy-entry" data-src="./static/index-legacy-bf9fd6dc.js">System.import(document.getElementById('vite-legacy-entry').getAttribute('data-src'))</script>
+  </body>
+</html>

@@ -33,6 +33,10 @@
                     anchor="bottom"
                     factoryClass="org.digma.intellij.plugin.toolwindow.recentactivity.DigmaBottomToolWindowFactory"/>
 
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.jaegerui.JaegerUIService"/>
+        <fileEditorProvider implementation="org.digma.intellij.plugin.jaegerui.JaegerUIFileEditorProvider"/>
+
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.ToolWindowShower"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.service.EditorInteractionService"
@@ -139,9 +143,6 @@
         <listener
                 class="org.digma.intellij.plugin.tab.TabChangeHandler"
                 topic="org.digma.intellij.plugin.analytics.TabsChanged"/>
-        <listener
-                class="org.digma.intellij.plugin.jaeger.JaegerUrlChangeHandler"
-                topic="org.digma.intellij.plugin.analytics.JaegerUrlChanged"/>
         <listener
                 class="org.digma.intellij.plugin.debugger.DebuggerListener"
                 topic="com.intellij.xdebugger.XDebuggerManagerListener"/>

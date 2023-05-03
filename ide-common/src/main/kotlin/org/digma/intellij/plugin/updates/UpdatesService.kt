@@ -11,6 +11,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.digma.intellij.plugin.PluginId
+import org.digma.intellij.plugin.analytics.AnalyticsProviderException
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
@@ -18,6 +19,7 @@ import org.digma.intellij.plugin.common.newerThan
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.digma.intellij.plugin.model.rest.version.BackendVersionResponse
+import org.digma.intellij.plugin.model.rest.version.PluginVersionResponse
 import org.digma.intellij.plugin.model.rest.version.VersionRequest
 import org.digma.intellij.plugin.model.rest.version.VersionResponse
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
@@ -86,12 +88,25 @@ class UpdatesService(private val project: Project) : Disposable {
 
         val analyticsService = AnalyticsService.getInstance(project)
 
-        var versionsResp: VersionResponse?
+        var versionsResp: VersionResponse? = null
         try {
             versionsResp = analyticsService.getVersions(buildVersionRequest())
         } catch (ase: AnalyticsServiceException) {
-            Log.log(logger::debug, "AnalyticsServiceException for getVersions: {}", ase.message);
-            versionsResp = null
+            var logException = true
+            if (ase.cause is AnalyticsProviderException) {
+                // addressing issue https://github.com/digma-ai/digma-intellij-plugin/issues/606
+                // look if got HTTP Error Code 404 (https://en.wikipedia.org/wiki/HTTP_404), it means that backend is too old
+                val ape = ase.cause as AnalyticsProviderException
+                if (ape.responseCode == 404) {
+                    logException = false
+                    versionsResp = createResponseToInduceBackendUpdate()
+                }
+            }
+
+            if (logException) {
+                Log.log(logger::debug, "AnalyticsServiceException for getVersions: {}", ase.message)
+                versionsResp = null
+            }
         }
 
         if (versionsResp == null) {
@@ -104,6 +119,17 @@ class UpdatesService(private val project: Project) : Disposable {
         EdtInvocationManager.getInstance().invokeLater {
             affectedPanel?.reset()
         }
+    }
+
+    @VisibleForTesting
+    protected fun createResponseToInduceBackendUpdate(): VersionResponse {
+        val pluginVersionResp = PluginVersionResponse(false, "0.0.1")
+        val backendVersionResp = BackendVersionResponse(
+            true, "0.0.2", "0.0.1",
+            BackendDeploymentType.Unknown // cannot determine the deployment type - it will fallback to DockerExtension - as required
+        )
+        val resp = VersionResponse(pluginVersionResp, backendVersionResp)
+        return resp
     }
 
     fun updateButtonClicked() {

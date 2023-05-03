@@ -20,6 +20,8 @@
   window.theme = "${theme}";
   window.mainFont;
   window.codeFont;
+  window.userEmail = "${userEmail}";
+  window.isObservabilityEnabled = ${isObservabilityEnabled?string('true', 'false')};
   window.wizardSkipInstallationStep = ${wizardSkipInstallationStep?string('true', 'false')};
 </script>
 <script src="/index.js"></script>

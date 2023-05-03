@@ -9,5 +9,6 @@ data class PersistenceData(
         var alreadyPassedTheInstallationWizardForPyCharmIDE: Boolean = false,
         var firstTimeConnectionEstablished: Boolean = false,
         var firstTimePluginLoaded: Boolean = false,
-        var firstTimeInsightReceived: Boolean = false
+        var firstTimeInsightReceived: Boolean = false,
+        var userEmail: String? = null
 )

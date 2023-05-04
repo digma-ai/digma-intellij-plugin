@@ -477,8 +477,7 @@ public class AnalyticsService implements Disposable {
                 return true;
             }
 
-            return e.getCause().getMessage() != null &&
-                    e.getCause().getMessage().contains("Error 404");
+            return false;
         }
 
 

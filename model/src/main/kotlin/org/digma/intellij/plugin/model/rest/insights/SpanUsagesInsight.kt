@@ -18,7 +18,7 @@ data class SpanUsagesInsight
         "actualStartTime",
         "customStartTime",
         "prefixedCodeObjectId",
-        "isRecalculateEnabled",
+       // "isRecalculateEnabled",
         "shortDisplayInfo",
         "spanInfo",
         "span",
@@ -33,7 +33,7 @@ constructor(
         override val actualStartTime: Date?,
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
-        override val isRecalculateEnabled: Boolean,
+     //   override val isRecalculateEnabled: Boolean,
         override val shortDisplayInfo: ShortDisplayInfo?,
         override val spanInfo: SpanInfo,
         val span: String,
@@ -41,4 +41,5 @@ constructor(
 ) : SpanInsight {
 
     override val type: InsightType = InsightType.SpanUsages
+    override val isRecalculateEnabled: Boolean = true // should remove the setter = true later ...support backward compatibility
 }

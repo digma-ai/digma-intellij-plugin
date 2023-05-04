@@ -115,9 +115,12 @@ public class DocumentInfoContainer {
         Map<String, List<CodeObjectInsight>> result = new HashMap<>();
         response.getMethodsWithInsights()
                 .forEach(methodWithInsights -> {
-                    if (CollectionUtils.isNotEmpty(methodWithInsights.getInsights())) {
+                    var insights = methodWithInsights.getInsights()
+                            .stream().filter(codeObjectInsight -> !codeObjectInsight.getType().equals(InsightType.Unmapped))
+                            .collect(Collectors.toList());
+                    if (CollectionUtils.isNotEmpty(insights)) {
                         var methodId = MethodInfo.removeType(methodWithInsights.getMethodWithIds().getCodeObjectId()); // without type
-                        result.put(methodId, methodWithInsights.getInsights());
+                        result.put(methodId, insights);
                     }
                 });
         return result;

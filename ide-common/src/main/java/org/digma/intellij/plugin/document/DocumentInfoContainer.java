@@ -84,7 +84,7 @@ public class DocumentInfoContainer {
         List<MethodInfo> methodInfos = getMethodInfos();
         try {
             Log.log(LOGGER::debug, "Requesting insights by methodInfos {}", methodInfos);
-             InsightsOfMethodsResponse response = analyticsService.getInsightsOfMethods(methodInfos);
+            InsightsOfMethodsResponse response = analyticsService.getInsightsOfMethods(methodInfos);
 
             insightsMap = createMapOfInsights(response); // replace the existing map with a new one
 

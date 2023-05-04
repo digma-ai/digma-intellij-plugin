@@ -55,7 +55,7 @@ data class SlimAggregatedInsight
 @ConstructorProperties("type", "importance", "codeObjectIds")
 constructor(
         val type: String,
-        val importance: Int,
+        val importance: Int, // value of zero means that backend is still not up to date(forward compatibility)
         val codeObjectIds: List<String>
 )
 

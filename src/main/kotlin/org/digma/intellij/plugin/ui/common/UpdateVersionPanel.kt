@@ -58,14 +58,12 @@ class UpdateVersionPanel(
             val resourceInputStream = UpdateVersionPanel.javaClass.classLoader.getResourceAsStream(resourceName)
             val ioFile = Path.of(tempDirForGuides.absolutePath, resourceName).toFile()
             FileUtil.createParentDirs(ioFile)
-            ioFile.deleteOnExit()
 
             resourceInputStream.use { input ->
                 ioFile.outputStream().use { output ->
                     input.copyTo(output)
                 }
             }
-            ioFile.setWritable(false)
 
             return LocalFileSystem.getInstance().findFileByIoFile(ioFile)!!
         }
@@ -130,11 +128,11 @@ class UpdateVersionPanel(
             if (updateState.shouldUpdateBackend) {
                 when (updateState.backendDeploymentType) {
                     BackendDeploymentType.Helm -> {
-                        EditorService.getInstance(project).openVirtualFile(updateGuideForHelm)
+                        EditorService.getInstance(project).openVirtualFile(updateGuideForHelm, true)
                     }
 
                     BackendDeploymentType.DockerCompose -> {
-                        EditorService.getInstance(project).openVirtualFile(updateGuideDockerCompose)
+                        EditorService.getInstance(project).openVirtualFile(updateGuideDockerCompose, true)
                     }
 
                     BackendDeploymentType.DockerExtension -> {

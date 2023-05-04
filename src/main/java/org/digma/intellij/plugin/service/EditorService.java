@@ -4,6 +4,7 @@ import com.intellij.icons.AllIcons;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.ex.EditorEx;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.Project;
@@ -154,8 +155,14 @@ public class EditorService implements Disposable {
         return FileEditorManager.getInstance(project).openTextEditor(navigable, true);
     }
 
-    public void openVirtualFile(@NotNull VirtualFile virtualFile) {
-        openVirtualFile(virtualFile, 1);
+    public void openVirtualFile(@NotNull VirtualFile virtualFile, boolean readOnly) {
+        Editor editor = openVirtualFile(virtualFile, 1);
+        if (readOnly) {
+            if (editor instanceof EditorEx) {
+                var editorEx = (EditorEx) editor;
+                editorEx.setViewer(true);
+            }
+        }
     }
 
     private boolean showIfAlreadyOpen(String name, int lineNumber) {

@@ -11,10 +11,12 @@ data class VersionResponse
 @ConstructorProperties(
     "plugin",
     "backend",
+    "errors",
 )
 constructor(
     val plugin: PluginVersionResponse,
     val backend: BackendVersionResponse,
+    val errors: List<String>,
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

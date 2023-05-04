@@ -95,7 +95,7 @@ fun getTopUsagePanel(project: Project, moreData: HashMap<String, Any>,
     flowPanel.isOpaque = false
 
     val percentageLabel = CopyableLabelHtml(asHtml("${span(String.format("%.1f", spanFlow.percentage))}% "))
-    percentageLabel.preferredSize = Dimension(40, 1)
+    percentageLabel.preferredSize = Dimension(Laf.scaleSize(50), 1)
     flowPanel.add(percentageLabel, BorderLayout.WEST)
 
     val line = JBPanel<JBPanel<*>>(ResizableFlowLayout(FlowLayout.LEFT, 5, 0))
@@ -127,8 +127,8 @@ fun getTopUsagePanel(project: Project, moreData: HashMap<String, Any>,
         val wrapper = JPanel(BorderLayout())
         wrapper.isOpaque = false
         wrapper.border = JBUI.Borders.emptyTop(5)
-        wrapper.add(buttonToJaeger, BorderLayout.LINE_END)
-        flowPanel.add(wrapper, BorderLayout.SOUTH)
+        wrapper.add(buttonToJaeger, BorderLayout.NORTH)
+        flowPanel.add(wrapper, BorderLayout.EAST)
     }
 
     return flowPanel
@@ -136,7 +136,7 @@ fun getTopUsagePanel(project: Project, moreData: HashMap<String, Any>,
 
 fun addSpanLinkIfPossible(project: Project, service: SpanFlow.Service, moreData: HashMap<String, Any>, panel: JPanel) {
     if (moreData.contains(service.codeObjectId)){
-        var spanName = service.span;
+        val spanName = service.span;
         val link = ActionLink(spanName) {
             openWorkspaceFileForSpan(project, moreData, service.codeObjectId)
         }

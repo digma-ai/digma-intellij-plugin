@@ -29,9 +29,6 @@ import javax.swing.JLabel
 import javax.swing.JPanel
 
 
-private const val NO_INFO_CARD_NAME = "NO-INFO"
-private const val LOADING_INSIGHTS_CARD_NAME = "Loading-Insights"
-
 
 private val logger: Logger = Logger.getInstance("org.digma.intellij.plugin.ui.insights.InsightsTab")
 
@@ -72,7 +69,7 @@ fun insightsPanel(project: Project): DigmaTabPanel {
     previewPanel.add(previewList, BorderLayout.CENTER)
     previewPanel.isOpaque = false
 
-    val noInfoWarningPanel = noCodeObjectWarningPanel(insightsModel)
+    val noInsightsPanel = createNoInsightsPanel()
     val pendingInsightsPanel = createPendingInsightsPanel()
     val loadingInsightsPanel = createLoadingInsightsPanel()
     val noDataYetPanel = createNoDataYetPanel()
@@ -84,15 +81,19 @@ fun insightsPanel(project: Project): DigmaTabPanel {
     cardsPanel.border = JBUI.Borders.empty()
     cardsPanel.add(insightsList, InsightsTabCard.INSIGHTS.name)
     cardsPanel.add(previewPanel, InsightsTabCard.PREVIEW.name)
-    cardsPanel.add(noInfoWarningPanel, NO_INFO_CARD_NAME)
-    cardsPanel.add(loadingInsightsPanel, LOADING_INSIGHTS_CARD_NAME)
+    cardsPanel.add(noInsightsPanel, UiInsightStatus.NoInsights.name)
+    cardsPanel.add(loadingInsightsPanel, UiInsightStatus.LoadingInsights.name)
     cardsPanel.add(pendingInsightsPanel, UiInsightStatus.InsightPending.name)
     cardsPanel.add(noDataYetPanel, UiInsightStatus.NoSpanData.name)
     cardsPanel.add(noObservabilityPanel, UiInsightStatus.NoObservability.name)
     cardLayout.addLayoutComponent(insightsList, InsightsTabCard.INSIGHTS.name)
     cardLayout.addLayoutComponent(previewPanel, InsightsTabCard.PREVIEW.name)
-    cardLayout.addLayoutComponent(noInfoWarningPanel, NO_INFO_CARD_NAME)
-    cardLayout.show(cardsPanel, NO_INFO_CARD_NAME)
+    cardLayout.addLayoutComponent(noInsightsPanel, UiInsightStatus.NoInsights.name)
+    cardLayout.addLayoutComponent(loadingInsightsPanel, UiInsightStatus.LoadingInsights.name)
+    cardLayout.addLayoutComponent(pendingInsightsPanel, UiInsightStatus.InsightPending.name)
+    cardLayout.addLayoutComponent(noDataYetPanel, UiInsightStatus.NoSpanData.name)
+    cardLayout.addLayoutComponent(noObservabilityPanel, UiInsightStatus.NoObservability.name)
+    cardLayout.show(cardsPanel, UiInsightStatus.NoInsights.name)
 
     val result = object : DigmaTabPanel() {
         override fun getPreferredFocusableComponent(): JComponent {
@@ -106,7 +107,6 @@ fun insightsPanel(project: Project): DigmaTabPanel {
         //reset must be called from EDT
         override fun reset() {
 
-            noInfoWarningPanel.reset()
             previewTitle.reset()
 
             insightsList.getModel().setListData(insightsModel.listViewItems)
@@ -122,9 +122,9 @@ fun insightsPanel(project: Project): DigmaTabPanel {
                     // because of sync issues between the model (updating in the background) and the current backend call.
                     // model has no insights and the current backend call returns insights exists, the model will be updated in x seconds (with insights) so its ok to show no insights for this period of time
                     UiInsightStatus.InsightExist -> UiInsightStatus.InsightPending.name
-                    UiInsightStatus.NoInsights -> NO_INFO_CARD_NAME
-                    UiInsightStatus.Unknown -> LOADING_INSIGHTS_CARD_NAME
-                    else -> NO_INFO_CARD_NAME
+                    UiInsightStatus.NoInsights -> UiInsightStatus.NoInsights.name
+                    UiInsightStatus.Unknown -> UiInsightStatus.LoadingInsights.name
+                    else -> UiInsightStatus.NoInsights.name
                 }
                 cardLayout.show(cardsPanel, cardName)
             } else if (!insightsModel.hasInsights()
@@ -133,7 +133,7 @@ fun insightsPanel(project: Project): DigmaTabPanel {
                     cardLayout.show(cardsPanel, UiInsightStatus.NoSpanData.name)  //show no data yet
                 }
                 else{
-                    cardLayout.show(cardsPanel, NO_INFO_CARD_NAME)
+                    cardLayout.show(cardsPanel, UiInsightStatus.NoInsights.name)
                 }
 
             } else {

@@ -134,6 +134,8 @@ object Laf {
                 @JvmStatic val NoDataYetDark = SvgIcon.asIs("/icons/no_data_yet-dark.svg")
                 @JvmStatic val NoObservabilityLight = SvgIcon.asIs("/icons/no_observability-light.svg")
                 @JvmStatic val NoObservabilityDark = SvgIcon.asIs("/icons/no_observability-dark.svg")
+                @JvmStatic val NoInsightsLight = SvgIcon.asIs("/icons/no_insights_light.svg")
+                @JvmStatic val NoInsightsDark = SvgIcon.asIs("/icons/no_insights_dark.svg")
                 @JvmStatic val SummaryEmptyLight = SvgIcon.asIs("/icons/summary_empty_light.svg")
                 @JvmStatic val SummaryEmptyDark = SvgIcon.asIs("/icons/summary_empty_dark.svg")
                 @JvmStatic val UpdateProductDark = SvgIcon.asIs("/icons/update-product-dark.svg")

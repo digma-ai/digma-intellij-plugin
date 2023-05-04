@@ -36,6 +36,10 @@ object Laf {
         return JBUI.scale(size)
     }
 
+    fun scaleSize(size: Int): Int {
+        return JBUI.scale(size)
+    }
+
     fun scaleBorders(size: Int): Int {
         return size
         //todo: need to consider if to scale borders

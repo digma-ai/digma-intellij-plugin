@@ -132,10 +132,24 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
             userId,
             "error",
             mapOf(
+                "error.source" to "plugin",
+                "action" to "unknown",
                 "message" to message,
                 "exception.type" to exception.javaClass.name,
                 "exception.message" to exception.message,
                 "exception.stack-trace" to stringWriter.toString()
+            )
+        )
+    }
+
+    fun reportBackendError(message: String, action: String) {
+        postHog?.capture(
+            userId,
+            "error",
+            mapOf(
+                "error.source" to "backend",
+                "action" to action,
+                "message" to message,
             )
         )
     }

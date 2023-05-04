@@ -22,6 +22,7 @@ import org.digma.intellij.plugin.model.rest.version.BackendVersionResponse
 import org.digma.intellij.plugin.model.rest.version.PluginVersionResponse
 import org.digma.intellij.plugin.model.rest.version.VersionRequest
 import org.digma.intellij.plugin.model.rest.version.VersionResponse
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.VisibleForTesting
@@ -58,6 +59,7 @@ class UpdatesService(private val project: Project) : Disposable {
 
     private var blackoutStopTime: LocalDateTime = LocalDateTime.now().minusMonths(3)
 
+    private var prevBackendErrorsList: List<String> = emptyList()
     private var stateBackendVersion: BackendVersionResponse
     private var statePluginVersion: PluginVersion
 
@@ -113,6 +115,20 @@ class UpdatesService(private val project: Project) : Disposable {
             return
         }
 
+        if (!versionsResp.errors.isNullOrEmpty()) {
+            val currErrors = versionsResp.errors.toList()
+
+            if (currErrors != prevBackendErrorsList) {
+                val activityMonitor = ActivityMonitor.getInstance(project)
+                currErrors.forEach {
+                    activityMonitor.reportBackendError(it, "query-for-versions-and-propose-to-update")
+                }
+            }
+
+            prevBackendErrorsList = currErrors
+            return
+        }
+
         stateBackendVersion = versionsResp.backend
         statePluginVersion.latestVersion = versionsResp.plugin.latestVersion
 
@@ -128,7 +144,7 @@ class UpdatesService(private val project: Project) : Disposable {
             true, "0.0.2", "0.0.1",
             BackendDeploymentType.Unknown // cannot determine the deployment type - it will fallback to DockerExtension - as required
         )
-        val resp = VersionResponse(pluginVersionResp, backendVersionResp)
+        val resp = VersionResponse(pluginVersionResp, backendVersionResp, emptyList())
         return resp
     }
 

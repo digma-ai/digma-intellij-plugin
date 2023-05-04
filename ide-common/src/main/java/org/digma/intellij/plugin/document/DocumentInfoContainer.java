@@ -84,7 +84,7 @@ public class DocumentInfoContainer {
         List<MethodInfo> methodInfos = getMethodInfos();
         try {
             Log.log(LOGGER::debug, "Requesting insights by methodInfos {}", methodInfos);
-            InsightsOfMethodsResponse response = analyticsService.getInsightsOfMethods(methodInfos);
+             InsightsOfMethodsResponse response = analyticsService.getInsightsOfMethods(methodInfos);
 
             insightsMap = createMapOfInsights(response); // replace the existing map with a new one
 
@@ -115,9 +115,12 @@ public class DocumentInfoContainer {
         Map<String, List<CodeObjectInsight>> result = new HashMap<>();
         response.getMethodsWithInsights()
                 .forEach(methodWithInsights -> {
-                    if (CollectionUtils.isNotEmpty(methodWithInsights.getInsights())) {
+                    var insights = methodWithInsights.getInsights()
+                            .stream().filter(codeObjectInsight -> !codeObjectInsight.getType().equals(InsightType.Unmapped))
+                            .collect(Collectors.toList());
+                    if (CollectionUtils.isNotEmpty(insights)) {
                         var methodId = MethodInfo.removeType(methodWithInsights.getMethodWithIds().getCodeObjectId()); // without type
-                        result.put(methodId, methodWithInsights.getInsights());
+                        result.put(methodId, insights);
                     }
                 });
         return result;

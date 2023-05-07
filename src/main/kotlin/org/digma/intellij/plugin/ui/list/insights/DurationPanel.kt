@@ -1,9 +1,9 @@
 package org.digma.intellij.plugin.ui.list.insights
 
-import com.intellij.openapi.fileEditor.impl.HTMLEditorProvider
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBPanel
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
 import org.digma.intellij.plugin.model.rest.insights.SpanInfo
@@ -68,7 +68,7 @@ private fun buildButtonToPercentilesGraph(project: Project, span: SpanInfo): JBu
     val button = ListItemActionButton("Histogram")
     button.addActionListener {
         val htmlContent = analyticsService.getHtmlGraphForSpanPercentiles(span.instrumentationLibrary, span.name, Laf.Colors.PLUGIN_BACKGROUND.getHex())
-        HTMLEditorProvider.openEditor(project, "Percentiles Graph of Span ${span.name}", htmlContent)
+        DigmaHTMLEditorProvider.openEditor(project, "Percentiles Graph of Span ${span.name}", htmlContent)
     }
 
     return button

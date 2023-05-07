@@ -4,12 +4,13 @@ import com.intellij.openapi.fileEditor.impl.FileEditorManagerImpl;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.LightVirtualFile;
+import org.digma.intellij.plugin.common.DigmaVirtualFileMarker;
 import org.digma.intellij.plugin.ui.model.TraceSample;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class JaegerUIVirtualFile extends LightVirtualFile {
+public class JaegerUIVirtualFile extends LightVirtualFile implements DigmaVirtualFileMarker {
 
     public static final Key<String> JAEGER_UI_EDITOR_KEY = Key.create("Digma.JAEGER_UI_EDITOR_KEY");
     private String jaegerBaseUrl;

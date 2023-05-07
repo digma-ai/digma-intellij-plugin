@@ -4,9 +4,7 @@ import com.intellij.execution.runners.ExecutionUtil;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.openapi.wm.ToolWindowManager;
@@ -16,7 +14,6 @@ import com.intellij.ui.jcef.JBCefApp;
 import com.intellij.ui.jcef.JBCefBrowser;
 import com.intellij.ui.jcef.JBCefClient;
 import kotlin.Pair;
-import kotlin.Triple;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.browser.CefMessageRouter;
@@ -31,10 +28,14 @@ import org.digma.intellij.plugin.common.CommonUtils;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.icons.AppIcons;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.rest.recentactivity.*;
+import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityEntrySpanForTracePayload;
+import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityEntrySpanPayload;
+import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityGoToSpanRequest;
+import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityGoToTraceRequest;
+import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResponseEntry;
+import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.psi.LanguageService;
-import org.digma.intellij.plugin.refreshInsightsTask.RefreshService;
 import org.digma.intellij.plugin.service.EditorService;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.toolwindow.common.CustomViewerWindow;
@@ -49,12 +50,25 @@ import javax.swing.*;
 import java.awt.*;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Timer;
-import java.util.*;
+import java.util.TimerTask;
 
-import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.*;
-import static org.digma.intellij.plugin.ui.common.EnvironmentUtilKt.*;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.GLOBAL_SET_IS_JAEGER_ENABLED;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_SPAN;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_TRACE;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_INITIALIZE;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_SET_DATA;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.REQUEST_MESSAGE_TYPE;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.parseJsonToObject;
+import static org.digma.intellij.plugin.ui.common.EnvironmentUtilKt.LOCAL_ENV;
+import static org.digma.intellij.plugin.ui.common.EnvironmentUtilKt.SUFFIX_OF_LOCAL;
+import static org.digma.intellij.plugin.ui.common.EnvironmentUtilKt.getSortedEnvironments;
 import static org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt.openJaegerFromRecentActivity;
 
 
@@ -215,16 +229,7 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory, Disposab
                 String actualEnvName = adjustBackEnvNameIfNeeded(payload.getEnvironment());
                 environmentsSupplier.setCurrent(actualEnvName);
 
-                Triple<VirtualFile, Editor, Boolean> openedFileAndEditor = editorService.openWorkspaceFileInEditor(fileAndOffset.getFirst(), fileAndOffset.getSecond());
-
-                if (openedFileAndEditor != null) {
-                    boolean fileWasAlreadyOpen = openedFileAndEditor.component3();
-                    if (fileWasAlreadyOpen) {
-                        // if file already opened then refresh for faster insight getting (issue 474)
-                        RefreshService refreshService = RefreshService.getInstance(project);
-                        refreshService.refreshAllInBackground();
-                    }
-                }
+                editorService.openWorkspaceFileInEditor(fileAndOffset.getFirst(), fileAndOffset.getSecond());
 
                 ToolWindow digmaSidePaneToolWindow = ToolWindowManager.getInstance(project).getToolWindow(DIGMA_SIDE_PANE_TOOL_WINDOW_NAME);
                 if (digmaSidePaneToolWindow != null && !digmaSidePaneToolWindow.isVisible()) {

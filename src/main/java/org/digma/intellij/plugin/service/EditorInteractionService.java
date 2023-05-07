@@ -129,6 +129,8 @@ public class EditorInteractionService implements CaretContextService, Disposable
             errorsViewService.contextChangeNoMethodInfo(dummyMethodInfo);
         } else {
             Log.log(logger::debug, "Context changed to {}. ", methodInfo);
+            DocumentInfoContainer documentInfo = documentInfoService.getDocumentInfo(methodUnderCaret);
+            boolean methodHasNewInsights = documentInfo.loadInsightsForMethod(methodInfo.getId()); // might be long call since going to the backend
             insightsViewService.updateInsightsModel(methodInfo);
             errorsViewService.updateErrorsModel(methodInfo);
         }

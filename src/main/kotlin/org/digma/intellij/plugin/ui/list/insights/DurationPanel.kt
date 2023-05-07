@@ -48,8 +48,9 @@ fun spanDurationPanel(
                 durationsListPanel.add(durationsPanel)
             }
 
-    val buttonToGraph = buildButtonToPercentilesGraph(project, spanDurationsInsight.spanInfo)
-    val buttonToJaeger = buildButtonToJaeger(project, "Compare", spanDurationsInsight.spanInfo.name, traceSamples)
+    //related to issue #621
+    //val buttonToGraph = buildButtonToPercentilesGraph(project, spanDurationsInsight.spanInfo)
+    //val buttonToJaeger = buildButtonToJaeger(project, "Compare", spanDurationsInsight.spanInfo.name, traceSamples)
 
     return createInsightPanel(
             project = project,
@@ -58,7 +59,7 @@ fun spanDurationPanel(
             description = "",
             iconsList = listOf(Laf.Icons.Insight.DURATION),
             bodyPanel = durationsListPanel,
-            buttons = listOf(buttonToGraph, buttonToJaeger),
+            buttons = null, //listOf(buttonToGraph, buttonToJaeger),
             paginationComponent = null
     )
 }

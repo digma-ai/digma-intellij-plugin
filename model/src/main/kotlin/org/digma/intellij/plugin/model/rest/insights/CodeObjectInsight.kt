@@ -54,4 +54,8 @@ interface CodeObjectInsight {
     fun hasDecorators(): Boolean {
         return !decorators.isNullOrEmpty()
     }
+
+    fun isTypeMapped(): Boolean {
+        return type != null && type != InsightType.Unmapped
+    }
 }

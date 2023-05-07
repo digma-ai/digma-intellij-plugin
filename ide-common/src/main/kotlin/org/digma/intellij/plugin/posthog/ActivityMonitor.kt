@@ -79,7 +79,7 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
         postHog?.alias(userId, email)
     }
 
-    fun registerCustomEvent(eventName: String, tags: Map<String, Any>) {
+    fun registerCustomEvent(eventName: String, tags: Map<String, Any>?) {
         postHog?.capture(userId, eventName, tags)
     }
 

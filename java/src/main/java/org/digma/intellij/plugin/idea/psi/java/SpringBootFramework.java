@@ -97,6 +97,11 @@ public class SpringBootFramework implements IEndpointDiscovery {
             Query<PsiMethod> psiMethodsInFile = AnnotatedElementsSearch.searchPsiMethods(currAnnotation.getPsiClass(), GlobalSearchScope.fileScope(psiFile));
 
             for (PsiMethod currPsiMethod : psiMethodsInFile) {
+                final String methodId = JavaLanguageUtils.createJavaMethodCodeObjectId(currPsiMethod);
+                final MethodInfo methodInfo = documentInfo.getMethods().get(methodId);
+                //this method must exist in the document info
+                Objects.requireNonNull(methodInfo, "method info " + methodId + " must exist in DocumentInfo for " + documentInfo.getFileUri());
+
                 final PsiAnnotation mappingPsiAnnotationOnMethod = currPsiMethod.getAnnotation(currAnnotation.getClassNameFqn());
                 if (mappingPsiAnnotationOnMethod == null) {
                     continue; // very unlikely
@@ -116,23 +121,21 @@ public class SpringBootFramework implements IEndpointDiscovery {
                 if (controllerReqMappingAnnotation != null) {
                     endpointUriPrefix = JavaLanguageUtils.getValueOfFirstMatchingAnnotationAttribute(controllerReqMappingAnnotation, ATTRIBUTES_OF_PATH, "");
                 }
-                final String endpointUriSuffix = JavaLanguageUtils.getValueOfFirstMatchingAnnotationAttribute(mappingPsiAnnotationOnMethod, ATTRIBUTES_OF_PATH, "");
 
-                String httpMethodName = evalHttpMethod(mappingPsiAnnotationOnMethod, controllerReqMappingAnnotation);
+                final String httpMethodName = evalHttpMethod(mappingPsiAnnotationOnMethod, controllerReqMappingAnnotation);
                 if (httpMethodName == null) {
                     continue; // not likely
                 }
 
-                String httpEndpointCodeObjectId = createHttpEndpointCodeObjectId(httpMethodName, endpointUriPrefix, endpointUriSuffix);
+                final List<String> endpointUriSuffixes = JavaLanguageUtils.getValuesOfFirstMatchingAnnotationAttribute(mappingPsiAnnotationOnMethod, ATTRIBUTES_OF_PATH);
 
-                String methodCodeObjectId = JavaLanguageUtils.createJavaMethodCodeObjectId(currPsiMethod);
-                EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, methodCodeObjectId, documentInfo.getFileUri());
-                Log.log(LOGGER::debug, "Found endpoint info '{}' for method '{}'", endpointInfo.getId(), endpointInfo.getContainingMethodId());
+                for (String currSuffix : endpointUriSuffixes) {
+                    String httpEndpointCodeObjectId = createHttpEndpointCodeObjectId(httpMethodName, endpointUriPrefix, currSuffix);
+                    EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, methodId, documentInfo.getFileUri());
+                    Log.log(LOGGER::debug, "Found endpoint info '{}' for method '{}'", endpointInfo.getId(), endpointInfo.getContainingMethodId());
 
-                MethodInfo methodInfo = documentInfo.getMethods().get(endpointInfo.getContainingMethodId());
-                //this method must exist in the document info
-                Objects.requireNonNull(methodInfo, "method info " + endpointInfo.getContainingMethodId() + " must exist in DocumentInfo for " + documentInfo.getFileUri());
-                methodInfo.addEndpoint(endpointInfo);
+                    methodInfo.addEndpoint(endpointInfo);
+                }
             }
         });
     }

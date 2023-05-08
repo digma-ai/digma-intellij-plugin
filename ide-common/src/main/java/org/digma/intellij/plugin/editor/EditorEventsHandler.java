@@ -16,6 +16,7 @@ import com.intellij.util.Alarm;
 import com.intellij.util.AlarmFactory;
 import com.intellij.util.RunnableCallable;
 import com.intellij.util.concurrency.NonUrgentExecutor;
+import org.digma.intellij.plugin.common.DigmaVirtualFileMarker;
 import org.digma.intellij.plugin.common.FileUtils;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.log.Log;
@@ -75,6 +76,10 @@ public class EditorEventsHandler implements FileEditorManagerListener {
      */
     @Override
     public void selectionChanged(@NotNull FileEditorManagerEvent editorManagerEvent) {
+
+        if (isFileNotChangingContext(editorManagerEvent.getNewFile())){
+            return;
+        }
 
         //this will make sure that all registered language services complete startup before they can be used.
         // usually there is nothing to do, but rider for example need to load the protocol models on EDT.
@@ -199,8 +204,9 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
     }
 
-
-
+    private boolean isFileNotChangingContext(VirtualFile newFile) {
+        return DigmaVirtualFileMarker.class.isAssignableFrom(newFile.getClass());
+    }
 
 
     @Override

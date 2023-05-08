@@ -1,10 +1,10 @@
 package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.ide.BrowserUtil
-import com.intellij.openapi.fileEditor.impl.HTMLEditorProvider
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider
 import org.digma.intellij.plugin.jaegerui.JaegerUIService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.settings.LinkMode
@@ -59,7 +59,7 @@ fun buildButtonToJaeger(
                     .replace("__CAPTION__", caption)
                 val editorTitle = "Jaeger sample traces of Span $spanName"
                 EDT.ensureEDT {
-                    HTMLEditorProvider.openEditor(project, editorTitle, htmlContent)
+                    DigmaHTMLEditorProvider.openEditor(project, editorTitle, htmlContent)
                 }
             }
             LinkMode.External -> {
@@ -107,7 +107,7 @@ fun openJaegerFromRecentActivity(
                 .replace("__CAPTION__", caption)
             val editorTitle = "Jaeger sample traces of Span $spanName"
             EDT.ensureEDT {
-                HTMLEditorProvider.openEditor(project, editorTitle, htmlContent)
+                DigmaHTMLEditorProvider.openEditor(project, editorTitle, htmlContent)
             }
         }
         LinkMode.External -> {

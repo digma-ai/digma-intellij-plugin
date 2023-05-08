@@ -3,11 +3,15 @@ package org.digma.intellij.plugin.jaegerui;
 import com.intellij.openapi.fileTypes.ex.FakeFileType;
 import com.intellij.openapi.util.NlsContexts;
 import com.intellij.openapi.vfs.VirtualFile;
+import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("UnstableApiUsage")
 public class JaegerUIFileType  extends FakeFileType {
+
+    private JaegerUIFileType() {
+    }
 
     public static final JaegerUIFileType INSTANCE = new JaegerUIFileType();
 
@@ -18,6 +22,11 @@ public class JaegerUIFileType  extends FakeFileType {
 
     @Override
     public @NonNls @NotNull String getName() {
+        return "JaegerUI";
+    }
+
+    @Override
+    public @NotNull @Nls String getDisplayName() {
         return "JaegerUI";
     }
 

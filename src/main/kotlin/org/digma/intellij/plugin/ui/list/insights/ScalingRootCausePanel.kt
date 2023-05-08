@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.ui.list.insights
 
-import com.intellij.openapi.fileEditor.impl.HTMLEditorProvider
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
@@ -9,11 +8,14 @@ import org.apache.commons.lang3.StringUtils
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.editor.getCurrentPageNumberForInsight
 import org.digma.intellij.plugin.editor.updateListOfEntriesToDisplay
+import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider
 import org.digma.intellij.plugin.model.rest.insights.AffectedEndpointInfo
-import org.digma.intellij.plugin.model.rest.insights.EndpointInfo
 import org.digma.intellij.plugin.model.rest.insights.EndpointSchema
 import org.digma.intellij.plugin.model.rest.insights.SpanScalingRootCauseInsight
-import org.digma.intellij.plugin.ui.common.*
+import org.digma.intellij.plugin.ui.common.Laf
+import org.digma.intellij.plugin.ui.common.asHtml
+import org.digma.intellij.plugin.ui.common.getHex
+import org.digma.intellij.plugin.ui.common.spanGrayed
 import org.digma.intellij.plugin.ui.list.ListItemActionButton
 import org.digma.intellij.plugin.ui.list.openWorkspaceFileForSpan
 import org.digma.intellij.plugin.ui.model.TraceSample
@@ -140,7 +142,7 @@ private fun buildButtonToPercentilesGraph(project: Project, spanName: String,ins
     val button = ListItemActionButton("Histogram")
     button.addActionListener {
         val htmlContent = analyticsService.getHtmlGraphForSpanScaling(instLibrary, spanName, Laf.Colors.PLUGIN_BACKGROUND.getHex())
-        HTMLEditorProvider.openEditor(project, "Scaling Graph of Span $spanName", htmlContent)
+        DigmaHTMLEditorProvider.openEditor(project, "Scaling Graph of Span $spanName", htmlContent)
     }
 
     return button

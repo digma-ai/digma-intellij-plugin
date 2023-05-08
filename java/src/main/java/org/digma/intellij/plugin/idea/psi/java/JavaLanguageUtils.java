@@ -3,6 +3,8 @@ package org.digma.intellij.plugin.idea.psi.java;
 import com.intellij.lang.jvm.JvmMethod;
 import com.intellij.lang.jvm.annotation.JvmAnnotationAttribute;
 import com.intellij.psi.PsiAnnotation;
+import com.intellij.psi.PsiAnnotationMemberValue;
+import com.intellij.psi.PsiArrayInitializerMemberValue;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiExpression;
@@ -18,6 +20,8 @@ import com.intellij.psi.impl.source.PsiClassReferenceType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -82,7 +86,30 @@ public class JavaLanguageUtils {
 
     @Nullable
     public static String getPsiAnnotationAttributeValue(@NotNull PsiAnnotation annotation, @NotNull String attributeName) {
-        var value = annotation.findAttributeValue(attributeName);
+        var attrValue = annotation.findAttributeValue(attributeName);
+        return extractValue(attrValue);
+    }
+
+    @NotNull
+    public static List<String> getPsiAnnotationAttributeValues(@NotNull PsiAnnotation annotation, @NotNull String attributeName) {
+        var attrValue = annotation.findAttributeValue(attributeName);
+        List<PsiAnnotationMemberValue> sourceList;
+        if (attrValue instanceof PsiArrayInitializerMemberValue) {
+            PsiAnnotationMemberValue[] initializers = ((PsiArrayInitializerMemberValue) attrValue).getInitializers();
+            sourceList = Arrays.stream(initializers).toList();
+        } else {
+            sourceList = List.of(attrValue);
+        }
+
+        List<String> retList = sourceList.stream()
+                .map(it -> extractValue(it))
+                .filter(it -> it != null)
+                .toList();
+        return retList;
+    }
+
+    @Nullable
+    private static String extractValue(@NotNull PsiAnnotationMemberValue value) {
         if (value instanceof PsiLiteral) {
             return getPsiLiteralValue((PsiLiteral) value);
         } else if (value instanceof PsiExpression) {
@@ -105,7 +132,7 @@ public class JavaLanguageUtils {
     public static String getPsiExpressionValue(@NotNull PsiExpression expression) {
         if (expression instanceof PsiReferenceExpression) {
             return getPsiReferenceExpressionValue((PsiReferenceExpression) expression);
-        }else if (expression instanceof PsiLiteralExpression) {
+        } else if (expression instanceof PsiLiteralExpression) {
             return getPsiLiteralValue((PsiLiteralExpression) expression);
         }
         return null;
@@ -117,8 +144,8 @@ public class JavaLanguageUtils {
         var element = psiReferenceExpression.resolve();
         if (element instanceof PsiField) {
             return getPsiFieldValue((PsiField) element);
-        }else if (element instanceof PsiLocalVariable){
-            return getPsiLocalVariableValue((PsiLocalVariable)element);
+        } else if (element instanceof PsiLocalVariable) {
+            return getPsiLocalVariableValue((PsiLocalVariable) element);
         }
 
         return null;
@@ -126,11 +153,11 @@ public class JavaLanguageUtils {
 
 
     @Nullable
-    private static String getPsiLocalVariableValue(@NotNull PsiLocalVariable localVariable){
+    private static String getPsiLocalVariableValue(@NotNull PsiLocalVariable localVariable) {
         PsiElement initializer = localVariable.getInitializer();
-        if (initializer instanceof PsiLiteralExpression){
+        if (initializer instanceof PsiLiteralExpression) {
             return getPsiLiteralValue((PsiLiteral) initializer);
-        }else if (initializer instanceof PsiReferenceExpression){
+        } else if (initializer instanceof PsiReferenceExpression) {
             return getPsiReferenceExpressionValue((PsiReferenceExpression) initializer);
         }
         return null;
@@ -142,7 +169,7 @@ public class JavaLanguageUtils {
         var initializer = psiField.getInitializer();
         if (initializer instanceof PsiLiteral) {
             return getPsiLiteralValue((PsiLiteral) initializer);
-        }else if (initializer instanceof PsiReferenceExpression) {
+        } else if (initializer instanceof PsiReferenceExpression) {
             return getPsiReferenceExpressionValue((PsiReferenceExpression) initializer);
         }
         return psiField.getText();
@@ -150,10 +177,10 @@ public class JavaLanguageUtils {
 
 
     @Nullable
-    public static PsiMethod findMethodInClass(@NotNull PsiClass psiClass, @NotNull String methodName,@NotNull  Predicate<PsiMethod> methodPredicate) {
+    public static PsiMethod findMethodInClass(@NotNull PsiClass psiClass, @NotNull String methodName, @NotNull Predicate<PsiMethod> methodPredicate) {
         var methods = psiClass.findMethodsByName(methodName);
         for (JvmMethod method : methods) {
-            if (method instanceof PsiMethod && methodPredicate.test((PsiMethod) method)){
+            if (method instanceof PsiMethod && methodPredicate.test((PsiMethod) method)) {
                 return (PsiMethod) method;
             }
         }
@@ -174,17 +201,29 @@ public class JavaLanguageUtils {
         return defaultValue;
     }
 
+    @NotNull
+    public static List<String> getValuesOfFirstMatchingAnnotationAttribute(@NotNull PsiAnnotation psiAnnotation, @NotNull List<String> attributeList) {
+        List<JvmAnnotationAttribute> annotationAttributes = psiAnnotation.getAttributes();
+
+        for (JvmAnnotationAttribute curr : annotationAttributes) {
+            if (attributeList.contains(curr.getAttributeName())) {
+                return JavaLanguageUtils.getPsiAnnotationAttributeValues(psiAnnotation, curr.getAttributeName());
+            }
+        }
+        return Collections.emptyList();
+    }
+
     /**
      * test if the psiElement is a method with methodName and containingClassName.
      * methodPredicate can be used to test more properties of the method like its access modifiers and arguments.
      */
-    public static boolean isMethod(@NotNull PsiElement psiElement,@NotNull String methodName,@NotNull String containingClassName, @Nullable Predicate<PsiMethod> methodPredicate) {
+    public static boolean isMethod(@NotNull PsiElement psiElement, @NotNull String methodName, @NotNull String containingClassName, @Nullable Predicate<PsiMethod> methodPredicate) {
 
         if (psiElement instanceof PsiMethod &&
                 ((PsiMethod) psiElement).getName().equals(methodName) &&
                 ((PsiMethod) psiElement).getContainingClass() != null &&
                 ((PsiMethod) psiElement).getContainingClass().getQualifiedName() != null &&
-                ((PsiMethod) psiElement).getContainingClass().getQualifiedName().equals(containingClassName)){
+                ((PsiMethod) psiElement).getContainingClass().getQualifiedName().equals(containingClassName)) {
 
             return methodPredicate == null || methodPredicate.test((PsiMethod) psiElement);
 
@@ -193,11 +232,11 @@ public class JavaLanguageUtils {
         return false;
     }
 
-    public static boolean isMethodWithFirstArgumentString(@NotNull PsiElement psiElement,@NotNull String methodName,@NotNull String containingClassName) {
-        return isMethod(psiElement,methodName,containingClassName, psiMethod -> {
-            if (psiMethod.getParameters().length >= 1 && psiMethod.getParameters()[0].getType() instanceof PsiClassReferenceType){
+    public static boolean isMethodWithFirstArgumentString(@NotNull PsiElement psiElement, @NotNull String methodName, @NotNull String containingClassName) {
+        return isMethod(psiElement, methodName, containingClassName, psiMethod -> {
+            if (psiMethod.getParameters().length >= 1 && psiMethod.getParameters()[0].getType() instanceof PsiClassReferenceType) {
                 var type = ((PsiClassReferenceType) psiMethod.getParameters()[0].getType()).resolve();
-                if (type != null){
+                if (type != null) {
                     return type.getQualifiedName() != null && type.getQualifiedName().equals("java.lang.String");
                 }
             }
@@ -205,8 +244,8 @@ public class JavaLanguageUtils {
         });
     }
 
-    public static boolean isMethodWithNoArguments(@NotNull PsiElement psiElement,@NotNull String methodName,@NotNull String containingClassName) {
-        return isMethod(psiElement,methodName,containingClassName, psiMethod -> psiMethod.getParameters().length == 0);
+    public static boolean isMethodWithNoArguments(@NotNull PsiElement psiElement, @NotNull String methodName, @NotNull String containingClassName) {
+        return isMethod(psiElement, methodName, containingClassName, psiMethod -> psiMethod.getParameters().length == 0);
     }
 
 

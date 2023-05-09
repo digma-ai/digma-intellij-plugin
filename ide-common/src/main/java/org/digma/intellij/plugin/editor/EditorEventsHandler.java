@@ -77,7 +77,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
     @Override
     public void selectionChanged(@NotNull FileEditorManagerEvent editorManagerEvent) {
 
-        if (isFileNotChangingContext(editorManagerEvent.getNewFile())){
+        if (editorManagerEvent.getNewFile() != null && isFileNotChangingContext(editorManagerEvent.getNewFile())){
             return;
         }
 
@@ -204,7 +204,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
     }
 
-    private boolean isFileNotChangingContext(VirtualFile newFile) {
+    private boolean isFileNotChangingContext(@NotNull VirtualFile newFile) {
         return DigmaVirtualFileMarker.class.isAssignableFrom(newFile.getClass());
     }
 

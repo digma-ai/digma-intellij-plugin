@@ -140,14 +140,12 @@ class NavigationPanel(
 
 //        rowPanel.add(getPointerButton()) // will be used later
 
-        if (IDEUtilsService.getInstance(project).isJavaProject) {
-            val cSettingsButton = GridBagConstraints()
-            cSettingsButton.gridx = 2
-            cSettingsButton.gridy = 0
-            cSettingsButton.anchor = GridBagConstraints.LINE_START
-            cSettingsButton.fill = GridBagConstraints.NONE
-            parentPanel.add(getSettingsButton(), cSettingsButton)
-        }
+        val cSettingsButton = GridBagConstraints()
+        cSettingsButton.gridx = 2
+        cSettingsButton.gridy = 0
+        cSettingsButton.anchor = GridBagConstraints.LINE_START
+        cSettingsButton.fill = GridBagConstraints.NONE
+        parentPanel.add(getSettingsButton(), cSettingsButton)
 
         parentPanel.border = BorderFactory.createMatteBorder(0, 0, 1, 0, Laf.Colors.PLUGIN_BACKGROUND) // create 1px border in JetBrains dark gray color
 

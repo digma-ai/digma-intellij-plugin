@@ -3,8 +3,8 @@ package org.digma.intellij.plugin.toolwindow.common
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.JBCefBrowser
-import com.intellij.ui.jcef.JBCefBrowserBuilder
 import org.cef.CefApp
+import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator
 
 class CustomViewerWindow(
     val project: Project,
@@ -15,12 +15,7 @@ class CustomViewerWindow(
     private val webView: JBCefBrowser = getBrowser()
 
     private fun getBrowser(): JBCefBrowser {
-        val jbCefBrowserBuilder = JBCefBrowserBuilder()
-        jbCefBrowserBuilder.setOffScreenRendering(true) // setting it to false may cause focus issues on some linux os
-        // this provides us an opportunity to open DevTools
-        jbCefBrowserBuilder.setEnableOpenDevToolsMenuItem(true)
-        val jbCefBrowser = jbCefBrowserBuilder.build()
-
+        val jbCefBrowser = JBCefBrowserBuilderCreator.create().build()
         registerAppSchemeHandler()
         jbCefBrowser.loadURL("https://$resourceFolderName/index.html")
         Disposer.register(browserDisposer, jbCefBrowser)

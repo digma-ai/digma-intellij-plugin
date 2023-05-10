@@ -21,7 +21,7 @@
       window.codeFont;
       window.isJaegerEnabled = ${isJaegerEnabled?string('true', 'false')};
       window.recentActivityExpirationLimit = ${recentActivityExpirationLimit};
-      window.recentActivityDocumentationURL = "https://github.com/digma-ai/digma-intellij-plugin/blob/main/README.md";
+      window.recentActivityDocumentationURL = "https://youtu.be/F1Y0kETn-QQ";
     </script>
     <script src="/index.js"></script>
   </body>

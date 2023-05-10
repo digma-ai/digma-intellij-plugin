@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.jaegerui;
 
-import com.intellij.openapi.actionSystem.ActionGroup;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorState;
 import com.intellij.openapi.project.Project;
@@ -9,6 +8,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.jcef.JBCefBrowser;
 import org.cef.CefApp;
 import org.cef.browser.CefMessageRouter;
+import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -28,13 +28,9 @@ public class JaegerUIFileEditor extends UserDataHolderBase implements FileEditor
 
     public JaegerUIFileEditor(Project project, VirtualFile file) {
         this.file = file;
-
-        jbCefBrowser = JBCefBrowser.createBuilder()
-                .setOffScreenRendering(true)
+        jbCefBrowser = JBCefBrowserBuilderCreator.create()
                 .setUrl("http://" + DOMAIN_NAME + "/index.html")
-                .setEnableOpenDevToolsMenuItem(false)
                 .build();
-
         registerAppSchemeHandler(project, (JaegerUIVirtualFile) file);
 
         var jbCefClient = jbCefBrowser.getJBCefClient();

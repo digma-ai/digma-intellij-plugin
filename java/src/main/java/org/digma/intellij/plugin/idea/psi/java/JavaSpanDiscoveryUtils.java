@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static org.digma.intellij.plugin.idea.psi.java.Constants.GLOBAL_OPENTELEMETY_FQN;
 import static org.digma.intellij.plugin.idea.psi.java.Constants.OPENTELEMETY_FQN;
 import static org.digma.intellij.plugin.idea.psi.java.Constants.SPAN_BUILDER_FQN;
 import static org.digma.intellij.plugin.idea.psi.java.Constants.TRACER_BUILDER_FQN;
@@ -305,7 +306,8 @@ public class JavaSpanDiscoveryUtils {
     private static String getInstLibraryFromMethodCallExpression(@NotNull Project project, @NotNull PsiMethodCallExpression tracerMethodCallExpression) {
         PsiMethod getTracerMethod = (PsiMethod) tracerMethodCallExpression.getMethodExpression().resolve();
         if (getTracerMethod != null) {
-            if (isMethodWithFirstArgumentString(getTracerMethod, "getTracer", OPENTELEMETY_FQN)) {
+            if (isMethodWithFirstArgumentString(getTracerMethod, "getTracer", OPENTELEMETY_FQN) ||
+                    isMethodWithFirstArgumentString(getTracerMethod, "getTracer", GLOBAL_OPENTELEMETY_FQN)) {
                 return getValueFromFirstArgument(tracerMethodCallExpression.getArgumentList());
             } else if (isMethodWithNoArguments(getTracerMethod, "build", TRACER_BUILDER_FQN)) {
                 PsiExpression tracerBuilderBuildMethodQualifier = tracerMethodCallExpression.getMethodExpression().getQualifierExpression();

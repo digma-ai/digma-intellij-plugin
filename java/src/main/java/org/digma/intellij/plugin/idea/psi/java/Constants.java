@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.idea.psi.java;
 public interface Constants {
 
     String OPENTELEMETY_FQN = "io.opentelemetry.api.OpenTelemetry";
+    String GLOBAL_OPENTELEMETY_FQN = "io.opentelemetry.api.GlobalOpenTelemetry";
     String TRACER_BUILDER_FQN = "io.opentelemetry.api.trace.TracerBuilder";
     String WITH_SPAN_FQN = "io.opentelemetry.instrumentation.annotations.WithSpan";
     String WITH_SPAN_INST_LIBRARY_1 = "io.opentelemetry.spring-boot-autoconfigure";

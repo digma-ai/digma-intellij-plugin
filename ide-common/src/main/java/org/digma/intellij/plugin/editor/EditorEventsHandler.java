@@ -25,6 +25,7 @@ import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.psi.LanguageServiceLocator;
 import org.digma.intellij.plugin.ui.CaretContextService;
+import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -78,6 +79,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
     public void selectionChanged(@NotNull FileEditorManagerEvent editorManagerEvent) {
 
         if (editorManagerEvent.getNewFile() != null && isFileNotChangingContext(editorManagerEvent.getNewFile())){
+            Log.log(LOGGER::debug,"Ignoring file {} because its not changing context",editorManagerEvent.getNewFile());
             return;
         }
 
@@ -174,6 +176,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                         caretListener.maybeAddCaretListener(selectedTextEditor);
                         documentChangeListener.maybeAddDocumentListener(selectedTextEditor);
 
+                        MainToolWindowCardsController.getInstance(project).showMainPanel();
                         ReadAction.nonBlocking(new RunnableCallable(() -> {
                             MethodUnderCaret methodUnderCaret = languageService.detectMethodUnderCaret(project, psiFile, selectedTextEditor,selectedTextEditor.getCaretModel().getOffset());
                             Log.log(LOGGER::debug, "Found MethodUnderCaret for :{}, '{}'",newFile,methodUnderCaret);
@@ -183,9 +186,11 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
                     }else if (psiFile != null){
                         Log.log(LOGGER::debug, "file not supported :{}, calling contextEmptyNonSupportedFile",newFile);
+                        MainToolWindowCardsController.getInstance(project).showNonSupported();
                         caretContextService.contextEmptyNonSupportedFile(psiFile.getVirtualFile().getPath());
                     }else{
                         Log.log(LOGGER::debug, "calling contextEmpty for {}",newFile);
+                        MainToolWindowCardsController.getInstance(project).showNoFile();
                         caretContextService.contextEmpty();
                     }
                 }else{
@@ -196,9 +201,11 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
         } else if (newFile != null) {
             Log.log(LOGGER::debug, "new file is not relevant {}, calling contextEmptyNonSupportedFile",newFile);
+            MainToolWindowCardsController.getInstance(project).showNonSupported();
             caretContextService.contextEmptyNonSupportedFile(newFile.getPath());
         } else {
             Log.log(LOGGER::debug, "new file is null calling contextEmpty");
+            MainToolWindowCardsController.getInstance(project).showNoFile();
             caretContextService.contextEmpty();
         }
 
@@ -233,6 +240,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
         if (!source.hasOpenFiles()){
             Log.log(LOGGER::debug, "no more open editors , calling contextEmpty");
+            MainToolWindowCardsController.getInstance(project).showNoFile();
             caretContextService.contextEmpty();
             return;
         }
@@ -273,14 +281,17 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                     contextChangeAlarmAfterFileClosed.addRequest(() -> languageService.refreshMethodUnderCaret(project, psiFile,selectedTextEditor, selectedTextEditor.getCaretModel().getOffset()), 200);
                 } else {
                     Log.log(LOGGER::debug, "updateContextAfterFileClosed no psi file for {}, calling contextEmptyNonSupportedFile",selectedFile);
+                    MainToolWindowCardsController.getInstance(project).showNonSupported();
                     contextChangeAlarmAfterFileClosed.addRequest(() -> caretContextService.contextEmptyNonSupportedFile(selectedFile.getPath()), 200);
                 }
             }else {
                 Log.log(LOGGER::debug, "updateContextAfterFileClosed selected file is not relevant {}, calling contextEmptyNonSupportedFile",selectedFile);
+                MainToolWindowCardsController.getInstance(project).showNonSupported();
                 contextChangeAlarmAfterFileClosed.addRequest(() -> caretContextService.contextEmptyNonSupportedFile(selectedFile.getPath()), 200);
             }
         } else {
             Log.log(LOGGER::debug, "updateContextAfterFileClosed selected no selected editor, calling contextEmpty");
+            MainToolWindowCardsController.getInstance(project).showNoFile();
             contextChangeAlarmAfterFileClosed.addRequest(caretContextService::contextEmpty, 200);
         }
     }

@@ -4,10 +4,12 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
+import com.intellij.util.PlatformUtils;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.psi.SupportedLanguages;
 import org.jetbrains.annotations.NotNull;
 
+@SuppressWarnings("UnstableApiUsage")
 public class IDEUtilsService {
 
     private final IsRider isRider;
@@ -36,11 +38,25 @@ public class IDEUtilsService {
     mean that its pycharm.
      */
     public boolean isJavaProject() {
-        return isIdea.isIdea();
+        return (PlatformUtils.isIdeaCommunity() || PlatformUtils.isIdeaUltimate()) && isIdea.isIdea();
+    }
+
+    public boolean isCSharpProject() {
+        return (PlatformUtils.isIdeaCommunity() || PlatformUtils.isIdeaUltimate()) && isRider.isRider();
     }
 
 
+    public static boolean isIdeaIDE() {
+        return PlatformUtils.isIdeaCommunity() || PlatformUtils.isIdeaUltimate();
+    }
 
+    public static boolean isRiderIDE() {
+        return PlatformUtils.isRider();
+    }
+
+    public static boolean isPyCharmIDE() {
+        return PlatformUtils.isPyCharm() || PlatformUtils.isPyCharmCommunity() || PlatformUtils.isPyCharmEducational();
+    }
 
     public boolean isRiderAndCSharpFile(@NotNull Project project, VirtualFile file) {
 
@@ -126,16 +142,6 @@ public class IDEUtilsService {
         }
     }
 
-    public static boolean isIdeaIDE(String productName) {
-        return SupportedIDETypes.IDEA.getProductName().equals(productName);
-    }
 
-    public static boolean isRiderIDE(String productName) {
-        return SupportedIDETypes.RIDER.getProductName().equals(productName);
-    }
-
-    public static boolean isPyCharmIDE(String productName) {
-        return SupportedIDETypes.PYCHARM.getProductName().equals(productName);
-    }
 
 }

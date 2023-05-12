@@ -68,7 +68,11 @@ class NavigationPanel(
         })
         messageBusConnection.subscribe(
                 ModelChangeListener.MODEL_CHANGED_TOPIC,
-                ModelChangeListener { newModel -> rebuildInBackground(newModel) }
+                        object : ModelChangeListener {
+                            override fun modelChanged(newModel: PanelModel) {
+                                rebuildInBackground(newModel)
+                            }
+                        }
         )
     }
 

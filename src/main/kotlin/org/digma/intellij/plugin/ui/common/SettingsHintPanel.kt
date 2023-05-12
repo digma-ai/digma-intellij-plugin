@@ -8,6 +8,7 @@ import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
+import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import java.awt.Cursor
 import java.awt.FlowLayout
@@ -75,7 +76,8 @@ class SettingsHintPanel(project: Project) : JPanel() {
         onboardingLinkLabel.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent?) {
                 try {
-                    ToolWindowShower.getInstance(project).displayInstallationWizard()
+                    MainToolWindowCardsController.getInstance(project).showWizard();
+                    ToolWindowShower.getInstance(project).showToolWindow()
                 } catch (ex: Exception) {
                     Log.log(logger::debug, "exception opening 'Onboarding Digma' message: {}. ", ex.message)
                 }

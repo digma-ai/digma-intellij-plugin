@@ -2,36 +2,30 @@
 
 package org.digma.intellij.plugin.ui.errors
 
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.intellij.ui.components.JBPanel
-import com.intellij.ui.dsl.builder.MutableProperty
-import com.intellij.ui.dsl.builder.panel
-import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.ui.common.noCodeObjectWarningPanel
-import org.digma.intellij.plugin.ui.common.wrapWithNoConnectionWrapper
+import org.digma.intellij.plugin.ui.common.buildPreviewListPanel
+import org.digma.intellij.plugin.ui.common.statuspanels.createLoadingInsightsPanel
+import org.digma.intellij.plugin.ui.common.statuspanels.createNoErrorsPanel
+import org.digma.intellij.plugin.ui.common.statuspanels.createPendingInsightsPanel
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.errors.ErrorsPanelList
 import org.digma.intellij.plugin.ui.list.insights.PreviewList
 import org.digma.intellij.plugin.ui.list.listBackground
+import org.digma.intellij.plugin.ui.model.UIInsightsStatus
+import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsTabCard
-import org.digma.intellij.plugin.ui.model.insights.InsightsTabCard
+import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import org.digma.intellij.plugin.ui.service.ErrorsViewService
 import org.digma.intellij.plugin.ui.service.InsightsViewService
 import java.awt.BorderLayout
 import java.awt.CardLayout
 import javax.swing.JComponent
-import javax.swing.JLabel
 import javax.swing.JPanel
 
-
-private const val NO_INFO_CARD_NAME = "NO-INFO"
-private const val LIST_CARD_NAME = "LIST"
-private const val PREVIEW_LIST_CARD_NAME = "PREVIEW_LIST"
 
 private val logger: Logger = Logger.getInstance("org.digma.intellij.plugin.ui.insights.ErrorsTab")
 
@@ -46,118 +40,142 @@ fun errorsPanel(project: Project): DigmaTabPanel {
     val insightsModel = InsightsViewService.getInstance(project).model
 
     val errorsList = ScrollablePanelList(ErrorsPanelList(project, errorsModel.listViewItems))
+    val previewList = ScrollablePanelList(PreviewList(project, errorsModel.getMethodNamesWithErrors()))
 
-    val previewList = ScrollablePanelList(PreviewList(project, insightsModel.getMethodNamesWithInsights()))
-    val previewTitle = panel {
-        row {
-            icon(AllIcons.Ide.FatalErrorRead)
-                .horizontalAlign(HorizontalAlign.CENTER)
-        }
-        row {
-            label("No code object was selected")
-                .horizontalAlign(HorizontalAlign.CENTER)
-        }
-        row {
-            label("").bind(
-                JLabel::getText, JLabel::setText, MutableProperty(
-                    getter = { insightsModel.getPreviewListMessage() },
-                    setter = {})
-            )
-        }
-    }
-    previewTitle.isOpaque = false
-
-    val previewPanel = JPanel(BorderLayout())
-    previewPanel.add(previewTitle, BorderLayout.NORTH)
-    previewPanel.add(previewList, BorderLayout.CENTER)
-    previewPanel.isOpaque = false
-
-
-    val noInfoWarningPanel = noCodeObjectWarningPanel(errorsModel)
-
-
-    //a card layout for the errorsPanelList and noInfoWarningPanel
-    val errorsPanelListCardLayout = CardLayout()
-    val errorsPanelListCardPanel = JPanel(errorsPanelListCardLayout)
-    errorsPanelListCardPanel.isOpaque = false
-    errorsPanelListCardPanel.border = empty()
-    errorsPanelListCardPanel.add(errorsList, LIST_CARD_NAME)
-    errorsPanelListCardPanel.add(previewPanel, PREVIEW_LIST_CARD_NAME)
-    errorsPanelListCardPanel.add(noInfoWarningPanel, NO_INFO_CARD_NAME)
-    errorsPanelListCardLayout.addLayoutComponent(errorsList, LIST_CARD_NAME)
-    errorsPanelListCardLayout.addLayoutComponent(previewPanel, PREVIEW_LIST_CARD_NAME)
-    errorsPanelListCardLayout.addLayoutComponent(noInfoWarningPanel, NO_INFO_CARD_NAME)
-    errorsPanelListCardLayout.show(errorsPanelListCardPanel, NO_INFO_CARD_NAME)
-
-
-    val errorsListPanel = JBPanel<JBPanel<*>>()
-    errorsListPanel.layout = BorderLayout()
-    errorsListPanel.isOpaque = false
-    errorsListPanel.add(errorsPanelListCardPanel, BorderLayout.CENTER)
-
+    val previewPanel = buildPreviewListPanel(previewList)
 
     val errorsDetailsPanel = errorDetailsPanel(project, errorsModel)
 
+    //a card layout for the errorsList or previewList
+    val myCardLayout = CardLayout()
+    val myCardPanel = JPanel(myCardLayout)
+    myCardPanel.isOpaque = false
+    myCardPanel.border = empty()
 
-    val cardLayout = CardLayout()
-    val cardsPanel = JPanel(cardLayout)
-    cardsPanel.isOpaque = false
-    cardsPanel.add(errorsListPanel, ErrorsTabCard.ERRORS_LIST.name)
-    cardsPanel.add(errorsDetailsPanel, ErrorsTabCard.ERROR_DETAILS.name)
-    cardLayout.addLayoutComponent(errorsListPanel, ErrorsTabCard.ERRORS_LIST.name)
-    cardLayout.addLayoutComponent(errorsDetailsPanel, ErrorsTabCard.ERROR_DETAILS.name)
-    cardLayout.show(cardsPanel, ErrorsTabCard.ERRORS_LIST.name)
+    myCardPanel.add(errorsList, ErrorsTabCard.ERRORS_LIST.name)
+    myCardLayout.addLayoutComponent(errorsList, ErrorsTabCard.ERRORS_LIST.name)
+
+    myCardPanel.add(previewPanel, ErrorsTabCard.PREVIEW_LIST.name)
+    myCardLayout.addLayoutComponent(previewPanel, ErrorsTabCard.PREVIEW_LIST.name)
+
+    myCardPanel.add(errorsDetailsPanel, ErrorsTabCard.ERROR_DETAILS.name)
+    myCardLayout.addLayoutComponent(errorsDetailsPanel, ErrorsTabCard.ERROR_DETAILS.name)
+
+    myCardLayout.show(myCardPanel, ErrorsTabCard.ERRORS_LIST.name)
 
     val result = object : DigmaTabPanel() {
         override fun getPreferredFocusableComponent(): JComponent {
             if (ErrorsTabCard.ERROR_DETAILS == errorsModel.card) {
                 return errorsDetailsPanel.getPreferredFocusableComponent()
             }
-            return errorsListPanel
+            return errorsList
         }
 
         override fun getPreferredFocusedComponent(): JComponent {
             if (ErrorsTabCard.ERROR_DETAILS == errorsModel.card) {
                 return errorsDetailsPanel.getPreferredFocusedComponent()
             }
-            return errorsListPanel
+            return errorsList
         }
 
         //reset must be called from EDT
         override fun reset() {
 
-            //for intellij DialogPanel instances call reset.
-            //for others call inside SwingUtilities.invokeLater
-
-            noInfoWarningPanel.reset()
-            previewTitle.reset()
-
-
             errorsList.getModel().setListData(errorsModel.listViewItems)
-            previewList.getModel().setListData(insightsModel.getMethodNamesWithInsights())
+            previewList.getModel().setListData(errorsModel.getMethodNamesWithErrors())
             errorsDetailsPanel.reset()
-            cardLayout.show(cardsPanel, errorsModel.card.name)
-
-            if (errorsList.getModel().size == 0 && previewList.getModel().size > 0 && insightsModel.card == InsightsTabCard.PREVIEW) {
-                Log.log(logger::debug,project, "Changing errors tab card to $PREVIEW_LIST_CARD_NAME")
-                errorsPanelListCardLayout.show(errorsPanelListCardPanel, PREVIEW_LIST_CARD_NAME)
-            } else if (errorsList.getModel().size == 0) {
-                Log.log(logger::debug,project, "Changing errors tab card to $NO_INFO_CARD_NAME")
-                errorsPanelListCardLayout.show(errorsPanelListCardPanel, NO_INFO_CARD_NAME)
-            } else {
-                Log.log(logger::debug,project, "Changing errors tab card to $LIST_CARD_NAME")
-                errorsPanelListCardLayout.show(errorsPanelListCardPanel, LIST_CARD_NAME)
-            }
-
-            revalidate()
-            repaint()
+            Log.log(logger::debug, project, "Changing errors tab card to ${errorsModel.card.name}")
+            myCardLayout.show(myCardPanel, errorsModel.card.name)
         }
     }
 
     result.layout = BorderLayout()
-    result.add(cardsPanel, BorderLayout.CENTER)
+    result.add(myCardPanel, BorderLayout.CENTER)
     result.background = listBackground()
 
-    return wrapWithNoConnectionWrapper(project, result)
+    return wrapWithEmptyStatuses(project,result, errorsModel, insightsModel)
 }
 
+
+
+
+private fun wrapWithEmptyStatuses(
+    project: Project,
+    errorsPanel: DigmaTabPanel,
+    errorsModel: ErrorsModel,
+    insightsModel: InsightsModel
+): DigmaTabPanel {
+
+    //using the insights model status to change to empty state card
+
+    val noErrorsCardName = "NoErrors"
+
+    val emptyStatusesCardsLayout = CardLayout()
+    val emptyStatusesCardsPanel = JPanel(emptyStatusesCardsLayout)
+    emptyStatusesCardsPanel.isOpaque = false
+    emptyStatusesCardsPanel.border = empty()
+
+    val noInErrorsPanel = createNoErrorsPanel()
+    val pendingInsightsPanel = createPendingInsightsPanel()
+    val loadingInsightsPanel = createLoadingInsightsPanel()
+
+    emptyStatusesCardsPanel.add(errorsPanel, UIInsightsStatus.Default.name)
+    emptyStatusesCardsLayout.addLayoutComponent(errorsPanel, UIInsightsStatus.Default.name)
+
+    emptyStatusesCardsPanel.add(noInErrorsPanel, noErrorsCardName)
+    emptyStatusesCardsLayout.addLayoutComponent(noInErrorsPanel, noErrorsCardName)
+
+    emptyStatusesCardsPanel.add(loadingInsightsPanel, UIInsightsStatus.Loading.name)
+    emptyStatusesCardsLayout.addLayoutComponent(loadingInsightsPanel, UIInsightsStatus.Loading.name)
+
+    emptyStatusesCardsPanel.add(pendingInsightsPanel, UIInsightsStatus.InsightPending.name)
+    emptyStatusesCardsLayout.addLayoutComponent(pendingInsightsPanel, UIInsightsStatus.InsightPending.name)
+
+    emptyStatusesCardsLayout.show(emptyStatusesCardsPanel, UIInsightsStatus.Default.name)
+
+
+
+    val resultPanel = object : DigmaTabPanel() {
+        override fun getPreferredFocusableComponent(): JComponent {
+            return errorsPanel
+        }
+
+        override fun getPreferredFocusedComponent(): JComponent {
+            return errorsPanel
+        }
+
+        override fun reset() {
+
+            errorsPanel.reset()
+
+
+            if (listOf(UIInsightsStatus.Loading,UIInsightsStatus.InsightPending).contains(insightsModel.status)){
+                Log.log(logger::debug, project, "Changing to empty state card  ${insightsModel.status.name}")
+                emptyStatusesCardsLayout.show(emptyStatusesCardsPanel, insightsModel.status.name)
+            }else{
+                var cardToShow = UIInsightsStatus.Default.name
+
+                if (listOf(UIInsightsStatus.NoSpanData,UIInsightsStatus.NoObservability,UIInsightsStatus.NoInsights).contains(insightsModel.status)){
+                    cardToShow = noErrorsCardName
+                }
+
+                if (errorsModel.listViewItems.isEmpty() && errorsModel.card == ErrorsTabCard.ERRORS_LIST){
+                    cardToShow = noErrorsCardName
+                }
+                if (!errorsModel.hasErrors() && errorsModel.card == ErrorsTabCard.PREVIEW_LIST){
+                    cardToShow = noErrorsCardName
+                }
+
+                Log.log(logger::debug, project, "Changing to empty state card  $cardToShow")
+                emptyStatusesCardsLayout.show(emptyStatusesCardsPanel, cardToShow)
+            }
+        }
+    }
+
+    resultPanel.layout = BorderLayout()
+    resultPanel.add(emptyStatusesCardsPanel,BorderLayout.CENTER)
+    resultPanel.border = empty()
+    resultPanel.background = listBackground()
+
+    return resultPanel
+}

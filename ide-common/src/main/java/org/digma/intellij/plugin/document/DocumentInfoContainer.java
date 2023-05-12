@@ -12,6 +12,7 @@ import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
+import org.digma.intellij.plugin.model.rest.insights.ErrorInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
 import org.digma.intellij.plugin.model.rest.insights.MethodWithInsights;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
@@ -46,7 +47,7 @@ public class DocumentInfoContainer {
 
     // map between methodId to its insights
     @NotNull
-    private ConcurrentMap<String, List<CodeObjectInsight>> insightsMap = new ConcurrentHashMap();
+    private ConcurrentMap<String, List<CodeObjectInsight>> insightsMap = new ConcurrentHashMap<>();
 
     private UsageStatusResult usageStatus = EmptyUsageStatusResult;
     private UsageStatusResult usageStatusOfErrors = EmptyUsageStatusResult;
@@ -231,6 +232,11 @@ public class DocumentInfoContainer {
 
     public boolean hasInsights(String methodId) {
         return insightsMap.containsKey(methodId);
+    }
+
+    public boolean hasErrors(String methodId) {
+        return insightsMap.containsKey(methodId) &&
+                insightsMap.get(methodId).stream().anyMatch(ErrorInsight.class::isInstance);
     }
 
     public UsageStatusResult getUsageStatus() {

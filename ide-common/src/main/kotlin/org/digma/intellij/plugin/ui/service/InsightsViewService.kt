@@ -2,8 +2,6 @@ package org.digma.intellij.plugin.ui.service
 
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.rd.util.launchBackground
-import com.jetbrains.rd.util.lifetime.LifetimeDefinition
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.common.modelChangeListener.ModelChangeListener
@@ -16,12 +14,12 @@ import org.digma.intellij.plugin.model.rest.insights.InsightStatus
 import org.digma.intellij.plugin.ui.model.DocumentScope
 import org.digma.intellij.plugin.ui.model.EmptyScope
 import org.digma.intellij.plugin.ui.model.MethodScope
+import org.digma.intellij.plugin.ui.model.UIInsightsStatus
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
+import org.digma.intellij.plugin.ui.model.insights.InsightsPreviewListItem
 import org.digma.intellij.plugin.ui.model.insights.InsightsTabCard
-import org.digma.intellij.plugin.ui.model.insights.PreviewListItem
-import org.digma.intellij.plugin.ui.model.insights.UiInsightStatus
 import org.jetbrains.annotations.VisibleForTesting
-import java.util.*
+import java.util.Collections
 import java.util.concurrent.locks.ReentrantLock
 
 class InsightsViewService(project: Project) : AbstractViewService(project) {
@@ -57,24 +55,37 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
 
             val insightsListContainer = insightsProvider.getCachedInsights(methodInfo)
 
-            model.listViewItems = insightsListContainer.listViewItems
+            model.listViewItems = insightsListContainer.listViewItems ?: listOf()
             model.previewListViewItems = ArrayList()
-            model.usageStatusResult = insightsListContainer.usageStatus
+            model.usageStatusResult = insightsListContainer.usageStatus ?: EmptyUsageStatusResult
             model.scope = MethodScope(methodInfo)
             model.insightsCount = insightsListContainer.count
             model.card = InsightsTabCard.INSIGHTS
 
-            if (!insightsListContainer.listViewItems.isNullOrEmpty()) {
-                model.status = UiInsightStatus.InsightExist
+
+            if (model.listViewItems.isNotEmpty()) {
+                model.status = UIInsightsStatus.Default
             } else {
-                model.status = UiInsightStatus.Unknown
-                val newLifetimeDefinition = LifetimeDefinition()
-                newLifetimeDefinition.lifetime.launchBackground {
-                    fetchAndUpdateModelInsightStatus(methodInfo, model)
+                model.status = UIInsightsStatus.Loading
+                Log.log(logger::debug,"No insights for method {}, Starting background thread.",methodInfo.name)
+                Backgroundable.runInNewBackgroundThread(project,"Fetching insights status for method ${methodInfo.name}"){
+
+                    Log.log(logger::debug,"Loading backend status in background for method {}",methodInfo.name)
+                    val insightStatus = insightsProvider.getInsightStatus(methodInfo)
+                    Log.log(logger::debug,"Got status from backend {} for method {}",insightStatus,methodInfo.name)
+                    //if status is null assign EmptyStatus, it probably means there was a communication error
+                    model.status = insightStatus?.let {
+                        return@let toUiInsightStatus(it, methodInfo.hasRelatedCodeObjectIds())
+                    } ?: UIInsightsStatus.Loading
+
+                    Log.log(logger::debug,"UIInsightsStatus for method {} is {}",methodInfo.name,model.status)
+
                     notifyModelChangedAndUpdateUi()
                 }
             }
+
             notifyModelChangedAndUpdateUi()
+
         } finally {
             if (lock.isHeldByCurrentThread) {
                 lock.unlock()
@@ -83,29 +94,22 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
         }
     }
 
-    fun fetchAndUpdateModelInsightStatus(methodInfo: MethodInfo, model: InsightsModel) {
-        val insightStatus = insightsProvider.getInsightStatus(methodInfo)
-        val uiInsightStatus = toUiInsightStatus(insightStatus, methodInfo.hasRelatedCodeObjectIds())
-        model.status = uiInsightStatus
-
-    }
 
     @VisibleForTesting
-    fun toUiInsightStatus(status: InsightStatus, methodHasRelatedCodeObjectIds: Boolean): UiInsightStatus {
+    fun toUiInsightStatus(status: InsightStatus, methodHasRelatedCodeObjectIds: Boolean): UIInsightsStatus {
+        //no need for else branch, all possible values are handled
         return when (status) {
-            InsightStatus.InsightExist -> UiInsightStatus.InsightExist
-            InsightStatus.InsightPending -> UiInsightStatus.InsightPending
+            InsightStatus.InsightExist -> UIInsightsStatus.InsightPending
+            InsightStatus.InsightPending -> UIInsightsStatus.InsightPending
             InsightStatus.NoSpanData -> {
                 if (methodHasRelatedCodeObjectIds)
-                    return UiInsightStatus.NoSpanData // the client(this plugin) is aware of code objects, but server is not (yet)
+                    return UIInsightsStatus.NoSpanData // the client(this plugin) is aware of code objects, but server is not (yet)
                 else
                     if (IDEUtilsService.getInstance(project).isJavaProject)
-                        return UiInsightStatus.NoObservability
+                        return UIInsightsStatus.NoObservability
                     else
-                        return UiInsightStatus.NoInsights
+                        return UIInsightsStatus.NoInsights
             }
-             // Unknown status returned on any backend exception. Unknown status displays 'loading...' msg on ui, so for now the default state when insight list empty and status unknown will be NoInsights
-            else -> UiInsightStatus.NoInsights
         }
     }
 
@@ -119,11 +123,17 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
         model.scope = MethodScope(dummy)
         model.insightsCount = 0
         model.card = InsightsTabCard.INSIGHTS
+        model.status = UIInsightsStatus.NoInsights
 
         notifyModelChangedAndUpdateUi()
+
     }
 
 
+    /**
+     * empty should be called only when there is no file opened in the editor and not in
+     * any other case.
+     */
     fun empty() {
 
         Log.log(logger::debug, "empty called")
@@ -134,8 +144,11 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
         model.scope = EmptyScope("")
         model.insightsCount = 0
         model.card = InsightsTabCard.INSIGHTS
+        //when empty set Default status, empty editor should be covered by MainToolWindowCardsController
+        model.status = UIInsightsStatus.Default
 
         notifyModelChangedAndUpdateUi()
+
     }
 
     fun emptyNonSupportedFile(fileUri: String) {
@@ -148,8 +161,11 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
         model.scope = EmptyScope(getNonSupportedFileScopeMessage(fileUri))
         model.insightsCount = 0
         model.card = InsightsTabCard.INSIGHTS
+        //when non supported file set Default status, non-supported file should be covered by MainToolWindowCardsController
+        model.status = UIInsightsStatus.Default
 
         notifyModelChangedAndUpdateUi()
+
     }
 
     fun showDocumentPreviewList(
@@ -161,20 +177,32 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
 
         if (documentInfoContainer == null) {
             model.previewListViewItems = ArrayList()
+            model.listViewItems = ArrayList()
             model.usageStatusResult = EmptyUsageStatusResult
             model.scope = EmptyScope(fileUri.substringAfterLast('/'))
             model.insightsCount = 0
+            model.card = InsightsTabCard.PREVIEW
+            model.status = UIInsightsStatus.NoInsights
         } else {
             model.previewListViewItems = getDocumentPreviewItems(documentInfoContainer)
+            model.listViewItems = ArrayList()
             model.usageStatusResult = documentInfoContainer.usageStatus
             model.scope = DocumentScope(documentInfoContainer.documentInfo)
             model.insightsCount = computeInsightsPreviewCount(documentInfoContainer)
+            model.card = InsightsTabCard.PREVIEW
+            model.status = UIInsightsStatus.Default
+            if (!model.hasInsights()) {
+                if(model.hasDiscoverableCodeObjects()){
+                    model.status = UIInsightsStatus.NoSpanData
+                }
+                else{
+                    model.status = UIInsightsStatus.NoInsights
+                }
+            }
         }
 
-        model.listViewItems = ArrayList()
-        model.card = InsightsTabCard.PREVIEW
-
         notifyModelChangedAndUpdateUi()
+
     }
 
 
@@ -182,11 +210,11 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
         return documentInfoContainer.insightsCount
     }
 
-    private fun getDocumentPreviewItems(documentInfoContainer: DocumentInfoContainer): List<PreviewListItem> {
+    private fun getDocumentPreviewItems(documentInfoContainer: DocumentInfoContainer): List<InsightsPreviewListItem> {
 
-        val listViewItems = ArrayList<PreviewListItem>()
+        val listViewItems = ArrayList<InsightsPreviewListItem>()
         documentInfoContainer.documentInfo.methods.forEach { (id, methodInfo) ->
-            listViewItems.add(PreviewListItem(methodInfo.id, documentInfoContainer.hasInsights(id), methodInfo.getRelatedCodeObjectIdsWithType().any()))
+            listViewItems.add(InsightsPreviewListItem(methodInfo.id, documentInfoContainer.hasInsights(id), methodInfo.getRelatedCodeObjectIdsWithType().any()))
         }
 
         //sort by name of the function, it will be sorted later by sortIndex when added to a PanelListModel, but

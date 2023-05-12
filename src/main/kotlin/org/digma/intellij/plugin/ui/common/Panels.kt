@@ -1,80 +1,33 @@
 package org.digma.intellij.plugin.ui.common
 
 import com.intellij.icons.AllIcons
-import com.intellij.openapi.project.Project
-import com.intellij.openapi.ui.DialogPanel
-import com.intellij.ui.dsl.builder.BottomGap
-import com.intellij.ui.dsl.builder.MutableProperty
-import com.intellij.ui.dsl.builder.TopGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
-import com.intellij.util.ui.JBUI
-import org.digma.intellij.plugin.ui.model.NOT_SUPPORTED_OBJECT_MSG
-import org.digma.intellij.plugin.ui.model.PanelModel
-import org.digma.intellij.plugin.ui.model.insights.InsightsModel
-import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
-import javax.swing.JLabel
+import org.digma.intellij.plugin.ui.list.ScrollablePanelList
+import java.awt.BorderLayout
+import javax.swing.JPanel
 
 
-fun noCodeObjectWarningPanel(model: PanelModel): DialogPanel {
-    return panel {
+fun buildPreviewListPanel(list: ScrollablePanelList): JPanel {
+    val previewTitle = panel {
         row {
-            icon(AllIcons.General.BalloonInformation)
-                    .horizontalAlign(HorizontalAlign.CENTER)
-        }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
+            icon(AllIcons.Ide.FatalErrorRead)
+                .horizontalAlign(HorizontalAlign.CENTER)
+        }
         row {
-            label(getNoInfoMessage(model)).bind(
-                    JLabel::getText, JLabel::setText, MutableProperty(
-                    getter = { getNoInfoMessage(model) },
-                    setter = {})
-            ).bind(
-                    JLabel::getToolTipText, JLabel::setToolTipText, MutableProperty(
-                    getter = { getNoInfoMessage(model) },
-                    setter = {})
-            )
-                    .horizontalAlign(HorizontalAlign.CENTER)
-        }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
-    }.andTransparent().withBorder(JBUI.Borders.empty())
-}
-
-fun createPendingInsightsPanel(): DialogPanel {
-    return panel {
+            label("No code object was selected")
+                .horizontalAlign(HorizontalAlign.CENTER)
+        }
         row {
-            icon(Laf.Icons.Common.Mascot64)
-                    .horizontalAlign(HorizontalAlign.CENTER)
-        }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
-        row {
-            label("Processing Insights...")
-                    .horizontalAlign(HorizontalAlign.CENTER)
-        }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
-    }.andTransparent().withBorder(JBUI.Borders.empty())
-}
-
-fun createLoadingInsightsPanel(): DialogPanel {
-    return panel {
-        row {
-            icon(Laf.Icons.Common.Loading)
-                    .horizontalAlign(HorizontalAlign.CENTER)
-        }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
-        row {
-            label("Loading...")
-                    .horizontalAlign(HorizontalAlign.CENTER)
-        }.bottomGap(BottomGap.MEDIUM).topGap(TopGap.MEDIUM)
-    }.andTransparent().withBorder(JBUI.Borders.empty())
-}
-
-
-
-
-private fun getNoInfoMessage(model: PanelModel): String {
-    var msg = if (model is InsightsModel) "No insights" else "No errors"
-
-    if (model.getScope().isNotBlank() && !model.getScope().contains(NOT_SUPPORTED_OBJECT_MSG)) {
-        msg += " for " + model.getScope()
+            label("Try to click one of the following code objects")
+        }
     }
-    return msg
+
+    previewTitle.isOpaque = false
+    val previewPanel = JPanel(BorderLayout())
+    previewPanel.add(previewTitle, BorderLayout.NORTH)
+    previewPanel.add(list, BorderLayout.CENTER)
+    previewPanel.isOpaque = false
+    return previewPanel
 }
 
-fun wrapWithNoConnectionWrapper(project: Project, panel: DigmaTabPanel): DigmaTabPanel {
-    return NoConnectionWrapper(project, panel)
-}

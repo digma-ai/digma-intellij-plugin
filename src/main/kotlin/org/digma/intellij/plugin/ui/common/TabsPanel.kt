@@ -5,7 +5,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.rd.util.launchBackground
 import com.intellij.ui.components.JBTabbedPane
-import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.JBUI.Borders.empty
 import com.jetbrains.rd.util.lifetime.LifetimeDefinition
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.TabsChanged
@@ -16,7 +16,10 @@ import org.digma.intellij.plugin.ui.errors.errorsPanel
 import org.digma.intellij.plugin.ui.insights.insightsPanel
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
-import org.digma.intellij.plugin.ui.service.*
+import org.digma.intellij.plugin.ui.service.ErrorsViewService
+import org.digma.intellij.plugin.ui.service.InsightsViewService
+import org.digma.intellij.plugin.ui.service.SummaryViewService
+import org.digma.intellij.plugin.ui.service.TabsHelper
 import org.digma.intellij.plugin.ui.summary.summaryPanel
 import java.util.concurrent.locks.ReentrantLock
 import javax.swing.BorderFactory
@@ -36,7 +39,7 @@ class TabsPanel(
         this.project = project
         isOpaque = false
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
-        border = JBUI.Borders.empty()
+        border = empty()
 
         rebuildInBackground()
 
@@ -96,7 +99,7 @@ class TabsPanel(
 
     private fun getTabsPanel(): JBTabbedPane {
         tabbedPane.isOpaque = false
-        tabbedPane.border = JBUI.Borders.empty()
+        tabbedPane.border = empty()
         val insightsPanel = createInsightsPanel(project)
 
         insightsPanel.border = BorderFactory.createEmptyBorder(0, 0, 0, 0) // Set the border of the panel to empty

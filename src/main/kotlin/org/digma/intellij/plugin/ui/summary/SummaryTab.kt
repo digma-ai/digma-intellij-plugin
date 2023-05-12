@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.ui.summary
 import com.intellij.openapi.project.Project
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.ui.common.createSummaryEmptyPanel
-import org.digma.intellij.plugin.ui.common.wrapWithNoConnectionWrapper
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.listBackground
 import org.digma.intellij.plugin.ui.list.summaries.SummaryPanelList
@@ -52,11 +51,10 @@ fun summaryPanel(project: Project): DigmaTabPanel {
         }
     }
 
-    result.isOpaque = false
     result.border = JBUI.Borders.empty()
     result.layout = BorderLayout()
     result.add(cardsPanel, BorderLayout.CENTER)
     result.background = listBackground()
 
-    return wrapWithNoConnectionWrapper(project, result)
+    return result
 }

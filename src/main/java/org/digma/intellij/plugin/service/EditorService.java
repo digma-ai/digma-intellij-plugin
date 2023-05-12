@@ -214,7 +214,9 @@ public class EditorService implements Disposable {
                 return;
             }
 
-            var vf = new LightVirtualFile(name, stackTrace);
+            var vf = new DigmaStackTraceVirtualFile(name, stackTrace);
+            //when setting file type it doesn't work..
+//            vf.setFileType(DigmaStackTraceFileType.INSTANCE);
             vf.setWritable(false);
             openVirtualFile(vf, 0);
 

@@ -12,14 +12,40 @@ import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.lang.Integer.max
 import java.util.Collections
 
+class ErrorsPreviewListItem(val name: String, val hasErrors: Boolean, val hasRelatedCodeObjects: Boolean )
+
+enum class ErrorsTabCard {
+    ERRORS_LIST, ERROR_DETAILS,PREVIEW_LIST
+}
+
 class ErrorsModel : PanelModel {
 
     var errorsCount: Int = 0
     var listViewItems: List<ListViewItem<CodeObjectError>> = Collections.emptyList()
+    var previewListViewItems: List<ErrorsPreviewListItem> = Collections.emptyList()
     var usageStatusResult: UsageStatusResult = EmptyUsageStatusResult
     var scope: Scope = EmptyScope("")
     var errorDetails: ErrorDetailsModel = ErrorDetailsModel()
     var card: ErrorsTabCard = ErrorsTabCard.ERRORS_LIST
+
+
+    fun getMethodNamesWithErrors(): List<ListViewItem<String>>{
+        val methodsWithErrors = mutableListOf<ListViewItem<String>>()
+
+        var index = 0
+        previewListViewItems.filter { o -> o.hasErrors }.forEach {
+            methodsWithErrors.add(ListViewItem(it.name, index++))
+        }
+        return methodsWithErrors
+    }
+
+    fun hasErrors(): Boolean{
+        return previewListViewItems.any { o -> o.hasErrors }
+    }
+
+    fun hasDiscoverableCodeObjects(): Boolean{
+        return previewListViewItems.any{ o -> o.hasRelatedCodeObjects}
+    }
 
 
     override fun count(): String {
@@ -46,9 +72,4 @@ class ErrorsModel : PanelModel {
         return usageStatusResult
     }
 
-}
-
-
-enum class ErrorsTabCard {
-    ERRORS_LIST, ERROR_DETAILS
 }

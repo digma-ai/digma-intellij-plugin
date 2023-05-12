@@ -1,7 +1,12 @@
-package org.digma.intellij.plugin.ui.common
+package org.digma.intellij.plugin.ui.common.statuspanels
 
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.JBUI.emptyInsets
+import com.intellij.util.ui.JBUI.insets
+import org.digma.intellij.plugin.ui.common.Laf
+import org.digma.intellij.plugin.ui.common.asHtml
+import org.digma.intellij.plugin.ui.common.boldFonts
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import javax.swing.Icon
@@ -16,30 +21,29 @@ fun createNoDataYetPanel(): JPanel {
     val constraints = GridBagConstraints()
 
     constraints.gridx = 1
-    constraints.gridy = 2
+    constraints.gridy = 1
     constraints.gridwidth = 1
     constraints.gridheight = 1
     constraints.anchor = GridBagConstraints.CENTER
-    constraints.insets = JBUI.insets(10, 5)
-    val icon = JLabel(getIcon())
+    constraints.insets = insets(10, 5)
+    val icon = JLabel(getNoDataYetIcon())
     icon.horizontalAlignment = SwingConstants.CENTER
     panel.add(icon,constraints)
 
-    constraints.gridx = 1
-    constraints.gridy = 3
-    constraints.gridwidth = 1
-    constraints.gridheight = 1
-    constraints.fill = GridBagConstraints.BOTH
-    constraints.anchor = GridBagConstraints.CENTER
-    constraints.insets = JBUI.insets(10, 5)
+    constraints.gridy = 2
     val noObservability = JLabel("No Data Yet")
     boldFonts(noObservability)
     noObservability.horizontalAlignment = SwingConstants.CENTER
     panel.add(noObservability,constraints)
 
-    addNoDataYetDetailsPart("Trigger actions that call this code ",panel,4)
-    addNoDataYetDetailsPart("object to learn more about it's ",panel,5)
-    addNoDataYetDetailsPart("runtime behavior.",panel,6)
+    constraints.insets = emptyInsets()
+    constraints.gridy = 3
+    addNoDataYetDetailsPart("Trigger actions that call this code ",panel,constraints)
+    constraints.gridy = 4
+    addNoDataYetDetailsPart("object to learn more about it's ",panel,constraints)
+    constraints.gridy = 5
+    addNoDataYetDetailsPart("runtime behavior.",panel,constraints)
+
     panel.isOpaque = false
     panel.border = JBUI.Borders.empty()
 
@@ -47,21 +51,14 @@ fun createNoDataYetPanel(): JPanel {
 }
 
 
-private fun addNoDataYetDetailsPart(text: String, panel: JPanel, gridy: Int){
-    val constraints = GridBagConstraints()
-    constraints.gridx = 1
-    constraints.gridy = gridy
-    constraints.gridwidth = 1
-    constraints.gridheight = 1
-    constraints.fill = GridBagConstraints.HORIZONTAL
-    constraints.anchor = GridBagConstraints.CENTER
+private fun addNoDataYetDetailsPart(text: String, panel: JPanel, constraints: GridBagConstraints){
     val noObservabilityDetailsLabel = JLabel(asHtml(text))
     noObservabilityDetailsLabel.horizontalAlignment = SwingConstants.CENTER
     panel.add(noObservabilityDetailsLabel,constraints)
 }
 
 
-private fun getIcon():Icon{
+private fun getNoDataYetIcon():Icon{
     return if (JBColor.isBright()){
         Laf.Icons.Common.NoDataYetLight
     }else{

@@ -27,6 +27,7 @@ import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.settings.SettingsState;
+import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
@@ -72,7 +73,9 @@ public class AnalyticsService implements Disposable {
 
     public AnalyticsService(@NotNull Project project) {
         //initialize BackendConnectionMonitor when starting, so it is aware early on connection statuses
-        project.getService(BackendConnectionMonitor.class);
+        BackendConnectionMonitor.getInstance(project);
+        //initialize MainToolWindowCardsController when starting, so it is aware early on connection statuses
+        MainToolWindowCardsController.getInstance(project);
         SettingsState settingsState = SettingsState.getInstance();
         environment = new Environment(project, this, PersistenceService.getInstance().getState(), settingsState);
         this.project = project;
@@ -416,11 +419,6 @@ public class AnalyticsService implements Disposable {
                 //log connection exceptions only the first time and show an error notification.
                 // while status is in error the following connection exceptions will not be logged, other exceptions
                 // will be logged only once.
-
-                if (e.getTargetException().getCause() instanceof SocketTimeoutException) {
-                    Log.log(LOGGER::warn, "SocketTimeoutException for {} request => {}", method.getName(), e.getTargetException().getCause());
-                    return null;
-                }
 
                 boolean isConnectionException = isConnectionException(e) || isSslConnectionException(e);
                 if (status.isOk() && isConnectionException) {

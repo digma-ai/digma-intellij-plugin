@@ -83,8 +83,8 @@ class UpdatesService(private val project: Project) : Disposable {
     }
 
     fun checkForNewerVersions() {
-        val backend = BackendConnectionMonitor.getInstance(project)
-        if (!backend.isConnectionOk()) {
+        val backendConnectionMonitor = BackendConnectionMonitor.getInstance(project)
+        if (backendConnectionMonitor.isConnectionError()) {
             return
         }
 

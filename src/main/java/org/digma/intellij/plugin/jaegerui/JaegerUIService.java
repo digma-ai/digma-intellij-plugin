@@ -12,10 +12,12 @@ import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.ReadActions;
-import org.digma.intellij.plugin.jaegerui.model.GoToSpanMessage;
-import org.digma.intellij.plugin.jaegerui.model.Importance;
-import org.digma.intellij.plugin.jaegerui.model.SpansMessage;
+import org.digma.intellij.plugin.jaegerui.model.incoming.GoToSpanMessage;
+import org.digma.intellij.plugin.jaegerui.model.incoming.SpansMessage;
+import org.digma.intellij.plugin.jaegerui.model.outgoing.Insight;
+import org.digma.intellij.plugin.jaegerui.model.outgoing.SpanData;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.psi.SupportedLanguages;
 import org.digma.intellij.plugin.service.EditorService;
@@ -27,9 +29,17 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
-import static org.digma.intellij.plugin.document.CodeObjectsUtil.*;
+import static org.digma.intellij.plugin.document.CodeObjectsUtil.addMethodTypeToIds;
+import static org.digma.intellij.plugin.document.CodeObjectsUtil.addSpanTypeToIds;
+import static org.digma.intellij.plugin.document.CodeObjectsUtil.createMethodCodeObjectId;
+import static org.digma.intellij.plugin.document.CodeObjectsUtil.createSpanId;
 
 public class JaegerUIService {
 
@@ -44,6 +54,7 @@ public class JaegerUIService {
 
     private static final String INITIAL_ROUTE_PARAM_NAME = "initial_route";
     private static final String JAEGER_URL_PARAM_NAME = "jaeger_url";
+    private static final String JAEGER_QUERY_URL_CHANGED_FROM_DEFAULT_PARAM_NAME = "isUserChangedJaegerQueryUrl";
 
 
 
@@ -72,8 +83,13 @@ public class JaegerUIService {
         }
 
         try {
+
+            var didUserChangeJaegerQueryUrl = !(SettingsState.DEFAULT_JAEGER_QUERY_URL.equalsIgnoreCase(SettingsState.getInstance().jaegerQueryUrl));
+
             var data = new HashMap<String, String>();
             data.put(JAEGER_URL_PARAM_NAME, jaegerUIVirtualFile.getJaegerBaseUrl());
+            data.put(JAEGER_QUERY_URL_CHANGED_FROM_DEFAULT_PARAM_NAME, String.valueOf(didUserChangeJaegerQueryUrl));
+
 
             if (jaegerUIVirtualFile.getTraceId() != null){
                 var initialRoutePath = buildInitialRoutePath(jaegerUIVirtualFile.getTraceId());
@@ -224,9 +240,9 @@ public class JaegerUIService {
         }
     }
 
-    public Map<String, Importance> getResolvedSpans(SpansMessage spansMessage) {
+    public Map<String, SpanData> getResolvedSpans(SpansMessage spansMessage) {
 
-        var resolvedSpans = new HashMap<String, Importance>();
+        var allSpans = new HashMap<String, SpanData>();
 
         var spanIds = spansMessage.payload().spans().stream()
                 .map(span -> createSpanId(span.instrumentationLibrary(),span.name())).toList();
@@ -234,7 +250,7 @@ public class JaegerUIService {
                 .filter(span -> span.function() != null && span.namespace() != null)
                 .map(span -> createMethodCodeObjectId(span.namespace(),span.function())).toList();
 
-        Map<String,Integer> importanceMap = getImportance(spanIds,methodIds);
+        Map<String, List<Insight>> allInsights = getInsights(spanIds,methodIds);
 
         for (SupportedLanguages value : SupportedLanguages.values()) {
             var languageService = LanguageService.findLanguageServiceByName(project,value.getLanguageServiceClassName());
@@ -244,19 +260,57 @@ public class JaegerUIService {
                 spansMessage.payload().spans().forEach(span -> {
                     var spanId = createSpanId(span.instrumentationLibrary(),span.name());
                     var methodId = (span.function() == null || span.namespace() == null) ? "" : createMethodCodeObjectId(span.namespace(),span.function());
-                    if (spanWorkspaceUris.containsKey(spanId) || methodWorkspaceUris.containsKey(methodId)) {
-                        Integer importance = importanceMap.getOrDefault(spanId,importanceMap.getOrDefault(methodId,9));
-                        resolvedSpans.put(span.id(), new Importance(importance));
-                    }
+                    var hasCodeLocation = (spanWorkspaceUris.containsKey(spanId) || methodWorkspaceUris.containsKey(methodId));
+
+                    var spanData = allSpans.computeIfAbsent(span.id(), s -> new SpanData(hasCodeLocation,new ArrayList<>()));
+
+                    addInsightsToSpanData(spanData,spanId,methodId,allInsights);
                 });
             }
         }
 
-        return resolvedSpans;
+        return allSpans;
 
     }
 
-    private Map<String, Integer> getImportance(List<String> spanIds, List<String> methodIds) {
+    private void addInsightsToSpanData(SpanData spanData, String spanId, String methodId, Map<String, List<Insight>> allInsights) {
+
+        List<Insight> spanInsights = new ArrayList<>();
+        if (allInsights.get(spanId) != null) {
+            spanInsights.addAll(allInsights.get(spanId));
+        }
+        if (allInsights.get(methodId) != null) {
+            spanInsights.addAll(allInsights.get(methodId));
+        }
+        spanInsights = distinctByType(spanInsights);
+        spanData.insights().addAll(spanInsights);
+    }
+
+    @NotNull
+    private List<Insight> distinctByType(@NotNull List<Insight> spanInsights) {
+
+        if (spanInsights.isEmpty()){
+            return spanInsights;
+        }
+
+        Map<String,List<Insight>> mappedByType = new HashMap<>();
+        spanInsights.forEach(insight -> {
+            var list = mappedByType.computeIfAbsent(insight.type(), s -> new ArrayList<>());
+            list.add(insight);
+        });
+        List<Insight> insightList = new ArrayList<>();
+        mappedByType.forEach((key, value) -> {
+            var insightOptional = value.stream().reduce((insight1, insight2) -> (insight1.importance() < insight2.importance()) ? insight1 : insight2);
+            insightOptional.ifPresent(insightList::add);
+        });
+
+
+        return insightList;
+    }
+
+
+    @NotNull
+    private Map<String, List<Insight>> getInsights(@NotNull List<String> spanIds, @NotNull List<String> methodIds) {
 
         if (spanIds.size() > 500){
             return Collections.emptyMap();
@@ -265,15 +319,17 @@ public class JaegerUIService {
         var ids = new ArrayList<>(addSpanTypeToIds(spanIds));
         ids.addAll(addMethodTypeToIds(methodIds));
 
-        var importance = new HashMap<String,Integer>();
+        var insights = new HashMap<String,List<Insight>>();
 
         try {
-            var insights = AnalyticsService.getInstance(project).getInsights(ids);
-            insights.forEach(codeObjectInsight -> {
+            var insightsFromBackend = AnalyticsService.getInstance(project).getInsights(ids).
+                    stream().filter(codeObjectInsight -> codeObjectInsight.getType() != InsightType.Unmapped);
+            insightsFromBackend.forEach(codeObjectInsight -> {
                 var id = codeObjectInsight.getCodeObjectId();
-                importance.merge(id,codeObjectInsight.getImportance(), Math::min);
+                var objectInsights = insights.computeIfAbsent(id, s -> new ArrayList<>());
+                objectInsights.add(new Insight(codeObjectInsight.getType().name(),codeObjectInsight.getImportance()));
             });
-            return importance;
+            return insights;
         } catch (AnalyticsServiceException e) {
             Log.debugWithException(LOGGER,e,"Exception in getInsights {}",e.getMessage());
             return Collections.emptyMap();

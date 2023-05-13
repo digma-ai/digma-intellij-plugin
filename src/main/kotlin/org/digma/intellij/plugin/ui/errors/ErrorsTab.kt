@@ -148,14 +148,17 @@ private fun wrapWithEmptyStatuses(
 
             errorsPanel.reset()
 
-
-            if (listOf(UIInsightsStatus.Loading,UIInsightsStatus.InsightPending).contains(insightsModel.status)){
-                Log.log(logger::debug, project, "Changing to empty state card  ${insightsModel.status.name}")
+            if (errorsModel.card == ErrorsTabCard.ERROR_DETAILS){
+                Log.log(logger::debug, project, "Changing to error default")
+                emptyStatusesCardsLayout.show(emptyStatusesCardsPanel,UIInsightsStatus.Default.name )
+            }else if (listOf(UIInsightsStatus.Loading,UIInsightsStatus.InsightPending).contains(insightsModel.status)){
+                Log.log(logger::debug, project, "Changing to card  ${insightsModel.status.name}")
                 emptyStatusesCardsLayout.show(emptyStatusesCardsPanel, insightsModel.status.name)
             }else{
                 var cardToShow = UIInsightsStatus.Default.name
 
-                if (listOf(UIInsightsStatus.NoSpanData,UIInsightsStatus.NoObservability,UIInsightsStatus.NoInsights).contains(insightsModel.status)){
+                if (errorsModel.listViewItems.isNotEmpty() &&
+                    listOf(UIInsightsStatus.NoSpanData,UIInsightsStatus.NoObservability,UIInsightsStatus.NoInsights).contains(insightsModel.status)){
                     cardToShow = noErrorsCardName
                 }
 
@@ -166,7 +169,7 @@ private fun wrapWithEmptyStatuses(
                     cardToShow = noErrorsCardName
                 }
 
-                Log.log(logger::debug, project, "Changing to empty state card  $cardToShow")
+                Log.log(logger::debug, project, "Changing to card  $cardToShow")
                 emptyStatusesCardsLayout.show(emptyStatusesCardsPanel, cardToShow)
             }
         }

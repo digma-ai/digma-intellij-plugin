@@ -214,7 +214,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
 
         val listViewItems = ArrayList<InsightsPreviewListItem>()
         documentInfoContainer.documentInfo.methods.forEach { (id, methodInfo) ->
-            listViewItems.add(InsightsPreviewListItem(methodInfo.id, documentInfoContainer.hasInsights(id), methodInfo.getRelatedCodeObjectIdsWithType().any()))
+            listViewItems.add(InsightsPreviewListItem(methodInfo.id, documentInfoContainer.hasInsights(id), methodInfo.getRelatedCodeObjectIds().any()))
         }
 
         //sort by name of the function, it will be sorted later by sortIndex when added to a PanelListModel, but

@@ -38,7 +38,7 @@ public class MainToolWindowCardsController implements Disposable {
     private boolean isWizardOn = false;
     private boolean isConnectionLost = false;
 
-    //latestRequestedCard is used when connection gained or on startup to show the latest request if any.
+    //latestRequestedCard is used when connection gained to show the latest request if any.
     private MainWindowCard latestRequestedCard = null;
 
 
@@ -116,7 +116,6 @@ public class MainToolWindowCardsController implements Disposable {
         EDT.ensureEDT(() -> {
             if (isWizardPanelExists) {
                 isWizardOn = true;
-                //isConnectionLost = false; //reset isConnectionLost because maybe there will be a new installation
                 showCard(MainWindowCard.WIZARD);
             }else{
                 Log.log(LOGGER::debug,project,"show WIZARD was called but wizard panel does not exists");
@@ -209,7 +208,7 @@ public class MainToolWindowCardsController implements Disposable {
 
 
     //for debugging only.
-    //it's not easy to debug this class whith debugger because debugger changes focus behaviour,
+    //it's not easy to debug this class with debugger because debugger changes focus behaviour,
     // it's easier with debug logging and printStackTrace can help to understand who called this class
 //    private void printStackTrace() {
 //        Log.log(LOGGER::debug,"Stack trace:");

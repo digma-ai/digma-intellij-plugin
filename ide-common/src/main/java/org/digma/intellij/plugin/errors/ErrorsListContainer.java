@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.errors;
 
-import com.esotericsoftware.kryo.kryo5.util.Null;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;

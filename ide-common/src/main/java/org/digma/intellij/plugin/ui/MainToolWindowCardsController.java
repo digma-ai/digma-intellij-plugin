@@ -74,6 +74,7 @@ public class MainToolWindowCardsController implements Disposable {
 
 
     public void setCardsPanel(JPanel cardsPanel,boolean isWizardPanelExists) {
+        Log.log(LOGGER::debug,"setCardsPanel called isWizardPanelExists={}",isWizardPanelExists);
         this.cardsPanel = cardsPanel;
         this.isWizardPanelExists = isWizardPanelExists;
         //it may be that there was a connection lost event before the panel was ready.
@@ -196,6 +197,7 @@ public class MainToolWindowCardsController implements Disposable {
         if (cardsPanel == null){
             Log.log(LOGGER::debug,project,"show {} was called but cardsPanel is null",card);
         }else{
+            Log.log(LOGGER::debug,project,"Showing card {}",card);
             ((CardLayout)cardsPanel.getLayout()).show(cardsPanel,card.name());
         }
     }

@@ -34,6 +34,7 @@ import org.digma.intellij.plugin.toolwindow.recentactivity.JcefMessageRequest
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.common.ObservabilityUtil.Companion.updateObservabilityValue
+import org.digma.intellij.plugin.ui.panels.DisposablePanel
 import java.awt.BorderLayout
 import javax.swing.JPanel
 import javax.swing.UIManager
@@ -47,7 +48,7 @@ private const val IS_OBSERVABILITY_ENABLED_VARIABLE: String = "isObservabilityEn
 private val logger: Logger =
     Logger.getInstance("org.digma.intellij.plugin.ui.common.InstallationWizardSidePanelWindowPanel")
 
-fun createInstallationWizardSidePanelWindowPanel(project: Project): JPanel? {
+fun createInstallationWizardSidePanelWindowPanel(project: Project): DisposablePanel? {
     if (!JBCefApp.isSupported()) {
         // Fallback to an alternative browser-less solution
         return null
@@ -120,7 +121,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): JPanel? {
                 EDT.ensureEDT {
                     updateInstallationWizardFlag()
                     ToolWindowShower.getInstance(project).showToolWindow()
-                    MainToolWindowCardsController.getInstance(project).wizardClosedShowMainPanel();
+                    MainToolWindowCardsController.getInstance(project).wizardFinished();
                     ToolWindowManager.getInstance(project).getToolWindow(PluginId.OBSERVABILITY_WINDOW_ID)!!.show()
                 }
             }
@@ -165,7 +166,11 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): JPanel? {
     browserPanel.add(jbCefBrowser.component, BorderLayout.CENTER)
 
 
-    val jcefDigmaPanel = JPanel()
+    val jcefDigmaPanel = object: DisposablePanel(){
+        override fun dispose() {
+            jbCefBrowser.dispose()
+        }
+    }
     jcefDigmaPanel.layout = BorderLayout()
     jcefDigmaPanel.add(browserPanel, BorderLayout.CENTER)
 

@@ -211,9 +211,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
     }
 
-    private boolean isFileNotChangingContext(@NotNull VirtualFile newFile) {
-        return DigmaVirtualFileMarker.class.isAssignableFrom(newFile.getClass());
-    }
+
 
 
     @Override
@@ -280,14 +278,18 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                     Log.log(LOGGER::debug, "calling {}.refreshMethodUnderCaret for {}",languageService,psiFile.getVirtualFile());
                     contextChangeAlarmAfterFileClosed.addRequest(() -> languageService.refreshMethodUnderCaret(project, psiFile,selectedTextEditor, selectedTextEditor.getCaretModel().getOffset()), 200);
                 } else {
-                    Log.log(LOGGER::debug, "updateContextAfterFileClosed no psi file for {}, calling contextEmptyNonSupportedFile",selectedFile);
+                    if (isFileChangingContext(selectedFile)) {
+                        Log.log(LOGGER::debug, "updateContextAfterFileClosed no psi file for {}, calling contextEmptyNonSupportedFile", selectedFile);
+                        MainToolWindowCardsController.getInstance(project).showNonSupported();
+                        contextChangeAlarmAfterFileClosed.addRequest(() -> caretContextService.contextEmptyNonSupportedFile(selectedFile.getPath()), 200);
+                    }
+                }
+            }else {
+                if (isFileChangingContext(selectedFile)) {
+                    Log.log(LOGGER::debug, "updateContextAfterFileClosed selected file is not relevant {}, calling contextEmptyNonSupportedFile",selectedFile);
                     MainToolWindowCardsController.getInstance(project).showNonSupported();
                     contextChangeAlarmAfterFileClosed.addRequest(() -> caretContextService.contextEmptyNonSupportedFile(selectedFile.getPath()), 200);
                 }
-            }else {
-                Log.log(LOGGER::debug, "updateContextAfterFileClosed selected file is not relevant {}, calling contextEmptyNonSupportedFile",selectedFile);
-                MainToolWindowCardsController.getInstance(project).showNonSupported();
-                contextChangeAlarmAfterFileClosed.addRequest(() -> caretContextService.contextEmptyNonSupportedFile(selectedFile.getPath()), 200);
             }
         } else {
             Log.log(LOGGER::debug, "updateContextAfterFileClosed selected no selected editor, calling contextEmpty");
@@ -295,6 +297,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
             contextChangeAlarmAfterFileClosed.addRequest(caretContextService::contextEmpty, 200);
         }
     }
+
 
 
     private boolean isRelevantFile(VirtualFile file) {
@@ -313,6 +316,14 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
     }
 
+
+    private boolean isFileNotChangingContext(@NotNull VirtualFile file) {
+        return DigmaVirtualFileMarker.class.isAssignableFrom(file.getClass());
+    }
+
+    private boolean isFileChangingContext(@NotNull VirtualFile file) {
+        return !isFileNotChangingContext(file);
+    }
 
 
 }

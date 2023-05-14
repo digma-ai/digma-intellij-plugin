@@ -19,14 +19,15 @@ import org.digma.intellij.plugin.ui.ToolWindowShower;
 import org.digma.intellij.plugin.ui.common.NoConnectionPanelKt;
 import org.digma.intellij.plugin.ui.common.statuspanels.NoFilePanelKt;
 import org.digma.intellij.plugin.ui.common.statuspanels.NonSupportedPanelKt;
+import org.digma.intellij.plugin.ui.panels.DisposablePanel;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
 import org.digma.intellij.plugin.ui.service.SummaryViewService;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.function.Supplier;
 
 import static org.digma.intellij.plugin.ui.common.InstallationWizardSidePanelWindowPanelKt.createInstallationWizardSidePanelWindowPanel;
 import static org.digma.intellij.plugin.ui.common.MainSidePaneWindowPanelKt.createMainSidePaneWindowPanel;
@@ -64,12 +65,21 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         ToolWindowShower.getInstance(project).setToolWindow(toolWindow);
 
         var mainSidePaneWindowPanel = createMainSidePaneWindowPanel(project);
-        var wizardPanel = createInstallationWizardSidePanelWindowPanel(project);
+        var cardsPanel = createCardsPanel(project,mainSidePaneWindowPanel);
+        var mainContent =  ContentFactory.getInstance().createContent(cardsPanel, null, false);
+        toolWindow.getContentManager().addContent(mainContent);
 
-        var cardPanel = createCardsPanel(project,mainSidePaneWindowPanel,wizardPanel);
-        var content =  ContentFactory.getInstance().createContent(cardPanel, null, false);
-        toolWindow.getContentManager().addContent(content);
-        MainToolWindowCardsController.getInstance(project).setCardsPanel(cardPanel,wizardPanel != null);
+
+        //the mainContent is added by default to the tool window. it will be replaced if we need to show
+        // the wizard.
+        //wizardPanelBuilder is instead of moving some classes to ide-common. ideally we want things to be accessible in
+        // ide-common. We want to build the wizard in MainToolWindowCardsController every time its necessary but the
+        // method createInstallationWizardSidePanelWindowPanel is not accessible in ide-common module, to move it its
+        // necessary to move more code. but anyway the Supplier is fine here.
+        //when ever we need to show the wizard it will be created new and disposed when finished, its probably not a
+        // good idea to keep it in memory after its finished.
+        Supplier<DisposablePanel> wizardPanelBuilder = () -> createInstallationWizardSidePanelWindowPanel(project);
+        MainToolWindowCardsController.getInstance(project).initComponents(toolWindow,mainContent,cardsPanel,wizardPanelBuilder);
 
         ErrorsActionsService errorsActionsService = project.getService(ErrorsActionsService.class);
         toolWindow.getContentManager().addContentManagerListener(errorsActionsService);
@@ -81,7 +91,7 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
                 IDEUtilsService.isPyCharmIDE() && persistenceDataState.getAlreadyPassedTheInstallationWizardForPyCharmIDE()
         ) {
             MainToolWindowCardsController.getInstance(project).showMainPanel();
-        } else {
+        }else{
             MainToolWindowCardsController.getInstance(project).showWizard();
         }
 
@@ -91,7 +101,7 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         DumbService.getInstance(project).runWhenSmart(() -> initializeWhenSmart(project));
     }
 
-    private JPanel createCardsPanel(@NotNull Project project, @NotNull JPanel mainPanel, @Nullable JPanel wizardPanel) {
+    private JPanel createCardsPanel(@NotNull Project project, @NotNull JPanel mainPanel) {
 
         var cardLayout = new CardLayout();
         var cardsPanel = new JPanel(cardLayout);
@@ -105,14 +115,13 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
 
         cardsPanel.add(mainPanel, MainToolWindowCardsController.MainWindowCard.MAIN.name());
         cardLayout.addLayoutComponent(mainPanel, MainToolWindowCardsController.MainWindowCard.MAIN.name());
-        if (wizardPanel != null){
-            cardsPanel.add(wizardPanel, MainToolWindowCardsController.MainWindowCard.WIZARD.name());
-            cardLayout.addLayoutComponent(wizardPanel, MainToolWindowCardsController.MainWindowCard.WIZARD.name());
-        }
+
         cardsPanel.add(noConnectionPanel, MainToolWindowCardsController.MainWindowCard.NO_CONNECTION.name());
         cardLayout.addLayoutComponent(noConnectionPanel, MainToolWindowCardsController.MainWindowCard.NO_CONNECTION.name());
+
         cardsPanel.add(nonSupportedPanel, MainToolWindowCardsController.MainWindowCard.NON_SUPPORTED.name());
         cardLayout.addLayoutComponent(nonSupportedPanel, MainToolWindowCardsController.MainWindowCard.NON_SUPPORTED.name());
+
         cardsPanel.add(noFilePanel, MainToolWindowCardsController.MainWindowCard.EMPTY_EDITOR.name());
         cardLayout.addLayoutComponent(noFilePanel, MainToolWindowCardsController.MainWindowCard.EMPTY_EDITOR.name());
 

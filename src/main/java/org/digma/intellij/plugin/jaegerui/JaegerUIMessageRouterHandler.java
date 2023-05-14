@@ -10,10 +10,14 @@ import org.cef.browser.CefFrame;
 import org.cef.callback.CefQueryCallback;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
 import org.digma.intellij.plugin.common.Backgroundable;
-import org.digma.intellij.plugin.jaegerui.model.GoToSpanMessage;
-import org.digma.intellij.plugin.jaegerui.model.SpansMessage;
-import org.digma.intellij.plugin.jaegerui.model.SpansWithResolvedLocationMessage;
+import org.digma.intellij.plugin.jaegerui.model.incoming.GoToSpanMessage;
+import org.digma.intellij.plugin.jaegerui.model.incoming.SpansMessage;
+import org.digma.intellij.plugin.jaegerui.model.outgoing.SpanData;
+import org.digma.intellij.plugin.jaegerui.model.outgoing.SpansWithResolvedLocationMessage;
 import org.digma.intellij.plugin.log.Log;
+
+import java.util.Collections;
+import java.util.Map;
 
 public class JaegerUIMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
@@ -36,14 +40,20 @@ public class JaegerUIMessageRouterHandler extends CefMessageRouterHandlerAdapter
                 var jsonNode = objectMapper.readTree(request);
                 String action = jsonNode.get("action").asText();
                 switch (action) {
-                    case "GET_SPANS_WITH_RESOLVED_LOCATION" -> {
+                    case "GET_SPANS_DATA" -> {
 
                         SpansMessage spansMessage = objectMapper.treeToValue(jsonNode, SpansMessage.class);
 
-                        var resolvedSpans = JaegerUIService.getInstance(project).getResolvedSpans(spansMessage);
+                        Map<String, SpanData> resolvedSpans;
+                        try {
+                            resolvedSpans = JaegerUIService.getInstance(project).getResolvedSpans(spansMessage);
+                        }catch (Exception e){
+                            Log.debugWithException(LOGGER,e,"Exception while resolving spans for GET_SPANS_DATA");
+                            resolvedSpans = Collections.emptyMap();
+                        }
 
                         var spansWithResolvedLocationMessage = new SpansWithResolvedLocationMessage("digma",
-                                "SET_SPANS_WITH_RESOLVED_LOCATION", resolvedSpans);
+                                "SET_SPANS_DATA", resolvedSpans);
 
                         var stringMessage = objectMapper.writeValueAsString(spansWithResolvedLocationMessage);
 

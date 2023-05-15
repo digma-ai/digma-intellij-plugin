@@ -76,7 +76,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
                     //if status is null assign EmptyStatus, it probably means there was a communication error
                     model.status = insightStatus?.let {
                         return@let toUiInsightStatus(it, methodInfo.hasRelatedCodeObjectIds())
-                    } ?: UIInsightsStatus.Loading
+                    } ?: UIInsightsStatus.NoInsights
 
                     Log.log(logger::debug,"UIInsightsStatus for method {} is {}",methodInfo.name,model.status)
 

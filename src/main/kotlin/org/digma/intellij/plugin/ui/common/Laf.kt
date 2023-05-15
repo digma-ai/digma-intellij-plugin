@@ -133,7 +133,6 @@ object Laf {
 
         class Common {
             companion object {
-                @JvmStatic val Loading = AllIcons.Actions.BuildLoadChanges
                 @JvmStatic val NoDataYetLight = SvgIcon.asIs("/icons/no_data_yet-light.svg")
                 @JvmStatic val NoDataYetDark = SvgIcon.asIs("/icons/no_data_yet-dark.svg")
                 @JvmStatic val NoObservabilityLight = SvgIcon.asIs("/icons/no_observability-light.svg")
@@ -146,6 +145,16 @@ object Laf {
                 @JvmStatic val UpdateProductLight = SvgIcon.asIs("/icons/update-product-light.svg")
                 @JvmStatic val Mascot64 = loadAndScaleIconByWidth("/icons/digma.png", 64)
                 @JvmStatic val Mascot16 = loadAndScaleIconByWidth("/icons/digma.png", 16)
+                @JvmStatic val FileDark = SvgIcon.asIs("/icons/file-dark.svg")
+                @JvmStatic val FileLight = SvgIcon.asIs("/icons/file-light.svg")
+                @JvmStatic val LoadingDark = SvgIcon.asIs("/icons/loader-anim-dark.svg")
+                @JvmStatic val LoadingLight = SvgIcon.asIs("/icons/loader-anim-light.svg")
+                @JvmStatic val ProcessingDark = SvgIcon.asIs("/icons/processing-dark.svg")
+                @JvmStatic val ProcessingLight = SvgIcon.asIs("/icons/processing-light.svg")
+                @JvmStatic val NoConnectionDark = SvgIcon.asIs("/icons/no-connection-dark.svg")
+                @JvmStatic val NoConnectionLight = SvgIcon.asIs("/icons/no-connection-light.svg")
+                @JvmStatic val NoErrorsDark = SvgIcon.asIs("/icons/no-errors-dark.svg")
+                @JvmStatic val NoErrorsLight = SvgIcon.asIs("/icons/no-errors-light.svg")
             }
         }
 

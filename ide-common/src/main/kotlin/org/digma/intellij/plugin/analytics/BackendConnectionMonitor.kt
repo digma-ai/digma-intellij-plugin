@@ -7,7 +7,7 @@ import com.intellij.util.messages.MessageBusConnection
 /**
  * This service keeps track of the analytics service connection status. it is used to decide when to show the
  * no connection message in the plugin window.
- * see also class NoConnectionWrapper
+ * see also class NoConnectionPanel
  */
 class BackendConnectionMonitor(val project: Project) : Disposable, AnalyticsServiceConnectionEvent {
 

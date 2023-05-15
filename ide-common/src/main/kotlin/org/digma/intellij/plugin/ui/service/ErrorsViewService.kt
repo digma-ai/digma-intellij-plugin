@@ -9,15 +9,15 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult
 import org.digma.intellij.plugin.model.discovery.MethodInfo
-import org.digma.intellij.plugin.model.rest.insights.ErrorInsight
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.ui.model.DocumentScope
 import org.digma.intellij.plugin.ui.model.EmptyScope
 import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.model.errors.ErrorDetailsModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
+import org.digma.intellij.plugin.ui.model.errors.ErrorsPreviewListItem
 import org.digma.intellij.plugin.ui.model.errors.ErrorsTabCard
-import java.util.*
+import java.util.Collections
 import java.util.concurrent.locks.ReentrantLock
 
 class ErrorsViewService(project: Project) : AbstractViewService(project) {
@@ -52,8 +52,9 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
 
             val errorsListContainer = errorsProvider.getErrors(methodInfo)
 
-            model.listViewItems = errorsListContainer.listViewItems
-            model.usageStatusResult = errorsListContainer.usageStatus
+            model.listViewItems = errorsListContainer.listViewItems ?: listOf()
+            model.previewListViewItems = ArrayList()
+            model.usageStatusResult = errorsListContainer.usageStatus ?: EmptyUsageStatusResult
             model.scope = MethodScope(methodInfo)
             model.card = ErrorsTabCard.ERRORS_LIST
             model.errorsCount = errorsListContainer.count
@@ -73,6 +74,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         Log.log(logger::debug, "contextChangeNoMethodInfo to {}. ", dummy)
 
         model.listViewItems = ArrayList()
+        model.previewListViewItems = ArrayList()
         model.usageStatusResult = EmptyUsageStatusResult
         model.scope = MethodScope(dummy)
         model.card = ErrorsTabCard.ERRORS_LIST
@@ -108,11 +110,17 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         updateUi()
     }
 
+
+    /**
+     * empty should be called only when there is no file opened in the editor and not in
+     * any other case.
+     */
     fun empty() {
 
         Log.log(logger::debug, "empty called")
 
         model.listViewItems = Collections.emptyList()
+        model.previewListViewItems = ArrayList()
         model.usageStatusResult = EmptyUsageStatusResult
         model.scope = EmptyScope("")
         model.card = ErrorsTabCard.ERRORS_LIST
@@ -126,6 +134,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         Log.log(logger::debug, "emptyNonSupportedFile called")
 
         model.listViewItems = Collections.emptyList()
+        model.previewListViewItems = ArrayList()
         model.usageStatusResult = EmptyUsageStatusResult
         model.scope = EmptyScope(getNonSupportedFileScopeMessage(fileUri))
         model.card = ErrorsTabCard.ERRORS_LIST
@@ -135,10 +144,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
     }
 
 
-    /*
-    the errors tab don't need to load anything when showing preview in insights tab,
-    just needs to update the scope and empty the list
-     */
+
     fun showDocumentPreviewList(
         documentInfoContainer: DocumentInfoContainer?,
         fileUri: String
@@ -148,19 +154,39 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
 
         if (documentInfoContainer == null) {
             model.scope = EmptyScope(fileUri.substringAfterLast('/'))
+            model.listViewItems = ArrayList()
             model.errorsCount = 0
             model.usageStatusResult = EmptyUsageStatusResult
+            model.previewListViewItems = ArrayList()
+            model.card = ErrorsTabCard.PREVIEW_LIST
         } else {
             model.scope = DocumentScope(documentInfoContainer.documentInfo)
+            model.listViewItems = ArrayList()
             model.errorsCount = computeErrorsPreviewCount(documentInfoContainer)
             model.usageStatusResult = documentInfoContainer.usageStatusOfErrors
+            model.previewListViewItems = getDocumentPreviewItems(documentInfoContainer)
+            model.card = ErrorsTabCard.PREVIEW_LIST
         }
-
-        model.listViewItems = ArrayList()
-        model.card = ErrorsTabCard.ERRORS_LIST
 
         updateUi()
     }
+
+
+
+    private fun getDocumentPreviewItems(documentInfoContainer: DocumentInfoContainer): List<ErrorsPreviewListItem> {
+
+        val listViewItems = ArrayList<ErrorsPreviewListItem>()
+        documentInfoContainer.documentInfo.methods.forEach { (id, methodInfo) ->
+            listViewItems.add(ErrorsPreviewListItem(methodInfo.id, documentInfoContainer.hasErrors(id), methodInfo.getRelatedCodeObjectIds().any()))
+        }
+
+        //sort by name of the function, it will be sorted later by sortIndex when added to a PanelListModel, but
+        // because they all have the same sortIndex then positions will not change
+        Collections.sort(listViewItems, Comparator.comparing { it.name })
+        return listViewItems
+
+    }
+
 
 
     private fun computeErrorsPreviewCount(documentInfoContainer: DocumentInfoContainer): Int {

@@ -14,6 +14,7 @@ import org.cef.callback.CefQueryCallback
 import org.cef.handler.CefMessageRouterHandlerAdapter
 import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.analytics.BackendConnectionUtil
+import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.installationwizard.FinishRequest
@@ -30,8 +31,10 @@ import org.digma.intellij.plugin.toolwindow.recentactivity.JBCefBrowserUtil
 import org.digma.intellij.plugin.toolwindow.recentactivity.JcefConnectionCheckMessagePayload
 import org.digma.intellij.plugin.toolwindow.recentactivity.JcefConnectionCheckMessageRequest
 import org.digma.intellij.plugin.toolwindow.recentactivity.JcefMessageRequest
+import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.common.ObservabilityUtil.Companion.updateObservabilityValue
+import org.digma.intellij.plugin.ui.panels.DisposablePanel
 import java.awt.BorderLayout
 import javax.swing.JPanel
 import javax.swing.UIManager
@@ -45,12 +48,14 @@ private const val IS_OBSERVABILITY_ENABLED_VARIABLE: String = "isObservabilityEn
 private val logger: Logger =
     Logger.getInstance("org.digma.intellij.plugin.ui.common.InstallationWizardSidePanelWindowPanel")
 
-fun createInstallationWizardSidePanelWindowPanel(project: Project): JPanel? {
+fun createInstallationWizardSidePanelWindowPanel(project: Project): DisposablePanel? {
     if (!JBCefApp.isSupported()) {
         // Fallback to an alternative browser-less solution
         return null
     }
 
+    //at this stage the AnalyticsService was initialized already and if there is no connection then
+    // BackendConnectionMonitor should already know that
     val isServerConnectedAlready = BackendConnectionUtil.getInstance(project).testConnectionToBackend()
     val customViewerWindow = CustomViewerWindow(
         project, RESOURCE_FOLDER_NAME,
@@ -113,9 +118,10 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): JPanel? {
                 if (email != null) {
                     ActivityMonitor.getInstance(project).registerEmail(email)
                 }
-                ApplicationManager.getApplication().invokeLater {
+                EDT.ensureEDT {
                     updateInstallationWizardFlag()
-                    ToolWindowShower.getInstance(project).displayMainSidePaneWindowPanel()
+                    ToolWindowShower.getInstance(project).showToolWindow()
+                    MainToolWindowCardsController.getInstance(project).wizardFinished();
                     ToolWindowManager.getInstance(project).getToolWindow(PluginId.OBSERVABILITY_WINDOW_ID)!!.show()
                 }
             }
@@ -160,7 +166,11 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): JPanel? {
     browserPanel.add(jbCefBrowser.component, BorderLayout.CENTER)
 
 
-    val jcefDigmaPanel = JPanel()
+    val jcefDigmaPanel = object: DisposablePanel(){
+        override fun dispose() {
+            jbCefBrowser.dispose()
+        }
+    }
     jcefDigmaPanel.layout = BorderLayout()
     jcefDigmaPanel.add(browserPanel, BorderLayout.CENTER)
 
@@ -171,16 +181,15 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): JPanel? {
  * Set global flag that this user has already passed the installation wizard
  */
 private fun updateInstallationWizardFlag() {
-    val productName = ApplicationNamesInfo.getInstance().productName
-    if (IDEUtilsService.isIdeaIDE(productName)) {
+    if (IDEUtilsService.isIdeaIDE()) {
         if (!PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForIdeaIDE) {
             PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForIdeaIDE = true
         }
-    } else if (IDEUtilsService.isRiderIDE(productName)) {
+    } else if (IDEUtilsService.isRiderIDE()) {
         if (!PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForRiderIDE) {
             PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForRiderIDE = true
         }
-    } else if (IDEUtilsService.isPyCharmIDE(productName)) {
+    } else if (IDEUtilsService.isPyCharmIDE()) {
         if (!PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForPyCharmIDE) {
             PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForPyCharmIDE = true
         }

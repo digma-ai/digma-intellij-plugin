@@ -18,6 +18,7 @@ import org.digma.intellij.plugin.model.rest.insights.MethodWithInsightStatus;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,14 +65,15 @@ public class InsightsProvider {
         }
     }
 
+    @Nullable
     public InsightStatus getInsightStatus(@NotNull MethodInfo methodInfo) {
         try {
             CodeObjectInsightsStatusResponse response = analyticsService.getCodeObjectInsightStatus(List.of(methodInfo));
-            MethodWithInsightStatus methodResp = response.getCodeObjectsWithInsightsStatus().iterator().next();
-            return methodResp.getInsightStatus();
+            MethodWithInsightStatus methodResp = response.getCodeObjectsWithInsightsStatus().stream().findFirst().orElse(null);
+            return methodResp == null ? null : methodResp.getInsightStatus();
         } catch (AnalyticsServiceException e) {
             Log.log(LOGGER::debug, "AnalyticsServiceException for getCodeObjectInsightStatus for {}: {}", methodInfo.getId(), e.getMessage());
-            return InsightStatus.Unknown;
+            return null;
         }
     }
 

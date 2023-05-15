@@ -121,7 +121,7 @@ public class Environment implements EnvironmentsSupplier {
 
 
     //refresh is called many times, every time the method context changes,and it's not necessary to
-    //really try every time,it used as a hook to refresh in case the backend list changed.
+    //really try every time,its used as a hook to refresh in case the backend list changed.
     //so it will only refresh if some time passed since the last call
     @Override
     public void refresh() {

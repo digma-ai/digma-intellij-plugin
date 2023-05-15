@@ -13,6 +13,7 @@ import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.digma.intellij.plugin.service.EditorService
+import org.digma.intellij.plugin.ui.common.Links.DIGMA_DOCKER_APP_URL
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import org.digma.intellij.plugin.updates.UpdateState
 import org.digma.intellij.plugin.updates.UpdatesService
@@ -136,12 +137,12 @@ class UpdateVersionPanel(
                     }
 
                     BackendDeploymentType.DockerExtension -> {
-                        BrowserUtil.browse(NoConnectionWrapper.DIGMA_DOCKER_APP_URL, project)
+                        BrowserUtil.browse(DIGMA_DOCKER_APP_URL, project)
                     }
 
                     else -> {
                         // default fallback to Docker Extension
-                        BrowserUtil.browse(NoConnectionWrapper.DIGMA_DOCKER_APP_URL, project)
+                        BrowserUtil.browse(DIGMA_DOCKER_APP_URL, project)
                     }
                 }
             } else if (updateState.shouldUpdatePlugin) {

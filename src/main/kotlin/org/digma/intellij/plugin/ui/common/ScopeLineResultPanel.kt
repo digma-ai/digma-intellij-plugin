@@ -45,7 +45,11 @@ class ScopeLineResultPanel(
     init {
         modelChangeConnection.subscribe(
                 ModelChangeListener.MODEL_CHANGED_TOPIC,
-                ModelChangeListener { newModel -> rebuildInBackground(newModel) }
+                        object : ModelChangeListener {
+                            override fun modelChanged(newModel: PanelModel) {
+                                rebuildInBackground(newModel)
+                            }
+                        }
         )
         this.refreshService = project.getService(RefreshService::class.java)
         this.project = project

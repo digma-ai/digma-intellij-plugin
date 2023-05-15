@@ -1,25 +1,33 @@
 package org.digma.intellij.plugin.toolwindow.sidepane;
 
-import com.intellij.openapi.application.ApplicationNamesInfo;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.ContentFactory;
+import com.intellij.util.ui.JBUI;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.common.IDEUtilsService;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.persistence.PersistenceData;
 import org.digma.intellij.plugin.persistence.PersistenceService;
-import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.service.ErrorsActionsService;
+import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.digma.intellij.plugin.ui.ToolWindowShower;
+import org.digma.intellij.plugin.ui.common.NoConnectionPanelKt;
+import org.digma.intellij.plugin.ui.common.statuspanels.NoFilePanelKt;
+import org.digma.intellij.plugin.ui.common.statuspanels.NonSupportedPanelKt;
+import org.digma.intellij.plugin.ui.panels.DisposablePanel;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
 import org.digma.intellij.plugin.ui.service.SummaryViewService;
 import org.jetbrains.annotations.NotNull;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.function.Supplier;
 
 import static org.digma.intellij.plugin.ui.common.InstallationWizardSidePanelWindowPanelKt.createInstallationWizardSidePanelWindowPanel;
 import static org.digma.intellij.plugin.ui.common.MainSidePaneWindowPanelKt.createMainSidePaneWindowPanel;
@@ -52,35 +60,39 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         LanguageService.ensureStartupOnEDTForAll(project);
 
         //initialize AnalyticsService early so the UI can detect the connection status when created
-        project.getService(AnalyticsService.class);
+        AnalyticsService.getInstance(project);
 
         ToolWindowShower.getInstance(project).setToolWindow(toolWindow);
 
         var mainSidePaneWindowPanel = createMainSidePaneWindowPanel(project);
-        var content =  ContentFactory.getInstance().createContent(mainSidePaneWindowPanel, null, false);
-        ToolWindowShower.getInstance(project).setMainContent(content);
+        var cardsPanel = createCardsPanel(project,mainSidePaneWindowPanel);
+        var mainContent =  ContentFactory.getInstance().createContent(cardsPanel, null, false);
+        toolWindow.getContentManager().addContent(mainContent);
 
-        var jcefDigmaPanel = createInstallationWizardSidePanelWindowPanel(project);
-        //todo: what happens if returns null ? there is no null check in ToolWindowShower.displayInstallationWizard
-        if(jcefDigmaPanel != null){
-            content =  ContentFactory.getInstance().createContent(jcefDigmaPanel, null, false);
-            ToolWindowShower.getInstance(project).setInstallationWizardContent(content);
-        }
+
+        //the mainContent is added by default to the tool window. it will be replaced if we need to show
+        // the wizard.
+        //wizardPanelBuilder is instead of moving some classes to ide-common. ideally we want things to be accessible in
+        // ide-common. We want to build the wizard in MainToolWindowCardsController every time its necessary but the
+        // method createInstallationWizardSidePanelWindowPanel is not accessible in ide-common module, to move it its
+        // necessary to move more code. but anyway the Supplier is fine here.
+        //when ever we need to show the wizard it will be created new and disposed when finished, its probably not a
+        // good idea to keep it in memory after its finished.
+        Supplier<DisposablePanel> wizardPanelBuilder = () -> createInstallationWizardSidePanelWindowPanel(project);
+        MainToolWindowCardsController.getInstance(project).initComponents(toolWindow,mainContent,cardsPanel,wizardPanelBuilder);
 
         ErrorsActionsService errorsActionsService = project.getService(ErrorsActionsService.class);
         toolWindow.getContentManager().addContentManagerListener(errorsActionsService);
 
-        String productName = ApplicationNamesInfo.getInstance().getProductName();
         PersistenceData persistenceDataState = PersistenceService.getInstance().getState();
 
-        if (IDEUtilsService.isIdeaIDE(productName) && persistenceDataState.getAlreadyPassedTheInstallationWizardForIdeaIDE() ||
-                IDEUtilsService.isRiderIDE(productName) && persistenceDataState.getAlreadyPassedTheInstallationWizardForRiderIDE() ||
-                IDEUtilsService.isPyCharmIDE(productName) && persistenceDataState.getAlreadyPassedTheInstallationWizardForPyCharmIDE()
-
+        if (IDEUtilsService.isIdeaIDE() && persistenceDataState.getAlreadyPassedTheInstallationWizardForIdeaIDE() ||
+                IDEUtilsService.isRiderIDE() && persistenceDataState.getAlreadyPassedTheInstallationWizardForRiderIDE() ||
+                IDEUtilsService.isPyCharmIDE() && persistenceDataState.getAlreadyPassedTheInstallationWizardForPyCharmIDE()
         ) {
-            ToolWindowShower.getInstance(project).displayMainSidePaneWindowPanel();
-        } else {
-            ToolWindowShower.getInstance(project).displayInstallationWizard();
+            MainToolWindowCardsController.getInstance(project).showMainPanel();
+        }else{
+            MainToolWindowCardsController.getInstance(project).showWizard();
         }
 
         //todo: runWhenSmart is ok for java,python , but in Rider runWhenSmart does not guarantee that the solution
@@ -88,7 +100,37 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         // can run this task when the solution is fully loaded.
         DumbService.getInstance(project).runWhenSmart(() -> initializeWhenSmart(project));
     }
-    
+
+    private JPanel createCardsPanel(@NotNull Project project, @NotNull JPanel mainPanel) {
+
+        var cardLayout = new CardLayout();
+        var cardsPanel = new JPanel(cardLayout);
+        cardsPanel.setOpaque(false);
+        cardsPanel.setBorder(JBUI.Borders.empty());
+
+        var noConnectionPanel = NoConnectionPanelKt.createNoConnectionPanel(project);
+        var nonSupportedPanel = NonSupportedPanelKt.createNonSupportedPanel(project);
+        var noFilePanel = NoFilePanelKt.createNoFilePanel(project);
+
+
+        cardsPanel.add(mainPanel, MainToolWindowCardsController.MainWindowCard.MAIN.name());
+        cardLayout.addLayoutComponent(mainPanel, MainToolWindowCardsController.MainWindowCard.MAIN.name());
+
+        cardsPanel.add(noConnectionPanel, MainToolWindowCardsController.MainWindowCard.NO_CONNECTION.name());
+        cardLayout.addLayoutComponent(noConnectionPanel, MainToolWindowCardsController.MainWindowCard.NO_CONNECTION.name());
+
+        cardsPanel.add(nonSupportedPanel, MainToolWindowCardsController.MainWindowCard.NON_SUPPORTED.name());
+        cardLayout.addLayoutComponent(nonSupportedPanel, MainToolWindowCardsController.MainWindowCard.NON_SUPPORTED.name());
+
+        cardsPanel.add(noFilePanel, MainToolWindowCardsController.MainWindowCard.EMPTY_EDITOR.name());
+        cardLayout.addLayoutComponent(noFilePanel, MainToolWindowCardsController.MainWindowCard.EMPTY_EDITOR.name());
+
+        cardLayout.show(cardsPanel, MainToolWindowCardsController.MainWindowCard.MAIN.name());
+
+        return cardsPanel;
+    }
+
+
     private void initializeWhenSmart(@NotNull Project project) {
 
         Log.log(LOGGER::debug, "in initializeWhenSmart, dumb mode is {}", DumbService.isDumb(project));

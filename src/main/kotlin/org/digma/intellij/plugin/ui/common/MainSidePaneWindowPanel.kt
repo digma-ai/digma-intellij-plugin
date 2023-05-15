@@ -17,6 +17,7 @@ fun createMainSidePaneWindowPanel(project: Project): DigmaResettablePanel {
 
     val result = object : DigmaResettablePanel() {
 
+        //todo: this reset is never called
         override fun reset() {
             navigationPanel.reset()
             updatePanel.reset()

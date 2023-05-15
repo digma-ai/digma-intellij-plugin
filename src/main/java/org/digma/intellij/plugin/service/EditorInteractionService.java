@@ -12,6 +12,7 @@ import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.ui.CaretContextService;
+import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
 
@@ -58,10 +59,13 @@ public class EditorInteractionService implements CaretContextService, Disposable
         }
 
         //There is no need to execute the contextChanged flow if there is no connection to the backend.
-        // so testConnectionToBackend will detect a backend connection error , call contextEmptyNoConnection once
-        // to clean the views, and will return. and will keep blocking until the connection is regained.
+        // testConnectionToBackend will trigger environment refresh that will either refresh the environments
+        // or mark the connection as lost.
+        //todo: one side effect here is that if connection lost and regained the context will still be the last one that
+        // succeeded and that's what will be shown to user until another context change.
         if (!BackendConnectionUtil.getInstance(project).testConnectionToBackend()) {
             Log.log(logger::debug, "No connection to backend, not executing contextChanged for '{}'", methodUnderCaret.getId());
+            MainToolWindowCardsController.getInstance(project).showMainPanel();
             return;
         }
 
@@ -90,17 +94,20 @@ public class EditorInteractionService implements CaretContextService, Disposable
 
         if (!methodUnderCaret.isSupportedFile()) {
             Log.log(logger::debug, "methodUnderCaret is non supported file {}. ", methodUnderCaret);
+            MainToolWindowCardsController.getInstance(project).showNonSupported();
             contextEmptyNonSupportedFile(methodUnderCaret.getFileUri());
             return;
         }
         if (methodUnderCaret.getFileUri().isBlank()) {
             Log.log(logger::debug, "No fileUri in methodUnderCaret,clearing context {}. ", methodUnderCaret);
+            MainToolWindowCardsController.getInstance(project).showNoFile();
             contextEmpty();
             return;
         }
 
         String className = methodUnderCaret.getClassName();
 
+        MainToolWindowCardsController.getInstance(project).showMainPanel();
 
         if (methodUnderCaret.getId().isBlank()) { // caret not under method
             Log.log(logger::debug, "No id in methodUnderCaret, Showing document preview  {}. ", methodUnderCaret);
@@ -114,25 +121,25 @@ public class EditorInteractionService implements CaretContextService, Disposable
             }
             insightsViewService.showDocumentPreviewList(documentInfoContainer, methodUnderCaret.getFileUri());
             errorsViewService.showDocumentPreviewList(documentInfoContainer, methodUnderCaret.getFileUri());
-            return;
-        }
-        MethodInfo methodInfo = documentInfoService.getMethodInfo(methodUnderCaret);
-        if (methodInfo == null) {
-            Log.log(logger::warn, "Could not find MethodInfo for MethodUnderCaret {}. ", methodUnderCaret);
-            //this happens when we don't have method info for a real method, usually when a class doesn't have
-            //code objects found during discovery, it can be synthetic or auto-generated methods.
-            //pass a dummy method info just to populate the view,the view is aware and will not try to query for insights.
-            var dummyMethodInfo = new MethodInfo(methodUnderCaret.getId(), methodUnderCaret.getName(), className, "",
-                    methodUnderCaret.getFileUri(), 0, new ArrayList<>());
-            Log.log(logger::warn, "Using dummy MethodInfo for to update views {}. ", dummyMethodInfo);
-            insightsViewService.contextChangeNoMethodInfo(dummyMethodInfo);
-            errorsViewService.contextChangeNoMethodInfo(dummyMethodInfo);
-        } else {
-            Log.log(logger::debug, "Context changed to {}. ", methodInfo);
-            DocumentInfoContainer documentInfo = documentInfoService.getDocumentInfo(methodUnderCaret);
-            boolean methodHasNewInsights = documentInfo.loadInsightsForMethod(methodInfo.getId()); // might be long call since going to the backend
-            insightsViewService.updateInsightsModel(methodInfo);
-            errorsViewService.updateErrorsModel(methodInfo);
+        }else {
+            MethodInfo methodInfo = documentInfoService.getMethodInfo(methodUnderCaret);
+            if (methodInfo == null) {
+                Log.log(logger::warn, "Could not find MethodInfo for MethodUnderCaret {}. ", methodUnderCaret);
+                //this happens when we don't have method info for a real method, usually when a class doesn't have
+                //code objects found during discovery, it can be synthetic or auto-generated methods.
+                //pass a dummy method info just to populate the view,the view is aware and will not try to query for insights.
+                var dummyMethodInfo = new MethodInfo(methodUnderCaret.getId(), methodUnderCaret.getName(), className, "",
+                        methodUnderCaret.getFileUri(), 0, new ArrayList<>());
+                Log.log(logger::warn, "Using dummy MethodInfo for to update views {}. ", dummyMethodInfo);
+                insightsViewService.contextChangeNoMethodInfo(dummyMethodInfo);
+                errorsViewService.contextChangeNoMethodInfo(dummyMethodInfo);
+            } else {
+                Log.log(logger::debug, "Context changed to {}. ", methodInfo);
+                DocumentInfoContainer documentInfo = documentInfoService.getDocumentInfo(methodUnderCaret);
+                boolean methodHasNewInsights = documentInfo.loadInsightsForMethod(methodInfo.getId()); // might be long call since going to the backend
+                insightsViewService.updateInsightsModel(methodInfo);
+                errorsViewService.updateErrorsModel(methodInfo);
+            }
         }
     }
 
@@ -142,6 +149,10 @@ public class EditorInteractionService implements CaretContextService, Disposable
         errorsViewService.emptyNonSupportedFile(fileUri);
     }
 
+    /**
+     * contextEmpty should be called only when there is no file opened in the editor and not in
+     * any other case.
+     */
     @Override
     public void contextEmpty() {
         Log.log(logger::debug, "contextEmpty called");

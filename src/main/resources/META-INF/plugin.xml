@@ -38,6 +38,7 @@
         <fileEditorProvider implementation="org.digma.intellij.plugin.jaegerui.JaegerUIFileEditorProvider"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.ToolWindowShower"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.ui.MainToolWindowCardsController"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.service.EditorInteractionService"
                         serviceInterface="org.digma.intellij.plugin.ui.CaretContextService"/>

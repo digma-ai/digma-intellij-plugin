@@ -121,7 +121,7 @@ public class JavaLanguageService implements LanguageService {
 
     @Override
     public boolean isSupportedFile(@NotNull Project project, @NotNull PsiFile psiFile) {
-        return JavaLanguage.INSTANCE.equals(psiFile.getLanguage());
+        return JavaLanguage.INSTANCE.equals(psiFile.getLanguage()) && !psiFile.getName().contains("package-info");
     }
 
     @Override

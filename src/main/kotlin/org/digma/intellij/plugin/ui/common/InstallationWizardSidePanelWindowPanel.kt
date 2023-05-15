@@ -169,6 +169,8 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): DisposablePa
     val jcefDigmaPanel = object: DisposablePanel(){
         override fun dispose() {
             jbCefBrowser.dispose()
+            jbCefClient.dispose()
+            msgRouter.dispose()
         }
     }
     jcefDigmaPanel.layout = BorderLayout()

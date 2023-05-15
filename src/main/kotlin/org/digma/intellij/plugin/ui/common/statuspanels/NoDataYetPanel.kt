@@ -34,6 +34,7 @@ fun createNoDataYetPanel(): JPanel {
     val noObservability = JLabel("No Data Yet")
     boldFonts(noObservability)
     noObservability.horizontalAlignment = SwingConstants.CENTER
+    noObservability.horizontalTextPosition = SwingConstants.CENTER
     panel.add(noObservability,constraints)
 
     constraints.insets = emptyInsets()
@@ -54,6 +55,7 @@ fun createNoDataYetPanel(): JPanel {
 private fun addNoDataYetDetailsPart(text: String, panel: JPanel, constraints: GridBagConstraints){
     val noObservabilityDetailsLabel = JLabel(asHtml(text))
     noObservabilityDetailsLabel.horizontalAlignment = SwingConstants.CENTER
+    noObservabilityDetailsLabel.horizontalTextPosition = SwingConstants.CENTER
     panel.add(noObservabilityDetailsLabel,constraints)
 }
 

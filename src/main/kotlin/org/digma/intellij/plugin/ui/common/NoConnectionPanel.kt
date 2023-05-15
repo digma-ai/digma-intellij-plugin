@@ -5,11 +5,12 @@ import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.ActionLink
-import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.JBUI.Borders.empty
 import com.intellij.util.ui.JBUI.emptyInsets
 import com.intellij.util.ui.JBUI.insets
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.settings.ProjectSettings
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
@@ -62,20 +63,29 @@ fun createNoConnectionPanel(project: Project):JPanel{
     addNoConnectionDetailsPart("but we're not getting anything back.",panel,constraints)
     constraints.gridy = 6
     addNoConnectionDetailsPart("Please make sure Digma is up and running",panel,constraints)
+
     constraints.gridy = 7
-//    addNoConnectionDetailsPart("or change the URL from the plugin settings.",panel,constraints)
-    val settingsLink = ActionLink("or change the URL from the plugin settings."){
-        ShowSettingsUtil.getInstance().showSettingsDialog(project,"Digma Plugin")
+    val changeInSettingsPanel = JPanel(BorderLayout())
+    changeInSettingsPanel.isOpaque = false
+    changeInSettingsPanel.border = empty()
+    val changeInSettingsLabel = JLabel("or change the URL from the plugin")
+    changeInSettingsLabel.horizontalAlignment = SwingConstants.CENTER
+    changeInSettingsLabel.horizontalTextPosition = SwingConstants.CENTER
+    val settingsLink = ActionLink("settings."){
+        ShowSettingsUtil.getInstance().showSettingsDialog(project, ProjectSettings.DISPLAY_NAME)
     }
-    settingsLink.horizontalAlignment = SwingConstants.CENTER
-    settingsLink.horizontalTextPosition = SwingConstants.CENTER
-    panel.add(settingsLink,constraints)
+    settingsLink.horizontalAlignment = SwingConstants.LEADING
+    settingsLink.horizontalTextPosition = SwingConstants.LEADING
+    settingsLink.border = empty()
+    changeInSettingsPanel.add(changeInSettingsLabel,BorderLayout.CENTER)
+    changeInSettingsPanel.add(settingsLink,BorderLayout.EAST)
+    panel.add(changeInSettingsPanel,constraints)
 
     constraints.insets = insets(10, 5)
     constraints.gridy = 8
     constraints.fill = GridBagConstraints.NONE
     val slackLinkPanel = JPanel(BorderLayout(10,5))
-    slackLinkPanel.add(JLabel(Laf.Icons.Common.Slack), BorderLayout.WEST)
+    slackLinkPanel.add(JLabel(Laf.Icons.General.SLACK), BorderLayout.WEST)
     val slackLink = ActionLink("Join Our Slack Channel for Support"){
         BrowserUtil.browse(Links.DIGMA_SLACK_SUPPORT_CHANNEL, project)
     }
@@ -106,7 +116,7 @@ fun createNoConnectionPanel(project: Project):JPanel{
     panel.add(buttonsPanel,constraints)
 
     panel.isOpaque = false
-    panel.border = JBUI.Borders.empty()
+    panel.border = empty()
 
     return panel
 }
@@ -116,6 +126,7 @@ fun createNoConnectionPanel(project: Project):JPanel{
 private fun addNoConnectionDetailsPart(text: String, panel: JPanel, constraints: GridBagConstraints): JLabel{
     val noConnectionPartDetailsLabel = JLabel(asHtml(text))
     noConnectionPartDetailsLabel.horizontalAlignment = SwingConstants.CENTER
+    noConnectionPartDetailsLabel.horizontalTextPosition = SwingConstants.CENTER
     panel.add(noConnectionPartDetailsLabel,constraints)
     return noConnectionPartDetailsLabel
 }

@@ -33,6 +33,7 @@ fun createLoadingInsightsPanel(): JPanel {
     val loadingLabel = JLabel("Loading...")
     boldFonts(loadingLabel)
     loadingLabel.horizontalAlignment = SwingConstants.CENTER
+    loadingLabel.horizontalTextPosition = SwingConstants.CENTER
     panel.add(loadingLabel,constraints)
 
     panel.isOpaque = false

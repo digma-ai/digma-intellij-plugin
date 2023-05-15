@@ -31,6 +31,7 @@ fun createNoInsightsPanel(): JPanel {
     val noInsights = JLabel("No Insights")
     boldFonts(noInsights)
     noInsights.horizontalAlignment = SwingConstants.CENTER
+    noInsights.horizontalTextPosition = SwingConstants.CENTER
     panel.add(noInsights, constraints)
 
     panel.isOpaque = false

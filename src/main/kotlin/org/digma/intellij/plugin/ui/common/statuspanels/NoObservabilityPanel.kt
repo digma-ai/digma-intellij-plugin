@@ -46,6 +46,7 @@ fun createNoObservabilityPanel(project: Project, insightsModel: InsightsModel): 
     val noObservability = JLabel("No Observability")
     boldFonts(noObservability)
     noObservability.horizontalAlignment = SwingConstants.CENTER
+    noObservability.horizontalTextPosition = SwingConstants.CENTER
     panel.add(noObservability, constraints)
 
     constraints.insets = emptyInsets()
@@ -61,6 +62,7 @@ fun createNoObservabilityPanel(project: Project, insightsModel: InsightsModel): 
     constraints.insets = JBUI.insets(20, 5, 0, 5)
     val autoFixLabel1 = JLabel(asHtml("Before adding annotations, "))
     autoFixLabel1.horizontalAlignment = SwingConstants.CENTER
+    autoFixLabel1.horizontalTextPosition = SwingConstants.CENTER
     panel.add(autoFixLabel1, constraints)
 
     constraints.gridy = 8
@@ -68,6 +70,7 @@ fun createNoObservabilityPanel(project: Project, insightsModel: InsightsModel): 
     constraints.insets = emptyInsets()
     val autoFixLabel2 = JLabel(asHtml("please add the following dependency:"))
     autoFixLabel2.horizontalAlignment = SwingConstants.CENTER
+    autoFixLabel2.horizontalTextPosition = SwingConstants.CENTER
     panel.add(autoFixLabel2, constraints)
 
     constraints.gridy = 9
@@ -133,6 +136,7 @@ fun createNoObservabilityPanel(project: Project, insightsModel: InsightsModel): 
 private fun addNoObservabilityDetailsPart(text: String, panel: JPanel, constraints: GridBagConstraints) {
     val noObservabilityDetailsLabel = JLabel(asHtml(text))
     noObservabilityDetailsLabel.horizontalAlignment = SwingConstants.CENTER
+    noObservabilityDetailsLabel.horizontalTextPosition = SwingConstants.CENTER
     panel.add(noObservabilityDetailsLabel, constraints)
 }
 

@@ -41,6 +41,7 @@ fun createNoFileInEditorPanel(project: Project,mainMessage: String): JPanel {
     val notSupportedLabel = JLabel(mainMessage)
     boldFonts(notSupportedLabel)
     notSupportedLabel.horizontalAlignment = SwingConstants.CENTER
+    notSupportedLabel.horizontalTextPosition = SwingConstants.CENTER
     panel.add(notSupportedLabel,constraints)
 
     constraints.insets = emptyInsets()
@@ -50,7 +51,7 @@ fun createNoFileInEditorPanel(project: Project,mainMessage: String): JPanel {
     addNotSupportedDetailsPart("to see runtime data and insights here.",panel,constraints)
 
     val slackLinkPanel = JPanel(BorderLayout(10,5))
-    slackLinkPanel.add(JLabel(Laf.Icons.Common.Slack), BorderLayout.WEST)
+    slackLinkPanel.add(JLabel(Laf.Icons.General.SLACK), BorderLayout.WEST)
     val slackLink = ActionLink("Join Our Slack Channel for Support"){
         BrowserUtil.browse(Links.DIGMA_SLACK_SUPPORT_CHANNEL, project)
     }
@@ -70,6 +71,7 @@ fun createNoFileInEditorPanel(project: Project,mainMessage: String): JPanel {
 private fun addNotSupportedDetailsPart(text: String, panel: JPanel, constraints: GridBagConstraints){
     val notSupportedDetailsLabel = JLabel(asHtml(text))
     notSupportedDetailsLabel.horizontalAlignment = SwingConstants.CENTER
+    notSupportedDetailsLabel.horizontalTextPosition = SwingConstants.CENTER
     panel.add(notSupportedDetailsLabel,constraints)
 }
 

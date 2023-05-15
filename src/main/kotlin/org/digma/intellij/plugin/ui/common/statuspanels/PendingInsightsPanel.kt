@@ -31,6 +31,7 @@ fun createPendingInsightsPanel(): JPanel {
     val processingLabel = JLabel("Processing Insights...")
     boldFonts(processingLabel)
     processingLabel.horizontalAlignment = SwingConstants.CENTER
+    processingLabel.horizontalTextPosition = SwingConstants.CENTER
     panel.add(processingLabel,constraints)
 
     panel.isOpaque = false

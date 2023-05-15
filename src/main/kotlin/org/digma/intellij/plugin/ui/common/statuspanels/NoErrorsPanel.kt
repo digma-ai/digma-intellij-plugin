@@ -35,6 +35,7 @@ fun createNoErrorsPanel(): JPanel {
     val goodNewsLabel = JLabel("Good News!")
     boldFonts(goodNewsLabel)
     goodNewsLabel.horizontalAlignment = SwingConstants.CENTER
+    goodNewsLabel.horizontalTextPosition = SwingConstants.CENTER
     panel.add(goodNewsLabel,constraints)
 
     constraints.insets = insetsBottom(10)
@@ -42,6 +43,7 @@ fun createNoErrorsPanel(): JPanel {
     val noErrorsLabel = JLabel("No Errors Where Recorded Here Yet.")
     boldFonts(noErrorsLabel)
     noErrorsLabel.horizontalAlignment = SwingConstants.CENTER
+    noErrorsLabel.horizontalTextPosition = SwingConstants.CENTER
     panel.add(noErrorsLabel,constraints)
 
     constraints.insets = emptyInsets()
@@ -63,6 +65,7 @@ fun createNoErrorsPanel(): JPanel {
 private fun addNoErrorsDetailsPart(text: String, panel: JPanel, constraints: GridBagConstraints){
     val noObservabilityDetailsLabel = JLabel(asHtml(text))
     noObservabilityDetailsLabel.horizontalAlignment = SwingConstants.CENTER
+    noObservabilityDetailsLabel.horizontalTextPosition = SwingConstants.CENTER
     panel.add(noObservabilityDetailsLabel,constraints)
 }
 

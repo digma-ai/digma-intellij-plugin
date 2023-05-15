@@ -71,7 +71,7 @@ fun createNoConnectionPanel(project: Project):JPanel{
     val changeInSettingsLabel = JLabel("or change the URL from the plugin")
     changeInSettingsLabel.horizontalAlignment = SwingConstants.CENTER
     changeInSettingsLabel.horizontalTextPosition = SwingConstants.CENTER
-    val settingsLink = ActionLink("settings."){
+    val settingsLink = ActionLink(" settings."){
         ShowSettingsUtil.getInstance().showSettingsDialog(project, ProjectSettings.DISPLAY_NAME)
     }
     settingsLink.horizontalAlignment = SwingConstants.LEADING

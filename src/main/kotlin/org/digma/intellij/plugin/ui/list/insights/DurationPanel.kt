@@ -2,13 +2,18 @@ package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBPanel
+import com.intellij.ui.dsl.builder.panel
+import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
 import org.digma.intellij.plugin.model.rest.insights.SpanInfo
+import org.digma.intellij.plugin.model.rest.insights.SpanInstanceInfo
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.getHex
+import org.digma.intellij.plugin.ui.common.spanBold
 import org.digma.intellij.plugin.ui.list.ListItemActionButton
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.model.TraceSample
@@ -17,21 +22,21 @@ import javax.swing.JButton
 import javax.swing.JPanel
 
 fun spanDurationPanel(
-        project: Project,
-        spanDurationsInsight: SpanDurationsInsight,
-        panelsLayoutHelper: PanelsLayoutHelper
+    project: Project,
+    spanDurationsInsight: SpanDurationsInsight,
+    panelsLayoutHelper: PanelsLayoutHelper,
 ): JPanel {
 
     if (spanDurationsInsight.percentiles.isEmpty()) {
         return createInsightPanel(
-                project = project,
-                insight = spanDurationsInsight,
-                title = "Duration",
-                description = "Waiting for more data.",
-                iconsList = listOf(Laf.Icons.Insight.WAITING_DATA),
-                bodyPanel = null,
-                buttons = null,
-                paginationComponent = null
+            project = project,
+            insight = spanDurationsInsight,
+            title = "Duration",
+            description = "Waiting for more data.",
+            iconsList = listOf(Laf.Icons.Insight.WAITING_DATA),
+            bodyPanel = null,
+            buttons = null,
+            paginationComponent = null
         )
     }
 
@@ -39,14 +44,19 @@ fun spanDurationPanel(
     durationsListPanel.layout = BoxLayout(durationsListPanel, BoxLayout.Y_AXIS)
     durationsListPanel.isOpaque = false
 
+    spanDurationsInsight.lastSpanInstanceInfo?.let {
+        val lastCallPanel = createLastCallPanel(it)
+        durationsListPanel.add(lastCallPanel)
+    }
+
     val traceSamples = ArrayList<TraceSample>()
 
     spanDurationsInsight.percentiles
-            .sortedBy(SpanDurationsPercentile::percentile)
-            .forEach { percentile: SpanDurationsPercentile ->
-                val durationsPanel = percentileRowPanel(percentile, panelsLayoutHelper, traceSamples)
-                durationsListPanel.add(durationsPanel)
-            }
+        .sortedBy(SpanDurationsPercentile::percentile)
+        .forEach { percentile: SpanDurationsPercentile ->
+            val durationsPanel = percentileRowPanel(percentile, panelsLayoutHelper, traceSamples)
+            durationsListPanel.add(durationsPanel)
+        }
 
 
     val buttonToGraph = buildButtonToPercentilesGraph(project, spanDurationsInsight.spanInfo)
@@ -54,14 +64,14 @@ fun spanDurationPanel(
     //val buttonToJaeger = buildButtonToJaeger(project, "Compare", spanDurationsInsight.spanInfo.name, traceSamples)
 
     return createInsightPanel(
-            project = project,
-            insight = spanDurationsInsight,
-            title = "Duration",
-            description = "",
-            iconsList = listOf(Laf.Icons.Insight.DURATION),
-            bodyPanel = durationsListPanel,
-            buttons = listOf(buttonToGraph),
-            paginationComponent = null
+        project = project,
+        insight = spanDurationsInsight,
+        title = "Duration",
+        description = "",
+        iconsList = listOf(Laf.Icons.Insight.DURATION),
+        bodyPanel = durationsListPanel,
+        buttons = listOf(buttonToGraph),
+        paginationComponent = null
     )
 }
 
@@ -74,4 +84,23 @@ private fun buildButtonToPercentilesGraph(project: Project, span: SpanInfo): JBu
     }
 
     return button
+}
+
+private fun createLastCallPanel(lastSpan: SpanInstanceInfo): JPanel {
+    val contentsSb = StringBuilder()
+    contentsSb.append("Last call: $HTML_NON_BREAKING_SPACE ")
+    contentsSb.append(spanBold(evalDuration(lastSpan.duration)))
+    contentsSb.append(" $HTML_NON_BREAKING_SPACE ")
+    contentsSb.append(spanBold(CommonUtils.prettyTimeOf(lastSpan.startTime)))
+
+    val thePanel = panel {
+        row {
+            text(contentsSb.toString())
+                .resizableColumn()
+        }.resizableRow()
+    }.andTransparent()
+
+    thePanel.border = JBUI.Borders.empty()
+
+    return thePanel
 }

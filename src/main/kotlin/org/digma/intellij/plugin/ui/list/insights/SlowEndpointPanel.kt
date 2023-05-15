@@ -38,7 +38,7 @@ server processed 25% of requests in higher than ${evalDuration(insight.endpoints
 }
 
 fun evalDuration(duration: Duration): String {
-    return "${duration.value}${duration.unit}"
+    return "${duration.value} ${duration.unit}"
 }
 
 fun genContent(insight: SlowEndpointInsight): String {

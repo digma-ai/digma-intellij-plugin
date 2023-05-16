@@ -154,6 +154,17 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
         )
     }
 
+    fun reportRunConfig(runConfigTypeName: String, observabilityEnabled: Boolean) {
+        postHog?.capture(
+            userId,
+            "run config",
+            mapOf(
+                "run.config.type" to runConfigTypeName,
+                "observability.enabled" to observabilityEnabled,
+            )
+        )
+    }
+
     fun registerInsightsViewed(insightTypes: List<out InsightType>) {
         val newInsightsViewed = HashSet(insightTypes)
         if (lastInsightsViewed != null && lastInsightsViewed == newInsightsViewed)

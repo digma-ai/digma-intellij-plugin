@@ -19,6 +19,7 @@ import com.intellij.util.concurrency.NonUrgentExecutor;
 import org.digma.intellij.plugin.common.DigmaVirtualFileMarker;
 import org.digma.intellij.plugin.common.FileUtils;
 import org.digma.intellij.plugin.document.DocumentInfoService;
+import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
@@ -318,7 +319,8 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
 
     private boolean isFileNotChangingContext(@NotNull VirtualFile file) {
-        return DigmaVirtualFileMarker.class.isAssignableFrom(file.getClass());
+        return DigmaVirtualFileMarker.class.isAssignableFrom(file.getClass()) ||
+                DigmaHTMLEditorProvider.getInstance(project).isOurTitle(file.getName());
     }
 
     private boolean isFileChangingContext(@NotNull VirtualFile file) {

@@ -15,13 +15,19 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.*;
+import com.intellij.psi.JavaPsiFacade;
+import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiElementFactory;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiJavaFile;
+import com.intellij.psi.PsiManager;
+import com.intellij.psi.PsiMethod;
 import com.intellij.psi.impl.java.stubs.index.JavaFullClassNameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import kotlin.Pair;
 import org.digma.intellij.plugin.common.EDT;
-import org.digma.intellij.plugin.common.ReadActions;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
@@ -32,7 +38,11 @@ import org.digma.intellij.plugin.ui.CaretContextService;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.createJavaMethodCodeObjectId;
 
@@ -74,9 +84,9 @@ public class JavaLanguageService implements LanguageService {
 
     @Override
     public void runWhenSmart(Runnable task) {
-        if (DumbService.isDumb(project)){
+        if (DumbService.isDumb(project)) {
             DumbService.getInstance(project).runWhenSmart(task);
-        }else{
+        } else {
             task.run();
         }
     }
@@ -86,7 +96,7 @@ public class JavaLanguageService implements LanguageService {
     public Language getLanguageForMethodCodeObjectId(@NotNull String methodId) {
 
         //try to parse the methodId as if it is java and try to find the language
-        if (methodId.indexOf("$_$") <= 0){
+        if (methodId.indexOf("$_$") <= 0) {
             Log.log(LOGGER::debug, "method id in getLanguageForMethodCodeObjectId does not contain $_$ {}", methodId);
             return null;
         }
@@ -128,12 +138,12 @@ public class JavaLanguageService implements LanguageService {
     @NotNull
     public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int caretOffset) {
         String fileUri = PsiUtils.psiFileToUri(psiFile);
-        if (!isSupportedFile(project,psiFile)){
+        if (!isSupportedFile(project, psiFile)) {
             return new MethodUnderCaret("", "", "", "", fileUri, false);
         }
-        PsiJavaFile psiJavaFile = (PsiJavaFile)psiFile;
+        PsiJavaFile psiJavaFile = (PsiJavaFile) psiFile;
         String packageName = psiJavaFile.getPackageName();
-        PsiElement underCaret =  psiFile.findElementAt(caretOffset);
+        PsiElement underCaret = psiFile.findElementAt(caretOffset);
         if (underCaret == null) {
             return new MethodUnderCaret("", "", "", packageName, fileUri, true);
         }
@@ -145,18 +155,18 @@ public class JavaLanguageService implements LanguageService {
 
         return new MethodUnderCaret("", "", className, packageName, fileUri);
     }
-    private String safelyTryGetClassName(PsiElement element){
-        PsiClass psiClass =  PsiTreeUtil.getParentOfType(element, PsiClass.class);
-        if (psiClass != null)
-        {
+
+    private String safelyTryGetClassName(PsiElement element) {
+        PsiClass psiClass = PsiTreeUtil.getParentOfType(element, PsiClass.class);
+        if (psiClass != null) {
             String className = psiClass.getName();
-            if(className != null) return className;
+            if (className != null) return className;
         }
         return "";
     }
 
     @NotNull
-    public CanInstrumentMethodResult canInstrumentMethod(@NotNull Project project, @Nullable String methodId){
+    public CanInstrumentMethodResult canInstrumentMethod(@NotNull Project project, @Nullable String methodId) {
 
         var psiMethod = findPsiMethodByMethodCodeObjectId(methodId);
         if (psiMethod == null) {
@@ -187,7 +197,7 @@ public class JavaLanguageService implements LanguageService {
         return new JavaCanInstrumentMethodResult(methodId, psiMethod, withSpanClass, psiJavaFile);
     }
 
-    public boolean instrumentMethod(@NotNull CanInstrumentMethodResult result){
+    public boolean instrumentMethod(@NotNull CanInstrumentMethodResult result) {
 
         if (!(result instanceof JavaCanInstrumentMethodResult goodResult)) {
             Log.log(LOGGER::warn, "instrumentMethod was called with failing result from canInstrumentMethod");
@@ -226,7 +236,7 @@ public class JavaLanguageService implements LanguageService {
     public void navigateToMethod(String methodId) {
 
         Log.log(LOGGER::debug, "got navigate to method request {}", methodId);
-        if (methodId.indexOf("$_$") <= 0){
+        if (methodId.indexOf("$_$") <= 0) {
             Log.log(LOGGER::debug, "method id in navigateToMethod does not contain $_$, can not navigate {}", methodId);
             return;
         }
@@ -318,7 +328,7 @@ public class JavaLanguageService implements LanguageService {
                         workspaceUrls.put(methodId, url);
                     }
                 }
-            }else{
+            } else {
                 Log.log(LOGGER::debug, "method id in findWorkspaceUrisForCodeObjectIdsForErrorStackTrace does not contain $_$ {}", methodId);
             }
         });
@@ -346,33 +356,39 @@ public class JavaLanguageService implements LanguageService {
     private @Nullable PsiMethod findPsiMethodByMethodCodeObjectId(@Nullable String methodId) {
         if (methodId == null) return null;
 
-
-        if (methodId.contains("$_$")) {
-
-            return ReadActions.ensureReadAction(() -> {
-                var className = methodId.substring(0, methodId.indexOf("$_$"));
-                //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
-                className = className.replace('$', '.');
-
-                //searching in project scope will find only project classes
-                Collection<PsiClass> psiClasses =
-                        JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.projectScope(project));
-                if (!psiClasses.isEmpty()) {
-                    //hopefully there is only one class by that name in the project
-                    PsiClass psiClass = psiClasses.stream().findAny().get();
-                    PsiFile psiFile = PsiTreeUtil.getParentOfType(psiClass, PsiFile.class);
-                    for (PsiMethod method : psiClass.getMethods()) {
-                        String javaMethodCodeObjectId = createJavaMethodCodeObjectId(method);
-                        if (javaMethodCodeObjectId.equals(methodId) && psiFile != null) {
-                            return method;
-                        }
-                    }
-                }
-                return null;
-            });
-
-        }else{
+        if (!methodId.contains("$_$")) {
             Log.log(LOGGER::debug, "method id in findWorkspaceUrisForMethodCodeObjectIds does not contain $_$ {}", methodId);
+            return null;
+        }
+
+        return ReadAction.nonBlocking(() -> netoFindPsiMethodByMethodCodeObjectId(methodId))
+                .inSmartMode(project)
+                .withDocumentsCommitted(project)
+                .executeSynchronously();
+    }
+
+    private @Nullable PsiMethod netoFindPsiMethodByMethodCodeObjectId(@NotNull String methodId) {
+        if (!methodId.contains("$_$")) {
+            Log.log(LOGGER::debug, "method id in netoFindPsiMethodByMethodCodeObjectId does not contain $_$ {}", methodId);
+            return null;
+        }
+
+        var className = methodId.substring(0, methodId.indexOf("$_$"));
+        //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
+        className = className.replace('$', '.');
+
+        //searching in project scope will find only project classes
+        Collection<PsiClass> psiClasses = JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.projectScope(project));
+        if (!psiClasses.isEmpty()) {
+            //hopefully there is only one class by that name in the project
+            PsiClass psiClass = psiClasses.stream().findAny().get();
+            PsiFile psiFile = PsiTreeUtil.getParentOfType(psiClass, PsiFile.class);
+            for (PsiMethod method : psiClass.getMethods()) {
+                String javaMethodCodeObjectId = createJavaMethodCodeObjectId(method);
+                if (javaMethodCodeObjectId.equals(methodId) && psiFile != null) {
+                    return method;
+                }
+            }
         }
         return null;
     }
@@ -406,15 +422,13 @@ public class JavaLanguageService implements LanguageService {
     }
 
 
-
-
     @Override
     public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile) {
         Log.log(LOGGER::debug, "got buildDocumentInfo request for {}", psiFile);
         //must be PsiJavaFile , this method should be called only for java files
         if (psiFile instanceof PsiJavaFile psiJavaFile) {
             return JavaCodeObjectDiscovery.buildDocumentInfo(project, psiJavaFile, endpointDiscoveryList);
-        }else{
+        } else {
             Log.log(LOGGER::debug, "psi file is noy java, returning empty DocumentInfo for {}", psiFile);
             return new DocumentInfo(PsiUtils.psiFileToUri(psiFile), new HashMap<>());
         }
@@ -429,7 +443,7 @@ public class JavaLanguageService implements LanguageService {
     @Override
     public boolean isRelevant(VirtualFile file) {
 
-        if (file.isDirectory() || !file.isValid()){
+        if (file.isDirectory() || !file.isValid()) {
             return false;
         }
 

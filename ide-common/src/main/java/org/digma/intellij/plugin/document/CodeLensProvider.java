@@ -12,9 +12,11 @@ import org.digma.intellij.plugin.model.rest.insights.CodeObjectDecorator;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public class CodeLensProvider {
 
@@ -27,14 +29,15 @@ public class CodeLensProvider {
     }
 
 
-    public List<CodeLens> provideCodeLens(@NotNull PsiFile psiFile) {
+    @NotNull
+    public Set<CodeLens> provideCodeLens(@NotNull PsiFile psiFile) {
 
         Log.log(LOGGER::debug, "Got request for code lens for {}", psiFile.getVirtualFile());
 
         DocumentInfoContainer documentInfo = documentInfoService.getDocumentInfo(psiFile);
         if (documentInfo == null) {
             Log.log(LOGGER::debug, "Can't find DocumentInfo for {}", psiFile.getVirtualFile());
-            return new ArrayList<>();
+            return Collections.emptySet();
         }
 
         var codeLens = buildCodeLens(documentInfo, false);
@@ -42,11 +45,9 @@ public class CodeLensProvider {
         return codeLens;
     }
 
-    private List<CodeLens> buildCodeLens(
-            @NotNull DocumentInfoContainer documentInfoContainer,
-            boolean environmentPrefix
-    ) {
-        List<CodeLens> codeLensList = new ArrayList<>();
+    @NotNull
+    private Set<CodeLens> buildCodeLens(@NotNull DocumentInfoContainer documentInfoContainer, boolean environmentPrefix) {
+        Set<CodeLens> codeLensList = new LinkedHashSet<>();
 
         var methodsInfo = documentInfoContainer.getDocumentInfo().getMethods().values();
 

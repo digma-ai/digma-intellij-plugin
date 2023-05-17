@@ -42,7 +42,7 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
             try {
                 val psiFile = PsiUtils.uriToPsiFile(psiFileUri!!, project)
                 Log.log(logger::debug, "Requesting code lens for {}", psiFile.virtualFile)
-                val codeLens: List<CodeLens> = codeLensProvider.provideCodeLens(psiFile)
+                val codeLens: Set<CodeLens> = codeLensProvider.provideCodeLens(psiFile)
                 Log.log(logger::debug, "Got codeLens for {}: {}", psiFile.virtualFile, codeLens)
                 installCodeLens(psiFile, codeLens)
             } catch (e: PsiFileNotFountException) {
@@ -52,13 +52,13 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
     }
 
 
-    fun installCodeLens(@NotNull psiFile: PsiFile, @NotNull codeLenses: List<CodeLens>) {
-        EDT.ensureEDT{
-            installCodeLensOnEDT(psiFile,codeLenses)
+    fun installCodeLens(@NotNull psiFile: PsiFile, @NotNull codeLenses: Set<CodeLens>) {
+        EDT.ensureEDT {
+            installCodeLensOnEDT(psiFile, codeLenses)
         }
     }
 
-    private fun installCodeLensOnEDT(@NotNull psiFile: PsiFile, @NotNull codeLenses: List<CodeLens>) {
+    private fun installCodeLensOnEDT(@NotNull psiFile: PsiFile, @NotNull codeLenses: Set<CodeLens>) {
 
         Log.log(logger::debug, "got request to installCodeLensOnEDT for {}: {}", psiFile.virtualFile, codeLenses)
 
@@ -66,7 +66,7 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
         //code lens of this document, necessary in environment change event.
 
         //always try to find ProjectModelId for the psi file, it is the preferred way to find a psi file in resharper
-        val projectModelId: Int? = tryGetProjectModelId(psiFile,project)
+        val projectModelId: Int? = tryGetProjectModelId(psiFile, project)
         val psiUri = PsiUtils.psiFileToUri(psiFile)
         val psiId = PsiFileID(projectModelId, psiUri)
 

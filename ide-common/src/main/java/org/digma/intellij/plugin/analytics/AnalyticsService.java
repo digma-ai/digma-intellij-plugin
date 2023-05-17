@@ -41,7 +41,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.net.SocketException;
-import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.net.http.HttpTimeoutException;
 import java.time.Instant;
@@ -403,11 +402,11 @@ public class AnalyticsService implements Disposable {
                 if (status.isInConnectionError()) {
                     // change status here because connectionGained() will trigger call to this invoke() again
                     // and without changing the status Notification will be displayed several times in a loop
-                    status.ok();
+                    status.reset();
                     NotificationUtil.showNotification(project, "Digma: Connection reestablished !");
                     project.getMessageBus().syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC).connectionGained();
                 }
-                status.ok();
+                status.reset();
 
                 return result;
 
@@ -421,31 +420,32 @@ public class AnalyticsService implements Disposable {
                 // will be logged only once.
 
                 boolean isConnectionException = isConnectionException(e) || isSslConnectionException(e);
-                if (status.isOk() && isConnectionException) {
-                    status.connectError();
-                    project.getMessageBus().syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC).connectionLost();
-                    var message = isConnectionException(e) ? getConnectExceptionMessage(e) : getSslExceptionMessage(e);
-                    Log.log(LOGGER::warn, "Connection exception: error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
-                    LOGGER.warn(e);
-                    ActivityMonitor.getInstance(project).registerConnectionError(method.getName(), message);
-                    NotificationUtil.notifyError(project, "<html>Connection error with Digma backend api for method " + method.getName() + ".<br> "
-                            + message + ".<br> See logs for details.");
-                } else if (status.isOk()) {
-                    status.error();
-                    Log.log(LOGGER::warn, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getCause().getMessage());
-                    var message = getExceptionMessage(e);
-                    NotificationUtil.notifyError(project, "<html>Error with Digma backend api for method " + method.getName() + ".<br> "
-                            + message + ".<br> See logs for details.");
-                    LOGGER.warn(e);
-                    ActivityMonitor.getInstance(project).registerError(e, message);
-                } else if (!status.hadError(e)) {
-                    status.error();
+                if(status.isOk()){
+                    if (isConnectionException) {
+                        status.addConnectionError(e);
+                        project.getMessageBus().syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC).connectionLost();
+                        var message = isConnectionException(e) ? getConnectExceptionMessage(e) : getSslExceptionMessage(e);
+                        Log.log(LOGGER::warn, "Connection exception: error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
+                        ActivityMonitor.getInstance(project).registerConnectionError(method.getName(), message);
+                        NotificationUtil.notifyError(project, "<html>Connection error with Digma backend api for method " + method.getName() + ".<br> "
+                                + message + ".<br> See logs for details.");
+                    }
+                    else{
+                        status.addIfNewError(e);
+                        Log.log(LOGGER::warn, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getCause().getMessage());
+                        var message = getExceptionMessage(e);
+                        NotificationUtil.notifyError(project, "<html>Error with Digma backend api for method " + method.getName() + ".<br> "
+                                + message + ".<br> See logs for details.");
+                        ActivityMonitor.getInstance(project).registerError(e, message);
+                    }
+                }
+                // status was not ok but it's a new error
+                else if(status.addIfNewError(e)){
                     var message = getExceptionMessage(e);
                     Log.log(LOGGER::warn, "New Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
                     LOGGER.warn(e);
                     ActivityMonitor.getInstance(project).registerError(e, message);
                 }
-
 
                 if (e.getCause() instanceof AnalyticsProviderException) {
                     throw e.getCause();
@@ -454,7 +454,7 @@ public class AnalyticsService implements Disposable {
                 throw new AnalyticsServiceException(e);
 
             } catch (Exception e) {
-                status.error();
+                status.addIfNewError(e);
                 Log.log(LOGGER::debug, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getMessage());
                 LOGGER.error(e);
                 ActivityMonitor.getInstance(project).registerError(e, "Error invoking AnalyticsProvider");
@@ -562,51 +562,35 @@ public class AnalyticsService implements Disposable {
 
     private static class Status {
 
-        private final Map<String, Boolean> errorsHistory = new HashMap<>();
-
+        private final Set<String> errors = new HashSet<>();
         private final AtomicBoolean hadConnectException = new AtomicBoolean(false);
-        private boolean hadError = false;
-
-        boolean isInError() {
-            return hadConnectException.get() || hadError;
-        }
 
         boolean isInConnectionError() {
             return hadConnectException.get();
         }
 
         boolean isOk() {
-            return !isInError();
+            return !hadConnectException.get() && errors.isEmpty();
         }
 
-        public void ok() {
+        public void reset() {
             hadConnectException.set(false);
-            hadError = false;
-            errorsHistory.clear();
+            errors.clear();
         }
 
-        public void connectError() {
+        public void addConnectionError(Exception e) {
             hadConnectException.set(true);
+            addIfNewError(e);
         }
 
-
-        public void error() {
-            hadError = true;
-        }
-
-        public boolean hadError(InvocationTargetException e) {
+        public boolean addIfNewError(Exception e) {
             var cause = findRealError(e);
             var errorName = cause.getClass().getName();
-            if (errorsHistory.containsKey(errorName)) {
-                return true;
-            }
-            errorsHistory.put(errorName, true);
-
-            return false;
+            return errors.add(errorName);
         }
 
         @NotNull
-        private Throwable findRealError(InvocationTargetException e) {
+        private Throwable findRealError(Exception e) {
 
             Throwable cause = e.getCause();
             while (cause != null && !cause.getClass().equals(AnalyticsProviderException.class)) {

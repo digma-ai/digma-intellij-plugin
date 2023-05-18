@@ -42,6 +42,7 @@ import org.digma.intellij.plugin.toolwindow.common.CustomViewerWindow;
 import org.digma.intellij.plugin.toolwindow.common.JaegerUrlChangedPayload;
 import org.digma.intellij.plugin.toolwindow.common.JaegerUrlChangedRequest;
 import org.digma.intellij.plugin.toolwindow.common.ThemeChangeListener;
+import org.digma.intellij.plugin.toolwindow.recentactivity.incoming.CloseLiveViewMessage;
 import org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt;
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
 import org.jetbrains.annotations.NotNull;
@@ -61,6 +62,7 @@ import java.util.TimerTask;
 
 import static org.digma.intellij.plugin.navigation.codeless.CodelessNavigationKt.navigate;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.GLOBAL_SET_IS_JAEGER_ENABLED;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_CLOSE_LIVE_VIEW;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_SPAN;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_TRACE;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_INITIALIZE;
@@ -184,6 +186,10 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory, Disposab
                 if (RECENT_ACTIVITY_GO_TO_TRACE.equalsIgnoreCase(reactMessageRequest.getAction())) {
                     RecentActivityGoToTraceRequest recentActivityGoToTraceRequest = parseJsonToObject(request, RecentActivityGoToTraceRequest.class);
                     processRecentActivityGoToTraceRequest(recentActivityGoToTraceRequest, project);
+                }
+                if (RECENT_ACTIVITY_CLOSE_LIVE_VIEW.equalsIgnoreCase(reactMessageRequest.getAction())) {
+                    CloseLiveViewMessage closeLiveViewMessage = parseJsonToObject(request,CloseLiveViewMessage.class);
+                    RecentActivityService.getInstance(project).liveViewClosed(closeLiveViewMessage);
                 }
 
                 callback.success("");

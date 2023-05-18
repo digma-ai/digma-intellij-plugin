@@ -8,6 +8,7 @@ import com.intellij.ui.JBColor;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.CommonUtils;
+import org.digma.intellij.plugin.document.CodeObjectsUtil;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
@@ -292,7 +293,8 @@ public class AnalyticsService implements Disposable {
 
     public DurationLiveData getDurationLiveData(String codeObjectId) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
-        return executeCatching(() -> analyticsProviderProxy.getDurationLiveData(new DurationLiveDataRequest(env,codeObjectId)));
+        return executeCatching(() ->
+                analyticsProviderProxy.getDurationLiveData(new DurationLiveDataRequest(env,CodeObjectsUtil.addMethodTypeToId(codeObjectId))));
     }
 
     public UsageStatusResult getUsageStatusOfErrors(List<String> objectIds) throws AnalyticsServiceException {

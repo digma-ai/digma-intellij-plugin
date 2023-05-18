@@ -16,6 +16,7 @@ import javax.swing.Icon
 import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.plaf.basic.BasicButtonUI
+import kotlin.math.max
 
 
 class ListItemActionButton(text: String) : AbstractListItemActionButton(text)
@@ -72,15 +73,24 @@ abstract class AbstractListItemActionButton: JButton {
 
 	override fun getPreferredSize(): Dimension {
 		val original = super.getPreferredSize()
-		val widthToSubtract = 15.scaled()
-		val heightToSubtract = 5.scaled()
-		if (isBorderPainted && border != null) {
+		var widthToSubtract = 15.scaled()
+		var heightToSubtract = 5.scaled()
+		return if (isBorderPainted && border != null) {
 			val borderWidth = border.getBorderInsets(this).left + border.getBorderInsets(this).right
 			val borderHeight = border.getBorderInsets(this).top + border.getBorderInsets(this).bottom
-			widthToSubtract.plus(borderWidth)
-			heightToSubtract.plus(borderHeight)
+			widthToSubtract = widthToSubtract.plus(borderWidth)
+			heightToSubtract = heightToSubtract.plus(borderHeight)
+			var width = original.width - widthToSubtract
+			var height = original.height - heightToSubtract
+
+			icon?.let {
+				width = max(width,(icon.iconWidth + borderWidth))
+				height = max(height,(icon.iconHeight + borderHeight))
+			}
+			Dimension(width + 2.scaled(), height + 2.scaled())
+		}else{
+			Dimension(original.width - widthToSubtract, original.height - heightToSubtract)
 		}
-		return Dimension(original.width - widthToSubtract, original.height - heightToSubtract)
 	}
 
 	override fun paintComponent(g: Graphics) {

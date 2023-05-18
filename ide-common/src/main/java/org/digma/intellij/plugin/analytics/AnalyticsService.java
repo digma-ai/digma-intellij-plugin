@@ -294,7 +294,7 @@ public class AnalyticsService implements Disposable {
     public DurationLiveData getDurationLiveData(String codeObjectId) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         return executeCatching(() ->
-                analyticsProviderProxy.getDurationLiveData(new DurationLiveDataRequest(env,CodeObjectsUtil.addMethodTypeToId(codeObjectId))));
+                analyticsProviderProxy.getDurationLiveData(new DurationLiveDataRequest(env,codeObjectId)));
     }
 
     public UsageStatusResult getUsageStatusOfErrors(List<String> objectIds) throws AnalyticsServiceException {

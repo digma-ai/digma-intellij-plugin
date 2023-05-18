@@ -102,12 +102,18 @@ public class RecentActivityService implements Disposable {
             public void run() {
                 try {
                     DurationLiveData newDurationLiveData =
-                            AnalyticsService.getInstance(project).getDurationLiveData(originalDurationLiveData.getDurationInsight().getCodeObjectId());
-                    sendLiveDataImpl(newDurationLiveData);
+                            AnalyticsService.getInstance(project)
+                                    .getDurationLiveData(originalDurationLiveData.getDurationInsight().getPrefixedCodeObjectId());
+                    if (newDurationLiveData.getDurationInsight() != null) {
+                        sendLiveDataImpl(newDurationLiveData);
+                    }
                 } catch (AnalyticsServiceException e) {
                     Log.debugWithException(logger,e,"Exception from getDurationLiveData {}",e.getMessage());
+                }catch (Exception e){
+                    //catch any other exception and rethrow because it's a bug we should fix
+                    Log.debugWithException(logger,e,"Exception from myLiveDataTimer {}",e.getMessage());
+                    throw e;
                 }
-
             }
         },5000,5000);
     }

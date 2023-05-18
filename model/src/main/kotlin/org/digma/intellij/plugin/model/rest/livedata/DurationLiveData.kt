@@ -22,5 +22,5 @@ data class DurationLiveData
     "liveDataRecords",
     "durationInsight"
 )
-constructor(val liveDataRecords: List<LiveDataRecord>,val durationInsight: SpanDurationsInsight)
+constructor(val liveDataRecords: List<LiveDataRecord>,val durationInsight: SpanDurationsInsight?)
 

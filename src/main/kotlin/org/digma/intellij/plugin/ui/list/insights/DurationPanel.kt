@@ -6,8 +6,8 @@ import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.common.CommonUtils
-import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
@@ -65,7 +65,7 @@ fun spanDurationPanel(
 
 
     val buttonToGraph = buildButtonToPercentilesGraph(project, spanDurationsInsight.spanInfo)
-    val liveViewButton = buildLiveViewButton(project,spanDurationsInsight.codeObjectId)
+    val liveViewButton = buildLiveViewButton(project,spanDurationsInsight)
     //related to issue #621
     //val buttonToJaeger = buildButtonToJaeger(project, "Compare", spanDurationsInsight.spanInfo.name, traceSamples)
 
@@ -83,17 +83,22 @@ fun spanDurationPanel(
 
 
 
-private fun buildLiveViewButton(project: Project, codeObjectId: String): JButton {
+private fun buildLiveViewButton(project: Project, spanDurationsInsight: SpanDurationsInsight): JButton {
 
     val icon = if (JBColor.isBright()) Laf.Icons.Common.LiveIconLight else Laf.Icons.Common.LiveIconDark
     val borderColor = if (JBColor.isBright()) Laf.Colors.LIVE_BUTTON_BORDER_LIGHT else Laf.Colors.LIVE_BUTTON_BORDER_DARK
     val liveViewButton = ListItemActionIconButton("Live",icon)
     liveViewButton.isBorderPainted = true
-    liveViewButton.border = JBUI.Borders.customLine(borderColor,1.scaled())
+    liveViewButton.border = JBUI.Borders.customLine(borderColor,2.scaled())
     liveViewButton.addActionListener{
-        val durationLiveData = AnalyticsService.getInstance(project).getDurationLiveData(CodeObjectsUtil.addMethodTypeToId(codeObjectId))
-        RecentActivityService.getInstance(project).sendLiveData(durationLiveData)
-
+        try {
+            val durationLiveData = AnalyticsService.getInstance(project).getDurationLiveData(spanDurationsInsight.prefixedCodeObjectId)
+            durationLiveData.durationInsight?.let {
+                RecentActivityService.getInstance(project).sendLiveData(durationLiveData)
+            }
+        }catch (e: AnalyticsServiceException){
+            //do nothing, the exception is logged in AnalyticsService
+        }
     }
     return liveViewButton
 }

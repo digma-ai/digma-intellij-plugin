@@ -125,6 +125,7 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory, Disposab
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
         Log.log(LOGGER::debug, "createToolWindowContent for project  {}", project);
 
+        RecentActivityToolWindowShower.getInstance(project).setToolWindow(toolWindow);
         var contentFactory = ContentFactory.getInstance();
         var codeAnalyticsTab = createCodeAnalyticsTab(project, toolWindow, contentFactory);
         if (codeAnalyticsTab != null) {
@@ -158,6 +159,8 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory, Disposab
 
         jbCefBrowser.getCefBrowser().setFocus(true);
 
+        RecentActivityService.getInstance(project).setJcefBrowser(jbCefBrowser);
+
         CefMessageRouter msgRouter = CefMessageRouter.create();
 
         ThemeChangeListener listener = new ThemeChangeListener(jbCefBrowser);
@@ -172,6 +175,7 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory, Disposab
                 JcefMessageRequest reactMessageRequest = parseJsonToObject(request, JcefMessageRequest.class);
                 if (RECENT_ACTIVITY_INITIALIZE.equalsIgnoreCase(reactMessageRequest.getAction())) {
                     processRecentActivityInitialized();
+                    RecentActivityService.getInstance(project).runInitTask();
                 }
                 if (RECENT_ACTIVITY_GO_TO_SPAN.equalsIgnoreCase(reactMessageRequest.getAction())) {
                     RecentActivityGoToSpanRequest recentActivityGoToSpanRequest = parseJsonToObject(request, RecentActivityGoToSpanRequest.class);

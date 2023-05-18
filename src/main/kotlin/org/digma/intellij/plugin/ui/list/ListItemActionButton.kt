@@ -3,16 +3,29 @@ package org.digma.intellij.plugin.ui.list
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.ui.common.Laf
-import java.awt.*
+import java.awt.Color
+import java.awt.Dimension
+import java.awt.Graphics
+import java.awt.Graphics2D
+import java.awt.RenderingHints
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import javax.swing.AbstractButton
+import javax.swing.Icon
 import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.plaf.basic.BasicButtonUI
 
 
-internal class ListItemActionButton constructor(text: String): JButton(text) {
+class ListItemActionButton(text: String) : AbstractListItemActionButton(text)
+
+class ListItemActionIconButton(icon: Icon) : AbstractListItemActionButton(icon)
+
+abstract class AbstractListItemActionButton: JButton {
+		constructor(text: String): super(text)
+		constructor(icon: Icon): super(icon)
+
+
 	init {
 		isOpaque = false
 		background = getDefaultBgColor()

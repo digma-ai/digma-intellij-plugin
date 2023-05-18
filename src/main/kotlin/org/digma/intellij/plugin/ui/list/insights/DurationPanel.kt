@@ -1,20 +1,24 @@
 package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.openapi.project.Project
+import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.CommonUtils
+import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
 import org.digma.intellij.plugin.model.rest.insights.SpanInfo
 import org.digma.intellij.plugin.model.rest.insights.SpanInstanceInfo
+import org.digma.intellij.plugin.toolwindow.recentactivity.RecentActivityService
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.getHex
 import org.digma.intellij.plugin.ui.common.spanBold
 import org.digma.intellij.plugin.ui.list.ListItemActionButton
+import org.digma.intellij.plugin.ui.list.ListItemActionIconButton
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.model.TraceSample
 import javax.swing.BoxLayout
@@ -60,6 +64,7 @@ fun spanDurationPanel(
 
 
     val buttonToGraph = buildButtonToPercentilesGraph(project, spanDurationsInsight.spanInfo)
+    val liveViewButton = buildLiveViewButton(project,spanDurationsInsight.codeObjectId)
     //related to issue #621
     //val buttonToJaeger = buildButtonToJaeger(project, "Compare", spanDurationsInsight.spanInfo.name, traceSamples)
 
@@ -70,10 +75,25 @@ fun spanDurationPanel(
         description = "",
         iconsList = listOf(Laf.Icons.Insight.DURATION),
         bodyPanel = durationsListPanel,
-        buttons = listOf(buttonToGraph),
+        buttons = listOf(buttonToGraph,liveViewButton),
         paginationComponent = null
     )
 }
+
+
+
+private fun buildLiveViewButton(project: Project, codeObjectId: String): JButton {
+
+    val icon = if (JBColor.isBright()) Laf.Icons.Common.LiveViewLight else Laf.Icons.Common.LiveViewDark
+    val liveViewButton = ListItemActionIconButton(icon)
+    liveViewButton.addActionListener{
+        val durationLiveData = AnalyticsService.getInstance(project).getDurationLiveData(CodeObjectsUtil.addMethodTypeToId(codeObjectId))
+        RecentActivityService.getInstance(project).sendLiveData(durationLiveData)
+
+    }
+    return liveViewButton
+}
+
 
 private fun buildButtonToPercentilesGraph(project: Project, span: SpanInfo): JButton {
     val analyticsService = AnalyticsService.getInstance(project)

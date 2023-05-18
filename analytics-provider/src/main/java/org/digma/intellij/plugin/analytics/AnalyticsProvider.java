@@ -12,6 +12,8 @@ import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsRequest;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
+import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
+import org.digma.intellij.plugin.model.rest.livedata.DurationLiveDataRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
@@ -54,6 +56,8 @@ public interface AnalyticsProvider extends Closeable {
     String getHtmlGraphForSpanScaling(SpanHistogramQuery request);
 
     RecentActivityResult getRecentActivity(RecentActivityRequest recentActivityRequest);
+
+    DurationLiveData getDurationLiveData(DurationLiveDataRequest durationLiveDataRequest);
 
     VersionResponse getVersions(VersionRequest request);
 

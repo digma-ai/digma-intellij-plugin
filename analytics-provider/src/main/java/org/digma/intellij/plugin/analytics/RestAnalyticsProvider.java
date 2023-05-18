@@ -18,6 +18,8 @@ import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsRequest;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
+import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
+import org.digma.intellij.plugin.model.rest.livedata.DurationLiveDataRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
@@ -133,6 +135,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     @Override
     public RecentActivityResult getRecentActivity(RecentActivityRequest recentActivityRequest) {
         return execute(() -> client.analyticsProvider.getRecentActivity(recentActivityRequest));
+    }
+
+    @Override
+    public DurationLiveData getDurationLiveData(DurationLiveDataRequest durationLiveDataRequest) {
+        return execute(() -> client.analyticsProvider.getDurationLiveData(durationLiveDataRequest));
     }
 
     @Override
@@ -401,6 +408,14 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @POST("/CodeAnalytics/codeObjects/recent_activity")
         Call<RecentActivityResult> getRecentActivity(@Body RecentActivityRequest recentActivityRequest);
+
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/LiveData/liveData")
+        Call<DurationLiveData> getDurationLiveData(@Body DurationLiveDataRequest durationLiveDataRequest);
 
         @Headers({
                 "Accept: application/+json",

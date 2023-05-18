@@ -155,6 +155,8 @@ object Laf {
                 @JvmStatic val NoConnectionLight = SvgIcon.asIs("/icons/no-connection-light.svg")
                 @JvmStatic val NoErrorsDark = SvgIcon.asIs("/icons/no-errors-dark.svg")
                 @JvmStatic val NoErrorsLight = SvgIcon.asIs("/icons/no-errors-light.svg")
+                @JvmStatic val LiveViewDark = SvgIcon.asIs("/icons/live-view-button-dark.svg")
+                @JvmStatic val LiveViewLight = SvgIcon.asIs("/icons/live-view-button-light.svg")
             }
         }
 

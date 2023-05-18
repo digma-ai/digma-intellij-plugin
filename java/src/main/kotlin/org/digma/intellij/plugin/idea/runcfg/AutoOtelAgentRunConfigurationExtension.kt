@@ -78,11 +78,12 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
                 //this also works for: CommonJavaRunConfigurationParameters
                 //params.vmParametersList.addParametersString("-verbose:class -javaagent:/home/shalom/tmp/run-configuration/opentelemetry-javaagent.jar")
                 //params.vmParametersList.addProperty("myprop","myvalue")
-                val javaToolOptions = buildJavaToolOptions(configuration, project)
+                val javaToolOptions = buildJavaToolOptions(configuration, params, project)
                 javaToolOptions?.let {
                     mergeJavaToolOptions(params, it)
                 }
             }
+
             RunConfigType.GradleRun -> {
                 //when injecting JAVA_TOOL_OPTIONS to GradleRunConfiguration the GradleRunConfiguration will also run with
                 // JAVA_TOOL_OPTIONS which is not ideal. for example, gradle will execute with JAVA_TOOL_OPTIONS and then fork
@@ -95,18 +96,20 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
                 //when gradle runs the :test task it's not possible to pass system properties to the task.
                 // JAVA_TOOL_OPTIONS is not the best as said above, but it works.
                 configuration as GradleRunConfiguration
-                val javaToolOptions = buildJavaToolOptions(configuration, project)
+                val javaToolOptions = buildJavaToolOptions(configuration, params, project)
                 javaToolOptions?.let {
                     mergeGradleJavaToolOptions(configuration, javaToolOptions)
                 }
             }
+
             RunConfigType.MavenRun -> {
                 configuration as MavenRunConfiguration
-                val javaToolOptions = buildJavaToolOptions(configuration, project)
+                val javaToolOptions = buildJavaToolOptions(configuration, params, project)
                 javaToolOptions?.let {
                     mergeJavaToolOptions(params, it)
                 }
             }
+
             else -> {
                 // do nothing
             }
@@ -185,7 +188,11 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
         return console
     }
 
-    private fun buildJavaToolOptions(configuration: RunConfigurationBase<*>, project: Project): String? {
+    private fun buildJavaToolOptions(
+        configuration: RunConfigurationBase<*>,
+        params: JavaParameters,
+        project: Project,
+    ): String? {
 
         val otelAgentPath = OTELJarProvider.getInstance().getOtelAgentJarPath(project)
         val digmaExtensionPath = OTELJarProvider.getInstance().getDigmaAgentExtensionJarPath(project)
@@ -194,7 +201,7 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
             return null
         }
 
-        return ""
+        var retVal = " "
             .plus("-javaagent:$otelAgentPath")
             .plus(" ")
             .plus("-Dotel.javaagent.extensions=$digmaExtensionPath")
@@ -205,11 +212,37 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
             .plus(" ")
             .plus("-Dotel.exporter.otlp.traces.endpoint=${getExporterUrl()}")
             .plus(" ")
-            .plus("-Dotel.service.name=${getServiceName(configuration)}")
-            .plus(" ")
+
+        if (!isOtelServiceNameAlreadyDefined(params)) {
+            retVal = retVal
+                .plus("-Dotel.service.name=${evalServiceName(configuration)}")
+                .plus(" ")
+        }
+
+        return retVal
     }
 
-    private fun getServiceName(configuration: RunConfigurationBase<*>): String {
+    private fun isOtelEntryDefined(
+        javaConfParams: JavaParameters,
+        environmentVariable: String,
+        systemProperty: String,
+    ): Boolean {
+        return javaConfParams.env.containsKey(environmentVariable)
+                || isVmEntryExists(javaConfParams, systemProperty)
+    }
+
+    /**
+     * see <a href="https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/autoconfigure/README.md#opentelemetry-resource"></a>
+     */
+    private fun isOtelServiceNameAlreadyDefined(javaConfParams: JavaParameters): Boolean {
+        return isOtelEntryDefined(javaConfParams, "OTEL_SERVICE_NAME", "otel.service.name")
+    }
+
+    private fun isVmEntryExists(javaConfParams: JavaParameters, entryName: String): Boolean {
+        return javaConfParams.vmParametersList.hasProperty(entryName)
+    }
+
+    private fun evalServiceName(configuration: RunConfigurationBase<*>): String {
         return if (configuration is ModuleRunConfiguration && configuration.modules.isNotEmpty()) {
             val moduleName = configuration.modules.first().name
             moduleName.replace(" ", "").trim()

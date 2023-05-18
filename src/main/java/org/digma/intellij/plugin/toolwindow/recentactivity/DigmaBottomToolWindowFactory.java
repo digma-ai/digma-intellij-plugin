@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.toolwindow.recentactivity;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.execution.runners.ExecutionUtil;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
@@ -188,8 +189,18 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory, Disposab
                     processRecentActivityGoToTraceRequest(recentActivityGoToTraceRequest, project);
                 }
                 if (RECENT_ACTIVITY_CLOSE_LIVE_VIEW.equalsIgnoreCase(reactMessageRequest.getAction())) {
-                    CloseLiveViewMessage closeLiveViewMessage = parseJsonToObject(request,CloseLiveViewMessage.class);
-                    RecentActivityService.getInstance(project).liveViewClosed(closeLiveViewMessage);
+                    //for some reason, in Rider, Gson can not parse CloseLiveViewMessage so using ObjectMapper.
+                    //it's probably a missing add-open for Gson in Rider.
+                    // todo: check it in the next Rider version, just try to use Gson
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    CloseLiveViewMessage closeLiveViewMessage = null;
+                    try {
+                        closeLiveViewMessage = objectMapper.readValue(request, CloseLiveViewMessage.class);
+                        RecentActivityService.getInstance(project).liveViewClosed(closeLiveViewMessage);
+                    } catch (Exception e) {
+                        Log.debugWithException(LOGGER,e, "Exception while building CloseLiveViewMessage {}", e.getMessage());
+                        RecentActivityService.getInstance(project).liveViewClosed(null);
+                    }
                 }
 
                 callback.success("");

@@ -13,6 +13,7 @@ import org.digma.intellij.plugin.toolwindow.recentactivity.incoming.CloseLiveVie
 import org.digma.intellij.plugin.toolwindow.recentactivity.outgoing.LiveDataMessage;
 import org.digma.intellij.plugin.toolwindow.recentactivity.outgoing.LiveDataPayload;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -46,9 +47,9 @@ public class RecentActivityService implements Disposable {
         this.jbCefBrowser = jbCefBrowser;
     }
 
-    public void sendLiveData(@NotNull DurationLiveData durationLiveData) {
+    public void sendLiveData(@NotNull DurationLiveData durationLiveData, @NotNull String codeObjectId) {
 
-        Log.log(logger::debug,project,"Got sendLiveData request for {}",durationLiveData.getDurationInsight().getCodeObjectId());
+        Log.log(logger::debug,project,"Got sendLiveData request for {}",codeObjectId);
 
         stopLiveDataTimerTask();
 
@@ -58,7 +59,7 @@ public class RecentActivityService implements Disposable {
             //ugly hack for initialization when RECENT_ACTIVITY_INITIALIZE message is sent.
             // if the recent activity window was not yet initialized then we need to send the live data only after
             // RECENT_ACTIVITY_INITIALIZE message is sent.
-            initTask = new MyInitTask(durationLiveData) {
+            initTask = new MyInitTask(codeObjectId) {
                 @Override
                 public void run() {
                     sendLiveDataImpl(durationLiveData);
@@ -67,7 +68,7 @@ public class RecentActivityService implements Disposable {
         }else{
             RecentActivityToolWindowShower.getInstance(project).showToolWindow();
             sendLiveDataImpl(durationLiveData);
-            startNewLiveDataTimerTask(durationLiveData);
+            startNewLiveDataTimerTask(codeObjectId);
         }
     }
 
@@ -89,9 +90,9 @@ public class RecentActivityService implements Disposable {
         }
     }
 
-    private void startNewLiveDataTimerTask(DurationLiveData originalDurationLiveData) {
+    private void startNewLiveDataTimerTask(@NotNull String codeObjectId) {
 
-        Log.log(logger::debug,project,"Starting new timer for {}",originalDurationLiveData.getDurationInsight().getCodeObjectId());
+        Log.log(logger::debug,project,"Starting new timer for {}",codeObjectId);
 
         if (myLiveDataTimer != null){
             myLiveDataTimer.cancel();
@@ -101,12 +102,8 @@ public class RecentActivityService implements Disposable {
             @Override
             public void run() {
                 try {
-                    DurationLiveData newDurationLiveData =
-                            AnalyticsService.getInstance(project)
-                                    .getDurationLiveData(originalDurationLiveData.getDurationInsight().getPrefixedCodeObjectId());
-                    if (newDurationLiveData.getDurationInsight() != null) {
-                        sendLiveDataImpl(newDurationLiveData);
-                    }
+                    DurationLiveData newDurationLiveData = AnalyticsService.getInstance(project).getDurationLiveData(codeObjectId);
+                    sendLiveDataImpl(newDurationLiveData);
                 } catch (AnalyticsServiceException e) {
                     Log.debugWithException(logger,e,"Exception from getDurationLiveData {}",e.getMessage());
                 }catch (Exception e){
@@ -124,15 +121,18 @@ public class RecentActivityService implements Disposable {
     public void runInitTask() {
         if (initTask != null){
             initTask.run();
-            startNewLiveDataTimerTask(initTask.durationLiveData);
+            startNewLiveDataTimerTask(initTask.codeObjectId);
             initTask = null;
         }
     }
 
-    public void liveViewClosed(CloseLiveViewMessage closeLiveViewMessage) {
-        Log.log(logger::debug,project,"Stopping timer for {}",closeLiveViewMessage.payload().codeObjectId());
-        var codeObjectId = CodeObjectsUtil.stripMethodPrefix(closeLiveViewMessage.payload().codeObjectId());
-        //currently not considering the codeObjectId because there is only one timer task
+    public void liveViewClosed(@Nullable CloseLiveViewMessage closeLiveViewMessage) {
+        Log.log(logger::debug, project, "Stopping timer");
+        if (closeLiveViewMessage != null) {
+            Log.log(logger::debug, project, "Stopping timer for {}", closeLiveViewMessage.payload().codeObjectId());
+            var codeObjectId = CodeObjectsUtil.stripMethodPrefix(closeLiveViewMessage.payload().codeObjectId());
+            //currently not considering the codeObjectId because there is only one timer task
+        }
         stopLiveDataTimerTask();
     }
 
@@ -146,10 +146,10 @@ public class RecentActivityService implements Disposable {
 
     private abstract static class MyInitTask implements Runnable{
 
-        private final DurationLiveData durationLiveData;
+        private final String codeObjectId;
 
-        public MyInitTask(@NotNull DurationLiveData durationLiveData) {
-            this.durationLiveData = durationLiveData;
+        public MyInitTask(@NotNull String codeObjectId) {
+            this.codeObjectId = codeObjectId;
         }
     }
 }

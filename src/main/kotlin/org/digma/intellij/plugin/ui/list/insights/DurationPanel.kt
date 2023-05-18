@@ -92,9 +92,10 @@ private fun buildLiveViewButton(project: Project, spanDurationsInsight: SpanDura
     liveViewButton.border = JBUI.Borders.customLine(borderColor,2.scaled())
     liveViewButton.addActionListener{
         try {
-            val durationLiveData = AnalyticsService.getInstance(project).getDurationLiveData(spanDurationsInsight.prefixedCodeObjectId)
-            durationLiveData.durationInsight?.let {
-                RecentActivityService.getInstance(project).sendLiveData(durationLiveData)
+            val idToUse = spanDurationsInsight.prefixedCodeObjectId
+            idToUse?.let {
+                val durationLiveData = AnalyticsService.getInstance(project).getDurationLiveData(it)
+                RecentActivityService.getInstance(project).sendLiveData(durationLiveData,it)
             }
         }catch (e: AnalyticsServiceException){
             //do nothing, the exception is logged in AnalyticsService

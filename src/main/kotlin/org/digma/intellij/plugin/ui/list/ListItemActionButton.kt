@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.list
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.ui.common.Laf
+import org.digma.intellij.plugin.ui.scaled
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.Graphics
@@ -19,11 +20,11 @@ import javax.swing.plaf.basic.BasicButtonUI
 
 class ListItemActionButton(text: String) : AbstractListItemActionButton(text)
 
-class ListItemActionIconButton(icon: Icon) : AbstractListItemActionButton(icon)
+class ListItemActionIconButton(text: String,icon: Icon) : AbstractListItemActionButton(text,icon)
 
 abstract class AbstractListItemActionButton: JButton {
 		constructor(text: String): super(text)
-		constructor(icon: Icon): super(icon)
+		constructor(text: String,icon: Icon): super(text,icon)
 
 
 	init {
@@ -44,6 +45,9 @@ abstract class AbstractListItemActionButton: JButton {
 
 			override fun mousePressed(e: MouseEvent?) {
 				background = getPressedBgColor()
+			}
+			override fun mouseReleased(e: MouseEvent?) {
+				background = Laf.Colors.PLUGIN_BACKGROUND
 			}
 		})
 	}
@@ -68,7 +72,15 @@ abstract class AbstractListItemActionButton: JButton {
 
 	override fun getPreferredSize(): Dimension {
 		val original = super.getPreferredSize()
-		return Dimension(original.width-Laf.scalePanels(15), original.height - Laf.scalePanels(5))
+		val widthToSubtract = 15.scaled()
+		val heightToSubtract = 5.scaled()
+		if (isBorderPainted && border != null) {
+			val borderWidth = border.getBorderInsets(this).left + border.getBorderInsets(this).right
+			val borderHeight = border.getBorderInsets(this).top + border.getBorderInsets(this).bottom
+			widthToSubtract.plus(borderWidth)
+			heightToSubtract.plus(borderHeight)
+		}
+		return Dimension(original.width - widthToSubtract, original.height - heightToSubtract)
 	}
 
 	override fun paintComponent(g: Graphics) {

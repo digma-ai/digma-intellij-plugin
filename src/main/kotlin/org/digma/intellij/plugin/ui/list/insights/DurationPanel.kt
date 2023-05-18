@@ -21,6 +21,7 @@ import org.digma.intellij.plugin.ui.list.ListItemActionButton
 import org.digma.intellij.plugin.ui.list.ListItemActionIconButton
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.model.TraceSample
+import org.digma.intellij.plugin.ui.scaled
 import javax.swing.BoxLayout
 import javax.swing.JButton
 import javax.swing.JPanel
@@ -84,8 +85,11 @@ fun spanDurationPanel(
 
 private fun buildLiveViewButton(project: Project, codeObjectId: String): JButton {
 
-    val icon = if (JBColor.isBright()) Laf.Icons.Common.LiveViewLight else Laf.Icons.Common.LiveViewDark
-    val liveViewButton = ListItemActionIconButton(icon)
+    val icon = if (JBColor.isBright()) Laf.Icons.Common.LiveIconLight else Laf.Icons.Common.LiveIconDark
+    val borderColor = if (JBColor.isBright()) Laf.Colors.LIVE_BUTTON_BORDER_LIGHT else Laf.Colors.LIVE_BUTTON_BORDER_DARK
+    val liveViewButton = ListItemActionIconButton("Live",icon)
+    liveViewButton.isBorderPainted = true
+    liveViewButton.border = JBUI.Borders.customLine(borderColor,1.scaled())
     liveViewButton.addActionListener{
         val durationLiveData = AnalyticsService.getInstance(project).getDurationLiveData(CodeObjectsUtil.addMethodTypeToId(codeObjectId))
         RecentActivityService.getInstance(project).sendLiveData(durationLiveData)

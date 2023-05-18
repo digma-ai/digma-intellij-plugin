@@ -66,6 +66,8 @@ object Laf {
             @JvmStatic val BUTTON_BACKGROUND: Color = Color(0x3638CD) // suppose to be dark purple
             //@JvmStatic val SIMPLE_ICON_COLOR: JBColor = JBColor(0x222222, 0xDDDDDD)
             @JvmStatic val GRAY: Color = Color(0x8A8A8A)
+            @JvmStatic val LIVE_BUTTON_BORDER_DARK: Color = Color(0x414363)
+            @JvmStatic val LIVE_BUTTON_BORDER_LIGHT: Color = Color(0xEEEEFD)
         }
     }
 
@@ -155,8 +157,14 @@ object Laf {
                 @JvmStatic val NoConnectionLight = SvgIcon.asIs("/icons/no-connection-light.svg")
                 @JvmStatic val NoErrorsDark = SvgIcon.asIs("/icons/no-errors-dark.svg")
                 @JvmStatic val NoErrorsLight = SvgIcon.asIs("/icons/no-errors-light.svg")
-                @JvmStatic val LiveViewDark = SvgIcon.asIs("/icons/live-view-button-dark.svg")
-                @JvmStatic val LiveViewLight = SvgIcon.asIs("/icons/live-view-button-light.svg")
+
+                //These two icons LiveButtonFullIconDark and LiveButtonFullIconLight can be used as one icon
+                // for the live view button, but we probably don't need to use them, it doesn't look good.
+                // we use LiveIconDark and LiveIconLight plus regular text.
+                @JvmStatic val LiveButtonFullIconDark = SvgIcon.asIs("/icons/live-view-button-dark.svg")
+                @JvmStatic val LiveButtonFullIconLight = SvgIcon.asIs("/icons/live-view-button-light.svg")
+                @JvmStatic val LiveIconDark = SvgIcon.asIs("/icons/live-icon-dark.svg")
+                @JvmStatic val LiveIconLight = SvgIcon.asIs("/icons/live-icon-light.svg")
             }
         }
 

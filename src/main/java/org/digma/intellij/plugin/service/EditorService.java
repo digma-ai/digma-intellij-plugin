@@ -228,6 +228,12 @@ public class EditorService implements Disposable {
         }
     }
 
+
+    /**
+     * opens a file created from a classpath resource that must be a text file.
+     * @param name the name of the editor
+     * @param resourcePath the classpath resource path
+     */
     public void openClasspathResourceReadOnly(String name, String resourcePath) {
 
         if (resourcePath == null || resourcePath.isBlank()) {
@@ -247,6 +253,8 @@ public class EditorService implements Disposable {
                 var vf = new LightVirtualFile(name, content);
                 vf.setWritable(false);
                 openVirtualFile(vf, 0);
+            }else{
+                Log.log(LOGGER::debug, "Could not load input stream for classpath resource {}, {}",resourcePath);
             }
 
         } catch (Exception e) {

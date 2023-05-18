@@ -26,8 +26,10 @@ import javax.swing.JPanel
 import javax.swing.SwingConstants
 
 
-const val UPDATE_GUIDE_DOCKER_COMPOSE = "guides/upgrade_docker_compose.md"
-const val UPDATE_GUIDE_HELM = "guides/upgrade_helm.md"
+const val UPDATE_GUIDE_DOCKER_COMPOSE_PATH = "/guides/upgrade_docker_compose.md"
+const val UPDATE_GUIDE_DOCKER_COMPOSE_NAME = "upgrade_docker_compose.md"
+const val UPDATE_GUIDE_HELM_PATH = "/guides/upgrade_helm.md"
+const val UPDATE_GUIDE_HELM_NAME = "upgrade_helm.md"
 
 class UpdateVersionPanel(
     val project: Project
@@ -107,11 +109,11 @@ class UpdateVersionPanel(
             if (updateState.shouldUpdateBackend) {
                 when (updateState.backendDeploymentType) {
                     BackendDeploymentType.Helm -> {
-                        EditorService.getInstance(project).openClasspathResourceReadOnly("Helm Guide",UPDATE_GUIDE_HELM)
+                        EditorService.getInstance(project).openClasspathResourceReadOnly(UPDATE_GUIDE_HELM_NAME,UPDATE_GUIDE_HELM_PATH)
                     }
 
                     BackendDeploymentType.DockerCompose -> {
-                        EditorService.getInstance(project).openClasspathResourceReadOnly("Docker Compose Guide",UPDATE_GUIDE_DOCKER_COMPOSE)
+                        EditorService.getInstance(project).openClasspathResourceReadOnly(UPDATE_GUIDE_DOCKER_COMPOSE_NAME,UPDATE_GUIDE_DOCKER_COMPOSE_PATH)
                     }
 
                     BackendDeploymentType.DockerExtension -> {

@@ -17,12 +17,14 @@ import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.testFramework.BinaryLightVirtualFile;
 import com.intellij.testFramework.LightVirtualFile;
 import kotlin.Triple;
+import org.apache.commons.io.IOUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.vcs.VcsService;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 public class EditorService implements Disposable {
@@ -223,6 +225,41 @@ public class EditorService implements Disposable {
         } catch (Exception e) {
             Log.log(LOGGER::warn, "Could not open stack trace. " + e.getMessage());
             NotificationUtil.notifyError(project, "Could not open stack trace. " + e.getMessage());
+        }
+    }
+
+
+    /**
+     * opens a file created from a classpath resource that must be a text file.
+     * @param name the name of the editor
+     * @param resourcePath the classpath resource path
+     */
+    public void openClasspathResourceReadOnly(String name, String resourcePath) {
+
+        if (resourcePath == null || resourcePath.isBlank()) {
+            NotificationUtil.showNotification(project, "openClasspathResourceReadOnly was called with empty resourcePath");
+            return;
+        }
+        //create unique name
+
+        if (showIfAlreadyOpen(name, 0)) {
+            return;
+        }
+
+        try (var inputStream = getClass().getResourceAsStream(resourcePath)) {
+
+            if (inputStream != null) {
+                var content = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+                var vf = new LightVirtualFile(name, content);
+                vf.setWritable(false);
+                openVirtualFile(vf, 0);
+            }else{
+                Log.log(LOGGER::debug, "Could not load input stream for classpath resource {}, {}",resourcePath);
+            }
+
+        } catch (Exception e) {
+            Log.log(LOGGER::warn, "Could not open classpath resource {}, {}",resourcePath, e.getMessage());
+            NotificationUtil.notifyError(project, "Could not open classpath resource " + resourcePath);
         }
     }
 

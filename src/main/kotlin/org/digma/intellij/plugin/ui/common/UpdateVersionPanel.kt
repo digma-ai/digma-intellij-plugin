@@ -6,9 +6,6 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.io.FileUtil
-import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
@@ -19,7 +16,6 @@ import org.digma.intellij.plugin.updates.UpdateState
 import org.digma.intellij.plugin.updates.UpdatesService
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import java.nio.file.Path
 import javax.swing.BorderFactory
 import javax.swing.Box
 import javax.swing.BoxLayout
@@ -30,6 +26,11 @@ import javax.swing.JPanel
 import javax.swing.SwingConstants
 
 
+const val UPDATE_GUIDE_DOCKER_COMPOSE_PATH = "/guides/upgrade_docker_compose.md"
+const val UPDATE_GUIDE_DOCKER_COMPOSE_NAME = "upgrade_docker_compose.md"
+const val UPDATE_GUIDE_HELM_PATH = "/guides/upgrade_helm.md"
+const val UPDATE_GUIDE_HELM_NAME = "upgrade_helm.md"
+
 class UpdateVersionPanel(
     val project: Project
 ) : DigmaResettablePanel(), Disposable {
@@ -37,8 +38,6 @@ class UpdateVersionPanel(
     private val logger: Logger = Logger.getInstance(UpdateVersionPanel::class.java)
 
     private val updatesService: UpdatesService = UpdatesService.getInstance(project)
-    private val updateGuideDockerCompose: VirtualFile = loadFile("guides/upgrade_docker_compose.md")
-    private val updateGuideForHelm: VirtualFile = loadFile("guides/upgrade_helm.md")
 
     init {
         updatesService.affectedPanel = this
@@ -51,25 +50,6 @@ class UpdateVersionPanel(
         rebuildInBackground()
     }
 
-    companion object {
-
-        protected val tempDirForGuides = FileUtil.createTempDirectory("digma_", "_guides", true)
-
-        fun loadFile(resourceName: String): VirtualFile {
-            val resourceInputStream = UpdateVersionPanel.javaClass.classLoader.getResourceAsStream(resourceName)
-            val ioFile = Path.of(tempDirForGuides.absolutePath, resourceName).toFile()
-            FileUtil.createParentDirs(ioFile)
-
-            resourceInputStream.use { input ->
-                ioFile.outputStream().use { output ->
-                    input.copyTo(output)
-                }
-            }
-
-            return LocalFileSystem.getInstance().findFileByIoFile(ioFile)!!
-        }
-
-    }
 
     override fun reset() {
         rebuildInBackground()
@@ -129,11 +109,11 @@ class UpdateVersionPanel(
             if (updateState.shouldUpdateBackend) {
                 when (updateState.backendDeploymentType) {
                     BackendDeploymentType.Helm -> {
-                        EditorService.getInstance(project).openVirtualFile(updateGuideForHelm, true)
+                        EditorService.getInstance(project).openClasspathResourceReadOnly(UPDATE_GUIDE_HELM_NAME,UPDATE_GUIDE_HELM_PATH)
                     }
 
                     BackendDeploymentType.DockerCompose -> {
-                        EditorService.getInstance(project).openVirtualFile(updateGuideDockerCompose, true)
+                        EditorService.getInstance(project).openClasspathResourceReadOnly(UPDATE_GUIDE_DOCKER_COMPOSE_NAME,UPDATE_GUIDE_DOCKER_COMPOSE_PATH)
                     }
 
                     BackendDeploymentType.DockerExtension -> {

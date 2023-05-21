@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.service;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.content.ContentManagerEvent;
 import com.intellij.ui.content.ContentManagerListener;
+import org.digma.intellij.plugin.errors.ErrorsProvider;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsightNamedError;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
@@ -44,7 +45,8 @@ public class ErrorsActionsService implements ContentManagerListener {
     public void showErrorDetails(@NotNull String uid) {
         tabsHelper.showingErrorDetails();
         errorsViewService.setVisible();
-        errorsViewService.showErrorDetails(uid);
+        ErrorsProvider errorsProvider  = project.getService(ErrorsProvider.class);
+        errorsViewService.showErrorDetails(uid,errorsProvider);
         tabsHelper.errorDetailsOn();
     }
 

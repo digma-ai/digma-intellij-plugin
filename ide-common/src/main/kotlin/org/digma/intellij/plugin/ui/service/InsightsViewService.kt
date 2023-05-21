@@ -1,16 +1,21 @@
 package org.digma.intellij.plugin.ui.service
 
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.common.modelChangeListener.ModelChangeListener
 import org.digma.intellij.plugin.document.DocumentInfoContainer
+import org.digma.intellij.plugin.insights.CodeLessSpanInsightsProvider
+import org.digma.intellij.plugin.insights.InsightsListContainer
 import org.digma.intellij.plugin.insights.InsightsProvider
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult
+import org.digma.intellij.plugin.model.discovery.CodeLessSpan
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.rest.insights.InsightStatus
+import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
 import org.digma.intellij.plugin.ui.model.DocumentScope
 import org.digma.intellij.plugin.ui.model.EmptyScope
 import org.digma.intellij.plugin.ui.model.MethodScope
@@ -31,8 +36,6 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
     //elsewhere in the program. it can not be singleton.
     val model = InsightsModel()
 
-    private val insightsProvider: InsightsProvider = project.getService(InsightsProvider::class.java)
-
 
     override fun getViewDisplayName(): String {
         return "Insights" + if (model.insightsCount > 0) " (${model.count()})" else ""
@@ -40,14 +43,58 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
 
 
     companion object {
+        @JvmStatic
         fun getInstance(project: Project): InsightsViewService {
             return project.getService(InsightsViewService::class.java)
         }
     }
 
-    fun updateInsightsModel(
-            methodInfo: MethodInfo
-    ) {
+
+    //first phase new navigation.
+    // show insights that are not related to code location but as a result of a click on span in
+    // jaeger ui.
+    //currently not checking backend status if there are no insights because this request started as a
+    // result of existing insights for a span.
+    //currently not refreshing the insights.
+    fun updateInsightsModel(codeLessSpan: CodeLessSpan) {
+
+        val codeLessInsightsProvider = CodeLessSpanInsightsProvider(codeLessSpan,project)
+
+        Log.log(logger::debug, "updateInsightsModel to {}. ", codeLessSpan)
+
+        val insightsListContainer: InsightsListContainer? =
+            ReadAction.compute<InsightsListContainer,Exception> { codeLessInsightsProvider.getInsights() }
+
+        if (insightsListContainer == null){
+            Log.log(logger::debug,project, "could not load insights for {}, see logs for details",codeLessSpan )
+            empty()
+            return
+        }
+
+        if (insightsListContainer.listViewItems.isNullOrEmpty()){
+            Log.log(logger::debug,project, "emptying model for {} because there are no insights",codeLessSpan )
+            empty()
+            return
+        }
+
+        model.listViewItems = insightsListContainer.listViewItems ?: listOf()
+        model.previewListViewItems = ArrayList()
+        model.usageStatusResult = insightsListContainer.usageStatus ?: EmptyUsageStatusResult
+        model.scope = CodeLessSpanScope(codeLessSpan)
+        model.insightsCount = insightsListContainer.count
+        model.card = InsightsTabCard.INSIGHTS
+        model.status = UIInsightsStatus.Default
+
+        notifyModelChangedAndUpdateUi()
+
+    }
+
+    fun updateInsightsModel(methodInfo: MethodInfo) {
+        val insightsProvider: InsightsProvider = project.getService(InsightsProvider::class.java)
+        updateInsightsModelWithInsightsProvider(methodInfo,insightsProvider)
+    }
+
+    private fun updateInsightsModelWithInsightsProvider(methodInfo: MethodInfo, insightsProvider: InsightsProvider) {
         lock.lock()
         Log.log(logger::debug, "Lock acquired for updateInsightsModel to {}. ", methodInfo)
         try {
@@ -102,13 +149,15 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
             InsightStatus.InsightExist -> UIInsightsStatus.InsightPending
             InsightStatus.InsightPending -> UIInsightsStatus.InsightPending
             InsightStatus.NoSpanData -> {
-                if (methodHasRelatedCodeObjectIds)
-                    return UIInsightsStatus.NoSpanData // the client(this plugin) is aware of code objects, but server is not (yet)
-                else
-                    if (IDEUtilsService.getInstance(project).isJavaProject)
-                        return UIInsightsStatus.NoObservability
-                    else
-                        return UIInsightsStatus.NoInsights
+                return if (methodHasRelatedCodeObjectIds) {
+                    UIInsightsStatus.NoSpanData // the client(this plugin) is aware of code objects, but server is not (yet)
+                } else {
+                    if (IDEUtilsService.getInstance(project).isJavaProject) {
+                        UIInsightsStatus.NoObservability
+                    } else {
+                        UIInsightsStatus.NoInsights
+                    }
+                }
             }
         }
     }

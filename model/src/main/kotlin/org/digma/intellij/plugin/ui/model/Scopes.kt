@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.model
 
+import org.digma.intellij.plugin.model.discovery.CodeLessSpan
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 
@@ -40,6 +41,20 @@ class MethodScope(private val methodInfo: MethodInfo) : Scope {
         return methodInfo
     }
 }
+
+
+class CodeLessSpanScope(private val codeLessSpan: CodeLessSpan) : Scope {
+    override fun getScope(): String {
+        return codeLessSpan.spanId
+    }
+
+    override fun getScopeTooltip(): String {
+        return codeLessSpan.spanId
+    }
+
+}
+
+
 
 class DocumentScope(private val documentInfo: DocumentInfo) : Scope {
     override fun getScope(): String {

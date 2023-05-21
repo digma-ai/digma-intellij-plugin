@@ -40,6 +40,7 @@ import static org.digma.intellij.plugin.document.CodeObjectsUtil.addMethodTypeTo
 import static org.digma.intellij.plugin.document.CodeObjectsUtil.addSpanTypeToIds;
 import static org.digma.intellij.plugin.document.CodeObjectsUtil.createMethodCodeObjectId;
 import static org.digma.intellij.plugin.document.CodeObjectsUtil.createSpanId;
+import static org.digma.intellij.plugin.navigation.codeless.CodelessNavigationKt.navigate;
 
 public class JaegerUIService {
 
@@ -224,6 +225,7 @@ public class JaegerUIService {
                     Pair<String, Integer> location = spanWorkspaceUris.get(spanId);
                     EditorService editorService = project.getService(EditorService.class);
                     EDT.ensureEDT(() -> editorService.openWorkspaceFileInEditor(location.getFirst(), location.getSecond()));
+                    //if code location was found link to it and return.no need to check the other language services
                     return;
                 }else if (span.function() != null && span.namespace() != null){
                     var methodId = createMethodCodeObjectId(span.namespace(),span.function());
@@ -233,11 +235,17 @@ public class JaegerUIService {
                         Pair<String, Integer> location = methodWorkspaceUris.get(methodId);
                         EditorService editorService = project.getService(EditorService.class);
                         EDT.ensureEDT(() -> editorService.openWorkspaceFileInEditor(location.getFirst(), location.getSecond()));
+                        //if code location was found link to it and return.no need to check the other language services
                         return;
                     }
                 }
             }
         }
+
+
+        //if we're here then code location was not found
+        navigate(project,span.instrumentationLibrary(),span.name(),span.namespace(),span.function());
+
     }
 
     public Map<String, SpanData> getResolvedSpans(SpansMessage spansMessage) {

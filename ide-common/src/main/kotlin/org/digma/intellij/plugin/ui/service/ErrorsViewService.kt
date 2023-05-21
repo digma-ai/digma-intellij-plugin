@@ -5,11 +5,14 @@ import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.errors.ErrorsProvider
+import org.digma.intellij.plugin.insights.CodeLessSpanInsightsProvider
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult
+import org.digma.intellij.plugin.model.discovery.CodeLessSpan
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.persistence.PersistenceService
+import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
 import org.digma.intellij.plugin.ui.model.DocumentScope
 import org.digma.intellij.plugin.ui.model.EmptyScope
 import org.digma.intellij.plugin.ui.model.MethodScope
@@ -29,7 +32,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
     //elsewhere in the program. it can not be singleton.
     val model = ErrorsModel()
 
-    private val errorsProvider: ErrorsProvider = project.getService(ErrorsProvider::class.java)
+
 
     companion object {
         fun getInstance(project: Project): ErrorsViewService {
@@ -42,9 +45,44 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         return "Errors" + if (model.errorsCount > 0) " (${model.count()})" else ""
     }
 
-    fun updateErrorsModel(
-        methodInfo: MethodInfo
-    ) {
+    fun updateErrorsModel(codeLessSpan: CodeLessSpan) {
+
+        val codeLessInsightsProvider = CodeLessSpanInsightsProvider(codeLessSpan,project)
+
+        Log.log(logger::debug, "updateInsightsModel to {}. ", codeLessSpan)
+
+        val errorsListContainer = codeLessInsightsProvider.getErrors()
+
+        if (errorsListContainer == null){
+            Log.log(logger::debug,project, "could not load errors for {}, see logs for details",codeLessSpan )
+            empty()
+            return
+        }
+
+        if (errorsListContainer.listViewItems.isNullOrEmpty()){
+            Log.log(logger::debug,project, "emptying model for {} because there are no errors",codeLessSpan )
+            empty()
+            return
+        }
+
+
+        model.listViewItems = errorsListContainer.listViewItems ?: listOf()
+        model.previewListViewItems = ArrayList()
+        model.usageStatusResult = errorsListContainer.usageStatus ?: EmptyUsageStatusResult
+        model.scope = CodeLessSpanScope(codeLessSpan)
+        model.card = ErrorsTabCard.ERRORS_LIST
+        model.errorsCount = errorsListContainer.count
+
+        updateUi()
+    }
+
+
+    fun updateErrorsModel(methodInfo: MethodInfo) {
+        val errorsProvider: ErrorsProvider = project.getService(ErrorsProvider::class.java)
+        updateErrorsModelWithErrorsProvider(methodInfo,errorsProvider)
+    }
+
+    private fun updateErrorsModelWithErrorsProvider(methodInfo: MethodInfo, errorsProvider: ErrorsProvider) {
         lock.lock()
         Log.log(logger::debug, "Lock acquired for contextChanged to {}. ", methodInfo)
         try {
@@ -87,7 +125,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         tabsHelper.notifyTabChanged(1)
     }
 
-    fun showErrorDetails(uid: String) {
+    fun showErrorDetails(uid: String, errorsProvider: ErrorsProvider) {
 
         Log.log(logger::debug, "showDocumentPreviewList for {}. ", uid)
 

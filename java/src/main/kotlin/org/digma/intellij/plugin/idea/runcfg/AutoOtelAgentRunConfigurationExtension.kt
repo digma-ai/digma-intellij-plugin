@@ -5,6 +5,7 @@ import com.intellij.execution.Executor
 import com.intellij.execution.RunConfigurationExtension
 import com.intellij.execution.configurations.JavaParameters
 import com.intellij.execution.configurations.ModuleRunConfiguration
+import com.intellij.execution.configurations.ParametersList
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.execution.process.ProcessEvent
@@ -78,7 +79,8 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
                 //this also works for: CommonJavaRunConfigurationParameters
                 //params.vmParametersList.addParametersString("-verbose:class -javaagent:/home/shalom/tmp/run-configuration/opentelemetry-javaagent.jar")
                 //params.vmParametersList.addProperty("myprop","myvalue")
-                val javaToolOptions = buildJavaToolOptions(configuration, params, project)
+                val javaToolOptions =
+                    buildJavaToolOptions(configuration, project, isOtelServiceNameAlreadyDefined(params))
                 javaToolOptions?.let {
                     mergeJavaToolOptions(params, it)
                 }
@@ -96,7 +98,8 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
                 //when gradle runs the :test task it's not possible to pass system properties to the task.
                 // JAVA_TOOL_OPTIONS is not the best as said above, but it works.
                 configuration as GradleRunConfiguration
-                val javaToolOptions = buildJavaToolOptions(configuration, params, project)
+                val javaToolOptions =
+                    buildJavaToolOptions(configuration, project, isOtelServiceNameAlreadyDefined(configuration))
                 javaToolOptions?.let {
                     mergeGradleJavaToolOptions(configuration, javaToolOptions)
                 }
@@ -104,7 +107,8 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
 
             RunConfigType.MavenRun -> {
                 configuration as MavenRunConfiguration
-                val javaToolOptions = buildJavaToolOptions(configuration, params, project)
+                val javaToolOptions =
+                    buildJavaToolOptions(configuration, project, isOtelServiceNameAlreadyDefined(params))
                 javaToolOptions?.let {
                     mergeJavaToolOptions(params, it)
                 }
@@ -190,8 +194,8 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
 
     private fun buildJavaToolOptions(
         configuration: RunConfigurationBase<*>,
-        params: JavaParameters,
         project: Project,
+        serviceAlreadyDefined: Boolean,
     ): String? {
 
         val otelAgentPath = OTELJarProvider.getInstance().getOtelAgentJarPath(project)
@@ -213,7 +217,7 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
             .plus("-Dotel.exporter.otlp.traces.endpoint=${getExporterUrl()}")
             .plus(" ")
 
-        if (!isOtelServiceNameAlreadyDefined(params)) {
+        if (!serviceAlreadyDefined) {
             retVal = retVal
                 .plus("-Dotel.service.name=${evalServiceName(configuration)}")
                 .plus(" ")
@@ -236,6 +240,15 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
      */
     private fun isOtelServiceNameAlreadyDefined(javaConfParams: JavaParameters): Boolean {
         return isOtelEntryDefined(javaConfParams, "OTEL_SERVICE_NAME", "otel.service.name")
+    }
+
+    // when its Gradle config check the GradleRunConfiguration.settings, and not the JavaParameters, since JavaParameters do not contain the relevant data
+    private fun isOtelServiceNameAlreadyDefined(config: GradleRunConfiguration): Boolean {
+        val vmParList = ParametersList()
+        vmParList.addParametersString(config.settings.vmOptions)
+
+        return config.settings.env.containsKey("OTEL_SERVICE_NAME")
+                || vmParList.hasProperty("otel.service.name")
     }
 
     private fun isVmEntryExists(javaConfParams: JavaParameters, entryName: String): Boolean {

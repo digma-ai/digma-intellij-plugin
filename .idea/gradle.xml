@@ -28,6 +28,7 @@
             <option value="$PROJECT_DIR$/python" />
             <option value="$PROJECT_DIR$/rider" />
             <option value="$PROJECT_DIR$/rider/protocol" />
+            <option value="$PROJECT_DIR$/system-test" />
           </set>
         </option>
       </GradleProjectSettings>

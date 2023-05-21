@@ -60,6 +60,7 @@ dependencies {
     implementation(project(":java"))
     implementation(project(":python"))
     implementation(project(":rider"))
+    implementation(project(":system-test"))
 // todo: jetbrains recommend using the instrumented jar but there is a bug.
 // https://github.com/digma-ai/digma-intellij-plugin/issues/1017
 //    implementation(project(":ide-common", "instrumentedJar"))

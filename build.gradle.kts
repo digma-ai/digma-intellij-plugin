@@ -29,7 +29,8 @@ dependencies{
     implementation(project(":ide-common"))
     implementation(project(":java"))
     implementation(project(":python"))
-    implementation(project(":rider"))
+//    implementation(project(":rider"))
+    implementation(project(":system-test"))
     implementation(libs.freemarker)
 }
 
@@ -76,7 +77,7 @@ project.afterEvaluate{
     val buildPlugin = tasks.named("buildPlugin").get()
     project(":java").afterEvaluate { buildPlugin.dependsOn(tasks.getByName("buildPlugin")) }
     project(":python").afterEvaluate { buildPlugin.dependsOn(tasks.getByName("buildPlugin")) }
-    project(":rider").afterEvaluate { buildPlugin.dependsOn(tasks.getByName("buildPlugin")) }
+//    project(":rider").afterEvaluate { buildPlugin.dependsOn(tasks.getByName("buildPlugin")) }
 }
 
 
@@ -165,7 +166,7 @@ tasks {
         dependsOn(deleteLog)
         //rider contributes to prepareSandbox, so it needs to run before runIde
         dependsOn("prepareSandbox")
-        dependsOn(":rider:prepareSandboxForRider")
+//        dependsOn(":rider:prepareSandboxForRider")
         maxHeapSize = "2g"
         // Rider's backend doesn't support dynamic plugins. It might be possible to work with auto-reload of the frontend
         // part of a plugin, but there are dangers about keeping plugins in sync

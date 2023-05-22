@@ -4,12 +4,15 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
 import org.apache.commons.collections4.CollectionUtils;
+import org.digma.intellij.plugin.common.Unicodes;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightImportance;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.lens.CodeLens;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectDecorator;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
+import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight;
+import org.digma.intellij.plugin.recentactivity.RecentActivityLogic;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
@@ -66,6 +69,11 @@ public class CodeLensProvider {
                 continue; // to next method
             }
 
+            if (hasRecentActivity(insights)) {
+                CodeLens codeLens = buildCodeLensOfActive(methodInfo.getId());
+                codeLensList.add(codeLens);
+            }
+
             final boolean haveDecorators = evalHaveDecorators(insights);
             if (!haveDecorators) {
                 CodeLens codeLens = new CodeLens(methodInfo.getId(), "Runtime Data", 8);
@@ -105,6 +113,27 @@ public class CodeLensProvider {
         } // end of forEach method
 
         return codeLensList;
+    }
+
+    private static CodeLens buildCodeLensOfActive(String methodId) {
+        var title = Unicodes.getGREEN_CIRCLE();
+        CodeLens codeLens = new CodeLens(methodId, title, 1);
+        codeLens.setLensDescription("There's activity on this method");
+        codeLens.setAnchor("Top");
+
+        return codeLens;
+    }
+
+    private static boolean hasRecentActivity(List<CodeObjectInsight> insights) {
+        Optional<SpanDurationsInsight> optInsight = insights.stream()
+                .filter(it -> it instanceof SpanDurationsInsight)
+                .map(it -> (SpanDurationsInsight) it)
+                .filter(it -> it.getLastSpanInstanceInfo() != null
+                        // for debug, comment out the line below (with isRecentTime)
+                        && RecentActivityLogic.isRecentTime(it.getLastSpanInstanceInfo().getStartTime())
+                )
+                .findFirst();
+        return optInsight.isPresent();
     }
 
     private static boolean evalHaveDecorators(List<CodeObjectInsight> insights) {

@@ -8,6 +8,7 @@ import org.digma.intellij.plugin.editor.CurrentContextUpdater
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
 import org.digma.intellij.plugin.service.ErrorsActionsService
+import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.service.ErrorsViewService
 import org.digma.intellij.plugin.ui.service.InsightsViewService
 
@@ -54,6 +55,8 @@ fun navigate(
 
     //clear the latest method so that if user clicks on the editor again after watching code less insights the context will change
     project.service<CurrentContextUpdater>().clearLatestMethod()
+
+    ToolWindowShower.getInstance(project).showToolWindow()
 }
 
 
@@ -85,5 +88,7 @@ fun navigate(project: Project, spanCodeObjectId: String, methodCodeObjectId: Str
 
     //clear the latest method so that if user clicks on the editor again after watching code less insights the context will change
     project.service<CurrentContextUpdater>().clearLatestMethod()
+
+    ToolWindowShower.getInstance(project).showToolWindow()
 
 }

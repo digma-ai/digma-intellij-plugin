@@ -55,7 +55,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
         caretContextService = project.getService(CaretContextService.class);
         languageServiceLocator = project.getService(LanguageServiceLocator.class);
         documentInfoService = project.getService(DocumentInfoService.class);
-        currentContextUpdater = new CurrentContextUpdater(project);
+        currentContextUpdater = project.getService(CurrentContextUpdater.class);
         caretListener = new CaretListener(project,currentContextUpdater);
         documentChangeListener = new DocumentChangeListener(project,currentContextUpdater);
         contextChangeAlarmAfterFileClosed = AlarmFactory.getInstance().create();

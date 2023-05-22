@@ -38,6 +38,7 @@
         <fileEditorProvider implementation="org.digma.intellij.plugin.jaegerui.JaegerUIFileEditorProvider"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.ToolWindowShower"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.toolwindow.recentactivity.RecentActivityToolWindowShower"/>
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.MainToolWindowCardsController"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.service.EditorInteractionService"
@@ -90,6 +91,8 @@
         <projectService serviceImplementation="org.digma.intellij.plugin.posthog.PluginActivityMonitor"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.updates.UpdatesService"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.toolwindow.recentactivity.RecentActivityService"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider"/>
 

@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.toolwindow.recentactivity;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.execution.runners.ExecutionUtil;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
@@ -26,6 +27,7 @@ import org.digma.intellij.plugin.analytics.EnvironmentChanged;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.CommonUtils;
 import org.digma.intellij.plugin.common.EDT;
+import org.digma.intellij.plugin.common.JsonUtils;
 import org.digma.intellij.plugin.icons.AppIcons;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityEntrySpanForTracePayload;
@@ -42,6 +44,7 @@ import org.digma.intellij.plugin.toolwindow.common.CustomViewerWindow;
 import org.digma.intellij.plugin.toolwindow.common.JaegerUrlChangedPayload;
 import org.digma.intellij.plugin.toolwindow.common.JaegerUrlChangedRequest;
 import org.digma.intellij.plugin.toolwindow.common.ThemeChangeListener;
+import org.digma.intellij.plugin.toolwindow.recentactivity.incoming.CloseLiveViewMessage;
 import org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt;
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
 import org.jetbrains.annotations.NotNull;
@@ -61,6 +64,7 @@ import java.util.TimerTask;
 
 import static org.digma.intellij.plugin.navigation.codeless.CodelessNavigationKt.navigate;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.GLOBAL_SET_IS_JAEGER_ENABLED;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_CLOSE_LIVE_VIEW;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_SPAN;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_TRACE;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_INITIALIZE;
@@ -125,6 +129,7 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory, Disposab
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
         Log.log(LOGGER::debug, "createToolWindowContent for project  {}", project);
 
+        RecentActivityToolWindowShower.getInstance(project).setToolWindow(toolWindow);
         var contentFactory = ContentFactory.getInstance();
         var codeAnalyticsTab = createCodeAnalyticsTab(project, toolWindow, contentFactory);
         if (codeAnalyticsTab != null) {
@@ -158,6 +163,8 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory, Disposab
 
         jbCefBrowser.getCefBrowser().setFocus(true);
 
+        RecentActivityService.getInstance(project).setJcefBrowser(jbCefBrowser);
+
         CefMessageRouter msgRouter = CefMessageRouter.create();
 
         ThemeChangeListener listener = new ThemeChangeListener(jbCefBrowser);
@@ -172,6 +179,7 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory, Disposab
                 JcefMessageRequest reactMessageRequest = parseJsonToObject(request, JcefMessageRequest.class);
                 if (RECENT_ACTIVITY_INITIALIZE.equalsIgnoreCase(reactMessageRequest.getAction())) {
                     processRecentActivityInitialized();
+                    RecentActivityService.getInstance(project).runInitTask();
                 }
                 if (RECENT_ACTIVITY_GO_TO_SPAN.equalsIgnoreCase(reactMessageRequest.getAction())) {
                     RecentActivityGoToSpanRequest recentActivityGoToSpanRequest = parseJsonToObject(request, RecentActivityGoToSpanRequest.class);
@@ -180,6 +188,17 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory, Disposab
                 if (RECENT_ACTIVITY_GO_TO_TRACE.equalsIgnoreCase(reactMessageRequest.getAction())) {
                     RecentActivityGoToTraceRequest recentActivityGoToTraceRequest = parseJsonToObject(request, RecentActivityGoToTraceRequest.class);
                     processRecentActivityGoToTraceRequest(recentActivityGoToTraceRequest, project);
+                }
+                if (RECENT_ACTIVITY_CLOSE_LIVE_VIEW.equalsIgnoreCase(reactMessageRequest.getAction())) {
+                    try {
+                        CloseLiveViewMessage closeLiveViewMessage = JsonUtils.stringToJavaRecord(request,CloseLiveViewMessage.class);
+                        RecentActivityService.getInstance(project).liveViewClosed(closeLiveViewMessage);
+                    } catch (Exception e) {
+                        //we can't miss the close message because then the live view will stay open.
+                        // close the live view even if there is an error parsing the message.
+                        Log.debugWithException(LOGGER,project,e, "Exception while parsing CloseLiveViewMessage {}", e.getMessage());
+                        RecentActivityService.getInstance(project).liveViewClosed(null);
+                    }
                 }
 
                 callback.success("");

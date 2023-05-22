@@ -40,6 +40,7 @@ public class CodeObjectsUtil {
     }
 
 
-
-
+    public static String stripMethodPrefix(@NotNull String codeObjectId) {
+        return codeObjectId.startsWith("method:") ? codeObjectId.substring("method:".length()) : codeObjectId;
+    }
 }

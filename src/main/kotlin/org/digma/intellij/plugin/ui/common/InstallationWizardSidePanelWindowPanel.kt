@@ -31,6 +31,7 @@ import org.digma.intellij.plugin.toolwindow.recentactivity.JBCefBrowserUtil
 import org.digma.intellij.plugin.toolwindow.recentactivity.JcefConnectionCheckMessagePayload
 import org.digma.intellij.plugin.toolwindow.recentactivity.JcefConnectionCheckMessageRequest
 import org.digma.intellij.plugin.toolwindow.recentactivity.JcefMessageRequest
+import org.digma.intellij.plugin.toolwindow.recentactivity.RecentActivityToolWindowShower
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.common.ObservabilityUtil.Companion.updateObservabilityValue
@@ -122,7 +123,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): DisposablePa
                     updateInstallationWizardFlag()
                     ToolWindowShower.getInstance(project).showToolWindow()
                     MainToolWindowCardsController.getInstance(project).wizardFinished();
-                    ToolWindowManager.getInstance(project).getToolWindow(PluginId.OBSERVABILITY_WINDOW_ID)!!.show()
+                    RecentActivityToolWindowShower.getInstance(project).showToolWindow()
                 }
             }
             if (ToolWindowUtil.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER.equals(action, ignoreCase = true)) {

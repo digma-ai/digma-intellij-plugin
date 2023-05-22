@@ -3,16 +3,31 @@ package org.digma.intellij.plugin.ui.list
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.ui.common.Laf
-import java.awt.*
+import org.digma.intellij.plugin.ui.scaled
+import java.awt.Color
+import java.awt.Dimension
+import java.awt.Graphics
+import java.awt.Graphics2D
+import java.awt.RenderingHints
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import javax.swing.AbstractButton
+import javax.swing.Icon
 import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.plaf.basic.BasicButtonUI
+import kotlin.math.max
 
 
-internal class ListItemActionButton constructor(text: String): JButton(text) {
+class ListItemActionButton(text: String) : AbstractListItemActionButton(text)
+
+class ListItemActionIconButton(text: String,icon: Icon) : AbstractListItemActionButton(text,icon)
+
+abstract class AbstractListItemActionButton: JButton {
+		constructor(text: String): super(text)
+		constructor(text: String,icon: Icon): super(text,icon)
+
+
 	init {
 		isOpaque = false
 		background = getDefaultBgColor()
@@ -31,6 +46,9 @@ internal class ListItemActionButton constructor(text: String): JButton(text) {
 
 			override fun mousePressed(e: MouseEvent?) {
 				background = getPressedBgColor()
+			}
+			override fun mouseReleased(e: MouseEvent?) {
+				background = Laf.Colors.PLUGIN_BACKGROUND
 			}
 		})
 	}
@@ -55,7 +73,24 @@ internal class ListItemActionButton constructor(text: String): JButton(text) {
 
 	override fun getPreferredSize(): Dimension {
 		val original = super.getPreferredSize()
-		return Dimension(original.width-Laf.scalePanels(15), original.height - Laf.scalePanels(5))
+		var widthToSubtract = 15.scaled()
+		var heightToSubtract = 5.scaled()
+		return if (isBorderPainted && border != null) {
+			val borderWidth = border.getBorderInsets(this).left + border.getBorderInsets(this).right
+			val borderHeight = border.getBorderInsets(this).top + border.getBorderInsets(this).bottom
+			widthToSubtract = widthToSubtract.plus(borderWidth)
+			heightToSubtract = heightToSubtract.plus(borderHeight)
+			var width = original.width - widthToSubtract
+			var height = original.height - heightToSubtract
+
+			icon?.let {
+				width = max(width,(icon.iconWidth + borderWidth))
+				height = max(height,(icon.iconHeight + borderHeight))
+			}
+			Dimension(width + 2.scaled(), height + 2.scaled())
+		}else{
+			Dimension(original.width - widthToSubtract, original.height - heightToSubtract)
+		}
 	}
 
 	override fun paintComponent(g: Graphics) {

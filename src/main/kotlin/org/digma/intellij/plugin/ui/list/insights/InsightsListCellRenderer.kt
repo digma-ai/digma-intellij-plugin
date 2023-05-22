@@ -22,7 +22,6 @@ import org.digma.intellij.plugin.model.rest.insights.SpanDurationBreakdownInsigh
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanNPlusOneInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanScalingInsight
-import org.digma.intellij.plugin.model.rest.insights.SpanScalingRootCauseInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanSlowEndpointsInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanUsagesInsight
 import org.digma.intellij.plugin.model.rest.insights.UnmappedInsight
@@ -71,8 +70,7 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
             is SpanDurationsInsight -> spanDurationPanel(project, value.modelObject as SpanDurationsInsight, panelsLayoutHelper)
             is SpanDurationBreakdownInsight -> spanDurationBreakdownPanel(project, value.modelObject as SpanDurationBreakdownInsight, value.moreData)
             is SpanSlowEndpointsInsight -> spanSlowEndpointsPanel(project, value.modelObject as SpanSlowEndpointsInsight, value.moreData)
-            is SpanScalingInsight -> spanScalingListViewItemsPanel(project, value.modelObject as SpanScalingInsight, value.moreData)
-            is SpanScalingRootCauseInsight -> spanScalingRootCauseItemsPanel(project, value.modelObject as SpanScalingRootCauseInsight, value.moreData)
+            is SpanScalingInsight -> spanScalingPanel(project, value.modelObject as SpanScalingInsight, value.moreData)
             is UnmappedInsight -> unmappedInsightPanel(project, value.modelObject as UnmappedInsight)
             is NoDataYet -> noDataYetInsightPanel()
             is NoObservability -> noObservabilityInsightPanel(project, value.modelObject as NoObservability)

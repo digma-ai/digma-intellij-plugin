@@ -13,7 +13,9 @@ import org.digma.intellij.plugin.view.ListViewItemBuilder;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -53,6 +55,7 @@ public class GroupListViewItemBuilder<T extends CodeObjectInsight> implements Li
             }
             case SpanScaling:{
                 WorkspaceUrisHelper.findWorkspaceUrisForSpans(project,theListView, getSpanIds((SpanScalingInsight) insight), methodInfo);
+                WorkspaceUrisHelper.findWorkspaceUrisForMethodCodeObjectIds(project, theListView, getCodeObjectIds((SpanScalingInsight) insight), methodInfo);
                 break;
             }
             case SpanEndpointBottleneck: {
@@ -61,10 +64,6 @@ public class GroupListViewItemBuilder<T extends CodeObjectInsight> implements Li
             }
             case SpanUsages: {
                 WorkspaceUrisHelper.findWorkspaceUrisForMethodCodeObjectIds(project, theListView, getCodeObjectIds((SpanUsagesInsight) insight), methodInfo);
-                break;
-            }
-            case SpanScalingRootCause: {
-                WorkspaceUrisHelper.findWorkspaceUrisForMethodCodeObjectIds(project, theListView, getCodeObjectIds((SpanScalingRootCauseInsight) insight), methodInfo);
                 break;
             }
         }
@@ -87,7 +86,10 @@ public class GroupListViewItemBuilder<T extends CodeObjectInsight> implements Li
         return codeObjectIds;
     }
 
-    private List<String> getCodeObjectIds(SpanScalingRootCauseInsight insight) {
+    private List<String> getCodeObjectIds(SpanScalingInsight insight) {
+        if(insight.getAffectedEndpoints() == null)
+            return Collections.emptyList();
+
         return insight.getAffectedEndpoints().stream().filter(it -> it.getCodeObjectId() != null)
                 .map(it -> it.getCodeObjectId())
                 .toList();
@@ -100,6 +102,9 @@ public class GroupListViewItemBuilder<T extends CodeObjectInsight> implements Li
     }
 
     private List<String> getSpanIds(SpanScalingInsight insight) {
+        if(insight.getRootCauseSpans() == null)
+            return Collections.emptyList();
+
         return insight.getRootCauseSpans().stream()
                 .map(it -> CodeObjectsUtil.createSpanId(it.getInstrumentationLibrary(), it.getName()))
                 .toList();

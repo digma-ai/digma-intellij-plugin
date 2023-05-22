@@ -33,7 +33,6 @@ import java.util.Date
     JsonSubTypes.Type(value = SpanNPlusOneInsight::class, name = "SpaNPlusOne"),
     JsonSubTypes.Type(value = SlowEndpointInsight::class, name = "SlowEndpoint"),
     JsonSubTypes.Type(value = SpanScalingInsight::class, name = "SpanScaling"),
-    JsonSubTypes.Type(value = SpanScalingRootCauseInsight::class, name = "SpanScalingRootCause"),
     JsonSubTypes.Type(value = SpanDurationsInsight::class, name = "SpanDurations"),
     JsonSubTypes.Type(value = SpanSlowEndpointsInsight::class, name = "SpanEndpointBottleneck"),
     JsonSubTypes.Type(value = SpanDurationBreakdownInsight::class, name = "SpanDurationBreakdown"),

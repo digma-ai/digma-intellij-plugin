@@ -27,7 +27,8 @@ data class SpanScalingInsight
         "maxConcurrency",
         "minDuration",
         "maxDuration",
-        "rootCauseSpans"
+        "rootCauseSpans",
+        "affectedEndpoints",
 )
 constructor(
         override val codeObjectId: String,
@@ -47,7 +48,8 @@ constructor(
         val maxConcurrency: Int,
         val minDuration: Duration,
         val maxDuration: Duration,
-        val rootCauseSpans: List<RootCauseSpan> = ArrayList()
+        val rootCauseSpans: List<RootCauseSpan>?,
+        val affectedEndpoints: List<AffectedEndpointInfo>?
 ) : SpanInsight {
 
     override val type: InsightType = InsightType.SpanScaling

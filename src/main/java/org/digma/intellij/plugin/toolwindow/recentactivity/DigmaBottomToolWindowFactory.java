@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.toolwindow.recentactivity;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.execution.runners.ExecutionUtil;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
@@ -38,6 +37,7 @@ import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRespons
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.psi.LanguageService;
+import org.digma.intellij.plugin.recentactivity.RecentActivityLogic;
 import org.digma.intellij.plugin.service.EditorService;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.toolwindow.common.CustomViewerWindow;
@@ -51,8 +51,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -63,6 +61,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import static org.digma.intellij.plugin.navigation.codeless.CodelessNavigationKt.navigate;
+import static org.digma.intellij.plugin.recentactivity.RecentActivityLogic.RECENT_EXPIRATION_LIMIT_MILLIS;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.GLOBAL_SET_IS_JAEGER_ENABLED;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_CLOSE_LIVE_VIEW;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_SPAN;
@@ -86,7 +85,6 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory, Disposab
     private static final String RESOURCE_FOLDER_NAME = "recentactivity";
     private static final String RECENT_EXPIRATION_LIMIT_VARIABLE = "recentActivityExpirationLimit";
     private static final int FETCHING_LOOP_INTERVAL = 10 * 1000; // 10sec
-    private static final int RECENT_EXPIRATION_LIMIT = 10 * 60 * 1000; // 10min
 
     private final Icon icon = AppIcons.TOOL_WINDOW_OBSERVABILITY;
     private final Icon iconWithGreenDot = ExecutionUtil.getLiveIndicator(icon);
@@ -155,7 +153,7 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory, Disposab
         }
         var editorService = project.getService(EditorService.class);
         var customViewerWindow = new CustomViewerWindow(project, RESOURCE_FOLDER_NAME, new HashMap<>() {{
-            put(RECENT_EXPIRATION_LIMIT_VARIABLE, RECENT_EXPIRATION_LIMIT);
+            put(RECENT_EXPIRATION_LIMIT_VARIABLE, RECENT_EXPIRATION_LIMIT_MILLIS);
         }});
         jbCefBrowser = customViewerWindow.getWebView();
 
@@ -191,12 +189,12 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory, Disposab
                 }
                 if (RECENT_ACTIVITY_CLOSE_LIVE_VIEW.equalsIgnoreCase(reactMessageRequest.getAction())) {
                     try {
-                        CloseLiveViewMessage closeLiveViewMessage = JsonUtils.stringToJavaRecord(request,CloseLiveViewMessage.class);
+                        CloseLiveViewMessage closeLiveViewMessage = JsonUtils.stringToJavaRecord(request, CloseLiveViewMessage.class);
                         RecentActivityService.getInstance(project).liveViewClosed(closeLiveViewMessage);
                     } catch (Exception e) {
                         //we can't miss the close message because then the live view will stay open.
                         // close the live view even if there is an error parsing the message.
-                        Log.debugWithException(LOGGER,project,e, "Exception while parsing CloseLiveViewMessage {}", e.getMessage());
+                        Log.debugWithException(LOGGER, project, e, "Exception while parsing CloseLiveViewMessage {}", e.getMessage());
                         RecentActivityService.getInstance(project).liveViewClosed(null);
                     }
                 }
@@ -241,7 +239,7 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory, Disposab
                 final Pair<String, Integer> fileAndOffset = workspaceUrisForMethodCodeObjectIds.get(methodCodeObjectId);
                 if (fileAndOffset == null) {
                     NotificationUtil.showNotification(project, "code object could not be found in the workspace");
-                    navigate(project,payload.getSpan().getSpanCodeObjectId(),payload.getSpan().getMethodCodeObjectId());
+                    navigate(project, payload.getSpan().getSpanCodeObjectId(), payload.getSpan().getMethodCodeObjectId());
                     return;
                 }
 
@@ -320,7 +318,7 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory, Disposab
                 .max(Date::compareTo);
 
         return latestActivity.isPresent() &&
-                latestActivity.get().toInstant().plus(RECENT_EXPIRATION_LIMIT, ChronoUnit.MILLIS).isAfter(Instant.now());
+                RecentActivityLogic.isRecentTime(latestActivity.get());
     }
 
     private List<RecentActivityResponseEntry> getEntriesWithAdjustedLocalEnvs(RecentActivityResult recentActivityData) {

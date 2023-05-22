@@ -22,6 +22,7 @@ import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.psi.SupportedLanguages;
 import org.digma.intellij.plugin.service.EditorService;
 import org.digma.intellij.plugin.settings.SettingsState;
+import org.digma.intellij.plugin.ui.ToolWindowShower;
 import org.digma.intellij.plugin.ui.model.TraceSample;
 import org.jetbrains.annotations.NotNull;
 
@@ -213,6 +214,8 @@ public class JaegerUIService {
 
     public void goToSpan(GoToSpanMessage goToSpanMessage) {
 
+        Log.log(LOGGER::debug,project,"goToSpan request {}",goToSpanMessage);
+
         var span = goToSpanMessage.payload();
 
         for (SupportedLanguages value : SupportedLanguages.values()) {
@@ -224,7 +227,9 @@ public class JaegerUIService {
                 if (spanWorkspaceUris.containsKey(spanId)) {
                     Pair<String, Integer> location = spanWorkspaceUris.get(spanId);
                     EditorService editorService = project.getService(EditorService.class);
+                    Log.log(LOGGER::debug,project,"found span code location in goToSpan for {} with span id {}",span,spanId);
                     EDT.ensureEDT(() -> editorService.openWorkspaceFileInEditor(location.getFirst(), location.getSecond()));
+                    ToolWindowShower.getInstance(project).showToolWindow();
                     //if code location was found link to it and return.no need to check the other language services
                     return;
                 }else if (span.function() != null && span.namespace() != null){
@@ -234,7 +239,9 @@ public class JaegerUIService {
                     if (methodWorkspaceUris.containsKey(methodId)){
                         Pair<String, Integer> location = methodWorkspaceUris.get(methodId);
                         EditorService editorService = project.getService(EditorService.class);
+                        Log.log(LOGGER::debug,project,"found span code location in goToSpan for {} with method id {}",span,methodId);
                         EDT.ensureEDT(() -> editorService.openWorkspaceFileInEditor(location.getFirst(), location.getSecond()));
+                        ToolWindowShower.getInstance(project).showToolWindow();
                         //if code location was found link to it and return.no need to check the other language services
                         return;
                     }
@@ -242,7 +249,17 @@ public class JaegerUIService {
             }
         }
 
+        //if we're here we didn't find code location
+        Log.log(LOGGER::warn,project,"could not find code location in goToSpan for {}",goToSpanMessage);
 
+    }
+
+
+    public void goToInsight(GoToSpanMessage goToSpanMessage) {
+
+        Log.log(LOGGER::debug,project,"goToInsight request {}",goToSpanMessage);
+
+        var span = goToSpanMessage.payload();
         //if we're here then code location was not found
         navigate(project,span.instrumentationLibrary(),span.name(),span.namespace(),span.function());
 

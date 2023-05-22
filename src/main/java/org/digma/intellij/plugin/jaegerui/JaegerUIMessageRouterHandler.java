@@ -67,6 +67,11 @@ public class JaegerUIMessageRouterHandler extends CefMessageRouterHandlerAdapter
                         GoToSpanMessage goToSpanMessage = objectMapper.treeToValue(jsonNode, GoToSpanMessage.class);
                         JaegerUIService.getInstance(project).goToSpan(goToSpanMessage);
                     }
+                    case "GO_TO_INSIGHTS" -> {
+                        //it's the same message as go to span
+                        GoToSpanMessage goToSpanMessage = objectMapper.treeToValue(jsonNode, GoToSpanMessage.class);
+                        JaegerUIService.getInstance(project).goToInsight(goToSpanMessage);
+                    }
                     default -> throw new IllegalStateException("Unexpected value: " + action);
                 }
 

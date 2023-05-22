@@ -6,6 +6,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.ui.jcef.JBCefBrowser;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
+import org.digma.intellij.plugin.common.JsonUtils;
 import org.digma.intellij.plugin.document.CodeObjectsUtil;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
@@ -74,12 +75,16 @@ public class RecentActivityService implements Disposable {
 
 
     private void sendLiveDataImpl(DurationLiveData durationLiveData){
-        Log.log(logger::debug,project,"sending live data for {}",durationLiveData.getDurationInsight().getCodeObjectId());
+        Log.log(logger::debug,project,"sending live data for {}",durationLiveData.getDurationData().getCodeObjectId());
         LiveDataMessage liveDataMessageMessage =
                 new LiveDataMessage("digma", RECENT_ACTIVITY_SET_LIVE_DATA,
-                        new LiveDataPayload(durationLiveData.getLiveDataRecords(),durationLiveData.getDurationInsight()));
-        var strMessage = JBCefBrowserUtil.resultToString(liveDataMessageMessage);
-        JBCefBrowserUtil.postJSMessage(strMessage, jbCefBrowser);
+                        new LiveDataPayload(durationLiveData.getLiveDataRecords(),durationLiveData.getDurationData()));
+        try{
+            var strMessage = JsonUtils.javaRecordToJsonString(liveDataMessageMessage);
+            JBCefBrowserUtil.postJSMessage(strMessage, jbCefBrowser);
+        }catch (Exception e){
+            Log.debugWithException(logger,project,e,"Exception sending live data message");
+        }
     }
 
     private void stopLiveDataTimerTask() {
@@ -127,11 +132,16 @@ public class RecentActivityService implements Disposable {
     }
 
     public void liveViewClosed(@Nullable CloseLiveViewMessage closeLiveViewMessage) {
+
+        //closeLiveViewMessage may be null if there is an error parsing the message.
+        // this is a protection against errors so that the timer is always closed when user clicks the close button
+
         Log.log(logger::debug, project, "Stopping timer");
         if (closeLiveViewMessage != null) {
             Log.log(logger::debug, project, "Stopping timer for {}", closeLiveViewMessage.payload().codeObjectId());
             var codeObjectId = CodeObjectsUtil.stripMethodPrefix(closeLiveViewMessage.payload().codeObjectId());
-            //currently not considering the codeObjectId because there is only one timer task
+            //currently not considering the codeObjectId because there is only one timer task.
+            // but may be necessary in the future when there are few live views opened
         }
         stopLiveDataTimerTask();
     }

@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight;
+import org.digma.intellij.plugin.model.rest.livedata.DurationData;
 import org.digma.intellij.plugin.model.rest.livedata.LiveDataRecord;
 
 import java.util.List;
@@ -16,7 +16,7 @@ import java.util.List;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonSerialize
 public record LiveDataPayload(@JsonProperty(value = "liveDataRecords",required = true) List<LiveDataRecord> liveDataRecords,
-                              @JsonProperty(value = "durationInsight",required = true) SpanDurationsInsight durationInsight){
+                              @JsonProperty(value = "durationData",required = true) DurationData durationData){
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     public LiveDataPayload {
         //nothing to do , for jackson only

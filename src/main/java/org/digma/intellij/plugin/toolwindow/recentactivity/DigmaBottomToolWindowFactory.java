@@ -27,6 +27,7 @@ import org.digma.intellij.plugin.analytics.EnvironmentChanged;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.CommonUtils;
 import org.digma.intellij.plugin.common.EDT;
+import org.digma.intellij.plugin.common.JsonUtils;
 import org.digma.intellij.plugin.icons.AppIcons;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityEntrySpanForTracePayload;
@@ -189,16 +190,13 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory, Disposab
                     processRecentActivityGoToTraceRequest(recentActivityGoToTraceRequest, project);
                 }
                 if (RECENT_ACTIVITY_CLOSE_LIVE_VIEW.equalsIgnoreCase(reactMessageRequest.getAction())) {
-                    //for some reason, in Rider, Gson can not parse CloseLiveViewMessage so using ObjectMapper.
-                    //it's probably a missing add-open for Gson in Rider.
-                    // todo: check it in the next Rider version, just try to use Gson
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    CloseLiveViewMessage closeLiveViewMessage = null;
                     try {
-                        closeLiveViewMessage = objectMapper.readValue(request, CloseLiveViewMessage.class);
+                        CloseLiveViewMessage closeLiveViewMessage = JsonUtils.stringToJavaRecord(request,CloseLiveViewMessage.class);
                         RecentActivityService.getInstance(project).liveViewClosed(closeLiveViewMessage);
                     } catch (Exception e) {
-                        Log.debugWithException(LOGGER,e, "Exception while building CloseLiveViewMessage {}", e.getMessage());
+                        //we can't miss the close message because then the live view will stay open.
+                        // close the live view even if there is an error parsing the message.
+                        Log.debugWithException(LOGGER,project,e, "Exception while parsing CloseLiveViewMessage {}", e.getMessage());
                         RecentActivityService.getInstance(project).liveViewClosed(null);
                     }
                 }

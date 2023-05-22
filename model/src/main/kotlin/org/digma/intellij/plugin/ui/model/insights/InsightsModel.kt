@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.ui.model.insights
 
 import org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
+import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
 import org.digma.intellij.plugin.ui.model.DocumentScope
 import org.digma.intellij.plugin.ui.model.EmptyScope
 import org.digma.intellij.plugin.ui.model.MethodScope
@@ -55,6 +56,10 @@ class InsightsModel : PanelModel {
 
     override fun isDocumentScope(): Boolean {
         return scope is DocumentScope
+    }
+
+    override fun isCodeLessSpanScope(): Boolean {
+        return scope is CodeLessSpanScope
     }
 
     override fun getScope(): String {

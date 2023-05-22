@@ -268,16 +268,6 @@ public class MainToolWindowCardsController implements Disposable {
 
 
 
-    //for debugging only.
-    //it's not easy to debug this class with debugger because debugger changes focus behaviour,
-    // it's easier with debug logging and printStackTrace can help to understand who called this class
-//    private void printStackTrace() {
-//        Log.log(LOGGER::debug,"Stack trace:");
-//        for (StackTraceElement ste : Thread.currentThread().getStackTrace()) {
-//            Log.log(LOGGER::debug,ste.toString());
-//        }
-//    }
-
 
     private static class WizardComponents{
         Content wizardContent;

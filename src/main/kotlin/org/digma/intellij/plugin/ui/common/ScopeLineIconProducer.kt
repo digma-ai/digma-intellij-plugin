@@ -12,6 +12,8 @@ class ScopeLineIconProducer(val model: PanelModel): Producer<Icon> {
             return Laf.Icons.Insight.METHOD
         }else if (model.isDocumentScope()){
             return Laf.Icons.Insight.FILE
+        }else if (model.isCodeLessSpanScope()){
+            return Laf.Icons.Insight.TELESCOPE
         }
         return Laf.Icons.Insight.EMPTY
     }

@@ -59,6 +59,7 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static org.digma.intellij.plugin.navigation.codeless.CodelessNavigationKt.navigate;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.GLOBAL_SET_IS_JAEGER_ENABLED;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_SPAN;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_TRACE;
@@ -221,6 +222,7 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory, Disposab
                 final Pair<String, Integer> fileAndOffset = workspaceUrisForMethodCodeObjectIds.get(methodCodeObjectId);
                 if (fileAndOffset == null) {
                     NotificationUtil.showNotification(project, "code object could not be found in the workspace");
+                    navigate(project,payload.getSpan().getSpanCodeObjectId(),payload.getSpan().getMethodCodeObjectId());
                     return;
                 }
 

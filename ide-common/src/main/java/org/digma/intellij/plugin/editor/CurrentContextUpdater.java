@@ -22,7 +22,7 @@ import org.jetbrains.annotations.NotNull;
  * Processes requests to update the current method context as a result of caret
  * event or document change event.
  */
-class CurrentContextUpdater {
+public class CurrentContextUpdater {
 
     private static final Logger LOGGER = Logger.getInstance(CurrentContextUpdater.class);
     private final Project project;
@@ -38,7 +38,7 @@ class CurrentContextUpdater {
     */
     private MethodUnderCaret latestMethodUnderCaret;
 
-    CurrentContextUpdater(Project project) {
+    public CurrentContextUpdater(Project project) {
         this.project = project;
         caretContextService = project.getService(CaretContextService.class);
         languageServiceLocator = project.getService(LanguageServiceLocator.class);

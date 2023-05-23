@@ -75,6 +75,13 @@ public class RecentActivityService implements Disposable {
 
 
     private void sendLiveDataImpl(DurationLiveData durationLiveData){
+
+        //should not happen but we need to check
+        if (durationLiveData.getDurationData() == null){
+            Log.log(logger::debug,project,"durationLiveData.getDurationData is null, not sending live data for {}",durationLiveData);
+            return;
+        }
+
         Log.log(logger::debug,project,"sending live data for {}",durationLiveData.getDurationData().getCodeObjectId());
         LiveDataMessage liveDataMessageMessage =
                 new LiveDataMessage("digma", RECENT_ACTIVITY_SET_LIVE_DATA,
@@ -108,12 +115,19 @@ public class RecentActivityService implements Disposable {
             public void run() {
                 try {
                     DurationLiveData newDurationLiveData = AnalyticsService.getInstance(project).getDurationLiveData(codeObjectId);
+                    if (newDurationLiveData.getDurationData() == null){
+                        Log.log(logger::debug,project,"newDurationLiveData.getDurationData is null, stopping refresh timer for {}",codeObjectId);
+                        stopLiveDataTimerTask();
+                        return;
+                    }
                     sendLiveDataImpl(newDurationLiveData);
                 } catch (AnalyticsServiceException e) {
-                    Log.debugWithException(logger,e,"Exception from getDurationLiveData {}",e.getMessage());
+                    Log.debugWithException(logger,project,e,"got Exception from getDurationLiveData. Stopping refresh timer for {} {}",codeObjectId,e.getMessage());
+                    stopLiveDataTimerTask();
                 }catch (Exception e){
                     //catch any other exception and rethrow because it's a bug we should fix
-                    Log.debugWithException(logger,e,"Exception from myLiveDataTimer {}",e.getMessage());
+                    Log.debugWithException(logger,project,e,"Exception in myLiveDataTimer,Stopping refresh timer for {} {}",codeObjectId,e.getMessage());
+                    stopLiveDataTimerTask();
                     throw e;
                 }
             }

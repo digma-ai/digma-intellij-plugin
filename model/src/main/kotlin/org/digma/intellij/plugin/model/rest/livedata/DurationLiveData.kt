@@ -42,5 +42,5 @@ data class DurationLiveData
     "liveDataRecords",
     "durationData"
 )
-constructor(val liveDataRecords: List<LiveDataRecord>,val durationData: DurationData)
+constructor(val liveDataRecords: List<LiveDataRecord>,val durationData: DurationData?)
 

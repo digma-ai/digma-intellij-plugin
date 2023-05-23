@@ -90,7 +90,7 @@ tasks {
     }
 
     jar {
-        dependsOn(":rider:copyKotlinModuleFile")
+//        dependsOn(":rider:copyKotlinModuleFile")
     }
 
     wrapper {
@@ -200,7 +200,7 @@ tasks {
     }
 
     verifyPlugin {
-        dependsOn(":rider:prepareSandboxForRider")
+//        dependsOn(":rider:prepareSandboxForRider")
     }
 
     signPlugin {

@@ -56,7 +56,8 @@ dependencyResolutionManagement {
 
 
 rootProject.name = "digma-intellij-plugin"
-include("rider:protocol")
-findProject(":rider:protocol")?.name = "protocol"
-include("model", "analytics-provider", "ide-common", "rider", "python", "java")
+//include("rider:protocol")
+//findProject(":rider:protocol")?.name = "protocol"
+//include("model", "analytics-provider", "ide-common", "rider", "python", "java")
+include("model", "analytics-provider", "ide-common", "python", "java")
 include("system-test")

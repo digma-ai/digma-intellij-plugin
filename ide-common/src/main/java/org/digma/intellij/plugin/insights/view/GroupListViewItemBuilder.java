@@ -53,6 +53,10 @@ public class GroupListViewItemBuilder<T extends CodeObjectInsight> implements Li
                 WorkspaceUrisHelper.findWorkspaceUrisForSpans(project, theListView, getSpanIds((EPNPlusSpansInsight) insight), methodInfo);
                 break;
             }
+            case EndpointDurationSlowdown:{
+                WorkspaceUrisHelper.findWorkspaceUrisForSpans(project, theListView, getSpanIds((EndpointDurationSlowdownInsight) insight), methodInfo);
+                break;
+            }
             case SpanScaling:{
                 WorkspaceUrisHelper.findWorkspaceUrisForSpans(project,theListView, getSpanIds((SpanScalingInsight) insight), methodInfo);
                 WorkspaceUrisHelper.findWorkspaceUrisForMethodCodeObjectIds(project, theListView, getCodeObjectIds((SpanScalingInsight) insight), methodInfo);
@@ -107,6 +111,15 @@ public class GroupListViewItemBuilder<T extends CodeObjectInsight> implements Li
 
         return insight.getRootCauseSpans().stream()
                 .map(it -> CodeObjectsUtil.createSpanId(it.getInstrumentationLibrary(), it.getName()))
+                .toList();
+    }
+
+    private List<String> getSpanIds(EndpointDurationSlowdownInsight insight) {
+        if(insight.getDurationSlowdownSources() == null)
+            return Collections.emptyList();
+
+        return insight.getDurationSlowdownSources().stream()
+                .map(it -> CodeObjectsUtil.createSpanId(it.getSpanInfo().getInstrumentationLibrary(), it.getSpanInfo().getName()))
                 .toList();
     }
 

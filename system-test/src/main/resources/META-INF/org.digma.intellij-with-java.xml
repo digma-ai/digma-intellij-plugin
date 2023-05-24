@@ -1,0 +1,31 @@
+<idea-plugin>
+
+    <depends>org.jetbrains.idea.maven</depends>
+    <depends>org.jetbrains.plugins.gradle</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+
+        <fileBasedIndex implementation="org.digma.intellij.plugin.idea.psi.java.JavaDocumentInfoIndex"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaLanguageService"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaSpanNavigationProvider"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.idea.psi.java.JavaSpanNavigationStartupActivity"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService"/>
+
+        <runConfigurationExtension implementation="org.digma.intellij.plugin.idea.runcfg.AutoOtelAgentRunConfigurationExtension"/>
+        <applicationService serviceImplementation="org.digma.intellij.plugin.idea.runcfg.OTELJarProvider"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.idea.runcfg.OTELJarProviderStartup"/>
+    </extensions>
+
+
+    <projectListeners>
+        <listener
+                class="org.digma.intellij.plugin.idea.psi.java.DocumentsChangeListenerForJavaSpanNavigation"
+                topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
+        <listener
+                class="org.digma.intellij.plugin.idea.psi.java.BulkFileChangeListenerForJavaSpanNavigation"
+                topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
+    </projectListeners>
+
+
+</idea-plugin>

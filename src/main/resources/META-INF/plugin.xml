@@ -17,7 +17,7 @@
 
     <depends optional="true" config-file="org.digma.intellij-with-python.xml">com.intellij.modules.python</depends>
     <depends optional="true" config-file="org.digma.intellij-with-java.xml">com.intellij.modules.java</depends>
-    <depends optional="true" config-file="org.digma.intellij-with-rider.xml">com.intellij.modules.rider</depends>
+<!--    <depends optional="true" config-file="org.digma.intellij-with-rider.xml">com.intellij.modules.rider</depends>-->
 
 
     <extensions defaultExtensionNs="com.intellij">
@@ -75,6 +75,7 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.common.DumbAwareNotifier"/>
 
+        <projectService serviceImplementation="org.digma.intellij.plugin.analytics.BackendConnectionMonitor"/>
         <projectService serviceImplementation="org.digma.intellij.plugin.analytics.BackendConnectionMonitor"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.analytics.BackendConnectionUtil"/>

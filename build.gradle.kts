@@ -30,7 +30,6 @@ dependencies{
     implementation(project(":java"))
     implementation(project(":python"))
 //    implementation(project(":rider"))
-    implementation(project(":system-test"))
     implementation(libs.freemarker)
 }
 
@@ -231,4 +230,8 @@ tasks {
         }
     }
 
+}
+
+tasks.test {
+    useJUnit()
 }

@@ -10,7 +10,6 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/analytics-provider" />
             <option value="$PROJECT_DIR$/buildSrc" />
-            <option value="$PROJECT_DIR$/devkit-core" />
             <option value="$PROJECT_DIR$/ide-common" />
             <option value="$PROJECT_DIR$/java" />
             <option value="$PROJECT_DIR$/model" />

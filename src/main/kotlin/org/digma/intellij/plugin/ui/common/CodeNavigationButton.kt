@@ -59,12 +59,12 @@ class CodeNavigationButton(val project: Project,val panelModel:PanelModel, enabl
                             Log.log(logger::debug,project,"Navigation to direct span succeeded for {},{}",spanId,methodId)
                         }else{
 
-                            val closestParentItems = codeObjectNavigation.navigationEntry.spanNavigationItems
+                            val closestParentItems = codeObjectNavigation.navigationEntry.closestParentSpans
                                 .filter { spanNavigationItem -> spanNavigationItem.navItemType == NavItemType.ClosestParentInternal }
                                 .sortedBy { spanNavigationItem -> spanNavigationItem.distance }
                                 .filter { spanNavigationItem -> project.service<CodeNavigator>().canNavigateToSpanOrMethod(spanNavigationItem.spanCodeObjectId,spanNavigationItem.methodCodeObjectId) }
 
-                            val closestParentWithMethodItems = codeObjectNavigation.navigationEntry.spanNavigationItems
+                            val closestParentWithMethodItems = codeObjectNavigation.navigationEntry.closestParentSpans
                                 .filter { spanNavigationItem -> spanNavigationItem.navItemType == NavItemType.ClosestParentWithMethodCodeObjectId }
                                 .sortedBy { spanNavigationItem -> spanNavigationItem.distance }
                                 .filter { spanNavigationItem -> project.service<CodeNavigator>().canNavigateToSpanOrMethod(spanNavigationItem.spanCodeObjectId,spanNavigationItem.methodCodeObjectId) }
@@ -82,6 +82,8 @@ class CodeNavigationButton(val project: Project,val panelModel:PanelModel, enabl
 
                     }
                 } catch (e: Exception) {
+                    HintManager.getInstance().showHint(JLabel("Code Not Found!"), RelativePoint.getSouthWestOf(this),
+                        HintManager.HIDE_BY_ESCAPE,5000)
                     Log.debugWithException(logger, project, e, "Error in getCodeObjectNavigation")
                 }
             }

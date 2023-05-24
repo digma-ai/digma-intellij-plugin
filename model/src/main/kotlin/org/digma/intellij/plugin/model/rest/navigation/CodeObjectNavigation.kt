@@ -21,7 +21,37 @@ data class NavigationEntry
 @ConstructorProperties(
     "spanInfo", "closestParentSpans"
 )
-constructor(val spanInfo: SpanInfo, val spanNavigationItems: List<SpanNavigationItem>)
+constructor(val spanInfo: SpanInfoCopyTemp, val closestParentSpans: List<SpanNavigationItem>)
+
+
+
+//TODO: we should use SpanInfo here.
+// this is a workaround for a bug in backend that sometimes can not find the span because of names mismatch.
+// when that happens the fields in the span are null and jackson fails.
+// when the backend bug is fixed we can change to use SpanInfo.
+@JsonIgnoreProperties(ignoreUnknown = true)
+class SpanInfoCopyTemp
+@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+@ConstructorProperties(
+    "instrumentationLibrary",
+    "name",
+    "spanCodeObjectId",
+    "displayName",
+    "methodCodeObjectId",
+    "kind",
+)
+constructor(
+    open val instrumentationLibrary: String?,
+    open val name: String?,
+    open val spanCodeObjectId: String?,
+    open val displayName: String?,
+    open val methodCodeObjectId: String?,
+    open val kind: String?,
+)
+
+
+
+
 
 
 

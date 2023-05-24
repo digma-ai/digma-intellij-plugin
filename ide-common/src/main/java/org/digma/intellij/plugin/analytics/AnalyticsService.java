@@ -20,6 +20,8 @@ import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.insights.*;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveDataRequest;
+import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation;
+import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigationRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
@@ -296,6 +298,14 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() ->
                 analyticsProviderProxy.getDurationLiveData(new DurationLiveDataRequest(env,codeObjectId)));
     }
+
+    public CodeObjectNavigation getCodeObjectNavigation(String spanCodeObjectId) throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        return executeCatching(() ->
+                analyticsProviderProxy.getCodeObjectNavigation(new CodeObjectNavigationRequest(env,spanCodeObjectId)));
+    }
+
+
 
     public UsageStatusResult getUsageStatusOfErrors(List<String> objectIds) throws AnalyticsServiceException {
         return executeCatching(() -> {

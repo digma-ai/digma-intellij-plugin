@@ -52,6 +52,10 @@ class CodeLessSpanScope(private val codeLessSpan: CodeLessSpan) : Scope {
         return codeLessSpan.spanName
     }
 
+    fun getSpan():CodeLessSpan{
+        return codeLessSpan
+    }
+
 }
 
 

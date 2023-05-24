@@ -130,8 +130,21 @@ class ScopeLineResultPanel(
         }
         this.add(scopeLine)
         this.add(Box.createHorizontalGlue())
+        this.add(getCodeLocationButton(project))
+        this.add(Box.createHorizontalGlue())
         this.add(getGeneralRefreshButton(project))
     }
+
+    private fun getCodeLocationButton(project: Project): JButton {
+        val size = Laf.scalePanels(Laf.Sizes.BUTTON_SIZE_24)
+        val buttonsSize = Dimension(size, size)
+        val button = CodeNavigationButton(project,model)
+        button.preferredSize = buttonsSize
+        button.maximumSize = buttonsSize
+        return button
+    }
+
+
 
     private fun getGeneralRefreshButton(project: Project): JButton {
         val size = Laf.scalePanels(Laf.Sizes.BUTTON_SIZE_24)

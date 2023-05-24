@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.service;
+package org.digma.intellij.plugin.vf;
 
 import com.intellij.testFramework.LightVirtualFile;
 import org.digma.intellij.plugin.common.DigmaVirtualFileMarker;

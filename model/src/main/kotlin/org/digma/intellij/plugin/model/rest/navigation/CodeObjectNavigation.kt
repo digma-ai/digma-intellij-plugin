@@ -25,31 +25,6 @@ constructor(val spanInfo: SpanInfo, val spanNavigationItems: List<SpanNavigation
 
 
 
-//@JsonIgnoreProperties(ignoreUnknown = true)
-//class CodeObjectNavigationSpanInfo
-//@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-//@ConstructorProperties(
-//    "instrumentationLibrary",
-//    "name",
-//    "spanCodeObjectId",
-//    "displayName",
-//    "methodCodeObjectId",
-//    "kind",
-//)
-//constructor(
-//    open val instrumentationLibrary: String?,
-//    open val name: String?,
-//    open val spanCodeObjectId: String,
-//    open val displayName: String?,
-//    open val methodCodeObjectId: String?,
-//    open val kind: String?,
-//)
-
-
-
-
-
-
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class SpanNavigationItem
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)

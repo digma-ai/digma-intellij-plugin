@@ -63,17 +63,15 @@ class CodeNavigationButton(val project: Project,val panelModel:PanelModel, enabl
                                 .filter { spanNavigationItem -> spanNavigationItem.navItemType == NavItemType.ClosestParentInternal }
                                 .sortedBy { spanNavigationItem -> spanNavigationItem.distance }
                                 .filter { spanNavigationItem -> project.service<CodeNavigator>().canNavigateToSpanOrMethod(spanNavigationItem.spanCodeObjectId,spanNavigationItem.methodCodeObjectId) }
-                                .toMutableList()
 
                             val closestParentWithMethodItems = codeObjectNavigation.navigationEntry.spanNavigationItems
                                 .filter { spanNavigationItem -> spanNavigationItem.navItemType == NavItemType.ClosestParentWithMethodCodeObjectId }
                                 .sortedBy { spanNavigationItem -> spanNavigationItem.distance }
                                 .filter { spanNavigationItem -> project.service<CodeNavigator>().canNavigateToSpanOrMethod(spanNavigationItem.spanCodeObjectId,spanNavigationItem.methodCodeObjectId) }
-                                .toMutableList()
 
 
                             if (closestParentItems.isEmpty() && closestParentWithMethodItems.isEmpty()){
-                                HintManager.getInstance().showHint(JLabel("Not Able to Navigate"), RelativePoint.getSouthWestOf(this),
+                                HintManager.getInstance().showHint(JLabel("Code Not Found!"), RelativePoint.getSouthWestOf(this),
                                     HintManager.HIDE_BY_ESCAPE,5000)
                             }else{
                                 HintManager.getInstance().showHint(NavigationList(project,closestParentItems,closestParentWithMethodItems), RelativePoint.getSouthWestOf(this),

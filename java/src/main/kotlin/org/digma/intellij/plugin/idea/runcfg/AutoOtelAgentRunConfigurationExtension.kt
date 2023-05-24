@@ -29,6 +29,10 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
 
     private val logger: Logger = Logger.getInstance(AutoOtelAgentRunConfigurationExtension::class.java)
 
+    companion object {
+        const val DIGMA_OBSERVABILITY_ENV_VAR_NAME = "DIGMA_OBSERVABILITY"
+    }
+
     private fun enabled(): Boolean {
         return PersistenceService.getInstance().state.isAutoOtel
     }
@@ -308,6 +312,24 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
                 it.contains(":bootRun") || it.equals("bootRun")
             }
             if (isMainMethod || hasTestTask || hasBootRun) {
+                return true
+            }
+
+            val digmaObservabilityEnvVarValue = configuration.settings.env.get(DIGMA_OBSERVABILITY_ENV_VAR_NAME)
+            if (digmaObservabilityEnvVarValue != null
+                && ("true".equals(digmaObservabilityEnvVarValue.trim(), true)
+                        || "yes".equals(digmaObservabilityEnvVarValue.trim(), true)
+                        )
+            ) {
+                return true
+            }
+
+            // check for standard OpenTelemetry environment variables based on common prefix OTEL_
+            val hasOtelDefined = configuration.settings.env.keys.any {
+                it.startsWith("OTEL_")
+            }
+
+            if (hasOtelDefined) {
                 return true
             }
         }

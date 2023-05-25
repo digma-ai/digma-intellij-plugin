@@ -77,7 +77,7 @@ public class CodeLensProvider {
             final boolean haveDecorators = evalHaveDecorators(insights);
             if (!haveDecorators) {
                 CodeLens codeLens = new CodeLens(methodInfo.getId(), "Runtime Data", 8);
-                codeLens.setLensDescription("Code object has basic insights");
+                codeLens.setLensDescription("Runtime data available");
                 codeLens.setAnchor("Top");
 
                 codeLensList.add(codeLens);
@@ -116,9 +116,9 @@ public class CodeLensProvider {
     }
 
     private static CodeLens buildCodeLensOfActive(String methodId) {
-        var title = Unicodes.getGREEN_CIRCLE();
+        var title = Unicodes.getLIVE_CIRCLE();
         CodeLens codeLens = new CodeLens(methodId, title, 1);
-        codeLens.setLensDescription("There's activity on this method");
+        codeLens.setLensDescription("Live data available");
         codeLens.setAnchor("Top");
 
         return codeLens;

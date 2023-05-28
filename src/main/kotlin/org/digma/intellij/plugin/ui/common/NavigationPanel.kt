@@ -45,6 +45,9 @@ class NavigationPanel(
     private var analyticsService: AnalyticsService? = null
     private val rebuildPanelLock = ReentrantLock()
 
+
+    private var myScopeLineResultPanel: ScopeLineResultPanel? = null
+
     init {
         this.project = project
         this.model = model
@@ -173,7 +176,11 @@ class NavigationPanel(
         )
 //        rowPanel.add(getDashboardButton()) // will be used later
 //        rowPanel.add(Box.createHorizontalGlue())
-        rowPanel.add(ScopeLineResultPanel(project, model))
+
+
+        myScopeLineResultPanel?.dispose()
+        myScopeLineResultPanel = ScopeLineResultPanel(project, model)
+        rowPanel.add(myScopeLineResultPanel)
         rowPanel.add(Box.createHorizontalGlue())
 //        rowPanel.add(getRelatedInsightsIconLabel()) // will be used later
         return rowPanel

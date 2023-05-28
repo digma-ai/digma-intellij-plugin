@@ -296,4 +296,8 @@ public interface LanguageService extends Disposable {
     default boolean instrumentMethod(@NotNull CanInstrumentMethodResult result){
         return false;
     }
+
+    // addDependencyToOtelLib so could manually instrument (so canInstrumentMethod would return true)
+    default void addDependencyToOtelLib(@NotNull Project project, @NotNull String methodId) {
+    }
 }

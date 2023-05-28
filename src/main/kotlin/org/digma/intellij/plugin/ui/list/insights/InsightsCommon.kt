@@ -5,21 +5,23 @@ import com.intellij.codeInsight.hint.HintUtil
 import com.intellij.openapi.project.Project
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.ui.components.ActionLink
-import com.intellij.ui.dsl.builder.panel
-import com.intellij.ui.dsl.builder.text
-import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.JBUI.Borders.empty
-import io.ktor.util.reflect.*
+import io.ktor.util.reflect.instanceOf
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.notifications.NotificationUtil
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshService
-import org.digma.intellij.plugin.ui.common.*
+import org.digma.intellij.plugin.ui.common.Laf
+import org.digma.intellij.plugin.ui.common.MethodInstrumentationPresenter
+import org.digma.intellij.plugin.ui.common.OtelDependencyButton
+import org.digma.intellij.plugin.ui.common.Text
 import org.digma.intellij.plugin.ui.common.Text.NO_OBSERVABILITY_DETAIL_DESCRIPTION
-import org.digma.intellij.plugin.ui.common.Text.NO_OBSERVABILITY_MISSING_DEPENDENCY_DESCRIPTION
+import org.digma.intellij.plugin.ui.common.asHtml
+import org.digma.intellij.plugin.ui.common.buildBoldTitleGrayedComment
+import org.digma.intellij.plugin.ui.common.span
 import org.digma.intellij.plugin.ui.list.ListItemActionButton
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.list.commonListItemPanel
@@ -35,7 +37,13 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.Date
-import javax.swing.*
+import javax.swing.Box
+import javax.swing.Icon
+import javax.swing.JButton
+import javax.swing.JComponent
+import javax.swing.JLabel
+import javax.swing.JPanel
+import javax.swing.SwingConstants
 import kotlin.math.max
 
 private const val RECALCULATE = "Recalculate"
@@ -404,24 +412,20 @@ fun noObservabilityInsightPanel(project: Project, insight: NoObservability): JPa
     val model = MethodInstrumentationPresenter(project)
     model.update(methodId)
 
-    val body = panel {
-        row {
-            label(asHtml(NO_OBSERVABILITY_MISSING_DEPENDENCY_DESCRIPTION))
-        }
-        row {
-            val textArea = textArea().text(model.missingDependency ?: "")
-            textArea.component.isEditable = false
-            textArea.component.background = Laf.Colors.EDITOR_BACKGROUND
-            textArea.component.lineWrap = true
-            textArea.horizontalAlign(HorizontalAlign.FILL)
-        }
-    }
+    val body = JPanel(BorderLayout())
     body.isOpaque = false
 
+    val autoFixLabel = JLabel(asHtml(span(Laf.Colors.RED_OF_MISSING, Text.NO_OBSERVABILITY_MISSING_DEPENDENCY_DESCRIPTION)))
+    autoFixLabel.border = JBUI.Borders.emptyRight(10)
+    body.add(autoFixLabel, BorderLayout.CENTER)
+
+    val autoFixLink = OtelDependencyButton("Autofix", project, model)
+    body.add(autoFixLink, BorderLayout.EAST)
+
     val addAnnotationButton = ListItemActionButton("Add Annotation")
-    addAnnotationButton.addActionListener{
+    addAnnotationButton.addActionListener {
         ActivityMonitor.getInstance(project).registerInsightButtonClicked("add-annotation")
-        val succeeded =  model.instrumentMethod()
+        val succeeded = model.instrumentMethod()
         if (succeeded) {
             addAnnotationButton.isEnabled = false
         } else {
@@ -429,14 +433,15 @@ fun noObservabilityInsightPanel(project: Project, insight: NoObservability): JPa
         }
     }
 
-    if(model.canInstrumentMethod){
+    if (model.canInstrumentMethod) {
         addAnnotationButton.isEnabled = true
         body.isVisible = false
-    }
-    else {
+    } else {
         addAnnotationButton.isEnabled = false
         body.isVisible = model.cannotBecauseMissingDependency
     }
+
+    autoFixLink.defineTheAction(null)
 
     return createInsightPanel(
         project = project,

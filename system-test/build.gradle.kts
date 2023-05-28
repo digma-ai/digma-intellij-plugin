@@ -30,4 +30,3 @@ dependencies {
 tasks.test {
     useJUnit()
 }
-

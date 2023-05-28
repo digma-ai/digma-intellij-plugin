@@ -1,6 +1,10 @@
 package org.digma.intellij.plugin.idea.psi.java;
 
+import com.google.common.collect.ImmutableMap;
+import com.intellij.buildsystem.model.unified.UnifiedCoordinates;
+import com.intellij.buildsystem.model.unified.UnifiedDependency;
 import com.intellij.codeInsight.codeVision.CodeVisionEntry;
+import com.intellij.externalSystem.DependencyModifierService;
 import com.intellij.lang.Language;
 import com.intellij.lang.java.JavaLanguage;
 import com.intellij.openapi.application.ReadAction;
@@ -9,6 +13,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
@@ -29,6 +34,8 @@ import com.intellij.psi.util.PsiTreeUtil;
 import kotlin.Pair;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.ReadActions;
+import org.digma.intellij.plugin.idea.build.BuildSystemChecker;
+import org.digma.intellij.plugin.idea.build.JavaBuildSystem;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
@@ -45,8 +52,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.createJavaMethodCodeObjectId;
-
 public class JavaLanguageService implements LanguageService {
 
     private static final Logger LOGGER = Logger.getInstance(JavaLanguageService.class);
@@ -62,6 +67,17 @@ public class JavaLanguageService implements LanguageService {
     private final SpringBootFramework springBootFramework;
     private final List<IEndpointDiscovery> endpointDiscoveryList;
 
+    private static final String OtelDependencyVersion = "1.26.0";
+    private static final UnifiedCoordinates OtelCoordinates = new UnifiedCoordinates("io.opentelemetry.instrumentation", "opentelemetry-instrumentation-annotations", OtelDependencyVersion);
+    private static final ImmutableMap<JavaBuildSystem, UnifiedDependency> MapBuildSystem2Dependency;
+
+    static {
+        var builder = new ImmutableMap.Builder<JavaBuildSystem, UnifiedDependency>();
+        builder.put(JavaBuildSystem.UNKNOWN, new UnifiedDependency(OtelCoordinates, "compile"));
+        builder.put(JavaBuildSystem.MAVEN, new UnifiedDependency(OtelCoordinates, null));
+        builder.put(JavaBuildSystem.GRADLE, new UnifiedDependency(OtelCoordinates, "implementation"));
+        MapBuildSystem2Dependency = builder.build();
+    }
 
     /*
     It's better, as much as possible, in language services especially, not to initialize service dependencies in the constructor but use
@@ -151,7 +167,7 @@ public class JavaLanguageService implements LanguageService {
         PsiMethod psiMethod = PsiTreeUtil.getParentOfType(underCaret, PsiMethod.class);
         String className = safelyTryGetClassName(underCaret);
         if (psiMethod != null) {
-            return new MethodUnderCaret(createJavaMethodCodeObjectId(psiMethod), psiMethod.getName(), className, packageName, fileUri);
+            return new MethodUnderCaret(JavaLanguageUtils.createJavaMethodCodeObjectId(psiMethod), psiMethod.getName(), className, packageName, fileUri);
         }
 
         return new MethodUnderCaret("", "", className, packageName, fileUri);
@@ -228,6 +244,34 @@ public class JavaLanguageService implements LanguageService {
             }
         });
         return true;
+    }
+
+    @Nullable
+    private Module getModuleOfMethodId(String methodCodeObjectId) {
+        var psiMethod = findPsiMethodByMethodCodeObjectId(methodCodeObjectId);
+        if (psiMethod == null) {
+            Log.log(LOGGER::warn, "Failed to get PsiMethod from method id '{}'", methodCodeObjectId);
+            return null;
+        }
+
+        var module = ModuleUtilCore.findModuleForPsiElement(psiMethod);
+        if (module == null) {
+            Log.log(LOGGER::warn, "Failed to get module from PsiMethod '{}'", methodCodeObjectId);
+            return null;
+        }
+
+        return module;
+    }
+
+    @Override
+    public void addDependencyToOtelLib(@NotNull Project project, @NotNull String methodId) {
+        Module module = getModuleOfMethodId(methodId);
+        JavaBuildSystem moduleBuildSystem = BuildSystemChecker.Companion.determineBuildSystem(module);
+        UnifiedDependency dependencyLib = MapBuildSystem2Dependency.get(moduleBuildSystem);
+
+        var dependencyModifierService = DependencyModifierService.getInstance(project);
+
+        dependencyModifierService.addDependency(module, dependencyLib);
     }
 
     /**
@@ -369,7 +413,7 @@ public class JavaLanguageService implements LanguageService {
             PsiClass psiClass = psiClasses.stream().findAny().get();
             PsiFile psiFile = PsiTreeUtil.getParentOfType(psiClass, PsiFile.class);
             for (PsiMethod method : psiClass.getMethods()) {
-                String javaMethodCodeObjectId = createJavaMethodCodeObjectId(method);
+                String javaMethodCodeObjectId = JavaLanguageUtils.createJavaMethodCodeObjectId(method);
                 if (javaMethodCodeObjectId.equals(methodId) && psiFile != null) {
                     return method;
                 }

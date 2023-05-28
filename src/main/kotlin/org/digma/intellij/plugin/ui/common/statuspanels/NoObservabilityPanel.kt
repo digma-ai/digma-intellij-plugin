@@ -2,15 +2,17 @@ package org.digma.intellij.plugin.ui.common.statuspanels
 
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
-import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.JBUI.emptyInsets
 import org.digma.intellij.plugin.notifications.NotificationUtil
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.MethodInstrumentationPresenter
+import org.digma.intellij.plugin.ui.common.OtelDependencyButton
+import org.digma.intellij.plugin.ui.common.Text
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.boldFonts
+import org.digma.intellij.plugin.ui.common.span
 import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
@@ -52,32 +54,24 @@ fun createNoObservabilityPanel(project: Project, insightsModel: InsightsModel): 
     val mainMessagePanel = JPanel(BorderLayout())
     mainMessagePanel.isOpaque = false
     mainMessagePanel.border = JBUI.Borders.empty()
-    mainMessagePanel.add(mainMessageTextPane,BorderLayout.CENTER)
-    componentsPanel.add(mainMessagePanel,constraints)
+    mainMessagePanel.add(mainMessageTextPane, BorderLayout.CENTER)
+    componentsPanel.add(mainMessagePanel, constraints)
 
-
-    constraints.insets = emptyInsets()
     constraints.gridy = 4
-    val autoFixMessageTextPane = createTextPaneWithHtmlParagraph("Before adding annotations,<br>please add the following dependency:")
-    val autoFixMessagePanel = JPanel(BorderLayout())
-    autoFixMessagePanel.isOpaque = false
-    autoFixMessagePanel.border = JBUI.Borders.empty()
-    autoFixMessagePanel.add(autoFixMessageTextPane,BorderLayout.CENTER)
-    componentsPanel.add(autoFixMessagePanel,constraints)
+    constraints.fill = GridBagConstraints.BOTH
+    constraints.insets = JBUI.insets(20, 5, 0, 5)
+    val autoFixPanel = JPanel(BorderLayout())
+
+    val autoFixLabel = JLabel(asHtml(span(Laf.Colors.RED_OF_MISSING, Text.NO_OBSERVABILITY_MISSING_DEPENDENCY_DESCRIPTION)))
+    autoFixLabel.border = JBUI.Borders.emptyRight(10)
+    autoFixPanel.add(autoFixLabel, BorderLayout.CENTER)
+
+    val autoFixLink = OtelDependencyButton("Autofix", project, model)
+    autoFixPanel.add(autoFixLink, BorderLayout.EAST)
+
+    componentsPanel.add(autoFixPanel, constraints)
 
     constraints.gridy = 5
-    constraints.fill = GridBagConstraints.NONE
-    constraints.anchor = GridBagConstraints.CENTER
-    constraints.insets = emptyInsets()
-    val missingDependencyLabel = JBLabel(asHtml(""))
-    missingDependencyLabel.setCopyable(true)
-    missingDependencyLabel.isOpaque = true
-    missingDependencyLabel.background = Laf.Colors.EDITOR_BACKGROUND
-    componentsPanel.add(missingDependencyLabel, constraints)
-
-
-
-    constraints.gridy = 6
     constraints.fill = GridBagConstraints.NONE
     constraints.anchor = GridBagConstraints.CENTER
     constraints.insets = JBUI.insets(10, 5)
@@ -93,8 +87,6 @@ fun createNoObservabilityPanel(project: Project, insightsModel: InsightsModel): 
     }
 
 
-
-
     val resettablePanel = object : DigmaResettablePanel() {
         override fun reset() {
             val methodScope = insightsModel.scope as? MethodScope
@@ -102,14 +94,10 @@ fun createNoObservabilityPanel(project: Project, insightsModel: InsightsModel): 
                 model.update(methodScope.getMethodInfo().id)
                 if (model.canInstrumentMethod) {
                     addAnnotationButton.isEnabled = true
-                    autoFixMessagePanel.isVisible = false
-                    missingDependencyLabel.isVisible = false
+                    autoFixPanel.isVisible = false
                 } else {
                     addAnnotationButton.isEnabled = false
-                    autoFixMessagePanel.isVisible = model.cannotBecauseMissingDependency
-                    missingDependencyLabel.isVisible = model.cannotBecauseMissingDependency
-                    val depText = model.missingDependency ?: ""
-                    missingDependencyLabel.text = asHtml(depText)
+                    autoFixPanel.isVisible = model.cannotBecauseMissingDependency
                 }
             }
         }
@@ -122,6 +110,8 @@ fun createNoObservabilityPanel(project: Project, insightsModel: InsightsModel): 
 
     resettablePanel.layout = BorderLayout()
     resettablePanel.add(scrollPane, BorderLayout.CENTER)
+
+    autoFixLink.defineTheAction(resettablePanel)
 
     return resettablePanel
 }

@@ -50,7 +50,7 @@ fun createNoErrorsPanel(): JPanel {
     constraints.gridy = 4
     addNoErrorsDetailsPart("You should return to this page if",panel,constraints)
     constraints.gridy = 5
-    addNoErrorsDetailsPart("anu exceptions do occur to see",panel,constraints)
+    addNoErrorsDetailsPart("any exceptions do occur to see",panel,constraints)
     constraints.gridy = 6
     addNoErrorsDetailsPart("more details.",panel,constraints)
 

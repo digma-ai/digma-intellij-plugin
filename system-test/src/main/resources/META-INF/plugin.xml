@@ -9,13 +9,13 @@
     <description>
         Please write plugin description in README.md , see <!-- Plugin description --> section
     </description>
+
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.vcs</depends>
     <depends optional="true" config-file="org.digma.intellij-with-java.xml">com.intellij.modules.java</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <projectService serviceImplementation="org.digma.intellij.plugin.psi.LanguageServiceLocator"/>
-<!--        <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaLanguageService"/>-->
     </extensions>
 
 </idea-plugin>

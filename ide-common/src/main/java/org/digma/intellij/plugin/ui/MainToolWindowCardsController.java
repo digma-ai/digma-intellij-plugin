@@ -16,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 /**
@@ -43,7 +44,7 @@ public class MainToolWindowCardsController implements Disposable {
     private final WizardComponents wizard = new WizardComponents();
     private Supplier<DisposablePanel> wizardPanelBuilder;
 
-    private boolean isConnectionLost = false;
+    private final AtomicBoolean isConnectionLost = new AtomicBoolean(false);
 
     //latestRequestedCard is used when connection gained to show the latest request if any.
     // during connection lost there may be requests to show not file or non-supported file.
@@ -59,14 +60,14 @@ public class MainToolWindowCardsController implements Disposable {
                     @Override
                     public void connectionLost() {
                         Log.log(LOGGER::debug,"Got connectionLost");
-                        isConnectionLost = true;
+                        isConnectionLost.set(true);
                         showNoConnection();
                     }
 
                     @Override
                     public void connectionGained() {
                         Log.log(LOGGER::debug,"Got connectionGained");
-                        isConnectionLost = false;
+                        isConnectionLost.set(false);
                         showLatestRequestAfterConnectionGained();
                     }
                 });
@@ -110,7 +111,7 @@ public class MainToolWindowCardsController implements Disposable {
 
         //it may be that there was a connection lost event before the panels were ready.
         // in that case show connection lost panel
-        if (isConnectionLost){
+        if (isConnectionLost.get()){
             showNoConnection();
         }
     }
@@ -174,7 +175,7 @@ public class MainToolWindowCardsController implements Disposable {
 
         //this may happen on startup,showMainPanel is called from the tool window factory,
         // but there may be a connection lost before the content was built and before this controller was initialized
-        if (isConnectionLost){
+        if (isConnectionLost.get()){
             Log.log(LOGGER::debug,"Not showing MainPanel because connection lost, showing NoConnection");
             showNoConnection();
         }else{
@@ -209,7 +210,7 @@ public class MainToolWindowCardsController implements Disposable {
 
         //replace the card even if wizard is on. it will not show until wizard content is removed.
 
-        if (isConnectionLost){
+        if (isConnectionLost.get()){
             Log.log(LOGGER::debug,"Not showing NonSupported because connection lost, showing NoConnection");
             showNoConnection();
         }else{
@@ -225,7 +226,7 @@ public class MainToolWindowCardsController implements Disposable {
 
         //replace the card even if wizard is on. it will not show until wizard content is removed.
 
-        if (isConnectionLost){
+        if (isConnectionLost.get()){
             Log.log(LOGGER::debug,"Not showing NoFile because connection lost, showing NoConnection");
             showNoConnection();
         }else{
@@ -244,7 +245,7 @@ public class MainToolWindowCardsController implements Disposable {
             Log.log(LOGGER::debug,"latestRequestedCard is null, showing MAIN");
             showMainPanel();
         }else{
-            Log.log(LOGGER::debug,"showLatestRequestAfterConnectionGained called, showing {}",latestRequestedCard);
+            Log.log(LOGGER::debug,"showLatestRequestAfterConnectionGained called, showing latestRequestedCard {}",latestRequestedCard);
             switch (latestRequestedCard){
                 case NON_SUPPORTED -> showNonSupported();
                 case EMPTY_EDITOR -> showNoFile();

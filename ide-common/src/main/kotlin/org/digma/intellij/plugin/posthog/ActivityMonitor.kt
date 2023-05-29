@@ -9,9 +9,11 @@ import com.posthog.java.PostHog
 import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.model.InsightType
+import org.threeten.extra.Hours
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.time.Duration
+import java.time.Instant
 import java.time.LocalDateTime
 import java.util.Optional
 
@@ -33,6 +35,7 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
     private var postHog: PostHog? = null
     private var lastLensClick: LocalDateTime? = null
     private var lastInsightsViewed: HashSet<InsightType>? = null
+    private var lastConnectionErrorTime: Instant = Instant.MIN
 
     init {
         val hostname = CommonUtils.getLocalHostname()
@@ -109,7 +112,11 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
     }
 
     fun registerConnectionError(action: String, message: String) {
-        postHog?.capture(userId, "connection error", mapOf("reason" to message, "action" to action))
+        val oneHourAgo = Instant.now().minus(Hours.of(1))
+        if (lastConnectionErrorTime.isBefore(oneHourAgo)) {
+            postHog?.capture(userId, "connection error", mapOf("reason" to message, "action" to action))
+            lastConnectionErrorTime = Instant.now()
+        }
     }
 
     fun registerFirstInsightReceived() {
@@ -225,6 +232,7 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
             )
         )
     }
+
 
 //    override fun dispose() {
 //        try {

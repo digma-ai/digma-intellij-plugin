@@ -20,6 +20,8 @@ import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveDataRequest;
+import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation;
+import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigationRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
@@ -140,6 +142,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     @Override
     public DurationLiveData getDurationLiveData(DurationLiveDataRequest durationLiveDataRequest) {
         return execute(() -> client.analyticsProvider.getDurationLiveData(durationLiveDataRequest));
+    }
+
+    @Override
+    public CodeObjectNavigation getCodeObjectNavigation(CodeObjectNavigationRequest codeObjectNavigationRequest) {
+        return execute(() -> client.analyticsProvider.getCodeObjectNavigation(codeObjectNavigationRequest));
     }
 
     @Override
@@ -416,6 +423,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @POST("/LiveData/liveData")
         Call<DurationLiveData> getDurationLiveData(@Body DurationLiveDataRequest durationLiveDataRequest);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/CodeAnalytics/codeObjects/span_navigation")
+        Call<CodeObjectNavigation> getCodeObjectNavigation(@Body CodeObjectNavigationRequest codeObjectNavigationRequest);
 
         @Headers({
                 "Accept: application/+json",

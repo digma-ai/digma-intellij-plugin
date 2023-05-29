@@ -14,6 +14,8 @@ import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveDataRequest;
+import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation;
+import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigationRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
@@ -58,6 +60,8 @@ public interface AnalyticsProvider extends Closeable {
     RecentActivityResult getRecentActivity(RecentActivityRequest recentActivityRequest);
 
     DurationLiveData getDurationLiveData(DurationLiveDataRequest durationLiveDataRequest);
+
+    CodeObjectNavigation getCodeObjectNavigation(CodeObjectNavigationRequest codeObjectNavigationRequest);
 
     VersionResponse getVersions(VersionRequest request);
 

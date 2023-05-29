@@ -15,16 +15,16 @@ import org.digma.intellij.plugin.ui.service.InsightsViewService
 
 private val logger = Logger.getInstance("org.digma.intellij.plugin.navigation.codeless.CodelessNavigation")
 
-fun navigate(
+fun showInsightsForSpan(
     project: Project, spanInstLibrary: String?,
     spanName: String?, functionNamespace: String?, functionName: String?,
 ) {
 
-    Log.log(logger::debug,project,"Got navigation request for {} {} {} {}", spanInstLibrary, spanName, functionNamespace, functionName)
+    Log.log(logger::debug,project,"Got showInsightsForSpan request for {} {} {} {}", spanInstLibrary, spanName, functionNamespace, functionName)
 
 
     if (spanInstLibrary == null || spanName == null) {
-        Log.log(logger::debug,project, "Not navigating because span instrumentation library or span name is null")
+        Log.log(logger::debug,project, "Not showing insights because span instrumentation library or span name is null")
         return
     }
 
@@ -60,11 +60,16 @@ fun navigate(
 }
 
 
-fun navigate(project: Project, spanCodeObjectId: String, methodCodeObjectId: String?) {
+fun showInsightsForSpan(project: Project, spanCodeObjectId: String, methodCodeObjectId: String?) {
+
+    Log.log(logger::debug,project,"Got showInsightsForSpan request for {} {}", spanCodeObjectId, methodCodeObjectId)
+
     val instLibrary = spanCodeObjectId.substringBefore("\$_$")
     val spanName = spanCodeObjectId.substringAfter("\$_$")
     val funcNamespace = methodCodeObjectId?.substringBefore("\$_$")
     val funcName = methodCodeObjectId?.substringAfter("\$_$")
+
+
     project.service<InsightsViewService>().updateInsightsModel(CodeLessSpan(
         spanCodeObjectId,
         instLibrary,

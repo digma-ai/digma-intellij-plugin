@@ -6,7 +6,6 @@ import com.intellij.openapi.project.Project;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateExceptionHandler;
-import kotlin.Pair;
 import org.apache.commons.collections.CollectionUtils;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
@@ -18,11 +17,11 @@ import org.digma.intellij.plugin.jaegerui.model.outgoing.Insight;
 import org.digma.intellij.plugin.jaegerui.model.outgoing.SpanData;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
+import org.digma.intellij.plugin.navigation.codeless.CodelessNavigationKt;
+import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.psi.SupportedLanguages;
-import org.digma.intellij.plugin.service.EditorService;
 import org.digma.intellij.plugin.settings.SettingsState;
-import org.digma.intellij.plugin.ui.ToolWindowShower;
 import org.digma.intellij.plugin.ui.model.TraceSample;
 import org.jetbrains.annotations.NotNull;
 
@@ -41,11 +40,10 @@ import static org.digma.intellij.plugin.document.CodeObjectsUtil.addMethodTypeTo
 import static org.digma.intellij.plugin.document.CodeObjectsUtil.addSpanTypeToIds;
 import static org.digma.intellij.plugin.document.CodeObjectsUtil.createMethodCodeObjectId;
 import static org.digma.intellij.plugin.document.CodeObjectsUtil.createSpanId;
-import static org.digma.intellij.plugin.navigation.codeless.CodelessNavigationKt.navigate;
 
 public class JaegerUIService {
 
-    private static final Logger LOGGER = Logger.getInstance(JaegerUIService.class);
+    private final Logger LOGGER = Logger.getInstance(JaegerUIService.class);
 
     private final Project project;
 
@@ -218,40 +216,12 @@ public class JaegerUIService {
 
         var span = goToSpanMessage.payload();
 
-        for (SupportedLanguages value : SupportedLanguages.values()) {
-            var languageService = LanguageService.findLanguageServiceByName(project,value.getLanguageServiceClassName());
-            if (languageService != null){
-                var spanId = createSpanId(span.instrumentationLibrary(),span.name());
-                var spanWorkspaceUris = ReadActions.ensureReadAction(() -> languageService.findWorkspaceUrisForSpanIds(Collections.singletonList(spanId)));
-
-                if (spanWorkspaceUris.containsKey(spanId)) {
-                    Pair<String, Integer> location = spanWorkspaceUris.get(spanId);
-                    EditorService editorService = project.getService(EditorService.class);
-                    Log.log(LOGGER::debug,project,"found span code location in goToSpan for {} with span id {}",span,spanId);
-                    EDT.ensureEDT(() -> editorService.openWorkspaceFileInEditor(location.getFirst(), location.getSecond()));
-                    ToolWindowShower.getInstance(project).showToolWindow();
-                    //if code location was found link to it and return.no need to check the other language services
-                    return;
-                }else if (span.function() != null && span.namespace() != null){
-                    var methodId = createMethodCodeObjectId(span.namespace(),span.function());
-                    var methodWorkspaceUris = ReadActions.ensureReadAction(() -> languageService.findWorkspaceUrisForMethodCodeObjectIds(Collections.singletonList(methodId)));
-
-                    if (methodWorkspaceUris.containsKey(methodId)){
-                        Pair<String, Integer> location = methodWorkspaceUris.get(methodId);
-                        EditorService editorService = project.getService(EditorService.class);
-                        Log.log(LOGGER::debug,project,"found span code location in goToSpan for {} with method id {}",span,methodId);
-                        EDT.ensureEDT(() -> editorService.openWorkspaceFileInEditor(location.getFirst(), location.getSecond()));
-                        ToolWindowShower.getInstance(project).showToolWindow();
-                        //if code location was found link to it and return.no need to check the other language services
-                        return;
-                    }
-                }
-            }
+        Log.log(LOGGER::debug,project,"calling CodeNavigator.maybeNavigateToSpan from goToSpan for {}",span);
+        if(project.getService(CodeNavigator.class).maybeNavigateToSpan(span.instrumentationLibrary(),span.name(),span.namespace(),span.function())){
+            Log.log(LOGGER::debug,project,"CodeNavigator.maybeNavigateToSpan did navigate to span {}",span);
+        }else{
+            Log.log(LOGGER::warn,project,"could not find code location in goToSpan for {}",goToSpanMessage);
         }
-
-        //if we're here we didn't find code location
-        Log.log(LOGGER::warn,project,"could not find code location in goToSpan for {}",goToSpanMessage);
-
     }
 
 
@@ -261,7 +231,7 @@ public class JaegerUIService {
 
         var span = goToSpanMessage.payload();
         //if we're here then code location was not found
-        navigate(project,span.instrumentationLibrary(),span.name(),span.namespace(),span.function());
+        CodelessNavigationKt.showInsightsForSpan(project,span.instrumentationLibrary(),span.name(),span.namespace(),span.function());
 
     }
 

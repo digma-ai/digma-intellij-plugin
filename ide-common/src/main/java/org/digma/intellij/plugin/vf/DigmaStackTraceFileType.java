@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.service;
+package org.digma.intellij.plugin.vf;
 
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.fileTypes.ex.FakeFileType;

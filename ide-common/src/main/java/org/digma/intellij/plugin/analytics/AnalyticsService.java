@@ -197,8 +197,8 @@ public class AnalyticsService implements Disposable {
     /**
      * removed deprecation because its necessary for JaegerUIService#getImportance(java.util.List)
      */
-     //@deprecated This method is deprecated and will be removed in a future release.
-     //Use {@link #getInsightsOfMethods(List<MethodInfo>)} instead.
+    //@deprecated This method is deprecated and will be removed in a future release.
+    //Use {@link #getInsightsOfMethods(List<MethodInfo>)} instead.
     public List<CodeObjectInsight> getInsights(List<String> objectIds) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         Log.log(LOGGER::debug, "Requesting insights for next objectIds {} and next environment {}", objectIds, env);
@@ -439,30 +439,33 @@ public class AnalyticsService implements Disposable {
                 // will be logged only once.
 
                 boolean isConnectionException = isConnectionException(e) || isSslConnectionException(e);
+                String message = isConnectionException
+                        ? isConnectionException(e) ? getConnectExceptionMessage(e) : getSslExceptionMessage(e)
+                        : getExceptionMessage(e);
                 if(status.isOk()){
                     if (isConnectionException) {
                         status.addConnectionError(e);
                         project.getMessageBus().syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC).connectionLost();
-                        var message = isConnectionException(e) ? getConnectExceptionMessage(e) : getSslExceptionMessage(e);
                         Log.log(LOGGER::warn, "Connection exception: error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
-                        ActivityMonitor.getInstance(project).registerConnectionError(method.getName(), message);
                         NotificationUtil.notifyError(project, "<html>Connection error with Digma backend api for method " + method.getName() + ".<br> "
                                 + message + ".<br> See logs for details.");
                     }
                     else{
                         status.addIfNewError(e);
                         Log.log(LOGGER::warn, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getCause().getMessage());
-                        var message = getExceptionMessage(e);
                         NotificationUtil.notifyError(project, "<html>Error with Digma backend api for method " + method.getName() + ".<br> "
                                 + message + ".<br> See logs for details.");
-                        ActivityMonitor.getInstance(project).registerError(e, message);
                     }
                 }
                 // status was not ok but it's a new error
                 else if(status.addIfNewError(e)){
-                    var message = getExceptionMessage(e);
                     Log.log(LOGGER::warn, "New Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
                     LOGGER.warn(e);
+                }
+
+                if (isConnectionException) {
+                    ActivityMonitor.getInstance(project).registerConnectionError(method.getName(), message);
+                } else {
                     ActivityMonitor.getInstance(project).registerError(e, message);
                 }
 

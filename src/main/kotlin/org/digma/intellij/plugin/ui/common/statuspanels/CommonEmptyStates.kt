@@ -17,6 +17,7 @@ import java.awt.GridBagLayout
 import javax.swing.Icon
 import javax.swing.JLabel
 import javax.swing.JPanel
+import javax.swing.JTextPane
 import javax.swing.SwingConstants
 
 
@@ -83,3 +84,66 @@ private fun getFileIcon(): Icon {
         Laf.Icons.Common.FileDark
     }
 }
+
+
+
+
+
+fun createTextPaneWithHtmlParagraph(paragraph: String): JTextPane {
+    return createTextPaneWithHtml(getHtmlWithParagraphCenterAlign(paragraph))
+}
+
+fun createTextPaneWithHtmlTitleAndParagraph(title: String,paragraph: String): JTextPane {
+    return createTextPaneWithHtml(getHtmlWithTitleAndParagraphCenterAlign(title,paragraph))
+}
+
+fun createTextPaneWithHtml(html: String): JTextPane {
+
+    val textPane = JTextPane()
+    return textPane.apply {
+        contentType = "text/html"
+        isEditable = false
+        isOpaque = false
+        background = null
+        border = null
+        putClientProperty(JTextPane.HONOR_DISPLAY_PROPERTIES, true)
+//        font = BaseCopyableLabel.DEFAULT_FONT
+        text = html
+        toolTipText = ""
+        isFocusCycleRoot = false
+        isFocusTraversalPolicyProvider = false
+    }
+}
+
+
+
+fun getHtmlWithTitleAndParagraphCenterAlign(title: String,paragraph: String): String{
+    return "<html>" +
+            "<head>" +
+            "<style>" +
+            "h3 {text-align: center;}" +
+            "p {text-align: center;}" +
+            "div {text-align: center;}" +
+            "</style>" +
+            "</head>" +
+            "<body>" +
+            "<h3>$title</h3>" +
+            "<p>$paragraph</p>" +
+            "</body>" +
+            "</html>"
+}
+
+fun getHtmlWithParagraphCenterAlign(paragraph: String): String{
+    return "<html>" +
+            "<head>" +
+            "<style>" +
+            "p {text-align: center;}" +
+            "div {text-align: center;}" +
+            "</style>" +
+            "</head>" +
+            "<body>" +
+            "<p>$paragraph</p>" +
+            "</body>" +
+            "</html>"
+}
+

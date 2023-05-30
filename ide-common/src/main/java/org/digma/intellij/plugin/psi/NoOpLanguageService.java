@@ -80,7 +80,7 @@ public class NoOpLanguageService implements LanguageService {
     }
 
     @Override
-    public void environmentChanged(String newEnv) {
+    public void environmentChanged(String newEnv, boolean refreshInsightsView) {
         //nothing to do
     }
 

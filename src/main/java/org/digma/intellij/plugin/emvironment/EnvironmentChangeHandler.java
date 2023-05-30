@@ -27,7 +27,7 @@ public class EnvironmentChangeHandler implements EnvironmentChanged {
     //environmentChanged must run in a background thread.
     //when fired by the Environment object it is on background
     @Override
-    public void environmentChanged(String newEnv) {
+    public void environmentChanged(String newEnv, boolean refreshInsightsView) {
 
         //for all languages and IDEs documentInfoService needs to refresh its data
         documentInfoService.environmentChanged(newEnv);
@@ -41,7 +41,7 @@ public class EnvironmentChangeHandler implements EnvironmentChanged {
                 Class<? extends LanguageService> clazz = (Class<? extends LanguageService>) Class.forName(value.getLanguageServiceClassName());
                 LanguageService languageService = project.getService(clazz);
                 if (languageService != null) {
-                    languageService.environmentChanged(newEnv);
+                    languageService.environmentChanged(newEnv,refreshInsightsView);
                 }
             } catch (Throwable e) {
                 //catch Throwable because there may be errors.

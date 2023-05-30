@@ -56,7 +56,7 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
             EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC,
             object : EnvironmentChanged {
 
-                override fun environmentChanged(newEnv: String?) {
+                override fun environmentChanged(newEnv: String?, refreshInsightsView: Boolean) {
                     Log.log(logger::debug, "environmentChanged called")
                     reloadSummariesPanelInBackground(project)
                 }

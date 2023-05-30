@@ -88,10 +88,10 @@ fun createCommonEmptyStateWithIconTitleAndParagraph(icon: Icon, title: String, p
 fun createCommonEmptyStateWithIconTitleAndParagraphAndSlackLink(project: Project,icon: Icon, title: String,paragraph: String): JPanel {
     val textPane = createTextPaneWithHtmlTitleAndParagraph(title,paragraph)
     val componentsPanel = createCommonEmptyStatePanelWIthIconAndTextPane(icon, textPane)
-    return createCommonEmptyStateWithPanelSlackLink(project,componentsPanel)
+    return createCommonEmptyStatePanelWithSlackLink(project,componentsPanel)
 }
 
-private fun createCommonEmptyStateWithPanelSlackLink(project: Project,componentsPanel: JPanel): JPanel {
+private fun createCommonEmptyStatePanelWithSlackLink(project: Project, componentsPanel: JPanel): JPanel {
 
     val mainPanel = JPanel(GridBagLayout())
     mainPanel.isOpaque = false

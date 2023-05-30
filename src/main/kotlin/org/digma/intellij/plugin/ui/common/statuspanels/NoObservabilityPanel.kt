@@ -2,10 +2,11 @@ package org.digma.intellij.plugin.ui.common.statuspanels
 
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
+import com.intellij.ui.components.JBLabel
+import com.intellij.ui.components.JBScrollPane
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.JBUI.emptyInsets
 import org.digma.intellij.plugin.notifications.NotificationUtil
-import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.MethodInstrumentationPresenter
 import org.digma.intellij.plugin.ui.common.asHtml
@@ -22,13 +23,16 @@ import javax.swing.Icon
 import javax.swing.JButton
 import javax.swing.JLabel
 import javax.swing.JPanel
+import javax.swing.ScrollPaneConstants
 import javax.swing.SwingConstants
 
 fun createNoObservabilityPanel(project: Project, insightsModel: InsightsModel): DigmaResettablePanel {
 
     val model = MethodInstrumentationPresenter(project)
 
-    val panel = JPanel(GridBagLayout())
+    val componentsPanel = JPanel(GridBagLayout())
+    componentsPanel.isOpaque = false
+    componentsPanel.border = JBUI.Borders.empty()
 
     val constraints = GridBagConstraints()
 
@@ -40,56 +44,45 @@ fun createNoObservabilityPanel(project: Project, insightsModel: InsightsModel): 
     constraints.insets = JBUI.insets(10, 5)
     val icon = JLabel(getNoObservabilityIcon())
     icon.horizontalAlignment = SwingConstants.CENTER
-    panel.add(icon, constraints)
-
-    constraints.gridy = 2
-    val noObservability = JLabel("No Observability")
-    boldFonts(noObservability)
-    noObservability.horizontalAlignment = SwingConstants.CENTER
-    noObservability.horizontalTextPosition = SwingConstants.CENTER
-    panel.add(noObservability, constraints)
+    componentsPanel.add(icon, constraints)
 
     constraints.insets = emptyInsets()
     constraints.gridy = 3
-    addNoObservabilityDetailsPart("Add an annotation to observe this ", panel, constraints)
-    constraints.gridy = 4
-    addNoObservabilityDetailsPart("method and collect data about ", panel, constraints)
-    constraints.gridy = 5
-    addNoObservabilityDetailsPart("its runtime behavior.", panel, constraints)
+    val mainMessageTextPane = createTextPaneWithHtmlTitleAndParagraph("No Observability","Add an annotation to observe this<br>method and collect data about<br>its runtime behavior.")
+    val mainMessagePanel = JPanel(BorderLayout())
+    mainMessagePanel.isOpaque = false
+    mainMessagePanel.border = JBUI.Borders.empty()
+    mainMessagePanel.add(mainMessageTextPane,BorderLayout.CENTER)
+    componentsPanel.add(mainMessagePanel,constraints)
 
-    constraints.gridy = 7
-    constraints.fill = GridBagConstraints.BOTH
-    constraints.insets = JBUI.insets(20, 5, 0, 5)
-    val autoFixLabel1 = JLabel(asHtml("Before adding annotations, "))
-    autoFixLabel1.horizontalAlignment = SwingConstants.CENTER
-    autoFixLabel1.horizontalTextPosition = SwingConstants.CENTER
-    panel.add(autoFixLabel1, constraints)
 
-    constraints.gridy = 8
-    constraints.anchor = GridBagConstraints.CENTER
     constraints.insets = emptyInsets()
-    val autoFixLabel2 = JLabel(asHtml("please add the following dependency:"))
-    autoFixLabel2.horizontalAlignment = SwingConstants.CENTER
-    autoFixLabel2.horizontalTextPosition = SwingConstants.CENTER
-    panel.add(autoFixLabel2, constraints)
+    constraints.gridy = 4
+    val autoFixMessageTextPane = createTextPaneWithHtmlParagraph("Before adding annotations,<br>please add the following dependency:")
+    val autoFixMessagePanel = JPanel(BorderLayout())
+    autoFixMessagePanel.isOpaque = false
+    autoFixMessagePanel.border = JBUI.Borders.empty()
+    autoFixMessagePanel.add(autoFixMessageTextPane,BorderLayout.CENTER)
+    componentsPanel.add(autoFixMessagePanel,constraints)
 
-    constraints.gridy = 9
+    constraints.gridy = 5
     constraints.fill = GridBagConstraints.NONE
     constraints.anchor = GridBagConstraints.CENTER
     constraints.insets = emptyInsets()
-    val missingDependencyLabel = CopyableLabelHtml(asHtml(""))
+    val missingDependencyLabel = JBLabel(asHtml(""))
+    missingDependencyLabel.setCopyable(true)
     missingDependencyLabel.isOpaque = true
     missingDependencyLabel.background = Laf.Colors.EDITOR_BACKGROUND
-    panel.add(missingDependencyLabel, constraints)
+    componentsPanel.add(missingDependencyLabel, constraints)
 
 
 
-    constraints.gridy = 10
+    constraints.gridy = 6
     constraints.fill = GridBagConstraints.NONE
     constraints.anchor = GridBagConstraints.CENTER
     constraints.insets = JBUI.insets(10, 5)
     val addAnnotationButton = AddAnnotationButton()
-    panel.add(addAnnotationButton, constraints)
+    componentsPanel.add(addAnnotationButton, constraints)
     addAnnotationButton.addActionListener {
         val succeeded = model.instrumentMethod()
         if (succeeded) {
@@ -101,8 +94,6 @@ fun createNoObservabilityPanel(project: Project, insightsModel: InsightsModel): 
 
 
 
-    panel.isOpaque = false
-    panel.border = JBUI.Borders.empty()
 
     val resettablePanel = object : DigmaResettablePanel() {
         override fun reset() {
@@ -111,34 +102,30 @@ fun createNoObservabilityPanel(project: Project, insightsModel: InsightsModel): 
                 model.update(methodScope.getMethodInfo().id)
                 if (model.canInstrumentMethod) {
                     addAnnotationButton.isEnabled = true
-                    autoFixLabel1.isVisible = false
-                    autoFixLabel2.isVisible = false
+                    autoFixMessagePanel.isVisible = false
                     missingDependencyLabel.isVisible = false
                 } else {
                     addAnnotationButton.isEnabled = false
-                    autoFixLabel1.isVisible = model.cannotBecauseMissingDependency
-                    autoFixLabel2.isVisible = model.cannotBecauseMissingDependency
+                    autoFixMessagePanel.isVisible = model.cannotBecauseMissingDependency
                     missingDependencyLabel.isVisible = model.cannotBecauseMissingDependency
                     val depText = model.missingDependency ?: ""
-                    missingDependencyLabel.text = asHtml(depText.replace(":", ":<br>"))
+                    missingDependencyLabel.text = asHtml(depText)
                 }
             }
-
         }
     }
+
+
+    val scrollPane = JBScrollPane()
+    scrollPane.horizontalScrollBarPolicy = ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
+    scrollPane.setViewportView(componentsPanel)
+
     resettablePanel.layout = BorderLayout()
-    resettablePanel.add(panel, BorderLayout.CENTER)
+    resettablePanel.add(scrollPane, BorderLayout.CENTER)
 
     return resettablePanel
 }
 
-
-private fun addNoObservabilityDetailsPart(text: String, panel: JPanel, constraints: GridBagConstraints) {
-    val noObservabilityDetailsLabel = JLabel(asHtml(text))
-    noObservabilityDetailsLabel.horizontalAlignment = SwingConstants.CENTER
-    noObservabilityDetailsLabel.horizontalTextPosition = SwingConstants.CENTER
-    panel.add(noObservabilityDetailsLabel, constraints)
-}
 
 private fun getNoObservabilityIcon(): Icon {
     return if (JBColor.isBright()) {

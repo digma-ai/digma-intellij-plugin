@@ -8,7 +8,7 @@ import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.ui.common.buildPreviewListPanel
 import org.digma.intellij.plugin.ui.common.statuspanels.createLoadingInsightsPanel
-import org.digma.intellij.plugin.ui.common.statuspanels.createNoErrorsPanel
+import org.digma.intellij.plugin.ui.common.statuspanels.createNoErrorsEmptyStatePanel
 import org.digma.intellij.plugin.ui.common.statuspanels.createPendingInsightsPanel
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.errors.ErrorsPanelList
@@ -115,7 +115,7 @@ private fun wrapWithEmptyStatuses(
     emptyStatusesCardsPanel.isOpaque = false
     emptyStatusesCardsPanel.border = empty()
 
-    val noInErrorsPanel = createNoErrorsPanel()
+    val noInErrorsPanel = createNoErrorsEmptyStatePanel()
     val pendingInsightsPanel = createPendingInsightsPanel()
     val loadingInsightsPanel = createLoadingInsightsPanel()
 

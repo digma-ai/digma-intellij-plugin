@@ -16,9 +16,7 @@ import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.service.ErrorsActionsService;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.digma.intellij.plugin.ui.ToolWindowShower;
-import org.digma.intellij.plugin.ui.common.NoConnectionPanelKt;
-import org.digma.intellij.plugin.ui.common.statuspanels.NoFilePanelKt;
-import org.digma.intellij.plugin.ui.common.statuspanels.NonSupportedPanelKt;
+import org.digma.intellij.plugin.ui.common.statuspanels.NoConnectionPanelKt;
 import org.digma.intellij.plugin.ui.panels.DisposablePanel;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
@@ -31,6 +29,8 @@ import java.util.function.Supplier;
 
 import static org.digma.intellij.plugin.ui.common.InstallationWizardSidePanelWindowPanelKt.createInstallationWizardSidePanelWindowPanel;
 import static org.digma.intellij.plugin.ui.common.MainSidePaneWindowPanelKt.createMainSidePaneWindowPanel;
+import static org.digma.intellij.plugin.ui.common.statuspanels.CommonHtmlEmptyStatesKt.createNoFileEmptyStatePanel;
+import static org.digma.intellij.plugin.ui.common.statuspanels.CommonHtmlEmptyStatesKt.createNonSupportedEmptyStatePanel;
 
 
 /**
@@ -109,8 +109,8 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         cardsPanel.setBorder(JBUI.Borders.empty());
 
         var noConnectionPanel = NoConnectionPanelKt.createNoConnectionPanel(project);
-        var nonSupportedPanel = NonSupportedPanelKt.createNonSupportedPanel(project);
-        var noFilePanel = NoFilePanelKt.createNoFilePanel(project);
+        var nonSupportedPanel = createNonSupportedEmptyStatePanel(project);
+        var noFilePanel = createNoFileEmptyStatePanel(project);
 
 
         cardsPanel.add(mainPanel, MainToolWindowCardsController.MainWindowCard.MAIN.name());

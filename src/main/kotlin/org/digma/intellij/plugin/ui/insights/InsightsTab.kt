@@ -9,7 +9,7 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.common.buildPreviewListPanel
 import org.digma.intellij.plugin.ui.common.statuspanels.createLoadingInsightsPanel
-import org.digma.intellij.plugin.ui.common.statuspanels.createNoDataYetPanel
+import org.digma.intellij.plugin.ui.common.statuspanels.createNoDataYetEmptyStatePanel
 import org.digma.intellij.plugin.ui.common.statuspanels.createNoInsightsPanel
 import org.digma.intellij.plugin.ui.common.statuspanels.createNoObservabilityPanel
 import org.digma.intellij.plugin.ui.common.statuspanels.createPendingInsightsPanel
@@ -106,7 +106,7 @@ private fun wrapWithEmptyStatuses(project: Project, insightsPanel: DigmaTabPanel
     val noInsightsPanel = createNoInsightsPanel()
     val pendingInsightsPanel = createPendingInsightsPanel()
     val loadingInsightsPanel = createLoadingInsightsPanel()
-    val noDataYetPanel = createNoDataYetPanel()
+    val noDataYetPanel = createNoDataYetEmptyStatePanel()
     val noObservabilityPanel = createNoObservabilityPanel(project, insightsModel)
 
     emptyStatusesCardsPanel.add(insightsPanel, UIInsightsStatus.Default.name)

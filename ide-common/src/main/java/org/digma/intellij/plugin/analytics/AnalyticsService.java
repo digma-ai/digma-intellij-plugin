@@ -84,6 +84,19 @@ public class AnalyticsService implements Disposable {
     private String myApiToken;
     private final Project project;
 
+    /**
+     * myConnectionLostFlag must be a member of AnalyticsService and not of the AnalyticsInvocationHandler proxy.
+     * AnalyticsInvocationHandler may be replaced , AnalyticsService a singleton.
+     * the error that may happen is myConnectionLostFlag is a member of AnalyticsInvocationHandler is:
+     * we got a connection error,myConnectionLostFlag is marked to true. user changes the url in settings,
+     * AnalyticsInvocationHandler is replaced with a new instance and myConnectionLostFlag is false, the next successful
+     * call will not reset the status and we're locked in connection lost.
+     * when myConnectionLostFlag is a member of AnalyticsService as is here, it will not happen, it is a singleton
+     * for the project and new instances of AnalyticsInvocationHandler will see its real state.
+     */
+    private final AtomicBoolean myConnectionLostFlag = new AtomicBoolean(false);
+
+
     private AnalyticsProvider analyticsProviderProxy;
 
     private RestAnalyticsProvider analyticsProvider;
@@ -391,7 +404,6 @@ public class AnalyticsService implements Disposable {
         //ObjectMapper here is only used for printing the result to log as json
         private final ObjectMapper objectMapper = new ObjectMapper();
 
-        private final AtomicBoolean myConnectionLostFlag = new AtomicBoolean(false);
         private final ReentrantLock myConnectionLostLock = new ReentrantLock();
 
         //sometimes the connection lost is momentary or regaining is momentary, use the alarm to wait

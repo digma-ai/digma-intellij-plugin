@@ -555,6 +555,10 @@ public class AnalyticsService implements Disposable {
             // the reason for locking here and in markConnectionLostAndNotify is to avoid a situation were myConnectionLostFlag
             // if marked but never reset and to make sure that is we notified connectionLost we will also notify when its gained back.
             try{
+                //if connection is ok do nothing.
+                if (isConnectionOK()){
+                    return;
+                }
                 myConnectionLostLock.lock();
                 if (myConnectionLostFlag.get()) {
                     myConnectionLostFlag.set(false);

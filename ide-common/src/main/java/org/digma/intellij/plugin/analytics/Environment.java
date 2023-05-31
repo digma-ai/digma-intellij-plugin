@@ -92,8 +92,13 @@ public class Environment implements EnvironmentsSupplier {
 
         Log.log(LOGGER::debug, "Setting current environment , old={},new={}", this.current, newEnv);
 
-        //don't change or fire the event if it's the same env.
-        if (!forceChange && Objects.equals(this.current, newEnv) || StringUtils.isEmpty(newEnv) || NO_ENVIRONMENTS_MESSAGE.equals(newEnv)) {
+        //check if value is illegal
+        if (StringUtils.isEmpty(newEnv) || NO_ENVIRONMENTS_MESSAGE.equals(newEnv)){
+            return;
+        }
+
+        //don't change or fire the event if it's the same env. unless forceChange is true
+        if (!forceChange && Objects.equals(this.current, newEnv)) {
 
             //run the task even if no need to change environment
             if (taskToRunAfterChange != null){

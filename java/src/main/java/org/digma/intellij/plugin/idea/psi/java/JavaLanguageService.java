@@ -28,6 +28,7 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import kotlin.Pair;
 import org.digma.intellij.plugin.common.EDT;
+import org.digma.intellij.plugin.common.ReadActions;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
@@ -241,49 +242,31 @@ public class JavaLanguageService implements LanguageService {
             return;
         }
 
-        var className = methodId.substring(0, methodId.indexOf("$_$"));
+        ReadActions.ensureReadAction(() -> {
 
-        //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
-        className = className.replace('$', '.');
-
-        //searching in project scope will find only project classes
-        Collection<PsiClass> psiClasses =
-                JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.allScope(project));
-        if (!psiClasses.isEmpty()) {
-            //hopefully there is only one class by that name in the project
-            Optional<PsiClass> psiClassOptional = psiClasses.stream().findAny();
-            PsiClass psiClass = psiClassOptional.get();
-            for (PsiMethod method : psiClass.getMethods()) {
-                var id = JavaLanguageUtils.createJavaMethodCodeObjectId(method);
-                if (id.equals(methodId) && method.canNavigate()) {
-                    Log.log(LOGGER::debug, "navigating to method {}", method);
-                    method.navigate(true);
-                    return;
+            var className = methodId.substring(0, methodId.indexOf("$_$"));
+            //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
+            className = className.replace('$', '.');
+            //searching in project scope will find only project classes
+            Collection<PsiClass> psiClasses =
+                    JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.allScope(project));
+            if (!psiClasses.isEmpty()) {
+                //hopefully there is only one class by that name in the project
+                Optional<PsiClass> psiClassOptional = psiClasses.stream().findAny();
+                PsiClass psiClass = psiClassOptional.get();
+                for (PsiMethod method : psiClass.getMethods()) {
+                    var id = JavaLanguageUtils.createJavaMethodCodeObjectId(method);
+                    if (id.equals(methodId) && method.canNavigate()) {
+                        Log.log(LOGGER::debug, "navigating to method {}", method);
+                        method.navigate(true);
+                        return;
+                    }
                 }
             }
-        }
+        });
+
     }
 
-    @Nullable
-    private PsiMethod findMethod(PsiClass[] classes, String codeObjectId) {
-
-        for (PsiClass aClass : classes) {
-            PsiMethod[] methods = aClass.getMethods();
-            for (PsiMethod method : methods) {
-                String id = createJavaMethodCodeObjectId(method);
-                if (id.equals(codeObjectId)) {
-                    return method;
-                }
-            }
-
-            var m = findMethod(aClass.getInnerClasses(), codeObjectId);
-            if (m != null) {
-                return m;
-            }
-        }
-
-        return null;
-    }
 
 
     @Override
@@ -311,23 +294,28 @@ public class JavaLanguageService implements LanguageService {
         codeObjectIds.forEach(methodId -> {
 
             if (methodId.contains("$_$")) {
-                var className = methodId.substring(0, methodId.indexOf("$_$"));
 
-                //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
-                className = className.replace('$', '.');
+                ReadActions.ensureReadAction(() -> {
 
-                //searching in project scope will find only project classes
-                Collection<PsiClass> psiClasses =
-                        JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.projectScope(project));
-                if (!psiClasses.isEmpty()) {
-                    //hopefully there is only one class by that name in the project
-                    PsiClass psiClass = psiClasses.stream().findAny().get();
-                    PsiFile psiFile = PsiTreeUtil.getParentOfType(psiClass, PsiFile.class);
-                    if (psiFile != null) {
-                        String url = PsiUtils.psiFileToUri(psiFile);
-                        workspaceUrls.put(methodId, url);
+                    var className = methodId.substring(0, methodId.indexOf("$_$"));
+
+                    //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
+                    className = className.replace('$', '.');
+
+                    //searching in project scope will find only project classes
+                    Collection<PsiClass> psiClasses =
+                            JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.projectScope(project));
+                    if (!psiClasses.isEmpty()) {
+                        //hopefully there is only one class by that name in the project
+                        PsiClass psiClass = psiClasses.stream().findAny().get();
+                        PsiFile psiFile = PsiTreeUtil.getParentOfType(psiClass, PsiFile.class);
+                        if (psiFile != null) {
+                            String url = PsiUtils.psiFileToUri(psiFile);
+                            workspaceUrls.put(methodId, url);
+                        }
                     }
-                }
+                });
+
             } else {
                 Log.log(LOGGER::debug, "method id in findWorkspaceUrisForCodeObjectIdsForErrorStackTrace does not contain $_$ {}", methodId);
             }
@@ -341,14 +329,13 @@ public class JavaLanguageService implements LanguageService {
 
         Map<String, Pair<String, Integer>> workspaceUrls = new HashMap<>();
 
-        methodCodeObjectIds.forEach(methodId -> {
-
+        methodCodeObjectIds.forEach(methodId -> ReadActions.ensureReadAction(() -> {
             var psiMethod = findPsiMethodByMethodCodeObjectId(methodId);
             if (psiMethod != null) {
                 String url = PsiUtils.psiFileToUri(psiMethod.getContainingFile());
                 workspaceUrls.put(methodId, new Pair<>(url, psiMethod.getTextOffset()));
             }
-        });
+        }));
 
         return workspaceUrls;
     }
@@ -361,10 +348,8 @@ public class JavaLanguageService implements LanguageService {
             return null;
         }
 
-        return ReadAction.nonBlocking(() -> netoFindPsiMethodByMethodCodeObjectId(methodId))
-                .inSmartMode(project)
-                .withDocumentsCommitted(project)
-                .executeSynchronously();
+        return ReadActions.ensureReadAction(() -> netoFindPsiMethodByMethodCodeObjectId(methodId));
+
     }
 
     private @Nullable PsiMethod netoFindPsiMethodByMethodCodeObjectId(@NotNull String methodId) {

@@ -10,6 +10,7 @@ import org.digma.intellij.plugin.persistence.PersistenceData;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -73,11 +74,37 @@ public class Environment implements EnvironmentsSupplier {
 
     @Override
     public void setCurrent(@NotNull String newEnv) {
+        setCurrent(newEnv,true,false,null);
+    }
+
+    @Override
+    public void setCurrent(@NotNull String newEnv,boolean forceChange) {
+        setCurrent(newEnv,true,forceChange,null);
+    }
+
+    @Override
+    public void setCurrent(@Nullable String newEnv,boolean refreshInsightsView,@Nullable Runnable taskToRunAfterChange){
+        setCurrent(newEnv,refreshInsightsView,false,taskToRunAfterChange);
+    }
+
+    @Override
+    public void setCurrent(@Nullable String newEnv,boolean refreshInsightsView,boolean forceChange,@Nullable Runnable taskToRunAfterChange){
 
         Log.log(LOGGER::debug, "Setting current environment , old={},new={}", this.current, newEnv);
 
-        //don't change or fire the event if it's the same env.
-        if (Objects.equals(this.current, newEnv) || StringUtils.isEmpty(newEnv) || NO_ENVIRONMENTS_MESSAGE.equals(newEnv)) {
+        //check if value is illegal
+        if (StringUtils.isEmpty(newEnv) || NO_ENVIRONMENTS_MESSAGE.equals(newEnv)){
+            return;
+        }
+
+        //don't change or fire the event if it's the same env. unless forceChange is true
+        if (!forceChange && Objects.equals(this.current, newEnv)) {
+
+            //run the task even if no need to change environment
+            if (taskToRunAfterChange != null){
+                taskToRunAfterChange.run();
+            }
+
             return;
         }
 
@@ -93,7 +120,7 @@ public class Environment implements EnvironmentsSupplier {
                     // we got here to changeEnv but list is empty, probably first run/call
                     refreshEnvironments();
                 }
-                changeEnvironment(newEnv);
+                changeEnvironment(newEnv,refreshInsightsView,taskToRunAfterChange);
             } finally {
                 envChangeLock.unlock();
             }
@@ -103,12 +130,15 @@ public class Environment implements EnvironmentsSupplier {
     }
 
 
-    private void changeEnvironment(@NotNull String newEnv) {
+    private void changeEnvironment(@NotNull String newEnv,boolean refreshInsightsView,@Nullable Runnable taskToRunAfterChange) {
         if (StringUtils.isNotEmpty(newEnv)) {
             var oldEnv = this.current;
             this.current = newEnv;
             persistenceData.setCurrentEnv(newEnv);
-            notifyEnvironmentChanged(oldEnv, newEnv);
+            if (taskToRunAfterChange != null){
+                taskToRunAfterChange.run();
+            }
+            notifyEnvironmentChanged(oldEnv, newEnv,refreshInsightsView);
         }
     }
 
@@ -250,13 +280,17 @@ public class Environment implements EnvironmentsSupplier {
     }
 
     private void notifyEnvironmentChanged(String oldEnv, String newEnv) {
+        notifyEnvironmentChanged(oldEnv,newEnv,true);
+    }
+
+    private void notifyEnvironmentChanged(String oldEnv, String newEnv,boolean refreshInsightsView) {
         Log.log(LOGGER::debug, "Firing EnvironmentChanged event for {}", newEnv);
         if (project.isDisposed()) {
             return;
         }
         Log.log(LOGGER::info, "Digma: Changing environment " + oldEnv + " to " + newEnv);
         EnvironmentChanged publisher = project.getMessageBus().syncPublisher(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC);
-        publisher.environmentChanged(newEnv);
+        publisher.environmentChanged(newEnv,refreshInsightsView);
     }
 
 }

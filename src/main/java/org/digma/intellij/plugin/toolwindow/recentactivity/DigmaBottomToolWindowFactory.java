@@ -140,7 +140,7 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory, Disposab
         if (backendConnectionMonitor.isConnectionOk()) {
             Backgroundable.ensureBackground(project, "change environment", () -> {
                 EnvironmentChanged publisher = project.getMessageBus().syncPublisher(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC);
-                publisher.environmentChanged(analyticsService.getEnvironment().getCurrent());
+                publisher.environmentChanged(analyticsService.getEnvironment().getCurrent(), true);
             });
         }
 
@@ -234,27 +234,36 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory, Disposab
             String methodCodeObjectId = payload.getSpan().getMethodCodeObjectId();
 
             ApplicationManager.getApplication().invokeLater(() -> {
+
                 LanguageService languageService = LanguageService.findLanguageServiceByMethodCodeObjectId(project, methodCodeObjectId);
                 Map<String, Pair<String, Integer>> workspaceUrisForMethodCodeObjectIds = languageService.findWorkspaceUrisForMethodCodeObjectIds(Collections.singletonList(methodCodeObjectId));
                 final Pair<String, Integer> fileAndOffset = workspaceUrisForMethodCodeObjectIds.get(methodCodeObjectId);
+
                 if (fileAndOffset == null) {
-                    NotificationUtil.showNotification(project, "code object could not be found in the workspace");
-                    showInsightsForSpan(project, payload.getSpan().getSpanCodeObjectId(), payload.getSpan().getMethodCodeObjectId());
-                    return;
-                }
 
-                // modifying the selected environment
-                EnvironmentsSupplier environmentsSupplier = analyticsService.getEnvironment();
-                String actualEnvName = adjustBackEnvNameIfNeeded(payload.getEnvironment());
-                environmentsSupplier.setCurrent(actualEnvName);
+                    // modifying the selected environment
+                    EnvironmentsSupplier environmentsSupplier = analyticsService.getEnvironment();
+                    String actualEnvName = adjustBackEnvNameIfNeeded(payload.getEnvironment());
+                    environmentsSupplier.setCurrent(actualEnvName,false, () -> {
+                        NotificationUtil.showNotification(project, "code object could not be found in the workspace");
+                        showInsightsForSpan(project, payload.getSpan().getSpanCodeObjectId(), payload.getSpan().getMethodCodeObjectId());
+                    });
 
-                editorService.openWorkspaceFileInEditor(fileAndOffset.getFirst(), fileAndOffset.getSecond());
+                }else{
+                    editorService.openWorkspaceFileInEditor(fileAndOffset.getFirst(), fileAndOffset.getSecond());
 
-                ToolWindow digmaSidePaneToolWindow = ToolWindowManager.getInstance(project).getToolWindow(DIGMA_SIDE_PANE_TOOL_WINDOW_NAME);
-                if (digmaSidePaneToolWindow != null && !digmaSidePaneToolWindow.isVisible()) {
-                    digmaSidePaneToolWindow.show();
-                } else {
-                    Log.log(LOGGER::debug, "digmaSidePaneToolWindow is empty OR is visible already");
+                    // modifying the selected environment
+                    EnvironmentsSupplier environmentsSupplier = analyticsService.getEnvironment();
+                    String actualEnvName = adjustBackEnvNameIfNeeded(payload.getEnvironment());
+                    environmentsSupplier.setCurrent(actualEnvName,true);
+
+
+                    ToolWindow digmaSidePaneToolWindow = ToolWindowManager.getInstance(project).getToolWindow(DIGMA_SIDE_PANE_TOOL_WINDOW_NAME);
+                    if (digmaSidePaneToolWindow != null && !digmaSidePaneToolWindow.isVisible()) {
+                        digmaSidePaneToolWindow.show();
+                    } else {
+                        Log.log(LOGGER::debug, "digmaSidePaneToolWindow is empty OR is visible already");
+                    }
                 }
             });
         }

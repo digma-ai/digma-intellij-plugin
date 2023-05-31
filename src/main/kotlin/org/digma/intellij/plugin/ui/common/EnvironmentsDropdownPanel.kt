@@ -76,7 +76,7 @@ class EnvironmentsDropdownPanel(
                 object : EnvironmentChanged {
                     //there are few instances of EnvironmentsPanel, if a button is clicked in the insights tab the selected button
                     //need to change also in the errors tab, and vice versa.
-                    override fun environmentChanged(newEnv: String?) {
+                    override fun environmentChanged(newEnv: String?, refreshInsightsView: Boolean) {
                         EDT.ensureEDT { select(newEnv) }
                     }
 

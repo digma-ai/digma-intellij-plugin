@@ -33,7 +33,7 @@ class CodeNavigationButton(val project: Project,val panelModel:PanelModel, enabl
 
         isEnabled = getCodeLessSpan() != null
         if (!isEnabled){
-            toolTipText = asHtml("Code navigation here is disabled because<br> the insights view is already linked to code location")
+            toolTipText = asHtml("Already at code location")
             border = JBUI.Borders.customLine(JBColor.LIGHT_GRAY, 1)
             background = Laf.Colors.TRANSPARENT
         }

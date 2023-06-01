@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.navigation.codeless
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.editor.CurrentContextUpdater
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
@@ -15,75 +14,30 @@ import org.digma.intellij.plugin.ui.service.InsightsViewService
 
 private val logger = Logger.getInstance("org.digma.intellij.plugin.navigation.codeless.CodelessNavigation")
 
-fun showInsightsForSpan(
-    project: Project, spanInstLibrary: String?,
-    spanName: String?, functionNamespace: String?, functionName: String?,
-) {
+fun showInsightsForSpan(project: Project, spanId: String, methodId: String?) {
 
-    Log.log(logger::debug,project,"Got showInsightsForSpan request for {} {} {} {}", spanInstLibrary, spanName, functionNamespace, functionName)
+    Log.log(logger::debug,project,"Got showInsightsForSpan request for {} {}", spanId, methodId)
 
-
-    if (spanInstLibrary == null || spanName == null) {
-        Log.log(logger::debug,project, "Not showing insights because span instrumentation library or span name is null")
-        return
-    }
-
-    val spanId = CodeObjectsUtil.createSpanId(spanInstLibrary, spanName)
-    val methodId = if (functionNamespace != null && functionName != null) CodeObjectsUtil.createMethodCodeObjectId(
-        functionNamespace,functionName) else null
+    val instLibrary = spanId.substringBefore("\$_$")
+    val spanName = spanId.substringAfter("\$_$")
+    val funcNamespace = methodId?.substringBefore("\$_$")
+    val funcName = methodId?.substringAfter("\$_$")
 
 
     project.service<InsightsViewService>().updateInsightsModel(CodeLessSpan(
         spanId,
-        spanInstLibrary,
-        spanName,
-        methodId,
-        functionNamespace,
-        functionName
-    ))
-
-    project.service<ErrorsViewService>().updateErrorsModel(CodeLessSpan(
-        spanId,
-        spanInstLibrary,
-        spanName,
-        methodId,
-        functionNamespace,
-        functionName
-    ))
-
-    project.service<ErrorsActionsService>().closeErrorDetailsBackButton()
-
-    //clear the latest method so that if user clicks on the editor again after watching code less insights the context will change
-    project.service<CurrentContextUpdater>().clearLatestMethod()
-
-    ToolWindowShower.getInstance(project).showToolWindow()
-}
-
-
-fun showInsightsForSpan(project: Project, spanCodeObjectId: String, methodCodeObjectId: String?) {
-
-    Log.log(logger::debug,project,"Got showInsightsForSpan request for {} {}", spanCodeObjectId, methodCodeObjectId)
-
-    val instLibrary = spanCodeObjectId.substringBefore("\$_$")
-    val spanName = spanCodeObjectId.substringAfter("\$_$")
-    val funcNamespace = methodCodeObjectId?.substringBefore("\$_$")
-    val funcName = methodCodeObjectId?.substringAfter("\$_$")
-
-
-    project.service<InsightsViewService>().updateInsightsModel(CodeLessSpan(
-        spanCodeObjectId,
         instLibrary,
         spanName,
-        methodCodeObjectId,
+        methodId,
         funcNamespace,
         funcName
     ))
 
     project.service<ErrorsViewService>().updateErrorsModel(CodeLessSpan(
-        spanCodeObjectId,
+        spanId,
         instLibrary,
         spanName,
-        methodCodeObjectId,
+        methodId,
         funcNamespace,
         funcName
     ))

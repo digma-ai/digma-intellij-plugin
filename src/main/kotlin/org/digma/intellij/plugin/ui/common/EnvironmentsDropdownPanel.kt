@@ -312,7 +312,7 @@ class EnvironmentsDropdownPanel(
         }
     }
 
-    private fun select(newSelectedEnv: String?) {
+    private fun selectOLD(newSelectedEnv: String?) {
         val currentSelected: String = comboBox.selectedItem as String
         //both panels will catch the event,the one that generated the event will be ignored and not changed.
         if (Objects.equals(currentSelected, newSelectedEnv)) {
@@ -324,6 +324,42 @@ class EnvironmentsDropdownPanel(
         }
         comboBox.selectedItem = buildLinkText(newSelectedEnv)
     }
+
+
+//    private fun selectFixLoop(newSelectedEnv: String?) {
+//
+//        val actualSelectedEnvironment = environmentsSupplier.getCurrent()
+//
+//        val currentSelected: String = comboBox.selectedItem as String
+//        //both panels will catch the event,the one that generated the event will be ignored and not changed.
+//        if (Objects.equals(currentSelected, actualSelectedEnvironment)) {
+//            return
+//        }
+//
+//        if (actualSelectedEnvironment == null) {
+//            return
+//        }
+//        comboBox.selectedItem = buildLinkText(actualSelectedEnvironment)
+//    }
+
+   private fun select(newSelectedEnv: String?) {
+
+        val actualSelectedEnvironment = environmentsSupplier.getCurrent()
+
+        val currentSelected: String = comboBox.selectedItem as String
+        //both panels will catch the event,the one that generated the event will be ignored and not changed.
+        if (Objects.equals(currentSelected, actualSelectedEnvironment)) {
+            return
+        }
+
+        if (actualSelectedEnvironment == null) {
+            return
+        }
+        comboBox.selectedItem = buildLinkText(actualSelectedEnvironment)
+    }
+
+
+
 
     private fun buildLinkText(currEnv: String): String {
         var txtValue = currEnv

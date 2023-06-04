@@ -132,6 +132,7 @@ class ScopeLineResultPanel(
         this.add(Box.createHorizontalGlue())
         this.add(getCodeLocationButton(project))
         this.add(Box.createHorizontalGlue())
+        this.add(Box.createHorizontalStrut(5))
         this.add(getGeneralRefreshButton(project))
     }
 

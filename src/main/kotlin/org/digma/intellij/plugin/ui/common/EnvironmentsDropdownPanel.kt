@@ -77,6 +77,12 @@ class EnvironmentsDropdownPanel(
                     //there are few instances of EnvironmentsPanel, if a button is clicked in the insights tab the selected button
                     //need to change also in the errors tab, and vice versa.
                     override fun environmentChanged(newEnv: String?, refreshInsightsView: Boolean) {
+                        //it probably not necessary to enable the combo back here because its
+                        // probably another instance then the one that was disabled but just to make sure in case
+                        // there is a scenario that the combo instance is not replaced
+                        comboBox.isEnabled = true
+                        comboBox.cursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR)
+                        comboBox.parent.cursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR)
                         EDT.ensureEDT { select(newEnv) }
                     }
 
@@ -254,6 +260,9 @@ class EnvironmentsDropdownPanel(
             if (!StringUtils.equals(selectedEnv, currEnv)) {
                 changeEnvAlarm.cancelAllRequests()
                 changeEnvAlarm.addRequest({
+                    cb.cursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR)
+                    cb.parent.cursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR)
+                    cb.isEnabled = false
                     environmentsSupplier.setCurrent(selectedEnv)
                 }, 100)
             }
@@ -312,7 +321,7 @@ class EnvironmentsDropdownPanel(
         }
     }
 
-    private fun select(newSelectedEnv: String?) {
+    private fun selectOLD(newSelectedEnv: String?) {
         val currentSelected: String = comboBox.selectedItem as String
         //both panels will catch the event,the one that generated the event will be ignored and not changed.
         if (Objects.equals(currentSelected, newSelectedEnv)) {
@@ -324,6 +333,42 @@ class EnvironmentsDropdownPanel(
         }
         comboBox.selectedItem = buildLinkText(newSelectedEnv)
     }
+
+
+//    private fun selectFixLoop(newSelectedEnv: String?) {
+//
+//        val actualSelectedEnvironment = environmentsSupplier.getCurrent()
+//
+//        val currentSelected: String = comboBox.selectedItem as String
+//        //both panels will catch the event,the one that generated the event will be ignored and not changed.
+//        if (Objects.equals(currentSelected, actualSelectedEnvironment)) {
+//            return
+//        }
+//
+//        if (actualSelectedEnvironment == null) {
+//            return
+//        }
+//        comboBox.selectedItem = buildLinkText(actualSelectedEnvironment)
+//    }
+
+   private fun select(newSelectedEnv: String?) {
+
+        val actualSelectedEnvironment = environmentsSupplier.getCurrent()
+
+        val currentSelected: String = comboBox.selectedItem as String
+        //both panels will catch the event,the one that generated the event will be ignored and not changed.
+        if (Objects.equals(currentSelected, actualSelectedEnvironment)) {
+            return
+        }
+
+        if (actualSelectedEnvironment == null) {
+            return
+        }
+        comboBox.selectedItem = buildLinkText(actualSelectedEnvironment)
+    }
+
+
+
 
     private fun buildLinkText(currEnv: String): String {
         var txtValue = currEnv

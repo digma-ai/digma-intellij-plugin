@@ -17,6 +17,10 @@ import org.apache.commons.lang3.StringUtils
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.common.LOCAL_ENV
+import org.digma.intellij.plugin.common.SUFFIX_OF_LOCAL
+import org.digma.intellij.plugin.common.isEnvironmentLocal
+import org.digma.intellij.plugin.common.isLocalEnvironmentMine
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
 import org.digma.intellij.plugin.ui.model.PanelModel

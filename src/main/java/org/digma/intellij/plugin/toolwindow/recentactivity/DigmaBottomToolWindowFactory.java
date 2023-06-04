@@ -70,9 +70,9 @@ import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_SET_DATA;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.REQUEST_MESSAGE_TYPE;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.parseJsonToObject;
-import static org.digma.intellij.plugin.ui.common.EnvironmentUtilKt.LOCAL_ENV;
-import static org.digma.intellij.plugin.ui.common.EnvironmentUtilKt.SUFFIX_OF_LOCAL;
-import static org.digma.intellij.plugin.ui.common.EnvironmentUtilKt.getSortedEnvironments;
+import static org.digma.intellij.plugin.common.EnvironmentUtilKt.LOCAL_ENV;
+import static org.digma.intellij.plugin.common.EnvironmentUtilKt.SUFFIX_OF_LOCAL;
+import static org.digma.intellij.plugin.common.EnvironmentUtilKt.getSortedEnvironments;
 import static org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt.openJaegerFromRecentActivity;
 
 

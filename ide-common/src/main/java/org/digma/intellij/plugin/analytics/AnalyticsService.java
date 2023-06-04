@@ -71,6 +71,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static org.digma.intellij.plugin.common.EnvironmentUtilKt.isEnvironmentLocal;
+import static org.digma.intellij.plugin.common.EnvironmentUtilKt.isLocalEnvironmentMine;
 import static org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult;
 
 
@@ -181,7 +183,9 @@ public class AnalyticsService implements Disposable {
 
     public List<String> getEnvironments() {
         try {
-            return analyticsProviderProxy.getEnvironments();
+            var environments =  analyticsProviderProxy.getEnvironments();
+            return environments.stream().filter(o->!isEnvironmentLocal(o) || isLocalEnvironmentMine(o,  CommonUtils.getLocalHostname()))
+                    .collect(Collectors.toList());
         } catch (Exception e) {
             //getEnvironments should never throw exception.
             // it is called only from this class or from the Environment object and both can handle null.

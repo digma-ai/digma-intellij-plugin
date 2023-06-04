@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.ui.common
+package org.digma.intellij.plugin.common
 
 const val LOCAL_ENV = "LOCAL"
 const val SUFFIX_OF_LOCAL = "[LOCAL]"

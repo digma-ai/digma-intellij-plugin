@@ -4,6 +4,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.WrapLayout
 import org.digma.intellij.plugin.editor.getCurrentPageNumberForInsight
 import org.digma.intellij.plugin.editor.updateListOfEntriesToDisplay
 import org.digma.intellij.plugin.model.rest.insights.SpanFlow
@@ -14,7 +15,6 @@ import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.span
 import org.digma.intellij.plugin.ui.common.spanGrayed
-import org.digma.intellij.plugin.ui.layouts.ResizableFlowLayout
 import org.digma.intellij.plugin.ui.list.openWorkspaceFileForSpan
 import org.digma.intellij.plugin.ui.model.TraceSample
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
@@ -108,7 +108,7 @@ fun getTopUsagePanel(project: Project, moreData: HashMap<String, Any>,
     percentageLabel.preferredSize = Dimension(Laf.scaleSize(50), 1)
     flowPanel.add(percentageLabel, BorderLayout.WEST)
 
-    val line = JBPanel<JBPanel<*>>(ResizableFlowLayout(FlowLayout.LEFT, 5, 0))
+    val line = JBPanel<JBPanel<*>>(WrapLayout(FlowLayout.LEFT, 5, 0))
     line.isOpaque = false
     var spanName = origSpanName // default, just in case first service is not found
     spanFlow.firstService?.let { firstService ->

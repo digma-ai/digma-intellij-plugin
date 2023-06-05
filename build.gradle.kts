@@ -16,10 +16,26 @@ plugins {
     id("plugin-project")
     id("org.jetbrains.changelog") version "2.0.0"
     id("org.jetbrains.qodana") version "0.1.13"
+    id("org.jetbrains.kotlinx.kover") version "0.6.1"
     id("common-kotlin")
 }
 
 
+tasks.register("incrementSemanticVersionPatch") {
+    doLast {
+        common.semanticversion.incrementSemanticVersionPatch(project)
+    }
+}
+tasks.register("incrementSemanticVersionMinor") {
+    doLast {
+        common.semanticversion.incrementSemanticVersionMinor(project)
+    }
+}
+tasks.register("incrementSemanticVersionMajor") {
+    doLast {
+        common.semanticversion.incrementSemanticVersionMajor(project)
+    }
+}
 
 
 dependencies{
@@ -48,7 +64,7 @@ intellij {
 
 // Configure Gradle Changelog Plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
 changelog {
-    version.set(project.semanticVersion.version.get().toString())
+    version.set(common.semanticversion.getSemanticVersion(project))
     path.set("${project.projectDir}/CHANGELOG.md")
     groups.set(listOf("Added", "Changed", "Deprecated", "Removed", "Fixed", "Security"))
     header.set(provider { "[${version.get()}] - ${date()}" })
@@ -83,12 +99,11 @@ project.afterEvaluate{
 
 tasks {
 
-    incrementSemanticVersion {
-        //enable the SemanticVersion only for this module
-        enabled = true
+    jar {
+        dependsOn(":rider:copyKotlinModuleFile")
     }
 
-    jar {
+    instrumentedJar{
         dependsOn(":rider:copyKotlinModuleFile")
     }
 
@@ -102,7 +117,7 @@ tasks {
     }
 
     patchPluginXml {
-        version.set(project.semanticVersion.version.get().toString())
+        version.set(common.semanticversion.getSemanticVersion(project))
         sinceBuild.set(properties("pluginSinceBuild"))
         untilBuild.set(properties("pluginUntilBuild"))
 
@@ -194,6 +209,8 @@ tasks {
     }
 
 
+    //todo: run plugin verifier for resharper
+    // https://blog.jetbrains.com/dotnet/2023/05/26/the-api-verifier/
     runPluginVerifier {
         subsystemsToCheck.set("without-android")
     }
@@ -219,15 +236,7 @@ tasks {
         // the version is based on the SemVer (https://semver.org) and supports pre-release labels, like 2.1.7-alpha.3
         // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
         // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
-        channels.set(listOf(project.semanticVersion.version.get().toString().split('-').getOrElse(1) { "default" }
+        channels.set(listOf(common.semanticversion.getSemanticVersion(project).split('-').getOrElse(1) { "default" }
             .split('.').first()))
     }
-
-
-    create("printVersion", DefaultTask::class.java) {
-        doLast {
-            logger.lifecycle("The project current version is ${project.semanticVersion.version.get()}")
-        }
-    }
-
 }

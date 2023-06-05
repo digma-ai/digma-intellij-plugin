@@ -30,12 +30,16 @@ dependencyResolutionManagement {
     versionCatalogs {
         create("libs") {
             //rdgen version is independent of rider version
-            version("rider-rdgen", "2022.3.4")
+//            version("rider-rdgen", "2022.3.4")
+//            version("rider-rdgen", "2023.1.2")
+            version("rider-rdgen", "2023.2.0")
+//            version("rider-rdgen", "2023.2.1")
+//            version("rider-rdgen", "2023.2.2-preview2")
             //kotlin stdlib is not packaged with the plugin because intellij platform already contains it.
             //it's necessary for compilation in some cases for example rider protocol module.
             //it must target the lowest bundled stdlib version of the platform we support
             //see: https://plugins.jetbrains.com/docs/intellij/using-kotlin.html#adding-kotlin-support
-            version("kotlin-stdlib", "1.6.21")
+            version("kotlin-stdlib", "1.7.0")
             library("kotlin-stdlib-jdk8", "org.jetbrains.kotlin", "kotlin-stdlib-jdk8").versionRef("kotlin-stdlib")
             library("guava", "com.google.guava", "guava").version("31.1-jre")
             version("retrofit", "2.9.0")
@@ -51,6 +55,7 @@ dependencyResolutionManagement {
             library("commons-collections4", "org.apache.commons", "commons-collections4").version("4.4")
             library("freemarker", "org.freemarker", "freemarker").version("2.3.30")
             library("posthog", "com.posthog.java", "posthog").version("1.1.0")
+            library("google-gson", "com.google.code.gson", "gson").version("2.10.1")
         }
     }
 }

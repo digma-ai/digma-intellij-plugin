@@ -1,6 +1,8 @@
 import common.platformVersion
 import common.properties
 import common.rider.rdLibDirectory
+import org.apache.tools.ant.filters.ReplaceTokens
+import org.jetbrains.kotlin.fir.scopes.impl.overrides
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 @Suppress(
@@ -20,6 +22,37 @@ dependencies {
     compileOnly(project(":ide-common"))
     compileOnly(project(":model"))
 }
+
+
+
+val initPluginProps = tasks.register<Copy>("initPluginProps"){
+
+    delete(layout.projectDirectory.dir("Digma.Rider.Plugin").file("Plugin.props"))
+
+    val resharperVersion =
+        if (project.findProperty("useLatestVersion") == "true"){
+        "2023.1.0"
+    }else if (project.findProperty("useEAPVersion") == "true"){
+        //todo: currently rider EAP fails in rdgen , don't use EAP yet , use current version
+        // so we can compile the other modules
+//        "232.6734.9-EAP-SNAPSHOT"
+        "2022.3.1"
+    }else{
+        "2022.3.1"
+    }
+
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+
+    val tokens = mapOf("RESHARPER_VERSION" to resharperVersion)
+    from(layout.projectDirectory.dir("Digma.Rider.Plugin"))
+    include("Plugin.props.template")
+    filter<ReplaceTokens>("tokens" to tokens)
+    into(layout.projectDirectory.dir("Digma.Rider.Plugin"))
+    rename("(.+).template", "$1")
+
+
+}
+tasks.processResources.get().dependsOn(initPluginProps)
 
 
 

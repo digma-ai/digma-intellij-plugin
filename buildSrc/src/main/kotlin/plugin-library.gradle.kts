@@ -1,9 +1,10 @@
 plugins {
     id("digma-base")
-    `java-library`
+    id("java-library")
     id("org.jetbrains.intellij")
 }
 
+//todo: explore the plugin docs and make relevant changes
 tasks{
     buildSearchableOptions {
         enabled = false

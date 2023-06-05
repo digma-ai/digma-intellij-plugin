@@ -1,7 +1,7 @@
-﻿<Project>
+<Project>
 
   <PropertyGroup>
-    <SdkVersion>2022.3.1</SdkVersion>
+    <SdkVersion>@RESHARPER_VERSION@</SdkVersion>
 
     <Title>DigmaRiderPlugin</Title>
     <Description>Digma Rider Plugin</Description>

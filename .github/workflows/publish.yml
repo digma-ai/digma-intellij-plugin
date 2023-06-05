@@ -95,7 +95,7 @@ jobs:
 
       - name: Increment version
         run: |
-          ./gradlew incrementSemanticVersion
+          ./gradlew incrementSemanticVersionPatch
           ./gradlew printVersion -q
 
       - name: Commit next version to main

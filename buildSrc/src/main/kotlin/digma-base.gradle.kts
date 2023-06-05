@@ -3,24 +3,8 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
-    `java`
-    `jvm-test-suite`
-    id("com.dorongold.task-tree")
-    id("com.glovoapp.semantic-versioning")
-}
-
-semanticVersion {
-    //if the propertiesFile is not changed the plugin will look for a file in each module.
-    propertiesFile.set(project.rootProject.file("version.properties"))
-}
-
-tasks.incrementSemanticVersion {
-    //disable the task for all projects.
-    //because digma-base is applied to all projects then calling incrementSemanticVersion will be invoked
-    //for each project and we don't want that.
-    //we could apply the plugin only to the main project but then we can't use its tasks in script plugins.
-    //the task is enabled only in the main project.
-    enabled = false
+    id("java")
+    id("jvm-test-suite")
 }
 
 java {
@@ -30,13 +14,21 @@ java {
 }
 
 group = properties("pluginGroup", project)
-version = project.semanticVersion.version.get()
+version = common.semanticversion.getSemanticVersion(project)
+
+tasks.register("printSemanticVersion") {
+    doLast {
+        println("${project.name} ${common.semanticversion.getSemanticVersion(project)}")
+    }
+}
+
 
 repositories {
     mavenCentral()
-// jetbrains artifacts repositories
-//    maven("https://www.jetbrains.com/intellij-repository/releases")
-//    maven("https://cache-redirector.jetbrains.com/intellij-dependencies")
+    // jetbrains artifacts repositories
+    maven("https://www.jetbrains.com/intellij-repository/releases")
+    maven("https://www.jetbrains.com/intellij-repository/snapshots")
+    maven("https://cache-redirector.jetbrains.com/intellij-dependencies")
 }
 
 configurations {
@@ -78,17 +70,18 @@ testing {
             //this is the only place junit version should be mentioned in the project.
             //it applies to all projects. can't use versions catalog in scripts plugins so using
             //hard coded version.
-            useJUnitJupiter("5.8.2")
+            useJUnitJupiter()
 
             dependencies {
-                implementation(project)
+                implementation(project())
 
-                //this is a workaround to an issue with junit launcher in intellij platform 2022.2 plus gradle 7.5.1.
-                //it is discussed in a slack thread and will probably be fixed in the next intellij platform patch.
-                //todo: when upgrading the platform version check if its fixed just by removing it and building the project with no errors.
-                //https://jetbrains-platform.slack.com/archives/CPL5291JP/p1660085792256189
-                runtimeOnly("org.junit.platform:junit-platform-launcher")
-                runtimeOnly("org.junit.jupiter:junit-jupiter-engine")
+//                //this is fixed in gradle 8.1.1
+//                //this is a workaround to an issue with junit launcher in intellij platform 2022.2 plus gradle 7.5.1.
+//                //it is discussed in a slack thread and will probably be fixed in the next intellij platform patch.
+//                //todo: when upgrading the platform version check if its fixed just by removing it and building the project with no errors.
+//                //https://jetbrains-platform.slack.com/archives/CPL5291JP/p1660085792256189
+//                runtimeOnly("org.junit.platform:junit-platform-launcher")
+//                runtimeOnly("org.junit.jupiter:junit-jupiter-engine")
             }
         }
     }
@@ -100,7 +93,7 @@ tasks {
 
     withType<JavaCompile> {
         options.compilerArgs.addAll(listOf("-Xlint:unchecked,deprecation"))
-        options.release.set(17)
+        options.release.set(JavaLanguageVersion.of(properties("javaVersion", project)).asInt())
     }
 
 
@@ -164,3 +157,5 @@ tasks {
     }
 
 }
+
+

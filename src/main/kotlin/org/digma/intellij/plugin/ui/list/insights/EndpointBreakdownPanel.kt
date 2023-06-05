@@ -4,6 +4,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.WrapLayout
 import org.digma.intellij.plugin.model.rest.insights.EndpointBreakdownComponent
 import org.digma.intellij.plugin.model.rest.insights.EndpointBreakdownInsight
 import org.digma.intellij.plugin.ui.Circle
@@ -11,7 +12,6 @@ import org.digma.intellij.plugin.ui.PieChart
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.spanBold
 import org.digma.intellij.plugin.ui.common.spanGrayed
-import org.digma.intellij.plugin.ui.layouts.ResizableFlowLayout
 import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Dimension
@@ -26,7 +26,7 @@ fun endpointBreakdownPanel(
 
     val colorPoolForUnknownTypes = mutableListOf<Color>(JBColor.PINK, JBColor.GREEN, JBColor.RED, JBColor.CYAN, JBColor.MAGENTA)
 
-    val listPanel = JBPanel<JBPanel<*>>(ResizableFlowLayout(FlowLayout.LEFT, 10, 0))
+    val listPanel = JBPanel<JBPanel<*>>(WrapLayout(FlowLayout.LEFT, 10, 0))
     listPanel.isOpaque = false
 
     val pie = PieChart()

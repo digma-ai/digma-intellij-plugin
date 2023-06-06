@@ -77,9 +77,9 @@ fun spanSlowEndpointsPanel(project: Project, insight: SpanSlowEndpointsInsight, 
         val link = ActionLink(normalizedDisplayName) {
             if (moreData.contains(spanCodeObjectId)) {
                 @Suppress("UNCHECKED_CAST")
-                showInsightsForSpanWithCodeLocation(project, spanCodeObjectId,spanDisplayName, null, moreData[spanCodeObjectId] as Pair<String, Int>)
+                showInsightsForSpanWithCodeLocation(project, spanCodeObjectId,spanDisplayName, insight.spanInfo.methodCodeObjectId, moreData[spanCodeObjectId] as Pair<String, Int>)
             }else{
-                showInsightsForSpan(project, spanCodeObjectId, spanDisplayName,null)
+                showInsightsForSpan(project, spanCodeObjectId, spanDisplayName,insight.spanInfo.methodCodeObjectId)
             }
         }
         val targetClass = spanCodeObjectId.substringBeforeLast("\$_\$");

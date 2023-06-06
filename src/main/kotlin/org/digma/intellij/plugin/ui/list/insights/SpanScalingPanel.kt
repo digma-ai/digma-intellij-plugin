@@ -14,6 +14,7 @@ import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider
 import org.digma.intellij.plugin.model.rest.insights.AffectedEndpointInfo
 import org.digma.intellij.plugin.model.rest.insights.EndpointSchema
 import org.digma.intellij.plugin.model.rest.insights.RootCauseSpan
+import org.digma.intellij.plugin.model.rest.insights.SpanInfo
 import org.digma.intellij.plugin.model.rest.insights.SpanScalingInsight
 import org.digma.intellij.plugin.navigation.codeless.showInsightsForSpan
 import org.digma.intellij.plugin.navigation.codeless.showInsightsForSpanWithCodeLocation
@@ -83,7 +84,7 @@ fun getRootCauseSpansPanel(project: Project, moreData: HashMap<String, Any>, ins
 
     insight.rootCauseSpans!!.let { spans ->
         repeat(spans.size) {index ->
-            rootCauseSpansPanel.add(getRootCauseSpanPanel(project,moreData,spans[index]))
+            rootCauseSpansPanel.add(getRootCauseSpanPanel(project,moreData,spans[index],insight.spanInfo))
         }
     }
 
@@ -178,7 +179,7 @@ private fun buildAffectedEndpointItem(project: Project, moreData: HashMap<String
     return endPointPanel
 }
 
-fun getRootCauseSpanPanel(project: Project, moreData: HashMap<String, Any>, rootCauseSpan: RootCauseSpan): JPanel {
+fun getRootCauseSpanPanel(project: Project, moreData: HashMap<String, Any>, rootCauseSpan: RootCauseSpan,spanInfo: SpanInfo): JPanel {
 
     val rootCausePanel = JPanel(BorderLayout())
     rootCausePanel.border = empty()
@@ -191,9 +192,9 @@ fun getRootCauseSpanPanel(project: Project, moreData: HashMap<String, Any>, root
     val link = ActionLink(normalizedDisplayName) {
         if (moreData.contains(spanId)) {
             @Suppress("UNCHECKED_CAST")
-            showInsightsForSpanWithCodeLocation(project, spanId, displayName,null, moreData[spanId] as Pair<String, Int>)
+            showInsightsForSpanWithCodeLocation(project, spanId, displayName,spanInfo.methodCodeObjectId, moreData[spanId] as Pair<String, Int>)
         }else{
-            showInsightsForSpan(project, spanId, displayName,null)
+            showInsightsForSpan(project, spanId, displayName,spanInfo.methodCodeObjectId)
         }
     }
     link.toolTipText = asHtml(spanId)

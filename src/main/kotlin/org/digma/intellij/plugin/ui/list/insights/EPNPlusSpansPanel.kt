@@ -8,6 +8,7 @@ import org.digma.intellij.plugin.editor.getCurrentPageNumberForInsight
 import org.digma.intellij.plugin.editor.updateListOfEntriesToDisplay
 import org.digma.intellij.plugin.model.rest.insights.EPNPlusSpansInsight
 import org.digma.intellij.plugin.model.rest.insights.HighlyOccurringSpanInfo
+import org.digma.intellij.plugin.model.rest.insights.SpanInfo
 import org.digma.intellij.plugin.navigation.codeless.showInsightsForSpan
 import org.digma.intellij.plugin.navigation.codeless.showInsightsForSpanWithCodeLocation
 import org.digma.intellij.plugin.ui.common.Laf
@@ -46,6 +47,7 @@ fun ePNPlusSpansPanel(
             rebuildENPlusInsightRowsPanel(
                     resultNPOnePanel!!,
                     nPOneSpansToDisplay,
+                    insight.spanInfo,
                     project,
                     moreData
             )
@@ -55,7 +57,7 @@ fun ePNPlusSpansPanel(
     }
 
     updateListOfEntriesToDisplay(spansOfInsight, nPOneSpansToDisplay, getCurrentPageNumberForInsight(uniqueInsightId, lastPageNum), RECORDS_PER_PAGE_EPNPLUS, project)
-    buildENPlusInsightRowsPanel(resultNPOnePanel, nPOneSpansToDisplay, project, moreData)
+    buildENPlusInsightRowsPanel(resultNPOnePanel, nPOneSpansToDisplay,insight.spanInfo, project, moreData)
 
     val result = createInsightPanel(
             project = project,
@@ -72,13 +74,13 @@ fun ePNPlusSpansPanel(
     return result
 }
 
-private fun getMainDescriptionPanel(span: HighlyOccurringSpanInfo, project: Project, moreData: HashMap<String, Any>): JPanel {
+private fun getMainDescriptionPanel(span: HighlyOccurringSpanInfo,spanInfo:SpanInfo, project: Project, moreData: HashMap<String, Any>): JPanel {
     val spanOneRecordPanel = getDefaultSpanOneRecordPanel()
     val displayText: String?
     if (span.internalSpan != null) {
         val spanId = span.internalSpan!!.spanCodeObjectId
         displayText = span.internalSpan?.displayName
-        addMainDescriptionLabelWithLink(spanOneRecordPanel, displayText, spanId!!, project, moreData)
+        addMainDescriptionLabelWithLink(spanOneRecordPanel, displayText, spanId!!,spanInfo, project, moreData)
     } else {
         displayText = span.clientSpan?.displayName
         if (StringUtils.isNotEmpty(displayText)) {
@@ -92,15 +94,15 @@ private fun getMainDescriptionPanel(span: HighlyOccurringSpanInfo, project: Proj
     return spanOneRecordPanel
 }
 
-private fun addMainDescriptionLabelWithLink(spanOneRecordPanel: JPanel, displayText: String?, spanId: String, project: Project, moreData: HashMap<String, Any>) {
+private fun addMainDescriptionLabelWithLink(spanOneRecordPanel: JPanel, displayText: String?, spanId: String,spanInfo:SpanInfo, project: Project, moreData: HashMap<String, Any>) {
     if ( StringUtils.isNotEmpty(displayText)) {
         val normalizedDisplayName = StringUtils.normalizeSpace(displayText)
         val actionLink = ActionLink(normalizedDisplayName) {
             if (moreData.contains(spanId)) {
                 @Suppress("UNCHECKED_CAST")
-                showInsightsForSpanWithCodeLocation(project, spanId,displayText, null, moreData[spanId] as Pair<String, Int>)
+                showInsightsForSpanWithCodeLocation(project, spanId,displayText, spanInfo.methodCodeObjectId, moreData[spanId] as Pair<String, Int>)
             }else{
-                showInsightsForSpan(project, spanId,displayText, null)
+                showInsightsForSpan(project, spanId,displayText, spanInfo.methodCodeObjectId)
             }
         }
         actionLink.toolTipText = asHtml(displayText)
@@ -139,6 +141,7 @@ private fun getImpactLabel(span: HighlyOccurringSpanInfo): JLabel {
 private fun buildENPlusInsightRowsPanel(
         nPOnePanel: DigmaResettablePanel,
         nPOneSpansToDisplay: List<HighlyOccurringSpanInfo>,
+        spanInfo:SpanInfo,
         project: Project,
         moreData: HashMap<String, Any>
 ) {
@@ -146,23 +149,24 @@ private fun buildENPlusInsightRowsPanel(
     nPOnePanel.isOpaque = false
 
     nPOneSpansToDisplay.forEach { nPOneSpan: HighlyOccurringSpanInfo ->
-        nPOnePanel.add(nPOneSpanRowPanel(nPOneSpan, project, moreData))
+        nPOnePanel.add(nPOneSpanRowPanel(nPOneSpan,spanInfo, project, moreData))
     }
 }
 
 private fun rebuildENPlusInsightRowsPanel(
         nPOnePanel: DigmaResettablePanel,
         nPOneSpansToDisplay: List<HighlyOccurringSpanInfo>,
+        spanInfo:SpanInfo,
         project: Project,
         moreData: HashMap<String, Any>
 ) {
     nPOnePanel.removeAll()
-    buildENPlusInsightRowsPanel(nPOnePanel, nPOneSpansToDisplay, project, moreData)
+    buildENPlusInsightRowsPanel(nPOnePanel, nPOneSpansToDisplay,spanInfo, project, moreData)
 }
 
-private fun nPOneSpanRowPanel(span: HighlyOccurringSpanInfo, project: Project, moreData: HashMap<String, Any>): JPanel {
+private fun nPOneSpanRowPanel(span: HighlyOccurringSpanInfo, spanInfo:SpanInfo,project: Project, moreData: HashMap<String, Any>): JPanel {
     val resultPanel = createDefaultBoxLayoutYAxisPanel()
-    resultPanel.add(getMainDescriptionPanel(span, project, moreData))
+    resultPanel.add(getMainDescriptionPanel(span,spanInfo, project, moreData))
     resultPanel.add(getRowPanel(span))
     return resultPanel
 }

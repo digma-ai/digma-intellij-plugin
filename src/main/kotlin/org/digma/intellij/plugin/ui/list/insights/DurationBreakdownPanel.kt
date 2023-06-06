@@ -9,6 +9,7 @@ import org.digma.intellij.plugin.editor.getCurrentPageNumberForInsight
 import org.digma.intellij.plugin.editor.updateListOfEntriesToDisplay
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationBreakdown
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationBreakdownInsight
+import org.digma.intellij.plugin.model.rest.insights.SpanInfo
 import org.digma.intellij.plugin.navigation.codeless.showInsightsForSpan
 import org.digma.intellij.plugin.navigation.codeless.showInsightsForSpanWithCodeLocation
 import org.digma.intellij.plugin.ui.common.Laf
@@ -50,6 +51,7 @@ fun spanDurationBreakdownPanel(
             rebuildDurationBreakdownRowPanel(
                     resultBreakdownPanel!!,
                     durationBreakdownEntriesToDisplay,
+                insight.spanInfo,
                     project,
                     moreData
             )
@@ -59,7 +61,7 @@ fun spanDurationBreakdownPanel(
     }
 
     updateListOfEntriesToDisplay(validBreakdownEntries, durationBreakdownEntriesToDisplay, getCurrentPageNumberForInsight(uniqueInsightId, lastPageNum), RECORDS_PER_PAGE_DURATION_BREAKDOWN, project)
-    buildDurationBreakdownRowPanel(resultBreakdownPanel, durationBreakdownEntriesToDisplay, project, moreData)
+    buildDurationBreakdownRowPanel(resultBreakdownPanel, durationBreakdownEntriesToDisplay,insight.spanInfo, project, moreData)
 
     return createInsightPanel(
             project = project,
@@ -77,6 +79,7 @@ fun spanDurationBreakdownPanel(
 private fun buildDurationBreakdownRowPanel(
         durationBreakdownPanel: DigmaResettablePanel,
         durationBreakdownEntriesToDisplay: List<SpanDurationBreakdown>,
+        spanInfo: SpanInfo,
         project: Project,
         moreData: HashMap<String, Any>
 ) {
@@ -84,28 +87,30 @@ private fun buildDurationBreakdownRowPanel(
     durationBreakdownPanel.isOpaque = false
 
     durationBreakdownEntriesToDisplay.forEach { durationBreakdown: SpanDurationBreakdown ->
-        durationBreakdownPanel.add(durationBreakdownRowPanel(durationBreakdown, project, moreData))
+        durationBreakdownPanel.add(durationBreakdownRowPanel(durationBreakdown,spanInfo, project, moreData))
     }
 }
 
 private fun rebuildDurationBreakdownRowPanel(
         durationBreakdownPanel: DigmaResettablePanel,
         durationBreakdownEntriesToDisplay: List<SpanDurationBreakdown>,
+        spanInfo: SpanInfo,
         project: Project,
         moreData: HashMap<String, Any>
 ) {
     durationBreakdownPanel.removeAll()
-    buildDurationBreakdownRowPanel(durationBreakdownPanel, durationBreakdownEntriesToDisplay, project, moreData)
+    buildDurationBreakdownRowPanel(durationBreakdownPanel, durationBreakdownEntriesToDisplay,spanInfo, project, moreData)
 }
 
 private fun durationBreakdownRowPanel(
         durationBreakdown: SpanDurationBreakdown,
+        spanInfo:SpanInfo,
         project: Project,
         moreData: HashMap<String, Any>
 ): JPanel {
     val durationBreakdownPanel = getDurationBreakdownPanel()
     val telescopeIconLabel = getTelescopeIconLabel()
-    val spanDisplayNameLabel = getSpanDisplayNameLabel(durationBreakdown, project, moreData)
+    val spanDisplayNameLabel = getSpanDisplayNameLabel(durationBreakdown,spanInfo, project, moreData)
     val breakdownDurationLabelPanel = getBreakdownDurationLabel(durationBreakdown)
 
     durationBreakdownPanel.add(telescopeIconLabel, BorderLayout.WEST)
@@ -133,6 +138,7 @@ private fun getTelescopeIconLabel(): JLabel {
 
 private fun getSpanDisplayNameLabel(
         durationBreakdown: SpanDurationBreakdown,
+        spanInfo:SpanInfo,
         project: Project,
         moreData: HashMap<String, Any>,
 ): JComponent {
@@ -142,9 +148,9 @@ private fun getSpanDisplayNameLabel(
     val messageLabel = ActionLink(trimmedDisplayName) {
         if (moreData.contains(spanId)) {
             @Suppress("UNCHECKED_CAST")
-            showInsightsForSpanWithCodeLocation(project, spanId,durationBreakdown.spanDisplayName, null, moreData[spanId] as Pair<String, Int>)
+            showInsightsForSpanWithCodeLocation(project, spanId,durationBreakdown.spanDisplayName, spanInfo.methodCodeObjectId, moreData[spanId] as Pair<String, Int>)
         }else{
-            showInsightsForSpan(project, spanId,durationBreakdown.spanDisplayName, null)
+            showInsightsForSpan(project, spanId,durationBreakdown.spanDisplayName, spanInfo.methodCodeObjectId)
         }
     }
     messageLabel.toolTipText = asHtml(trimmedDisplayName)

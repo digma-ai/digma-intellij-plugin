@@ -149,9 +149,9 @@ fun addSpanLinkIfPossible(project: Project, service: SpanFlow.Service, moreData:
     val link = ActionLink(spanName) {
         if (moreData.contains(service.spanCodeObjectId)) {
             @Suppress("UNCHECKED_CAST")
-            showInsightsForSpanWithCodeLocation(project, service.spanCodeObjectId,spanName, null, moreData[service.codeObjectId] as Pair<String, Int>)
+            showInsightsForSpanWithCodeLocation(project, service.spanCodeObjectId,spanName, service.codeObjectId, moreData[service.codeObjectId] as Pair<String, Int>)
         }else{
-            showInsightsForSpan(project, service.spanCodeObjectId, spanName,null)
+            showInsightsForSpan(project, service.spanCodeObjectId, spanName,service.codeObjectId)
         }
     }
     val targetClass = service.codeObjectId.substringBeforeLast("\$_\$")

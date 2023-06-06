@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.navigation.codeless
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.editor.CurrentContextUpdater
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
@@ -19,28 +20,33 @@ fun showInsightsForSpan(project: Project, spanId: String,spanDisplayName: String
 
     Log.log(logger::debug,project,"Got showInsightsForSpan request for {} {}", spanId, methodId)
 
-    val instLibrary = spanId.substringBefore("\$_$")
-    val spanName = spanId.substringAfter("\$_$")
-    val funcNamespace = methodId?.substringBefore("\$_$")
-    val funcName = methodId?.substringAfter("\$_$")
+    val spanIdWithoutType = CodeObjectsUtil.stripSpanPrefix(spanId)
+    val methodIdWithoutType:String? = methodId?.let {
+        CodeObjectsUtil.stripMethodPrefix(it)
+    }
+
+    val instLibrary = spanIdWithoutType.substringBefore("\$_$")
+    val spanName = spanIdWithoutType.substringAfter("\$_$")
+    val funcNamespace = methodIdWithoutType?.substringBefore("\$_$")
+    val funcName = methodIdWithoutType?.substringAfter("\$_$")
 
 
     project.service<InsightsViewService>().updateInsightsModel(CodeLessSpan(
-        spanId,
+        spanIdWithoutType,
         instLibrary,
         spanName,
         spanDisplayName,
-        methodId,
+        methodIdWithoutType,
         funcNamespace,
         funcName
     ))
 
     project.service<ErrorsViewService>().updateErrorsModel(CodeLessSpan(
-        spanId,
+        spanIdWithoutType,
         instLibrary,
         spanName,
         spanDisplayName,
-        methodId,
+        methodIdWithoutType,
         funcNamespace,
         funcName
     ))
@@ -65,29 +71,35 @@ fun showInsightsForSpanWithCodeLocation(
 
     Log.log(logger::debug,project,"Got showInsightsForSpanWithCodeLocation request for {} {}", spanId, methodId)
 
-    val instLibrary = spanId.substringBefore("\$_$")
-    val spanName = spanId.substringAfter("\$_$")
-    val funcNamespace = methodId?.substringBefore("\$_$")
-    val funcName = methodId?.substringAfter("\$_$")
+    val spanIdWithoutType = CodeObjectsUtil.stripSpanPrefix(spanId)
+    val methodIdWithoutType:String? = methodId?.let {
+        CodeObjectsUtil.stripMethodPrefix(it)
+    }
+
+
+    val instLibrary = spanIdWithoutType.substringBefore("\$_$")
+    val spanName = spanIdWithoutType.substringAfter("\$_$")
+    val funcNamespace = methodIdWithoutType?.substringBefore("\$_$")
+    val funcName = methodIdWithoutType?.substringAfter("\$_$")
 
 
     project.service<InsightsViewService>().updateInsightsModel(CodeLessSpanWithCodeLocation(
-        spanId,
+        spanIdWithoutType,
         instLibrary,
         spanName,
         spanDisplayName,
-        methodId,
+        methodIdWithoutType,
         funcNamespace,
         funcName,
         workspaceUri
     ))
 
     project.service<ErrorsViewService>().updateErrorsModel(CodeLessSpanWithCodeLocation(
-        spanId,
+        spanIdWithoutType,
         instLibrary,
         spanName,
         spanDisplayName,
-        methodId,
+        methodIdWithoutType,
         funcNamespace,
         funcName,
         workspaceUri

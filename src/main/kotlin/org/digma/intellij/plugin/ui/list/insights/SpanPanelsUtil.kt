@@ -58,7 +58,7 @@ fun getLink(project: Project, spanInfo: SpanInfo, moreData: HashMap<String, Any>
     val spanId = spanInfo.spanCodeObjectId!!
     val link = ActionLink(spanInfo.name) {
         @Suppress("UNCHECKED_CAST")
-        showInsightsForSpanWithCodeLocation(project, spanId,spanInfo.displayName,null,moreData[spanId] as Pair<String, Int>)
+        showInsightsForSpanWithCodeLocation(project, spanId,spanInfo.displayName,spanInfo.methodCodeObjectId,moreData[spanId] as Pair<String, Int>)
     }
     var targetClass = spanId.substringBeforeLast("\$_\$");
 

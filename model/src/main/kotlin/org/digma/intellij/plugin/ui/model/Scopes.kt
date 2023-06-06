@@ -45,11 +45,12 @@ class MethodScope(private val methodInfo: MethodInfo) : Scope {
 
 class CodeLessSpanScope(private val codeLessSpan: CodeLessSpan) : Scope {
     override fun getScope(): String {
-        return codeLessSpan.spanName
+
+        return codeLessSpan.spanDisplayName ?: codeLessSpan.spanName
     }
 
     override fun getScopeTooltip(): String {
-        return codeLessSpan.spanName
+        return codeLessSpan.spanDisplayName ?: codeLessSpan.spanName
     }
 
     fun getSpan():CodeLessSpan{

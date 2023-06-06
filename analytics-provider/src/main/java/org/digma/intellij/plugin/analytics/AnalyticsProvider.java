@@ -36,7 +36,6 @@ public interface AnalyticsProvider extends Closeable {
      * @deprecated This method is deprecated and will be removed in a future release.
      * Use {@link #getInsightsOfMethods(InsightsOfMethodsRequest insightsOfMethodsRequest)} instead.
      */
-    @Deprecated
     List<CodeObjectInsight> getInsights(InsightsRequest insightsRequest);
 
     InsightsOfMethodsResponse getInsightsOfMethods(InsightsOfMethodsRequest insightsOfMethodsRequest);

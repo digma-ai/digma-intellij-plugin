@@ -4,20 +4,25 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
 import org.apache.commons.lang3.StringUtils
-import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.editor.getCurrentPageNumberForInsight
 import org.digma.intellij.plugin.editor.updateListOfEntriesToDisplay
 import org.digma.intellij.plugin.model.rest.insights.EPNPlusSpansInsight
 import org.digma.intellij.plugin.model.rest.insights.HighlyOccurringSpanInfo
+import org.digma.intellij.plugin.navigation.codeless.showInsightsForSpan
+import org.digma.intellij.plugin.navigation.codeless.showInsightsForSpanWithCodeLocation
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.spanBold
-import org.digma.intellij.plugin.ui.list.openWorkspaceFileForSpan
 import org.digma.intellij.plugin.ui.model.TraceSample
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.BorderLayout
 import java.math.RoundingMode
-import javax.swing.*
+import javax.swing.Box
+import javax.swing.BoxLayout
+import javax.swing.JButton
+import javax.swing.JLabel
+import javax.swing.JPanel
+import javax.swing.SwingConstants
 
 private const val RECORDS_PER_PAGE_EPNPLUS = 3
 
@@ -71,9 +76,9 @@ private fun getMainDescriptionPanel(span: HighlyOccurringSpanInfo, project: Proj
     val spanOneRecordPanel = getDefaultSpanOneRecordPanel()
     val displayText: String?
     if (span.internalSpan != null) {
-        val spanId = CodeObjectsUtil.createSpanId(span.internalSpan!!.instrumentationLibrary, span.internalSpan!!.name)
+        val spanId = span.internalSpan!!.spanCodeObjectId
         displayText = span.internalSpan?.displayName
-        addMainDescriptionLabelWithLink(spanOneRecordPanel, displayText, spanId, project, moreData)
+        addMainDescriptionLabelWithLink(spanOneRecordPanel, displayText, spanId!!, project, moreData)
     } else {
         displayText = span.clientSpan?.displayName
         if (StringUtils.isNotEmpty(displayText)) {
@@ -90,19 +95,17 @@ private fun getMainDescriptionPanel(span: HighlyOccurringSpanInfo, project: Proj
 private fun addMainDescriptionLabelWithLink(spanOneRecordPanel: JPanel, displayText: String?, spanId: String, project: Project, moreData: HashMap<String, Any>) {
     if ( StringUtils.isNotEmpty(displayText)) {
         val normalizedDisplayName = StringUtils.normalizeSpace(displayText)
-        if (moreData.contains(spanId)) {
-            val actionLink = ActionLink(normalizedDisplayName) {
-                openWorkspaceFileForSpan(project, moreData, spanId)
+        val actionLink = ActionLink(normalizedDisplayName) {
+            if (moreData.contains(spanId)) {
+                @Suppress("UNCHECKED_CAST")
+                showInsightsForSpanWithCodeLocation(project, spanId,displayText, null, moreData[spanId] as Pair<String, Int>)
+            }else{
+                showInsightsForSpan(project, spanId,displayText, null)
             }
-            actionLink.toolTipText = asHtml(displayText)
-            actionLink.horizontalAlignment = SwingConstants.LEFT
-            spanOneRecordPanel.add(actionLink, BorderLayout.NORTH)
-        } else {
-            val jbLabel = JBLabel(displayText!!, SwingConstants.TRAILING)
-            jbLabel.toolTipText = asHtml(displayText)
-            jbLabel.horizontalAlignment = SwingConstants.LEFT
-            spanOneRecordPanel.add(jbLabel, BorderLayout.NORTH)
         }
+        actionLink.toolTipText = asHtml(displayText)
+        actionLink.horizontalAlignment = SwingConstants.LEFT
+        spanOneRecordPanel.add(actionLink, BorderLayout.NORTH)
     }
 }
 

@@ -6,13 +6,16 @@ import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI.Borders.empty
-import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.model.rest.insights.DurationSlowdownSource
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
 import org.digma.intellij.plugin.model.rest.insights.SpanInfo
-import org.digma.intellij.plugin.ui.common.*
+import org.digma.intellij.plugin.navigation.codeless.showInsightsForSpanWithCodeLocation
+import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
+import org.digma.intellij.plugin.ui.common.Laf
+import org.digma.intellij.plugin.ui.common.asHtml
+import org.digma.intellij.plugin.ui.common.spanBold
+import org.digma.intellij.plugin.ui.common.spanGrayed
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
-import org.digma.intellij.plugin.ui.list.openWorkspaceFileForSpan
 import org.digma.intellij.plugin.ui.model.TraceSample
 import org.digma.intellij.plugin.ui.needToShowDurationChange
 import org.digma.intellij.plugin.ui.scaled
@@ -24,7 +27,7 @@ import java.awt.Dimension
 import java.io.InputStreamReader
 import java.sql.Timestamp
 import java.time.Duration
-import java.util.*
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 import javax.swing.BoxLayout
 import javax.swing.JPanel
@@ -52,9 +55,10 @@ class SpanPanels {
 
 fun getLink(project: Project, spanInfo: SpanInfo, moreData: HashMap<String, Any>): ActionLink {
 
-    val spanId = CodeObjectsUtil.createSpanId(spanInfo.instrumentationLibrary, spanInfo.name)
+    val spanId = spanInfo.spanCodeObjectId!!
     val link = ActionLink(spanInfo.name) {
-        openWorkspaceFileForSpan(project, moreData, spanId)
+        @Suppress("UNCHECKED_CAST")
+        showInsightsForSpanWithCodeLocation(project, spanId,spanInfo.displayName,spanInfo.methodCodeObjectId,moreData[spanId] as Pair<String, Int>)
     }
     var targetClass = spanId.substringBeforeLast("\$_\$");
 

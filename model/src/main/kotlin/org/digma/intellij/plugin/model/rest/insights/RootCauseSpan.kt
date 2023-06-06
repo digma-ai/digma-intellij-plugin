@@ -13,6 +13,7 @@ data class RootCauseSpan
                         "instrumentationLibrary",
                         "serviceName",
                         "codeObjectId",
+                        "spanCodeObjectId",
                         "kind")
 constructor(val sampleTraceId: String?,
             val name: String,
@@ -20,5 +21,6 @@ constructor(val sampleTraceId: String?,
             val instrumentationLibrary: String,
             val serviceName: String?,
             val codeObjectId: String?,
+            val spanCodeObjectId: String,
             val kind: String = "Internal")
 

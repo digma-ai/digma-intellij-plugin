@@ -11,6 +11,8 @@ import org.digma.intellij.plugin.ui.model.TraceSample
 import java.awt.BorderLayout
 import javax.swing.*
 
+
+//todo: missing link
 fun spanNPlusOneInsightPanel(project: Project, insight: SpanNPlusOneInsight): JPanel {
     val resultPanel = createDefaultBoxLayoutLineAxisPanel()
     resultPanel.add(spanNPlusOneInsightRowPanel(insight))

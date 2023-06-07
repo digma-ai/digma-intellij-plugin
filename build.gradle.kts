@@ -188,7 +188,6 @@ tasks {
     runIde {
         dependsOn(deleteLog)
         dependsOn(prepareSandbox)
-        dependsOn(configurations.getByName("riderDotNetObjects"))
 
         maxHeapSize = "2g"
         // Rider's backend doesn't support dynamic plugins. It might be possible to work with auto-reload of the frontend
@@ -225,7 +224,7 @@ tasks {
     }
 
     verifyPlugin {
-        dependsOn(configurations.getByName("riderDotNetObjects"))
+        dependsOn(prepareSandbox)
     }
 
     signPlugin {

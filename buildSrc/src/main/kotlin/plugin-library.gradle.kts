@@ -4,7 +4,10 @@ plugins {
     id("org.jetbrains.intellij")
 }
 
-//todo: explore the plugin docs and make relevant changes
+//this plugin is applied to modules that are compiled with intellij platform
+// but are not plugins and don't need to run many of gradle-intellij-plugin
+// tasks. the unnecessary tasks are disabled.
+//we have only one real plugin and its the root project that really builds a plugin.
 tasks{
     buildSearchableOptions {
         enabled = false

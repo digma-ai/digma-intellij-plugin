@@ -92,16 +92,16 @@ tasks {
             // maybe in the future we can support 3 versions
 
             if (project.findProperty("useLatestVersion") == "true"){
-                "2023.1.0"
-//                "2022.3.1"
+//                "2023.1.0"
+                "2022.3.1"
             }else if (project.findProperty("useEAPVersion") == "true"){
                 //todo: currently rider EAP fails in rdgen , don't use EAP yet , use current version
                 // so we can compile the other modules
-        "232.6734.9-EAP-SNAPSHOT"
-//                "2022.3.1"
+//        "232.6734.9-EAP-SNAPSHOT"
+                "2022.3.1"
             }else{
-                "2023.1.0"
-//                "2022.3.1"
+//                "2023.1.0"
+                "2022.3.1"
             }
 
         duplicatesStrategy = DuplicatesStrategy.INCLUDE

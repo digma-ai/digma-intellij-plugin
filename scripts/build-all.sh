@@ -4,7 +4,7 @@ set -e
 
 ./gradlew clean buildPlugin
 
-./gradlew clean buildPlugin -PuseLatestVersion
+./gradlew clean buildPlugin -PuseLatestVersion=true
 
-./gradlew clean buildPlugin -PuseEAPVersion
+./gradlew clean buildPlugin -PuseEAPVersion=true
 

@@ -26,8 +26,8 @@ tasks.register("printSemanticVersion") {
 repositories {
     mavenCentral()
     // jetbrains artifacts repositories
-    maven("https://www.jetbrains.com/intellij-repository/releases")
-    maven("https://www.jetbrains.com/intellij-repository/snapshots")
+    maven("https://cache-redirector.jetbrains.com/intellij-repository/releases")
+    maven("https://cache-redirector.jetbrains.com/intellij-repository/snapshots")
     maven("https://cache-redirector.jetbrains.com/intellij-dependencies")
 }
 
@@ -74,14 +74,6 @@ testing {
 
             dependencies {
                 implementation(project())
-
-//                //this is fixed in gradle 8.1.1
-//                //this is a workaround to an issue with junit launcher in intellij platform 2022.2 plus gradle 7.5.1.
-//                //it is discussed in a slack thread and will probably be fixed in the next intellij platform patch.
-//                //todo: when upgrading the platform version check if its fixed just by removing it and building the project with no errors.
-//                //https://jetbrains-platform.slack.com/archives/CPL5291JP/p1660085792256189
-//                runtimeOnly("org.junit.platform:junit-platform-launcher")
-//                runtimeOnly("org.junit.jupiter:junit-jupiter-engine")
             }
         }
     }

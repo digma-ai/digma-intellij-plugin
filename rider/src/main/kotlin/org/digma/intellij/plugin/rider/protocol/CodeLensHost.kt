@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.rider.protocol
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
+import com.jetbrains.rd.framework.IProtocol
 import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent
 import com.jetbrains.rider.projectView.solution
 import org.digma.intellij.plugin.common.EDT
@@ -33,6 +34,11 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
         }
     }
 
+
+    private fun getProtocol(model: CodeObjectsModel):IProtocol{
+        //todo: this is because in EAP protocol is nullable, maybe need to remove when EAP is released
+        return model.protocol!!
+    }
 
     fun environmentChanged(newEnv: String) {
         Log.log(logger::debug, "Got environmentChanged {}", newEnv)
@@ -73,7 +79,7 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
         Log.log(logger::debug, "Installing code lens for {}", psiId)
 
         val model: CodeObjectsModel = project.solution.codeObjectsModel
-        model.protocol.scheduler.invokeOrQueue {
+        getProtocol(model).scheduler.invokeOrQueue {
 
             //first remove all code lens entries belonging to this document.
             //the map is not keyed by document, so we have to search

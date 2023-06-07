@@ -10,8 +10,20 @@ tasks{
         enabled = false
     }
 
+    downloadRobotServerPlugin{
+        enabled = false
+    }
+
     runIde{
         //if runIde in those modules is enabled then runIde for the plugin project will run them all
+        enabled = false
+    }
+
+    runIdeForUiTests{
+        enabled = false
+    }
+
+    runIdePerformanceTest{
         enabled = false
     }
 
@@ -39,9 +51,6 @@ tasks{
         enabled = false
     }
 
-    runPluginVerifier {
-        enabled = false
-    }
     patchPluginXml{
         enabled = false
     }

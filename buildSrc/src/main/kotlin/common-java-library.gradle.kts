@@ -11,5 +11,6 @@ plugins {
 tasks {
     //a workaround: if the project is built by calling buildPlugin
     // then build is not called for projects that are not intellij plugin project.
+    // for example the :model project and :analytics-provider
     create("buildPlugin").dependsOn(build)
 }

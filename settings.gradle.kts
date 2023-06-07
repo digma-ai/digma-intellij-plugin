@@ -3,14 +3,27 @@ pluginManagement {
     repositories {
         mavenCentral()
         maven(url = "https://cache-redirector.jetbrains.com/plugins.gradle.org")
-        maven(url = "https://cache-redirector.jetbrains.com/dl.bintray.com/kotlin/kotlin-eap")
         maven(url = "https://cache-redirector.jetbrains.com/myget.org.rd-snapshots.maven")
+        maven(url = "https://packages.jetbrains.team/maven/p/ij/intellij-dependencies")
         gradlePluginPortal()
     }
     resolutionStrategy {
         eachPlugin {
+            // Gradle has to map a plugin dependency to Maven coordinates - '{groupId}:{artifactId}:{version}'. It tries
+            // to do use '{plugin.id}:{plugin.id}.gradle.plugin:version'.
+            // This doesn't work for rdgen, so we provide some help
             if (requested.id.id == "com.jetbrains.rdgen") {
-                useModule("com.jetbrains.rd:rd-gen:${requested.version}")
+
+                if (settings.providers.gradleProperty("useEAPVersion").isPresent &&
+                    settings.providers.gradleProperty("useEAPVersion").get() == "true"){
+                    val rdgenForEAPVersion = "2023.2.2-preview2"
+                    logger.lifecycle("Using rdgen $rdgenForEAPVersion")
+                    useVersion(rdgenForEAPVersion)
+                    useModule("com.jetbrains.rd:rd-gen:${rdgenForEAPVersion}")
+                }else{
+                    logger.lifecycle("Using rdgen ${requested.version}")
+                    useModule("com.jetbrains.rd:rd-gen:${requested.version}")
+                }
             }
         }
     }
@@ -30,11 +43,7 @@ dependencyResolutionManagement {
     versionCatalogs {
         create("libs") {
             //rdgen version is independent of rider version
-//            version("rider-rdgen", "2022.3.4")
-//            version("rider-rdgen", "2023.1.2")
             version("rider-rdgen", "2023.2.0")
-//            version("rider-rdgen", "2023.2.1")
-//            version("rider-rdgen", "2023.2.2-preview2")
             //kotlin stdlib is not packaged with the plugin because intellij platform already contains it.
             //it's necessary for compilation in some cases for example rider protocol module.
             //it must target the lowest bundled stdlib version of the platform we support

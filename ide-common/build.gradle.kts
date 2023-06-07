@@ -23,14 +23,3 @@ dependencies {
     implementation(project(":analytics-provider"))
 }
 
-tasks{
-
-    val injectPosthogTokenUrlTask = task("injectPosthogTokenUrl") {
-        doLast{
-            val url = System.getenv("POSTHOG_TOKEN_URL") ?: ""
-            file("${project.rootProject.sourceSets.main.get().output.resourcesDir?.absolutePath}/posthog-token-url.txt").writeText(url)
-        }
-    }
-
-    processResources.get().finalizedBy(injectPosthogTokenUrlTask)
-}

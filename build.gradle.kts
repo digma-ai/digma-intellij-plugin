@@ -38,15 +38,24 @@ tasks.register("incrementSemanticVersionMajor") {
 }
 
 
+val riderDotNetObjects: Configuration by configurations.creating {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+}
+
 dependencies{
     implementation(libs.commons.lang3)
     implementation(project(":model"))
     implementation(project(":analytics-provider"))
-    implementation(project(":ide-common"))
-    implementation(project(":java"))
-    implementation(project(":python"))
-    implementation(project(":rider"))
+    implementation(project(":ide-common", "instrumentedJar"))
+    implementation(project(":java", "instrumentedJar"))
+    implementation(project(":python", "instrumentedJar"))
+    implementation(project(":rider", "instrumentedJar"))
     implementation(libs.freemarker)
+
+    riderDotNetObjects(project(mapOf(
+        "path" to ":rider",
+        "configuration" to "riderDotNetObjects")))
 }
 
 // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
@@ -88,7 +97,7 @@ project.afterEvaluate{
     //currently, only rider contributes the dotnet dll's to the sandbox.
 
     //it can be written with task fqn like buildPlugin.dependsOn(":rider:buildPlugin")
-    //but this syntax is not favorite by the gradle developers becasue it will cause eager initialization of the task.
+    //but this syntax is not favorite by the gradle developers because it will cause eager initialization of the task.
     val buildPlugin = tasks.named("buildPlugin").get()
     project(":java").afterEvaluate { buildPlugin.dependsOn(tasks.getByName("buildPlugin")) }
     project(":python").afterEvaluate { buildPlugin.dependsOn(tasks.getByName("buildPlugin")) }
@@ -99,12 +108,12 @@ project.afterEvaluate{
 
 tasks {
 
-    jar {
-        dependsOn(":rider:copyKotlinModuleFile")
-    }
 
-    instrumentedJar{
-        dependsOn(":rider:copyKotlinModuleFile")
+    prepareSandbox{
+        //copy rider dlls to the plugin sandbox so it is packaged in the zip
+        from(configurations.getByName("riderDotNetObjects")){
+            into("${properties("pluginName",project)}/dotnet/")
+        }
     }
 
     wrapper {
@@ -167,7 +176,7 @@ tasks {
         enabled = false
     }
 
-    val deleteLog = create("deleteLogs", Delete::class.java) {
+    val deleteLog by registering(Delete::class) {
         outputs.upToDateWhen { false }
         project.layout.buildDirectory.dir("idea-sandbox/system/log").get().asFile.walk().forEach {
             if (it.name.endsWith(".log")) {
@@ -178,9 +187,9 @@ tasks {
 
     runIde {
         dependsOn(deleteLog)
-        //rider contributes to prepareSandbox, so it needs to run before runIde
-        dependsOn("prepareSandbox")
-        dependsOn(":rider:prepareSandboxForRider")
+        dependsOn(prepareSandbox)
+        dependsOn(configurations.getByName("riderDotNetObjects"))
+
         maxHeapSize = "2g"
         // Rider's backend doesn't support dynamic plugins. It might be possible to work with auto-reload of the frontend
         // part of a plugin, but there are dangers about keeping plugins in sync
@@ -216,7 +225,7 @@ tasks {
     }
 
     verifyPlugin {
-        dependsOn(":rider:prepareSandboxForRider")
+        dependsOn(configurations.getByName("riderDotNetObjects"))
     }
 
     signPlugin {
@@ -238,5 +247,16 @@ tasks {
         // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
         channels.set(listOf(common.semanticversion.getSemanticVersion(project).split('-').getOrElse(1) { "default" }
             .split('.').first()))
+    }
+
+
+    val injectPosthogTokenUrlTask by registering{
+        doLast{
+            val url = System.getenv("POSTHOG_TOKEN_URL") ?: ""
+            file("${project.sourceSets.main.get().output.resourcesDir?.absolutePath}/posthog-token-url.txt").writeText(url)
+        }
+    }
+    processResources{
+        finalizedBy(injectPosthogTokenUrlTask)
     }
 }

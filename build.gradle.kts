@@ -47,10 +47,14 @@ dependencies{
     implementation(libs.commons.lang3)
     implementation(project(":model"))
     implementation(project(":analytics-provider"))
-    implementation(project(":ide-common", "instrumentedJar"))
-    implementation(project(":java", "instrumentedJar"))
-    implementation(project(":python", "instrumentedJar"))
-    implementation(project(":rider", "instrumentedJar"))
+    implementation(project(":ide-common"))
+    implementation(project(":java"))
+    implementation(project(":python"))
+    implementation(project(":rider"))
+//    implementation(project(":ide-common", "instrumentedJar"))
+//    implementation(project(":java", "instrumentedJar"))
+//    implementation(project(":python", "instrumentedJar"))
+//    implementation(project(":rider", "instrumentedJar"))
     implementation(libs.freemarker)
 
     riderDotNetObjects(project(mapOf(

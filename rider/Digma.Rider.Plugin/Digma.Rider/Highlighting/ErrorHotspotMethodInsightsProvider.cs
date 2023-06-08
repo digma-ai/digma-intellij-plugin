@@ -17,8 +17,8 @@ namespace Digma.Rider.Highlighting
         public override string ProviderId => nameof(ErrorHotspotMethodInsightsProvider);
         public override string DisplayName => "Error Hotspot Method Hints";
         
-        public override ICollection<CodeLensRelativeOrdering> RelativeOrderings => new CodeLensRelativeOrdering[]
-            { new CodeLensRelativeOrderingFirst() };
+        public override ICollection<CodeVisionRelativeOrdering> RelativeOrderings => new CodeVisionRelativeOrdering[]
+            { new CodeVisionRelativeOrderingFirst() };
         
     }
 }

@@ -17,8 +17,8 @@ namespace Digma.Rider.Highlighting
         public override string ProviderId => nameof(SlowEndpointMethodInsightsProvider);
         public override string DisplayName => "Slow Endpoint Method Hints";
         
-        public override ICollection<CodeLensRelativeOrdering> RelativeOrderings => new CodeLensRelativeOrdering[]
-            { new CodeLensRelativeOrderingFirst() };
+        public override ICollection<CodeVisionRelativeOrdering> RelativeOrderings => new CodeVisionRelativeOrdering[]
+            { new CodeVisionRelativeOrderingFirst() };
         
     }
 }

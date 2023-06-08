@@ -32,7 +32,6 @@ intellij {
     version.set("RD-" + platformVersion(project))
     plugins.set(listOf("rider-plugins-appender"))
     downloadSources.set(false) //there are no sources for rider
-//    instrumentCode.set(false) // why not??
 }
 
 
@@ -92,16 +91,14 @@ tasks {
             // maybe in the future we can support 3 versions
 
             if (project.findProperty("useLatestVersion") == "true"){
-//                "2023.1.0"
-                "2022.3.1"
+                "2023.1.0"
             }else if (project.findProperty("useEAPVersion") == "true"){
                 //todo: currently rider EAP fails in rdgen , don't use EAP yet , use current version
                 // so we can compile the other modules
 //        "232.6734.9-EAP-SNAPSHOT"
-                "2022.3.1"
+                "2023.2.0-eap03"
             }else{
-//                "2023.1.0"
-                "2022.3.1"
+                "2023.1.0"
             }
 
         duplicatesStrategy = DuplicatesStrategy.INCLUDE

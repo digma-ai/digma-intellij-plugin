@@ -20,7 +20,7 @@ namespace Digma.Rider.Highlighting
         public override string ProviderId => "MethodInsightsProvider2";
         public override string DisplayName => "Method Insights Provider_2 Hints";
 
-        public override ICollection<CodeLensRelativeOrdering> RelativeOrderings => new CodeLensRelativeOrdering[]
-            { new CodeLensRelativeOrderingFirst() };
+        public override ICollection<CodeVisionRelativeOrdering> RelativeOrderings => new CodeVisionRelativeOrdering[]
+            { new CodeVisionRelativeOrderingFirst() };
     }
 }

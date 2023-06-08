@@ -54,7 +54,7 @@ namespace Digma.Rider.Highlighting
         }
 
         
-        public CodeLensAnchorKind DefaultAnchor => CodeLensAnchorKind.Top;
-        public abstract ICollection<CodeLensRelativeOrdering> RelativeOrderings { get; }
+        public CodeVisionAnchorKind DefaultAnchor => CodeVisionAnchorKind.Top;
+        public abstract ICollection<CodeVisionRelativeOrdering> RelativeOrderings { get; }
     }
 }

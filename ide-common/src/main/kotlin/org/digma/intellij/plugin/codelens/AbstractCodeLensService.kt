@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.codelens
 import com.intellij.codeInsight.codeVision.CodeVisionEntry
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
-import com.intellij.codeInsight.hints.codeVision.CodeVisionPassFactory
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.components.service
@@ -158,8 +157,6 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
         FileEditorManager.getInstance(project).allEditors.forEach {
             if (it.file == psiFile.virtualFile && it is TextEditor) {
                 Log.log(logger::debug, "restarting DaemonCodeAnalyzer for {}", psiFile.virtualFile)
-                //todo: CodeVisionPassFactory is internal in 2023.2 EAP, find another way
-                CodeVisionPassFactory.clearModificationStamp(it.editor)
                 DaemonCodeAnalyzer.getInstance(project).restart(psiFile)
             }
         }

@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.service
 
 import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.common.Backgroundable
@@ -15,6 +16,7 @@ import org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.rest.insights.InsightStatus
+import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
 import org.digma.intellij.plugin.ui.model.DocumentScope
 import org.digma.intellij.plugin.ui.model.EmptyScope
@@ -57,6 +59,8 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
     // result of existing insights for a span.
     //currently not refreshing the insights.
     fun updateInsightsModel(codeLessSpan: CodeLessSpan) {
+
+        project.service<MainToolWindowCardsController>().showMainPanel(true)
 
         val codeLessInsightsProvider = CodeLessSpanInsightsProvider(codeLessSpan,project)
 

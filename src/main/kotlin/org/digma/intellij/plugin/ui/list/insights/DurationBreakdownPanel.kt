@@ -5,23 +5,18 @@ import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.apache.commons.lang3.StringUtils
+import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.editor.getCurrentPageNumberForInsight
 import org.digma.intellij.plugin.editor.updateListOfEntriesToDisplay
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationBreakdown
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationBreakdownInsight
-import org.digma.intellij.plugin.model.rest.insights.SpanInfo
-import org.digma.intellij.plugin.navigation.codeless.showInsightsForSpan
-import org.digma.intellij.plugin.navigation.codeless.showInsightsForSpanWithCodeLocation
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.boldFonts
+import org.digma.intellij.plugin.ui.list.openWorkspaceFileForSpan
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.BorderLayout
-import javax.swing.BoxLayout
-import javax.swing.JComponent
-import javax.swing.JLabel
-import javax.swing.JPanel
-import javax.swing.SwingConstants
+import javax.swing.*
 
 
 private const val P_50: Float = 0.5F
@@ -51,7 +46,6 @@ fun spanDurationBreakdownPanel(
             rebuildDurationBreakdownRowPanel(
                     resultBreakdownPanel!!,
                     durationBreakdownEntriesToDisplay,
-                insight.spanInfo,
                     project,
                     moreData
             )
@@ -61,7 +55,7 @@ fun spanDurationBreakdownPanel(
     }
 
     updateListOfEntriesToDisplay(validBreakdownEntries, durationBreakdownEntriesToDisplay, getCurrentPageNumberForInsight(uniqueInsightId, lastPageNum), RECORDS_PER_PAGE_DURATION_BREAKDOWN, project)
-    buildDurationBreakdownRowPanel(resultBreakdownPanel, durationBreakdownEntriesToDisplay,insight.spanInfo, project, moreData)
+    buildDurationBreakdownRowPanel(resultBreakdownPanel, durationBreakdownEntriesToDisplay, project, moreData)
 
     return createInsightPanel(
             project = project,
@@ -79,7 +73,6 @@ fun spanDurationBreakdownPanel(
 private fun buildDurationBreakdownRowPanel(
         durationBreakdownPanel: DigmaResettablePanel,
         durationBreakdownEntriesToDisplay: List<SpanDurationBreakdown>,
-        spanInfo: SpanInfo,
         project: Project,
         moreData: HashMap<String, Any>
 ) {
@@ -87,30 +80,28 @@ private fun buildDurationBreakdownRowPanel(
     durationBreakdownPanel.isOpaque = false
 
     durationBreakdownEntriesToDisplay.forEach { durationBreakdown: SpanDurationBreakdown ->
-        durationBreakdownPanel.add(durationBreakdownRowPanel(durationBreakdown,spanInfo, project, moreData))
+        durationBreakdownPanel.add(durationBreakdownRowPanel(durationBreakdown, project, moreData))
     }
 }
 
 private fun rebuildDurationBreakdownRowPanel(
         durationBreakdownPanel: DigmaResettablePanel,
         durationBreakdownEntriesToDisplay: List<SpanDurationBreakdown>,
-        spanInfo: SpanInfo,
         project: Project,
         moreData: HashMap<String, Any>
 ) {
     durationBreakdownPanel.removeAll()
-    buildDurationBreakdownRowPanel(durationBreakdownPanel, durationBreakdownEntriesToDisplay,spanInfo, project, moreData)
+    buildDurationBreakdownRowPanel(durationBreakdownPanel, durationBreakdownEntriesToDisplay, project, moreData)
 }
 
 private fun durationBreakdownRowPanel(
         durationBreakdown: SpanDurationBreakdown,
-        spanInfo:SpanInfo,
         project: Project,
         moreData: HashMap<String, Any>
 ): JPanel {
     val durationBreakdownPanel = getDurationBreakdownPanel()
     val telescopeIconLabel = getTelescopeIconLabel()
-    val spanDisplayNameLabel = getSpanDisplayNameLabel(durationBreakdown,spanInfo, project, moreData)
+    val spanDisplayNameLabel = getSpanDisplayNameLabel(durationBreakdown, project, moreData)
     val breakdownDurationLabelPanel = getBreakdownDurationLabel(durationBreakdown)
 
     durationBreakdownPanel.add(telescopeIconLabel, BorderLayout.WEST)
@@ -138,20 +129,18 @@ private fun getTelescopeIconLabel(): JLabel {
 
 private fun getSpanDisplayNameLabel(
         durationBreakdown: SpanDurationBreakdown,
-        spanInfo:SpanInfo,
         project: Project,
         moreData: HashMap<String, Any>,
 ): JComponent {
-    val spanId = durationBreakdown.spanCodeObjectId
+    val spanId = CodeObjectsUtil.createSpanId(durationBreakdown.spanInstrumentationLibrary, durationBreakdown.spanName)
     val trimmedDisplayName = StringUtils.normalizeSpace(durationBreakdown.spanDisplayName)
 
-    val messageLabel = ActionLink(trimmedDisplayName) {
-        if (moreData.contains(spanId)) {
-            @Suppress("UNCHECKED_CAST")
-            showInsightsForSpanWithCodeLocation(project, spanId,durationBreakdown.spanDisplayName, spanInfo.methodCodeObjectId, moreData[spanId] as Pair<String, Int>)
-        }else{
-            showInsightsForSpan(project, spanId,durationBreakdown.spanDisplayName, spanInfo.methodCodeObjectId)
+    val messageLabel = if (moreData.contains(spanId)) {
+        ActionLink(trimmedDisplayName) {
+            openWorkspaceFileForSpan(project, moreData, spanId)
         }
+    } else {
+        JLabel(trimmedDisplayName)
     }
     messageLabel.toolTipText = asHtml(trimmedDisplayName)
     messageLabel.border = empty(0, 5, 5, 0)

@@ -5,10 +5,10 @@ import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.apache.commons.lang3.StringUtils
+import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.model.rest.insights.*
-import org.digma.intellij.plugin.navigation.codeless.showInsightsForSpan
 import org.digma.intellij.plugin.ui.common.*
-import org.digma.intellij.plugin.navigation.codeless.showInsightsForSpanWithCodeLocation
+import org.digma.intellij.plugin.ui.list.openWorkspaceFileForSpan
 import java.awt.BorderLayout
 import java.awt.GridLayout
 import java.math.BigDecimal
@@ -24,25 +24,36 @@ fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: 
 
         val displayName = slowSpan.spanInfo.displayName
         val description = descriptionOf(slowSpan)
-        val spanId = slowSpan.spanInfo.spanCodeObjectId!!
+        val spanId = CodeObjectsUtil.createSpanId(slowSpan.spanInfo.instrumentationLibrary, slowSpan.spanInfo.name)
 
-        val normalizedDisplayName = StringUtils.normalizeSpace(displayName)
-        val grayedDescription = asHtml(spanGrayed(description))
-        val descriptionLabel = JBLabel(grayedDescription, SwingConstants.LEFT)
-        val link = ActionLink(normalizedDisplayName) {
-            if (moreData.contains(spanId)) {
-                @Suppress("UNCHECKED_CAST")
-                showInsightsForSpanWithCodeLocation(project, spanId,displayName, slowSpan.spanInfo.methodCodeObjectId, moreData[spanId] as Pair<String, Int>)
-            }else{
-                showInsightsForSpan(project, spanId,displayName, slowSpan.spanInfo.methodCodeObjectId)
+        if (moreData.contains(spanId)) {
+            val normalizedDisplayName = StringUtils.normalizeSpace(displayName)
+            val grayedDescription = asHtml(spanGrayed(description))
+            val descriptionLabel = JBLabel(grayedDescription, SwingConstants.LEFT)
+            val link = ActionLink(normalizedDisplayName) {
+                openWorkspaceFileForSpan(project, moreData, spanId)
             }
-        }
-        link.toolTipText = genToolTip(slowSpan)
+            link.toolTipText = genToolTip(slowSpan)
 
-        val spanOneRecordPanel = getDefaultSpanOneRecordPanel()
-        spanOneRecordPanel.add(link, BorderLayout.NORTH)
-        spanOneRecordPanel.add(descriptionLabel, BorderLayout.SOUTH)
-        spansListPanel.add(spanOneRecordPanel)
+            val spanOneRecordPanel = getDefaultSpanOneRecordPanel()
+            spanOneRecordPanel.add(link, BorderLayout.NORTH)
+            spanOneRecordPanel.add(descriptionLabel, BorderLayout.SOUTH)
+            spansListPanel.add(spanOneRecordPanel)
+        } else {
+            val normalizedDisplayName = StringUtils.normalizeSpace(displayName)
+            val grayedDescription = asHtml(spanGrayed(description))
+            val descriptionLabel = JBLabel(grayedDescription, SwingConstants.LEFT)
+
+            val displayNameLabel = JBLabel(normalizedDisplayName, SwingConstants.TRAILING)
+            displayNameLabel.toolTipText = genToolTip(slowSpan)
+            displayNameLabel.horizontalAlignment = SwingConstants.LEFT
+
+            val spanOneRecordPanel = getDefaultSpanOneRecordPanel()
+            spanOneRecordPanel.add(displayNameLabel, BorderLayout.NORTH)
+            spanOneRecordPanel.add(descriptionLabel, BorderLayout.SOUTH)
+
+            spansListPanel.add(spanOneRecordPanel)
+        }
     }
 
     return createInsightPanel(
@@ -69,23 +80,22 @@ fun spanSlowEndpointsPanel(project: Project, insight: SpanSlowEndpointsInsight, 
         currContainerPanel.isOpaque = false
 
         val routeInfo = EndpointSchema.getRouteInfo(slowEndpointInfo.endpointInfo.route)
-        var spanCodeObjectId = slowEndpointInfo.endpointInfo.spanCodeObjectId;
-        var spanDisplayName = slowEndpointInfo.endpointInfo.serviceName;
+        var routeCodeObjectId = slowEndpointInfo.endpointInfo.codeObjectId;
         val shortRouteName =  routeInfo.shortName
 
-        val normalizedDisplayName = StringUtils.normalizeSpace(shortRouteName)
-        val link = ActionLink(normalizedDisplayName) {
-            if (moreData.contains(spanCodeObjectId)) {
-                @Suppress("UNCHECKED_CAST")
-                showInsightsForSpanWithCodeLocation(project, spanCodeObjectId,spanDisplayName, insight.spanInfo.methodCodeObjectId, moreData[spanCodeObjectId] as Pair<String, Int>)
-            }else{
-                showInsightsForSpan(project, spanCodeObjectId, spanDisplayName,insight.spanInfo.methodCodeObjectId)
+        if (routeCodeObjectId != null && moreData.contains(routeCodeObjectId)) {
+            val normalizedDisplayName = StringUtils.normalizeSpace(shortRouteName)
+            val link = ActionLink(normalizedDisplayName) {
+                openWorkspaceFileForSpan(project, moreData, routeCodeObjectId!!)
             }
-        }
-        val targetClass = spanCodeObjectId.substringBeforeLast("\$_\$");
+            var targetClass = routeCodeObjectId?.substringBeforeLast("\$_\$");
 
-        link.toolTipText = asHtml("$targetClass: $shortRouteName")
-        currContainerPanel.add(link, BorderLayout.NORTH)
+            link.toolTipText = asHtml("$targetClass: $shortRouteName")
+            currContainerPanel.add(link, BorderLayout.NORTH)
+        } else {
+            val line1 = JBLabel(asHtml("${slowEndpointInfo.endpointInfo.serviceName}: <b>$shortRouteName</b>"))
+            currContainerPanel.add(line1)
+        }
 
         val line2 = JBLabel(asHtml(descriptionOf(slowEndpointInfo)))
         currContainerPanel.add(line2)

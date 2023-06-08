@@ -166,9 +166,6 @@ public class MainToolWindowCardsController implements Disposable {
 
 
     public void showMainPanel() {
-        showMainPanel(false);
-    }
-    public void showMainPanel(boolean force) {
 
         Log.log(LOGGER::debug,"showMainPanel called");
 
@@ -184,7 +181,7 @@ public class MainToolWindowCardsController implements Disposable {
         }else{
             //FileEditorManager must be called on EDT
             EDT.ensureEDT(() -> {
-                if (!force && FileEditorManager.getInstance(project).getOpenFiles().length == 0){
+                if (FileEditorManager.getInstance(project).getOpenFiles().length == 0){
                     Log.log(LOGGER::debug,"No files opened, calling showNoFile from showMainPanel");
                     showNoFile();
                 }else{

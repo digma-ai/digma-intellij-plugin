@@ -15,7 +15,6 @@ import org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.rest.insights.InsightStatus
-import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
 import org.digma.intellij.plugin.ui.model.DocumentScope
 import org.digma.intellij.plugin.ui.model.EmptyScope
@@ -59,8 +58,6 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
     //currently not refreshing the insights.
     fun updateInsightsModel(codeLessSpan: CodeLessSpan) {
 
-        MainToolWindowCardsController.getInstance(project).showMainPanel(true)
-
         val codeLessInsightsProvider = CodeLessSpanInsightsProvider(codeLessSpan,project)
 
         Log.log(logger::debug, "updateInsightsModel to {}. ", codeLessSpan)
@@ -68,23 +65,25 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
         val insightsListContainer: InsightsListContainer? =
             ReadAction.compute<InsightsListContainer,Exception> { codeLessInsightsProvider.getInsights() }
 
-        if (insightsListContainer?.listViewItems.isNullOrEmpty()){
+        if (insightsListContainer == null){
             Log.log(logger::debug,project, "could not load insights for {}, see logs for details",codeLessSpan )
+            empty()
+            return
         }
 
+        if (insightsListContainer.listViewItems.isNullOrEmpty()){
+            Log.log(logger::debug,project, "emptying model for {} because there are no insights",codeLessSpan )
+            empty()
+            return
+        }
 
-        model.listViewItems = insightsListContainer?.listViewItems ?: listOf()
+        model.listViewItems = insightsListContainer.listViewItems ?: listOf()
         model.previewListViewItems = ArrayList()
-        model.usageStatusResult = insightsListContainer?.usageStatus ?: EmptyUsageStatusResult
+        model.usageStatusResult = insightsListContainer.usageStatus ?: EmptyUsageStatusResult
         model.scope = CodeLessSpanScope(codeLessSpan)
-        model.insightsCount = insightsListContainer?.count ?: 0
+        model.insightsCount = insightsListContainer.count
         model.card = InsightsTabCard.INSIGHTS
         model.status = UIInsightsStatus.Default
-
-        if (model.listViewItems.isEmpty()){
-            model.status = UIInsightsStatus.NoInsights
-        }
-
 
         notifyModelChangedAndUpdateUi()
 

@@ -8,16 +8,14 @@ import com.intellij.util.ui.JBUI.Borders.emptyBottom
 import com.intellij.util.ui.JBUI.Borders.emptyTop
 import org.apache.commons.lang3.StringUtils
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.editor.getCurrentPageNumberForInsight
 import org.digma.intellij.plugin.editor.updateListOfEntriesToDisplay
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider
 import org.digma.intellij.plugin.model.rest.insights.AffectedEndpointInfo
 import org.digma.intellij.plugin.model.rest.insights.EndpointSchema
 import org.digma.intellij.plugin.model.rest.insights.RootCauseSpan
-import org.digma.intellij.plugin.model.rest.insights.SpanInfo
 import org.digma.intellij.plugin.model.rest.insights.SpanScalingInsight
-import org.digma.intellij.plugin.navigation.codeless.showInsightsForSpan
-import org.digma.intellij.plugin.navigation.codeless.showInsightsForSpanWithCodeLocation
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
@@ -25,15 +23,11 @@ import org.digma.intellij.plugin.ui.common.getHex
 import org.digma.intellij.plugin.ui.common.spanBold
 import org.digma.intellij.plugin.ui.common.spanGrayed
 import org.digma.intellij.plugin.ui.list.ListItemActionButton
+import org.digma.intellij.plugin.ui.list.openWorkspaceFileForSpan
 import org.digma.intellij.plugin.ui.model.TraceSample
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.BorderLayout
-import javax.swing.Box
-import javax.swing.BoxLayout
-import javax.swing.JButton
-import javax.swing.JLabel
-import javax.swing.JPanel
-import javax.swing.SwingConstants
+import javax.swing.*
 
 private const val RECORDS_PER_PAGE_AFFECTED_ENDPOINTS = 3
 
@@ -84,7 +78,7 @@ fun getRootCauseSpansPanel(project: Project, moreData: HashMap<String, Any>, ins
 
     insight.rootCauseSpans!!.let { spans ->
         repeat(spans.size) {index ->
-            rootCauseSpansPanel.add(getRootCauseSpanPanel(project,moreData,spans[index],insight.spanInfo))
+            rootCauseSpansPanel.add(getRootCauseSpanPanel(project,moreData,spans[index]))
         }
     }
 
@@ -147,19 +141,13 @@ private fun buildAffectedEndpointItem(project: Project, moreData: HashMap<String
     endPointPanel.isOpaque = false
 
     val routeInfo = EndpointSchema.getRouteInfo(affectedEndpoint.route)
-    val routeCodeObjectId = affectedEndpoint.spanCodeObjectId
-    val displayName = affectedEndpoint.displayName
+    val routeCodeObjectId = affectedEndpoint.codeObjectId
     val shortRouteName =  routeInfo.shortName
 
-    if (routeCodeObjectId != null) {
+    if (routeCodeObjectId != null && moreData.contains(routeCodeObjectId)) {
         val normalizedDisplayName = StringUtils.normalizeSpace(shortRouteName)
         val link = ActionLink(normalizedDisplayName) {
-            if (moreData.contains(routeCodeObjectId)) {
-                @Suppress("UNCHECKED_CAST")
-                showInsightsForSpanWithCodeLocation(project, routeCodeObjectId,displayName, affectedEndpoint.methodCodeObjectId, moreData[routeCodeObjectId] as Pair<String, Int>)
-            }else{
-                showInsightsForSpan(project, routeCodeObjectId,displayName, affectedEndpoint.methodCodeObjectId)
-            }
+            openWorkspaceFileForSpan(project, moreData, routeCodeObjectId)
         }
         val targetClass = routeCodeObjectId.substringBeforeLast("\$_\$")
 
@@ -179,26 +167,27 @@ private fun buildAffectedEndpointItem(project: Project, moreData: HashMap<String
     return endPointPanel
 }
 
-fun getRootCauseSpanPanel(project: Project, moreData: HashMap<String, Any>, rootCauseSpan: RootCauseSpan,spanInfo: SpanInfo): JPanel {
+fun getRootCauseSpanPanel(project: Project, moreData: HashMap<String, Any>, rootCauseSpan: RootCauseSpan): JPanel {
 
     val rootCausePanel = JPanel(BorderLayout())
     rootCausePanel.border = empty()
     rootCausePanel.isOpaque = false
 
     val normalizedDisplayName = StringUtils.normalizeSpace(rootCauseSpan.displayName)
-    val spanId = rootCauseSpan.spanCodeObjectId
-    val displayName = rootCauseSpan.displayName
+    val spanId = CodeObjectsUtil.createSpanId(rootCauseSpan.instrumentationLibrary, rootCauseSpan.name)
 
-    val link = ActionLink(normalizedDisplayName) {
-        if (moreData.contains(spanId)) {
-            @Suppress("UNCHECKED_CAST")
-            showInsightsForSpanWithCodeLocation(project, spanId, displayName,spanInfo.methodCodeObjectId, moreData[spanId] as Pair<String, Int>)
-        }else{
-            showInsightsForSpan(project, spanId, displayName,spanInfo.methodCodeObjectId)
+    if (moreData.contains(spanId)) {
+        val link = ActionLink(normalizedDisplayName) {
+            openWorkspaceFileForSpan(project, moreData, spanId)
         }
+        link.toolTipText = asHtml(spanId)
+        rootCausePanel.add(link,BorderLayout.CENTER)
+    }else{
+        val displayNameLabel = JBLabel(normalizedDisplayName, SwingConstants.TRAILING)
+        displayNameLabel.toolTipText = asHtml(spanId)
+        displayNameLabel.horizontalAlignment = SwingConstants.LEFT
+        rootCausePanel.add(displayNameLabel,BorderLayout.CENTER)
     }
-    link.toolTipText = asHtml(spanId)
-    rootCausePanel.add(link,BorderLayout.CENTER)
 
     val spanName = rootCauseSpan.name
     val sampleTraceId = rootCauseSpan.sampleTraceId

@@ -230,7 +230,7 @@ public class JaegerUIService {
 
         var span = goToSpanMessage.payload();
         //if we're here then code location was not found
-        CodelessNavigationKt.showInsightsForSpan(project, span.spanId(),span.name(), span.methodId());
+        CodelessNavigationKt.showInsightsForSpan(project, span.spanId(), span.methodId());
     }
 
     public Map<String, SpanData> getResolvedSpans(SpansMessage spansMessage) {

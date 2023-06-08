@@ -9,14 +9,13 @@ import org.digma.intellij.plugin.editor.getCurrentPageNumberForInsight
 import org.digma.intellij.plugin.editor.updateListOfEntriesToDisplay
 import org.digma.intellij.plugin.model.rest.insights.SpanFlow
 import org.digma.intellij.plugin.model.rest.insights.SpanUsagesInsight
-import org.digma.intellij.plugin.navigation.codeless.showInsightsForSpan
-import org.digma.intellij.plugin.navigation.codeless.showInsightsForSpanWithCodeLocation
 import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
 import org.digma.intellij.plugin.ui.common.Html
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.span
 import org.digma.intellij.plugin.ui.common.spanGrayed
+import org.digma.intellij.plugin.ui.list.openWorkspaceFileForSpan
 import org.digma.intellij.plugin.ui.model.TraceSample
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.BorderLayout
@@ -24,6 +23,7 @@ import java.awt.Dimension
 import java.awt.FlowLayout
 import javax.swing.Box
 import javax.swing.BoxLayout
+import javax.swing.JLabel
 import javax.swing.JPanel
 
 
@@ -146,15 +146,16 @@ fun getTopUsagePanel(project: Project, moreData: HashMap<String, Any>,
 
 fun addSpanLinkIfPossible(project: Project, service: SpanFlow.Service, moreData: HashMap<String, Any>, panel: JPanel) {
     val spanName = service.span
-    val link = ActionLink(spanName) {
-        if (moreData.contains(service.spanCodeObjectId)) {
-            @Suppress("UNCHECKED_CAST")
-            showInsightsForSpanWithCodeLocation(project, service.spanCodeObjectId,spanName, service.codeObjectId, moreData[service.codeObjectId] as Pair<String, Int>)
-        }else{
-            showInsightsForSpan(project, service.spanCodeObjectId, spanName,service.codeObjectId)
+    if (moreData.contains(service.codeObjectId)) {
+        val link = ActionLink(spanName) {
+            openWorkspaceFileForSpan(project, moreData, service.codeObjectId)
         }
+        val targetClass = service.codeObjectId.substringBeforeLast("\$_\$")
+
+        link.toolTipText = asHtml("$targetClass: $spanName")
+        panel.add(link)
+    } else {
+        val label = JLabel(asHtml(span(spanName)))
+        panel.add(label)
     }
-    val targetClass = service.codeObjectId.substringBeforeLast("\$_\$")
-    link.toolTipText = asHtml("$targetClass: $spanName")
-    panel.add(link)
 }

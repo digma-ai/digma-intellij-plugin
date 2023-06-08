@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.editor.getCurrentPageNumberForInsight
 import org.digma.intellij.plugin.editor.updateListOfEntriesToDisplay
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider
+import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.AffectedEndpointInfo
 import org.digma.intellij.plugin.model.rest.insights.EndpointSchema
 import org.digma.intellij.plugin.model.rest.insights.RootCauseSpan
@@ -50,7 +51,7 @@ fun spanScalingPanel(project: Project, insight: SpanScalingInsight, moreData: Ha
         scalingPanel.add(getAffectedEndpointsPanel(project, moreData, insight))
     }
 
-    val buttonToGraph = buildButtonToScalingGraph(project, insight.spanName,insight.spanInstrumentationLibrary)
+    val buttonToGraph = buildButtonToScalingGraph(project, insight.spanName,insight.spanInstrumentationLibrary, insight.type)
 
     val backwardsCompatibilityTitle = "Scaling Issue Found"
     val backwardsCompatibilityDescription = "Significant performance degradation at ${insight.turningPointConcurrency} executions/second"
@@ -104,7 +105,7 @@ fun getAffectedEndpointsPanel(project: Project, moreData: HashMap<String, Any>, 
             affectedEndpointsPanel!!.removeAll()
             buildAffectedEndpointList(affectedEndpointsPanel!!, affectedEndpointsToDisplay, project, moreData)
             rebuildPaginationPanel(paginationPanel, lastPageNum,
-                insight.affectedEndpoints!!, affectedEndpointsPanel, affectedEndpointsToDisplay, uniqueInsightId, RECORDS_PER_PAGE_AFFECTED_ENDPOINTS, project)
+                insight.affectedEndpoints!!, affectedEndpointsPanel, affectedEndpointsToDisplay, uniqueInsightId, RECORDS_PER_PAGE_AFFECTED_ENDPOINTS, project, insight.type)
         }
     }
     affectedEndpointsPanel.border = emptyTop(5)
@@ -168,7 +169,7 @@ private fun buildAffectedEndpointItem(project: Project, moreData: HashMap<String
 
         val sampleTraceId = affectedEndpoint.sampleTraceId
         val traceSample = TraceSample(affectedEndpoint.name, sampleTraceId)
-        val buttonToJaeger = buildButtonToJaeger(project, "Trace", affectedEndpoint.name, listOf(traceSample))
+        val buttonToJaeger = buildButtonToJaeger(project, "Trace", affectedEndpoint.name, listOf(traceSample), InsightType.SpanScaling)
         if (buttonToJaeger != null) {
             endPointPanel.add(buttonToJaeger, BorderLayout.EAST)
         }
@@ -203,7 +204,7 @@ fun getRootCauseSpanPanel(project: Project, moreData: HashMap<String, Any>, root
     val spanName = rootCauseSpan.name
     val sampleTraceId = rootCauseSpan.sampleTraceId
     val traceSample = TraceSample(spanName, sampleTraceId)
-    val buttonToJaeger = buildButtonToJaeger(project, "Trace", spanName, listOf(traceSample))
+    val buttonToJaeger = buildButtonToJaeger(project, "Trace", spanName, listOf(traceSample), InsightType.SpanScaling)
     if(buttonToJaeger != null) {
         rootCausePanel.add(buttonToJaeger, BorderLayout.EAST)
     }
@@ -224,13 +225,13 @@ private fun getScalingCalculationsPanel(insight: SpanScalingInsight): JPanel {
     return scalingBodyPanel
 }
 
-private fun buildButtonToScalingGraph(project: Project, spanName: String, instLibrary: String): JButton {
+private fun buildButtonToScalingGraph(project: Project, spanName: String, instLibrary: String, insightType: InsightType): JButton {
     val analyticsService = AnalyticsService.getInstance(project)
     val button = ListItemActionButton("Histogram")
     button.addActionListener {
         val htmlContent = analyticsService.getHtmlGraphForSpanScaling(instLibrary, spanName, Laf.Colors.PLUGIN_BACKGROUND.getHex())
         DigmaHTMLEditorProvider.openEditor(project, "Scaling Graph of Span $spanName", htmlContent)
-        ActivityMonitor.getInstance(project).registerInsightButtonClicked("scaling-histogram")
+        ActivityMonitor.getInstance(project).registerInsightButtonClicked("histogram", insightType)
     }
 
     return button

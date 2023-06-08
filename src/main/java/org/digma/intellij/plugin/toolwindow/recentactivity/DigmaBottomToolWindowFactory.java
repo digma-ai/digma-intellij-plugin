@@ -36,6 +36,7 @@ import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityGoToTra
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResponseEntry;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
+import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.recentactivity.RecentActivityLogic;
 import org.digma.intellij.plugin.service.EditorService;
@@ -74,6 +75,7 @@ import static org.digma.intellij.plugin.common.EnvironmentUtilKt.LOCAL_ENV;
 import static org.digma.intellij.plugin.common.EnvironmentUtilKt.SUFFIX_OF_LOCAL;
 import static org.digma.intellij.plugin.common.EnvironmentUtilKt.getSortedEnvironments;
 import static org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt.openJaegerFromRecentActivity;
+import static org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt.traceButtonName;
 
 
 /**
@@ -184,6 +186,7 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory, Disposab
                     processRecentActivityGoToSpanRequest(recentActivityGoToSpanRequest.getPayload(), project, editorService);
                 }
                 if (RECENT_ACTIVITY_GO_TO_TRACE.equalsIgnoreCase(reactMessageRequest.getAction())) {
+                    ActivityMonitor.getInstance(project).registerButtonClicked(traceButtonName,"recent-activity");
                     RecentActivityGoToTraceRequest recentActivityGoToTraceRequest = parseJsonToObject(request, RecentActivityGoToTraceRequest.class);
                     processRecentActivityGoToTraceRequest(recentActivityGoToTraceRequest, project);
                 }

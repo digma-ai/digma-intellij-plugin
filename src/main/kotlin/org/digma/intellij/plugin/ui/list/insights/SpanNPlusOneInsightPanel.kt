@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.list.insights
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBLabel
 import org.apache.commons.lang3.StringUtils
+import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.SpanNPlusOneInsight
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
@@ -33,7 +34,7 @@ private fun getButtonToJaeger(project: Project, insight: SpanNPlusOneInsight): J
     val spanName = insight.clientSpanName
     val sampleTraceId = insight.traceId
     val traceSample = spanName?.let { TraceSample(it, sampleTraceId) }
-    return spanName?.let { buildButtonToJaeger(project, "Trace", it, listOf(traceSample)) }
+    return spanName?.let { buildButtonToJaeger(project, "Trace", it, listOf(traceSample), InsightType.SpaNPlusOne) }
 }
 
 private fun spanNPlusOneInsightRowPanel(insight: SpanNPlusOneInsight): JPanel {

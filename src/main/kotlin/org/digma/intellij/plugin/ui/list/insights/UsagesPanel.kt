@@ -7,6 +7,7 @@ import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.WrapLayout
 import org.digma.intellij.plugin.editor.getCurrentPageNumberForInsight
 import org.digma.intellij.plugin.editor.updateListOfEntriesToDisplay
+import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.SpanFlow
 import org.digma.intellij.plugin.model.rest.insights.SpanUsagesInsight
 import org.digma.intellij.plugin.navigation.codeless.showInsightsForSpan
@@ -50,7 +51,7 @@ fun spanUsagesPanel(project: Project, insight: SpanUsagesInsight, moreData: Hash
                 spanName
             )
             rebuildPaginationPanel(paginationPanel, lastPageNum,
-                flows, topUsagePanel, flowsToDisplay, uniqueInsightId, RECORDS_PER_PAGE, project)
+                flows, topUsagePanel, flowsToDisplay, uniqueInsightId, RECORDS_PER_PAGE, project, insight.type)
         }
     }
 
@@ -66,7 +67,7 @@ fun spanUsagesPanel(project: Project, insight: SpanUsagesInsight, moreData: Hash
         bodyPanel = topUsagePanel,
         buttons = null,
         paginationComponent = buildPaginationRowPanel(lastPageNum, paginationPanel,
-            flows, topUsagePanel, flowsToDisplay, uniqueInsightId, RECORDS_PER_PAGE, project)
+            flows, topUsagePanel, flowsToDisplay, uniqueInsightId, RECORDS_PER_PAGE, project, insight.type)
     )
 }
 
@@ -132,7 +133,7 @@ fun getTopUsagePanel(project: Project, moreData: HashMap<String, Any>,
     }
     flowPanel.add(line, BorderLayout.CENTER)
 
-    val buttonToJaeger = buildButtonToJaeger(project, "Trace", spanName, listOf(traceSample))
+    val buttonToJaeger = buildButtonToJaeger(project, "Trace", spanName, listOf(traceSample), InsightType.SpanUsages)
     if (buttonToJaeger != null) {
         val wrapper = JPanel(BorderLayout())
         wrapper.isOpaque = false

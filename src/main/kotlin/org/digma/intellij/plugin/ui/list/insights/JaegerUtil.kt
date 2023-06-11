@@ -6,6 +6,7 @@ import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider
 import org.digma.intellij.plugin.jaegerui.JaegerUIService
+import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.settings.LinkMode
 import org.digma.intellij.plugin.settings.SettingsState
@@ -13,9 +14,11 @@ import org.digma.intellij.plugin.ui.list.ListItemActionButton
 import org.digma.intellij.plugin.ui.model.TraceSample
 import javax.swing.JButton
 
+const val traceButtonName: String = "show-in-jaeger"
+
 // if cannot create the button then would return null
 fun buildButtonToJaeger(
-        project: Project, linkCaption: String, spanName: String, traceSamples: List<TraceSample?>
+        project: Project, linkCaption: String, spanName: String, traceSamples: List<TraceSample?>, insightType: InsightType
 ): JButton? {
 
     val filteredTraces = traceSamples.filter { traceSample -> traceSample != null && traceSample.hasTraceId() }
@@ -27,7 +30,7 @@ fun buildButtonToJaeger(
     val button = ListItemActionButton(linkCaption)
     button.addActionListener{
 
-        ActivityMonitor.getInstance(project).registerInsightButtonClicked("show-in-jaeger")
+        ActivityMonitor.getInstance(project).registerInsightButtonClicked(traceButtonName, insightType)
 
         val settingsState = SettingsState.getInstance()
         val jaegerBaseUrl = settingsState.jaegerUrl?.trim()?.trimEnd('/')

@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.list.insights
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.util.ui.JBUI.Borders
+import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsight
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsightNamedError
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -41,7 +42,7 @@ fun errorsPanel(project: Project, modelObject: ErrorInsight): JPanel {
     val expandButton = ListItemActionButton("Expand")
     expandButton.addActionListener {
         project.getService(InsightsActionsService::class.java).showErrorsTab(modelObject)
-        ActivityMonitor.getInstance(project).registerInsightButtonClicked("expand-errors")
+        ActivityMonitor.getInstance(project).registerInsightButtonClicked("expand-errors", modelObject.type)
     }
 
     return createInsightPanel(

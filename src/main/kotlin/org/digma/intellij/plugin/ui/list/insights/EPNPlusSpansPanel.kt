@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.editor.getCurrentPageNumberForInsight
 import org.digma.intellij.plugin.editor.updateListOfEntriesToDisplay
+import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.EPNPlusSpansInsight
 import org.digma.intellij.plugin.model.rest.insights.HighlyOccurringSpanInfo
 import org.digma.intellij.plugin.ui.common.Laf
@@ -45,7 +46,7 @@ fun ePNPlusSpansPanel(
                     moreData
             )
             rebuildPaginationPanel(paginationPanel, lastPageNum,
-                    spansOfInsight, resultNPOnePanel, nPOneSpansToDisplay, uniqueInsightId, RECORDS_PER_PAGE_EPNPLUS, project)
+                    spansOfInsight, resultNPOnePanel, nPOneSpansToDisplay, uniqueInsightId, RECORDS_PER_PAGE_EPNPLUS, project, insight.type)
         }
     }
 
@@ -61,7 +62,7 @@ fun ePNPlusSpansPanel(
             bodyPanel = resultNPOnePanel,
             buttons = listOf(getButtonToJaeger(project, insight)),
             paginationComponent = buildPaginationRowPanel(lastPageNum, paginationPanel,
-                    spansOfInsight, resultNPOnePanel, nPOneSpansToDisplay, uniqueInsightId, RECORDS_PER_PAGE_EPNPLUS, project),
+                    spansOfInsight, resultNPOnePanel, nPOneSpansToDisplay, uniqueInsightId, RECORDS_PER_PAGE_EPNPLUS, project, insight.type),
     )
     result.toolTipText = asHtml("Repeating select query pattern suggests N-Plus-One")
     return result
@@ -168,5 +169,5 @@ private fun getButtonToJaeger(project: Project, insight: EPNPlusSpansInsight): J
     val spanName = insight.endpointSpanName()
     val sampleTraceId = insight.spans.first().traceId
     val traceSample = TraceSample(spanName, sampleTraceId)
-    return buildButtonToJaeger(project, "Trace", spanName, listOf(traceSample))
+    return buildButtonToJaeger(project, "Trace", spanName, listOf(traceSample), InsightType.EndpointSpaNPlusOne)
 }

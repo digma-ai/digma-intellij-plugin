@@ -9,10 +9,12 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider
+import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
 import org.digma.intellij.plugin.model.rest.insights.SpanInfo
 import org.digma.intellij.plugin.model.rest.insights.SpanInstanceInfo
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.toolwindow.recentactivity.RecentActivityService
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.getHex
@@ -64,7 +66,7 @@ fun spanDurationPanel(
         }
 
 
-    val buttonToGraph = buildButtonToPercentilesGraph(project, spanDurationsInsight.spanInfo)
+    val buttonToGraph = buildButtonToPercentilesGraph(project, spanDurationsInsight.spanInfo, spanDurationsInsight.type)
     val liveViewButton = buildLiveViewButton(project,spanDurationsInsight)
     //related to issue #621
     //val buttonToJaeger = buildButtonToJaeger(project, "Compare", spanDurationsInsight.spanInfo.name, traceSamples)
@@ -92,6 +94,7 @@ private fun buildLiveViewButton(project: Project, spanDurationsInsight: SpanDura
     liveViewButton.border = JBUI.Borders.customLine(borderColor,2.scaled())
     liveViewButton.addActionListener{
         try {
+            ActivityMonitor.getInstance( project).registerInsightButtonClicked("live", spanDurationsInsight.type)
             val idToUse = spanDurationsInsight.prefixedCodeObjectId
             idToUse?.let {
                 val durationLiveData = AnalyticsService.getInstance(project).getDurationLiveData(it)
@@ -105,10 +108,12 @@ private fun buildLiveViewButton(project: Project, spanDurationsInsight: SpanDura
 }
 
 
-private fun buildButtonToPercentilesGraph(project: Project, span: SpanInfo): JButton {
+private fun buildButtonToPercentilesGraph(project: Project, span: SpanInfo, insightType: InsightType): JButton {
     val analyticsService = AnalyticsService.getInstance(project)
     val button = ListItemActionButton("Histogram")
     button.addActionListener {
+        ActivityMonitor.getInstance(project).registerInsightButtonClicked("histogram", insightType)
+
         val htmlContent = analyticsService.getHtmlGraphForSpanPercentiles(span.instrumentationLibrary, span.name, Laf.Colors.PLUGIN_BACKGROUND.getHex())
         DigmaHTMLEditorProvider.openEditor(project, "Percentiles Graph of Span ${span.name}", htmlContent)
     }

@@ -185,11 +185,31 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
         )
     }
 
-    fun registerInsightButtonClicked(button: String) {
+    fun registerButtonClicked(button: String, source: Any ? = null) {
+        var properties:MutableMap<String, Any> = mutableMapOf()
+        properties["button"] = button;
+        if(source != null){
+            properties["source"] = source;
+        }
+
+        postHog?.capture(
+            userId,
+            "button-clicked",
+            properties
+        )
+    }
+
+    fun registerInsightButtonClicked(button: String, insight: Any) {
+        var properties:MutableMap<String, Any> = mutableMapOf()
+        properties["button"] = button;
+        if(insight != null){
+            properties["source"] = insight;
+        }
+
         postHog?.capture(
             userId,
             "insights button-clicked",
-            mapOf("button" to button)
+            properties
         )
     }
 

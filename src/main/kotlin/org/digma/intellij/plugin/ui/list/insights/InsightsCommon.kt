@@ -165,7 +165,8 @@ private fun rebuildPanel(
                     customStartTime = insight.customStartTime,
                     actualStartTime = insight.actualStartTime,
                     isRecalculateButtonPressed = isRecalculateButtonPressed,
-                    project = project
+                    project = project,
+                insight.type
             ))
 
         if (bodyPanel != null)
@@ -194,7 +195,8 @@ private fun getTimeInfoMessagePanel(
         customStartTime: Date?,
         actualStartTime: Date?,
         isRecalculateButtonPressed: Boolean,
-        project: Project
+        project: Project,
+        insightType: InsightType
 ): JPanel {
     val formattedActualStartTime = actualStartTime?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalDateTime()
     val diff: Duration = Duration.between(formattedActualStartTime, LocalDateTime.now())
@@ -217,7 +219,7 @@ private fun getTimeInfoMessagePanel(
     val timeInfoMessageLabelPanel = getDefaultSpanOneRecordPanel()
     timeInfoMessageLabelPanel.add(timeInfoMessageLabel, BorderLayout.NORTH)
     if (shouldShowApplyNewTimeFilterLabel(isRecalculateButtonPressed, identicalStartTimes)) {
-        timeInfoMessageLabelPanel.add(getRefreshInsightButton(project), BorderLayout.SOUTH)
+        timeInfoMessageLabelPanel.add(getRefreshInsightButton(project,insightType), BorderLayout.SOUTH)
     }
     return timeInfoMessageLabelPanel
 }
@@ -332,7 +334,7 @@ private fun showHintMessage(
     recalculateAction.addActionListener {
         analyticsService.setInsightCustomStartTime(codeObjectId, insightType)
         rebuildInsightPanel(insightPanel)
-        ActivityMonitor.getInstance(project).registerInsightButtonClicked("recalculate")
+        ActivityMonitor.getInstance(project).registerInsightButtonClicked("recalculate", insightType)
     }
     recalculateAction.border = HintUtil.createHintBorder()
     recalculateAction.background = HintUtil.getInformationColor()
@@ -340,12 +342,12 @@ private fun showHintMessage(
     HintManager.getInstance().showHint(recalculateAction, RelativePoint.getSouthWestOf(threeDotsIcon), HintManager.HIDE_BY_ESCAPE, 2000)
 }
 
-private fun getRefreshInsightButton(project: Project): ActionLink {
+private fun getRefreshInsightButton(project: Project, insightType: InsightType): ActionLink {
     val refreshAction = ActionLink(REFRESH)
     refreshAction.addActionListener {
         val refreshService: RefreshService = project.getService(RefreshService::class.java)
         refreshService.refreshAllInBackground()
-        ActivityMonitor.getInstance(project).registerInsightButtonClicked("refresh")
+        ActivityMonitor.getInstance(project).registerInsightButtonClicked("refresh", insightType)
     }
     refreshAction.border = empty()
     refreshAction.isOpaque = false
@@ -424,7 +426,7 @@ fun noObservabilityInsightPanel(project: Project, insight: NoObservability): JPa
 
     val addAnnotationButton = ListItemActionButton("Add Annotation")
     addAnnotationButton.addActionListener {
-        ActivityMonitor.getInstance(project).registerInsightButtonClicked("add-annotation")
+        ActivityMonitor.getInstance(project).registerInsightButtonClicked("add-annotation", "NoObservability")
         val succeeded = model.instrumentMethod()
         if (succeeded) {
             addAnnotationButton.isEnabled = false

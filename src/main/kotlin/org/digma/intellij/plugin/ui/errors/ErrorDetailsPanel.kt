@@ -232,8 +232,7 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
 
 }
 
-
-
+const val errorDetailsViewName = "error-details"
 fun bottomPanel(project: Project,errorsModel: ErrorsModel, framesList: ScrollablePanelList): JPanel {
 
     return panel {
@@ -248,7 +247,7 @@ fun bottomPanel(project: Project,errorsModel: ErrorsModel, framesList: Scrollabl
                         errorsModel.errorDetails.flowStacks.isWorkspaceOnly = isSelected
                         PersistenceService.getInstance().state.isWorkspaceOnly = isSelected
                         framesList.getModel().setListData(errorsModel.errorDetails.flowStacks.getCurrentStack())
-                        ActivityMonitor.getInstance(project).registerInsightButtonClicked("error-frame-workspace-only")
+                        ActivityMonitor.getInstance(project).registerButtonClicked("error-frame-workspace-only", errorDetailsViewName)
                     }
                 }
 
@@ -257,7 +256,7 @@ fun bottomPanel(project: Project,errorsModel: ErrorsModel, framesList: Scrollabl
                 val currentStack = errorsModel.errorDetails.flowStacks.current
                 val stackTrace = errorsModel.errorDetails.delegate?.errors?.get(currentStack)?.stackTrace
                 actionListener.openRawStackTrace(stackTrace)
-                ActivityMonitor.getInstance(project).registerInsightButtonClicked("open-raw-trace")
+                ActivityMonitor.getInstance(project).registerButtonClicked("open-raw-trace",errorDetailsViewName)
             }.horizontalAlign(HorizontalAlign.RIGHT).gap(RightGap.SMALL)
 
 
@@ -291,7 +290,7 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
         val currentStack = errorsModel.errorDetails.flowStacks.current.plus(1)
         currentLabel.text = "${currentStack}/${stackSize} Flow Stacks"
         framesList.getModel().setListData(errorsModel.errorDetails.flowStacks.getCurrentStack())
-        ActivityMonitor.getInstance(project).registerInsightButtonClicked("error-previous-flow")
+        ActivityMonitor.getInstance(project).registerButtonClicked("error-previous-flow",errorDetailsViewName)
     }
 
     val forwardButton = IconButton(Laf.Icons.ErrorDetails.FORWARD)
@@ -303,7 +302,7 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
         val currentStack = errorsModel.errorDetails.flowStacks.current.plus(1)
         currentLabel.text = "${currentStack}/${stackSize} Flow Stacks"
         framesList.getModel().setListData(errorsModel.errorDetails.flowStacks.getCurrentStack())
-        ActivityMonitor.getInstance(project).registerInsightButtonClicked("error-next-flow")
+        ActivityMonitor.getInstance(project).registerButtonClicked("error-next-flow",errorDetailsViewName)
     }
 
     val panel = JTransparentPanel()

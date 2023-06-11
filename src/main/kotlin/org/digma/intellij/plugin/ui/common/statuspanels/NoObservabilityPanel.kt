@@ -1,8 +1,12 @@
 package org.digma.intellij.plugin.ui.common.statuspanels
 
+import com.intellij.openapi.application.ModalityState
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBScrollPane
+import com.intellij.util.RunnableCallable
+import com.intellij.util.concurrency.NonUrgentExecutor
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.JBUI.emptyInsets
 import org.digma.intellij.plugin.notifications.NotificationUtil
@@ -91,14 +95,17 @@ fun createNoObservabilityPanel(project: Project, insightsModel: InsightsModel): 
         override fun reset() {
             val methodScope = insightsModel.scope as? MethodScope
             methodScope?.let {
-                model.update(methodScope.getMethodInfo().id)
-                if (model.canInstrumentMethod) {
-                    addAnnotationButton.isEnabled = true
-                    autoFixPanel.isVisible = false
-                } else {
-                    addAnnotationButton.isEnabled = false
-                    autoFixPanel.isVisible = model.cannotBecauseMissingDependency
-                }
+                ReadAction.nonBlocking(RunnableCallable {
+                    model.update(methodScope.getMethodInfo().id)
+                }).inSmartMode(project).withDocumentsCommitted(project).finishOnUiThread(ModalityState.stateForComponent(componentsPanel)){
+                    if (model.canInstrumentMethod) {
+                        addAnnotationButton.isEnabled = true
+                        autoFixPanel.isVisible = false
+                    } else {
+                        addAnnotationButton.isEnabled = false
+                        autoFixPanel.isVisible = model.cannotBecauseMissingDependency
+                    }
+                }.submit(NonUrgentExecutor.getInstance())
             }
         }
     }

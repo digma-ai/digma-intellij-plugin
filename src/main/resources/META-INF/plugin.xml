@@ -117,6 +117,7 @@
 
         <postStartupActivity implementation="org.digma.intellij.plugin.common.DumbAwareStartupActivity"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.common.RunOnceStartupActivity"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.toolwindow.recentactivity.RecentActivityStartupActivity"/>
 
 
         <!-- Code lens providers are used only for some languages, for example java,python.

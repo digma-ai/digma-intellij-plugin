@@ -7,13 +7,15 @@ import java.awt.Font
 import java.awt.Rectangle
 import javax.swing.JTextPane
 
+//todo: JBLabel could be a better alternative with setCopyable(true) and isAllowAutoWrapping = true,
+// but i couldn't make tooltip work with JBLabel
+
 open class BaseCopyableLabel(val myText: String) : JTextPane() {
 
     protected fun construct(myText: String, foregroundColor: Color) {
         isEditable = false
         isOpaque = false
         background = null
-        border = null
         putClientProperty(HONOR_DISPLAY_PROPERTIES, true)
         font = DEFAULT_FONT
         text = myText

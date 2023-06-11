@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.TabsChanged
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.errors.errorsPanel
 import org.digma.intellij.plugin.ui.insights.insightsPanel
@@ -129,6 +130,9 @@ class TabsPanel(
                 tabbedPane.setTitleAt(1, TabsHelper.DEFAULT_ERRORS_TAB_NAME)
             }
 
+            ActivityMonitor.getInstance(project).registerCustomEvent("tabs selection-changed",  mapOf(
+                "tab.name" to tabbedPane.getTitleAt(currentTabIndex)
+            ))
             // Do something with the tab indexes, such as update UI or perform logic
             tabsHelper.currentTabIndex = currentTabIndex
         }

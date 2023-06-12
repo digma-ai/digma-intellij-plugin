@@ -200,7 +200,6 @@ tasks {
 
     runIde {
         dependsOn(deleteLog)
-        dependsOn(prepareSandbox)
 
         maxHeapSize = "2g"
         // Rider's backend doesn't support dynamic plugins. It might be possible to work with auto-reload of the frontend

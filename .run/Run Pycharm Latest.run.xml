@@ -5,7 +5,7 @@
       <option name="executionName" />
       <option name="externalProjectPath" value="$PROJECT_DIR$" />
       <option name="externalSystemIdString" value="GRADLE" />
-      <option name="scriptParameters" value="-PplatformType=PC -PplatformPlugins= -PuseLatestVersion=true" />
+      <option name="scriptParameters" value="-PbuildWithPycharm=true -PplatformPlugins= -PuseLatestVersion=true" />
       <option name="taskDescriptions">
         <list />
       </option>

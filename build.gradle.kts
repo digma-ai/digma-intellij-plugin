@@ -1,3 +1,4 @@
+import common.dynamicPlatformType
 import common.platformVersion
 import common.properties
 import org.jetbrains.changelog.date
@@ -61,6 +62,14 @@ dependencies{
         "path" to ":rider",
         "configuration" to "riderDotNetObjects")))
 }
+
+//the platformType is determined dynamically depending on some flags.
+//it enables launching different IDEs with different versions and still let the other modules
+//compile correctly. most modules always compile with the same platform type.
+//it is only necessary for launcher, so when launching rider the platform type for this project and ide-common
+// should be RD but not for the other projects like java,python.
+val platformType by extra(dynamicPlatformType(project))
+
 
 // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
 intellij {

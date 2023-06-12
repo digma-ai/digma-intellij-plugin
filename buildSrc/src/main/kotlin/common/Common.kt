@@ -4,6 +4,25 @@ import org.gradle.api.Project
 
 fun properties(key: String,project: Project) = project.findProperty(key).toString()
 
+
+fun dynamicPlatformType(project: Project):String{
+
+    if (project.findProperty("buildWithRider") == "true"){
+        return "RD"
+    }else if (project.findProperty("buildWIthUltimate") == "true"){
+        return "IU"
+    }else if (project.findProperty("buildWithPycharm") == "true"){
+        return "PC"
+    }else if (project.findProperty("buildWithPycharmPro") == "true"){
+        return "PY"
+    }else{
+        return "IC"
+    }
+
+
+}
+
+
 fun platformVersion(project: Project):String{
 
     val platformType = properties("platformType",project)

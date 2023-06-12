@@ -13,6 +13,10 @@ dependencies{
     testImplementation(project(":model"))
 }
 
+//python module should always build with IC
+val platformType by extra("IC")
+
+
 intellij {
 
     //there is no source code for pycharm or python plugin

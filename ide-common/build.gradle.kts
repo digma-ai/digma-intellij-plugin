@@ -1,3 +1,4 @@
+import common.dynamicPlatformType
 import common.platformVersion
 
 plugins {
@@ -5,8 +6,13 @@ plugins {
     id("common-kotlin")
 }
 
+//ide-common module should build with different platform types, if running rider with runIde it should
+// build with RD, if running idea it should build with IC, etc.
+val platformType by extra(dynamicPlatformType(project))
+
+
 intellij {
-    version.set("IC-" + platformVersion(project))
+    version.set(platformType + "-" + platformVersion(project))
     plugins.set(listOf("Git4Idea"))
 }
 
@@ -18,6 +24,7 @@ dependencies {
     api(libs.commons.lang3)
     api(libs.commons.collections4)
     api(libs.posthog)
+    api(libs.maven.artifact)
 
     implementation(project(":model"))
     implementation(project(":analytics-provider"))

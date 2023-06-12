@@ -5,7 +5,7 @@
       <option name="executionName" />
       <option name="externalProjectPath" value="$PROJECT_DIR$" />
       <option name="externalSystemIdString" value="GRADLE" />
-      <option name="scriptParameters" value="-PplatformType=PY -PplatformPlugins=" />
+      <option name="scriptParameters" value="-PbuildWithPycharmPro=true -PplatformPlugins=" />
       <option name="taskDescriptions">
         <list />
       </option>

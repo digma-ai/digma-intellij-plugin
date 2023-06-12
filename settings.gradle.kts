@@ -65,10 +65,10 @@ dependencyResolutionManagement {
             library("freemarker", "org.freemarker", "freemarker").version("2.3.30")
             library("posthog", "com.posthog.java", "posthog").version("1.1.0")
             library("google-gson", "com.google.code.gson", "gson").version("2.10.1")
+            library("maven-artifact", "org.apache.maven", "maven-artifact").version("3.9.2")
         }
     }
 }
-
 
 rootProject.name = "digma-intellij-plugin"
 include("rider:protocol")

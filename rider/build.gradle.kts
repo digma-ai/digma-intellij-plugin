@@ -26,6 +26,8 @@ dependencies {
 
 
 
+//rider module should always build with RD
+val platformType by extra("RD")
 
 
 intellij {
@@ -95,8 +97,8 @@ tasks {
             }else if (project.findProperty("useEAPVersion") == "true"){
                 //todo: currently rider EAP fails in rdgen , don't use EAP yet , use current version
                 // so we can compile the other modules
-//        "232.6734.9-EAP-SNAPSHOT"
-                "2023.2.0-eap03"
+//                "2023.2.0-eap04"
+                "2023.1.0" //temp, eap doesn't compile
             }else{
                 "2023.1.0"
             }

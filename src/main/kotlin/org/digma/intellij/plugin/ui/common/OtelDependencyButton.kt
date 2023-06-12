@@ -11,6 +11,7 @@ import com.intellij.util.RunnableCallable
 import com.intellij.util.concurrency.NonUrgentExecutor
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.time.Instant
+import javax.swing.JLabel
 
 class OtelDependencyButton(text: String, val project: Project, val theModel: MethodInstrumentationPresenter) :
     ActionLink(text, null) {
@@ -29,24 +30,29 @@ class OtelDependencyButton(text: String, val project: Project, val theModel: Met
         const val WAIT_FOR_DEPENDENCY_INTERVAL_MILLIS: Long = 250
     }
 
-    fun defineTheAction(panelToReset: DigmaResettablePanel?) {
+    fun defineTheAction(panelToReset: DigmaResettablePanel?, labelOfWorking: JLabel) {
 
-        val actionDef = {
+        val actionDef: () -> Unit = {
+            this.isEnabled = false
+            labelOfWorking.isVisible = true
+
             WriteAction.run<Exception> {
                 theModel.addDependencyToOtelLibAndRefresh()
             }
 
-            if (panelToReset != null) {
-                ReadAction.nonBlocking(RunnableCallable {
-                    waitForOtelDependencyToBeAvailable()
+            ReadAction.nonBlocking(RunnableCallable {
+                waitForOtelDependencyToBeAvailable()
+            })
+                .inSmartMode(project)
+                .withDocumentsCommitted(project)
+                .finishOnUiThread(ModalityState.defaultModalityState(), {
+                    this.isEnabled = true
+                    labelOfWorking.isVisible = false
+
+                    panelToReset?.reset()
                 })
-                    .inSmartMode(project)
-                    .withDocumentsCommitted(project)
-                    .finishOnUiThread(ModalityState.defaultModalityState(), {
-                        panelToReset.reset()
-                    })
-                    .submit(NonUrgentExecutor.getInstance())
-            }
+                .submit(NonUrgentExecutor.getInstance())
+
         }
 
         addActionListener {

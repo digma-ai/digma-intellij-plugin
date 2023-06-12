@@ -424,6 +424,11 @@ fun noObservabilityInsightPanel(project: Project, insight: NoObservability): JPa
     val autoFixLink = OtelDependencyButton("Autofix", project, model)
     body.add(autoFixLink, BorderLayout.EAST)
 
+    val workingOnItLabel = JLabel(asHtml(Text.NO_OBSERVABILITY_WORKING_ON_IT_DESCRIPTION))
+    workingOnItLabel.isVisible = false
+    workingOnItLabel.border = JBUI.Borders.emptyTop(10)
+    body.add(workingOnItLabel, BorderLayout.SOUTH)
+
     val addAnnotationButton = ListItemActionButton("Add Annotation")
     addAnnotationButton.addActionListener {
         ActivityMonitor.getInstance(project).registerInsightButtonClicked("add-annotation", "NoObservability")
@@ -443,7 +448,7 @@ fun noObservabilityInsightPanel(project: Project, insight: NoObservability): JPa
         body.isVisible = model.cannotBecauseMissingDependency
     }
 
-    autoFixLink.defineTheAction(null)
+    autoFixLink.defineTheAction(null, workingOnItLabel)
 
     return createInsightPanel(
         project = project,

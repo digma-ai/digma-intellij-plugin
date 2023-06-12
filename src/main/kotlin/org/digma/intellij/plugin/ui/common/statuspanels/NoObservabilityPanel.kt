@@ -73,6 +73,11 @@ fun createNoObservabilityPanel(project: Project, insightsModel: InsightsModel): 
     val autoFixLink = OtelDependencyButton("Autofix", project, model)
     autoFixPanel.add(autoFixLink, BorderLayout.EAST)
 
+    val workingOnItLabel = JLabel(asHtml(Text.NO_OBSERVABILITY_WORKING_ON_IT_DESCRIPTION))
+    workingOnItLabel.isVisible = false
+    workingOnItLabel.border = JBUI.Borders.emptyTop(10)
+    autoFixPanel.add(workingOnItLabel, BorderLayout.SOUTH)
+
     componentsPanel.add(autoFixPanel, constraints)
 
     constraints.gridy = 5
@@ -97,7 +102,7 @@ fun createNoObservabilityPanel(project: Project, insightsModel: InsightsModel): 
             methodScope?.let {
                 ReadAction.nonBlocking(RunnableCallable {
                     model.update(methodScope.getMethodInfo().id)
-                }).inSmartMode(project).withDocumentsCommitted(project).finishOnUiThread(ModalityState.stateForComponent(componentsPanel)){
+                }).inSmartMode(project).withDocumentsCommitted(project).finishOnUiThread(ModalityState.stateForComponent(componentsPanel)) {
                     if (model.canInstrumentMethod) {
                         addAnnotationButton.isEnabled = true
                         autoFixPanel.isVisible = false
@@ -118,7 +123,7 @@ fun createNoObservabilityPanel(project: Project, insightsModel: InsightsModel): 
     resettablePanel.layout = BorderLayout()
     resettablePanel.add(scrollPane, BorderLayout.CENTER)
 
-    autoFixLink.defineTheAction(resettablePanel)
+    autoFixLink.defineTheAction(resettablePanel, workingOnItLabel)
 
     return resettablePanel
 }

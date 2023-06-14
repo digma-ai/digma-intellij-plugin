@@ -18,14 +18,15 @@ import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
+import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Cursor
 import java.awt.Dimension
+import java.awt.FlowLayout
 import java.util.concurrent.locks.ReentrantLock
-import javax.swing.Box
-import javax.swing.BoxLayout
 import javax.swing.JButton
 import javax.swing.JComponent
+import javax.swing.JPanel
 
 private const val REFRESH_ALL_INSIGHTS_AND_ERRORS = "Refresh"
 
@@ -54,7 +55,7 @@ class ScopeLineResultPanel(
         this.refreshService = project.getService(RefreshService::class.java)
         this.project = project
         this.model = model
-        this.layout = BoxLayout(this, BoxLayout.LINE_AXIS)
+        this.layout = BorderLayout()
         this.border = JBUI.Borders.emptyLeft(5)
         this.background = Laf.Colors.EDITOR_BACKGROUND
         this.isOpaque = true
@@ -128,12 +129,15 @@ class ScopeLineResultPanel(
             scopeLine!!.isOpaque = false
             scopeLine!!.border = JBUI.Borders.empty(2, 4)
         }
-        this.add(scopeLine)
-        this.add(Box.createHorizontalGlue())
-        this.add(getCodeLocationButton(project))
-        this.add(Box.createHorizontalGlue())
-        this.add(Box.createHorizontalStrut(5))
-        this.add(getGeneralRefreshButton(project))
+        this.add(scopeLine,BorderLayout.CENTER)
+
+        val buttonsPanel = JPanel(FlowLayout(FlowLayout.LEADING,5,5))
+        buttonsPanel.isOpaque = false
+        buttonsPanel.border = JBUI.Borders.empty()
+        buttonsPanel.add(getCodeLocationButton(project))
+        buttonsPanel.add(getGeneralRefreshButton(project))
+
+        this.add(buttonsPanel,BorderLayout.EAST)
     }
 
     private fun getCodeLocationButton(project: Project): JButton {

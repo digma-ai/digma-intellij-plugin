@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.openapi.project.Project
-import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.WrapLayout
@@ -24,7 +23,11 @@ fun endpointBreakdownPanel(
     insight: EndpointBreakdownInsight,
 ): JPanel {
 
-    val colorPoolForUnknownTypes = mutableListOf<Color>(JBColor.PINK, JBColor.GREEN, JBColor.RED, JBColor.CYAN, JBColor.MAGENTA)
+    val colorPoolForUnknownTypes = mutableListOf<Color>(
+        Color.decode("0x5378b4")/*blue*/,
+        Color.decode("0x8da760")/*green*/,
+        Color.decode("0xb9914e")/*orange*/,
+        Color.decode("0x9e4747")/*red*/)
 
     val listPanel = JBPanel<JBPanel<*>>(WrapLayout(FlowLayout.LEFT, 10, 0))
     listPanel.isOpaque = false
@@ -74,10 +77,10 @@ fun endpointBreakdownPanel(
 
 fun getColorForKnownType(component: EndpointBreakdownComponent): Color? {
     return when (component.type) {
-        "Internal" -> Color.decode("0xCBCB41")
-        "DB Queries" -> Color.decode("0xF55385")
-        "HTTP Clients" -> Color.decode("0x519ABA")
-        "Rendering" -> Color.decode("0xE37933")
+        "Internal" -> Color.decode("0x53AEB4")
+        "DB Queries" -> Color.decode("0xB180D7")
+        "HTTP Clients" -> Color.decode("0x75BEFF")
+        "Rendering" -> Color.decode("0xF55385")
         else -> null
     }
 }

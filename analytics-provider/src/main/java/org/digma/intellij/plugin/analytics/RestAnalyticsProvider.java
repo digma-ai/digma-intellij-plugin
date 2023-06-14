@@ -98,8 +98,6 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         return execute(() -> client.analyticsProvider.getInsightsForSingleSpan(insightsOfSingleSpanRequest));
     }
 
-
-
     @Override
     public List<GlobalInsight> getGlobalInsights(InsightsRequest insightsRequest) {
         return execute(() -> client.analyticsProvider.getGlobalInsights(insightsRequest));

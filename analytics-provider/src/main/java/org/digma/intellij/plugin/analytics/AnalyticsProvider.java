@@ -42,6 +42,7 @@ public interface AnalyticsProvider extends Closeable {
     List<CodeObjectInsight> getInsights(InsightsRequest insightsRequest);
 
     InsightsOfMethodsResponse getInsightsOfMethods(InsightsOfMethodsRequest insightsOfMethodsRequest);
+
     InsightsOfSingleSpanResponse getInsightsForSingleSpan(InsightsOfSingleSpanRequest insightsOfSingleSpanRequest);
 
     List<GlobalInsight> getGlobalInsights(InsightsRequest insightsRequest);

@@ -37,7 +37,4 @@ public class GroupListViewItemBuilder<T extends CodeObjectInsight> implements Li
 
         return List.of();
     }
-
-
-
 }

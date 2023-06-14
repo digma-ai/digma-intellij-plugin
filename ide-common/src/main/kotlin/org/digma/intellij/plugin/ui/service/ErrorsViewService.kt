@@ -69,7 +69,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         model.listViewItems = errorsListContainer?.listViewItems ?: listOf()
         model.previewListViewItems = ArrayList()
         model.usageStatusResult = errorsListContainer?.usageStatus ?: EmptyUsageStatusResult
-        model.scope = CodeLessSpanScope(codeLessSpan, null)
+        model.scope = CodeLessSpanScope(codeLessSpan, codelessSpanErrorsContainer?.insightsResponse?.spanInfo)
         model.card = ErrorsTabCard.ERRORS_LIST
         model.errorsCount = errorsListContainer?.count ?: 0
 

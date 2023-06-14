@@ -254,9 +254,7 @@ public class AnalyticsService implements Disposable {
     public InsightsOfSingleSpanResponse getInsightsForSingleSpan(String spanId) throws AnalyticsServiceException{
         var env = getCurrentEnvironment();
         Log.log(LOGGER::debug, "Requesting insights for span {}", spanId);
-        InsightsOfSingleSpanResponse insightsOfSingleSpanResponse =
-                executeCatching(() -> analyticsProviderProxy.getInsightsForSingleSpan(new InsightsOfSingleSpanRequest(env, spanId)));
-        return insightsOfSingleSpanResponse;
+        return executeCatching(() -> analyticsProviderProxy.getInsightsForSingleSpan(new InsightsOfSingleSpanRequest(env, spanId)));
     }
 
 

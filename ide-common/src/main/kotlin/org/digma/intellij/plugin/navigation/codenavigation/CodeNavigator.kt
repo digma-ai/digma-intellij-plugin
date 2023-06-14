@@ -62,6 +62,7 @@ class CodeNavigator(val project: Project) {
 
     }
 
+    //todo: change to navigateToMethod in languageService. need to implement a tryNavigateToMethod
     private fun maybeNavigateToMethod(methodId: String?): Boolean {
         if (methodId == null) {
             return false

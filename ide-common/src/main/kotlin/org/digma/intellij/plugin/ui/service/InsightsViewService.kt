@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.ui.service
 
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
@@ -67,9 +66,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
 
         Log.log(logger::debug, "updateInsightsModel to {}. ", codeLessSpan)
 
-        //todo: remove read action after removing all the findWorkspaceUri.. methods
-        val codelessSpanInsightsContainer: CodelessSpanInsightsContainer? =
-            ReadAction.compute<CodelessSpanInsightsContainer,Exception> { codeLessInsightsProvider.getInsights() }
+        val codelessSpanInsightsContainer: CodelessSpanInsightsContainer? = codeLessInsightsProvider.getInsights()
 
         val insightsContainer:InsightsListContainer? = codelessSpanInsightsContainer?.insightsContainer
 

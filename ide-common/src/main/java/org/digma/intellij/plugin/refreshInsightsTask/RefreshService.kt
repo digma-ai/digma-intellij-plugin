@@ -15,6 +15,7 @@ import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
+import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
 import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.service.ErrorsViewService
 import org.digma.intellij.plugin.ui.service.InsightsViewService
@@ -57,6 +58,12 @@ class RefreshService(private val project: Project) {
 
             Log.log(logger::debug, "testConnectionToBackend was triggered")
             BackendConnectionUtil.getInstance(project).testConnectionToBackend()
+
+            if (scope is CodeLessSpanScope){
+                val codelessSpan = scope.getSpan()
+                insightsViewService.updateInsightsModel(codelessSpan)
+                errorsViewService.updateErrorsModel(codelessSpan)
+            }
         }
     }
 
@@ -82,6 +89,11 @@ class RefreshService(private val project: Project) {
                         updateInsightsCacheForActiveDocumentAndRefreshViewIfNeeded(selectedTextEditor, documentInfoContainer, scope)
                     } else {
                         updateInsightsCacheForActiveDocument(selectedTextEditor, documentInfoContainer)
+                        if (scope is CodeLessSpanScope){
+                            val codelessSpan = scope.getSpan()
+                            insightsViewService.updateInsightsModel(codelessSpan)
+                            errorsViewService.updateErrorsModel(codelessSpan)
+                        }
                     }
                 } finally {
                     refreshInsightsTaskScheduledLock.unlock()

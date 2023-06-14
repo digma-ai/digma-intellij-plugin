@@ -71,7 +71,7 @@ public class InsightsViewBuilder extends ListViewBuilder {
         Set<String> spansThatHaveInsights = codeObjectInsights.stream()
                 .filter(it -> it instanceof SpanInsight)
                 .map(it -> (SpanInsight) it)
-                .map(SpanInsight::spanName)// span name without instrumentation library
+                .map(SpanInsight::getSpanDisplayName)// span name without instrumentation library
                 .collect(Collectors.toSet());
 
         // spansOfMethod minus spansThatHaveInsights

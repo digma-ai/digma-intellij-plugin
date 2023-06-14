@@ -3,7 +3,15 @@ package org.digma.intellij.plugin.insights.view;
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.document.CodeObjectsUtil;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
-import org.digma.intellij.plugin.model.rest.insights.*;
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
+import org.digma.intellij.plugin.model.rest.insights.EPNPlusSpansInsight;
+import org.digma.intellij.plugin.model.rest.insights.EndpointDurationSlowdownInsight;
+import org.digma.intellij.plugin.model.rest.insights.SlowestSpansInsight;
+import org.digma.intellij.plugin.model.rest.insights.SpanDurationBreakdownInsight;
+import org.digma.intellij.plugin.model.rest.insights.SpanFlow;
+import org.digma.intellij.plugin.model.rest.insights.SpanScalingInsight;
+import org.digma.intellij.plugin.model.rest.insights.SpanSlowEndpointsInsight;
+import org.digma.intellij.plugin.model.rest.insights.SpanUsagesInsight;
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupListViewItem;
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupType;
 import org.digma.intellij.plugin.ui.model.insights.InsightListViewItem;
@@ -15,7 +23,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -39,38 +46,6 @@ public class GroupListViewItemBuilder<T extends CodeObjectInsight> implements Li
                 groupManager.getOrCreateGroup(groupId, () -> new InsightGroupListViewItem(groupId, insightGroupType, route));
 
         final var theListView = new InsightListViewItem<>(insight);
-
-        switch (insight.getType()){
-            case SlowestSpans:{
-                WorkspaceUrisHelper.findWorkspaceUrisForSpans(project, theListView, getSpanIds((SlowestSpansInsight) insight), methodInfo);
-                break;
-            }
-            case SpanDurationBreakdown:{
-                WorkspaceUrisHelper.findWorkspaceUrisForSpans(project, theListView, getSpanIds((SpanDurationBreakdownInsight) insight), methodInfo);
-                break;
-            }
-            case EndpointSpaNPlusOne:{
-                WorkspaceUrisHelper.findWorkspaceUrisForSpans(project, theListView, getSpanIds((EPNPlusSpansInsight) insight), methodInfo);
-                break;
-            }
-            case EndpointDurationSlowdown:{
-                WorkspaceUrisHelper.findWorkspaceUrisForSpans(project, theListView, getSpanIds((EndpointDurationSlowdownInsight) insight), methodInfo);
-                break;
-            }
-            case SpanScaling:{
-                WorkspaceUrisHelper.findWorkspaceUrisForSpans(project,theListView, getSpanIds((SpanScalingInsight) insight), methodInfo);
-                WorkspaceUrisHelper.findWorkspaceUrisForMethodCodeObjectIds(project, theListView, getCodeObjectIds((SpanScalingInsight) insight), methodInfo);
-                break;
-            }
-            case SpanEndpointBottleneck: {
-                WorkspaceUrisHelper.findWorkspaceUrisForMethodCodeObjectIds(project, theListView, getCodeObjectIds((SpanSlowEndpointsInsight) insight), methodInfo);
-                break;
-            }
-            case SpanUsages: {
-                WorkspaceUrisHelper.findWorkspaceUrisForMethodCodeObjectIds(project, theListView, getCodeObjectIds((SpanUsagesInsight) insight), methodInfo);
-                break;
-            }
-        }
 
         theGroup.addItem(theListView);
 

@@ -4,28 +4,31 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
 import org.apache.commons.lang3.StringUtils
-import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.editor.getCurrentPageNumberForInsight
 import org.digma.intellij.plugin.editor.updateListOfEntriesToDisplay
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.EPNPlusSpansInsight
 import org.digma.intellij.plugin.model.rest.insights.HighlyOccurringSpanInfo
+import org.digma.intellij.plugin.navigation.codeless.showInsightsForSpan
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.spanBold
-import org.digma.intellij.plugin.ui.list.openWorkspaceFileForSpan
 import org.digma.intellij.plugin.ui.model.TraceSample
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.BorderLayout
 import java.math.RoundingMode
-import javax.swing.*
+import javax.swing.Box
+import javax.swing.BoxLayout
+import javax.swing.JButton
+import javax.swing.JLabel
+import javax.swing.JPanel
+import javax.swing.SwingConstants
 
 private const val RECORDS_PER_PAGE_EPNPLUS = 3
 
 fun ePNPlusSpansPanel(
         project: Project,
-        insight: EPNPlusSpansInsight,
-        moreData: HashMap<String, Any>
+        insight: EPNPlusSpansInsight
 ): JPanel {
 
     val uniqueInsightId = insight.codeObjectId + insight.type
@@ -42,8 +45,7 @@ fun ePNPlusSpansPanel(
             rebuildENPlusInsightRowsPanel(
                     resultNPOnePanel!!,
                     nPOneSpansToDisplay,
-                    project,
-                    moreData
+                    project
             )
             rebuildPaginationPanel(paginationPanel, lastPageNum,
                     spansOfInsight, resultNPOnePanel, nPOneSpansToDisplay, uniqueInsightId, RECORDS_PER_PAGE_EPNPLUS, project, insight.type)
@@ -51,7 +53,7 @@ fun ePNPlusSpansPanel(
     }
 
     updateListOfEntriesToDisplay(spansOfInsight, nPOneSpansToDisplay, getCurrentPageNumberForInsight(uniqueInsightId, lastPageNum), RECORDS_PER_PAGE_EPNPLUS, project)
-    buildENPlusInsightRowsPanel(resultNPOnePanel, nPOneSpansToDisplay, project, moreData)
+    buildENPlusInsightRowsPanel(resultNPOnePanel, nPOneSpansToDisplay, project)
 
     val result = createInsightPanel(
             project = project,
@@ -68,13 +70,13 @@ fun ePNPlusSpansPanel(
     return result
 }
 
-private fun getMainDescriptionPanel(span: HighlyOccurringSpanInfo, project: Project, moreData: HashMap<String, Any>): JPanel {
+private fun getMainDescriptionPanel(span: HighlyOccurringSpanInfo, project: Project): JPanel {
     val spanOneRecordPanel = getDefaultSpanOneRecordPanel()
     val displayText: String?
     if (span.internalSpan != null) {
-        val spanId = CodeObjectsUtil.createSpanId(span.internalSpan!!.instrumentationLibrary, span.internalSpan!!.name)
+        val spanId = span.internalSpan!!.spanCodeObjectId
         displayText = span.internalSpan?.displayName
-        addMainDescriptionLabelWithLink(spanOneRecordPanel, displayText, spanId, project, moreData)
+        addMainDescriptionLabelWithLink(spanOneRecordPanel, displayText, spanId, project)
     } else {
         displayText = span.clientSpan?.displayName
         if (StringUtils.isNotEmpty(displayText)) {
@@ -88,22 +90,15 @@ private fun getMainDescriptionPanel(span: HighlyOccurringSpanInfo, project: Proj
     return spanOneRecordPanel
 }
 
-private fun addMainDescriptionLabelWithLink(spanOneRecordPanel: JPanel, displayText: String?, spanId: String, project: Project, moreData: HashMap<String, Any>) {
+private fun addMainDescriptionLabelWithLink(spanOneRecordPanel: JPanel, displayText: String?, spanId: String, project: Project) {
     if ( StringUtils.isNotEmpty(displayText)) {
         val normalizedDisplayName = StringUtils.normalizeSpace(displayText)
-        if (moreData.contains(spanId)) {
-            val actionLink = ActionLink(normalizedDisplayName) {
-                openWorkspaceFileForSpan(project, moreData, spanId)
-            }
-            actionLink.toolTipText = asHtml(displayText)
-            actionLink.horizontalAlignment = SwingConstants.LEFT
-            spanOneRecordPanel.add(actionLink, BorderLayout.NORTH)
-        } else {
-            val jbLabel = JBLabel(displayText!!, SwingConstants.TRAILING)
-            jbLabel.toolTipText = asHtml(displayText)
-            jbLabel.horizontalAlignment = SwingConstants.LEFT
-            spanOneRecordPanel.add(jbLabel, BorderLayout.NORTH)
+        val actionLink = ActionLink(normalizedDisplayName) {
+            showInsightsForSpan(project, spanId)
         }
+        actionLink.toolTipText = asHtml(displayText)
+        actionLink.horizontalAlignment = SwingConstants.LEFT
+        spanOneRecordPanel.add(actionLink, BorderLayout.NORTH)
     }
 }
 
@@ -137,30 +132,28 @@ private fun getImpactLabel(span: HighlyOccurringSpanInfo): JLabel {
 private fun buildENPlusInsightRowsPanel(
         nPOnePanel: DigmaResettablePanel,
         nPOneSpansToDisplay: List<HighlyOccurringSpanInfo>,
-        project: Project,
-        moreData: HashMap<String, Any>
+        project: Project
 ) {
     nPOnePanel.layout = BoxLayout(nPOnePanel, BoxLayout.Y_AXIS)
     nPOnePanel.isOpaque = false
 
     nPOneSpansToDisplay.forEach { nPOneSpan: HighlyOccurringSpanInfo ->
-        nPOnePanel.add(nPOneSpanRowPanel(nPOneSpan, project, moreData))
+        nPOnePanel.add(nPOneSpanRowPanel(nPOneSpan, project))
     }
 }
 
 private fun rebuildENPlusInsightRowsPanel(
         nPOnePanel: DigmaResettablePanel,
         nPOneSpansToDisplay: List<HighlyOccurringSpanInfo>,
-        project: Project,
-        moreData: HashMap<String, Any>
+        project: Project
 ) {
     nPOnePanel.removeAll()
-    buildENPlusInsightRowsPanel(nPOnePanel, nPOneSpansToDisplay, project, moreData)
+    buildENPlusInsightRowsPanel(nPOnePanel, nPOneSpansToDisplay, project)
 }
 
-private fun nPOneSpanRowPanel(span: HighlyOccurringSpanInfo, project: Project, moreData: HashMap<String, Any>): JPanel {
+private fun nPOneSpanRowPanel(span: HighlyOccurringSpanInfo, project: Project): JPanel {
     val resultPanel = createDefaultBoxLayoutYAxisPanel()
-    resultPanel.add(getMainDescriptionPanel(span, project, moreData))
+    resultPanel.add(getMainDescriptionPanel(span, project))
     resultPanel.add(getRowPanel(span))
     return resultPanel
 }

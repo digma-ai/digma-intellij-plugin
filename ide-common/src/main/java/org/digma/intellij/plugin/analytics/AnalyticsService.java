@@ -24,6 +24,8 @@ import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightReque
 import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsRequest;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
+import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanRequest;
+import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanResponse;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.model.rest.insights.MethodWithCodeObjects;
 import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
@@ -246,6 +248,17 @@ public class AnalyticsService implements Disposable {
             PersistenceService.getInstance().getState().setFirstTimeInsightReceived(true);
         }
     }
+
+
+
+    public InsightsOfSingleSpanResponse getInsightsForSingleSpan(String spanId) throws AnalyticsServiceException{
+        var env = getCurrentEnvironment();
+        Log.log(LOGGER::debug, "Requesting insights for span {}", spanId);
+        InsightsOfSingleSpanResponse insightsOfSingleSpanResponse =
+                executeCatching(() -> analyticsProviderProxy.getInsightsForSingleSpan(new InsightsOfSingleSpanRequest(env, spanId)));
+        return insightsOfSingleSpanResponse;
+    }
+
 
     public InsightsOfMethodsResponse getInsightsOfMethods(List<MethodInfo> methodInfos) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();

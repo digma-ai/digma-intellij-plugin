@@ -6,18 +6,16 @@ import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI.Borders.empty
-import org.apache.commons.lang3.StringUtils
-import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.model.rest.insights.DurationSlowdownSource
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
 import org.digma.intellij.plugin.model.rest.insights.SpanInfo
+import org.digma.intellij.plugin.navigation.codeless.showInsightsForSpan
 import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.spanBold
 import org.digma.intellij.plugin.ui.common.spanGrayed
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
-import org.digma.intellij.plugin.ui.list.openWorkspaceFileForSpan
 import org.digma.intellij.plugin.ui.model.TraceSample
 import org.digma.intellij.plugin.ui.needToShowDurationChange
 import org.digma.intellij.plugin.ui.scaled
@@ -26,8 +24,6 @@ import org.threeten.extra.AmountFormats
 import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Dimension
-import java.awt.GridBagConstraints
-import java.awt.GridBagLayout
 import java.io.InputStreamReader
 import java.sql.Timestamp
 import java.time.Duration
@@ -38,7 +34,6 @@ import javax.swing.JPanel
 import javax.swing.SwingConstants
 import kotlin.math.abs
 import kotlin.math.max
-
 
 typealias DigmaDuration = org.digma.intellij.plugin.model.rest.insights.Duration
 
@@ -58,54 +53,47 @@ class SpanPanels {
     }
 }
 
-fun getLink(project: Project, spanInfo: SpanInfo, moreData: HashMap<String, Any>): ActionLink {
+fun getLink(project: Project, spanInfo: SpanInfo): ActionLink {
 
-    val spanId = CodeObjectsUtil.createSpanId(spanInfo.instrumentationLibrary, spanInfo.name)
-    val link = ActionLink(StringUtils.normalizeSpace(spanInfo.displayName)) {
-        openWorkspaceFileForSpan(project, moreData, spanId)
+    val spanId = spanInfo.spanCodeObjectId
+    val link = ActionLink(spanInfo.name) {
+        showInsightsForSpan(project,spanId)
     }
-    val targetClass = spanId.substringBeforeLast("\$_\$")
+    val targetClass = spanId.substringBeforeLast("\$_\$");
 
     link.toolTipText = asHtml("$targetClass: $spanInfo.name")
     link.border = empty()
     link.isOpaque = false
 
     link.minimumSize = link.preferredSize
-    return link
+    return link;
 }
 
 fun slowdownDurationRowPanel(
     project: Project,
     source: DurationSlowdownSource,
-    panelsLayoutHelper: PanelsLayoutHelper,
-    moreData: HashMap<String, Any>,
-    gridPanel: JPanel,
-    gridLayout: GridBagLayout,
-    row: Int
-) {
-    val c = GridBagConstraints()
-    c.fill = GridBagConstraints.HORIZONTAL
-    c.weightx = 1.0
-    c.gridy = row
+    panelsLayoutHelper: PanelsLayoutHelper
+): JPanel {
 
-    val link = getLink(project, source.spanInfo, moreData)
-    val linkPanel = JPanel()
+    val durationsPanel = JBPanel<JBPanel<*>>()
+    durationsPanel.layout = BorderLayout(5, 0)
+    durationsPanel.border = empty()
+    durationsPanel.isOpaque = false
+
+    val link = getLink(project, source.spanInfo);
+    val linkPanel = JPanel();
     linkPanel.layout = BorderLayout(10.scaled(), 0)
     linkPanel.border = empty()
     linkPanel.isOpaque = false
-    linkPanel.add(link, BorderLayout.CENTER)
-    gridPanel.add(linkPanel)
-    c.gridx = 0
-    c.weightx = 1.0
-    gridLayout.setConstraints(linkPanel, c)
-    c.weightx = 0.0
+    linkPanel.add(link, BorderLayout.WEST)
 
     //urationsPanel.add(linkPanel, BorderLayout.WEST) // why its not working?
 
-    val pLabelText = spanBold("${source.currentDuration.value} ${source.currentDuration.unit}")
-    val durationLabel = CopyableLabelHtml(pLabelText)
-    durationLabel.toolTipText = pLabelText
-    val durationPanel = object : JPanel() {
+    val pLabelNumbersText = "${source.currentDuration.value} ${source.currentDuration.unit}"
+    val pLabelText = "${spanBold(pLabelNumbersText)}"
+    val pLabel = CopyableLabelHtml(pLabelText)
+    pLabel.toolTipText = pLabelText
+    val pLabelPanel = object : JPanel() {
         override fun getPreferredSize(): Dimension {
             val ps = super.getPreferredSize()
             if (ps == null) {
@@ -117,29 +105,27 @@ fun slowdownDurationRowPanel(
             return Dimension(getCurrentLargestWidthDurationPLabel(panelsLayoutHelper, w), h)
         }
     }
-    durationPanel.layout = BorderLayout()
-    durationPanel.border = empty()
-    durationPanel.isOpaque = false
-    durationPanel.add(durationLabel, BorderLayout.WEST)
-    addCurrentLargestWidthDurationPLabel(panelsLayoutHelper, durationPanel.preferredSize.width)
-    gridPanel.add(durationPanel)
-    c.gridx = 1
-    gridLayout.setConstraints(durationPanel, c)
+    pLabelPanel.layout = BorderLayout()
+    pLabelPanel.border = empty()
+    pLabelPanel.isOpaque = false
+    pLabelPanel.add(pLabel, BorderLayout.WEST)
+    addCurrentLargestWidthDurationPLabel(panelsLayoutHelper, pLabelPanel.preferredSize.width)
+    linkPanel.add(pLabelPanel, BorderLayout.CENTER)
+    durationsPanel.add(linkPanel, BorderLayout.WEST)
 
-    val change = createDurationChangeLabel(
-        source.currentDuration,
-        source.previousDuration,
-        source.changeTime)
-    gridPanel.add(change)
-    c.gridx = 2
-    gridLayout.setConstraints(change, c)
+    durationsPanel.add(
+        createDurationChangeLabel(
+            source.currentDuration,
+            source.previousDuration,
+            source.changeTime
+        ), BorderLayout.CENTER
+    )
 
     if (source.changeTime != null && (source.changeVerified == null || source.changeVerified == false)) {
-        val state = createEvaluationStatePanel(panelsLayoutHelper)
-        gridPanel.add(state)
-        c.gridx = 3
-        gridLayout.setConstraints(change, c)
+        durationsPanel.add(createEvaluationStatePanel(panelsLayoutHelper), BorderLayout.EAST)
     }
+
+    return durationsPanel
 }
 
 fun percentileRowPanel(
@@ -217,7 +203,7 @@ fun createEvaluationStatePanel(panelsLayoutHelper: PanelsLayoutHelper): JPanel {
     evalPanel.add(evalLabel, BorderLayout.CENTER)
     evalPanel.isOpaque = false
     addCurrentLargestWidthIconPanel(panelsLayoutHelper, evalPanel.preferredSize.width)
-    return evalPanel
+    return evalPanel;
 }
 
 fun createDefaultBoxLayoutLineAxisPanel(): JPanel {

@@ -246,7 +246,7 @@ public class RecentActivityService implements Disposable {
                     String actualEnvName = adjustBackEnvNameIfNeeded(payload.getEnvironment());
                     environmentsSupplier.setCurrent(actualEnvName, false, () -> {
                         NotificationUtil.showNotification(project, "code object could not be found in the workspace");
-                        showInsightsForSpan(project, payload.getSpan().getSpanCodeObjectId(), payload.getSpan().getMethodCodeObjectId());
+                        showInsightsForSpan(project, payload.getSpan().getSpanCodeObjectId());
                     });
 
                 } else {

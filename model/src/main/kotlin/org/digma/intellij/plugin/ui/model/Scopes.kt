@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.model
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
+import org.digma.intellij.plugin.model.rest.insights.SpanInfo
 
 const val NOT_SUPPORTED_OBJECT_MSG = "Non supported object"
 
@@ -43,19 +44,18 @@ class MethodScope(private val methodInfo: MethodInfo) : Scope {
 }
 
 
-class CodeLessSpanScope(private val codeLessSpan: CodeLessSpan) : Scope {
+class CodeLessSpanScope(private val codeLessSpan: CodeLessSpan, private val spanInfo: SpanInfo?) : Scope {
     override fun getScope(): String {
-        return codeLessSpan.spanName
+        return spanInfo?.displayName ?: codeLessSpan.spanId.substringAfterLast("\$_$")
     }
 
     override fun getScopeTooltip(): String {
-        return codeLessSpan.spanName
+        return getScope()
     }
 
     fun getSpan():CodeLessSpan{
         return codeLessSpan
     }
-
 }
 
 

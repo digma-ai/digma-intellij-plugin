@@ -14,34 +14,17 @@ import org.digma.intellij.plugin.ui.service.InsightsViewService
 
 private val logger = Logger.getInstance("org.digma.intellij.plugin.navigation.codeless.CodelessNavigation")
 
-fun showInsightsForSpan(project: Project, spanId: String, methodId: String?) {
+fun showInsightsForSpan(project: Project, spanId: String) {
 
-    Log.log(logger::debug,project,"Got showInsightsForSpan request for {} {}", spanId, methodId)
+    Log.log(logger::debug, project, "Got showInsightsForSpan {}", spanId)
 
-    val instLibrary = spanId.substringBefore("\$_$")
-    val spanName = spanId.substringAfter("\$_$")
-    val funcNamespace = methodId?.substringBefore("\$_$")
-    val funcName = methodId?.substringAfter("\$_$")
+    project.service<InsightsViewService>().updateInsightsModel(
+        CodeLessSpan(spanId)
+    )
 
-
-    project.service<InsightsViewService>().updateInsightsModel(CodeLessSpan(
-        spanId,
-        instLibrary,
-        spanName,
-        methodId,
-        funcNamespace,
-        funcName
-    ))
-
-    project.service<ErrorsViewService>().updateErrorsModel(CodeLessSpan(
-        spanId,
-        instLibrary,
-        spanName,
-        methodId,
-        funcNamespace,
-        funcName
-    ))
-
+    project.service<ErrorsViewService>().updateErrorsModel(
+        CodeLessSpan(spanId)
+    )
 
     project.service<ErrorsActionsService>().closeErrorDetailsBackButton()
 

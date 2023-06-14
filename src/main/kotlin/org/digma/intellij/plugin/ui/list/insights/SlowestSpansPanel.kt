@@ -5,10 +5,16 @@ import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.apache.commons.lang3.StringUtils
-import org.digma.intellij.plugin.document.CodeObjectsUtil
-import org.digma.intellij.plugin.model.rest.insights.*
-import org.digma.intellij.plugin.ui.common.*
-import org.digma.intellij.plugin.ui.list.openWorkspaceFileForSpan
+import org.digma.intellij.plugin.model.rest.insights.EndpointSchema
+import org.digma.intellij.plugin.model.rest.insights.Percentile
+import org.digma.intellij.plugin.model.rest.insights.SlowEndpointInfo
+import org.digma.intellij.plugin.model.rest.insights.SlowSpanInfo
+import org.digma.intellij.plugin.model.rest.insights.SlowestSpansInsight
+import org.digma.intellij.plugin.model.rest.insights.SpanSlowEndpointsInsight
+import org.digma.intellij.plugin.navigation.codeless.showInsightsForSpan
+import org.digma.intellij.plugin.ui.common.Laf
+import org.digma.intellij.plugin.ui.common.asHtml
+import org.digma.intellij.plugin.ui.common.spanGrayed
 import java.awt.BorderLayout
 import java.awt.GridLayout
 import java.math.BigDecimal
@@ -16,7 +22,7 @@ import java.math.RoundingMode
 import javax.swing.JPanel
 import javax.swing.SwingConstants
 
-fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: HashMap<String, Any>): JPanel {
+fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight): JPanel {
 
     val spansListPanel = createDefaultBoxLayoutYAxisPanel()
 
@@ -24,78 +30,56 @@ fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight, moreData: 
 
         val displayName = slowSpan.spanInfo.displayName
         val description = descriptionOf(slowSpan)
-        val spanId = CodeObjectsUtil.createSpanId(slowSpan.spanInfo.instrumentationLibrary, slowSpan.spanInfo.name)
+        val spanId = slowSpan.spanInfo.spanCodeObjectId
 
-        if (moreData.contains(spanId)) {
-            val normalizedDisplayName = StringUtils.normalizeSpace(displayName)
-            val grayedDescription = asHtml(spanGrayed(description))
-            val descriptionLabel = JBLabel(grayedDescription, SwingConstants.LEFT)
-            val link = ActionLink(normalizedDisplayName) {
-                openWorkspaceFileForSpan(project, moreData, spanId)
-            }
-            link.toolTipText = genToolTip(slowSpan)
-
-            val spanOneRecordPanel = getDefaultSpanOneRecordPanel()
-            spanOneRecordPanel.add(link, BorderLayout.NORTH)
-            spanOneRecordPanel.add(descriptionLabel, BorderLayout.SOUTH)
-            spansListPanel.add(spanOneRecordPanel)
-        } else {
-            val normalizedDisplayName = StringUtils.normalizeSpace(displayName)
-            val grayedDescription = asHtml(spanGrayed(description))
-            val descriptionLabel = JBLabel(grayedDescription, SwingConstants.LEFT)
-
-            val displayNameLabel = JBLabel(normalizedDisplayName, SwingConstants.TRAILING)
-            displayNameLabel.toolTipText = genToolTip(slowSpan)
-            displayNameLabel.horizontalAlignment = SwingConstants.LEFT
-
-            val spanOneRecordPanel = getDefaultSpanOneRecordPanel()
-            spanOneRecordPanel.add(displayNameLabel, BorderLayout.NORTH)
-            spanOneRecordPanel.add(descriptionLabel, BorderLayout.SOUTH)
-
-            spansListPanel.add(spanOneRecordPanel)
+        val normalizedDisplayName = StringUtils.normalizeSpace(displayName)
+        val grayedDescription = asHtml(spanGrayed(description))
+        val descriptionLabel = JBLabel(grayedDescription, SwingConstants.LEFT)
+        val link = ActionLink(normalizedDisplayName) {
+            showInsightsForSpan(project, spanId)
         }
+        link.toolTipText = genToolTip(slowSpan)
+
+        val spanOneRecordPanel = getDefaultSpanOneRecordPanel()
+        spanOneRecordPanel.add(link, BorderLayout.NORTH)
+        spanOneRecordPanel.add(descriptionLabel, BorderLayout.SOUTH)
+        spansListPanel.add(spanOneRecordPanel)
+
     }
 
     return createInsightPanel(
-            project = project,
-            insight = insight,
-            title = "Span Bottleneck",
-            description = "The following spans are slowing request handling",
-            iconsList = listOf(Laf.Icons.Insight.BOTTLENECK),
-            bodyPanel = spansListPanel,
-            buttons = null,
-            paginationComponent = null
+        project = project,
+        insight = insight,
+        title = "Span Bottleneck",
+        description = "The following spans are slowing request handling",
+        iconsList = listOf(Laf.Icons.Insight.BOTTLENECK),
+        bodyPanel = spansListPanel,
+        buttons = null,
+        paginationComponent = null
     )
 }
 
-fun spanSlowEndpointsPanel(project: Project, insight: SpanSlowEndpointsInsight, moreData: HashMap<String, Any>): JPanel {
+fun spanSlowEndpointsPanel(project: Project, insight: SpanSlowEndpointsInsight): JPanel {
     val endpointsListPanel = JPanel()
     endpointsListPanel.layout = GridLayout(insight.slowEndpoints.size, 1, 0, 3)
     endpointsListPanel.border = empty()
     endpointsListPanel.isOpaque = false
 
-    insight.slowEndpoints.forEach {slowEndpointInfo ->
+    insight.slowEndpoints.forEach { slowEndpointInfo ->
         val currContainerPanel = JPanel(GridLayout(2, 1, 0, 3))
         endpointsListPanel.border = empty()
         currContainerPanel.isOpaque = false
 
         val routeInfo = EndpointSchema.getRouteInfo(slowEndpointInfo.endpointInfo.route)
-        var routeCodeObjectId = slowEndpointInfo.endpointInfo.codeObjectId;
-        val shortRouteName =  routeInfo.shortName
+        val shortRouteName = routeInfo.shortName
 
-        if (routeCodeObjectId != null && moreData.contains(routeCodeObjectId)) {
-            val normalizedDisplayName = StringUtils.normalizeSpace(shortRouteName)
-            val link = ActionLink(normalizedDisplayName) {
-                openWorkspaceFileForSpan(project, moreData, routeCodeObjectId!!)
-            }
-            var targetClass = routeCodeObjectId?.substringBeforeLast("\$_\$");
-
-            link.toolTipText = asHtml("$targetClass: $shortRouteName")
-            currContainerPanel.add(link, BorderLayout.NORTH)
-        } else {
-            val line1 = JBLabel(asHtml("${slowEndpointInfo.endpointInfo.serviceName}: <b>$shortRouteName</b>"))
-            currContainerPanel.add(line1)
+        val normalizedDisplayName = StringUtils.normalizeSpace(shortRouteName)
+        val link = ActionLink(normalizedDisplayName) {
+            showInsightsForSpan(project, slowEndpointInfo.endpointInfo.spanCodeObjectId)
         }
+        link.toolTipText = asHtml(shortRouteName)
+        currContainerPanel.add(link, BorderLayout.NORTH)
+
 
         val line2 = JBLabel(asHtml(descriptionOf(slowEndpointInfo)))
         currContainerPanel.add(line2)
@@ -103,25 +87,25 @@ fun spanSlowEndpointsPanel(project: Project, insight: SpanSlowEndpointsInsight, 
     }
 
     return createInsightPanel(
-            project = project,
-            insight = insight,
-            title = "Bottleneck",
-            description = "The following trace sources spend a significant portion here:",
-            iconsList = listOf(Laf.Icons.Insight.BOTTLENECK),
-            bodyPanel = endpointsListPanel,
-            buttons = null,
-            paginationComponent = null
+        project = project,
+        insight = insight,
+        title = "Bottleneck",
+        description = "The following trace sources spend a significant portion here:",
+        iconsList = listOf(Laf.Icons.Insight.BOTTLENECK),
+        bodyPanel = endpointsListPanel,
+        buttons = null,
+        paginationComponent = null
     )
 }
 
 fun descriptionOf(sei: SlowEndpointInfo): String {
     if (sei.ProbabilityOfBeingBottleneck != null &&
-        sei.AvgDurationWhenBeingBottleneck != null){
+        sei.AvgDurationWhenBeingBottleneck != null
+    ) {
 
-        return "Slowing ${(sei.ProbabilityOfBeingBottleneck!!*100).toInt()}% of the requests (~${sei.AvgDurationWhenBeingBottleneck!!.value}${sei.AvgDurationWhenBeingBottleneck!!.unit})"
+        return "Slowing ${(sei.ProbabilityOfBeingBottleneck!! * 100).toInt()}% of the requests (~${sei.AvgDurationWhenBeingBottleneck!!.value}${sei.AvgDurationWhenBeingBottleneck!!.unit})"
 
-    }
-    else{ // Obsolete
+    } else { // Obsolete
 
         if (sei.p95.fraction > 0) {
             return "Up to ~${percentageForDisplaySlowSpanInfo(sei.p95)} of entire of the entire request time ${durationText(sei.p95)}"
@@ -137,12 +121,12 @@ fun durationText(percentile: Percentile): String {
 
 fun descriptionOf(span: SlowSpanInfo): String {
     if (span.probabilityOfBeingBottleneck != null &&
-        span.avgDurationWhenBeingBottleneck != null){
+        span.avgDurationWhenBeingBottleneck != null
+    ) {
 
-        return "Slowing ${(span.probabilityOfBeingBottleneck!!*100).toInt()}% of the requests (~${span.avgDurationWhenBeingBottleneck!!.value}${span.avgDurationWhenBeingBottleneck!!.unit})"
+        return "Slowing ${(span.probabilityOfBeingBottleneck!! * 100).toInt()}% of the requests (~${span.avgDurationWhenBeingBottleneck!!.value}${span.avgDurationWhenBeingBottleneck!!.unit})"
 
-    }
-    else{ // Obsolete
+    } else { // Obsolete
 
         if (span.p50.fraction > 0.4)
             return "50% of the users by up to ${span.p50.maxDuration.value}${span.p50.maxDuration.unit}"

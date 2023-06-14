@@ -5,12 +5,12 @@ import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.JBUI.Borders.empty
-import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.discovery.CodeObjectInfo
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationChangeInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
 import org.digma.intellij.plugin.model.rest.insights.TopErrorFlowsInsight
+import org.digma.intellij.plugin.navigation.codeless.showInsightsForSpan
 import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
 import org.digma.intellij.plugin.ui.common.Laf
@@ -23,13 +23,11 @@ import org.digma.intellij.plugin.ui.list.commonListItemPanel
 import org.digma.intellij.plugin.ui.list.errors.contentOfFirstAndLast
 import org.digma.intellij.plugin.ui.list.insights.genericPanelForSingleInsight
 import org.digma.intellij.plugin.ui.list.insights.percentileRowPanel
-import org.digma.intellij.plugin.ui.list.openWorkspaceFileForSpan
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.BorderLayout
 import java.awt.GridLayout
 import javax.swing.JLabel
 import javax.swing.JPanel
-import javax.swing.SwingConstants
 
 
 class SummaryPanelListCellRenderer : AbstractPanelListCellRenderer() {
@@ -41,7 +39,7 @@ class SummaryPanelListCellRenderer : AbstractPanelListCellRenderer() {
         return when (val model = value.modelObject) {
             is SummaryTypeTitle -> buildTitle(model)
             is TopErrorFlowsInsight.Error -> commonListItemPanel(buildError(model, project))
-            is SpanDurationChangeInsight.Change -> commonListItemPanel(buildSpanDuration(model, value.moreData, panelsLayoutHelper, project))
+            is SpanDurationChangeInsight.Change -> commonListItemPanel(buildSpanDuration(model,  panelsLayoutHelper, project))
             else -> genericPanelForSingleInsight(project, model)
         }
     }
@@ -110,16 +108,15 @@ private fun getCharacteristic(model: TopErrorFlowsInsight.Error): JPanel {
     return wrapper
 }
 
-private fun buildSpanDuration(value: SpanDurationChangeInsight.Change, moreData: HashMap<String, Any>, panelsLayoutHelper: PanelsLayoutHelper, project: Project): JPanel {
+private fun buildSpanDuration(value: SpanDurationChangeInsight.Change, panelsLayoutHelper: PanelsLayoutHelper, project: Project): JPanel {
 
-    val spanId = CodeObjectsUtil.createSpanId(value.span.instrumentationLibrary, value.span.name)
-    val title = if (moreData.contains(spanId)) {
+    val spanId = value.span.spanCodeObjectId
+
+    val title =
         ActionLink(asHtml(value.span.displayName)) {
-            openWorkspaceFileForSpan(project, moreData, spanId)
+            showInsightsForSpan(project, spanId)
         }
-    } else{
-        JLabel(asHtml(value.span.displayName), SwingConstants.LEFT)
-    }
+
     title.toolTipText = value.span.displayName
     title.border = JBUI.Borders.emptyBottom(5)
 

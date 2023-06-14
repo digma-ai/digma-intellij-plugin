@@ -39,6 +39,7 @@ import java.util.Objects;
 
 import static org.digma.intellij.plugin.document.CodeObjectsUtil.addMethodTypeToIds;
 import static org.digma.intellij.plugin.document.CodeObjectsUtil.addSpanTypeToIds;
+import static org.digma.intellij.plugin.navigation.codeless.CodelessNavigationKt.showInsightsForSpan;
 
 
 public class JaegerUIService {
@@ -230,10 +231,12 @@ public class JaegerUIService {
 
         var span = goToSpanMessage.payload();
         //if we're here then code location was not found
-        CodelessNavigationKt.showInsightsForSpan(project, span.spanId(), span.methodId());
+        showInsightsForSpan(project, span.spanCodeObjectId());
     }
 
     public Map<String, SpanData> getResolvedSpans(SpansMessage spansMessage) {
+
+        //todo: change get insights with the new service
 
         var allSpans = new HashMap<String, SpanData>();
 

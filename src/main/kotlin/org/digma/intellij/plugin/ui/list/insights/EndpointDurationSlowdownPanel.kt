@@ -11,26 +11,24 @@ import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import java.awt.BorderLayout
-import java.awt.GridBagLayout
 import javax.swing.SwingConstants
 
 fun endpointDurationSlowdownPanel(
     project: Project,
     insight: EndpointDurationSlowdownInsight,
-    panelsLayoutHelper: PanelsLayoutHelper,
-    moreData: HashMap<String, Any>,
+    panelsLayoutHelper: PanelsLayoutHelper
 ): JPanel {
 
     val rootPanel = createDefaultBoxLayoutYAxisPanel()
 
     val p50Sources = insight.durationSlowdownSources.filter { it.percentile == "0.5" }
     if (p50Sources.isNotEmpty()){
-        addSlowdownSources(project, rootPanel, "Affecting most requests:", p50Sources, panelsLayoutHelper, moreData)
+        addSlowdownSources(project, rootPanel, "Affecting most requests:", p50Sources, panelsLayoutHelper)
     }
 
     val p95Sources = insight.durationSlowdownSources.filter { it.percentile == "0.95" }
     if (p95Sources.isNotEmpty()){
-        addSlowdownSources(project, rootPanel, "Affecting ~5% of requests:", p95Sources, panelsLayoutHelper, moreData)
+        addSlowdownSources(project, rootPanel, "Affecting ~5% of requests:", p95Sources, panelsLayoutHelper)
     }
 
     val result = createInsightPanel(
@@ -52,24 +50,20 @@ fun addSlowdownSources(
     rootPanel: JPanel,
     header: String,
     sources: List<DurationSlowdownSource>,
-    panelsLayoutHelper: PanelsLayoutHelper,
-    moreData: HashMap<String, Any>,) {
+    panelsLayoutHelper: PanelsLayoutHelper) {
 
     val normalizedDisplayName = StringUtils.normalizeSpace(header)
     val jbLabel = JBLabel(normalizedDisplayName)
     jbLabel.horizontalAlignment = SwingConstants.LEFT
     jbLabel.horizontalTextPosition = SwingConstants.LEFT
-    val labelWrapper = JPanel(BorderLayout())
+    var labelWrapper = JPanel(BorderLayout())
     labelWrapper.add(jbLabel, BorderLayout.WEST)
     labelWrapper.isOpaque = false
     labelWrapper.border = JBUI.Borders.empty()
     rootPanel.add(labelWrapper)
 
-    val gridLayout = GridBagLayout()
-    val gridPanel = JPanel(gridLayout)
-    gridPanel.isOpaque = false
-    for((index, source) in sources.withIndex()){
-        slowdownDurationRowPanel(project, source, panelsLayoutHelper, moreData, gridPanel, gridLayout, index)
+    sources.forEach { source: DurationSlowdownSource ->
+        val row = slowdownDurationRowPanel(project, source, panelsLayoutHelper)
+        rootPanel.add(row)
     }
-    rootPanel.add(gridPanel)
 }

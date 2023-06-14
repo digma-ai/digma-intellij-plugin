@@ -1,17 +1,22 @@
 package org.digma.intellij.plugin.ui.service
 
+import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.document.DocumentInfoContainer
+import org.digma.intellij.plugin.errors.ErrorsListContainer
 import org.digma.intellij.plugin.errors.ErrorsProvider
 import org.digma.intellij.plugin.insights.CodeLessSpanInsightsProvider
+import org.digma.intellij.plugin.insights.CodelessSpanErrorsContainer
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.persistence.PersistenceService
+import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
 import org.digma.intellij.plugin.ui.model.DocumentScope
 import org.digma.intellij.plugin.ui.model.EmptyScope
@@ -47,31 +52,29 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
 
     fun updateErrorsModel(codeLessSpan: CodeLessSpan) {
 
+        project.service<MainToolWindowCardsController>().showMainPanel(true)
+
         val codeLessInsightsProvider = CodeLessSpanInsightsProvider(codeLessSpan,project)
 
         Log.log(logger::debug, "updateInsightsModel to {}. ", codeLessSpan)
 
-        val errorsListContainer = codeLessInsightsProvider.getErrors()
+        //todo: remove read action after removing all the findWorkspaceUri.. methods
+        val codelessSpanErrorsContainer: CodelessSpanErrorsContainer? =
+            ReadAction.compute<CodelessSpanErrorsContainer,Exception> { codeLessInsightsProvider.getErrors() }
 
-        if (errorsListContainer == null){
+        val errorsListContainer: ErrorsListContainer? = codelessSpanErrorsContainer?.errorsContainer
+
+        if (errorsListContainer?.listViewItems.isNullOrEmpty()){
             Log.log(logger::debug,project, "could not load errors for {}, see logs for details",codeLessSpan )
-            empty()
-            return
-        }
-
-        if (errorsListContainer.listViewItems.isNullOrEmpty()){
-            Log.log(logger::debug,project, "emptying model for {} because there are no errors",codeLessSpan )
-            empty()
-            return
         }
 
 
-        model.listViewItems = errorsListContainer.listViewItems ?: listOf()
+        model.listViewItems = errorsListContainer?.listViewItems ?: listOf()
         model.previewListViewItems = ArrayList()
-        model.usageStatusResult = errorsListContainer.usageStatus ?: EmptyUsageStatusResult
-        model.scope = CodeLessSpanScope(codeLessSpan)
+        model.usageStatusResult = errorsListContainer?.usageStatus ?: EmptyUsageStatusResult
+        model.scope = CodeLessSpanScope(codeLessSpan, null)
         model.card = ErrorsTabCard.ERRORS_LIST
-        model.errorsCount = errorsListContainer.count
+        model.errorsCount = errorsListContainer?.count ?: 0
 
         updateUi()
     }

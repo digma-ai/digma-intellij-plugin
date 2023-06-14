@@ -24,10 +24,11 @@ fun endpointBreakdownPanel(
 ): JPanel {
 
     val colorPoolForUnknownTypes = mutableListOf<Color>(
-        Color.decode("0x5378b4")/*blue*/,
-        Color.decode("0x8da760")/*green*/,
-        Color.decode("0xb9914e")/*orange*/,
-        Color.decode("0x9e4747")/*red*/)
+        Color(0x5378b4)/*blue*/,
+        Color(0x8da760)/*green*/,
+        Color(0xb9914e)/*orange*/,
+        Color(0x9e4747)/*red*/
+    )
 
     val listPanel = JBPanel<JBPanel<*>>(WrapLayout(FlowLayout.LEFT, 10, 0))
     listPanel.isOpaque = false
@@ -77,10 +78,10 @@ fun endpointBreakdownPanel(
 
 fun getColorForKnownType(component: EndpointBreakdownComponent): Color? {
     return when (component.type) {
-        "Internal" -> Color.decode("0x53AEB4")
-        "DB Queries" -> Color.decode("0xB180D7")
-        "HTTP Clients" -> Color.decode("0x75BEFF")
-        "Rendering" -> Color.decode("0xF55385")
+        "Internal" -> Color(0x53AEB4)
+        "DB Queries" -> Color(0xB180D7)
+        "HTTP Clients" -> Color(0x75BEFF)
+        "Rendering" -> Color(0xF55385)
         else -> null
     }
 }

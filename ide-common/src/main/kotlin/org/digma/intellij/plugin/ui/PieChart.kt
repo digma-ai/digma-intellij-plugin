@@ -30,18 +30,18 @@ class PieChart : JComponent() {
 
         var x = border.left
         var y = border.top
-        var d = min(width-border.left-border.right, height-border.top-border.bottom)
+        var d = min(width - border.left - border.right, height - border.top - border.bottom)
 
         // gray border 1px
-        graphics.color = Color.decode("0x676673")
-        graphics.fillOval(x ,y, d, d)
+        graphics.color = Color(0x676673)
+        graphics.fillOval(x, y, d, d)
         x += 1
         y += 1
         d -= 2
 
         // inner dark bg
-        graphics.color = Color.decode("0x3f4247")
-        graphics.fillOval(x ,y, d, d)
+        graphics.color = Color(0x3f4247)
+        graphics.fillOval(x, y, d, d)
         x += 3
         y += 3
         d -= 6
@@ -49,32 +49,31 @@ class PieChart : JComponent() {
         // arcs
         val arcs = calcArcs(d)
         graphics.stroke = BasicStroke(2.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
-        for (arc in arcs){
+        for (arc in arcs) {
             graphics.color = arc.color
             graphics.drawArc(x, y, d, d, arc.startAngle, arc.angle)
         }
     }
 
-    private fun calcArcs(diameter: Int): List<Arc>{
+    private fun calcArcs(diameter: Int): List<Arc> {
         val sortedItems = items.sortedBy { i -> i.weight }
 
         val arcs = ArrayList<Arc>()
 
-        val minArcAngle = ceil(Math.toDegrees(asin(minArcSize*2.0/diameter))).toInt()
-        val marginArcAngle = ceil(Math.toDegrees(asin(marginArcSize*2.0/diameter))).toInt()
+        val minArcAngle = ceil(Math.toDegrees(asin(minArcSize * 2.0 / diameter))).toInt()
+        val marginArcAngle = ceil(Math.toDegrees(asin(marginArcSize * 2.0 / diameter))).toInt()
         val wholeWeight = items.sumOf { i -> i.weight }
-        val wholeAngle = 360 - marginArcAngle*items.size
+        val wholeAngle = 360 - marginArcAngle * items.size
         var angle = 0
 
         for (i in sortedItems.indices) {
-            if(i < sortedItems.size-1) {
+            if (i < sortedItems.size - 1) {
                 val fraction = sortedItems[i].weight / wholeWeight
                 val arcAngle = max((wholeAngle * fraction).toInt(), minArcAngle)
                 arcs.add(Arc(sortedItems[i].color, angle, arcAngle))
                 angle += arcAngle + marginArcAngle
-            }
-            else { // last
-                arcs.add(Arc(sortedItems[i].color, angle,360 - marginArcAngle - angle))
+            } else { // last
+                arcs.add(Arc(sortedItems[i].color, angle, 360 - marginArcAngle - angle))
             }
         }
 

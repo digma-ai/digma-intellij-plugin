@@ -1,30 +1,16 @@
 package org.digma.intellij.plugin.insights.view;
 
 import com.intellij.openapi.project.Project;
-import org.digma.intellij.plugin.document.CodeObjectsUtil;
-import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
-import org.digma.intellij.plugin.model.rest.insights.EPNPlusSpansInsight;
-import org.digma.intellij.plugin.model.rest.insights.EndpointDurationSlowdownInsight;
-import org.digma.intellij.plugin.model.rest.insights.SlowestSpansInsight;
-import org.digma.intellij.plugin.model.rest.insights.SpanDurationBreakdownInsight;
-import org.digma.intellij.plugin.model.rest.insights.SpanFlow;
-import org.digma.intellij.plugin.model.rest.insights.SpanScalingInsight;
-import org.digma.intellij.plugin.model.rest.insights.SpanSlowEndpointsInsight;
-import org.digma.intellij.plugin.model.rest.insights.SpanUsagesInsight;
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupListViewItem;
 import org.digma.intellij.plugin.ui.model.insights.InsightGroupType;
 import org.digma.intellij.plugin.ui.model.insights.InsightListViewItem;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
 import org.digma.intellij.plugin.view.ListGroupManager;
 import org.digma.intellij.plugin.view.ListViewItemBuilder;
-import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class GroupListViewItemBuilder<T extends CodeObjectInsight> implements ListViewItemBuilder<T> {
 
@@ -39,7 +25,7 @@ public class GroupListViewItemBuilder<T extends CodeObjectInsight> implements Li
     }
 
     @Override
-    public List<ListViewItem<?>> build(Project project, @NotNull MethodInfo methodInfo, T insight, ListGroupManager groupManager) {
+    public List<ListViewItem<?>> build(Project project, T insight, ListGroupManager groupManager) {
         final String route = routeFunction != null ? routeFunction.apply(insight) : "";
         final String groupId = endpointSpan.apply(insight);
         final InsightGroupListViewItem theGroup = (InsightGroupListViewItem)
@@ -52,71 +38,6 @@ public class GroupListViewItemBuilder<T extends CodeObjectInsight> implements Li
         return List.of();
     }
 
-    private List<String> getCodeObjectIds(SpanUsagesInsight insight) {
-        var codeObjectIds = new ArrayList<String>();
-        for (SpanFlow ins: insight.getFlows()) {
-            var firstServiceId = ins.getFirstService();
-            if (firstServiceId != null)
-                codeObjectIds.add(firstServiceId.getCodeObjectId());
-            var lastServiceId = ins.getLastService();
-            if (lastServiceId != null)
-                codeObjectIds.add(lastServiceId.getCodeObjectId());
-        }
-        return codeObjectIds;
-    }
 
-    private List<String> getCodeObjectIds(SpanScalingInsight insight) {
-        if(insight.getAffectedEndpoints() == null)
-            return Collections.emptyList();
-
-        return insight.getAffectedEndpoints().stream().filter(it -> it.getCodeObjectId() != null)
-                .map(it -> it.getCodeObjectId())
-                .toList();
-    }
-
-    private List<String> getCodeObjectIds(SpanSlowEndpointsInsight insight) {
-        return insight.getSlowEndpoints().stream().filter(it -> it.getEndpointInfo().getCodeObjectId() != null)
-                .map(it -> it.getEndpointInfo().getCodeObjectId())
-                .toList();
-    }
-
-    private List<String> getSpanIds(SpanScalingInsight insight) {
-        if(insight.getRootCauseSpans() == null)
-            return Collections.emptyList();
-
-        return insight.getRootCauseSpans().stream()
-                .map(it -> CodeObjectsUtil.createSpanId(it.getInstrumentationLibrary(), it.getName()))
-                .toList();
-    }
-
-    private List<String> getSpanIds(EndpointDurationSlowdownInsight insight) {
-        if(insight.getDurationSlowdownSources() == null)
-            return Collections.emptyList();
-
-        return insight.getDurationSlowdownSources().stream()
-                .map(it -> CodeObjectsUtil.createSpanId(it.getSpanInfo().getInstrumentationLibrary(), it.getSpanInfo().getName()))
-                .toList();
-    }
-
-    private List<String> getSpanIds(SlowestSpansInsight insight) {
-       return insight.getSpans().stream()
-                .map(it -> CodeObjectsUtil.createSpanId(it.getSpanInfo().getInstrumentationLibrary(), it.getSpanInfo().getName()))
-               .toList();
-    }
-
-    private List<String> getSpanIds(SpanDurationBreakdownInsight insight) {
-        return insight.getBreakdownEntries()
-                .stream().map(durationBreakdown ->
-                        CodeObjectsUtil.createSpanId(durationBreakdown.getSpanInstrumentationLibrary(), durationBreakdown.getSpanName()))
-                .collect(Collectors.toList());
-    }
-
-    private List<String> getSpanIds(EPNPlusSpansInsight insight) {
-        return insight.getSpans().stream().filter(it -> it.getInternalSpan() != null)
-                .map(it -> CodeObjectsUtil.createSpanId(
-                        it.getInternalSpan().getInstrumentationLibrary(),
-                        it.getInternalSpan().getName()))
-                .collect(Collectors.toList());
-    }
 
 }

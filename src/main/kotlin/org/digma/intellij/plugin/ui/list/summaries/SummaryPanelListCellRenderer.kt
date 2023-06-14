@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.list.summaries
 
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBPanel
@@ -24,6 +25,7 @@ import org.digma.intellij.plugin.ui.list.errors.contentOfFirstAndLast
 import org.digma.intellij.plugin.ui.list.insights.genericPanelForSingleInsight
 import org.digma.intellij.plugin.ui.list.insights.percentileRowPanel
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
+import org.digma.intellij.plugin.ui.service.TabsHelper
 import java.awt.BorderLayout
 import java.awt.GridLayout
 import javax.swing.JLabel
@@ -115,6 +117,7 @@ private fun buildSpanDuration(value: SpanDurationChangeInsight.Change, panelsLay
     val title =
         ActionLink(asHtml(value.span.displayName)) {
             showInsightsForSpan(project, spanId)
+            project.service<TabsHelper>().notifyTabChanged(0)
         }
 
     title.toolTipText = value.span.displayName

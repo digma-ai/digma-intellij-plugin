@@ -10,7 +10,6 @@ import org.digma.intellij.plugin.insights.view.BuildersHolder
 import org.digma.intellij.plugin.insights.view.InsightsViewBuilder
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.InsightType
-import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsight
@@ -25,11 +24,6 @@ abstract class AbstractInsightsProvider(val project: Project) {
     abstract fun getObject():Any
 
     abstract fun getObjectIdWithType():String
-
-    //we want to use existing infrastructures for building the list on insights, until more refactoring is done
-    // for the new navigation we need to provide a fake or possible MethodInfo.
-    // InsightsViewBuilder.build need a MethodInfo and expects it to be non-null and with real values.
-    abstract fun getNonNulMethodInfo(): MethodInfo
 
     fun getInsights(): CodelessSpanInsightsContainer? {
 
@@ -60,8 +54,7 @@ abstract class AbstractInsightsProvider(val project: Project) {
         usageStatus: UsageStatusResult,
     ): InsightsListContainer {
         val insightsViewBuilder = InsightsViewBuilder(BuildersHolder())
-        //todo: remove method
-        val listViewItems = insightsViewBuilder.build(project, getNonNulMethodInfo(), insightsList)
+        val listViewItems = insightsViewBuilder.build(project, insightsList)
         Log.log(logger::debug, "ListViewItems for {}: {}", getObject(), listViewItems)
         return InsightsListContainer(listViewItems, insightsList.size, usageStatus)
     }
@@ -81,7 +74,7 @@ abstract class AbstractInsightsProvider(val project: Project) {
 
             val insightsResponse: InsightsOfSingleSpanResponse = analyticsService.getInsightsForSingleSpan(objectId)
             val codeObjectIdsForErrors = insightsResponse.insights
-                .filter { codeObjectInsight -> codeObjectInsight is ErrorInsight }
+                .filterIsInstance<ErrorInsight>()
                 .map { codeObjectInsight -> codeObjectInsight.codeObjectId }
 
             Log.log(logger::debug,project,"requesting errors for {}",getObject())

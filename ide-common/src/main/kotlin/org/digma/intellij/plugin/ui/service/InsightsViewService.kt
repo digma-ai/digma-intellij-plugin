@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import org.apache.commons.lang.builder.EqualsBuilder
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.common.modelChangeListener.ModelChangeListener
@@ -72,6 +73,20 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
 
         if (insightsContainer?.listViewItems.isNullOrEmpty()){
             Log.log(logger::debug,project, "could not load insights for {}, see logs for details",codeLessSpan )
+        }
+
+
+        //todo: this is temporary, flickering happens because the UI is rebuilt on every refresh, when
+        // UI components are changed to bind to models flickering should not happen and we can just
+        // update the UI even with same data, it should be faster and more correct then deep equals of the data.
+        //this is the way to prevent updating the UI if insights list didn't change between refresh
+        // and by the way prevent flickering.
+        //kotlin equality doesn't work for listViewItems because ListViewItem does not implement equals
+        // so only the expensive reflectionEquals works here
+        if (model.scope is CodeLessSpanScope &&
+            (model.scope as CodeLessSpanScope).getSpan() == codeLessSpan &&
+            EqualsBuilder.reflectionEquals(insightsContainer?.listViewItems,model.listViewItems)) {
+            return
         }
 
 

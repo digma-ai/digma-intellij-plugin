@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.list.insights
 
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.util.ui.JBUI.Borders.empty
@@ -10,12 +11,12 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.editor.getCurrentPageNumberForInsight
 import org.digma.intellij.plugin.editor.updateListOfEntriesToDisplay
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider
+import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.AffectedEndpointInfo
 import org.digma.intellij.plugin.model.rest.insights.EndpointSchema
 import org.digma.intellij.plugin.model.rest.insights.RootCauseSpan
 import org.digma.intellij.plugin.model.rest.insights.SpanScalingInsight
-import org.digma.intellij.plugin.navigation.codeless.showInsightsForSpan
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
@@ -162,7 +163,7 @@ private fun buildAffectedEndpointItem(project: Project, affectedEndpoint: Affect
 
     val normalizedDisplayName = StringUtils.normalizeSpace(shortRouteName)
     val link = ActionLink(normalizedDisplayName) {
-        showInsightsForSpan(project, affectedEndpoint.spanCodeObjectId)
+        project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(affectedEndpoint.spanCodeObjectId)
     }
 
     link.toolTipText = asHtml(shortRouteName)
@@ -189,7 +190,7 @@ fun getRootCauseSpanPanel(project: Project, rootCauseSpan: RootCauseSpan): JPane
     val spanId = rootCauseSpan.spanCodeObjectId
     val link =
         ActionLink(normalizedDisplayName) {
-            showInsightsForSpan(project, spanId)
+            project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanId)
         }
     link.toolTipText = asHtml(normalizedDisplayName)
     rootCausePanel.add(link, BorderLayout.CENTER)

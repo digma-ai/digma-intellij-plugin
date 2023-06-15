@@ -11,6 +11,7 @@ import com.intellij.ui.dsl.builder.panel
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.document.CodeObjectsUtil
+import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
 import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation
@@ -53,11 +54,7 @@ class CodeNavigationButton(val project: Project, private val panelModel: PanelMo
                         val codeObjectNavigation =
                             project.service<AnalyticsService>().getCodeObjectNavigation(objectIdToUse)
 
-                        val spanId = codeObjectNavigation.navigationEntry.spanInfo?.spanCodeObjectId
-                        val methodId = codeObjectNavigation.navigationEntry.spanInfo?.methodCodeObjectId
-
-                        //try direct navigation
-                        navigate(spanId, methodId, codeObjectNavigation)
+                        navigate(codeObjectNavigation)
                     }
                 } catch (e: Exception) {
                     HintManager.getInstance().showHint(
@@ -72,11 +69,14 @@ class CodeNavigationButton(val project: Project, private val panelModel: PanelMo
     }
 
     private fun navigate(
-        spanId: String?,
-        methodId: String?,
-        codeObjectNavigation: CodeObjectNavigation,
+        codeObjectNavigation: CodeObjectNavigation
     ) {
-        if (project.service<CodeNavigator>().maybeNavigateToSpan(spanId, methodId)) {
+
+        val spanId = codeObjectNavigation.navigationEntry.spanInfo?.spanCodeObjectId
+        val methodId = codeObjectNavigation.navigationEntry.spanInfo?.methodCodeObjectId
+
+        //first try direct navigation, if can't then build navigation list and show user
+        if (project.service<InsightsViewOrchestrator>().showInsightsForSpanOrMethodAndNavigateToCode(spanId, methodId)) {
             Log.log(logger::debug, project, "Navigation to direct span succeeded for {},{}", spanId, methodId)
         } else {
 
@@ -143,7 +143,7 @@ class CodeNavigationButton(val project: Project, private val panelModel: PanelMo
                         row {
                             icon(Laf.Icons.General.CODE_LOCATION_LINK).gap(RightGap.SMALL)
                             link(navItem.displayName) {
-                                project.service<CodeNavigator>().maybeNavigateToSpan(navItem.spanCodeObjectId, navItem.methodCodeObjectId)
+                                project.service<InsightsViewOrchestrator>().showInsightsForSpanOrMethodAndNavigateToCode(navItem.spanCodeObjectId, navItem.methodCodeObjectId)
                                 HintManager.getInstance().hideAllHints()
                             }
                         }
@@ -161,7 +161,7 @@ class CodeNavigationButton(val project: Project, private val panelModel: PanelMo
                         row {
                             icon(Laf.Icons.General.CODE_LOCATION_LINK).gap(RightGap.SMALL)
                             link(navItem.displayName) {
-                                project.service<CodeNavigator>().maybeNavigateToSpan(navItem.spanCodeObjectId, navItem.methodCodeObjectId)
+                                project.service<InsightsViewOrchestrator>().showInsightsForSpanOrMethodAndNavigateToCode(navItem.spanCodeObjectId, navItem.methodCodeObjectId)
                                 HintManager.getInstance().hideAllHints()
                             }
                         }

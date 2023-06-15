@@ -1,15 +1,16 @@
 package org.digma.intellij.plugin.ui.list.insights
 
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
 import org.apache.commons.lang3.StringUtils
 import org.digma.intellij.plugin.editor.getCurrentPageNumberForInsight
 import org.digma.intellij.plugin.editor.updateListOfEntriesToDisplay
+import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.EPNPlusSpansInsight
 import org.digma.intellij.plugin.model.rest.insights.HighlyOccurringSpanInfo
-import org.digma.intellij.plugin.navigation.codeless.showInsightsForSpan
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.spanBold
@@ -94,7 +95,7 @@ private fun addMainDescriptionLabelWithLink(spanOneRecordPanel: JPanel, displayT
     if ( StringUtils.isNotEmpty(displayText)) {
         val normalizedDisplayName = StringUtils.normalizeSpace(displayText)
         val actionLink = ActionLink(normalizedDisplayName) {
-            showInsightsForSpan(project, spanId)
+            project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanId)
         }
         actionLink.toolTipText = asHtml(displayText)
         actionLink.horizontalAlignment = SwingConstants.LEFT

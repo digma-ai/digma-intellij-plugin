@@ -6,12 +6,12 @@ import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.JBUI.Borders.empty
+import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.discovery.CodeObjectInfo
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationChangeInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
 import org.digma.intellij.plugin.model.rest.insights.TopErrorFlowsInsight
-import org.digma.intellij.plugin.navigation.codeless.showInsightsForSpan
 import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
 import org.digma.intellij.plugin.ui.common.Laf
@@ -116,7 +116,7 @@ private fun buildSpanDuration(value: SpanDurationChangeInsight.Change, panelsLay
 
     val title =
         ActionLink(asHtml(value.span.displayName)) {
-            showInsightsForSpan(project, spanId)
+            project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanId)
             project.service<TabsHelper>().notifyTabChanged(0)
         }
 

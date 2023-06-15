@@ -18,9 +18,9 @@ class CodeNavigator(val project: Project) {
 
     private val logger: Logger = Logger.getInstance(CodeNavigator::class.java)
 
-    //Note: ids for navigation should no include prefix span: or method:
+    //Note: ids for navigation should not include prefix span: or method:
 
-    fun maybeNavigateToSpan(spanId: String?, methodId: String?): Boolean {
+    fun maybeNavigateToSpanOrMethod(spanId: String?, methodId: String?): Boolean {
 
         if (maybeNavigateToSpan(spanId)) {
             return true
@@ -30,12 +30,12 @@ class CodeNavigator(val project: Project) {
     }
 
 
-    private fun maybeNavigateToSpan(spanId: String?): Boolean {
+    fun maybeNavigateToSpan(spanId: String?): Boolean {
         if (spanId == null) {
             return false
         }
 
-        val spanIdWithoutType = CodeObjectsUtil.stripMethodPrefix(spanId)
+        val spanIdWithoutType = CodeObjectsUtil.stripSpanPrefix(spanId)
 
         SupportedLanguages.values().forEach { language ->
             val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
@@ -63,7 +63,7 @@ class CodeNavigator(val project: Project) {
     }
 
     //todo: change to navigateToMethod in languageService. need to implement a tryNavigateToMethod
-    private fun maybeNavigateToMethod(methodId: String?): Boolean {
+    fun maybeNavigateToMethod(methodId: String?): Boolean {
         if (methodId == null) {
             return false
         }
@@ -143,6 +143,45 @@ class CodeNavigator(val project: Project) {
         }
 
         return false
+    }
+
+    fun getMethodLocation(methodId: String): Pair<String, Int>? {
+
+        val methodIdWithoutType = CodeObjectsUtil.stripMethodPrefix(methodId)
+
+        SupportedLanguages.values().forEach { language ->
+            val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
+            if (languageService != null) {
+                val methodWorkspaceUris = ReadActions.ensureReadAction<Map<String, Pair<String, Int>>> {
+                    languageService.findWorkspaceUrisForMethodCodeObjectIds(listOf(methodIdWithoutType))
+                }
+                //if code location was found return. no need to check the other language services
+                if (methodWorkspaceUris.containsKey(methodIdWithoutType)) {
+                    return methodWorkspaceUris[methodIdWithoutType]
+                }
+            }
+        }
+        return null
+    }
+
+
+    fun getSpanLocation(spanId: String): Pair<String, Int>? {
+
+        val spanIdWithoutType = CodeObjectsUtil.stripSpanPrefix(spanId)
+
+        SupportedLanguages.values().forEach { language ->
+            val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
+            if (languageService != null) {
+                val spanWorkspaceUris = ReadActions.ensureReadAction<Map<String, Pair<String, Int>>> {
+                    languageService.findWorkspaceUrisForSpanIds(listOf(spanIdWithoutType))
+                }
+                //if code location was found return. no need to check the other language services
+                if (spanWorkspaceUris.containsKey(spanIdWithoutType)) {
+                    return spanWorkspaceUris[spanIdWithoutType]
+                }
+            }
+        }
+        return null
     }
 
 

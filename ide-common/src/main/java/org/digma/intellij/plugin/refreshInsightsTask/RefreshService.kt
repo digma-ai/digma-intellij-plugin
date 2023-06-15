@@ -41,11 +41,12 @@ class RefreshService(private val project: Project) {
 
     suspend fun refreshAllForCurrentFile(file: VirtualFile) {
         Log.log(logger::debug, "Automatic refreshAllForCurrentFile started for file = {}", file.name)
-        val scope = insightsViewService.model.scope
+
         val selectedTextEditor = withUiContext {
             // this code is on the UI thread
             FileEditorManager.getInstance(project).selectedTextEditor
         }
+        var scope = insightsViewService.model.scope
         if (scope is MethodScope) {
             val documentInfoContainer = documentInfoService.getDocumentInfoByMethodInfo(scope.getMethodInfo())
 
@@ -59,6 +60,7 @@ class RefreshService(private val project: Project) {
             Log.log(logger::debug, "testConnectionToBackend was triggered")
             BackendConnectionUtil.getInstance(project).testConnectionToBackend()
 
+            scope = insightsViewService.model.scope
             if (scope is CodeLessSpanScope){
                 val codelessSpan = scope.getSpan()
                 insightsViewService.updateInsightsModel(codelessSpan)
@@ -68,8 +70,8 @@ class RefreshService(private val project: Project) {
     }
 
     fun refreshAllInBackground() {
-        val scope = insightsViewService.model.scope
         val selectedTextEditor = FileEditorManager.getInstance(project).selectedTextEditor
+        var scope = insightsViewService.model.scope
         val documentInfoContainer =
                 if (scope is MethodScope) {
                     documentInfoService.getDocumentInfoByMethodInfo(scope.getMethodInfo())
@@ -86,11 +88,12 @@ class RefreshService(private val project: Project) {
                 try {
                     notifyRefreshInsightsTaskStarted(documentInfoContainer?.documentInfo?.fileUri)
                     if (scope is MethodScope) {
-                        updateInsightsCacheForActiveDocumentAndRefreshViewIfNeeded(selectedTextEditor, documentInfoContainer, scope)
+                        updateInsightsCacheForActiveDocumentAndRefreshViewIfNeeded(selectedTextEditor, documentInfoContainer, scope as MethodScope)
                     } else {
                         updateInsightsCacheForActiveDocument(selectedTextEditor, documentInfoContainer)
+                        scope = insightsViewService.model.scope
                         if (scope is CodeLessSpanScope){
-                            val codelessSpan = scope.getSpan()
+                            val codelessSpan = (scope as CodeLessSpanScope).getSpan()
                             insightsViewService.updateInsightsModel(codelessSpan)
                             errorsViewService.updateErrorsModel(codelessSpan)
                         }

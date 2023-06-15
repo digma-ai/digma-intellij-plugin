@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.list.insights
 
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBPanel
@@ -7,9 +8,9 @@ import com.intellij.util.ui.JBUI.Borders.empty
 import org.apache.commons.lang3.StringUtils
 import org.digma.intellij.plugin.editor.getCurrentPageNumberForInsight
 import org.digma.intellij.plugin.editor.updateListOfEntriesToDisplay
+import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationBreakdown
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationBreakdownInsight
-import org.digma.intellij.plugin.navigation.codeless.showInsightsForSpan
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.boldFonts
@@ -133,7 +134,7 @@ private fun getSpanDisplayNameLabel(
     val trimmedDisplayName = StringUtils.normalizeSpace(durationBreakdown.spanDisplayName)
 
     val messageLabel = ActionLink(trimmedDisplayName) {
-        showInsightsForSpan(project, spanId)
+        project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanId)
     }
     messageLabel.toolTipText = asHtml(trimmedDisplayName)
     messageLabel.border = empty(0, 5, 5, 0)

@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.list.insights
 
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBPanel
@@ -7,10 +8,10 @@ import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.WrapLayout
 import org.digma.intellij.plugin.editor.getCurrentPageNumberForInsight
 import org.digma.intellij.plugin.editor.updateListOfEntriesToDisplay
+import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.SpanFlow
 import org.digma.intellij.plugin.model.rest.insights.SpanUsagesInsight
-import org.digma.intellij.plugin.navigation.codeless.showInsightsForSpan
 import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
 import org.digma.intellij.plugin.ui.common.Html
 import org.digma.intellij.plugin.ui.common.Laf
@@ -150,7 +151,7 @@ fun getTopUsagePanel(
 fun addSpanLinkIfPossible(project: Project, service: SpanFlow.Service, panel: JPanel) {
     val spanName = service.span
     val link = ActionLink(spanName) {
-        showInsightsForSpan(project, service.spanCodeObjectId)
+        project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(service.spanCodeObjectId)
     }
     link.toolTipText = asHtml(spanName)
     panel.add(link)

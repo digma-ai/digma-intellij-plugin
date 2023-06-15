@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.document;
 
+import kotlin.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -57,5 +58,21 @@ public class CodeObjectsUtil {
             return codeObjectId.substring("span:".length());
         }
         return codeObjectId;
+    }
+
+
+    @NotNull
+    public static Pair<String, String> getMethodClassAndName(@NotNull String methodId) {
+
+        methodId = stripMethodPrefix(methodId);
+
+        if (!methodId.contains("$_$")){
+            return new Pair<>("",methodId);
+        }
+
+        var className = methodId.substring(0,methodId.indexOf("$_$"));
+        var methodName = methodId.substring(methodId.indexOf("$_$") + 3);
+
+        return new Pair<>(methodName,className);
     }
 }

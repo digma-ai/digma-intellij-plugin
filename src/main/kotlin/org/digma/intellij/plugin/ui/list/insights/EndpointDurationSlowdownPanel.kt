@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import java.awt.BorderLayout
+import java.awt.GridBagLayout
 import javax.swing.SwingConstants
 
 fun endpointDurationSlowdownPanel(
@@ -58,14 +59,17 @@ fun addSlowdownSources(
     val jbLabel = JBLabel(normalizedDisplayName)
     jbLabel.horizontalAlignment = SwingConstants.LEFT
     jbLabel.horizontalTextPosition = SwingConstants.LEFT
-    var labelWrapper = JPanel(BorderLayout())
+    val labelWrapper = JPanel(BorderLayout())
     labelWrapper.add(jbLabel, BorderLayout.WEST)
     labelWrapper.isOpaque = false
     labelWrapper.border = JBUI.Borders.empty()
     rootPanel.add(labelWrapper)
 
-    sources.forEach { source: DurationSlowdownSource ->
-        val row = slowdownDurationRowPanel(project, source, panelsLayoutHelper, moreData)
-        rootPanel.add(row)
+    val gridLayout = GridBagLayout()
+    val gridPanel = JPanel(gridLayout)
+    gridPanel.isOpaque = false
+    for((index, source) in sources.withIndex()){
+        slowdownDurationRowPanel(project, source, panelsLayoutHelper, moreData, gridPanel, gridLayout, index)
     }
+    rootPanel.add(gridPanel)
 }

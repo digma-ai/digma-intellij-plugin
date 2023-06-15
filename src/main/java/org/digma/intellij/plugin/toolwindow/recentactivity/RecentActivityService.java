@@ -28,6 +28,7 @@ import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator;
 import org.digma.intellij.plugin.common.JsonUtils;
 import org.digma.intellij.plugin.document.CodeObjectsUtil;
 import org.digma.intellij.plugin.icons.AppIcons;
+import org.digma.intellij.plugin.insights.InsightsViewOrchestrator;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityEntrySpanForTracePayload;
@@ -68,7 +69,6 @@ import java.util.TimerTask;
 import static org.digma.intellij.plugin.common.EnvironmentUtilKt.LOCAL_ENV;
 import static org.digma.intellij.plugin.common.EnvironmentUtilKt.SUFFIX_OF_LOCAL;
 import static org.digma.intellij.plugin.common.EnvironmentUtilKt.getSortedEnvironments;
-import static org.digma.intellij.plugin.navigation.codeless.CodelessNavigationKt.showInsightsForSpan;
 import static org.digma.intellij.plugin.recentactivity.RecentActivityLogic.RECENT_EXPIRATION_LIMIT_MILLIS;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.GLOBAL_SET_IS_JAEGER_ENABLED;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_CLOSE_LIVE_VIEW;
@@ -246,7 +246,7 @@ public class RecentActivityService implements Disposable {
                     String actualEnvName = adjustBackEnvNameIfNeeded(payload.getEnvironment());
                     environmentsSupplier.setCurrent(actualEnvName, false, () -> {
                         NotificationUtil.showNotification(project, "code object could not be found in the workspace");
-                        showInsightsForSpan(project, payload.getSpan().getSpanCodeObjectId(), payload.getSpan().getMethodCodeObjectId());
+                        project.getService(InsightsViewOrchestrator.class).showInsightsForCodelessSpan(payload.getSpan().getSpanCodeObjectId());
                     });
 
                 } else {

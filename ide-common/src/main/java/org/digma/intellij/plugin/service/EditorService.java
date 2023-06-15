@@ -5,6 +5,7 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.ex.EditorEx;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.Project;
@@ -16,6 +17,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.testFramework.BinaryLightVirtualFile;
 import com.intellij.testFramework.LightVirtualFile;
+import kotlin.Pair;
 import kotlin.Triple;
 import org.apache.commons.io.IOUtils;
 import org.digma.intellij.plugin.log.Log;
@@ -270,4 +272,20 @@ public class EditorService implements Disposable {
         //nothing to do
     }
 
+    @Nullable
+    public Pair<String, Integer> getCurrentCaretLocation() {
+        var selectedTextEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+
+        if (selectedTextEditor != null){
+            var file = FileDocumentManager.getInstance().getFile(selectedTextEditor.getDocument());
+            var offset = selectedTextEditor.getCaretModel().getOffset();
+
+            if (file != null){
+                return new Pair<>(file.getUrl(),offset);
+            }
+
+        }
+
+        return null;
+    }
 }

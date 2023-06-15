@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.document;
 
+import kotlin.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
@@ -42,10 +43,36 @@ public class CodeObjectsUtil {
 
 
     public static String stripSpanPrefix(@NotNull String spanCodeObjectId) {
-        return spanCodeObjectId.startsWith("span:") ? spanCodeObjectId.substring("span:".length()) : spanCodeObjectId;
+        return stripPrefix(spanCodeObjectId);
     }
 
-    public static String stripMethodPrefix(@NotNull String codeObjectId) {
-        return codeObjectId.startsWith("method:") ? codeObjectId.substring("method:".length()) : codeObjectId;
+    public static String stripMethodPrefix(@NotNull String methodCodeObjectId) {
+        return stripPrefix(methodCodeObjectId);
+    }
+
+
+    private static String stripPrefix(@NotNull String codeObjectId){
+        if(codeObjectId.startsWith("method:")){
+           return codeObjectId.substring("method:".length());
+        }else if(codeObjectId.startsWith("span:")){
+            return codeObjectId.substring("span:".length());
+        }
+        return codeObjectId;
+    }
+
+
+    @NotNull
+    public static Pair<String, String> getMethodClassAndName(@NotNull String methodId) {
+
+        methodId = stripMethodPrefix(methodId);
+
+        if (!methodId.contains("$_$")){
+            return new Pair<>("",methodId);
+        }
+
+        var className = methodId.substring(0,methodId.indexOf("$_$"));
+        var methodName = methodId.substring(methodId.indexOf("$_$") + 3);
+
+        return new Pair<>(methodName,className);
     }
 }

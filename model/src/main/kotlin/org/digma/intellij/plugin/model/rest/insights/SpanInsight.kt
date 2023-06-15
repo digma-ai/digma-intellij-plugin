@@ -4,7 +4,7 @@ interface SpanInsight : CodeObjectInsight {
     // scope = "Span"
     val spanInfo: SpanInfo
 
-    fun spanName(): String {
-        return spanInfo.name
+    fun getSpanDisplayName(): String {
+        return spanInfo.displayName
     }
 }

@@ -167,22 +167,12 @@ class NavigationPanel(
     }
 
     private fun getSecondRowPanel(model: PanelModel): JPanel {
-        val bgColor: Color = Laf.Colors.EDITOR_BACKGROUND
-
-        val rowPanel = createDefaultBoxLayoutLineAxisPanelWithBackgroundWithFixedHeight(
-                0, 5, 0, 5,
-                bgColor,
-                Laf.scalePanels(Laf.Sizes.PANEL_SIZE_32)
-        )
-//        rowPanel.add(getDashboardButton()) // will be used later
-//        rowPanel.add(Box.createHorizontalGlue())
-
-
+        val rowPanel = JPanel(BorderLayout())
+        rowPanel.isOpaque = false
+        rowPanel.border = JBUI.Borders.empty()
         myScopeLineResultPanel?.dispose()
         myScopeLineResultPanel = ScopeLineResultPanel(project, model)
-        rowPanel.add(myScopeLineResultPanel)
-        rowPanel.add(Box.createHorizontalGlue())
-//        rowPanel.add(getRelatedInsightsIconLabel()) // will be used later
+        rowPanel.add(myScopeLineResultPanel,BorderLayout.CENTER)
         return rowPanel
     }
 

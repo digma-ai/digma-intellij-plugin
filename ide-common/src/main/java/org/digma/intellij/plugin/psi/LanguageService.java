@@ -143,8 +143,6 @@ public interface LanguageService extends Disposable {
      * MethodInfo or a file.
      * for example: ErrorsProvider.getErrorDetails may be clicked from the summary view, in that case there was no
      * code object discovery and the file is probably not opened. in that case we have only methodCodeObjectId.
-     * Also, WorkspaceUrisHelper#findWorkspaceUrisForSpans calls this method if summary view has SpanDurationChangeInsight
-     * and there is no context like MethodInfo or file.
      * This method must be executed in ReadAction or EDT.
      */
     @NotNull

@@ -50,6 +50,10 @@ class TabsHelper(val project: Project) {
         visibleTabBeforeErrorDetails = null
     }
 
+    //todo: a weird way to change tabs, this method does not notify about tab changed, it requests the tabbed pane to change a tab.
+    // the only listener for this event is the TabsPanel and it changed tab to the requested index.
+    // this class should have method like showErrorsTab, showInsightsTab etc. that should call TabsPanel to change tab,
+    // tabs panel may fire en event that tab was changed.
     fun notifyTabChanged(newTabIndex: Int) {
         Log.log(logger::info, "Firing TabChanged event for {}", newTabIndex)
         if (project.isDisposed) {

@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.ReadActions;
+import org.digma.intellij.plugin.insights.InsightsViewOrchestrator;
 import org.digma.intellij.plugin.jaegerui.model.incoming.GoToSpanMessage;
 import org.digma.intellij.plugin.jaegerui.model.incoming.Span;
 import org.digma.intellij.plugin.jaegerui.model.incoming.SpansMessage;
@@ -18,8 +19,6 @@ import org.digma.intellij.plugin.jaegerui.model.outgoing.Insight;
 import org.digma.intellij.plugin.jaegerui.model.outgoing.SpanData;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
-import org.digma.intellij.plugin.navigation.codeless.CodelessNavigationKt;
-import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.psi.SupportedLanguages;
 import org.digma.intellij.plugin.settings.SettingsState;
@@ -216,7 +215,7 @@ public class JaegerUIService {
 
         Log.log(LOGGER::debug, project, "calling CodeNavigator.maybeNavigateToSpan from goToSpan for {}", span);
 
-        if (project.getService(CodeNavigator.class).maybeNavigateToSpan(span.spanId(), span.methodId())) {
+        if (project.getService(InsightsViewOrchestrator.class).showInsightsForSpanOrMethodAndNavigateToCode(span.spanId(), span.methodId())) {
             Log.log(LOGGER::debug, project, "CodeNavigator.maybeNavigateToSpan did navigate to span {}", span);
         } else {
             Log.log(LOGGER::warn, project, "could not find code location in goToSpan for {}", goToSpanMessage);
@@ -230,10 +229,12 @@ public class JaegerUIService {
 
         var span = goToSpanMessage.payload();
         //if we're here then code location was not found
-        CodelessNavigationKt.showInsightsForSpan(project, span.spanId(), span.methodId());
+        project.getService(InsightsViewOrchestrator.class).showInsightsForCodelessSpan(span.spanCodeObjectId());
     }
 
     public Map<String, SpanData> getResolvedSpans(SpansMessage spansMessage) {
+
+        //todo: change get insights with the new service
 
         var allSpans = new HashMap<String, SpanData>();
 

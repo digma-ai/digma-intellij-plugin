@@ -1,13 +1,13 @@
 package org.digma.intellij.plugin.ui.list.insights
 
 import com.google.common.io.CharStreams
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI.Borders.empty
-import org.apache.commons.lang3.StringUtils
-import org.digma.intellij.plugin.document.CodeObjectsUtil
+import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.model.rest.insights.DurationSlowdownSource
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
 import org.digma.intellij.plugin.model.rest.insights.SpanInfo
@@ -17,7 +17,6 @@ import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.spanBold
 import org.digma.intellij.plugin.ui.common.spanGrayed
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
-import org.digma.intellij.plugin.ui.list.openWorkspaceFileForSpan
 import org.digma.intellij.plugin.ui.model.TraceSample
 import org.digma.intellij.plugin.ui.needToShowDurationChange
 import org.digma.intellij.plugin.ui.scaled
@@ -39,7 +38,6 @@ import javax.swing.SwingConstants
 import kotlin.math.abs
 import kotlin.math.max
 
-
 typealias DigmaDuration = org.digma.intellij.plugin.model.rest.insights.Duration
 
 const val HTML_NON_BREAKING_SPACE: String = "&nbsp;"
@@ -58,11 +56,11 @@ class SpanPanels {
     }
 }
 
-fun getLink(project: Project, spanInfo: SpanInfo, moreData: HashMap<String, Any>): ActionLink {
+fun getLink(project: Project, spanInfo: SpanInfo): ActionLink {
 
-    val spanId = CodeObjectsUtil.createSpanId(spanInfo.instrumentationLibrary, spanInfo.name)
-    val link = ActionLink(StringUtils.normalizeSpace(spanInfo.displayName)) {
-        openWorkspaceFileForSpan(project, moreData, spanId)
+    val spanId = spanInfo.spanCodeObjectId
+    val link = ActionLink(spanInfo.name) {
+        project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanId)
     }
     val targetClass = spanId.substringBeforeLast("\$_\$")
 
@@ -78,7 +76,6 @@ fun slowdownDurationRowPanel(
     project: Project,
     source: DurationSlowdownSource,
     panelsLayoutHelper: PanelsLayoutHelper,
-    moreData: HashMap<String, Any>,
     gridPanel: JPanel,
     gridLayout: GridBagLayout,
     row: Int
@@ -88,7 +85,7 @@ fun slowdownDurationRowPanel(
     c.weightx = 1.0
     c.gridy = row
 
-    val link = getLink(project, source.spanInfo, moreData)
+    val link = getLink(project, source.spanInfo)
     val linkPanel = JPanel()
     linkPanel.layout = BorderLayout(10.scaled(), 0)
     linkPanel.border = empty()

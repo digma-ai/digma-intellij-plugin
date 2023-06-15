@@ -19,11 +19,12 @@ constructor(
 
     data class Service
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    @ConstructorProperties("service", "span", "codeObjectId")
+    @ConstructorProperties("service", "span", "codeObjectId","spanCodeObjectId")
     constructor(
         val service: String,
         val span: String,
         val codeObjectId: String,
+        val spanCodeObjectId: String
     )
 
 }

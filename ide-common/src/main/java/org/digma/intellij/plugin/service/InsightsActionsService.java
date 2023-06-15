@@ -48,8 +48,4 @@ public class InsightsActionsService {
         languageService.navigateToMethod(codeObjectId);
     }
 
-    public void openWorkspaceFileForSpan(@NotNull String workspaceUri, int offset) {
-        editorService.openWorkspaceFileInEditor(workspaceUri, offset);
-    }
-
 }

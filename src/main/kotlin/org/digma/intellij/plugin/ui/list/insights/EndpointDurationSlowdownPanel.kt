@@ -1,36 +1,35 @@
 package org.digma.intellij.plugin.ui.list.insights
 
-import org.digma.intellij.plugin.model.rest.insights.EndpointDurationSlowdownInsight
-import javax.swing.JPanel
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBLabel
 import com.intellij.util.ui.JBUI
 import org.apache.commons.lang3.StringUtils
 import org.digma.intellij.plugin.model.rest.insights.DurationSlowdownSource
+import org.digma.intellij.plugin.model.rest.insights.EndpointDurationSlowdownInsight
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import java.awt.BorderLayout
 import java.awt.GridBagLayout
+import javax.swing.JPanel
 import javax.swing.SwingConstants
 
 fun endpointDurationSlowdownPanel(
     project: Project,
     insight: EndpointDurationSlowdownInsight,
-    panelsLayoutHelper: PanelsLayoutHelper,
-    moreData: HashMap<String, Any>,
+    panelsLayoutHelper: PanelsLayoutHelper
 ): JPanel {
 
     val rootPanel = createDefaultBoxLayoutYAxisPanel()
 
     val p50Sources = insight.durationSlowdownSources.filter { it.percentile == "0.5" }
     if (p50Sources.isNotEmpty()){
-        addSlowdownSources(project, rootPanel, "Affecting most requests:", p50Sources, panelsLayoutHelper, moreData)
+        addSlowdownSources(project, rootPanel, "Affecting most requests:", p50Sources, panelsLayoutHelper)
     }
 
     val p95Sources = insight.durationSlowdownSources.filter { it.percentile == "0.95" }
     if (p95Sources.isNotEmpty()){
-        addSlowdownSources(project, rootPanel, "Affecting ~5% of requests:", p95Sources, panelsLayoutHelper, moreData)
+        addSlowdownSources(project, rootPanel, "Affecting ~5% of requests:", p95Sources, panelsLayoutHelper)
     }
 
     val result = createInsightPanel(
@@ -52,8 +51,7 @@ fun addSlowdownSources(
     rootPanel: JPanel,
     header: String,
     sources: List<DurationSlowdownSource>,
-    panelsLayoutHelper: PanelsLayoutHelper,
-    moreData: HashMap<String, Any>,) {
+    panelsLayoutHelper: PanelsLayoutHelper) {
 
     val normalizedDisplayName = StringUtils.normalizeSpace(header)
     val jbLabel = JBLabel(normalizedDisplayName)
@@ -69,7 +67,7 @@ fun addSlowdownSources(
     val gridPanel = JPanel(gridLayout)
     gridPanel.isOpaque = false
     for((index, source) in sources.withIndex()){
-        slowdownDurationRowPanel(project, source, panelsLayoutHelper, moreData, gridPanel, gridLayout, index)
+        slowdownDurationRowPanel(project, source, panelsLayoutHelper, gridPanel, gridLayout, index)
     }
     rootPanel.add(gridPanel)
 }

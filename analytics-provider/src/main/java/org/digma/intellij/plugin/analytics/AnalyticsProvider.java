@@ -10,6 +10,8 @@ import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightReque
 import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsRequest;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
+import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanRequest;
+import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanResponse;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
@@ -40,6 +42,8 @@ public interface AnalyticsProvider extends Closeable {
     List<CodeObjectInsight> getInsights(InsightsRequest insightsRequest);
 
     InsightsOfMethodsResponse getInsightsOfMethods(InsightsOfMethodsRequest insightsOfMethodsRequest);
+
+    InsightsOfSingleSpanResponse getInsightsForSingleSpan(InsightsOfSingleSpanRequest insightsOfSingleSpanRequest);
 
     List<GlobalInsight> getGlobalInsights(InsightsRequest insightsRequest);
 

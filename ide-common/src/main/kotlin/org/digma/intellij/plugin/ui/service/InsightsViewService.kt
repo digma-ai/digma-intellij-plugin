@@ -1,14 +1,15 @@
 package org.digma.intellij.plugin.ui.service
 
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import org.apache.commons.lang.builder.EqualsBuilder
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.common.modelChangeListener.ModelChangeListener
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.insights.CodeLessSpanInsightsProvider
+import org.digma.intellij.plugin.insights.CodelessSpanInsightsContainer
 import org.digma.intellij.plugin.insights.InsightsListContainer
 import org.digma.intellij.plugin.insights.InsightsProvider
 import org.digma.intellij.plugin.log.Log
@@ -66,28 +67,41 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
 
         Log.log(logger::debug, "updateInsightsModel to {}. ", codeLessSpan)
 
-        val insightsListContainer: InsightsListContainer? =
-            ReadAction.compute<InsightsListContainer,Exception> { codeLessInsightsProvider.getInsights() }
+        val codelessSpanInsightsContainer: CodelessSpanInsightsContainer? = codeLessInsightsProvider.getInsights()
 
-        if (insightsListContainer == null){
+        val insightsContainer:InsightsListContainer? = codelessSpanInsightsContainer?.insightsContainer
+
+        if (insightsContainer?.listViewItems.isNullOrEmpty()){
             Log.log(logger::debug,project, "could not load insights for {}, see logs for details",codeLessSpan )
-            empty()
+        }
+
+
+        //todo: this is temporary, flickering happens because the UI is rebuilt on every refresh, when
+        // UI components are changed to bind to models flickering should not happen and we can just
+        // update the UI even with same data, it should be faster and more correct then deep equals of the data.
+        //this is the way to prevent updating the UI if insights list didn't change between refresh
+        // and by the way prevent flickering.
+        //kotlin equality doesn't work for listViewItems because ListViewItem does not implement equals
+        // so only the expensive reflectionEquals works here
+        if (model.scope is CodeLessSpanScope &&
+            (model.scope as CodeLessSpanScope).getSpan() == codeLessSpan &&
+            EqualsBuilder.reflectionEquals(insightsContainer?.listViewItems,model.listViewItems)) {
             return
         }
 
-        if (insightsListContainer.listViewItems.isNullOrEmpty()){
-            Log.log(logger::debug,project, "emptying model for {} because there are no insights",codeLessSpan )
-            empty()
-            return
-        }
 
-        model.listViewItems = insightsListContainer.listViewItems ?: listOf()
+        model.listViewItems = insightsContainer?.listViewItems ?: listOf()
         model.previewListViewItems = ArrayList()
-        model.usageStatusResult = insightsListContainer.usageStatus ?: EmptyUsageStatusResult
-        model.scope = CodeLessSpanScope(codeLessSpan)
-        model.insightsCount = insightsListContainer.count
+        model.usageStatusResult = insightsContainer?.usageStatus ?: EmptyUsageStatusResult
+        model.scope = CodeLessSpanScope(codeLessSpan,codelessSpanInsightsContainer?.insightsResponse?.spanInfo)
+        model.insightsCount = insightsContainer?.count ?: 0
         model.card = InsightsTabCard.INSIGHTS
         model.status = UIInsightsStatus.Default
+
+        if (model.listViewItems.isEmpty()){
+            model.status = UIInsightsStatus.NoInsights
+        }
+
 
         notifyModelChangedAndUpdateUi()
 

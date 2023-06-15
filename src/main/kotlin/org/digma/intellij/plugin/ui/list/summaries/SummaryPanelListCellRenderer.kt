@@ -1,11 +1,12 @@
 package org.digma.intellij.plugin.ui.list.summaries
 
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.JBUI.Borders.empty
-import org.digma.intellij.plugin.document.CodeObjectsUtil
+import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.discovery.CodeObjectInfo
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationChangeInsight
@@ -23,13 +24,12 @@ import org.digma.intellij.plugin.ui.list.commonListItemPanel
 import org.digma.intellij.plugin.ui.list.errors.contentOfFirstAndLast
 import org.digma.intellij.plugin.ui.list.insights.genericPanelForSingleInsight
 import org.digma.intellij.plugin.ui.list.insights.percentileRowPanel
-import org.digma.intellij.plugin.ui.list.openWorkspaceFileForSpan
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
+import org.digma.intellij.plugin.ui.service.TabsHelper
 import java.awt.BorderLayout
 import java.awt.GridLayout
 import javax.swing.JLabel
 import javax.swing.JPanel
-import javax.swing.SwingConstants
 
 
 class SummaryPanelListCellRenderer : AbstractPanelListCellRenderer() {
@@ -41,7 +41,7 @@ class SummaryPanelListCellRenderer : AbstractPanelListCellRenderer() {
         return when (val model = value.modelObject) {
             is SummaryTypeTitle -> buildTitle(model)
             is TopErrorFlowsInsight.Error -> commonListItemPanel(buildError(model, project))
-            is SpanDurationChangeInsight.Change -> commonListItemPanel(buildSpanDuration(model, value.moreData, panelsLayoutHelper, project))
+            is SpanDurationChangeInsight.Change -> commonListItemPanel(buildSpanDuration(model,  panelsLayoutHelper, project))
             else -> genericPanelForSingleInsight(project, model)
         }
     }
@@ -110,16 +110,16 @@ private fun getCharacteristic(model: TopErrorFlowsInsight.Error): JPanel {
     return wrapper
 }
 
-private fun buildSpanDuration(value: SpanDurationChangeInsight.Change, moreData: HashMap<String, Any>, panelsLayoutHelper: PanelsLayoutHelper, project: Project): JPanel {
+private fun buildSpanDuration(value: SpanDurationChangeInsight.Change, panelsLayoutHelper: PanelsLayoutHelper, project: Project): JPanel {
 
-    val spanId = CodeObjectsUtil.createSpanId(value.span.instrumentationLibrary, value.span.name)
-    val title = if (moreData.contains(spanId)) {
+    val spanId = value.span.spanCodeObjectId
+
+    val title =
         ActionLink(asHtml(value.span.displayName)) {
-            openWorkspaceFileForSpan(project, moreData, spanId)
+            project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanId)
+            project.service<TabsHelper>().notifyTabChanged(0)
         }
-    } else{
-        JLabel(asHtml(value.span.displayName), SwingConstants.LEFT)
-    }
+
     title.toolTipText = value.span.displayName
     title.border = JBUI.Borders.emptyBottom(5)
 

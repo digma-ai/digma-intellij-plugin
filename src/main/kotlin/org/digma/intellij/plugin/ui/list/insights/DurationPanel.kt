@@ -16,6 +16,7 @@ import org.digma.intellij.plugin.model.rest.insights.SpanInfo
 import org.digma.intellij.plugin.model.rest.insights.SpanInstanceInfo
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.toolwindow.recentactivity.RecentActivityService
+import org.digma.intellij.plugin.ui.common.IconWithLiveIndication
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.getHex
 import org.digma.intellij.plugin.ui.common.spanBold
@@ -24,7 +25,9 @@ import org.digma.intellij.plugin.ui.list.ListItemActionIconButton
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.model.TraceSample
 import org.digma.intellij.plugin.ui.scaled
+import java.time.Instant
 import javax.swing.BoxLayout
+import javax.swing.Icon
 import javax.swing.JButton
 import javax.swing.JPanel
 
@@ -51,9 +54,15 @@ fun spanDurationPanel(
     durationsListPanel.layout = BoxLayout(durationsListPanel, BoxLayout.Y_AXIS)
     durationsListPanel.isOpaque = false
 
+    var icon: Icon = Laf.Icons.Insight.DURATION
+
     spanDurationsInsight.lastSpanInstanceInfo?.let {
         val lastCallPanel = createLastCallPanel(it)
         durationsListPanel.add(lastCallPanel)
+
+        if (it.startTime.toInstant().isAfter(Instant.now().minusSeconds(60))) {
+            icon = IconWithLiveIndication(icon)
+        }
     }
 
     val traceSamples = ArrayList<TraceSample>()
@@ -67,7 +76,7 @@ fun spanDurationPanel(
 
 
     val buttonToGraph = buildButtonToPercentilesGraph(project, spanDurationsInsight.spanInfo, spanDurationsInsight.type)
-    val liveViewButton = buildLiveViewButton(project,spanDurationsInsight)
+    val liveViewButton = buildLiveViewButton(project, spanDurationsInsight)
     //related to issue #621
     //val buttonToJaeger = buildButtonToJaeger(project, "Compare", spanDurationsInsight.spanInfo.name, traceSamples)
 
@@ -76,31 +85,30 @@ fun spanDurationPanel(
         insight = spanDurationsInsight,
         title = "Duration",
         description = "",
-        iconsList = listOf(Laf.Icons.Insight.DURATION),
+        iconsList = listOf(icon),
         bodyPanel = durationsListPanel,
-        buttons = listOf(buttonToGraph,liveViewButton),
+        buttons = listOf(buttonToGraph, liveViewButton),
         paginationComponent = null
     )
 }
-
 
 
 private fun buildLiveViewButton(project: Project, spanDurationsInsight: SpanDurationsInsight): JButton {
 
     val icon = if (JBColor.isBright()) Laf.Icons.Common.LiveIconLight else Laf.Icons.Common.LiveIconDark
     val borderColor = if (JBColor.isBright()) Laf.Colors.LIVE_BUTTON_BORDER_LIGHT else Laf.Colors.LIVE_BUTTON_BORDER_DARK
-    val liveViewButton = ListItemActionIconButton("Live",icon)
+    val liveViewButton = ListItemActionIconButton("Live", icon)
     liveViewButton.isBorderPainted = true
-    liveViewButton.border = JBUI.Borders.customLine(borderColor,2.scaled())
-    liveViewButton.addActionListener{
+    liveViewButton.border = JBUI.Borders.customLine(borderColor, 2.scaled())
+    liveViewButton.addActionListener {
         try {
-            ActivityMonitor.getInstance( project).registerInsightButtonClicked("live", spanDurationsInsight.type)
+            ActivityMonitor.getInstance(project).registerInsightButtonClicked("live", spanDurationsInsight.type)
             val idToUse = spanDurationsInsight.prefixedCodeObjectId
             idToUse?.let {
                 val durationLiveData = AnalyticsService.getInstance(project).getDurationLiveData(it)
-                RecentActivityService.getInstance(project).sendLiveData(durationLiveData,it)
+                RecentActivityService.getInstance(project).sendLiveData(durationLiveData, it)
             }
-        }catch (e: AnalyticsServiceException){
+        } catch (e: AnalyticsServiceException) {
             //do nothing, the exception is logged in AnalyticsService
         }
     }
@@ -114,7 +122,8 @@ private fun buildButtonToPercentilesGraph(project: Project, span: SpanInfo, insi
     button.addActionListener {
         ActivityMonitor.getInstance(project).registerInsightButtonClicked("histogram", insightType)
 
-        val htmlContent = analyticsService.getHtmlGraphForSpanPercentiles(span.instrumentationLibrary, span.name, Laf.Colors.PLUGIN_BACKGROUND.getHex())
+        val htmlContent =
+            analyticsService.getHtmlGraphForSpanPercentiles(span.instrumentationLibrary, span.name, Laf.Colors.PLUGIN_BACKGROUND.getHex())
         DigmaHTMLEditorProvider.openEditor(project, "Percentiles Graph of Span ${span.name}", htmlContent)
     }
 

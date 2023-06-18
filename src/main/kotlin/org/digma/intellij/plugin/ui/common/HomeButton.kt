@@ -24,6 +24,9 @@ class HomeButton(val project: Project, private val cardsPanel: JPanel): JToggleB
     }
 
     init {
+
+        project.service<HomeSwitcherService>().setButton(this)
+
         icon = getMyDefaultIcon()
         selectedIcon = getMySelectedIcon()
         isSelected = service<PersistenceService>().state.homeButtonSelected

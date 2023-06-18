@@ -19,9 +19,7 @@ import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import org.digma.intellij.plugin.ui.service.ErrorsViewService
 import org.digma.intellij.plugin.ui.service.InsightsViewService
-import org.digma.intellij.plugin.ui.service.SummaryViewService
 import org.digma.intellij.plugin.ui.service.TabsHelper
-import org.digma.intellij.plugin.ui.summary.summaryPanel
 import java.util.concurrent.locks.ReentrantLock
 import javax.swing.BorderFactory
 import javax.swing.BoxLayout
@@ -50,7 +48,7 @@ class TabsPanel(
                         var index = newTabIndex
                         if (-1 == newTabIndex) {
                             tabbedPane.setTitleAt(1, TabsHelper.DETAILED_ERRORS_TAB_NAME)
-                            index = 1;
+                            index = 1
                         } else {
                             tabbedPane.setTitleAt(1, TabsHelper.DEFAULT_ERRORS_TAB_NAME)
                         }
@@ -112,10 +110,8 @@ class TabsPanel(
         } else {
             tabbedPane.addTab(TabsHelper.DEFAULT_ERRORS_TAB_NAME, errorsPanel)
         }
-        val summaryPanel = createSummaryPanel(project);
-        tabbedPane.addTab(TabsHelper.SUMMARY_TAB_NAME, summaryPanel)
 
-        tabbedPane.border = BorderFactory.createEmptyBorder(); // Set the border of the tabbed pane to empty
+        tabbedPane.border = BorderFactory.createEmptyBorder()
 
         var currentTabIndex: Int
 
@@ -140,12 +136,6 @@ class TabsPanel(
         return tabbedPane
     }
 
-    private fun createSummaryPanel(project: Project): DigmaTabPanel {
-        val summaryPanel = summaryPanel(project)
-        val summaryViewService = project.getService(SummaryViewService::class.java)
-        summaryViewService.panel = summaryPanel
-        return summaryPanel
-    }
 
     private fun createErrorsPanel(project: Project): DigmaTabPanel {
         val errorsPanel = errorsPanel(project)

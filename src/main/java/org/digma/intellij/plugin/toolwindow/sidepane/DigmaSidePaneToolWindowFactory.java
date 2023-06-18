@@ -16,6 +16,7 @@ import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.service.ErrorsActionsService;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.digma.intellij.plugin.ui.ToolWindowShower;
+import org.digma.intellij.plugin.ui.common.ContentPanel;
 import org.digma.intellij.plugin.ui.common.statuspanels.NoConnectionPanelKt;
 import org.digma.intellij.plugin.ui.panels.DisposablePanel;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
@@ -64,7 +65,8 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
 
         ToolWindowShower.getInstance(project).setToolWindow(toolWindow);
 
-        var mainSidePaneWindowPanel = createMainSidePaneWindowPanel(project);
+        var contentPanel = new ContentPanel(project);
+        var mainSidePaneWindowPanel = createMainSidePaneWindowPanel(project,contentPanel);
         var cardsPanel = createCardsPanel(project,mainSidePaneWindowPanel);
         var mainContent =  ContentFactory.getInstance().createContent(cardsPanel, null, false);
         toolWindow.getContentManager().addContent(mainContent);
@@ -79,7 +81,7 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         //when ever we need to show the wizard it will be created new and disposed when finished, its probably not a
         // good idea to keep it in memory after its finished.
         Supplier<DisposablePanel> wizardPanelBuilder = () -> createInstallationWizardSidePanelWindowPanel(project);
-        MainToolWindowCardsController.getInstance(project).initComponents(toolWindow,mainContent,cardsPanel,wizardPanelBuilder);
+        MainToolWindowCardsController.getInstance(project).initComponents(toolWindow,mainContent,cardsPanel,contentPanel,wizardPanelBuilder);
 
         ErrorsActionsService errorsActionsService = project.getService(ErrorsActionsService.class);
         toolWindow.getContentManager().addContentManagerListener(errorsActionsService);

@@ -8,12 +8,12 @@ import org.digma.intellij.plugin.ui.service.InsightsViewService
 import java.awt.BorderLayout
 import javax.swing.JPanel
 
-fun createMainSidePaneWindowPanel(project: Project): DigmaResettablePanel {
+fun createMainSidePaneWindowPanel(project: Project,contentPanel: ContentPanel): DigmaResettablePanel {
 
     val insightsModel = InsightsViewService.getInstance(project).model
     val navigationPanel = NavigationPanel(project, insightsModel, AnalyticsService.getInstance(project).environment)
     val updatePanel = UpdateVersionPanel(project)
-    val tabsPanel = TabsPanel(project)
+
 
     val result = object : DigmaResettablePanel() {
 
@@ -21,7 +21,7 @@ fun createMainSidePaneWindowPanel(project: Project): DigmaResettablePanel {
         override fun reset() {
             navigationPanel.reset()
             updatePanel.reset()
-            tabsPanel.reset()
+            contentPanel.reset()
         }
 
         override fun requestFocus() {
@@ -44,7 +44,7 @@ fun createMainSidePaneWindowPanel(project: Project): DigmaResettablePanel {
     topPanel.add(updatePanel, BorderLayout.CENTER)
 
     result.add(topPanel, BorderLayout.NORTH)
-    result.add(tabsPanel, BorderLayout.CENTER)
+    result.add(contentPanel, BorderLayout.CENTER)
 
     return result
 }

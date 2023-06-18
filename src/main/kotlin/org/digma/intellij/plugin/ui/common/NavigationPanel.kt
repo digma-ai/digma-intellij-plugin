@@ -15,19 +15,27 @@ import com.jetbrains.rd.util.lifetime.LifetimeDefinition
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.common.CommonUtils
-import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.common.modelChangeListener.ModelChangeListener
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.ui.errors.IconButton
-import org.digma.intellij.plugin.ui.list.insights.createDefaultBoxLayoutLineAxisPanelWithBackgroundWithFixedHeight
 import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
-import java.awt.*
+import java.awt.BorderLayout
+import java.awt.CardLayout
+import java.awt.Cursor
+import java.awt.Dimension
+import java.awt.FlowLayout
+import java.awt.GridBagConstraints
+import java.awt.GridBagLayout
+import java.awt.GridLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.util.concurrent.locks.ReentrantLock
-import javax.swing.*
+import javax.swing.BorderFactory
+import javax.swing.JLabel
+import javax.swing.JPanel
+import javax.swing.SwingConstants
 
 
 class NavigationPanel(
@@ -167,13 +175,41 @@ class NavigationPanel(
     }
 
     private fun getSecondRowPanel(model: PanelModel): JPanel {
+
+        val scopeLine = createScopeLinePanel()
+        val projectPanel = ProjectHomePanel(project)
+
+        val cardsLayout = CardLayout()
+        val cardsPanel = JPanel(cardsLayout)
+        cardsPanel.isOpaque = false
+        cardsPanel.border = JBUI.Borders.empty()
+        cardsPanel.add(scopeLine,HomeButton.SCOPE_LINE_PANEL)
+        cardsPanel.add(projectPanel,HomeButton.HOME_PROJECT_PANEL)
+        cardsLayout.addLayoutComponent(scopeLine,HomeButton.SCOPE_LINE_PANEL)
+        cardsLayout.addLayoutComponent(projectPanel,HomeButton.HOME_PROJECT_PANEL)
+        cardsLayout.show(cardsPanel,HomeButton.SCOPE_LINE_PANEL)
+
         val rowPanel = JPanel(BorderLayout())
         rowPanel.isOpaque = false
         rowPanel.border = JBUI.Borders.empty()
+
+        val homeButton = HomeButton(project,cardsPanel)
+        rowPanel.add(homeButton,BorderLayout.WEST)
+        rowPanel.add(cardsPanel,BorderLayout.CENTER)
+        rowPanel.background = Laf.Colors.EDITOR_BACKGROUND
+        rowPanel.isOpaque = true
+        return rowPanel
+    }
+
+
+    private fun createScopeLinePanel():JPanel{
+        val panel = JPanel(BorderLayout())
+        panel.isOpaque = false
+        panel.border = JBUI.Borders.empty()
         myScopeLineResultPanel?.dispose()
         myScopeLineResultPanel = ScopeLineResultPanel(project, model)
-        rowPanel.add(myScopeLineResultPanel,BorderLayout.CENTER)
-        return rowPanel
+        panel.add(myScopeLineResultPanel!!,BorderLayout.CENTER)
+        return panel
     }
 
     private fun getLogoIconLabel(): JLabel {

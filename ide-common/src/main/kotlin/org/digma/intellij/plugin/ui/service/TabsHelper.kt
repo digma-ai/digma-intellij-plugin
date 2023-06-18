@@ -18,7 +18,8 @@ class TabsHelper(val project: Project) {
         const val INSIGHTS_TAB_NAME = "Insights"
         const val DEFAULT_ERRORS_TAB_NAME = "Errors"
         const val DETAILED_ERRORS_TAB_NAME = "Error Details"
-        const val SUMMARY_TAB_NAME = "Summary"
+        const val DASHBOARD_TAB_NAME = "Dashboard"
+        const val ASSETS_TAB_NAME = "Assets"
 
         @JvmStatic
         fun getInstance(project: Project): TabsHelper {
@@ -35,7 +36,7 @@ class TabsHelper(val project: Project) {
     }
 
     fun isSummaryTab(content: Content?): Boolean {
-        return content != null && content.tabName.equals(SUMMARY_TAB_NAME, ignoreCase = true)
+        return content != null && content.tabName.equals(DASHBOARD_TAB_NAME, ignoreCase = true)
     }
 
 

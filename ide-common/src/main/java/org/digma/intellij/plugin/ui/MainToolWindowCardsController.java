@@ -34,11 +34,17 @@ public class MainToolWindowCardsController implements Disposable {
         MAIN, NO_CONNECTION, NON_SUPPORTED, EMPTY_EDITOR
     }
 
+    public enum ContentCard {
+        HOME,INSIGHTS
+    }
+
+
     private final Project project;
 
     private ToolWindow toolWindow;
     private Content mainContent = null;
     private JPanel cardsPanel;
+    private JPanel contentPanel;
 
     //wizard content is created and disposed when necessary. WizardComponents keeps the reference to the content and the panel.
     private final WizardComponents wizard = new WizardComponents();
@@ -95,6 +101,7 @@ public class MainToolWindowCardsController implements Disposable {
     public void initComponents(@NotNull ToolWindow toolWindow,
                                @NotNull Content mainContent,
                                @NotNull JPanel cardsPanel,
+                               @NotNull JPanel contentPanel,
                                @NotNull Supplier<DisposablePanel> wizardPanelBuilder){
 
         Log.log(LOGGER::debug,"initComponents called");
@@ -106,6 +113,9 @@ public class MainToolWindowCardsController implements Disposable {
         this.mainContent = mainContent;
         Log.log(LOGGER::debug,"got cardPanel {}",cardsPanel);
         this.cardsPanel = cardsPanel;
+
+        Log.log(LOGGER::debug,"got contentPanel {}",contentPanel);
+        this.contentPanel = contentPanel;
 
         this.wizardPanelBuilder = wizardPanelBuilder;
 
@@ -196,6 +206,27 @@ public class MainToolWindowCardsController implements Disposable {
 
 
 
+    public void showHome(){
+        showMainPanel();
+        if (contentPanel == null){
+            Log.log(LOGGER::debug,project,"showHome was called but contentPanel is null");
+        }else{
+            Log.log(LOGGER::debug,project,"Showing home");
+            EDT.ensureEDT(() -> ((CardLayout)contentPanel.getLayout()).show(contentPanel,ContentCard.HOME.name()));
+        }
+    }
+
+    public void showInsights(){
+        showMainPanel();
+        if (contentPanel == null){
+            Log.log(LOGGER::debug,project,"showInsights was called but contentPanel is null");
+        }else{
+            Log.log(LOGGER::debug,project,"Showing insights");
+            EDT.ensureEDT(() -> ((CardLayout)contentPanel.getLayout()).show(contentPanel,ContentCard.INSIGHTS.name()));
+        }
+    }
+
+
 
 
     private void showNoConnection() {
@@ -257,6 +288,7 @@ public class MainToolWindowCardsController implements Disposable {
             latestRequestedCard = null;
         }
     }
+
 
 
 

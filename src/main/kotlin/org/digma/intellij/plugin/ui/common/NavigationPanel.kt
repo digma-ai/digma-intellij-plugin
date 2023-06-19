@@ -189,15 +189,17 @@ class NavigationPanel(
         cardsLayout.addLayoutComponent(projectPanel,HomeButton.HOME_PROJECT_PANEL)
         cardsLayout.show(cardsPanel,HomeButton.SCOPE_LINE_PANEL)
 
+
         val rowPanel = JPanel(BorderLayout())
-        rowPanel.isOpaque = false
         rowPanel.border = JBUI.Borders.empty()
+        rowPanel.background = Laf.Colors.EDITOR_BACKGROUND
 
         val homeButton = HomeButton(project,cardsPanel)
+        homeButton.border = JBUI.Borders.empty(2, 13, 2, 10)
+
         rowPanel.add(homeButton,BorderLayout.WEST)
         rowPanel.add(cardsPanel,BorderLayout.CENTER)
-        rowPanel.background = Laf.Colors.EDITOR_BACKGROUND
-        rowPanel.isOpaque = true
+
         return rowPanel
     }
 

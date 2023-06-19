@@ -6,12 +6,12 @@ import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
+import org.digma.intellij.plugin.ui.scaled
 import java.awt.CardLayout
 import java.awt.Cursor
-import java.awt.Graphics
+import java.awt.Dimension
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import javax.swing.Icon
 import javax.swing.JPanel
 import javax.swing.JToggleButton
 
@@ -21,21 +21,41 @@ class HomeButton(val project: Project, private val cardsPanel: JPanel): JToggleB
     companion object{
         const val SCOPE_LINE_PANEL = "SCOPE_LINE_PANEL"
         const val HOME_PROJECT_PANEL = "HOME_PROJECT_PANEL"
+
+        val DEFAULT_ICON = if (JBColor.isBright()){
+            Laf.Icons.General.HOME_DEFAULT_LIGHT
+        }else{
+            Laf.Icons.General.HOME_DEFAULT_DARK
+        }
+
+        val SELECTED_ICON = if (JBColor.isBright()){
+            Laf.Icons.General.HOME_SELECTED_LIGHT
+        }else{
+            Laf.Icons.General.HOME_SELECTED_DARK
+        }
+
+        val HOVER_ICON = if (JBColor.isBright()){
+            Laf.Icons.General.HOME_HOVER_LIGHT
+        }else{
+            Laf.Icons.General.HOME_HOVER_DARK
+        }
+
     }
 
     init {
 
         project.service<HomeSwitcherService>().setButton(this)
 
-        icon = getMyDefaultIcon()
-        selectedIcon = getMySelectedIcon()
-        isSelected = service<PersistenceService>().state.homeButtonSelected
+        icon = DEFAULT_ICON
+        selectedIcon = SELECTED_ICON
         cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
         isOpaque = true
         isContentAreaFilled = false
         isBorderPainted = false
         border = JBUI.Borders.empty()
         background = Laf.Colors.TRANSPARENT
+        isSelected = service<PersistenceService>().state.homeButtonSelected
+        preferredSize = Dimension(DEFAULT_ICON.iconWidth.scaled()+6, DEFAULT_ICON.iconHeight.scaled()+4)
 
         changeState()
 
@@ -47,11 +67,11 @@ class HomeButton(val project: Project, private val cardsPanel: JPanel): JToggleB
 
         addMouseListener(object: MouseAdapter(){
             override fun mouseEntered(e: MouseEvent?) {
-                icon = getMyHoverIcon()
+                icon = HOVER_ICON
             }
 
             override fun mouseExited(e: MouseEvent?) {
-                icon = getMyDefaultIcon()
+                icon = DEFAULT_ICON
             }
         })
     }
@@ -70,37 +90,9 @@ class HomeButton(val project: Project, private val cardsPanel: JPanel): JToggleB
 
 
 
-    private fun getMyDefaultIcon(): Icon {
-        return if (JBColor.isBright()){
-            Laf.Icons.General.HOME_DEFAULT_LIGHT
-        }else{
-            Laf.Icons.General.HOME_DEFAULT_DARK
-        }
-
-    }
-
-    private fun getMySelectedIcon(): Icon {
-        return if (JBColor.isBright()){
-            Laf.Icons.General.HOME_SELECTED_LIGHT
-        }else{
-            Laf.Icons.General.HOME_SELECTED_DARK
-        }
-
-    }
-
-    private fun getMyHoverIcon(): Icon {
-        return if (JBColor.isBright()){
-            Laf.Icons.General.HOME_HOVER_LIGHT
-        }else{
-            Laf.Icons.General.HOME_HOVER_DARK
-        }
-    }
-
-
-
-    override fun paintComponent(g: Graphics) {
-        g.color = background
-        g.fillRect(0, 0, width, height)
-        super.paintComponent(g)
-    }
+//    override fun paintComponent(g: Graphics) {
+//        g.color = background
+//        g.fillRect(0, 0, width, height)
+//        super.paintComponent(g)
+//    }
 }

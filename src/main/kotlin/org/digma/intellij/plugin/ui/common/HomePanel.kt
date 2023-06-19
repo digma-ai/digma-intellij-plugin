@@ -1,8 +1,11 @@
 package org.digma.intellij.plugin.ui.common
 
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBTabbedPane
 import com.intellij.util.ui.JBUI
+import org.digma.intellij.plugin.assets.AssetsPanel
+import org.digma.intellij.plugin.assets.AssetsService
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import org.digma.intellij.plugin.ui.service.SummaryViewService
@@ -10,8 +13,6 @@ import org.digma.intellij.plugin.ui.service.TabsHelper
 import org.digma.intellij.plugin.ui.summary.summaryPanel
 import java.awt.Component
 import javax.swing.BoxLayout
-import javax.swing.JLabel
-import javax.swing.JPanel
 
 class HomePanel(project: Project) : DigmaResettablePanel() {
 
@@ -34,9 +35,6 @@ class HomePanel(project: Project) : DigmaResettablePanel() {
 
         val summaryPanel = createSummaryPanel(project);
         tabbedPane.addTab(TabsHelper.DASHBOARD_TAB_NAME, summaryPanel)
-
-
-
     }
 
 
@@ -47,9 +45,7 @@ class HomePanel(project: Project) : DigmaResettablePanel() {
 
 
     private fun createAssetsPanel(project: Project): Component? {
-        val assetsPanel = JPanel()
-        assetsPanel.add(JLabel("Assets: TBD"))
-        return assetsPanel
+        return AssetsPanel(project,project.service<AssetsService>())
     }
 
 

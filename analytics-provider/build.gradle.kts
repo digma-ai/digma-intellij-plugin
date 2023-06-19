@@ -8,6 +8,7 @@ dependencies {
     implementation(project(":model"))
     implementation(libs.retrofit.client)
     implementation(libs.retrofit.jackson)
+    implementation(libs.retrofit.scalars)
     implementation(libs.guava)
 }
 

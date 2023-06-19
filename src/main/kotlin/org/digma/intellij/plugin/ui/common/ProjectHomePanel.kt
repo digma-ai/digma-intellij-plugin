@@ -16,7 +16,7 @@ class ProjectHomePanel(val project: Project) : JPanel(){
         layout = BorderLayout()
         this.background = Laf.Colors.EDITOR_BACKGROUND
         this.isOpaque = true
-        border = JBUI.Borders.emptyLeft(5)
+        border = JBUI.Borders.emptyLeft(10)
 
         add(createPanel(),BorderLayout.CENTER)
     }

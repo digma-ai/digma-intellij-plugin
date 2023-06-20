@@ -1,13 +1,14 @@
-package org.digma.intellij.plugin.ui.common
+package org.digma.intellij.plugin.home
 
 import com.intellij.openapi.components.Service
+import javax.swing.JToggleButton
 
 @Service(Service.Level.PROJECT)
 class HomeSwitcherService {
 
-    private var homeButton:HomeButton? = null
+    private var homeButton:JToggleButton? = null
 
-    fun setButton(homeButton: HomeButton) {
+    fun setButton(homeButton: JToggleButton) {
         this.homeButton = homeButton
     }
 

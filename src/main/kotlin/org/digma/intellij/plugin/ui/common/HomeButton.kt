@@ -4,6 +4,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
+import org.digma.intellij.plugin.home.HomeSwitcherService
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.scaled

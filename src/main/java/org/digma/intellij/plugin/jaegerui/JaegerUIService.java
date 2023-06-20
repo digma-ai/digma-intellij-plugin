@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.ReadActions;
+import org.digma.intellij.plugin.home.HomeSwitcherService;
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator;
 import org.digma.intellij.plugin.jaegerui.model.incoming.GoToSpanMessage;
 import org.digma.intellij.plugin.jaegerui.model.incoming.Span;
@@ -23,6 +24,7 @@ import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.psi.SupportedLanguages;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.model.TraceSample;
+import org.digma.intellij.plugin.ui.service.TabsHelper;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.ByteArrayInputStream;
@@ -42,7 +44,7 @@ import static org.digma.intellij.plugin.document.CodeObjectsUtil.addSpanTypeToId
 
 public class JaegerUIService {
 
-    private final Logger LOGGER = Logger.getInstance(JaegerUIService.class);
+    private final Logger logger = Logger.getInstance(JaegerUIService.class);
 
     private final Project project;
 
@@ -123,7 +125,7 @@ public class JaegerUIService {
             return new ByteArrayInputStream(stringWriter.toString().getBytes(StandardCharsets.UTF_8));
 
         } catch (Exception e) {
-            Log.debugWithException(LOGGER, e, "error creating template for index.html");
+            Log.debugWithException(logger, e, "error creating template for index.html");
             return null;
         }
     }
@@ -207,29 +209,39 @@ public class JaegerUIService {
     }
 
 
-    public void goToSpan(GoToSpanMessage goToSpanMessage) {
+    public void goToSpanAndNavigateToCode(GoToSpanMessage goToSpanMessage) {
 
-        Log.log(LOGGER::debug, project, "goToSpan request {}", goToSpanMessage);
+        Log.log(logger::debug, project, "goToSpan request {}", goToSpanMessage);
 
         var span = goToSpanMessage.payload();
 
-        Log.log(LOGGER::debug, project, "calling CodeNavigator.maybeNavigateToSpan from goToSpan for {}", span);
+        Log.log(logger::debug, project, "calling showInsightsForSpanOrMethodAndNavigateToCode from goToSpan for {}", span);
 
-        if (project.getService(InsightsViewOrchestrator.class).showInsightsForSpanOrMethodAndNavigateToCode(span.spanId(), span.methodId())) {
-            Log.log(LOGGER::debug, project, "CodeNavigator.maybeNavigateToSpan did navigate to span {}", span);
-        } else {
-            Log.log(LOGGER::warn, project, "could not find code location in goToSpan for {}", goToSpanMessage);
-        }
+        EDT.ensureEDT(() -> {
+            project.getService(HomeSwitcherService.class).switchToInsights();
+            project.getService(TabsHelper.class).notifyTabChanged(0);
+            var success = project.getService(InsightsViewOrchestrator.class).showInsightsForSpanOrMethodAndNavigateToCode(span.spanId(), span.methodId());
+            if (success) {
+                Log.log(logger::debug, project, "showInsightsForSpanOrMethodAndNavigateToCode did navigate to span {}", span);
+            } else {
+                Log.log(logger::warn, project, "could not navigate to span in goToSpan for {}", goToSpanMessage);
+            }
+        });
     }
 
 
+    //show insight without navigating to source
     public void goToInsight(GoToSpanMessage goToSpanMessage) {
 
-        Log.log(LOGGER::debug, project, "goToInsight request {}", goToSpanMessage);
+        Log.log(logger::debug, project, "goToInsight request {}", goToSpanMessage);
 
         var span = goToSpanMessage.payload();
         //if we're here then code location was not found
-        project.getService(InsightsViewOrchestrator.class).showInsightsForCodelessSpan(span.spanCodeObjectId());
+        EDT.ensureEDT(() -> {
+            project.getService(HomeSwitcherService.class).switchToInsights();
+            project.getService(TabsHelper.class).notifyTabChanged(0);
+            project.getService(InsightsViewOrchestrator.class).showInsightsForCodelessSpan(span.spanCodeObjectId());
+        });
     }
 
     public Map<String, SpanData> getResolvedSpans(SpansMessage spansMessage) {
@@ -325,7 +337,7 @@ public class JaegerUIService {
             });
             return insights;
         } catch (AnalyticsServiceException e) {
-            Log.debugWithException(LOGGER, e, "Exception in getInsights {}", e.getMessage());
+            Log.debugWithException(logger, e, "Exception in getInsights {}", e.getMessage());
             return Collections.emptyMap();
         }
     }

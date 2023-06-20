@@ -65,7 +65,7 @@ public class JaegerUIMessageRouterHandler extends CefMessageRouterHandlerAdapter
                     }
                     case "GO_TO_SPAN" -> {
                         GoToSpanMessage goToSpanMessage = objectMapper.treeToValue(jsonNode, GoToSpanMessage.class);
-                        JaegerUIService.getInstance(project).goToSpan(goToSpanMessage);
+                        JaegerUIService.getInstance(project).goToSpanAndNavigateToCode(goToSpanMessage);
                     }
                     case "GO_TO_INSIGHTS" -> {
                         //it's the same message as go to span

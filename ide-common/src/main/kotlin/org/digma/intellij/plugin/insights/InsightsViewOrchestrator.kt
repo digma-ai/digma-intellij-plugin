@@ -75,6 +75,7 @@ class InsightsViewOrchestrator(val project: Project) {
         // this class should show insights regardless of caret event and navigate to code if possible.
         // we need to separate this two actions , showing insights and navigating to source code.
 
+        ToolWindowShower.getInstance(project).showToolWindow()
 
         //we have a situation where the target button wants to navigate to a method or span and show its insights,
         // but the caret in the editor is already on the same offset, in that case a caret event will not be fired.

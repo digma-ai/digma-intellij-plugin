@@ -14,7 +14,6 @@ import com.intellij.ui.content.ContentFactory;
 import com.intellij.ui.jcef.JBCefApp;
 import com.intellij.ui.jcef.JBCefBrowser;
 import com.intellij.ui.jcef.JBCefClient;
-import kotlin.Pair;
 import org.apache.commons.lang3.StringUtils;
 import org.cef.CefApp;
 import org.cef.browser.CefBrowser;
@@ -30,6 +29,7 @@ import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator;
 import org.digma.intellij.plugin.common.JsonUtils;
 import org.digma.intellij.plugin.document.CodeObjectsUtil;
+import org.digma.intellij.plugin.home.HomeSwitcherService;
 import org.digma.intellij.plugin.icons.AppIcons;
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator;
 import org.digma.intellij.plugin.log.Log;
@@ -40,11 +40,10 @@ import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityGoToSpa
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityGoToTraceRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResponseEntry;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
+import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
-import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.recentactivity.RecentActivityLogic;
-import org.digma.intellij.plugin.service.EditorService;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.toolwindow.common.CustomSchemeHandlerFactory;
 import org.digma.intellij.plugin.toolwindow.common.JaegerUrlChangedPayload;
@@ -59,17 +58,16 @@ import org.digma.intellij.plugin.toolwindow.recentactivity.outgoing.LiveDataMess
 import org.digma.intellij.plugin.toolwindow.recentactivity.outgoing.LiveDataPayload;
 import org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt;
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
+import org.digma.intellij.plugin.ui.service.TabsHelper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -93,13 +91,12 @@ import static org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt.traceButto
 
 public class RecentActivityService implements Disposable {
 
-    private static final String DIGMA_SIDE_PANE_TOOL_WINDOW_NAME = "Digma";
     private static final String RESOURCE_FOLDER_NAME = "recentactivity";
     private static final String RECENT_EXPIRATION_LIMIT_VARIABLE = "recentActivityExpirationLimit";
     private static final int FETCHING_LOOP_INTERVAL = 10 * 1000; // 10sec
+    private static final Icon icon = AppIcons.TOOL_WINDOW_OBSERVABILITY;
 
     private final Logger logger = Logger.getInstance(RecentActivityService.class);
-    private final Icon icon = AppIcons.TOOL_WINDOW_OBSERVABILITY;
     private final Icon iconWithGreenDot = ExecutionUtil.getLiveIndicator(icon);
     private final String localHostname;
     private final Project project;
@@ -149,25 +146,20 @@ public class RecentActivityService implements Disposable {
         }
 
         var contentFactory = ContentFactory.getInstance();
-        var editorService = project.getService(EditorService.class);
 
         jbCefBrowser = JBCefBrowserBuilderCreator.create()
                 .setUrl("https://"+RESOURCE_FOLDER_NAME+"/index.html")
                 .build();
+
+        var indexTemplateData = new HashMap<String,Object>();
+        indexTemplateData.put(RECENT_EXPIRATION_LIMIT_VARIABLE, RECENT_EXPIRATION_LIMIT_MILLIS);
         CefApp.getInstance()
                 .registerSchemeHandlerFactory(
                         "https",
                         RESOURCE_FOLDER_NAME,
-                        new CustomSchemeHandlerFactory(RESOURCE_FOLDER_NAME, new HashMap<>() {{
-                            put(RECENT_EXPIRATION_LIMIT_VARIABLE, RECENT_EXPIRATION_LIMIT_MILLIS);
-                        }})
+                        new CustomSchemeHandlerFactory(RESOURCE_FOLDER_NAME,indexTemplateData)
                 );
         jbCefBrowser.getCefBrowser().setFocus(true);
-
-//        var customViewerWindow = new CustomViewerWindow(project, RESOURCE_FOLDER_NAME, new HashMap<>() {{
-//            put(RECENT_EXPIRATION_LIMIT_VARIABLE, RECENT_EXPIRATION_LIMIT_MILLIS);
-//        }});
-//        jbCefBrowser = customViewerWindow.getWebView();
 
         JBCefClient jbCefClient = jbCefBrowser.getJBCefClient();
 
@@ -186,9 +178,7 @@ public class RecentActivityService implements Disposable {
         //todo: temporary, this is a very bad way to do it, waiting for help from jetbrains developers
         var fontPreferences =  AppEditorFontOptions.getInstance().getFontPreferences();
         if (fontPreferences instanceof FontPreferencesImpl){
-            ((FontPreferencesImpl)AppEditorFontOptions.getInstance().getFontPreferences()).addChangeListener(e -> {
-                changeCodeFont();
-            },this);
+            ((FontPreferencesImpl)AppEditorFontOptions.getInstance().getFontPreferences()).addChangeListener(e -> changeCodeFont(),this);
         }
 
         SettingsState.getInstance().addChangeListener(settingsState1 -> sendRequestToChangeTraceButtonDisplaying(jbCefBrowser));
@@ -204,7 +194,7 @@ public class RecentActivityService implements Disposable {
                 }
                 if (RECENT_ACTIVITY_GO_TO_SPAN.equalsIgnoreCase(reactMessageRequest.getAction())) {
                     RecentActivityGoToSpanRequest recentActivityGoToSpanRequest = parseJsonToObject(request, RecentActivityGoToSpanRequest.class);
-                    processRecentActivityGoToSpanRequest(recentActivityGoToSpanRequest.getPayload(), project, editorService);
+                    processRecentActivityGoToSpanRequest(recentActivityGoToSpanRequest.getPayload(), project);
                 }
                 if (RECENT_ACTIVITY_GO_TO_TRACE.equalsIgnoreCase(reactMessageRequest.getAction())) {
                     ActivityMonitor.getInstance(project).registerButtonClicked(traceButtonName, "recent-activity");
@@ -227,10 +217,6 @@ public class RecentActivityService implements Disposable {
                 return true;
             }
 
-            @Override
-            public void onQueryCanceled(CefBrowser browser, CefFrame frame, long queryId) {
-                super.onQueryCanceled(browser, frame, queryId);
-            }
         }, true);
 
         jbCefClient.getCefClient().addMessageRouter(msgRouter);
@@ -253,41 +239,41 @@ public class RecentActivityService implements Disposable {
         sendLatestActivities(allEnvironments);
     }
 
-    private void processRecentActivityGoToSpanRequest(RecentActivityEntrySpanPayload payload, Project project, EditorService editorService) {
+    private void processRecentActivityGoToSpanRequest(RecentActivityEntrySpanPayload payload, Project project) {
         if (payload != null) {
-            String methodCodeObjectId = payload.getSpan().getMethodCodeObjectId();
 
             ApplicationManager.getApplication().invokeLater(() -> {
 
-                LanguageService languageService = LanguageService.findLanguageServiceByMethodCodeObjectId(project, methodCodeObjectId);
-                Map<String, Pair<String, Integer>> workspaceUrisForMethodCodeObjectIds = languageService.findWorkspaceUrisForMethodCodeObjectIds(Collections.singletonList(methodCodeObjectId));
-                final Pair<String, Integer> fileAndOffset = workspaceUrisForMethodCodeObjectIds.get(methodCodeObjectId);
+                //todo: we need to show the insights only after the environment changes. but environment change is done in the background
+                // and its not easy to sync the change environment and showing the insights.
+                // this actually comes to solve the case that the recent activity and the main environment combo
+                // are not the same one and they need to sync. when this is fixed we can remove
+                // the methods EnvironmentsSupplier.setCurrent(java.lang.String, boolean, java.lang.Runnable)
+                // changing environment should be atomic and should not be effected by user activities like
+                // clicking a link in recent activity
 
-                if (fileAndOffset == null) {
 
-                    // modifying the selected environment
+                var spanId = payload.getSpan().getSpanCodeObjectId();
+                var methodId = payload.getSpan().getMethodCodeObjectId();
+
+                var canNavigate = project.getService(CodeNavigator.class).canNavigateToSpanOrMethod(spanId, methodId);
+                if (canNavigate) {
                     EnvironmentsSupplier environmentsSupplier = analyticsService.getEnvironment();
                     String actualEnvName = adjustBackEnvNameIfNeeded(payload.getEnvironment());
-                    environmentsSupplier.setCurrent(actualEnvName, false, () -> {
-                        NotificationUtil.showNotification(project, "code object could not be found in the workspace");
-                        project.getService(InsightsViewOrchestrator.class).showInsightsForCodelessSpan(payload.getSpan().getSpanCodeObjectId());
-                    });
-
+                    environmentsSupplier.setCurrent(actualEnvName, false, () -> EDT.ensureEDT(() -> {
+                        project.getService(HomeSwitcherService.class).switchToInsights();
+                        project.getService(TabsHelper.class).notifyTabChanged(0);
+                        project.getService(InsightsViewOrchestrator.class).showInsightsForSpanOrMethodAndNavigateToCode(spanId, methodId);
+                    }));
                 } else {
-                    editorService.openWorkspaceFileInEditor(fileAndOffset.getFirst(), fileAndOffset.getSecond());
-
-                    // modifying the selected environment
+                    NotificationUtil.showNotification(project, "code object could not be found in the workspace");
                     EnvironmentsSupplier environmentsSupplier = analyticsService.getEnvironment();
                     String actualEnvName = adjustBackEnvNameIfNeeded(payload.getEnvironment());
-                    environmentsSupplier.setCurrent(actualEnvName, true);
-
-
-                    ToolWindow digmaSidePaneToolWindow = ToolWindowManager.getInstance(project).getToolWindow(DIGMA_SIDE_PANE_TOOL_WINDOW_NAME);
-                    if (digmaSidePaneToolWindow != null && !digmaSidePaneToolWindow.isVisible()) {
-                        digmaSidePaneToolWindow.show();
-                    } else {
-                        Log.log(logger::debug, "digmaSidePaneToolWindow is empty OR is visible already");
-                    }
+                    environmentsSupplier.setCurrent(actualEnvName, false, () -> EDT.ensureEDT(() -> {
+                        project.getService(HomeSwitcherService.class).switchToInsights();
+                        project.getService(TabsHelper.class).notifyTabChanged(0);
+                        project.getService(InsightsViewOrchestrator.class).showInsightsForCodelessSpan(payload.getSpan().getSpanCodeObjectId());
+                    }));
                 }
             });
         }

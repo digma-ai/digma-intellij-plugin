@@ -6,6 +6,7 @@ import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.codeInsight.hints.codeVision.CodeVisionPassFactory
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -14,18 +15,21 @@ import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.pom.Navigatable
-import com.intellij.psi.*
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiManager
+import com.intellij.psi.SmartPointerManager
 import com.intellij.util.RunnableCallable
 import com.intellij.util.concurrency.NonUrgentExecutor
 import com.intellij.util.messages.MessageBusConnection
 import org.digma.intellij.plugin.document.CodeLensProvider
 import org.digma.intellij.plugin.document.DocumentInfoChanged
+import org.digma.intellij.plugin.home.HomeSwitcherService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import java.awt.event.MouseEvent
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.stream.Collectors
 
@@ -163,11 +167,12 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
 
     private class ClickHandler(
         element: PsiElement,
-        private val project: Project
+        private val project: Project,
     ) : (MouseEvent?, Editor) -> Unit {
         private val elementPointer = SmartPointerManager.createPointer(element)
         override fun invoke(event: MouseEvent?, editor: Editor) {
             ActivityMonitor.getInstance(project).registerLensClicked()
+            project.service<HomeSwitcherService>().switchToInsights()
             ToolWindowShower.getInstance(project).showToolWindow()
             elementPointer.element?.let {
                 if (it is Navigatable && it.canNavigateToSource()) {

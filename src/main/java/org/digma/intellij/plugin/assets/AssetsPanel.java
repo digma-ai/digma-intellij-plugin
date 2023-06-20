@@ -5,9 +5,11 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.ui.jcef.JBCefBrowser;
 import com.intellij.util.ui.JBUI;
+import org.apache.commons.lang3.StringUtils;
 import org.cef.CefApp;
 import org.cef.browser.CefMessageRouter;
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator;
+import org.digma.intellij.plugin.toolwindow.common.ThemeUtil;
 
 import javax.swing.*;
 import java.awt.*;
@@ -20,6 +22,7 @@ public class AssetsPanel extends JPanel implements Disposable {
 
     private final transient JBCefBrowser jbCefBrowser;
     private final transient CefMessageRouter cefMessageRouter;
+    private final transient AssetsMessageRouterHandler messageHandler;
 
     public AssetsPanel(Project project,Disposable parentDisposable) {
 
@@ -33,7 +36,7 @@ public class AssetsPanel extends JPanel implements Disposable {
 
         var jbCefClient = jbCefBrowser.getJBCefClient();
         cefMessageRouter = CefMessageRouter.create();
-        var messageHandler = new AssetsMessageRouterHandler(project, jbCefBrowser);
+        messageHandler = new AssetsMessageRouterHandler(project, jbCefBrowser);
         cefMessageRouter.addHandler(messageHandler, true);
         jbCefClient.getCefClient().addMessageRouter(cefMessageRouter);
 
@@ -41,6 +44,12 @@ public class AssetsPanel extends JPanel implements Disposable {
         setBorder(JBUI.Borders.empty());
         add(jbCefBrowser.getComponent());
 
+
+        UIManager.addPropertyChangeListener(evt -> {
+            if ("lookAndFeel".equals(evt.getPropertyName())) {
+                changeUiTheme();
+            }
+        });
     }
 
 
@@ -49,6 +58,18 @@ public class AssetsPanel extends JPanel implements Disposable {
                 new AssetsSchemeHandlerFactory(project));
     }
 
+
+
+    private void changeUiTheme() {
+        String theme = ThemeUtil.getCurrentThemeName();
+        if (StringUtils.isNotEmpty(theme) && messageHandler != null) {
+            messageHandler.sendRequestToChangeUiTheme(theme);
+        }
+    }
+
+
+
+
     @Override
     public void dispose() {
         if (jbCefBrowser != null){
@@ -56,6 +77,9 @@ public class AssetsPanel extends JPanel implements Disposable {
         }
         if(cefMessageRouter != null){
             cefMessageRouter.dispose();
+        }
+        if (messageHandler != null) {
+            messageHandler.dispose();
         }
     }
 }

@@ -12,6 +12,8 @@ import java.beans.PropertyChangeListener;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.GLOBAL_SET_UI_THEME;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.REQUEST_MESSAGE_TYPE;
 
+//todo: change implementation because this listener hold a reference to jbCefBrowser
+// jbCefBrowser should be managed in one place that can dispose it when necessary
 public class ThemeChangeListener implements PropertyChangeListener {
     private static final Logger LOGGER = Logger.getInstance(ThemeChangeListener.class);
     private JBCefBrowser jbCefBrowser;

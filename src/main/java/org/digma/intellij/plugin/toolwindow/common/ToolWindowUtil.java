@@ -8,6 +8,7 @@ public class ToolWindowUtil {
     public static final String REQUEST_MESSAGE_TYPE = "digma";
     public static final String GLOBAL_SET_UI_THEME = "GLOBAL/SET_THEME";
     public static final String GLOBAL_SET_UI_MAIN_FONT = "GLOBAL/SET_MAIN_FONT";
+    public static final String GLOBAL_SET_UI_CODE_FONT = "GLOBAL/SET_CODE_FONT";
     public static final String GLOBAL_SET_IS_JAEGER_ENABLED = "GLOBAL/SET_IS_JAEGER_ENABLED";
     public static final String GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER = "GLOBAL/OPEN_URL_IN_DEFAULT_BROWSER";
     public static final String RECENT_ACTIVITY_SET_DATA = "RECENT_ACTIVITY/SET_DATA";

@@ -1,6 +1,8 @@
 package org.digma.intellij.plugin.assets;
 
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.editor.colors.impl.AppEditorFontOptions;
+import com.intellij.openapi.editor.colors.impl.FontPreferencesImpl;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.ui.jcef.JBCefBrowser;
@@ -59,6 +61,16 @@ public class AssetsPanel extends JPanel implements Disposable {
                 changeTheme();
             }
         });
+
+
+        //todo: temporary, this is a very bad way to do it, waiting for help from jetbrains developers
+        var fontPreferences =  AppEditorFontOptions.getInstance().getFontPreferences();
+        if (fontPreferences instanceof FontPreferencesImpl){
+            ((FontPreferencesImpl)AppEditorFontOptions.getInstance().getFontPreferences()).addChangeListener(e -> {
+                changeCodeFont();
+            },this);
+        }
+
     }
 
 
@@ -80,6 +92,13 @@ public class AssetsPanel extends JPanel implements Disposable {
         String fontName = getFont().getFontName();
         if (StringUtils.isNotEmpty(fontName) && messageHandler != null) {
             messageHandler.sendRequestToChangeFont(fontName);
+        }
+    }
+
+  private void changeCodeFont() {
+        String fontName = AppEditorFontOptions.getInstance().getFontPreferences().getFontFamily();
+        if (StringUtils.isNotEmpty(fontName) && messageHandler != null) {
+            messageHandler.sendRequestToChangeCodeFont(fontName);
         }
     }
 

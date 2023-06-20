@@ -4,6 +4,8 @@ import com.intellij.execution.runners.ExecutionUtil;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.editor.colors.impl.AppEditorFontOptions;
+import com.intellij.openapi.editor.colors.impl.FontPreferencesImpl;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
@@ -48,7 +50,9 @@ import org.digma.intellij.plugin.toolwindow.common.CustomSchemeHandlerFactory;
 import org.digma.intellij.plugin.toolwindow.common.JaegerUrlChangedPayload;
 import org.digma.intellij.plugin.toolwindow.common.JaegerUrlChangedRequest;
 import org.digma.intellij.plugin.toolwindow.common.ThemeChangeListener;
+import org.digma.intellij.plugin.toolwindow.common.UICodeFontRequest;
 import org.digma.intellij.plugin.toolwindow.common.UIFontRequest;
+import org.digma.intellij.plugin.toolwindow.common.UiCodeFontPayload;
 import org.digma.intellij.plugin.toolwindow.common.UiFontPayload;
 import org.digma.intellij.plugin.toolwindow.recentactivity.incoming.CloseLiveViewMessage;
 import org.digma.intellij.plugin.toolwindow.recentactivity.outgoing.LiveDataMessage;
@@ -74,6 +78,7 @@ import static org.digma.intellij.plugin.common.EnvironmentUtilKt.SUFFIX_OF_LOCAL
 import static org.digma.intellij.plugin.common.EnvironmentUtilKt.getSortedEnvironments;
 import static org.digma.intellij.plugin.recentactivity.RecentActivityLogic.RECENT_EXPIRATION_LIMIT_MILLIS;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.GLOBAL_SET_IS_JAEGER_ENABLED;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.GLOBAL_SET_UI_CODE_FONT;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.GLOBAL_SET_UI_MAIN_FONT;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_CLOSE_LIVE_VIEW;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_SPAN;
@@ -178,6 +183,13 @@ public class RecentActivityService implements Disposable {
             }
         });
 
+        //todo: temporary, this is a very bad way to do it, waiting for help from jetbrains developers
+        var fontPreferences =  AppEditorFontOptions.getInstance().getFontPreferences();
+        if (fontPreferences instanceof FontPreferencesImpl){
+            ((FontPreferencesImpl)AppEditorFontOptions.getInstance().getFontPreferences()).addChangeListener(e -> {
+                changeCodeFont();
+            },this);
+        }
 
         SettingsState.getInstance().addChangeListener(settingsState1 -> sendRequestToChangeTraceButtonDisplaying(jbCefBrowser));
 
@@ -534,6 +546,20 @@ public class RecentActivityService implements Disposable {
                             REQUEST_MESSAGE_TYPE,
                             GLOBAL_SET_UI_MAIN_FONT,
                             new UiFontPayload(fontName)
+                    ));
+            JBCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser);
+        }
+    }
+
+
+    private void changeCodeFont() {
+        String fontName = AppEditorFontOptions.getInstance().getFontPreferences().getFontFamily();
+        if (StringUtils.isNotEmpty(fontName)) {
+            String requestMessage = JBCefBrowserUtil.resultToString(
+                    new UICodeFontRequest(
+                            REQUEST_MESSAGE_TYPE,
+                            GLOBAL_SET_UI_CODE_FONT,
+                            new UiCodeFontPayload(fontName)
                     ));
             JBCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser);
         }

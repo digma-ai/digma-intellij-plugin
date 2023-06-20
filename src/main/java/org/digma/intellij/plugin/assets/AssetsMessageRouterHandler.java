@@ -16,14 +16,17 @@ import org.digma.intellij.plugin.analytics.EnvironmentChanged;
 import org.digma.intellij.plugin.assets.model.outgoing.SetAssetsDataMessage;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.toolwindow.common.UICodeFontRequest;
 import org.digma.intellij.plugin.toolwindow.common.UIFontRequest;
 import org.digma.intellij.plugin.toolwindow.common.UIThemeRequest;
+import org.digma.intellij.plugin.toolwindow.common.UiCodeFontPayload;
 import org.digma.intellij.plugin.toolwindow.common.UiFontPayload;
 import org.digma.intellij.plugin.toolwindow.common.UiThemePayload;
 import org.digma.intellij.plugin.toolwindow.recentactivity.JBCefBrowserUtil;
 
 import java.util.List;
 
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.GLOBAL_SET_UI_CODE_FONT;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.GLOBAL_SET_UI_MAIN_FONT;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.GLOBAL_SET_UI_THEME;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.REQUEST_MESSAGE_TYPE;
@@ -121,6 +124,16 @@ public class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter i
                         REQUEST_MESSAGE_TYPE,
                         GLOBAL_SET_UI_MAIN_FONT,
                         new UiFontPayload(font)
+                ));
+        JBCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser);
+    }
+
+    void sendRequestToChangeCodeFont(String font) {
+        String requestMessage = JBCefBrowserUtil.resultToString(
+                new UICodeFontRequest(
+                        REQUEST_MESSAGE_TYPE,
+                        GLOBAL_SET_UI_CODE_FONT,
+                        new UiCodeFontPayload(font)
                 ));
         JBCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser);
     }

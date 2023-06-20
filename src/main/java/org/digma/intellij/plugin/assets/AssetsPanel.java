@@ -30,7 +30,6 @@ public class AssetsPanel extends JPanel implements Disposable {
 
         jbCefBrowser = JBCefBrowserBuilderCreator.create()
                 .setUrl("http://" + DOMAIN_NAME + "/index.html")
-                .setEnableOpenDevToolsMenuItem(true)
                 .build();
         registerAppSchemeHandler(project);
 

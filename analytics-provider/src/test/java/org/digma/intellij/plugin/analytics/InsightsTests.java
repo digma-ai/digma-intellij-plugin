@@ -189,15 +189,8 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
                 , SERVICE
                 , new Duration(0.11D, "ms", 11000)
                 , new Duration(0.12D, "ms", 12000)
-                , new Duration(0.13D, "ms", 13000)
                 , new Duration(0.14D, "ms", 14000)
-                , new Duration(0.15D, "ms", 15000)
-                , new Duration(0.16D, "ms", 16000)
-                , new Duration(0.17D, "ms", 17000)
                 , new Duration(0.18D, "ms", 18000)
-                , new Duration(0.19D, "ms", 19000)
-                , new Duration(0.21D, "ms", 21000)
-                , new Duration(0.22D, "ms", 22000)
         );
         expectedCodeObjectInsights.add(expectedSlowEndpointInsight);
 
@@ -358,15 +351,8 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
                 , SERVICE
                 , new Duration(0.11D, "ms", 11000)
                 , new Duration(0.12D, "ms", 12000)
-                , new Duration(0.13D, "ms", 13000)
                 , new Duration(0.14D, "ms", 14000)
-                , new Duration(0.15D, "ms", 15000)
-                , new Duration(0.16D, "ms", 16000)
-                , new Duration(0.17D, "ms", 17000)
                 , new Duration(0.18D, "ms", 18000)
-                , new Duration(0.19D, "ms", 19000)
-                , new Duration(0.21D, "ms", 21000)
-                , new Duration(0.22D, "ms", 22000)
         );
         expectedCodeObjectInsights.add(expectedSlowEndpointInsight);
 

@@ -17,7 +17,7 @@
     <script>
       window.platform= "JetBrains";
       window.theme = "${theme}";
-      window.mainFont = "${mainFont}"";
+      window.mainFont = "${mainFont}";
       window.codeFont;
       window.assetsRefreshInterval;
     </script>

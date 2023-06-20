@@ -14,6 +14,8 @@ import org.digma.intellij.plugin.toolwindow.common.ThemeUtil;
 import javax.swing.*;
 import java.awt.*;
 
+import static org.digma.intellij.plugin.ui.list.ListCommonKt.listBackground;
+
 public class AssetsPanel extends JPanel implements Disposable {
 
     static final String RESOURCE_FOLDER_NAME = "/webview/assets";
@@ -42,6 +44,7 @@ public class AssetsPanel extends JPanel implements Disposable {
         setLayout(new BorderLayout());
         setBorder(JBUI.Borders.empty());
         add(jbCefBrowser.getComponent());
+        setBackground(listBackground());
 
         addPropertyChangeListener(evt -> {
             if (project.isDisposed()) return;

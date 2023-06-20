@@ -13,6 +13,7 @@ import com.intellij.ui.jcef.JBCefApp;
 import com.intellij.ui.jcef.JBCefBrowser;
 import com.intellij.ui.jcef.JBCefClient;
 import kotlin.Pair;
+import org.apache.commons.lang3.StringUtils;
 import org.cef.CefApp;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
@@ -47,6 +48,8 @@ import org.digma.intellij.plugin.toolwindow.common.CustomSchemeHandlerFactory;
 import org.digma.intellij.plugin.toolwindow.common.JaegerUrlChangedPayload;
 import org.digma.intellij.plugin.toolwindow.common.JaegerUrlChangedRequest;
 import org.digma.intellij.plugin.toolwindow.common.ThemeChangeListener;
+import org.digma.intellij.plugin.toolwindow.common.UIFontRequest;
+import org.digma.intellij.plugin.toolwindow.common.UiFontPayload;
 import org.digma.intellij.plugin.toolwindow.recentactivity.incoming.CloseLiveViewMessage;
 import org.digma.intellij.plugin.toolwindow.recentactivity.outgoing.LiveDataMessage;
 import org.digma.intellij.plugin.toolwindow.recentactivity.outgoing.LiveDataPayload;
@@ -71,6 +74,7 @@ import static org.digma.intellij.plugin.common.EnvironmentUtilKt.SUFFIX_OF_LOCAL
 import static org.digma.intellij.plugin.common.EnvironmentUtilKt.getSortedEnvironments;
 import static org.digma.intellij.plugin.recentactivity.RecentActivityLogic.RECENT_EXPIRATION_LIMIT_MILLIS;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.GLOBAL_SET_IS_JAEGER_ENABLED;
+import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.GLOBAL_SET_UI_MAIN_FONT;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_CLOSE_LIVE_VIEW;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_SPAN;
 import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.RECENT_ACTIVITY_GO_TO_TRACE;
@@ -166,6 +170,14 @@ public class RecentActivityService implements Disposable {
 
         ThemeChangeListener listener = new ThemeChangeListener(jbCefBrowser);
         UIManager.addPropertyChangeListener(listener);
+
+        jbCefBrowser.getComponent().addPropertyChangeListener(evt -> {
+            if (project.isDisposed()) return;
+            if ("font".equals(evt.getPropertyName())) {
+                changeFont(jbCefBrowser);
+            }
+        });
+
 
         SettingsState.getInstance().addChangeListener(settingsState1 -> sendRequestToChangeTraceButtonDisplaying(jbCefBrowser));
 
@@ -512,6 +524,20 @@ public class RecentActivityService implements Disposable {
             jbCefBrowser.dispose();
     }
 
+
+
+    private void changeFont(JBCefBrowser jbCefBrowser) {
+        String fontName = jbCefBrowser.getComponent().getFont().getFontName();
+        if (StringUtils.isNotEmpty(fontName)) {
+            String requestMessage = JBCefBrowserUtil.resultToString(
+                    new UIFontRequest(
+                            REQUEST_MESSAGE_TYPE,
+                            GLOBAL_SET_UI_MAIN_FONT,
+                            new UiFontPayload(fontName)
+                    ));
+            JBCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser);
+        }
+    }
 
     private abstract static class MyInitTask implements Runnable {
 

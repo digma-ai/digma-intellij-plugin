@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.assets;
 
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.util.ui.UIUtil;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateExceptionHandler;
@@ -20,6 +21,7 @@ public class IndexTemplateBuilder {
 
     private static final String INDEX_TEMPLATE_NAME = "assetstemplate.ftl";
     private static final String THEME_ENV_NAME = "theme";
+    private static final String FONT_ENV_NAME = "mainFont";
 
     private final Configuration freemarketConfiguration = new Configuration(Configuration.VERSION_2_3_30);
 
@@ -35,6 +37,7 @@ public class IndexTemplateBuilder {
         try {
             var data = new HashMap<String, String>();
             data.put(THEME_ENV_NAME, ThemeUtil.getCurrentThemeName());
+            data.put(FONT_ENV_NAME, UIUtil.getLabelFont().getFontName());
 
             Template template = freemarketConfiguration.getTemplate(INDEX_TEMPLATE_NAME);
             StringWriter stringWriter = new StringWriter();

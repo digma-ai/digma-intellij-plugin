@@ -44,10 +44,17 @@ public class AssetsPanel extends JPanel implements Disposable {
         setBorder(JBUI.Borders.empty());
         add(jbCefBrowser.getComponent());
 
+        addPropertyChangeListener(evt -> {
+            if (project.isDisposed()) return;
+            if ("font".equals(evt.getPropertyName())) {
+                changeFont();
+            }
+        });
 
         UIManager.addPropertyChangeListener(evt -> {
+            if (project.isDisposed()) return;
             if ("lookAndFeel".equals(evt.getPropertyName())) {
-                changeUiTheme();
+                changeTheme();
             }
         });
     }
@@ -60,10 +67,17 @@ public class AssetsPanel extends JPanel implements Disposable {
 
 
 
-    private void changeUiTheme() {
+    private void changeTheme() {
         String theme = ThemeUtil.getCurrentThemeName();
         if (StringUtils.isNotEmpty(theme) && messageHandler != null) {
             messageHandler.sendRequestToChangeUiTheme(theme);
+        }
+    }
+
+   private void changeFont() {
+        String fontName = getFont().getFontName();
+        if (StringUtils.isNotEmpty(fontName) && messageHandler != null) {
+            messageHandler.sendRequestToChangeFont(fontName);
         }
     }
 

@@ -18,7 +18,6 @@ import org.digma.intellij.plugin.model.rest.insights.LowUsageInsight;
 import org.digma.intellij.plugin.model.rest.insights.MethodWithCodeObjects;
 import org.digma.intellij.plugin.model.rest.insights.MethodWithInsights;
 import org.digma.intellij.plugin.model.rest.insights.NormalUsageInsight;
-import org.digma.intellij.plugin.model.rest.insights.Percentile;
 import org.digma.intellij.plugin.model.rest.insights.SlowEndpointInsight;
 import org.digma.intellij.plugin.model.rest.insights.SlowSpanInfo;
 import org.digma.intellij.plugin.model.rest.insights.SlowestSpansInsight;
@@ -164,10 +163,7 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
 
         SlowSpanInfo slowSpanInfo = new SlowSpanInfo(
                 createSpanInfo("SomeSpan", "Sample.MoneyTransfer.API.MoneyTransferDomainService$_$Error"),
-                new Percentile(0.10970134022722634D, new Duration(3.44D, "ms", 3441700L)),
-                new Percentile(0.2566821090980162D, new Duration(3.44D, "ms", 3441700L)),
-                new Percentile(0.4407383382867023D, new Duration(5.64D, "ms", 5643900L)),
-                null, null);
+                0.10970134022722634, new Duration(3.44D, "ms", 3441700L));
 
         String expectedSlowestSpansInsightCodeObjectId = "Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$TransferFunds";
         SlowestSpansInsight expectedSlowestSpansInsight = new SlowestSpansInsight(expectedSlowestSpansInsightCodeObjectId, ENV_1, SCOPE_1, IMPORTANCE_3, null,
@@ -336,10 +332,7 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
 
         SlowSpanInfo slowSpanInfo = new SlowSpanInfo(
                 createSpanInfo("SomeSpan", "Sample.MoneyTransfer.API.MoneyTransferDomainService$_$Error"),
-                new Percentile(0.10970134022722634D, new Duration(3.44D, "ms", 3441700L)),
-                new Percentile(0.2566821090980162D, new Duration(3.44D, "ms", 3441700L)),
-                new Percentile(0.4407383382867023D, new Duration(5.64D, "ms", 5643900L)),
-                null, null);
+                0.10970134022722634, new Duration(3.44D, "ms", 3441700L));
 
         String expectedSlowestSpansInsightCodeObjectId = "Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$TransferFunds";
         SlowestSpansInsight expectedSlowestSpansInsight = new SlowestSpansInsight(expectedSlowestSpansInsightCodeObjectId, ENV_1, SCOPE_1, IMPORTANCE_3, null,

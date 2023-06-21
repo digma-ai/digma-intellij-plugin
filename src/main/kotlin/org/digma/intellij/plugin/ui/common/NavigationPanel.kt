@@ -173,7 +173,7 @@ class NavigationPanel(
 
         val cardsLayout = CardLayout()
         val cardsPanel = JPanel(cardsLayout)
-        cardsPanel.border = JBUI.Borders.empty()
+        cardsPanel.border = JBUI.Borders.emptyRight(4)
         cardsPanel.background = Laf.Colors.EDITOR_BACKGROUND
 
         cardsPanel.isOpaque = false

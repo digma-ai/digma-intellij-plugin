@@ -21,14 +21,11 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
-import org.digma.intellij.plugin.ui.scaled
 import java.awt.BorderLayout
 import java.awt.CardLayout
 import java.awt.Cursor
 import java.awt.Dimension
 import java.awt.FlowLayout
-import java.awt.GridBagConstraints
-import java.awt.GridBagLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.util.concurrent.locks.ReentrantLock
@@ -64,6 +61,7 @@ class NavigationPanel(
         localHostname = CommonUtils.getLocalHostname()
         isOpaque = false
         layout = BorderLayout()
+//        layout = GridBagLayout()
         border = JBUI.Borders.empty()
         analyticsService = project.getService(AnalyticsService::class.java)
 
@@ -82,7 +80,7 @@ class NavigationPanel(
                 ModelChangeListener.MODEL_CHANGED_TOPIC,
                         object : ModelChangeListener {
                             override fun modelChanged(newModel: PanelModel) {
-                                rebuildInBackground(newModel)
+//                                rebuildInBackground(newModel)
                             }
                         }
         )
@@ -120,39 +118,156 @@ class NavigationPanel(
 
     private fun buildNavigationPanelComponents(model: PanelModel) {
 
-        val mainPanel = JPanel(GridBagLayout())
+        val mainPanel = JPanel(BorderLayout())
         mainPanel.background = Laf.Colors.EDITOR_BACKGROUND
 
-        val c = GridBagConstraints()
-        c.gridx = 0
-        c.gridy = 0
-        c.weightx = 0.0
-        c.fill = GridBagConstraints.NONE
-        c.ipadx = 10.scaled()
-        mainPanel.add(getLogoIconLabel(),c)
+        val firstPanel = JPanel(BorderLayout(5,0))
+        firstPanel.background = Laf.Colors.EDITOR_BACKGROUND
+        firstPanel.border = JBUI.Borders.empty()
+        val logo = getLogoIconLabel()
+        logo.alignmentX = 0F
+        firstPanel.add(logo,BorderLayout.WEST)
+        val firstRow = getFirstRowPanel(model)
+        firstRow.alignmentX = 1F
+        firstPanel.add(firstRow,BorderLayout.CENTER)
 
-        c.gridx = 1
-        c.weightx = 1.0
-        c.fill = GridBagConstraints.HORIZONTAL
-        c.ipadx = 0
-        mainPanel.add(getFirstRowPanel(model),c)
+        mainPanel.add(firstPanel,BorderLayout.NORTH)
 
+        val secondPanel = JPanel(BorderLayout(5,0))
+        secondPanel.background = Laf.Colors.EDITOR_BACKGROUND
+        secondPanel.border = JBUI.Borders.empty()
         val cardsPanel = getSecondRowPanel()
-        c.gridx = 0
-        c.gridy = 1
-        c.weightx = 0.0
-        c.fill = GridBagConstraints.NONE
-        c.ipadx = 10.scaled()
-        mainPanel.add(getHomeButton(cardsPanel),c)
+        val homeButton = getHomeButton(cardsPanel)
+        homeButton.alignmentX = 0F
+        secondPanel.add(homeButton,BorderLayout.WEST)
+        cardsPanel.alignmentX = 1F
+        secondPanel.add(cardsPanel,BorderLayout.CENTER)
 
-        c.gridx = 1
-        c.weightx = 1.0
-        c.fill = GridBagConstraints.HORIZONTAL
-        c.ipadx = 0
-        mainPanel.add(cardsPanel,c)
+        mainPanel.add(secondPanel,BorderLayout.SOUTH)
 
         add(mainPanel,BorderLayout.CENTER)
     }
+//    private fun buildNavigationPanelComponents(model: PanelModel) {
+//
+//        val mainPanel = JPanel(GridBagLayout())
+//        mainPanel.background = Laf.Colors.EDITOR_BACKGROUND
+//
+//        val firstPanel = JPanel(BorderLayout())
+//        val logo = getLogoIconLabel()
+//        logo.alignmentX = 0F
+//        firstPanel.add(logo,BorderLayout.WEST)
+//        val firstRow = getFirstRowPanel(model)
+//        firstRow.alignmentX = 1F
+//        firstPanel.add(firstRow,BorderLayout.CENTER)
+//
+//        val c = GridBagConstraints()
+//        c.gridx = 0
+//        c.gridy = 0
+//        c.fill = GridBagConstraints.HORIZONTAL
+//        mainPanel.add(firstPanel,c)
+//
+//        val secondPanel = JPanel(BorderLayout())
+//        val cardsPanel = getSecondRowPanel()
+//        val homeButton = getHomeButton(cardsPanel)
+//        homeButton.alignmentX = 0F
+//        secondPanel.add(homeButton,BorderLayout.WEST)
+//        cardsPanel.alignmentX = 1F
+//        secondPanel.add(cardsPanel,BorderLayout.CENTER)
+//
+//        c.gridx = 0
+//        c.gridy = 1
+//        c.fill = GridBagConstraints.HORIZONTAL
+//        mainPanel.add(secondPanel,c)
+//
+//        add(mainPanel,BorderLayout.CENTER)
+//    }
+//    private fun buildNavigationPanelComponents(model: PanelModel) {
+//
+//        val mainPanel = JPanel(GridLayout(2,1))
+//        mainPanel.background = Laf.Colors.EDITOR_BACKGROUND
+//
+//        val firstPanel = JPanel()
+//        val logo = getLogoIconLabel()
+//        logo.alignmentX = 0F
+//        firstPanel.add(logo)
+//        val firstRow = getFirstRowPanel(model)
+//        firstRow.alignmentX = 1F
+//        firstPanel.add(firstRow)
+//        mainPanel.add(firstPanel)
+//
+//        val secondPanel = JPanel()
+//        val cardsPanel = getSecondRowPanel()
+//        val homeButton = getHomeButton(cardsPanel)
+//        homeButton.alignmentX = 0F
+//        secondPanel.add(homeButton)
+//        cardsPanel.alignmentX = 1F
+//        secondPanel.add(cardsPanel)
+//        mainPanel.add(secondPanel)
+//
+//        add(mainPanel,BorderLayout.CENTER)
+//    }
+//    private fun buildNavigationPanelComponents(model: PanelModel) {
+//
+//        val mainPanel = JPanel(GridBagLayout())
+//        mainPanel.background = Laf.Colors.EDITOR_BACKGROUND
+//
+//
+//    val logo = getLogoIconLabel()
+//    logo.alignmentX = 0F
+//        val c = GridBagConstraints()
+//        c.gridx = 0
+//        c.gridy = 0
+//        c.weightx = 0.0
+//        c.fill = GridBagConstraints.NONE
+////        c.ipadx = 10.scaled()
+//        c.anchor = GridBagConstraints.CENTER
+//        c.gridwidth = 1
+//        mainPanel.add(logo,c)
+//
+//    val firstRow = getFirstRowPanel(model)
+//    firstRow.alignmentX = 1F
+//        c.gridx = 0
+//        c.gridx = 1
+////        c.weightx = 1.0
+//        c.weightx = 1.0
+//        c.fill = GridBagConstraints.HORIZONTAL
+//        c.ipadx = 0
+//        c.anchor = GridBagConstraints.WEST
+//        c.gridwidth = GridBagConstraints.REMAINDER
+//        mainPanel.add(firstRow,c)
+//
+//
+//        val cardsPanel = getSecondRowPanel()
+//    val homeButton = getHomeButton(cardsPanel)
+//    homeButton.alignmentX = 0F
+//        c.gridx = 0
+//        c.gridy = 1
+//        c.weightx = 0.0
+//        c.fill = GridBagConstraints.NONE
+////        c.ipadx = 10.scaled()
+//        c.anchor = GridBagConstraints.CENTER
+//        c.gridwidth = 1
+//        mainPanel.add(homeButton,c)
+//
+//    cardsPanel.alignmentX = 1F
+//        c.gridx = 1
+//        c.gridy = 1
+////        c.weightx = 1.0
+//        c.weightx = 1.0
+//        c.fill = GridBagConstraints.HORIZONTAL
+//        c.ipadx = 0
+//        c.anchor = GridBagConstraints.WEST
+//        c.gridwidth = GridBagConstraints.REMAINDER
+//        mainPanel.add(cardsPanel,c)
+//
+//        add(mainPanel,BorderLayout.CENTER)
+////        val mainC = GridBagConstraints()
+////        mainC.gridx = 0
+////        mainC.gridy = 0
+////        mainC.fill = GridBagConstraints.BOTH
+////        mainC.weightx = 1.0
+////        add(mainPanel,mainC)
+//    }
 
     private fun removeExistingComponentsIfPresent() {
         if (components.isNotEmpty()) {
@@ -203,15 +318,21 @@ class NavigationPanel(
         val buttonsSize = Dimension(size, size)
         homeButton.preferredSize = buttonsSize
         homeButton.maximumSize = buttonsSize
-
-        val panel = JPanel(GridBagLayout())
-        panel.isOpaque = false
-        panel.border = JBUI.Borders.empty()
-        val c = GridBagConstraints()
-        c.gridx = 0
-        c.gridy = 0
-        panel.add(homeButton,c)
-        return panel
+        return homeButton
+//
+//        val panel = JPanel(GridLayout(1,1))
+//        panel.isOpaque = false
+//        panel.border = JBUI.Borders.empty()
+//        panel.add(homeButton)
+//        return panel
+//        val panel = JPanel(GridBagLayout())
+//        panel.isOpaque = false
+//        panel.border = JBUI.Borders.empty()
+//        val c = GridBagConstraints()
+//        c.gridx = 0
+//        c.gridy = 0
+//        panel.add(homeButton,c)
+//        return panel
     }
 
 
@@ -240,15 +361,22 @@ class NavigationPanel(
         val buttonsSize = Dimension(size, size)
         logoIconLabel.preferredSize = buttonsSize
         logoIconLabel.maximumSize = buttonsSize
+        return logoIconLabel
+//
 
-        val panel = JPanel(GridBagLayout())
-        panel.isOpaque = false
-        panel.border = JBUI.Borders.empty()
-        val c = GridBagConstraints()
-        c.gridx = 0
-        c.gridy = 0
-        panel.add(logoIconLabel,c)
-        return panel
+//        val panel = JPanel(GridLayout(1,1))
+//        panel.isOpaque = false
+//        panel.border = JBUI.Borders.empty()
+//        panel.add(logoIconLabel)
+//        return panel
+//        val panel = JPanel(GridLayout(1,1))
+//        panel.isOpaque = false
+//        panel.border = JBUI.Borders.empty()
+//        val c = GridBagConstraints()
+//        c.gridx = 0
+//        c.gridy = 0
+//        panel.add(logoIconLabel,c)
+//        return panel
     }
 
 

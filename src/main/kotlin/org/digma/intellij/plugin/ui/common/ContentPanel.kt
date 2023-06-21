@@ -10,8 +10,8 @@ import java.awt.CardLayout
 
 class ContentPanel(project: Project) : DigmaResettablePanel() {
 
-    val tabsPanel = TabsPanel(project)
-    val homePanel = HomePanel(project)
+    private val insightsPanel = TabsPanel(project)
+    private val homePanel = HomePanel(project)
 
 
     init {
@@ -20,9 +20,9 @@ class ContentPanel(project: Project) : DigmaResettablePanel() {
 
         val cardLayout = CardLayout()
         this.layout = cardLayout
-        add(tabsPanel, MainToolWindowCardsController.ContentCard.INSIGHTS.name)
+        add(insightsPanel, MainToolWindowCardsController.ContentCard.INSIGHTS.name)
         add(homePanel, MainToolWindowCardsController.ContentCard.HOME.name)
-        cardLayout.addLayoutComponent(tabsPanel, MainToolWindowCardsController.ContentCard.INSIGHTS.name)
+        cardLayout.addLayoutComponent(insightsPanel, MainToolWindowCardsController.ContentCard.INSIGHTS.name)
         cardLayout.addLayoutComponent(homePanel, MainToolWindowCardsController.ContentCard.HOME.name)
         if (service<PersistenceService>().state.homeButtonSelected){
             cardLayout.show(this, MainToolWindowCardsController.ContentCard.HOME.name)

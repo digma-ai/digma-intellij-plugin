@@ -7,6 +7,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.rd.util.launchBackground
 import com.intellij.ui.awt.RelativePoint
+import com.intellij.ui.components.JBLabel
 import com.intellij.util.Alarm
 import com.intellij.util.AlarmFactory
 import com.intellij.util.messages.MessageBusConnection
@@ -17,10 +18,10 @@ import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.common.modelChangeListener.ModelChangeListener
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.ui.errors.IconButton
 import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
+import org.digma.intellij.plugin.ui.scaled
 import java.awt.BorderLayout
 import java.awt.CardLayout
 import java.awt.Cursor
@@ -28,11 +29,10 @@ import java.awt.Dimension
 import java.awt.FlowLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
-import java.awt.GridLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.util.concurrent.locks.ReentrantLock
-import javax.swing.BorderFactory
+import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.SwingConstants
@@ -52,6 +52,7 @@ class NavigationPanel(
     private val localHostname: String
     private var analyticsService: AnalyticsService? = null
     private val rebuildPanelLock = ReentrantLock()
+    private var environmentsDropdownPanel:EnvironmentsDropdownPanel ? = null
 
 
     private var myScopeLineResultPanel: ScopeLineResultPanel? = null
@@ -62,7 +63,7 @@ class NavigationPanel(
         changeEnvAlarm = AlarmFactory.getInstance().create()
         localHostname = CommonUtils.getLocalHostname()
         isOpaque = false
-        layout = GridLayout(2, 1)
+        layout = BorderLayout()
         border = JBUI.Borders.empty()
         analyticsService = project.getService(AnalyticsService::class.java)
 
@@ -118,8 +119,39 @@ class NavigationPanel(
     }
 
     private fun buildNavigationPanelComponents(model: PanelModel) {
-        this.add(getFirstRowPanel(model))
-        this.add(getSecondRowPanel(model))
+
+        val mainPanel = JPanel(GridBagLayout())
+        mainPanel.background = Laf.Colors.EDITOR_BACKGROUND
+
+        val c = GridBagConstraints()
+        c.gridx = 0
+        c.gridy = 0
+        c.weightx = 0.0
+        c.fill = GridBagConstraints.NONE
+        c.ipadx = 10.scaled()
+        mainPanel.add(getLogoIconLabel(),c)
+
+        c.gridx = 1
+        c.weightx = 1.0
+        c.fill = GridBagConstraints.HORIZONTAL
+        c.ipadx = 0
+        mainPanel.add(getFirstRowPanel(model),c)
+
+        val cardsPanel = getSecondRowPanel()
+        c.gridx = 0
+        c.gridy = 1
+        c.weightx = 0.0
+        c.fill = GridBagConstraints.NONE
+        c.ipadx = 10.scaled()
+        mainPanel.add(getHomeButton(cardsPanel),c)
+
+        c.gridx = 1
+        c.weightx = 1.0
+        c.fill = GridBagConstraints.HORIZONTAL
+        c.ipadx = 0
+        mainPanel.add(cardsPanel,c)
+
+        add(mainPanel,BorderLayout.CENTER)
     }
 
     private fun removeExistingComponentsIfPresent() {
@@ -129,58 +161,30 @@ class NavigationPanel(
             }
         }
     }
-    private var environmentsDropdownPanel:EnvironmentsDropdownPanel ? = null
+
     private fun getFirstRowPanel(model: PanelModel): JPanel {
-        val logoIconLabel = getLogoIconLabel()
 
         environmentsDropdownPanel?.dispose()
         environmentsDropdownPanel = EnvironmentsDropdownPanel(project, model, environmentsSupplier, localHostname)
 
-        val parentPanel = JPanel(GridBagLayout())
-        // Add the logo icon label to the parent panel with relative constraints
-        val cLogo = GridBagConstraints()
-        cLogo.gridx = 0
-        cLogo.gridy = 0
-        cLogo.anchor = GridBagConstraints.LINE_START
-        parentPanel.add(logoIconLabel, cLogo)
-
-        // Add the ComboBox to the parent panel with relative constraints
-        val cComboBox = GridBagConstraints()
-        cComboBox.gridx = 1
-        cComboBox.gridy = 0
-        cComboBox.weightx = 1.0
-        cComboBox.anchor = GridBagConstraints.LINE_START
-        cComboBox.fill = GridBagConstraints.HORIZONTAL
-        parentPanel.add(environmentsDropdownPanel, cComboBox)
-
-//        rowPanel.add(getPointerButton()) // will be used later
-
-        val cSettingsButton = GridBagConstraints()
-        cSettingsButton.gridx = 2
-        cSettingsButton.gridy = 0
-        cSettingsButton.anchor = GridBagConstraints.LINE_START
-        cSettingsButton.fill = GridBagConstraints.NONE
-        parentPanel.add(getSettingsButton(), cSettingsButton)
-
-        parentPanel.border = BorderFactory.createMatteBorder(0, 0, 1, 0, Laf.Colors.PLUGIN_BACKGROUND) // create 1px border in JetBrains dark gray color
-
-        // Set the background color of the parent panel
+        val parentPanel = JPanel(BorderLayout())
+        parentPanel.add(environmentsDropdownPanel, BorderLayout.CENTER)
+        parentPanel.add(getSettingsButton(), BorderLayout.EAST)
         parentPanel.background = Laf.Colors.EDITOR_BACKGROUND
-
-        // Set the preferred height of the parent panel based on the ComboBox
-        val comboBoxSize = environmentsDropdownPanel!!.preferredSize
-        parentPanel.preferredSize = Dimension(parentPanel.width, comboBoxSize.height)
 
         return parentPanel
     }
 
-    private fun getSecondRowPanel(model: PanelModel): JPanel {
+    private fun getSecondRowPanel(): JPanel {
 
         val scopeLine = createScopeLinePanel()
-        val projectPanel = ProjectHomePanel(project)
+        val projectPanel = createProjectPanel()
 
         val cardsLayout = CardLayout()
         val cardsPanel = JPanel(cardsLayout)
+        cardsPanel.border = JBUI.Borders.empty()
+        cardsPanel.background = Laf.Colors.EDITOR_BACKGROUND
+
         cardsPanel.isOpaque = false
         cardsPanel.border = JBUI.Borders.empty()
         cardsPanel.add(scopeLine,HomeButton.SCOPE_LINE_PANEL)
@@ -189,19 +193,27 @@ class NavigationPanel(
         cardsLayout.addLayoutComponent(projectPanel,HomeButton.HOME_PROJECT_PANEL)
         cardsLayout.show(cardsPanel,HomeButton.SCOPE_LINE_PANEL)
 
-
-        val rowPanel = JPanel(BorderLayout())
-        rowPanel.border = JBUI.Borders.empty()
-        rowPanel.background = Laf.Colors.EDITOR_BACKGROUND
-
-        val homeButton = HomeButton(project,cardsPanel)
-        homeButton.border = JBUI.Borders.empty(2, 13, 2, 10)
-
-        rowPanel.add(homeButton,BorderLayout.WEST)
-        rowPanel.add(cardsPanel,BorderLayout.CENTER)
-
-        return rowPanel
+        return cardsPanel
     }
+
+
+    fun getHomeButton(cardsPanel: JPanel):JComponent{
+        val homeButton = HomeButton(project,cardsPanel)
+        val size = Laf.scalePanels(Laf.Sizes.BUTTON_SIZE_24)
+        val buttonsSize = Dimension(size, size)
+        homeButton.preferredSize = buttonsSize
+        homeButton.maximumSize = buttonsSize
+
+        val panel = JPanel(GridBagLayout())
+        panel.isOpaque = false
+        panel.border = JBUI.Borders.empty()
+        val c = GridBagConstraints()
+        c.gridx = 0
+        c.gridy = 0
+        panel.add(homeButton,c)
+        return panel
+    }
+
 
 
     private fun createScopeLinePanel():JPanel{
@@ -213,44 +225,30 @@ class NavigationPanel(
         panel.add(myScopeLineResultPanel!!,BorderLayout.CENTER)
         return panel
     }
-
-    private fun getLogoIconLabel(): JLabel {
-        val logoIconLabel = JLabel(Laf.Icons.General.DIGMA_LOGO, SwingConstants.LEFT)
-        logoIconLabel.horizontalAlignment = SwingConstants.LEFT
-        logoIconLabel.verticalAlignment = SwingConstants.TOP
-        logoIconLabel.isOpaque = false
-        logoIconLabel.border = JBUI.Borders.empty(2, 13, 2, 10)
-        return logoIconLabel
+    private fun createProjectPanel(): JPanel {
+        val panel = JPanel(BorderLayout())
+        panel.isOpaque = false
+        panel.border = JBUI.Borders.empty()
+        val projectPanel = ProjectHomePanel(this.project)
+        panel.add(projectPanel, BorderLayout.CENTER)
+        return panel
     }
 
-    private fun getDashboardButton(): IconButton {
-        val size = Laf.scalePanels(Laf.Sizes.BUTTON_SIZE_26)
+    private fun getLogoIconLabel(): JComponent {
+        val logoIconLabel = JBLabel(Laf.Icons.General.DIGMA_LOGO,SwingConstants.CENTER)
+        val size = Laf.scalePanels(Laf.Sizes.BUTTON_SIZE_24)
         val buttonsSize = Dimension(size, size)
-        val dashboardButton = IconButton(Laf.Icons.General.HOME)
-        dashboardButton.preferredSize = buttonsSize
-        dashboardButton.maximumSize = buttonsSize
-        dashboardButton.border = JBUI.Borders.empty(2, 4)
-        return dashboardButton
-    }
+        logoIconLabel.preferredSize = buttonsSize
+        logoIconLabel.maximumSize = buttonsSize
 
-    private fun getRelatedInsightsIconLabel(): JLabel {
-        val logoIconLabel = JLabel(Laf.Icons.General.RELATED_INSIGHTS, SwingConstants.RIGHT)
-        logoIconLabel.horizontalAlignment = SwingConstants.RIGHT
-        logoIconLabel.verticalAlignment = SwingConstants.TOP
-        logoIconLabel.isOpaque = false
-        return logoIconLabel
-    }
-
-    private fun getPointerButton(): IconButton {
-        val size = Laf.scalePanels(Laf.Sizes.BUTTON_SIZE_26)
-        val buttonsSize = Dimension(size, size)
-        val relatedInsightsButton = IconButton(Laf.Icons.General.POINTER)
-        relatedInsightsButton.preferredSize = buttonsSize
-        relatedInsightsButton.maximumSize = buttonsSize
-        relatedInsightsButton.addActionListener {
-
-        }
-        return relatedInsightsButton
+        val panel = JPanel(GridBagLayout())
+        panel.isOpaque = false
+        panel.border = JBUI.Borders.empty()
+        val c = GridBagConstraints()
+        c.gridx = 0
+        c.gridy = 0
+        panel.add(logoIconLabel,c)
+        return panel
     }
 
 

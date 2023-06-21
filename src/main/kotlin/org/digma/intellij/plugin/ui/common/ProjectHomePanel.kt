@@ -5,7 +5,6 @@ import com.intellij.ui.JBColor
 import com.intellij.ui.dsl.builder.RowLayout
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
-import com.intellij.util.ui.JBUI
 import java.awt.BorderLayout
 import javax.swing.Icon
 import javax.swing.JPanel
@@ -16,7 +15,6 @@ class ProjectHomePanel(val project: Project) : JPanel(){
         layout = BorderLayout()
         this.background = Laf.Colors.EDITOR_BACKGROUND
         this.isOpaque = true
-        border = JBUI.Borders.emptyLeft(10)
 
         add(createPanel(),BorderLayout.CENTER)
     }

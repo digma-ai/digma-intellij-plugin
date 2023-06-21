@@ -70,7 +70,7 @@ class EnvironmentsDropdownPanel(
         this.localHostname = localHostname
         this.changeEnvAlarm = AlarmFactory.getInstance().create()
         layout = BoxLayout(this, BoxLayout.LINE_AXIS)
-        border = JBUI.Borders.empty(2, 6)
+        border = JBUI.Borders.empty()
         isOpaque = false
         cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
 

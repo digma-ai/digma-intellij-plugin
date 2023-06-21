@@ -7,10 +7,8 @@ import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.home.HomeSwitcherService
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
-import org.digma.intellij.plugin.ui.scaled
 import java.awt.CardLayout
 import java.awt.Cursor
-import java.awt.Dimension
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import javax.swing.JPanel
@@ -56,7 +54,7 @@ class HomeButton(val project: Project, private val cardsPanel: JPanel): JToggleB
         border = JBUI.Borders.empty()
         background = Laf.Colors.TRANSPARENT
         isSelected = service<PersistenceService>().state.homeButtonSelected
-        preferredSize = Dimension(DEFAULT_ICON.iconWidth.scaled()+6, DEFAULT_ICON.iconHeight.scaled()+4)
+//        preferredSize = Dimension(DEFAULT_ICON.iconWidth.scaled()+6, DEFAULT_ICON.iconHeight.scaled()+4)
 
         changeState()
 

@@ -23,6 +23,7 @@ class SpanNPlusOneInsight
         "spanInfo",
         "traceId",
         "clientSpanName",
+        "clientSpanCodeObjectId",
         "occurrences",
         "duration",
         "endpoints"
@@ -41,6 +42,7 @@ constructor(
         override val spanInfo: SpanInfo,
         val traceId: String?,
         val clientSpanName: String?,
+        val clientSpanCodeObjectId: String?,
         val occurrences: Number,
         val duration: Duration,
         val endpoints: List<SpanNPlusEndpoints>,

@@ -73,7 +73,7 @@ private fun buildError(model: TopErrorFlowsInsight.Error, project: Project): JPa
     val link = ActionLink(asHtml(linkText)) {
         project.service<HomeSwitcherService>().switchToInsights()
         val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
-        actionListener.showErrorDetails(model.uid)
+        actionListener.showErrorDetailsFromDashboard(model.uid)
     }
     link.border = JBUI.Borders.emptyBottom(10)
 

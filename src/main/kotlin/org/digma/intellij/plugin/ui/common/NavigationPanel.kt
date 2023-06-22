@@ -50,9 +50,8 @@ class NavigationPanel(
     private var analyticsService: AnalyticsService? = null
     private val rebuildPanelLock = ReentrantLock()
     private var environmentsDropdownPanel:EnvironmentsDropdownPanel ? = null
-
-
     private var myScopeLineResultPanel: ScopeLineResultPanel? = null
+
 
     init {
         this.project = project
@@ -64,22 +63,22 @@ class NavigationPanel(
         border = JBUI.Borders.empty()
         analyticsService = project.getService(AnalyticsService::class.java)
 
-        rebuildInBackground(model)
+        rebuildInBackground(model,true)
 
         messageBusConnection.subscribe(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, object : AnalyticsServiceConnectionEvent {
             override fun connectionLost() {
-                rebuildInBackground(model)
+                rebuildInBackground(model,false)
             }
 
             override fun connectionGained() {
-                rebuildInBackground(model)
+                rebuildInBackground(model,false)
             }
         })
         messageBusConnection.subscribe(
                 ModelChangeListener.MODEL_CHANGED_TOPIC,
                         object : ModelChangeListener {
                             override fun modelChanged(newModel: PanelModel) {
-                                rebuildInBackground(newModel)
+                                rebuildInBackground(newModel,false)
                             }
                         }
         )
@@ -87,16 +86,16 @@ class NavigationPanel(
 
 
     override fun reset() {
-        rebuildInBackground(model)
+        rebuildInBackground(model,false)
     }
 
-    private fun rebuildInBackground(model: PanelModel) {
+    private fun rebuildInBackground(model: PanelModel,startup: Boolean) {
         val lifetimeDefinition = LifetimeDefinition()
         lifetimeDefinition.lifetime.launchBackground {
             rebuildPanelLock.lock()
             Log.log(logger::debug, "Lock acquired for rebuild Navigation panel process.")
             try {
-                rebuild(model)
+                rebuild(model,startup)
             } finally {
                 rebuildPanelLock.unlock()
                 Log.log(logger::debug, "Lock released for rebuild Navigation panel process.")
@@ -105,17 +104,17 @@ class NavigationPanel(
         }
     }
 
-    private fun rebuild(model: PanelModel) {
+    private fun rebuild(model: PanelModel, startup: Boolean) {
         ApplicationManager.getApplication().invokeLater {
             if (!project.isDisposed) {
                 removeExistingComponentsIfPresent()
-                buildNavigationPanelComponents(model)
+                buildNavigationPanelComponents(model,startup)
                 revalidate()
             }
         }
     }
 
-    private fun buildNavigationPanelComponents(model: PanelModel) {
+    private fun buildNavigationPanelComponents(model: PanelModel, startup: Boolean) {
 
         val mainPanel = JPanel(BorderLayout())
         mainPanel.background = Laf.Colors.EDITOR_BACKGROUND
@@ -135,7 +134,7 @@ class NavigationPanel(
         bottomPanel.background = Laf.Colors.EDITOR_BACKGROUND
         bottomPanel.border = JBUI.Borders.empty()
         val cardsPanel = getSecondRowPanel()
-        val homeButton = getHomeButton(cardsPanel)
+        val homeButton = getHomeButton(cardsPanel,startup)
         homeButton.alignmentX = 0F
         bottomPanel.add(homeButton,BorderLayout.WEST)
         cardsPanel.alignmentX = 1F
@@ -178,18 +177,21 @@ class NavigationPanel(
 
         cardsPanel.isOpaque = false
         cardsPanel.border = JBUI.Borders.empty()
-        cardsPanel.add(scopeLine,HomeButton.SCOPE_LINE_PANEL)
-        cardsPanel.add(projectPanel,HomeButton.HOME_PROJECT_PANEL)
-        cardsLayout.addLayoutComponent(scopeLine,HomeButton.SCOPE_LINE_PANEL)
-        cardsLayout.addLayoutComponent(projectPanel,HomeButton.HOME_PROJECT_PANEL)
-        cardsLayout.show(cardsPanel,HomeButton.SCOPE_LINE_PANEL)
+        cardsPanel.add(scopeLine, HomeButton.SCOPE_LINE_PANEL)
+        cardsPanel.add(projectPanel, HomeButton.HOME_PROJECT_PANEL)
+        cardsLayout.addLayoutComponent(scopeLine, HomeButton.SCOPE_LINE_PANEL)
+        cardsLayout.addLayoutComponent(projectPanel, HomeButton.HOME_PROJECT_PANEL)
+        cardsLayout.show(cardsPanel, HomeButton.SCOPE_LINE_PANEL)
 
         return cardsPanel
     }
 
 
-    fun getHomeButton(cardsPanel: JPanel):JComponent{
-        val homeButton = HomeButton(project,cardsPanel)
+    //startup is a hack to overcome teh fact that NavigationPanel is rebuilt every few seconds
+    // it is just used to show the home panel on startup, we need a flag because the refresh is actually startup every few seconds
+    private fun getHomeButton(cardsPanel: JPanel, startup: Boolean): JComponent {
+
+        val homeButton = HomeButton(project, cardsPanel,startup)
         val size = Laf.scalePanels(Laf.Sizes.BUTTON_SIZE_24)
         val buttonsSize = Dimension(size, size)
         homeButton.preferredSize = buttonsSize

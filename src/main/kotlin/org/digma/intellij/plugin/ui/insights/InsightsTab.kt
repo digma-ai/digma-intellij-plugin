@@ -13,6 +13,7 @@ import org.digma.intellij.plugin.ui.common.statuspanels.createNoDataYetEmptyStat
 import org.digma.intellij.plugin.ui.common.statuspanels.createNoInsightsPanel
 import org.digma.intellij.plugin.ui.common.statuspanels.createNoObservabilityPanel
 import org.digma.intellij.plugin.ui.common.statuspanels.createPendingInsightsPanel
+import org.digma.intellij.plugin.ui.common.statuspanels.createStartupEmptyStatePanel
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.insights.InsightsList
 import org.digma.intellij.plugin.ui.list.insights.PreviewList
@@ -109,6 +110,8 @@ private fun wrapWithEmptyStatuses(project: Project, insightsPanel: DigmaTabPanel
     val noDataYetPanel = createNoDataYetEmptyStatePanel()
     val noObservabilityPanel = createNoObservabilityPanel(project, insightsModel)
 
+    val startupEmpty = createStartupEmptyStatePanel(project)
+
     emptyStatusesCardsPanel.add(insightsPanel, UIInsightsStatus.Default.name)
     emptyStatusesCardsLayout.addLayoutComponent(insightsPanel, UIInsightsStatus.Default.name)
 
@@ -127,7 +130,11 @@ private fun wrapWithEmptyStatuses(project: Project, insightsPanel: DigmaTabPanel
     emptyStatusesCardsPanel.add(noObservabilityPanel, UIInsightsStatus.NoObservability.name)
     emptyStatusesCardsLayout.addLayoutComponent(noObservabilityPanel, UIInsightsStatus.NoObservability.name)
 
-    emptyStatusesCardsLayout.show(emptyStatusesCardsPanel,UIInsightsStatus.Default.name)
+    emptyStatusesCardsPanel.add(startupEmpty, UIInsightsStatus.Startup.name)
+    emptyStatusesCardsLayout.addLayoutComponent(startupEmpty, UIInsightsStatus.Startup.name)
+
+    emptyStatusesCardsLayout.show(emptyStatusesCardsPanel,UIInsightsStatus.Startup.name)
+//    emptyStatusesCardsLayout.show(emptyStatusesCardsPanel,UIInsightsStatus.Default.name)
 
 
 
@@ -149,8 +156,13 @@ private fun wrapWithEmptyStatuses(project: Project, insightsPanel: DigmaTabPanel
                 noObservabilityPanel.reset()
             }
 
-            Log.log(logger::debug, project, "Changing to empty state card  ${insightsModel.status.name}")
-            emptyStatusesCardsLayout.show(emptyStatusesCardsPanel, insightsModel.status.name)
+            if (insightsModel.status == UIInsightsStatus.Startup){
+                emptyStatusesCardsLayout.show(emptyStatusesCardsPanel,UIInsightsStatus.Startup.name)
+            }else{
+                Log.log(logger::debug, project, "Changing to empty state card  ${insightsModel.status.name}")
+                emptyStatusesCardsLayout.show(emptyStatusesCardsPanel, insightsModel.status.name)
+            }
+
         }
     }
 

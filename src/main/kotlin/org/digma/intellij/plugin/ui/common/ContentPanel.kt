@@ -1,9 +1,7 @@
 package org.digma.intellij.plugin.ui.common
 
-import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.util.ui.JBUI
-import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.CardLayout
@@ -22,13 +20,16 @@ class ContentPanel(project: Project) : DigmaResettablePanel() {
         this.layout = cardLayout
         add(insightsPanel, MainToolWindowCardsController.ContentCard.INSIGHTS.name)
         add(homePanel, MainToolWindowCardsController.ContentCard.HOME.name)
+
         cardLayout.addLayoutComponent(insightsPanel, MainToolWindowCardsController.ContentCard.INSIGHTS.name)
         cardLayout.addLayoutComponent(homePanel, MainToolWindowCardsController.ContentCard.HOME.name)
-        if (service<PersistenceService>().state.homeButtonSelected){
-            cardLayout.show(this, MainToolWindowCardsController.ContentCard.HOME.name)
-        }else {
-            cardLayout.show(this, MainToolWindowCardsController.ContentCard.INSIGHTS.name)
-        }
+//        if (service<PersistenceService>().state.homeButtonSelected){
+//            cardLayout.show(this, MainToolWindowCardsController.ContentCard.HOME.name)
+//        }else {
+//            cardLayout.show(this, MainToolWindowCardsController.ContentCard.INSIGHTS.name)
+//        }
+
+        //project.service<HomeSwitcherService>().switchToHome()
     }
 
 

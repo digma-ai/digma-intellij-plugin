@@ -30,8 +30,6 @@ import java.util.function.Supplier;
 
 import static org.digma.intellij.plugin.ui.common.InstallationWizardSidePanelWindowPanelKt.createInstallationWizardSidePanelWindowPanel;
 import static org.digma.intellij.plugin.ui.common.MainSidePaneWindowPanelKt.createMainSidePaneWindowPanel;
-import static org.digma.intellij.plugin.ui.common.statuspanels.CommonHtmlEmptyStatesKt.createNoFileEmptyStatePanel;
-import static org.digma.intellij.plugin.ui.common.statuspanels.CommonHtmlEmptyStatesKt.createNonSupportedEmptyStatePanel;
 
 
 /**
@@ -92,7 +90,7 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
                 IDEUtilsService.isRiderIDE() && persistenceDataState.getAlreadyPassedTheInstallationWizardForRiderIDE() ||
                 IDEUtilsService.isPyCharmIDE() && persistenceDataState.getAlreadyPassedTheInstallationWizardForPyCharmIDE()
         ) {
-            MainToolWindowCardsController.getInstance(project).showMainPanel();
+            //MainToolWindowCardsController.getInstance(project).showMainPanel();
         }else{
             MainToolWindowCardsController.getInstance(project).showWizard();
         }
@@ -111,8 +109,8 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         cardsPanel.setBorder(JBUI.Borders.empty());
 
         var noConnectionPanel = NoConnectionPanelKt.createNoConnectionPanel(project);
-        var nonSupportedPanel = createNonSupportedEmptyStatePanel(project);
-        var noFilePanel = createNoFileEmptyStatePanel(project);
+//        var nonSupportedPanel = createNonSupportedEmptyStatePanel(project);
+//        var noFilePanel = createNoFileEmptyStatePanel(project);
 
 
         cardsPanel.add(mainPanel, MainToolWindowCardsController.MainWindowCard.MAIN.name());
@@ -121,11 +119,11 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         cardsPanel.add(noConnectionPanel, MainToolWindowCardsController.MainWindowCard.NO_CONNECTION.name());
         cardLayout.addLayoutComponent(noConnectionPanel, MainToolWindowCardsController.MainWindowCard.NO_CONNECTION.name());
 
-        cardsPanel.add(nonSupportedPanel, MainToolWindowCardsController.MainWindowCard.NON_SUPPORTED.name());
-        cardLayout.addLayoutComponent(nonSupportedPanel, MainToolWindowCardsController.MainWindowCard.NON_SUPPORTED.name());
+//        cardsPanel.add(nonSupportedPanel, MainToolWindowCardsController.MainWindowCard.NON_SUPPORTED.name());
+//        cardLayout.addLayoutComponent(nonSupportedPanel, MainToolWindowCardsController.MainWindowCard.NON_SUPPORTED.name());
 
-        cardsPanel.add(noFilePanel, MainToolWindowCardsController.MainWindowCard.EMPTY_EDITOR.name());
-        cardLayout.addLayoutComponent(noFilePanel, MainToolWindowCardsController.MainWindowCard.EMPTY_EDITOR.name());
+//        cardsPanel.add(noFilePanel, "STARTUP");
+//        cardLayout.addLayoutComponent(noFilePanel, "STARTUP");
 
         cardLayout.show(cardsPanel, MainToolWindowCardsController.MainWindowCard.MAIN.name());
 

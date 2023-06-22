@@ -6,6 +6,9 @@ import com.intellij.ui.content.ContentManagerListener;
 import org.digma.intellij.plugin.errors.ErrorsProvider;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsightNamedError;
+import org.digma.intellij.plugin.ui.model.EmptyScope;
+import org.digma.intellij.plugin.ui.model.Scope;
+import org.digma.intellij.plugin.ui.model.UIInsightsStatus;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
 import org.digma.intellij.plugin.ui.service.SummaryViewService;
@@ -21,7 +24,10 @@ public class ErrorsActionsService implements ContentManagerListener {
     private final SummaryViewService summaryViewService;
     private final TabsHelper tabsHelper;
 
+    private Scope scopeBeforeErrorDetails = null;
+
     private final EditorService editorService;
+    private UIInsightsStatus statusBeforeErrorDetails;
 
     public ErrorsActionsService(Project project) {
         this.project = project;
@@ -35,18 +41,34 @@ public class ErrorsActionsService implements ContentManagerListener {
 
 
     public void showErrorDetails(@NotNull ErrorInsightNamedError error) {
-        showErrorDetails(error.getUid());
+        showErrorDetails(error.getUid(),false);
     }
 
     public void showErrorDetails(@NotNull CodeObjectError codeObjectError) {
-        showErrorDetails(codeObjectError.getUid());
+        showErrorDetails(codeObjectError.getUid(),false);
     }
 
-    public void showErrorDetails(@NotNull String uid) {
+    public void showErrorDetailsFromDashboard(@NotNull String uid){
+        showErrorDetails(uid,true);
+    }
+
+    //todo: move to insightsViewOrchestrator
+    private void showErrorDetails(@NotNull String uid,boolean rememberCurrentScope) {
         tabsHelper.showingErrorDetails();
         errorsViewService.setVisible();
         ErrorsProvider errorsProvider  = project.getService(ErrorsProvider.class);
-        errorsViewService.showErrorDetails(uid,errorsProvider);
+
+        boolean replaceScope = false;
+        if (rememberCurrentScope || insightsViewService.getModel().getScope() instanceof EmptyScope) {
+            scopeBeforeErrorDetails = insightsViewService.getModel().getScope();
+            statusBeforeErrorDetails = insightsViewService.getModel().getStatus();
+            replaceScope = true;
+        }else {
+            scopeBeforeErrorDetails = null;
+            statusBeforeErrorDetails = null;
+        }
+        errorsViewService.showErrorDetails(uid,errorsProvider,replaceScope);
+        insightsViewService.notifyModelChangedAndUpdateUi();
         tabsHelper.errorDetailsOn();
     }
 
@@ -58,6 +80,14 @@ public class ErrorsActionsService implements ContentManagerListener {
     public void closeErrorDetailsWithoutNotify() {
         tabsHelper.errorDetailsOff();
         errorsViewService.closeErrorDetails();
+        if (scopeBeforeErrorDetails != null && statusBeforeErrorDetails != null) {
+            insightsViewService.getModel().setScope(scopeBeforeErrorDetails);
+            insightsViewService.getModel().setStatus(statusBeforeErrorDetails);
+            insightsViewService.notifyModelChangedAndUpdateUi();
+            scopeBeforeErrorDetails = null;
+            statusBeforeErrorDetails = null;
+        }
+        errorsViewService.updateUi();
         insightsViewService.updateUi();
     }
 

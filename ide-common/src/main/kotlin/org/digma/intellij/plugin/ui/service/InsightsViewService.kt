@@ -40,6 +40,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
     val model = InsightsModel()
 
 
+
     override fun getViewDisplayName(): String {
         return "Insights" + if (model.insightsCount > 0) " (${model.count()})" else ""
     }
@@ -108,6 +109,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
     }
 
     fun updateInsightsModel(methodInfo: MethodInfo) {
+
         val insightsProvider: InsightsProvider = project.getService(InsightsProvider::class.java)
         updateInsightsModelWithInsightsProvider(methodInfo,insightsProvider)
     }
@@ -203,35 +205,46 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
      */
     fun empty() {
 
-        Log.log(logger::debug, "empty called")
+        //this will prevent the refresh task from refreshing because refreshing will change the
+        // state of the code navigation button,
+        //after the refresh is changed to something else maybe this is not necessary anymore
+//        model.scope = EmptyScope("")
 
-        model.listViewItems = ArrayList()
-        model.previewListViewItems = ArrayList()
-        model.usageStatusResult = EmptyUsageStatusResult
-        model.scope = EmptyScope("")
-        model.insightsCount = 0
-        model.card = InsightsTabCard.INSIGHTS
-        //when empty set Default status, empty editor should be covered by MainToolWindowCardsController
-        model.status = UIInsightsStatus.Default
-
-        notifyModelChangedAndUpdateUi()
+//        Log.log(logger::debug, "empty called")
+//
+//        model.listViewItems = ArrayList()
+//        model.previewListViewItems = ArrayList()
+//        model.usageStatusResult = EmptyUsageStatusResult
+//        model.scope = EmptyScope("")
+//        model.insightsCount = 0
+//        model.card = InsightsTabCard.INSIGHTS
+//        //when empty set Default status, empty editor should be covered by MainToolWindowCardsController
+//        model.status = UIInsightsStatus.Default
+//
+//        notifyModelChangedAndUpdateUi()
 
     }
 
     fun emptyNonSupportedFile(fileUri: String) {
 
-        Log.log(logger::debug, "empty called")
+        //this will prevent the refresh task from refreshing because refreshing will change the
+        // state of the code navigation button,
+        //after the refresh is changed to something else maybe this is not necessary anymore
+//        model.scope = EmptyScope("")
 
-        model.listViewItems = ArrayList()
-        model.previewListViewItems = ArrayList()
-        model.usageStatusResult = EmptyUsageStatusResult
-        model.scope = EmptyScope(getNonSupportedFileScopeMessage(fileUri))
-        model.insightsCount = 0
-        model.card = InsightsTabCard.INSIGHTS
-        //when non supported file set Default status, non-supported file should be covered by MainToolWindowCardsController
-        model.status = UIInsightsStatus.Default
 
-        notifyModelChangedAndUpdateUi()
+//        Log.log(logger::debug, "empty called")
+//
+//        model.listViewItems = ArrayList()
+//        model.previewListViewItems = ArrayList()
+//        model.usageStatusResult = EmptyUsageStatusResult
+//        model.scope = EmptyScope(getNonSupportedFileScopeMessage(fileUri))
+//        model.insightsCount = 0
+//        model.card = InsightsTabCard.INSIGHTS
+//        //when non supported file set Default status, non-supported file should be covered by MainToolWindowCardsController
+//        model.status = UIInsightsStatus.Default
+//
+//        notifyModelChangedAndUpdateUi()
 
     }
 
@@ -239,6 +252,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
             documentInfoContainer: DocumentInfoContainer?,
             fileUri: String
     ) {
+
 
         Log.log(logger::debug, "showDocumentPreviewList for {}. ", fileUri)
 
@@ -309,7 +323,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
         publisher.modelChanged(model)
     }
 
-    private fun notifyModelChangedAndUpdateUi() {
+    fun notifyModelChangedAndUpdateUi() {
         notifyModelChanged()
         updateUi()
     }

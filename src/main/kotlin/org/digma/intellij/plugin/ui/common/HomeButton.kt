@@ -15,7 +15,7 @@ import javax.swing.JPanel
 import javax.swing.JToggleButton
 
 
-class HomeButton(val project: Project, private val cardsPanel: JPanel): JToggleButton() {
+class HomeButton(val project: Project, private val cardsPanel: JPanel, startup: Boolean): JToggleButton() {
 
     companion object{
         const val SCOPE_LINE_PANEL = "SCOPE_LINE_PANEL"
@@ -53,10 +53,22 @@ class HomeButton(val project: Project, private val cardsPanel: JPanel): JToggleB
         isBorderPainted = false
         border = JBUI.Borders.empty()
         background = Laf.Colors.TRANSPARENT
-        isSelected = service<PersistenceService>().state.homeButtonSelected
+
+        //all this is to overcome the refresh issue...
+        // we don't really need the persistence but we use it to restore the button state after refresh/rebuild
+        // all we want is to show the home on startup
+        if (startup){
+            isSelected = true
+            service<PersistenceService>().state.homeButtonSelected = true
+        }else{
+            isSelected = service<PersistenceService>().state.homeButtonSelected
+        }
+
+//        isSelected = if (startup) true else service<PersistenceService>().state.homeButtonSelected
 //        preferredSize = Dimension(DEFAULT_ICON.iconWidth.scaled()+6, DEFAULT_ICON.iconHeight.scaled()+4)
 
-        changeState()
+        //only change if home is pre-selected from persistence
+        if (isSelected) changeState()
 
         addChangeListener{
             service<PersistenceService>().state.homeButtonSelected = isSelected

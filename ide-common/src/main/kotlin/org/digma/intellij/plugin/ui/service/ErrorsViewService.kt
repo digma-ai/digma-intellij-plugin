@@ -20,7 +20,9 @@ import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
 import org.digma.intellij.plugin.ui.model.DocumentScope
 import org.digma.intellij.plugin.ui.model.EmptyScope
+import org.digma.intellij.plugin.ui.model.ErrorDetailsScope
 import org.digma.intellij.plugin.ui.model.MethodScope
+import org.digma.intellij.plugin.ui.model.UIInsightsStatus
 import org.digma.intellij.plugin.ui.model.errors.ErrorDetailsModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsPreviewListItem
@@ -36,7 +38,6 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
     //the model is single per the life of an open project in intellij. it shouldn't be created
     //elsewhere in the program. it can not be singleton.
     val model = ErrorsModel()
-
 
 
     companion object {
@@ -92,6 +93,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
 
 
     fun updateErrorsModel(methodInfo: MethodInfo) {
+
         val errorsProvider: ErrorsProvider = project.getService(ErrorsProvider::class.java)
         updateErrorsModelWithErrorsProvider(methodInfo,errorsProvider)
     }
@@ -139,7 +141,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         tabsHelper.notifyTabChanged(1)
     }
 
-    fun showErrorDetails(uid: String, errorsProvider: ErrorsProvider) {
+    fun showErrorDetails(uid: String, errorsProvider: ErrorsProvider,replaceScope: Boolean) {
 
         Log.log(logger::debug, "showDocumentPreviewList for {}. ", uid)
 
@@ -147,6 +149,11 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         errorDetails.flowStacks.isWorkspaceOnly = PersistenceService.getInstance().state.isWorkspaceOnly
         model.errorDetails = errorDetails
         model.card = ErrorsTabCard.ERROR_DETAILS
+
+        if (replaceScope) {
+            project.service<InsightsViewService>().model.scope = ErrorDetailsScope(errorDetails.getName())
+            project.service<InsightsViewService>().model.status = UIInsightsStatus.Default
+        }
 
         updateUi()
 
@@ -169,30 +176,33 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
      */
     fun empty() {
 
-        Log.log(logger::debug, "empty called")
 
-        model.listViewItems = Collections.emptyList()
-        model.previewListViewItems = ArrayList()
-        model.usageStatusResult = EmptyUsageStatusResult
-        model.scope = EmptyScope("")
-        model.card = ErrorsTabCard.ERRORS_LIST
-        model.errorsCount = 0
 
-        updateUi()
+//        Log.log(logger::debug, "empty called")
+//
+//        model.listViewItems = Collections.emptyList()
+//        model.previewListViewItems = ArrayList()
+//        model.usageStatusResult = EmptyUsageStatusResult
+//        model.scope = EmptyScope("")
+//        model.card = ErrorsTabCard.ERRORS_LIST
+//        model.errorsCount = 0
+//
+//        updateUi()
     }
 
     fun emptyNonSupportedFile(fileUri: String) {
 
-        Log.log(logger::debug, "emptyNonSupportedFile called")
 
-        model.listViewItems = Collections.emptyList()
-        model.previewListViewItems = ArrayList()
-        model.usageStatusResult = EmptyUsageStatusResult
-        model.scope = EmptyScope(getNonSupportedFileScopeMessage(fileUri))
-        model.card = ErrorsTabCard.ERRORS_LIST
-        model.errorsCount = 0
-
-        updateUi()
+//        Log.log(logger::debug, "emptyNonSupportedFile called")
+//
+//        model.listViewItems = Collections.emptyList()
+//        model.previewListViewItems = ArrayList()
+//        model.usageStatusResult = EmptyUsageStatusResult
+//        model.scope = EmptyScope(getNonSupportedFileScopeMessage(fileUri))
+//        model.card = ErrorsTabCard.ERRORS_LIST
+//        model.errorsCount = 0
+//
+//        updateUi()
     }
 
 

@@ -124,7 +124,7 @@ class ScopeLineResultPanel(
             return
         }
         if (model is InsightsModel || model is ErrorsModel) {
-            scopeLine = scopeLine({ model.getScope() }, { model.getScopeTooltip() }, ScopeLineIconProducer(model))
+            scopeLine = scopeLine({ model.getScopeString() }, { model.getScopeTooltip() }, ScopeLineIconProducer(model))
             scopeLine!!.isOpaque = false
         }
         this.add(scopeLine,BorderLayout.CENTER)

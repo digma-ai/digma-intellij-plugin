@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.ui;
 
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.ui.content.Content;
@@ -31,7 +30,9 @@ public class MainToolWindowCardsController implements Disposable {
     private static final Logger LOGGER = Logger.getInstance(MainToolWindowCardsController.class);
 
     public enum MainWindowCard {
-        MAIN, NO_CONNECTION, NON_SUPPORTED, EMPTY_EDITOR
+        MAIN, NO_CONNECTION
+        //, NON_SUPPORTED
+        //, EMPTY_EDITOR
     }
 
     public enum ContentCard {
@@ -194,12 +195,12 @@ public class MainToolWindowCardsController implements Disposable {
         }else{
             //FileEditorManager must be called on EDT
             EDT.ensureEDT(() -> {
-                if (!force && FileEditorManager.getInstance(project).getOpenFiles().length == 0){
-                    Log.log(LOGGER::debug,"No files opened, calling showNoFile from showMainPanel");
-                    showNoFile();
-                }else{
+//                if (!force && FileEditorManager.getInstance(project).getOpenFiles().length == 0){
+//                    Log.log(LOGGER::debug,"No files opened, calling showNoFile from showMainPanel");
+//                    showNoFile();
+//                }else{
                     showCard(MainWindowCard.MAIN);
-                }
+//                }
             });
         }
     }
@@ -237,36 +238,36 @@ public class MainToolWindowCardsController implements Disposable {
         showCard(MainWindowCard.NO_CONNECTION);
     }
 
-    public void showNonSupported() {
-        Log.log(LOGGER::debug,"showNonSupported called");
+//    public void showNonSupported() {
+//        Log.log(LOGGER::debug,"showNonSupported called");
+//
+//        latestRequestedCard = MainWindowCard.NON_SUPPORTED;
+//
+//        //replace the card even if wizard is on. it will not show until wizard content is removed.
+//
+//        if (isConnectionLost.get()){
+//            Log.log(LOGGER::debug,"Not showing NonSupported because connection lost, showing NoConnection");
+//            showNoConnection();
+//        }else{
+//            showCard(MainWindowCard.NON_SUPPORTED);
+//        }
+//    }
 
-        latestRequestedCard = MainWindowCard.NON_SUPPORTED;
 
-        //replace the card even if wizard is on. it will not show until wizard content is removed.
-
-        if (isConnectionLost.get()){
-            Log.log(LOGGER::debug,"Not showing NonSupported because connection lost, showing NoConnection");
-            showNoConnection();
-        }else{
-            showCard(MainWindowCard.NON_SUPPORTED);
-        }
-    }
-
-
-    public void showNoFile() {
-        Log.log(LOGGER::debug,"showNoFile called");
-
-        latestRequestedCard = MainWindowCard.EMPTY_EDITOR;
-
-        //replace the card even if wizard is on. it will not show until wizard content is removed.
-
-        if (isConnectionLost.get()){
-            Log.log(LOGGER::debug,"Not showing NoFile because connection lost, showing NoConnection");
-            showNoConnection();
-        }else{
-            showCard(MainWindowCard.EMPTY_EDITOR);
-        }
-    }
+//    public void showNoFile() {
+//        Log.log(LOGGER::debug,"showNoFile called");
+//
+//        latestRequestedCard = MainWindowCard.EMPTY_EDITOR;
+//
+//        //replace the card even if wizard is on. it will not show until wizard content is removed.
+//
+//        if (isConnectionLost.get()){
+//            Log.log(LOGGER::debug,"Not showing NoFile because connection lost, showing NoConnection");
+//            showNoConnection();
+//        }else{
+//            showCard(MainWindowCard.EMPTY_EDITOR);
+//        }
+//    }
 
 
     private void showLatestRequestAfterConnectionGained() {
@@ -275,18 +276,18 @@ public class MainToolWindowCardsController implements Disposable {
 
         //replace the card even if wizard is on. it will not show until wizard content is removed.
 
-        if (latestRequestedCard == null){
-            Log.log(LOGGER::debug,"latestRequestedCard is null, showing MAIN");
+//        if (latestRequestedCard == null){
+//            Log.log(LOGGER::debug,"latestRequestedCard is null, showing MAIN");
             showMainPanel();
-        }else{
-            Log.log(LOGGER::debug,"showLatestRequestAfterConnectionGained called, showing latestRequestedCard {}",latestRequestedCard);
-            switch (latestRequestedCard){
-                case NON_SUPPORTED -> showNonSupported();
-                case EMPTY_EDITOR -> showNoFile();
-                default -> showMainPanel();
-            }
-            latestRequestedCard = null;
-        }
+//        }else{
+//            Log.log(LOGGER::debug,"showLatestRequestAfterConnectionGained called, showing latestRequestedCard {}",latestRequestedCard);
+//            switch (latestRequestedCard){
+//                case NON_SUPPORTED -> showNonSupported();
+//                case EMPTY_EDITOR -> showNoFile();
+//                default -> showMainPanel();
+//            }
+//            latestRequestedCard = null;
+//        }
     }
 
 

@@ -99,7 +99,7 @@ class CodeNavigator(val project: Project) {
         return canNavigateToSpan(spanCodeObjectId) || canNavigateToMethod(methodCodeObjectId)
     }
 
-    private fun canNavigateToMethod(methodCodeObjectId: String?): Boolean {
+     fun canNavigateToMethod(methodCodeObjectId: String?): Boolean {
         if (methodCodeObjectId == null) {
             return false
         }
@@ -121,7 +121,7 @@ class CodeNavigator(val project: Project) {
         return false
     }
 
-    private fun canNavigateToSpan(spanCodeObjectId: String?): Boolean {
+    fun canNavigateToSpan(spanCodeObjectId: String?): Boolean {
         if (spanCodeObjectId == null) {
             return false
         }

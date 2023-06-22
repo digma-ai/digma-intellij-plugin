@@ -69,3 +69,15 @@ class DocumentScope(private val documentInfo: DocumentInfo) : Scope {
         return getScope()
     }
 }
+
+
+class ErrorDetailsScope(private val name: String) : Scope{
+    override fun getScope(): String {
+        return name
+    }
+
+    override fun getScopeTooltip(): String {
+        return name
+    }
+
+}

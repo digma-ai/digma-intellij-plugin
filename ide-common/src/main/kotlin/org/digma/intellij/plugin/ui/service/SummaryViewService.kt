@@ -17,7 +17,9 @@ import org.digma.intellij.plugin.summary.SummariesProvider
 import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import org.digma.intellij.plugin.ui.needToShowDurationChange
-import java.util.*
+import java.util.Collections
+import java.util.Timer
+import java.util.TimerTask
 import java.util.concurrent.locks.ReentrantLock
 
 
@@ -144,7 +146,7 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
 
         override fun isCodeLessSpanScope(): Boolean = false
 
-        override fun getScope(): String = "Current environment"
+        override fun getScopeString(): String = "Current environment"
 
         override fun getScopeTooltip(): String = ""
 

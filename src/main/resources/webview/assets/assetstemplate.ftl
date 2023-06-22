@@ -19,7 +19,7 @@
       window.theme = "${theme}";
       window.mainFont = "${mainFont}";
       window.codeFont = "${codeFont}";
-      window.assetsSearch = "${assetsSearch}";
+      window.assetsSearch = ${assetsSearch};
       window.assetsRefreshInterval;
     </script>
     <script src="/index.js"></script>

@@ -1,8 +1,10 @@
 package org.digma.intellij.plugin.assets;
 
+import com.intellij.openapi.application.ApplicationInfo;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.colors.impl.AppEditorFontOptions;
 import com.intellij.openapi.util.SystemInfo;
+import com.intellij.util.text.VersionComparatorUtil;
 import com.intellij.util.ui.UIUtil;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
@@ -43,7 +45,9 @@ public class IndexTemplateBuilder {
             data.put(THEME_ENV_NAME, ThemeUtil.getCurrentThemeName());
             data.put(FONT_ENV_NAME, UIUtil.getLabelFont().getFontName());
             data.put(CODE_FONT_ENV_NAME, AppEditorFontOptions.getInstance().getFontPreferences().getFontFamily());
-            data.put(ASSET_SEARCH_ENV_NAME, SystemInfo.isLinux ? "false" : "true");
+
+            var assetSearchEnabledForLinux = VersionComparatorUtil.compare(ApplicationInfo.getInstance().getMajorVersion(),"2023") >= 0;
+            data.put(ASSET_SEARCH_ENV_NAME, SystemInfo.isLinux ? String.valueOf(assetSearchEnabledForLinux) : "true");
 
 
             Template template = freemarketConfiguration.getTemplate(INDEX_TEMPLATE_NAME);

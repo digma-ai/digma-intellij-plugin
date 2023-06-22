@@ -14,6 +14,7 @@ import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
+import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation
 import org.digma.intellij.plugin.model.rest.navigation.NavItemType
@@ -22,6 +23,7 @@ import org.digma.intellij.plugin.navigation.NavigationModel
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.ui.list.RoundedPanel
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
+import org.digma.intellij.plugin.ui.model.DocumentScope
 import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
@@ -79,6 +81,23 @@ class CodeNavigationButton(val project: Project, private val panelModel: PanelMo
                         val codeNavigator = project.service<CodeNavigator>()
                         if (codeNavigator.canNavigateToMethod(methodId)){
                             codeNavigator.maybeNavigateToMethod(methodInfo.id)
+                        }else{
+                            HintManager.getInstance().showHint(
+                                JLabel("Code Not Found!"), RelativePoint.getSouthWestOf(this),
+                                HintManager.HIDE_BY_ESCAPE, 5000
+                            )
+                        }
+
+                        return@addActionListener
+                    }
+
+                    val documentInfo = getDocumentInfo()
+                    if (documentInfo != null){
+
+                        val fileUri = documentInfo.fileUri
+                        val codeNavigator = project.service<CodeNavigator>()
+                        if (codeNavigator.canNavigateToFile(fileUri)){
+                            codeNavigator.maybeNavigateToFile(fileUri)
                         }else{
                             HintManager.getInstance().showHint(
                                 JLabel("Code Not Found!"), RelativePoint.getSouthWestOf(this),
@@ -173,11 +192,21 @@ class CodeNavigationButton(val project: Project, private val panelModel: PanelMo
         }
         return null
     }
+
     private fun getMethodInfo(): MethodInfo? {
         if (panelModel is InsightsModel && panelModel.scope is MethodScope) {
             return (panelModel.scope as MethodScope).getMethodInfo()
         } else if (panelModel is ErrorsModel && panelModel.scope is MethodScope) {
             return (panelModel.scope as MethodScope).getMethodInfo()
+        }
+        return null
+    }
+
+    private fun getDocumentInfo(): DocumentInfo? {
+        if (panelModel is InsightsModel && panelModel.scope is DocumentScope) {
+            return (panelModel.scope as DocumentScope).getDocumentInfo()
+        } else if (panelModel is ErrorsModel && panelModel.scope is DocumentScope) {
+            return (panelModel.scope as DocumentScope).getDocumentInfo()
         }
         return null
     }

@@ -7,6 +7,7 @@ import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator.ViewState
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator.ViewState.*
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
+import org.digma.intellij.plugin.ui.model.DocumentScope
 import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.service.InsightsViewService
 
@@ -36,6 +37,8 @@ class NavigationModel(private val project: Project) {
             NoFile,
             -> {
                 if (insightsModel.scope is MethodScope || insightsModel.scope is CodeLessSpanScope) {
+                    showCodeNavigation.set(true)
+                } else if (insightsModel.scope is DocumentScope && insightsModel.insightsCount == 0) {
                     showCodeNavigation.set(true)
                 } else {
                     showCodeNavigation.set(false)

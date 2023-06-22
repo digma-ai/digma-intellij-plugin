@@ -68,6 +68,10 @@ class DocumentScope(private val documentInfo: DocumentInfo) : Scope {
     override fun getScopeTooltip(): String {
         return getScope()
     }
+
+    fun getDocumentInfo():DocumentInfo{
+        return documentInfo
+    }
 }
 
 

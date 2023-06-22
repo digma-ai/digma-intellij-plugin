@@ -39,7 +39,7 @@ public class AssetsPanel extends JPanel implements Disposable {
 
         var jbCefClient = jbCefBrowser.getJBCefClient();
         cefMessageRouter = CefMessageRouter.create();
-        messageHandler = new AssetsMessageRouterHandler(project, jbCefBrowser);
+        messageHandler = new AssetsMessageRouterHandler(project,parentDisposable, jbCefBrowser);
         cefMessageRouter.addHandler(messageHandler, true);
         jbCefClient.getCefClient().addMessageRouter(cefMessageRouter);
 
@@ -66,9 +66,7 @@ public class AssetsPanel extends JPanel implements Disposable {
         //todo: temporary, this is a very bad way to do it, waiting for help from jetbrains developers
         var fontPreferences =  AppEditorFontOptions.getInstance().getFontPreferences();
         if (fontPreferences instanceof FontPreferencesImpl){
-            ((FontPreferencesImpl)AppEditorFontOptions.getInstance().getFontPreferences()).addChangeListener(e -> {
-                changeCodeFont();
-            },this);
+            ((FontPreferencesImpl)AppEditorFontOptions.getInstance().getFontPreferences()).addChangeListener(e -> changeCodeFont(),this);
         }
 
     }

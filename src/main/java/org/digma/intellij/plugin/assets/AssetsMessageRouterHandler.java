@@ -41,11 +41,11 @@ public class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter i
     private final MessageBusConnection messageBusConnection;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public AssetsMessageRouterHandler(Project project, JBCefBrowser jbCefBrowser) {
+    public AssetsMessageRouterHandler(Project project,Disposable parentDisposable, JBCefBrowser jbCefBrowser) {
         this.project = project;
         this.jbCefBrowser = jbCefBrowser;
 
-        messageBusConnection = project.getMessageBus().connect(this);
+        messageBusConnection = project.getMessageBus().connect(parentDisposable);
         messageBusConnection.subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, new EnvironmentChanged() {
             @Override
             public void environmentChanged(String newEnv, boolean refreshInsightsView) {

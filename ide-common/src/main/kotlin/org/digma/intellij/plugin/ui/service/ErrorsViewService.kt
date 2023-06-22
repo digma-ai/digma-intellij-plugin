@@ -51,7 +51,37 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         return "Errors" + if (model.errorsCount > 0) " (${model.count()})" else ""
     }
 
+
+
+    //todo: quick and dirty prevent race condition with refresh task ultil we have time to re-write it
+    fun updateErrorsModelFromRefresh(codeLessSpan: CodeLessSpan) {
+        lock.lock()
+        try {
+            //don't let the refresh task update if it's not the same CodeLessSpan
+            if ( model.scope is CodeLessSpanScope && codeLessSpan == (model.scope as CodeLessSpanScope).getSpan()) {
+                updateErrorsModelImpl(codeLessSpan)
+            }
+        }finally {
+            if (lock.isHeldByCurrentThread) {
+                lock.unlock()
+            }
+        }
+    }
+
+    //todo: quick and dirty prevent race condition with refresh task ultil we have time to re-write it
     fun updateErrorsModel(codeLessSpan: CodeLessSpan) {
+        lock.lock()
+        try {
+            updateErrorsModelImpl(codeLessSpan)
+        }finally {
+            if (lock.isHeldByCurrentThread) {
+                lock.unlock()
+            }
+        }
+    }
+
+
+    private fun updateErrorsModelImpl(codeLessSpan: CodeLessSpan) {
 
         project.service<MainToolWindowCardsController>().showMainPanel()
 
@@ -92,7 +122,35 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
     }
 
 
+    //todo: quick and dirty prevent race condition with refresh task ultil we have time to re-write it
+    fun updateErrorsModelFromRefresh(methodInfo: MethodInfo) {
+        lock.lock()
+        try {
+            //don't let the refresh task update if it's not the same methodInfo
+            if ( model.scope is MethodScope && methodInfo == (model.scope as MethodScope).getMethodInfo()) {
+                updateErrorsModelImpl(methodInfo)
+            }
+        }finally {
+            if (lock.isHeldByCurrentThread) {
+                lock.unlock()
+            }
+        }
+    }
+
+    //todo: quick and dirty prevent race condition with refresh task ultil we have time to re-write it
     fun updateErrorsModel(methodInfo: MethodInfo) {
+        lock.lock()
+        try {
+            updateErrorsModelImpl(methodInfo)
+        }finally {
+            if (lock.isHeldByCurrentThread) {
+                lock.unlock()
+            }
+        }
+    }
+
+
+    private fun updateErrorsModelImpl(methodInfo: MethodInfo) {
 
         val errorsProvider: ErrorsProvider = project.getService(ErrorsProvider::class.java)
         updateErrorsModelWithErrorsProvider(methodInfo,errorsProvider)

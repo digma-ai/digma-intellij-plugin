@@ -53,13 +53,34 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
     }
 
 
-    //first phase new navigation.
-    // show insights that are not related to code location but as a result of a click on span in
-    // jaeger ui.
-    //currently not checking backend status if there are no insights because this request started as a
-    // result of existing insights for a span.
-    //currently not refreshing the insights.
+    //todo: quick and dirty prevent race condition with refresh task ultil we have time to re-write it
+    fun updateInsightsModelFromRefresh(codeLessSpan: CodeLessSpan) {
+        lock.lock()
+        try {
+            //don't let the refresh task update if it's not the same CodeLessSpan
+            if ( model.scope is CodeLessSpanScope && codeLessSpan == (model.scope as CodeLessSpanScope).getSpan()) {
+                updateInsightsModelImpl(codeLessSpan)
+            }
+        }finally {
+            if (lock.isHeldByCurrentThread) {
+                lock.unlock()
+            }
+        }
+    }
+
+    //todo: quick and dirty prevent race condition with refresh task ultil we have time to re-write it
     fun updateInsightsModel(codeLessSpan: CodeLessSpan) {
+        lock.lock()
+        try {
+            updateInsightsModelImpl(codeLessSpan)
+        }finally {
+            if (lock.isHeldByCurrentThread) {
+                lock.unlock()
+            }
+        }
+    }
+
+    private fun updateInsightsModelImpl(codeLessSpan: CodeLessSpan) {
 
         project.service<MainToolWindowCardsController>().showMainPanel()
 
@@ -108,8 +129,34 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
 
     }
 
-    fun updateInsightsModel(methodInfo: MethodInfo) {
+    //todo: quick and dirty prevent race condition with refresh task ultil we have time to re-write it
+    fun updateInsightsModelFromRefresh(methodInfo: MethodInfo) {
+        lock.lock()
+        try {
+            //don't let the refresh task update if it's not the same MethodInfo
+            if ( model.scope is MethodScope && methodInfo == (model.scope as MethodScope).getMethodInfo()) {
+                updateInsightsModelImpl(methodInfo)
+            }
+        }finally {
+            if (lock.isHeldByCurrentThread) {
+                lock.unlock()
+            }
+        }
+    }
 
+    //todo: quick and dirty prevent race condition with refresh task ultil we have time to re-write it
+    fun updateInsightsModel(methodInfo: MethodInfo) {
+        lock.lock()
+        try {
+            updateInsightsModelImpl(methodInfo)
+        }finally {
+            if (lock.isHeldByCurrentThread) {
+                lock.unlock()
+            }
+        }
+    }
+
+    private fun updateInsightsModelImpl(methodInfo: MethodInfo) {
         val insightsProvider: InsightsProvider = project.getService(InsightsProvider::class.java)
         updateInsightsModelWithInsightsProvider(methodInfo, insightsProvider)
     }

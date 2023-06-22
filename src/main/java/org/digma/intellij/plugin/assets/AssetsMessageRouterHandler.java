@@ -74,7 +74,7 @@ public class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter i
                 switch (action) {
                     case "ASSETS/GET_DATA" -> pushAssets(browser, objectMapper);
 
-                    case "ASSETS/GO_TO_ASSET" -> gotToAsset(jsonNode);
+                    case "ASSETS/GO_TO_ASSET" -> goToAsset(jsonNode);
 
                     default -> throw new IllegalStateException("Unexpected value: " + action);
                 }
@@ -87,7 +87,7 @@ public class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter i
         return true;
     }
 
-    private void gotToAsset(JsonNode jsonNode) throws JsonProcessingException {
+    private void goToAsset(JsonNode jsonNode) throws JsonProcessingException {
         Log.log(LOGGER::debug, project, "got ASSETS/GO_TO_ASSET message");
         var spanId = objectMapper.readTree(jsonNode.get("payload").toString()).get("entry").get("span").get("spanCodeObjectId").asText();
         Log.log(LOGGER::debug, project, "got span id {}",spanId);

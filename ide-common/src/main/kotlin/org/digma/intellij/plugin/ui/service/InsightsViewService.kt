@@ -253,10 +253,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
     @Deprecated("for removal")
     fun empty() {
 
-        //this will prevent the refresh task from refreshing because refreshing will change the
-        // state of the code navigation button,
-        //after the refresh is changed to something else maybe this is not necessary anymore
-//        model.scope = EmptyScope("")
+        //Note: we do not empty the model anymore
 
 //        Log.log(logger::debug, "empty called")
 //

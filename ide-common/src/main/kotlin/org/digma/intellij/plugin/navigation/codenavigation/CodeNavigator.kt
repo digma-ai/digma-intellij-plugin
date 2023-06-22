@@ -4,6 +4,7 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFileManager
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.document.CodeObjectsUtil
@@ -99,7 +100,7 @@ class CodeNavigator(val project: Project) {
         return canNavigateToSpan(spanCodeObjectId) || canNavigateToMethod(methodCodeObjectId)
     }
 
-    private fun canNavigateToMethod(methodCodeObjectId: String?): Boolean {
+     fun canNavigateToMethod(methodCodeObjectId: String?): Boolean {
         if (methodCodeObjectId == null) {
             return false
         }
@@ -121,7 +122,7 @@ class CodeNavigator(val project: Project) {
         return false
     }
 
-    private fun canNavigateToSpan(spanCodeObjectId: String?): Boolean {
+    fun canNavigateToSpan(spanCodeObjectId: String?): Boolean {
         if (spanCodeObjectId == null) {
             return false
         }
@@ -182,6 +183,15 @@ class CodeNavigator(val project: Project) {
             }
         }
         return null
+    }
+
+    fun canNavigateToFile(fileUri: String): Boolean {
+        val file = VirtualFileManager.getInstance().findFileByUrl(fileUri)
+        return file != null
+    }
+
+    fun maybeNavigateToFile(fileUri: String) {
+        project.service<EditorService>().openWorkspaceFileInEditor(fileUri,1)
     }
 
 

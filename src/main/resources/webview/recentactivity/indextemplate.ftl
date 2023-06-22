@@ -17,8 +17,8 @@
     <script>
       window.platform = "JetBrains";
       window.theme = "${theme}";
-      window.mainFont;
-      window.codeFont;
+      window.mainFont = "${mainFont}";
+      window.codeFont = "${codeFont}";
       window.isJaegerEnabled = ${isJaegerEnabled?string('true', 'false')};
       window.recentActivityExpirationLimit = ${recentActivityExpirationLimit};
       window.recentActivityDocumentationURL = "https://youtu.be/F1Y0kETn-QQ";

@@ -25,7 +25,7 @@ class ErrorsModel : PanelModel {
     var listViewItems: List<ListViewItem<CodeObjectError>> = Collections.emptyList()
     var previewListViewItems: List<ErrorsPreviewListItem> = Collections.emptyList()
     var usageStatusResult: UsageStatusResult = EmptyUsageStatusResult
-    var scope: Scope = EmptyScope("")
+    var scope: Scope = EmptyScope("Nothing here")
     var errorDetails: ErrorDetailsModel = ErrorDetailsModel()
     var card: ErrorsTabCard = ErrorsTabCard.ERRORS_LIST
 
@@ -65,7 +65,7 @@ class ErrorsModel : PanelModel {
         return scope is CodeLessSpanScope
     }
 
-    override fun getScope(): String {
+    override fun getScopeString(): String {
         return scope.getScope()
     }
 

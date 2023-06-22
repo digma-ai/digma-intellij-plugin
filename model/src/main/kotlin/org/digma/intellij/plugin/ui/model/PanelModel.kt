@@ -12,7 +12,7 @@ interface PanelModel {
 
     fun isCodeLessSpanScope(): Boolean
 
-    fun getScope(): String
+    fun getScopeString(): String
 
     fun getScopeTooltip(): String
 

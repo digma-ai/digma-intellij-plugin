@@ -25,8 +25,8 @@ class InsightsModel : PanelModel {
     var previewListViewItems: List<InsightsPreviewListItem> = Collections.emptyList()
     var usageStatusResult: UsageStatusResult = EmptyUsageStatusResult
     var card: InsightsTabCard = InsightsTabCard.INSIGHTS
-    var status: UIInsightsStatus = UIInsightsStatus.Default
-    var scope: Scope = EmptyScope("")
+    var status: UIInsightsStatus = UIInsightsStatus.Startup
+    var scope: Scope = EmptyScope("Nothing here")
 
     fun getMethodNamesWithInsights(): List<ListViewItem<String>>{
         val methodsWithInsights = mutableListOf<ListViewItem<String>>()
@@ -62,7 +62,7 @@ class InsightsModel : PanelModel {
         return scope is CodeLessSpanScope
     }
 
-    override fun getScope(): String {
+    override fun getScopeString(): String {
         return scope.getScope()
     }
 

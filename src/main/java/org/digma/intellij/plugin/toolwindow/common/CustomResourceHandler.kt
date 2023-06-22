@@ -1,5 +1,7 @@
 package org.digma.intellij.plugin.toolwindow.common
 
+import com.intellij.openapi.editor.colors.impl.AppEditorFontOptions
+import com.intellij.util.ui.UIUtil
 import freemarker.template.Configuration
 import org.cef.callback.CefCallback
 import org.cef.handler.CefLoadHandler
@@ -18,6 +20,8 @@ import java.net.URLConnection
 const val INDEX_TEMPLATE_FILE_NAME: String = "indextemplate.ftl"
 const val BASE_PACKAGE_PATH: String = "webview/"
 const val ENV_VARIABLE_THEME: String = "theme"
+const val ENV_VARIABLE_FONT = "mainFont"
+const val ENV_VARIABLE_CODE_FONT = "codeFont"
 const val IS_JAEGER_ENABLED: String = "isJaegerEnabled"
 const val COMMON_FILES_FOLDER_NAME: String = "common"
 
@@ -189,6 +193,8 @@ private fun loadFreemarkerTemplate(
     cfg.setClassForTemplateLoading(CustomResourceHandler::class.java, "/$BASE_PACKAGE_PATH$resourceFolderName")
     val data: MutableMap<String, Any> = mutableMapOf(
         ENV_VARIABLE_THEME to ThemeUtil.getCurrentThemeName(),
+        ENV_VARIABLE_FONT to UIUtil.getLabelFont().fontName,
+        ENV_VARIABLE_CODE_FONT to AppEditorFontOptions.getInstance().fontPreferences.fontFamily,
         IS_JAEGER_ENABLED to isJaegerButtonEnabled()
     )
     if (indexTemplateData != null)

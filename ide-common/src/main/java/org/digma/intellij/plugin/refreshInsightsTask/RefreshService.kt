@@ -14,6 +14,8 @@ import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.discovery.CodeLessSpan
+import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
 import org.digma.intellij.plugin.ui.model.MethodScope
@@ -63,8 +65,7 @@ class RefreshService(private val project: Project) {
             scope = insightsViewService.model.scope
             if (scope is CodeLessSpanScope){
                 val codelessSpan = scope.getSpan()
-                insightsViewService.updateInsightsModel(codelessSpan)
-                errorsViewService.updateErrorsModel(codelessSpan)
+                updateModels(codelessSpan)
             }
         }
     }
@@ -94,8 +95,7 @@ class RefreshService(private val project: Project) {
                         scope = insightsViewService.model.scope
                         if (scope is CodeLessSpanScope){
                             val codelessSpan = (scope as CodeLessSpanScope).getSpan()
-                            insightsViewService.updateInsightsModel(codelessSpan)
-                            errorsViewService.updateErrorsModel(codelessSpan)
+                            updateModels(codelessSpan)
                         }
                     }
                 } finally {
@@ -133,12 +133,30 @@ class RefreshService(private val project: Project) {
             // findWorkspaceUrisForCodeObjectIdsForErrorStackTrace or findWorkspaceUrisForMethodCodeObjectIds
             // and those require a ReadAction.
             ReadAction.nonBlocking(RunnableCallable {
-                insightsViewService.updateInsightsModel(scope.getMethodInfo())
-                errorsViewService.updateErrorsModel(scope.getMethodInfo())
+                updateModels(scope.getMethodInfo())
                 documentInfoService.notifyDocumentInfoChanged(documentInfoContainer!!.psiFile)
             }).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance())
         }
     }
+
+
+
+
+    private fun updateModels(methodInfo: MethodInfo){
+        insightsViewService.updateInsightsModelFromRefresh(methodInfo)
+        errorsViewService.updateErrorsModelFromRefresh(methodInfo)
+    }
+
+    private fun updateModels(codelessSpan: CodeLessSpan){
+        insightsViewService.updateInsightsModelFromRefresh(codelessSpan)
+        errorsViewService.updateErrorsModelFromRefresh(codelessSpan)
+    }
+
+
+
+
+
+
 
     private fun checkIfDataChanged(oldInsights: Map<String, List<CodeObjectInsight>>, newInsights: Map<String, List<CodeObjectInsight>>): Boolean {
         // In Kotlin, you can compare two maps for equality using the == operator.

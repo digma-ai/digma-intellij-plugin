@@ -20,7 +20,9 @@ import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
 import org.digma.intellij.plugin.ui.model.DocumentScope
 import org.digma.intellij.plugin.ui.model.EmptyScope
+import org.digma.intellij.plugin.ui.model.ErrorDetailsScope
 import org.digma.intellij.plugin.ui.model.MethodScope
+import org.digma.intellij.plugin.ui.model.UIInsightsStatus
 import org.digma.intellij.plugin.ui.model.errors.ErrorDetailsModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsPreviewListItem
@@ -38,7 +40,6 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
     val model = ErrorsModel()
 
 
-
     companion object {
         fun getInstance(project: Project): ErrorsViewService {
             return project.getService(ErrorsViewService::class.java)
@@ -50,9 +51,39 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         return "Errors" + if (model.errorsCount > 0) " (${model.count()})" else ""
     }
 
-    fun updateErrorsModel(codeLessSpan: CodeLessSpan) {
 
-        project.service<MainToolWindowCardsController>().showMainPanel(true)
+
+    //todo: quick and dirty prevent race condition with refresh task until we have time to re-write it
+    fun updateErrorsModelFromRefresh(codeLessSpan: CodeLessSpan) {
+        lock.lock()
+        try {
+            //don't let the refresh task update if it's not the same CodeLessSpan
+            if ( model.scope is CodeLessSpanScope && codeLessSpan == (model.scope as CodeLessSpanScope).getSpan()) {
+                updateErrorsModelImpl(codeLessSpan)
+            }
+        }finally {
+            if (lock.isHeldByCurrentThread) {
+                lock.unlock()
+            }
+        }
+    }
+
+    //todo: quick and dirty prevent race condition with refresh task until we have time to re-write it
+    fun updateErrorsModel(codeLessSpan: CodeLessSpan) {
+        lock.lock()
+        try {
+            updateErrorsModelImpl(codeLessSpan)
+        }finally {
+            if (lock.isHeldByCurrentThread) {
+                lock.unlock()
+            }
+        }
+    }
+
+
+    private fun updateErrorsModelImpl(codeLessSpan: CodeLessSpan) {
+
+        project.service<MainToolWindowCardsController>().showMainPanel()
 
         val codeLessInsightsProvider = CodeLessSpanInsightsProvider(codeLessSpan,project)
 
@@ -91,7 +122,36 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
     }
 
 
+    //todo: quick and dirty prevent race condition with refresh task until we have time to re-write it
+    fun updateErrorsModelFromRefresh(methodInfo: MethodInfo) {
+        lock.lock()
+        try {
+            //don't let the refresh task update if it's not the same methodInfo
+            if ( model.scope is MethodScope && methodInfo == (model.scope as MethodScope).getMethodInfo()) {
+                updateErrorsModelImpl(methodInfo)
+            }
+        }finally {
+            if (lock.isHeldByCurrentThread) {
+                lock.unlock()
+            }
+        }
+    }
+
+    //todo: quick and dirty prevent race condition with refresh task until we have time to re-write it
     fun updateErrorsModel(methodInfo: MethodInfo) {
+        lock.lock()
+        try {
+            updateErrorsModelImpl(methodInfo)
+        }finally {
+            if (lock.isHeldByCurrentThread) {
+                lock.unlock()
+            }
+        }
+    }
+
+
+    private fun updateErrorsModelImpl(methodInfo: MethodInfo) {
+
         val errorsProvider: ErrorsProvider = project.getService(ErrorsProvider::class.java)
         updateErrorsModelWithErrorsProvider(methodInfo,errorsProvider)
     }
@@ -139,7 +199,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         tabsHelper.notifyTabChanged(1)
     }
 
-    fun showErrorDetails(uid: String, errorsProvider: ErrorsProvider) {
+    fun showErrorDetails(uid: String, errorsProvider: ErrorsProvider,replaceScope: Boolean) {
 
         Log.log(logger::debug, "showDocumentPreviewList for {}. ", uid)
 
@@ -147,6 +207,11 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         errorDetails.flowStacks.isWorkspaceOnly = PersistenceService.getInstance().state.isWorkspaceOnly
         model.errorDetails = errorDetails
         model.card = ErrorsTabCard.ERROR_DETAILS
+
+        if (replaceScope) {
+            project.service<InsightsViewService>().model.scope = ErrorDetailsScope(errorDetails.getName())
+            project.service<InsightsViewService>().model.status = UIInsightsStatus.Default
+        }
 
         updateUi()
 
@@ -167,32 +232,38 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
      * empty should be called only when there is no file opened in the editor and not in
      * any other case.
      */
+    @Deprecated("for removal")
     fun empty() {
 
-        Log.log(logger::debug, "empty called")
+    //Note: we do not empty the model anymore
 
-        model.listViewItems = Collections.emptyList()
-        model.previewListViewItems = ArrayList()
-        model.usageStatusResult = EmptyUsageStatusResult
-        model.scope = EmptyScope("")
-        model.card = ErrorsTabCard.ERRORS_LIST
-        model.errorsCount = 0
-
-        updateUi()
+//        Log.log(logger::debug, "empty called")
+//
+//        model.listViewItems = Collections.emptyList()
+//        model.previewListViewItems = ArrayList()
+//        model.usageStatusResult = EmptyUsageStatusResult
+//        model.scope = EmptyScope("")
+//        model.card = ErrorsTabCard.ERRORS_LIST
+//        model.errorsCount = 0
+//
+//        updateUi()
     }
 
+    @Deprecated("for removal")
     fun emptyNonSupportedFile(fileUri: String) {
 
-        Log.log(logger::debug, "emptyNonSupportedFile called")
+        //Note: we do not empty the model anymore
 
-        model.listViewItems = Collections.emptyList()
-        model.previewListViewItems = ArrayList()
-        model.usageStatusResult = EmptyUsageStatusResult
-        model.scope = EmptyScope(getNonSupportedFileScopeMessage(fileUri))
-        model.card = ErrorsTabCard.ERRORS_LIST
-        model.errorsCount = 0
-
-        updateUi()
+//        Log.log(logger::debug, "emptyNonSupportedFile called")
+//
+//        model.listViewItems = Collections.emptyList()
+//        model.previewListViewItems = ArrayList()
+//        model.usageStatusResult = EmptyUsageStatusResult
+//        model.scope = EmptyScope(getNonSupportedFileScopeMessage(fileUri))
+//        model.card = ErrorsTabCard.ERRORS_LIST
+//        model.errorsCount = 0
+//
+//        updateUi()
     }
 
 

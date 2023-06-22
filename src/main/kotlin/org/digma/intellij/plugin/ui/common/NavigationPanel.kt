@@ -7,6 +7,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.rd.util.launchBackground
 import com.intellij.ui.awt.RelativePoint
+import com.intellij.ui.components.JBLabel
 import com.intellij.util.Alarm
 import com.intellij.util.AlarmFactory
 import com.intellij.util.messages.MessageBusConnection
@@ -15,19 +16,23 @@ import com.jetbrains.rd.util.lifetime.LifetimeDefinition
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.common.CommonUtils
-import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.common.modelChangeListener.ModelChangeListener
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.ui.errors.IconButton
-import org.digma.intellij.plugin.ui.list.insights.createDefaultBoxLayoutLineAxisPanelWithBackgroundWithFixedHeight
 import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
-import java.awt.*
+import java.awt.BorderLayout
+import java.awt.CardLayout
+import java.awt.Cursor
+import java.awt.Dimension
+import java.awt.FlowLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.util.concurrent.locks.ReentrantLock
-import javax.swing.*
+import javax.swing.JComponent
+import javax.swing.JLabel
+import javax.swing.JPanel
+import javax.swing.SwingConstants
 
 
 class NavigationPanel(
@@ -44,9 +49,9 @@ class NavigationPanel(
     private val localHostname: String
     private var analyticsService: AnalyticsService? = null
     private val rebuildPanelLock = ReentrantLock()
-
-
+    private var environmentsDropdownPanel:EnvironmentsDropdownPanel ? = null
     private var myScopeLineResultPanel: ScopeLineResultPanel? = null
+
 
     init {
         this.project = project
@@ -54,26 +59,26 @@ class NavigationPanel(
         changeEnvAlarm = AlarmFactory.getInstance().create()
         localHostname = CommonUtils.getLocalHostname()
         isOpaque = false
-        layout = GridLayout(2, 1)
+        layout = BorderLayout()
         border = JBUI.Borders.empty()
         analyticsService = project.getService(AnalyticsService::class.java)
 
-        rebuildInBackground(model)
+        rebuildInBackground(model,true)
 
         messageBusConnection.subscribe(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, object : AnalyticsServiceConnectionEvent {
             override fun connectionLost() {
-                rebuildInBackground(model)
+                rebuildInBackground(model,false)
             }
 
             override fun connectionGained() {
-                rebuildInBackground(model)
+                rebuildInBackground(model,false)
             }
         })
         messageBusConnection.subscribe(
                 ModelChangeListener.MODEL_CHANGED_TOPIC,
                         object : ModelChangeListener {
                             override fun modelChanged(newModel: PanelModel) {
-                                rebuildInBackground(newModel)
+                                rebuildInBackground(newModel,false)
                             }
                         }
         )
@@ -81,16 +86,16 @@ class NavigationPanel(
 
 
     override fun reset() {
-        rebuildInBackground(model)
+        rebuildInBackground(model,false)
     }
 
-    private fun rebuildInBackground(model: PanelModel) {
+    private fun rebuildInBackground(model: PanelModel,startup: Boolean) {
         val lifetimeDefinition = LifetimeDefinition()
         lifetimeDefinition.lifetime.launchBackground {
             rebuildPanelLock.lock()
             Log.log(logger::debug, "Lock acquired for rebuild Navigation panel process.")
             try {
-                rebuild(model)
+                rebuild(model,startup)
             } finally {
                 rebuildPanelLock.unlock()
                 Log.log(logger::debug, "Lock released for rebuild Navigation panel process.")
@@ -99,19 +104,44 @@ class NavigationPanel(
         }
     }
 
-    private fun rebuild(model: PanelModel) {
+    private fun rebuild(model: PanelModel, startup: Boolean) {
         ApplicationManager.getApplication().invokeLater {
             if (!project.isDisposed) {
                 removeExistingComponentsIfPresent()
-                buildNavigationPanelComponents(model)
+                buildNavigationPanelComponents(model,startup)
                 revalidate()
             }
         }
     }
 
-    private fun buildNavigationPanelComponents(model: PanelModel) {
-        this.add(getFirstRowPanel(model))
-        this.add(getSecondRowPanel(model))
+    private fun buildNavigationPanelComponents(model: PanelModel, startup: Boolean) {
+
+        val mainPanel = JPanel(BorderLayout())
+        mainPanel.background = Laf.Colors.EDITOR_BACKGROUND
+
+        val topPanel = JPanel(BorderLayout(5,0))
+        topPanel.background = Laf.Colors.EDITOR_BACKGROUND
+        topPanel.border = JBUI.Borders.empty()
+        val logo = getLogoIconLabel()
+        logo.alignmentX = 0F
+        topPanel.add(logo,BorderLayout.WEST)
+        val firstRow = getFirstRowPanel(model)
+        firstRow.alignmentX = 1F
+        topPanel.add(firstRow,BorderLayout.CENTER)
+        mainPanel.add(topPanel,BorderLayout.NORTH)
+
+        val bottomPanel = JPanel(BorderLayout(5,0))
+        bottomPanel.background = Laf.Colors.EDITOR_BACKGROUND
+        bottomPanel.border = JBUI.Borders.empty()
+        val cardsPanel = getSecondRowPanel()
+        val homeButton = getHomeButton(cardsPanel,startup)
+        homeButton.alignmentX = 0F
+        bottomPanel.add(homeButton,BorderLayout.WEST)
+        cardsPanel.alignmentX = 1F
+        bottomPanel.add(cardsPanel,BorderLayout.CENTER)
+        mainPanel.add(bottomPanel,BorderLayout.SOUTH)
+
+        add(mainPanel,BorderLayout.CENTER)
     }
 
     private fun removeExistingComponentsIfPresent() {
@@ -121,98 +151,81 @@ class NavigationPanel(
             }
         }
     }
-    private var environmentsDropdownPanel:EnvironmentsDropdownPanel ? = null
+
     private fun getFirstRowPanel(model: PanelModel): JPanel {
-        val logoIconLabel = getLogoIconLabel()
 
         environmentsDropdownPanel?.dispose()
         environmentsDropdownPanel = EnvironmentsDropdownPanel(project, model, environmentsSupplier, localHostname)
 
-        val parentPanel = JPanel(GridBagLayout())
-        // Add the logo icon label to the parent panel with relative constraints
-        val cLogo = GridBagConstraints()
-        cLogo.gridx = 0
-        cLogo.gridy = 0
-        cLogo.anchor = GridBagConstraints.LINE_START
-        parentPanel.add(logoIconLabel, cLogo)
-
-        // Add the ComboBox to the parent panel with relative constraints
-        val cComboBox = GridBagConstraints()
-        cComboBox.gridx = 1
-        cComboBox.gridy = 0
-        cComboBox.weightx = 1.0
-        cComboBox.anchor = GridBagConstraints.LINE_START
-        cComboBox.fill = GridBagConstraints.HORIZONTAL
-        parentPanel.add(environmentsDropdownPanel, cComboBox)
-
-//        rowPanel.add(getPointerButton()) // will be used later
-
-        val cSettingsButton = GridBagConstraints()
-        cSettingsButton.gridx = 2
-        cSettingsButton.gridy = 0
-        cSettingsButton.anchor = GridBagConstraints.LINE_START
-        cSettingsButton.fill = GridBagConstraints.NONE
-        parentPanel.add(getSettingsButton(), cSettingsButton)
-
-        parentPanel.border = BorderFactory.createMatteBorder(0, 0, 1, 0, Laf.Colors.PLUGIN_BACKGROUND) // create 1px border in JetBrains dark gray color
-
-        // Set the background color of the parent panel
+        val parentPanel = JPanel(BorderLayout())
+        parentPanel.add(environmentsDropdownPanel, BorderLayout.CENTER)
+        parentPanel.add(getSettingsButton(), BorderLayout.EAST)
         parentPanel.background = Laf.Colors.EDITOR_BACKGROUND
-
-        // Set the preferred height of the parent panel based on the ComboBox
-        val comboBoxSize = environmentsDropdownPanel!!.preferredSize
-        parentPanel.preferredSize = Dimension(parentPanel.width, comboBoxSize.height)
 
         return parentPanel
     }
 
-    private fun getSecondRowPanel(model: PanelModel): JPanel {
-        val rowPanel = JPanel(BorderLayout())
-        rowPanel.isOpaque = false
-        rowPanel.border = JBUI.Borders.empty()
+    private fun getSecondRowPanel(): JPanel {
+
+        val scopeLine = createScopeLinePanel()
+        val projectPanel = createProjectPanel()
+
+        val cardsLayout = CardLayout()
+        val cardsPanel = JPanel(cardsLayout)
+        cardsPanel.border = JBUI.Borders.emptyRight(4)
+        cardsPanel.background = Laf.Colors.EDITOR_BACKGROUND
+
+        cardsPanel.isOpaque = false
+        cardsPanel.border = JBUI.Borders.empty()
+        cardsPanel.add(scopeLine, HomeButton.SCOPE_LINE_PANEL)
+        cardsPanel.add(projectPanel, HomeButton.HOME_PROJECT_PANEL)
+        cardsLayout.addLayoutComponent(scopeLine, HomeButton.SCOPE_LINE_PANEL)
+        cardsLayout.addLayoutComponent(projectPanel, HomeButton.HOME_PROJECT_PANEL)
+        cardsLayout.show(cardsPanel, HomeButton.SCOPE_LINE_PANEL)
+
+        return cardsPanel
+    }
+
+
+    //startup is a hack to overcome teh fact that NavigationPanel is rebuilt every few seconds
+    // it is just used to show the home panel on startup, we need a flag because the refresh is actually startup every few seconds
+    private fun getHomeButton(cardsPanel: JPanel, startup: Boolean): JComponent {
+
+        val homeButton = HomeButton(project, cardsPanel,startup)
+        val size = Laf.scalePanels(Laf.Sizes.BUTTON_SIZE_24)
+        val buttonsSize = Dimension(size, size)
+        homeButton.preferredSize = buttonsSize
+        homeButton.maximumSize = buttonsSize
+        return homeButton
+    }
+
+
+
+    private fun createScopeLinePanel():JPanel{
+        val panel = JPanel(BorderLayout())
+        panel.isOpaque = false
+        panel.border = JBUI.Borders.empty()
         myScopeLineResultPanel?.dispose()
         myScopeLineResultPanel = ScopeLineResultPanel(project, model)
-        rowPanel.add(myScopeLineResultPanel,BorderLayout.CENTER)
-        return rowPanel
+        panel.add(myScopeLineResultPanel!!,BorderLayout.CENTER)
+        return panel
+    }
+    private fun createProjectPanel(): JPanel {
+        val panel = JPanel(BorderLayout())
+        panel.isOpaque = false
+        panel.border = JBUI.Borders.empty()
+        val projectPanel = ProjectHomePanel(this.project)
+        panel.add(projectPanel, BorderLayout.CENTER)
+        return panel
     }
 
-    private fun getLogoIconLabel(): JLabel {
-        val logoIconLabel = JLabel(Laf.Icons.General.DIGMA_LOGO, SwingConstants.LEFT)
-        logoIconLabel.horizontalAlignment = SwingConstants.LEFT
-        logoIconLabel.verticalAlignment = SwingConstants.TOP
-        logoIconLabel.isOpaque = false
-        logoIconLabel.border = JBUI.Borders.empty(2, 13, 2, 10)
-        return logoIconLabel
-    }
-
-    private fun getDashboardButton(): IconButton {
-        val size = Laf.scalePanels(Laf.Sizes.BUTTON_SIZE_26)
+    private fun getLogoIconLabel(): JComponent {
+        val logoIconLabel = JBLabel(Laf.Icons.General.DIGMA_LOGO,SwingConstants.CENTER)
+        val size = Laf.scalePanels(Laf.Sizes.BUTTON_SIZE_24)
         val buttonsSize = Dimension(size, size)
-        val dashboardButton = IconButton(Laf.Icons.General.HOME)
-        dashboardButton.preferredSize = buttonsSize
-        dashboardButton.maximumSize = buttonsSize
-        dashboardButton.border = JBUI.Borders.empty(2, 4)
-        return dashboardButton
-    }
-
-    private fun getRelatedInsightsIconLabel(): JLabel {
-        val logoIconLabel = JLabel(Laf.Icons.General.RELATED_INSIGHTS, SwingConstants.RIGHT)
-        logoIconLabel.horizontalAlignment = SwingConstants.RIGHT
-        logoIconLabel.verticalAlignment = SwingConstants.TOP
-        logoIconLabel.isOpaque = false
+        logoIconLabel.preferredSize = buttonsSize
+        logoIconLabel.maximumSize = buttonsSize
         return logoIconLabel
-    }
-
-    private fun getPointerButton(): IconButton {
-        val size = Laf.scalePanels(Laf.Sizes.BUTTON_SIZE_26)
-        val buttonsSize = Dimension(size, size)
-        val relatedInsightsButton = IconButton(Laf.Icons.General.POINTER)
-        relatedInsightsButton.preferredSize = buttonsSize
-        relatedInsightsButton.maximumSize = buttonsSize
-        relatedInsightsButton.addActionListener {
-
-        }
-        return relatedInsightsButton
     }
 
 

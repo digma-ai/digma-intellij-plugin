@@ -12,6 +12,7 @@ import org.digma.intellij.plugin.model.discovery.CodeObjectInfo
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationChangeInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
 import org.digma.intellij.plugin.model.rest.insights.TopErrorFlowsInsight
+import org.digma.intellij.plugin.navigation.HomeSwitcherService
 import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
 import org.digma.intellij.plugin.ui.common.Laf
@@ -70,8 +71,9 @@ private fun buildError(model: TopErrorFlowsInsight.Error, project: Project): JPa
     val relativeFrom = CodeObjectInfo.extractMethodName(model.sourceCodeObjectId)
     val linkText = buildLinkTextWithGrayedAndDefaultLabelColorPart(model.name, "from", relativeFrom)
     val link = ActionLink(asHtml(linkText)) {
+        project.service<HomeSwitcherService>().switchToInsights()
         val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
-        actionListener.showErrorDetails(model.uid)
+        actionListener.showErrorDetailsFromDashboard(model.uid)
     }
     link.border = JBUI.Borders.emptyBottom(10)
 
@@ -116,6 +118,7 @@ private fun buildSpanDuration(value: SpanDurationChangeInsight.Change, panelsLay
 
     val title =
         ActionLink(asHtml(value.span.displayName)) {
+            project.service<HomeSwitcherService>().switchToInsights()
             project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanId)
             project.service<TabsHelper>().notifyTabChanged(0)
         }

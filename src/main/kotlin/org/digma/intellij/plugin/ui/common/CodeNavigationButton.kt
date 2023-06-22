@@ -14,62 +14,124 @@ import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
+import org.digma.intellij.plugin.model.discovery.DocumentInfo
+import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation
 import org.digma.intellij.plugin.model.rest.navigation.NavItemType
 import org.digma.intellij.plugin.model.rest.navigation.SpanNavigationItem
+import org.digma.intellij.plugin.navigation.NavigationModel
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.ui.list.RoundedPanel
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
+import org.digma.intellij.plugin.ui.model.DocumentScope
+import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
 import java.awt.BorderLayout
+import java.awt.Color
 import java.awt.Cursor
 import javax.swing.JLabel
+
+private const val CODE_NOT_FOUND = "Code not found"
 
 class CodeNavigationButton(val project: Project, private val panelModel: PanelModel, enabled: Boolean = true) : TargetButton(project, enabled) {
 
     private val logger: Logger = Logger.getInstance(CodeNavigationButton::class.java)
+    private val myOriginalBackground: Color = background
 
     init {
 
-        isEnabled = getCodeLessSpan() != null
-        if (!isEnabled) {
-            toolTipText = asHtml("Already at code location")
-            border = JBUI.Borders.customLine(JBColor.LIGHT_GRAY, 1)
-            background = Laf.Colors.TRANSPARENT
+        val showCodeNavigation = project.service<NavigationModel>().showCodeNavigation
+        isEnabled = showCodeNavigation.get()
+
+        updateState()
+
+        @Suppress("UnstableApiUsage")
+        showCodeNavigation.afterChange {
+            isEnabled = it
+            updateState()
         }
 
-        if (isEnabled) {
 
-            cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        addActionListener {
 
-            addActionListener {
+            try {
+                val codeLessSpan = getCodeLessSpan()
+                if (codeLessSpan != null) {
 
-                try {
-                    val codeLessSpan = getCodeLessSpan()
-                    if (codeLessSpan != null) {
+                    val objectIdToUse = CodeObjectsUtil.addSpanTypeToId(codeLessSpan.spanId)
+                    val codeObjectNavigation =
+                        project.service<AnalyticsService>().getCodeObjectNavigation(objectIdToUse)
 
-                        val objectIdToUse = CodeObjectsUtil.addSpanTypeToId(codeLessSpan.spanId)
-                        val codeObjectNavigation =
-                            project.service<AnalyticsService>().getCodeObjectNavigation(objectIdToUse)
-
-                        navigate(codeObjectNavigation)
-                    }
-                } catch (e: Exception) {
-                    HintManager.getInstance().showHint(
-                        JLabel("Code Not Found!"), RelativePoint.getSouthWestOf(this),
-                        HintManager.HIDE_BY_ESCAPE, 5000
-                    )
-                    Log.debugWithException(logger, project, e, "Error in getCodeObjectNavigation")
+                    navigate(codeObjectNavigation)
+                    return@addActionListener
                 }
+
+                val methodInfo = getMethodInfo()
+                if (methodInfo != null) {
+
+                    val methodId = methodInfo.id
+                    val codeNavigator = project.service<CodeNavigator>()
+                    if (codeNavigator.canNavigateToMethod(methodId)) {
+                        codeNavigator.maybeNavigateToMethod(methodInfo.id)
+                    } else {
+                        HintManager.getInstance().showHint(
+                            JLabel(CODE_NOT_FOUND), RelativePoint.getSouthWestOf(this),
+                            HintManager.HIDE_BY_ESCAPE, 5000
+                        )
+                    }
+
+                    return@addActionListener
+                }
+
+                val documentInfo = getDocumentInfo()
+                if (documentInfo != null) {
+
+                    val fileUri = documentInfo.fileUri
+                    val codeNavigator = project.service<CodeNavigator>()
+                    if (codeNavigator.canNavigateToFile(fileUri)) {
+                        codeNavigator.maybeNavigateToFile(fileUri)
+                    } else {
+                        HintManager.getInstance().showHint(
+                            JLabel(CODE_NOT_FOUND), RelativePoint.getSouthWestOf(this),
+                            HintManager.HIDE_BY_ESCAPE, 5000
+                        )
+                    }
+
+                    return@addActionListener
+                }
+
+
+            } catch (e: Exception) {
+                HintManager.getInstance().showHint(
+                    JLabel(CODE_NOT_FOUND), RelativePoint.getSouthWestOf(this),
+                    HintManager.HIDE_BY_ESCAPE, 5000
+                )
+                Log.debugWithException(logger, project, e, "Error in getCodeObjectNavigation")
             }
         }
 
     }
 
+
+    private fun updateState() {
+        if (isEnabled) {
+            cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+            background = myOriginalBackground
+            border = JBUI.Borders.empty()
+            toolTipText = "Navigate to code"
+        } else {
+            cursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR)
+            toolTipText = asHtml("Already at code location")
+            border = JBUI.Borders.customLine(JBColor.LIGHT_GRAY, 1)
+            background = Laf.Colors.TRANSPARENT
+        }
+    }
+
+
     private fun navigate(
-        codeObjectNavigation: CodeObjectNavigation
+        codeObjectNavigation: CodeObjectNavigation,
     ) {
 
         val spanId = codeObjectNavigation.navigationEntry.spanInfo?.spanCodeObjectId
@@ -99,7 +161,7 @@ class CodeNavigationButton(val project: Project, private val panelModel: PanelMo
 
             if (closestParentItems.isEmpty() && closestParentWithMethodItems.isEmpty()) {
                 HintManager.getInstance().showHint(
-                    JLabel("Code Not Found!"), RelativePoint.getSouthWestOf(this),
+                    JLabel(CODE_NOT_FOUND), RelativePoint.getSouthWestOf(this),
                     HintManager.HIDE_BY_ESCAPE, 5000
                 )
             } else {
@@ -122,6 +184,23 @@ class CodeNavigationButton(val project: Project, private val panelModel: PanelMo
         return null
     }
 
+    private fun getMethodInfo(): MethodInfo? {
+        if (panelModel is InsightsModel && panelModel.scope is MethodScope) {
+            return (panelModel.scope as MethodScope).getMethodInfo()
+        } else if (panelModel is ErrorsModel && panelModel.scope is MethodScope) {
+            return (panelModel.scope as MethodScope).getMethodInfo()
+        }
+        return null
+    }
+
+    private fun getDocumentInfo(): DocumentInfo? {
+        if (panelModel is InsightsModel && panelModel.scope is DocumentScope) {
+            return (panelModel.scope as DocumentScope).getDocumentInfo()
+        } else if (panelModel is ErrorsModel && panelModel.scope is DocumentScope) {
+            return (panelModel.scope as DocumentScope).getDocumentInfo()
+        }
+        return null
+    }
 
     private class NavigationList(
         project: Project,
@@ -143,7 +222,8 @@ class CodeNavigationButton(val project: Project, private val panelModel: PanelMo
                         row {
                             icon(Laf.Icons.General.CODE_LOCATION_LINK).gap(RightGap.SMALL)
                             link(navItem.displayName) {
-                                project.service<InsightsViewOrchestrator>().showInsightsForSpanOrMethodAndNavigateToCode(navItem.spanCodeObjectId, navItem.methodCodeObjectId)
+                                project.service<InsightsViewOrchestrator>()
+                                    .showInsightsForSpanOrMethodAndNavigateToCode(navItem.spanCodeObjectId, navItem.methodCodeObjectId)
                                 HintManager.getInstance().hideAllHints()
                             }
                         }
@@ -161,7 +241,8 @@ class CodeNavigationButton(val project: Project, private val panelModel: PanelMo
                         row {
                             icon(Laf.Icons.General.CODE_LOCATION_LINK).gap(RightGap.SMALL)
                             link(navItem.displayName) {
-                                project.service<InsightsViewOrchestrator>().showInsightsForSpanOrMethodAndNavigateToCode(navItem.spanCodeObjectId, navItem.methodCodeObjectId)
+                                project.service<InsightsViewOrchestrator>()
+                                    .showInsightsForSpanOrMethodAndNavigateToCode(navItem.spanCodeObjectId, navItem.methodCodeObjectId)
                                 HintManager.getInstance().hideAllHints()
                             }
                         }

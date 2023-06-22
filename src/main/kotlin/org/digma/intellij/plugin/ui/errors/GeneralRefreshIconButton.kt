@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.errors
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
 import com.intellij.util.messages.MessageBusConnection
+import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshInsightsTaskScheduled
 import org.digma.intellij.plugin.ui.common.Laf
 import java.awt.Graphics
@@ -11,6 +12,7 @@ import java.awt.event.MouseEvent
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.swing.Icon
 import javax.swing.JButton
+import javax.swing.SwingConstants
 
 
 internal class GeneralRefreshIconButton(project: Project, icon: Icon) : JButton(icon), Disposable {
@@ -19,8 +21,10 @@ internal class GeneralRefreshIconButton(project: Project, icon: Icon) : JButton(
 
     init {
         isOpaque = false
+        horizontalAlignment = SwingConstants.CENTER
         isContentAreaFilled = false
         isBorderPainted = false
+        border = JBUI.Borders.empty()
         isEnabled = true
         background = Laf.Colors.TRANSPARENT
         val hoverBackground = Laf.Colors.LIST_ITEM_BACKGROUND

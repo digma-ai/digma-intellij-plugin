@@ -15,7 +15,7 @@ open class TargetButton(project: Project,enabled: Boolean = true) : JButton() {
     init {
         icon = myIcon
         pressedIcon = myPressedIcon
-        isOpaque = true
+        isOpaque = false
         isContentAreaFilled = false
         isBorderPainted = false
         border = JBUI.Borders.empty()

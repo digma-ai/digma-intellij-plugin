@@ -10,6 +10,7 @@ import org.digma.intellij.plugin.ui.common.buildPreviewListPanel
 import org.digma.intellij.plugin.ui.common.statuspanels.createLoadingInsightsPanel
 import org.digma.intellij.plugin.ui.common.statuspanels.createNoErrorsEmptyStatePanel
 import org.digma.intellij.plugin.ui.common.statuspanels.createPendingInsightsPanel
+import org.digma.intellij.plugin.ui.common.statuspanels.createStartupEmptyStatePanel
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.errors.ErrorsPanelList
 import org.digma.intellij.plugin.ui.list.insights.PreviewList
@@ -119,6 +120,8 @@ private fun wrapWithEmptyStatuses(
     val pendingInsightsPanel = createPendingInsightsPanel()
     val loadingInsightsPanel = createLoadingInsightsPanel()
 
+    val startupEmpty = createStartupEmptyStatePanel(project)
+
     emptyStatusesCardsPanel.add(errorsPanel, UIInsightsStatus.Default.name)
     emptyStatusesCardsLayout.addLayoutComponent(errorsPanel, UIInsightsStatus.Default.name)
 
@@ -131,7 +134,10 @@ private fun wrapWithEmptyStatuses(
     emptyStatusesCardsPanel.add(pendingInsightsPanel, UIInsightsStatus.InsightPending.name)
     emptyStatusesCardsLayout.addLayoutComponent(pendingInsightsPanel, UIInsightsStatus.InsightPending.name)
 
-    emptyStatusesCardsLayout.show(emptyStatusesCardsPanel, UIInsightsStatus.Default.name)
+    emptyStatusesCardsPanel.add(startupEmpty, UIInsightsStatus.Startup.name)
+    emptyStatusesCardsLayout.addLayoutComponent(startupEmpty, UIInsightsStatus.Startup.name)
+
+    emptyStatusesCardsLayout.show(emptyStatusesCardsPanel,UIInsightsStatus.Startup.name)
 
 
 
@@ -148,7 +154,9 @@ private fun wrapWithEmptyStatuses(
 
             errorsPanel.reset()
 
-            if (errorsModel.card == ErrorsTabCard.ERROR_DETAILS){
+            if (insightsModel.status == UIInsightsStatus.Startup){
+                emptyStatusesCardsLayout.show(emptyStatusesCardsPanel,UIInsightsStatus.Startup.name)
+            }else if (errorsModel.card == ErrorsTabCard.ERROR_DETAILS){
                 Log.log(logger::debug, project, "Changing to error default")
                 emptyStatusesCardsLayout.show(emptyStatusesCardsPanel,UIInsightsStatus.Default.name )
             }else if (listOf(UIInsightsStatus.Loading,UIInsightsStatus.InsightPending).contains(insightsModel.status)){

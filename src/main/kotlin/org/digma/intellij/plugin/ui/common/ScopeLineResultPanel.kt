@@ -22,7 +22,7 @@ import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Cursor
 import java.awt.Dimension
-import java.awt.FlowLayout
+import java.awt.GridLayout
 import java.util.concurrent.locks.ReentrantLock
 import javax.swing.JButton
 import javax.swing.JComponent
@@ -56,7 +56,6 @@ class ScopeLineResultPanel(
         this.project = project
         this.model = model
         this.layout = BorderLayout()
-        this.border = JBUI.Borders.emptyLeft(5)
         this.background = Laf.Colors.EDITOR_BACKGROUND
         this.isOpaque = true
 
@@ -125,13 +124,12 @@ class ScopeLineResultPanel(
             return
         }
         if (model is InsightsModel || model is ErrorsModel) {
-            scopeLine = scopeLine({ model.getScope() }, { model.getScopeTooltip() }, ScopeLineIconProducer(model))
+            scopeLine = scopeLine({ model.getScopeString() }, { model.getScopeTooltip() }, ScopeLineIconProducer(model))
             scopeLine!!.isOpaque = false
-            scopeLine!!.border = JBUI.Borders.empty(2, 4)
         }
         this.add(scopeLine,BorderLayout.CENTER)
 
-        val buttonsPanel = JPanel(FlowLayout(FlowLayout.LEADING,5,5))
+        val buttonsPanel = JPanel(GridLayout(1,2,5,0))
         buttonsPanel.isOpaque = false
         buttonsPanel.border = JBUI.Borders.empty()
         buttonsPanel.add(getCodeLocationButton(project))

@@ -134,9 +134,6 @@ private fun wrapWithEmptyStatuses(project: Project, insightsPanel: DigmaTabPanel
     emptyStatusesCardsLayout.addLayoutComponent(startupEmpty, UIInsightsStatus.Startup.name)
 
     emptyStatusesCardsLayout.show(emptyStatusesCardsPanel,UIInsightsStatus.Startup.name)
-//    emptyStatusesCardsLayout.show(emptyStatusesCardsPanel,UIInsightsStatus.Default.name)
-
-
 
 
     val resultPanel = object : DigmaTabPanel() {

@@ -24,8 +24,8 @@ import com.intellij.util.concurrency.NonUrgentExecutor
 import com.intellij.util.messages.MessageBusConnection
 import org.digma.intellij.plugin.document.CodeLensProvider
 import org.digma.intellij.plugin.document.DocumentInfoChanged
-import org.digma.intellij.plugin.home.HomeSwitcherService
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.navigation.HomeSwitcherService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.ui.ToolWindowShower

@@ -5,7 +5,7 @@ import com.intellij.openapi.project.Project
 import com.jetbrains.rd.platform.util.lifetime
 import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent
 import com.jetbrains.rider.projectView.solution
-import org.digma.intellij.plugin.home.HomeSwitcherService
+import org.digma.intellij.plugin.navigation.HomeSwitcherService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.ToolWindowShower
 

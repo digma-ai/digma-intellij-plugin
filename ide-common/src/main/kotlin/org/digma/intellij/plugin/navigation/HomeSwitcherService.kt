@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.home
+package org.digma.intellij.plugin.navigation
 
 import com.intellij.openapi.components.Service
 import javax.swing.JToggleButton

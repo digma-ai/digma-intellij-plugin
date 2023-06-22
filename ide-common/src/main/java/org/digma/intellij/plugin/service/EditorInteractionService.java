@@ -27,21 +27,17 @@ public class EditorInteractionService implements CaretContextService, Disposable
 
     private final Project project;
 
-//    private final InsightsViewService insightsViewService;
-//    private final ErrorsViewService errorsViewService;
     private final DocumentInfoService documentInfoService;
 
     private final InsightsViewOrchestrator insightsViewOrchestrator;
 
     /*
     EditorInteractionService has many dependencies. but EditorInteractionService should not be a dependency of too many
-    other services because it will increase the possibility for cyclic dependencies. in most cases its better to use
+    other services because it will increase the possibility for cyclic dependencies. in most cases it's better to use
     the getInstance only where necessary.
      */
     public EditorInteractionService(Project project) {
         this.project = project;
-//        insightsViewService = project.getService(InsightsViewService.class);
-//        errorsViewService = project.getService(ErrorsViewService.class);
         documentInfoService = project.getService(DocumentInfoService.class);
         insightsViewOrchestrator = project.getService(InsightsViewOrchestrator.class);
     }
@@ -101,13 +97,11 @@ public class EditorInteractionService implements CaretContextService, Disposable
 
         if (!methodUnderCaret.isSupportedFile()) {
             Log.log(logger::debug, "methodUnderCaret is non supported file {}. ", methodUnderCaret);
-//            MainToolWindowCardsController.getInstance(project).showNonSupported();
             contextEmptyNonSupportedFile(methodUnderCaret.getFileUri());
             return;
         }
         if (methodUnderCaret.getFileUri().isBlank()) {
             Log.log(logger::debug, "No fileUri in methodUnderCaret,clearing context {}. ", methodUnderCaret);
-//            MainToolWindowCardsController.getInstance(project).showNoFile();
             contextEmpty();
             return;
         }
@@ -119,7 +113,6 @@ public class EditorInteractionService implements CaretContextService, Disposable
         if (methodUnderCaret.getId().isBlank()) { // caret not under method
             Log.log(logger::debug, "No id in methodUnderCaret, Showing document preview  {}. ", methodUnderCaret);
             //if no id then try to show a preview for the document
-            /*if(!className.isEmpty()){ // caret under class }*/
             DocumentInfoContainer documentInfoContainer = documentInfoService.getDocumentInfo(methodUnderCaret);
             if (documentInfoContainer == null) {
                 Log.log(logger::debug, "Could not find document info for {}, Showing empty preview.", methodUnderCaret);
@@ -127,8 +120,6 @@ public class EditorInteractionService implements CaretContextService, Disposable
                 Log.log(logger::debug, "Found document info for {}. document: {}", methodUnderCaret, documentInfoContainer.getPsiFile());
             }
             insightsViewOrchestrator.updateWithDocumentPreviewList(documentInfoContainer, methodUnderCaret.getFileUri());
-//            insightsViewService.showDocumentPreviewList(documentInfoContainer, methodUnderCaret.getFileUri());
-//            errorsViewService.showDocumentPreviewList(documentInfoContainer, methodUnderCaret.getFileUri());
         }else {
             MethodInfo methodInfo = documentInfoService.getMethodInfo(methodUnderCaret);
             if (methodInfo == null) {
@@ -140,15 +131,9 @@ public class EditorInteractionService implements CaretContextService, Disposable
                         methodUnderCaret.getFileUri(), 0, new ArrayList<>());
                 Log.log(logger::warn, "Using dummy MethodInfo for to update views {}. ", dummyMethodInfo);
                 insightsViewOrchestrator.updateInsightsWithDummyMethodInfo(methodUnderCaret,dummyMethodInfo);
-//                insightsViewService.contextChangeNoMethodInfo(dummyMethodInfo);
-//                errorsViewService.contextChangeNoMethodInfo(dummyMethodInfo);
             } else {
                 Log.log(logger::debug, "Context changed to {}. ", methodInfo);
                 insightsViewOrchestrator.updateInsightsWithMethodFromSource(methodUnderCaret,methodInfo);
-//                DocumentInfoContainer documentInfo = documentInfoService.getDocumentInfo(methodUnderCaret);
-//                boolean methodHasNewInsights = documentInfo.loadInsightsForMethod(methodInfo.getId()); // might be long call since going to the backend
-//                insightsViewService.updateInsightsModel(methodInfo);
-//                errorsViewService.updateErrorsModel(methodInfo);
             }
         }
     }
@@ -156,8 +141,6 @@ public class EditorInteractionService implements CaretContextService, Disposable
     public void contextEmptyNonSupportedFile(String fileUri) {
         Log.log(logger::debug, "contextEmptyNonSupportedFile called");
         insightsViewOrchestrator.nonSupportedFileOpened(fileUri);
-//        insightsViewService.emptyNonSupportedFile(fileUri);
-//        errorsViewService.emptyNonSupportedFile(fileUri);
     }
 
     /**
@@ -168,8 +151,6 @@ public class EditorInteractionService implements CaretContextService, Disposable
     public void contextEmpty() {
         Log.log(logger::debug, "contextEmpty called");
         insightsViewOrchestrator.noFileOpened();
-//        insightsViewService.empty();
-//        errorsViewService.empty();
     }
 
     @Override

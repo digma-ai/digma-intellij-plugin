@@ -138,7 +138,6 @@ private fun wrapWithEmptyStatuses(
     emptyStatusesCardsLayout.addLayoutComponent(startupEmpty, UIInsightsStatus.Startup.name)
 
     emptyStatusesCardsLayout.show(emptyStatusesCardsPanel,UIInsightsStatus.Startup.name)
-//    emptyStatusesCardsLayout.show(emptyStatusesCardsPanel, UIInsightsStatus.Default.name)
 
 
 

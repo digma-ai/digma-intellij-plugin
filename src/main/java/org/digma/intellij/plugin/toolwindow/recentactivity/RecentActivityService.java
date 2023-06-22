@@ -29,7 +29,6 @@ import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator;
 import org.digma.intellij.plugin.common.JsonUtils;
 import org.digma.intellij.plugin.document.CodeObjectsUtil;
-import org.digma.intellij.plugin.home.HomeSwitcherService;
 import org.digma.intellij.plugin.icons.AppIcons;
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator;
 import org.digma.intellij.plugin.log.Log;
@@ -40,6 +39,7 @@ import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityGoToSpa
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityGoToTraceRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResponseEntry;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
+import org.digma.intellij.plugin.navigation.HomeSwitcherService;
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;

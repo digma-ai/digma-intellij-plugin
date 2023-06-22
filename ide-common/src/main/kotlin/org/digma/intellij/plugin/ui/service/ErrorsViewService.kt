@@ -53,7 +53,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
 
     fun updateErrorsModel(codeLessSpan: CodeLessSpan) {
 
-        project.service<MainToolWindowCardsController>().showMainPanel(true)
+        project.service<MainToolWindowCardsController>().showMainPanel()
 
         val codeLessInsightsProvider = CodeLessSpanInsightsProvider(codeLessSpan,project)
 
@@ -174,9 +174,10 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
      * empty should be called only when there is no file opened in the editor and not in
      * any other case.
      */
+    @Deprecated("for removal")
     fun empty() {
 
-
+    //Note: we do not empty the model anymore
 
 //        Log.log(logger::debug, "empty called")
 //
@@ -190,8 +191,10 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
 //        updateUi()
     }
 
+    @Deprecated("for removal")
     fun emptyNonSupportedFile(fileUri: String) {
 
+        //Note: we do not empty the model anymore
 
 //        Log.log(logger::debug, "emptyNonSupportedFile called")
 //

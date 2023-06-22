@@ -13,7 +13,6 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
-import org.digma.intellij.plugin.model.discovery.SpanInfo
 import org.digma.intellij.plugin.navigation.NavigationModel
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.service.EditorService
@@ -34,14 +33,13 @@ class InsightsViewOrchestrator(val project: Project) {
     // this class should be the central point of showing insights and navigating to code. it should be the listener
     // for caret events and decide if to show insights or not. and it should be the central point to show insights
     // for code objects and navigate to code if required and possible.
-    //maybe this class also has state of what is currently showing and where di the request come from so it can make decisions
+    //maybe this class also has state of what is currently showing and where did the request come from so it can make decisions
     // what to do in following caret events.
     //if this class is the central point for showing insights it can make decisions based on state.
 
 
     val logger = Logger.getInstance(this::class.java)
 
-    //    private var currentState:ViewState? = null
     private var currentState: AtomicProperty<ViewState> = AtomicProperty(ViewState.NoFile)
 
     enum class ViewState {
@@ -56,6 +54,7 @@ class InsightsViewOrchestrator(val project: Project) {
 
 
     init {
+        @Suppress("UnstableApiUsage")
         currentState.afterChange {
             project.service<NavigationModel>().viewStateChanged(currentState.get())
         }
@@ -145,8 +144,6 @@ class InsightsViewOrchestrator(val project: Project) {
 
     }
 
-    //todo: this is temporary, still relying on caret event to show method insights. as this class progresses
-    // it should be able to show method insights without relying on caret event.
     private fun emulateCaretEvent(methodId: String, fileUri: String): Boolean {
 
         val methodNameAndClass: Pair<String, String> = CodeObjectsUtil.getMethodClassAndName(methodId)
@@ -164,7 +161,7 @@ class InsightsViewOrchestrator(val project: Project) {
             Log.log({ message: String? -> logger.warn(message) }, "Could not find MethodInfo for MethodUnderCaret {}. ", methodUnderCaret)
             val dummyMethodInfo = MethodInfo(
                 methodUnderCaret.id, methodUnderCaret.name, methodUnderCaret.className, "",
-                methodUnderCaret.fileUri, 0, ArrayList<SpanInfo>()
+                methodUnderCaret.fileUri, 0, ArrayList()
             )
             Log.log({ message: String? -> logger.warn(message) }, "Using dummy MethodInfo for to update views {}. ", dummyMethodInfo)
             updateInsightsWithDummyMethodInfo(methodUnderCaret, dummyMethodInfo)
@@ -174,7 +171,6 @@ class InsightsViewOrchestrator(val project: Project) {
         }
 
 
-//        project.service<CaretContextService>().contextChanged(methodUnderCaret)
         return true
     }
 
@@ -197,7 +193,6 @@ class InsightsViewOrchestrator(val project: Project) {
     fun updateInsightsWithMethodFromSource(methodUnderCaret: MethodUnderCaret, methodInfo: MethodInfo) {
 
         currentState.set(ViewState.MethodFromSourceCode)
-//        project.service<HomeSwitcherService>().switchToInsights()
 
         val documentInfo: DocumentInfoContainer? = project.service<DocumentInfoService>().getDocumentInfo(methodUnderCaret)
         documentInfo?.let {
@@ -205,8 +200,6 @@ class InsightsViewOrchestrator(val project: Project) {
             project.service<InsightsViewService>().updateInsightsModel(methodInfo)
             project.service<ErrorsViewService>().updateErrorsModel(methodInfo)
         }
-
-
     }
 
     fun updateInsightsWithDummyMethodInfo(methodUnderCaret: MethodUnderCaret, dummyMethodInfo: MethodInfo) {

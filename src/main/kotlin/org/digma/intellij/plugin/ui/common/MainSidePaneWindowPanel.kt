@@ -21,7 +21,6 @@ fun createMainSidePaneWindowPanel(project: Project,contentPanel: ContentPanel): 
         override fun reset() {
             navigationPanel.reset()
             updatePanel.reset()
-            contentPanel.reset()
         }
 
         override fun requestFocus() {

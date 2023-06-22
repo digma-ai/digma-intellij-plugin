@@ -40,7 +40,6 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
     val model = InsightsModel()
 
 
-
     override fun getViewDisplayName(): String {
         return "Insights" + if (model.insightsCount > 0) " (${model.count()})" else ""
     }
@@ -62,18 +61,18 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
     //currently not refreshing the insights.
     fun updateInsightsModel(codeLessSpan: CodeLessSpan) {
 
-        project.service<MainToolWindowCardsController>().showMainPanel(true)
+        project.service<MainToolWindowCardsController>().showMainPanel()
 
-        val codeLessInsightsProvider = CodeLessSpanInsightsProvider(codeLessSpan,project)
+        val codeLessInsightsProvider = CodeLessSpanInsightsProvider(codeLessSpan, project)
 
         Log.log(logger::debug, "updateInsightsModel to {}. ", codeLessSpan)
 
         val codelessSpanInsightsContainer: CodelessSpanInsightsContainer? = codeLessInsightsProvider.getInsights()
 
-        val insightsContainer:InsightsListContainer? = codelessSpanInsightsContainer?.insightsContainer
+        val insightsContainer: InsightsListContainer? = codelessSpanInsightsContainer?.insightsContainer
 
-        if (insightsContainer?.listViewItems.isNullOrEmpty()){
-            Log.log(logger::debug,project, "could not load insights for {}, see logs for details",codeLessSpan )
+        if (insightsContainer?.listViewItems.isNullOrEmpty()) {
+            Log.log(logger::debug, project, "could not load insights for {}, see logs for details", codeLessSpan)
         }
 
 
@@ -86,7 +85,8 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
         // so only the expensive reflectionEquals works here
         if (model.scope is CodeLessSpanScope &&
             (model.scope as CodeLessSpanScope).getSpan() == codeLessSpan &&
-            EqualsBuilder.reflectionEquals(insightsContainer?.listViewItems,model.listViewItems)) {
+            EqualsBuilder.reflectionEquals(insightsContainer?.listViewItems, model.listViewItems)
+        ) {
             return
         }
 
@@ -94,12 +94,12 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
         model.listViewItems = insightsContainer?.listViewItems ?: listOf()
         model.previewListViewItems = ArrayList()
         model.usageStatusResult = insightsContainer?.usageStatus ?: EmptyUsageStatusResult
-        model.scope = CodeLessSpanScope(codeLessSpan,codelessSpanInsightsContainer?.insightsResponse?.spanInfo)
+        model.scope = CodeLessSpanScope(codeLessSpan, codelessSpanInsightsContainer?.insightsResponse?.spanInfo)
         model.insightsCount = insightsContainer?.count ?: 0
         model.card = InsightsTabCard.INSIGHTS
         model.status = UIInsightsStatus.Default
 
-        if (model.listViewItems.isEmpty()){
+        if (model.listViewItems.isEmpty()) {
             model.status = UIInsightsStatus.NoInsights
         }
 
@@ -111,7 +111,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
     fun updateInsightsModel(methodInfo: MethodInfo) {
 
         val insightsProvider: InsightsProvider = project.getService(InsightsProvider::class.java)
-        updateInsightsModelWithInsightsProvider(methodInfo,insightsProvider)
+        updateInsightsModelWithInsightsProvider(methodInfo, insightsProvider)
     }
 
     private fun updateInsightsModelWithInsightsProvider(methodInfo: MethodInfo, insightsProvider: InsightsProvider) {
@@ -134,18 +134,18 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
                 model.status = UIInsightsStatus.Default
             } else {
                 model.status = UIInsightsStatus.Loading
-                Log.log(logger::debug,"No insights for method {}, Starting background thread.",methodInfo.name)
-                Backgroundable.runInNewBackgroundThread(project,"Fetching insights status for method ${methodInfo.name}"){
+                Log.log(logger::debug, "No insights for method {}, Starting background thread.", methodInfo.name)
+                Backgroundable.runInNewBackgroundThread(project, "Fetching insights status for method ${methodInfo.name}") {
 
-                    Log.log(logger::debug,"Loading backend status in background for method {}",methodInfo.name)
+                    Log.log(logger::debug, "Loading backend status in background for method {}", methodInfo.name)
                     val insightStatus = insightsProvider.getInsightStatus(methodInfo)
-                    Log.log(logger::debug,"Got status from backend {} for method {}",insightStatus,methodInfo.name)
+                    Log.log(logger::debug, "Got status from backend {} for method {}", insightStatus, methodInfo.name)
                     //if status is null assign EmptyStatus, it probably means there was a communication error
                     model.status = insightStatus?.let {
                         return@let toUiInsightStatus(it, methodInfo.hasRelatedCodeObjectIds())
                     } ?: UIInsightsStatus.NoInsights
 
-                    Log.log(logger::debug,"UIInsightsStatus for method {} is {}",methodInfo.name,model.status)
+                    Log.log(logger::debug, "UIInsightsStatus for method {} is {}", methodInfo.name, model.status)
 
                     notifyModelChangedAndUpdateUi()
                 }
@@ -203,6 +203,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
      * empty should be called only when there is no file opened in the editor and not in
      * any other case.
      */
+    @Deprecated("for removal")
     fun empty() {
 
         //this will prevent the refresh task from refreshing because refreshing will change the
@@ -225,13 +226,10 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
 
     }
 
+    @Deprecated("for removal")
     fun emptyNonSupportedFile(fileUri: String) {
 
-        //this will prevent the refresh task from refreshing because refreshing will change the
-        // state of the code navigation button,
-        //after the refresh is changed to something else maybe this is not necessary anymore
-//        model.scope = EmptyScope("")
-
+        //Note: we do not empty the model anymore
 
 //        Log.log(logger::debug, "empty called")
 //
@@ -249,8 +247,8 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
     }
 
     fun showDocumentPreviewList(
-            documentInfoContainer: DocumentInfoContainer?,
-            fileUri: String
+        documentInfoContainer: DocumentInfoContainer?,
+        fileUri: String,
     ) {
 
 
@@ -273,10 +271,9 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
             model.card = InsightsTabCard.PREVIEW
             model.status = UIInsightsStatus.Default
             if (!model.hasInsights()) {
-                if(model.hasDiscoverableCodeObjects()){
+                if (model.hasDiscoverableCodeObjects()) {
                     model.status = UIInsightsStatus.NoSpanData
-                }
-                else{
+                } else {
                     model.status = UIInsightsStatus.NoInsights
                 }
             }
@@ -295,7 +292,13 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
 
         val listViewItems = ArrayList<InsightsPreviewListItem>()
         documentInfoContainer.documentInfo.methods.forEach { (id, methodInfo) ->
-            listViewItems.add(InsightsPreviewListItem(methodInfo.id, documentInfoContainer.hasInsights(id), methodInfo.getRelatedCodeObjectIds().any()))
+            listViewItems.add(
+                InsightsPreviewListItem(
+                    methodInfo.id,
+                    documentInfoContainer.hasInsights(id),
+                    methodInfo.getRelatedCodeObjectIds().any()
+                )
+            )
         }
 
         //sort by name of the function, it will be sorted later by sortIndex when added to a PanelListModel, but

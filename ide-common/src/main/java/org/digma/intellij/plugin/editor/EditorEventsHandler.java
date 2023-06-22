@@ -77,11 +77,6 @@ public class EditorEventsHandler implements FileEditorManagerListener {
     @Override
     public void selectionChanged(@NotNull FileEditorManagerEvent editorManagerEvent) {
 
-//        if (editorManagerEvent.getNewFile() != null && isFileNotChangingContext(editorManagerEvent.getNewFile())){
-//            Log.log(LOGGER::debug,"Ignoring file {} because its not changing context",editorManagerEvent.getNewFile());
-//            return;
-//        }
-
         //this will make sure that all registered language services complete startup before they can be used.
         // usually there is nothing to do, but rider for example need to load the protocol models on EDT.
         // in most cases this method will return immediately. Rider has a ServicesStartup StartupActivity that
@@ -185,11 +180,9 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
                     }else if (psiFile != null){
                         Log.log(LOGGER::debug, "file not supported :{}, calling contextEmptyNonSupportedFile",newFile);
-//                        MainToolWindowCardsController.getInstance(project).showNonSupported();
                         caretContextService.contextEmptyNonSupportedFile(psiFile.getVirtualFile().getPath());
                     }else{
                         Log.log(LOGGER::debug, "calling contextEmpty for {}",newFile);
-//                        MainToolWindowCardsController.getInstance(project).showNoFile();
                         caretContextService.contextEmpty();
                     }
                 }else{
@@ -200,11 +193,9 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
         } else if (newFile != null) {
             Log.log(LOGGER::debug, "new file is not relevant {}, calling contextEmptyNonSupportedFile",newFile);
-//            MainToolWindowCardsController.getInstance(project).showNonSupported();
             caretContextService.contextEmptyNonSupportedFile(newFile.getPath());
         } else {
             Log.log(LOGGER::debug, "new file is null calling contextEmpty");
-//            MainToolWindowCardsController.getInstance(project).showNoFile();
             caretContextService.contextEmpty();
         }
 
@@ -237,7 +228,6 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
         if (!source.hasOpenFiles()){
             Log.log(LOGGER::debug, "no more open editors , calling contextEmpty");
-//            MainToolWindowCardsController.getInstance(project).showNoFile();
             caretContextService.contextEmpty();
             return;
         }
@@ -277,23 +267,16 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                     Log.log(LOGGER::debug, "calling {}.refreshMethodUnderCaret for {}",languageService,psiFile.getVirtualFile());
                     contextChangeAlarmAfterFileClosed.addRequest(() -> languageService.refreshMethodUnderCaret(project, psiFile,selectedTextEditor, selectedTextEditor.getCaretModel().getOffset()), 200);
                 } else {
-//                    if (isFileChangingContext(selectedFile)) {
                         Log.log(LOGGER::debug, "updateContextAfterFileClosed no psi file for {}, calling contextEmptyNonSupportedFile", selectedFile);
-//                        MainToolWindowCardsController.getInstance(project).showNonSupported();
                         contextChangeAlarmAfterFileClosed.addRequest(() -> caretContextService.contextEmptyNonSupportedFile(selectedFile.getPath()), 200);
-//                    }
                 }
             }else {
-//                if (isFileChangingContext(selectedFile)) {
                     Log.log(LOGGER::debug, "updateContextAfterFileClosed selected file is not relevant {}, calling contextEmptyNonSupportedFile",selectedFile);
-//                    MainToolWindowCardsController.getInstance(project).showNonSupported();
                     contextChangeAlarmAfterFileClosed.addRequest(() -> caretContextService.contextEmptyNonSupportedFile(selectedFile.getPath()), 200);
-//                }
             }
         }
         else {
             Log.log(LOGGER::debug, "updateContextAfterFileClosed selected no selected editor, calling contextEmpty");
-//            MainToolWindowCardsController.getInstance(project).showNoFile();
             contextChangeAlarmAfterFileClosed.addRequest(caretContextService::contextEmpty, 200);
         }
     }
@@ -317,14 +300,6 @@ public class EditorEventsHandler implements FileEditorManagerListener {
     }
 
 
-//    private boolean isFileNotChangingContext(@NotNull VirtualFile file) {
-//        return DigmaVirtualFileMarker.class.isAssignableFrom(file.getClass()) ||
-//                DigmaHTMLEditorProvider.getInstance(project).isOurTitle(file.getName());
-//    }
-//
-//    private boolean isFileChangingContext(@NotNull VirtualFile file) {
-//        return !isFileNotChangingContext(file);
-//    }
 
 
 }

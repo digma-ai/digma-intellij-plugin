@@ -3,10 +3,10 @@ package org.digma.intellij.plugin.ui.common
 import com.intellij.openapi.project.Project
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
-import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.awt.CardLayout
+import javax.swing.JPanel
 
-class ContentPanel(project: Project) : DigmaResettablePanel() {
+class ContentPanel(project: Project) : JPanel() {
 
     private val insightsPanel = TabsPanel(project)
     private val homePanel = HomePanel(project)
@@ -23,19 +23,6 @@ class ContentPanel(project: Project) : DigmaResettablePanel() {
 
         cardLayout.addLayoutComponent(insightsPanel, MainToolWindowCardsController.ContentCard.INSIGHTS.name)
         cardLayout.addLayoutComponent(homePanel, MainToolWindowCardsController.ContentCard.HOME.name)
-//        if (service<PersistenceService>().state.homeButtonSelected){
-//            cardLayout.show(this, MainToolWindowCardsController.ContentCard.HOME.name)
-//        }else {
-//            cardLayout.show(this, MainToolWindowCardsController.ContentCard.INSIGHTS.name)
-//        }
-
-        //project.service<HomeSwitcherService>().switchToHome()
-    }
-
-
-
-    override fun reset() {
-
     }
 
 

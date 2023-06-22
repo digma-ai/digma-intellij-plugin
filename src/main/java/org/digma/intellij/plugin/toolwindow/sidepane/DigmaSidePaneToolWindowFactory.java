@@ -10,8 +10,6 @@ import com.intellij.util.ui.JBUI;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.common.IDEUtilsService;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.persistence.PersistenceData;
-import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.service.ErrorsActionsService;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
@@ -84,14 +82,7 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         ErrorsActionsService errorsActionsService = project.getService(ErrorsActionsService.class);
         toolWindow.getContentManager().addContentManagerListener(errorsActionsService);
 
-        PersistenceData persistenceDataState = PersistenceService.getInstance().getState();
-
-        if (IDEUtilsService.isIdeaIDE() && persistenceDataState.getAlreadyPassedTheInstallationWizardForIdeaIDE() ||
-                IDEUtilsService.isRiderIDE() && persistenceDataState.getAlreadyPassedTheInstallationWizardForRiderIDE() ||
-                IDEUtilsService.isPyCharmIDE() && persistenceDataState.getAlreadyPassedTheInstallationWizardForPyCharmIDE()
-        ) {
-            //MainToolWindowCardsController.getInstance(project).showMainPanel();
-        }else{
+        if (IDEUtilsService.shouldOpenWizard()) {
             MainToolWindowCardsController.getInstance(project).showWizard();
         }
 
@@ -109,8 +100,6 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         cardsPanel.setBorder(JBUI.Borders.empty());
 
         var noConnectionPanel = NoConnectionPanelKt.createNoConnectionPanel(project);
-//        var nonSupportedPanel = createNonSupportedEmptyStatePanel(project);
-//        var noFilePanel = createNoFileEmptyStatePanel(project);
 
 
         cardsPanel.add(mainPanel, MainToolWindowCardsController.MainWindowCard.MAIN.name());
@@ -118,12 +107,6 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
 
         cardsPanel.add(noConnectionPanel, MainToolWindowCardsController.MainWindowCard.NO_CONNECTION.name());
         cardLayout.addLayoutComponent(noConnectionPanel, MainToolWindowCardsController.MainWindowCard.NO_CONNECTION.name());
-
-//        cardsPanel.add(nonSupportedPanel, MainToolWindowCardsController.MainWindowCard.NON_SUPPORTED.name());
-//        cardLayout.addLayoutComponent(nonSupportedPanel, MainToolWindowCardsController.MainWindowCard.NON_SUPPORTED.name());
-
-//        cardsPanel.add(noFilePanel, "STARTUP");
-//        cardLayout.addLayoutComponent(noFilePanel, "STARTUP");
 
         cardLayout.show(cardsPanel, MainToolWindowCardsController.MainWindowCard.MAIN.name());
 

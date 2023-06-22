@@ -53,7 +53,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
 
 
 
-    //todo: quick and dirty prevent race condition with refresh task ultil we have time to re-write it
+    //todo: quick and dirty prevent race condition with refresh task until we have time to re-write it
     fun updateErrorsModelFromRefresh(codeLessSpan: CodeLessSpan) {
         lock.lock()
         try {
@@ -68,7 +68,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         }
     }
 
-    //todo: quick and dirty prevent race condition with refresh task ultil we have time to re-write it
+    //todo: quick and dirty prevent race condition with refresh task until we have time to re-write it
     fun updateErrorsModel(codeLessSpan: CodeLessSpan) {
         lock.lock()
         try {
@@ -122,7 +122,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
     }
 
 
-    //todo: quick and dirty prevent race condition with refresh task ultil we have time to re-write it
+    //todo: quick and dirty prevent race condition with refresh task until we have time to re-write it
     fun updateErrorsModelFromRefresh(methodInfo: MethodInfo) {
         lock.lock()
         try {
@@ -137,7 +137,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         }
     }
 
-    //todo: quick and dirty prevent race condition with refresh task ultil we have time to re-write it
+    //todo: quick and dirty prevent race condition with refresh task until we have time to re-write it
     fun updateErrorsModel(methodInfo: MethodInfo) {
         lock.lock()
         try {

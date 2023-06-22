@@ -53,7 +53,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
     }
 
 
-    //todo: quick and dirty prevent race condition with refresh task ultil we have time to re-write it
+    //todo: quick and dirty prevent race condition with refresh task until we have time to re-write it
     fun updateInsightsModelFromRefresh(codeLessSpan: CodeLessSpan) {
         lock.lock()
         try {
@@ -68,7 +68,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
         }
     }
 
-    //todo: quick and dirty prevent race condition with refresh task ultil we have time to re-write it
+    //todo: quick and dirty prevent race condition with refresh task until we have time to re-write it
     fun updateInsightsModel(codeLessSpan: CodeLessSpan) {
         lock.lock()
         try {
@@ -129,7 +129,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
 
     }
 
-    //todo: quick and dirty prevent race condition with refresh task ultil we have time to re-write it
+    //todo: quick and dirty prevent race condition with refresh task until we have time to re-write it
     fun updateInsightsModelFromRefresh(methodInfo: MethodInfo) {
         lock.lock()
         try {
@@ -144,7 +144,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
         }
     }
 
-    //todo: quick and dirty prevent race condition with refresh task ultil we have time to re-write it
+    //todo: quick and dirty prevent race condition with refresh task until we have time to re-write it
     fun updateInsightsModel(methodInfo: MethodInfo) {
         lock.lock()
         try {

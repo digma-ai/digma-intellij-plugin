@@ -17,8 +17,8 @@ import org.digma.intellij.plugin.analytics.EnvironmentChanged;
 import org.digma.intellij.plugin.assets.model.outgoing.SetAssetsDataMessage;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.rest.installationwizard.OpenInBrowserRequest;
-import org.digma.intellij.plugin.model.rest.installationwizard.SendTrackingEventRequest;
+import org.digma.intellij.plugin.model.rest.jcef.common.OpenInBrowserRequest;
+import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil;
 import org.digma.intellij.plugin.toolwindow.common.UICodeFontRequest;
@@ -88,7 +88,7 @@ public class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter i
                         }
                     }
 
-                    case ToolWindowUtil.INSTALLATION_WIZARD_SEND_TRACKING_EVENT -> {
+                    case ToolWindowUtil.GLOBAL_SEND_TRACKING_EVENT -> {
                         SendTrackingEventRequest trackingRequest = ToolWindowUtil.parseJsonToObject(request,SendTrackingEventRequest.class);
                         if (trackingRequest != null && trackingRequest.getPayload() != null){
                             ActivityMonitor.getInstance(project).registerCustomEvent(trackingRequest.getPayload().getEventName(), trackingRequest.getPayload().getData());

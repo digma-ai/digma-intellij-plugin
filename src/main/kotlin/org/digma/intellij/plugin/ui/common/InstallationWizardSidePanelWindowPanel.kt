@@ -5,22 +5,20 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ApplicationNamesInfo
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.jcef.JBCefApp
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.browser.CefMessageRouter
 import org.cef.callback.CefQueryCallback
 import org.cef.handler.CefMessageRouterHandlerAdapter
-import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.analytics.BackendConnectionUtil
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.model.rest.installationwizard.FinishRequest
-import org.digma.intellij.plugin.model.rest.installationwizard.OpenInBrowserRequest
-import org.digma.intellij.plugin.model.rest.installationwizard.SendTrackingEventRequest
-import org.digma.intellij.plugin.model.rest.installationwizard.SetObservabilityRequest
+import org.digma.intellij.plugin.model.rest.jcef.common.OpenInBrowserRequest
+import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest
+import org.digma.intellij.plugin.model.rest.jcef.installationwizard.FinishRequest
+import org.digma.intellij.plugin.model.rest.jcef.installationwizard.SetObservabilityRequest
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.toolwindow.common.CustomViewerWindow
@@ -91,7 +89,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): DisposablePa
                 request,
                 JcefMessageRequest::class.java
             )
-            if (ToolWindowUtil.INSTALLATION_WIZARD_SEND_TRACKING_EVENT.equals(action, ignoreCase = true)) {
+            if (ToolWindowUtil.GLOBAL_SEND_TRACKING_EVENT.equals(action, ignoreCase = true)) {
                 val (_, payload) = ToolWindowUtil.parseJsonToObject(
                     request,
                     SendTrackingEventRequest::class.java

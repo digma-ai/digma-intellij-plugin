@@ -1,24 +1,22 @@
-package org.digma.intellij.plugin.model.rest.installationwizard
+package org.digma.intellij.plugin.model.rest.jcef.common
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
 import java.beans.ConstructorProperties
 
-data class SetObservabilityRequest
+data class OpenInBrowserRequest
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ConstructorProperties("action", "payload")
 constructor(
-    val action: String,
-    val payload: SetObservabilityRequestPayload?
+        val action: String,
+        val payload: OpenInBrowserRequestPayload?
 )
 
-data class SetObservabilityRequestPayload
+data class OpenInBrowserRequestPayload
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@ConstructorProperties("isObservabilityEnabled")
+@ConstructorProperties("url")
 constructor(
-        @get:JsonProperty("isObservabilityEnabled")
-        val isObservabilityEnabled: Boolean
+        val url: String
 )

@@ -84,6 +84,8 @@ public class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter i
             }
         });
 
+        callback.success("");
+
         return true;
     }
 

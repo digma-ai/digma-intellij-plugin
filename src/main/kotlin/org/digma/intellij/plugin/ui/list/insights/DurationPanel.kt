@@ -15,7 +15,7 @@ import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
 import org.digma.intellij.plugin.model.rest.insights.SpanInfo
 import org.digma.intellij.plugin.model.rest.insights.SpanInstanceInfo
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.toolwindow.recentactivity.RecentActivityService
+import org.digma.intellij.plugin.recentactivity.RecentActivityService
 import org.digma.intellij.plugin.ui.common.IconWithLiveIndication
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.getHex

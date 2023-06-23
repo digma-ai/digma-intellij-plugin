@@ -45,7 +45,7 @@ public final class AssetsService implements Disposable {
             return null;
         }
 
-        return new IndexTemplateBuilder(path).build();
+        return new IndexTemplateBuilder().build();
     }
 
 

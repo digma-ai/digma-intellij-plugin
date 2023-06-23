@@ -25,20 +25,20 @@
                     secondary="false"
                     icon="org.digma.intellij.plugin.icons.AppIcons.TOOL_WINDOW"
                     anchor="right"
-                    factoryClass="org.digma.intellij.plugin.toolwindow.sidepane.DigmaSidePaneToolWindowFactory"/>
+                    factoryClass="org.digma.intellij.plugin.toolwindow.DigmaSidePaneToolWindowFactory"/>
 
         <toolWindow id="Observability"
                     secondary="false"
                     icon="org.digma.intellij.plugin.icons.AppIcons.TOOL_WINDOW_OBSERVABILITY"
                     anchor="bottom"
-                    factoryClass="org.digma.intellij.plugin.toolwindow.recentactivity.DigmaBottomToolWindowFactory"/>
+                    factoryClass="org.digma.intellij.plugin.recentactivity.DigmaBottomToolWindowFactory"/>
 
 
         <projectService serviceImplementation="org.digma.intellij.plugin.jaegerui.JaegerUIService"/>
         <fileEditorProvider implementation="org.digma.intellij.plugin.jaegerui.JaegerUIFileEditorProvider"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.ToolWindowShower"/>
-        <projectService serviceImplementation="org.digma.intellij.plugin.toolwindow.recentactivity.RecentActivityToolWindowShower"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.recentactivity.RecentActivityToolWindowShower"/>
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.MainToolWindowCardsController"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.service.EditorInteractionService"
@@ -92,7 +92,7 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.updates.UpdatesService"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.toolwindow.recentactivity.RecentActivityService"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.recentactivity.RecentActivityService"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider"/>
 
@@ -117,7 +117,7 @@
 
         <postStartupActivity implementation="org.digma.intellij.plugin.common.DumbAwareStartupActivity"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.common.RunOnceStartupActivity"/>
-        <postStartupActivity implementation="org.digma.intellij.plugin.toolwindow.recentactivity.RecentActivityStartupActivity"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.recentactivity.RecentActivityStartupActivity"/>
 
 
         <!-- Code lens providers are used only for some languages, for example java,python.
@@ -161,7 +161,7 @@
                 class="org.digma.intellij.plugin.common.modelChangeListener.ModelChangeHandler"
                 topic="org.digma.intellij.plugin.common.modelChangeListener.ModelChangeListener"/>
         <listener
-                class="org.digma.intellij.plugin.toolwindow.common.DigmaToolWindowsListener"
+                class="org.digma.intellij.plugin.toolwindow.DigmaToolWindowsListener"
                 topic="com.intellij.openapi.wm.ex.ToolWindowManagerListener"/>
     </projectListeners>
 

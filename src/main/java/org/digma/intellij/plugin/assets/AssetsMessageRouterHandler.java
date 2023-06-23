@@ -16,25 +16,16 @@ import org.cef.handler.CefMessageRouterHandlerAdapter;
 import org.digma.intellij.plugin.analytics.EnvironmentChanged;
 import org.digma.intellij.plugin.assets.model.outgoing.SetAssetsDataMessage;
 import org.digma.intellij.plugin.common.Backgroundable;
+import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil;
+import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil;
+import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.rest.jcef.common.OpenInBrowserRequest;
 import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
-import org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil;
-import org.digma.intellij.plugin.toolwindow.common.UICodeFontRequest;
-import org.digma.intellij.plugin.toolwindow.common.UIFontRequest;
-import org.digma.intellij.plugin.toolwindow.common.UIThemeRequest;
-import org.digma.intellij.plugin.toolwindow.common.UiCodeFontPayload;
-import org.digma.intellij.plugin.toolwindow.common.UiFontPayload;
-import org.digma.intellij.plugin.toolwindow.common.UiThemePayload;
-import org.digma.intellij.plugin.toolwindow.recentactivity.JBCefBrowserUtil;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
-
-import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.GLOBAL_SET_UI_CODE_FONT;
-import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.GLOBAL_SET_UI_MAIN_FONT;
-import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.GLOBAL_SET_UI_THEME;
-import static org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil.REQUEST_MESSAGE_TYPE;
 
 public class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter implements Disposable {
 
@@ -81,15 +72,15 @@ public class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter i
 
                     case "ASSETS/GO_TO_ASSET" -> goToAsset(jsonNode);
 
-                    case ToolWindowUtil.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
-                        OpenInBrowserRequest openBrowserRequest = ToolWindowUtil.parseJsonToObject(request,OpenInBrowserRequest.class);
+                    case JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
+                        OpenInBrowserRequest openBrowserRequest = JCefMessagesUtils.parseJsonToObject(request,OpenInBrowserRequest.class);
                         if (openBrowserRequest != null && openBrowserRequest.getPayload() != null){
                             BrowserUtil.browse(openBrowserRequest.getPayload().getUrl());
                         }
                     }
 
-                    case ToolWindowUtil.GLOBAL_SEND_TRACKING_EVENT -> {
-                        SendTrackingEventRequest trackingRequest = ToolWindowUtil.parseJsonToObject(request,SendTrackingEventRequest.class);
+                    case JCefMessagesUtils.GLOBAL_SEND_TRACKING_EVENT -> {
+                        SendTrackingEventRequest trackingRequest = JCefMessagesUtils.parseJsonToObject(request,SendTrackingEventRequest.class);
                         if (trackingRequest != null && trackingRequest.getPayload() != null){
                             ActivityMonitor.getInstance(project).registerCustomEvent(trackingRequest.getPayload().getEventName(), trackingRequest.getPayload().getData());
                         }
@@ -129,34 +120,16 @@ public class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter i
 
 
 
-    void sendRequestToChangeUiTheme(String uiTheme) {
-        String requestMessage = JBCefBrowserUtil.resultToString(
-                new UIThemeRequest(
-                        REQUEST_MESSAGE_TYPE,
-                        GLOBAL_SET_UI_THEME,
-                        new UiThemePayload(uiTheme)
-                ));
-        JBCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser);
+    void sendRequestToChangeUiTheme(@NotNull Theme theme) {
+        JCefBrowserUtil.sendRequestToChangeUiTheme(theme, jbCefBrowser);
     }
 
-    void sendRequestToChangeFont(String font) {
-        String requestMessage = JBCefBrowserUtil.resultToString(
-                new UIFontRequest(
-                        REQUEST_MESSAGE_TYPE,
-                        GLOBAL_SET_UI_MAIN_FONT,
-                        new UiFontPayload(font)
-                ));
-        JBCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser);
+    void sendRequestToChangeFont(String fontName) {
+        JCefBrowserUtil.sendRequestToChangeFont(fontName, jbCefBrowser);
     }
 
-    void sendRequestToChangeCodeFont(String font) {
-        String requestMessage = JBCefBrowserUtil.resultToString(
-                new UICodeFontRequest(
-                        REQUEST_MESSAGE_TYPE,
-                        GLOBAL_SET_UI_CODE_FONT,
-                        new UiCodeFontPayload(font)
-                ));
-        JBCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser);
+    void sendRequestToChangeCodeFont(String fontName) {
+        JCefBrowserUtil.sendRequestToChangeCodeFont(fontName, jbCefBrowser);
     }
 
 

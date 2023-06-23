@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.assets;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
@@ -16,6 +17,10 @@ import org.digma.intellij.plugin.analytics.EnvironmentChanged;
 import org.digma.intellij.plugin.assets.model.outgoing.SetAssetsDataMessage;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.rest.installationwizard.OpenInBrowserRequest;
+import org.digma.intellij.plugin.model.rest.installationwizard.SendTrackingEventRequest;
+import org.digma.intellij.plugin.posthog.ActivityMonitor;
+import org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil;
 import org.digma.intellij.plugin.toolwindow.common.UICodeFontRequest;
 import org.digma.intellij.plugin.toolwindow.common.UIFontRequest;
 import org.digma.intellij.plugin.toolwindow.common.UIThemeRequest;
@@ -75,6 +80,20 @@ public class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter i
                     case "ASSETS/GET_DATA" -> pushAssets(browser, objectMapper);
 
                     case "ASSETS/GO_TO_ASSET" -> goToAsset(jsonNode);
+
+                    case ToolWindowUtil.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
+                        OpenInBrowserRequest openBrowserRequest = ToolWindowUtil.parseJsonToObject(request,OpenInBrowserRequest.class);
+                        if (openBrowserRequest != null && openBrowserRequest.getPayload() != null){
+                            BrowserUtil.browse(openBrowserRequest.getPayload().getUrl());
+                        }
+                    }
+
+                    case ToolWindowUtil.INSTALLATION_WIZARD_SEND_TRACKING_EVENT -> {
+                        SendTrackingEventRequest trackingRequest = ToolWindowUtil.parseJsonToObject(request,SendTrackingEventRequest.class);
+                        if (trackingRequest != null && trackingRequest.getPayload() != null){
+                            ActivityMonitor.getInstance(project).registerCustomEvent(trackingRequest.getPayload().getEventName(), trackingRequest.getPayload().getData());
+                        }
+                    }
 
                     default -> throw new IllegalStateException("Unexpected value: " + action);
                 }

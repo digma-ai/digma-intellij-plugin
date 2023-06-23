@@ -80,6 +80,8 @@ public class JaegerUIMessageRouterHandler extends CefMessageRouterHandlerAdapter
             }
         });
 
+        callback.success("");
+
         return true;
     }
 

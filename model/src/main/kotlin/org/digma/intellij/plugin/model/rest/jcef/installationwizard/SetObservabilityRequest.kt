@@ -1,23 +1,24 @@
-package org.digma.intellij.plugin.model.rest.installationwizard
+package org.digma.intellij.plugin.model.rest.jcef.installationwizard
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import java.beans.ConstructorProperties
 
-data class SendTrackingEventRequest
+data class SetObservabilityRequest
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ConstructorProperties("action", "payload")
 constructor(
     val action: String,
-    val payload: SendTrackingEventRequestPayload?
+    val payload: SetObservabilityRequestPayload?
 )
 
-data class SendTrackingEventRequestPayload
+data class SetObservabilityRequestPayload
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@ConstructorProperties("eventName", "data")
+@ConstructorProperties("isObservabilityEnabled")
 constructor(
-    val eventName: String,
-    val data: Map<String, Any>
+        @get:JsonProperty("isObservabilityEnabled")
+        val isObservabilityEnabled: Boolean
 )

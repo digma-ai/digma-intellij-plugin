@@ -11,6 +11,7 @@ public class ToolWindowUtil {
     public static final String GLOBAL_SET_UI_CODE_FONT = "GLOBAL/SET_CODE_FONT";
     public static final String GLOBAL_SET_IS_JAEGER_ENABLED = "GLOBAL/SET_IS_JAEGER_ENABLED";
     public static final String GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER = "GLOBAL/OPEN_URL_IN_DEFAULT_BROWSER";
+    public static final String GLOBAL_SEND_TRACKING_EVENT = "GLOBAL/SEND_TRACKING_EVENT";
     public static final String RECENT_ACTIVITY_SET_DATA = "RECENT_ACTIVITY/SET_DATA";
     public static final String RECENT_ACTIVITY_INITIALIZE = "RECENT_ACTIVITY/INITIALIZE";
     public static final String RECENT_ACTIVITY_GO_TO_SPAN = "RECENT_ACTIVITY/GO_TO_SPAN";
@@ -20,7 +21,6 @@ public class ToolWindowUtil {
     public static final String INSTALLATION_WIZARD_FINISH = "INSTALLATION_WIZARD/FINISH";
     public static final String INSTALLATION_WIZARD_CHECK_CONNECTION = "INSTALLATION_WIZARD/CHECK_CONNECTION";
     public static final String INSTALLATION_WIZARD_SET_CHECK_CONNECTION = "INSTALLATION_WIZARD/SET_CONNECTION_CHECK_RESULT";
-    public static final String INSTALLATION_WIZARD_SEND_TRACKING_EVENT = "GLOBAL/SEND_TRACKING_EVENT";
     public static final String INSTALLATION_WIZARD_SET_OBSERVABILITY = "INSTALLATION_WIZARD/SET_OBSERVABILITY";
 
     public static <T> T parseJsonToObject(String jsonString, Class<T> jcefMessageRequestClass) {

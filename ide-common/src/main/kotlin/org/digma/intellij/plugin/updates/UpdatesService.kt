@@ -73,7 +73,7 @@ class UpdatesService(private val project: Project) : Disposable {
             }
         }
 
-        timer.scheduleAtFixedRate(
+        timer.schedule(
             fetchTask, DelayMilliseconds, PeriodMilliseconds
         )
     }

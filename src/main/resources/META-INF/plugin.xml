@@ -94,6 +94,7 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider"/>
 
+
         <notificationGroup id="Digma Notification Group"
                            displayType="NONE"
                            toolWindowId="Digma"/>

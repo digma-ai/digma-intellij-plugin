@@ -15,6 +15,12 @@
         <runConfigurationExtension implementation="org.digma.intellij.plugin.idea.runcfg.AutoOtelAgentRunConfigurationExtension"/>
         <applicationService serviceImplementation="org.digma.intellij.plugin.idea.runcfg.OTELJarProvider"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.idea.runcfg.OTELJarProviderStartup"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.deps.ModulesDepsService"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.idea.deps.ModuleDepsStarter"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.frameworks.QuarkusConfigureDepsService"/>
+        <runConfigurationExtension implementation="org.digma.intellij.plugin.idea.runcfg.QuarkusRunConfigurationExtension"/>
     </extensions>
 
 

@@ -87,6 +87,8 @@ class InsightsViewOrchestrator(val project: Project) {
 
     /**
      * shows insights for span or method by which ever is non-null, and be navigated to code.
+     * This method should be called only if it is possible to navigate to code. can be checked with
+     * codeNavigator.canNavigateToSpan(spanId) || codeNavigator.canNavigateToMethod(methodId)
      */
     //todo: this method needs clarification. what do we want to do?
     // first option is show insights for the span and navigate to either span location or method location, which ever is possible.

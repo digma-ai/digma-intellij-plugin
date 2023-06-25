@@ -182,6 +182,12 @@ object Laf {
             }
         }
 
+        class Misc {
+            companion object {
+                @JvmStatic val Quarkus = SvgIcon.asIs("/icons/quarkus.svg")
+            }
+        }
+
         companion object {
             private fun loadAndScaleInsightIcon(path: String): Icon {
                 return loadAndScaleInsightIconByWidth(path)

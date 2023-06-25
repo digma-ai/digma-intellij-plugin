@@ -137,8 +137,11 @@ class CodeNavigationButton(val project: Project, private val panelModel: PanelMo
         val spanId = codeObjectNavigation.navigationEntry.spanInfo?.spanCodeObjectId
         val methodId = codeObjectNavigation.navigationEntry.spanInfo?.methodCodeObjectId
 
+        val codeNavigator = project.service<CodeNavigator>()
+
         //first try direct navigation, if can't then build navigation list and show user
-        if (project.service<InsightsViewOrchestrator>().showInsightsForSpanOrMethodAndNavigateToCode(spanId, methodId)) {
+        if (codeNavigator.canNavigateToSpan(spanId) || codeNavigator.canNavigateToMethod(methodId)) {
+            project.service<InsightsViewOrchestrator>().showInsightsForSpanOrMethodAndNavigateToCode(spanId, methodId)
             Log.log(logger::debug, project, "Navigation to direct span succeeded for {},{}", spanId, methodId)
         } else {
 

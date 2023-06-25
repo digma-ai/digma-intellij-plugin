@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.toolwindow;
 
+import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
@@ -63,7 +64,7 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
 
         var contentPanel = new ContentPanel(project);
         var mainSidePaneWindowPanel = createMainSidePaneWindowPanel(project,contentPanel);
-        var cardsPanel = createCardsPanel(project,mainSidePaneWindowPanel);
+        var cardsPanel = createCardsPanel(project,mainSidePaneWindowPanel,AnalyticsService.getInstance(project));
         var mainContent =  ContentFactory.getInstance().createContent(cardsPanel, null, false);
         toolWindow.getContentManager().addContent(mainContent);
 
@@ -92,14 +93,14 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         DumbService.getInstance(project).runWhenSmart(() -> initializeWhenSmart(project));
     }
 
-    private JPanel createCardsPanel(@NotNull Project project, @NotNull JPanel mainPanel) {
+    private JPanel createCardsPanel(@NotNull Project project, @NotNull JPanel mainPanel, Disposable parentDisposable) {
 
         var cardLayout = new CardLayout();
         var cardsPanel = new JPanel(cardLayout);
         cardsPanel.setOpaque(false);
         cardsPanel.setBorder(JBUI.Borders.empty());
 
-        var noConnectionPanel = NoConnectionPanelKt.createNoConnectionPanel(project);
+        var noConnectionPanel = NoConnectionPanelKt.createNoConnectionPanel(project,parentDisposable);
 
 
         cardsPanel.add(mainPanel, MainToolWindowCardsController.MainWindowCard.MAIN.name());

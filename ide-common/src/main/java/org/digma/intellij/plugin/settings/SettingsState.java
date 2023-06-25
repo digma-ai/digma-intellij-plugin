@@ -5,6 +5,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.digma.intellij.plugin.common.CommonUtils;
 import org.jetbrains.annotations.NotNull;
@@ -88,8 +89,10 @@ public class SettingsState implements PersistentStateComponent<SettingsState>, D
     }
 
 
-    public void addChangeListener(SettingsChangeListener listener) {
+    public void addChangeListener(SettingsChangeListener listener, Disposable pareDisposable) {
         listeners.add(listener);
+
+        Disposer.register(pareDisposable, () -> removeChangeListener(listener));
     }
 
     public void removeChangeListener(SettingsChangeListener listener) {

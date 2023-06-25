@@ -128,7 +128,7 @@ public class AnalyticsService implements Disposable {
                 myApiToken = state.apiToken;
                 replaceClient(myApiUrl, myApiToken);
             }
-        });
+        },this);
     }
 
 

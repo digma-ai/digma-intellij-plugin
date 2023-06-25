@@ -159,7 +159,7 @@ public class RecentActivityService implements Disposable {
         msgRouter = CefMessageRouter.create();
 
 
-        SettingsState.getInstance().addChangeListener(settingsState1 -> sendRequestToChangeTraceButtonDisplaying(jbCefBrowser));
+        SettingsState.getInstance().addChangeListener(settingsState1 -> sendRequestToChangeTraceButtonDisplaying(jbCefBrowser),this);
 
         msgRouter.addHandler(new CefMessageRouterHandlerAdapter() {
             @Override

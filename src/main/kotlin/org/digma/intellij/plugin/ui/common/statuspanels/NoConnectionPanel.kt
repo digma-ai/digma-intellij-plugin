@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.common.statuspanels
 
 import com.intellij.ide.BrowserUtil
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
@@ -22,7 +23,7 @@ import javax.swing.JPanel
 import javax.swing.SwingConstants
 
 
-fun createNoConnectionPanel(project: Project):JPanel{
+fun createNoConnectionPanel(project: Project, parentDisposable: Disposable):JPanel{
 
     val settingsState = SettingsState.getInstance()
 
@@ -34,12 +35,12 @@ fun createNoConnectionPanel(project: Project):JPanel{
     val textPane = createTextPaneWithHtml(htmlText)
     val messagePanel = createCommonEmptyStatePanelWIthIconAndTextPane(getNoConnectionIcon(),textPane)
 
-    settingsState.addChangeListener {
+    settingsState.addChangeListener( {
         EDT.ensureEDT{
             val newHtmlText = getNoConnectionMessageHtml(settingsState.apiUrl)
             textPane.text = newHtmlText
         }
-    }
+    },parentDisposable)
 
 
     val constraints = GridBagConstraints()

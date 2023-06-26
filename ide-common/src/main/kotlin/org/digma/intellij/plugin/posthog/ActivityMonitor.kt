@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.posthog
 
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.application.ApplicationInfo
-import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.extensions.PluginDescriptor
 import com.intellij.openapi.project.Project
 import com.posthog.java.PostHog
@@ -20,8 +19,6 @@ import java.util.Optional
 class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
 
     companion object {
-        private val LOGGER = Logger.getInstance(ActivityMonitor::class.java)
-
         @JvmStatic
         fun getInstance(project: Project): ActivityMonitor {
             return project.getService(ActivityMonitor::class.java)
@@ -186,10 +183,10 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
     }
 
     fun registerButtonClicked(button: String, source: Any ? = null) {
-        var properties:MutableMap<String, Any> = mutableMapOf()
-        properties["button"] = button;
+        val properties:MutableMap<String, Any> = mutableMapOf()
+        properties["button"] = button
         if(source != null){
-            properties["source"] = source;
+            properties["source"] = source
         }
 
         postHog?.capture(
@@ -200,10 +197,10 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
     }
 
     fun registerInsightButtonClicked(button: String, insight: Any) {
-        var properties:MutableMap<String, Any> = mutableMapOf()
-        properties["button"] = button;
+        val properties:MutableMap<String, Any> = mutableMapOf()
+        properties["button"] = button
         if(insight != null){
-            properties["source"] = insight;
+            properties["source"] = insight
         }
 
         postHog?.capture(
@@ -226,6 +223,13 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
         postHog?.set(
             userId,
             mapOf("server.version" to applicationVersion)
+        )
+    }
+
+    fun registerContainerEngine(containerPlatform: String) {
+        postHog?.set(
+            userId,
+            mapOf("user.container-engine" to containerPlatform)
         )
     }
 

@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.analytics;
 
 import org.digma.intellij.plugin.model.rest.AboutResult;
+import org.digma.intellij.plugin.model.rest.assets.AssetsRequest;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
@@ -66,6 +67,8 @@ public interface AnalyticsProvider extends Closeable {
     DurationLiveData getDurationLiveData(DurationLiveDataRequest durationLiveDataRequest);
 
     CodeObjectNavigation getCodeObjectNavigation(CodeObjectNavigationRequest codeObjectNavigationRequest);
+
+    String getAssets(AssetsRequest assetsRequest);
 
     VersionResponse getVersions(VersionRequest request);
 

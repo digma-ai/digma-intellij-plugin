@@ -18,8 +18,8 @@
   window.platform = "JetBrains";
   window.ide = "${ide}";
   window.theme = "${theme}";
-  window.mainFont;
-  window.codeFont;
+  window.mainFont = "${mainFont}";
+  window.codeFont = "${codeFont}";
   window.userEmail = "${userEmail}";
   window.isObservabilityEnabled = ${isObservabilityEnabled?string('true', 'false')};
   window.wizardSkipInstallationStep = ${wizardSkipInstallationStep?string('true', 'false')};

@@ -5,40 +5,41 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ApplicationNamesInfo
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.jcef.JBCefApp
+import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.browser.CefMessageRouter
 import org.cef.callback.CefQueryCallback
 import org.cef.handler.CefMessageRouterHandlerAdapter
-import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.analytics.BackendConnectionUtil
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.IDEUtilsService
+import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator
+import org.digma.intellij.plugin.jcef.common.CustomSchemeHandlerFactory
+import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil
+import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.model.rest.installationwizard.FinishRequest
-import org.digma.intellij.plugin.model.rest.installationwizard.OpenInBrowserRequest
-import org.digma.intellij.plugin.model.rest.installationwizard.SendTrackingEventRequest
-import org.digma.intellij.plugin.model.rest.installationwizard.SetObservabilityRequest
+import org.digma.intellij.plugin.model.rest.jcef.common.OpenInBrowserRequest
+import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest
+import org.digma.intellij.plugin.model.rest.jcef.installationwizard.FinishRequest
+import org.digma.intellij.plugin.model.rest.jcef.installationwizard.SetObservabilityRequest
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.toolwindow.common.CustomViewerWindow
-import org.digma.intellij.plugin.toolwindow.common.ThemeChangeListener
-import org.digma.intellij.plugin.toolwindow.common.ToolWindowUtil
-import org.digma.intellij.plugin.toolwindow.recentactivity.ConnectionCheckResult
-import org.digma.intellij.plugin.toolwindow.recentactivity.JBCefBrowserUtil
-import org.digma.intellij.plugin.toolwindow.recentactivity.JcefConnectionCheckMessagePayload
-import org.digma.intellij.plugin.toolwindow.recentactivity.JcefConnectionCheckMessageRequest
-import org.digma.intellij.plugin.toolwindow.recentactivity.JcefMessageRequest
-import org.digma.intellij.plugin.toolwindow.recentactivity.RecentActivityToolWindowShower
+import org.digma.intellij.plugin.recentactivity.ConnectionCheckResult
+import org.digma.intellij.plugin.recentactivity.JcefConnectionCheckMessagePayload
+import org.digma.intellij.plugin.recentactivity.JcefConnectionCheckMessageRequest
+import org.digma.intellij.plugin.recentactivity.JcefMessageRequest
+import org.digma.intellij.plugin.recentactivity.RecentActivityToolWindowShower
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.common.ObservabilityUtil.Companion.updateObservabilityValue
 import org.digma.intellij.plugin.ui.panels.DisposablePanel
+import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
+import org.digma.intellij.plugin.ui.settings.SettingsChangeListener
+import org.digma.intellij.plugin.ui.settings.Theme
 import java.awt.BorderLayout
 import javax.swing.JPanel
-import javax.swing.UIManager
 
 private const val RESOURCE_FOLDER_NAME = "installationwizard"
 private const val ENV_VARIABLE_IDE: String = "ide"
@@ -50,6 +51,7 @@ private val logger: Logger =
     Logger.getInstance("org.digma.intellij.plugin.ui.common.InstallationWizardSidePanelWindowPanel")
 
 fun createInstallationWizardSidePanelWindowPanel(project: Project): DisposablePanel? {
+
     if (!JBCefApp.isSupported()) {
         // Fallback to an alternative browser-less solution
         return null
@@ -58,23 +60,27 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): DisposablePa
     //at this stage the AnalyticsService was initialized already and if there is no connection then
     // BackendConnectionMonitor should already know that
     val isServerConnectedAlready = BackendConnectionUtil.getInstance(project).testConnectionToBackend()
-    val customViewerWindow = CustomViewerWindow(
-        project, RESOURCE_FOLDER_NAME,
-        mapOf(
+
+    val jbCefBrowser = JBCefBrowserBuilderCreator.create()
+        .setUrl("https://$RESOURCE_FOLDER_NAME/index.html")
+        .build()
+    val indexTemplateData = mutableMapOf<String, Any>(
             WIZARD_SKIP_INSTALLATION_STEP_VARIABLE to isServerConnectedAlready,
             ENV_VARIABLE_IDE to ApplicationNamesInfo.getInstance().productName, //Available values: "IDEA", "Rider", "PyCharm"
             USER_EMAIL_VARIABLE to (PersistenceService.getInstance().state.userEmail ?: ""),
             IS_OBSERVABILITY_ENABLED_VARIABLE to PersistenceService.getInstance().state.isAutoOtel,
-        )
     )
-    val jbCefBrowser = customViewerWindow.getWebView()
+    CefApp.getInstance()
+        .registerSchemeHandlerFactory(
+            "https",
+            RESOURCE_FOLDER_NAME,
+            CustomSchemeHandlerFactory(RESOURCE_FOLDER_NAME, indexTemplateData)
+        )
 
     val jbCefClient = jbCefBrowser.jbCefClient
 
     val msgRouter = CefMessageRouter.create()
 
-    val listener = ThemeChangeListener(jbCefBrowser)
-    UIManager.addPropertyChangeListener(listener)
 
     msgRouter.addHandler(object : CefMessageRouterHandlerAdapter() {
         override fun onQuery(
@@ -83,16 +89,16 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): DisposablePa
             queryId: Long,
             request: String,
             persistent: Boolean,
-            callback: CefQueryCallback
+            callback: CefQueryCallback,
         ): Boolean {
             Log.log(logger::debug, "request: {}", request)
 
-            val (_, action) = ToolWindowUtil.parseJsonToObject(
+            val (_, action) = JCefMessagesUtils.parseJsonToObject(
                 request,
                 JcefMessageRequest::class.java
             )
-            if (ToolWindowUtil.INSTALLATION_WIZARD_SEND_TRACKING_EVENT.equals(action, ignoreCase = true)) {
-                val (_, payload) = ToolWindowUtil.parseJsonToObject(
+            if (JCefMessagesUtils.GLOBAL_SEND_TRACKING_EVENT.equals(action, ignoreCase = true)) {
+                val (_, payload) = JCefMessagesUtils.parseJsonToObject(
                     request,
                     SendTrackingEventRequest::class.java
                 )
@@ -100,8 +106,8 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): DisposablePa
                     ActivityMonitor.getInstance(project).registerCustomEvent(payload.eventName, payload.data)
                 }
             }
-            if (ToolWindowUtil.INSTALLATION_WIZARD_SET_OBSERVABILITY.equals(action, ignoreCase = true)) {
-                val (_, payload) = ToolWindowUtil.parseJsonToObject(
+            if (JCefMessagesUtils.INSTALLATION_WIZARD_SET_OBSERVABILITY.equals(action, ignoreCase = true)) {
+                val (_, payload) = JCefMessagesUtils.parseJsonToObject(
                     request,
                     SetObservabilityRequest::class.java
                 )
@@ -109,8 +115,8 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): DisposablePa
                     updateObservabilityValue(project, payload.isObservabilityEnabled)
                 }
             }
-            if (ToolWindowUtil.INSTALLATION_WIZARD_FINISH.equals(action, ignoreCase = true)) {
-                val (_, payload) = ToolWindowUtil.parseJsonToObject(
+            if (JCefMessagesUtils.INSTALLATION_WIZARD_FINISH.equals(action, ignoreCase = true)) {
+                val (_, payload) = JCefMessagesUtils.parseJsonToObject(
                     request,
                     FinishRequest::class.java
                 )
@@ -122,12 +128,12 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): DisposablePa
                 EDT.ensureEDT {
                     updateInstallationWizardFlag()
                     ToolWindowShower.getInstance(project).showToolWindow()
-                    MainToolWindowCardsController.getInstance(project).wizardFinished();
+                    MainToolWindowCardsController.getInstance(project).wizardFinished()
                     RecentActivityToolWindowShower.getInstance(project).showToolWindow()
                 }
             }
-            if (ToolWindowUtil.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER.equals(action, ignoreCase = true)) {
-                val (_, payload) = ToolWindowUtil.parseJsonToObject(
+            if (JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER.equals(action, ignoreCase = true)) {
+                val (_, payload) = JCefMessagesUtils.parseJsonToObject(
                     request,
                     OpenInBrowserRequest::class.java
                 )
@@ -139,21 +145,21 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): DisposablePa
                     }
                 }
             }
-            if (ToolWindowUtil.INSTALLATION_WIZARD_CHECK_CONNECTION.equals(action, ignoreCase = true)) {
+            if (JCefMessagesUtils.INSTALLATION_WIZARD_CHECK_CONNECTION.equals(action, ignoreCase = true)) {
                 val jcefConnectionCheckMessagePayload: JcefConnectionCheckMessagePayload =
                     if (BackendConnectionUtil.getInstance(project).testConnectionToBackend()) {
                         JcefConnectionCheckMessagePayload(ConnectionCheckResult.SUCCESS.value)
                     } else {
                         JcefConnectionCheckMessagePayload(ConnectionCheckResult.FAILURE.value)
                     }
-                val requestMessage = JBCefBrowserUtil.resultToString(
+                val requestMessage = JCefBrowserUtil.resultToString(
                     JcefConnectionCheckMessageRequest(
-                        ToolWindowUtil.REQUEST_MESSAGE_TYPE,
-                        ToolWindowUtil.INSTALLATION_WIZARD_SET_CHECK_CONNECTION,
+                        JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
+                        JCefMessagesUtils.INSTALLATION_WIZARD_SET_CHECK_CONNECTION,
                         jcefConnectionCheckMessagePayload
                     )
                 )
-                JBCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser)
+                JCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser)
             }
             callback.success("")
             return true
@@ -176,6 +182,24 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): DisposablePa
     }
     jcefDigmaPanel.layout = BorderLayout()
     jcefDigmaPanel.add(browserPanel, BorderLayout.CENTER)
+
+
+
+    ApplicationUISettingsChangeNotifier.getInstance(project).addSettingsChangeListener(object : SettingsChangeListener {
+        override fun systemFontChange(fontName: String) {
+            JCefBrowserUtil.sendRequestToChangeFont(fontName, jbCefBrowser)
+        }
+
+        override fun systemThemeChange(theme: Theme) {
+            JCefBrowserUtil.sendRequestToChangeUiTheme(theme, jbCefBrowser)
+        }
+
+        override fun editorFontChange(fontName: String) {
+            JCefBrowserUtil.sendRequestToChangeCodeFont(fontName, jbCefBrowser)
+        }
+    })
+
+
 
     return jcefDigmaPanel
 }

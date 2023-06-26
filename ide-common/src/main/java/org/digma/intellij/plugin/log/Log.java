@@ -35,6 +35,10 @@ public class Log {
         logger.warn(DIGMA + String.format(format.replace("{}", "%s"), args),e);
     }
 
+    public static void warnWithException(Logger logger, Project project,Throwable e, String format, Object... args) {
+        logger.warn(DIGMA_PROJECT + project.getName() + ": " + String.format(format.replace("{}", "%s"), args),e);
+    }
+
 
     public static void log(Consumer<String> consumer,Project project, String msg) {
         consumer.accept(DIGMA_PROJECT + project.getName() + ": " + msg);

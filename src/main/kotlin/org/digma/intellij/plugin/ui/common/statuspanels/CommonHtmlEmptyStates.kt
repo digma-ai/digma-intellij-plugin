@@ -21,6 +21,16 @@ import javax.swing.ScrollPaneConstants
 import javax.swing.SwingConstants
 
 
+fun createStartupEmptyStatePanel(project: Project):JPanel{
+    val icon = if (JBColor.isBright()) {
+        Laf.Icons.Common.FileLight
+    } else {
+        Laf.Icons.Common.FileDark
+    }
+    return createCommonEmptyStateWithIconTitleAndParagraphAndSlackLink(project,icon,"Nothing to show",
+        "Navigate to any code file in your workspace,<br>or click a recent activity,<br>to see runtime data and insights here.")
+}
+
 fun createNoFileEmptyStatePanel(project: Project):JPanel{
     val icon = if (JBColor.isBright()) {
         Laf.Icons.Common.FileLight

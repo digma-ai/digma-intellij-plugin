@@ -15,6 +15,7 @@ import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
+import org.digma.intellij.plugin.model.rest.assets.AssetsRequest;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
@@ -94,7 +95,7 @@ public class AnalyticsService implements Disposable {
      * the error that may happen is myConnectionLostFlag is a member of AnalyticsInvocationHandler is:
      * we got a connection error,myConnectionLostFlag is marked to true. user changes the url in settings,
      * AnalyticsInvocationHandler is replaced with a new instance and myConnectionLostFlag is false, the next successful
-     * call will not reset the status and we're locked in connection lost.
+     * call will not reset the status, and we're locked in connection lost.
      * when myConnectionLostFlag is a member of AnalyticsService as is here, it will not happen, it is a singleton
      * for the project and new instances of AnalyticsInvocationHandler will see its real state.
      */
@@ -127,7 +128,7 @@ public class AnalyticsService implements Disposable {
                 myApiToken = state.apiToken;
                 replaceClient(myApiUrl, myApiToken);
             }
-        });
+        },this);
     }
 
 
@@ -187,10 +188,7 @@ public class AnalyticsService implements Disposable {
         try {
             var environments =  analyticsProviderProxy.getEnvironments();
             var hostName = CommonUtils.getLocalHostname();
-            var result =  environments.stream().filter(o->!isEnvironmentLocal(o) || isLocalEnvironmentMine(o,  hostName))
-                    .collect(Collectors.toList());
-
-            return result;
+            return environments.stream().filter(o->!isEnvironmentLocal(o) || isLocalEnvironmentMine(o,  hostName)).toList();
         } catch (Exception e) {
             //getEnvironments should never throw exception.
             // it is called only from this class or from the Environment object and both can handle null.
@@ -364,6 +362,16 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getHtmlGraphForSpanScaling(spanHistogramQuery));
     }
 
+
+    public String getAssets() throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        return executeCatching(() ->
+                analyticsProviderProxy.getAssets(new AssetsRequest(env)));
+    }
+
+
+
+
     @Override
     public void dispose() {
         try {
@@ -495,7 +503,7 @@ public class AnalyticsService implements Disposable {
 
             } catch (InvocationTargetException e) {
 
-                //Note: when logging LOGGER.error idea will popup a red message which we don't want, so only report warn messages.
+                //Note: when logging LOGGER.error idea will pop up a red message which we don't want, so only report warn messages.
 
                 //handle only InvocationTargetException, other exceptions are probably a bug.
                 //log connection exceptions only the first time and show an error notification.
@@ -531,7 +539,7 @@ public class AnalyticsService implements Disposable {
                 message = getSslExceptionMessage(e);
             }
             if(isConnectionOK()){
-                //if more then one thread enter this section the worst that will happen is that we
+                //if more than one thread enter this section the worst that will happen is that we
                 // report the error more than once but connectionLost will be fired once because
                 // markConnectionLostAndNotify locks, marks and notifies only if connection ok.
                 if (isConnectionException) {
@@ -547,11 +555,6 @@ public class AnalyticsService implements Disposable {
                     NotificationUtil.notifyError(project, "<html>Error with Digma backend api for method " + method.getName() + ".<br> "
                             + message + ".<br> See logs for details.");
                 }
-
-                //if we got a connection lost it may be momentary,  calling environment.refreshNowOnBackground may fix the connection
-                // status. if not, the only impact is that another exception will be throws but it's not an issue because we
-                // are in an error state anyway.
-                environment.refreshNowOnBackground();
             }
             // status was not ok but it's a new error
             else if(errorReportingHelper.addIfNewError(e)){
@@ -578,24 +581,35 @@ public class AnalyticsService implements Disposable {
 
 
         private void resetConnectionLostAndNotifyIfNecessary() {
+
+
+            Log.log(LOGGER::debug, "resetConnectionLostAndNotifyIfNecessary called");
+
             //this is the critical section of the race condition, there is a performance penalty
             // for the locking , and if we recover from exception then also for the notification,
             // but only when recovering from connection lost, otherwise its very fast, and we are not a critical
             // multithreading application, so it's probably ok to lock in every API call
             // the reason for locking here and in markConnectionLostAndNotify is to avoid a situation were myConnectionLostFlag
-            // if marked but never reset and to make sure that is we notified connectionLost we will also notify when its gained back.
+            // if marked but never reset and to make sure that if we notified connectionLost we will also notify when its gained back.
             try{
                 //if connection is ok do nothing.
                 if (isConnectionOK()){
+                    Log.log(LOGGER::debug, "resetConnectionLostAndNotifyIfNecessary called, connection ok nothing to do.");
                     return;
                 }
+                Log.log(LOGGER::info, "acquiring lock to reset connection status after connection lost");
                 myConnectionLostLock.lock();
                 if (myConnectionLostFlag.get()) {
+                    Log.log(LOGGER::info, "resetting connection status after connection lost");
                     myConnectionLostFlag.set(false);
                     errorReportingHelper.reset();
                     myConnectionStatusNotifyAlarm.cancelAllRequests();
-                    myConnectionStatusNotifyAlarm
-                            .addRequest(() -> project.getMessageBus().syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC).connectionGained(),500);
+
+                    myConnectionStatusNotifyAlarm.addRequest(() -> {
+                        Log.log(LOGGER::info, "notifying connectionGained");
+                        project.getMessageBus().syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC).connectionGained();
+                    },500);
+
 
                     EDT.ensureEDT(() -> NotificationUtil.showNotification(project, "Digma: Connection reestablished !"));
                 }
@@ -608,19 +622,27 @@ public class AnalyticsService implements Disposable {
 
 
         private void markConnectionLostAndNotify() {
+
+            Log.log(LOGGER::debug, "markConnectionLostAndNotify called");
+
             //this is the second critical section of the race condition,
             // we are in error state so the performance penalty of locking is insignificant.
             try {
+                Log.log(LOGGER::info, "acquiring lock to mark connection lost");
                 myConnectionLostLock.lock();
-                //only mark and fire the event if connection is ok, avoid fireing the event more then once.
+                //only mark and fire the event if connection is ok, avoid firing the event more than once.
                 // this code block should be as fast as possible.
                 if (isConnectionOK()) {
+                    Log.log(LOGGER::info, "marking connection lost");
                     myConnectionLostFlag.set(true);
-                    //wait half a second because maybe the connection lost is momentary and it will be back
+                    //wait half a second because maybe the connection lost is momentary, and it will be back
                     // very soon
                     myConnectionStatusNotifyAlarm.cancelAllRequests();
                     myConnectionStatusNotifyAlarm
-                            .addRequest(() -> project.getMessageBus().syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC).connectionLost(), 500);
+                            .addRequest(() -> {
+                                Log.log(LOGGER::info, "notifying connectionLost");
+                                project.getMessageBus().syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC).connectionLost();
+                            }, 500);
                 }
             }finally {
                 if (myConnectionLostLock.isHeldByCurrentThread()){
@@ -636,11 +658,7 @@ public class AnalyticsService implements Disposable {
             while (ex != null && !(isConnectionUnavailableException(ex))) {
                 ex = ex.getCause();
             }
-            if (ex != null) {
-                return true;
-            }
-
-            return false;
+            return ex != null;
         }
 
 

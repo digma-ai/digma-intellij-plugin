@@ -7,6 +7,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
 import org.digma.intellij.plugin.model.rest.AboutResult;
+import org.digma.intellij.plugin.model.rest.assets.AssetsRequest;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
@@ -34,6 +35,7 @@ import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
+import retrofit2.converter.scalars.ScalarsConverterFactory;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.Headers;
@@ -156,6 +158,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
+    public String getAssets(AssetsRequest assetsRequest) {
+        return execute(() -> client.analyticsProvider.getAssets(assetsRequest));
+    }
+
+    @Override
     public VersionResponse getVersions(VersionRequest request) {
         return execute(() -> client.analyticsProvider.getVersions(request));
     }
@@ -245,6 +252,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
             Retrofit retrofit = new Retrofit.Builder()
                     .baseUrl(baseUrl)
                     .client(okHttpClient)
+                    //ScalarsConverterFactory must be the first, it supports serializing to plain String, see getAssets
+                    .addConverterFactory(ScalarsConverterFactory.create())
                     .addConverterFactory(jacksonFactory)
                     .validateEagerly(true)
                     .build();
@@ -443,6 +452,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @POST("/CodeAnalytics/codeObjects/span_navigation")
         Call<CodeObjectNavigation> getCodeObjectNavigation(@Body CodeObjectNavigationRequest codeObjectNavigationRequest);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/CodeAnalytics/codeObjects/assets")
+        Call<String> getAssets(@Body AssetsRequest assetsRequest);
 
         @Headers({
                 "Accept: application/+json",

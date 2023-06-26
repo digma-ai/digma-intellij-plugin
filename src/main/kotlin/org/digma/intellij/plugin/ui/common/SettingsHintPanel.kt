@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.common
 
+import com.intellij.codeInsight.hint.HintManager
 import com.intellij.codeInsight.hint.HintUtil
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.application.ApplicationManager
@@ -78,6 +79,7 @@ class SettingsHintPanel(project: Project) : JPanel() {
                 try {
                     MainToolWindowCardsController.getInstance(project).showWizard();
                     ToolWindowShower.getInstance(project).showToolWindow()
+                    HintManager.getInstance().hideAllHints()
                 } catch (ex: Exception) {
                     Log.log(logger::debug, "exception opening 'Onboarding Digma' message: {}. ", ex.message)
                 }
@@ -112,6 +114,7 @@ class SettingsHintPanel(project: Project) : JPanel() {
                     ApplicationManager.getApplication().invokeLater {
                         BrowserUtil.browse(DIGMA_SLACK_URL, project)
                     }
+                    HintManager.getInstance().hideAllHints()
                 } catch (ex: Exception) {
                     Log.log(logger::debug, "exception opening 'Digma Channel' link = {}, message: {}. ", DIGMA_SLACK_URL, ex.message)
                 }

@@ -7,6 +7,7 @@ import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import org.digma.intellij.plugin.model.rest.insights.EPNPlusSpansInsight
 import org.digma.intellij.plugin.model.rest.insights.EndpointBreakdownInsight
 import org.digma.intellij.plugin.model.rest.insights.EndpointDurationSlowdownInsight
+import org.digma.intellij.plugin.model.rest.insights.EndpointModelInViewInsight
 import org.digma.intellij.plugin.model.rest.insights.EndpointSchema
 import org.digma.intellij.plugin.model.rest.insights.EndpointSchema.Companion.CONSUMER_SCHEMA
 import org.digma.intellij.plugin.model.rest.insights.EndpointSchema.Companion.HTTP_SCHEMA
@@ -65,6 +66,8 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
             is NormalUsageInsight -> normalUsageInsightPanel(project, value.modelObject as NormalUsageInsight)
             is HighUsageInsight -> highUsageInsightPanel(project, value.modelObject as HighUsageInsight)
             is EPNPlusSpansInsight -> ePNPlusSpansPanel(project, value.modelObject as EPNPlusSpansInsight)
+            is EndpointModelInViewInsight -> mivPanel(project, value.modelObject as EndpointModelInViewInsight)
+
             is EndpointDurationSlowdownInsight -> endpointDurationSlowdownPanel(project, value.modelObject as EndpointDurationSlowdownInsight, panelsLayoutHelper)
             is EndpointBreakdownInsight -> endpointBreakdownPanel(project, value.modelObject as EndpointBreakdownInsight)
             is SpanNPlusOneInsight -> spanNPlusOneInsightPanel(project, value.modelObject as SpanNPlusOneInsight)

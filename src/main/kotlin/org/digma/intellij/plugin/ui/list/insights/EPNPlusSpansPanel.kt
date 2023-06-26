@@ -10,6 +10,7 @@ import org.digma.intellij.plugin.editor.updateListOfEntriesToDisplay
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.EPNPlusSpansInsight
+import org.digma.intellij.plugin.model.rest.insights.EndpointModelInViewInsight
 import org.digma.intellij.plugin.model.rest.insights.HighlyOccurringSpanInfo
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
@@ -26,6 +27,50 @@ import javax.swing.JPanel
 import javax.swing.SwingConstants
 
 private const val RECORDS_PER_PAGE_EPNPLUS = 3
+
+fun mivPanel(
+    project: Project,
+    insight: EndpointModelInViewInsight
+): JPanel {
+
+    val uniqueInsightId = insight.codeObjectId + insight.type
+    val lastPageNum: Int
+    var resultNPOnePanel: DigmaResettablePanel? = null
+    val paginationPanel = JPanel()
+    val nPOneSpansToDisplay = ArrayList<HighlyOccurringSpanInfo>()
+    val spansOfInsight = insight.spans
+
+    lastPageNum = countNumberOfPages(spansOfInsight.size, RECORDS_PER_PAGE_EPNPLUS)
+
+    resultNPOnePanel = object : DigmaResettablePanel() {
+        override fun reset() {
+            rebuildENPlusInsightRowsPanel(
+                resultNPOnePanel!!,
+                nPOneSpansToDisplay,
+                project
+            )
+            rebuildPaginationPanel(paginationPanel, lastPageNum,
+                spansOfInsight, resultNPOnePanel, nPOneSpansToDisplay, uniqueInsightId, RECORDS_PER_PAGE_EPNPLUS, project, insight.type)
+        }
+    }
+
+    updateListOfEntriesToDisplay(spansOfInsight, nPOneSpansToDisplay, getCurrentPageNumberForInsight(uniqueInsightId, lastPageNum), RECORDS_PER_PAGE_EPNPLUS, project)
+    buildENPlusInsightRowsPanel(resultNPOnePanel, nPOneSpansToDisplay, project)
+
+    val result = createInsightPanel(
+        project = project,
+        insight = insight,
+        title = "Model in View Query Detected",
+        description = asHtml("Query execution was detected during the view rendering."),
+        iconsList = listOf(Laf.Icons.Insight.N_PLUS_ONE),
+        bodyPanel = resultNPOnePanel,
+        buttons = listOf(getButtonToJaeger(project, insight)),
+        paginationComponent = buildPaginationRowPanel(lastPageNum, paginationPanel,
+            spansOfInsight, resultNPOnePanel, nPOneSpansToDisplay, uniqueInsightId, RECORDS_PER_PAGE_EPNPLUS, project, insight.type),
+    )
+    result.toolTipText = asHtml("Repeating select query pattern suggests N-Plus-One")
+    return result
+}
 
 fun ePNPlusSpansPanel(
         project: Project,
@@ -160,6 +205,13 @@ private fun nPOneSpanRowPanel(span: HighlyOccurringSpanInfo, project: Project): 
 }
 
 private fun getButtonToJaeger(project: Project, insight: EPNPlusSpansInsight): JButton? {
+    val spanName = insight.endpointSpanName()
+    val sampleTraceId = insight.spans.first().traceId
+    val traceSample = TraceSample(spanName, sampleTraceId)
+    return buildButtonToJaeger(project, "Trace", spanName, listOf(traceSample), InsightType.EndpointSpaNPlusOne)
+}
+
+private fun getButtonToJaeger(project: Project, insight: EndpointModelInViewInsight): JButton? {
     val spanName = insight.endpointSpanName()
     val sampleTraceId = insight.spans.first().traceId
     val traceSample = TraceSample(spanName, sampleTraceId)

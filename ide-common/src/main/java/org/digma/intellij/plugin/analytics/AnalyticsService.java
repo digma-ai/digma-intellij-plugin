@@ -187,8 +187,10 @@ public class AnalyticsService implements Disposable {
         try {
             var environments =  analyticsProviderProxy.getEnvironments();
             var hostName = CommonUtils.getLocalHostname();
-            return environments.stream().filter(o->!isEnvironmentLocal(o) || isLocalEnvironmentMine(o,  hostName))
+            var result =  environments.stream().filter(o->!isEnvironmentLocal(o) || isLocalEnvironmentMine(o,  hostName))
                     .collect(Collectors.toList());
+
+            return result;
         } catch (Exception e) {
             //getEnvironments should never throw exception.
             // it is called only from this class or from the Environment object and both can handle null.

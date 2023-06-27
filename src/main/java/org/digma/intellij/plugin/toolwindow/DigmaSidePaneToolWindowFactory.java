@@ -28,7 +28,7 @@ import java.awt.*;
 import java.util.function.Supplier;
 
 import static org.digma.intellij.plugin.ui.common.InstallationWizardSidePanelWindowPanelKt.createInstallationWizardSidePanelWindowPanel;
-import static org.digma.intellij.plugin.ui.common.MainSidePaneWindowPanelKt.createMainSidePaneWindowPanel;
+import static org.digma.intellij.plugin.ui.common.MainToolWindowPanelKt.createMainToolWindowPanel;
 
 
 /**
@@ -63,8 +63,8 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         ToolWindowShower.getInstance(project).setToolWindow(toolWindow);
 
         var contentPanel = new ContentPanel(project);
-        var mainSidePaneWindowPanel = createMainSidePaneWindowPanel(project,contentPanel);
-        var cardsPanel = createCardsPanel(project,mainSidePaneWindowPanel,AnalyticsService.getInstance(project));
+        var mainToolWindowPanel = createMainToolWindowPanel(project,contentPanel);
+        var cardsPanel = createCardsPanel(project,mainToolWindowPanel,AnalyticsService.getInstance(project));
         var mainContent =  ContentFactory.getInstance().createContent(cardsPanel, null, false);
         toolWindow.getContentManager().addContent(mainContent);
 

@@ -24,10 +24,10 @@ import java.util.concurrent.locks.ReentrantLock
 import javax.swing.BorderFactory
 import javax.swing.BoxLayout
 
-class TabsPanel(
+class InsightsPanel(
         project: Project
 ) : DigmaResettablePanel() {
-    private val logger: Logger = Logger.getInstance(TabsPanel::class.java)
+    private val logger: Logger = Logger.getInstance(InsightsPanel::class.java)
 
     private val project: Project
     private val rebuildPanelLock = ReentrantLock()

@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.common.modelChangeListener;
+package org.digma.intellij.plugin.model;
 
 import com.intellij.util.messages.Topic;
 import org.digma.intellij.plugin.ui.model.PanelModel;

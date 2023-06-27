@@ -8,7 +8,7 @@ import javax.swing.JPanel
 
 class ContentPanel(project: Project) : JPanel() {
 
-    private val insightsPanel = TabsPanel(project)
+    private val insightsPanel = InsightsPanel(project)
     private val homePanel = HomePanel(project)
 
 

@@ -6,15 +6,18 @@ import com.intellij.ui.components.JBTabbedPane
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.assets.AssetsPanel
 import org.digma.intellij.plugin.assets.AssetsService
-import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import org.digma.intellij.plugin.ui.service.SummaryViewService
-import org.digma.intellij.plugin.ui.service.TabsHelper
-import org.digma.intellij.plugin.ui.summary.summaryPanel
+import org.digma.intellij.plugin.ui.summary.dashboardPanel
 import java.awt.Component
 import javax.swing.BoxLayout
+import javax.swing.JPanel
 
-class HomePanel(project: Project) : DigmaResettablePanel() {
+
+private const val DASHBOARD_TAB_NAME = "Dashboard"
+private const val ASSETS_TAB_NAME = "Assets"
+
+class HomePanel(project: Project) : JPanel() {
 
 
     private val tabbedPane = JBTabbedPane()
@@ -31,27 +34,19 @@ class HomePanel(project: Project) : DigmaResettablePanel() {
         tabbedPane.border = JBUI.Borders.empty()
 
         val assetsPanel = createAssetsPanel(project);
-        tabbedPane.addTab(TabsHelper.ASSETS_TAB_NAME, assetsPanel)
+        tabbedPane.addTab(ASSETS_TAB_NAME, assetsPanel)
 
-        val summaryPanel = createSummaryPanel(project);
-        tabbedPane.addTab(TabsHelper.DASHBOARD_TAB_NAME, summaryPanel)
+        val dashboardPanel = createDashboardPanel(project);
+        tabbedPane.addTab(DASHBOARD_TAB_NAME, dashboardPanel)
     }
 
 
-
-    override fun reset() {
-
-    }
-
-
-    private fun createAssetsPanel(project: Project): Component? {
+    private fun createAssetsPanel(project: Project): Component {
         return AssetsPanel(project,project.service<AssetsService>())
     }
 
-
-
-    private fun createSummaryPanel(project: Project): DigmaTabPanel {
-        val summaryPanel = summaryPanel(project)
+    private fun createDashboardPanel(project: Project): DigmaTabPanel {
+        val summaryPanel = dashboardPanel(project)
         val summaryViewService = project.getService(SummaryViewService::class.java)
         summaryViewService.panel = summaryPanel
         return summaryPanel

@@ -1,136 +1,80 @@
 package org.digma.intellij.plugin.ui.common
 
-import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.rd.util.launchBackground
 import com.intellij.ui.components.JBTabbedPane
 import com.intellij.util.ui.JBUI.Borders.empty
-import com.jetbrains.rd.util.lifetime.LifetimeDefinition
-import org.digma.intellij.plugin.analytics.AnalyticsService
-import org.digma.intellij.plugin.analytics.TabsChanged
-import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.errors.errorsPanel
 import org.digma.intellij.plugin.ui.insights.insightsPanel
-import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import org.digma.intellij.plugin.ui.service.ErrorsViewService
 import org.digma.intellij.plugin.ui.service.InsightsViewService
-import org.digma.intellij.plugin.ui.service.TabsHelper
-import java.util.concurrent.locks.ReentrantLock
-import javax.swing.BorderFactory
 import javax.swing.BoxLayout
+import javax.swing.JPanel
 
-class InsightsPanel(
-        project: Project
-) : DigmaResettablePanel() {
-    private val logger: Logger = Logger.getInstance(InsightsPanel::class.java)
 
-    private val project: Project
-    private val rebuildPanelLock = ReentrantLock()
-    private val tabsHelper = TabsHelper.getInstance(project)
-    private val tabbedPane = JBTabbedPane()
+private const val INSIGHTS_TAB_NAME = "Insights"
+private const val ERRORS_TAB_NAME = "Errors"
+private const val ERROR_DETAILS_TAB_NAME = "Error Details"
+private const val INSIGHTS_TAB_INDEX = 0
+private const val ERRORS_TAB_INDEX = 1
+
+class InsightsPanel(private val project: Project) : JPanel() {
 
     init {
-        this.project = project
         isOpaque = false
         layout = BoxLayout(this, BoxLayout.Y_AXIS)
         border = empty()
 
-        rebuildInBackground()
+        val tabbedPane = getTabsPanel()
+        this.add(tabbedPane)
 
-        project.messageBus.connect(project.getService(AnalyticsService::class.java))
-                .subscribe(TabsChanged.TABS_CHANGED_TOPIC, TabsChanged { newTabIndex ->
-                    EDT.ensureEDT {
-                        var index = newTabIndex
-                        if (-1 == newTabIndex) {
-                            tabbedPane.setTitleAt(1, TabsHelper.DETAILED_ERRORS_TAB_NAME)
-                            index = 1
-                        } else {
-                            tabbedPane.setTitleAt(1, TabsHelper.DEFAULT_ERRORS_TAB_NAME)
-                        }
-                        tabbedPane.selectedIndex = index
-                    }
-                })
+        project.service<InsightsAndErrorsTabsHelper>().setTabbedPane(tabbedPane,ERRORS_TAB_NAME,ERROR_DETAILS_TAB_NAME)
+
     }
 
-    override fun reset() {
-        rebuildInBackground()
-    }
-
-    private fun rebuildInBackground() {
-        val lifetimeDefinition = LifetimeDefinition()
-        lifetimeDefinition.lifetime.launchBackground {
-            rebuildPanelLock.lock()
-            Log.log(logger::debug, "Lock acquired for rebuild Tabs panel process.")
-            try {
-                rebuild()
-            } finally {
-                rebuildPanelLock.unlock()
-                Log.log(logger::debug, "Lock released for rebuild Tabs panel process.")
-                lifetimeDefinition.terminate()
-            }
-        }
-    }
-
-    private fun rebuild() {
-        ApplicationManager.getApplication().invokeLater {
-            removeExistingComponentsIfPresent()
-            buildTabsPanelComponents()
-            revalidate()
-        }
-    }
-
-    private fun removeExistingComponentsIfPresent() {
-        if (components.isNotEmpty()) {
-            this.components.forEach {
-                this.remove(it)
-            }
-        }
-    }
-
-    private fun buildTabsPanelComponents() {
-        this.add(getTabsPanel())
-    }
 
     private fun getTabsPanel(): JBTabbedPane {
+        val tabbedPane = JBTabbedPane()
         tabbedPane.isOpaque = false
         tabbedPane.border = empty()
-        val insightsPanel = createInsightsPanel(project)
 
-        insightsPanel.border = BorderFactory.createEmptyBorder(0, 0, 0, 0) // Set the border of the panel to empty
-        tabbedPane.addTab(TabsHelper.INSIGHTS_TAB_NAME, insightsPanel)
+        val insightsPanel = createInsightsPanel(project)
+        insightsPanel.border = empty()
+        tabbedPane.addTab(INSIGHTS_TAB_NAME, insightsPanel)
+        project.service<InsightsAndErrorsTabsHelper>().setInsightsTabIndex(INSIGHTS_TAB_INDEX)
 
         val errorsPanel = createErrorsPanel(project)
-        if (tabsHelper.isErrorDetailsOn()) {
-            tabbedPane.addTab(TabsHelper.DETAILED_ERRORS_TAB_NAME, errorsPanel)
-        } else {
-            tabbedPane.addTab(TabsHelper.DEFAULT_ERRORS_TAB_NAME, errorsPanel)
-        }
+        errorsPanel.border = empty()
+        tabbedPane.addTab(ERRORS_TAB_NAME, errorsPanel)
+        project.service<InsightsAndErrorsTabsHelper>().setErrorsTabIndex(ERRORS_TAB_INDEX)
 
-        tabbedPane.border = BorderFactory.createEmptyBorder()
+        tabbedPane.border = empty()
 
         var currentTabIndex: Int
 
-        // Add a listener to the JBTabbedPane to track tab changes
+
         tabbedPane.addChangeListener {
-            // Get the index of the currently selected tab
+
+            val tabsHelper = project.service<InsightsAndErrorsTabsHelper>()
+
+            //if error detains is on and user clicks the insights tab we need to close
+            // error details.
+            //calling ErrorsActionsService.closeErrorDetails will in turn call
+            //InsightsAndErrorsTabsHelper.errorDetailsOff which will change the tab title
             currentTabIndex = tabbedPane.selectedIndex
-            if (tabsHelper.isErrorDetailsOn() && currentTabIndex != 1) {
-                // close the detailed error view and change error tab name if we navigate to different tab
-                val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
-                actionListener.closeErrorDetailsWithoutNotify()
-                tabbedPane.setTitleAt(1, TabsHelper.DEFAULT_ERRORS_TAB_NAME)
+            if (tabsHelper.isErrorDetailsOn() && tabbedPane.selectedIndex == ERRORS_TAB_INDEX) {
+                project.service<ErrorsActionsService>().closeErrorDetails()
             }
 
-            ActivityMonitor.getInstance(project).registerCustomEvent("tabs selection-changed",  mapOf(
-                "tab.name" to tabbedPane.getTitleAt(currentTabIndex)
-            ))
-            // Do something with the tab indexes, such as update UI or perform logic
-            tabsHelper.currentTabIndex = currentTabIndex
+            ActivityMonitor.getInstance(project).registerCustomEvent(
+                "tabs selection-changed", mapOf(
+                    "tab.name" to tabbedPane.getTitleAt(currentTabIndex)
+                )
+            )
         }
 
         return tabbedPane

@@ -1,12 +1,12 @@
 package org.digma.intellij.plugin.ui.service
 
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.wm.ToolWindow
-import com.intellij.ui.content.Content
 import com.intellij.util.messages.MessageBusConnection
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper
 import org.digma.intellij.plugin.ui.model.NOT_SUPPORTED_OBJECT_MSG
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 
@@ -15,12 +15,11 @@ abstract class AbstractViewService(val project: Project) : Disposable {
 
     //these may be null if the tool window did not open yet
     var panel: DigmaTabPanel? = null
-    private var toolWindow: ToolWindow? = null
-    private var toolWindowContent: Content? = null
+//    private var toolWindow: ToolWindow? = null
+//    private var toolWindowContent: Content? = null
 
     private val analyticsConnectionEventsConnection: MessageBusConnection = project.messageBus.connect()
 
-    protected val tabsHelper = TabsHelper.getInstance(project)
 
     init {
         //subscribe to connection lost/gained , call doUpdateUi() on each event so that the no connection card will show or hide
@@ -42,13 +41,14 @@ abstract class AbstractViewService(val project: Project) : Disposable {
 
 
     fun doConnectionLost() {
+        val insightsAndErrorsTabsHelper = project.service<InsightsAndErrorsTabsHelper>()
         //if a view needs to do something when connection lost can override this method and don't forget to call super
-        if (tabsHelper.isErrorDetailsOn()) {
-            tabsHelper.errorDetailsOff()
+        if (insightsAndErrorsTabsHelper.isErrorDetailsOn()) {
+            insightsAndErrorsTabsHelper.errorDetailsOff()
             if (this is ErrorsViewService) {
                 this.closeErrorDetails()
             }
-            tabsHelper.errorDetailsClosed()
+            insightsAndErrorsTabsHelper.errorDetailsClosed()
         }
     }
 
@@ -62,37 +62,9 @@ abstract class AbstractViewService(val project: Project) : Disposable {
     //in the view until its closed. there may be exceptions, for example the summary view can reload while error details
     // is on but setVisible should not run.
     open fun canUpdateUI(): Boolean {
-        return !tabsHelper.isErrorDetailsOn()
+        return !project.service<InsightsAndErrorsTabsHelper>().isErrorDetailsOn()
     }
 
-    open fun canSetVisible(): Boolean {
-        return !tabsHelper.isErrorDetailsOn()
-    }
-
-
-    fun setVisible() {
-        if (!canSetVisible()) {
-            return
-        }
-
-        val r = Runnable {
-            toolWindow?.contentManager?.setSelectedContent(toolWindowContent!!, false)
-            toolWindowContent?.component?.revalidate()
-            panel?.reset()
-        }
-
-        EDT.ensureEDT(r)
-    }
-
-    @Suppress("unused")
-    fun isVisible():Boolean{
-        return toolWindow?.contentManager?.selectedContent === toolWindowContent
-    }
-
-    fun setContent(toolWindow: ToolWindow, content: Content) {
-        this.toolWindow = toolWindow
-        this.toolWindowContent = content
-    }
 
 
     fun updateUi() {
@@ -117,16 +89,6 @@ abstract class AbstractViewService(val project: Project) : Disposable {
 
             val r = Runnable {
                 panel?.reset()
-
-                if (toolWindowContent != null) {
-                    // there is no need to display the tab name for now as we have only one tab
-                    // toolWindowContent?.displayName = getViewDisplayName()
-                    //reset focusable component methods, some panels are dynamic in what they return, see for example NoConnectionWrapper
-                    toolWindowContent?.setPreferredFocusedComponent { panel?.getPreferredFocusedComponent() }
-                    toolWindowContent?.preferredFocusableComponent = panel?.getPreferredFocusableComponent()
-                    toolWindowContent?.component?.revalidate()
-                    toolWindow?.component?.revalidate()
-                }
             }
 
             EDT.ensureEDT(r)

@@ -16,7 +16,7 @@ import javax.swing.JPanel
 private const val EMPTY_CARD_NAME = "EmptySummary"
 private const val LIST_CARD_NAME = "FullSummary"
 
-fun summaryPanel(project: Project): DigmaTabPanel {
+fun dashboardPanel(project: Project): DigmaTabPanel {
 
     val model = SummaryViewService.getInstance(project).model
 

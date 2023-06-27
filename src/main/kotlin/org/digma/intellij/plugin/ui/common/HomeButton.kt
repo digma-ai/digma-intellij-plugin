@@ -84,6 +84,7 @@ class HomeButton(val project: Project, private val cardsPanel: JPanel) : JToggle
             (cardsPanel.layout as CardLayout).show(cardsPanel, SCOPE_LINE_PANEL)
             project.service<MainToolWindowCardsController>().showInsights()
         }
+        cardsPanel.revalidate()
     }
 
 }

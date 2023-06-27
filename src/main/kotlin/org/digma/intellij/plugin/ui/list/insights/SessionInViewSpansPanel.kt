@@ -63,7 +63,7 @@ fun sessionInViewPanel(
         paginationComponent = buildPaginationRowPanel(lastPageNum, paginationPanel,
             spansOfInsight, resultSessionInViewPanel, sessionInViewSpansToDisplay, uniqueInsightId, RECORDS_PER_PAGE_SIV, project, insight.type),
     )
-    result.toolTipText = asHtml("Repeating select query pattern suggests N-Plus-One")
+    result.toolTipText = asHtml("Queries detected in rendering span suggestion a Session in View anti-pattern")
     return result
 }
 

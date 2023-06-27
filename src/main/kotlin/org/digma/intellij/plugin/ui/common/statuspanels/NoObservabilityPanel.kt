@@ -119,10 +119,14 @@ fun createNoObservabilityPanel(project: Project, insightsModel: InsightsModel): 
     val scrollPane = JBScrollPane()
     scrollPane.horizontalScrollBarPolicy = ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
     scrollPane.setViewportView(componentsPanel)
+    scrollPane.border = JBUI.Borders.empty()
+    scrollPane.isOpaque = false
+
 
     resettablePanel.layout = BorderLayout()
     resettablePanel.add(scrollPane, BorderLayout.CENTER)
-
+    resettablePanel.isOpaque = false
+    resettablePanel.border = JBUI.Borders.empty()
     autoFixLink.defineTheAction(resettablePanel, workingOnItLabel)
 
     return resettablePanel

@@ -55,6 +55,8 @@ fun createLoadingInsightsPanel(): JPanel {
 private fun createSimpleEmptyStatePanel(icon:Icon,text: String): JPanel {
 
     val panel = JPanel(GridBagLayout())
+    panel.isOpaque = false
+    panel.border = JBUI.Borders.empty()
 
     val constraints = GridBagConstraints()
 
@@ -75,8 +77,6 @@ private fun createSimpleEmptyStatePanel(icon:Icon,text: String): JPanel {
     textLabel.horizontalTextPosition = SwingConstants.CENTER
     panel.add(textLabel,constraints)
 
-    panel.isOpaque = false
-    panel.border = JBUI.Borders.empty()
 
     return panel
 }

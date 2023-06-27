@@ -44,3 +44,4 @@ constructor(
 ) : EndpointInsight {
     override val type: InsightType = InsightType.EndpointSpaNPlusOne
 }
+

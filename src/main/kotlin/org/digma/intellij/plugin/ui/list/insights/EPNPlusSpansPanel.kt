@@ -10,7 +10,9 @@ import org.digma.intellij.plugin.editor.updateListOfEntriesToDisplay
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.EPNPlusSpansInsight
+import org.digma.intellij.plugin.model.rest.insights.EndpointSessionInViewInsight
 import org.digma.intellij.plugin.model.rest.insights.HighlyOccurringSpanInfo
+import org.digma.intellij.plugin.model.rest.insights.SessionInViewSpanInfo
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.spanBold
@@ -26,6 +28,7 @@ import javax.swing.JPanel
 import javax.swing.SwingConstants
 
 private const val RECORDS_PER_PAGE_EPNPLUS = 3
+
 
 fun ePNPlusSpansPanel(
         project: Project,
@@ -143,6 +146,8 @@ private fun buildENPlusInsightRowsPanel(
     }
 }
 
+
+
 private fun rebuildENPlusInsightRowsPanel(
         nPOnePanel: DigmaResettablePanel,
         nPOneSpansToDisplay: List<HighlyOccurringSpanInfo>,
@@ -152,6 +157,8 @@ private fun rebuildENPlusInsightRowsPanel(
     buildENPlusInsightRowsPanel(nPOnePanel, nPOneSpansToDisplay, project)
 }
 
+
+
 private fun nPOneSpanRowPanel(span: HighlyOccurringSpanInfo, project: Project): JPanel {
     val resultPanel = createDefaultBoxLayoutYAxisPanel()
     resultPanel.add(getMainDescriptionPanel(span, project))
@@ -159,9 +166,11 @@ private fun nPOneSpanRowPanel(span: HighlyOccurringSpanInfo, project: Project): 
     return resultPanel
 }
 
+
 private fun getButtonToJaeger(project: Project, insight: EPNPlusSpansInsight): JButton? {
     val spanName = insight.endpointSpanName()
     val sampleTraceId = insight.spans.first().traceId
     val traceSample = TraceSample(spanName, sampleTraceId)
     return buildButtonToJaeger(project, "Trace", spanName, listOf(traceSample), InsightType.EndpointSpaNPlusOne)
 }
+

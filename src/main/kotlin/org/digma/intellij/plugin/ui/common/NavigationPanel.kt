@@ -256,7 +256,7 @@ class NavigationPanel(
     }
 
     private fun showSettingsMessage(threeDotsIcon: JLabel, project: Project) {
-        HintManager.getInstance().showHint(SettingsHintPanel(project), RelativePoint.getSouthWestOf(threeDotsIcon), HintManager.HIDE_BY_ESCAPE, 5000)
+        HintManager.getInstance().showHint(SettingsHintPanel(project), RelativePoint.getSouthWestOf(threeDotsIcon), HintManager.HIDE_BY_ESCAPE, 60000)
     }
 
     override fun dispose() {

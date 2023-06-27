@@ -15,8 +15,6 @@ abstract class AbstractViewService(val project: Project) : Disposable {
 
     //these may be null if the tool window did not open yet
     var panel: DigmaTabPanel? = null
-//    private var toolWindow: ToolWindow? = null
-//    private var toolWindowContent: Content? = null
 
     private val analyticsConnectionEventsConnection: MessageBusConnection = project.messageBus.connect()
 

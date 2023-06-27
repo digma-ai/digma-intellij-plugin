@@ -172,7 +172,7 @@ class EnvironmentsCombo(val project: Project, navigationPanel: NavigationPanel) 
                 return String.CASE_INSENSITIVE_ORDER.compare(env1.text,env2.text)
             }
             if (env1.hasUsage){
-                return -11
+                return -1
             }
             if (env2.hasUsage){
                 return 1

@@ -33,6 +33,8 @@ class EnvironmentsCombo(val project: Project, navigationPanel: NavigationPanel) 
         isOpaque = false
         renderer = MyRenderer()
         cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        isSwingPopup = false
+
         buildAndUpdateModel()
 
 
@@ -87,6 +89,7 @@ class EnvironmentsCombo(val project: Project, navigationPanel: NavigationPanel) 
 
         project.messageBus.connect(myParentDisposable).subscribe(
             ModelChangeListener.MODEL_CHANGED_TOPIC, ModelChangeListener {
+                if (isPopupVisible) return@ModelChangeListener
                 buildAndUpdateModel()
             })
 

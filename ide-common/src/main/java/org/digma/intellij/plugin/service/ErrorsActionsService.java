@@ -56,6 +56,10 @@ public class ErrorsActionsService{
      */
     private void showErrorDetails(@NotNull String uid,boolean rememberCurrentScope) {
 
+        //maybe there is already an error showing, must set to off before updating the model \
+        // because AbstractViewService.canUpdateUI will not let update if errorDetailsOn
+        insightsAndErrorsTabsHelper.errorDetailsOffNoTitleChange();
+
         insightsAndErrorsTabsHelper.rememberCurrentTab();
         insightsAndErrorsTabsHelper.switchToErrorsTab();
 

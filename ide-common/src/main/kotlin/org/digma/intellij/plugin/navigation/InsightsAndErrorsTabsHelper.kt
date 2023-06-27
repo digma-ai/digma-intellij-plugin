@@ -69,6 +69,10 @@ class InsightsAndErrorsTabsHelper(val project: Project) {
         }
     }
 
+    fun errorDetailsOffNoTitleChange() {
+        errorDetailsOn = false
+    }
+
     fun isErrorDetailsOn(): Boolean {
         return errorDetailsOn
     }

@@ -5,7 +5,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.navigation.HomeSwitcherService
-import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import java.awt.CardLayout
 import java.awt.Cursor
@@ -59,7 +58,6 @@ class HomeButton(val project: Project, private val cardsPanel: JPanel) : JToggle
         if (isSelected) changeState()
 
         addChangeListener {
-            service<PersistenceService>().state.homeButtonSelected = isSelected
             changeState()
         }
 

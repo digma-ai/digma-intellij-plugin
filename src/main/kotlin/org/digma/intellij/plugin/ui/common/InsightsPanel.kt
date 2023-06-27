@@ -65,14 +65,13 @@ class InsightsPanel(private val project: Project) : JPanel() {
             // error details.
             //calling ErrorsActionsService.closeErrorDetails will in turn call
             //InsightsAndErrorsTabsHelper.errorDetailsOff which will change the tab title
-            currentTabIndex = tabbedPane.selectedIndex
-            if (tabsHelper.isErrorDetailsOn() && tabbedPane.selectedIndex == ERRORS_TAB_INDEX) {
+            if (tabsHelper.isErrorDetailsOn() && tabbedPane.selectedIndex == INSIGHTS_TAB_INDEX) {
                 project.service<ErrorsActionsService>().closeErrorDetails()
             }
 
             ActivityMonitor.getInstance(project).registerCustomEvent(
                 "tabs selection-changed", mapOf(
-                    "tab.name" to tabbedPane.getTitleAt(currentTabIndex)
+                    "tab.name" to tabbedPane.getTitleAt(tabbedPane.selectedIndex)
                 )
             )
         }

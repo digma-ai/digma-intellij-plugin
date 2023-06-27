@@ -28,7 +28,7 @@ enum class InsightType {
     HighUsage,
     SlowEndpoint,
     EndpointSpaNPlusOne,
-    ModelInViewQuery,
+    EndpointSessionInView,
     EndpointDurationSlowdown,
     EndpointBreakdown,
     SpaNPlusOne,

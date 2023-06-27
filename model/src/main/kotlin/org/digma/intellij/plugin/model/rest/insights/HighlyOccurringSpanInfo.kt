@@ -16,3 +16,4 @@ constructor(
         val duration: Duration,
         val fraction: Double,
 )
+

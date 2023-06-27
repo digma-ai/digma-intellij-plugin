@@ -67,6 +67,8 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         var mainContent =  ContentFactory.getInstance().createContent(cardsPanel, null, false);
         toolWindow.getContentManager().addContent(mainContent);
 
+        //start at home
+        project.getService(MainToolWindowCardsController.class).showHome();
 
         //the mainContent is added by default to the tool window. it will be replaced if we need to show
         // the wizard.
@@ -105,6 +107,7 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         cardsPanel.add(noConnectionPanel, MainToolWindowCardsController.MainWindowCard.NO_CONNECTION.name());
         cardLayout.addLayoutComponent(noConnectionPanel, MainToolWindowCardsController.MainWindowCard.NO_CONNECTION.name());
 
+        //start at home
         cardLayout.show(cardsPanel, MainToolWindowCardsController.MainWindowCard.MAIN.name());
 
         return cardsPanel;

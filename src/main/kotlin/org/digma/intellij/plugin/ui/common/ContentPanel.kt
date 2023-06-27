@@ -22,6 +22,9 @@ class ContentPanel(project: Project) : JPanel() {
         add(homePanel, MainToolWindowCardsController.ContentCard.HOME.name)
         cardLayout.addLayoutComponent(insightsPanel, MainToolWindowCardsController.ContentCard.INSIGHTS.name)
         cardLayout.addLayoutComponent(homePanel, MainToolWindowCardsController.ContentCard.HOME.name)
+
+        //start at home
+        cardLayout.show(this,MainToolWindowCardsController.ContentCard.HOME.name)
     }
 
 

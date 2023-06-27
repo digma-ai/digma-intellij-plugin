@@ -54,8 +54,10 @@ class HomeButton(val project: Project, private val cardsPanel: JPanel) : JToggle
         background = Laf.Colors.TRANSPARENT
         isSelected = true
 
-        //only change if home is pre-selected from persistence
-        if (isSelected) changeState()
+        //at this stage MainToolWindowCardsController will probably do nothing because it's not initialized
+        // yet, this is still construction time. but all cards start at home so it's probably ok.
+        // search the project for 'start at home' to see cards that should initialize to start at home
+        changeState()
 
         addChangeListener {
             changeState()

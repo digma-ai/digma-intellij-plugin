@@ -56,7 +56,10 @@ public final class AssetsService implements Disposable {
 
     public String getAssets() {
         try {
-            return AnalyticsService.getInstance(project).getAssets();
+            Log.log(logger::debug, project, "got get assets request");
+            String assets = AnalyticsService.getInstance(project).getAssets();
+            Log.log(logger::debug, project, "got assets [{}]", assets);
+            return assets;
         } catch (AnalyticsServiceException e) {
             Log.warnWithException(logger,project,e,"Error loading assets {}",e.getMessage());
             return "";
@@ -64,6 +67,7 @@ public final class AssetsService implements Disposable {
     }
 
     public void showAsset(String spanId) {
+        Log.log(logger::debug, project, "showAsset called");
         project.getService(HomeSwitcherService.class).switchToInsights();
         project.getService(InsightsViewOrchestrator.class).showInsightsForCodelessSpan(spanId);
         project.getService(InsightsAndErrorsTabsHelper.class).switchToInsightsTab();

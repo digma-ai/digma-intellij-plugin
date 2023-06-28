@@ -46,7 +46,7 @@ public class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter i
             @Override
             public void environmentChanged(String newEnv, boolean refreshInsightsView) {
                 try {
-                    pushAssets(jbCefBrowser.getCefBrowser(),objectMapper);
+                    pushAssetsOnEnvironmentChange(jbCefBrowser.getCefBrowser(), objectMapper);
                 } catch (JsonProcessingException e) {
                     Log.debugWithException(LOGGER, e, "Exception in pushAssets ");
                 }
@@ -59,6 +59,7 @@ public class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter i
         });
     }
 
+
     @Override
     public boolean onQuery(CefBrowser browser, CefFrame frame, long queryId, String request, boolean persistent, CefQueryCallback callback) {
 
@@ -68,7 +69,7 @@ public class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter i
                 var jsonNode = objectMapper.readTree(request);
                 String action = jsonNode.get("action").asText();
                 switch (action) {
-                    case "ASSETS/GET_DATA" -> pushAssets(browser, objectMapper);
+                    case "ASSETS/GET_DATA" -> pushAssetsFromGetData(browser, objectMapper);
 
                     case "ASSETS/GO_TO_ASSET" -> goToAsset(jsonNode);
 
@@ -108,7 +109,7 @@ public class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter i
 
 
     private synchronized void pushAssets(CefBrowser browser, ObjectMapper objectMapper) throws JsonProcessingException {
-        Log.log(LOGGER::debug, project, "got ASSETS/GET_DATA message");
+        Log.log(LOGGER::debug, project, "pushAssets called");
         var payload = objectMapper.readTree(AssetsService.getInstance(project).getAssets());
         var message = new SetAssetsDataMessage("digma", "ASSETS/SET_DATA", payload);
         Log.log(LOGGER::debug, project, "sending ASSETS/SET_DATA message");
@@ -118,6 +119,16 @@ public class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter i
                 0);
     }
 
+
+    private void pushAssetsFromGetData(CefBrowser browser, ObjectMapper objectMapper) throws JsonProcessingException {
+        Log.log(LOGGER::debug, project, "got ASSETS/GET_DATA message");
+        pushAssets(browser, objectMapper);
+    }
+
+    private void pushAssetsOnEnvironmentChange(CefBrowser cefBrowser, ObjectMapper objectMapper) throws JsonProcessingException {
+        Log.log(LOGGER::debug, project, "pushAssetsOnEnvironmentChange called");
+        pushAssets(cefBrowser, objectMapper);
+    }
 
 
     void sendRequestToChangeUiTheme(@NotNull Theme theme) {

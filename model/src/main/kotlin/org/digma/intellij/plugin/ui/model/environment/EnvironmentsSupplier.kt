@@ -1,14 +1,11 @@
 package org.digma.intellij.plugin.ui.model.environment
 
-import org.jetbrains.annotations.NotNull
-
 interface EnvironmentsSupplier {
 
-    @NotNull
     fun getEnvironments(): List<String>
-    fun setCurrent(@NotNull selectedItem: String?)
+    fun setCurrent(selectedItem: String?)
 
-    fun setCurrent(@NotNull selectedItem: String?,forceChange: Boolean)
+    fun setCurrent(selectedItem: String?,forceChange: Boolean)
 
     /**
      * a variant of setCurrent that notifies all listeners not to update the insights view. and will run a task right

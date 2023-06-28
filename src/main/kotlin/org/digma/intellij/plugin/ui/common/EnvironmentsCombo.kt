@@ -45,21 +45,22 @@ class EnvironmentsCombo(val project: Project, navigationPanel: NavigationPanel) 
                 return@ItemListener
             }
 
-            val selected = (it.item as EnvItem).text
-            val currentEnv = project.service<AnalyticsService>().environment.getCurrent()
-            if (!StringUtils.equals(currentEnv, selected)) {
-                selectionAlarm.cancelAllRequests()
-                selectionAlarm.addRequest({
-                    //actually setting environment here will cause an environmentChanged which is
-                    // handled also here by this combo, and it should be the trigger to change back the cursor
-                    // and enable
-                    cursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR)
-                    navigationPanel.cursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR)
-                    isEnabled = false
-                    project.service<AnalyticsService>().environment.setCurrent(selected)
-                }, 100)
+            it.item?.let { item ->
+                val selected = (item as EnvItem).text
+                val currentEnv = project.service<AnalyticsService>().environment.getCurrent()
+                if (!StringUtils.equals(currentEnv, selected)) {
+                    selectionAlarm.cancelAllRequests()
+                    selectionAlarm.addRequest({
+                        //actually setting environment here will cause an environmentChanged which is
+                        // handled also here by this combo, and it should be the trigger to change back the cursor
+                        // and enable
+                        cursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR)
+                        navigationPanel.cursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR)
+                        isEnabled = false
+                        project.service<AnalyticsService>().environment.setCurrent(selected)
+                    }, 100)
+                }
             }
-
         })
 
 
@@ -70,8 +71,12 @@ class EnvironmentsCombo(val project: Project, navigationPanel: NavigationPanel) 
                 navigationPanel.cursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR)
                 isEnabled = true
 
+                if (selectedItem == null || newEnv == null){
+                    return
+                }
+
                 //otherwise we have a stack overflow because selection will change environment too
-                if ((selectedItem as EnvItem).text == newEnv){
+                if ((selectedItem as? EnvItem)?.text == newEnv){
                     return
                 }
                 EDT.ensureEDT {
@@ -93,21 +98,26 @@ class EnvironmentsCombo(val project: Project, navigationPanel: NavigationPanel) 
                 buildAndUpdateModel()
             })
 
-        //todo: do we need to do anything when connectionLost? I think not, when connection is back the model will rebuild
     }
 
 
 
     private fun buildAndUpdateModel(){
         val envs = buildEnvsList()
-        (model as CollectionComboBoxModel).removeAll()
-        (model as CollectionComboBoxModel).add(envs)
-        model.selectedItem = envs.find { envItem -> envItem.isSelected } ?: envs.firstOrNull()
+        EDT.ensureEDT {
+            (model as CollectionComboBoxModel).removeAll()
+            (model as CollectionComboBoxModel).add(envs)
+            model.selectedItem = envs.find { envItem -> envItem.isSelected } ?: envs.firstOrNull()
+        }
     }
 
 
     private fun buildEnvsList(): List<EnvItem> {
         val environmentsSupplier: EnvironmentsSupplier = project.service<AnalyticsService>().environment
+
+        if (environmentsSupplier.getEnvironments().isEmpty()){
+            return listOf()
+        }
 
         val usageStatusesOfInsights = project.service<InsightsViewService>().model.usageStatusResult
         val usageStatusesOfErrors = project.service<ErrorsViewService>().model.usageStatusResult

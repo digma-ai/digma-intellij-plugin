@@ -39,6 +39,7 @@ import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityGoToTra
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResponseEntry;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.navigation.HomeSwitcherService;
+import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper;
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
@@ -50,7 +51,6 @@ import org.digma.intellij.plugin.recentactivity.outgoing.LiveDataPayload;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt;
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
-import org.digma.intellij.plugin.ui.service.TabsHelper;
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier;
 import org.digma.intellij.plugin.ui.settings.SettingsChangeListener;
 import org.digma.intellij.plugin.ui.settings.Theme;
@@ -262,7 +262,7 @@ public class RecentActivityService implements Disposable {
                     String actualEnvName = adjustBackEnvNameIfNeeded(payload.getEnvironment());
                     environmentsSupplier.setCurrent(actualEnvName, false, () -> EDT.ensureEDT(() -> {
                         project.getService(HomeSwitcherService.class).switchToInsights();
-                        project.getService(TabsHelper.class).notifyTabChanged(0);
+                        project.getService(InsightsAndErrorsTabsHelper.class).switchToInsightsTab();
                         project.getService(InsightsViewOrchestrator.class).showInsightsForSpanOrMethodAndNavigateToCode(spanId, methodId);
                     }));
                 } else {
@@ -271,7 +271,7 @@ public class RecentActivityService implements Disposable {
                     String actualEnvName = adjustBackEnvNameIfNeeded(payload.getEnvironment());
                     environmentsSupplier.setCurrent(actualEnvName, false, () -> EDT.ensureEDT(() -> {
                         project.getService(HomeSwitcherService.class).switchToInsights();
-                        project.getService(TabsHelper.class).notifyTabChanged(0);
+                        project.getService(InsightsAndErrorsTabsHelper.class).switchToInsightsTab();
                         project.getService(InsightsViewOrchestrator.class).showInsightsForCodelessSpan(payload.getSpan().getSpanCodeObjectId());
                     }));
                 }

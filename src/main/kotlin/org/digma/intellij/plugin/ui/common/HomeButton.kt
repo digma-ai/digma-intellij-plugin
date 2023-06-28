@@ -5,7 +5,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.navigation.HomeSwitcherService
-import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import java.awt.CardLayout
 import java.awt.Cursor
@@ -15,7 +14,7 @@ import javax.swing.JPanel
 import javax.swing.JToggleButton
 
 
-class HomeButton(val project: Project, private val cardsPanel: JPanel, startup: Boolean) : JToggleButton() {
+class HomeButton(val project: Project, private val cardsPanel: JPanel) : JToggleButton() {
 
     companion object {
         const val SCOPE_LINE_PANEL = "SCOPE_LINE_PANEL"
@@ -53,22 +52,14 @@ class HomeButton(val project: Project, private val cardsPanel: JPanel, startup: 
         isBorderPainted = false
         border = JBUI.Borders.empty()
         background = Laf.Colors.TRANSPARENT
+        isSelected = true
 
-        //all this is to overcome the refresh issue...
-        // we don't really need the persistence but we use it to restore the button state after refresh/rebuild
-        // all we want is to show the home on startup
-        if (startup) {
-            isSelected = true
-            service<PersistenceService>().state.homeButtonSelected = true
-        } else {
-            isSelected = service<PersistenceService>().state.homeButtonSelected
-        }
-
-        //only change if home is pre-selected from persistence
-        if (isSelected) changeState()
+        //at this stage MainToolWindowCardsController will probably do nothing because it's not initialized
+        // yet, this is still construction time. but all cards start at home so it's probably ok.
+        // search the project for 'start at home' to see cards that should initialize to start at home
+        changeState()
 
         addChangeListener {
-            service<PersistenceService>().state.homeButtonSelected = isSelected
             changeState()
         }
 
@@ -93,6 +84,7 @@ class HomeButton(val project: Project, private val cardsPanel: JPanel, startup: 
             (cardsPanel.layout as CardLayout).show(cardsPanel, SCOPE_LINE_PANEL)
             project.service<MainToolWindowCardsController>().showInsights()
         }
+        cardsPanel.revalidate()
     }
 
 }

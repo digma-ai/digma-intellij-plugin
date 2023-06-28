@@ -10,6 +10,5 @@ data class PersistenceData(
         var firstTimeConnectionEstablished: Boolean = false,
         var firstTimePluginLoaded: Boolean = false,
         var firstTimeInsightReceived: Boolean = false,
-        var userEmail: String? = null,
-        var homeButtonSelected: Boolean = false
+        var userEmail: String? = null
 )

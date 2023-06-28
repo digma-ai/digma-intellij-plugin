@@ -6,13 +6,13 @@ import com.intellij.openapi.project.Project
 import org.apache.commons.lang.builder.EqualsBuilder
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.IDEUtilsService
-import org.digma.intellij.plugin.common.modelChangeListener.ModelChangeListener
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.insights.CodeLessSpanInsightsProvider
 import org.digma.intellij.plugin.insights.CodelessSpanInsightsContainer
 import org.digma.intellij.plugin.insights.InsightsListContainer
 import org.digma.intellij.plugin.insights.InsightsProvider
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.ModelChangeListener
 import org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
 import org.digma.intellij.plugin.model.discovery.MethodInfo

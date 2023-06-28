@@ -10,7 +10,7 @@ import org.digma.intellij.plugin.insights.InsightsViewOrchestrator;
 import org.digma.intellij.plugin.jaegerui.JaegerUIService;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.navigation.HomeSwitcherService;
-import org.digma.intellij.plugin.ui.service.TabsHelper;
+import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper;
 
 import java.io.InputStream;
 
@@ -66,6 +66,6 @@ public final class AssetsService implements Disposable {
     public void showAsset(String spanId) {
         project.getService(HomeSwitcherService.class).switchToInsights();
         project.getService(InsightsViewOrchestrator.class).showInsightsForCodelessSpan(spanId);
-        project.getService(TabsHelper.class).notifyTabChanged(0);
+        project.getService(InsightsAndErrorsTabsHelper.class).switchToInsightsTab();
     }
 }

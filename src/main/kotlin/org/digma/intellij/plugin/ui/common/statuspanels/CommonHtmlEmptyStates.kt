@@ -161,6 +161,8 @@ fun createCommonEmptyStatePanelWIthIconAndTextPane(icon: Icon, textPane: JTextPa
 
 fun wrapWithScrollable(componentsPanel: JPanel):JPanel{
     val scrollPane = JBScrollPane()
+    scrollPane.border = JBUI.Borders.empty()
+    scrollPane.isOpaque = false
     scrollPane.horizontalScrollBarPolicy = ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
     scrollPane.setViewportView(componentsPanel)
 

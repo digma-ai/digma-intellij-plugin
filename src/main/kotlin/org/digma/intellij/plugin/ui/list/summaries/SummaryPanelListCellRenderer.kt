@@ -13,6 +13,7 @@ import org.digma.intellij.plugin.model.rest.insights.SpanDurationChangeInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
 import org.digma.intellij.plugin.model.rest.insights.TopErrorFlowsInsight
 import org.digma.intellij.plugin.navigation.HomeSwitcherService
+import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper
 import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
 import org.digma.intellij.plugin.ui.common.Laf
@@ -26,7 +27,6 @@ import org.digma.intellij.plugin.ui.list.errors.contentOfFirstAndLast
 import org.digma.intellij.plugin.ui.list.insights.genericPanelForSingleInsight
 import org.digma.intellij.plugin.ui.list.insights.percentileRowPanel
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
-import org.digma.intellij.plugin.ui.service.TabsHelper
 import java.awt.BorderLayout
 import java.awt.GridLayout
 import javax.swing.JLabel
@@ -120,7 +120,7 @@ private fun buildSpanDuration(value: SpanDurationChangeInsight.Change, panelsLay
         ActionLink(asHtml(value.span.displayName)) {
             project.service<HomeSwitcherService>().switchToInsights()
             project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanId)
-            project.service<TabsHelper>().notifyTabChanged(0)
+            project.service<InsightsAndErrorsTabsHelper>().switchToInsightsTab()
         }
 
     title.toolTipText = value.span.displayName

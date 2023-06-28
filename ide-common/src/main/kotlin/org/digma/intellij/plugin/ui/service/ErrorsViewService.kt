@@ -15,6 +15,7 @@ import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
 import org.digma.intellij.plugin.model.discovery.MethodInfo
+import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
@@ -196,7 +197,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
     }
 
     fun showErrorList() {
-        tabsHelper.notifyTabChanged(1)
+        project.service<InsightsAndErrorsTabsHelper>().switchToErrorsTab()
     }
 
     fun showErrorDetails(uid: String, errorsProvider: ErrorsProvider,replaceScope: Boolean) {

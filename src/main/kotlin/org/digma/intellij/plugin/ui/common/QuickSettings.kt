@@ -6,6 +6,8 @@ import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import com.intellij.ui.awt.RelativePoint
+import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
@@ -20,8 +22,44 @@ import javax.swing.BorderFactory
 import javax.swing.Box
 import javax.swing.JLabel
 import javax.swing.JPanel
+import javax.swing.SwingConstants
+
 
 private const val DIGMA_SLACK_URL = "https://join.slack.com/t/continuous-feedback/shared_invite/zt-1hk5rbjow-yXOIxyyYOLSXpCZ4RXstgA"
+
+
+class QuickSettingsButton(private val project: Project): JLabel(Laf.Icons.Insight.THREE_DOTS, SwingConstants.RIGHT){
+
+    init {
+        horizontalAlignment = SwingConstants.RIGHT
+        verticalAlignment = SwingConstants.TOP
+        isOpaque = false
+        border = JBUI.Borders.empty(2, 5)
+        cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        addMouseListener(object : MouseAdapter() {
+            override fun mouseClicked(e: MouseEvent?) {
+                showSettingsMessage()
+            }
+
+            override fun mouseExited(e: MouseEvent?) {
+                //nothing to do
+            }
+            override fun mousePressed(e: MouseEvent?) {
+                //nothing to do
+            }
+        })
+    }
+
+
+    private fun showSettingsMessage() {
+        HintManager.getInstance().showHint(SettingsHintPanel(project), RelativePoint.getSouthWestOf(this), HintManager.HIDE_BY_ESCAPE, 60000)
+    }
+
+}
+
+
+
+
 
 class SettingsHintPanel(project: Project) : JPanel() {
     private val logger = Logger.getInstance(SettingsHintPanel::class.java)

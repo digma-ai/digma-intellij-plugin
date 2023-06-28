@@ -20,11 +20,11 @@ import org.digma.intellij.plugin.jaegerui.model.outgoing.SpanData;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.navigation.HomeSwitcherService;
+import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.psi.SupportedLanguages;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.model.TraceSample;
-import org.digma.intellij.plugin.ui.service.TabsHelper;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.ByteArrayInputStream;
@@ -219,7 +219,7 @@ public class JaegerUIService {
 
         EDT.ensureEDT(() -> {
             project.getService(HomeSwitcherService.class).switchToInsights();
-            project.getService(TabsHelper.class).notifyTabChanged(0);
+            project.getService(InsightsAndErrorsTabsHelper.class).switchToInsightsTab();
             var success = project.getService(InsightsViewOrchestrator.class).showInsightsForSpanOrMethodAndNavigateToCode(span.spanId(), span.methodId());
             if (success) {
                 Log.log(logger::debug, project, "showInsightsForSpanOrMethodAndNavigateToCode did navigate to span {}", span);
@@ -239,7 +239,7 @@ public class JaegerUIService {
         //if we're here then code location was not found
         EDT.ensureEDT(() -> {
             project.getService(HomeSwitcherService.class).switchToInsights();
-            project.getService(TabsHelper.class).notifyTabChanged(0);
+            project.getService(InsightsAndErrorsTabsHelper.class).switchToInsightsTab();
             project.getService(InsightsViewOrchestrator.class).showInsightsForCodelessSpan(span.spanCodeObjectId());
         });
     }

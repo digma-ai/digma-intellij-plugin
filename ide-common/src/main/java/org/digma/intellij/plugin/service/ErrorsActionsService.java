@@ -1,28 +1,24 @@
 package org.digma.intellij.plugin.service;
 
 import com.intellij.openapi.project.Project;
-import com.intellij.ui.content.ContentManagerEvent;
-import com.intellij.ui.content.ContentManagerListener;
 import org.digma.intellij.plugin.errors.ErrorsProvider;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsightNamedError;
+import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper;
 import org.digma.intellij.plugin.ui.model.EmptyScope;
 import org.digma.intellij.plugin.ui.model.Scope;
 import org.digma.intellij.plugin.ui.model.UIInsightsStatus;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
-import org.digma.intellij.plugin.ui.service.SummaryViewService;
-import org.digma.intellij.plugin.ui.service.TabsHelper;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ErrorsActionsService implements ContentManagerListener {
+public class ErrorsActionsService{
 
     private final Project project;
     private final InsightsViewService insightsViewService;
     private final ErrorsViewService errorsViewService;
-    private final SummaryViewService summaryViewService;
-    private final TabsHelper tabsHelper;
+    private final InsightsAndErrorsTabsHelper insightsAndErrorsTabsHelper;
 
     private Scope scopeBeforeErrorDetails = null;
 
@@ -33,8 +29,7 @@ public class ErrorsActionsService implements ContentManagerListener {
         this.project = project;
         insightsViewService = project.getService(InsightsViewService.class);
         errorsViewService = project.getService(ErrorsViewService.class);
-        summaryViewService = project.getService(SummaryViewService.class);
-        tabsHelper = project.getService(TabsHelper.class);
+        insightsAndErrorsTabsHelper = project.getService(InsightsAndErrorsTabsHelper.class);
         editorService = project.getService(EditorService.class);
     }
 
@@ -53,9 +48,21 @@ public class ErrorsActionsService implements ContentManagerListener {
     }
 
     //todo: move to insightsViewOrchestrator
+
+    /*
+    rememberCurrentScope is necessary when clicking an error in the dashboard. if the errors tab currently
+    showing errors of some method then the scope will be replaced to the error scope that is going to show,
+    and the previous scope restored when error details is closed.
+     */
     private void showErrorDetails(@NotNull String uid,boolean rememberCurrentScope) {
-        tabsHelper.showingErrorDetails();
-        errorsViewService.setVisible();
+
+        //maybe there is already an error showing, must set to off before updating the model \
+        // because AbstractViewService.canUpdateUI will not let update if errorDetailsOn
+        insightsAndErrorsTabsHelper.errorDetailsOffNoTitleChange();
+
+        insightsAndErrorsTabsHelper.rememberCurrentTab();
+        insightsAndErrorsTabsHelper.switchToErrorsTab();
+
         ErrorsProvider errorsProvider  = project.getService(ErrorsProvider.class);
 
         boolean replaceScope = false;
@@ -68,18 +75,20 @@ public class ErrorsActionsService implements ContentManagerListener {
             statusBeforeErrorDetails = null;
         }
         errorsViewService.showErrorDetails(uid,errorsProvider,replaceScope);
+        //this is necessary so the scope line will update with the error scope
         insightsViewService.notifyModelChangedAndUpdateUi();
-        tabsHelper.errorDetailsOn();
+        insightsAndErrorsTabsHelper.errorDetailsOn();
     }
 
     public void closeErrorDetailsBackButton() {
-        closeErrorDetailsWithoutNotify();
-        tabsHelper.errorDetailsClosed();
+        closeErrorDetails();
+
     }
 
-    public void closeErrorDetailsWithoutNotify() {
-        tabsHelper.errorDetailsOff();
+    public void closeErrorDetails() {
+        insightsAndErrorsTabsHelper.errorDetailsOff();
         errorsViewService.closeErrorDetails();
+        insightsAndErrorsTabsHelper.errorDetailsClosed();
         if (scopeBeforeErrorDetails != null && statusBeforeErrorDetails != null) {
             insightsViewService.getModel().setScope(scopeBeforeErrorDetails);
             insightsViewService.getModel().setStatus(statusBeforeErrorDetails);
@@ -92,16 +101,6 @@ public class ErrorsActionsService implements ContentManagerListener {
     }
 
 
-    @Override
-    public void selectionChanged(@NotNull ContentManagerEvent event) {
-        if (tabsHelper.isErrorDetailsOn() &&
-                (tabsHelper.isInsightsTab(event.getContent()) || tabsHelper.isSummaryTab(event.getContent()))) {
-            tabsHelper.errorDetailsOff();
-            errorsViewService.closeErrorDetails();
-            insightsViewService.updateUi();
-            summaryViewService.updateUi();
-        }
-    }
 
     public void openErrorFrameWorkspaceFile(@Nullable String workspaceUrl, @Nullable String lastInstanceCommitId, int lineNumber) {
         if (workspaceUrl != null) {

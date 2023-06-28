@@ -25,9 +25,7 @@ import org.digma.intellij.plugin.ui.list.RoundedPanel
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
 import org.digma.intellij.plugin.ui.model.DocumentScope
 import org.digma.intellij.plugin.ui.model.MethodScope
-import org.digma.intellij.plugin.ui.model.PanelModel
-import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
-import org.digma.intellij.plugin.ui.model.insights.InsightsModel
+import org.digma.intellij.plugin.ui.service.InsightsViewService
 import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Cursor
@@ -35,7 +33,7 @@ import javax.swing.JLabel
 
 private const val CODE_NOT_FOUND = "Code not found"
 
-class CodeNavigationButton(val project: Project, private val panelModel: PanelModel, enabled: Boolean = true) : TargetButton(project, enabled) {
+class CodeNavigationButton(val project: Project) : TargetButton(project, true) {
 
     private val logger: Logger = Logger.getInstance(CodeNavigationButton::class.java)
     private val myOriginalBackground: Color = background
@@ -179,30 +177,30 @@ class CodeNavigationButton(val project: Project, private val panelModel: PanelMo
 
 
     private fun getCodeLessSpan(): CodeLessSpan? {
-        if (panelModel is InsightsModel && panelModel.scope is CodeLessSpanScope) {
-            return (panelModel.scope as CodeLessSpanScope).getSpan()
-        } else if (panelModel is ErrorsModel && panelModel.scope is CodeLessSpanScope) {
-            return (panelModel.scope as CodeLessSpanScope).getSpan()
+        val panelModel = project.service<InsightsViewService>().model
+        return if (panelModel.scope is CodeLessSpanScope) {
+            (panelModel.scope as CodeLessSpanScope).getSpan()
+        }else {
+            null
         }
-        return null
     }
 
     private fun getMethodInfo(): MethodInfo? {
-        if (panelModel is InsightsModel && panelModel.scope is MethodScope) {
-            return (panelModel.scope as MethodScope).getMethodInfo()
-        } else if (panelModel is ErrorsModel && panelModel.scope is MethodScope) {
-            return (panelModel.scope as MethodScope).getMethodInfo()
+        val panelModel = project.service<InsightsViewService>().model
+        return if ( panelModel.scope is MethodScope) {
+            (panelModel.scope as MethodScope).getMethodInfo()
+        }else{
+            null
         }
-        return null
     }
 
     private fun getDocumentInfo(): DocumentInfo? {
-        if (panelModel is InsightsModel && panelModel.scope is DocumentScope) {
-            return (panelModel.scope as DocumentScope).getDocumentInfo()
-        } else if (panelModel is ErrorsModel && panelModel.scope is DocumentScope) {
-            return (panelModel.scope as DocumentScope).getDocumentInfo()
+        val panelModel = project.service<InsightsViewService>().model
+        return if (panelModel.scope is DocumentScope) {
+            (panelModel.scope as DocumentScope).getDocumentInfo()
+        }else {
+            null
         }
-        return null
     }
 
     private class NavigationList(

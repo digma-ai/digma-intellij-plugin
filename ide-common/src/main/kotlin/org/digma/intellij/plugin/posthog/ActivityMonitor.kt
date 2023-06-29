@@ -8,6 +8,8 @@ import com.posthog.java.PostHog
 import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.model.InsightType
+import org.digma.intellij.plugin.model.rest.AboutResult
+import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.threeten.extra.Hours
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -219,10 +221,11 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
     }
 
 
-    fun registerServerVersion(applicationVersion: String) {
+    fun registerServerInfo(serverInfo: AboutResult) {
         postHog?.set(
             userId,
-            mapOf("server.version" to applicationVersion)
+            mapOf("server.version" to serverInfo.applicationVersion,
+                "server.deploymentType" to if(serverInfo.deploymentType != null) serverInfo.deploymentType else BackendDeploymentType.Unknown )
         )
     }
 

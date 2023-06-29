@@ -1,13 +1,13 @@
 package org.digma.intellij.plugin.posthog
 
+import com.intellij.execution.configurations.GeneralCommandLine
+import com.intellij.execution.util.ExecUtil
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
 import org.digma.intellij.plugin.log.Log
-import java.util.concurrent.TimeUnit
 
 class ContainerEngineStartupActivity : StartupActivity {
-    private val timeoutInSec = 5L
     private val logger = Logger.getInstance(ContainerEngineStartupActivity::class.java)
     private val isWindows: Boolean = System.getProperty("os.name").startsWith("windows", true)
 
@@ -23,34 +23,26 @@ class ContainerEngineStartupActivity : StartupActivity {
     }
 
     private fun getInstalled(project: Project): ContainerEngine {
-
-        if (isInstalled(project, "podman"))
+        if(getExecPath(project, "podman") != null)
             return ContainerEngine.PODMAN
 
-        if (isInstalled(project, "docker"))
+        if (getExecPath(project, "docker") != null)
             return ContainerEngine.DOCKER
 
         return ContainerEngine.UNKNOWN
     }
-
-    private fun isInstalled(project: Project, command: String): Boolean {
-        val pb = ProcessBuilder(if (isWindows) "where" else "which", command)
-        pb.redirectOutput(ProcessBuilder.Redirect.DISCARD)
-        pb.redirectError(ProcessBuilder.Redirect.DISCARD)
-
-        var found = false
+    private fun getExecPath(project: Project, executable: String): String ? {
+        val cmd = GeneralCommandLine(if (isWindows) "where" else "which")
+        cmd.addParameter(executable);
+        val cmdString = cmd.commandLineString
         try {
-            val p = pb.start()
-            if (p.waitFor(timeoutInSec, TimeUnit.SECONDS)) {
-                found = p.exitValue() == 0
-            }
-            p.destroy()
+            val result =  ExecUtil.execAndReadLine(cmd)
+            Log.log(logger::debug, "getExecPath: $cmdString result with: $result")
+            return result
         } catch (ex: Exception) {
-            val commandLine = pb.command().joinToString(" ")
-            Log.warnWithException(logger, project, ex, "Failed to run '{}'", commandLine)
-            ActivityMonitor.getInstance(project).registerError(ex, "Failed to run '${commandLine}'")
+            Log.warnWithException(logger, ex, "Failed to run '{}'", cmdString)
+            ActivityMonitor.getInstance(project).registerError(ex, "Failed to run '${cmdString}'")
         }
-
-        return found
+        return null
     }
 }

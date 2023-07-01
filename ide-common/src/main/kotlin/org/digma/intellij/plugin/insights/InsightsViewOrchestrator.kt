@@ -5,6 +5,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.observable.properties.AtomicProperty
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.document.DocumentInfoService
@@ -13,6 +14,7 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
+import org.digma.intellij.plugin.navigation.HomeSwitcherService
 import org.digma.intellij.plugin.navigation.NavigationModel
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.service.EditorService
@@ -42,6 +44,9 @@ class InsightsViewOrchestrator(val project: Project) {
 
     private var currentState: AtomicProperty<ViewState> = AtomicProperty(ViewState.NoFile)
 
+    private val startupFiles: MutableList<String> = mutableListOf()
+    var isShowInsightsOnStartup = false
+
     enum class ViewState {
         CodelessSpan,
         SpanOrMethodWithNavigation,
@@ -59,6 +64,12 @@ class InsightsViewOrchestrator(val project: Project) {
             project.service<NavigationModel>().viewStateChanged(currentState.get())
         }
     }
+
+
+    fun startupFiles(startupFiles: Set<String>) {
+        this.startupFiles.addAll(startupFiles)
+    }
+
 
     /**
      * shows insights for a span.
@@ -178,6 +189,9 @@ class InsightsViewOrchestrator(val project: Project) {
 
     fun nonSupportedFileOpened(fileUri: String) {
 
+        isShowInsightsOnStartup = true
+        startupFiles.clear()
+
         currentState.set(ViewState.NonSupportedFile)
 
         project.service<InsightsViewService>().emptyNonSupportedFile(fileUri)
@@ -193,6 +207,13 @@ class InsightsViewOrchestrator(val project: Project) {
     }
 
     fun updateInsightsWithMethodFromSource(methodUnderCaret: MethodUnderCaret, methodInfo: MethodInfo) {
+
+        if (startupFiles.contains(methodInfo.containingFileUri)) {
+            startupFiles.clear()
+            isShowInsightsOnStartup = true
+            showInsightsOnStartup()
+        }
+
 
         currentState.set(ViewState.MethodFromSourceCode)
 
@@ -214,10 +235,31 @@ class InsightsViewOrchestrator(val project: Project) {
 
     fun updateWithDocumentPreviewList(documentInfoContainer: DocumentInfoContainer?, fileUri: String) {
 
+        if (documentInfoContainer != null && startupFiles.contains(fileUri)) {
+            startupFiles.clear()
+            isShowInsightsOnStartup = true
+            showInsightsOnStartup()
+        }
+
+
         currentState.set(ViewState.DocumentPreviewList)
 
         project.service<InsightsViewService>().showDocumentPreviewList(documentInfoContainer, fileUri)
         project.service<ErrorsViewService>().showDocumentPreviewList(documentInfoContainer, fileUri)
     }
+
+    private fun showInsightsOnStartup() {
+
+        //the call to switchToInsights may not succeed because maybe the components are not constructed yet.
+        // but when the tool window is constructed it will query showInsightsOnStartup and if true will
+        // try that again
+        if (isShowInsightsOnStartup) {
+            EDT.invokeLater {
+                project.service<HomeSwitcherService>().switchToInsights()
+            }
+        }
+
+    }
+
 
 }

@@ -18,13 +18,19 @@ public class EDT {
     }
 
     public static void assertEDT(String message) {
-        if (ApplicationManager.getApplication().isDispatchThread()){
+        if (ApplicationManager.getApplication().isDispatchThread()) {
             return;
         }
         //log an error here, intellij will pop up an error message. usually we don't want an error message
         // but this should be caught in development time.
-        Log.log(LOGGER::error,message);
+        Log.log(LOGGER::error, message);
     }
+
+
+    public static void invokeLater(Runnable task) {
+        ApplicationManager.getApplication().invokeLater(task);
+    }
+
 
     public static boolean isEdt() {
         return ApplicationManager.getApplication().isDispatchThread();

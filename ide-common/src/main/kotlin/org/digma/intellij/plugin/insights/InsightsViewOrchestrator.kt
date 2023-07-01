@@ -208,12 +208,7 @@ class InsightsViewOrchestrator(val project: Project) {
 
     fun updateInsightsWithMethodFromSource(methodUnderCaret: MethodUnderCaret, methodInfo: MethodInfo) {
 
-        if (startupFiles.contains(methodInfo.containingFileUri)) {
-            startupFiles.clear()
-            isShowInsightsOnStartup = true
-            showInsightsOnStartup()
-        }
-
+        maybeShowInsightsOnStartup(methodInfo.containingFileUri)
 
         currentState.set(ViewState.MethodFromSourceCode)
 
@@ -235,17 +230,24 @@ class InsightsViewOrchestrator(val project: Project) {
 
     fun updateWithDocumentPreviewList(documentInfoContainer: DocumentInfoContainer?, fileUri: String) {
 
-        if (documentInfoContainer != null && startupFiles.contains(fileUri)) {
-            startupFiles.clear()
-            isShowInsightsOnStartup = true
-            showInsightsOnStartup()
+        if (documentInfoContainer != null) {
+            maybeShowInsightsOnStartup(fileUri)
         }
-
 
         currentState.set(ViewState.DocumentPreviewList)
 
         project.service<InsightsViewService>().showDocumentPreviewList(documentInfoContainer, fileUri)
         project.service<ErrorsViewService>().showDocumentPreviewList(documentInfoContainer, fileUri)
+    }
+
+
+    private fun maybeShowInsightsOnStartup(fileUri: String) {
+
+        if (startupFiles.contains(fileUri)) {
+            startupFiles.clear()
+            isShowInsightsOnStartup = true
+            showInsightsOnStartup()
+        }
     }
 
     private fun showInsightsOnStartup() {
@@ -258,7 +260,6 @@ class InsightsViewOrchestrator(val project: Project) {
                 project.service<HomeSwitcherService>().switchToInsights()
             }
         }
-
     }
 
 

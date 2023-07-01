@@ -96,7 +96,8 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
 
         EDT.invokeLater(() -> {
             //check if isShowInsightsOnStartup is true and show insights if necessary
-            if (project.getService(InsightsViewOrchestrator.class).isShowInsightsOnStartup()) {
+            var isSHowInsightsOnStartup = project.getService(InsightsViewOrchestrator.class).isShowInsightsOnStartup();
+            if (isSHowInsightsOnStartup) {
                 project.getService(HomeSwitcherService.class).switchToInsights();
             }
         });

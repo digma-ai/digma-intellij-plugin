@@ -34,6 +34,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import kotlin.Pair;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.ReadActions;
+import org.digma.intellij.plugin.editor.EditorUtils;
 import org.digma.intellij.plugin.idea.build.BuildSystemChecker;
 import org.digma.intellij.plugin.idea.build.JavaBuildSystem;
 import org.digma.intellij.plugin.log.Log;
@@ -438,7 +439,7 @@ public class JavaLanguageService implements LanguageService {
                     var file = fileEditor.getFile();
                     var psiFile = PsiManager.getInstance(project).findFile(file);
                     if (psiFile != null && isRelevant(psiFile.getVirtualFile())) {
-                        var selectedTextEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+                        var selectedTextEditor = EditorUtils.getSelectedTextEditorForFile(file, FileEditorManager.getInstance(project));
                         if (selectedTextEditor != null) {
                             int offset = selectedTextEditor.getCaretModel().getOffset();
                             var methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset);

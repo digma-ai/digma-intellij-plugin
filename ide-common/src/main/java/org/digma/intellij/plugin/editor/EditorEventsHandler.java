@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.editor;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
@@ -157,16 +158,18 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
             })).inSmartMode(project).withDocumentsCommitted(project).finishOnUiThread(ModalityState.defaultModalityState(), unused -> {
 
-                Log.log(LOGGER::debug, "finishing on ui thread for :{}",newFile);
+                Log.log(LOGGER::debug, "finishing on ui thread for :{}", newFile);
 
-                var selectedTextEditor = fileEditorManager.getSelectedTextEditor();
+                //get the editor where the file is opened not just the selected editor
+                Editor selectedTextEditor = EditorUtils.getSelectedTextEditorForFile(newFile, fileEditorManager);
+
                 if (selectedTextEditor != null) {
-                    Log.log(LOGGER::debug, "Found selected editor for :{}",newFile);
+                    Log.log(LOGGER::debug, "Found selected editor for :{}", newFile);
                     PsiFile psiFile = PsiDocumentManager.getInstance(project).getPsiFile(selectedTextEditor.getDocument());
                     if (psiFile != null && isRelevantFile(psiFile.getVirtualFile())) {
-                        Log.log(LOGGER::debug, "Found relevant psi file for :{}",newFile);
+                        Log.log(LOGGER::debug, "Found relevant psi file for :{}", newFile);
                         LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
-                        Log.log(LOGGER::debug, "Found language service {} for :{}",languageService,newFile);
+                        Log.log(LOGGER::debug, "Found language service {} for :{}", languageService, newFile);
                         caretListener.maybeAddCaretListener(selectedTextEditor);
                         documentChangeListener.maybeAddDocumentListener(selectedTextEditor);
 
@@ -259,7 +262,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
             if ( isRelevantFile(selectedFile) && !FileUtils.isVcsFile(selectedFile)) {
                 Log.log(LOGGER::debug, "updateContextAfterFileClosed found selected file {}",selectedFile);
                 PsiFile psiFile = PsiManager.getInstance(project).findFile(selectedFile);
-                var selectedTextEditor = fileEditorManager.getSelectedTextEditor();
+                var selectedTextEditor = EditorUtils.getSelectedTextEditorForFile(selectedFile, fileEditorManager);
                 if (psiFile != null && selectedTextEditor != null) {
                     Log.log(LOGGER::debug, "updateContextAfterFileClosed psi file {}",psiFile.getVirtualFile());
                     //each language service may do the refresh differently, Rider is different from others.

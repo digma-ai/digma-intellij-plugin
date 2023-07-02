@@ -9,11 +9,8 @@ import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.ContentFactory;
 import com.intellij.util.ui.JBUI;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
-import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.IDEUtilsService;
-import org.digma.intellij.plugin.insights.InsightsViewOrchestrator;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.navigation.HomeSwitcherService;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.digma.intellij.plugin.ui.ToolWindowShower;
@@ -92,15 +89,6 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         // is fully loaded. consider replacing that with LanguageService.runWhenSmartForAll so that C# language service
         // can run this task when the solution is fully loaded.
         DumbService.getInstance(project).runWhenSmart(() -> initializeWhenSmart(project));
-
-
-        EDT.invokeLater(() -> {
-            //check if isShowInsightsOnStartup is true and show insights if necessary
-            var isSHowInsightsOnStartup = project.getService(InsightsViewOrchestrator.class).isShowInsightsOnStartup();
-            if (isSHowInsightsOnStartup) {
-                project.getService(HomeSwitcherService.class).switchToInsights();
-            }
-        });
     }
 
     private JPanel createCardsPanel(@NotNull Project project, @NotNull JPanel mainPanel, Disposable parentDisposable) {

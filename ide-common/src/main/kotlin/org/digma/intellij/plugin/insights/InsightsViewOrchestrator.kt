@@ -1,16 +1,19 @@
 package org.digma.intellij.plugin.insights
 
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.observable.properties.AtomicProperty
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.editor.CurrentContextUpdater
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.ModelChangeListener
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
@@ -20,6 +23,8 @@ import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.service.EditorService
 import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.ToolWindowShower
+import org.digma.intellij.plugin.ui.model.DocumentScope
+import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.service.ErrorsViewService
 import org.digma.intellij.plugin.ui.service.InsightsViewService
 
@@ -27,7 +32,7 @@ import org.digma.intellij.plugin.ui.service.InsightsViewService
  * the job of this class is to show insights for code objects and navigate to source code if necessary and possible.
  */
 @Service(Service.Level.PROJECT)
-class InsightsViewOrchestrator(val project: Project) {
+class InsightsViewOrchestrator(val project: Project) : Disposable {
 
     //todo: this class is WIP.
     // we need to separate the flows of showing insights and navigating to code.
@@ -45,7 +50,7 @@ class InsightsViewOrchestrator(val project: Project) {
     private var currentState: AtomicProperty<ViewState> = AtomicProperty(ViewState.NoFile)
 
     private val startupFiles: MutableList<String> = mutableListOf()
-    var isShowInsightsOnStartup = false
+    var isWaitingForStartupFiles = true
 
     enum class ViewState {
         CodelessSpan,
@@ -63,13 +68,60 @@ class InsightsViewOrchestrator(val project: Project) {
         currentState.afterChange {
             project.service<NavigationModel>().viewStateChanged(currentState.get())
         }
+
+        val messageBusConnection = project.messageBus.connect(this)
+        messageBusConnection.subscribe(
+            ModelChangeListener.MODEL_CHANGED_TOPIC, ModelChangeListener
+            {
+
+                if (startupFiles.isNotEmpty()) {
+
+                    Log.log(logger::debug, project, "got model change,startupFiles not empty")
+
+                    isWaitingForStartupFiles = false
+
+                    val insightsModel = project.service<InsightsViewService>().model
+                    val scope = insightsModel.scope
+                    val showInsights = if (scope is MethodScope) {
+                        insightsModel.listViewItems.isNotEmpty() &&
+                                startupFiles.contains(scope.getMethodInfo().containingFileUri)
+                    } else if (scope is DocumentScope) {
+                        insightsModel.hasInsights() &&
+                                startupFiles.contains(scope.getDocumentInfo().fileUri)
+                    } else {
+                        false
+                    }
+
+                    Log.log(logger::debug, project, "showInsights is {}", showInsights)
+
+                    if (showInsights) {
+                        EDT.invokeLater {
+                            project.service<HomeSwitcherService>().switchToInsights()
+                        }
+                    }
+
+                }
+                startupFiles.clear()
+                //don't need this connection after startup
+                messageBusConnection.dispose()
+
+            }
+        )
     }
 
 
-    fun startupFiles(startupFiles: Set<String>) {
-        this.startupFiles.addAll(startupFiles)
+    override fun dispose() {
+        //nothing to do, used as parent disposable
     }
 
+
+    fun addStartupFile(newFile: VirtualFile) {
+        startupFiles.add(newFile.url)
+    }
+
+    fun clearStartupFiles(newFile: VirtualFile) {
+        startupFiles.add(newFile.url)
+    }
 
     /**
      * shows insights for a span.
@@ -189,9 +241,6 @@ class InsightsViewOrchestrator(val project: Project) {
 
     fun nonSupportedFileOpened(fileUri: String) {
 
-        isShowInsightsOnStartup = true
-        startupFiles.clear()
-
         currentState.set(ViewState.NonSupportedFile)
 
         project.service<InsightsViewService>().emptyNonSupportedFile(fileUri)
@@ -207,8 +256,6 @@ class InsightsViewOrchestrator(val project: Project) {
     }
 
     fun updateInsightsWithMethodFromSource(methodUnderCaret: MethodUnderCaret, methodInfo: MethodInfo) {
-
-        maybeShowInsightsOnStartup(methodInfo.containingFileUri)
 
         currentState.set(ViewState.MethodFromSourceCode)
 
@@ -230,37 +277,10 @@ class InsightsViewOrchestrator(val project: Project) {
 
     fun updateWithDocumentPreviewList(documentInfoContainer: DocumentInfoContainer?, fileUri: String) {
 
-        if (documentInfoContainer != null) {
-            maybeShowInsightsOnStartup(fileUri)
-        }
-
         currentState.set(ViewState.DocumentPreviewList)
 
         project.service<InsightsViewService>().showDocumentPreviewList(documentInfoContainer, fileUri)
         project.service<ErrorsViewService>().showDocumentPreviewList(documentInfoContainer, fileUri)
     }
-
-
-    private fun maybeShowInsightsOnStartup(fileUri: String) {
-
-        if (startupFiles.contains(fileUri)) {
-            startupFiles.clear()
-            isShowInsightsOnStartup = true
-            showInsightsOnStartup()
-        }
-    }
-
-    private fun showInsightsOnStartup() {
-
-        //the call to switchToInsights may not succeed because maybe the components are not constructed yet.
-        // but when the tool window is constructed it will query showInsightsOnStartup and if true will
-        // try that again
-        if (isShowInsightsOnStartup) {
-            EDT.invokeLater {
-                project.service<HomeSwitcherService>().switchToInsights()
-            }
-        }
-    }
-
 
 }

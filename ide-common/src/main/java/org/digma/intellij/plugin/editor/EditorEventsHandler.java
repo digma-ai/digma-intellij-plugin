@@ -3,10 +3,12 @@ package org.digma.intellij.plugin.editor;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
+import com.intellij.openapi.fileEditor.impl.EditorsSplitters;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
@@ -18,6 +20,7 @@ import com.intellij.util.RunnableCallable;
 import com.intellij.util.concurrency.NonUrgentExecutor;
 import org.digma.intellij.plugin.common.FileUtils;
 import org.digma.intellij.plugin.document.DocumentInfoService;
+import org.digma.intellij.plugin.insights.InsightsViewOrchestrator;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
@@ -117,9 +120,24 @@ public class EditorEventsHandler implements FileEditorManagerListener {
         //ignore non supported files. newFile may be null when the last editor is closed.
         //A relevant file is a source file that is supported by one of the language services.
 
+
+        //support for showing insights view on startup if a re-opened file has insights
+        if (newFile != null &&
+                project.getService(InsightsViewOrchestrator.class).isWaitingForStartupFiles() &&
+                EditorsSplitters.isOpenedInBulk(newFile)) {
+            if (isRelevantFile(newFile)) {
+                Log.log(LOGGER::debug, project, "adding bulk file for {}", newFile);
+                project.getService(InsightsViewOrchestrator.class).addStartupFile(newFile);
+            } else {
+                Log.log(LOGGER::debug, project, "clearing bulk files for {}", newFile);
+                project.getService(InsightsViewOrchestrator.class).clearStartupFiles(newFile);
+            }
+        }
+
+
         if (newFile != null && isRelevantFile(newFile)) {
 
-            Log.log(LOGGER::debug, "handling new open file:{}",newFile);
+            Log.log(LOGGER::debug, "handling new open file:{}", newFile);
 
             //wait for smart mode before loading document info and installing caret and document change listeners.
             //if files are opened on startup before indexes are ready there is nothing we can do to build the document
@@ -157,16 +175,18 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
             })).inSmartMode(project).withDocumentsCommitted(project).finishOnUiThread(ModalityState.defaultModalityState(), unused -> {
 
-                Log.log(LOGGER::debug, "finishing on ui thread for :{}",newFile);
+                Log.log(LOGGER::debug, "finishing on ui thread for :{}", newFile);
 
-                var selectedTextEditor = fileEditorManager.getSelectedTextEditor();
+                //get the editor where the file is opened not just the selected editor
+                Editor selectedTextEditor = EditorUtils.getSelectedTextEditorForFile(newFile, fileEditorManager);
+
                 if (selectedTextEditor != null) {
-                    Log.log(LOGGER::debug, "Found selected editor for :{}",newFile);
+                    Log.log(LOGGER::debug, "Found selected editor for :{}", newFile);
                     PsiFile psiFile = PsiDocumentManager.getInstance(project).getPsiFile(selectedTextEditor.getDocument());
                     if (psiFile != null && isRelevantFile(psiFile.getVirtualFile())) {
-                        Log.log(LOGGER::debug, "Found relevant psi file for :{}",newFile);
+                        Log.log(LOGGER::debug, "Found relevant psi file for :{}", newFile);
                         LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
-                        Log.log(LOGGER::debug, "Found language service {} for :{}",languageService,newFile);
+                        Log.log(LOGGER::debug, "Found language service {} for :{}", languageService, newFile);
                         caretListener.maybeAddCaretListener(selectedTextEditor);
                         documentChangeListener.maybeAddDocumentListener(selectedTextEditor);
 
@@ -259,7 +279,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
             if ( isRelevantFile(selectedFile) && !FileUtils.isVcsFile(selectedFile)) {
                 Log.log(LOGGER::debug, "updateContextAfterFileClosed found selected file {}",selectedFile);
                 PsiFile psiFile = PsiManager.getInstance(project).findFile(selectedFile);
-                var selectedTextEditor = fileEditorManager.getSelectedTextEditor();
+                var selectedTextEditor = EditorUtils.getSelectedTextEditorForFile(selectedFile, fileEditorManager);
                 if (psiFile != null && selectedTextEditor != null) {
                     Log.log(LOGGER::debug, "updateContextAfterFileClosed psi file {}",psiFile.getVirtualFile());
                     //each language service may do the refresh differently, Rider is different from others.

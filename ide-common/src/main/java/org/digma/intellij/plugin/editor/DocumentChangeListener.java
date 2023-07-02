@@ -116,7 +116,7 @@ class DocumentChangeListener {
                     // event will fire only when the caret moves but not while editing.
                     // if the document changes and no caret event is fired the UI will not be updated.
                     // so calling hare currentContextUpdater after document change will update the UI.
-                    var editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+                    var editor = EditorUtils.getSelectedTextEditorForFile(changedPsiFile.getVirtualFile(), FileEditorManager.getInstance(project));
                     if (editor != null){
                         int caretOffset = editor.logicalPositionToOffset(editor.getCaretModel().getLogicalPosition());
                         var file = FileDocumentManager.getInstance().getFile(editor.getDocument());

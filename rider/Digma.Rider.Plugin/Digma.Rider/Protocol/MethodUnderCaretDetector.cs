@@ -10,7 +10,6 @@ using JetBrains.ReSharper.Psi.CSharp.Tree;
 using JetBrains.ReSharper.Psi.Files;
 using JetBrains.ReSharper.Psi.Tree;
 using JetBrains.ReSharper.Resources.Shell;
-using JetBrains.RiderTutorials.Utils;
 using JetBrains.TextControl;
 using JetBrains.Util;
 using static Digma.Rider.Logging.Logger;

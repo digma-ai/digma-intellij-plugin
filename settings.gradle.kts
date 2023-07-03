@@ -16,7 +16,7 @@ pluginManagement {
 
                 if (settings.providers.gradleProperty("useEAPVersion").isPresent &&
                     settings.providers.gradleProperty("useEAPVersion").get() == "true"){
-                    val rdgenForEAPVersion = "2023.2.2-preview2"
+                    val rdgenForEAPVersion = "2023.2.2"
                     logger.lifecycle("Using rdgen $rdgenForEAPVersion")
                     useVersion(rdgenForEAPVersion)
                     useModule("com.jetbrains.rd:rd-gen:${rdgenForEAPVersion}")

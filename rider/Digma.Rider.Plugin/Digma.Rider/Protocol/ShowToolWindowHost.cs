@@ -1,5 +1,6 @@
 using JetBrains.ProjectModel;
 using JetBrains.RdBackend.Common.Features;
+using JetBrains.ReSharper.Feature.Services.Protocol;
 using JetBrains.Util;
 using static Digma.Rider.Logging.Logger;
 

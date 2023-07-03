@@ -4,14 +4,12 @@ using System.Linq;
 using Digma.Rider.Protocol;
 using JetBrains.Annotations;
 using JetBrains.Lifetimes;
-using JetBrains.Platform.MsBuildTask.Utils;
 using JetBrains.ProjectModel;
 using JetBrains.RdBackend.Common.Features.ProjectModel.View;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.CSharp;
 using JetBrains.ReSharper.Psi.CSharp.Tree;
 using JetBrains.ReSharper.Psi.Files;
-using JetBrains.RiderTutorials.Utils;
 using JetBrains.Util;
 using static Digma.Rider.Logging.Logger;
 
@@ -123,7 +121,7 @@ namespace Digma.Rider.Util
             {
                 Log(Logger, "Uri for {0} is file, trying to find it by absolute path {1}",psiFileId,uri.AbsolutePath);
                 var path = VirtualFileSystemPath.CreateByCanonicalPath(uri.AbsolutePath, InteractionContext.Local);
-                var projectFile = solution.FindProjectItemsByLocation(path).OfType<IProjectFile>().TryGetSingleItem();
+                var projectFile = solution.FindProjectItemsByLocation(path).OfType<IProjectFile>().SingleItem();
                 var file = projectFile?.GetPrimaryPsiFile(file => file.PrimaryPsiLanguage.Equals(CSharpLanguage.Instance));
                 if (file != null)
                 {

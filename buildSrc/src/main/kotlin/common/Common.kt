@@ -18,8 +18,6 @@ fun dynamicPlatformType(project: Project):String{
     }else{
         return "IC"
     }
-
-
 }
 
 

@@ -5,7 +5,8 @@
       <option name="executionName" />
       <option name="externalProjectPath" value="$PROJECT_DIR$" />
       <option name="externalSystemIdString" value="GRADLE" />
-      <option name="scriptParameters" value="-PbuildWithRider=true -PplatformPlugins=rider-plugins-appender" />
+      <option name="scriptParameters"
+              value="-PbuildWithRider=true -PplatformType=RD -PplatformPlugins=rider-plugins-appender"/>
       <option name="taskDescriptions">
         <list />
       </option>

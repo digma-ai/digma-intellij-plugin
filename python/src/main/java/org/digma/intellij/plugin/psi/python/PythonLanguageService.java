@@ -25,6 +25,7 @@ import kotlin.Pair;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.ReadActions;
 import org.digma.intellij.plugin.document.DocumentInfoService;
+import org.digma.intellij.plugin.editor.EditorUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
@@ -180,7 +181,7 @@ public class PythonLanguageService implements LanguageService {
                 // and the user opens files, selects tabs or moves the caret. then when indexing is finished
                 // we have the list of methods but then psiMethod.navigate doesn't work.
                 // navigation to source using the editor does work in these circumstances.
-                var selectedEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+                var selectedEditor = EditorUtils.getSelectedTextEditorForFile(psiFile.getVirtualFile(), FileEditorManager.getInstance(project));
                 if (selectedEditor != null) {
                     Log.log(LOGGER::debug, "moving caret to offset of function {}", pyFunction);
                     selectedEditor.getCaretModel().moveToOffset(pyFunction.getTextOffset());

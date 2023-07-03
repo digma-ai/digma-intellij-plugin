@@ -20,6 +20,7 @@ import com.jetbrains.rider.projectView.SolutionLifecycleHost;
 import kotlin.Pair;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.EDT;
+import org.digma.intellij.plugin.editor.EditorUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
@@ -167,7 +168,7 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
                     var file = fileEditor.getFile();
                     var psiFile = PsiManager.getInstance(project).findFile(file);
                     if (psiFile != null && isRelevant(psiFile.getVirtualFile())) {
-                        var selectedTextEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+                        var selectedTextEditor = EditorUtils.getSelectedTextEditorForFile(file, FileEditorManager.getInstance(project));
                         if (selectedTextEditor != null) {
                             int offset = selectedTextEditor.getCaretModel().getOffset();
                             var methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset);

@@ -9,7 +9,7 @@ internal class PythonAdditionalIdsProviderTests {
 
     @Test
     fun testAdditionalIdsWithType(){
-        val methodInfo = MethodInfo("project-root/test/folder/main.py\$_\$myFunction","myFunction","myClass","my.namespace.MyClass","file://my/file.uri",10,listOf())
+        val methodInfo = MethodInfo("project-root/test/folder/main.py\$_\$myFunction", "myFunction", "myClass", "my.namespace.MyClass", "file://my/file.uri", 10)
         val ids = PythonAdditionalIdsProvider().provideAdditionalIdsWithType(methodInfo)
 
         assert(ids.size == 3)
@@ -20,7 +20,7 @@ internal class PythonAdditionalIdsProviderTests {
 
     @Test
     fun testAdditionalIdsWithoutType(){
-        val methodInfo = MethodInfo("project-root/test/folder/main.py\$_\$myFunction","myFunction","myClass","my.namespace.MyClass","file://my/file.uri",10,listOf())
+        val methodInfo = MethodInfo("project-root/test/folder/main.py\$_\$myFunction", "myFunction", "myClass", "my.namespace.MyClass", "file://my/file.uri", 10)
         val ids = PythonAdditionalIdsProvider().provideAdditionalIdsWithoutType(methodInfo)
 
         assert(ids.size == 3)
@@ -31,7 +31,7 @@ internal class PythonAdditionalIdsProviderTests {
 
     @Test
     fun testAdditionalIdsMethodInfoWithType(){
-        val methodInfo = MethodInfo("project-root/test/folder/main.py\$_\$myFunction","myFunction","myClass","my.namespace.MyClass","file://my/file.uri",10,listOf())
+        val methodInfo = MethodInfo("project-root/test/folder/main.py\$_\$myFunction", "myFunction", "myClass", "my.namespace.MyClass", "file://my/file.uri", 10)
         methodInfo.additionalIdsProvider = PythonAdditionalIdsProvider()
 
         val ids = methodInfo.allIdsWithType()
@@ -45,7 +45,7 @@ internal class PythonAdditionalIdsProviderTests {
 
     @Test
     fun testAdditionalIdsMethodInfoWithoutType(){
-        val methodInfo = MethodInfo("project-root/test/folder/main.py\$_\$myFunction","myFunction","myClass","my.namespace.MyClass","file://my/file.uri",10,listOf())
+        val methodInfo = MethodInfo("project-root/test/folder/main.py\$_\$myFunction", "myFunction", "myClass", "my.namespace.MyClass", "file://my/file.uri", 10)
         methodInfo.additionalIdsProvider = PythonAdditionalIdsProvider()
 
         val ids = methodInfo.allIdsWithoutType()

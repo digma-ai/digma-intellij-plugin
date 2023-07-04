@@ -128,7 +128,7 @@ public class EditorInteractionService implements CaretContextService, Disposable
                 //code objects found during discovery, it can be synthetic or auto-generated methods.
                 //pass a dummy method info just to populate the view,the view is aware and will not try to query for insights.
                 var dummyMethodInfo = new MethodInfo(methodUnderCaret.getId(), methodUnderCaret.getName(), className, "",
-                        methodUnderCaret.getFileUri(), 0, new ArrayList<>());
+                        methodUnderCaret.getFileUri(), 0);
                 Log.log(logger::warn, "Using dummy MethodInfo for to update views {}. ", dummyMethodInfo);
                 insightsViewOrchestrator.updateInsightsWithDummyMethodInfo(methodUnderCaret,dummyMethodInfo);
             } else {

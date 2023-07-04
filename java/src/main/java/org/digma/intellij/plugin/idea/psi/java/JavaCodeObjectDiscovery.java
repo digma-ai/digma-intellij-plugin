@@ -13,6 +13,7 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.psi.search.searches.MethodReferencesSearch;
 import com.intellij.util.Query;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
@@ -93,11 +94,10 @@ public class JavaCodeObjectDiscovery {
             }
 
             final List<PsiMethod> methods;
-            if (aClass instanceof PsiExtensibleClass) {
+            if (aClass instanceof PsiExtensibleClass extClass) {
                 // avoid cases when there are generated methods and/or constructors such as lombok creates,
                 // see issue https://github.com/digma-ai/digma-intellij-plugin/issues/833
                 // see issue https://youtrack.jetbrains.com/issue/IDEA-323198
-                PsiExtensibleClass extClass = (PsiExtensibleClass) aClass;
                 methods = extClass.getOwnMethods();
             } else {
                 // call to getMethods might cause issue https://github.com/digma-ai/digma-intellij-plugin/issues/833, so avoiding it if possible
@@ -116,7 +116,8 @@ public class JavaCodeObjectDiscovery {
                 int offsetAtFileUri = method.getTextOffset();
                 List<SpanInfo> spans = new ArrayList<>();
                 Objects.requireNonNull(containingClassName, "a class in java must have a qualified name");
-                MethodInfo methodInfo = new MethodInfo(id, name, containingClassName, containingNamespace, containingFileUri, offsetAtFileUri, spans);
+                MethodInfo methodInfo = new MethodInfo(id, name, containingClassName, containingNamespace, containingFileUri, offsetAtFileUri);
+                methodInfo.addSpans(spans);
                 methodInfoMap.put(id, methodInfo);
             }
 
@@ -146,6 +147,9 @@ public class JavaCodeObjectDiscovery {
         Log.log(LOGGER::debug, "Building spans for file {}", psiFile);
         withSpanAnnotationSpanDiscovery(project, psiFile, documentInfo);
         startSpanMethodCallSpanDiscovery(project, psiFile, documentInfo);
+
+        MicrometerTracingFramework micrometerTracingFramework = new MicrometerTracingFramework(project);
+        micrometerTracingFramework.annotationSpanDiscovery(project, psiFile, documentInfo);
     }
 
     private static void endpointDiscovery(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo, @NotNull List<IEndpointDiscovery> endpointDiscoveryList) {
@@ -188,7 +192,7 @@ public class JavaCodeObjectDiscovery {
             psiMethods = filterNonRelevantMethodsForSpanDiscovery(psiMethods);
             psiMethods.forEach(psiMethod -> {
                 List<SpanInfo> spanInfos = JavaSpanDiscoveryUtils.getSpanInfoFromWithSpanAnnotatedMethod(psiMethod);
-                if (spanInfos != null) {
+                if (CollectionUtils.isNotEmpty(spanInfos)) {
                     spanInfos.forEach(spanInfo -> {
                         Log.log(LOGGER::debug, "Found span info {} for method {}", spanInfo.getId(), spanInfo.getContainingMethodId());
                         MethodInfo methodInfo = documentInfo.getMethods().get(spanInfo.getContainingMethodId());

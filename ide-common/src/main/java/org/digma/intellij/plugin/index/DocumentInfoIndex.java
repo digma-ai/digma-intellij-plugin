@@ -16,7 +16,6 @@ import org.jetbrains.annotations.Nullable;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Map;
 
 /**
@@ -36,7 +35,6 @@ public abstract class DocumentInfoIndex extends SingleEntryFileBasedIndexExtensi
 
 
     protected abstract DocumentInfo buildDocumentInfo(Project theProject, PsiFile psiFile);
-
 
 
     @Override
@@ -62,8 +60,6 @@ public abstract class DocumentInfoIndex extends SingleEntryFileBasedIndexExtensi
             }
         };
     }
-
-
 
 
     @Override
@@ -93,7 +89,7 @@ public abstract class DocumentInfoIndex extends SingleEntryFileBasedIndexExtensi
                     String containingFileUri = IOUtil.readString(in);
                     String containingNamespace = IOUtil.readString(in);
                     int offsetAtFileUri = in.readInt();
-                    return new MethodInfo(id, name, containingClass, containingNamespace, containingFileUri, offsetAtFileUri, new ArrayList<>());
+                    return new MethodInfo(id, name, containingClass, containingNamespace, containingFileUri, offsetAtFileUri);
                 });
 
                 return new DocumentInfo(path, methods);

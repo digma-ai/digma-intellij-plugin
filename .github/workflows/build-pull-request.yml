@@ -36,10 +36,11 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1.0.4
 
+
       - name: Build Plugin
         env:
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL}}
-        run: ./gradlew buildPlugin --no-daemon
+        run: ./gradlew test buildPlugin --no-daemon
 
       # Collect Tests Result of failed tests
       ##todo: add other modules test reports
@@ -62,6 +63,7 @@ jobs:
           name: pluginVerifier-result
           path: ${{ github.workspace }}/build/reports/pluginVerifier
           retention-days: 5
+
 
 
       - name: Prepare Plugin Artifact

@@ -107,13 +107,10 @@ object BuildProfiles {
 
         "eap" to BuildProfile(
             platformVersion = "LATEST-EAP-SNAPSHOT",
-//            platformVersion = "232-EAP-SNAPSHOT",
-//            platformVersion = "232.8660-EAP-CANDIDATE-SNAPSHOT",
             riderVersion = "2023.2-EAP7-SNAPSHOT",
             pycharmVersion = "LATEST-EAP-SNAPSHOT",
             riderResharperVersion = "2023.2.0-eap07",
             riderResharperVersionConstant = "PROFILE_2023_2",
-//            pythonPluginVersion = "232.8296.17",
             pythonPluginVersion = "232.8453.116",
             platformVersionCode = "232",
             pluginSinceBuild = "232",

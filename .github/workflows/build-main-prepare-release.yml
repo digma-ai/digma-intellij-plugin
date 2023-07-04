@@ -13,7 +13,7 @@
 ## JBIJPPTPL (Jetbrains intellij platform plugin template)
 
 
-name: Build, Verify and Prepare Release
+name: Build main and Prepare Release
 on:
   push:
     branches: [ main ]
@@ -56,13 +56,13 @@ jobs:
         id: properties
         shell: bash
         run: |
+          VERSION=$(./gradlew -q printSemanticVersion | cut -f2- -d ' ')
+          
           PROPERTIES="$(./gradlew properties --console=plain -q)"
-          VERSION="$(echo "$PROPERTIES" | grep "^version:" | cut -f2- -d ' ')"
           NAME="$(echo "$PROPERTIES" | grep "^pluginName:" | cut -f2- -d ' ')"
           
           echo "::set-output name=version::$VERSION"
           echo "::set-output name=name::$NAME"
-
 
       - name: Build Plugin
         env:

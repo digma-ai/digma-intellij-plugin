@@ -163,7 +163,7 @@ class InsightsViewOrchestrator(val project: Project) {
             Log.log({ message: String? -> logger.warn(message) }, "Could not find MethodInfo for MethodUnderCaret {}. ", methodUnderCaret)
             val dummyMethodInfo = MethodInfo(
                 methodUnderCaret.id, methodUnderCaret.name, methodUnderCaret.className, "",
-                methodUnderCaret.fileUri, 0, ArrayList()
+                methodUnderCaret.fileUri, 0
             )
             Log.log({ message: String? -> logger.warn(message) }, "Using dummy MethodInfo for to update views {}. ", dummyMethodInfo)
             updateInsightsWithDummyMethodInfo(methodUnderCaret, dummyMethodInfo)

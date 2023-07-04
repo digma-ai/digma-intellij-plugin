@@ -23,6 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -64,7 +65,7 @@ public class JavaSpanDiscoveryUtils {
      * this method should be called with psiMethod that was validated to be annotated with @WithSpan otherwise it
      * will return null.
      */
-    @Nullable
+    @NotNull
     public static List<SpanInfo> getSpanInfoFromWithSpanAnnotatedMethod(@NotNull PsiMethod psiMethod) {
 
         var withSpanAnnotation = psiMethod.getAnnotation(Constants.WITH_SPAN_FQN);
@@ -84,15 +85,15 @@ public class JavaSpanDiscoveryUtils {
             var spanName = createSpanNameForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass);
 
             List<SpanInfo> spanInfos = new ArrayList<>();
-            spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass,WITH_SPAN_INST_LIBRARY_1), spanName, methodId, containingFileUri));
-            spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass,WITH_SPAN_INST_LIBRARY_2), spanName, methodId, containingFileUri));
-            spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass,WITH_SPAN_INST_LIBRARY_3), spanName, methodId, containingFileUri));
-            spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass,WITH_SPAN_INST_LIBRARY_4), spanName, methodId, containingFileUri));
+            spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass, WITH_SPAN_INST_LIBRARY_1), spanName, methodId, containingFileUri));
+            spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass, WITH_SPAN_INST_LIBRARY_2), spanName, methodId, containingFileUri));
+            spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass, WITH_SPAN_INST_LIBRARY_3), spanName, methodId, containingFileUri));
+            spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass, WITH_SPAN_INST_LIBRARY_4), spanName, methodId, containingFileUri));
             return spanInfos;
         }
 
         //if here then we couldn't completely discover the span
-        return null;
+        return Collections.emptyList();
     }
 
 
@@ -160,7 +161,7 @@ public class JavaSpanDiscoveryUtils {
 
 
     @Nullable
-    private static SpanInfo getSpanInfoFromSpanBuilderVariable(@NotNull Project project,@NotNull  PsiVariable spanBuilderVariable, @NotNull String methodId, @NotNull String containingFileUri) {
+    private static SpanInfo getSpanInfoFromSpanBuilderVariable(@NotNull Project project, @NotNull PsiVariable spanBuilderVariable, @NotNull String methodId, @NotNull String containingFileUri) {
 
         //search references to the variable, if an assignment is found use it to find the SpanInfo.
         //if no assignment is found use the variable initialization
@@ -183,8 +184,8 @@ public class JavaSpanDiscoveryUtils {
             PsiExpression initializer = spanBuilderVariable.getInitializer();
             if (initializer instanceof PsiMethodCallExpression) {
                 return getSpanInfoFromSpanBuilderMethodCallExpression(project, (PsiMethodCallExpression) initializer, methodId, containingFileUri);
-            }else if(initializer instanceof PsiReferenceExpression){
-                return getSpanInfoFromSpanBuilderReferenceExpression(project, (PsiReferenceExpression) initializer,methodId,containingFileUri);
+            } else if (initializer instanceof PsiReferenceExpression) {
+                return getSpanInfoFromSpanBuilderReferenceExpression(project, (PsiReferenceExpression) initializer, methodId, containingFileUri);
             }
         }
 
@@ -192,10 +193,8 @@ public class JavaSpanDiscoveryUtils {
     }
 
 
-
-
     @Nullable
-    private static SpanInfo getSpanInfoFromSpanBuilderAssignmentExpression(@NotNull Project project,@NotNull  PsiAssignmentExpression spanBuilderAssignmentExpression, @NotNull String methodId, @NotNull String containingFileUri) {
+    private static SpanInfo getSpanInfoFromSpanBuilderAssignmentExpression(@NotNull Project project, @NotNull PsiAssignmentExpression spanBuilderAssignmentExpression, @NotNull String methodId, @NotNull String containingFileUri) {
 
         PsiExpression rightAssignmentExpression = spanBuilderAssignmentExpression.getRExpression();
         if (rightAssignmentExpression instanceof PsiMethodCallExpression) {
@@ -313,7 +312,7 @@ public class JavaSpanDiscoveryUtils {
                 PsiExpression tracerBuilderBuildMethodQualifier = tracerMethodCallExpression.getMethodExpression().getQualifierExpression();
                 if (tracerBuilderBuildMethodQualifier instanceof PsiMethodCallExpression) {
                     return getInstLibraryFromMethodCallExpression(project, (PsiMethodCallExpression) tracerBuilderBuildMethodQualifier);
-                }else if(tracerBuilderBuildMethodQualifier instanceof PsiReferenceExpression){
+                } else if (tracerBuilderBuildMethodQualifier instanceof PsiReferenceExpression) {
                     return getInstLibraryFromTracerReferenceExpression(project, (PsiReferenceExpression) tracerBuilderBuildMethodQualifier);
                 }
             } else if (isMethodWithFirstArgumentString(getTracerMethod, "tracerBuilder", OPENTELEMETY_FQN)) {
@@ -336,7 +335,7 @@ public class JavaSpanDiscoveryUtils {
     @NotNull
     public static Query<PsiMethod> filterNonRelevantMethodsForSpanDiscovery(@NotNull Query<PsiMethod> psiMethods) {
         return psiMethods.filtering(psiMethod -> {
-            var file = PsiTreeUtil.getParentOfType(psiMethod,PsiFile.class);
+            var file = PsiTreeUtil.getParentOfType(psiMethod, PsiFile.class);
             //only java files are relevant
             if (file instanceof PsiJavaFile) {
                 var aClass = PsiTreeUtil.getParentOfType(psiMethod, PsiClass.class);

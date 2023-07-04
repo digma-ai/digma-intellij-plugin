@@ -38,7 +38,7 @@ tasks {
     withType<KotlinCompile> {
 
         doFirst {
-            logger.lifecycle("Building kotlin with jvmTarget:${kotlinOptions.jvmTarget},apiVersion:${kotlinOptions.apiVersion},jvmTarget:${kotlinOptions.languageVersion}")
+            logger.lifecycle("Compiling kotlin with jvmTarget:${kotlinOptions.jvmTarget},apiVersion:${kotlinOptions.apiVersion},jvmTarget:${kotlinOptions.languageVersion}")
         }
 
         kotlinOptions {

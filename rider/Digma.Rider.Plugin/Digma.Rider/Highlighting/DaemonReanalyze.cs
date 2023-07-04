@@ -3,12 +3,16 @@ using Digma.Rider.Util;
 using JetBrains.Lifetimes;
 using JetBrains.Platform.RdFramework.Impl;
 using JetBrains.ProjectModel;
-using JetBrains.RdBackend.Common.Features;
 using JetBrains.ReSharper.Feature.Services.Daemon;
-using JetBrains.ReSharper.Feature.Services.Protocol;
 using JetBrains.ReSharper.Resources.Shell;
 using JetBrains.Util;
 using static Digma.Rider.Logging.Logger;
+
+#if (PROFILE_2023_2) // FIX_WHEN_MIN_IS_232
+using JetBrains.ReSharper.Feature.Services.Protocol;
+#else
+using JetBrains.RdBackend.Common.Features;
+#endif
 
 namespace Digma.Rider.Highlighting
 {

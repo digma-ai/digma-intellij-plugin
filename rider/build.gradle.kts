@@ -87,22 +87,25 @@ tasks {
 
         dependsOn(deletePluginProps)
 
-        val resharperVersion =
+        val tokens = mutableMapOf<String, String>()
 
             //todo: currently the current and latest versions are the same,
             // maybe in the future we can support 3 versions
 
-            if (project.findProperty("useLatestVersion") == "true"){
-                "2023.1.3"
-            }else if (project.findProperty("useEAPVersion") == "true"){
-                "2023.2.0-eap06"
-            }else{
-                "2023.1.3"
+            if (project.findProperty("useLatestVersion") == "true") {
+                tokens["RESHARPER_VERSION"] = "2023.1.3"
+                tokens["VERSION_CONSTANT"] = "PROFILE_2023_1"
+            }else if (project.findProperty("useEAPVersion") == "true") {
+                tokens["RESHARPER_VERSION"] = "2023.2.0-eap07"
+                tokens["VERSION_CONSTANT"] = "PROFILE_2023_2"
+            }else {
+                tokens["RESHARPER_VERSION"] = "2022.3.1"
+                tokens["VERSION_CONSTANT"] = "PROFILE_2022_3"
             }
 
         duplicatesStrategy = DuplicatesStrategy.INCLUDE
 
-        val tokens = mapOf("RESHARPER_VERSION" to resharperVersion)
+//        val tokens = mapOf("RESHARPER_VERSION" to resharperVersion)
         from(layout.projectDirectory.dir("Digma.Rider.Plugin"))
         include("Plugin.props.template")
         filter<ReplaceTokens>("tokens" to tokens)

@@ -43,6 +43,7 @@ dependencyResolutionManagement {
     versionCatalogs {
         create("libs") {
             //rdgen version is independent of rider version
+//            version("rider-rdgen", "2022.3.4")
             version("rider-rdgen", "2023.2.0")
             //kotlin stdlib is not packaged with the plugin because intellij platform already contains it.
             //it's necessary for compilation in some cases for example rider protocol module.

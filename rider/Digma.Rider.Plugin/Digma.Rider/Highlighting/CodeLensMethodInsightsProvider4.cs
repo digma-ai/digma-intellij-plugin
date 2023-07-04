@@ -1,7 +1,5 @@
-using System.Collections.Generic;
 using Digma.Rider.Protocol;
 using JetBrains.ProjectModel;
-using JetBrains.Rider.Model;
 using JetBrains.Util;
 
 namespace Digma.Rider.Highlighting
@@ -19,7 +17,5 @@ namespace Digma.Rider.Highlighting
         public override string ProviderId => "MethodInsightsProvider4";
         public override string DisplayName => "Method Insights Provider_4 Hints";
 
-        public override ICollection<CodeVisionRelativeOrdering> RelativeOrderings => new CodeVisionRelativeOrdering[]
-            { new CodeVisionRelativeOrderingFirst() };
     }
 }

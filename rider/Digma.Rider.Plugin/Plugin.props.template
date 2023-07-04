@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <SdkVersion>@RESHARPER_VERSION@</SdkVersion>
+    <DefineConstants>@VERSION_CONSTANT@</DefineConstants>
 
     <Title>DigmaRiderPlugin</Title>
     <Description>Digma Rider Plugin</Description>

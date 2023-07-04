@@ -1,5 +1,6 @@
 plugins {
     id("digma-base")
-    id("java")
+    id("common-java")
+    id("common-kotlin")
     id("org.jetbrains.intellij")
 }

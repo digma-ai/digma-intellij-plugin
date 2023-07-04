@@ -4,6 +4,7 @@
 
 plugins {
     id("digma-base")
+    id("common-java")
     id("java-library")
 }
 

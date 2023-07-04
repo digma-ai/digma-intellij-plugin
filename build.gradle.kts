@@ -1,10 +1,14 @@
+import common.buildVersion
 import common.dynamicPlatformType
+import common.logBuildProfile
+import common.platformPlugins
 import common.platformVersion
 import common.properties
+import common.withCurrentProfile
 import org.jetbrains.changelog.date
+import org.jetbrains.changelog.exceptions.MissingVersionException
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.tasks.ListProductsReleasesTask
-import org.jetbrains.changelog.exceptions.MissingVersionException
 import java.util.EnumSet
 
 fun properties(key: String) = properties(key,project)
@@ -18,7 +22,7 @@ plugins {
     id("org.jetbrains.changelog") version "2.0.0"
     id("org.jetbrains.qodana") version "0.1.13"
     id("org.jetbrains.kotlinx.kover") version "0.6.1"
-    id("common-kotlin")
+
 }
 
 
@@ -68,15 +72,16 @@ dependencies{
 //compile correctly. most modules always compile with the same platform type.
 //it is only necessary for launcher, so when launching rider the platform type for this project and ide-common
 // should be RD but not for the other projects like java,python.
-val platformType by extra(dynamicPlatformType(project))
+val platformType: String by extra(dynamicPlatformType(project))
 
 
 // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
 intellij {
+    logBuildProfile(project)
     pluginName.set(properties("pluginName"))
-    version.set(platformVersion(project))
+    version.set(project.platformVersion())
     type.set(properties("platformType"))
-    plugins.set(properties("platformPlugins").split(',').map(String::trim).filter(String::isNotEmpty))
+    plugins.set(project.platformPlugins().split(',').map(String::trim).filter(String::isNotEmpty))
 
     pluginsRepositories {
         marketplace()
@@ -86,7 +91,7 @@ intellij {
 
 // Configure Gradle Changelog Plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
 changelog {
-    version.set(common.semanticversion.getSemanticVersion(project))
+    version.set(project.buildVersion())
     path.set("${project.projectDir}/CHANGELOG.md")
     groups.set(listOf("Added", "Changed", "Deprecated", "Removed", "Fixed", "Security"))
     header.set(provider { "[${version.get()}] - ${date()}" })
@@ -139,9 +144,13 @@ tasks {
     }
 
     patchPluginXml {
-        version.set(common.semanticversion.getSemanticVersion(project))
-        sinceBuild.set(properties("pluginSinceBuild"))
-        untilBuild.set(properties("pluginUntilBuild"))
+        version.set(project.buildVersion())
+        withCurrentProfile {
+            sinceBuild.set(it.pluginSinceBuild)
+            untilBuild.set(it.pluginUntilBuild)
+        }
+//        sinceBuild.set(properties("pluginSinceBuild"))
+//        untilBuild.set(properties("pluginUntilBuild"))
 
         // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest
         pluginDescription.set(
@@ -163,10 +172,10 @@ tasks {
         }
         changeNotes.set(provider {
             changelog.renderItem(
-                    latestChangelog
-                            .withHeader(false)
-                            .withEmptySections(false),
-                    org.jetbrains.changelog.Changelog.OutputType.HTML
+                latestChangelog
+                    .withHeader(false)
+                    .withEmptySections(false),
+                org.jetbrains.changelog.Changelog.OutputType.HTML
             )
         })
     }
@@ -201,6 +210,14 @@ tasks {
     runIde {
         dependsOn(deleteLog)
 
+        project.withCurrentProfile {
+            if (it.platformVersionCode == "232") {
+                jbrVersion = "jbr-release-17.0.7b1000.5"
+                jbrVariant = "jcef"
+            }
+        }
+
+
         maxHeapSize = "2g"
         // Rider's backend doesn't support dynamic plugins. It might be possible to work with auto-reload of the frontend
         // part of a plugin, but there are dangers about keeping plugins in sync
@@ -216,6 +233,7 @@ tasks {
     // currently we compile python with IC plus python plugin so no real need to verify pycharm
     // but it would be better if we did.
     listProductsReleases {
+        //todo: maybe get from buildProfile too
         val typesToVerify = properties("typesToVerifyPlugin").split(",")
         types.set(typesToVerify)
         val versionsToVerify = properties("versionsToVerifyPlugin").split(",")

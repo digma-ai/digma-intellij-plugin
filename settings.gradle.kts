@@ -14,16 +14,20 @@ pluginManagement {
             // This doesn't work for rdgen, so we provide some help
             if (requested.id.id == "com.jetbrains.rdgen") {
 
-                if (settings.providers.gradleProperty("useEAPVersion").isPresent &&
-                    settings.providers.gradleProperty("useEAPVersion").get() == "true"){
-                    val rdgenForEAPVersion = "2023.2.2"
-                    logger.lifecycle("Using rdgen $rdgenForEAPVersion")
-                    useVersion(rdgenForEAPVersion)
-                    useModule("com.jetbrains.rd:rd-gen:${rdgenForEAPVersion}")
-                }else{
-                    logger.lifecycle("Using rdgen ${requested.version}")
-                    useModule("com.jetbrains.rd:rd-gen:${requested.version}")
+                val rdGenVersion = if (settings.providers.gradleProperty("buildProfile").isPresent) {
+                    val profile = settings.providers.gradleProperty("buildProfile").get()
+                    when (profile) {
+                        "latest" -> "2023.2.0"
+                        "eap" -> "2023.2.2"
+                        else -> "2023.2.0"
+                    }
+                } else {
+                    "2023.2.0"
                 }
+
+                logger.lifecycle("Using rdgen $rdGenVersion")
+                useVersion(rdGenVersion)
+                useModule("com.jetbrains.rd:rd-gen:${rdGenVersion}")
             }
         }
     }
@@ -34,16 +38,12 @@ pluginManagement {
 kotlin-stdlib: the kotlin-stdlib must be compatible with the intellij platform version,
  see: https://plugins.jetbrains.com/docs/intellij/kotlin.html#kotlin-standard-library
 
-we currently have to specify intellij platform version in a few places , so use
-the version alias where ever possible
-
  todo: maybe use java-platforms instead of versionCatalogs
  */
 dependencyResolutionManagement {
     versionCatalogs {
         create("libs") {
             //rdgen version is independent of rider version
-//            version("rider-rdgen", "2022.3.4")
             version("rider-rdgen", "2023.2.0")
             //kotlin stdlib is not packaged with the plugin because intellij platform already contains it.
             //it's necessary for compilation in some cases for example rider protocol module.

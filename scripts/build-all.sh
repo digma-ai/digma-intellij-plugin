@@ -6,9 +6,16 @@ set -e
 ###################   idea community
 
 ./gradlew clean buildPlugin
-./gradlew clean buildPlugin -PuseLatestVersion=true
-./gradlew clean buildPlugin -PuseEAPVersion=true
+./gradlew clean buildPlugin -PbuildProfile=latest
+./gradlew clean buildPlugin -PbuildProfile=eap
 
+## to run ide from command line
+./gradlew clean runIde
+./gradlew clean runIde -PbuildProfile=latest
+./gradlew clean runIde -PbuildProfile=eap
+
+
+aaa
 ## to run ide from command line
 ./gradlew clean runIde -PplatformPlugins=com.intellij.java
 ./gradlew clean runIde -PplatformPlugins=com.intellij.java -PuseLatestVersion=true

@@ -1,8 +1,9 @@
+import common.IdeFlavor
+import common.logBuildProfile
 import common.platformVersion
 
 plugins {
     id("plugin-library")
-    id("common-kotlin")
 }
 
 
@@ -12,9 +13,10 @@ dependencies{
 }
 
 //java module should always build with IC
-val platformType by extra("IC")
+val platformType by extra(IdeFlavor.IC.name)
 
 intellij {
-    version.set("IC-"+ platformVersion(project))
-    plugins.set(listOf("com.intellij.java","org.jetbrains.idea.maven","org.jetbrains.plugins.gradle"))
+    logBuildProfile(project)
+    version.set("$platformType-${project.platformVersion()}")
+    plugins.set(listOf("com.intellij.java", "org.jetbrains.idea.maven", "org.jetbrains.plugins.gradle"))
 }

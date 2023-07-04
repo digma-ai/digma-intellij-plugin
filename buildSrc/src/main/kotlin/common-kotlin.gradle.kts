@@ -1,4 +1,4 @@
-import common.properties
+import common.currentProfile
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 
@@ -22,7 +22,8 @@ plugins {
 
 kotlin {
     jvmToolchain {
-        this.languageVersion.set(JavaLanguageVersion.of(properties("javaVersion", project)))
+//        this.languageVersion.set(JavaLanguageVersion.of(properties("javaVersion", project)))
+        this.languageVersion.set(JavaLanguageVersion.of(project.currentProfile().javaVersion))
     }
 }
 
@@ -33,9 +34,23 @@ dependencies {
 }
 
 tasks {
-    properties("javaVersion", project).let {
-        withType<KotlinCompile> {
-            kotlinOptions.jvmTarget = it
+
+    withType<KotlinCompile> {
+
+        doFirst {
+            logger.lifecycle("Building kotlin with jvmTarget:${kotlinOptions.jvmTarget},apiVersion:${kotlinOptions.apiVersion},jvmTarget:${kotlinOptions.languageVersion}")
+        }
+
+        kotlinOptions {
+            jvmTarget = project.currentProfile().javaVersion
+            apiVersion = project.currentProfile().kotlinTarget
+            languageVersion = project.currentProfile().kotlinTarget
         }
     }
+
+//    properties("javaVersion", project).let {
+//        withType<KotlinCompile> {
+//            kotlinOptions.jvmTarget = it
+//        }
+//    }
 }

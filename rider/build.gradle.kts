@@ -1,6 +1,9 @@
+import common.IdeFlavor
+import common.logBuildProfile
 import common.platformVersion
 import common.properties
 import common.rider.rdLibDirectory
+import common.withCurrentProfile
 import org.apache.tools.ant.filters.ReplaceTokens
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -10,7 +13,6 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 )
 plugins {
     id("plugin-library")
-    id("common-kotlin")
     id("com.jetbrains.rdgen") version libs.versions.rider.rdgen.get()
 }
 
@@ -25,13 +27,13 @@ dependencies {
 }
 
 
-
 //rider module should always build with RD
-val platformType by extra("RD")
+val platformType by extra(IdeFlavor.RD.name)
 
 
 intellij {
-    version.set("RD-" + platformVersion(project))
+    logBuildProfile(project)
+    version.set("$platformType-${project.platformVersion()}")
     plugins.set(listOf("rider-plugins-appender"))
     downloadSources.set(false) //there are no sources for rider
 }
@@ -89,19 +91,25 @@ tasks {
 
         val tokens = mutableMapOf<String, String>()
 
-            //todo: currently the current and latest versions are the same,
-            // maybe in the future we can support 3 versions
 
-            if (project.findProperty("useLatestVersion") == "true") {
-                tokens["RESHARPER_VERSION"] = "2023.1.3"
-                tokens["VERSION_CONSTANT"] = "PROFILE_2023_1"
-            }else if (project.findProperty("useEAPVersion") == "true") {
-                tokens["RESHARPER_VERSION"] = "2023.2.0-eap07"
-                tokens["VERSION_CONSTANT"] = "PROFILE_2023_2"
-            }else {
-                tokens["RESHARPER_VERSION"] = "2022.3.1"
-                tokens["VERSION_CONSTANT"] = "PROFILE_2022_3"
-            }
+        withCurrentProfile {
+            tokens["RESHARPER_VERSION"] = it.riderResharperVersion
+            tokens["VERSION_CONSTANT"] = it.riderResharperVersionConstant
+        }
+//
+//            //todo: currently the current and latest versions are the same,
+//            // maybe in the future we can support 3 versions
+//
+//            if (project.findProperty("useLatestVersion") == "true") {
+//                tokens["RESHARPER_VERSION"] = "2023.1.3"
+//                tokens["VERSION_CONSTANT"] = "PROFILE_2023_1"
+//            }else if (project.findProperty("useEAPVersion") == "true") {
+//                tokens["RESHARPER_VERSION"] = "2023.2.0-eap07"
+//                tokens["VERSION_CONSTANT"] = "PROFILE_2023_2"
+//            }else {
+//                tokens["RESHARPER_VERSION"] = "2022.3.1"
+//                tokens["VERSION_CONSTANT"] = "PROFILE_2022_3"
+//            }
 
         duplicatesStrategy = DuplicatesStrategy.INCLUDE
 
@@ -112,8 +120,6 @@ tasks {
         into(layout.projectDirectory.dir("Digma.Rider.Plugin"))
         rename("(.+).template", "$1")
     }
-
-
 
 
     val setBuildTool by registering {
@@ -184,7 +190,6 @@ tasks {
     }
 
 }
-
 
 
 val compileDotNet by tasks

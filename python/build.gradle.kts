@@ -1,9 +1,10 @@
+import common.IdeFlavor
+import common.currentProfile
+import common.logBuildProfile
 import common.platformVersion
-import common.pythonPluginVersion
 
 plugins {
     id("plugin-library")
-    id("common-kotlin")
 }
 
 dependencies{
@@ -14,10 +15,11 @@ dependencies{
 }
 
 //python module should always build with IC
-val platformType by extra("IC")
+val platformType by extra(IdeFlavor.IC.name)
 
 
 intellij {
+    logBuildProfile(project)
 
     //there is no source code for pycharm or python plugin
     downloadSources.set(false)
@@ -27,9 +29,9 @@ intellij {
     //So it is possible not to depend on pycharm but to depend on IC with PythonCore plugin. that means we are limited
     //to what PythonCore provides. if we ever need specific pycharm functionality we will need to depend on pycharm.
 
-    version.set("IC-" + platformVersion(project))
+    version.set("$platformType-${project.platformVersion()}")
     //the python plugin version must be compatible with platformVersion
-    plugins.set(listOf("PythonCore:" + pythonPluginVersion(project)))
+    plugins.set(listOf("PythonCore:${project.currentProfile().pythonPluginVersion}"))
 
     //to depend on pycharm community:
 //    version.set("PC-" + platformVersion(project))

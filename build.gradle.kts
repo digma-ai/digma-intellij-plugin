@@ -19,6 +19,7 @@ fun properties(key: String) = properties(key,project)
     "DSL_SCOPE_VIOLATION"
 )
 plugins {
+    id("semantic-version")
     id("plugin-project")
     id("org.jetbrains.changelog") version "2.0.0"
     id("org.jetbrains.qodana") version "0.1.13"
@@ -26,22 +27,14 @@ plugins {
 
 }
 
+//the platformType is determined dynamically depending on some flags.
+//it enables launching different IDEs with different versions and still let the other modules
+//compile correctly. most modules always compile with the same platform type.
+//it is only necessary for launcher, so when launching rider the platform type for this project and ide-common
+// should be RD but not for the other projects like java,python.
+val platformType: String by extra(dynamicPlatformType(project))
 
-tasks.register("incrementSemanticVersionPatch") {
-    doLast {
-        common.semanticversion.incrementSemanticVersionPatch(project)
-    }
-}
-tasks.register("incrementSemanticVersionMinor") {
-    doLast {
-        common.semanticversion.incrementSemanticVersionMinor(project)
-    }
-}
-tasks.register("incrementSemanticVersionMajor") {
-    doLast {
-        common.semanticversion.incrementSemanticVersionMajor(project)
-    }
-}
+logBuildProfile(project)
 
 
 val riderDotNetObjects: Configuration by configurations.creating {
@@ -67,13 +60,6 @@ dependencies{
         "path" to ":rider",
         "configuration" to "riderDotNetObjects")))
 }
-
-//the platformType is determined dynamically depending on some flags.
-//it enables launching different IDEs with different versions and still let the other modules
-//compile correctly. most modules always compile with the same platform type.
-//it is only necessary for launcher, so when launching rider the platform type for this project and ide-common
-// should be RD but not for the other projects like java,python.
-val platformType: String by extra(dynamicPlatformType(project))
 
 
 // Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin

@@ -9,11 +9,7 @@ plugins {
 group = properties("pluginGroup", project)
 version = project.buildVersion()
 
-tasks.register("printSemanticVersion") {
-    doLast {
-        println("${project.name} ${common.semanticversion.getSemanticVersion(project)}")
-    }
-}
+
 
 
 repositories {

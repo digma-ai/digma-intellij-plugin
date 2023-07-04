@@ -69,6 +69,8 @@ fun Project.currentProfile(): BuildProfile = BuildProfiles.currentProfile(this)
 
 object BuildProfiles {
 
+    enum class Profiles { defaut, latest, eap }
+
     fun currentProfile(project: Project): BuildProfile {
         val profile = project.findProperty("buildProfile") ?: "default"
         return profiles[profile] ?: throw GradleException("can not find profile $profile")
@@ -78,6 +80,7 @@ object BuildProfiles {
     private val profiles = mapOf(
 
         "default" to BuildProfile(
+            profile = Profiles.defaut,
             platformVersion = "2022.3.1",
             riderVersion = "2022.3.1",
             pycharmVersion = "2022.3.1",
@@ -87,11 +90,13 @@ object BuildProfiles {
             platformVersionCode = "223",
             pluginSinceBuild = "223",
             pluginUntilBuild = "223.*",
+            versionToRunPluginVerifier = "2022.3.1",
             kotlinTarget = KotlinVersion.KOTLIN_1_7.version,
             javaVersion = JavaVersion.VERSION_17.majorVersion
         ),
 
         "latest" to BuildProfile(
+            profile = Profiles.latest,
             platformVersion = "2023.1.3",
             riderVersion = "2023.1.3",
             pycharmVersion = "2023.1.3",
@@ -101,11 +106,13 @@ object BuildProfiles {
             platformVersionCode = "231",
             pluginSinceBuild = "231",
             pluginUntilBuild = "231.*",
+            versionToRunPluginVerifier = "2023.1.3",
             kotlinTarget = KotlinVersion.KOTLIN_1_8.version,
             javaVersion = JavaVersion.VERSION_17.majorVersion
         ),
 
         "eap" to BuildProfile(
+            profile = Profiles.eap,
             platformVersion = "LATEST-EAP-SNAPSHOT",
             riderVersion = "2023.2-EAP7-SNAPSHOT",
             pycharmVersion = "LATEST-EAP-SNAPSHOT",
@@ -115,6 +122,7 @@ object BuildProfiles {
             platformVersionCode = "232",
             pluginSinceBuild = "232",
             pluginUntilBuild = "232.*",
+            versionToRunPluginVerifier = "2023.2",
             kotlinTarget = KotlinVersion.KOTLIN_1_8.version,
             javaVersion = JavaVersion.VERSION_17.majorVersion
         )
@@ -126,6 +134,7 @@ object BuildProfiles {
 
 
 data class BuildProfile(
+    val profile: BuildProfiles.Profiles,
     val platformVersion: String,
     val riderVersion: String,
     val pycharmVersion: String,
@@ -135,6 +144,7 @@ data class BuildProfile(
     val platformVersionCode: String,
     val pluginSinceBuild: String,
     val pluginUntilBuild: String,
+    val versionToRunPluginVerifier: String,
     val kotlinTarget: String,
     val javaVersion: String,
 )

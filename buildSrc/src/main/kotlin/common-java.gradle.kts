@@ -60,7 +60,7 @@ tasks {
     withType<JavaCompile> {
 
         doFirst {
-            logger.lifecycle("Compiling java with release:${options.release}")
+            logger.lifecycle("Compiling java with release:${options.release.get()}")
         }
 
         options.compilerArgs.addAll(listOf("-Xlint:unchecked,deprecation"))

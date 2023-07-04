@@ -1,5 +1,6 @@
+import common.BuildProfiles
+import common.IdeFlavor
 import common.buildVersion
-import common.currentProfile
 import common.dynamicPlatformType
 import common.logBuildProfile
 import common.platformPlugins
@@ -221,21 +222,13 @@ tasks {
     // but it would be better if we did.
     listProductsReleases {
 
-
         types.set(listOf(platformType))
-        sinceVersion.set(project.currentProfile().pluginSinceBuild)
-        untilVersion.set(project.currentProfile().pluginUntilBuild)
 
-//        val typesToVerify = properties("typesToVerifyPlugin").split(",")
-//        types.set(typesToVerify)
-//        val versionsToVerify = properties("versionsToVerifyPlugin").split(",")
-//        val lowestVersion = versionsToVerify[0]
-//        sinceVersion.set(lowestVersion)
-//        val latestVersion = if(versionsToVerify.size == 1)  versionsToVerify[0] else versionsToVerify[1]
-//        untilVersion.set(latestVersion)
-////        sinceBuild.set("222.3739.36")
-////        untilBuild.set("222.4167.24")
-
+        //doesn't work for EAP , but runPluginVerifier does not rely on the output of listProductsReleases
+        withCurrentProfile { profile ->
+            sinceBuild.set(profile.pluginSinceBuild)
+            untilBuild.set(profile.pluginUntilBuild)
+        }
 
         releaseChannels.set(EnumSet.of(ListProductsReleasesTask.Channel.RELEASE))
     }
@@ -244,6 +237,15 @@ tasks {
     //todo: run plugin verifier for resharper
     // https://blog.jetbrains.com/dotnet/2023/05/26/the-api-verifier/
     runPluginVerifier {
+
+        //rider EAP doesn't work here, plugin verifier can't find it
+        withCurrentProfile { profile ->
+            if (profile.profile == BuildProfiles.Profiles.eap && platformType == IdeFlavor.RD.name) {
+                enabled = false
+            } else {
+                ideVersions.set(listOf("${platformType}-${profile.versionToRunPluginVerifier}"))
+            }
+        }
         subsystemsToCheck.set("without-android")
     }
 

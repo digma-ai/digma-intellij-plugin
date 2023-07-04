@@ -33,7 +33,7 @@ jobs:
       - name: Build Plugin
         env:
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL}}
-        run: ./gradlew test buildPlugin -PbuildWithRider=true -PbuildProfile=eap --no-daemon
+        run: ./gradlew clean test buildPlugin -PbuildWithRider=true -PbuildProfile=eap --no-daemon
 
       - name: Collect Tests Result
         if: ${{ failure() }}
@@ -43,15 +43,16 @@ jobs:
           path: ${{ github.workspace }}/ide-common/build/reports/tests
 
 
-      - name: Run Plugin Verifier
-        run: ./gradlew runPluginVerifier -PbuildWithRider=true -PbuildProfile=eap --no-daemon
-
-      - name: Collect Plugin Verifier Result
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: pluginVerifier-result
-          path: ${{ github.workspace }}/build/reports/pluginVerifier
+      ## todo: currently runPluginVerifier doesn't work for rider, but its not important because this workflow builds with rider
+      #      - name: Run Plugin Verifier
+      #        run: ./gradlew clean runPluginVerifier -PbuildWithRider=true -PbuildProfile=eap --no-daemon
+      #
+      #      - name: Collect Plugin Verifier Result
+      #        if: ${{ always() }}
+      #        uses: actions/upload-artifact@v3
+      #        with:
+      #          name: pluginVerifier-result
+      #          path: ${{ github.workspace }}/build/reports/pluginVerifier
 
       - name: Prepare Plugin Artifact
         id: artifact

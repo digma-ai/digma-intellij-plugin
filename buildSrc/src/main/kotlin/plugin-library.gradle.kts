@@ -11,6 +11,11 @@ plugins {
 // tasks. the unnecessary tasks are disabled.
 //we have only one real plugin and its the root project that really builds a plugin.
 tasks{
+
+    listProductsReleases {
+        enabled = false
+    }
+
     buildSearchableOptions {
         enabled = false
     }

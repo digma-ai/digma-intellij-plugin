@@ -1,4 +1,4 @@
-name: Build all branches (!main)
+name: Build all branches (!main) (default profile)
 
 on:
   push:

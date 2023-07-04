@@ -1,4 +1,4 @@
-name: Build main (latest)
+name: Build main (latest profile)
 on:
   push:
     branches: [ main,support-2023.2-EAP ]

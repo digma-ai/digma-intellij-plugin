@@ -1,4 +1,4 @@
-name: Build Rider main
+name: Build Rider main (default profile)
 on:
   push:
     branches: [ main,support-2023.2-EAP ]

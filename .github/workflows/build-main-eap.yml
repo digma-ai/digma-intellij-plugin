@@ -1,7 +1,7 @@
 name: Build main (EAP)
 on:
   push:
-    branches: [ main ]
+    branches: [ main,support-2023.2-EAP ]
 
 jobs:
 

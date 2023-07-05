@@ -28,7 +28,7 @@ plugins {
 
 }
 
-//the platformType is determined dynamically depending on some flags.
+//the platformType is determined dynamically with a gradle property.
 //it enables launching different IDEs with different versions and still let the other modules
 //compile correctly. most modules always compile with the same platform type.
 //it is only necessary for launcher, so when launching rider the platform type for this project and ide-common
@@ -38,6 +38,7 @@ val platformType: String by extra(dynamicPlatformType(project))
 logBuildProfile(project)
 
 
+//this project depends on rider dotnet artifacts. this will force the dotnet build before packaging.
 val riderDotNetObjects: Configuration by configurations.creating {
     isCanBeConsumed = false
     isCanBeResolved = true
@@ -51,6 +52,7 @@ dependencies{
     implementation(project(":java"))
     implementation(project(":python"))
     implementation(project(":rider"))
+// todo: recommended by jetbrains but has a bug that openiong classes opens the class file instead of source file
 //    implementation(project(":ide-common", "instrumentedJar"))
 //    implementation(project(":java", "instrumentedJar"))
 //    implementation(project(":python", "instrumentedJar"))
@@ -63,7 +65,6 @@ dependencies{
 }
 
 
-// Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
 intellij {
     logBuildProfile(project)
     pluginName.set(properties("pluginName"))
@@ -137,8 +138,6 @@ tasks {
             sinceBuild.set(it.pluginSinceBuild)
             untilBuild.set(it.pluginUntilBuild)
         }
-//        sinceBuild.set(properties("pluginSinceBuild"))
-//        untilBuild.set(properties("pluginUntilBuild"))
 
         // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest
         pluginDescription.set(
@@ -198,6 +197,7 @@ tasks {
     runIde {
         dependsOn(deleteLog)
 
+        //todo: remove when 232 is released
         project.withCurrentProfile {
             if (it.platformVersionCode == "232") {
                 jbrVersion = "jbr-release-17.0.7b1000.5"
@@ -216,14 +216,8 @@ tasks {
     }
 
 
-    //todo: we need to do something with github workflow so that we can verify all required versions,
-    // github fails with no space left on device when trying to verify more then 2 IDEs.
-    // currently we compile python with IC plus python plugin so no real need to verify pycharm
-    // but it would be better if we did.
     listProductsReleases {
-
         types.set(listOf(platformType))
-
         //doesn't work for EAP , but runPluginVerifier does not rely on the output of listProductsReleases
         withCurrentProfile { profile ->
             sinceBuild.set(profile.pluginSinceBuild)

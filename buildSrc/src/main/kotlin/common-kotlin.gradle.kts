@@ -22,7 +22,6 @@ plugins {
 
 kotlin {
     jvmToolchain {
-//        this.languageVersion.set(JavaLanguageVersion.of(properties("javaVersion", project)))
         this.languageVersion.set(JavaLanguageVersion.of(project.currentProfile().javaVersion))
     }
 }
@@ -48,9 +47,4 @@ tasks {
         }
     }
 
-//    properties("javaVersion", project).let {
-//        withType<KotlinCompile> {
-//            kotlinOptions.jvmTarget = it
-//        }
-//    }
 }

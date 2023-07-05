@@ -36,8 +36,7 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
 
 
     private fun getProtocol(model: CodeObjectsModel):IProtocol{
-        //todo: this is because in EAP protocol is nullable, maybe need to remove when EAP is released
-        return model.protocol!!
+        return model.protocol
     }
 
     fun environmentChanged(newEnv: String) {

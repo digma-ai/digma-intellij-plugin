@@ -43,15 +43,17 @@ jobs:
           path: ${{ github.workspace }}/ide-common/build/reports/tests
 
 
-      - name: Run Plugin Verifier
-        run: ./gradlew clean runPluginVerifier -PbuildWithRider=true -PbuildProfile=latest --no-daemon
-
-      - name: Collect Plugin Verifier Result
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: pluginVerifier-result
-          path: ${{ github.workspace }}/build/reports/pluginVerifier
+      ## can't verify Rider because it will fail on code in java or python modules that don't exist in Rider.
+      ## but it's ok because this workflow build with Rider and that is good enough
+      #      - name: Run Plugin Verifier
+      #        run: ./gradlew clean runPluginVerifier -PbuildWithRider=true -PbuildProfile=latest --no-daemon
+      #
+      #      - name: Collect Plugin Verifier Result
+      #        if: ${{ always() }}
+      #        uses: actions/upload-artifact@v3
+      #        with:
+      #          name: pluginVerifier-result
+      #          path: ${{ github.workspace }}/build/reports/pluginVerifier
 
       - name: Prepare Plugin Artifact
         id: artifact

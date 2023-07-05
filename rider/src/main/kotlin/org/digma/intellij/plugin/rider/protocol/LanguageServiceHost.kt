@@ -68,8 +68,7 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
     }
 
     private fun getProtocol(model: LanguageServiceModel): IProtocol {
-        //todo: this is because in EAP protocol is nullable, maybe need to remove when EAP is released
-        return model.protocol!!
+        return model.protocol
     }
 
     /*

@@ -57,11 +57,15 @@ tasks{
         enabled = false
     }
 
-    listProductsReleases{
+    listProductsReleases {
         enabled = false
     }
 
-    patchPluginXml{
+    patchPluginXml {
+        enabled = false
+    }
+
+    listBundledPlugins {
         enabled = false
     }
 }

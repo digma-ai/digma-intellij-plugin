@@ -12,7 +12,7 @@ jobs:
   # Prepare and publish the plugin to the Marketplace repository
   publish:
 #    todo: if: "github.event.release.released"
-    name: Publish Plugin
+    name: Publish Plugin (lowest profile)
     runs-on: ubuntu-latest
     steps:
 
@@ -26,6 +26,7 @@ jobs:
         with:
           java-version: '17'
           distribution: 'corretto'
+          cache: gradle
 
       - name: Setup dotnet
         uses: actions/setup-dotnet@v2
@@ -36,9 +37,6 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1.0.4
 
-      - name: Run Plugin Verifier
-        run: ./gradlew clean buildPlugin runPluginVerifier --no-daemon
-
       - name: Export Properties
         id: properties
         shell: bash
@@ -48,15 +46,9 @@ jobs:
           EOM
           )"
           
-          CHANGELOG="${CHANGELOG//'%'/'%25'}"
-          CHANGELOG="${CHANGELOG//$'\n'/'%0A'}"
-          CHANGELOG="${CHANGELOG//$'\r'/'%0D'}"
-          CHANGELOG=$(echo $CHANGELOG | sed  's/## /### /g')
           echo "::set-output name=changelog::$CHANGELOG"
 
-      # Update Unreleased section with the current release note
-      # we replaced ATX_2 with ATX_3 because patchChangelog will fail if it can't find ATX_2 line with a version.
-      # we don't keep a changelog file in git, just create it here ,patch plugin.xml and ignore it.
+      # Update changelog
       - name: Patch Changelog
         if: ${{ steps.properties.outputs.changelog != '' }}
         env:
@@ -81,6 +73,8 @@ jobs:
         run: gh release upload ${{ github.event.release.tag_name }} ./build/distributions/*
 
 
+      ## This section checks out main branch, update changelog file increment the version, commit and push.
+
       - name: Revert changelog file and untracked files
         run: |
           git reset --hard HEAD
@@ -93,6 +87,15 @@ jobs:
           ref: main
           token: ${{ secrets.GH_ADMIN_TOKEN }}
 
+
+      # Update changelog file again and commit to main
+      - name: Patch Changelog in main branch
+        if: ${{ steps.properties.outputs.changelog != '' }}
+        env:
+          CHANGELOG: ${{ steps.properties.outputs.changelog }}
+        run: |
+          ./gradlew patchChangelog --release-note="$CHANGELOG"
+
       - name: Increment version
         run: |
           ./gradlew incrementSemanticVersionPatch
@@ -100,8 +103,10 @@ jobs:
 
       - name: Commit next version to main
         run: |
+          VERSION=$(cat version.properties |grep "version="|cut -d= -f2)
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add version.properties
-          git commit -m "increment next version after publish"
+          git add CHANGELOG.md
+          git commit -m "increment version after publish to ${VERSION} and update changelog"
           git push

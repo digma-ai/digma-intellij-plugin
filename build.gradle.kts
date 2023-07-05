@@ -22,7 +22,7 @@ fun properties(key: String) = properties(key,project)
 plugins {
     id("semantic-version")
     id("plugin-project")
-    id("org.jetbrains.changelog") version "2.0.0"
+    id("org.jetbrains.changelog") version "2.0.1"
     id("org.jetbrains.qodana") version "0.1.13"
     id("org.jetbrains.kotlinx.kover") version "0.6.1"
 

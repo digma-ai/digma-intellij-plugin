@@ -12,7 +12,7 @@ jobs:
   # Prepare and publish the plugin to the Marketplace repository
   publish:
     #    todo: if: "github.event.release.released"
-    name: Publish Plugin
+    name: Publish Plugin (latest profile)
     runs-on: ubuntu-latest
     steps:
 

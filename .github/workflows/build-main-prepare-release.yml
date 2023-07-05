@@ -9,7 +9,7 @@ jobs:
 
   build:
 
-    name: Build and Verify
+    name: Build and Verify (default profile)
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.properties.outputs.version }}
@@ -51,7 +51,7 @@ jobs:
           echo "::set-output name=version::$VERSION"
           echo "::set-output name=name::$NAME"
 
-      - name: Build Plugin
+      - name: Build Plugin (default profile)
         env:
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL}}
         run: ./gradlew clean test buildPlugin --no-daemon
@@ -66,7 +66,7 @@ jobs:
           path: ${{ github.workspace }}/ide-common/build/reports/tests
 
 
-      - name: Run Plugin Verifier
+      - name: Run Plugin Verifier (default profile)
         run: ./gradlew clean runPluginVerifier --no-daemon
 
       - name: Collect Plugin Verifier Result

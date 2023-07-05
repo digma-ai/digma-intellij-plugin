@@ -1,13 +1,13 @@
 name: Build main (latest profile)
 on:
   push:
-    branches: [ main,support-2023.2-EAP ]
+    branches: [ main ]
 
 jobs:
 
   build:
 
-    name: Build and Verify
+    name: Build and Verify (latest profile)
     runs-on: ubuntu-latest
 
     steps:
@@ -30,7 +30,7 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1.0.4
 
-      - name: Build Plugin
+      - name: Build Plugin (latest profile)
         env:
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL}}
         run: ./gradlew clean test buildPlugin -PbuildProfile=latest --no-daemon
@@ -43,7 +43,7 @@ jobs:
           path: ${{ github.workspace }}/ide-common/build/reports/tests
 
 
-      - name: Run Plugin Verifier
+      - name: Run Plugin Verifier (latest profile)
         run: ./gradlew clean runPluginVerifier -PbuildProfile=latest --no-daemon
 
       - name: Collect Plugin Verifier Result

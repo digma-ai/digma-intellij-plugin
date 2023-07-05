@@ -1,13 +1,13 @@
 name: Build Rider main (latest profile)
 on:
   push:
-    branches: [ main,support-2023.2-EAP ]
+    branches: [ main ]
 
 jobs:
 
   build:
 
-    name: Build and Verify Rider
+    name: Build and Verify Rider (latest profile)
     runs-on: ubuntu-latest
 
     steps:
@@ -30,7 +30,7 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1.0.4
 
-      - name: Build Plugin
+      - name: Build Plugin (latest profile)
         env:
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL}}
         run: ./gradlew clean test buildPlugin -PbuildWithRider=true -PbuildProfile=latest --no-daemon

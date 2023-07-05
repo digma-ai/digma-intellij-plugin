@@ -30,7 +30,7 @@ jobs:
         uses: gradle/wrapper-validation-action@v1.0.4
 
 
-      - name: Build Plugin
+      - name: Build Plugin (default profile)
         env:
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL}}
         run: ./gradlew clean test buildPlugin --no-daemon
@@ -46,7 +46,7 @@ jobs:
           retention-days: 5
 
 
-      - name: Run Plugin Verifier
+      - name: Run Plugin Verifier (default profile)
         run: ./gradlew clean runPluginVerifier --no-daemon
 
       - name: Collect Plugin Verifier Result

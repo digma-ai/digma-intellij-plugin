@@ -28,6 +28,7 @@ open class InsightListViewItem<INSIGHT : CodeObjectInsight>(insight: INSIGHT) :
                 // HTTP Endpoints
                 InsightType.EndpointSpaNPlusOne -> 55
                 InsightType.EndpointSessionInView -> 56
+                InsightType.EndpointChattyApi -> 57
 
                 InsightType.SlowestSpans -> 40
                 InsightType.LowUsage -> 30

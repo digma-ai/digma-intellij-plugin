@@ -7,23 +7,23 @@ import java.beans.ConstructorProperties
 import java.util.Date
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class EndpointSessionInViewInsight
+data class EndpointChattyApiInsight
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties(
-        "codeObjectId",
-        "environment",
-        "scope",
-        "importance",
-        "decorators",
-        "actualStartTime",
-        "customStartTime",
-        "prefixedCodeObjectId",
-        "isRecalculateEnabled",
-        "shortDisplayInfo",
-        "spanInfo",
-        "route",
-        "serviceName",
-        "spans"
+    "codeObjectId",
+    "environment",
+    "scope",
+    "importance",
+    "decorators",
+    "actualStartTime",
+    "customStartTime",
+    "prefixedCodeObjectId",
+    "isRecalculateEnabled",
+    "shortDisplayInfo",
+    "spanInfo",
+    "route",
+    "serviceName",
+    "spans"
 )
 constructor(
     override val codeObjectId: String,
@@ -39,9 +39,7 @@ constructor(
     override val spanInfo: SpanInfo,
     override var route: String,
     override var serviceName: String,
-    val spans: List<SessionInViewSpanInfo>,
+    val spans: List<ChattyApiSpanInfo>,
 ) : EndpointInsight {
-        override val type: InsightType = InsightType.EndpointSessionInView
+    override val type: InsightType = InsightType.EndpointChattyApi
 }
-
-

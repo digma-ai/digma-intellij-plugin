@@ -1,0 +1,81 @@
+# GitHub Actions Workflow created for handling the release process based on the draft release prepared
+# with the Build workflow. Running the publishPlugin task requires the PUBLISH_TOKEN secret provided.
+
+
+name: Publish to jetbrains marketplace
+on:
+  workflow_call:
+    inputs:
+      build-profile:
+        required: true
+        type: string
+      tag-name:
+        required: true
+        type: string
+      changelog:
+        required: true
+        type: string
+
+jobs:
+
+  publish:
+    name: Publish Plugin
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Fetch Sources
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.tag-name }}
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+          cache: gradle
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: |
+            6.0.102
+
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v1.0.4
+
+      - name: Export Properties
+        id: properties
+        shell: bash
+        run: |
+          CHANGELOG="$(cat << 'EOM' | sed -e 's/^[[:space:]]*$//g' -e '/./,$!d'
+          ${{ inputs.changelog }}
+          EOM
+          )"
+          
+          echo "::set-output name=changelog::$CHANGELOG"
+
+      # Update changelog
+      - name: Patch Changelog
+        if: ${{ steps.properties.outputs.changelog != '' }}
+        env:
+          CHANGELOG: ${{ steps.properties.outputs.changelog }}
+        run: |
+          ./gradlew patchChangelog --release-note="$CHANGELOG"
+
+      # Publish the plugin to the Marketplace
+      - name: Publish Plugin
+        env:
+          PUBLISH_TOKEN: ${{ secrets.DIGMA_JB_INTELLIJ_PUBLISH_TOKEN }}
+          DIGMA_JB_PRIVATE_KEY_PASSWORD: ${{ secrets.DIGMA_JB_PRIVATE_KEY_PASSWORD }}
+          DIGMA_JB_CERTIFICATE_CHAIN_FILE: ${{ secrets.DIGMA_JB_CERTIFICATE_CHAIN_FILE }}
+          DIGMA_JB_PRIVATE_KEY_FILE: ${{ secrets.DIGMA_JB_PRIVATE_KEY_FILE }}
+          POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL}}
+        run: ./gradlew clean buildPlugin publishPlugin -PbuildProfile=${{ inputs.build-profile }} --no-daemon
+
+      # Upload artifact as a release asset
+      - name: Upload Release Asset
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload ${{ inputs.tag-name }} ./build/distributions/*
+

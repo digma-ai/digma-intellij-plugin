@@ -29,13 +29,8 @@ fun dynamicPlatformType(project: Project): String {
  */
 fun Project.platformPlugins(): String = when (properties("platformType", this)) {
     IdeFlavor.RD.name -> "rider-plugins-appender"
-    IdeFlavor.PC.name,
-    IdeFlavor.PY.name,
-    -> ""
-
-    IdeFlavor.IC.name,
-    IdeFlavor.IU.name,
-    -> "com.intellij.java"
+    IdeFlavor.PC.name,IdeFlavor.PY.name -> ""
+    IdeFlavor.IC.name,IdeFlavor.IU.name -> "com.intellij.java"
 
     else -> ""
 }
@@ -43,13 +38,8 @@ fun Project.platformPlugins(): String = when (properties("platformType", this)) 
 
 fun Project.platformVersion(): String = when (properties("platformType", this)) {
     IdeFlavor.RD.name -> currentProfile().riderVersion
-    IdeFlavor.PC.name,
-    IdeFlavor.PY.name,
-    -> currentProfile().pycharmVersion
-
-    IdeFlavor.IC.name,
-    IdeFlavor.IU.name,
-    -> currentProfile().platformVersion
+    IdeFlavor.PC.name,IdeFlavor.PY.name -> currentProfile().pycharmVersion
+    IdeFlavor.IC.name,IdeFlavor.IU.name -> currentProfile().platformVersion
 
     else -> currentProfile().platformVersion
 }

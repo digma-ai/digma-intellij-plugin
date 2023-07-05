@@ -264,7 +264,7 @@ tasks {
         // the version is based on the SemVer (https://semver.org) and supports pre-release labels, like 2.1.7-alpha.3
         // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
         // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
-        channels.set(listOf(common.semanticversion.getSemanticVersion(project).split('-').getOrElse(1) { "default" }
+        channels.set(listOf(project.buildVersion().split('-').getOrElse(1) { "default" }
             .split('.').first()))
     }
 

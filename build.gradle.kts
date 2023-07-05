@@ -66,7 +66,6 @@ dependencies{
 
 
 intellij {
-    logBuildProfile(project)
     pluginName.set(properties("pluginName"))
     version.set(project.platformVersion())
     type.set(properties("platformType"))

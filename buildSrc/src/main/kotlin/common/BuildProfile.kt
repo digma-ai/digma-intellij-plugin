@@ -29,8 +29,8 @@ fun dynamicPlatformType(project: Project): String {
  */
 fun Project.platformPlugins(): String = when (properties("platformType", this)) {
     IdeFlavor.RD.name -> "rider-plugins-appender"
-    IdeFlavor.PC.name,IdeFlavor.PY.name -> ""
-    IdeFlavor.IC.name,IdeFlavor.IU.name -> "com.intellij.java"
+    IdeFlavor.PC.name, IdeFlavor.PY.name -> ""
+    IdeFlavor.IC.name, IdeFlavor.IU.name -> "com.intellij.java"
 
     else -> ""
 }
@@ -38,8 +38,8 @@ fun Project.platformPlugins(): String = when (properties("platformType", this)) 
 
 fun Project.platformVersion(): String = when (properties("platformType", this)) {
     IdeFlavor.RD.name -> currentProfile().riderVersion
-    IdeFlavor.PC.name,IdeFlavor.PY.name -> currentProfile().pycharmVersion
-    IdeFlavor.IC.name,IdeFlavor.IU.name -> currentProfile().platformVersion
+    IdeFlavor.PC.name, IdeFlavor.PY.name -> currentProfile().pycharmVersion
+    IdeFlavor.IC.name, IdeFlavor.IU.name -> currentProfile().platformVersion
 
     else -> currentProfile().platformVersion
 }
@@ -59,18 +59,22 @@ fun Project.currentProfile(): BuildProfile = BuildProfiles.currentProfile(this)
 
 object BuildProfiles {
 
-    enum class Profiles { defaut, latest, eap }
+    enum class Profiles { lowest, latest, eap }
 
     fun currentProfile(project: Project): BuildProfile {
-        val profile = project.findProperty("buildProfile") ?: "default"
-        return profiles[profile] ?: throw GradleException("can not find profile $profile")
+
+        val selectedProfile = project.findProperty("buildProfile")?.let {
+            Profiles.valueOf(it as String)
+        } ?: Profiles.lowest
+
+        return profiles[selectedProfile] ?: throw GradleException("can not find profile $selectedProfile")
     }
 
 
     private val profiles = mapOf(
 
-        "default" to BuildProfile(
-            profile = Profiles.defaut,
+        Profiles.lowest to BuildProfile(
+            profile = Profiles.lowest,
             platformVersion = "2022.3.1",
             riderVersion = "2022.3.1",
             pycharmVersion = "2022.3.1",
@@ -85,7 +89,7 @@ object BuildProfiles {
             javaVersion = JavaVersion.VERSION_17.majorVersion
         ),
 
-        "latest" to BuildProfile(
+        Profiles.latest to BuildProfile(
             profile = Profiles.latest,
             platformVersion = "2023.1.3",
             riderVersion = "2023.1.3",
@@ -101,7 +105,7 @@ object BuildProfiles {
             javaVersion = JavaVersion.VERSION_17.majorVersion
         ),
 
-        "eap" to BuildProfile(
+        Profiles.eap to BuildProfile(
             profile = Profiles.eap,
             platformVersion = "LATEST-EAP-SNAPSHOT",
             riderVersion = "2023.2-EAP7-SNAPSHOT",

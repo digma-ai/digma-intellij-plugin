@@ -10,9 +10,9 @@ plugins {
 // build with RD, if running idea it should build with IC, etc.
 val platformType by extra(dynamicPlatformType(project))
 
+logBuildProfile(project)
 
 intellij {
-    logBuildProfile(project)
     version.set("$platformType-${project.platformVersion()}")
     plugins.set(listOf("Git4Idea"))
 }

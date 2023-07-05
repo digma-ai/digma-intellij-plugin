@@ -68,7 +68,7 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
     }
 
     private fun getProtocol(model: LanguageServiceModel): IProtocol {
-        return model.protocol!! //protocol is nullable in 2023.2
+        return model.protocol!! //protocol is nullable in 2023.2, remove when 2023.2 is our base
     }
 
     /*

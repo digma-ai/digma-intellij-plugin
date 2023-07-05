@@ -6,11 +6,11 @@ see build-all.sh for examples.
 ## Build
 ############################################################
 
-the project can build 3 profiles: default, latest and eap.
+the project can build 3 profiles: lowest, latest and eap.
 
 the motivation is to be able to build for different intellij releases without maintaining branches.
 
-default build with the lowest version supported, for example 2022.3.1
+lowest build with the lowest version supported, for example 2022.3.1
 latest builds for the latest intellij release, for example 2023.1.3
 eap build for the EAP version, for example 2023.2
 
@@ -40,13 +40,13 @@ for example:
 or
 ./gradlew clean buildPlugin -PbuildProfile=eap
 
-when there is no profile the default profile is active.
+when there is no profile the lowest profile is active.
 
 
 ## How to build
 ############################################################
 
-If you built the project with default profile, and now you want to build with latest its necessary to clean before mainly
+If you built the project with lowest profile, and now you want to build with latest its necessary to clean before mainly
 because of some leftovers from previous build.
 so a workflow could be something like:
 you start a branch for some feature, do a clean build. form now on you work as usual. if you now want to
@@ -111,7 +111,7 @@ or
 ############################################################
 
 when buildProfile is activated it changes versions only for the build, your project in the IDE still compiles
-with the default profile.
+with the lowest profile.
 its possible to load a different platfor version in the IDE.
 for example to load the latest version in Idea, add in gradle.properties
 

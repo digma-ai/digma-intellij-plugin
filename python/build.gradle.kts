@@ -7,7 +7,7 @@ plugins {
     id("plugin-library")
 }
 
-dependencies{
+dependencies {
     compileOnly(project(":ide-common"))
     compileOnly(project(":model"))
 
@@ -17,9 +17,10 @@ dependencies{
 //python module should always build with IC
 val platformType by extra(IdeFlavor.IC.name)
 
+logBuildProfile(project)
+
 
 intellij {
-    logBuildProfile(project)
 
     //there is no source code for pycharm or python plugin
     downloadSources.set(false)

@@ -5,7 +5,9 @@
 set -e
 ###################   idea community
 
-./gradlew clean buildPlugin
+# there is no need to send the lowest profile,its here just as example
+
+./gradlew clean buildPlugin -PbuildProfile=lowes
 ./gradlew clean buildPlugin -PbuildProfile=latest
 ./gradlew clean buildPlugin -PbuildProfile=eap
 

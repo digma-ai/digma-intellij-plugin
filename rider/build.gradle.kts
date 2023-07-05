@@ -30,9 +30,10 @@ dependencies {
 //rider module should always build with RD
 val platformType by extra(IdeFlavor.RD.name)
 
+logBuildProfile(project)
+
 
 intellij {
-    logBuildProfile(project)
     version.set("$platformType-${project.platformVersion()}")
     plugins.set(listOf("rider-plugins-appender"))
     downloadSources.set(false) //there are no sources for rider

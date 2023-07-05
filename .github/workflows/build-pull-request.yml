@@ -1,0 +1,77 @@
+name: Build on pull request to main (default profile)
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Fetch Sources
+        uses: actions/checkout@v3
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: |
+            6.0.102
+
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v1.0.4
+
+
+      - name: Build Plugin (default profile)
+        env:
+          POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL}}
+        run: ./gradlew clean test buildPlugin --no-daemon
+
+      # Collect Tests Result of failed tests
+      ##todo: add other modules test reports
+      - name: Collect Tests Result
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: tests-result
+          path: ${{ github.workspace }}/ide-common/build/reports/tests
+          retention-days: 5
+
+
+      - name: Run Plugin Verifier (default profile)
+        run: ./gradlew clean runPluginVerifier --no-daemon
+
+      - name: Collect Plugin Verifier Result
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: pluginVerifier-result
+          path: ${{ github.workspace }}/build/reports/pluginVerifier
+          retention-days: 5
+
+
+
+      - name: Prepare Plugin Artifact
+        id: artifact
+        shell: bash
+        run: |
+          cd ${{ github.workspace }}/build/distributions
+          FILENAME=`ls *.zip`
+          unzip "$FILENAME" -d content
+          echo "::set-output name=filename::${FILENAME:0:-4}"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ steps.artifact.outputs.filename }}
+          path: ./build/distributions/content/*/*
+          retention-days: 5
+

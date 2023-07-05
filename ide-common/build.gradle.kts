@@ -1,12 +1,19 @@
+import common.dynamicPlatformType
+import common.logBuildProfile
 import common.platformVersion
 
 plugins {
     id("plugin-library")
-    id("common-kotlin")
 }
 
+//ide-common module should build with different platform types, if running rider with runIde it should
+// build with RD, if running idea it should build with IC, etc.
+val platformType by extra(dynamicPlatformType(project))
+
+logBuildProfile(project)
+
 intellij {
-    version.set("IC-" + platformVersion(project))
+    version.set("$platformType-${project.platformVersion()}")
     plugins.set(listOf("Git4Idea"))
 }
 
@@ -18,19 +25,9 @@ dependencies {
     api(libs.commons.lang3)
     api(libs.commons.collections4)
     api(libs.posthog)
+    api(libs.maven.artifact)
 
     implementation(project(":model"))
     implementation(project(":analytics-provider"))
 }
 
-tasks{
-
-    val injectPosthogTokenUrlTask = task("injectPosthogTokenUrl") {
-        doLast{
-            val url = System.getenv("POSTHOG_TOKEN_URL") ?: ""
-            file("${project.rootProject.sourceSets.main.get().output.resourcesDir?.absolutePath}/posthog-token-url.txt").writeText(url)
-        }
-    }
-
-    processResources.get().finalizedBy(injectPosthogTokenUrlTask)
-}

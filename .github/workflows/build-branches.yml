@@ -1,6 +1,4 @@
-
-
-name: CI Build and Upload plugin all branches (!main)
+name: Build all branches (!main) (default profile)
 
 on:
   push:
@@ -35,7 +33,7 @@ jobs:
       - name: Build Plugin
         env:
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL}}
-        run: ./gradlew test buildPlugin --no-daemon
+        run: ./gradlew clean test buildPlugin --no-daemon
 
       # Collect Tests Result of failed tests
       ##todo: add other modules test reports
@@ -49,7 +47,7 @@ jobs:
 
 
       - name: Run Plugin Verifier
-        run: ./gradlew runPluginVerifier --no-daemon
+        run: ./gradlew clean runPluginVerifier --no-daemon
 
       - name: Collect Plugin Verifier Result
         if: ${{ always() }}

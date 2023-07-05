@@ -1,9 +1,16 @@
+import common.BuildProfiles
+import common.IdeFlavor
+import common.buildVersion
+import common.dynamicPlatformType
+import common.logBuildProfile
+import common.platformPlugins
 import common.platformVersion
 import common.properties
+import common.withCurrentProfile
 import org.jetbrains.changelog.date
+import org.jetbrains.changelog.exceptions.MissingVersionException
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.tasks.ListProductsReleasesTask
-import org.jetbrains.changelog.exceptions.MissingVersionException
 import java.util.EnumSet
 
 fun properties(key: String) = properties(key,project)
@@ -13,14 +20,29 @@ fun properties(key: String) = properties(key,project)
     "DSL_SCOPE_VIOLATION"
 )
 plugins {
+    id("semantic-version")
     id("plugin-project")
     id("org.jetbrains.changelog") version "2.0.0"
     id("org.jetbrains.qodana") version "0.1.13"
-    id("common-kotlin")
+    id("org.jetbrains.kotlinx.kover") version "0.6.1"
+
 }
 
+//the platformType is determined dynamically with a gradle property.
+//it enables launching different IDEs with different versions and still let the other modules
+//compile correctly. most modules always compile with the same platform type.
+//it is only necessary for launcher, so when launching rider the platform type for this project and ide-common
+// should be RD but not for the other projects like java,python.
+val platformType: String by extra(dynamicPlatformType(project))
+
+logBuildProfile(project)
 
 
+//this project depends on rider dotnet artifacts. this will force the dotnet build before packaging.
+val riderDotNetObjects: Configuration by configurations.creating {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+}
 
 dependencies{
     implementation(libs.commons.lang3)
@@ -30,15 +52,24 @@ dependencies{
     implementation(project(":java"))
     implementation(project(":python"))
     implementation(project(":rider"))
+// todo: recommended by jetbrains but has a bug that openiong classes opens the class file instead of source file
+//    implementation(project(":ide-common", "instrumentedJar"))
+//    implementation(project(":java", "instrumentedJar"))
+//    implementation(project(":python", "instrumentedJar"))
+//    implementation(project(":rider", "instrumentedJar"))
     implementation(libs.freemarker)
+
+    riderDotNetObjects(project(mapOf(
+        "path" to ":rider",
+        "configuration" to "riderDotNetObjects")))
 }
 
-// Configure Gradle IntelliJ Plugin - read more: https://github.com/JetBrains/gradle-intellij-plugin
+
 intellij {
     pluginName.set(properties("pluginName"))
-    version.set(platformVersion(project))
+    version.set(project.platformVersion())
     type.set(properties("platformType"))
-    plugins.set(properties("platformPlugins").split(',').map(String::trim).filter(String::isNotEmpty))
+    plugins.set(project.platformPlugins().split(',').map(String::trim).filter(String::isNotEmpty))
 
     pluginsRepositories {
         marketplace()
@@ -48,7 +79,7 @@ intellij {
 
 // Configure Gradle Changelog Plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
 changelog {
-    version.set(project.semanticVersion.version.get().toString())
+    version.set(project.buildVersion())
     path.set("${project.projectDir}/CHANGELOG.md")
     groups.set(listOf("Added", "Changed", "Deprecated", "Removed", "Fixed", "Security"))
     header.set(provider { "[${version.get()}] - ${date()}" })
@@ -72,7 +103,7 @@ project.afterEvaluate{
     //currently, only rider contributes the dotnet dll's to the sandbox.
 
     //it can be written with task fqn like buildPlugin.dependsOn(":rider:buildPlugin")
-    //but this syntax is not favorite by the gradle developers becasue it will cause eager initialization of the task.
+    //but this syntax is not favorite by the gradle developers because it will cause eager initialization of the task.
     val buildPlugin = tasks.named("buildPlugin").get()
     project(":java").afterEvaluate { buildPlugin.dependsOn(tasks.getByName("buildPlugin")) }
     project(":python").afterEvaluate { buildPlugin.dependsOn(tasks.getByName("buildPlugin")) }
@@ -83,13 +114,12 @@ project.afterEvaluate{
 
 tasks {
 
-    incrementSemanticVersion {
-        //enable the SemanticVersion only for this module
-        enabled = true
-    }
 
-    jar {
-        dependsOn(":rider:copyKotlinModuleFile")
+    prepareSandbox{
+        //copy rider dlls to the plugin sandbox so it is packaged in the zip
+        from(configurations.getByName("riderDotNetObjects")){
+            into("${properties("pluginName",project)}/dotnet/")
+        }
     }
 
     wrapper {
@@ -102,9 +132,11 @@ tasks {
     }
 
     patchPluginXml {
-        version.set(project.semanticVersion.version.get().toString())
-        sinceBuild.set(properties("pluginSinceBuild"))
-        untilBuild.set(properties("pluginUntilBuild"))
+        version.set(project.buildVersion())
+        withCurrentProfile {
+            sinceBuild.set(it.pluginSinceBuild)
+            untilBuild.set(it.pluginUntilBuild)
+        }
 
         // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest
         pluginDescription.set(
@@ -126,10 +158,10 @@ tasks {
         }
         changeNotes.set(provider {
             changelog.renderItem(
-                    latestChangelog
-                            .withHeader(false)
-                            .withEmptySections(false),
-                    org.jetbrains.changelog.Changelog.OutputType.HTML
+                latestChangelog
+                    .withHeader(false)
+                    .withEmptySections(false),
+                org.jetbrains.changelog.Changelog.OutputType.HTML
             )
         })
     }
@@ -152,7 +184,7 @@ tasks {
         enabled = false
     }
 
-    val deleteLog = create("deleteLogs", Delete::class.java) {
+    val deleteLog by registering(Delete::class) {
         outputs.upToDateWhen { false }
         project.layout.buildDirectory.dir("idea-sandbox/system/log").get().asFile.walk().forEach {
             if (it.name.endsWith(".log")) {
@@ -163,9 +195,16 @@ tasks {
 
     runIde {
         dependsOn(deleteLog)
-        //rider contributes to prepareSandbox, so it needs to run before runIde
-        dependsOn("prepareSandbox")
-        dependsOn(":rider:prepareSandboxForRider")
+
+        //todo: remove when 232 is released
+        project.withCurrentProfile {
+            if (it.platformVersionCode == "232") {
+                jbrVersion = "jbr-release-17.0.7b1000.5"
+                jbrVariant = "jcef"
+            }
+        }
+
+
         maxHeapSize = "2g"
         // Rider's backend doesn't support dynamic plugins. It might be possible to work with auto-reload of the frontend
         // part of a plugin, but there are dangers about keeping plugins in sync
@@ -176,30 +215,35 @@ tasks {
     }
 
 
-    //todo: we need to do something with github workflow so that we can verify all required versions,
-    // github fails with no space left on device when trying to verify more then 2 IDEs.
-    // currently we compile python with IC plus python plugin so no real need to verify pycharm
-    // but it would be better if we did.
     listProductsReleases {
-        val typesToVerify = properties("typesToVerifyPlugin").split(",")
-        types.set(typesToVerify)
-        val versionsToVerify = properties("versionsToVerifyPlugin").split(",")
-        val lowestVersion = versionsToVerify[0]
-        sinceVersion.set(lowestVersion)
-        val latestVersion = if(versionsToVerify.size == 1)  versionsToVerify[0] else versionsToVerify[1]
-        untilVersion.set(latestVersion)
-//        sinceBuild.set("222.3739.36")
-//        untilBuild.set("222.4167.24")
+        types.set(listOf(platformType))
+        //doesn't work for EAP , but runPluginVerifier does not rely on the output of listProductsReleases
+        withCurrentProfile { profile ->
+            sinceBuild.set(profile.pluginSinceBuild)
+            untilBuild.set(profile.pluginUntilBuild)
+        }
+
         releaseChannels.set(EnumSet.of(ListProductsReleasesTask.Channel.RELEASE))
     }
 
 
+    //todo: run plugin verifier for resharper
+    // https://blog.jetbrains.com/dotnet/2023/05/26/the-api-verifier/
     runPluginVerifier {
+
+        //rider EAP doesn't work here, plugin verifier can't find it
+        withCurrentProfile { profile ->
+            if (profile.profile == BuildProfiles.Profiles.eap && platformType == IdeFlavor.RD.name) {
+                enabled = false
+            } else {
+                ideVersions.set(listOf("${platformType}-${profile.versionToRunPluginVerifier}"))
+            }
+        }
         subsystemsToCheck.set("without-android")
     }
 
     verifyPlugin {
-        dependsOn(":rider:prepareSandboxForRider")
+        dependsOn(prepareSandbox)
     }
 
     signPlugin {
@@ -219,15 +263,18 @@ tasks {
         // the version is based on the SemVer (https://semver.org) and supports pre-release labels, like 2.1.7-alpha.3
         // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
         // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
-        channels.set(listOf(project.semanticVersion.version.get().toString().split('-').getOrElse(1) { "default" }
+        channels.set(listOf(project.buildVersion().split('-').getOrElse(1) { "default" }
             .split('.').first()))
     }
 
 
-    create("printVersion", DefaultTask::class.java) {
-        doLast {
-            logger.lifecycle("The project current version is ${project.semanticVersion.version.get()}")
+    val injectPosthogTokenUrlTask by registering{
+        doLast{
+            val url = System.getenv("POSTHOG_TOKEN_URL") ?: ""
+            file("${project.sourceSets.main.get().output.resourcesDir?.absolutePath}/posthog-token-url.txt").writeText(url)
         }
     }
-
+    processResources{
+        finalizedBy(injectPosthogTokenUrlTask)
+    }
 }

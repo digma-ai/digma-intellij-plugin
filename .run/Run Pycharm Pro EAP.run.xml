@@ -1,16 +1,17 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Run IDEA Community With Python" type="GradleRunConfiguration" factoryName="Gradle">
-    <log_file alias="idea.log" path="$PROJECT_DIR$/build/idea-sandbox/system/log/idea_IC.log" />
+  <configuration default="false" name="Run Pycharm Pro EAP" type="GradleRunConfiguration" factoryName="Gradle">
+    <log_file alias="idea.log" path="$PROJECT_DIR$/build/idea-sandbox/system/log/idea_RD.log" />
     <ExternalSystemSettings>
       <option name="executionName" />
       <option name="externalProjectPath" value="$PROJECT_DIR$" />
       <option name="externalSystemIdString" value="GRADLE" />
-      <option name="scriptParameters" value="-PplatformType=IC -PplatformPlugins=com.intellij.java,PythonCore:223.7571.182" />
+      <option name="scriptParameters" value="-PbuildWithPycharmPro=true -PbuildProfile=eap"/>
       <option name="taskDescriptions">
         <list />
       </option>
       <option name="taskNames">
         <list>
+          <option value="buildPlugin"/>
           <option value="runIde" />
         </list>
       </option>
@@ -19,7 +20,7 @@
     <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
     <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
     <DebugAllEnabled>false</DebugAllEnabled>
-    <ForceTestExec>false</ForceTestExec>
+    <RunAsTest>false</RunAsTest>
     <method v="2" />
   </configuration>
 </component>

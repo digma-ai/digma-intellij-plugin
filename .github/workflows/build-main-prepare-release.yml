@@ -1,19 +1,6 @@
-# GitHub Actions Workflow created for testing and preparing the plugin release in following steps:
-# - validate Gradle Wrapper,
-# - run 'test' and 'verifyPlugin' tasks,
-# - run Qodana inspections,
-# - run 'buildPlugin' task and prepare artifact for the further tests,
-# - run 'runPluginVerifier' task,
-# - create a draft release.
-#
-# Workflow is triggered on push to main.
-#
-# GitHub Actions reference: https://help.github.com/en/actions
-#
-## JBIJPPTPL (Jetbrains intellij platform plugin template)
+## This is the workflow that creates the release draft
 
-
-name: Build, Verify and Prepare Release
+name: Build main (default profile) and Prepare Release
 on:
   push:
     branches: [ main ]
@@ -22,7 +9,7 @@ jobs:
 
   build:
 
-    name: Build and Verify
+    name: Build and Verify (default profile)
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.properties.outputs.version }}
@@ -56,18 +43,18 @@ jobs:
         id: properties
         shell: bash
         run: |
+          VERSION=$(./gradlew -q printSemanticVersion | cut -f2- -d ' ')
+          
           PROPERTIES="$(./gradlew properties --console=plain -q)"
-          VERSION="$(echo "$PROPERTIES" | grep "^version:" | cut -f2- -d ' ')"
           NAME="$(echo "$PROPERTIES" | grep "^pluginName:" | cut -f2- -d ' ')"
           
           echo "::set-output name=version::$VERSION"
           echo "::set-output name=name::$NAME"
 
-
-      - name: Build Plugin
+      - name: Build Plugin (default profile)
         env:
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL}}
-        run: ./gradlew test buildPlugin --no-daemon
+        run: ./gradlew clean test buildPlugin --no-daemon
 
       # Collect Tests Result of failed tests
       ##todo: add other modules test reports
@@ -79,8 +66,8 @@ jobs:
           path: ${{ github.workspace }}/ide-common/build/reports/tests
 
 
-      - name: Run Plugin Verifier
-        run: ./gradlew runPluginVerifier --no-daemon
+      - name: Run Plugin Verifier (default profile)
+        run: ./gradlew clean runPluginVerifier --no-daemon
 
       - name: Collect Plugin Verifier Result
         if: ${{ always() }}

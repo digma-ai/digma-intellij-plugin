@@ -43,6 +43,17 @@ or
 when there is no profile the default profile is active.
 
 
+## How to build
+############################################################
+
+If you built the project with default profile, and now you want to build with latest its necessary to clean before mainly
+because of some leftovers from previous build.
+so a workflow could be something like:
+you start a branch for some feature, do a clean build. form now on you work as usual. if you now want to
+build and test with latest or eap, do a clean build again.
+
+
+
 ## Intellij version codes:
 ############################################################
 
@@ -147,13 +158,14 @@ currently there was no need, but solutions are there.
 ############################################################
 
 there are launchers to run the various IDEs with different version,
-and its also possible to launch an IDE from command line:
+and it's also possible to launch an IDE from command line:
 see build-all.sh for examples.
 
 for example:
 ./gradlew clean buildPlugin runIde -PbuildWithRider=true -PbuildProfile=eap
 ./gradlew clean buildPlugin -PbuildWithPycharm=true -PbuildProfile=eap
 
+if you run for example idea latest and now want to run rider eap a clean is necessary.
 
 
 ## github actions

@@ -1,4 +1,4 @@
-name: Build on pull request to main (default profile)
+name: Build on pull request to main (lowest profile)
 
 on:
   pull_request:
@@ -30,7 +30,7 @@ jobs:
         uses: gradle/wrapper-validation-action@v1.0.4
 
 
-      - name: Build Plugin (default profile)
+      - name: Build Plugin (lowest profile)
         env:
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL}}
         run: ./gradlew clean test buildPlugin --no-daemon
@@ -46,7 +46,7 @@ jobs:
           retention-days: 5
 
 
-      - name: Run Plugin Verifier (default profile)
+      - name: Run Plugin Verifier (lowest profile)
         run: ./gradlew clean runPluginVerifier --no-daemon
 
       - name: Collect Plugin Verifier Result

@@ -1,6 +1,6 @@
 ## This is the workflow that creates the release draft
 
-name: Build main (default profile) and Prepare Release
+name: Build main (lowest profile) and Prepare Release
 on:
   push:
     branches: [ main ]
@@ -9,7 +9,7 @@ jobs:
 
   build:
 
-    name: Build and Verify (default profile)
+    name: Build and Verify (lowest profile)
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.properties.outputs.version }}
@@ -51,7 +51,7 @@ jobs:
           echo "::set-output name=version::$VERSION"
           echo "::set-output name=name::$NAME"
 
-      - name: Build Plugin (default profile)
+      - name: Build Plugin (lowest profile)
         env:
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL}}
         run: ./gradlew clean test buildPlugin --no-daemon
@@ -66,7 +66,7 @@ jobs:
           path: ${{ github.workspace }}/ide-common/build/reports/tests
 
 
-      - name: Run Plugin Verifier (default profile)
+      - name: Run Plugin Verifier (lowest profile)
         run: ./gradlew clean runPluginVerifier --no-daemon
 
       - name: Collect Plugin Verifier Result

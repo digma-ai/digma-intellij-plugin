@@ -22,7 +22,7 @@ fun properties(key: String) = properties(key,project)
 plugins {
     id("semantic-version")
     id("plugin-project")
-    id("org.jetbrains.changelog") version "2.0.1"
+    id("org.jetbrains.changelog") version "2.1.0"
     id("org.jetbrains.qodana") version "0.1.13"
     id("org.jetbrains.kotlinx.kover") version "0.6.1"
 
@@ -79,10 +79,12 @@ intellij {
 
 // Configure Gradle Changelog Plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
 changelog {
-    version.set(project.buildVersion())
+    //change log needs the base version,not the build version
+    val versionToUse = common.semanticversion.getSemanticVersion(project)
+    version.set(versionToUse)
     path.set("${project.projectDir}/CHANGELOG.md")
     groups.set(listOf("Added", "Changed", "Deprecated", "Removed", "Fixed", "Security"))
-    header.set(provider { "[${version.get()}] - ${date()}" })
+    header.set(provider { "[${versionToUse}] - ${date()}" })
     keepUnreleasedSection.set(false)
 }
 
@@ -129,6 +131,13 @@ tasks {
         distributionPath = "wrapper/dists"
         archiveBase = Wrapper.PathBase.GRADLE_USER_HOME
         archivePath = "wrapper/dists"
+    }
+
+    patchChangelog {
+        outputs.upToDateWhen { false }
+        doLast {
+            logger.lifecycle("in patchChangelog, releaseNote=$releaseNote, version=${version.get()}, inputFile=${inputFile.get()}, outputFile=${outputFile.get()}")
+        }
     }
 
     patchPluginXml {

@@ -36,7 +36,7 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
 
 
     private fun getProtocol(model: CodeObjectsModel):IProtocol{
-        return model.protocol
+        return model.protocol!! //protocol is nullable in 2023.2
     }
 
     fun environmentChanged(newEnv: String) {

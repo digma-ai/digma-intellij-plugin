@@ -2,7 +2,7 @@
 # with the Build workflow. Running the publishPlugin task requires the PUBLISH_TOKEN secret provided.
 
 
-name: Publish to jetbrains marketplace (default profile)
+name: Publish to jetbrains marketplace (lowest profile)
 on:
   release:
     types: [prereleased, released]

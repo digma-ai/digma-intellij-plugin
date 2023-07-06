@@ -68,7 +68,7 @@ jobs:
 
 
       - name: Run Plugin Verifier
-        run: ./gradlew clean runPluginVerifier --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PbuildProfile=${{ inputs.build-profile }}  -PdoNotDownloadSources=true
+        run: ./gradlew runPluginVerifier --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PbuildProfile=${{ inputs.build-profile }}  -PdoNotDownloadSources=true
 
       - name: Collect Plugin Verifier Result
         if: ${{ always() }}

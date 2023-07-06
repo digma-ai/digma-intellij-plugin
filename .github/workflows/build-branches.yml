@@ -5,13 +5,24 @@ on:
     branches: [ '**','!main' ]
 
 jobs:
+
   call-build-workflow:
+    strategy:
+      matrix:
+        profile: [ lowest, latest, eap ]
     uses: ./.github/workflows/build-workflow.yml
     with:
-      build-profile: "lowest"
+      build-profile: ${{ matrix.profile }}
       ref-name: ${{ github.ref_name }}
     secrets: inherit
 
+#  call-build-workflow:
+#    uses: ./.github/workflows/build-workflow.yml
+#    with:
+#      build-profile: "lowest"
+#      ref-name: ${{ github.ref_name }}
+#    secrets: inherit
+#
 
 #  build:
 #

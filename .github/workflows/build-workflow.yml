@@ -67,18 +67,6 @@ jobs:
           retention-days: 5
 
 
-      - name: Run Plugin Verifier
-        run: ./gradlew runPluginVerifier --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PbuildProfile=${{ inputs.build-profile }}  -PdoNotDownloadSources=true
-
-      - name: Collect Plugin Verifier Result
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: pluginVerifier-result-${{ inputs.build-profile }}
-          path: ${{ github.workspace }}/build/reports/pluginVerifier
-          retention-days: 5
-
-
       - name: Prepare Plugin Artifact
         id: artifact
         shell: bash
@@ -94,3 +82,16 @@ jobs:
           name: ${{ steps.artifact.outputs.filename }}
           path: ./build/distributions/content/*/*
           retention-days: 5
+
+      ### runPluginVerifier must run only after upload artifact because it packages again
+      - name: Run Plugin Verifier
+        run: ./gradlew runPluginVerifier --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PbuildProfile=${{ inputs.build-profile }}  -PdoNotDownloadSources=true
+
+      - name: Collect Plugin Verifier Result
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: pluginVerifier-result-${{ inputs.build-profile }}
+          path: ${{ github.workspace }}/build/reports/pluginVerifier
+          retention-days: 5
+

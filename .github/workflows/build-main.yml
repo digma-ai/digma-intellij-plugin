@@ -60,7 +60,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          name: pluginVerifier-result
+          name: pluginVerifier-result-${{ inputs.build-profile }}
           path: ${{ github.workspace }}/build/reports/pluginVerifier
 
       - name: Prepare Plugin Artifact

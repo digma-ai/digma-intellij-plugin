@@ -279,8 +279,7 @@ tasks {
     val injectPosthogTokenUrlTask by registering{
         doLast{
             logger.lifecycle("injecting posthog token url")
-//            val url = System.getenv("POSTHOG_TOKEN_URL") ?: ""
-            val url = ""
+            val url = System.getenv("POSTHOG_TOKEN_URL") ?: ""
             file("${project.sourceSets.main.get().output.resourcesDir?.absolutePath}/posthog-token-url.txt").writeText(url)
         }
     }

@@ -1,5 +1,3 @@
-# GitHub Actions Workflow created for handling the release process based on the draft release prepared
-# with the Build workflow. Running the publishPlugin task requires the PUBLISH_TOKEN secret provided.
 
 
 name: Publish to jetbrains marketplace
@@ -15,7 +13,17 @@ on:
       changelog:
         required: true
         type: string
-
+    secrets:
+      publish-token:
+        required: true
+      digma-jb-private-key-password:
+        required: true
+      digma-jb-certificate-chain-file:
+        required: true
+      digma-jb-private-key-file:
+        required: true
+      posthog-token-url:
+        required: true
 jobs:
 
   publish:
@@ -60,16 +68,16 @@ jobs:
         env:
           CHANGELOG: ${{ steps.properties.outputs.changelog }}
         run: |
-          ./gradlew patchChangelog --release-note="$CHANGELOG" -PbuildProfile=${{ inputs.build-profile }} --no-configuration-cache
+          ./gradlew -PbuildProfile=${{ inputs.build-profile }} --no-configuration-cache patchChangelog --release-note="$CHANGELOG"
 
       # Publish the plugin to the Marketplace
       - name: Publish Plugin
         env:
-          PUBLISH_TOKEN: ${{ secrets.DIGMA_JB_INTELLIJ_PUBLISH_TOKEN }}
-          DIGMA_JB_PRIVATE_KEY_PASSWORD: ${{ secrets.DIGMA_JB_PRIVATE_KEY_PASSWORD }}
-          DIGMA_JB_CERTIFICATE_CHAIN_FILE: ${{ secrets.DIGMA_JB_CERTIFICATE_CHAIN_FILE }}
-          DIGMA_JB_PRIVATE_KEY_FILE: ${{ secrets.DIGMA_JB_PRIVATE_KEY_FILE }}
-          POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL}}
+          PUBLISH_TOKEN: ${{ secrets.publish-token }}
+          DIGMA_JB_PRIVATE_KEY_PASSWORD: ${{ secrets.digma-jb-private-key-password }}
+          DIGMA_JB_CERTIFICATE_CHAIN_FILE: ${{ secrets.digma-jb-certificate-chain-file }}
+          DIGMA_JB_PRIVATE_KEY_FILE: ${{ secrets.digma-jb-private-key-file }}
+          POSTHOG_TOKEN_URL: ${{ secrets.posthog-token-url}}
         run: ./gradlew clean buildPlugin publishPlugin -PbuildProfile=${{ inputs.build-profile }} --no-configuration-cache
 
       # Upload artifact as a release asset
@@ -77,4 +85,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release upload ${{ inputs.tag-name }} ./build/distributions/*
-

@@ -15,6 +15,13 @@ jobs:
       build-profile: ${{ matrix.profile }}
       tag-name: ${{ github.event.release.tag_name }}
       changelog: ${{ github.event.release.body }}
+    secrets:
+      publish-token: ${{ secrets.DIGMA_JB_INTELLIJ_PUBLISH_TOKEN }}
+      digma-jb-private-key-password: ${{ secrets.DIGMA_JB_PRIVATE_KEY_PASSWORD }}
+      digma-jb-certificate-chain-file: ${{ secrets.DIGMA_JB_CERTIFICATE_CHAIN_FILE }}
+      digma-jb-private-key-file: ${{ secrets.DIGMA_JB_PRIVATE_KEY_FILE }}
+      posthog-token-url: ${{ secrets.POSTHOG_TOKEN_URL}}
+
 
   update-to-next-version:
     needs: call-publish-workflow

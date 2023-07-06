@@ -33,7 +33,7 @@ jobs:
       - name: Build Plugin
         env:
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL}}
-        run: ./gradlew clean test buildPlugin --no-daemon
+        run: ./gradlew clean test buildPlugin --no-configuration-cache
 
       # Collect Tests Result of failed tests
       ##todo: add other modules test reports
@@ -47,7 +47,7 @@ jobs:
 
 
       - name: Run Plugin Verifier
-        run: ./gradlew clean runPluginVerifier --no-daemon
+        run: ./gradlew clean runPluginVerifier --no-configuration-cache
 
       - name: Collect Plugin Verifier Result
         if: ${{ always() }}

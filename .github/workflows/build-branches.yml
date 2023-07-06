@@ -1,3 +1,5 @@
+## could use matrix strategy instead of calling the workflows one by one but secrets don't work with matrtix.
+
 name: Build all branches (!main)
 
 on:

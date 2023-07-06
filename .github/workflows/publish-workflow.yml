@@ -13,32 +13,25 @@ on:
       changelog:
         required: true
         type: string
-#    secrets:
-#      publish-token:
-#        required: true
-#      digma-jb-private-key-password:
-#        required: true
-#      digma-jb-certificate-chain-file:
-#        required: true
-#      digma-jb-private-key-file:
-#        required: true
-#      posthog-token-url:
-#        required: true
 jobs:
 
   publish:
     name: Publish Plugin
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Maximize build space
         uses: easimon/maximize-build-space@master
         with:
-          root-reserve-mb: 1024
+          root-reserve-mb: 10000
+          temp-reserve-mb: 512
           swap-size-mb: 1024
           remove-android: true
           remove-haskell: true
           remove-codeql: true
           remove-docker-images: true
+
+      - name: Debug
+        run: echo "Publishing ref ${{ inputs.tag-name }} with profile ${{ inputs.build-profile }} with changelog ${{ inputs.changelog }}"
 
       - name: Fetch Sources
         uses: actions/checkout@v3
@@ -69,7 +62,7 @@ jobs:
           EOM
           )"
           
-          echo "::set-output name=changelog::$CHANGELOG"
+          echo "changelog=${$CHANGELOG}" >> "$GITHUB_OUTPUT"
 
       # Update changelog
       - name: Patch Changelog
@@ -77,7 +70,7 @@ jobs:
         env:
           CHANGELOG: ${{ steps.properties.outputs.changelog }}
         run: |
-          ./gradlew -PbuildProfile=${{ inputs.build-profile }}  -PdoNotDownloadSources=true --no-configuration-cache --gradle-user-home=./localhome patchChangelog --release-note="$CHANGELOG"
+          ./gradlew --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PdoNotDownloadSources=true patchChangelog --release-note="$CHANGELOG"
 
       # Publish the plugin to the Marketplace
       - name: Publish Plugin
@@ -86,9 +79,10 @@ jobs:
           DIGMA_JB_PRIVATE_KEY_PASSWORD: ${{ secrets.DIGMA_JB_PRIVATE_KEY_PASSWORD }}
           DIGMA_JB_CERTIFICATE_CHAIN_FILE: ${{ secrets.DIGMA_JB_CERTIFICATE_CHAIN_FILE }}
           DIGMA_JB_PRIVATE_KEY_FILE: ${{ secrets.DIGMA_JB_PRIVATE_KEY_FILE }}
-          POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL}}
+          POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL }}
         run: ./gradlew publishPlugin -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir ./.projectcache
 
+      ## todo: delete the release if workflow fails, but what about rerun ? maybe disable rerun for publish workflow
       #      # Delete release on failure
       #      - name: Delete release on failure
       #        if: ${{ failure() }} || ${{ cancelled() }}

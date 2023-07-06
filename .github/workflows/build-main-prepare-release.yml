@@ -14,7 +14,9 @@ jobs:
     with:
       build-profile: ${{ matrix.profile }}
       ref-name: ${{ github.ref_name }}
-    secrets: inherit
+    #    secrets: inherit doesn't work with matrix
+    secrets:
+      posthog-url: ${{ secrets.POSTHOG_TOKEN_URL }}
 
 
 

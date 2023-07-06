@@ -12,7 +12,7 @@ jobs:
     uses: ./.github/workflows/build-workflow.yml
     with:
       build-profile: ${{ matrix.profile }}
-      ref-name: ${{ github.ref_name }}
+      ref-name: ${{ github.event.pull_request.head.sha }}
     secrets: inherit
 
 

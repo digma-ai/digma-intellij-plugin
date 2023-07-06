@@ -9,9 +9,9 @@ on:
       build-profile:
         required: true
         type: string
-    secrets:
-      posthog-token-url:
-        required: true
+#    secrets:
+#      posthog-token-url:
+#        required: true
 
 jobs:
 
@@ -44,5 +44,5 @@ jobs:
 
       - name: Build Plugin
         env:
-          POSTHOG_TOKEN_URL: ${{ secrets.posthog-token-url}}
+          POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL}}
         run: ./gradlew clean test buildPlugin -PbuildWithRider=true -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true --no-configuration-cache

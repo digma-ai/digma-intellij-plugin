@@ -13,8 +13,8 @@ jobs:
     uses: ./.github/workflows/build-main.yml
     with:
       build-profile: ${{ matrix.profile }}
-    secrets:
-      posthog-token-url: ${{ secrets.POSTHOG_TOKEN_URL}}
+    secrets: inherit
+  #      posthog-token-url: ${{ secrets.POSTHOG_TOKEN_URL}}
   call-build-rider:
     strategy:
       matrix:
@@ -22,8 +22,8 @@ jobs:
     uses: ./.github/workflows/build-main-with-rider.yml
     with:
       build-profile: ${{ matrix.profile }}
-    secrets:
-      posthog-token-url: ${{ secrets.POSTHOG_TOKEN_URL}}
+    secrets: inherit
+  #      posthog-token-url: ${{ secrets.POSTHOG_TOKEN_URL}}
 
 
   # Prepare a draft release for GitHub Releases page for the manual verification

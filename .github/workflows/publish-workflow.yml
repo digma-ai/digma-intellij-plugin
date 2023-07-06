@@ -13,17 +13,17 @@ on:
       changelog:
         required: true
         type: string
-    secrets:
-      publish-token:
-        required: true
-      digma-jb-private-key-password:
-        required: true
-      digma-jb-certificate-chain-file:
-        required: true
-      digma-jb-private-key-file:
-        required: true
-      posthog-token-url:
-        required: true
+#    secrets:
+#      publish-token:
+#        required: true
+#      digma-jb-private-key-password:
+#        required: true
+#      digma-jb-certificate-chain-file:
+#        required: true
+#      digma-jb-private-key-file:
+#        required: true
+#      posthog-token-url:
+#        required: true
 jobs:
 
   publish:
@@ -73,11 +73,11 @@ jobs:
       # Publish the plugin to the Marketplace
       - name: Publish Plugin
         env:
-          PUBLISH_TOKEN: ${{ secrets.publish-token }}
-          DIGMA_JB_PRIVATE_KEY_PASSWORD: ${{ secrets.digma-jb-private-key-password }}
-          DIGMA_JB_CERTIFICATE_CHAIN_FILE: ${{ secrets.digma-jb-certificate-chain-file }}
-          DIGMA_JB_PRIVATE_KEY_FILE: ${{ secrets.digma-jb-private-key-file }}
-          POSTHOG_TOKEN_URL: ${{ secrets.posthog-token-url}}
+          PUBLISH_TOKEN: ${{ secrets.DIGMA_JB_INTELLIJ_PUBLISH_TOKEN }}
+          DIGMA_JB_PRIVATE_KEY_PASSWORD: ${{ secrets.DIGMA_JB_PRIVATE_KEY_PASSWORD }}
+          DIGMA_JB_CERTIFICATE_CHAIN_FILE: ${{ secrets.DIGMA_JB_CERTIFICATE_CHAIN_FILE }}
+          DIGMA_JB_PRIVATE_KEY_FILE: ${{ secrets.DIGMA_JB_PRIVATE_KEY_FILE }}
+          POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL}}
         run: ./gradlew publishPlugin -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true --no-configuration-cache
 
       #      # Delete release on failure

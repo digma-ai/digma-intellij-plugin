@@ -1,6 +1,6 @@
 ## This is the workflow that creates the release draft
 
-name: Build main (lowest profile) and Prepare Release
+name: Build main and Prepare Release
 on:
   push:
     branches: [ main ]

@@ -33,7 +33,6 @@ jobs:
         with:
           java-version: '17'
           distribution: 'corretto'
-          cache: gradle
 
       - name: Setup dotnet
         uses: actions/setup-dotnet@v2

@@ -38,6 +38,12 @@ val platformType: String by extra(dynamicPlatformType(project))
 
 logBuildProfile(project)
 
+tasks.register("printCurrentProfileBuildVersion") {
+    doLast {
+        println("build-version=${project.buildVersion()}")
+    }
+}
+
 
 //this project depends on rider dotnet artifacts. this will force the dotnet build before packaging.
 val riderDotNetObjects: Configuration by configurations.creating {
@@ -45,7 +51,7 @@ val riderDotNetObjects: Configuration by configurations.creating {
     isCanBeResolved = true
 }
 
-dependencies{
+dependencies {
     implementation(libs.commons.lang3)
     implementation(project(":model"))
     implementation(project(":analytics-provider"))
@@ -273,7 +279,8 @@ tasks {
     val injectPosthogTokenUrlTask by registering{
         doLast{
             logger.lifecycle("injecting posthog token url")
-            val url = System.getenv("POSTHOG_TOKEN_URL") ?: ""
+//            val url = System.getenv("POSTHOG_TOKEN_URL") ?: ""
+            val url = ""
             file("${project.sourceSets.main.get().output.resourcesDir?.absolutePath}/posthog-token-url.txt").writeText(url)
         }
     }

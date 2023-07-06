@@ -1,4 +1,4 @@
-name: Build all branches (!main) (lowest profile)
+name: Build all branches (!main)
 
 on:
   workflow_call:
@@ -54,17 +54,24 @@ jobs:
       - name: Build Plugin
         env:
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL }}
-        run: ./gradlew clean test buildPlugin --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PbuildProfile=${{ inputs.build-profile }}  -PdoNotDownloadSources=true
+        run: ./gradlew clean test buildPlugin --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true
 
-      # Collect Tests Result of failed tests
-      ##todo: add other modules test reports
-      - name: Collect Tests Result
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v3
+      - name: Find posthog url
+        id: posthog
+        shell: bash
+        run: |
+          cd ${{ github.workspace }}/build/libs
+          FILENAME=`ls instrumented-digma-intellij-plugin*.jar`
+          unzip "$FILENAME" -d content
+          URL=$(cat ./content/posthog-token-url.txt)
+          echo "url=${URL}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify posthog url exists
+        uses: actions/github-script@v3
+        if: ${{ steps.posthog.outputs.url }} == ''
         with:
-          name: tests-result-${{ inputs.build-profile }}
-          path: ${{ github.workspace }}/ide-common/build/reports/tests
-          retention-days: 5
+          script: |
+            core.setFailed('posthog url is empty')
 
 
       - name: Prepare Plugin Artifact
@@ -82,6 +89,17 @@ jobs:
           name: ${{ steps.artifact.outputs.filename }}
           path: ./build/distributions/content/*/*
           retention-days: 5
+
+      # Collect Tests Result of failed tests
+      ##todo: add other modules test reports
+      - name: Collect Tests Result
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: tests-result-${{ inputs.build-profile }}
+          path: ${{ github.workspace }}/ide-common/build/reports/tests
+          retention-days: 5
+
 
       ### runPluginVerifier must run only after upload artifact because it packages again
       - name: Run Plugin Verifier

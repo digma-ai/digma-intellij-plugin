@@ -41,7 +41,7 @@ jobs:
       - name: Build Plugin
         env:
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL}}
-        run: ./gradlew buildPlugin --no-daemon
+        run: ./gradlew buildPlugin --no-configuration-cache
 
       # Collect Tests Result of failed tests
       ##todo: add other modules test reports

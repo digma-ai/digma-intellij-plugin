@@ -10,7 +10,7 @@ jobs:
 
   build:
 
-    name: Build and Verify (eap profile)
+    name: Build and Verify
     runs-on: ubuntu-latest
 
     steps:
@@ -27,10 +27,10 @@ jobs:
           distribution: 'corretto'
 
       - name: Setup dotnet
-        uses: actions/setup-dotnet@v2
+        uses: actions/setup-dotnet@v3
         with:
           dotnet-version: |
-            6.0.102
+            6.0.411
 
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1.0.4
@@ -38,7 +38,7 @@ jobs:
       - name: Build Plugin
         env:
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL}}
-        run: ./gradlew clean test buildPlugin -PbuildWithRider=true -PbuildProfile=${{ inputs.build-profile }} --no-daemon
+        run: ./gradlew clean test buildPlugin -PbuildWithRider=true -PbuildProfile=${{ inputs.build-profile }} --no-configuration-cache
 
       - name: Collect Tests Result
         if: ${{ failure() }}
@@ -49,7 +49,7 @@ jobs:
 
 
       - name: Run Plugin Verifier (eap profile)
-        run: ./gradlew runPluginVerifier -PbuildWithRider=true -PbuildProfile=${{ inputs.build-profile }} --no-daemon
+        run: ./gradlew runPluginVerifier -PbuildWithRider=true -PbuildProfile=${{ inputs.build-profile }} --no-configuration-cache
 
       - name: Collect Plugin Verifier Result
         if: ${{ always() }}

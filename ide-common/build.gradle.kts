@@ -1,6 +1,7 @@
 import common.dynamicPlatformType
 import common.logBuildProfile
 import common.platformVersion
+import common.shouldDownloadSources
 
 plugins {
     id("plugin-library")
@@ -15,6 +16,7 @@ logBuildProfile(project)
 intellij {
     version.set("$platformType-${project.platformVersion()}")
     plugins.set(listOf("Git4Idea"))
+    downloadSources.set(project.shouldDownloadSources())
 }
 
 dependencies {

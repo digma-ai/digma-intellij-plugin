@@ -39,7 +39,7 @@ jobs:
         env:
           CHANGELOG: ${{ steps.properties.outputs.changelog }}
         run: |
-          ./gradlew patchChangelog --release-note="$CHANGELOG"
+          ./gradlew -PdoNotDownloadSources=true patchChangelog --release-note="$CHANGELOG"
 
       - name: Increment version
         run: |

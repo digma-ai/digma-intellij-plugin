@@ -45,4 +45,4 @@ jobs:
       - name: Build Plugin
         env:
           POSTHOG_TOKEN_URL: ${{ secrets.posthog-token-url}}
-        run: ./gradlew clean test buildPlugin -PbuildWithRider=true -PbuildProfile=${{ inputs.build-profile }} --no-configuration-cache
+        run: ./gradlew clean test buildPlugin -PbuildWithRider=true -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true --no-configuration-cache

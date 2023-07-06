@@ -6,6 +6,7 @@ import common.logBuildProfile
 import common.platformPlugins
 import common.platformVersion
 import common.properties
+import common.shouldDownloadSources
 import common.withCurrentProfile
 import org.jetbrains.changelog.date
 import org.jetbrains.changelog.exceptions.MissingVersionException
@@ -70,6 +71,7 @@ intellij {
     version.set(project.platformVersion())
     type.set(properties("platformType"))
     plugins.set(project.platformPlugins().split(',').map(String::trim).filter(String::isNotEmpty))
+    downloadSources.set(project.shouldDownloadSources())
 
     pluginsRepositories {
         marketplace()
@@ -204,15 +206,6 @@ tasks {
 
     runIde {
         dependsOn(deleteLog)
-
-        //todo: remove when 232 is released
-        project.withCurrentProfile {
-            if (it.platformVersionCode == "232") {
-                jbrVersion = "jbr-release-17.0.7b1000.5"
-                jbrVariant = "jcef"
-            }
-        }
-
 
         maxHeapSize = "2g"
         // Rider's backend doesn't support dynamic plugins. It might be possible to work with auto-reload of the frontend

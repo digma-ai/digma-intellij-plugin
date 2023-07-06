@@ -43,7 +43,7 @@ jobs:
       - name: Build Plugin
         env:
           POSTHOG_TOKEN_URL: ${{ secrets.posthog-token-url}}
-        run: ./gradlew clean test buildPlugin -PbuildProfile=${{ inputs.build-profile }} --no-configuration-cache
+        run: ./gradlew clean test buildPlugin -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true --no-configuration-cache
 
       - name: Collect Tests Result
         if: ${{ failure() }}
@@ -54,7 +54,7 @@ jobs:
 
 
       - name: Run Plugin Verifier
-        run: ./gradlew runPluginVerifier -PbuildProfile=${{ inputs.build-profile }} --no-configuration-cache
+        run: ./gradlew runPluginVerifier -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true --no-configuration-cache
 
       - name: Collect Plugin Verifier Result
         if: ${{ always() }}

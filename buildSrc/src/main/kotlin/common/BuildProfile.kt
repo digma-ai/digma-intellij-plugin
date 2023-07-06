@@ -44,6 +44,10 @@ fun Project.platformVersion(): String = when (properties("platformType", this)) 
     else -> currentProfile().platformVersion
 }
 
+fun Project.shouldDownloadSources(): Boolean {
+    return if(findProperty("doNotDownloadSources") == null) true else false
+}
+
 
 fun Project.buildVersion(): String {
     return "${common.semanticversion.getSemanticVersion(this)}.${this.currentProfile().platformVersionCode}"

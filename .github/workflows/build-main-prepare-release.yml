@@ -39,6 +39,13 @@ jobs:
       - name: Fetch Sources
         uses: actions/checkout@v3
 
+      - name: Export Properties
+        id: properties
+        shell: bash
+        run: |
+          VERSION=$(cat version.properties |grep "version="|cut -d= -f2)
+          echo "::set-output name=version::$VERSION"
+
       # Remove old release drafts by using the curl request for the available releases with draft flag
       - name: Remove Old Release Drafts
         env:
@@ -53,7 +60,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v${{ needs.build.outputs.version }} \
+          gh release create v${{ steps.properties.outputs.version }} \
             --draft \
-            --title "v${{ needs.build.outputs.version }}" \
-            --notes "## ${{ needs.build.outputs.version }} "
+            --title "v${{ steps.properties.outputs.version }}"

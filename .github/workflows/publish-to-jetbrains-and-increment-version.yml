@@ -39,12 +39,12 @@ jobs:
         env:
           CHANGELOG: ${{ steps.properties.outputs.changelog }}
         run: |
-          ./gradlew -PdoNotDownloadSources=true patchChangelog --release-note="$CHANGELOG"
+          ./gradlew -PdoNotDownloadSources=true --gradle-user-home=./localhome patchChangelog --release-note="$CHANGELOG"
 
       - name: Increment version
         run: |
-          ./gradlew incrementSemanticVersionPatch
-          ./gradlew printSemanticVersion -q
+          ./gradlew --gradle-user-home=./localhome incrementSemanticVersionPatch 
+          ./gradlew --gradle-user-home=./localhome printSemanticVersion -q
 
       - name: Commit next version to main
         run: |

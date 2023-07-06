@@ -9,7 +9,7 @@ jobs:
     uses: ./.github/workflows/build-workflow.yml
     with:
       build-profile: "lowest"
-      ref-name: ${{ env.GITHUB_REF_NAME }}
+      ref-name: ${{ github.ref_name }}
     secrets: inherit
 
 

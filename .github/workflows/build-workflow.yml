@@ -9,7 +9,6 @@ on:
       ref-name:
         required: true
         type: string
-    secrets: inherit
 
 jobs:
   build:

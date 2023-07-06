@@ -4,7 +4,8 @@ name: Build all branches (!main) temp
 
 on:
   push:
-    branches: [ '**','!main' ]
+#    branches: [ '**','!main' ]
+    branches: [ 'aaa' ]
 
 jobs:
   build:

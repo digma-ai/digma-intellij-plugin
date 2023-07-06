@@ -1,4 +1,3 @@
-## This is the workflow that creates the release draft
 
 name: Build main and Prepare Release
 on:
@@ -6,24 +5,31 @@ on:
     branches: [ main ]
 
 jobs:
-  call-build-workflow:
-    strategy:
-      matrix:
-        profile: [ lowest, latest, eap ]
+  call-build-workflow-lowest:
     uses: ./.github/workflows/build-workflow.yml
     with:
-      build-profile: ${{ matrix.profile }}
+      build-profile: lowest
       ref-name: ${{ github.ref_name }}
-    #    secrets: inherit doesn't work with matrix
-    secrets:
-      posthog-url: ${{ secrets.POSTHOG_TOKEN_URL }}
+    secrets: inherit
+  call-build-workflow-latest:
+    uses: ./.github/workflows/build-workflow.yml
+    with:
+      build-profile: latest
+      ref-name: ${{ github.ref_name }}
+    secrets: inherit
+  call-build-workflow-eap:
+    uses: ./.github/workflows/build-workflow.yml
+    with:
+      build-profile: eap
+      ref-name: ${{ github.ref_name }}
+    secrets: inherit
 
 
 
   # Prepare a draft release for GitHub Releases page for the manual verification
   # If accepted and published, release workflow would be triggered
   releaseDraft:
-    needs: [ call-build-workflow ]
+    needs: [ call-build-workflow-lowest,call-build-workflow-latest,call-build-workflow-eap ]
     name: Prepare Release Draft
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest

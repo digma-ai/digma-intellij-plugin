@@ -6,30 +6,65 @@ on:
     branches: [ main ]
 
 jobs:
-  call-build-main:
-    strategy:
-      matrix:
-        profile: [ lowest, latest, eap ]
+  call-build-main-lowest:
     uses: ./.github/workflows/build-main.yml
     with:
-      build-profile: ${{ matrix.profile }}
+      build-profile: "lowest"
     secrets: inherit
-  #      posthog-token-url: ${{ secrets.POSTHOG_TOKEN_URL}}
-  call-build-rider:
-    strategy:
-      matrix:
-        profile: [ lowest, latest, eap ]
+  call-build-main-latest:
+    needs: call-build-main-lowest
+    uses: ./.github/workflows/build-main.yml
+    with:
+      build-profile: "latest"
+    secrets: inherit
+  call-build-main-eap:
+    needs: call-build-main-latest
+    uses: ./.github/workflows/build-main.yml
+    with:
+      build-profile: "eap"
+    secrets: inherit
+  call-build-rider-lowest:
+    needs: call-build-main-eap
     uses: ./.github/workflows/build-main-with-rider.yml
     with:
-      build-profile: ${{ matrix.profile }}
+      build-profile: "lowest"
     secrets: inherit
-  #      posthog-token-url: ${{ secrets.POSTHOG_TOKEN_URL}}
+  call-build-rider-latest:
+    needs: call-build-rider-lowest
+    uses: ./.github/workflows/build-main-with-rider.yml
+    with:
+      build-profile: "latest"
+    secrets: inherit
+  call-build-rider-eap:
+    needs: call-build-rider-latest
+    uses: ./.github/workflows/build-main-with-rider.yml
+    with:
+      build-profile: "eap"
+    secrets: inherit
+
+  #  call-build-main:
+  #    strategy:
+  #      matrix:
+  #        profile: [ lowest, latest, eap ]
+  #    uses: ./.github/workflows/build-main.yml
+  #    with:
+  #      build-profile: ${{ matrix.profile }}
+  #    secrets: inherit
+  #  call-build-rider:
+  #    needs: call-build-main
+  #    strategy:
+  #      matrix:
+  #        profile: [ lowest, latest, eap ]
+  #    uses: ./.github/workflows/build-main-with-rider.yml
+  #    with:
+  #      build-profile: ${{ matrix.profile }}
+  #    secrets: inherit
 
 
   # Prepare a draft release for GitHub Releases page for the manual verification
   # If accepted and published, release workflow would be triggered
   releaseDraft:
-    needs: [ call-build-main,call-build-rider ]
+    needs: [ call-build-rider-eap ]
     name: Prepare Release Draft
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest

@@ -33,7 +33,7 @@ jobs:
       - name: Build Plugin (lowest profile)
         env:
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL}}
-        run: ./gradlew clean test buildPlugin -PdoNotDownloadSources=true --no-configuration-cache --gradle-user-home=./localhome
+        run: ./gradlew clean test buildPlugin -PdoNotDownloadSources=true --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir ./.projectcache
 
       # Collect Tests Result of failed tests
       ##todo: add other modules test reports

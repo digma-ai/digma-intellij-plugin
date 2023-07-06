@@ -8,9 +8,6 @@ on:
       build-profile:
         required: true
         type: string
-#    secrets:
-#      posthog-token-url:
-#        required: true
 jobs:
 
   build:
@@ -52,7 +49,7 @@ jobs:
       - name: Build Plugin
         env:
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL}}
-        run: ./gradlew clean test buildPlugin -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true --no-configuration-cache --gradle-user-home=./localhome
+        run: ./gradlew clean test buildPlugin -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true --no-configuration-cache --gradle-user-home=./.localhome --project-cache-dir ./.projectcache
 
       - name: Collect Tests Result
         if: ${{ failure() }}
@@ -63,7 +60,7 @@ jobs:
 
 
       - name: Run Plugin Verifier
-        run: ./gradlew runPluginVerifier -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true --no-configuration-cache --gradle-user-home=./localhome
+        run: ./gradlew runPluginVerifier -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir ./.projectcache
 
       - name: Collect Plugin Verifier Result
         if: ${{ always() }}

@@ -54,4 +54,4 @@ jobs:
       - name: Build Plugin
         env:
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL}}
-        run: ./gradlew clean test buildPlugin -PbuildWithRider=true -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true --no-configuration-cache --gradle-user-home=./localhome
+        run: ./gradlew clean test buildPlugin -PbuildWithRider=true -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir ./.projectcache

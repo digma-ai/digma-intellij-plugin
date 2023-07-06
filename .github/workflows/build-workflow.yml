@@ -9,9 +9,6 @@ on:
       ref-name:
         required: true
         type: string
-    secrets:
-      posthog-url:
-        required: true
 
 jobs:
   build:

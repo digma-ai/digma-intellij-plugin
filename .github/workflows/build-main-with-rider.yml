@@ -1,19 +1,24 @@
-name: Build Rider main (lowest profile)
+name: Build Rider main branch
 on:
-  push:
-    branches: [ main ]
+  workflow_call:
+    inputs:
+      build-profile:
+        required: true
+        type: string
 
 jobs:
 
   build:
 
-    name: Build and Verify Rider (lowest profile)
+    name: Build and Verify (eap profile)
     runs-on: ubuntu-latest
 
     steps:
 
       - name: Fetch Sources
         uses: actions/checkout@v3
+        with:
+          ref: 'main'
 
       - name: Setup Java
         uses: actions/setup-java@v3
@@ -30,10 +35,10 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1.0.4
 
-      - name: Build Plugin (lowest profile)
+      - name: Build Plugin
         env:
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL}}
-        run: ./gradlew clean test buildPlugin -PbuildWithRider=true --no-daemon
+        run: ./gradlew clean test buildPlugin -PbuildWithRider=true -PbuildProfile=${{ inputs.build-profile }} --no-daemon
 
       - name: Collect Tests Result
         if: ${{ failure() }}
@@ -42,17 +47,16 @@ jobs:
           name: tests-result
           path: ${{ github.workspace }}/ide-common/build/reports/tests
 
-      ## can't verify Rider because it will fail on code in java or python modules that don't exist in Rider.
-      ## but it's ok because this workflow build with Rider and that is good enough
-      #      - name: Run Plugin Verifier
-      #        run: ./gradlew clean runPluginVerifier -PbuildWithRider=true --no-daemon
-      #
-      #      - name: Collect Plugin Verifier Result
-      #        if: ${{ always() }}
-      #        uses: actions/upload-artifact@v3
-      #        with:
-      #          name: pluginVerifier-result
-      #          path: ${{ github.workspace }}/build/reports/pluginVerifier
+
+      - name: Run Plugin Verifier (eap profile)
+        run: ./gradlew runPluginVerifier -PbuildWithRider=true -PbuildProfile=${{ inputs.build-profile }} --no-daemon
+
+      - name: Collect Plugin Verifier Result
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: pluginVerifier-result
+          path: ${{ github.workspace }}/build/reports/pluginVerifier
 
       - name: Prepare Plugin Artifact
         id: artifact

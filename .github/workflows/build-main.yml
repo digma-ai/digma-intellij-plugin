@@ -1,7 +1,10 @@
-name: Build main (EAP profile)
+name: Build main branch
 on:
-  push:
-    branches: [ main ]
+  workflow_call:
+    inputs:
+      build-profile:
+        required: true
+        type: string
 
 jobs:
 
@@ -14,6 +17,8 @@ jobs:
 
       - name: Fetch Sources
         uses: actions/checkout@v3
+        with:
+          ref: 'main'
 
       - name: Setup Java
         uses: actions/setup-java@v3
@@ -30,10 +35,10 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1.0.4
 
-      - name: Build Plugin (eap profile)
+      - name: Build Plugin
         env:
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL}}
-        run: ./gradlew clean test buildPlugin -PbuildProfile=eap --no-daemon
+        run: ./gradlew clean test buildPlugin -PbuildProfile=${{ inputs.build-profile }} --no-daemon
 
       - name: Collect Tests Result
         if: ${{ failure() }}
@@ -44,7 +49,7 @@ jobs:
 
 
       - name: Run Plugin Verifier (eap profile)
-        run: ./gradlew clean runPluginVerifier -PbuildProfile=eap --no-daemon
+        run: ./gradlew runPluginVerifier -PbuildProfile=${{ inputs.build-profile }} --no-daemon
 
       - name: Collect Plugin Verifier Result
         if: ${{ always() }}

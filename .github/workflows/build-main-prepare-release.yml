@@ -6,104 +6,28 @@ on:
     branches: [ main ]
 
 jobs:
-
-  build:
-
-    name: Build and Verify (lowest profile)
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.properties.outputs.version }}
-      changelog: ${{ steps.properties.outputs.changelog }}
-
-    steps:
-
-      - name: Fetch Sources
-        uses: actions/checkout@v3
-
-      - name: Setup Java
-        uses: actions/setup-java@v3
-        with:
-          java-version: '17'
-          distribution: 'corretto'
-
-      - name: Setup dotnet
-        uses: actions/setup-dotnet@v2
-        with:
-          dotnet-version: |
-            6.0.102
-
-      - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@v1.0.4
-
-
-      # Set environment variables
-      # the original jetbrains template feeds the whole changelog history to the release draft. we don't need it,
-      #  we keep an empty CHANGELOG.md file in the repository used only to patch plugin.xml in the publish workflow.
-      - name: Export Properties
-        id: properties
-        shell: bash
-        run: |
-          VERSION=$(./gradlew -q printSemanticVersion | cut -f2- -d ' ')
-          
-          PROPERTIES="$(./gradlew properties --console=plain -q)"
-          NAME="$(echo "$PROPERTIES" | grep "^pluginName:" | cut -f2- -d ' ')"
-          
-          echo "::set-output name=version::$VERSION"
-          echo "::set-output name=name::$NAME"
-
-      - name: Build Plugin (lowest profile)
-        env:
-          POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL}}
-        run: ./gradlew clean test buildPlugin --no-daemon
-
-      # Collect Tests Result of failed tests
-      ##todo: add other modules test reports
-      - name: Collect Tests Result
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: tests-result
-          path: ${{ github.workspace }}/ide-common/build/reports/tests
-
-
-      - name: Run Plugin Verifier (lowest profile)
-        run: ./gradlew clean runPluginVerifier --no-daemon
-
-      - name: Collect Plugin Verifier Result
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: pluginVerifier-result
-          path: ${{ github.workspace }}/build/reports/pluginVerifier
-
-      # Run Qodana inspections
-      ##todo: fails with no space left on device
-      #      - name: Qodana - Code Inspection
-      #        uses: JetBrains/qodana-action@v4.2.5
-
-      - name: Prepare Plugin Artifact
-        id: artifact
-        shell: bash
-        run: |
-          cd ${{ github.workspace }}/build/distributions
-          FILENAME=`ls *.zip`
-          unzip "$FILENAME" -d content
-
-          echo "::set-output name=filename::${FILENAME:0:-4}"
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ steps.artifact.outputs.filename }}
-          path: ./build/distributions/content/*/*
+  call-build-main:
+    strategy:
+      matrix:
+        profile: [ lowest, latest, eap ]
+    uses: ./.github/workflows/build-main.yml
+    with:
+      build-profile: ${{ matrix.profile }}
+  call-build-rider:
+    strategy:
+      matrix:
+        profile: [ lowest, latest, eap ]
+    uses: ./.github/workflows/build-main-with-rider.yml
+    with:
+      build-profile: ${{ matrix.profile }}
 
 
   # Prepare a draft release for GitHub Releases page for the manual verification
   # If accepted and published, release workflow would be triggered
   releaseDraft:
+    needs: [ call-build-main,call-build-rider ]
     name: Prepare Release Draft
     if: github.event_name != 'pull_request'
-    needs: build
     runs-on: ubuntu-latest
     steps:
 

@@ -35,10 +35,10 @@ jobs:
           distribution: 'corretto'
 
       - name: Setup dotnet
-        uses: actions/setup-dotnet@v2
+        uses: actions/setup-dotnet@v3
         with:
           dotnet-version: |
-            6.0.102
+            6.0.411
 
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1.0.4
@@ -60,7 +60,7 @@ jobs:
         env:
           CHANGELOG: ${{ steps.properties.outputs.changelog }}
         run: |
-          ./gradlew patchChangelog --release-note="$CHANGELOG"
+          ./gradlew patchChangelog --release-note="$CHANGELOG" -PbuildProfile=${{ inputs.build-profile }} --no-configuration-cache
 
       # Publish the plugin to the Marketplace
       - name: Publish Plugin
@@ -70,7 +70,7 @@ jobs:
           DIGMA_JB_CERTIFICATE_CHAIN_FILE: ${{ secrets.DIGMA_JB_CERTIFICATE_CHAIN_FILE }}
           DIGMA_JB_PRIVATE_KEY_FILE: ${{ secrets.DIGMA_JB_PRIVATE_KEY_FILE }}
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL}}
-        run: ./gradlew clean buildPlugin publishPlugin -PbuildProfile=${{ inputs.build-profile }} --no-daemon
+        run: ./gradlew clean buildPlugin publishPlugin -PbuildProfile=${{ inputs.build-profile }} --no-configuration-cache
 
       # Upload artifact as a release asset
       - name: Upload Release Asset

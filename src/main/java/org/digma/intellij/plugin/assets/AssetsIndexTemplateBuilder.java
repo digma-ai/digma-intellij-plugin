@@ -7,7 +7,6 @@ import com.intellij.util.text.VersionComparatorUtil;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateExceptionHandler;
-import org.digma.intellij.plugin.jaegerui.JaegerUIService;
 import org.digma.intellij.plugin.jcef.common.JCefTemplateUtils;
 import org.digma.intellij.plugin.log.Log;
 
@@ -17,16 +16,16 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
-public class IndexTemplateBuilder {
+class AssetsIndexTemplateBuilder {
 
-    private final Logger logger = Logger.getInstance(JaegerUIService.class);
+    private final Logger logger = Logger.getInstance(AssetsIndexTemplateBuilder.class);
 
     private static final String INDEX_TEMPLATE_NAME = "assetstemplate.ftl";
     private static final String ASSET_SEARCH_ENV_NAME = "assetsSearch";
 
     private final Configuration freemarketConfiguration = new Configuration(Configuration.VERSION_2_3_30);
 
-    public IndexTemplateBuilder() {
+    public AssetsIndexTemplateBuilder() {
         freemarketConfiguration.setClassForTemplateLoading(this.getClass(), AssetsPanel.RESOURCE_FOLDER_NAME);
         freemarketConfiguration.setDefaultEncoding(StandardCharsets.UTF_8.name());
         freemarketConfiguration.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);

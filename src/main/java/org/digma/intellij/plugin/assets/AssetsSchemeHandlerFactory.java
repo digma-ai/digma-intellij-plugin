@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-public class AssetsSchemeHandlerFactory implements CefSchemeHandlerFactory {
+class AssetsSchemeHandlerFactory implements CefSchemeHandlerFactory {
     private final Project project;
 
     public AssetsSchemeHandlerFactory(Project project) {

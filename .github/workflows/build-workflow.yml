@@ -67,7 +67,8 @@ jobs:
           echo "url=${URL}" >> "$GITHUB_OUTPUT"
 
       - name: Debug
-        run: echo "posthog url is ${{ steps.posthog.outputs.url }}"
+        if: ${{ steps.posthog.outputs.url }} == ''
+        run: echo "posthog url is empty"
 
       #      - name: Verify posthog url exists
       #        uses: actions/github-script@v3

@@ -27,7 +27,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter implements Disposable {
+class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter implements Disposable {
 
     private static final Logger LOGGER = Logger.getInstance(AssetsMessageRouterHandler.class);
 
@@ -37,7 +37,7 @@ public class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter i
     private final MessageBusConnection messageBusConnection;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public AssetsMessageRouterHandler(Project project,Disposable parentDisposable, JBCefBrowser jbCefBrowser) {
+    public AssetsMessageRouterHandler(Project project, Disposable parentDisposable, JBCefBrowser jbCefBrowser) {
         this.project = project;
         this.jbCefBrowser = jbCefBrowser;
 

@@ -11,6 +11,6 @@ data class SessionInViewSpanInfo
 constructor(
     val renderSpan: SpanInfo?,
     val clientSpan: SpanInfo?,
-    val traceId: String?,
+    val traceId: String?
 )
 

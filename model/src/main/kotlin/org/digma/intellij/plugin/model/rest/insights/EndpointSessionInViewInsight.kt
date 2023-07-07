@@ -18,7 +18,6 @@ data class EndpointSessionInViewInsight
         "actualStartTime",
         "customStartTime",
         "prefixedCodeObjectId",
-        "isRecalculateEnabled",
         "shortDisplayInfo",
         "spanInfo",
         "route",
@@ -34,7 +33,6 @@ constructor(
     override val actualStartTime: Date?,
     override val customStartTime: Date?,
     override val prefixedCodeObjectId: String?,
-    override val isRecalculateEnabled: Boolean,
     override val shortDisplayInfo: ShortDisplayInfo?,
     override val spanInfo: SpanInfo,
     override var route: String,
@@ -42,6 +40,8 @@ constructor(
     val spans: List<SessionInViewSpanInfo>,
 ) : EndpointInsight {
         override val type: InsightType = InsightType.EndpointSessionInView
+        override val isRecalculateEnabled: Boolean = true // should remove the setter = true later ...support backward compatibility
+
 }
 
 

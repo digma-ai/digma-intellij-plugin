@@ -18,7 +18,6 @@ data class EndpointChattyApiInsight
     "actualStartTime",
     "customStartTime",
     "prefixedCodeObjectId",
-    "isRecalculateEnabled",
     "shortDisplayInfo",
     "spanInfo",
     "route",
@@ -34,12 +33,15 @@ constructor(
     override val actualStartTime: Date?,
     override val customStartTime: Date?,
     override val prefixedCodeObjectId: String?,
-    override val isRecalculateEnabled: Boolean,
+    //override val isRecalculateEnabled: Boolean,
     override val shortDisplayInfo: ShortDisplayInfo?,
     override val spanInfo: SpanInfo,
     override var route: String,
     override var serviceName: String,
     val spans: List<ChattyApiSpanInfo>,
 ) : EndpointInsight {
+
     override val type: InsightType = InsightType.EndpointChattyApi
+    override val isRecalculateEnabled: Boolean = true // should remove the setter = true later ...support backward compatibility
+
 }

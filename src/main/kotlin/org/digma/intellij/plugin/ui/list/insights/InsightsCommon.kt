@@ -163,7 +163,7 @@ private fun rebuildPanel(
     val icon = iconsList?.firstOrNull { icon -> !icon.instanceOf(ThreeDotsIcon::class) }
     var iconLabel = JLabel()
     if (icon != null) {
-        iconLabel = JLabel(icon, SwingConstants.RIGHT)
+        iconLabel = JLabel(icon, SwingConstants.RIGHT)  
         iconLabel.horizontalAlignment = SwingConstants.RIGHT
         iconLabel.verticalAlignment = SwingConstants.TOP
         iconLabel.isOpaque = false

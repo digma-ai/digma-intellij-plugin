@@ -8,11 +8,9 @@ import java.beans.ConstructorProperties
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ChattyApiSpanInfo
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@ConstructorProperties(  "clientSpan", "traceId", "repeats", "isRecalculateEnabled")
+@ConstructorProperties(  "clientSpan", "traceId", "repeats")
 constructor(
     val clientSpan: SpanInfo?,
     val traceId: String?,
-    val repeats: Int,
-    val isRecalculateEnabled: Boolean = true
-
+    val repeats: Int
 )

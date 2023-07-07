@@ -15,4 +15,5 @@ jobs:
     with:
       build-profile: ${{ matrix.profile }}
       ref-name: ${{ github.ref_name }}
+      build-with-rider: true
     secrets: inherit

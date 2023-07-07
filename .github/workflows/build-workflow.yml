@@ -9,6 +9,9 @@ on:
       ref-name:
         required: true
         type: string
+      build-with-rider:
+        required: true
+        type: string
 
 jobs:
   build:
@@ -52,9 +55,16 @@ jobs:
 
 
       - name: Build Plugin
+        if: ${{ inputs.build-with-rider != 'true' }}
         env:
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL }}
         run: ./gradlew clean test buildPlugin --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true
+
+      - name: Build Plugin with Rider
+        if: ${{ inputs.build-with-rider == 'true' }}
+        env:
+          POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL }}
+        run: ./gradlew clean test buildPlugin --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PbuildWithRider=true -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true
 
       - name: Find posthog url
         id: posthog

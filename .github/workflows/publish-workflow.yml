@@ -83,6 +83,23 @@ jobs:
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL }}
         run: ./gradlew publishPlugin --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true
 
+      - name: Find posthog url
+        id: posthog
+        shell: bash
+        run: |
+          cd ${{ github.workspace }}/build/libs
+          FILENAME=`ls instrumented-digma-intellij-plugin*.jar`
+          unzip -q "$FILENAME" -d content
+          URL=$(cat ./content/posthog-token-url.txt)
+          echo "url=${URL}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify posthog url exists
+        uses: actions/github-script@v3
+        if: ${{ steps.posthog.outputs.url == '' }}
+        run: echo "posthog url is empty,failing build"
+        with:
+          script: |
+            core.setFailed('posthog url is empty')
 
       ## todo: delete the release if workflow fails, but what about rerun ? maybe disable rerun for publish workflow
       #      # Delete release on failure

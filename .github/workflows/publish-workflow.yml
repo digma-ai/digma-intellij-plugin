@@ -63,7 +63,7 @@ jobs:
           EOM
           )"
           
-          echo "changelog=${$CHANGELOG}" >> "$GITHUB_OUTPUT"
+          echo "changelog=${CHANGELOG}" >> "$GITHUB_OUTPUT"
 
       # Update changelog
       - name: Patch Changelog

@@ -5,9 +5,9 @@
 set -e
 ###################   idea community
 
-# there is no need to send the lowest profile,its here just as example
+# there is no need to send the lowest profile, its the default if not sent,its here just as example
 
-./gradlew clean buildPlugin -PbuildProfile=lowes
+./gradlew clean buildPlugin -PbuildProfile=lowest
 ./gradlew clean buildPlugin -PbuildProfile=latest
 ./gradlew clean buildPlugin -PbuildProfile=eap
 
@@ -18,11 +18,11 @@ set -e
 
 
 ## run idea community with python plugin installed , this is for testing that digma functions correctly
-## when python plugin is installed
-# todo
-./gradlew clean runIde -PplatformPlugins=com.intellij.java,PythonCore:231.8770.65
-./gradlew clean runIde -PplatformPlugins=com.intellij.java,PythonCore:231.8770.65 -PuseLatestVersion=true
-./gradlew clean runIde -PplatformPlugins=com.intellij.java,PythonCore:232.7295.16 -PuseEAPVersion=true
+## when python plugin is installed.
+## the python plugin version need to be updated when updating build profiles
+./gradlew clean runIde -PplatformPlugins=com.intellij.java,PythonCore:223.7571.182 -PbuildProfile=lowest
+./gradlew clean runIde -PplatformPlugins=com.intellij.java,PythonCore:231.8770.65 -PbuildProfile=latest
+./gradlew clean runIde -PplatformPlugins=com.intellij.java,PythonCore:232.8453.116 -PbuildProfile=eap
 
 
 ###################### idea ultimate

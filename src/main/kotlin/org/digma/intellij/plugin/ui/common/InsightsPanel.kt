@@ -4,6 +4,8 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBTabbedPane
 import com.intellij.util.ui.JBUI.Borders.empty
+import org.digma.intellij.plugin.insights.InsightsPanel
+import org.digma.intellij.plugin.insights.InsightsService
 import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.service.ErrorsActionsService
@@ -17,9 +19,10 @@ import javax.swing.JPanel
 
 
 private const val INSIGHTS_TAB_NAME = "Insights"
+private const val INSIGHTS_NEW_TAB_NAME = "InsightsNew"
 private const val ERRORS_TAB_NAME = "Errors"
 private const val ERROR_DETAILS_TAB_NAME = "Error Details"
-private const val INSIGHTS_TAB_INDEX = 0
+private const val INSIGHTS_TAB_INDEX = 2 //todo: temporary for Kyrylo testing, needs to be 0
 private const val ERRORS_TAB_INDEX = 1
 
 class InsightsPanel(private val project: Project) : JPanel() {
@@ -52,6 +55,14 @@ class InsightsPanel(private val project: Project) : JPanel() {
         tabbedPane.addTab(ERRORS_TAB_NAME, errorsPanel)
         project.service<InsightsAndErrorsTabsHelper>().setErrorsTabIndex(ERRORS_TAB_INDEX)
 
+
+        val insightsNewPanel = createInsightsNewPanel(project)
+        insightsNewPanel.border = empty()
+        tabbedPane.addTab(INSIGHTS_NEW_TAB_NAME, insightsNewPanel)
+//        project.service<InsightsAndErrorsTabsHelper>().setInsightsTabIndex(INSIGHTS_TAB_INDEX)
+
+
+
         tabbedPane.border = empty()
 
         var currentTabIndex: Int
@@ -77,6 +88,10 @@ class InsightsPanel(private val project: Project) : JPanel() {
         }
 
         return tabbedPane
+    }
+
+    private fun createInsightsNewPanel(project: Project): JPanel {
+        return InsightsPanel(project,project.service<InsightsService>())
     }
 
 

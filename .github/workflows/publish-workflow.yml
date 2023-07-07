@@ -76,15 +76,10 @@ jobs:
         run: |
           ./gradlew --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PdoNotDownloadSources=true patchChangelog --release-note="$CHANGELOG"
 
-      # Publish the plugin to the Marketplace
-      - name: Publish Plugin
+      - name: Build plugin
         env:
-          PUBLISH_TOKEN: ${{ secrets.DIGMA_JB_INTELLIJ_PUBLISH_TOKEN }}
-          DIGMA_JB_PRIVATE_KEY_PASSWORD: ${{ secrets.DIGMA_JB_PRIVATE_KEY_PASSWORD }}
-          DIGMA_JB_CERTIFICATE_CHAIN_FILE: ${{ secrets.DIGMA_JB_CERTIFICATE_CHAIN_FILE }}
-          DIGMA_JB_PRIVATE_KEY_FILE: ${{ secrets.DIGMA_JB_PRIVATE_KEY_FILE }}
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL }}
-        run: ./gradlew publishPlugin --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true
+        run: ./gradlew buildPlugin --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true
 
       - name: Find posthog url
         id: posthog
@@ -106,6 +101,18 @@ jobs:
         with:
           script: |
             core.setFailed('posthog url is empty')
+
+
+      # Publish the plugin to the Marketplace
+      - name: Publish Plugin
+        env:
+          PUBLISH_TOKEN: ${{ secrets.DIGMA_JB_INTELLIJ_PUBLISH_TOKEN }}
+          DIGMA_JB_PRIVATE_KEY_PASSWORD: ${{ secrets.DIGMA_JB_PRIVATE_KEY_PASSWORD }}
+          DIGMA_JB_CERTIFICATE_CHAIN_FILE: ${{ secrets.DIGMA_JB_CERTIFICATE_CHAIN_FILE }}
+          DIGMA_JB_PRIVATE_KEY_FILE: ${{ secrets.DIGMA_JB_PRIVATE_KEY_FILE }}
+          POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL }}
+        run: ./gradlew publishPlugin --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true
+
 
       - name: Prepare Plugin Artifact
         id: artifact

@@ -2,6 +2,7 @@ package common
 
 import org.gradle.api.Project
 
+//todo: fix to return null if property not found, need to check all usages
 fun properties(key: String,project: Project) = project.findProperty(key).toString()
 
 

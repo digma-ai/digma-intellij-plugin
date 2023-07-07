@@ -27,12 +27,19 @@ fun dynamicPlatformType(project: Project): String {
 /**
  * platformPlugins necessary only when running an ide, not for compilation.
  */
-fun Project.platformPlugins(): String = when (properties("platformType", this)) {
-    IdeFlavor.RD.name -> "rider-plugins-appender"
-    IdeFlavor.PC.name, IdeFlavor.PY.name -> ""
-    IdeFlavor.IC.name, IdeFlavor.IU.name -> "com.intellij.java"
+fun Project.platformPlugins(): String {
 
-    else -> ""
+    if (findProperty("platformPlugins") != null){
+        return findProperty("platformPlugins").toString()
+    }
+
+    return when (properties("platformType", this)) {
+        IdeFlavor.RD.name -> "rider-plugins-appender"
+        IdeFlavor.PC.name, IdeFlavor.PY.name -> ""
+        IdeFlavor.IC.name, IdeFlavor.IU.name -> "com.intellij.java"
+
+        else -> ""
+    }
 }
 
 

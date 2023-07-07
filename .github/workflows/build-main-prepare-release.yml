@@ -41,6 +41,8 @@ jobs:
 
       - name: Fetch Sources
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Export Properties
         id: properties
@@ -58,8 +60,19 @@ jobs:
             --jq '.[] | select(.draft == true) | .id' \
             | xargs -I '{}' gh api -X DELETE repos/{owner}/{repo}/releases/{}
 
+      - name: Check if tag exists
+        uses: mukunku/tag-exists-action@v1.2.0
+        id: checkTag
+        with:
+          tag: "v${{ steps.properties.outputs.version }}"
+
+      - name: Echo if tag exists
+        if: ${{ steps.checkTag.outputs.exists }}
+        run: echo "tag for this version exists"
+
       # Delete old release if exists
       - name: Delete old tag
+        if: ${{ steps.checkTag.outputs.exists }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

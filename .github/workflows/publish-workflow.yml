@@ -74,7 +74,7 @@ jobs:
         env:
           CHANGELOG: ${{ steps.properties.outputs.changelog }}
         run: |
-          ./gradlew --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PdoNotDownloadSources=true patchChangelog --release-note="$CHANGELOG"
+          ./gradlew --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true patchChangelog --release-note="$CHANGELOG"
 
       - name: Build plugin
         env:

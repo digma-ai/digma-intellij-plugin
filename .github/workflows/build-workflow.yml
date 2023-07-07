@@ -62,21 +62,20 @@ jobs:
         run: |
           cd ${{ github.workspace }}/build/libs
           FILENAME=`ls instrumented-digma-intellij-plugin*.jar`
-          unzip "$FILENAME" -d content
+          unzip -q "$FILENAME" -d content
           URL=$(cat ./content/posthog-token-url.txt)
           echo "url=${URL}" >> "$GITHUB_OUTPUT"
 
-      - name: Debug
-        if: ${{ steps.posthog.outputs.url }} == ''
-        run: echo "posthog url is empty"
+      - name: Debug posthog url
+        if: ${{ steps.posthog.outputs.url == '' }}
+        run: echo "posthog url is empty,failing build"
 
-      #      - name: Verify posthog url exists
-      #        uses: actions/github-script@v3
-      #        if: ${{ steps.posthog.outputs.url }} == ''
-      #        with:
-      #          script: |
-      #            core.setFailed('posthog url is empty')
-
+      - name: Verify posthog url exists
+        if: ${{ steps.posthog.outputs.url == '' }}
+        uses: actions/github-script@v3
+        with:
+          script: |
+            core.setFailed('posthog url is empty')
 
       - name: Prepare Plugin Artifact
         id: artifact

@@ -15,5 +15,15 @@ jobs:
     with:
       build-profile: ${{ matrix.profile }}
       ref-name: ${{ github.ref_name }}
+      build-with-rider: false
+    secrets: inherit
+  call-build-workflow-with-rider:
+    strategy:
+      matrix:
+        profile: [ lowest, latest, eap ]
+    uses: ./.github/workflows/build-workflow.yml
+    with:
+      build-profile: ${{ matrix.profile }}
+      ref-name: ${{ github.ref_name }}
       build-with-rider: true
     secrets: inherit

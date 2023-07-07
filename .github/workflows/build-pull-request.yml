@@ -13,5 +13,5 @@ jobs:
     with:
       build-profile: ${{ matrix.profile }}
       ref-name: ${{ github.event.pull_request.head.sha }}
-      build-with-rider: true
+      build-with-rider: false
     secrets: inherit

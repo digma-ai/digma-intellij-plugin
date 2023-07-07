@@ -9,12 +9,22 @@ jobs:
     strategy:
       matrix:
         profile: [ lowest, latest, eap ]
-        with-rider: [ true,false ]
     uses: ./.github/workflows/build-workflow.yml
     with:
       build-profile: ${{ matrix.profile }}
       ref-name: ${{ github.ref_name }}
-      build-with-rider: ${{ matrix.with-rider }}
+      build-with-rider: false
+    secrets: inherit
+  ## can do a double matrix for rider but then it's not clear in github which is the rider build.
+  call-build-workflow-with-rider:
+    strategy:
+      matrix:
+        profile: [ lowest, latest, eap ]
+    uses: ./.github/workflows/build-workflow.yml
+    with:
+      build-profile: ${{ matrix.profile }}
+      ref-name: ${{ github.ref_name }}
+      build-with-rider: true
     secrets: inherit
 
 
@@ -22,8 +32,7 @@ jobs:
   # Prepare a draft release for GitHub Releases page for the manual verification
   # If accepted and published, release workflow would be triggered
   releaseDraft:
-    needs: [ call-build-workflow ]
-    #    needs: [ call-build-workflow-lowest,call-build-workflow-latest,call-build-workflow-eap ]
+    needs: [ call-build-workflow,call-build-workflow-with-rider ]
     name: Prepare Release Draft
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-22.04

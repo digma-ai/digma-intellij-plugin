@@ -6,33 +6,20 @@ on:
     types: [prereleased, released]
 
 jobs:
-  call-publish-workflow-lowest:
+  call-publish-workflow:
+    strategy:
+      matrix:
+        profile: [ lowest, latest, eap ]
     uses: ./.github/workflows/publish-workflow.yml
     with:
-      build-profile: lowest
-      tag-name: ${{ github.event.release.tag_name }}
-      changelog: ${{ github.event.release.body }}
-    secrets: inherit
-  call-publish-workflow-latest:
-    needs: call-publish-workflow-lowest
-    uses: ./.github/workflows/publish-workflow.yml
-    with:
-      build-profile: latest
-      tag-name: ${{ github.event.release.tag_name }}
-      changelog: ${{ github.event.release.body }}
-    secrets: inherit
-  call-publish-workflow-eap:
-    needs: call-publish-workflow-latest
-    uses: ./.github/workflows/publish-workflow.yml
-    with:
-      build-profile: eap
+      build-profile: ${{ matrix.profile }}
       tag-name: ${{ github.event.release.tag_name }}
       changelog: ${{ github.event.release.body }}
     secrets: inherit
 
 
   update-to-next-version:
-    needs: [ call-publish-workflow-lowest,call-publish-workflow-latest,call-publish-workflow-eap ]
+    needs: [ call-publish-workflow ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout main branch

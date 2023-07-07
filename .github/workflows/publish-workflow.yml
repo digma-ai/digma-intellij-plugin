@@ -19,6 +19,7 @@ jobs:
     name: Publish Plugin
     runs-on: ubuntu-22.04
     steps:
+
       - name: Maximize build space
         uses: easimon/maximize-build-space@master
         with:
@@ -80,7 +81,8 @@ jobs:
           DIGMA_JB_CERTIFICATE_CHAIN_FILE: ${{ secrets.DIGMA_JB_CERTIFICATE_CHAIN_FILE }}
           DIGMA_JB_PRIVATE_KEY_FILE: ${{ secrets.DIGMA_JB_PRIVATE_KEY_FILE }}
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL }}
-        run: ./gradlew publishPlugin -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir ./.projectcache
+        run: ./gradlew publishPlugin --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true
+
 
       ## todo: delete the release if workflow fails, but what about rerun ? maybe disable rerun for publish workflow
       #      # Delete release on failure

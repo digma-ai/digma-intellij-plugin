@@ -64,15 +64,15 @@ jobs:
         uses: mukunku/tag-exists-action@v1.2.0
         id: checkTag
         with:
-          tag: "v${{ steps.properties.outputs.version }}"
+          tag: v${{ steps.properties.outputs.version }}
 
       - name: Echo if tag exists
-        if: ${{ steps.checkTag.outputs.exists == "true" }}
+        if: ${{ steps.checkTag.outputs.exists }}
         run: echo "tag for this version exists"
 
       # Delete old release if exists
       - name: Delete old tag
-        if: ${{ steps.checkTag.outputs.exists == "true" }}
+        if: ${{ steps.checkTag.outputs.exists }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

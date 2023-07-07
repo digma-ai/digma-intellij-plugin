@@ -13,24 +13,5 @@ jobs:
     with:
       build-profile: ${{ matrix.profile }}
       ref-name: ${{ github.event.pull_request.head.sha }}
+      build-with-rider: false
     secrets: inherit
-
-
-#  call-build-workflow-lowest:
-#    uses: ./.github/workflows/build-workflow.yml
-#    with:
-#      build-profile: lowest
-#      ref-name: ${{ github.ref_name }}
-#    secrets: inherit
-#  call-build-workflow-latest:
-#    uses: ./.github/workflows/build-workflow.yml
-#    with:
-#      build-profile: latest
-#      ref-name: ${{ github.ref_name }}
-#    secrets: inherit
-#  call-build-workflow-eap:
-#    uses: ./.github/workflows/build-workflow.yml
-#    with:
-#      build-profile: eap
-#      ref-name: ${{ github.ref_name }}
-#    secrets: inherit

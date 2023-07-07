@@ -63,7 +63,10 @@ jobs:
           EOM
           )"
           
-          echo "changelog=${CHANGELOG}" >> "$GITHUB_OUTPUT"
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "changelog<<$EOF" >> "$GITHUB_ENV"
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "$EOF" >> "$GITHUB_ENV"
 
       # Update changelog
       - name: Patch Changelog

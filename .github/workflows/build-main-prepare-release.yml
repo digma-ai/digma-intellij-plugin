@@ -54,7 +54,7 @@ jobs:
         shell: bash
         run: |
           VERSION=$(cat version.properties |grep "version="|cut -d= -f2)
-          echo "version=${$VERSION}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
 
       # Remove old release drafts by using the curl request for the available releases with draft flag
       - name: Remove Old Release Drafts

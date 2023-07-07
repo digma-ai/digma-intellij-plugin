@@ -15,7 +15,7 @@ import org.digma.intellij.plugin.log.Log;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class AssetsResourceHandler implements CefResourceHandler {
+class AssetsResourceHandler implements CefResourceHandler {
 
     private final Logger logger = Logger.getInstance(AssetsResourceHandler.class);
 

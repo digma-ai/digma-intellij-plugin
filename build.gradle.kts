@@ -38,6 +38,12 @@ val platformType: String by extra(dynamicPlatformType(project))
 
 logBuildProfile(project)
 
+tasks.register("printCurrentProfileBuildVersion") {
+    doLast {
+        println("build-version=${project.buildVersion()}")
+    }
+}
+
 
 //this project depends on rider dotnet artifacts. this will force the dotnet build before packaging.
 val riderDotNetObjects: Configuration by configurations.creating {
@@ -45,7 +51,7 @@ val riderDotNetObjects: Configuration by configurations.creating {
     isCanBeResolved = true
 }
 
-dependencies{
+dependencies {
     implementation(libs.commons.lang3)
     implementation(project(":model"))
     implementation(project(":analytics-provider"))

@@ -5,27 +5,27 @@ on:
     branches: [ main ]
 
 jobs:
-  call-build-workflow:
-    strategy:
-      matrix:
-        profile: [ lowest, latest, eap ]
-    uses: ./.github/workflows/build-workflow.yml
-    with:
-      build-profile: ${{ matrix.profile }}
-      ref-name: ${{ github.ref_name }}
-      build-with-rider: false
-    secrets: inherit
-
-  call-build-workflow-with-rider:
-    strategy:
-      matrix:
-        profile: [ lowest, latest, eap ]
-    uses: ./.github/workflows/build-workflow.yml
-    with:
-      build-profile: ${{ matrix.profile }}
-      ref-name: ${{ github.ref_name }}
-      build-with-rider: true
-    secrets: inherit
+#  call-build-workflow:
+  #    strategy:
+  #      matrix:
+  #        profile: [ lowest, latest, eap ]
+  #    uses: ./.github/workflows/build-workflow.yml
+  #    with:
+  #      build-profile: ${{ matrix.profile }}
+  #      ref-name: ${{ github.ref_name }}
+  #      build-with-rider: false
+  #    secrets: inherit
+  #
+  #  call-build-workflow-with-rider:
+  #    strategy:
+  #      matrix:
+  #        profile: [ lowest, latest, eap ]
+  #    uses: ./.github/workflows/build-workflow.yml
+  #    with:
+  #      build-profile: ${{ matrix.profile }}
+  #      ref-name: ${{ github.ref_name }}
+  #      build-with-rider: true
+  #    secrets: inherit
 
 
 
@@ -67,22 +67,22 @@ jobs:
           tag: "v${{ steps.properties.outputs.version }}"
 
       - name: Echo if tag exists
-        if: ${{ steps.checkTag.outputs.exists }}
+        if: ${{ steps.checkTag.outputs.exists == "true" }}
         run: echo "tag for this version exists"
 
       # Delete old release if exists
       - name: Delete old tag
-        if: ${{ steps.checkTag.outputs.exists }}
+        if: ${{ steps.checkTag.outputs.exists == "true" }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release delete v${{ steps.properties.outputs.version }} -y
 
-      # Create new release draft - which is not publicly visible and requires manual acceptance
-      - name: Create Release Draft
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release create v${{ steps.properties.outputs.version }} \
-            --draft \
-            --title "v${{ steps.properties.outputs.version }}"
+#      # Create new release draft - which is not publicly visible and requires manual acceptance
+#      - name: Create Release Draft
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        run: |
+#          gh release create v${{ steps.properties.outputs.version }} \
+#            --draft \
+#            --title "v${{ steps.properties.outputs.version }}"

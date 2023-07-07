@@ -22,7 +22,7 @@ jobs:
   # Prepare a draft release for GitHub Releases page for the manual verification
   # If accepted and published, release workflow would be triggered
   releaseDraft:
-    needs: [ call-build-workflow,call-build-workflow-with-rider ]
+    needs: [ call-build-workflow ]
     #    needs: [ call-build-workflow-lowest,call-build-workflow-latest,call-build-workflow-eap ]
     name: Prepare Release Draft
     if: github.event_name != 'pull_request'

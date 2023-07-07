@@ -1,0 +1,15 @@
+
+name: Manual workflow
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check-release-exists:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Delete old tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete v2.0.101 -y

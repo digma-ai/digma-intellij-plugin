@@ -1,3 +1,6 @@
+## All gradle command are changing gradle user home and project home to use the project directory. that is because
+## maximize-build-space increases the working directory so that home directory has no space for gradle.
+
 name: Build all branches (!main)
 
 on:

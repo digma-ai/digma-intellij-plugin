@@ -54,8 +54,8 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1.0.4
 
-      - name: Export Properties
-        id: properties
+      - name: Export Changelog
+        id: exportchangelog
         shell: bash
         run: |
           CHANGELOG="$(cat << 'EOM' | sed -e 's/^[[:space:]]*$//g' -e '/./,$!d'
@@ -70,9 +70,9 @@ jobs:
 
       # Update changelog
       - name: Patch Changelog
-        if: ${{ steps.properties.outputs.changelog != '' }}
+        if: ${{ steps.exportchangelog.outputs.changelog != '' }}
         env:
-          CHANGELOG: ${{ steps.properties.outputs.changelog }}
+          CHANGELOG: ${{ steps.exportchangelog.outputs.changelog }}
         run: |
           ./gradlew --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true patchChangelog --release-note="$CHANGELOG"
 

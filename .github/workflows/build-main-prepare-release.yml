@@ -43,8 +43,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Export Properties
-        id: properties
+      - name: Export Version
+        id: exportversion
         shell: bash
         run: |
           VERSION=$(cat version.properties |grep "version="|cut -d= -f2)
@@ -59,29 +59,11 @@ jobs:
             --jq '.[] | select(.draft == true) | .id' \
             | xargs -I '{}' gh api -X DELETE repos/{owner}/{repo}/releases/{}
 
-      #      - name: Check if tag exists
-      #        uses: mukunku/tag-exists-action@v1.2.0
-      #        id: checkTag
-      #        with:
-      #          tag: v${{ steps.properties.outputs.version }}
-      #
-      #      - name: Echo if tag exists
-      #        if: ${{ steps.checkTag.outputs.exists }}
-      #        run: echo "tag for this version exists"
-      #
-      #      # Delete old release if exists
-      #      - name: Delete old tag
-      #        if: ${{ steps.checkTag.outputs.exists }}
-      #        env:
-      #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #        run: |
-      #          gh release delete v${{ steps.properties.outputs.version }} -y
-
       # Create new release draft - which is not publicly visible and requires manual acceptance
       - name: Create Release Draft
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v${{ steps.properties.outputs.version }} \
+          gh release create v${{ steps.exportversion.outputs.version }} \
             --draft \
-            --title "v${{ steps.properties.outputs.version }}"
+            --title "v${{ steps.exportversion.outputs.version }}"

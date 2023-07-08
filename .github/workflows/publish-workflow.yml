@@ -117,7 +117,7 @@ jobs:
       # todo: delete the release if workflow fails, but what about rerun ? maybe disable rerun for publish workflow
       # Delete release on failure
       - name: Delete release on failure
-        if: ${{ failure() }} || ${{ cancelled() }}
+        if: ${{ failure() || cancelled() }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release delete ${{ inputs.tag-name }} --cleanup-tag --yes

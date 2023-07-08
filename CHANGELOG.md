@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.104] - 2023-07-08
+## [2.0.105] - 2023-07-08
+- trigger build by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/928
+
+## 2.0.104 - 2023-07-08
 - fix-increment-version by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/927
 
 ## 2.0.99 - 2023-07-06

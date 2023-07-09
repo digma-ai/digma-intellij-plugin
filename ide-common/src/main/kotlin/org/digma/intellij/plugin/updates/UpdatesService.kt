@@ -228,8 +228,7 @@ class UpdatesService(private val project: Project) : Disposable {
     }
 
     // when plugin is not installed it will return 0.0.0
-    @NotNull
-    fun getPluginVersion(): String {
+    private fun getPluginVersion(): String {
         return SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("0.0.0")
     }
 }

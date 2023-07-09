@@ -1,22 +1,19 @@
 package org.digma.intellij.plugin.posthog
 
-import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.application.ApplicationInfo
-import com.intellij.openapi.extensions.PluginDescriptor
 import com.intellij.openapi.project.Project
 import com.posthog.java.PostHog
-import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.AboutResult
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
+import org.digma.intellij.plugin.semanticversion.SemanticVersionUtil
 import org.threeten.extra.Hours
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
-import java.util.Optional
 
 class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
 
@@ -242,10 +239,7 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
         val ideName = ideInfo.versionName
         val ideVersion = ideInfo.fullVersion
         val ideBuildNumber = ideInfo.build.asString()
-        val pluginVersion =
-            Optional.ofNullable(PluginManagerCore.getPlugin(com.intellij.openapi.extensions.PluginId.getId(PluginId.PLUGIN_ID)))
-                .map(PluginDescriptor::getVersion)
-                .orElse("unknown")
+        val pluginVersion = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
 
         postHog?.set(
             userId,

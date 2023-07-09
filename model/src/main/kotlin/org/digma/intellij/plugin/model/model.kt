@@ -29,6 +29,7 @@ enum class InsightType {
     SlowEndpoint,
     EndpointSpaNPlusOne,
     EndpointSessionInView,
+    EndpointChattyApi,
     EndpointDurationSlowdown,
     EndpointBreakdown,
     SpaNPlusOne,

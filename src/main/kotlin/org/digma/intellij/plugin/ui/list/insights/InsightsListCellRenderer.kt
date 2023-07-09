@@ -6,6 +6,7 @@ import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import org.digma.intellij.plugin.model.rest.insights.EPNPlusSpansInsight
 import org.digma.intellij.plugin.model.rest.insights.EndpointBreakdownInsight
+import org.digma.intellij.plugin.model.rest.insights.EndpointChattyApiInsight
 import org.digma.intellij.plugin.model.rest.insights.EndpointDurationSlowdownInsight
 import org.digma.intellij.plugin.model.rest.insights.EndpointSessionInViewInsight
 import org.digma.intellij.plugin.model.rest.insights.EndpointSchema
@@ -67,6 +68,7 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
             is HighUsageInsight -> highUsageInsightPanel(project, value.modelObject as HighUsageInsight)
             is EPNPlusSpansInsight -> ePNPlusSpansPanel(project, value.modelObject as EPNPlusSpansInsight)
             is EndpointSessionInViewInsight -> sessionInViewPanel(project, value.modelObject as EndpointSessionInViewInsight)
+            is EndpointChattyApiInsight -> chattyApiPanel(project, value.modelObject as EndpointChattyApiInsight)
 
             is EndpointDurationSlowdownInsight -> endpointDurationSlowdownPanel(project, value.modelObject as EndpointDurationSlowdownInsight, panelsLayoutHelper)
             is EndpointBreakdownInsight -> endpointBreakdownPanel(project, value.modelObject as EndpointBreakdownInsight)

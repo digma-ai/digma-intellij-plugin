@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.105] - 2023-07-08
+## [2.0.106] - 2023-07-09
+- chatty api insight by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/905
+- fix build version to match semver by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/933
+
+## 2.0.105 - 2023-07-08
 - trigger build by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/928
 
 ## 2.0.104 - 2023-07-08

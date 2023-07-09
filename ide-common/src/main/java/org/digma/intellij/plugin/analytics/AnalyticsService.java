@@ -61,7 +61,6 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.net.http.HttpTimeoutException;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -112,7 +111,7 @@ public class AnalyticsService implements Disposable {
         //initialize MainToolWindowCardsController when starting, so it is aware early on connection statuses
         MainToolWindowCardsController.getInstance(project);
         SettingsState settingsState = SettingsState.getInstance();
-        environment = new Environment(project, this, PersistenceService.getInstance().getState(), settingsState);
+        environment = new Environment(project, this, PersistenceService.getInstance().getState());
         this.project = project;
         myApiUrl = settingsState.apiUrl;
         myApiToken = settingsState.apiToken;
@@ -160,12 +159,7 @@ public class AnalyticsService implements Disposable {
 
 
     private void initializeEnvironmentsList() {
-        List<String> envs = getEnvironments();
-        if (envs == null) {
-            envs = new ArrayList<>();
-        }
-
-        environment.replaceEnvironmentsList(envs);
+        environment.refreshNowOnBackground();
     }
 
 
@@ -173,12 +167,7 @@ public class AnalyticsService implements Disposable {
 
         Backgroundable.ensureBackground(project, "Digma: Environments list changed", () -> {
             replaceClient(url, token);
-            List<String> envs = getEnvironments();
-            if (envs == null) {
-                envs = new ArrayList<>();
-            }
-
-            environment.replaceEnvironmentsListAndFireChange(envs);
+            environment.refreshNowOnBackground();
         });
 
     }

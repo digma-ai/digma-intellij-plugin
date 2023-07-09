@@ -57,7 +57,7 @@ fun Project.shouldDownloadSources(): Boolean {
 
 
 fun Project.buildVersion(): String {
-    return "${common.semanticversion.getSemanticVersion(this)}.${this.currentProfile().platformVersionCode}"
+    return "${common.semanticversion.getSemanticVersion(this)}+${this.currentProfile().platformVersionCode}"
 }
 
 fun Project.withCurrentProfile(consumer: (BuildProfile) -> Unit) {

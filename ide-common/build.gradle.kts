@@ -28,6 +28,7 @@ dependencies {
     api(libs.commons.collections4)
     api(libs.posthog)
     api(libs.maven.artifact)
+    api(libs.glovoapp.versioning)
 
     implementation(project(":model"))
     implementation(project(":analytics-provider"))

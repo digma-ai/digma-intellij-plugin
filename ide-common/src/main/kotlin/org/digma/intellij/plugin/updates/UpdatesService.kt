@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.updates
 
-import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.diagnostic.Logger
@@ -10,7 +9,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.apache.maven.artifact.versioning.ComparableVersion
-import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.analytics.AnalyticsProviderException
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
@@ -23,6 +21,7 @@ import org.digma.intellij.plugin.model.rest.version.PluginVersionResponse
 import org.digma.intellij.plugin.model.rest.version.VersionRequest
 import org.digma.intellij.plugin.model.rest.version.VersionResponse
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.semanticversion.SemanticVersionUtil
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.VisibleForTesting
@@ -65,7 +64,7 @@ class UpdatesService(private val project: Project) : Disposable {
 
     init {
         stateBackendVersion = BackendVersionResponse(false, "0.0.1", "0.0.1", BackendDeploymentType.Unknown)
-        statePluginVersion = PluginVersion(getPluginVersion())
+        statePluginVersion = PluginVersion(SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("0.0.0"))
 
         val fetchTask = object : TimerTask() {
             override fun run() {
@@ -209,7 +208,8 @@ class UpdatesService(private val project: Project) : Disposable {
     @NotNull
     private fun buildVersionRequest(): VersionRequest {
         return VersionRequest(
-            getPluginVersion(), getPlatformType(), getPlatformVersion()
+            SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("0.0.0"),
+            getPlatformType(), getPlatformVersion()
         )
     }
 
@@ -228,15 +228,6 @@ class UpdatesService(private val project: Project) : Disposable {
         return appInfo.fullVersion
     }
 
-    // when plugin is not installed it will return 0.0.0
-    @NotNull
-    fun getPluginVersion(): String {
-        val plugin = PluginManagerCore.getPlugin(com.intellij.openapi.extensions.PluginId.getId(PluginId.PLUGIN_ID))
-        if (plugin != null)
-            return plugin.version
-
-        return "0.0.0"
-    }
 }
 
 data class PluginVersion(val currentVersion: String) {

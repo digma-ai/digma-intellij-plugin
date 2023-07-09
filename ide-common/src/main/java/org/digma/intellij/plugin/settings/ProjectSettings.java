@@ -45,6 +45,7 @@ public class ProjectSettings implements Configurable {
                 isJaegerUrlChanged(settings) ||
                 isJaegerQueryUrlChanged(settings) ||
                 isJaegerLinkModeChanged(settings) ||
+                isSpringBootObservabilityModeChanged(settings) ||
                 isRuntimeObservabilityBackendUrlChanged(settings);
     }
 
@@ -72,6 +73,10 @@ public class ProjectSettings implements Configurable {
         return !Objects.equals(settings.jaegerLinkMode, mySettingsComponent.getJaegerLinkMode());
     }
 
+    private boolean isSpringBootObservabilityModeChanged(SettingsState settings) {
+        return !Objects.equals(settings.springBootObservabilityMode, mySettingsComponent.getSpringBootObservabilityMode());
+    }
+
     private boolean isRuntimeObservabilityBackendUrlChanged(SettingsState settings) {
         return !Objects.equals(settings.runtimeObservabilityBackendUrl, mySettingsComponent.getRuntimeObservabilityBackendUrl());
     }
@@ -91,7 +96,7 @@ public class ProjectSettings implements Configurable {
 
         if (mySettingsComponent.getJaegerUrl() != null &&
                 !mySettingsComponent.getJaegerUrl().isBlank() &&
-                !CommonUtils.isWelFormedUrl(mySettingsComponent.getJaegerUrl())){
+                !CommonUtils.isWelFormedUrl(mySettingsComponent.getJaegerUrl())) {
             throw new ConfigurationException("Jaeger url is not a well formed url");
         }
 
@@ -99,7 +104,7 @@ public class ProjectSettings implements Configurable {
             if (!CommonUtils.isWelFormedUrl(mySettingsComponent.getJaegerQueryUrl())) {
                 throw new ConfigurationException("Jaeger query url must be well formed in Embedded mode");
             }
-        }else{
+        } else {
             if (mySettingsComponent.getJaegerQueryUrl() != null &&
                     !mySettingsComponent.getJaegerQueryUrl().isBlank() &&
                     !CommonUtils.isWelFormedUrl(mySettingsComponent.getJaegerQueryUrl())) {
@@ -118,6 +123,7 @@ public class ProjectSettings implements Configurable {
         settings.jaegerUrl = mySettingsComponent.getJaegerUrl();
         settings.jaegerQueryUrl = mySettingsComponent.getJaegerQueryUrl();
         settings.jaegerLinkMode = mySettingsComponent.getJaegerLinkMode();
+        settings.springBootObservabilityMode = mySettingsComponent.getSpringBootObservabilityMode();
         settings.runtimeObservabilityBackendUrl = mySettingsComponent.getRuntimeObservabilityBackendUrl();
         settings.fireChanged();
     }
@@ -131,6 +137,7 @@ public class ProjectSettings implements Configurable {
         mySettingsComponent.setJaegerUrl(settings.jaegerUrl);
         mySettingsComponent.setJaegerQueryUrl(settings.jaegerQueryUrl);
         mySettingsComponent.setJaegerLinkMode(settings.jaegerLinkMode);
+        mySettingsComponent.setSpringBootObservabilityMode(settings.springBootObservabilityMode);
         mySettingsComponent.setRuntimeObservabilityBackendUrl(settings.runtimeObservabilityBackendUrl);
     }
 

@@ -14,12 +14,15 @@ import com.intellij.execution.process.ProcessListener
 import com.intellij.execution.ui.ConsoleView
 import com.intellij.execution.ui.ConsoleViewContentType
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
+import org.digma.intellij.plugin.idea.deps.ModulesDepsService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.settings.SettingsState
+import org.digma.intellij.plugin.settings.SpringBootObservabilityMode
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.idea.maven.execution.MavenRunConfiguration
 import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
@@ -64,8 +67,10 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
         runnerSettings: RunnerSettings?,
     ) {
 
-        Log.log(logger::debug, "updateJavaParameters, project:{}, id:{}, name:{}, type:{}",
-                configuration.project, configuration.id, configuration.name, configuration.type)
+        val resolvedModule = RunCfgTools.resolveModule(configuration, params, runnerSettings)
+
+        Log.log(logger::debug, "updateJavaParameters, project:{}, id:{}, name:{}, type:{}, module:{}",
+            configuration.project, configuration.id, configuration.name, configuration.type, resolvedModule)
 
         val project = configuration.project
         val runConfigType = evalRunConfigType(configuration)
@@ -85,13 +90,15 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
             return
         }
 
+        val useOtelAgent = evalToUseAgent(resolvedModule)
+
         when (runConfigType) {
             RunConfigType.JavaRun -> {
                 //this also works for: CommonJavaRunConfigurationParameters
                 //params.vmParametersList.addParametersString("-verbose:class -javaagent:/home/shalom/tmp/run-configuration/opentelemetry-javaagent.jar")
                 //params.vmParametersList.addProperty("myprop","myvalue")
                 val javaToolOptions =
-                    buildJavaToolOptions(configuration, project, isOtelServiceNameAlreadyDefined(params))
+                    buildJavaToolOptions(configuration, project, useOtelAgent, isOtelServiceNameAlreadyDefined(params))
                 javaToolOptions?.let {
                     mergeJavaToolOptions(params, it)
                 }
@@ -110,7 +117,7 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
                 // JAVA_TOOL_OPTIONS is not the best as said above, but it works.
                 configuration as GradleRunConfiguration
                 val javaToolOptions =
-                    buildJavaToolOptions(configuration, project, isOtelServiceNameAlreadyDefined(configuration))
+                    buildJavaToolOptions(configuration, project, useOtelAgent, isOtelServiceNameAlreadyDefined(configuration))
                 javaToolOptions?.let {
                     mergeGradleJavaToolOptions(configuration, javaToolOptions)
                 }
@@ -119,7 +126,7 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
             RunConfigType.MavenRun -> {
                 configuration as MavenRunConfiguration
                 val javaToolOptions =
-                    buildJavaToolOptions(configuration, project, isOtelServiceNameAlreadyDefined(params))
+                    buildJavaToolOptions(configuration, project, useOtelAgent, isOtelServiceNameAlreadyDefined(params))
                 javaToolOptions?.let {
                     mergeJavaToolOptions(params, it)
                 }
@@ -129,6 +136,22 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
                 // do nothing
             }
         } // end when case
+    }
+
+    // this one is used AFTER of settings.observability enabled
+    private fun evalToUseAgent(module: Module?): Boolean {
+        if (module == null) return true
+        val useAgentForSpringBoot = getConfigUseAgentForSpringBoot()
+
+        val modulesDepsService = ModulesDepsService.getInstance(module.project)
+        val moduleExt = modulesDepsService.getModuleExt(module.name)
+        if (moduleExt != null) {
+            if (moduleExt.metadata.hasSpringBoot() && !useAgentForSpringBoot) {
+                // use Micrometer tracing, instead of OtelAgent
+                return false
+            }
+        }
+        return true
     }
 
     //this is only for gradle. we need to keep original JAVA_TOOL_OPTIONS if exists and restore when the process is
@@ -206,6 +229,7 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
     private fun buildJavaToolOptions(
         configuration: RunConfigurationBase<*>,
         project: Project,
+        useOtelAgent: Boolean,
         serviceAlreadyDefined: Boolean,
     ): String? {
 
@@ -217,10 +241,14 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
         }
 
         var retVal = " "
-            .plus("-javaagent:$otelAgentPath")
-            .plus(" ")
-            .plus("-Dotel.javaagent.extensions=$digmaExtensionPath")
-            .plus(" ")
+        if (useOtelAgent) {
+            retVal = retVal
+                .plus("-javaagent:$otelAgentPath")
+                .plus(" ")
+                .plus("-Dotel.javaagent.extensions=$digmaExtensionPath")
+                .plus(" ")
+        }
+        retVal = retVal
             .plus("-Dotel.traces.exporter=otlp")
             .plus(" ")
             .plus("-Dotel.metrics.exporter=none")
@@ -277,6 +305,10 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
 
     private fun getExporterUrl(): String {
         return SettingsState.getInstance().runtimeObservabilityBackendUrl
+    }
+
+    private fun getConfigUseAgentForSpringBoot(): Boolean {
+        return SettingsState.getInstance().springBootObservabilityMode == SpringBootObservabilityMode.OtelAgent
     }
 
     private fun reportToPosthog(project: Project, runConfigType: RunConfigType, observabilityEnabled: Boolean, connectedToBackend: Boolean) {

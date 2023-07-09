@@ -54,9 +54,17 @@ class ModulesDepsService(private val project: Project) : Disposable {
 
         @JvmStatic
         fun evalModuleMetadata(libDeps: Collection<LibraryOrderEntry>): ModuleMetadata {
+            // quarkus
             var hasOpenTelemetryAnnotations = false
             var quarkusVersion: String? = null
             var hasQuarkusOpenTelemetry = false
+
+            // spring boot
+            var hasSpringBootStarterActuator = false
+            var hasMicrometerTracingBridgeOtel = false
+            var hasOtelExporterOtlp = false
+            var springBootVersion: String? = null
+
 
             for (currLib in libDeps) {
                 val libCoord = toUnifiedCoordinates(currLib)
@@ -73,9 +81,31 @@ class ModulesDepsService(private val project: Project) : Disposable {
                 if (!hasQuarkusOpenTelemetry) {
                     hasQuarkusOpenTelemetry = checkQuarkusOpenTelemetry(libCoord)
                 }
+
+                // spring boot
+                if (springBootVersion == null) {
+                    val hasSpringBoot = checkSpringBoot(libCoord)
+                    if (hasSpringBoot) {
+                        springBootVersion = libCoord.version
+                    }
+                }
+                if (!hasSpringBootStarterActuator) {
+                    hasSpringBootStarterActuator = checkSpringBootStarterActuator(libCoord)
+                }
+                if (!hasMicrometerTracingBridgeOtel) {
+                    hasMicrometerTracingBridgeOtel = checkMicrometerTracingBridgeOtel(libCoord)
+                }
+                if (!hasOtelExporterOtlp) {
+                    hasOtelExporterOtlp = checkOtelExporterOtlp(libCoord)
+                }
+
+                // other
             }
 
-            return ModuleMetadata(hasOpenTelemetryAnnotations, quarkusVersion, hasQuarkusOpenTelemetry)
+            return ModuleMetadata(
+                hasOpenTelemetryAnnotations, quarkusVersion, hasQuarkusOpenTelemetry,
+                springBootVersion, hasSpringBootStarterActuator, hasMicrometerTracingBridgeOtel, hasOtelExporterOtlp
+            )
         }
 
         @JvmStatic
@@ -92,6 +122,31 @@ class ModulesDepsService(private val project: Project) : Disposable {
         fun checkOpenTelemetryAnnotations(libCoord: UnifiedCoordinates): Boolean {
             return libCoord.groupId == "io.opentelemetry.instrumentation" && libCoord.artifactId == "opentelemetry-instrumentation-annotations"
         }
+
+        @JvmStatic
+        fun checkSpringBoot(libCoord: UnifiedCoordinates): Boolean {
+            return libCoord.groupId == "org.springframework.boot"
+        }
+
+        @JvmStatic
+        fun checkSpringBootStarterActuator(libCoord: UnifiedCoordinates): Boolean {
+            return libCoord.groupId == "org.springframework.boot" &&
+                    libCoord.artifactId == "spring-boot-starter-actuator"
+        }
+
+        @JvmStatic
+        fun checkMicrometerTracingBridgeOtel(libCoord: UnifiedCoordinates): Boolean {
+            return libCoord.groupId == "io.micrometer" &&
+                    libCoord.artifactId == "micrometer-tracing-bridge-otel"
+        }
+
+        @JvmStatic
+        fun checkOtelExporterOtlp(libCoord: UnifiedCoordinates): Boolean {
+            return libCoord.groupId == "io.opentelemetry" &&
+                    libCoord.artifactId == "opentelemetry-exporter-otlp"
+        }
+
+
     }
 
     // delay for first check for update since startup
@@ -140,6 +195,11 @@ class ModulesDepsService(private val project: Project) : Disposable {
         return theMap
     }
 
+    fun getModuleExt(moduleName: String): ModuleExt? {
+        val mExt = mapName2Module.get(moduleName)
+        return mExt
+    }
+
     fun getQuarkusModulesWithoutOpenTelemetry(): Set<ModuleExt> {
         return mapName2Module.values.filter {
             it.metadata.hasQuarkus() && !it.metadata.hasQuarkusOpenTelemetry
@@ -148,6 +208,29 @@ class ModulesDepsService(private val project: Project) : Disposable {
             .toSet()
     }
 
+    fun getSpringBootModulesWithoutObservabilityDeps(): Set<ModuleExt> {
+        return mapName2Module.values.filter {
+            true
+                    && !aotOrTest(it.module)
+                    && it.metadata.hasSpringBoot()
+                    && (false
+                    || !it.metadata.hasSpringBootStarterActuator
+                    || !it.metadata.hasMicrometerTracingBridgeOtel
+                    || !it.metadata.hasOtelExporterOtlp
+                    )
+        }.toSet()
+    }
+
+    // some Gradle modules might have be non relevant ones
+    fun aotOrTest(mod: Module): Boolean {
+        val moduleName = mod.name
+
+        return (false
+                || moduleName.endsWith(".aot")
+                || moduleName.endsWith(".aotTest")
+                || moduleName.endsWith(".test")
+                )
+    }
 }
 
 class ModuleDepsStarter : StartupActivity {
@@ -158,12 +241,23 @@ class ModuleDepsStarter : StartupActivity {
 }
 
 data class ModuleMetadata(
+    // quarkus
     val hasOpenTelemetryAnnotations: Boolean,
     val quarkusVersion: String?,
     val hasQuarkusOpenTelemetry: Boolean,
+    // spring boot
+    val springBootVersion: String?,
+    val hasSpringBootStarterActuator: Boolean,
+    val hasMicrometerTracingBridgeOtel: Boolean,
+    val hasOtelExporterOtlp: Boolean,
+    // other
 ) {
     fun hasQuarkus(): Boolean {
         return !quarkusVersion.isNullOrBlank()
+    }
+
+    fun hasSpringBoot(): Boolean {
+        return !springBootVersion.isNullOrBlank()
     }
 }
 

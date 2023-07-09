@@ -185,6 +185,7 @@ object Laf {
         class Misc {
             companion object {
                 @JvmStatic val Quarkus = SvgIcon.asIs("/icons/quarkus.svg")
+                @JvmStatic val SpringBoot = SvgIcon.asIs("/icons/spring-boot.svg")
             }
         }
 

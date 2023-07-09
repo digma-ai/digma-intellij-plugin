@@ -21,6 +21,8 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.frameworks.QuarkusConfigureDepsService"/>
         <runConfigurationExtension implementation="org.digma.intellij.plugin.idea.runcfg.QuarkusRunConfigurationExtension"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService"/>
     </extensions>
 
 

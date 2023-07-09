@@ -34,6 +34,7 @@ public class SettingsState implements PersistentStateComponent<SettingsState>, D
     public static final String DEFAULT_JAEGER_URL = "http://localhost:16686";
     public static final String DEFAULT_JAEGER_QUERY_URL = "http://localhost:17686";
     public static final LinkMode DEFAULT_JAEGER_LINK_MODE = LinkMode.Embedded;
+    public static final SpringBootObservabilityMode DEFAULT_SPRING_BOOT_OBSERVABILITY_MODE = SpringBootObservabilityMode.OtelAgent;
     public static final String DEFAULT_RUNTIME_OBSERVABILITY_BACKEND_URL = "http://localhost:5050";
 
     @NotNull
@@ -47,6 +48,8 @@ public class SettingsState implements PersistentStateComponent<SettingsState>, D
     public String jaegerQueryUrl = DEFAULT_JAEGER_QUERY_URL;
     @NotNull
     public LinkMode jaegerLinkMode = DEFAULT_JAEGER_LINK_MODE;
+    @NotNull
+    public SpringBootObservabilityMode springBootObservabilityMode = DEFAULT_SPRING_BOOT_OBSERVABILITY_MODE;
     @NotNull
     public String runtimeObservabilityBackendUrl = DEFAULT_RUNTIME_OBSERVABILITY_BACKEND_URL;
     @Nullable

@@ -29,7 +29,8 @@ public class SettingsComponent {
     private final JBTextField myJaegerQueryUrlText = new JBTextField();
     private final JBLabel myJaegerQueryUrlLabel = new JBLabel("Jaeger Query URL (For embedded mode): ");
     private final ComboBox<LinkMode> myJaegerLinkModeComboBox = new ComboBox<>(new EnumComboBoxModel<>(LinkMode.class));
-    private final JBLabel myEmbeddedJaegerMessage = new JBLabel("<html><body><span style=\"color:\""+JBColor.BLUE+"\"\"><b>Jaeger embedded is only supported for deployment on a local environment.</b></span></body>");
+    private final JBLabel myEmbeddedJaegerMessage = new JBLabel("<html><body><span style=\"color:\"" + JBColor.BLUE + "\"\"><b>Jaeger embedded is only supported for deployment on a local environment.</b></span></body>");
+    private final ComboBox<SpringBootObservabilityMode> mySpringBootObservabilityModeComboBox = new ComboBox<>(new EnumComboBoxModel<>(SpringBootObservabilityMode.class));
     private final JBTextField myRuntimeObservabilityBackendUrlText = new JBTextField();
 
     public SettingsComponent() {
@@ -106,15 +107,23 @@ public class SettingsComponent {
 
 
         myEmbeddedJaegerMessage.setForeground(JBColor.BLUE);
+
         var myJaegerLinkModeLabel = new JBLabel("Jaeger link mode: ");
-        myJaegerLinkModeLabel.setToolTipText("Internal will open the link as an embedded URL within the IDE. " +
-                "External will open the link externally to your default browser." +
-                " Embedded mode will open embedded Jaeger UI in the editor area.");
+        myJaegerLinkModeLabel.setToolTipText(""
+                + "Internal will open the link as an embedded URL within the IDE. "
+                + "External will open the link externally to your default browser. "
+                + "Embedded mode will open embedded Jaeger UI in the editor area. "
+        );
         myJaegerLinkModeComboBox.addItemListener(e -> {
             LinkMode selected = (LinkMode) myJaegerLinkModeComboBox.getSelectedItem();
             linkModeSelected(defaultLabelForeground, selected);
         });
 
+        var mySpringBootObservabilityModeLabel = new JBLabel("Spring Boot observability mode: ");
+        mySpringBootObservabilityModeLabel.setToolTipText(""
+                + "OtelAgent will use the default OpenTelemetry java agent. "
+                + "Micrometer will use Micrometer tracing, including the annotation of 'Observed' "
+        );
 
         var myRuntimeObservabilityBackendUrlLabel = new JBLabel("Runtime observability backend URL:");
         myRuntimeObservabilityBackendUrlLabel.setToolTipText("Where should observability data be sent from the IDE? This would be the Digma collector URL typically listening to port 5050");
@@ -144,6 +153,7 @@ public class SettingsComponent {
                 .addComponent(myEmbeddedJaegerMessage, 1)
                 .addLabeledComponent(myJaegerUrlLabel, myJaegerUrlText, 1, false)
                 .addLabeledComponent(myJaegerQueryUrlLabel, myJaegerQueryUrlText, 1, false)
+                .addLabeledComponent(mySpringBootObservabilityModeLabel, mySpringBootObservabilityModeComboBox, 1, false)
                 .addLabeledComponent(myRuntimeObservabilityBackendUrlLabel, myRuntimeObservabilityBackendUrlText, 1, false)
                 .addComponentToRightColumn(feedbackForRuntimeObservabilityBackendUrl, 1)
                 .addComponent(resetButton)
@@ -245,6 +255,14 @@ public class SettingsComponent {
         linkModeSelected(JBColor.foreground(), linkMode);
     }
 
+    public SpringBootObservabilityMode getSpringBootObservabilityMode() {
+        return (SpringBootObservabilityMode) mySpringBootObservabilityModeComboBox.getSelectedItem();
+    }
+
+    public void setSpringBootObservabilityMode(SpringBootObservabilityMode mode) {
+        mySpringBootObservabilityModeComboBox.setSelectedItem(mode);
+    }
+
     @NotNull
     public String getRuntimeObservabilityBackendUrl() {
         return myRuntimeObservabilityBackendUrlText.getText().trim();
@@ -271,6 +289,7 @@ public class SettingsComponent {
         this.setJaegerQueryUrl(SettingsState.DEFAULT_JAEGER_QUERY_URL);
         this.setJaegerLinkMode(SettingsState.DEFAULT_JAEGER_LINK_MODE);
         this.myEmbeddedJaegerMessage.setVisible(true);
+        this.setSpringBootObservabilityMode(SettingsState.DEFAULT_SPRING_BOOT_OBSERVABILITY_MODE);
         this.setRuntimeObservabilityBackendUrl(SettingsState.DEFAULT_RUNTIME_OBSERVABILITY_BACKEND_URL);
     }
 }

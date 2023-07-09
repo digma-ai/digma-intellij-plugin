@@ -4,6 +4,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.ui.frameworks.QuarkusConfigureDepsPanel
+import org.digma.intellij.plugin.ui.frameworks.SpringBootMicrometerConfigureDepsPanel
 import java.awt.BorderLayout
 import javax.swing.JPanel
 
@@ -14,6 +15,13 @@ fun createMainToolWindowPanel(project: Project, contentPanel: ContentPanel): JPa
     val quarkusConfigureDepsPanel: JPanel? =
         if (IDEUtilsService.getInstance(project).isJavaProject()) {
             QuarkusConfigureDepsPanel(project)
+        } else {
+            null
+        }
+
+    val springBootConfigureDepsPanel: JPanel? =
+        if (IDEUtilsService.getInstance(project).isJavaProject()) {
+            SpringBootMicrometerConfigureDepsPanel(project)
         } else {
             null
         }
@@ -30,6 +38,10 @@ fun createMainToolWindowPanel(project: Project, contentPanel: ContentPanel): JPa
     topPanel.add(updatePanel, BorderLayout.CENTER)
 
     quarkusConfigureDepsPanel?.let {
+        topPanel.add(it, BorderLayout.SOUTH)
+    }
+
+    springBootConfigureDepsPanel?.let {
         topPanel.add(it, BorderLayout.SOUTH)
     }
 

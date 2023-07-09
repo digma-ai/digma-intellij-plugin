@@ -5,11 +5,11 @@ import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditorManager
-import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
@@ -21,6 +21,7 @@ import com.intellij.psi.SmartPointerManager
 import com.intellij.util.RunnableCallable
 import com.intellij.util.concurrency.NonUrgentExecutor
 import com.intellij.util.messages.MessageBusConnection
+import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.document.CodeLensProvider
 import org.digma.intellij.plugin.document.DocumentInfoChanged
 import org.digma.intellij.plugin.log.Log
@@ -67,7 +68,8 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
             Log.log(logger::debug, "got documentInfoChanged, restarting DaemonCodeAnalyzer for {}", psiUri)
             codeLensCache.remove(PsiUtils.psiFileToUri(psiFile))
             ReadAction.nonBlocking(RunnableCallable{
-                restartFile(psiFile)
+//                restartFile(psiFile)
+                restartAll()
             }).inSmartMode(project).submit(NonUrgentExecutor.getInstance())
         })
     }
@@ -141,26 +143,45 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
 
 
     private fun restartAll() {
-        ReadAction.nonBlocking(RunnableCallable{
-            Log.log(logger::debug,"restarting DaemonCodeAnalyzer for all files ")
-            codeLensCache.clear()
-            FileEditorManager.getInstance(project).openFiles.forEach {  virtualFile ->
-                val psiFile = PsiManager.getInstance(project).findFile(virtualFile)
-                psiFile?.let {
-                    restartFile(it)
-                }
-            }
-        }).inSmartMode(project).submit(NonUrgentExecutor.getInstance())
-    }
 
-    private fun restartFile(psiFile: PsiFile) {
-        FileEditorManager.getInstance(project).allEditors.forEach {
-            if (it.file == psiFile.virtualFile && it is TextEditor) {
-                Log.log(logger::debug, "restarting DaemonCodeAnalyzer for {}", psiFile.virtualFile)
-                DaemonCodeAnalyzer.getInstance(project).restart(psiFile)
+        //todo: since CodeVisionPassFactory became internal its not possible
+        // to call CodeVisionPassFactory.clearModificationStamp(it.editor) and just calling DaemonCodeAnalyzer.restart
+        // does not trigger a call to computeForEditor and there is no refresh.
+        // doing it the way bellow works, but seems a waste to clear and refresh all when we need to refresh only one file.
+        // try to find a replacement for CodeVisionPassFactory.clearModificationStamp and refresh only one by one.
+
+        codeLensCache.clear()
+
+        EDT.ensureEDT {
+            WriteAction.run<RuntimeException> {
+                val manager = PsiManager.getInstance(project)
+                manager.dropPsiCaches()
+                manager.dropResolveCaches()
+                DaemonCodeAnalyzer.getInstance(project).restart()
             }
         }
+
+//        ReadAction.nonBlocking(RunnableCallable{
+//            DaemonCodeAnalyzer.getInstance(project).restart()
+//            Log.log(logger::debug,"restarting DaemonCodeAnalyzer for all files ")
+//            codeLensCache.clear()
+//            FileEditorManager.getInstance(project).openFiles.forEach {  virtualFile ->
+//                val psiFile = PsiManager.getInstance(project).findFile(virtualFile)
+//                psiFile?.let {
+//                    restartFile(it)
+//                }
+//            }
+//        }).inSmartMode(project).submit(NonUrgentExecutor.getInstance())
     }
+
+//    private fun restartFile(psiFile: PsiFile) {
+//        FileEditorManager.getInstance(project).allEditors.forEach {
+//            if (it.file == psiFile.virtualFile && it is TextEditor) {
+//                Log.log(logger::debug, "restarting DaemonCodeAnalyzer for {}", psiFile.virtualFile)
+//                DaemonCodeAnalyzer.getInstance(project).restart(psiFile)
+//            }
+//        }
+//    }
 
 
     private class ClickHandler(

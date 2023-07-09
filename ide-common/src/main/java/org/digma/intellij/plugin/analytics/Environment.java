@@ -41,7 +41,7 @@ public class Environment implements EnvironmentsSupplier {
         this.analyticsService = analyticsService;
         this.persistenceData = persistenceData;
         this.current = persistenceData.getCurrentEnv();
-        scheduleEnvironmentRefresh(project, analyticsService, this);
+        scheduleEnvironmentRefresh(analyticsService, this);
 
         //call refresh on environment when connection is lost, in some cases its necessary for some components to reset or update ui.
         //usually these components react to environment change events, so this will trigger an environment change if not already happened before.

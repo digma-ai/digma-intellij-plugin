@@ -64,7 +64,7 @@ class UpdatesService(private val project: Project) : Disposable {
 
     init {
         stateBackendVersion = BackendVersionResponse(false, "0.0.1", "0.0.1", BackendDeploymentType.Unknown)
-        statePluginVersion = PluginVersion(SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("0.0.0"))
+        statePluginVersion = PluginVersion(getPluginVersion())
 
         val fetchTask = object : TimerTask() {
             override fun run() {
@@ -208,8 +208,7 @@ class UpdatesService(private val project: Project) : Disposable {
     @NotNull
     private fun buildVersionRequest(): VersionRequest {
         return VersionRequest(
-            SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("0.0.0"),
-            getPlatformType(), getPlatformVersion()
+            getPluginVersion(), getPlatformType(), getPlatformVersion()
         )
     }
 
@@ -228,6 +227,11 @@ class UpdatesService(private val project: Project) : Disposable {
         return appInfo.fullVersion
     }
 
+    // when plugin is not installed it will return 0.0.0
+    @NotNull
+    fun getPluginVersion(): String {
+        return SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("0.0.0")
+    }
 }
 
 data class PluginVersion(val currentVersion: String) {

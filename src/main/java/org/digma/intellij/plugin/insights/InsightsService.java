@@ -7,6 +7,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.ui.GuiUtils;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
+import org.digma.intellij.plugin.document.CodeObjectsUtil;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider;
 import org.digma.intellij.plugin.log.Log;
@@ -115,18 +116,20 @@ public final class InsightsService implements Disposable {
         project.getService(InsightsAndErrorsTabsHelper.class).switchToInsightsTab();
     }
 
-    public void openHistogram(String spanCodeObjectId, String insightType) {
+    public void openHistogram(String spanId, String insightType) {
 
         ActivityMonitor.getInstance(project).registerInsightButtonClicked("histogram", insightType);
 
-        var instrumentationLibrary = spanCodeObjectId.substring(0,spanCodeObjectId.indexOf("$_$"));
-        var spanName = spanCodeObjectId.substring(spanCodeObjectId.indexOf("$_$")+3);
+        var spanIdWithoutPrefix = CodeObjectsUtil.stripSpanPrefix(spanId);
+
+        var instrumentationLibrary = spanIdWithoutPrefix.substring(0, spanIdWithoutPrefix.indexOf("$_$"));
+        var spanName = spanIdWithoutPrefix.substring(spanIdWithoutPrefix.indexOf("$_$") + 3);
 
         var color = Laf.Colors.getPLUGIN_BACKGROUND();
         var s = GuiUtils.colorToHex(color);
         var colorName = s.startsWith("#") ? s : "#$s";
         try {
-            String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanPercentiles(instrumentationLibrary, spanName,colorName );
+            String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanPercentiles(instrumentationLibrary, spanName, colorName);
             DigmaHTMLEditorProvider.openEditor(project, "Percentiles Graph of Span ${span.name}", htmlContent);
         } catch (AnalyticsServiceException e) {
             throw new RuntimeException(e);

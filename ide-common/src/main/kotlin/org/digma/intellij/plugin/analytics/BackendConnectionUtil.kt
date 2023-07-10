@@ -26,14 +26,11 @@ class BackendConnectionUtil(project: Project) {
 
     fun testConnectionToBackend(): Boolean {
 
-        //refresh will run in the background.
-        //if there is currently no connection, but connection will recover during this refresh call then
-        //not sure backendConnectionMonitor will catch it in time.
-        //the next call will return the latest connection status
-        //but anyway if the connection will recover an environmentChanged event will fire and that should
-        // be a hook to intentionally cause a contextChange event.
-        Log.log(logger::debug,"Triggering environmentsSupplier.refresh")
-        environmentsSupplier.refresh()
+        //if called on background thread refreshNowOnBackground will run on the same thread ,
+        // otherwise refreshNowOnBackground will run on background and isConnectionOk will return old result,
+        // next call will be ok
+        Log.log(logger::debug, "Triggering environmentsSupplier.refresh")
+        environmentsSupplier.refreshNowOnBackground()
 
         return backendConnectionMonitor.isConnectionOk()
     }

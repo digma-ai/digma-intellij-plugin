@@ -9,7 +9,6 @@ import com.intellij.openapi.rd.util.withUiContext
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.RunnableCallable
 import com.intellij.util.concurrency.NonUrgentExecutor
-import org.digma.intellij.plugin.analytics.BackendConnectionUtil
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.document.DocumentInfoService
@@ -58,9 +57,6 @@ class RefreshService(private val project: Project) {
         } else {
             val documentInfoContainer = documentInfoService.getDocumentInfo(file)
             updateInsightsCacheForActiveDocument(selectedTextEditor, documentInfoContainer)
-
-            Log.log(logger::debug, "testConnectionToBackend was triggered")
-            BackendConnectionUtil.getInstance(project).testConnectionToBackend()
 
             scope = insightsViewService.model.scope
             if (scope is CodeLessSpanScope){

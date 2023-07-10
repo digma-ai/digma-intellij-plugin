@@ -4,10 +4,8 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import com.intellij.ui.GuiUtils;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
-import org.digma.intellij.plugin.document.CodeObjectsUtil;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider;
 import org.digma.intellij.plugin.log.Log;
@@ -116,21 +114,13 @@ public final class InsightsService implements Disposable {
         project.getService(InsightsAndErrorsTabsHelper.class).switchToInsightsTab();
     }
 
-    public void openHistogram(String spanId, String insightType) {
+    public void openHistogram(String instrumentationLibrary, String spanName, String insightType) {
 
         ActivityMonitor.getInstance(project).registerInsightButtonClicked("histogram", insightType);
 
-        var spanIdWithoutPrefix = CodeObjectsUtil.stripSpanPrefix(spanId);
-
-        var instrumentationLibrary = spanIdWithoutPrefix.substring(0, spanIdWithoutPrefix.indexOf("$_$"));
-        var spanName = spanIdWithoutPrefix.substring(spanIdWithoutPrefix.indexOf("$_$") + 3);
-
-        var color = Laf.Colors.getPLUGIN_BACKGROUND();
-        var s = GuiUtils.colorToHex(color);
-        var colorName = s.startsWith("#") ? s : "#$s";
         try {
-            String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanPercentiles(instrumentationLibrary, spanName, colorName);
-            DigmaHTMLEditorProvider.openEditor(project, "Percentiles Graph of Span ${span.name}", htmlContent);
+            String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanPercentiles(instrumentationLibrary, spanName, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
+            DigmaHTMLEditorProvider.openEditor(project, "Percentiles Graph of Span " + spanName, htmlContent);
         } catch (AnalyticsServiceException e) {
             throw new RuntimeException(e);
         }

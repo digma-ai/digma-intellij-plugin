@@ -116,9 +116,10 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter implem
 
     private void openHistogram(JsonNode jsonNode) throws JsonProcessingException {
         Log.log(LOGGER::debug, project, "got INSIGHTS/OPEN_HISTOGRAM message");
-        var spanCodeObjectId = objectMapper.readTree(jsonNode.get("payload").toString()).get("spanCodeObjectId").asText();
+        var instrumentationLibrary = objectMapper.readTree(jsonNode.get("payload").toString()).get("instrumentationLibrary").asText();
+        var name = objectMapper.readTree(jsonNode.get("payload").toString()).get("name").asText();
         var insightType = objectMapper.readTree(jsonNode.get("payload").toString()).get("insightType").asText();
-        InsightsService.getInstance(project).openHistogram(spanCodeObjectId,insightType);
+        InsightsService.getInstance(project).openHistogram(instrumentationLibrary, name, insightType);
     }
 
     private void openLiveView(JsonNode jsonNode) throws JsonProcessingException {

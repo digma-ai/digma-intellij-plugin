@@ -167,7 +167,7 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
 
         String expectedSlowestSpansInsightCodeObjectId = "Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$TransferFunds";
         SlowestSpansInsight expectedSlowestSpansInsight = new SlowestSpansInsight(expectedSlowestSpansInsightCodeObjectId, ENV_1, SCOPE_1, IMPORTANCE_3, null,
-                actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedSlowestSpansInsightCodeObjectId), false,null,
+                actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedSlowestSpansInsightCodeObjectId), null,
                 createSpanInfo(ENDPOINT_SPAN, expectedSlowestSpansInsightCodeObjectId), ROUTE, SERVICE,
                 Collections.singletonList(slowSpanInfo));
         expectedCodeObjectInsights.add(expectedSlowestSpansInsight);
@@ -329,7 +329,7 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
 
         String expectedSlowestSpansInsightCodeObjectId = "Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$TransferFunds";
         SlowestSpansInsight expectedSlowestSpansInsight = new SlowestSpansInsight(expectedSlowestSpansInsightCodeObjectId, ENV_1, SCOPE_1, IMPORTANCE_3, null,
-                actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedSlowestSpansInsightCodeObjectId), false,null,
+                actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(expectedSlowestSpansInsightCodeObjectId), null,
                 createSpanInfo(ENDPOINT_SPAN, expectedSlowestSpansInsightCodeObjectId), ROUTE, SERVICE,
                 Collections.singletonList(slowSpanInfo));
         expectedCodeObjectInsights.add(expectedSlowestSpansInsight);

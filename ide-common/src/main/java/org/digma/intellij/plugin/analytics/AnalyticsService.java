@@ -159,7 +159,7 @@ public class AnalyticsService implements Disposable {
 
 
     private void initializeEnvironmentsList() {
-        environment.refreshNowOnBackground();
+        environment.refreshNow();
     }
 
 

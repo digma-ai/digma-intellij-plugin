@@ -159,7 +159,7 @@ public class AnalyticsService implements Disposable {
 
 
     private void initializeEnvironmentsList() {
-        environment.refreshNowOnBackground();
+        environment.refreshNow();
     }
 
 
@@ -624,6 +624,12 @@ public class AnalyticsService implements Disposable {
                 if (isConnectionOK()) {
                     Log.log(LOGGER::info, "marking connection lost");
                     myConnectionLostFlag.set(true);
+
+                    //must notify BackendConnectionMonitor immediately and not on background thread, the main reason is
+                    // that on startup it must be notified immediately before starting to create UI components
+                    // it will also catch the connection lost event
+                    project.getService(BackendConnectionMonitor.class).connectionLost();
+
                     //wait half a second because maybe the connection lost is momentary, and it will be back
                     // very soon
                     myConnectionStatusNotifyAlarm.cancelAllRequests();

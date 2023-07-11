@@ -140,6 +140,21 @@ public class Environment implements EnvironmentsSupplier {
         });
     }
 
+    void refreshNow() {
+
+        Log.log(LOGGER::debug, "Refreshing Environments on current thread.");
+        envChangeLock.lock();
+        try {
+            //run both refreshEnvironments and updateCurrentEnv under same lock
+            refreshEnvironments();
+            updateCurrentEnv(persistenceData.getCurrentEnv(), true);
+        } finally {
+            if (envChangeLock.isHeldByCurrentThread()) {
+                envChangeLock.unlock();
+            }
+        }
+    }
+
 
     //this method should not be called on ui threads, it may hang and cause a freeze
     private void refreshEnvironments() {

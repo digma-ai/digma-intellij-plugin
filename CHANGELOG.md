@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.107] - 2023-07-10
+## [2.0.108] - 2023-07-11
+- Update Jaeger UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/940
+- Refresh environment on startup by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/942
+
+## 2.0.107 - 2023-07-10
 - Fix environment refresh by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/937
 
 ## 2.0.106 - 2023-07-09

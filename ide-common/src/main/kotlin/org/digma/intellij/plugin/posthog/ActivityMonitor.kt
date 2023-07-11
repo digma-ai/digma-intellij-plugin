@@ -82,8 +82,13 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
         postHog?.capture(userId, eventName, tags)
     }
 
-    fun registerLensClicked() {
+    fun registerLensClicked(lens: String) {
         lastLensClick = LocalDateTime.now()
+        postHog?.capture(
+            userId,
+            "lens clicked",
+            mapOf("lens" to lens)
+        )
     }
 
     fun registerSidePanelOpened() {
@@ -117,6 +122,10 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
 
     fun registerFirstInsightReceived() {
         postHog?.capture(userId, "insight first-received")
+    }
+
+    fun registerFirstAssetsReceived() {
+        postHog?.capture(userId, "plugin first-assets")
     }
 
     fun registerObservabilityOn() {
@@ -181,31 +190,44 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
         )
     }
 
-    fun registerButtonClicked(button: String, source: Any ? = null) {
-        val properties:MutableMap<String, Any> = mutableMapOf()
-        properties["button"] = button
-        if(source != null){
-            properties["source"] = source
-        }
-
+    fun registerButtonClicked(panel: MonitoredPanel, button: String) {
         postHog?.capture(
             userId,
             "button-clicked",
-            properties
+            mapOf(
+                "panel" to panel.name,
+                "button" to button
+            )
         )
     }
 
-    fun registerInsightButtonClicked(button: String, insight: Any) {
-        val properties:MutableMap<String, Any> = mutableMapOf()
-        properties["button"] = button
-        if(insight != null){
-            properties["source"] = insight
-        }
+   fun registerSpanLinkClicked(insight: InsightType) {
+       postHog?.capture(
+           userId,
+           "span-link clicked",
+           mapOf(
+               "panel" to MonitoredPanel.Insights.name,
+               "insight" to insight.name
+           )
+       )
+   }
 
+   fun registerSpanLinkClicked(panel: MonitoredPanel) {
+        postHog?.capture(
+            userId,
+            "span-link clicked",
+            mapOf("panel" to panel.name)
+        )
+    }
+
+    fun registerButtonClicked(button: String, insight: InsightType) {
         postHog?.capture(
             userId,
             "insights button-clicked",
-            properties
+            mapOf(
+                "button" to button,
+                "insight" to insight.name
+            )
         )
     }
 
@@ -216,7 +238,6 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
     fun registerPluginUninstalled() {
         postHog?.capture(userId, "plugin uninstalled")
     }
-
 
     fun registerServerInfo(serverInfo: AboutResult) {
         postHog?.set(

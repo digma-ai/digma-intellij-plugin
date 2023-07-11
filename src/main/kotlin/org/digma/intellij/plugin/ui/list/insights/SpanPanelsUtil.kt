@@ -8,9 +8,11 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
+import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.DurationSlowdownSource
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
 import org.digma.intellij.plugin.model.rest.insights.SpanInfo
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
@@ -60,6 +62,7 @@ fun getLink(project: Project, spanInfo: SpanInfo): ActionLink {
 
     val spanId = spanInfo.spanCodeObjectId
     val link = ActionLink(spanInfo.name) {
+        ActivityMonitor.getInstance(project).registerSpanLinkClicked(InsightType.EndpointDurationSlowdown)
         project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanId)
     }
     val targetClass = spanId.substringBeforeLast("\$_\$")

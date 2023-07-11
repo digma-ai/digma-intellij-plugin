@@ -18,6 +18,7 @@ import org.digma.intellij.plugin.model.rest.insights.EndpointSchema
 import org.digma.intellij.plugin.model.rest.insights.RootCauseSpan
 import org.digma.intellij.plugin.model.rest.insights.SpanScalingInsight
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.getHex
@@ -163,6 +164,7 @@ private fun buildAffectedEndpointItem(project: Project, affectedEndpoint: Affect
 
     val normalizedDisplayName = StringUtils.normalizeSpace(shortRouteName)
     val link = ActionLink(normalizedDisplayName) {
+        ActivityMonitor.getInstance(project).registerSpanLinkClicked(InsightType.SpanScaling)
         project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(affectedEndpoint.spanCodeObjectId)
     }
 
@@ -190,6 +192,7 @@ fun getRootCauseSpanPanel(project: Project, rootCauseSpan: RootCauseSpan): JPane
     val spanId = rootCauseSpan.spanCodeObjectId
     val link =
         ActionLink(normalizedDisplayName) {
+            ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Summary)
             project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanId)
         }
     link.toolTipText = asHtml(normalizedDisplayName)
@@ -229,7 +232,7 @@ private fun buildButtonToScalingGraph(project: Project, spanName: String, instLi
     button.addActionListener {
         val htmlContent = analyticsService.getHtmlGraphForSpanScaling(instLibrary, spanName, Laf.Colors.PLUGIN_BACKGROUND.getHex())
         DigmaHTMLEditorProvider.openEditor(project, "Scaling Graph of Span $spanName", htmlContent)
-        ActivityMonitor.getInstance(project).registerInsightButtonClicked("histogram", insightType)
+        ActivityMonitor.getInstance(project).registerButtonClicked("histogram", insightType)
     }
 
     return button

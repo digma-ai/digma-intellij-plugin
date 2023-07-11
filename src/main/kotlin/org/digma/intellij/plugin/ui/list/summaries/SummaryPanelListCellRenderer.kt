@@ -14,6 +14,8 @@ import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
 import org.digma.intellij.plugin.model.rest.insights.TopErrorFlowsInsight
 import org.digma.intellij.plugin.navigation.HomeSwitcherService
 import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper
+import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
 import org.digma.intellij.plugin.ui.common.Laf
@@ -118,6 +120,7 @@ private fun buildSpanDuration(value: SpanDurationChangeInsight.Change, panelsLay
 
     val title =
         ActionLink(asHtml(value.span.displayName)) {
+            ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Summary)
             project.service<HomeSwitcherService>().switchToInsights()
             project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanId)
             project.service<InsightsAndErrorsTabsHelper>().switchToInsightsTab()

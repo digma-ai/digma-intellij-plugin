@@ -11,6 +11,8 @@ import org.digma.intellij.plugin.jaegerui.JaegerUIService;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.navigation.HomeSwitcherService;
 import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper;
+import org.digma.intellij.plugin.posthog.ActivityMonitor;
+import org.digma.intellij.plugin.posthog.MonitoredPanel;
 
 import java.io.InputStream;
 
@@ -68,6 +70,7 @@ public final class AssetsService implements Disposable {
 
     public void showAsset(String spanId) {
         Log.log(logger::debug, project, "showAsset called");
+        ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Assets);
         project.getService(HomeSwitcherService.class).switchToInsights();
         project.getService(InsightsViewOrchestrator.class).showInsightsForCodelessSpan(spanId);
         project.getService(InsightsAndErrorsTabsHelper.class).switchToInsightsTab();

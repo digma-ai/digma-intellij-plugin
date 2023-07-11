@@ -118,7 +118,7 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
                 val entry = ClickableTextCodeVisionEntry(
                     lens.lensTitle,
                     codeLensProviderFactory.getProviderId(lens.lensTitle, usedGenericProviders),
-                    ClickHandler(method, project),
+                    ClickHandler(method, lens.lensTitle, project),
                     null, // icon was set already on previous step inside CodeLensProvider.buildCodeLens()
                     lens.lensMoreText,
                     lens.lensDescription
@@ -186,11 +186,12 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
 
     private class ClickHandler(
         element: PsiElement,
+        private val lensTitle: String,
         private val project: Project,
     ) : (MouseEvent?, Editor) -> Unit {
         private val elementPointer = SmartPointerManager.createPointer(element)
         override fun invoke(event: MouseEvent?, editor: Editor) {
-            ActivityMonitor.getInstance(project).registerLensClicked()
+            ActivityMonitor.getInstance(project).registerLensClicked(lensTitle)
             project.service<HomeSwitcherService>().switchToInsights()
             ToolWindowShower.getInstance(project).showToolWindow()
             elementPointer.element?.let {

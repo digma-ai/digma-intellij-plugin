@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.EndpointSchema
 import org.digma.intellij.plugin.model.rest.insights.SpanNPlusEndpoints
 import org.digma.intellij.plugin.model.rest.insights.SpanNPlusOneInsight
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.spanBold
@@ -74,6 +75,7 @@ private fun getAffectedEndpointRow(project: Project, endpoint: SpanNPlusEndpoint
     val normalizedDisplayName = StringUtils.normalizeSpace(shortRouteName)
     if (endpoint.endpointInfo.entrySpanCodeObjectId != null) {
         val link = ActionLink(normalizedDisplayName) {
+            ActivityMonitor.getInstance(project).registerSpanLinkClicked(InsightType.SpaNPlusOne)
             project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(endpoint.endpointInfo.entrySpanCodeObjectId!!)
         }
         link.toolTipText = asHtml(shortRouteName)
@@ -111,6 +113,7 @@ private fun getMainDescriptionPanel(project: Project, insight: SpanNPlusOneInsig
     val normalizedDisplayText = StringUtils.normalizeSpace(insight.clientSpanName)
     if (insight.clientSpanCodeObjectId != null) {
         val actionLink = ActionLink(normalizedDisplayText) {
+            ActivityMonitor.getInstance(project).registerSpanLinkClicked(InsightType.SpaNPlusOne)
             project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(insight.clientSpanCodeObjectId!!)
         }
         actionLink.toolTipText = asHtml(displayText)

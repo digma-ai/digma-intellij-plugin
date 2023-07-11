@@ -10,9 +10,8 @@ import org.digma.intellij.plugin.editor.updateListOfEntriesToDisplay
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.EPNPlusSpansInsight
-import org.digma.intellij.plugin.model.rest.insights.EndpointSessionInViewInsight
 import org.digma.intellij.plugin.model.rest.insights.HighlyOccurringSpanInfo
-import org.digma.intellij.plugin.model.rest.insights.SessionInViewSpanInfo
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.spanBold
@@ -31,8 +30,8 @@ private const val RECORDS_PER_PAGE_EPNPLUS = 3
 
 
 fun ePNPlusSpansPanel(
-        project: Project,
-        insight: EPNPlusSpansInsight
+    project: Project,
+    insight: EPNPlusSpansInsight,
 ): JPanel {
 
     val uniqueInsightId = insight.codeObjectId + insight.type
@@ -98,6 +97,7 @@ private fun addMainDescriptionLabelWithLink(spanOneRecordPanel: JPanel, displayT
     if ( StringUtils.isNotEmpty(displayText)) {
         val normalizedDisplayName = StringUtils.normalizeSpace(displayText)
         val actionLink = ActionLink(normalizedDisplayName) {
+            ActivityMonitor.getInstance(project).registerSpanLinkClicked(InsightType.EndpointSpaNPlusOne)
             project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanId)
         }
         actionLink.toolTipText = asHtml(displayText)
@@ -134,9 +134,9 @@ private fun getImpactLabel(span: HighlyOccurringSpanInfo): JLabel {
 }
 
 private fun buildENPlusInsightRowsPanel(
-        nPOnePanel: DigmaResettablePanel,
-        nPOneSpansToDisplay: List<HighlyOccurringSpanInfo>,
-        project: Project
+    nPOnePanel: DigmaResettablePanel,
+    nPOneSpansToDisplay: List<HighlyOccurringSpanInfo>,
+    project: Project,
 ) {
     nPOnePanel.layout = BoxLayout(nPOnePanel, BoxLayout.Y_AXIS)
     nPOnePanel.isOpaque = false
@@ -149,9 +149,9 @@ private fun buildENPlusInsightRowsPanel(
 
 
 private fun rebuildENPlusInsightRowsPanel(
-        nPOnePanel: DigmaResettablePanel,
-        nPOneSpansToDisplay: List<HighlyOccurringSpanInfo>,
-        project: Project
+    nPOnePanel: DigmaResettablePanel,
+    nPOneSpansToDisplay: List<HighlyOccurringSpanInfo>,
+    project: Project,
 ) {
     nPOnePanel.removeAll()
     buildENPlusInsightRowsPanel(nPOnePanel, nPOneSpansToDisplay, project)

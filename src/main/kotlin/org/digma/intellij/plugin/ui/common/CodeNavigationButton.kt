@@ -21,6 +21,8 @@ import org.digma.intellij.plugin.model.rest.navigation.NavItemType
 import org.digma.intellij.plugin.model.rest.navigation.SpanNavigationItem
 import org.digma.intellij.plugin.navigation.NavigationModel
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
+import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.ui.list.RoundedPanel
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
 import org.digma.intellij.plugin.ui.model.DocumentScope
@@ -54,6 +56,7 @@ class CodeNavigationButton(val project: Project) : TargetButton(project, true) {
 
         addActionListener {
 
+            ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.Scope,"NavigateToCode")
             try {
                 val codeLessSpan = getCodeLessSpan()
                 if (codeLessSpan != null) {

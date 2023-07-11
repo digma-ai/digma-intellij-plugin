@@ -43,6 +43,7 @@ import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper;
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
+import org.digma.intellij.plugin.posthog.MonitoredPanel;
 import org.digma.intellij.plugin.recentactivity.incoming.CloseLiveViewMessage;
 import org.digma.intellij.plugin.recentactivity.outgoing.JaegerUrlChangedPayload;
 import org.digma.intellij.plugin.recentactivity.outgoing.JaegerUrlChangedRequest;
@@ -175,7 +176,7 @@ public class RecentActivityService implements Disposable {
                     processRecentActivityGoToSpanRequest(recentActivityGoToSpanRequest.getPayload(), project);
                 }
                 if (RECENT_ACTIVITY_GO_TO_TRACE.equalsIgnoreCase(reactMessageRequest.getAction())) {
-                    ActivityMonitor.getInstance(project).registerButtonClicked(traceButtonName, "recent-activity");
+                    ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.RecentActivity, traceButtonName);
                     RecentActivityGoToTraceRequest recentActivityGoToTraceRequest = parseJsonToObject(request, RecentActivityGoToTraceRequest.class);
                     processRecentActivityGoToTraceRequest(recentActivityGoToTraceRequest, project);
                 }
@@ -255,6 +256,7 @@ public class RecentActivityService implements Disposable {
 
                 var spanId = payload.getSpan().getSpanCodeObjectId();
                 var methodId = payload.getSpan().getMethodCodeObjectId();
+                ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.RecentActivity);
 
                 var canNavigate = project.getService(CodeNavigator.class).canNavigateToSpanOrMethod(spanId, methodId);
                 if (canNavigate) {

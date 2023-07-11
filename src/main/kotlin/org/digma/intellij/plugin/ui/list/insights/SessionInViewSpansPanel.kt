@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.EndpointSessionInViewInsight
 import org.digma.intellij.plugin.model.rest.insights.SessionInViewSpanInfo
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.model.TraceSample
@@ -125,6 +126,7 @@ private fun addMainDescriptionLabelWithLink(spanOneRecordPanel: JPanel, displayT
     if ( StringUtils.isNotEmpty(displayText)) {
         val normalizedDisplayName = StringUtils.normalizeSpace(displayText)
         val actionLink = ActionLink(normalizedDisplayName) {
+            ActivityMonitor.getInstance(project).registerSpanLinkClicked(InsightType.EndpointSessionInView)
             project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanId)
         }
         actionLink.toolTipText = asHtml(displayText)

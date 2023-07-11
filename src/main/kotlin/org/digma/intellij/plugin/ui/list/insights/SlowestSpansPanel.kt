@@ -7,10 +7,12 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.apache.commons.lang3.StringUtils
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
+import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.EndpointSchema
 import org.digma.intellij.plugin.model.rest.insights.SlowSpanInfo
 import org.digma.intellij.plugin.model.rest.insights.SlowestSpansInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanSlowEndpointsInsight
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.spanGrayed
@@ -33,6 +35,7 @@ fun slowestSpansPanel(project: Project, insight: SlowestSpansInsight): JPanel {
         val grayedDescription = asHtml(spanGrayed(description))
         val descriptionLabel = JBLabel(grayedDescription, SwingConstants.LEFT)
         val link = ActionLink(normalizedDisplayName) {
+            ActivityMonitor.getInstance(project).registerSpanLinkClicked(InsightType.SlowestSpans)
             project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanId)
         }
         link.toolTipText = genToolTip(slowSpan)
@@ -72,6 +75,7 @@ fun spanSlowEndpointsPanel(project: Project, insight: SpanSlowEndpointsInsight):
 
         val normalizedDisplayName = StringUtils.normalizeSpace(shortRouteName)
         val link = ActionLink(normalizedDisplayName) {
+            ActivityMonitor.getInstance(project).registerSpanLinkClicked(InsightType.SlowestSpans)
             project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(slowEndpointInfo.endpointInfo.spanCodeObjectId)
         }
         link.toolTipText = asHtml(shortRouteName)

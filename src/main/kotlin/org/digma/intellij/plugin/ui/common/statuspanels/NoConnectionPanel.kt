@@ -9,6 +9,8 @@ import com.intellij.ui.components.ActionLink
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.settings.ProjectSettings
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
@@ -52,6 +54,7 @@ fun createNoConnectionPanel(project: Project, parentDisposable: Disposable):JPan
     constraints.gridy = 2
     constraints.ipady = 20
     val settingsLink = ActionLink(" settings."){
+        ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.NoConnection, "settings")
         ShowSettingsUtil.getInstance().showSettingsDialog(project, ProjectSettings.DISPLAY_NAME)
     }
     settingsLink.horizontalAlignment = SwingConstants.LEADING
@@ -66,16 +69,19 @@ fun createNoConnectionPanel(project: Project, parentDisposable: Disposable):JPan
     constraints.gridy = 4
     val buttonsPanel = JPanel(BorderLayout(20,10))
     val refreshLink = ActionLink("Refresh"){
+        ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.NoConnection, "refresh")
         AnalyticsService.getInstance(project).environment.refreshNowOnBackground()
     }
     buttonsPanel.add(refreshLink,BorderLayout.WEST)
 
     val installLink = ActionLink("Install"){
+        ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.NoConnection, "install")
         BrowserUtil.browse(DIGMA_DOCKER_APP_URL, project)
     }
     buttonsPanel.add(installLink,BorderLayout.EAST)
 
     val setupLink = ActionLink("Set-up Digma"){
+        ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.NoConnection, "set-up")
         EDT.ensureEDT{
             MainToolWindowCardsController.getInstance(project).showWizard()
             ToolWindowShower.getInstance(project).showToolWindow()

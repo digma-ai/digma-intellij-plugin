@@ -13,6 +13,7 @@ import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.notifications.NotificationUtil
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshService
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.MethodInstrumentationPresenter
@@ -367,7 +368,7 @@ private fun showHintMessage(
     recalculateAction.addActionListener {
         analyticsService.setInsightCustomStartTime(codeObjectId, insightType)
         rebuildInsightPanel(insightPanel)
-        ActivityMonitor.getInstance(project).registerInsightButtonClicked("recalculate", insightType)
+        ActivityMonitor.getInstance(project).registerButtonClicked("recalculate", insightType)
     }
     recalculateAction.border = HintUtil.createHintBorder()
     recalculateAction.background = HintUtil.getInformationColor()
@@ -380,7 +381,7 @@ private fun getRefreshInsightButton(project: Project, insightType: InsightType):
     refreshAction.addActionListener {
         val refreshService: RefreshService = project.getService(RefreshService::class.java)
         refreshService.refreshAllInBackground()
-        ActivityMonitor.getInstance(project).registerInsightButtonClicked("refresh", insightType)
+        ActivityMonitor.getInstance(project).registerButtonClicked("refresh", insightType)
     }
     refreshAction.border = empty()
     refreshAction.isOpaque = false
@@ -466,7 +467,7 @@ fun noObservabilityInsightPanel(project: Project, insight: NoObservability): JPa
 
     val addAnnotationButton = ListItemActionButton("Add Annotation")
     addAnnotationButton.addActionListener {
-        ActivityMonitor.getInstance(project).registerInsightButtonClicked("add-annotation", "NoObservability")
+        ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.NoObservability, "add-annotation")
         val succeeded = model.instrumentMethod()
         if (succeeded) {
             addAnnotationButton.isEnabled = false

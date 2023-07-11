@@ -98,12 +98,12 @@ fun <T> buildPaginationPanel(
     prev.addActionListener {
         if (--currPageNum <= 0) currPageNum = 1
         updateInsightBodyPanelWithItemsToDisplay(entries, resultInsightBodyPanel, entriesToDisplay, uniqueInsightId, currPageNum, recordsPerPage, project)
-        ActivityMonitor.getInstance( project).registerInsightButtonClicked("previous-page", insightType)
+        ActivityMonitor.getInstance( project).registerButtonClicked("previous-page", insightType)
     }
     next.addActionListener {
         if (++currPageNum > lastPageNum) currPageNum = lastPageNum
         updateInsightBodyPanelWithItemsToDisplay(entries, resultInsightBodyPanel, entriesToDisplay, uniqueInsightId, currPageNum, recordsPerPage, project)
-        ActivityMonitor.getInstance( project).registerInsightButtonClicked("next-page", insightType)
+        ActivityMonitor.getInstance( project).registerButtonClicked("next-page", insightType)
     }
 
     val paginationLabelText = "$currPageNum of $lastPageNum"

@@ -102,7 +102,7 @@ private fun buildLiveViewButton(project: Project, spanDurationsInsight: SpanDura
     liveViewButton.border = JBUI.Borders.customLine(borderColor, 2.scaled())
     liveViewButton.addActionListener {
         try {
-            ActivityMonitor.getInstance(project).registerInsightButtonClicked("live", spanDurationsInsight.type)
+            ActivityMonitor.getInstance(project).registerButtonClicked("live", spanDurationsInsight.type)
             val idToUse = spanDurationsInsight.prefixedCodeObjectId
             idToUse?.let {
                 val durationLiveData = AnalyticsService.getInstance(project).getDurationLiveData(it)
@@ -120,7 +120,7 @@ private fun buildButtonToPercentilesGraph(project: Project, span: SpanInfo, insi
     val analyticsService = AnalyticsService.getInstance(project)
     val button = ListItemActionButton("Histogram")
     button.addActionListener {
-        ActivityMonitor.getInstance(project).registerInsightButtonClicked("histogram", insightType)
+        ActivityMonitor.getInstance(project).registerButtonClicked("histogram", insightType)
 
         val htmlContent =
             analyticsService.getHtmlGraphForSpanPercentiles(span.instrumentationLibrary, span.name, Laf.Colors.PLUGIN_BACKGROUND.getHex())

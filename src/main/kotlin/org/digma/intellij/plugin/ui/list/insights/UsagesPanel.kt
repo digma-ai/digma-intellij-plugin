@@ -12,6 +12,7 @@ import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.SpanFlow
 import org.digma.intellij.plugin.model.rest.insights.SpanUsagesInsight
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
 import org.digma.intellij.plugin.ui.common.Html
 import org.digma.intellij.plugin.ui.common.Laf
@@ -151,6 +152,7 @@ fun getTopUsagePanel(
 fun addSpanLinkIfPossible(project: Project, service: SpanFlow.Service, panel: JPanel) {
     val spanName = service.span
     val link = ActionLink(spanName) {
+        ActivityMonitor.getInstance(project).registerSpanLinkClicked(InsightType.SpanUsages)
         project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(service.spanCodeObjectId)
     }
     link.toolTipText = asHtml(spanName)

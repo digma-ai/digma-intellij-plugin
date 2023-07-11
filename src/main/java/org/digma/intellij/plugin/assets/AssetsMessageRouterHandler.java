@@ -21,6 +21,7 @@ import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.rest.jcef.common.OpenInBrowserRequest;
 import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest;
+import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.ui.settings.Theme;
 import org.jetbrains.annotations.NotNull;
@@ -74,15 +75,15 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter implemen
                     case "ASSETS/GO_TO_ASSET" -> goToAsset(jsonNode);
 
                     case JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
-                        OpenInBrowserRequest openBrowserRequest = JCefMessagesUtils.parseJsonToObject(request,OpenInBrowserRequest.class);
-                        if (openBrowserRequest != null && openBrowserRequest.getPayload() != null){
+                        OpenInBrowserRequest openBrowserRequest = JCefMessagesUtils.parseJsonToObject(request, OpenInBrowserRequest.class);
+                        if (openBrowserRequest != null && openBrowserRequest.getPayload() != null) {
                             BrowserUtil.browse(openBrowserRequest.getPayload().getUrl());
                         }
                     }
 
                     case JCefMessagesUtils.GLOBAL_SEND_TRACKING_EVENT -> {
-                        SendTrackingEventRequest trackingRequest = JCefMessagesUtils.parseJsonToObject(request,SendTrackingEventRequest.class);
-                        if (trackingRequest != null && trackingRequest.getPayload() != null){
+                        SendTrackingEventRequest trackingRequest = JCefMessagesUtils.parseJsonToObject(request, SendTrackingEventRequest.class);
+                        if (trackingRequest != null && trackingRequest.getPayload() != null) {
                             ActivityMonitor.getInstance(project).registerCustomEvent(trackingRequest.getPayload().getEventName(), trackingRequest.getPayload().getData());
                         }
                     }
@@ -103,7 +104,7 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter implemen
     private void goToAsset(JsonNode jsonNode) throws JsonProcessingException {
         Log.log(LOGGER::debug, project, "got ASSETS/GO_TO_ASSET message");
         var spanId = objectMapper.readTree(jsonNode.get("payload").toString()).get("entry").get("span").get("spanCodeObjectId").asText();
-        Log.log(LOGGER::debug, project, "got span id {}",spanId);
+        Log.log(LOGGER::debug, project, "got span id {}", spanId);
         AssetsService.getInstance(project).showAsset(spanId);
     }
 
@@ -111,6 +112,10 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter implemen
     private synchronized void pushAssets(CefBrowser browser, ObjectMapper objectMapper) throws JsonProcessingException {
         Log.log(LOGGER::debug, project, "pushAssets called");
         var payload = objectMapper.readTree(AssetsService.getInstance(project).getAssets());
+        if (!payload.isMissingNode() && !PersistenceService.getInstance().getState().getFirstTimeAssetsReceived()) {
+            ActivityMonitor.getInstance(project).registerFirstAssetsReceived();
+            PersistenceService.getInstance().getState().setFirstTimeAssetsReceived(true);
+        }
         var message = new SetAssetsDataMessage("digma", "ASSETS/SET_DATA", payload);
         Log.log(LOGGER::debug, project, "sending ASSETS/SET_DATA message");
         browser.executeJavaScript(
@@ -142,7 +147,6 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter implemen
     void sendRequestToChangeCodeFont(String fontName) {
         JCefBrowserUtil.sendRequestToChangeCodeFont(fontName, jbCefBrowser);
     }
-
 
 
     @Override

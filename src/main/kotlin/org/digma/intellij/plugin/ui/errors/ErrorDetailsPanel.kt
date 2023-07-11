@@ -17,6 +17,7 @@ import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.common.CopyableLabel
 import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
@@ -232,7 +233,6 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
 
 }
 
-const val errorDetailsViewName = "error-details"
 fun bottomPanel(project: Project,errorsModel: ErrorsModel, framesList: ScrollablePanelList): JPanel {
 
     return panel {
@@ -247,7 +247,7 @@ fun bottomPanel(project: Project,errorsModel: ErrorsModel, framesList: Scrollabl
                         errorsModel.errorDetails.flowStacks.isWorkspaceOnly = isSelected
                         PersistenceService.getInstance().state.isWorkspaceOnly = isSelected
                         framesList.getModel().setListData(errorsModel.errorDetails.flowStacks.getCurrentStack())
-                        ActivityMonitor.getInstance(project).registerButtonClicked("error-frame-workspace-only", errorDetailsViewName)
+                        ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.ErrorDetails, "error-frame-workspace-only")
                     }
                 }
 
@@ -256,7 +256,7 @@ fun bottomPanel(project: Project,errorsModel: ErrorsModel, framesList: Scrollabl
                 val currentStack = errorsModel.errorDetails.flowStacks.current
                 val stackTrace = errorsModel.errorDetails.delegate?.errors?.get(currentStack)?.stackTrace
                 actionListener.openRawStackTrace(stackTrace)
-                ActivityMonitor.getInstance(project).registerButtonClicked("open-raw-trace",errorDetailsViewName)
+                ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.ErrorDetails, "open-raw-trace")
             }.horizontalAlign(HorizontalAlign.RIGHT).gap(RightGap.SMALL)
 
 
@@ -290,7 +290,7 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
         val currentStack = errorsModel.errorDetails.flowStacks.current.plus(1)
         currentLabel.text = "${currentStack}/${stackSize} Flow Stacks"
         framesList.getModel().setListData(errorsModel.errorDetails.flowStacks.getCurrentStack())
-        ActivityMonitor.getInstance(project).registerButtonClicked("error-previous-flow",errorDetailsViewName)
+        ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.ErrorDetails, "error-previous-flow")
     }
 
     val forwardButton = IconButton(Laf.Icons.ErrorDetails.FORWARD)
@@ -302,7 +302,7 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
         val currentStack = errorsModel.errorDetails.flowStacks.current.plus(1)
         currentLabel.text = "${currentStack}/${stackSize} Flow Stacks"
         framesList.getModel().setListData(errorsModel.errorDetails.flowStacks.getCurrentStack())
-        ActivityMonitor.getInstance(project).registerButtonClicked("error-next-flow",errorDetailsViewName)
+        ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.ErrorDetails, "error-next-flow")
     }
 
     val panel = JTransparentPanel()

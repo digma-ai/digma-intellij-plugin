@@ -9,8 +9,10 @@ import org.apache.commons.lang3.StringUtils
 import org.digma.intellij.plugin.editor.getCurrentPageNumberForInsight
 import org.digma.intellij.plugin.editor.updateListOfEntriesToDisplay
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
+import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationBreakdown
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationBreakdownInsight
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.common.boldFonts
@@ -27,8 +29,8 @@ private const val P_50: Float = 0.5F
 private const val RECORDS_PER_PAGE_DURATION_BREAKDOWN = 3
 
 fun spanDurationBreakdownPanel(
-        project: Project,
-        insight: SpanDurationBreakdownInsight
+    project: Project,
+    insight: SpanDurationBreakdownInsight,
 ): JPanel {
 
     val uniqueInsightId = insight.codeObjectId + insight.type
@@ -73,9 +75,9 @@ fun spanDurationBreakdownPanel(
 }
 
 private fun buildDurationBreakdownRowPanel(
-        durationBreakdownPanel: DigmaResettablePanel,
-        durationBreakdownEntriesToDisplay: List<SpanDurationBreakdown>,
-        project: Project
+    durationBreakdownPanel: DigmaResettablePanel,
+    durationBreakdownEntriesToDisplay: List<SpanDurationBreakdown>,
+    project: Project,
 ) {
     durationBreakdownPanel.layout = BoxLayout(durationBreakdownPanel, BoxLayout.Y_AXIS)
     durationBreakdownPanel.isOpaque = false
@@ -86,17 +88,17 @@ private fun buildDurationBreakdownRowPanel(
 }
 
 private fun rebuildDurationBreakdownRowPanel(
-        durationBreakdownPanel: DigmaResettablePanel,
-        durationBreakdownEntriesToDisplay: List<SpanDurationBreakdown>,
-        project: Project
+    durationBreakdownPanel: DigmaResettablePanel,
+    durationBreakdownEntriesToDisplay: List<SpanDurationBreakdown>,
+    project: Project,
 ) {
     durationBreakdownPanel.removeAll()
     buildDurationBreakdownRowPanel(durationBreakdownPanel, durationBreakdownEntriesToDisplay, project)
 }
 
 private fun durationBreakdownRowPanel(
-        durationBreakdown: SpanDurationBreakdown,
-        project: Project
+    durationBreakdown: SpanDurationBreakdown,
+    project: Project,
 ): JPanel {
     val durationBreakdownPanel = getDurationBreakdownPanel()
     val telescopeIconLabel = getTelescopeIconLabel()
@@ -127,13 +129,14 @@ private fun getTelescopeIconLabel(): JLabel {
 }
 
 private fun getSpanDisplayNameLabel(
-        durationBreakdown: SpanDurationBreakdown,
-        project: Project
+    durationBreakdown: SpanDurationBreakdown,
+    project: Project,
 ): JComponent {
     val spanId = durationBreakdown.spanCodeObjectId
     val trimmedDisplayName = StringUtils.normalizeSpace(durationBreakdown.spanDisplayName)
 
     val messageLabel = ActionLink(trimmedDisplayName) {
+        ActivityMonitor.getInstance(project).registerSpanLinkClicked(InsightType.SpanDurationBreakdown)
         project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanId)
     }
     messageLabel.toolTipText = asHtml(trimmedDisplayName)
@@ -146,7 +149,7 @@ private fun getSpanDisplayNameLabel(
 }
 
 private fun getBreakdownDurationLabel(
-        durationBreakdown: SpanDurationBreakdown
+    durationBreakdown: SpanDurationBreakdown,
 ): JComponent {
     val pLabelText = getDisplayValueOfPercentile(durationBreakdown, P_50)
     val pLabel = JLabel(pLabelText)

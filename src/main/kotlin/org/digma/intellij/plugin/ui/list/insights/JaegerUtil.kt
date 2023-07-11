@@ -30,7 +30,7 @@ fun buildButtonToJaeger(
     val button = ListItemActionButton(linkCaption)
     button.addActionListener{
 
-        ActivityMonitor.getInstance(project).registerInsightButtonClicked(traceButtonName, insightType)
+        ActivityMonitor.getInstance(project).registerButtonClicked(traceButtonName, insightType)
 
         val settingsState = SettingsState.getInstance()
         val jaegerBaseUrl = settingsState.jaegerUrl?.trim()?.trimEnd('/')

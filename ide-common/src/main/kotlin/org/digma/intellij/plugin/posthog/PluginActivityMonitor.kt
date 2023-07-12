@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.posthog
 
+import com.intellij.ide.BrowserUtil
 import com.intellij.ide.plugins.IdeaPluginDescriptor
 import com.intellij.ide.plugins.PluginStateListener
 import com.intellij.ide.plugins.PluginStateManager
@@ -26,7 +27,7 @@ class PluginActivityMonitor(private val project: Project) : PluginStateListener,
         if(descriptor.pluginId.idString == PluginId.PLUGIN_ID){
             ActivityMonitor.getInstance(project).registerPluginUninstalled()
         }
-
+        //BrowserUtil.browse("https://digma.ai/uninstall", project)
         super.uninstall(descriptor)
     }
 

@@ -12,6 +12,7 @@ import com.intellij.execution.ui.ConsoleView
 import com.intellij.execution.ui.ConsoleViewContentType
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -71,12 +72,18 @@ class QuarkusRunConfigurationExtension : RunConfigurationExtension() {
         val project = configuration.project
         val runConfigType = evalRunConfigType(configuration)
         val autoInstrumentationEnabled = enabled()
+        val connectedToBackend = BackendConnectionMonitor.getInstance(project).isConnectionOk()
 
-        reportToPosthog(project, runConfigType, autoInstrumentationEnabled)
+        reportToPosthog(project, runConfigType, autoInstrumentationEnabled, connectedToBackend)
 
         //testing if enabled must be done here just before running.
         if (!autoInstrumentationEnabled) {
             Log.log(logger::debug, "autoInstrumentation is not enabled")
+            return
+        }
+
+        if (!connectedToBackend) {
+            Log.log(logger::warn, "No connection to Digma backend. Otel won't be exported")
             return
         }
 
@@ -200,9 +207,9 @@ class QuarkusRunConfigurationExtension : RunConfigurationExtension() {
         return SettingsState.getInstance().runtimeObservabilityBackendUrl
     }
 
-    private fun reportToPosthog(project: Project, runConfigType: RunConfigType, observabilityEnabled: Boolean) {
+    private fun reportToPosthog(project: Project, runConfigType: RunConfigType, observabilityEnabled: Boolean, connectedToBackend: Boolean) {
         val activityMonitor = ActivityMonitor.getInstance(project)
-        activityMonitor.reportRunConfig(runConfigType.name, observabilityEnabled)
+        activityMonitor.reportRunConfig(runConfigType.name, observabilityEnabled, connectedToBackend)
     }
 
     @NotNull

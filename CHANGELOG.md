@@ -1,6 +1,12 @@
 # Changelog
 
-## [2.0.108] - 2023-07-11
+## [2.0.109] - 2023-07-12
+- Monitoring customer engagement by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/941
+- Feature/resolve module from RunConfig by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/943
+- Added uninstall page by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/949
+- Added uninstall url by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/950
+
+## 2.0.108 - 2023-07-11
 - Update Jaeger UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/940
 - Refresh environment on startup by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/942
 

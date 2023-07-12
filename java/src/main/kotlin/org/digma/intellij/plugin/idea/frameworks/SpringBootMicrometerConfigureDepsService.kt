@@ -61,14 +61,14 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
 
 
     private val BlackoutDurationSeconds =
-//        TimeUnit.MINUTES.toSeconds(1) // production value
-        TimeUnit.SECONDS.toSeconds(12) // use short period (few seconds) when debugging
+        TimeUnit.MINUTES.toSeconds(1) // production value
+//        TimeUnit.SECONDS.toSeconds(12) // use short period (few seconds) when debugging
 
     private val DelayMilliseconds = TimeUnit.SECONDS.toMillis(5)
 
     private val PeriodMilliseconds =
-//        TimeUnit.MINUTES.toMillis(1) // production value is 5 minutes
-        TimeUnit.SECONDS.toMillis(12) // use short period (few seconds) when debugging
+        TimeUnit.MINUTES.toMillis(1) // production value is 5 minutes
+//        TimeUnit.SECONDS.toMillis(12) // use short period (few seconds) when debugging
 
     private val timer = Timer()
 

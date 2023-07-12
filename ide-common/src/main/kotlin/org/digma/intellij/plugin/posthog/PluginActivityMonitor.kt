@@ -27,7 +27,7 @@ class PluginActivityMonitor(private val project: Project) : PluginStateListener,
         if(descriptor.pluginId.idString == PluginId.PLUGIN_ID){
             ActivityMonitor.getInstance(project).registerPluginUninstalled()
         }
-        //BrowserUtil.browse("https://digma.ai/uninstall", project)
+        BrowserUtil.browse("https://digma.ai/uninstall/", project)
         super.uninstall(descriptor)
     }
 

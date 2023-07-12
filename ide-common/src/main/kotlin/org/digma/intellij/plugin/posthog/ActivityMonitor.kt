@@ -166,13 +166,14 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
         )
     }
 
-    fun reportRunConfig(runConfigTypeName: String, observabilityEnabled: Boolean) {
+    fun reportRunConfig(runConfigTypeName: String, observabilityEnabled: Boolean, connectedToBackend: Boolean) {
         postHog?.capture(
             userId,
             "run config",
             mapOf(
                 "run.config.type" to runConfigTypeName,
                 "observability.enabled" to observabilityEnabled,
+                "backend.connected" to connectedToBackend,
             )
         )
     }

@@ -4,8 +4,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBTabbedPane
 import com.intellij.util.ui.JBUI.Borders.empty
-import org.digma.intellij.plugin.insights.InsightsPanel
-import org.digma.intellij.plugin.insights.InsightsService
+import org.digma.intellij.plugin.insights.InsightsReactPanel
 import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.service.ErrorsActionsService
@@ -91,7 +90,7 @@ class InsightsPanel(private val project: Project) : JPanel() {
     }
 
     private fun createInsightsNewPanel(project: Project): JPanel {
-        return InsightsPanel(project,project.service<InsightsService>())
+        return InsightsReactPanel(project)
     }
 
 

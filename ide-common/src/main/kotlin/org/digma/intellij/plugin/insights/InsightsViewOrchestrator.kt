@@ -20,6 +20,7 @@ import org.digma.intellij.plugin.service.EditorService
 import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.service.ErrorsViewService
+import org.digma.intellij.plugin.ui.service.InsightsService
 import org.digma.intellij.plugin.ui.service.InsightsViewService
 
 /**
@@ -80,6 +81,9 @@ class InsightsViewOrchestrator(val project: Project) {
             project.service<ErrorsViewService>().updateErrorsModel(
                 CodeLessSpan(spanId)
             )
+
+            //the new React app insights
+            project.service<InsightsService>().updateInsights(CodeLessSpan(spanId))
 
             project.service<ErrorsActionsService>().closeErrorDetailsBackButton()
 
@@ -232,6 +236,8 @@ class InsightsViewOrchestrator(val project: Project) {
             val methodHasNewInsights = documentInfo.loadInsightsForMethod(methodUnderCaret.id) // might be long call since going to the backend
             project.service<InsightsViewService>().updateInsightsModel(methodInfo)
             project.service<ErrorsViewService>().updateErrorsModel(methodInfo)
+            //the new React app insights
+            project.service<InsightsService>().updateInsights(methodInfo)
         }
     }
 
@@ -241,6 +247,7 @@ class InsightsViewOrchestrator(val project: Project) {
 
         project.service<InsightsViewService>().contextChangeNoMethodInfo(dummyMethodInfo)
         project.service<ErrorsViewService>().contextChangeNoMethodInfo(dummyMethodInfo)
+        //todo: update the new react app insights
     }
 
     fun updateWithDocumentPreviewList(documentInfoContainer: DocumentInfoContainer?, fileUri: String) {

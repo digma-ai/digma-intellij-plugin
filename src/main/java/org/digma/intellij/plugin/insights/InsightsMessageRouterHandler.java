@@ -4,60 +4,45 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.ide.BrowserUtil;
-import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.jcef.JBCefBrowser;
-import com.intellij.util.messages.MessageBusConnection;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.callback.CefQueryCallback;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
-import org.digma.intellij.plugin.analytics.EnvironmentChanged;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.insights.model.outgoing.InsightsPayload;
 import org.digma.intellij.plugin.insights.model.outgoing.SetInsightsDataMessage;
+import org.digma.intellij.plugin.insights.model.outgoing.Span;
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil;
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.jcef.common.OpenInBrowserRequest;
 import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
+import org.digma.intellij.plugin.ui.service.InsightsService;
 import org.digma.intellij.plugin.ui.settings.Theme;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter implements Disposable {
+class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
     private static final Logger LOGGER = Logger.getInstance(InsightsMessageRouterHandler.class);
 
     private final Project project;
     private final JBCefBrowser jbCefBrowser;
 
-    private final MessageBusConnection messageBusConnection;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public InsightsMessageRouterHandler(Project project, Disposable parentDisposable, JBCefBrowser jbCefBrowser) {
+    public InsightsMessageRouterHandler(Project project, JBCefBrowser jbCefBrowser) {
         this.project = project;
         this.jbCefBrowser = jbCefBrowser;
 
-        messageBusConnection = project.getMessageBus().connect(parentDisposable);
-        messageBusConnection.subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, new EnvironmentChanged() {
-            @Override
-            public void environmentChanged(String newEnv, boolean refreshInsightsView) {
-                try {
-                    pushInsightsOnEnvironmentChange(jbCefBrowser.getCefBrowser(), objectMapper);
-                } catch (JsonProcessingException e) {
-                    Log.debugWithException(LOGGER, e, "Exception in pushInsights");
-                }
-            }
 
-            @Override
-            public void environmentsListChanged(List<String> newEnvironments) {
-                //nothing to do
-            }
-        });
     }
 
 
@@ -70,7 +55,7 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter implem
                 var jsonNode = objectMapper.readTree(request);
                 String action = jsonNode.get("action").asText();
                 switch (action) {
-//                    case "INSIGHTS/GET_DATA" -> pushInsightsFromGetData(browser, objectMapper);
+                    case "INSIGHTS/GET_DATA" -> pushInsightsFromGetData();
 
                     case "INSIGHTS/GO_TO_ASSET" -> goToInsight(jsonNode);
 
@@ -130,36 +115,11 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter implem
     }
 
 
-    private synchronized void pushInsights(CefBrowser browser, ObjectMapper objectMapper) throws JsonProcessingException {
-        Log.log(LOGGER::debug, project, "pushAssets called");
-        var insights = InsightsService.getInstance(project).getInsights();
-        var payload = new InsightsPayload(insights);
-        var message = new SetInsightsDataMessage("digma", "INSIGHTS/SET_DATA", payload);
-        Log.log(LOGGER::debug, project, "sending INSIGHTS/SET_DATA message");
-        browser.executeJavaScript(
-                "window.postMessage(" + objectMapper.writeValueAsString(message) + ");",
-                jbCefBrowser.getCefBrowser().getURL(),
-                0);
-    }
-
-
-    private void pushInsightsFromGetData(CefBrowser browser, ObjectMapper objectMapper) throws JsonProcessingException {
+    private void pushInsightsFromGetData() {
         Log.log(LOGGER::debug, project, "got INSIGHTS/GET_DATA message");
-        pushInsights(browser, objectMapper);
+        InsightsService.getInstance(project).refreshInsights();
     }
 
-    private void pushInsightsOnEnvironmentChange(CefBrowser cefBrowser, ObjectMapper objectMapper) throws JsonProcessingException {
-        Log.log(LOGGER::debug, project, "pushInsightsOnEnvironmentChange called");
-        pushInsights(cefBrowser, objectMapper);
-    }
-
-    public void pushInsightsFromEvent() {
-        try {
-            pushInsights(jbCefBrowser.getCefBrowser(),objectMapper);
-        } catch (JsonProcessingException e) {
-            Log.debugWithException(LOGGER, e, "Exception in pushInsightsFromEvent");
-        }
-    }
 
 
     void sendRequestToChangeUiTheme(@NotNull Theme theme) {
@@ -175,15 +135,32 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter implem
     }
 
 
-    @Override
-    public void onQueryCanceled(CefBrowser browser, CefFrame frame, long queryId) {
-        Log.log(LOGGER::debug, "jcef query canceled");
+    void pushInsights(List<CodeObjectInsight> insights, List<Span> spans, String assetId, String serviceName, String environment, String uiInsightsStatus) {
+
+        var payload = new InsightsPayload(insights, spans, assetId, serviceName, environment, uiInsightsStatus);
+        var message = new SetInsightsDataMessage("digma", "INSIGHTS/SET_DATA", payload);
+        Log.log(LOGGER::debug, project, "sending INSIGHTS/SET_DATA message");
+        try {
+            jbCefBrowser.getCefBrowser().executeJavaScript(
+                    "window.postMessage(" + objectMapper.writeValueAsString(message) + ");",
+                    jbCefBrowser.getCefBrowser().getURL(),
+                    0);
+        } catch (JsonProcessingException e) {
+            Log.warnWithException(LOGGER, project, e, "Error sending message to webview");
+        }
     }
 
-    @Override
-    public void dispose() {
-        messageBusConnection.dispose();
+
+    void emptyInsights() {
+
+        var message = new SetInsightsDataMessage("digma", "INSIGHTS/SET_DATA", InsightsPayload.EMPTY);
+        try {
+            jbCefBrowser.getCefBrowser().executeJavaScript(
+                    "window.postMessage(" + objectMapper.writeValueAsString(message) + ");",
+                    jbCefBrowser.getCefBrowser().getURL(),
+                    0);
+        } catch (JsonProcessingException e) {
+            Log.warnWithException(LOGGER, project, e, "Error sending message to webview");
+        }
     }
-
-
 }

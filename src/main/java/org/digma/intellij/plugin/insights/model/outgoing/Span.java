@@ -6,25 +6,15 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
-import org.digma.intellij.plugin.ui.model.UIInsightsStatus;
-
-import java.util.Collections;
-import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonSerialize
-public record InsightsPayload(List<CodeObjectInsight> insights, List<Span> spans, String assetId, String serviceName,
-                              String environment, String insightsStatus) {
+public record Span(String spanCodeObjectId, String spanDisplayName) {
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    public InsightsPayload {
+    public Span {
         //nothing to do , for jackson only
     }
-
-
-    public static final InsightsPayload EMPTY = new InsightsPayload(Collections.emptyList(), Collections.emptyList(),
-            "", "", "", UIInsightsStatus.NoInsights.name());
 }

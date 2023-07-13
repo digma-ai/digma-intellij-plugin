@@ -11,6 +11,7 @@ import org.cef.network.CefRequest;
 import org.cef.network.CefResponse;
 import org.digma.intellij.plugin.jaegerui.JaegerUIException;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.ui.service.InsightsService;
 
 import java.io.IOException;
 import java.io.InputStream;

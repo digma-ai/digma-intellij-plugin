@@ -22,7 +22,7 @@ class InsightsIndexTemplateBuilder {
     private final Configuration freemarketConfiguration = new Configuration(Configuration.VERSION_2_3_30);
 
     public InsightsIndexTemplateBuilder() {
-        freemarketConfiguration.setClassForTemplateLoading(this.getClass(), InsightsPanel.RESOURCE_FOLDER_NAME);
+        freemarketConfiguration.setClassForTemplateLoading(this.getClass(), InsightsServiceImpl.RESOURCE_FOLDER_NAME);
         freemarketConfiguration.setDefaultEncoding(StandardCharsets.UTF_8.name());
         freemarketConfiguration.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
         freemarketConfiguration.setNumberFormat("computer");

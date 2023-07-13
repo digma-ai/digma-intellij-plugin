@@ -24,14 +24,14 @@ class InsightsSchemeHandlerFactory implements CefSchemeHandlerFactory {
         if (url != null) {
             var host = url.getHost();
             var file = url.getFile();
-            if (InsightsPanel.DOMAIN_NAME.equals(host) &&
-                    InsightsPanel.SCHEMA_NAME.equals(schemeName)) {
-                var resourceName = InsightsPanel.RESOURCE_FOLDER_NAME + file;
+            if (InsightsServiceImpl.DOMAIN_NAME.equals(host) &&
+                    InsightsServiceImpl.SCHEMA_NAME.equals(schemeName)) {
+                var resourceName = InsightsServiceImpl.RESOURCE_FOLDER_NAME + file;
                 var resource = getClass().getResource(resourceName);
                 if (resource != null) {
                     return new InsightsResourceHandler(project, resourceName);
                 } else {
-                    return new InsightsResourceHandler(project, InsightsPanel.RESOURCE_FOLDER_NAME + "/index.html");
+                    return new InsightsResourceHandler(project, InsightsServiceImpl.RESOURCE_FOLDER_NAME + "/index.html");
                 }
             }
         }

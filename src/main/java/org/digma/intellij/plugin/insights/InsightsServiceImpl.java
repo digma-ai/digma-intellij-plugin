@@ -15,6 +15,7 @@ import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider;
 import org.digma.intellij.plugin.insights.model.outgoing.Span;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
@@ -232,7 +233,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
         Log.log(logger::debug, project, "openHistogram called {},{}", instrumentationLibrary, spanName);
 
-        ActivityMonitor.getInstance(project).registerInsightButtonClicked("histogram", insightType);
+        ActivityMonitor.getInstance(project).registerButtonClicked("histogram", InsightType.valueOf(insightType));
 
         try {
             String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanPercentiles(instrumentationLibrary, spanName, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));

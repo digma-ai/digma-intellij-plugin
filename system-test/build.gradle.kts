@@ -5,10 +5,6 @@ plugins {
     id("common-kotlin")
 }
 
-//intellij {
-//    version.set("IC-"+ platformVersion(project))
-//    plugins.set(listOf("com.intellij.java","org.jetbrains.idea.maven","org.jetbrains.plugins.gradle"))
-//}
 intellij {
     pluginName.set("system-test-plugin")
     version.set(platformVersion(project))
@@ -22,9 +18,11 @@ intellij {
 }
 
 dependencies {
+    testImplementation("org.mockito:mockito-inline:3.6.28")
     implementation(project(":ide-common"))
     implementation(project(":java"))
     implementation(project(":model"))
+    implementation(project(":"))
 }
 
 tasks.test {

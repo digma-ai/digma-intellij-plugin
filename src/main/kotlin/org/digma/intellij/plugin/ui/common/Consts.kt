@@ -6,10 +6,12 @@ object Html {
     const val ARROW_LEFT: String = "&#8592;"
 }
 
-object Text{
+object Text {
     const val NO_DATA_YET_DETAIL_DESCRIPTION = "Trigger actions that call this code object to learn more about its runtime behavior"
     const val NO_OBSERVABILITY_DETAIL_DESCRIPTION = "Add an annotation to observe this method and collect data about its runtime behavior"
-    const val NO_OBSERVABILITY_MISSING_DEPENDENCY_DESCRIPTION = "Before adding annotations, please add the following dependency:";
+    const val NO_OBSERVABILITY_MISSING_DEPENDENCY_DESCRIPTION = "missing dependency: opentelemetry.annotation"
+    const val NO_OBSERVABILITY_WORKING_ON_IT_DESCRIPTION =
+        "Working on it! This page will refresh automatically when ready. this should take a few minutes"
 
 }
 

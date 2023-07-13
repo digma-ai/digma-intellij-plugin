@@ -55,6 +55,10 @@ fun buildLinkTextWithTitleAndGrayedComment(title: String,comment: String): Strin
     return asHtml("$titlePart<br>$commentPart")
 }
 
+fun buildLinkTextWithUnderLine(title: String): String {
+    return spanUnderline(Laf.Colors.LINK_TEXT, title)
+}
+
 fun buildBoldTitleGrayedComment(title: String,comment: String): String{
     return buildTitleGrayedComment(title, comment,true)
 }
@@ -141,6 +145,10 @@ fun span(color: Color, value: String, bold: Boolean): String {
     } else {
         "<span style=\"color:${color.getHex()}\">$value</span>"
     }
+}
+
+fun spanUnderline(color: Color, value: String): String {
+    return "<span style=\"color:${color.getHex()}\"><u>$value</u></span>"
 }
 
 

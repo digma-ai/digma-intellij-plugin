@@ -8,6 +8,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiJavaFile;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiReference;
+import com.intellij.psi.impl.source.PsiExtensibleClass;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.psi.search.searches.MethodReferencesSearch;
@@ -43,8 +44,8 @@ public class JavaCodeObjectDiscovery {
 
         try {
             DocumentInfo documentInfo = JavaDocumentInfoIndex.tryGetDocumentInfoFromIndex(project, psiJavaFile);
-            if (documentInfo == null){
-                documentInfo = buildDocumentInfoImpl(project,psiJavaFile);
+            if (documentInfo == null) {
+                documentInfo = buildDocumentInfoImpl(project, psiJavaFile);
             }
             /*
             why do we need a separate enrichDocumentInfo stage?
@@ -64,9 +65,6 @@ public class JavaCodeObjectDiscovery {
             Log.log(LOGGER::debug, "buildDocumentInfo for {} took {} milliseconds", psiJavaFile.getName(), stopWatch.getTime(TimeUnit.MILLISECONDS));
         }
     }
-
-
-
 
 
     public static DocumentInfo buildDocumentInfoImpl(@NotNull Project project, @NotNull PsiJavaFile psiJavaFile) {
@@ -94,7 +92,19 @@ public class JavaCodeObjectDiscovery {
                 continue;
             }
 
-            PsiMethod[] methods = aClass.getMethods();
+            final List<PsiMethod> methods;
+            if (aClass instanceof PsiExtensibleClass) {
+                // avoid cases when there are generated methods and/or constructors such as lombok creates,
+                // see issue https://github.com/digma-ai/digma-intellij-plugin/issues/833
+                // see issue https://youtrack.jetbrains.com/issue/IDEA-323198
+                PsiExtensibleClass extClass = (PsiExtensibleClass) aClass;
+                methods = extClass.getOwnMethods();
+            } else {
+                // call to getMethods might cause issue https://github.com/digma-ai/digma-intellij-plugin/issues/833, so avoiding it if possible
+                PsiMethod[] methodsArr = aClass.getMethods(); // call to getMethods might cause issue 833
+                methods = List.of(methodsArr);
+            }
+
             for (PsiMethod method : methods) {
                 String id = createJavaMethodCodeObjectId(method);
                 String name = method.getName();

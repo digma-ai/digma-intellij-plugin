@@ -1,0 +1,86 @@
+
+
+name: Publish to jetbrains marketplace
+on:
+  release:
+    types: [prereleased, released]
+
+jobs:
+  call-publish-workflow:
+    strategy:
+      matrix:
+        profile: [ lowest, latest, eap ]
+    uses: ./.github/workflows/publish-workflow.yml
+    with:
+      build-profile: ${{ matrix.profile }}
+      tag-name: ${{ github.event.release.tag_name }}
+      changelog: ${{ github.event.release.body }}
+    secrets: inherit
+
+
+  update-to-next-version:
+    needs: [ call-publish-workflow ]
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v3
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GH_ADMIN_TOKEN }}
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: |
+            6.0.411
+
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v1.0.4
+
+      - name: Export Changelog
+        id: exportchangelog
+        shell: bash
+        run: |
+          CHANGELOG="$(cat << 'EOM' | sed -e 's/^[[:space:]]*$//g' -e '/./,$!d'
+          ${{ github.event.release.body }}
+          EOM
+          )"
+          
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "changelog<<$EOF" >> "$GITHUB_OUTPUT"
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "$EOF" >> "$GITHUB_OUTPUT"
+
+      # Update changelog
+      - name: Patch Changelog
+        if: ${{ steps.exportchangelog.outputs.changelog != '' }}
+        env:
+          CHANGELOG: ${{ steps.exportchangelog.outputs.changelog }}
+        run: |
+          ./gradlew --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PdoNotDownloadSources=true patchChangelog --release-note="$CHANGELOG"
+
+
+      - name: Increment version
+        run: |
+          ./gradlew --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PdoNotDownloadSources=true  incrementSemanticVersionPatch 
+          ./gradlew --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PdoNotDownloadSources=true  printSemanticVersion -q
+
+      - name: Commit next version to main
+        run: |
+          VERSION=$(cat version.properties |grep "version="|cut -d= -f2)
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git stash
+          git pull
+          git stash pop
+          git add version.properties
+          git add CHANGELOG.md
+          git commit -m "increment version after publish to ${VERSION} and update changelog"
+          git push

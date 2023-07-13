@@ -1,7 +1,5 @@
-using System.Collections.Generic;
 using Digma.Rider.Protocol;
 using JetBrains.ProjectModel;
-using JetBrains.Rider.Model;
 using JetBrains.Util;
 
 namespace Digma.Rider.Highlighting
@@ -16,9 +14,6 @@ namespace Digma.Rider.Highlighting
 
         public override string ProviderId => nameof(ScaleFactorMethodInsightsProvider);
         public override string DisplayName => "Scale Factor Method Hints";
-        
-        public override ICollection<CodeLensRelativeOrdering> RelativeOrderings => new CodeLensRelativeOrdering[]
-            { new CodeLensRelativeOrderingFirst() };
         
     }
 }

@@ -17,7 +17,7 @@
 
     <depends optional="true" config-file="org.digma.intellij-with-python.xml">com.intellij.modules.python</depends>
     <depends optional="true" config-file="org.digma.intellij-with-java.xml">com.intellij.modules.java</depends>
-<!--    <depends optional="true" config-file="org.digma.intellij-with-rider.xml">com.intellij.modules.rider</depends>-->
+    <depends optional="true" config-file="org.digma.intellij-with-rider.xml">com.intellij.modules.rider</depends>
 
 
     <extensions defaultExtensionNs="com.intellij">
@@ -25,19 +25,20 @@
                     secondary="false"
                     icon="org.digma.intellij.plugin.icons.AppIcons.TOOL_WINDOW"
                     anchor="right"
-                    factoryClass="org.digma.intellij.plugin.toolwindow.sidepane.DigmaSidePaneToolWindowFactory"/>
+                    factoryClass="org.digma.intellij.plugin.toolwindow.DigmaSidePaneToolWindowFactory"/>
 
         <toolWindow id="Observability"
                     secondary="false"
                     icon="org.digma.intellij.plugin.icons.AppIcons.TOOL_WINDOW_OBSERVABILITY"
                     anchor="bottom"
-                    factoryClass="org.digma.intellij.plugin.toolwindow.recentactivity.DigmaBottomToolWindowFactory"/>
+                    factoryClass="org.digma.intellij.plugin.recentactivity.DigmaBottomToolWindowFactory"/>
 
 
         <projectService serviceImplementation="org.digma.intellij.plugin.jaegerui.JaegerUIService"/>
         <fileEditorProvider implementation="org.digma.intellij.plugin.jaegerui.JaegerUIFileEditorProvider"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.ToolWindowShower"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.recentactivity.RecentActivityToolWindowShower"/>
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.MainToolWindowCardsController"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.service.EditorInteractionService"
@@ -67,15 +68,12 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.service.ErrorsActionsService"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.ui.service.TabsHelper"/>
-
         <projectService serviceImplementation="org.digma.intellij.plugin.service.EditorService"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.vcs.VcsService"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.common.DumbAwareNotifier"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.analytics.BackendConnectionMonitor"/>
         <projectService serviceImplementation="org.digma.intellij.plugin.analytics.BackendConnectionMonitor"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.analytics.BackendConnectionUtil"/>
@@ -92,7 +90,10 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.updates.UpdatesService"/>
 
+        <projectService serviceImplementation="org.digma.intellij.plugin.recentactivity.RecentActivityService"/>
+
         <projectService serviceImplementation="org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider"/>
+
 
         <notificationGroup id="Digma Notification Group"
                            displayType="NONE"
@@ -115,6 +116,8 @@
 
         <postStartupActivity implementation="org.digma.intellij.plugin.common.DumbAwareStartupActivity"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.common.RunOnceStartupActivity"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.recentactivity.RecentActivityStartupActivity"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.posthog.ContainerEngineStartupActivity"/>
 
 
         <!-- Code lens providers are used only for some languages, for example java,python.
@@ -146,19 +149,13 @@
                 class="org.digma.intellij.plugin.emvironment.EnvironmentChangeHandler"
                 topic="org.digma.intellij.plugin.analytics.EnvironmentChanged"/>
         <listener
-                class="org.digma.intellij.plugin.tab.TabChangeHandler"
-                topic="org.digma.intellij.plugin.analytics.TabsChanged"/>
-        <listener
                 class="org.digma.intellij.plugin.debugger.DebuggerListener"
                 topic="com.intellij.xdebugger.XDebuggerManagerListener"/>
         <listener
                 class="org.digma.intellij.plugin.editor.GeneralFileEditorListener"
                 topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
         <listener
-                class="org.digma.intellij.plugin.common.modelChangeListener.ModelChangeHandler"
-                topic="org.digma.intellij.plugin.common.modelChangeListener.ModelChangeListener"/>
-        <listener
-                class="org.digma.intellij.plugin.toolwindow.common.DigmaToolWindowsListener"
+                class="org.digma.intellij.plugin.toolwindow.DigmaToolWindowsListener"
                 topic="com.intellij.openapi.wm.ex.ToolWindowManagerListener"/>
     </projectListeners>
 

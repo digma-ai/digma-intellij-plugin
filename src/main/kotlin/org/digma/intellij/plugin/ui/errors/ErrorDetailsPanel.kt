@@ -3,7 +3,11 @@ package org.digma.intellij.plugin.ui.errors
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.JBColor
-import com.intellij.ui.dsl.builder.*
+import com.intellij.ui.dsl.builder.MutableProperty
+import com.intellij.ui.dsl.builder.RightGap
+import com.intellij.ui.dsl.builder.RowLayout
+import com.intellij.ui.dsl.builder.TopGap
+import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import com.intellij.ui.dsl.gridLayout.VerticalAlign
 import com.intellij.util.ui.JBUI.Borders
@@ -13,15 +17,30 @@ import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.service.ErrorsActionsService
-import org.digma.intellij.plugin.ui.common.*
+import org.digma.intellij.plugin.ui.common.CopyableLabel
+import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
+import org.digma.intellij.plugin.ui.common.JTransparentPanel
+import org.digma.intellij.plugin.ui.common.Laf
+import org.digma.intellij.plugin.ui.common.asHtml
+import org.digma.intellij.plugin.ui.common.boldFonts
+import org.digma.intellij.plugin.ui.common.buildBoldGrayRegularText
+import org.digma.intellij.plugin.ui.common.createScorePanelNoArrows
+import org.digma.intellij.plugin.ui.common.span
+import org.digma.intellij.plugin.ui.common.spanGrayed
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.errordetails.ErrorFramesPanelList
 import org.digma.intellij.plugin.ui.list.listBackground
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
-import java.awt.*
-import java.util.*
+import java.awt.BorderLayout
+import java.awt.Dimension
+import java.awt.FlowLayout
+import java.awt.GridBagConstraints
+import java.awt.GridBagLayout
+import java.awt.GridLayout
+import java.util.Date
 import java.util.function.Consumer
 import javax.swing.JComponent
 import javax.swing.JLabel
@@ -214,8 +233,6 @@ fun errorDetailsPanel(project: Project, errorsModel: ErrorsModel): DigmaTabPanel
 
 }
 
-
-
 fun bottomPanel(project: Project,errorsModel: ErrorsModel, framesList: ScrollablePanelList): JPanel {
 
     return panel {
@@ -230,7 +247,7 @@ fun bottomPanel(project: Project,errorsModel: ErrorsModel, framesList: Scrollabl
                         errorsModel.errorDetails.flowStacks.isWorkspaceOnly = isSelected
                         PersistenceService.getInstance().state.isWorkspaceOnly = isSelected
                         framesList.getModel().setListData(errorsModel.errorDetails.flowStacks.getCurrentStack())
-                        ActivityMonitor.getInstance(project).registerInsightButtonClicked("error-frame-workspace-only")
+                        ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.ErrorDetails, "error-frame-workspace-only")
                     }
                 }
 
@@ -239,7 +256,7 @@ fun bottomPanel(project: Project,errorsModel: ErrorsModel, framesList: Scrollabl
                 val currentStack = errorsModel.errorDetails.flowStacks.current
                 val stackTrace = errorsModel.errorDetails.delegate?.errors?.get(currentStack)?.stackTrace
                 actionListener.openRawStackTrace(stackTrace)
-                ActivityMonitor.getInstance(project).registerInsightButtonClicked("open-raw-trace")
+                ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.ErrorDetails, "open-raw-trace")
             }.horizontalAlign(HorizontalAlign.RIGHT).gap(RightGap.SMALL)
 
 
@@ -273,7 +290,7 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
         val currentStack = errorsModel.errorDetails.flowStacks.current.plus(1)
         currentLabel.text = "${currentStack}/${stackSize} Flow Stacks"
         framesList.getModel().setListData(errorsModel.errorDetails.flowStacks.getCurrentStack())
-        ActivityMonitor.getInstance(project).registerInsightButtonClicked("error-previous-flow")
+        ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.ErrorDetails, "error-previous-flow")
     }
 
     val forwardButton = IconButton(Laf.Icons.ErrorDetails.FORWARD)
@@ -285,7 +302,7 @@ fun flowStackNavigation(errorsModel: ErrorsModel, framesList: ScrollablePanelLis
         val currentStack = errorsModel.errorDetails.flowStacks.current.plus(1)
         currentLabel.text = "${currentStack}/${stackSize} Flow Stacks"
         framesList.getModel().setListData(errorsModel.errorDetails.flowStacks.getCurrentStack())
-        ActivityMonitor.getInstance(project).registerInsightButtonClicked("error-next-flow")
+        ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.ErrorDetails, "error-next-flow")
     }
 
     val panel = JTransparentPanel()
@@ -439,7 +456,7 @@ private fun namePanel(errorsModel: ErrorsModel): DialogPanel {
 
             }
         }
-    }.andTransparent().withBorder(Borders.customLine(Color.DARK_GRAY, 0, 2, 0, 0))
+    }.andTransparent().withBorder(Borders.customLine(JBColor.DARK_GRAY, 0, 2, 0, 0))
 
 }
 

@@ -42,7 +42,7 @@ class ConnectionActivityMonitor(private val project: Project) : AnalyticsService
                 //     due to older server versions which does not contain this
                 //     endpoint yet
                 val about = AnalyticsService.getInstance(project).analyticsProvider.about
-                ActivityMonitor.getInstance(project).registerServerVersion(about.applicationVersion)
+                ActivityMonitor.getInstance(project).registerServerInfo(about)
             } catch (e: Exception) {
                 Log.log(LOGGER::debug, "Failed to get+register server version: {}", e.message);
             }

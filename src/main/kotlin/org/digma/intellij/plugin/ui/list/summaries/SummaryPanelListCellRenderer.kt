@@ -1,16 +1,21 @@
 package org.digma.intellij.plugin.ui.list.summaries
 
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.JBUI.Borders.empty
-import org.digma.intellij.plugin.document.CodeObjectsUtil
+import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.discovery.CodeObjectInfo
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationChangeInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsPercentile
 import org.digma.intellij.plugin.model.rest.insights.TopErrorFlowsInsight
+import org.digma.intellij.plugin.navigation.HomeSwitcherService
+import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper
+import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
 import org.digma.intellij.plugin.ui.common.Laf
@@ -23,13 +28,11 @@ import org.digma.intellij.plugin.ui.list.commonListItemPanel
 import org.digma.intellij.plugin.ui.list.errors.contentOfFirstAndLast
 import org.digma.intellij.plugin.ui.list.insights.genericPanelForSingleInsight
 import org.digma.intellij.plugin.ui.list.insights.percentileRowPanel
-import org.digma.intellij.plugin.ui.list.openWorkspaceFileForSpan
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.BorderLayout
 import java.awt.GridLayout
 import javax.swing.JLabel
 import javax.swing.JPanel
-import javax.swing.SwingConstants
 
 
 class SummaryPanelListCellRenderer : AbstractPanelListCellRenderer() {
@@ -41,7 +44,7 @@ class SummaryPanelListCellRenderer : AbstractPanelListCellRenderer() {
         return when (val model = value.modelObject) {
             is SummaryTypeTitle -> buildTitle(model)
             is TopErrorFlowsInsight.Error -> commonListItemPanel(buildError(model, project))
-            is SpanDurationChangeInsight.Change -> commonListItemPanel(buildSpanDuration(model, value.moreData, panelsLayoutHelper, project))
+            is SpanDurationChangeInsight.Change -> commonListItemPanel(buildSpanDuration(model,  panelsLayoutHelper, project))
             else -> genericPanelForSingleInsight(project, model)
         }
     }
@@ -70,8 +73,9 @@ private fun buildError(model: TopErrorFlowsInsight.Error, project: Project): JPa
     val relativeFrom = CodeObjectInfo.extractMethodName(model.sourceCodeObjectId)
     val linkText = buildLinkTextWithGrayedAndDefaultLabelColorPart(model.name, "from", relativeFrom)
     val link = ActionLink(asHtml(linkText)) {
+        project.service<HomeSwitcherService>().switchToInsights()
         val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
-        actionListener.showErrorDetails(model.uid)
+        actionListener.showErrorDetailsFromDashboard(model.uid)
     }
     link.border = JBUI.Borders.emptyBottom(10)
 
@@ -110,16 +114,18 @@ private fun getCharacteristic(model: TopErrorFlowsInsight.Error): JPanel {
     return wrapper
 }
 
-private fun buildSpanDuration(value: SpanDurationChangeInsight.Change, moreData: HashMap<String, Any>, panelsLayoutHelper: PanelsLayoutHelper, project: Project): JPanel {
+private fun buildSpanDuration(value: SpanDurationChangeInsight.Change, panelsLayoutHelper: PanelsLayoutHelper, project: Project): JPanel {
 
-    val spanId = CodeObjectsUtil.createSpanId(value.span.instrumentationLibrary, value.span.name)
-    val title = if (moreData.contains(spanId)) {
+    val spanId = value.span.spanCodeObjectId
+
+    val title =
         ActionLink(asHtml(value.span.displayName)) {
-            openWorkspaceFileForSpan(project, moreData, spanId)
+            ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Summary)
+            project.service<HomeSwitcherService>().switchToInsights()
+            project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanId)
+            project.service<InsightsAndErrorsTabsHelper>().switchToInsightsTab()
         }
-    } else{
-        JLabel(asHtml(value.span.displayName), SwingConstants.LEFT)
-    }
+
     title.toolTipText = value.span.displayName
     title.border = JBUI.Borders.emptyBottom(5)
 

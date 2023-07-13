@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.rider.protocol
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
+import com.jetbrains.rd.framework.IProtocol
 import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent
 import com.jetbrains.rider.projectView.solution
 import org.digma.intellij.plugin.common.EDT
@@ -34,6 +35,10 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
     }
 
 
+    private fun getProtocol(model: CodeObjectsModel):IProtocol{
+        return model.protocol!! //protocol is nullable in 2023.2, remove when 2023.2 is our base
+    }
+
     fun environmentChanged(newEnv: String) {
         Log.log(logger::debug, "Got environmentChanged {}", newEnv)
 
@@ -42,7 +47,7 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
             try {
                 val psiFile = PsiUtils.uriToPsiFile(psiFileUri!!, project)
                 Log.log(logger::debug, "Requesting code lens for {}", psiFile.virtualFile)
-                val codeLens: List<CodeLens> = codeLensProvider.provideCodeLens(psiFile)
+                val codeLens: Set<CodeLens> = codeLensProvider.provideCodeLens(psiFile)
                 Log.log(logger::debug, "Got codeLens for {}: {}", psiFile.virtualFile, codeLens)
                 installCodeLens(psiFile, codeLens)
             } catch (e: PsiFileNotFountException) {
@@ -52,13 +57,13 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
     }
 
 
-    fun installCodeLens(@NotNull psiFile: PsiFile, @NotNull codeLenses: List<CodeLens>) {
-        EDT.ensureEDT{
-            installCodeLensOnEDT(psiFile,codeLenses)
+    fun installCodeLens(@NotNull psiFile: PsiFile, @NotNull codeLenses: Set<CodeLens>) {
+        EDT.ensureEDT {
+            installCodeLensOnEDT(psiFile, codeLenses)
         }
     }
 
-    private fun installCodeLensOnEDT(@NotNull psiFile: PsiFile, @NotNull codeLenses: List<CodeLens>) {
+    private fun installCodeLensOnEDT(@NotNull psiFile: PsiFile, @NotNull codeLenses: Set<CodeLens>) {
 
         Log.log(logger::debug, "got request to installCodeLensOnEDT for {}: {}", psiFile.virtualFile, codeLenses)
 
@@ -66,14 +71,14 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
         //code lens of this document, necessary in environment change event.
 
         //always try to find ProjectModelId for the psi file, it is the preferred way to find a psi file in resharper
-        val projectModelId: Int? = tryGetProjectModelId(psiFile,project)
+        val projectModelId: Int? = tryGetProjectModelId(psiFile, project)
         val psiUri = PsiUtils.psiFileToUri(psiFile)
         val psiId = PsiFileID(projectModelId, psiUri)
 
         Log.log(logger::debug, "Installing code lens for {}", psiId)
 
         val model: CodeObjectsModel = project.solution.codeObjectsModel
-        model.protocol.scheduler.invokeOrQueue {
+        getProtocol(model).scheduler.invokeOrQueue {
 
             //first remove all code lens entries belonging to this document.
             //the map is not keyed by document, so we have to search

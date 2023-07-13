@@ -5,18 +5,35 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
+import com.intellij.util.Alarm;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.CommonUtils;
+import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
+import org.digma.intellij.plugin.model.rest.assets.AssetsRequest;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
-import org.digma.intellij.plugin.model.rest.insights.*;
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
+import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightRequest;
+import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
+import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsRequest;
+import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
+import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanRequest;
+import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanResponse;
+import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
+import org.digma.intellij.plugin.model.rest.insights.MethodWithCodeObjects;
+import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
+import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
+import org.digma.intellij.plugin.model.rest.livedata.DurationLiveDataRequest;
+import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation;
+import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigationRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
@@ -41,16 +58,23 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.net.SocketException;
-import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.net.http.HttpTimeoutException;
 import java.time.Instant;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static org.digma.intellij.plugin.common.EnvironmentUtilKt.isEnvironmentLocal;
+import static org.digma.intellij.plugin.common.EnvironmentUtilKt.isLocalEnvironmentMine;
 import static org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult;
 
 
@@ -64,11 +88,21 @@ public class AnalyticsService implements Disposable {
     private String myApiToken;
     private final Project project;
 
+    /**
+     * myConnectionLostFlag must be a member of AnalyticsService and not of the AnalyticsInvocationHandler proxy.
+     * AnalyticsInvocationHandler may be replaced , AnalyticsService a singleton.
+     * the error that may happen is myConnectionLostFlag is a member of AnalyticsInvocationHandler is:
+     * we got a connection error,myConnectionLostFlag is marked to true. user changes the url in settings,
+     * AnalyticsInvocationHandler is replaced with a new instance and myConnectionLostFlag is false, the next successful
+     * call will not reset the status, and we're locked in connection lost.
+     * when myConnectionLostFlag is a member of AnalyticsService as is here, it will not happen, it is a singleton
+     * for the project and new instances of AnalyticsInvocationHandler will see its real state.
+     */
+    private final AtomicBoolean myConnectionLostFlag = new AtomicBoolean(false);
+
+
     private AnalyticsProvider analyticsProviderProxy;
 
-    //this status is used to keep track of connection errors, and for helping with reporting messages only when necessary
-    // and keep the log clean
-    private final Status status = new Status();
     private RestAnalyticsProvider analyticsProvider;
 
     public AnalyticsService(@NotNull Project project) {
@@ -77,7 +111,7 @@ public class AnalyticsService implements Disposable {
         //initialize MainToolWindowCardsController when starting, so it is aware early on connection statuses
         MainToolWindowCardsController.getInstance(project);
         SettingsState settingsState = SettingsState.getInstance();
-        environment = new Environment(project, this, PersistenceService.getInstance().getState(), settingsState);
+        environment = new Environment(project, this, PersistenceService.getInstance().getState());
         this.project = project;
         myApiUrl = settingsState.apiUrl;
         myApiToken = settingsState.apiToken;
@@ -93,7 +127,7 @@ public class AnalyticsService implements Disposable {
                 myApiToken = state.apiToken;
                 replaceClient(myApiUrl, myApiToken);
             }
-        });
+        },this);
     }
 
 
@@ -125,12 +159,7 @@ public class AnalyticsService implements Disposable {
 
 
     private void initializeEnvironmentsList() {
-        List<String> envs = getEnvironments();
-        if (envs == null) {
-            envs = new ArrayList<>();
-        }
-
-        environment.replaceEnvironmentsList(envs);
+        environment.refreshNow();
     }
 
 
@@ -138,12 +167,7 @@ public class AnalyticsService implements Disposable {
 
         Backgroundable.ensureBackground(project, "Digma: Environments list changed", () -> {
             replaceClient(url, token);
-            List<String> envs = getEnvironments();
-            if (envs == null) {
-                envs = new ArrayList<>();
-            }
-
-            environment.replaceEnvironmentsListAndFireChange(envs);
+            environment.refreshNowOnBackground();
         });
 
     }
@@ -151,7 +175,9 @@ public class AnalyticsService implements Disposable {
 
     public List<String> getEnvironments() {
         try {
-            return analyticsProviderProxy.getEnvironments();
+            var environments =  analyticsProviderProxy.getEnvironments();
+            var hostName = CommonUtils.getLocalHostname();
+            return environments.stream().filter(o->!isEnvironmentLocal(o) || isLocalEnvironmentMine(o,  hostName)).toList();
         } catch (Exception e) {
             //getEnvironments should never throw exception.
             // it is called only from this class or from the Environment object and both can handle null.
@@ -161,10 +187,6 @@ public class AnalyticsService implements Disposable {
 
     private String getCurrentEnvironment() throws AnalyticsServiceException {
         String currentEnv = environment.getCurrent();
-        //todo: we probably don't need to refresh environments here
-//        if (currentEnv == null || currentEnv.isEmpty()){
-//            environment.refreshEnvironments();
-//        }
         if (currentEnv == null || currentEnv.isEmpty()) {
             throw new AnalyticsServiceException("No selected environment");
         }
@@ -193,8 +215,8 @@ public class AnalyticsService implements Disposable {
     /**
      * removed deprecation because its necessary for JaegerUIService#getImportance(java.util.List)
      */
-     //@deprecated This method is deprecated and will be removed in a future release.
-     //Use {@link #getInsightsOfMethods(List<MethodInfo>)} instead.
+    //@deprecated This method is deprecated and will be removed in a future release.
+    //Use {@link #getInsightsOfMethods(List<MethodInfo>)} instead.
     public List<CodeObjectInsight> getInsights(List<String> objectIds) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         Log.log(LOGGER::debug, "Requesting insights for next objectIds {} and next environment {}", objectIds, env);
@@ -215,6 +237,15 @@ public class AnalyticsService implements Disposable {
             PersistenceService.getInstance().getState().setFirstTimeInsightReceived(true);
         }
     }
+
+
+
+    public InsightsOfSingleSpanResponse getInsightsForSingleSpan(String spanId) throws AnalyticsServiceException{
+        var env = getCurrentEnvironment();
+        Log.log(LOGGER::debug, "Requesting insights for span {}", spanId);
+        return executeCatching(() -> analyticsProviderProxy.getInsightsForSingleSpan(new InsightsOfSingleSpanRequest(env, spanId)));
+    }
+
 
     public InsightsOfMethodsResponse getInsightsOfMethods(List<MethodInfo> methodInfos) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
@@ -289,6 +320,20 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getRecentActivity(new RecentActivityRequest(environments)));
     }
 
+    public DurationLiveData getDurationLiveData(String codeObjectId) throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        return executeCatching(() ->
+                analyticsProviderProxy.getDurationLiveData(new DurationLiveDataRequest(env,codeObjectId)));
+    }
+
+    public CodeObjectNavigation getCodeObjectNavigation(String spanCodeObjectId) throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        return executeCatching(() ->
+                analyticsProviderProxy.getCodeObjectNavigation(new CodeObjectNavigationRequest(env,spanCodeObjectId)));
+    }
+
+
+
     public UsageStatusResult getUsageStatusOfErrors(List<String> objectIds) throws AnalyticsServiceException {
         return executeCatching(() -> {
             UsageStatusResult usageStatus = analyticsProviderProxy.getUsageStatus(new UsageStatusRequest(objectIds, List.of("Error")));
@@ -305,6 +350,16 @@ public class AnalyticsService implements Disposable {
         final SpanHistogramQuery spanHistogramQuery = new SpanHistogramQuery(getCurrentEnvironment(), spanName, instrumentationLibrary, JBColor.isBright() ? "light" : "dark", backgroundColor);
         return executeCatching(() -> analyticsProviderProxy.getHtmlGraphForSpanScaling(spanHistogramQuery));
     }
+
+
+    public String getAssets() throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        return executeCatching(() ->
+                analyticsProviderProxy.getAssets(new AssetsRequest(env)));
+    }
+
+
+
 
     @Override
     public void dispose() {
@@ -357,8 +412,18 @@ public class AnalyticsService implements Disposable {
 
         private final AnalyticsProvider analyticsProvider;
 
+        //this errorReportingHelper is used to keep track of errors for helping with reporting messages only when necessary
+        // and keep the log clean
+        private final ErrorReportingHelper errorReportingHelper = new ErrorReportingHelper();
+
         //ObjectMapper here is only used for printing the result to log as json
         private final ObjectMapper objectMapper = new ObjectMapper();
+
+        private final ReentrantLock myConnectionLostLock = new ReentrantLock();
+
+        //sometimes the connection lost is momentary or regaining is momentary, use the alarm to wait
+        // before notifying listeners of connectionLost/ConnectionGained
+        private final Alarm myConnectionStatusNotifyAlarm = new Alarm(Alarm.ThreadToUse.POOLED_THREAD,AnalyticsService.this);
 
 
         public AnalyticsInvocationHandler(AnalyticsProvider analyticsProvider) {
@@ -387,7 +452,15 @@ public class AnalyticsService implements Disposable {
                     Log.log(LOGGER::debug, "Sending request to {}: args '{}'", method.getName(), argsToString(args));
                 }
 
-                Object result = method.invoke(analyticsProvider, args);
+                Object result;
+                try {
+                    result = method.invoke(analyticsProvider, args);
+                }catch (Exception e){
+                    //this is a poor retry, we don't have a retry mechanism, but sometimes there is a momentary
+                    // connection issue and the next call will succeed, instead of going through the exception handling
+                    // and events , just try again once. the performance penalty is minor, we are in error state anyway.
+                    result = method.invoke(analyticsProvider, args);
+                }
 
                 if (LOGGER.isDebugEnabled()) {
                     Log.log(LOGGER::debug, "Got response from {}: args '{}', -----------------" +
@@ -399,62 +472,40 @@ public class AnalyticsService implements Disposable {
                     PersistenceService.getInstance().getState().setFirstTimeConnectionEstablished(true);
                 }
 
-                //reset status on success call
-                if (status.isInConnectionError()) {
-                    // change status here because connectionGained() will trigger call to this invoke() again
-                    // and without changing the status Notification will be displayed several times in a loop
-                    status.ok();
-                    NotificationUtil.showNotification(project, "Digma: Connection reestablished !");
-                    project.getMessageBus().syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC).connectionGained();
-                }
-                status.ok();
+                //if we are here then the call to the underlying analytics api succeeded, we can reset the status
+                // and notify connectionGained if necessary.
+                //it is not perfect, there is still a race condition, we may report connection lost while actually the
+                // connection is ok, or we may consider the connection ok while there is an error.
+                //if two threads A and B enter this method, A gets an error and enters the exception handling,
+                // right afet that B succeeds because maybe the error was momentary, and A still didn't mark
+                // myConnectionLostFlag ,A will mark myConnectionLostFlag to true and notify connectionLost while
+                // actually the connection is ok. Or the other way around.
+                //but, the next call will fix it and the status will be ok. So this incorrect state is only until the
+                // next call, which is probably ok.
+                //to be more accurate we need to lock the whole critical section that actually calls the backend, but we
+                // don't want to do that because then the performance penalty is significant for every call.
+                //resetConnectionLostAndNotifyIfNecessary is significant penalty only when it needs to recover from connectionLost,
+                // otherwise its very fast and insignificant in such an application.
+                resetConnectionLostAndNotifyIfNecessary();
 
                 return result;
 
             } catch (InvocationTargetException e) {
 
-                //Note: when logging LOGGER.error idea will popup a red message which we don't want, so only report warn messages.
+                //Note: when logging LOGGER.error idea will pop up a red message which we don't want, so only report warn messages.
 
                 //handle only InvocationTargetException, other exceptions are probably a bug.
                 //log connection exceptions only the first time and show an error notification.
-                // while status is in error the following connection exceptions will not be logged, other exceptions
+                // while status is in error, following connection exceptions will not be logged, other exceptions
                 // will be logged only once.
 
-                boolean isConnectionException = isConnectionException(e) || isSslConnectionException(e);
-                if (status.isOk() && isConnectionException) {
-                    status.connectError();
-                    project.getMessageBus().syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC).connectionLost();
-                    var message = isConnectionException(e) ? getConnectExceptionMessage(e) : getSslExceptionMessage(e);
-                    Log.log(LOGGER::warn, "Connection exception: error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
-                    LOGGER.warn(e);
-                    ActivityMonitor.getInstance(project).registerConnectionError(method.getName(), message);
-                    NotificationUtil.notifyError(project, "<html>Connection error with Digma backend api for method " + method.getName() + ".<br> "
-                            + message + ".<br> See logs for details.");
-                } else if (status.isOk()) {
-                    status.error();
-                    Log.log(LOGGER::warn, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getCause().getMessage());
-                    var message = getExceptionMessage(e);
-                    NotificationUtil.notifyError(project, "<html>Error with Digma backend api for method " + method.getName() + ".<br> "
-                            + message + ".<br> See logs for details.");
-                    LOGGER.warn(e);
-                    ActivityMonitor.getInstance(project).registerError(e, message);
-                } else if (!status.hadError(e)) {
-                    status.error();
-                    var message = getExceptionMessage(e);
-                    Log.log(LOGGER::warn, "New Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
-                    LOGGER.warn(e);
-                    ActivityMonitor.getInstance(project).registerError(e, message);
-                }
-
-
-                if (e.getCause() instanceof AnalyticsProviderException) {
-                    throw e.getCause();
-                }
-
+                //handleInvocationTargetException may rethrow an exception, if it didn't then always
+                // an AnalyticsServiceException will be throws
+                handleInvocationTargetException(e, method, args);
                 throw new AnalyticsServiceException(e);
 
             } catch (Exception e) {
-                status.error();
+                errorReportingHelper.addIfNewError(e);
                 Log.log(LOGGER::debug, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getMessage());
                 LOGGER.error(e);
                 ActivityMonitor.getInstance(project).registerError(e, "Error invoking AnalyticsProvider");
@@ -465,17 +516,144 @@ public class AnalyticsService implements Disposable {
             }
         }
 
+
+
+
+        private void handleInvocationTargetException(InvocationTargetException e, Method method, Object[] args) throws Throwable {
+            boolean isConnectionException = isConnectionException(e) || isSslConnectionException(e);
+            String message;
+            if (isConnectionException){
+                message = getConnectExceptionMessage(e);
+            }else{
+                message = getSslExceptionMessage(e);
+            }
+            if(isConnectionOK()){
+                //if more than one thread enter this section the worst that will happen is that we
+                // report the error more than once but connectionLost will be fired once because
+                // markConnectionLostAndNotify locks, marks and notifies only if connection ok.
+                if (isConnectionException) {
+                    markConnectionLostAndNotify();
+                    errorReportingHelper.addIfNewError(e);
+                    Log.log(LOGGER::warn, "Connection exception: error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
+                    NotificationUtil.notifyError(project, "<html>Connection error with Digma backend api for method " + method.getName() + ".<br> "
+                            + message + ".<br> See logs for details.");
+                }
+                else{
+                    errorReportingHelper.addIfNewError(e);
+                    Log.log(LOGGER::warn, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getCause().getMessage());
+                    NotificationUtil.notifyError(project, "<html>Error with Digma backend api for method " + method.getName() + ".<br> "
+                            + message + ".<br> See logs for details.");
+                }
+            }
+            // status was not ok but it's a new error
+            else if(errorReportingHelper.addIfNewError(e)){
+                Log.log(LOGGER::warn, "New Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
+                LOGGER.warn(e);
+            }
+
+            if (isConnectionException) {
+                ActivityMonitor.getInstance(project).registerConnectionError(method.getName(), message);
+            } else {
+                ActivityMonitor.getInstance(project).registerError(e, message);
+            }
+
+            if (e.getCause() instanceof AnalyticsProviderException) {
+                throw e.getCause();
+            }
+
+        }
+
+
+        private boolean isConnectionOK(){
+            return !myConnectionLostFlag.get();
+        }
+
+
+        private void resetConnectionLostAndNotifyIfNecessary() {
+
+
+            Log.log(LOGGER::debug, "resetConnectionLostAndNotifyIfNecessary called");
+
+            //this is the critical section of the race condition, there is a performance penalty
+            // for the locking , and if we recover from exception then also for the notification,
+            // but only when recovering from connection lost, otherwise its very fast, and we are not a critical
+            // multithreading application, so it's probably ok to lock in every API call
+            // the reason for locking here and in markConnectionLostAndNotify is to avoid a situation were myConnectionLostFlag
+            // if marked but never reset and to make sure that if we notified connectionLost we will also notify when its gained back.
+            try{
+                //if connection is ok do nothing.
+                if (isConnectionOK()){
+                    Log.log(LOGGER::debug, "resetConnectionLostAndNotifyIfNecessary called, connection ok nothing to do.");
+                    return;
+                }
+                Log.log(LOGGER::info, "acquiring lock to reset connection status after connection lost");
+                myConnectionLostLock.lock();
+                if (myConnectionLostFlag.get()) {
+                    Log.log(LOGGER::info, "resetting connection status after connection lost");
+                    myConnectionLostFlag.set(false);
+                    errorReportingHelper.reset();
+                    myConnectionStatusNotifyAlarm.cancelAllRequests();
+
+                    myConnectionStatusNotifyAlarm.addRequest(() -> {
+                        Log.log(LOGGER::info, "notifying connectionGained");
+                        project.getMessageBus().syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC).connectionGained();
+                    },500);
+
+
+                    EDT.ensureEDT(() -> NotificationUtil.showNotification(project, "Digma: Connection reestablished !"));
+                }
+            }finally {
+                if (myConnectionLostLock.isHeldByCurrentThread()){
+                    myConnectionLostLock.unlock();
+                }
+            }
+        }
+
+
+        private void markConnectionLostAndNotify() {
+
+            Log.log(LOGGER::debug, "markConnectionLostAndNotify called");
+
+            //this is the second critical section of the race condition,
+            // we are in error state so the performance penalty of locking is insignificant.
+            try {
+                Log.log(LOGGER::info, "acquiring lock to mark connection lost");
+                myConnectionLostLock.lock();
+                //only mark and fire the event if connection is ok, avoid firing the event more than once.
+                // this code block should be as fast as possible.
+                if (isConnectionOK()) {
+                    Log.log(LOGGER::info, "marking connection lost");
+                    myConnectionLostFlag.set(true);
+
+                    //must notify BackendConnectionMonitor immediately and not on background thread, the main reason is
+                    // that on startup it must be notified immediately before starting to create UI components
+                    // it will also catch the connection lost event
+                    project.getService(BackendConnectionMonitor.class).connectionLost();
+
+                    //wait half a second because maybe the connection lost is momentary, and it will be back
+                    // very soon
+                    myConnectionStatusNotifyAlarm.cancelAllRequests();
+                    myConnectionStatusNotifyAlarm
+                            .addRequest(() -> {
+                                Log.log(LOGGER::info, "notifying connectionLost");
+                                project.getMessageBus().syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC).connectionLost();
+                            }, 500);
+                }
+            }finally {
+                if (myConnectionLostLock.isHeldByCurrentThread()){
+                    myConnectionLostLock.unlock();
+                }
+            }
+        }
+
+
         private boolean isConnectionException(InvocationTargetException e) {
 
             var ex = e.getCause();
             while (ex != null && !(isConnectionUnavailableException(ex))) {
                 ex = ex.getCause();
             }
-            if (ex != null) {
-                return true;
-            }
-
-            return false;
+            return ex != null;
         }
 
 
@@ -560,53 +738,23 @@ public class AnalyticsService implements Disposable {
     }
 
 
-    private static class Status {
+    private static class ErrorReportingHelper {
 
-        private final Map<String, Boolean> errorsHistory = new HashMap<>();
+        private final Set<String> errors = new HashSet<>();
 
-        private final AtomicBoolean hadConnectException = new AtomicBoolean(false);
-        private boolean hadError = false;
-
-        boolean isInError() {
-            return hadConnectException.get() || hadError;
-        }
-
-        boolean isInConnectionError() {
-            return hadConnectException.get();
-        }
-
-        boolean isOk() {
-            return !isInError();
-        }
-
-        public void ok() {
-            hadConnectException.set(false);
-            hadError = false;
-            errorsHistory.clear();
-        }
-
-        public void connectError() {
-            hadConnectException.set(true);
+        public void reset() {
+            errors.clear();
         }
 
 
-        public void error() {
-            hadError = true;
-        }
-
-        public boolean hadError(InvocationTargetException e) {
+        public boolean addIfNewError(Exception e) {
             var cause = findRealError(e);
             var errorName = cause.getClass().getName();
-            if (errorsHistory.containsKey(errorName)) {
-                return true;
-            }
-            errorsHistory.put(errorName, true);
-
-            return false;
+            return errors.add(errorName);
         }
 
         @NotNull
-        private Throwable findRealError(InvocationTargetException e) {
+        private Throwable findRealError(Exception e) {
 
             Throwable cause = e.getCause();
             while (cause != null && !cause.getClass().equals(AnalyticsProviderException.class)) {

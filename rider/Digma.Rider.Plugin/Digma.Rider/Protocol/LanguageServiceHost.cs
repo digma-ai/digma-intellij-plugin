@@ -6,7 +6,6 @@ using JetBrains.Annotations;
 using JetBrains.Lifetimes;
 using JetBrains.ProjectModel;
 using JetBrains.Rd.Tasks;
-using JetBrains.RdBackend.Common.Features;
 using JetBrains.ReSharper.Psi;
 using JetBrains.ReSharper.Psi.Caches;
 using JetBrains.ReSharper.Psi.Files;
@@ -14,6 +13,12 @@ using JetBrains.ReSharper.Resources.Shell;
 using JetBrains.Util;
 using JetBrains.Util.Extension;
 using static Digma.Rider.Logging.Logger;
+
+#if (PROFILE_2023_2) // FIX_WHEN_MIN_IS_232
+using JetBrains.ReSharper.Feature.Services.Protocol;
+#else
+using JetBrains.RdBackend.Common.Features;
+#endif
 
 namespace Digma.Rider.Protocol
 {

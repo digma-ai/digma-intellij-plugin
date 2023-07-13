@@ -1,25 +1,23 @@
 package org.digma.intellij.plugin.posthog
 
-import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.application.ApplicationInfo
-import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.extensions.PluginDescriptor
 import com.intellij.openapi.project.Project
 import com.posthog.java.PostHog
-import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.model.InsightType
+import org.digma.intellij.plugin.model.rest.AboutResult
+import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
+import org.digma.intellij.plugin.semanticversion.SemanticVersionUtil
+import org.threeten.extra.Hours
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.time.Duration
+import java.time.Instant
 import java.time.LocalDateTime
-import java.util.Optional
 
 class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
 
     companion object {
-        private val LOGGER = Logger.getInstance(ActivityMonitor::class.java)
-
         @JvmStatic
         fun getInstance(project: Project): ActivityMonitor {
             return project.getService(ActivityMonitor::class.java)
@@ -33,6 +31,7 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
     private var postHog: PostHog? = null
     private var lastLensClick: LocalDateTime? = null
     private var lastInsightsViewed: HashSet<InsightType>? = null
+    private var lastConnectionErrorTime: Instant = Instant.MIN
 
     init {
         val hostname = CommonUtils.getLocalHostname()
@@ -83,8 +82,13 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
         postHog?.capture(userId, eventName, tags)
     }
 
-    fun registerLensClicked() {
+    fun registerLensClicked(lens: String) {
         lastLensClick = LocalDateTime.now()
+        postHog?.capture(
+            userId,
+            "lens clicked",
+            mapOf("lens" to lens)
+        )
     }
 
     fun registerSidePanelOpened() {
@@ -109,11 +113,19 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
     }
 
     fun registerConnectionError(action: String, message: String) {
-        postHog?.capture(userId, "connection error", mapOf("reason" to message, "action" to action))
+        val oneHourAgo = Instant.now().minus(Hours.of(1))
+        if (lastConnectionErrorTime.isBefore(oneHourAgo)) {
+            postHog?.capture(userId, "connection error", mapOf("reason" to message, "action" to action))
+            lastConnectionErrorTime = Instant.now()
+        }
     }
 
     fun registerFirstInsightReceived() {
         postHog?.capture(userId, "insight first-received")
+    }
+
+    fun registerFirstAssetsReceived() {
+        postHog?.capture(userId, "plugin first-assets")
     }
 
     fun registerObservabilityOn() {
@@ -154,6 +166,18 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
         )
     }
 
+    fun reportRunConfig(runConfigTypeName: String, observabilityEnabled: Boolean, connectedToBackend: Boolean) {
+        postHog?.capture(
+            userId,
+            "run config",
+            mapOf(
+                "run.config.type" to runConfigTypeName,
+                "observability.enabled" to observabilityEnabled,
+                "backend.connected" to connectedToBackend,
+            )
+        )
+    }
+
     fun registerInsightsViewed(insightTypes: List<out InsightType>) {
         val newInsightsViewed = HashSet(insightTypes)
         if (lastInsightsViewed != null && lastInsightsViewed == newInsightsViewed)
@@ -167,11 +191,44 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
         )
     }
 
-    fun registerInsightButtonClicked(button: String) {
+    fun registerButtonClicked(panel: MonitoredPanel, button: String) {
+        postHog?.capture(
+            userId,
+            "button-clicked",
+            mapOf(
+                "panel" to panel.name,
+                "button" to button
+            )
+        )
+    }
+
+   fun registerSpanLinkClicked(insight: InsightType) {
+       postHog?.capture(
+           userId,
+           "span-link clicked",
+           mapOf(
+               "panel" to MonitoredPanel.Insights.name,
+               "insight" to insight.name
+           )
+       )
+   }
+
+   fun registerSpanLinkClicked(panel: MonitoredPanel) {
+        postHog?.capture(
+            userId,
+            "span-link clicked",
+            mapOf("panel" to panel.name)
+        )
+    }
+
+    fun registerButtonClicked(button: String, insight: InsightType) {
         postHog?.capture(
             userId,
             "insights button-clicked",
-            mapOf("button" to button)
+            mapOf(
+                "button" to button,
+                "insight" to insight.name
+            )
         )
     }
 
@@ -183,11 +240,18 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
         postHog?.capture(userId, "plugin uninstalled")
     }
 
-
-    fun registerServerVersion(applicationVersion: String) {
+    fun registerServerInfo(serverInfo: AboutResult) {
         postHog?.set(
             userId,
-            mapOf("server.version" to applicationVersion)
+            mapOf("server.version" to serverInfo.applicationVersion,
+                "server.deploymentType" to if(serverInfo.deploymentType != null) serverInfo.deploymentType else BackendDeploymentType.Unknown )
+        )
+    }
+
+    fun registerContainerEngine(containerPlatform: String) {
+        postHog?.set(
+            userId,
+            mapOf("user.container-engine" to containerPlatform)
         )
     }
 
@@ -197,10 +261,7 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
         val ideName = ideInfo.versionName
         val ideVersion = ideInfo.fullVersion
         val ideBuildNumber = ideInfo.build.asString()
-        val pluginVersion =
-            Optional.ofNullable(PluginManagerCore.getPlugin(com.intellij.openapi.extensions.PluginId.getId(PluginId.PLUGIN_ID)))
-                .map(PluginDescriptor::getVersion)
-                .orElse("unknown")
+        val pluginVersion = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
 
         postHog?.set(
             userId,
@@ -214,6 +275,7 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
             )
         )
     }
+
 
 //    override fun dispose() {
 //        try {

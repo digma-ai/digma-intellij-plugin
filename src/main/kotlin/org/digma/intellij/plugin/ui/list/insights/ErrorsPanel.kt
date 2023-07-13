@@ -31,6 +31,7 @@ fun errorsPanel(project: Project, modelObject: ErrorInsight): JPanel {
         }else "me"
         val errorText = buildLinkTextWithGrayedAndDefaultLabelColorPart(error.errorType ,"From", from)
         val link = ActionLink(errorText) {
+            ActivityMonitor.getInstance(project).registerCustomEvent("error-insight top-error-clicked", null)
             val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
             actionListener.showErrorDetails(error)
         }
@@ -41,7 +42,7 @@ fun errorsPanel(project: Project, modelObject: ErrorInsight): JPanel {
     val expandButton = ListItemActionButton("Expand")
     expandButton.addActionListener {
         project.getService(InsightsActionsService::class.java).showErrorsTab(modelObject)
-        ActivityMonitor.getInstance(project).registerInsightButtonClicked("expand-errors")
+        ActivityMonitor.getInstance(project).registerButtonClicked("expand-errors", modelObject.type)
     }
 
     return createInsightPanel(

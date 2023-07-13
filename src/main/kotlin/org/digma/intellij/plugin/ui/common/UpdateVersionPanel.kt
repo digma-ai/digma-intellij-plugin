@@ -1,14 +1,10 @@
 package org.digma.intellij.plugin.ui.common
 
 import com.intellij.ide.BrowserUtil
-import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.components.service
+import com.intellij.openapi.observable.properties.AtomicProperty
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.io.FileUtil
-import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
@@ -19,7 +15,6 @@ import org.digma.intellij.plugin.updates.UpdateState
 import org.digma.intellij.plugin.updates.UpdatesService
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import java.nio.file.Path
 import javax.swing.BorderFactory
 import javax.swing.Box
 import javax.swing.BoxLayout
@@ -30,76 +25,41 @@ import javax.swing.JPanel
 import javax.swing.SwingConstants
 
 
+const val UPDATE_GUIDE_DOCKER_COMPOSE_PATH = "/guides/upgrade_docker_compose.md"
+const val UPDATE_GUIDE_DOCKER_COMPOSE_NAME = "upgrade_docker_compose.md"
+const val UPDATE_GUIDE_HELM_PATH = "/guides/upgrade_helm.md"
+const val UPDATE_GUIDE_HELM_NAME = "upgrade_helm.md"
+
 class UpdateVersionPanel(
     val project: Project
-) : DigmaResettablePanel(), Disposable {
+) : DigmaResettablePanel() {
 
-    private val logger: Logger = Logger.getInstance(UpdateVersionPanel::class.java)
+    private var updateState = project.service<UpdatesService>().evalAndGetState()
 
-    private val updatesService: UpdatesService = UpdatesService.getInstance(project)
-    private val updateGuideDockerCompose: VirtualFile = loadFile("guides/upgrade_docker_compose.md")
-    private val updateGuideForHelm: VirtualFile = loadFile("guides/upgrade_helm.md")
+    private val updateTextProperty = AtomicProperty("")
 
     init {
-        updatesService.affectedPanel = this
-
+        project.service<UpdatesService>().affectedPanel = this
         isOpaque = false
         layout = BoxLayout(this, BoxLayout.X_AXIS)
-
         isVisible = false
-
-        rebuildInBackground()
+        buildItemsInPanel()
+        changeState()
     }
 
-    companion object {
-
-        protected val tempDirForGuides = FileUtil.createTempDirectory("digma_", "_guides", true)
-
-        fun loadFile(resourceName: String): VirtualFile {
-            val resourceInputStream = UpdateVersionPanel.javaClass.classLoader.getResourceAsStream(resourceName)
-            val ioFile = Path.of(tempDirForGuides.absolutePath, resourceName).toFile()
-            FileUtil.createParentDirs(ioFile)
-
-            resourceInputStream.use { input ->
-                ioFile.outputStream().use { output ->
-                    input.copyTo(output)
-                }
-            }
-
-            return LocalFileSystem.getInstance().findFileByIoFile(ioFile)!!
-        }
-
+    private fun changeState() {
+        updateTextProperty.set(buildText(updateState))
+        isVisible = updateState.shouldUpdateAny()
     }
+
 
     override fun reset() {
-        rebuildInBackground()
+        updateState = project.service<UpdatesService>().evalAndGetState()
+        changeState()
     }
 
-    fun rebuildInBackground() {
 
-        ApplicationManager.getApplication().invokeLater {
-
-            removeExistingComponentsIfPresent()
-
-            val updateState = updatesService.evalAndGetState()
-            if (updateState.shouldUpdateAny()) {
-                buildItemsInPanel(updateState)
-                isVisible = true
-            } else {
-                isVisible = false
-            }
-        }
-    }
-
-    private fun removeExistingComponentsIfPresent() {
-        if (components.isNotEmpty()) {
-            this.components.forEach {
-                this.remove(it)
-            }
-        }
-    }
-
-    fun buildItemsInPanel(updateState: UpdateState) {
+    private fun buildItemsInPanel() {
         val borderedPanel = JPanel()
         borderedPanel.layout = BoxLayout(borderedPanel, BoxLayout.Y_AXIS)
         borderedPanel.isOpaque = true
@@ -114,26 +74,30 @@ class UpdateVersionPanel(
         contentPanel.border = JBUI.Borders.empty(4)
 
         val icon = JLabel(getIcon())
-        contentPanel.add(Box.createHorizontalStrut(5));
+        contentPanel.add(Box.createHorizontalStrut(5))
         contentPanel.add(icon)
-        contentPanel.add(Box.createHorizontalStrut(5));
-        val updateTextLabel = JLabel(buildText(updateState))
+        contentPanel.add(Box.createHorizontalStrut(5))
+        val updateTextLabel = JLabel(updateTextProperty.get())
+        updateTextProperty.afterChange(project.service<UpdatesService>()) {
+            updateTextLabel.text = updateTextProperty.get()
+        }
+
         contentPanel.add(updateTextLabel)
-        contentPanel.add(Box.createHorizontalStrut(5));
+        contentPanel.add(Box.createHorizontalStrut(5))
         val updateButton = UpdateActionButton()
         contentPanel.add(updateButton)
-        contentPanel.add(Box.createHorizontalStrut(5));
+        contentPanel.add(Box.createHorizontalStrut(5))
 
         updateButton.addActionListener {
             // the update action itself
             if (updateState.shouldUpdateBackend) {
                 when (updateState.backendDeploymentType) {
                     BackendDeploymentType.Helm -> {
-                        EditorService.getInstance(project).openVirtualFile(updateGuideForHelm, true)
+                        EditorService.getInstance(project).openClasspathResourceReadOnly(UPDATE_GUIDE_HELM_NAME,UPDATE_GUIDE_HELM_PATH)
                     }
 
                     BackendDeploymentType.DockerCompose -> {
-                        EditorService.getInstance(project).openVirtualFile(updateGuideDockerCompose, true)
+                        EditorService.getInstance(project).openClasspathResourceReadOnly(UPDATE_GUIDE_DOCKER_COMPOSE_NAME,UPDATE_GUIDE_DOCKER_COMPOSE_PATH)
                     }
 
                     BackendDeploymentType.DockerExtension -> {
@@ -152,7 +116,7 @@ class UpdateVersionPanel(
             }
 
             // post click
-            updatesService.updateButtonClicked()
+            project.service<UpdatesService>().updateButtonClicked()
             this.isVisible = false
         }
 
@@ -162,14 +126,12 @@ class UpdateVersionPanel(
         this.add(borderedPanel)
     }
 
-    fun buildText(updateState: UpdateState): String {
-        val txt: String
-        if (updateState.shouldUpdateBackend) {
-            txt = asHtml("<b>Update Recommended |</b> Digma analysis backend")
+    private fun buildText(updateState: UpdateState): String {
+        return if (updateState.shouldUpdateBackend) {
+            asHtml("<b>Update Recommended |</b> Digma analysis backend")
         } else {
-            txt = asHtml("<b>Update Recommended |</b> Digma IDE plugin")
+            asHtml("<b>Update Recommended |</b> Digma IDE plugin")
         }
-        return txt
     }
 
     private fun getIcon(): Icon {
@@ -180,9 +142,6 @@ class UpdateVersionPanel(
         }
     }
 
-    override fun dispose() {
-
-    }
 }
 
 private class UpdateActionButton : JButton() {

@@ -19,7 +19,7 @@ open class SpanInfo
 constructor(
         open val instrumentationLibrary: String,
         open val name: String,
-        open val spanCodeObjectId: String?, //TODO: should be not null, somehow the backend returns nulls on endpoints
+        open val spanCodeObjectId: String,
         open val displayName: String,
         open val methodCodeObjectId: String?,
         open val kind: String?,

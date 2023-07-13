@@ -7,6 +7,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
 import org.digma.intellij.plugin.model.rest.AboutResult;
+import org.digma.intellij.plugin.model.rest.assets.AssetsRequest;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
@@ -16,8 +17,14 @@ import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightReque
 import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsRequest;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
+import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanRequest;
+import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanResponse;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
+import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
+import org.digma.intellij.plugin.model.rest.livedata.DurationLiveDataRequest;
+import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation;
+import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigationRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
@@ -28,6 +35,7 @@ import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
+import retrofit2.converter.scalars.ScalarsConverterFactory;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.Headers;
@@ -88,6 +96,10 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         return execute(() -> client.analyticsProvider.getInsightsOfMethods(insightsOfMethodsRequest));
     }
 
+    public InsightsOfSingleSpanResponse getInsightsForSingleSpan(InsightsOfSingleSpanRequest insightsOfSingleSpanRequest){
+        return execute(() -> client.analyticsProvider.getInsightsForSingleSpan(insightsOfSingleSpanRequest));
+    }
+
     @Override
     public List<GlobalInsight> getGlobalInsights(InsightsRequest insightsRequest) {
         return execute(() -> client.analyticsProvider.getGlobalInsights(insightsRequest));
@@ -133,6 +145,21 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     @Override
     public RecentActivityResult getRecentActivity(RecentActivityRequest recentActivityRequest) {
         return execute(() -> client.analyticsProvider.getRecentActivity(recentActivityRequest));
+    }
+
+    @Override
+    public DurationLiveData getDurationLiveData(DurationLiveDataRequest durationLiveDataRequest) {
+        return execute(() -> client.analyticsProvider.getDurationLiveData(durationLiveDataRequest));
+    }
+
+    @Override
+    public CodeObjectNavigation getCodeObjectNavigation(CodeObjectNavigationRequest codeObjectNavigationRequest) {
+        return execute(() -> client.analyticsProvider.getCodeObjectNavigation(codeObjectNavigationRequest));
+    }
+
+    @Override
+    public String getAssets(AssetsRequest assetsRequest) {
+        return execute(() -> client.analyticsProvider.getAssets(assetsRequest));
     }
 
     @Override
@@ -225,6 +252,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
             Retrofit retrofit = new Retrofit.Builder()
                     .baseUrl(baseUrl)
                     .client(okHttpClient)
+                    //ScalarsConverterFactory must be the first, it supports serializing to plain String, see getAssets
+                    .addConverterFactory(ScalarsConverterFactory.create())
                     .addConverterFactory(jacksonFactory)
                     .validateEagerly(true)
                     .build();
@@ -335,6 +364,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
+        @POST("/CodeAnalytics/codeObjects/insights_of_single")
+        Call<InsightsOfSingleSpanResponse> getInsightsForSingleSpan(@Body InsightsOfSingleSpanRequest insightsOfSingleSpanRequest);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
         @POST("/CodeAnalytics/insights")
         Call<List<GlobalInsight>> getGlobalInsights(@Body InsightsRequest insightsRequest);
 
@@ -401,6 +437,28 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @POST("/CodeAnalytics/codeObjects/recent_activity")
         Call<RecentActivityResult> getRecentActivity(@Body RecentActivityRequest recentActivityRequest);
+
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/LiveData/liveData")
+        Call<DurationLiveData> getDurationLiveData(@Body DurationLiveDataRequest durationLiveDataRequest);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/CodeAnalytics/codeObjects/span_navigation")
+        Call<CodeObjectNavigation> getCodeObjectNavigation(@Body CodeObjectNavigationRequest codeObjectNavigationRequest);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/CodeAnalytics/codeObjects/assets")
+        Call<String> getAssets(@Body AssetsRequest assetsRequest);
 
         @Headers({
                 "Accept: application/+json",

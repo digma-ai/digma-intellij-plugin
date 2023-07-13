@@ -9,10 +9,11 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.common.buildPreviewListPanel
 import org.digma.intellij.plugin.ui.common.statuspanels.createLoadingInsightsPanel
-import org.digma.intellij.plugin.ui.common.statuspanels.createNoDataYetPanel
+import org.digma.intellij.plugin.ui.common.statuspanels.createNoDataYetEmptyStatePanel
 import org.digma.intellij.plugin.ui.common.statuspanels.createNoInsightsPanel
 import org.digma.intellij.plugin.ui.common.statuspanels.createNoObservabilityPanel
 import org.digma.intellij.plugin.ui.common.statuspanels.createPendingInsightsPanel
+import org.digma.intellij.plugin.ui.common.statuspanels.createStartupEmptyStatePanel
 import org.digma.intellij.plugin.ui.list.ScrollablePanelList
 import org.digma.intellij.plugin.ui.list.insights.InsightsList
 import org.digma.intellij.plugin.ui.list.insights.PreviewList
@@ -106,8 +107,10 @@ private fun wrapWithEmptyStatuses(project: Project, insightsPanel: DigmaTabPanel
     val noInsightsPanel = createNoInsightsPanel()
     val pendingInsightsPanel = createPendingInsightsPanel()
     val loadingInsightsPanel = createLoadingInsightsPanel()
-    val noDataYetPanel = createNoDataYetPanel()
+    val noDataYetPanel = createNoDataYetEmptyStatePanel()
     val noObservabilityPanel = createNoObservabilityPanel(project, insightsModel)
+
+    val startupEmpty = createStartupEmptyStatePanel(project)
 
     emptyStatusesCardsPanel.add(insightsPanel, UIInsightsStatus.Default.name)
     emptyStatusesCardsLayout.addLayoutComponent(insightsPanel, UIInsightsStatus.Default.name)
@@ -127,9 +130,10 @@ private fun wrapWithEmptyStatuses(project: Project, insightsPanel: DigmaTabPanel
     emptyStatusesCardsPanel.add(noObservabilityPanel, UIInsightsStatus.NoObservability.name)
     emptyStatusesCardsLayout.addLayoutComponent(noObservabilityPanel, UIInsightsStatus.NoObservability.name)
 
-    emptyStatusesCardsLayout.show(emptyStatusesCardsPanel,UIInsightsStatus.Default.name)
+    emptyStatusesCardsPanel.add(startupEmpty, UIInsightsStatus.Startup.name)
+    emptyStatusesCardsLayout.addLayoutComponent(startupEmpty, UIInsightsStatus.Startup.name)
 
-
+    emptyStatusesCardsLayout.show(emptyStatusesCardsPanel,UIInsightsStatus.Startup.name)
 
 
     val resultPanel = object : DigmaTabPanel() {
@@ -149,8 +153,13 @@ private fun wrapWithEmptyStatuses(project: Project, insightsPanel: DigmaTabPanel
                 noObservabilityPanel.reset()
             }
 
-            Log.log(logger::debug, project, "Changing to empty state card  ${insightsModel.status.name}")
-            emptyStatusesCardsLayout.show(emptyStatusesCardsPanel, insightsModel.status.name)
+            if (insightsModel.status == UIInsightsStatus.Startup){
+                emptyStatusesCardsLayout.show(emptyStatusesCardsPanel,UIInsightsStatus.Startup.name)
+            }else{
+                Log.log(logger::debug, project, "Changing to empty state card  ${insightsModel.status.name}")
+                emptyStatusesCardsLayout.show(emptyStatusesCardsPanel, insightsModel.status.name)
+            }
+
         }
     }
 

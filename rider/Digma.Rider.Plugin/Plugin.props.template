@@ -1,0 +1,19 @@
+<Project>
+
+  <PropertyGroup>
+    <SdkVersion>@RESHARPER_VERSION@</SdkVersion>
+    <DefineConstants>@VERSION_CONSTANT@</DefineConstants>
+
+    <Title>DigmaRiderPlugin</Title>
+    <Description>Digma Rider Plugin</Description>
+
+    <Authors>Digma</Authors>
+    <Copyright>Copyright $([System.DateTime]::Now.Year) Maintainers of DigmaRiderPlugin</Copyright>
+    <PackageTags>digma rider plugin</PackageTags>
+
+    <PackageProjectUrl></PackageProjectUrl>
+    <PackageLicenseUrl></PackageLicenseUrl>
+    <PackageIconUrl></PackageIconUrl>
+  </PropertyGroup>
+
+</Project>

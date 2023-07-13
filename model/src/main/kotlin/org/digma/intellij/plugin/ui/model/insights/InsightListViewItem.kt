@@ -27,11 +27,16 @@ open class InsightListViewItem<INSIGHT : CodeObjectInsight>(insight: INSIGHT) :
                 InsightType.SpanDurationBreakdown -> 68
                 // HTTP Endpoints
                 InsightType.EndpointSpaNPlusOne -> 55
+                InsightType.EndpointSessionInView -> 56
+                InsightType.EndpointChattyApi -> 57
+
                 InsightType.SlowestSpans -> 40
                 InsightType.LowUsage -> 30
                 InsightType.NormalUsage -> 50
                 InsightType.HighUsage -> 10
                 InsightType.SlowEndpoint -> 20
+                InsightType.EndpointDurationSlowdown -> 25 //??? where it should be ?
+                InsightType.EndpointBreakdown -> 5
                 InsightType.Unmapped -> 200
             }
         }

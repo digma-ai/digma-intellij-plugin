@@ -25,6 +25,7 @@ import kotlin.Pair;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.ReadActions;
 import org.digma.intellij.plugin.document.DocumentInfoService;
+import org.digma.intellij.plugin.editor.EditorUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
@@ -138,26 +139,30 @@ public class PythonLanguageService implements LanguageService {
 
         var functionName = PythonLanguageUtils.extractFunctionNameFromCodeObjectId(methodId);
 
-        var functions = PyFunctionNameIndex.find(functionName, project, GlobalSearchScope.allScope(project));
 
-        //PyFunctionNameIndex may find many functions, we want only one, so if we found it break the loop
-        boolean found = false;
-        for (PyFunction function : functions) {
-            if (function.isValid()) {
-                var codeObjectId = PythonLanguageUtils.createPythonMethodCodeObjectId(project, function);
-                List<String> allIds = PythonAdditionalIdsProvider.getAdditionalIdsInclusive(codeObjectId, false);
-                if (allIds.contains(methodId) && (function.canNavigateToSource())) {
-                    Log.log(LOGGER::debug, "navigating to method {}", function);
-                    found = true;
-                    function.navigate(true);
-                    break;
+        ReadActions.ensureReadAction(() -> {
+            var functions = PyFunctionNameIndex.find(functionName, project, GlobalSearchScope.allScope(project));
+
+            //PyFunctionNameIndex may find many functions, we want only one, so if we found it break the loop
+            boolean found = false;
+            for (PyFunction function : functions) {
+                if (function.isValid()) {
+                    var codeObjectId = PythonLanguageUtils.createPythonMethodCodeObjectId(project, function);
+                    List<String> allIds = PythonAdditionalIdsProvider.getAdditionalIdsInclusive(codeObjectId, false);
+                    if (allIds.contains(methodId) && (function.canNavigateToSource())) {
+                        Log.log(LOGGER::debug, "navigating to method {}", function);
+                        found = true;
+                        function.navigate(true);
+                        break;
+                    }
                 }
             }
-        }
 
-        if (!found) {
-            navigateToMethodFallback(methodId);
-        }
+            if (!found) {
+                navigateToMethodFallback(methodId);
+            }
+        });
+
     }
 
     private void navigateToMethodFallback(String methodId) {
@@ -176,7 +181,7 @@ public class PythonLanguageService implements LanguageService {
                 // and the user opens files, selects tabs or moves the caret. then when indexing is finished
                 // we have the list of methods but then psiMethod.navigate doesn't work.
                 // navigation to source using the editor does work in these circumstances.
-                var selectedEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+                var selectedEditor = EditorUtils.getSelectedTextEditorForFile(psiFile.getVirtualFile(), FileEditorManager.getInstance(project));
                 if (selectedEditor != null) {
                     Log.log(LOGGER::debug, "moving caret to offset of function {}", pyFunction);
                     selectedEditor.getCaretModel().moveToOffset(pyFunction.getTextOffset());
@@ -204,24 +209,26 @@ public class PythonLanguageService implements LanguageService {
 
             var functionName = PythonLanguageUtils.extractFunctionNameFromCodeObjectId(methodId);
 
-            var functions = PyFunctionNameIndex.find(functionName, project, GlobalSearchScope.projectScope(project));
+            ReadActions.ensureReadAction(() -> {
+                var functions = PyFunctionNameIndex.find(functionName, project, GlobalSearchScope.projectScope(project));
 
-            //PyFunctionNameIndex may find many functions, we want only one, so if we found it break the loop
-            // assuming that our createPythonMethodCodeObjectId returns a unique id
-            for (PyFunction function : functions) {
-                if (function.isValid()) {
-                    PsiFile psiFile = function.getContainingFile();
-                    if (PythonLanguageUtils.isProjectFile(project, psiFile)) {
-                        var codeObjectId = PythonLanguageUtils.createPythonMethodCodeObjectId(project, function);
-                        List<String> allIds = PythonAdditionalIdsProvider.getAdditionalIdsInclusive(codeObjectId, false);
-                        if (allIds.contains(methodId)) {
-                            String url = PsiUtils.psiFileToUri(psiFile);
-                            workspaceUris.put(codeObjectId, url);
-                            break;
+                //PyFunctionNameIndex may find many functions, we want only one, so if we found it break the loop
+                // assuming that our createPythonMethodCodeObjectId returns a unique id
+                for (PyFunction function : functions) {
+                    if (function.isValid()) {
+                        PsiFile psiFile = function.getContainingFile();
+                        if (PythonLanguageUtils.isProjectFile(project, psiFile)) {
+                            var codeObjectId = PythonLanguageUtils.createPythonMethodCodeObjectId(project, function);
+                            List<String> allIds = PythonAdditionalIdsProvider.getAdditionalIdsInclusive(codeObjectId, false);
+                            if (allIds.contains(methodId)) {
+                                String url = PsiUtils.psiFileToUri(psiFile);
+                                workspaceUris.put(codeObjectId, url);
+                                break;
+                            }
                         }
                     }
                 }
-            }
+            });
         });
 
         return workspaceUris;
@@ -267,23 +274,24 @@ public class PythonLanguageService implements LanguageService {
     }
 
     @Override
-    public void environmentChanged(String newEnv) {
-
-        EDT.ensureEDT(() -> {
-            var fileEditor = FileEditorManager.getInstance(project).getSelectedEditor();
-            if (fileEditor != null) {
-                var file = fileEditor.getFile();
-                var psiFile = PsiManager.getInstance(project).findFile(file);
-                if (psiFile != null && isRelevant(psiFile)) {
-                    var selectedTextEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
-                    if (selectedTextEditor != null) {
-                        int offset = selectedTextEditor.getCaretModel().getOffset();
-                        var methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset);
-                        CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
+    public void environmentChanged(String newEnv, boolean refreshInsightsView) {
+        if (refreshInsightsView) {
+            EDT.ensureEDT(() -> {
+                var fileEditor = FileEditorManager.getInstance(project).getSelectedEditor();
+                if (fileEditor != null) {
+                    var file = fileEditor.getFile();
+                    var psiFile = PsiManager.getInstance(project).findFile(file);
+                    if (psiFile != null && isRelevant(psiFile)) {
+                        var selectedTextEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+                        if (selectedTextEditor != null) {
+                            int offset = selectedTextEditor.getCaretModel().getOffset();
+                            var methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset);
+                            CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
 
         PythonCodeLensService.getInstance(project).environmentChanged(newEnv);
     }

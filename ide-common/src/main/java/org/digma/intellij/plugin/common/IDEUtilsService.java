@@ -5,6 +5,8 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.util.PlatformUtils;
+import org.digma.intellij.plugin.persistence.PersistenceData;
+import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.psi.SupportedLanguages;
 import org.jetbrains.annotations.NotNull;
@@ -25,6 +27,23 @@ public class IDEUtilsService {
         return project.getService(IDEUtilsService.class);
     }
 
+
+    public static boolean isAlreadyPassedInstallationWizard(){
+        PersistenceData persistenceDataState = PersistenceService.getInstance().getState();
+        if (IDEUtilsService.isIdeaIDE() && persistenceDataState.getAlreadyPassedTheInstallationWizardForIdeaIDE() ||
+                IDEUtilsService.isRiderIDE() && persistenceDataState.getAlreadyPassedTheInstallationWizardForRiderIDE() ||
+                IDEUtilsService.isPyCharmIDE() && persistenceDataState.getAlreadyPassedTheInstallationWizardForPyCharmIDE()
+        )   {
+            return true;
+        }
+
+        return false;
+    }
+
+
+    public static boolean shouldOpenWizard(){
+        return !isAlreadyPassedInstallationWizard();
+    }
 
 
     /*

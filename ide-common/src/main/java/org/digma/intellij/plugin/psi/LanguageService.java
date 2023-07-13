@@ -143,8 +143,6 @@ public interface LanguageService extends Disposable {
      * MethodInfo or a file.
      * for example: ErrorsProvider.getErrorDetails may be clicked from the summary view, in that case there was no
      * code object discovery and the file is probably not opened. in that case we have only methodCodeObjectId.
-     * Also, WorkspaceUrisHelper#findWorkspaceUrisForSpans calls this method if summary view has SpanDurationChangeInsight
-     * and there is no context like MethodInfo or file.
      * This method must be executed in ReadAction or EDT.
      */
     @NotNull
@@ -267,7 +265,7 @@ public interface LanguageService extends Disposable {
     /**
      * let language services do something on environmentChanged. for example to update the current method context.
      */
-    void environmentChanged(String newEnv);
+    void environmentChanged(String newEnv, boolean refreshInsightsView);
 
 
     @NotNull
@@ -295,5 +293,9 @@ public interface LanguageService extends Disposable {
 
     default boolean instrumentMethod(@NotNull CanInstrumentMethodResult result){
         return false;
+    }
+
+    // addDependencyToOtelLib so could manually instrument (so canInstrumentMethod would return true)
+    default void addDependencyToOtelLib(@NotNull Project project, @NotNull String methodId) {
     }
 }

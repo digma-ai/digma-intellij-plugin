@@ -19,6 +19,7 @@ import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
 import org.digma.intellij.plugin.view.ListViewBuilder;
 import org.digma.intellij.plugin.view.ListViewItemBuilder;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,9 +37,13 @@ public class InsightsViewBuilder extends ListViewBuilder {
         this.buildersHolder = Objects.requireNonNull(buildersHolder, "buildersHolder must not be null");
     }
 
-    @SuppressWarnings("unchecked")
     @NotNull
-    public List<ListViewItem<?>> build(Project project, @NotNull MethodInfo methodInfo, List<? extends CodeObjectInsight> codeObjectInsights) {
+    public List<ListViewItem<?>> build(Project project, List<? extends CodeObjectInsight> codeObjectInsights) {
+        return build(project,null,codeObjectInsights);
+    }
+
+    @NotNull
+    public List<ListViewItem<?>> build(Project project, @Nullable MethodInfo methodInfo, List<? extends CodeObjectInsight> codeObjectInsights) {
 
         adjustToHttpIfNeeded(codeObjectInsights);
 
@@ -46,16 +51,19 @@ public class InsightsViewBuilder extends ListViewBuilder {
 
         codeObjectInsights.forEach(insight -> {
             final ListViewItemBuilder<CodeObjectInsight> builder = (ListViewItemBuilder<CodeObjectInsight>) buildersHolder.getBuilder(insight.getType());
-            final List<ListViewItem<?>> insightListItems = builder.build(project, methodInfo, insight, groupManager);
+            final List<ListViewItem<?>> insightListItems = builder.build(project, insight, groupManager);
             allItems.addAll(insightListItems);
         });
 
-        Set<String> spansThatHaveNoInsight = findLocalSpansThatHaveNoInsights(methodInfo, codeObjectInsights);
-        if (!spansThatHaveNoInsight.isEmpty()) {
-            buildItemsForNoDataYet(spansThatHaveNoInsight);
-        }
 
-        buildNoObservabilityPanelIfNeed(project, methodInfo, codeObjectInsights, allItems);
+        if (methodInfo != null) {
+            Set<String> spansThatHaveNoInsight = findLocalSpansThatHaveNoInsights(methodInfo, codeObjectInsights);
+            if (!spansThatHaveNoInsight.isEmpty()) {
+                buildItemsForNoDataYet(spansThatHaveNoInsight);
+            }
+
+            buildNoObservabilityPanelIfNeed(project, methodInfo, codeObjectInsights, allItems);
+        }
 
         allItems.addAll(groupManager.getGroupItems());
 
@@ -69,22 +77,19 @@ public class InsightsViewBuilder extends ListViewBuilder {
                 .collect(Collectors.toSet());
 
         Set<String> spansThatHaveInsights = codeObjectInsights.stream()
-                .filter(it -> it instanceof SpanInsight)
+                .filter(SpanInsight.class::isInstance)
                 .map(it -> (SpanInsight) it)
-                .map(SpanInsight::spanName)// span name without instrumentation library
+                .map(SpanInsight::getSpanDisplayName)// span name without instrumentation library
                 .collect(Collectors.toSet());
 
         // spansOfMethod minus spansThatHaveInsights
-        Set<String> spansThatHaveNoInsights = Sets.difference(spansOfMethod, spansThatHaveInsights).immutableCopy();
-
-        return spansThatHaveNoInsights;
+        return Sets.difference(spansOfMethod, spansThatHaveInsights).immutableCopy();
     }
 
     protected void buildItemsForNoDataYet(Set<String> spansThatHaveNoInsight) {
-        for (String currSpanName : spansThatHaveNoInsight) {
-            String groupId = currSpanName;
+        for (String groupId : spansThatHaveNoInsight) {
             GroupListViewItem theGroup = groupManager.getOrCreateGroup(
-                    groupId, () -> new InsightGroupListViewItem(currSpanName, InsightGroupType.Span, ""));
+                    groupId, () -> new InsightGroupListViewItem(groupId, InsightGroupType.Span, ""));
 
             ListViewItem<NoDataYet> itemOfNoDataYet = new ListViewItem<>(new NoDataYet(), SORT_INDEX_HIGHEST_IRRELEVANT);
             theGroup.addItem(itemOfNoDataYet);
@@ -96,7 +101,7 @@ public class InsightsViewBuilder extends ListViewBuilder {
         if (methodInfo.hasRelatedCodeObjectIds()) return;
 
         Set<InsightType> insightTypes = codeObjectInsights.stream()
-                .map(it -> it.getType())
+                .map(CodeObjectInsight::getType)
                 .collect(Collectors.toSet());
 
         boolean hasInsightOfErrors = insightTypes.remove(InsightType.Errors);
@@ -114,8 +119,8 @@ public class InsightsViewBuilder extends ListViewBuilder {
     protected void adjustToHttpIfNeeded(final List<? extends CodeObjectInsight> codeObjectInsights) {
         codeObjectInsights
                 .stream()
-                .filter(coi -> coi instanceof EndpointInsight)
-                .map(coi -> (EndpointInsight) coi)
+                .filter(EndpointInsight.class::isInstance)
+                .map(EndpointInsight.class::cast)
                 .forEach(EndpointSchema::adjustHttpRouteIfNeeded);
     }
 

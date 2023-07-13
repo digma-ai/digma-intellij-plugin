@@ -5,6 +5,10 @@ import com.intellij.ui.dsl.builder.RightGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.gridLayout.HorizontalAlign
 import org.digma.intellij.plugin.model.rest.insights.EPNPlusSpansInsight
+import org.digma.intellij.plugin.model.rest.insights.EndpointBreakdownInsight
+import org.digma.intellij.plugin.model.rest.insights.EndpointChattyApiInsight
+import org.digma.intellij.plugin.model.rest.insights.EndpointDurationSlowdownInsight
+import org.digma.intellij.plugin.model.rest.insights.EndpointSessionInViewInsight
 import org.digma.intellij.plugin.model.rest.insights.EndpointSchema
 import org.digma.intellij.plugin.model.rest.insights.EndpointSchema.Companion.CONSUMER_SCHEMA
 import org.digma.intellij.plugin.model.rest.insights.EndpointSchema.Companion.HTTP_SCHEMA
@@ -22,7 +26,6 @@ import org.digma.intellij.plugin.model.rest.insights.SpanDurationBreakdownInsigh
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanNPlusOneInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanScalingInsight
-import org.digma.intellij.plugin.model.rest.insights.SpanScalingRootCauseInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanSlowEndpointsInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanUsagesInsight
 import org.digma.intellij.plugin.model.rest.insights.UnmappedInsight
@@ -63,16 +66,20 @@ class InsightsListCellRenderer : AbstractPanelListCellRenderer() {
             is LowUsageInsight -> lowUsageInsightPanel(project, value.modelObject as LowUsageInsight)
             is NormalUsageInsight -> normalUsageInsightPanel(project, value.modelObject as NormalUsageInsight)
             is HighUsageInsight -> highUsageInsightPanel(project, value.modelObject as HighUsageInsight)
-            is EPNPlusSpansInsight -> ePNPlusSpansPanel(project, value.modelObject as EPNPlusSpansInsight, value.moreData)
+            is EPNPlusSpansInsight -> ePNPlusSpansPanel(project, value.modelObject as EPNPlusSpansInsight)
+            is EndpointSessionInViewInsight -> sessionInViewPanel(project, value.modelObject as EndpointSessionInViewInsight)
+            is EndpointChattyApiInsight -> chattyApiPanel(project, value.modelObject as EndpointChattyApiInsight)
+
+            is EndpointDurationSlowdownInsight -> endpointDurationSlowdownPanel(project, value.modelObject as EndpointDurationSlowdownInsight, panelsLayoutHelper)
+            is EndpointBreakdownInsight -> endpointBreakdownPanel(project, value.modelObject as EndpointBreakdownInsight)
             is SpanNPlusOneInsight -> spanNPlusOneInsightPanel(project, value.modelObject as SpanNPlusOneInsight)
             is SlowEndpointInsight -> slowEndpointPanel(project, value.modelObject as SlowEndpointInsight)
-            is SlowestSpansInsight -> slowestSpansPanel(project, value.modelObject as SlowestSpansInsight, value.moreData)
-            is SpanUsagesInsight -> spanUsagesPanel(project, value.modelObject as SpanUsagesInsight, value.moreData)
+            is SlowestSpansInsight -> slowestSpansPanel(project, value.modelObject as SlowestSpansInsight)
+            is SpanUsagesInsight -> spanUsagesPanel(project, value.modelObject as SpanUsagesInsight)
             is SpanDurationsInsight -> spanDurationPanel(project, value.modelObject as SpanDurationsInsight, panelsLayoutHelper)
-            is SpanDurationBreakdownInsight -> spanDurationBreakdownPanel(project, value.modelObject as SpanDurationBreakdownInsight, value.moreData)
-            is SpanSlowEndpointsInsight -> spanSlowEndpointsPanel(project, value.modelObject as SpanSlowEndpointsInsight, value.moreData)
-            is SpanScalingInsight -> spanScalingListViewItemsPanel(project, value.modelObject as SpanScalingInsight, value.moreData)
-            is SpanScalingRootCauseInsight -> spanScalingRootCauseItemsPanel(project, value.modelObject as SpanScalingRootCauseInsight, value.moreData)
+            is SpanDurationBreakdownInsight -> spanDurationBreakdownPanel(project, value.modelObject as SpanDurationBreakdownInsight)
+            is SpanSlowEndpointsInsight -> spanSlowEndpointsPanel(project, value.modelObject as SpanSlowEndpointsInsight)
+            is SpanScalingInsight -> spanScalingPanel(project, value.modelObject as SpanScalingInsight)
             is UnmappedInsight -> unmappedInsightPanel(project, value.modelObject as UnmappedInsight)
             is NoDataYet -> noDataYetInsightPanel()
             is NoObservability -> noObservabilityInsightPanel(project, value.modelObject as NoObservability)

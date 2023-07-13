@@ -23,7 +23,7 @@ constructor(
     val serviceName: String,
     override val name: String,
     override val instrumentationLibrary: String,
-    override val spanCodeObjectId: String?,
+    override val spanCodeObjectId: String,
     override val displayName: String,
     override val methodCodeObjectId: String?,
     override val kind: String?,

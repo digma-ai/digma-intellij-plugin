@@ -9,12 +9,14 @@ import com.intellij.openapi.rd.util.withUiContext
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.RunnableCallable
 import com.intellij.util.concurrency.NonUrgentExecutor
-import org.digma.intellij.plugin.analytics.BackendConnectionUtil
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.discovery.CodeLessSpan
+import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
+import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
 import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.service.ErrorsViewService
 import org.digma.intellij.plugin.ui.service.InsightsViewService
@@ -40,11 +42,12 @@ class RefreshService(private val project: Project) {
 
     suspend fun refreshAllForCurrentFile(file: VirtualFile) {
         Log.log(logger::debug, "Automatic refreshAllForCurrentFile started for file = {}", file.name)
-        val scope = insightsViewService.model.scope
+
         val selectedTextEditor = withUiContext {
             // this code is on the UI thread
             FileEditorManager.getInstance(project).selectedTextEditor
         }
+        var scope = insightsViewService.model.scope
         if (scope is MethodScope) {
             val documentInfoContainer = documentInfoService.getDocumentInfoByMethodInfo(scope.getMethodInfo())
 
@@ -55,14 +58,17 @@ class RefreshService(private val project: Project) {
             val documentInfoContainer = documentInfoService.getDocumentInfo(file)
             updateInsightsCacheForActiveDocument(selectedTextEditor, documentInfoContainer)
 
-            Log.log(logger::debug, "testConnectionToBackend was triggered")
-            BackendConnectionUtil.getInstance(project).testConnectionToBackend()
+            scope = insightsViewService.model.scope
+            if (scope is CodeLessSpanScope){
+                val codelessSpan = scope.getSpan()
+                updateModels(codelessSpan)
+            }
         }
     }
 
     fun refreshAllInBackground() {
-        val scope = insightsViewService.model.scope
         val selectedTextEditor = FileEditorManager.getInstance(project).selectedTextEditor
+        var scope = insightsViewService.model.scope
         val documentInfoContainer =
                 if (scope is MethodScope) {
                     documentInfoService.getDocumentInfoByMethodInfo(scope.getMethodInfo())
@@ -79,9 +85,14 @@ class RefreshService(private val project: Project) {
                 try {
                     notifyRefreshInsightsTaskStarted(documentInfoContainer?.documentInfo?.fileUri)
                     if (scope is MethodScope) {
-                        updateInsightsCacheForActiveDocumentAndRefreshViewIfNeeded(selectedTextEditor, documentInfoContainer, scope)
+                        updateInsightsCacheForActiveDocumentAndRefreshViewIfNeeded(selectedTextEditor, documentInfoContainer, scope as MethodScope)
                     } else {
                         updateInsightsCacheForActiveDocument(selectedTextEditor, documentInfoContainer)
+                        scope = insightsViewService.model.scope
+                        if (scope is CodeLessSpanScope){
+                            val codelessSpan = (scope as CodeLessSpanScope).getSpan()
+                            updateModels(codelessSpan)
+                        }
                     }
                 } finally {
                     refreshInsightsTaskScheduledLock.unlock()
@@ -118,12 +129,30 @@ class RefreshService(private val project: Project) {
             // findWorkspaceUrisForCodeObjectIdsForErrorStackTrace or findWorkspaceUrisForMethodCodeObjectIds
             // and those require a ReadAction.
             ReadAction.nonBlocking(RunnableCallable {
-                insightsViewService.updateInsightsModel(scope.getMethodInfo())
-                errorsViewService.updateErrorsModel(scope.getMethodInfo())
+                updateModels(scope.getMethodInfo())
                 documentInfoService.notifyDocumentInfoChanged(documentInfoContainer!!.psiFile)
             }).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance())
         }
     }
+
+
+
+
+    private fun updateModels(methodInfo: MethodInfo){
+        insightsViewService.updateInsightsModelFromRefresh(methodInfo)
+        errorsViewService.updateErrorsModelFromRefresh(methodInfo)
+    }
+
+    private fun updateModels(codelessSpan: CodeLessSpan){
+        insightsViewService.updateInsightsModelFromRefresh(codelessSpan)
+        errorsViewService.updateErrorsModelFromRefresh(codelessSpan)
+    }
+
+
+
+
+
+
 
     private fun checkIfDataChanged(oldInsights: Map<String, List<CodeObjectInsight>>, newInsights: Map<String, List<CodeObjectInsight>>): Boolean {
         // In Kotlin, you can compare two maps for equality using the == operator.

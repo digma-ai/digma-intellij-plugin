@@ -12,11 +12,14 @@ import org.digma.intellij.plugin.model.rest.insights.SpanDurationChangeInsight
 import org.digma.intellij.plugin.model.rest.insights.TopErrorFlowsInsight
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
 import org.digma.intellij.plugin.psi.LanguageService
+import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.summary.SummariesProvider
 import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import org.digma.intellij.plugin.ui.needToShowDurationChange
-import java.util.*
+import java.util.Collections
+import java.util.Timer
+import java.util.TimerTask
 import java.util.concurrent.locks.ReentrantLock
 
 
@@ -25,6 +28,8 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
     private val logger: Logger = Logger.getInstance(SummaryViewService::class.java)
 
     private val summariesProvider: SummariesProvider = project.getService(SummariesProvider::class.java)
+    private val settingsState: SettingsState = SettingsState.getInstance()
+    private val time: Timer = Timer()
 
     val model = Model()
 
@@ -47,7 +52,12 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
         // more than once.
         LanguageService.runWhenSmartForAll(project){
             Log.log(logger::debug, "runWhenSmart called")
-            reloadSummariesPanelInBackground(project)
+            val reloadTask = object : TimerTask() {
+                override fun run() {
+                    reloadSummariesPanel()
+                }
+            }
+            time.schedule(reloadTask, 0, settingsState.refreshDelay * 1000L)
         }
 
 
@@ -56,7 +66,7 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
             EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC,
             object : EnvironmentChanged {
 
-                override fun environmentChanged(newEnv: String?) {
+                override fun environmentChanged(newEnv: String?, refreshInsightsView: Boolean) {
                     Log.log(logger::debug, "environmentChanged called")
                     reloadSummariesPanelInBackground(project)
                 }
@@ -71,6 +81,7 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
 
     override fun dispose() {
         super.dispose()
+        time.cancel()
         environmentChangeConnection.dispose()
     }
 
@@ -83,17 +94,22 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
     private fun reloadSummariesPanelInBackground(project: Project) {
         Log.log(logger::debug, "reloadSummariesPanelInBackground called")
         val task = Runnable {
-            rebuildPanelLock.lock()
-            Log.log(logger::debug, "Lock acquired for reload Summaries panel process.")
-            try {
-                reload()
-            } finally {
-                rebuildPanelLock.unlock()
-                Log.log(logger::debug, "Lock released for reload Summaries panel process.")
-            }
+            reloadSummariesPanel()
         }
         Backgroundable.ensureBackground(project, "Summary view Reload", task)
     }
+
+    private fun reloadSummariesPanel() {
+        rebuildPanelLock.lock()
+        Log.log(logger::debug, "Lock acquired for reload Summaries panel process.")
+        try {
+            reload()
+        } finally {
+            rebuildPanelLock.unlock()
+            Log.log(logger::debug, "Lock released for reload Summaries panel process.")
+        }
+    }
+
 
     private fun reload() {
         Log.log(logger::debug, "reload called")
@@ -128,7 +144,9 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
 
         override fun isDocumentScope(): Boolean = false
 
-        override fun getScope(): String = "Current environment"
+        override fun isCodeLessSpanScope(): Boolean = false
+
+        override fun getScopeString(): String = "Current environment"
 
         override fun getScopeTooltip(): String = ""
 

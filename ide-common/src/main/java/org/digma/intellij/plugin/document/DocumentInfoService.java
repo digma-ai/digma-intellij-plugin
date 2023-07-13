@@ -147,8 +147,10 @@ public class DocumentInfoService {
 
         DocumentInfoContainer documentInfoContainer = documents.get(methodInfo.getContainingFileUri());
         if (documentInfoContainer != null) {
+            Log.log(LOGGER::debug, "DocumentInfoContainer exists for MethodInfo {}, getting insights", methodInfo.getId());
             return documentInfoContainer.getInsightsForMethod(methodInfo.getId());
         }
+        Log.log(LOGGER::debug, "DocumentInfoContainer does not exist for MethodInfo {}", methodInfo.getId());
         return Collections.emptyList();
     }
 

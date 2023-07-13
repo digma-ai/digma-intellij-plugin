@@ -20,6 +20,7 @@ import com.jetbrains.rider.projectView.SolutionLifecycleHost;
 import kotlin.Pair;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.EDT;
+import org.digma.intellij.plugin.editor.EditorUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
@@ -158,23 +159,25 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     }
 
     @Override
-    public void environmentChanged(String newEnv) {
+    public void environmentChanged(String newEnv, boolean refreshInsightsView) {
 
-        EDT.ensureEDT(() -> {
-            var fileEditor = FileEditorManager.getInstance(project).getSelectedEditor();
-            if (fileEditor != null) {
-                var file = fileEditor.getFile();
-                var psiFile = PsiManager.getInstance(project).findFile(file);
-                if (psiFile != null && isRelevant(psiFile.getVirtualFile())) {
-                    var selectedTextEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
-                    if (selectedTextEditor != null) {
-                        int offset = selectedTextEditor.getCaretModel().getOffset();
-                        var methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset);
-                        CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
+        if (refreshInsightsView) {
+            EDT.ensureEDT(() -> {
+                var fileEditor = FileEditorManager.getInstance(project).getSelectedEditor();
+                if (fileEditor != null) {
+                    var file = fileEditor.getFile();
+                    var psiFile = PsiManager.getInstance(project).findFile(file);
+                    if (psiFile != null && isRelevant(psiFile.getVirtualFile())) {
+                        var selectedTextEditor = EditorUtils.getSelectedTextEditorForFile(file, FileEditorManager.getInstance(project));
+                        if (selectedTextEditor != null) {
+                            int offset = selectedTextEditor.getCaretModel().getOffset();
+                            var methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset);
+                            CaretContextService.getInstance(project).contextChanged(methodUnderCaret);
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
 
 
         CodeLensHost.getInstance(project).environmentChanged(newEnv);

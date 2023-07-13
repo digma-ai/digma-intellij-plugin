@@ -10,7 +10,9 @@ interface PanelModel {
 
     fun isDocumentScope(): Boolean
 
-    fun getScope(): String
+    fun isCodeLessSpanScope(): Boolean
+
+    fun getScopeString(): String
 
     fun getScopeTooltip(): String
 

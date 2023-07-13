@@ -24,7 +24,7 @@ fun commonListItemPanel(panel: JPanel): JPanel {
     return wrapper
 }
 
-class RoundedPanel(val radius: Int) : JPanel() {
+open class RoundedPanel(val radius: Int) : JPanel() {
 
     init {
         isOpaque = false

@@ -27,8 +27,16 @@ public class Log {
         logger.debug(DIGMA + String.format(format.replace("{}", "%s"), args),e);
     }
 
+    public static void debugWithException(Logger logger, Project project,Throwable e, String format, Object... args) {
+        logger.debug(DIGMA_PROJECT + project.getName() + ": " + String.format(format.replace("{}", "%s"), args),e);
+    }
+
     public static void warnWithException(Logger logger,Throwable e, String format, Object... args) {
         logger.warn(DIGMA + String.format(format.replace("{}", "%s"), args),e);
+    }
+
+    public static void warnWithException(Logger logger, Project project,Throwable e, String format, Object... args) {
+        logger.warn(DIGMA_PROJECT + project.getName() + ": " + String.format(format.replace("{}", "%s"), args),e);
     }
 
 

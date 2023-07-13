@@ -60,12 +60,17 @@ object Laf {
             @JvmStatic val LIST_ITEM_BACKGROUND: JBColor = JBColor(Color(0, 0, 50, 15), Color(200, 200, 255, 20))
             @JvmStatic val TRANSPARENT: Color = Color(0, 0, 0, 0)
             @JvmStatic val BLUE_LIGHT_SHADE: Color = Color(0x8f90ff)
+            @JvmStatic val RED_OF_MISSING: JBColor = JBColor(0xE00036, 0xF93967)
+            @JvmStatic val LINK_TEXT: JBColor = JBColor(0x426DDA, 0xB9C2EB)
             @JvmStatic val ERROR_RED: Color = Color(0xf95959)      // same as in VS Code plugin
             @JvmStatic val ERROR_ORANGE: Color = Color(0xfdb44b)   // same as in VS Code plugin
             @JvmStatic val ERROR_GREEN: Color = Color(0x7dd87d)    // same as in VS Code plugin
-            @JvmStatic val BUTTON_BACKGROUND: Color = Color(0x3638CD) // suppose to be dark purple
+            @JvmStatic val BUTTON_BACKGROUND: Color = Color(0x3538CD) // suppose to be dark purple
             //@JvmStatic val SIMPLE_ICON_COLOR: JBColor = JBColor(0x222222, 0xDDDDDD)
             @JvmStatic val GRAY: Color = Color(0x8A8A8A)
+            //the LIVE_BUTTON_BORDER colors should match the colors of the rect in LiveButtonFullIconDark and LiveButtonFullIconLight
+            @JvmStatic val LIVE_BUTTON_BORDER_DARK: Color = Color(0x414363)
+            @JvmStatic val LIVE_BUTTON_BORDER_LIGHT: Color = Color(0x8f90ff)
         }
     }
 
@@ -73,12 +78,23 @@ object Laf {
         class General{
             companion object {
                 @JvmStatic val HOME: Icon = SvgIcon.asIs("/icons/home.svg")
+                @JvmStatic val HOME_DEFAULT_DARK: Icon = SvgIcon.asIs("/icons/home-default-dark.svg")
+                @JvmStatic val HOME_HOVER_DARK: Icon = SvgIcon.asIs("/icons/home-hover-dark.svg")
+                @JvmStatic val HOME_SELECTED_DARK: Icon = SvgIcon.asIs("/icons/home-selected-dark.svg")
+                @JvmStatic val HOME_DEFAULT_LIGHT: Icon = SvgIcon.asIs("/icons/home-default-light.svg")
+                @JvmStatic val HOME_HOVER_LIGHT: Icon = SvgIcon.asIs("/icons/home-hover-light.svg")
+                @JvmStatic val HOME_SELECTED_LIGHT: Icon = SvgIcon.asIs("/icons/home-selected-light.svg")
+                @JvmStatic val PROJECT_DARK: Icon = SvgIcon.asIs("/icons/project-dark.svg")
+                @JvmStatic val PROJECT_LIGHT: Icon = SvgIcon.asIs("/icons/project-light.svg")
                 @JvmStatic val ARROW_UP: Icon = SvgIcon.asIs("/icons/arrow-up.svg")
                 @JvmStatic val ARROW_DOWN: Icon = SvgIcon.asIs("/icons/arrow-down.svg")
                 @JvmStatic val DIGMA_LOGO: Icon = SvgIcon.asIs("/icons/digma-logo.svg")
                 @JvmStatic val RELATED_INSIGHTS: Icon = SvgIcon.asIs("/icons/related-insights.svg")
                 @JvmStatic val POINTER: Icon = SvgIcon.asIs("/icons/pointer.svg")
                 @JvmStatic val SLACK: Icon = SvgIcon.asIs("/icons/slack.svg")
+                @JvmStatic val TARGET: Icon = SvgIcon.asIs("/icons/target.svg")
+                @JvmStatic val TARGET_PRESSED: Icon = SvgIcon.asIs("/icons/target-pressed.svg")
+                @JvmStatic val CODE_LOCATION_LINK: Icon = SvgIcon.asIs("/icons/code-location-link.svg")
             }
         }
 
@@ -155,6 +171,21 @@ object Laf {
                 @JvmStatic val NoConnectionLight = SvgIcon.asIs("/icons/no-connection-light.svg")
                 @JvmStatic val NoErrorsDark = SvgIcon.asIs("/icons/no-errors-dark.svg")
                 @JvmStatic val NoErrorsLight = SvgIcon.asIs("/icons/no-errors-light.svg")
+
+                //These two icons LiveButtonFullIconDark and LiveButtonFullIconLight can be used as one icon
+                // for the live view button, but we probably don't need to use them, it doesn't look good.
+                // we use LiveIconDark and LiveIconLight plus regular text.
+                @JvmStatic val LiveButtonFullIconDark = SvgIcon.asIs("/icons/live-view-button-full-icon-dark.svg")
+                @JvmStatic val LiveButtonFullIconLight = SvgIcon.asIs("/icons/live-view-button-full-icon-light.svg")
+                @JvmStatic val LiveIconDark = SvgIcon.asIs("/icons/live-icon-dark.svg")
+                @JvmStatic val LiveIconLight = SvgIcon.asIs("/icons/live-icon-light.svg")
+            }
+        }
+
+        class Misc {
+            companion object {
+                @JvmStatic val Quarkus = SvgIcon.asIs("/icons/quarkus.svg")
+                @JvmStatic val SpringBoot = SvgIcon.asIs("/icons/spring-boot.svg")
             }
         }
 

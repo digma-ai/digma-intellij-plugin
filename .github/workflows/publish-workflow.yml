@@ -1,0 +1,129 @@
+
+
+name: Publish to jetbrains marketplace
+on:
+  workflow_call:
+    inputs:
+      build-profile:
+        required: true
+        type: string
+      tag-name:
+        required: true
+        type: string
+      changelog:
+        required: true
+        type: string
+jobs:
+
+  publish:
+    name: Publish Plugin
+    runs-on: ubuntu-22.04
+    steps:
+
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@master
+        with:
+          root-reserve-mb: 10000
+          temp-reserve-mb: 512
+          swap-size-mb: 1024
+          remove-android: true
+          remove-haskell: true
+          remove-codeql: true
+          remove-docker-images: true
+
+      - name: Debug
+        run: echo "Publishing ref ${{ inputs.tag-name }} with profile ${{ inputs.build-profile }} with changelog ${{ inputs.changelog }}"
+
+      - name: Fetch Sources
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.tag-name }}
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: |
+            6.0.411
+
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v1.0.4
+
+      - name: Export Changelog
+        id: exportchangelog
+        shell: bash
+        run: |
+          CHANGELOG="$(cat << 'EOM' | sed -e 's/^[[:space:]]*$//g' -e '/./,$!d'
+          ${{ inputs.changelog }}
+          EOM
+          )"
+          
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "changelog<<$EOF" >> "$GITHUB_OUTPUT"
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "$EOF" >> "$GITHUB_OUTPUT"
+
+      # Update changelog
+      - name: Patch Changelog
+        if: ${{ steps.exportchangelog.outputs.changelog != '' }}
+        env:
+          CHANGELOG: ${{ steps.exportchangelog.outputs.changelog }}
+        run: |
+          ./gradlew --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true patchChangelog --release-note="$CHANGELOG"
+
+      - name: Build plugin
+        env:
+          POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL }}
+        run: ./gradlew buildPlugin --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true
+
+      - name: Find posthog url
+        id: posthog
+        shell: bash
+        run: |
+          cd ${{ github.workspace }}/build/libs
+          FILENAME=`ls instrumented-digma-intellij-plugin*.jar`
+          unzip -q "$FILENAME" -d content
+          URL=$(cat ./content/posthog-token-url.txt)
+          echo "url=${URL}" >> "$GITHUB_OUTPUT"
+
+      - name: Debug posthog url
+        if: ${{ steps.posthog.outputs.url == '' }}
+        run: echo "posthog url is empty,failing build"
+
+      - name: Verify posthog url exists
+        if: ${{ steps.posthog.outputs.url == '' }}
+        uses: actions/github-script@v3
+        with:
+          script: |
+            core.setFailed('posthog url is empty')
+
+
+      # Publish the plugin to the Marketplace
+      - name: Publish Plugin
+        env:
+          PUBLISH_TOKEN: ${{ secrets.DIGMA_JB_INTELLIJ_PUBLISH_TOKEN }}
+          DIGMA_JB_PRIVATE_KEY_PASSWORD: ${{ secrets.DIGMA_JB_PRIVATE_KEY_PASSWORD }}
+          DIGMA_JB_CERTIFICATE_CHAIN_FILE: ${{ secrets.DIGMA_JB_CERTIFICATE_CHAIN_FILE }}
+          DIGMA_JB_PRIVATE_KEY_FILE: ${{ secrets.DIGMA_JB_PRIVATE_KEY_FILE }}
+          POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL }}
+        run: ./gradlew publishPlugin --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true
+
+
+      # todo: delete the release if workflow fails, but what about rerun ? maybe disable rerun for publish workflow
+      # Delete release on failure
+      - name: Delete release on failure
+        if: ${{ failure() || cancelled() }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release delete ${{ inputs.tag-name }} --cleanup-tag --yes
+
+      # Upload artifact as a release asset
+      - name: Upload Release Asset
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload ${{ inputs.tag-name }} ./build/distributions/*

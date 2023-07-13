@@ -1,6 +1,8 @@
+@file:Suppress("UnstableApiUsage")
+
 plugins {
     id("common-java-library")
-    `jvm-test-suite`
+    id("jvm-test-suite")
 }
 
 
@@ -8,6 +10,7 @@ dependencies {
     implementation(project(":model"))
     implementation(libs.retrofit.client)
     implementation(libs.retrofit.jackson)
+    implementation(libs.retrofit.scalars)
     implementation(libs.guava)
 }
 
@@ -19,17 +22,17 @@ testing {
         val test by getting(JvmTestSuite::class) {
 
             dependencies {
-                implementation(project)
+                implementation(project())
                 implementation(libs.kotlin.stdlib.jdk8)
                 implementation(libs.okhttp)
                 implementation(libs.okhttp.mockwebserver)
-                implementation("com.google.code.gson:gson:2.10.1")
+                implementation(libs.google.gson)
             }
 
             targets {
                 all {
                     testTask.configure {
-                        setForkEvery(1L) //because MockWebServer is static
+                        forkEvery = 1L //because MockWebServer is static
 
                         //this is only to silent the warning : see https://stackoverflow.com/questions/60915381/retrofit2-maven-project-illegal-reflective-access-warning
                         //WARNING: Illegal reflective access by retrofit2.Platform (file:/home/shalom/.gradle/caches/modules-2/files-2.1/com.squareup.retrofit2/retrofit/2.9.0/d8fdfbd5da952141a665a403348b74538efc05ff/retrofit-2.9.0.jar) to constructor java.lang.invoke.MethodHandles$Lookup(java.lang.Class,int)

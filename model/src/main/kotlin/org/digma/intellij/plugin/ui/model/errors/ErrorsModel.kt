@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.model.errors
 import org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
+import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
 import org.digma.intellij.plugin.ui.model.DocumentScope
 import org.digma.intellij.plugin.ui.model.EmptyScope
 import org.digma.intellij.plugin.ui.model.MethodScope
@@ -24,7 +25,7 @@ class ErrorsModel : PanelModel {
     var listViewItems: List<ListViewItem<CodeObjectError>> = Collections.emptyList()
     var previewListViewItems: List<ErrorsPreviewListItem> = Collections.emptyList()
     var usageStatusResult: UsageStatusResult = EmptyUsageStatusResult
-    var scope: Scope = EmptyScope("")
+    var scope: Scope = EmptyScope("Nothing here")
     var errorDetails: ErrorDetailsModel = ErrorDetailsModel()
     var card: ErrorsTabCard = ErrorsTabCard.ERRORS_LIST
 
@@ -60,7 +61,11 @@ class ErrorsModel : PanelModel {
         return scope is DocumentScope
     }
 
-    override fun getScope(): String {
+    override fun isCodeLessSpanScope(): Boolean {
+        return scope is CodeLessSpanScope
+    }
+
+    override fun getScopeString(): String {
         return scope.getScope()
     }
 

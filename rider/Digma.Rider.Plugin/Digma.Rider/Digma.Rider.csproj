@@ -10,7 +10,7 @@
     <TargetFramework>net472</TargetFramework>
     <AssemblyName>Digma.Rider</AssemblyName>
     <RootNamespace>$(AssemblyName)</RootNamespace>
-    <IsPackable>false</IsPackable>
+    <IsPackable>True</IsPackable>
     <DefineConstants>$(DefineConstants);RIDER</DefineConstants>
   </PropertyGroup>
 

@@ -13,6 +13,7 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import com.intellij.util.RunnableCallable
 import com.intellij.util.concurrency.NonUrgentExecutor
+import com.jetbrains.rd.framework.IProtocol
 import com.jetbrains.rd.util.reactive.whenTrue
 import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent
 import com.jetbrains.rdclient.util.idea.callSynchronously
@@ -66,7 +67,9 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
         }
     }
 
-
+    private fun getProtocol(model: LanguageServiceModel): IProtocol {
+        return model.protocol!! //protocol is nullable in 2023.2, remove when 2023.2 is our base
+    }
 
     /*
         the IDE remembers open files on shutdown and reopens them on startup.
@@ -208,7 +211,7 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
 
         val riderMethodUnderCaret: RiderMethodUnderCaret? =
             if (ApplicationManager.getApplication().isDispatchThread){
-                model.detectMethodUnderCaret.callSynchronously(MethodUnderCaretRequest(psiId, caretOffset),model.protocol)
+                model.detectMethodUnderCaret.callSynchronously(MethodUnderCaretRequest(psiId, caretOffset),getProtocol(model))
             }else{
                 runBlockingCancellable {
                     model.detectMethodUnderCaret.startSuspending(MethodUnderCaretRequest(psiId, caretOffset))
@@ -235,7 +238,7 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
 
         val workspaceUriPairs =
             if (ApplicationManager.getApplication().isDispatchThread){
-                model.getWorkspaceUrisForErrorStackTrace.callSynchronously(codeObjectIds,model.protocol)
+                model.getWorkspaceUrisForErrorStackTrace.callSynchronously(codeObjectIds,getProtocol(model))
             }else{
                 runBlockingCancellable {
                     model.getWorkspaceUrisForErrorStackTrace.startSuspending(codeObjectIds)
@@ -257,7 +260,7 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
 
         val workspaceUriTuples =
             if (ApplicationManager.getApplication().isDispatchThread){
-                model.getWorkspaceUrisForMethodCodeObjectIds.callSynchronously(methodCodeObjectIds,model.protocol)
+                model.getWorkspaceUrisForMethodCodeObjectIds.callSynchronously(methodCodeObjectIds,getProtocol(model))
             }else{
                 runBlockingCancellable {
                     model.getWorkspaceUrisForMethodCodeObjectIds.startSuspending(methodCodeObjectIds)
@@ -279,7 +282,7 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
 
         val workspaceUriTuples =
             if (ApplicationManager.getApplication().isDispatchThread){
-                model.getSpansWorkspaceUris.callSynchronously(spanIds,model.protocol)
+                model.getSpansWorkspaceUris.callSynchronously(spanIds,getProtocol(model))
             }else{
                 runBlockingCancellable {
                     model.getSpansWorkspaceUris.startSuspending(spanIds)
@@ -322,7 +325,7 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
 
         val result =
             if (ApplicationManager.getApplication().isDispatchThread){
-                model.isCsharpMethod.callSynchronously(methodCodeObjectId,model.protocol)
+                model.isCsharpMethod.callSynchronously(methodCodeObjectId,getProtocol(model))
             }else{
                 runBlockingCancellable {
                     model.isCsharpMethod.startSuspending(methodCodeObjectId)
@@ -334,7 +337,7 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
 
 
     fun navigateToMethod(methodId: String) {
-        model.protocol.scheduler.invokeOrQueue {
+        getProtocol(model).scheduler.invokeOrQueue {
             //the message needs to be unique. if a message is the same as the previous one the event is not fired
             val message = "{${Random.nextInt()}}$methodId"
             model.navigateToMethod.fire(message)

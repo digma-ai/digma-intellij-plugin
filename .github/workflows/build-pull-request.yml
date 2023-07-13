@@ -1,0 +1,17 @@
+name: Build on pull request to main
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  call-build-workflow:
+    strategy:
+      matrix:
+        profile: [ lowest, latest, eap ]
+    uses: ./.github/workflows/build-workflow.yml
+    with:
+      build-profile: ${{ matrix.profile }}
+      ref-name: ${{ github.event.pull_request.head.sha }}
+      build-with-rider: false
+    secrets: inherit

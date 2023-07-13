@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.analytics;
 
 import org.digma.intellij.plugin.model.rest.AboutResult;
+import org.digma.intellij.plugin.model.rest.assets.AssetsRequest;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
@@ -10,8 +11,14 @@ import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightReque
 import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsRequest;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
+import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanRequest;
+import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanResponse;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
 import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
+import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
+import org.digma.intellij.plugin.model.rest.livedata.DurationLiveDataRequest;
+import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation;
+import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigationRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
@@ -37,6 +44,8 @@ public interface AnalyticsProvider extends Closeable {
 
     InsightsOfMethodsResponse getInsightsOfMethods(InsightsOfMethodsRequest insightsOfMethodsRequest);
 
+    InsightsOfSingleSpanResponse getInsightsForSingleSpan(InsightsOfSingleSpanRequest insightsOfSingleSpanRequest);
+
     List<GlobalInsight> getGlobalInsights(InsightsRequest insightsRequest);
 
     List<CodeObjectError> getErrorsOfCodeObject(String environment, List<String> codeObjectIds);
@@ -54,6 +63,12 @@ public interface AnalyticsProvider extends Closeable {
     String getHtmlGraphForSpanScaling(SpanHistogramQuery request);
 
     RecentActivityResult getRecentActivity(RecentActivityRequest recentActivityRequest);
+
+    DurationLiveData getDurationLiveData(DurationLiveDataRequest durationLiveDataRequest);
+
+    CodeObjectNavigation getCodeObjectNavigation(CodeObjectNavigationRequest codeObjectNavigationRequest);
+
+    String getAssets(AssetsRequest assetsRequest);
 
     VersionResponse getVersions(VersionRequest request);
 

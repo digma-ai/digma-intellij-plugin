@@ -22,7 +22,7 @@ set -e
 ## the python plugin version need to be updated when updating build profiles
 ./gradlew clean runIde -PplatformPlugins=com.intellij.java,PythonCore:223.7571.182 -PbuildProfile=lowest
 ./gradlew clean runIde -PplatformPlugins=com.intellij.java,PythonCore:231.8770.65 -PbuildProfile=latest
-./gradlew clean runIde -PplatformPlugins=com.intellij.java,PythonCore:232.8453.116 -PbuildProfile=eap
+./gradlew clean runIde -PplatformPlugins=com.intellij.java,PythonCore:232.8660.48 -PbuildProfile=eap
 
 
 ###################### idea ultimate

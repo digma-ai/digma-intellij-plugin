@@ -118,12 +118,12 @@ object BuildProfiles {
 
         Profiles.eap to BuildProfile(
             profile = Profiles.eap,
-            platformVersion = "LATEST-EAP-SNAPSHOT",
-            riderVersion = "2023.2-EAP7-SNAPSHOT",
-            pycharmVersion = "LATEST-EAP-SNAPSHOT",
-            riderResharperVersion = "2023.2.0-eap07",
+            platformVersion = "232-EAP-SNAPSHOT",
+            riderVersion = "2023.2-SNAPSHOT",
+            pycharmVersion = "232-EAP-SNAPSHOT",
+            riderResharperVersion = "2023.2.0-eap08",
             riderResharperVersionConstant = "PROFILE_2023_2",
-            pythonPluginVersion = "232.8453.116",
+            pythonPluginVersion = "232.8660.48",
             platformVersionCode = "232",
             pluginSinceBuild = "232",
             pluginUntilBuild = "232.*",

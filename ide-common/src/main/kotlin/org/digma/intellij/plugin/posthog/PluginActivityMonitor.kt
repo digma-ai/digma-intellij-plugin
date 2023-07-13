@@ -25,9 +25,9 @@ class PluginActivityMonitor(private val project: Project) : PluginStateListener,
 
     override fun uninstall(descriptor: IdeaPluginDescriptor) {
         if(descriptor.pluginId.idString == PluginId.PLUGIN_ID){
-            ActivityMonitor.getInstance(project).registerPluginUninstalled()
+            val userId = ActivityMonitor.getInstance(project).registerPluginUninstalled()
+            BrowserUtil.browse("https://digma.ai/uninstall?u=$userId", project)
         }
-        BrowserUtil.browse("https://digma.ai/uninstall/", project)
         super.uninstall(descriptor)
     }
 

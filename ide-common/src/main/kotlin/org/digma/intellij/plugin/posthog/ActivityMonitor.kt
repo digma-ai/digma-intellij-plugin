@@ -76,6 +76,7 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
 
     fun registerEmail(email: String) {
         postHog?.alias(userId, email)
+        postHog?.identify(userId, mapOf("email" to email))
     }
 
     fun registerCustomEvent(eventName: String, tags: Map<String, Any>?) {
@@ -236,8 +237,9 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
         postHog?.capture(userId, "plugin first-loaded")
     }
 
-    fun registerPluginUninstalled() {
+    fun registerPluginUninstalled():String {
         postHog?.capture(userId, "plugin uninstalled")
+        return userId
     }
 
     fun registerServerInfo(serverInfo: AboutResult) {

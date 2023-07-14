@@ -36,17 +36,20 @@ public class ErrorsActionsService{
     }
 
 
-
     public void showErrorDetails(@NotNull ErrorInsightNamedError error) {
-        showErrorDetails(error.getUid(),false);
+        showErrorDetails(error.getUid(), false);
+    }
+
+    public void showErrorDetails(@NotNull String errorUid) {
+        showErrorDetails(errorUid, false);
     }
 
     public void showErrorDetails(@NotNull CodeObjectError codeObjectError) {
-        showErrorDetails(codeObjectError.getUid(),false);
+        showErrorDetails(codeObjectError.getUid(), false);
     }
 
-    public void showErrorDetailsFromDashboard(@NotNull String uid){
-        showErrorDetails(uid,true);
+    public void showErrorDetailsFromDashboard(@NotNull String uid) {
+        showErrorDetails(uid, true);
     }
 
     //todo: move to insightsViewOrchestrator

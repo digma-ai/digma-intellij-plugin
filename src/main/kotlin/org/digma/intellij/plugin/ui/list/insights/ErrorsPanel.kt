@@ -41,7 +41,7 @@ fun errorsPanel(project: Project, modelObject: ErrorInsight): JPanel {
 
     val expandButton = ListItemActionButton("Expand")
     expandButton.addActionListener {
-        project.getService(InsightsActionsService::class.java).showErrorsTab(modelObject)
+        project.getService(InsightsActionsService::class.java).showErrorsTab()
         ActivityMonitor.getInstance(project).registerButtonClicked("expand-errors", modelObject.type)
     }
 

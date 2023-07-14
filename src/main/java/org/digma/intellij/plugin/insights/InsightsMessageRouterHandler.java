@@ -19,10 +19,13 @@ import org.digma.intellij.plugin.insights.model.outgoing.Span;
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil;
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.jcef.common.OpenInBrowserRequest;
 import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
+import org.digma.intellij.plugin.service.ErrorsActionsService;
+import org.digma.intellij.plugin.service.InsightsActionsService;
 import org.digma.intellij.plugin.ui.service.InsightsService;
 import org.digma.intellij.plugin.ui.settings.Theme;
 import org.jetbrains.annotations.NotNull;
@@ -64,6 +67,9 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
                     case "INSIGHTS/OPEN_HISTOGRAM" -> openHistogram(jsonNode);
 
+                    case "INSIGHTS/GO_TO_ERRORS" -> goToErrors(jsonNode);
+
+                    case "INSIGHTS/GO_TO_ERROR" -> goToError(jsonNode);
 
 
                     case JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
@@ -115,12 +121,23 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
         InsightsService.getInstance(project).openLiveView(prefixedCodeObjectId);
     }
 
+    private void goToErrors(JsonNode jsonNode) throws JsonProcessingException {
+        project.getService(InsightsActionsService.class).showErrorsTab();
+        ActivityMonitor.getInstance(project).registerButtonClicked("expand-errors", InsightType.Errors);
+    }
+
+    private void goToError(JsonNode jsonNode) throws JsonProcessingException {
+        ActivityMonitor.getInstance(project).registerCustomEvent("error-insight top-error-clicked", null);
+        var errorUid = objectMapper.readTree(jsonNode.get("payload").toString()).get("errorId").asText();
+        var actionListener = project.getService(ErrorsActionsService.class);
+        actionListener.showErrorDetails(errorUid);
+    }
+
 
     private void pushInsightsFromGetData() {
         Log.log(LOGGER::debug, project, "got INSIGHTS/GET_DATA message");
         InsightsService.getInstance(project).refreshInsights();
     }
-
 
 
     void sendRequestToChangeUiTheme(@NotNull Theme theme) {

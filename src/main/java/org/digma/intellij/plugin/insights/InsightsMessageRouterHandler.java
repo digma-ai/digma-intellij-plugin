@@ -74,6 +74,10 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
                     case "INSIGHTS/GO_TO_METHOD" -> goToMethod(jsonNode);
 
+                    case "INSIGHTS/RECALCULATE" -> recalculate(jsonNode);
+
+                    case "INSIGHTS/REFRESH_ALL" -> refresh(jsonNode);
+
 
                     case JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
                         OpenInBrowserRequest openBrowserRequest = JCefMessagesUtils.parseJsonToObject(request, OpenInBrowserRequest.class);
@@ -139,6 +143,16 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     private void goToMethod(JsonNode jsonNode) throws JsonProcessingException {
         var methodId = objectMapper.readTree(jsonNode.get("payload").toString()).get("id").asText();
         EDT.ensureEDT(() -> project.getService(InsightsActionsService.class).navigateToMethodFromFunctionsListPanel(methodId));
+    }
+
+    private void recalculate(JsonNode jsonNode) throws JsonProcessingException {
+        var prefixedCodeObjectId = objectMapper.readTree(jsonNode.get("payload").toString()).get("prefixedCodeObjectId").asText();
+        var insightType = objectMapper.readTree(jsonNode.get("payload").toString()).get("insightType").asText();
+        InsightsService.getInstance(project).recalculate(prefixedCodeObjectId, insightType);
+    }
+
+    private void refresh(JsonNode jsonNode) throws JsonProcessingException {
+        InsightsService.getInstance(project).refresh();
     }
 
 

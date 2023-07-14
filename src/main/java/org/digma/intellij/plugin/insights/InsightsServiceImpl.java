@@ -31,6 +31,7 @@ import org.digma.intellij.plugin.navigation.HomeSwitcherService;
 import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.recentactivity.RecentActivityService;
+import org.digma.intellij.plugin.refreshInsightsTask.RefreshService;
 import org.digma.intellij.plugin.ui.common.Laf;
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope;
 import org.digma.intellij.plugin.ui.model.DocumentScope;
@@ -433,4 +434,23 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
         }
     }
 
+
+    @Override
+    public void recalculate(@NotNull String prefixedCodeObjectId, @NotNull String insightType) {
+        try {
+            AnalyticsService.getInstance(project).setInsightCustomStartTime(prefixedCodeObjectId, InsightType.valueOf(insightType));
+        } catch (AnalyticsServiceException e) {
+            Log.warnWithException(logger, project, e, "Error in setInsightCustomStartTime {}", e.getMessage());
+        }
+        ActivityMonitor.getInstance(project).registerButtonClicked("recalculate", InsightType.valueOf(insightType));
+    }
+
+    @Override
+    public void refresh() {
+
+        //todo: do a real refresh, after refactoring the RefreshService, refresh the insights
+
+        project.getService(RefreshService.class).refreshAllInBackground();
+//        ActivityMonitor.getInstance(project).registerButtonClicked("refresh", insightType);
+    }
 }

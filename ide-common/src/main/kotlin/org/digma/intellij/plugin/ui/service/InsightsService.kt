@@ -21,6 +21,8 @@ interface InsightsService : Disposable {
     fun updateInsights(methodInfo: MethodInfo)
     fun refreshInsights()
     fun showDocumentPreviewList(documentInfoContainer: DocumentInfoContainer?, fileUri: String)
+    fun recalculate(prefixedCodeObjectId: String, insightType: String)
+    fun refresh()
 
     companion object {
         @JvmStatic

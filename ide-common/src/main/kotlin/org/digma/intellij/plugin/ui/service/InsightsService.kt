@@ -26,6 +26,8 @@ interface InsightsService : Disposable {
     fun refresh(insightType: InsightType)
     fun goToTrace(traceId: String, traceName: String, insightType: InsightType)
     fun goToTraceComparison(traceId1: String, traceName1: String, traceId2: String, traceName2: String, insightType: InsightType)
+    fun addAnnotation(methodId: String)
+    fun fixMissingDependencies(methodId: String)
 
     companion object {
         @JvmStatic

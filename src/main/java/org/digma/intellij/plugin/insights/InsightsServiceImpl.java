@@ -2,16 +2,22 @@ package org.digma.intellij.plugin.insights;
 
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ModalityState;
+import com.intellij.openapi.application.ReadAction;
+import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.jcef.JBCefApp;
 import com.intellij.ui.jcef.JBCefBrowser;
+import com.intellij.util.RunnableCallable;
+import com.intellij.util.concurrency.NonUrgentExecutor;
 import org.cef.CefApp;
 import org.cef.browser.CefMessageRouter;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.analytics.EnvironmentChanged;
 import org.digma.intellij.plugin.common.Backgroundable;
+import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.IDEUtilsService;
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator;
 import org.digma.intellij.plugin.document.DocumentInfoContainer;
@@ -31,11 +37,13 @@ import org.digma.intellij.plugin.model.rest.insights.MethodWithInsightStatus;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
 import org.digma.intellij.plugin.navigation.HomeSwitcherService;
 import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper;
+import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.recentactivity.RecentActivityService;
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshService;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.common.Laf;
+import org.digma.intellij.plugin.ui.common.MethodInstrumentationPresenter;
 import org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt;
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope;
 import org.digma.intellij.plugin.ui.model.DocumentScope;
@@ -52,6 +60,7 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.io.InputStream;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -70,6 +79,11 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
     static final String RESOURCE_FOLDER_NAME = "/webview/insights";
     static final String DOMAIN_NAME = "insights";
     static final String SCHEMA_NAME = "http";
+
+    static final String MODEL_PROP_INSTRUMENTATION = "MODEL_PROP_INSTRUMENTATION";
+
+    static final Long MAX_SECONDS_WAIT_FOR_DEPENDENCY = 6L;
+    static final Long WAIT_FOR_DEPENDENCY_INTERVAL_MILLIS = 250L;
 
     private final InsightsModelReact model = new InsightsModelReact();
 
@@ -182,6 +196,9 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
         withUpdateLock(() -> {
             Log.log(logger::debug, "updateInsightsModel to {}. ", codeLessSpan);
+
+            model.clearProperties();
+
             try {
                 var insightsResponse = project.getService(AnalyticsService.class).getInsightsForSingleSpan(codeLessSpan.getSpanId());
                 model.setScope(new CodeLessSpanScope(codeLessSpan, insightsResponse.getSpanInfo()));
@@ -197,7 +214,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 //            }
                 messageHandler.pushInsights(insights, Collections.emptyList(), codeLessSpan.getSpanId(), EMPTY_SERVICE_NAME,
                         AnalyticsService.getInstance(project).getEnvironment().getCurrent(), status,
-                        ViewMode.INSIGHTS.name(), Collections.emptyList(), false);
+                        ViewMode.INSIGHTS.name(), Collections.emptyList(), false, false);
 
             } catch (AnalyticsServiceException e) {
                 Log.warnWithException(logger, project, e, "Error in getInsightsForSingleSpan");
@@ -213,7 +230,16 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
         withUpdateLock(() -> {
             Log.log(logger::debug, "updateInsightsModel to {}. ", methodInfo);
 
+            model.clearProperties();
+
             model.setScope(new MethodScope(methodInfo));
+
+            var methodInstrumentationPresenter = new MethodInstrumentationPresenter(project);
+            ApplicationManager.getApplication().runReadAction(() -> methodInstrumentationPresenter.update(methodInfo.getId()));
+            var hasMissingDependency = methodInstrumentationPresenter.getCannotBecauseMissingDependency();
+            var canInstrumentMethod = methodInstrumentationPresenter.getCanInstrumentMethod();
+            model.addProperty(MODEL_PROP_INSTRUMENTATION, methodInstrumentationPresenter);
+
             var insights = DocumentInfoService.getInstance(project).getCachedMethodInsights(methodInfo);
 
             var spans = methodInfo.getSpans().stream().map(spanInfo -> new Span(spanInfo.getId(), spanInfo.getName())).toList();
@@ -226,7 +252,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
             }
             messageHandler.pushInsights(insights, spans, methodInfo.getId(), EMPTY_SERVICE_NAME,
                     AnalyticsService.getInstance(project).getEnvironment().getCurrent(), status,
-                    ViewMode.INSIGHTS.name(), Collections.emptyList(), false);
+                    ViewMode.INSIGHTS.name(), Collections.emptyList(), hasMissingDependency, canInstrumentMethod);
         });
     }
 
@@ -268,7 +294,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
                 }
                 messageHandler.pushInsights(insights, spans, methodInfo.getId(), EMPTY_SERVICE_NAME,
                         AnalyticsService.getInstance(project).getEnvironment().getCurrent(), statusToUse.name(),
-                        ViewMode.INSIGHTS.name(), Collections.emptyList(), false);
+                        ViewMode.INSIGHTS.name(), Collections.emptyList(), false, false);
             }
         });
     }
@@ -311,7 +337,10 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
 
     private void emptyInsights() {
-        withUpdateLock(() -> messageHandler.emptyInsights());
+        withUpdateLock(() -> {
+            model.clearProperties();
+            messageHandler.emptyInsights();
+        });
     }
 
 
@@ -319,6 +348,8 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
     public void showDocumentPreviewList(@Nullable DocumentInfoContainer documentInfoContainer, @NotNull String fileUri) {
 
         withUpdateLock(() -> {
+
+            model.clearProperties();
 
             if (documentInfoContainer == null) {
                 model.setScope(new EmptyScope(fileUri.substring(fileUri.lastIndexOf("/"))));
@@ -337,7 +368,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
                 }
 
                 messageHandler.pushInsights(Collections.emptyList(), Collections.emptyList(), fileUri, EMPTY_SERVICE_NAME,
-                        AnalyticsService.getInstance(project).getEnvironment().getCurrent(), status.name(), ViewMode.PREVIEW.name(), functionsList, false);
+                        AnalyticsService.getInstance(project).getEnvironment().getCurrent(), status.name(), ViewMode.PREVIEW.name(), functionsList, false, false);
 
             }
         });
@@ -353,7 +384,6 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
         List<Method> methods = new java.util.ArrayList<>(documentInfoContainer.getDocumentInfo()
                 .getMethods().entrySet().stream().filter(entry -> documentInfoContainer.hasInsights(entry.getKey()))
                 .map(entry -> new Method(entry.getKey(), entry.getValue().getName())).toList());
-
 
         methods.sort(Comparator.comparing(Method::name));
 
@@ -377,6 +407,59 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
                 emptyInsights();
             }
         });
+    }
+
+
+    @Override
+    public void addAnnotation(@NotNull String methodId) {
+        if (model.getScope() instanceof MethodScope methodScope && methodScope.getMethodInfo().getId().equals(methodId)) {
+            MethodInstrumentationPresenter methodInstrumentationPresenter = (MethodInstrumentationPresenter) model.getProperty(MODEL_PROP_INSTRUMENTATION);
+            if (methodInstrumentationPresenter != null) {
+                EDT.ensureEDT(() -> {
+                    var succeeded = WriteAction.compute(methodInstrumentationPresenter::instrumentMethod);
+                    if (succeeded) {
+                        refreshInsights();
+                    } else {
+                        NotificationUtil.notifyError(project, "Failed to add annotation");
+                    }
+                });
+            }
+        }
+    }
+
+    @Override
+    public void fixMissingDependencies(@NotNull String methodId) {
+        if (model.getScope() instanceof MethodScope methodScope && methodScope.getMethodInfo().getId().equals(methodId)) {
+            MethodInstrumentationPresenter methodInstrumentationPresenter = (MethodInstrumentationPresenter) model.getProperty(MODEL_PROP_INSTRUMENTATION);
+            if (methodInstrumentationPresenter != null) {
+
+                EDT.ensureEDT(() -> WriteAction.run(methodInstrumentationPresenter::addDependencyToOtelLibAndRefresh));
+
+                ReadAction.nonBlocking(new RunnableCallable(() -> waitForOtelDependencyToBeAvailable(methodInstrumentationPresenter)))
+                        .inSmartMode(project).withDocumentsCommitted(project)
+                        .finishOnUiThread(ModalityState.defaultModalityState(), unused -> refreshInsights())
+                        .submit(NonUrgentExecutor.getInstance());
+            }
+        }
+    }
+
+    private void waitForOtelDependencyToBeAvailable(MethodInstrumentationPresenter methodInstrumentationPresenter) {
+        var startPollingTimeSeconds = Instant.now().getEpochSecond();
+        var canInstrument = methodInstrumentationPresenter.getCanInstrumentMethod();
+        while (!canInstrument) {
+            var nowTimeSeconds = Instant.now().getEpochSecond();
+            if (nowTimeSeconds >= startPollingTimeSeconds + MAX_SECONDS_WAIT_FOR_DEPENDENCY) {
+                break;
+            }
+            try {
+                Thread.sleep(WAIT_FOR_DEPENDENCY_INTERVAL_MILLIS);
+            } catch (InterruptedException e) {
+                //ignore
+            }
+
+            methodInstrumentationPresenter.update(methodInstrumentationPresenter.getSelectedMethodId());
+            canInstrument = methodInstrumentationPresenter.getCanInstrumentMethod();
+        }
     }
 
 
@@ -453,7 +536,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
     }
 
     @Override
-    public void refresh(InsightType insightType) {
+    public void refresh(@NotNull InsightType insightType) {
         //TODO: do a real refresh, after refactoring the RefreshService, refresh the insights
         project.getService(RefreshService.class).refreshAllInBackground();
         ActivityMonitor.getInstance(project).registerButtonClicked("refresh", insightType);
@@ -461,7 +544,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
 
     @Override
-    public void goToTrace(@NotNull String traceId, @NotNull String traceName, InsightType insightType) {
+    public void goToTrace(@NotNull String traceId, @NotNull String traceName, @NotNull InsightType insightType) {
         JaegerUtilKt.openJaegerFromInsight(project, traceId, traceName, insightType);
     }
 

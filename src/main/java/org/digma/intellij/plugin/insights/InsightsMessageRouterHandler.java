@@ -82,6 +82,10 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
                     case "INSIGHTS/GO_TO_TRACE_COMPARISON" -> goToTraceComparison(jsonNode);
 
+                    case "INSIGHTS/AUTOFIX_MISSING_DEPENDENCY" -> fixMissingDependencies(jsonNode);
+
+                    case "INSIGHTS/ADD_ANNOTATION" -> addAnnotation(jsonNode);
+
 
                     case JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
                         OpenInBrowserRequest openBrowserRequest = JCefMessagesUtils.parseJsonToObject(request, OpenInBrowserRequest.class);
@@ -109,6 +113,7 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
         return true;
     }
+
 
     private void goToInsight(JsonNode jsonNode) throws JsonProcessingException {
         Log.log(LOGGER::debug, project, "got INSIGHTS/GO_TO_ASSET message");
@@ -180,6 +185,17 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     }
 
 
+    private void addAnnotation(JsonNode jsonNode) throws JsonProcessingException {
+        var methodId = objectMapper.readTree(jsonNode.get("payload").toString()).get("methodId").asText();
+        InsightsService.getInstance(project).addAnnotation(methodId);
+    }
+
+    private void fixMissingDependencies(JsonNode jsonNode) throws JsonProcessingException {
+        var methodId = objectMapper.readTree(jsonNode.get("payload").toString()).get("methodId").asText();
+        InsightsService.getInstance(project).fixMissingDependencies(methodId);
+    }
+
+
     private void pushInsightsFromGetData() {
         Log.log(LOGGER::debug, project, "got INSIGHTS/GET_DATA message");
         InsightsService.getInstance(project).refreshInsights();
@@ -202,10 +218,11 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     void pushInsights(List<CodeObjectInsight> insights, List<Span> spans, String assetId,
                       String serviceName, String environment, String uiInsightsStatus, String viewMode,
                       List<Method> methods,
-                      boolean hasMissingDependency) {
+                      boolean hasMissingDependency,
+                      boolean canInstrumentMethod) {
 
 
-        var payload = new InsightsPayload(insights, spans, assetId, serviceName, environment, uiInsightsStatus, viewMode, methods, hasMissingDependency);
+        var payload = new InsightsPayload(insights, spans, assetId, serviceName, environment, uiInsightsStatus, viewMode, methods, hasMissingDependency, canInstrumentMethod);
 
 
         var message = new SetInsightsDataMessage("digma", "INSIGHTS/SET_DATA", payload);

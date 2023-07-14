@@ -33,6 +33,8 @@ class InsightsIndexTemplateBuilder {
         try {
             var data = new HashMap<String, Object>();
             JCefTemplateUtils.addCommonEnvVariables(data);
+            JCefTemplateUtils.addIsJaegerEnabled(data);
+
 
             Template template = freemarketConfiguration.getTemplate(INDEX_TEMPLATE_NAME);
             StringWriter stringWriter = new StringWriter();

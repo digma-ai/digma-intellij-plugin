@@ -20,6 +20,7 @@
       window.mainFont = "${mainFont}";
       window.codeFont = "${codeFont}";
       window.insightsRefreshInterval;
+      window.isJaegerEnabled = ${isJaegerEnabled};
     </script>
     <script src="/index.js"></script>
   </body>

@@ -78,6 +78,10 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
                     case "INSIGHTS/REFRESH_ALL" -> refresh(jsonNode);
 
+                    case "INSIGHTS/GO_TO_TRACE" -> goToTrace(jsonNode);
+
+                    case "INSIGHTS/GO_TO_TRACE_COMPARISON" -> goToTraceComparison(jsonNode);
+
 
                     case JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
                         OpenInBrowserRequest openBrowserRequest = JCefMessagesUtils.parseJsonToObject(request, OpenInBrowserRequest.class);
@@ -152,7 +156,27 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     }
 
     private void refresh(JsonNode jsonNode) throws JsonProcessingException {
-        InsightsService.getInstance(project).refresh();
+        var insightType = objectMapper.readTree(jsonNode.get("payload").toString()).get("insightType").asText();
+        InsightsService.getInstance(project).refresh(InsightType.valueOf(insightType));
+    }
+
+    private void goToTrace(JsonNode jsonNode) throws JsonProcessingException {
+
+        var traceId = objectMapper.readTree(jsonNode.get("payload").toString()).get("trace").get("id").asText();
+        var traceName = objectMapper.readTree(jsonNode.get("payload").toString()).get("trace").get("name").asText();
+        var insightType = objectMapper.readTree(jsonNode.get("payload").toString()).get("insightType").asText();
+        InsightsService.getInstance(project).goToTrace(traceId, traceName, InsightType.valueOf(insightType));
+    }
+
+    private void goToTraceComparison(JsonNode jsonNode) throws JsonProcessingException {
+
+        var traces = objectMapper.readTree(jsonNode.get("payload").toString()).get("traces");
+        var traceId1 = traces.get(0).get("id").asText();
+        var traceName1 = traces.get(0).get("name").asText();
+        var traceId2 = traces.get(1).get("id").asText();
+        var traceName2 = traces.get(1).get("name").asText();
+        var insightType = objectMapper.readTree(jsonNode.get("payload").toString()).get("insightType").asText();
+        InsightsService.getInstance(project).goToTraceComparison(traceId1, traceName1, traceId2, traceName2, InsightType.valueOf(insightType));
     }
 
 

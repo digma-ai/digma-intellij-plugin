@@ -33,6 +33,7 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.recentactivity.RecentActivityService;
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshService;
 import org.digma.intellij.plugin.ui.common.Laf;
+import org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt;
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope;
 import org.digma.intellij.plugin.ui.model.DocumentScope;
 import org.digma.intellij.plugin.ui.model.EmptyScope;
@@ -446,11 +447,20 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
     }
 
     @Override
-    public void refresh() {
-
-        //todo: do a real refresh, after refactoring the RefreshService, refresh the insights
-
+    public void refresh(InsightType insightType) {
+        //TODO: do a real refresh, after refactoring the RefreshService, refresh the insights
         project.getService(RefreshService.class).refreshAllInBackground();
-//        ActivityMonitor.getInstance(project).registerButtonClicked("refresh", insightType);
+        ActivityMonitor.getInstance(project).registerButtonClicked("refresh", insightType);
+    }
+
+
+    @Override
+    public void goToTrace(@NotNull String traceId, @NotNull String traceName, InsightType insightType) {
+        JaegerUtilKt.openJaegerFromInsight(project, traceId, traceName, insightType);
+    }
+
+    @Override
+    public void goToTraceComparison(@NotNull String traceId1, @NotNull String traceName1, @NotNull String traceId2, @NotNull String traceName2, @NotNull InsightType insightType) {
+        JaegerUtilKt.openJaegerComparisonFromInsight(project, traceId1, traceName1, traceId2, traceName2, insightType);
     }
 }

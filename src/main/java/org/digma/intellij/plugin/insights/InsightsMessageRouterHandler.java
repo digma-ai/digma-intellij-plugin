@@ -12,6 +12,7 @@ import org.cef.browser.CefFrame;
 import org.cef.callback.CefQueryCallback;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
 import org.digma.intellij.plugin.common.Backgroundable;
+import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.insights.model.outgoing.InsightsPayload;
 import org.digma.intellij.plugin.insights.model.outgoing.Method;
 import org.digma.intellij.plugin.insights.model.outgoing.SetInsightsDataMessage;
@@ -70,6 +71,8 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
                     case "INSIGHTS/GO_TO_ERRORS" -> goToErrors(jsonNode);
 
                     case "INSIGHTS/GO_TO_ERROR" -> goToError(jsonNode);
+
+                    case "INSIGHTS/GO_TO_METHOD" -> goToMethod(jsonNode);
 
 
                     case JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
@@ -133,6 +136,11 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
         actionListener.showErrorDetails(errorUid);
     }
 
+    private void goToMethod(JsonNode jsonNode) throws JsonProcessingException {
+        var methodId = objectMapper.readTree(jsonNode.get("payload").toString()).get("id").asText();
+        EDT.ensureEDT(() -> project.getService(InsightsActionsService.class).navigateToMethodFromFunctionsListPanel(methodId));
+    }
+
 
     private void pushInsightsFromGetData() {
         Log.log(LOGGER::debug, project, "got INSIGHTS/GET_DATA message");
@@ -177,7 +185,20 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
     void emptyInsights() {
 
-        var message = new SetInsightsDataMessage("digma", "INSIGHTS/SET_DATA", InsightsPayload.EMPTY);
+        var message = new SetInsightsDataMessage("digma", "INSIGHTS/SET_DATA", InsightsPayload.EMPTY_INSIGHTS);
+        try {
+            jbCefBrowser.getCefBrowser().executeJavaScript(
+                    "window.postMessage(" + objectMapper.writeValueAsString(message) + ");",
+                    jbCefBrowser.getCefBrowser().getURL(),
+                    0);
+        } catch (JsonProcessingException e) {
+            Log.warnWithException(LOGGER, project, e, "Error sending message to webview");
+        }
+    }
+
+    void emptyPreview() {
+
+        var message = new SetInsightsDataMessage("digma", "INSIGHTS/SET_DATA", InsightsPayload.EMPTY_PREVIEW);
         try {
             jbCefBrowser.getCefBrowser().executeJavaScript(
                     "window.postMessage(" + objectMapper.writeValueAsString(message) + ");",

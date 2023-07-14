@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.service
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import java.io.InputStream
@@ -19,6 +20,7 @@ interface InsightsService : Disposable {
     fun updateInsights(codeLessSpan: CodeLessSpan)
     fun updateInsights(methodInfo: MethodInfo)
     fun refreshInsights()
+    fun showDocumentPreviewList(documentInfoContainer: DocumentInfoContainer?, fileUri: String)
 
     companion object {
         @JvmStatic

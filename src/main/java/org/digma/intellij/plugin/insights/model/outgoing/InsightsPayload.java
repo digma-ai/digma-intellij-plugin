@@ -32,6 +32,8 @@ public record InsightsPayload(List<CodeObjectInsight> insights,
     }
 
 
-    public static final InsightsPayload EMPTY = new InsightsPayload(Collections.emptyList(), Collections.emptyList(),
+    public static final InsightsPayload EMPTY_INSIGHTS = new InsightsPayload(Collections.emptyList(), Collections.emptyList(),
             "", "", "", UIInsightsStatus.NoInsights.name(), ViewMode.INSIGHTS.name(), Collections.emptyList(), false);
+    public static final InsightsPayload EMPTY_PREVIEW = new InsightsPayload(Collections.emptyList(), Collections.emptyList(),
+            "", "", "", UIInsightsStatus.NoInsights.name(), ViewMode.PREVIEW.name(), Collections.emptyList(), false);
 }

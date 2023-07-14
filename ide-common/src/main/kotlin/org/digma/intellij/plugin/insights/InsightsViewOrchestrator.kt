@@ -256,6 +256,9 @@ class InsightsViewOrchestrator(val project: Project) {
 
         project.service<InsightsViewService>().showDocumentPreviewList(documentInfoContainer, fileUri)
         project.service<ErrorsViewService>().showDocumentPreviewList(documentInfoContainer, fileUri)
+
+        //the new React app insights
+        project.service<InsightsService>().showDocumentPreviewList(documentInfoContainer, fileUri)
     }
 
 }

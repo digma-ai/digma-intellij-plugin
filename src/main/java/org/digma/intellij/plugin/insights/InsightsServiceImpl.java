@@ -13,8 +13,10 @@ import org.digma.intellij.plugin.analytics.EnvironmentChanged;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.IDEUtilsService;
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator;
+import org.digma.intellij.plugin.document.DocumentInfoContainer;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider;
+import org.digma.intellij.plugin.insights.model.outgoing.Method;
 import org.digma.intellij.plugin.insights.model.outgoing.Span;
 import org.digma.intellij.plugin.insights.model.outgoing.ViewMode;
 import org.digma.intellij.plugin.log.Log;
@@ -31,6 +33,8 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.recentactivity.RecentActivityService;
 import org.digma.intellij.plugin.ui.common.Laf;
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope;
+import org.digma.intellij.plugin.ui.model.DocumentScope;
+import org.digma.intellij.plugin.ui.model.EmptyScope;
 import org.digma.intellij.plugin.ui.model.MethodScope;
 import org.digma.intellij.plugin.ui.model.UIInsightsStatus;
 import org.digma.intellij.plugin.ui.model.insights.InsightsModelReact;
@@ -44,6 +48,7 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import java.io.InputStream;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -303,6 +308,52 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
 
     @Override
+    public void showDocumentPreviewList(@Nullable DocumentInfoContainer documentInfoContainer, @NotNull String fileUri) {
+
+        withUpdateLock(() -> {
+
+            if (documentInfoContainer == null) {
+                model.setScope(new EmptyScope(fileUri.substring(fileUri.lastIndexOf("/"))));
+                messageHandler.emptyPreview();
+            } else {
+                model.setScope(new DocumentScope(documentInfoContainer.getDocumentInfo()));
+                var functionsList = getDocumentPreviewItems(documentInfoContainer);
+
+                var status = UIInsightsStatus.Default;
+                if (functionsList.isEmpty()) {
+                    if (hasDiscoverableCodeObjects(documentInfoContainer)) {
+                        status = UIInsightsStatus.NoSpanData;
+                    } else {
+                        status = UIInsightsStatus.NoInsights;
+                    }
+                }
+
+                messageHandler.pushInsights(Collections.emptyList(), Collections.emptyList(), fileUri, EMPTY_SERVICE_NAME,
+                        AnalyticsService.getInstance(project).getEnvironment().getCurrent(), status.name(), ViewMode.PREVIEW.name(), functionsList, false);
+
+            }
+        });
+    }
+
+    private boolean hasDiscoverableCodeObjects(DocumentInfoContainer documentInfoContainer) {
+        return documentInfoContainer.getDocumentInfo().getMethods().entrySet().stream().anyMatch(entry -> entry.getValue().hasRelatedCodeObjectIds());
+    }
+
+
+    private List<Method> getDocumentPreviewItems(DocumentInfoContainer documentInfoContainer) {
+
+        List<Method> methods = new java.util.ArrayList<>(documentInfoContainer.getDocumentInfo()
+                .getMethods().entrySet().stream().filter(entry -> documentInfoContainer.hasInsights(entry.getKey()))
+                .map(entry -> new Method(entry.getKey(), entry.getValue().getName())).toList());
+
+
+        methods.sort(Comparator.comparing(Method::name));
+
+        return methods;
+    }
+
+
+    @Override
     public void refreshInsights() {
 
         withUpdateLock(() -> {
@@ -312,6 +363,8 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
                 updateInsights(((MethodScope) scope).getMethodInfo());
             } else if (scope instanceof CodeLessSpanScope) {
                 updateInsights(((CodeLessSpanScope) scope).getSpan());
+            } else if (scope instanceof DocumentScope) {
+                //do nothing, keep the view as is, don't empty. todo: maybe refresh the functions list,requires reloading insights
             } else {
                 emptyInsights();
             }

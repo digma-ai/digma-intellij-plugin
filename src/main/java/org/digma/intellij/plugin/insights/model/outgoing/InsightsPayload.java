@@ -16,8 +16,15 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 @JsonSerialize
-public record InsightsPayload(List<CodeObjectInsight> insights, List<Span> spans, String assetId, String serviceName,
-                              String environment, String insightsStatus) {
+public record InsightsPayload(List<CodeObjectInsight> insights,
+                              List<Span> spans,
+                              String assetId,
+                              String serviceName,
+                              String environment,
+                              String insightsStatus,
+                              String viewMode,
+                              List<Method> methods,
+                              boolean hasMissingDependency) {
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     public InsightsPayload {
@@ -26,5 +33,5 @@ public record InsightsPayload(List<CodeObjectInsight> insights, List<Span> spans
 
 
     public static final InsightsPayload EMPTY = new InsightsPayload(Collections.emptyList(), Collections.emptyList(),
-            "", "", "", UIInsightsStatus.NoInsights.name());
+            "", "", "", UIInsightsStatus.NoInsights.name(), ViewMode.INSIGHTS.name(), Collections.emptyList(), false);
 }

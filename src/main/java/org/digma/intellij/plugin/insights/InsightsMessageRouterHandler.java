@@ -13,6 +13,7 @@ import org.cef.callback.CefQueryCallback;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.insights.model.outgoing.InsightsPayload;
+import org.digma.intellij.plugin.insights.model.outgoing.Method;
 import org.digma.intellij.plugin.insights.model.outgoing.SetInsightsDataMessage;
 import org.digma.intellij.plugin.insights.model.outgoing.Span;
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil;
@@ -95,7 +96,7 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     private void goToInsight(JsonNode jsonNode) throws JsonProcessingException {
         Log.log(LOGGER::debug, project, "got INSIGHTS/GO_TO_ASSET message");
         var spanId = objectMapper.readTree(jsonNode.get("payload").toString()).get("spanCodeObjectId").asText();
-        Log.log(LOGGER::debug, project, "got span id {}",spanId);
+        Log.log(LOGGER::debug, project, "got span id {}", spanId);
         InsightsService.getInstance(project).showInsight(spanId);
     }
 
@@ -110,7 +111,7 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     private void openLiveView(JsonNode jsonNode) throws JsonProcessingException {
         Log.log(LOGGER::debug, project, "got INSIGHTS/OPEN_LIVE_VIEW message");
         var prefixedCodeObjectId = objectMapper.readTree(jsonNode.get("payload").toString()).get("prefixedCodeObjectId").asText();
-        Log.log(LOGGER::debug, project, "got prefixedCodeObjectId {}",prefixedCodeObjectId);
+        Log.log(LOGGER::debug, project, "got prefixedCodeObjectId {}", prefixedCodeObjectId);
         InsightsService.getInstance(project).openLiveView(prefixedCodeObjectId);
     }
 
@@ -135,9 +136,15 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     }
 
 
-    void pushInsights(List<CodeObjectInsight> insights, List<Span> spans, String assetId, String serviceName, String environment, String uiInsightsStatus) {
+    void pushInsights(List<CodeObjectInsight> insights, List<Span> spans, String assetId,
+                      String serviceName, String environment, String uiInsightsStatus, String viewMode,
+                      List<Method> methods,
+                      boolean hasMissingDependency) {
 
-        var payload = new InsightsPayload(insights, spans, assetId, serviceName, environment, uiInsightsStatus);
+
+        var payload = new InsightsPayload(insights, spans, assetId, serviceName, environment, uiInsightsStatus, viewMode, methods, hasMissingDependency);
+
+
         var message = new SetInsightsDataMessage("digma", "INSIGHTS/SET_DATA", payload);
         Log.log(LOGGER::debug, project, "sending INSIGHTS/SET_DATA message");
         try {

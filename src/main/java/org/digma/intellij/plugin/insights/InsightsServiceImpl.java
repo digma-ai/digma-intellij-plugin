@@ -10,14 +10,20 @@ import org.cef.browser.CefMessageRouter;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.analytics.EnvironmentChanged;
+import org.digma.intellij.plugin.common.Backgroundable;
+import org.digma.intellij.plugin.common.IDEUtilsService;
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider;
 import org.digma.intellij.plugin.insights.model.outgoing.Span;
+import org.digma.intellij.plugin.insights.model.outgoing.ViewMode;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
+import org.digma.intellij.plugin.model.rest.insights.InsightStatus;
+import org.digma.intellij.plugin.model.rest.insights.MethodWithInsightStatus;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
 import org.digma.intellij.plugin.navigation.HomeSwitcherService;
 import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper;
@@ -39,6 +45,7 @@ import javax.swing.*;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 public final class InsightsServiceImpl implements InsightsService, Disposable {
 
@@ -59,6 +66,8 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
     private JBCefBrowser jbCefBrowser;
     private CefMessageRouter cefMessageRouter;
     private InsightsMessageRouterHandler messageHandler;
+
+    private final ReentrantLock updateLock = new ReentrantLock();
 
 
     public InsightsServiceImpl(Project project) {
@@ -157,54 +166,156 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
     @Override
     public void updateInsights(@NotNull CodeLessSpan codeLessSpan) {
-        Log.log(logger::debug, "updateInsightsModel to {}. ", codeLessSpan);
-        try {
-            var insightsResponse = project.getService(AnalyticsService.class).getInsightsForSingleSpan(codeLessSpan.getSpanId());
-            model.setScope(new CodeLessSpanScope(codeLessSpan, insightsResponse.getSpanInfo()));
 
-            var insights = insightsResponse.getInsights();
+        withUpdateLock(() -> {
+            Log.log(logger::debug, "updateInsightsModel to {}. ", codeLessSpan);
+            try {
+                var insightsResponse = project.getService(AnalyticsService.class).getInsightsForSingleSpan(codeLessSpan.getSpanId());
+                model.setScope(new CodeLessSpanScope(codeLessSpan, insightsResponse.getSpanInfo()));
 
-            messageHandler.pushInsights(insights, Collections.emptyList(), codeLessSpan.getSpanId(), EMPTY_SERVICE_NAME,
-                    AnalyticsService.getInstance(project).getEnvironment().getCurrent(), UIInsightsStatus.Default.name());
+                var insights = insightsResponse.getInsights();
 
-        } catch (AnalyticsServiceException e) {
-            Log.warnWithException(logger, project, e, "Error in getInsightsForSingleSpan");
-            emptyInsights();
-        }
+                var status = UIInsightsStatus.Default.name();
+                //todo: how to update status for span,AnalyticsService.getCodeObjectInsightStatus is only for method
+//            if (insights.isEmpty()){
+//                Log.log(logger::debug, "No insights for CodeLessSpan {}, Starting background thread to update status.", codeLessSpan.getSpanId());
+//                status = UIInsightsStatus.Loading.name();
+//                updateStatusInBackground();
+//            }
+                messageHandler.pushInsights(insights, Collections.emptyList(), codeLessSpan.getSpanId(), EMPTY_SERVICE_NAME,
+                        AnalyticsService.getInstance(project).getEnvironment().getCurrent(), status,
+                        ViewMode.INSIGHTS.name(), Collections.emptyList(), false);
+
+            } catch (AnalyticsServiceException e) {
+                Log.warnWithException(logger, project, e, "Error in getInsightsForSingleSpan");
+                emptyInsights();
+            }
+        });
     }
 
 
     @Override
     public void updateInsights(@NotNull MethodInfo methodInfo) {
-        Log.log(logger::debug, "updateInsightsModel to {}. ", methodInfo);
 
-        model.setScope(new MethodScope(methodInfo));
-        var insights = DocumentInfoService.getInstance(project).getCachedMethodInsights(methodInfo);
+        withUpdateLock(() -> {
+            Log.log(logger::debug, "updateInsightsModel to {}. ", methodInfo);
 
-        var spans = methodInfo.getSpans().stream().map(spanInfo -> new Span(spanInfo.getId(), spanInfo.getName())).toList();
+            model.setScope(new MethodScope(methodInfo));
+            var insights = DocumentInfoService.getInstance(project).getCachedMethodInsights(methodInfo);
 
-        //todo: insights status logic
-        messageHandler.pushInsights(insights, spans, methodInfo.getId(), EMPTY_SERVICE_NAME,
-                AnalyticsService.getInstance(project).getEnvironment().getCurrent(), UIInsightsStatus.Default.name());
+            var spans = methodInfo.getSpans().stream().map(spanInfo -> new Span(spanInfo.getId(), spanInfo.getName())).toList();
+
+            var status = UIInsightsStatus.Default.name();
+            if (insights.isEmpty()) {
+                Log.log(logger::debug, "No insights for method {}, Starting background thread to update status.", methodInfo.getName());
+                status = UIInsightsStatus.Loading.name();
+                updateStatusInBackground(methodInfo);
+            }
+            messageHandler.pushInsights(insights, spans, methodInfo.getId(), EMPTY_SERVICE_NAME,
+                    AnalyticsService.getInstance(project).getEnvironment().getCurrent(), status,
+                    ViewMode.INSIGHTS.name(), Collections.emptyList(), false);
+        });
+    }
+
+    private void updateStatusInBackground(@NotNull MethodInfo methodInfo) {
+
+        Backgroundable.runInNewBackgroundThread(project, "Fetching insights status", () -> {
+
+            Log.log(logger::debug, "Loading backend status in background for method {}", methodInfo.getName());
+            var insightStatus = getInsightStatus(methodInfo);
+            Log.log(logger::debug, "Got status from backend {} for method {}", insightStatus, methodInfo.getName());
+
+            UIInsightsStatus status;
+            //if status is null assign EmptyStatus, it probably means there was a communication error
+            if (insightStatus == null) {
+                status = UIInsightsStatus.NoInsights;
+            } else {
+                status = toUiInsightStatus(insightStatus, methodInfo.hasRelatedCodeObjectIds());
+            }
+
+            updateInsightsWithStatus(methodInfo, status);
+
+        });
+    }
+
+    private void updateInsightsWithStatus(@NotNull MethodInfo methodInfo, UIInsightsStatus status) {
+
+        withUpdateLock(() -> {
+            if (model.getScope() instanceof MethodScope methodScope && methodScope.getMethodInfo().getId().equals(methodInfo.getId())) {
+
+                Log.log(logger::debug, "updateInsightsWithStatus to {}, {} ", methodInfo, status);
+
+                var insights = DocumentInfoService.getInstance(project).getCachedMethodInsights(methodInfo);
+
+                var spans = methodInfo.getSpans().stream().map(spanInfo -> new Span(spanInfo.getId(), spanInfo.getName())).toList();
+
+                var statusToUse = UIInsightsStatus.Default;
+                if (insights.isEmpty()) {
+                    statusToUse = status;
+                }
+                messageHandler.pushInsights(insights, spans, methodInfo.getId(), EMPTY_SERVICE_NAME,
+                        AnalyticsService.getInstance(project).getEnvironment().getCurrent(), statusToUse.name(),
+                        ViewMode.INSIGHTS.name(), Collections.emptyList(), false);
+            }
+        });
+    }
+
+
+    private UIInsightsStatus toUiInsightStatus(InsightStatus status, Boolean methodHasRelatedCodeObjectIds) {
+
+        switch (status) {
+            case InsightExist, InsightPending -> {
+                return UIInsightsStatus.InsightPending;
+            }
+            case NoSpanData -> {
+                if (Boolean.TRUE.equals(methodHasRelatedCodeObjectIds)) {
+                    return UIInsightsStatus.NoSpanData;
+                } else {
+                    if (IDEUtilsService.getInstance(project).isJavaProject()) {
+                        return UIInsightsStatus.NoObservability;
+                    } else {
+                        return UIInsightsStatus.NoInsights;
+                    }
+                }
+            }
+        }
+
+        return UIInsightsStatus.NoInsights;
+    }
+
+
+    @Nullable
+    public InsightStatus getInsightStatus(@NotNull MethodInfo methodInfo) {
+        try {
+            CodeObjectInsightsStatusResponse response = AnalyticsService.getInstance(project).getCodeObjectInsightStatus(List.of(methodInfo));
+            MethodWithInsightStatus methodResp = response.getCodeObjectsWithInsightsStatus().stream().findFirst().orElse(null);
+            return methodResp == null ? null : methodResp.getInsightStatus();
+        } catch (AnalyticsServiceException e) {
+            Log.log(logger::debug, "AnalyticsServiceException for getCodeObjectInsightStatus for {}: {}", methodInfo.getId(), e.getMessage());
+            return null;
+        }
     }
 
 
     private void emptyInsights() {
-        messageHandler.emptyInsights();
+        withUpdateLock(() -> messageHandler.emptyInsights());
     }
 
 
     @Override
     public void refreshInsights() {
-        Log.log(logger::debug, project, "refreshInsights called, scope is {}", model.getScope().getScope());
-        var scope = model.getScope();
-        if (scope instanceof MethodScope) {
-            updateInsights(((MethodScope) scope).getMethodInfo());
-        } else if (scope instanceof CodeLessSpanScope) {
-            updateInsights(((CodeLessSpanScope) scope).getSpan());
-        } else {
-            emptyInsights();
-        }
+
+        withUpdateLock(() -> {
+            Log.log(logger::debug, project, "refreshInsights called, scope is {}", model.getScope().getScope());
+            var scope = model.getScope();
+            if (scope instanceof MethodScope) {
+                updateInsights(((MethodScope) scope).getMethodInfo());
+            } else if (scope instanceof CodeLessSpanScope) {
+                updateInsights(((CodeLessSpanScope) scope).getSpan());
+            } else {
+                emptyInsights();
+            }
+        });
     }
 
 
@@ -216,6 +327,19 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
     private void pushInsightsOnEnvironmentChange() {
         Log.log(logger::debug, project, "pushInsightsOnEnvironmentChange called");
         refreshInsights();
+    }
+
+
+    private void withUpdateLock(Runnable task) {
+        try {
+            updateLock.lock();
+            task.run();
+
+        } finally {
+            if (updateLock.isHeldByCurrentThread()) {
+                updateLock.unlock();
+            }
+        }
     }
 
 

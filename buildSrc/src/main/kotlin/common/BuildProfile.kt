@@ -121,7 +121,7 @@ object BuildProfiles {
             platformVersion = "232-EAP-SNAPSHOT",
             riderVersion = "2023.2-SNAPSHOT",
             pycharmVersion = "232-EAP-SNAPSHOT",
-            riderResharperVersion = "2023.2.0-eap08",
+            riderResharperVersion = "2023.2.0-eap09",
             riderResharperVersionConstant = "PROFILE_2023_2",
             pythonPluginVersion = "232.8660.48",
             platformVersionCode = "232",

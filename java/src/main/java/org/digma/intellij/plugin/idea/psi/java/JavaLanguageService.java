@@ -206,9 +206,9 @@ public class JavaLanguageService implements LanguageService {
 
         var withSpanClass = JavaPsiFacade.getInstance(project).findClass(
                 "io.opentelemetry.instrumentation.annotations.WithSpan",
-                GlobalSearchScope.allScope(project));
+                GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module, false));
         if (withSpanClass == null) {
-            Log.log(LOGGER::warn, "Failed to get WithSpan PsiClass (methodId: {})", methodId);
+            Log.log(LOGGER::warn, "Cannot find WithSpan PsiClass (methodId: {}) (module:{})", methodId, module);
             return new CanInstrumentMethodResult(new CanInstrumentMethodResult.MissingDependencyCause("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations"));
         }
 
@@ -311,7 +311,6 @@ public class JavaLanguageService implements LanguageService {
         });
 
     }
-
 
 
     @Override

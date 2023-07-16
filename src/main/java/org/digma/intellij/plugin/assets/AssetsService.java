@@ -5,6 +5,7 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+import com.intellij.ui.jcef.JBCefApp;
 import com.intellij.ui.jcef.JBCefBrowser;
 import org.cef.CefApp;
 import org.cef.browser.CefMessageRouter;
@@ -38,9 +39,9 @@ public final class AssetsService implements Disposable {
     static final String DOMAIN_NAME = "assets";
     static final String SCHEMA_NAME = "http";
 
-    private final JBCefBrowser jbCefBrowser;
-    private final CefMessageRouter cefMessageRouter;
-    private final AssetsMessageRouterHandler messageHandler;
+    private JBCefBrowser jbCefBrowser;
+    private CefMessageRouter cefMessageRouter;
+    private AssetsMessageRouterHandler messageHandler;
 
 
 
@@ -48,56 +49,62 @@ public final class AssetsService implements Disposable {
 
         this.project = project;
 
-        jbCefBrowser = JBCefBrowserBuilderCreator.create()
-                .setUrl("http://" + DOMAIN_NAME + "/index.html")
-                .build();
-        registerAppSchemeHandler(project);
+        if (JBCefApp.isSupported()) {
 
-        var jbCefClient = jbCefBrowser.getJBCefClient();
-        cefMessageRouter = CefMessageRouter.create();
-        messageHandler = new AssetsMessageRouterHandler(project, jbCefBrowser);
-        cefMessageRouter.addHandler(messageHandler, true);
-        jbCefClient.getCefClient().addMessageRouter(cefMessageRouter);
+            jbCefBrowser = JBCefBrowserBuilderCreator.create()
+                    .setUrl("http://" + DOMAIN_NAME + "/index.html")
+                    .build();
+            registerAppSchemeHandler(project);
 
-        ApplicationUISettingsChangeNotifier.getInstance(project).addSettingsChangeListener(new SettingsChangeListener() {
-            @Override
-            public void systemFontChange(@NotNull String fontName) {
-                messageHandler.sendRequestToChangeFont(fontName);
-            }
+            var jbCefClient = jbCefBrowser.getJBCefClient();
+            cefMessageRouter = CefMessageRouter.create();
+            messageHandler = new AssetsMessageRouterHandler(project, jbCefBrowser);
+            cefMessageRouter.addHandler(messageHandler, true);
+            jbCefClient.getCefClient().addMessageRouter(cefMessageRouter);
 
-            @Override
-            public void systemThemeChange(@NotNull Theme theme) {
-                messageHandler.sendRequestToChangeUiTheme(theme);
-            }
-
-            @Override
-            public void editorFontChange(@NotNull String fontName) {
-                messageHandler.sendRequestToChangeCodeFont(fontName);
-            }
-        });
-
-
-        project.getMessageBus().connect(this).subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, new EnvironmentChanged() {
-            @Override
-            public void environmentChanged(String newEnv, boolean refreshInsightsView) {
-                try {
-                    messageHandler.pushAssetsOnEnvironmentChange();
-                } catch (JsonProcessingException e) {
-                    Log.debugWithException(logger, e, "Exception in pushAssets ");
+            ApplicationUISettingsChangeNotifier.getInstance(project).addSettingsChangeListener(new SettingsChangeListener() {
+                @Override
+                public void systemFontChange(@NotNull String fontName) {
+                    messageHandler.sendRequestToChangeFont(fontName);
                 }
-            }
 
-            @Override
-            public void environmentsListChanged(List<String> newEnvironments) {
-                //nothing to do
-            }
-        });
+                @Override
+                public void systemThemeChange(@NotNull Theme theme) {
+                    messageHandler.sendRequestToChangeUiTheme(theme);
+                }
+
+                @Override
+                public void editorFontChange(@NotNull String fontName) {
+                    messageHandler.sendRequestToChangeCodeFont(fontName);
+                }
+            });
+
+
+            project.getMessageBus().connect(this).subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, new EnvironmentChanged() {
+                @Override
+                public void environmentChanged(String newEnv, boolean refreshInsightsView) {
+                    try {
+                        messageHandler.pushAssetsOnEnvironmentChange();
+                    } catch (JsonProcessingException e) {
+                        Log.debugWithException(logger, e, "Exception in pushAssets ");
+                    }
+                }
+
+                @Override
+                public void environmentsListChanged(List<String> newEnvironments) {
+                    //nothing to do
+                }
+            });
+        }
 
     }
 
 
     JComponent getComponent() {
-        return jbCefBrowser.getComponent();
+        if (JBCefApp.isSupported()) {
+            return jbCefBrowser.getComponent();
+        }
+        return null;
     }
 
     private void registerAppSchemeHandler(Project project) {

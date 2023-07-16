@@ -35,6 +35,8 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
 
         val MicrometerTracingBridgeOtelCoordinates = UnifiedCoordinates("io.micrometer", "micrometer-tracing-bridge-otel", "1.1.2")
         val OtelExporterOtlpCoordinates = UnifiedCoordinates("io.opentelemetry", "opentelemetry-exporter-otlp", "1.26.0")
+        val DigmaSpringBootMicrometerAutoconfCoordinates =
+            UnifiedCoordinates("io.github.digma-ai", "digma-spring-boot-micrometer-tracing-autoconf", "0.7.2")
 
         @JvmStatic
         fun getInstance(project: Project): SpringBootMicrometerConfigureDepsService {
@@ -132,6 +134,9 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
         }
         if (!moduleExt.metadata.hasOtelExporterOtlp) {
             uniDeps.add(buildUnifiedDependency(OtelExporterOtlpCoordinates, moduleBuildSystem))
+        }
+        if (!moduleExt.metadata.hasDigmaSpringBootMicrometerAutoconf) {
+            uniDeps.add(buildUnifiedDependency(DigmaSpringBootMicrometerAutoconfCoordinates, moduleBuildSystem))
         }
 
         println("adding spring boot deps to module '${module.name}' deps: ${uniDeps}")

@@ -29,7 +29,7 @@ fun dynamicPlatformType(project: Project): String {
  */
 fun Project.platformPlugins(): String {
 
-    if (findProperty("platformPlugins") != null){
+    if (findProperty("platformPlugins") != null) {
         return findProperty("platformPlugins").toString()
     }
 
@@ -52,7 +52,7 @@ fun Project.platformVersion(): String = when (properties("platformType", this)) 
 }
 
 fun Project.shouldDownloadSources(): Boolean {
-    return if(findProperty("doNotDownloadSources") == null) true else false
+    return if (findProperty("doNotDownloadSources") == null) true else false
 }
 
 
@@ -86,6 +86,7 @@ object BuildProfiles {
 
         Profiles.lowest to BuildProfile(
             profile = Profiles.lowest,
+            // platformVersion is Intellij IDEA Community and Ultimate
             platformVersion = "2022.3.1",
             riderVersion = "2022.3.1",
             pycharmVersion = "2022.3.1",
@@ -102,9 +103,10 @@ object BuildProfiles {
 
         Profiles.latest to BuildProfile(
             profile = Profiles.latest,
-            platformVersion = "2023.1.3",
+            // platformVersion is Intellij IDEA Community and Ultimate
+            platformVersion = "2023.1.4",
             riderVersion = "2023.1.3",
-            pycharmVersion = "2023.1.3",
+            pycharmVersion = "2023.1.4",
             riderResharperVersion = "2023.1.3",
             riderResharperVersionConstant = "PROFILE_2023_1",
             pythonPluginVersion = "231.8770.65",
@@ -118,6 +120,7 @@ object BuildProfiles {
 
         Profiles.eap to BuildProfile(
             profile = Profiles.eap,
+            // platformVersion is Intellij IDEA Community and Ultimate
             platformVersion = "232-EAP-SNAPSHOT",
             riderVersion = "2023.2-SNAPSHOT",
             pycharmVersion = "232-EAP-SNAPSHOT",

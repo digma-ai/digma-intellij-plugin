@@ -26,7 +26,7 @@ class AssetsIndexTemplateBuilder {
     private final Configuration freemarketConfiguration = new Configuration(Configuration.VERSION_2_3_30);
 
     public AssetsIndexTemplateBuilder() {
-        freemarketConfiguration.setClassForTemplateLoading(this.getClass(), AssetsPanel.RESOURCE_FOLDER_NAME);
+        freemarketConfiguration.setClassForTemplateLoading(this.getClass(), AssetsService.RESOURCE_FOLDER_NAME);
         freemarketConfiguration.setDefaultEncoding(StandardCharsets.UTF_8.name());
         freemarketConfiguration.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
         freemarketConfiguration.setNumberFormat("computer");

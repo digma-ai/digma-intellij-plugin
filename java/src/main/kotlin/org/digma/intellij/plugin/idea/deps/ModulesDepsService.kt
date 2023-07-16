@@ -63,6 +63,7 @@ class ModulesDepsService(private val project: Project) : Disposable {
             var hasSpringBootStarterActuator = false
             var hasMicrometerTracingBridgeOtel = false
             var hasOtelExporterOtlp = false
+            var hasDigmaSpringBootMicrometerAutoconf = false
             var springBootVersion: String? = null
 
 
@@ -98,13 +99,18 @@ class ModulesDepsService(private val project: Project) : Disposable {
                 if (!hasOtelExporterOtlp) {
                     hasOtelExporterOtlp = checkOtelExporterOtlp(libCoord)
                 }
+                // spring boot + digma (aspect for @Observed)
+                if (!hasDigmaSpringBootMicrometerAutoconf) {
+                    hasDigmaSpringBootMicrometerAutoconf = checkDigmaSpringBootMicrometerAutoconf(libCoord)
+                }
 
                 // other
             }
 
             return ModuleMetadata(
                 hasOpenTelemetryAnnotations, quarkusVersion, hasQuarkusOpenTelemetry,
-                springBootVersion, hasSpringBootStarterActuator, hasMicrometerTracingBridgeOtel, hasOtelExporterOtlp
+                springBootVersion, hasSpringBootStarterActuator, hasMicrometerTracingBridgeOtel, hasOtelExporterOtlp,
+                hasDigmaSpringBootMicrometerAutoconf
             )
         }
 
@@ -146,6 +152,11 @@ class ModulesDepsService(private val project: Project) : Disposable {
                     libCoord.artifactId == "opentelemetry-exporter-otlp"
         }
 
+        @JvmStatic
+        fun checkDigmaSpringBootMicrometerAutoconf(libCoord: UnifiedCoordinates): Boolean {
+            return libCoord.groupId == "io.github.digma-ai" &&
+                    libCoord.artifactId == "digma-spring-boot-micrometer-tracing-autoconf"
+        }
 
     }
 
@@ -217,6 +228,7 @@ class ModulesDepsService(private val project: Project) : Disposable {
                     || !it.metadata.hasSpringBootStarterActuator
                     || !it.metadata.hasMicrometerTracingBridgeOtel
                     || !it.metadata.hasOtelExporterOtlp
+                    || !it.metadata.hasDigmaSpringBootMicrometerAutoconf
                     )
         }.toSet()
     }
@@ -250,6 +262,7 @@ data class ModuleMetadata(
     val hasSpringBootStarterActuator: Boolean,
     val hasMicrometerTracingBridgeOtel: Boolean,
     val hasOtelExporterOtlp: Boolean,
+    val hasDigmaSpringBootMicrometerAutoconf: Boolean,
     // other
 ) {
     fun hasQuarkus(): Boolean {

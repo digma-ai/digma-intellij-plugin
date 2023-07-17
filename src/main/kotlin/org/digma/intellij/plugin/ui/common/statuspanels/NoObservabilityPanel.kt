@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.ui.common.statuspanels
 
 import com.intellij.openapi.application.ModalityState
 import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.observable.properties.AtomicProperty
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBScrollPane
@@ -35,6 +36,7 @@ import javax.swing.SwingConstants
 fun createNoObservabilityPanel(project: Project, insightsModel: InsightsModel): DigmaResettablePanel {
 
     val model = MethodInstrumentationPresenter(project)
+    val propertyOfMissing = AtomicProperty("unknown")
 
     val componentsPanel = JPanel(GridBagLayout())
     componentsPanel.isOpaque = false
@@ -66,9 +68,12 @@ fun createNoObservabilityPanel(project: Project, insightsModel: InsightsModel): 
     constraints.insets = JBUI.insets(20, 5, 0, 5)
     val autoFixPanel = JPanel(BorderLayout())
 
-    val autoFixLabel = JLabel(asHtml(span(Laf.Colors.RED_OF_MISSING, Text.NO_OBSERVABILITY_MISSING_DEPENDENCY_DESCRIPTION)))
+    val autoFixLabel = JLabel()
     autoFixLabel.border = JBUI.Borders.emptyRight(10)
     autoFixPanel.add(autoFixLabel, BorderLayout.CENTER)
+    propertyOfMissing.afterChange {
+        autoFixLabel.text = asHtml(span(Laf.Colors.RED_OF_MISSING, "missing dependency: $it"))
+    }
 
     val autoFixLink = OtelDependencyButton("Autofix", project, model)
     autoFixPanel.add(autoFixLink, BorderLayout.EAST)
@@ -103,6 +108,7 @@ fun createNoObservabilityPanel(project: Project, insightsModel: InsightsModel): 
                 ReadAction.nonBlocking(RunnableCallable {
                     model.update(methodScope.getMethodInfo().id)
                 }).inSmartMode(project).withDocumentsCommitted(project).finishOnUiThread(ModalityState.stateForComponent(componentsPanel)) {
+                    propertyOfMissing.set(model.missingDependency ?: "unknown")
                     if (model.canInstrumentMethod) {
                         addAnnotationButton.isEnabled = true
                         autoFixPanel.isVisible = false

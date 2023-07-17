@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.110] - 2023-07-17
+## [2.0.111] - 2023-07-17
+- Feature/span discovery for spring boot micrometer tracing by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/902
+
+## 2.0.110 - 2023-07-17
 - No connection - no agent by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/951
 - Feature/suggest spring boot dependencies when missing by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/934
 - bug fix/using timing prod values by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/952

@@ -7,7 +7,6 @@ import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator;
-import org.digma.intellij.plugin.jaegerui.JaegerUIService;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.navigation.HomeSwitcherService;
 import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper;
@@ -19,7 +18,7 @@ import java.io.InputStream;
 @Service(Service.Level.PROJECT)
 public final class AssetsService implements Disposable {
 
-    private final Logger logger = Logger.getInstance(JaegerUIService.class);
+    private final Logger logger = Logger.getInstance(AssetsService.class);
 
     private final Project project;
 

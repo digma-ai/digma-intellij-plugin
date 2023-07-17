@@ -1,6 +1,17 @@
 # Changelog
 
-## [2.0.109] - 2023-07-12
+## [2.0.110] - 2023-07-17
+- No connection - no agent by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/951
+- Feature/suggest spring boot dependencies when missing by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/934
+- bug fix/using timing prod values by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/952
+- update eap profile versions by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/956
+- Build with pycharm instead of python plugin by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/957
+- update-resharper-eap-version by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/960
+- Feature/latest 2023.1.4 by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/961
+- Bug fix/refer to module scope by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/962
+- Feature/add dep of Digma Spring Boot Micrometer Autoconf by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/963
+
+## 2.0.109 - 2023-07-12
 - Monitoring customer engagement by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/941
 - Feature/resolve module from RunConfig by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/943
 - Added uninstall page by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/949

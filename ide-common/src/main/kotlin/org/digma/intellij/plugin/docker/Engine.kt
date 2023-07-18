@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.docker
 
 import com.intellij.openapi.diagnostic.Logger
 import org.digma.intellij.plugin.log.Log
-import org.jsoup.helper.Consumer
 import java.nio.file.Path
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -14,104 +13,126 @@ internal class Engine {
     private val streamExecutor = Executors.newFixedThreadPool(2)
 
 
-    fun up(composeFile: Path, dockerComposeCmd: String): Int {
+    fun up(composeFile: Path, dockerComposeCmd: List<String>): Int {
 
         try {
 
-            Log.log(logger::info, "starting installation")
+            Log.log(logger::info, "starting docker compose")
 
             val processBuilder = ProcessBuilder()
-            processBuilder.command(dockerComposeCmd, "-f", composeFile.toString(), "up", "-d")
+            if (dockerComposeCmd.size == 1) {
+                processBuilder.command(dockerComposeCmd[0], "-f", composeFile.toString(), "up", "-d")
+            } else {
+                processBuilder.command(dockerComposeCmd[0], dockerComposeCmd[1], "-f", composeFile.toString(), "up", "-d")
+            }
             processBuilder.directory(composeFile.toFile().parentFile)
             processBuilder.redirectErrorStream(true)
             val process = processBuilder.start()
 
             Log.log(logger::info, "started process {}", process.info())
 
-            streamExecutor.submit(StreamGobbler(process.inputStream, Consumer {
+            streamExecutor.submit(StreamGobbler(process.inputStream) {
                 Log.log(logger::info, "DigmaDocker: $it")
-            }))
-            streamExecutor.submit(StreamGobbler(process.errorStream, Consumer {
+            })
+            streamExecutor.submit(StreamGobbler(process.errorStream) {
                 Log.log(logger::info, "DigmaDockerError: $it")
-            }))
+            })
 
             val success = process.waitFor(10, TimeUnit.MINUTES)
 
             val exitValue = process.exitValue()
 
             if (success) {
-                Log.log(logger::info, "installation completed successfully [exit code {}] for {}", exitValue, process.info())
+                Log.log(logger::info, "docker compose completed successfully [exit code {}] for {}", exitValue, process.info())
             } else {
-                Log.log(logger::info, "installation unsuccessful [exit code {}] for {}", exitValue, process.info())
+                Log.log(logger::info, "docker compose unsuccessful [exit code {}] for {}", exitValue, process.info())
             }
 
             return exitValue
 
         } catch (e: Exception) {
-            Log.warnWithException(logger, e, "error installing engined")
+            Log.warnWithException(logger, e, "error starting engined")
         }
         return -1
     }
 
 
-    fun down(composeFile: Path, dockerComposeCmd: String): Int {
+    fun down(composeFile: Path, dockerComposeCmd: List<String>): Int {
         try {
 
-            Log.log(logger::info, "starting shutdown")
+            Log.log(logger::info, "starting docker compose down")
 
             val processBuilder = ProcessBuilder()
-            processBuilder.command(dockerComposeCmd, "-f", composeFile.toString(), "down")
+            if (dockerComposeCmd.size == 1) {
+                processBuilder.command(dockerComposeCmd[0], "-f", composeFile.toString(), "down")
+            } else {
+                processBuilder.command(dockerComposeCmd[0], dockerComposeCmd[1], "-f", composeFile.toString(), "down")
+            }
             processBuilder.directory(composeFile.toFile().parentFile)
             processBuilder.redirectErrorStream(true)
             val process = processBuilder.start()
 
             Log.log(logger::info, "started process {}", process.info())
 
-            streamExecutor.submit(StreamGobbler(process.inputStream, Consumer {
+            streamExecutor.submit(StreamGobbler(process.inputStream) {
                 Log.log(logger::info, "DigmaDocker: $it")
-            }))
-            streamExecutor.submit(StreamGobbler(process.errorStream, Consumer {
+            })
+            streamExecutor.submit(StreamGobbler(process.errorStream) {
                 Log.log(logger::info, "DigmaDockerError: $it")
-            }))
+            })
 
             val success = process.waitFor(5, TimeUnit.MINUTES)
 
             val exitValue = process.exitValue()
 
             if (success) {
-                Log.log(logger::info, "shutdown completed successfully [exit code {}] for {}", exitValue, process.info())
+                Log.log(logger::info, "docker compose down completed successfully [exit code {}] for {}", exitValue, process.info())
             } else {
-                Log.log(logger::info, "shutdown unsuccessful [exit code {}] for {}", exitValue, process.info())
+                Log.log(logger::info, "docker compose down unsuccessful [exit code {}] for {}", exitValue, process.info())
             }
 
             return exitValue
 
         } catch (e: Exception) {
-            Log.warnWithException(logger, e, "error shutdown engine")
+            Log.warnWithException(logger, e, "error docker compose down")
         }
         return -1
     }
 
 
-    fun remove(composeFile: Path, dockerComposeCmd: String): Int {
+    fun remove(composeFile: Path, dockerComposeCmd: List<String>): Int {
         try {
 
             Log.log(logger::info, "starting uninstall")
 
             val processBuilder = ProcessBuilder()
-            processBuilder.command(dockerComposeCmd, "-f", composeFile.toString(), "down", "--rmi", "all", "-v", "--remove-orphans")
+            if (dockerComposeCmd.size == 1) {
+                processBuilder.command(dockerComposeCmd[0], "-f", composeFile.toString(), "down", "--rmi", "all", "-v", "--remove-orphans")
+            } else {
+                processBuilder.command(
+                    dockerComposeCmd[0],
+                    dockerComposeCmd[1],
+                    "-f",
+                    composeFile.toString(),
+                    "down",
+                    "--rmi",
+                    "all",
+                    "-v",
+                    "--remove-orphans"
+                )
+            }
             processBuilder.directory(composeFile.toFile().parentFile)
             processBuilder.redirectErrorStream(true)
             val process = processBuilder.start()
 
             Log.log(logger::info, "started process {}", process.info())
 
-            streamExecutor.submit(StreamGobbler(process.inputStream, Consumer {
+            streamExecutor.submit(StreamGobbler(process.inputStream) {
                 Log.log(logger::info, "DigmaDocker: $it")
-            }))
-            streamExecutor.submit(StreamGobbler(process.errorStream, Consumer {
+            })
+            streamExecutor.submit(StreamGobbler(process.errorStream) {
                 Log.log(logger::info, "DigmaDockerError: $it")
-            }))
+            })
 
             val success = process.waitFor(5, TimeUnit.MINUTES)
 

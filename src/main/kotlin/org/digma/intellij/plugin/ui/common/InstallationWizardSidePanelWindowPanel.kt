@@ -196,47 +196,122 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                 JCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser)
             }
             if (JCefMessagesUtils.INSTALLATION_WIZARD_INSTALL_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
-                service<DockerService>().installEngine(project) {
+                service<DockerService>().installEngine(project) { exitValue ->
 
                     runBlocking {
-                        BackendConnectionUtil.getInstance(project).testConnectionToBackend()
                         delay(5000)
-                        sendDockerResult(it, jbCefBrowser, JCefMessagesUtils.INSTALLATION_WIZARD_SET_INSTALL_DIGMA_ENGINE_RESULT)
-                        val success = it == "0"
+                        BackendConnectionUtil.getInstance(project).testConnectionToBackend()
+                        delay(2000)
+                        val connectionOk = BackendConnectionUtil.getInstance(project).testConnectionToBackend()
+                        val success = exitValue == "0"
+                        val isEngineUp = connectionOk && success
+                        if (isEngineUp) {
+                            sendDockerResult(
+                                ConnectionCheckResult.SUCCESS.value,
+                                "",
+                                jbCefBrowser,
+                                JCefMessagesUtils.INSTALLATION_WIZARD_SET_INSTALL_DIGMA_ENGINE_RESULT
+                            )
+                            sendIsDigmaEngineInstalled(true, jbCefBrowser)
+                            sendIsDigmaEngineRunning(true, jbCefBrowser)
+                        } else {
+                            sendDockerResult(
+                                ConnectionCheckResult.FAILURE.value,
+                                exitValue,
+                                jbCefBrowser,
+                                JCefMessagesUtils.INSTALLATION_WIZARD_SET_INSTALL_DIGMA_ENGINE_RESULT
+                            )
+                            sendIsDigmaEngineInstalled(false, jbCefBrowser)
+                            sendIsDigmaEngineRunning(false, jbCefBrowser)
+                        }
 
                         sendIsDockerInstalled(success, jbCefBrowser)
                         sendIsDockerComposeInstalled(success, jbCefBrowser)
-                        sendIsDigmaEngineInstalled(success, jbCefBrowser)
-                        sendIsDigmaEngineRunning(project, success, jbCefBrowser)
                     }
                 }
             }
             if (JCefMessagesUtils.INSTALLATION_WIZARD_UNINSTALL_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
-                service<DockerService>().removeEngine(project) {
-                    sendDockerResult(it, jbCefBrowser, JCefMessagesUtils.INSTALLATION_WIZARD_SET_UNINSTALL_DIGMA_ENGINE_RESULT)
-                    val success = it == "0"
-                    sendIsDigmaEngineRunning(project, !success, jbCefBrowser)
-                    sendIsDigmaEngineInstalled(!success, jbCefBrowser)
+                service<DockerService>().removeEngine(project) { exitValue ->
+
+                    runBlocking {
+                        val success = exitValue == "0"
+                        if (success) {
+                            sendDockerResult(
+                                ConnectionCheckResult.SUCCESS.value,
+                                "",
+                                jbCefBrowser,
+                                JCefMessagesUtils.INSTALLATION_WIZARD_SET_UNINSTALL_DIGMA_ENGINE_RESULT
+                            )
+                            sendIsDigmaEngineRunning(false, jbCefBrowser)
+                        } else {
+                            sendDockerResult(
+                                ConnectionCheckResult.FAILURE.value,
+                                exitValue,
+                                jbCefBrowser,
+                                JCefMessagesUtils.INSTALLATION_WIZARD_SET_UNINSTALL_DIGMA_ENGINE_RESULT
+                            )
+                        }
+                    }
                 }
             }
             if (JCefMessagesUtils.INSTALLATION_WIZARD_START_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
-                service<DockerService>().startEngine(project) {
+                service<DockerService>().startEngine(project) { exitValue ->
 
                     runBlocking {
-                        BackendConnectionUtil.getInstance(project).testConnectionToBackend()
                         delay(5000)
-                        sendDockerResult(it, jbCefBrowser, JCefMessagesUtils.INSTALLATION_WIZARD_SET_START_DIGMA_ENGINE_RESULT)
-                        val success = it == "0"
-                        sendIsDigmaEngineRunning(project, success, jbCefBrowser)
+                        BackendConnectionUtil.getInstance(project).testConnectionToBackend()
+                        delay(2000)
+                        val connectionOk = BackendConnectionUtil.getInstance(project).testConnectionToBackend()
+                        val success = exitValue == "0"
+                        val isEngineUp = connectionOk && success
+                        if (isEngineUp) {
+                            sendDockerResult(
+                                ConnectionCheckResult.SUCCESS.value,
+                                "",
+                                jbCefBrowser,
+                                JCefMessagesUtils.INSTALLATION_WIZARD_SET_START_DIGMA_ENGINE_RESULT
+                            )
+                            sendIsDigmaEngineInstalled(true, jbCefBrowser)
+                            sendIsDigmaEngineRunning(true, jbCefBrowser)
+                        } else {
+                            sendDockerResult(
+                                ConnectionCheckResult.FAILURE.value,
+                                exitValue,
+                                jbCefBrowser,
+                                JCefMessagesUtils.INSTALLATION_WIZARD_SET_START_DIGMA_ENGINE_RESULT
+                            )
+                            sendIsDigmaEngineInstalled(false, jbCefBrowser)
+                            sendIsDigmaEngineRunning(false, jbCefBrowser)
+                        }
+
+                        sendIsDockerInstalled(success, jbCefBrowser)
+                        sendIsDockerComposeInstalled(success, jbCefBrowser)
                     }
 
                 }
             }
             if (JCefMessagesUtils.INSTALLATION_WIZARD_STOP_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
-                service<DockerService>().stopEngine(project) {
-                    sendDockerResult(it, jbCefBrowser, JCefMessagesUtils.INSTALLATION_WIZARD_SET_STOP_DIGMA_ENGINE_RESULT)
-                    val success = it == "0"
-                    sendIsDigmaEngineRunning(project, !success, jbCefBrowser)
+                service<DockerService>().stopEngine(project) { exitValue ->
+
+                    runBlocking {
+                        val success = exitValue == "0"
+                        if (success) {
+                            sendDockerResult(
+                                ConnectionCheckResult.SUCCESS.value,
+                                "",
+                                jbCefBrowser,
+                                JCefMessagesUtils.INSTALLATION_WIZARD_SET_STOP_DIGMA_ENGINE_RESULT
+                            )
+                            sendIsDigmaEngineRunning(false, jbCefBrowser)
+                        } else {
+                            sendDockerResult(
+                                ConnectionCheckResult.FAILURE.value,
+                                exitValue,
+                                jbCefBrowser,
+                                JCefMessagesUtils.INSTALLATION_WIZARD_SET_STOP_DIGMA_ENGINE_RESULT
+                            )
+                        }
+                    }
                 }
             }
             callback.success("")
@@ -303,12 +378,9 @@ private fun updateInstallationWizardFlag() {
 }
 
 
-private fun sendDockerResult(msg: String, jbCefBrowser: JBCefBrowser, messageType: String) {
-    val payload = if (msg == "0") {
-        JcefDockerResultPayload("success", "")
-    } else {
-        JcefDockerResultPayload("failure", msg)
-    }
+private fun sendDockerResult(result: String, errorMsg: String, jbCefBrowser: JBCefBrowser, messageType: String) {
+
+    val payload = JcefDockerResultPayload(result, errorMsg)
 
     val requestMessage = JCefBrowserUtil.resultToString(
         JcefDockerResultRequest(
@@ -333,16 +405,6 @@ fun sendIsDigmaEngineInstalled(result: Boolean, jbCefBrowser: JBCefBrowser) {
     JCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser)
 }
 
-
-fun sendIsDigmaEngineRunning(project: Project, success: Boolean, jbCefBrowser: JBCefBrowser) {
-
-    if (!success) {
-        sendIsDigmaEngineRunning(false, jbCefBrowser)
-    } else {
-        val connectionOk = BackendConnectionUtil.getInstance(project).testConnectionToBackend()
-        sendIsDigmaEngineRunning(connectionOk, jbCefBrowser)
-    }
-}
 
 fun sendIsDigmaEngineRunning(success: Boolean, jbCefBrowser: JBCefBrowser) {
 

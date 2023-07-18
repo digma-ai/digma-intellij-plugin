@@ -61,11 +61,13 @@ class RunCfgTools {
 
             if (configuration is GradleRunConfiguration) {
                 val taskNames = configuration.settings.taskNames
+                taskNames.removeAll(UNIMPORTANT_TASKS)
                 activityMonitor.reportUnknownTaskRunning("gradle", taskNames)
             }
 
             if (configuration is MavenRunConfiguration) {
                 val goals = configuration.runnerParameters.goals
+                goals.removeAll(UNIMPORTANT_TASKS)
                 activityMonitor.reportUnknownTaskRunning("maven", goals)
             }
         }

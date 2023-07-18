@@ -243,6 +243,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                                 JCefMessagesUtils.INSTALLATION_WIZARD_SET_UNINSTALL_DIGMA_ENGINE_RESULT
                             )
                             sendIsDigmaEngineRunning(false, jbCefBrowser)
+                            sendIsDigmaEngineInstalled(false, jbCefBrowser)
                         } else {
                             sendDockerResult(
                                 ConnectionCheckResult.FAILURE.value,

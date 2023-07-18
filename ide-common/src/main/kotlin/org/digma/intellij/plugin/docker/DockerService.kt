@@ -122,6 +122,11 @@ class DockerService {
 
                 if (dockerComposeCmd != null) {
                     val exitValue = engine.up(downloader.composeFile!!, dockerComposeCmd)
+                    if (exitValue != "0") {
+                        downloader.deleteFile()
+                    }
+                } else {
+                    downloader.deleteFile()
                 }
             } else {
                 Log.log(logger::warn, "Failed to download compose file")

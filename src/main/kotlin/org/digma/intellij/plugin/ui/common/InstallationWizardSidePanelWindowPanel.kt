@@ -75,10 +75,10 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): DisposablePa
         .setUrl("https://$RESOURCE_FOLDER_NAME/index.html")
         .build()
     val indexTemplateData = mutableMapOf<String, Any>(
-            WIZARD_SKIP_INSTALLATION_STEP_VARIABLE to isServerConnectedAlready,
-            ENV_VARIABLE_IDE to ApplicationNamesInfo.getInstance().productName, //Available values: "IDEA", "Rider", "PyCharm"
-            USER_EMAIL_VARIABLE to (PersistenceService.getInstance().state.userEmail ?: ""),
-            IS_OBSERVABILITY_ENABLED_VARIABLE to PersistenceService.getInstance().state.isAutoOtel,
+        WIZARD_SKIP_INSTALLATION_STEP_VARIABLE to isServerConnectedAlready,
+        ENV_VARIABLE_IDE to ApplicationNamesInfo.getInstance().productName, //Available values: "IDEA", "Rider", "PyCharm"
+        USER_EMAIL_VARIABLE to (PersistenceService.getInstance().state.userEmail ?: ""),
+        IS_OBSERVABILITY_ENABLED_VARIABLE to PersistenceService.getInstance().state.isAutoOtel,
         IS_DOCKER_INSTALLED to service<DockerService>().isDockerInstalled(),
         IS_DOCKER_COMPOSE_INSTALLED to service<DockerService>().isDockerComposeInstalled(),
         IS_DIGMA_ENGINE_INSTALLED to service<DockerService>().isEngineInstalled(),

@@ -10,5 +10,6 @@ data class JaegerUrlChangedPayload
 @JsonIgnoreProperties(ignoreUnknown = true)
 constructor(
         @get:JsonProperty("isJaegerEnabled")
-        val isJaegerEnabled: Boolean
+        @param:JsonProperty("isJaegerEnabled")
+        val isJaegerEnabled: Boolean,
 )

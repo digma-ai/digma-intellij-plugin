@@ -13,7 +13,7 @@ internal class Engine {
     private val streamExecutor = Executors.newFixedThreadPool(2)
 
 
-    fun up(composeFile: Path, dockerComposeCmd: List<String>): Int {
+    fun up(composeFile: Path, dockerComposeCmd: List<String>): String {
 
         try {
 
@@ -48,16 +48,16 @@ internal class Engine {
                 Log.log(logger::info, "docker compose unsuccessful [exit code {}] for {}", exitValue, process.info())
             }
 
-            return exitValue
+            return exitValue.toString()
 
         } catch (e: Exception) {
             Log.warnWithException(logger, e, "error starting engined")
+            return e.message ?: e.toString()
         }
-        return -1
     }
 
 
-    fun down(composeFile: Path, dockerComposeCmd: List<String>): Int {
+    fun down(composeFile: Path, dockerComposeCmd: List<String>): String {
         try {
 
             Log.log(logger::info, "starting docker compose down")
@@ -91,15 +91,15 @@ internal class Engine {
                 Log.log(logger::info, "docker compose down unsuccessful [exit code {}] for {}", exitValue, process.info())
             }
 
-            return exitValue
+            return exitValue.toString()
 
         } catch (e: Exception) {
             Log.warnWithException(logger, e, "error docker compose down")
+            return e.message ?: e.toString()
         }
-        return -1
     }
 
-    fun start(composeFile: Path, dockerComposeCmd: List<String>): Int {
+    fun start(composeFile: Path, dockerComposeCmd: List<String>): String {
         try {
 
             Log.log(logger::info, "starting docker compose")
@@ -133,16 +133,16 @@ internal class Engine {
                 Log.log(logger::info, "docker compose start unsuccessful [exit code {}] for {}", exitValue, process.info())
             }
 
-            return exitValue
+            return exitValue.toString()
 
         } catch (e: Exception) {
             Log.warnWithException(logger, e, "error docker compose start")
+            return e.message ?: e.toString()
         }
-        return -1
     }
 
 
-    fun stop(composeFile: Path, dockerComposeCmd: List<String>): Int {
+    fun stop(composeFile: Path, dockerComposeCmd: List<String>): String {
         try {
 
             Log.log(logger::info, "starting docker compose stop")
@@ -176,19 +176,16 @@ internal class Engine {
                 Log.log(logger::info, "docker compose stop unsuccessful [exit code {}] for {}", exitValue, process.info())
             }
 
-            return exitValue
+            return exitValue.toString()
 
         } catch (e: Exception) {
             Log.warnWithException(logger, e, "error docker compose stop")
+            return e.message ?: e.toString()
         }
-        return -1
     }
 
 
-
-
-
-    fun remove(composeFile: Path, dockerComposeCmd: List<String>): Int {
+    fun remove(composeFile: Path, dockerComposeCmd: List<String>): String {
         try {
 
             Log.log(logger::info, "starting uninstall")
@@ -227,12 +224,12 @@ internal class Engine {
                 Log.log(logger::info, "uninstall unsuccessful [exit code {}] for {}", exitValue, process.info())
             }
 
-            return exitValue
+            return exitValue.toString()
 
         } catch (e: Exception) {
             Log.warnWithException(logger, e, "error uninstalling engine")
+            return e.message ?: e.toString()
         }
-        return -1
     }
 
 

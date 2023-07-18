@@ -8,6 +8,8 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.ui.jcef.JBCefBrowser
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
@@ -195,14 +197,14 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): DisposablePa
                     sendIsDockerInstalled(success, jbCefBrowser)
                     sendIsDockerComposeInstalled(success, jbCefBrowser)
                     sendIsDigmaEngineInstalled(success, jbCefBrowser)
-                    sendIsDigmaEngineRunning(success, jbCefBrowser)
+                    sendIsDigmaEngineRunning(project, success, jbCefBrowser)
                 }
             }
             if (JCefMessagesUtils.INSTALLATION_WIZARD_UNINSTALL_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
                 service<DockerService>().removeEngine(project) {
                     sendDockerResult(it, jbCefBrowser, JCefMessagesUtils.INSTALLATION_WIZARD_SET_UNINSTALL_DIGMA_ENGINE_RESULT)
                     val success = it == "0"
-                    sendIsDigmaEngineRunning(!success, jbCefBrowser)
+                    sendIsDigmaEngineRunning(project, !success, jbCefBrowser)
                     sendIsDigmaEngineInstalled(!success, jbCefBrowser)
                 }
             }
@@ -210,14 +212,14 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): DisposablePa
                 service<DockerService>().startEngine(project) {
                     sendDockerResult(it, jbCefBrowser, JCefMessagesUtils.INSTALLATION_WIZARD_SET_START_DIGMA_ENGINE_RESULT)
                     val success = it == "0"
-                    sendIsDigmaEngineRunning(success, jbCefBrowser)
+                    sendIsDigmaEngineRunning(project, success, jbCefBrowser)
                 }
             }
             if (JCefMessagesUtils.INSTALLATION_WIZARD_STOP_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
                 service<DockerService>().stopEngine(project) {
                     sendDockerResult(it, jbCefBrowser, JCefMessagesUtils.INSTALLATION_WIZARD_SET_STOP_DIGMA_ENGINE_RESULT)
                     val success = it == "0"
-                    sendIsDigmaEngineRunning(!success, jbCefBrowser)
+                    sendIsDigmaEngineRunning(project, !success, jbCefBrowser)
                 }
             }
             callback.success("")
@@ -315,8 +317,24 @@ fun sendIsDigmaEngineInstalled(result: Boolean, jbCefBrowser: JBCefBrowser) {
 }
 
 
-fun sendIsDigmaEngineRunning(result: Boolean, jbCefBrowser: JBCefBrowser) {
-    val payload = JcefDockerIsDigmaEngineRunningPayload(result)
+fun sendIsDigmaEngineRunning(project: Project, success: Boolean, jbCefBrowser: JBCefBrowser) {
+
+    if (!success) {
+        sendIsDigmaEngineRunning(false, jbCefBrowser)
+    }
+
+    BackendConnectionUtil.getInstance(project).testConnectionToBackend()
+
+    runBlocking {
+        delay(2000)
+        val connectionOk = BackendConnectionUtil.getInstance(project).testConnectionToBackend()
+        sendIsDigmaEngineRunning(connectionOk, jbCefBrowser)
+    }
+}
+
+fun sendIsDigmaEngineRunning(success: Boolean, jbCefBrowser: JBCefBrowser) {
+
+    val payload = JcefDockerIsDigmaEngineRunningPayload(success)
     val requestMessage = JCefBrowserUtil.resultToString(
         JcefDockerIsDigmaEngineRunningRequest(
             JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
@@ -326,6 +344,9 @@ fun sendIsDigmaEngineRunning(result: Boolean, jbCefBrowser: JBCefBrowser) {
     )
     JCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser)
 }
+
+
+
 
 fun sendIsDockerInstalled(result: Boolean, jbCefBrowser: JBCefBrowser) {
     val isDockerInstalledPayload = JcefDockerIsDockerInstalledPayload(result)

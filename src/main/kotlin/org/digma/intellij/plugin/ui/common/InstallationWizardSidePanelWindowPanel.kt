@@ -39,6 +39,7 @@ import org.digma.intellij.plugin.recentactivity.RecentActivityToolWindowShower
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.common.ObservabilityUtil.Companion.updateObservabilityValue
+import org.digma.intellij.plugin.ui.list.insights.isJaegerButtonEnabled
 import org.digma.intellij.plugin.ui.panels.DisposablePanel
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
 import org.digma.intellij.plugin.ui.settings.SettingsChangeListener
@@ -56,6 +57,7 @@ private const val IS_DOCKER_COMPOSE_INSTALLED: String = "isDockerComposeInstalle
 private const val IS_DIGMA_ENGINE_INSTALLED: String = "isDigmaEngineInstalled"
 private const val IS_DIGMA_ENGINE_RUNNING: String = "isDigmaEngineRunning"
 private const val IS_WIZARD_FIRST_LAUNCH: String = "wizardFirstLaunch"
+private const val IS_JAEGER_ENABLED: String = "isJaegerEnabled"
 
 private val logger: Logger =
     Logger.getInstance("org.digma.intellij.plugin.ui.common.InstallationWizardSidePanelWindowPanel")
@@ -84,6 +86,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): DisposablePa
         IS_DIGMA_ENGINE_INSTALLED to service<DockerService>().isEngineInstalled(),
         IS_DIGMA_ENGINE_RUNNING to service<DockerService>().isEngineRunning(project),
         IS_WIZARD_FIRST_LAUNCH to service<DockerService>().isEngineInstalled(),
+        IS_JAEGER_ENABLED to isJaegerButtonEnabled(),
     )
     CefApp.getInstance()
         .registerSchemeHandlerFactory(

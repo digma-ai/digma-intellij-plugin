@@ -1,14 +1,14 @@
 <idea-plugin>
 
     <!--
-       This file is meant to declare services and extension points that are common to all IDEs that
-       are not Rider.
-       these are services that are necessary only for language plugins that are implemented fully with intellij platform
-       and run only on the JVM.
-       the reason is it declares services and listeners that are not necessary in Rider.
-       although they will load in Rider but usually do nothing.
-       for example EditorEventsHandler will load in Rider but will ignore C# files.
+    This file was a separate file when CSharpLanguageService language service was async to rider backend.
+    but we changed CSharpLanguageService to work sync like the other language services and this file
+    is nit really necessary and the declarations can move to the main plugin file.
        -->
+
+    <extensions defaultExtensionNs="com.intellij">
+        <projectService serviceImplementation="org.digma.intellij.plugin.editor.CurrentContextUpdater"/>
+    </extensions>
 
     <projectListeners>
         <listener

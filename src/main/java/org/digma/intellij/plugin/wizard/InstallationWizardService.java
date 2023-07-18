@@ -3,14 +3,12 @@ package org.digma.intellij.plugin.wizard;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.jcef.JBCefBrowser;
-import org.digma.intellij.plugin.jcef.common.InstallationWizardSetCurrentStepPayload;
-import org.digma.intellij.plugin.jcef.common.InstallationWizardSetCurrentStepRequest;
-import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil;
-import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils;
 import org.jetbrains.annotations.NotNull;
 
 @Service(Service.Level.PROJECT)
 public final class InstallationWizardService {
+
+    //todo: refactor installation wizard to be managed by a service
 
     private final Project project;
     private JBCefBrowser jbCefBrowser;
@@ -27,18 +25,18 @@ public final class InstallationWizardService {
         this.jbCefBrowser = jbCefBrowser;
     }
 
-    public void sendCurrentStep(@NotNull String step) {
-
-        if (jbCefBrowser == null) {
-            return;
-        }
-
-        var payload = new InstallationWizardSetCurrentStepPayload(step);
-        var message = JCefBrowserUtil.resultToString(new InstallationWizardSetCurrentStepRequest(
-                JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
-                JCefMessagesUtils.INSTALLATION_WIZARD_SET_CURRENT_STEP,
-                payload));
-
-        JCefBrowserUtil.postJSMessage(message, jbCefBrowser);
-    }
+//    public void sendCurrentStep(@NotNull String step) {
+//
+//        if (jbCefBrowser == null) {
+//            return;
+//        }
+//
+//        var payload = new InstallationWizardSetCurrentStepPayload(step);
+//        var message = JCefBrowserUtil.resultToString(new InstallationWizardSetCurrentStepRequest(
+//                JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
+//                JCefMessagesUtils.INSTALLATION_WIZARD_SET_CURRENT_STEP,
+//                payload));
+//
+//        JCefBrowserUtil.postJSMessage(message, jbCefBrowser);
+//    }
 }

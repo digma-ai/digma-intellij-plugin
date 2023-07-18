@@ -98,10 +98,13 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
         IS_DOCKER_COMPOSE_INSTALLED to service<DockerService>().isDockerComposeInstalled(),
         IS_DIGMA_ENGINE_INSTALLED to service<DockerService>().isEngineInstalled(),
         IS_DIGMA_ENGINE_RUNNING to service<DockerService>().isEngineRunning(project),
-        IS_WIZARD_FIRST_LAUNCH to !service<DockerService>().isEngineInstalled(),
+        IS_WIZARD_FIRST_LAUNCH to PersistenceService.getInstance().isFirstWizardLaunch(),
         IS_JAEGER_ENABLED to isJaegerButtonEnabled(),
         IS_WIZARD_SKIP_INSTALLATION_STEP to wizardSkipInstallationStep,
     )
+
+    PersistenceService.getInstance().firstWizardLaunchDone()
+
     CefApp.getInstance()
         .registerSchemeHandlerFactory(
             "https",

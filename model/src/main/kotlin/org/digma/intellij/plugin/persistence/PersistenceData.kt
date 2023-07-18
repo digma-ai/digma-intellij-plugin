@@ -8,8 +8,8 @@ data class PersistenceData(
         var alreadyPassedTheInstallationWizardForRiderIDE: Boolean = false,
         var alreadyPassedTheInstallationWizardForPyCharmIDE: Boolean = false,
         var firstTimeConnectionEstablished: Boolean = false,
-        var firstTimePluginLoaded: Boolean = false,
+        var firstWizardLaunch: Boolean = true,
         var firstTimeInsightReceived: Boolean = false,
         var firstTimeAssetsReceived: Boolean = false,
-        var userEmail: String? = null
+        var userEmail: String? = null,
 )

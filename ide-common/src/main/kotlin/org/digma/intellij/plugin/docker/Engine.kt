@@ -99,6 +99,94 @@ internal class Engine {
         return -1
     }
 
+    fun start(composeFile: Path, dockerComposeCmd: List<String>): Int {
+        try {
+
+            Log.log(logger::info, "starting docker compose")
+
+            val processBuilder = ProcessBuilder()
+            if (dockerComposeCmd.size == 1) {
+                processBuilder.command(dockerComposeCmd[0], "-f", composeFile.toString(), "start")
+            } else {
+                processBuilder.command(dockerComposeCmd[0], dockerComposeCmd[1], "-f", composeFile.toString(), "down")
+            }
+            processBuilder.directory(composeFile.toFile().parentFile)
+            processBuilder.redirectErrorStream(true)
+            val process = processBuilder.start()
+
+            Log.log(logger::info, "started process {}", process.info())
+
+            streamExecutor.submit(StreamGobbler(process.inputStream) {
+                Log.log(logger::info, "DigmaDocker: $it")
+            })
+            streamExecutor.submit(StreamGobbler(process.errorStream) {
+                Log.log(logger::info, "DigmaDockerError: $it")
+            })
+
+            val success = process.waitFor(5, TimeUnit.MINUTES)
+
+            val exitValue = process.exitValue()
+
+            if (success) {
+                Log.log(logger::info, "docker compose start completed successfully [exit code {}] for {}", exitValue, process.info())
+            } else {
+                Log.log(logger::info, "docker compose start unsuccessful [exit code {}] for {}", exitValue, process.info())
+            }
+
+            return exitValue
+
+        } catch (e: Exception) {
+            Log.warnWithException(logger, e, "error docker compose start")
+        }
+        return -1
+    }
+
+
+    fun stop(composeFile: Path, dockerComposeCmd: List<String>): Int {
+        try {
+
+            Log.log(logger::info, "starting docker compose stop")
+
+            val processBuilder = ProcessBuilder()
+            if (dockerComposeCmd.size == 1) {
+                processBuilder.command(dockerComposeCmd[0], "-f", composeFile.toString(), "down")
+            } else {
+                processBuilder.command(dockerComposeCmd[0], dockerComposeCmd[1], "-f", composeFile.toString(), "down")
+            }
+            processBuilder.directory(composeFile.toFile().parentFile)
+            processBuilder.redirectErrorStream(true)
+            val process = processBuilder.start()
+
+            Log.log(logger::info, "started process {}", process.info())
+
+            streamExecutor.submit(StreamGobbler(process.inputStream) {
+                Log.log(logger::info, "DigmaDocker: $it")
+            })
+            streamExecutor.submit(StreamGobbler(process.errorStream) {
+                Log.log(logger::info, "DigmaDockerError: $it")
+            })
+
+            val success = process.waitFor(5, TimeUnit.MINUTES)
+
+            val exitValue = process.exitValue()
+
+            if (success) {
+                Log.log(logger::info, "docker compose stop completed successfully [exit code {}] for {}", exitValue, process.info())
+            } else {
+                Log.log(logger::info, "docker compose stop unsuccessful [exit code {}] for {}", exitValue, process.info())
+            }
+
+            return exitValue
+
+        } catch (e: Exception) {
+            Log.warnWithException(logger, e, "error docker compose stop")
+        }
+        return -1
+    }
+
+
+
+
 
     fun remove(composeFile: Path, dockerComposeCmd: List<String>): Int {
         try {

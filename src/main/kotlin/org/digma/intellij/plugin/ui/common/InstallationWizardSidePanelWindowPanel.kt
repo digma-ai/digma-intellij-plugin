@@ -218,7 +218,6 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): DisposablePa
                     sendDockerResult(it, jbCefBrowser, JCefMessagesUtils.INSTALLATION_WIZARD_SET_STOP_DIGMA_ENGINE_RESULT)
                     val success = it == "0"
                     sendIsDigmaEngineRunning(!success, jbCefBrowser)
-                    sendIsDigmaEngineInstalled(!success, jbCefBrowser)
                 }
             }
             callback.success("")

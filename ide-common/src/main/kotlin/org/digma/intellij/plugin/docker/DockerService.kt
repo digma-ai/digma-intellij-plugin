@@ -110,7 +110,7 @@ class DockerService {
                 val dockerComposeCmd = getDockerComposeCommand()
 
                 if (dockerComposeCmd != null) {
-                    val exitValue = engine.down(downloader.composeFile!!, dockerComposeCmd)
+                    val exitValue = engine.stop(downloader.composeFile!!, dockerComposeCmd)
                     notifyResult("$exitValue", resultTask)
                 } else {
                     notifyResult("no docker-compose command", resultTask)
@@ -126,7 +126,7 @@ class DockerService {
                 val dockerComposeCmd = getDockerComposeCommand()
 
                 if (dockerComposeCmd != null) {
-                    val exitValue = engine.up(downloader.composeFile!!, dockerComposeCmd)
+                    val exitValue = engine.start(downloader.composeFile!!, dockerComposeCmd)
                     notifyResult("$exitValue", resultTask)
                 } else {
                     notifyResult("no docker-compose command", resultTask)

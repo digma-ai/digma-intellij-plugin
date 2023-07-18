@@ -178,6 +178,8 @@ class DockerService {
                 Log.log(logger::warn, "Failed to find compose file")
                 notifyResult("Failed to find compose file", resultTask)
             }
+
+            downloader.deleteFile()
         }
     }
 

@@ -182,7 +182,7 @@ class DockerService {
 
     fun removeEngine(project: Project, resultTask: Consumer<String>) {
 
-        Backgroundable.runInNewBackgroundThread(project, "starting digma engine") {
+        Backgroundable.runInNewBackgroundThread(project, "uninstalling digma engine") {
             if (downloader.findComposeFile()) {
                 val dockerComposeCmd = getDockerComposeCommand()
 

@@ -8,6 +8,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.LibraryOrderEntry
 import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.startup.StartupActivity
+import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.posthog.MonitoredFramework
 import org.jetbrains.annotations.NotNull
 import java.util.Timer
 import java.util.TimerTask
@@ -65,6 +67,9 @@ class ModulesDepsService(private val project: Project) : Disposable {
             var hasOtelExporterOtlp = false
             var hasDigmaSpringBootMicrometerAutoconf = false
             var springBootVersion: String? = null
+            var micronautVersion: String? = null
+            var dropwizardVersion: String? = null
+            var springVersion: String? = null
 
 
             for (currLib in libDeps) {
@@ -104,13 +109,35 @@ class ModulesDepsService(private val project: Project) : Disposable {
                     hasDigmaSpringBootMicrometerAutoconf = checkDigmaSpringBootMicrometerAutoconf(libCoord)
                 }
 
-                // other
+                // Micronaut
+                if (micronautVersion == null) {
+                    val hasMicronaut = checkMicronaut(libCoord)
+                    if (hasMicronaut) {
+                        micronautVersion = libCoord.version
+                    }
+                }
+
+                // Dropwizard
+                if (dropwizardVersion == null) {
+                    val hasDropwizard = checkDropwizard(libCoord)
+                    if (hasDropwizard) {
+                        dropwizardVersion = libCoord.version
+                    }
+                }
+
+                // Spring
+                if (springVersion == null) {
+                    val hasSpring = checkSpring(libCoord)
+                    if (hasSpring) {
+                        springVersion = libCoord.version
+                    }
+                }
             }
 
             return ModuleMetadata(
                 hasOpenTelemetryAnnotations, quarkusVersion, hasQuarkusOpenTelemetry,
                 springBootVersion, hasSpringBootStarterActuator, hasMicrometerTracingBridgeOtel, hasOtelExporterOtlp,
-                hasDigmaSpringBootMicrometerAutoconf
+                hasDigmaSpringBootMicrometerAutoconf, micronautVersion, dropwizardVersion, springVersion
             )
         }
 
@@ -132,6 +159,21 @@ class ModulesDepsService(private val project: Project) : Disposable {
         @JvmStatic
         fun checkSpringBoot(libCoord: UnifiedCoordinates): Boolean {
             return libCoord.groupId == "org.springframework.boot"
+        }
+
+        @JvmStatic
+        fun checkMicronaut(libCoord: UnifiedCoordinates): Boolean {
+            return libCoord.groupId == "io.micronaut"
+        }
+
+        @JvmStatic
+        fun checkDropwizard(libCoord: UnifiedCoordinates): Boolean {
+            return libCoord.groupId == "io.dropwizard"
+        }
+
+        @JvmStatic
+        fun checkSpring(libCoord: UnifiedCoordinates): Boolean {
+            return libCoord.groupId == "org.springframework"
         }
 
         @JvmStatic
@@ -189,7 +231,9 @@ class ModulesDepsService(private val project: Project) : Disposable {
     }
 
     fun periodicAction() {
-        mapName2Module = createModuleMap()
+        val newMap = createModuleMap()
+        notifyOfNewDetections(newMap.values)
+        mapName2Module = newMap
 
 //        println("mapName2Module = ${mapName2Module}")
     }
@@ -206,6 +250,35 @@ class ModulesDepsService(private val project: Project) : Disposable {
         return theMap
     }
 
+    private fun notifyOfNewDetections(newValues: MutableCollection<ModuleExt>){
+        val previousValues = mapName2Module.values;
+        val activityMonitor = ActivityMonitor.getInstance(project)
+
+        fun changedToTrue(getter: (ModuleMetadata) -> Boolean): Boolean {
+            return !previousValues.any { getter(it.metadata) } && newValues.any { getter(it.metadata) }
+        }
+
+        if (changedToTrue { it.hasSpring() }) {
+            activityMonitor.registerFramework(MonitoredFramework.Spring)
+        }
+
+        if (changedToTrue { it.hasSpringBoot() }) {
+            activityMonitor.registerFramework(MonitoredFramework.SpringBoot)
+        }
+
+        if (changedToTrue { it.hasMicronaut() }) {
+            activityMonitor.registerFramework(MonitoredFramework.Micronaut)
+        }
+
+        if (changedToTrue { it.hasDropwizard() }) {
+            activityMonitor.registerFramework(MonitoredFramework.Dropwizard)
+        }
+
+        if (changedToTrue { it.hasQuarkus() }) {
+            activityMonitor.registerFramework(MonitoredFramework.Quarkus)
+        }
+    }
+
     fun getModuleExt(moduleName: String): ModuleExt? {
         val mExt = mapName2Module.get(moduleName)
         return mExt
@@ -218,6 +291,7 @@ class ModulesDepsService(private val project: Project) : Disposable {
 //            .map { it.module }
             .toSet()
     }
+
 
     fun getSpringBootModulesWithoutObservabilityDeps(): Set<ModuleExt> {
         return mapName2Module.values.filter {
@@ -264,6 +338,9 @@ data class ModuleMetadata(
     val hasOtelExporterOtlp: Boolean,
     val hasDigmaSpringBootMicrometerAutoconf: Boolean,
     // other
+    val micronautVersion: String?,
+    val dropwizardVersion: String?,
+    val springVersion: String?,
 ) {
     fun hasQuarkus(): Boolean {
         return !quarkusVersion.isNullOrBlank()
@@ -271,6 +348,18 @@ data class ModuleMetadata(
 
     fun hasSpringBoot(): Boolean {
         return !springBootVersion.isNullOrBlank()
+    }
+
+    fun hasMicronaut(): Boolean {
+        return !micronautVersion.isNullOrBlank()
+    }
+
+    fun hasDropwizard(): Boolean {
+        return !dropwizardVersion.isNullOrBlank()
+    }
+
+    fun hasSpring(): Boolean {
+        return !springVersion.isNullOrBlank()
     }
 }
 

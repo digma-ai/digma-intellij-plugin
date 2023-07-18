@@ -74,6 +74,14 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
 //        registerSessionDetails()
 //    }
 
+    fun registerFramework(framework: MonitoredFramework) {
+        postHog?.capture(userId, "framework detected", mapOf("framework.name" to framework.name))
+        postHog?.set(userId, mapOf(
+            "framework.last" to framework.name,
+            "framework.${framework.name}.last-seen" to Instant.now().toString()
+        ))
+    }
+
     fun registerEmail(email: String) {
         postHog?.alias(userId, email)
     }

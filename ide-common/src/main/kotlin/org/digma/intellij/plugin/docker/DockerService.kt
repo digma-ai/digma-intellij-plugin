@@ -74,13 +74,19 @@ class DockerService {
 
 
     private fun getDockerComposeCommand(): List<String>? {
-        val dockerComposeCmd = getCommand(DOCKER_COMPOSE_COMMAND)
+        var dockerComposeCmd = getCommand(DOCKER_COMPOSE_COMMAND)
         if (dockerComposeCmd != null) {
+            if (SystemInfo.isWindows && !dockerComposeCmd.endsWith("exe", true)) {
+                dockerComposeCmd = dockerComposeCmd.plus(".exe")
+            }
             return listOf(dockerComposeCmd)
         }
 
-        val dockerCmd = getCommand(DOCKER_COMMAND)
+        var dockerCmd = getCommand(DOCKER_COMMAND)
         if (dockerCmd != null) {
+            if (SystemInfo.isWindows && !dockerCmd.endsWith("exe", true)) {
+                dockerCmd = dockerCmd.plus(".exe")
+            }
             return listOf(dockerCmd, "compose")
         }
         return null

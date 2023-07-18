@@ -1,26 +1,16 @@
 package org.digma.intellij.plugin.idea.runcfg
 
 import com.intellij.execution.CommonJavaRunConfigurationParameters
-import com.intellij.execution.Executor
-import com.intellij.execution.RunConfigurationExtension
 import com.intellij.execution.configurations.JavaParameters
 import com.intellij.execution.configurations.ModuleRunConfiguration
 import com.intellij.execution.configurations.ParametersList
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunnerSettings
-import com.intellij.execution.process.ProcessEvent
-import com.intellij.execution.process.ProcessHandler
-import com.intellij.execution.process.ProcessListener
-import com.intellij.execution.ui.ConsoleView
-import com.intellij.execution.ui.ConsoleViewContentType
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
-import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.persistence.PersistenceService
-import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.settings.SpringBootObservabilityMode
 import org.jetbrains.annotations.NotNull
@@ -29,20 +19,25 @@ import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
 
 private const val ORG_GRADLE_JAVA_TOOL_OPTIONS = "ORG_GRADLE_JAVA_TOOL_OPTIONS"
 
-class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
+class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
 
-    private val logger: Logger = Logger.getInstance(AutoOtelAgentRunConfigurationExtension::class.java)
+    private val logger: Logger = Logger.getInstance(AutoOtelAgentRunConfigurationWrapper::class.java)
 
     companion object {
         const val DIGMA_OBSERVABILITY_ENV_VAR_NAME = "DIGMA_OBSERVABILITY"
+
+        @JvmStatic
+        fun getInstance(project: Project): AutoOtelAgentRunConfigurationWrapper {
+            return project.getService(AutoOtelAgentRunConfigurationWrapper::class.java)
+        }
     }
 
-    private fun enabled(): Boolean {
-        return PersistenceService.getInstance().state.isAutoOtel
+    override fun canWrap(configuration: RunConfigurationBase<*>): Boolean {
+        return evalRunConfigType(configuration) != RunConfigType.Unknown
     }
 
-    protected fun isBackendOk(project: Project): Boolean {
-        return BackendConnectionMonitor.getInstance(project).isConnectionOk()
+    override fun getRunConfigType(configuration: RunConfigurationBase<*>): RunConfigType {
+        return evalRunConfigType(configuration)
     }
 
     /*
@@ -53,48 +48,16 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
     run configuration with a gradle script generated in place and a JavaExec task that runs the main method.
     unit tests will be executed by calling gradle :test task.
      */
-
-
-    override fun isApplicableFor(configuration: RunConfigurationBase<*>): Boolean {
-        Log.log(logger::debug, "isApplicableFor, project:{}, id:{}, name:{}, type:{}",
-                configuration.project, configuration.id, configuration.name, configuration.type)
-
-        val runConfigType = evalRunConfigType(configuration)
-
-        return runConfigType != RunConfigType.Unknown
-    }
-
-
     override fun <T : RunConfigurationBase<*>?> updateJavaParameters(
         configuration: T & Any,
         params: JavaParameters,
         runnerSettings: RunnerSettings?,
+        resolvedModule: Module?,
     ) {
 
-        val resolvedModule = RunCfgTools.resolveModule(configuration, params, runnerSettings)
-
-        Log.log(logger::debug, "updateJavaParameters, project:{}, id:{}, name:{}, type:{}, module:{}",
-            configuration.project, configuration.id, configuration.name, configuration.type, resolvedModule)
-
         val project = configuration.project
-        val runConfigType = evalRunConfigType(configuration)
-        val autoInstrumentationEnabled = enabled()
-        val connectedToBackend = isBackendOk(project)
-
-        reportToPosthog(project, runConfigType, autoInstrumentationEnabled, connectedToBackend)
-
-        //testing if enabled must be done here just before running.
-        if (!autoInstrumentationEnabled) {
-            Log.log(logger::debug, "AutoOtelAgentRunConfigurationExtension is not enabled")
-            return
-        }
-
-        if (!connectedToBackend) {
-            Log.log(logger::warn, "No connection to Digma backend. going to skip the Otel agent")
-            return
-        }
-
         val useOtelAgent = evalToUseAgent(resolvedModule)
+        val runConfigType = evalRunConfigType(configuration)
 
         when (runConfigType) {
             RunConfigType.JavaRun -> {
@@ -184,53 +147,6 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
         params.env[JAVA_TOOL_OPTIONS] = javaToolOptions
     }
 
-
-    override fun attachToProcess(
-        configuration: RunConfigurationBase<*>,
-        handler: ProcessHandler,
-        runnerSettings: RunnerSettings?,
-    ) {
-        //we need to clean gradle configuration from our JAVA_TOOL_OPTIONS
-        if (isGradleConfiguration(configuration)) {
-            handler.addProcessListener(object : ProcessListener {
-
-                override fun processWillTerminate(event: ProcessEvent, willBeDestroyed: Boolean) {
-                    cleanGradleSettings(configuration)
-                }
-
-                private fun cleanGradleSettings(configuration: RunConfigurationBase<*>) {
-                    configuration as GradleRunConfiguration
-                    Log.log(logger::debug, "Cleaning gradle configuration {}", configuration)
-                    if (configuration.settings.env.containsKey(ORG_GRADLE_JAVA_TOOL_OPTIONS)) {
-                        val orgJavaToolOptions = configuration.settings.env[ORG_GRADLE_JAVA_TOOL_OPTIONS]
-                        configuration.settings.env[JAVA_TOOL_OPTIONS] = orgJavaToolOptions
-                        configuration.settings.env.remove(ORG_GRADLE_JAVA_TOOL_OPTIONS)
-                    } else if (configuration.settings.env.containsKey(JAVA_TOOL_OPTIONS)) {
-                        configuration.settings.env.remove(JAVA_TOOL_OPTIONS)
-                    }
-                }
-            })
-        }
-
-    }
-
-
-    override fun decorate(
-        console: ConsoleView,
-        configuration: RunConfigurationBase<*>,
-        executor: Executor,
-    ): ConsoleView {
-        if (enabled() &&
-            isBackendOk(configuration.project) &&
-            (isMavenConfiguration(configuration) || isJavaConfiguration(configuration))
-        ) {
-            //that only works for java and maven run configurations.
-            console.print("This process is enhanced by Digma OTEL agent !\n", ConsoleViewContentType.LOG_WARNING_OUTPUT)
-        }
-
-        return console
-    }
-
     private fun buildJavaToolOptions(
         configuration: RunConfigurationBase<*>,
         project: Project,
@@ -241,7 +157,10 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
         val otelAgentPath = OTELJarProvider.getInstance().getOtelAgentJarPath(project)
         val digmaExtensionPath = OTELJarProvider.getInstance().getDigmaAgentExtensionJarPath(project)
         if (otelAgentPath == null || digmaExtensionPath == null) {
-            Log.log(logger::debug, "could not build $JAVA_TOOL_OPTIONS because otel agent or digma extension jar are not available. please check the logs")
+            Log.log(
+                logger::warn,
+                "could not build $JAVA_TOOL_OPTIONS because otel agent or digma extension jar are not available. please check the logs"
+            )
             return null
         }
 
@@ -316,11 +235,6 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
         return SettingsState.getInstance().springBootObservabilityMode == SpringBootObservabilityMode.OtelAgent
     }
 
-    private fun reportToPosthog(project: Project, runConfigType: RunConfigType, observabilityEnabled: Boolean, connectedToBackend: Boolean) {
-        val activityMonitor = ActivityMonitor.getInstance(project)
-        activityMonitor.reportRunConfig(runConfigType.name, observabilityEnabled, connectedToBackend)
-    }
-
     @NotNull
     private fun evalRunConfigType(configuration: RunConfigurationBase<*>): RunConfigType {
         if (isJavaConfiguration(configuration)) return RunConfigType.JavaRun
@@ -339,7 +253,7 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
     }
 
 
-    private fun isGradleConfiguration(configuration: RunConfigurationBase<*>): Boolean {
+    override fun isGradleConfiguration(configuration: RunConfigurationBase<*>): Boolean {
         /*
         this will catch gradle running a main method or a unit test or spring bootRun.
         all other gradle tasks are ignored.

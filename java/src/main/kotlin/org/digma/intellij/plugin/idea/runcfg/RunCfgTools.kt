@@ -53,7 +53,6 @@ class RunCfgTools {
             // no match, need to log warning
             return null
         }
-
     }
 
 }

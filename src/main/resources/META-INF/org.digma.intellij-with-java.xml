@@ -12,7 +12,7 @@
         <postStartupActivity implementation="org.digma.intellij.plugin.idea.psi.java.JavaSpanNavigationStartupActivity"/>
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService"/>
 
-        <runConfigurationExtension implementation="org.digma.intellij.plugin.idea.runcfg.AutoOtelAgentRunConfigurationExtension"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.runcfg.AutoOtelAgentRunConfigurationWrapper"/>
         <applicationService serviceImplementation="org.digma.intellij.plugin.idea.runcfg.OTELJarProvider"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.idea.runcfg.OTELJarProviderStartup"/>
 
@@ -20,7 +20,8 @@
         <postStartupActivity implementation="org.digma.intellij.plugin.idea.deps.ModuleDepsStarter"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.frameworks.QuarkusConfigureDepsService"/>
-        <runConfigurationExtension implementation="org.digma.intellij.plugin.idea.runcfg.QuarkusRunConfigurationExtension"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.runcfg.QuarkusRunConfigurationWrapper"/>
+        <runConfigurationExtension implementation="org.digma.intellij.plugin.idea.runcfg.OtelRunConfigurationExtension"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService"/>
     </extensions>

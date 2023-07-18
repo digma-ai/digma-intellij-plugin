@@ -115,6 +115,19 @@ class DockerService {
         }
     }
 
+    fun upgradeEngine(project: Project) {
+        Backgroundable.runInNewBackgroundThread(project, "upgrading digma engine") {
+            if (downloader.downloadComposeFile()) {
+                val dockerComposeCmd = getDockerComposeCommand()
+
+                if (dockerComposeCmd != null) {
+                    val exitValue = engine.up(downloader.composeFile!!, dockerComposeCmd)
+                }
+            } else {
+                Log.log(logger::warn, "Failed to download compose file")
+            }
+        }
+    }
 
     fun stopEngine(project: Project, resultTask: Consumer<String>) {
 

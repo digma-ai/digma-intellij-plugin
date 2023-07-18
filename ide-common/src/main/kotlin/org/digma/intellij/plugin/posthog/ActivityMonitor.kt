@@ -14,10 +14,8 @@ import java.io.StringWriter
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ConcurrentMap
 
-class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
+class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
 
     companion object {
         @JvmStatic
@@ -183,16 +181,20 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
 
     fun reportUnknownTaskRunning(configType: String, taskNames: List<String>) {
 
-        // Remove keys older than 1 minute
+        // Purge tasks older than 1 minute
         latestUnknownRunConfigTasks.entries.removeIf {
             it.value.isBefore(Instant.now().minusSeconds(60))
         }
 
+        // Filter out tasks seen in the last 1 minute
         val taskNamesToReport = taskNames.stream()
             .filter{ !latestUnknownRunConfigTasks.containsKey(it)}
             .toList()
         for (task in taskNames)
             latestUnknownRunConfigTasks[task] = Instant.now()
+
+        if(taskNamesToReport.isEmpty())
+            return
 
         postHog?.capture(
             userId, "unknown-config ran", mapOf(

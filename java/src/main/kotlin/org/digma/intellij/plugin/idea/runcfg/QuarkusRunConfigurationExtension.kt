@@ -36,6 +36,10 @@ class QuarkusRunConfigurationExtension : RunConfigurationExtension() {
         return PersistenceService.getInstance().state.isAutoOtel
     }
 
+    protected fun isBackendOk(project: Project): Boolean {
+        return BackendConnectionMonitor.getInstance(project).isConnectionOk()
+    }
+
     /*
     Note about gradle
     in intellij the user can configure to run main method or unit tests with gradle or with
@@ -64,15 +68,17 @@ class QuarkusRunConfigurationExtension : RunConfigurationExtension() {
         runnerSettings: RunnerSettings?,
     ) {
 
+        val resolvedModule = RunCfgTools.resolveModule(configuration, params, runnerSettings)
+
         Log.log(
-            logger::debug, "updateJavaParameters, project:{}, id:{}, name:{}, type:{}",
-            configuration.project, configuration.id, configuration.name, configuration.type
+            logger::debug, "updateJavaParameters, project:{}, id:{}, name:{}, type:{}, module: {}",
+            configuration.project, configuration.id, configuration.name, configuration.type, resolvedModule
         )
 
         val project = configuration.project
         val runConfigType = evalRunConfigType(configuration)
         val autoInstrumentationEnabled = enabled()
-        val connectedToBackend = BackendConnectionMonitor.getInstance(project).isConnectionOk()
+        val connectedToBackend = isBackendOk(project)
 
         reportToPosthog(project, runConfigType, autoInstrumentationEnabled, connectedToBackend)
 
@@ -183,6 +189,7 @@ class QuarkusRunConfigurationExtension : RunConfigurationExtension() {
         executor: Executor,
     ): ConsoleView {
         if (enabled() &&
+            isBackendOk(configuration.project) &&
             (isMavenConfiguration(configuration))
         ) {
             //that only works for java and maven run configurations.

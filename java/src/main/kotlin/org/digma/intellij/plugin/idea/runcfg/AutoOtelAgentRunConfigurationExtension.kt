@@ -41,6 +41,10 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
         return PersistenceService.getInstance().state.isAutoOtel
     }
 
+    protected fun isBackendOk(project: Project): Boolean {
+        return BackendConnectionMonitor.getInstance(project).isConnectionOk()
+    }
+
     /*
     Note about gradle
     in intellij the user can configure to run main method or unit tests with gradle or with
@@ -75,7 +79,7 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
         val project = configuration.project
         val runConfigType = evalRunConfigType(configuration)
         val autoInstrumentationEnabled = enabled()
-        val connectedToBackend = BackendConnectionMonitor.getInstance(project).isConnectionOk()
+        val connectedToBackend = isBackendOk(project)
 
         reportToPosthog(project, runConfigType, autoInstrumentationEnabled, connectedToBackend)
 
@@ -217,6 +221,7 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
         executor: Executor,
     ): ConsoleView {
         if (enabled() &&
+            isBackendOk(configuration.project) &&
             (isMavenConfiguration(configuration) || isJavaConfiguration(configuration))
         ) {
             //that only works for java and maven run configurations.

@@ -1,6 +1,12 @@
 # Changelog
 
-## [2.0.111] - 2023-07-17
+## [2.0.112] - 2023-07-18
+- register email by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/955
+- Small bug fix/print only if backend is ok by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/974
+- Project framework discovery+posthog by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/972
+- Feature/add annotation Observed for spring boot micrometer instead of WithSpan by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/973
+
+## 2.0.111 - 2023-07-17
 - Feature/span discovery for spring boot micrometer tracing by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/902
 
 ## 2.0.110 - 2023-07-17

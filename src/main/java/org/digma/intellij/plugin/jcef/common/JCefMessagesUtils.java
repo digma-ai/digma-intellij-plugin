@@ -34,6 +34,14 @@ public class JCefMessagesUtils {
     public static final String INSTALLATION_WIZARD_STOP_DIGMA_ENGINE = "INSTALLATION_WIZARD/STOP_DIGMA_ENGINE";
     public static final String INSTALLATION_WIZARD_SET_STOP_DIGMA_ENGINE_RESULT = "INSTALLATION_WIZARD/SET_STOP_DIGMA_ENGINE_RESULT";
 
+    public static final String GLOBAL_SET_IS_DIGMA_ENGINE_INSTALLED = "GLOBAL/SET_IS_DIGMA_ENGINE_INSTALLED";
+    public static final String GLOBAL_SET_IS_DIGMA_ENGINE_RUNNING = "GLOBAL/SET_IS_DIGMA_ENGINE_RUNNING";
+    public static final String GLOBAL_SET_IS_DOCKER_INSTALLED = "GLOBAL/SET_IS_DOCKER_INSTALLED";
+    public static final String GLOBAL_SET_IS_DOCKER_COMPOSE_INSTALLED = "GLOBAL/SET_IS_DOCKER_COMPOSE_INSTALLED";
+
+
+
+
     public static <T> T parseJsonToObject(String jsonString, Class<T> jcefMessageRequestClass) {
         JsonObject object = JsonParser.parseString(jsonString).getAsJsonObject();
         return new Gson().fromJson(object, jcefMessageRequestClass);

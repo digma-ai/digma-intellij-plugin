@@ -16,8 +16,25 @@ data class JcefDockerResultPayload
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 constructor(val result: String, val error: String)
 
-
 enum class ConnectionCheckResult(val value: String) {
     SUCCESS("success"),
     FAILURE("failure")
 }
+
+
+data class JcefDockerIsDigmaEngineInstalledPayload
+@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+constructor(val isDigmaEngineInstalled: Boolean)
+
+data class JcefDockerIsDigmaEngineRunningPayload
+@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+constructor(val isDigmaEngineRunning: Boolean)
+
+data class JcefDockerIsDockerInstalledPayload
+@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+constructor(val isDockerInstalled: Boolean)
+
+data class JcefDockerIsDockerComposeInstalledPayload
+@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+constructor(val isDockerComposeInstalled: Boolean)
+

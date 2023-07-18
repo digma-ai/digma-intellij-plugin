@@ -95,8 +95,12 @@ class DockerService {
                 if (dockerComposeCmd != null) {
                     val exitValue = engine.up(downloader.composeFile!!, dockerComposeCmd)
                     notifyResult(exitValue, resultTask)
+                    if (exitValue != "0") {
+                        downloader.deleteFile()
+                    }
                 } else {
                     notifyResult("no docker-compose command", resultTask)
+                    downloader.deleteFile()
                 }
             } else {
                 Log.log(logger::warn, "Failed to download compose file")
@@ -118,6 +122,7 @@ class DockerService {
                     notifyResult(exitValue, resultTask)
                 } else {
                     notifyResult("no docker-compose command", resultTask)
+                    downloader.deleteFile()
                 }
             } else {
                 Log.log(logger::warn, "Failed to find compose file")
@@ -140,8 +145,12 @@ class DockerService {
                 if (dockerComposeCmd != null) {
                     val exitValue = engine.start(downloader.composeFile!!, dockerComposeCmd)
                     notifyResult(exitValue, resultTask)
+                    if (exitValue != "0") {
+                        downloader.deleteFile()
+                    }
                 } else {
                     notifyResult("no docker-compose command", resultTask)
+                    downloader.deleteFile()
                 }
             } else {
                 Log.log(logger::warn, "Failed to find compose file")
@@ -163,6 +172,7 @@ class DockerService {
                     notifyResult(exitValue, resultTask)
                 } else {
                     notifyResult("no docker-compose command", resultTask)
+                    downloader.deleteFile()
                 }
             } else {
                 Log.log(logger::warn, "Failed to find compose file")

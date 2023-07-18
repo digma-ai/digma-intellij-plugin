@@ -77,4 +77,14 @@ class Downloader {
         return null
     }
 
+    fun deleteFile() {
+        if (composeFile == null) {
+            createComposeFilePath()
+        }
+
+        if (composeFile != null && composeFile!!.toFile().exists()) {
+            composeFile!!.toFile().delete()
+        }
+    }
+
 }

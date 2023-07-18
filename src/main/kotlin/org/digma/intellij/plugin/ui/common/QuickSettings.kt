@@ -13,6 +13,7 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
+import org.digma.intellij.plugin.wizard.InstallationWizardService
 import java.awt.Cursor
 import java.awt.FlowLayout
 import java.awt.GridLayout
@@ -96,6 +97,7 @@ class SettingsHintPanel(project: Project) : JPanel() {
                 try {
                     MainToolWindowCardsController.getInstance(project).showWizard();
                     ToolWindowShower.getInstance(project).showToolWindow()
+                    InstallationWizardService.getInstance(project).sendCurrentStep("install")
                     HintManager.getInstance().hideAllHints()
                 } catch (ex: Exception) {
                     Log.log(logger::debug, "exception opening 'Local Engine' message: {}. ", ex.message)
@@ -150,6 +152,7 @@ class SettingsHintPanel(project: Project) : JPanel() {
                 try {
                     MainToolWindowCardsController.getInstance(project).showWizard();
                     ToolWindowShower.getInstance(project).showToolWindow()
+                    InstallationWizardService.getInstance(project).sendCurrentStep("observability")
                     HintManager.getInstance().hideAllHints()
                 } catch (ex: Exception) {
                     Log.log(logger::debug, "exception opening 'Onboarding Digma' message: {}. ", ex.message)

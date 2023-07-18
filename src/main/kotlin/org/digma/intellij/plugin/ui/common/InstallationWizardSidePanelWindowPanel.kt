@@ -24,6 +24,15 @@ import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.jcef.common.CustomSchemeHandlerFactory
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
+import org.digma.intellij.plugin.jcef.common.JcefDockerIsDigmaEngineInstalledPayload
+import org.digma.intellij.plugin.jcef.common.JcefDockerIsDigmaEngineInstalledRequest
+import org.digma.intellij.plugin.jcef.common.JcefDockerIsDigmaEngineRunningPayload
+import org.digma.intellij.plugin.jcef.common.JcefDockerIsDigmaEngineRunningRequest
+import org.digma.intellij.plugin.jcef.common.JcefDockerIsDockerComposeInstalledPayload
+import org.digma.intellij.plugin.jcef.common.JcefDockerIsDockerComposeInstalledRequest
+import org.digma.intellij.plugin.jcef.common.JcefDockerIsDockerInstalledPayload
+import org.digma.intellij.plugin.jcef.common.JcefDockerIsDockerInstalledRequest
+import org.digma.intellij.plugin.jcef.common.JcefDockerResultRequest
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.jcef.common.OpenInBrowserRequest
 import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest
@@ -34,16 +43,7 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.recentactivity.ConnectionCheckResult
 import org.digma.intellij.plugin.recentactivity.JcefConnectionCheckMessagePayload
 import org.digma.intellij.plugin.recentactivity.JcefConnectionCheckMessageRequest
-import org.digma.intellij.plugin.recentactivity.JcefDockerIsDigmaEngineInstalledPayload
-import org.digma.intellij.plugin.recentactivity.JcefDockerIsDigmaEngineInstalledRequest
-import org.digma.intellij.plugin.recentactivity.JcefDockerIsDigmaEngineRunningPayload
-import org.digma.intellij.plugin.recentactivity.JcefDockerIsDigmaEngineRunningRequest
-import org.digma.intellij.plugin.recentactivity.JcefDockerIsDockerComposeInstalledPayload
-import org.digma.intellij.plugin.recentactivity.JcefDockerIsDockerComposeInstalledRequest
-import org.digma.intellij.plugin.recentactivity.JcefDockerIsDockerInstalledPayload
-import org.digma.intellij.plugin.recentactivity.JcefDockerIsDockerInstalledRequest
 import org.digma.intellij.plugin.recentactivity.JcefDockerResultPayload
-import org.digma.intellij.plugin.recentactivity.JcefDockerResultRequest
 import org.digma.intellij.plugin.recentactivity.JcefMessageRequest
 import org.digma.intellij.plugin.recentactivity.RecentActivityToolWindowShower
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
@@ -54,6 +54,7 @@ import org.digma.intellij.plugin.ui.panels.DisposablePanel
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
 import org.digma.intellij.plugin.ui.settings.SettingsChangeListener
 import org.digma.intellij.plugin.ui.settings.Theme
+import org.digma.intellij.plugin.wizard.InstallationWizardService
 import java.awt.BorderLayout
 import javax.swing.JPanel
 
@@ -108,6 +109,8 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): DisposablePa
     val jbCefClient = jbCefBrowser.jbCefClient
 
     val msgRouter = CefMessageRouter.create()
+
+    InstallationWizardService.getInstance(project).setJcefBrowser(jbCefBrowser)
 
 
     msgRouter.addHandler(object : CefMessageRouterHandlerAdapter() {

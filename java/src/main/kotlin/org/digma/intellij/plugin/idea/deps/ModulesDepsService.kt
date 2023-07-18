@@ -298,13 +298,23 @@ class ModulesDepsService(private val project: Project) : Disposable {
             true
                     && !aotOrTest(it.module)
                     && it.metadata.hasSpringBoot()
-                    && (false
-                    || !it.metadata.hasSpringBootStarterActuator
-                    || !it.metadata.hasMicrometerTracingBridgeOtel
-                    || !it.metadata.hasOtelExporterOtlp
-                    || !it.metadata.hasDigmaSpringBootMicrometerAutoconf
-                    )
+                    && !isModuleHasNeededDependenciesForSpringBootWithMicrometer(it.metadata)
         }.toSet()
+    }
+
+    fun isModuleHasNeededDependenciesForSpringBootWithMicrometer(metadata: ModuleMetadata): Boolean {
+        val retval = (true
+                && metadata.hasSpringBootStarterActuator
+                && metadata.hasMicrometerTracingBridgeOtel
+                && metadata.hasOtelExporterOtlp
+                && metadata.hasDigmaSpringBootMicrometerAutoconf
+                )
+        return retval
+    }
+
+    fun isSpringBootModule(module: Module): Boolean {
+        val metadata = buildMetadata(module)
+        return metadata.hasSpringBoot();
     }
 
     // some Gradle modules might have be non relevant ones

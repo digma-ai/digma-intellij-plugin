@@ -453,7 +453,7 @@ fun noObservabilityInsightPanel(project: Project, insight: NoObservability): JPa
     val body = JPanel(BorderLayout())
     body.isOpaque = false
 
-    val autoFixLabel = JLabel(asHtml(span(Laf.Colors.RED_OF_MISSING, Text.NO_OBSERVABILITY_MISSING_DEPENDENCY_DESCRIPTION)))
+    val autoFixLabel = JLabel(asHtml(span(Laf.Colors.RED_OF_MISSING, "missing dependency: " + model.missingDependency)))
     autoFixLabel.border = JBUI.Borders.emptyRight(10)
     body.add(autoFixLabel, BorderLayout.CENTER)
 

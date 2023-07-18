@@ -26,6 +26,7 @@ class MicrometerTracingFramework(val project: Project) {
 
         // OBSERVED_FQN , @Target({ ElementType.ANNOTATION_TYPE, ElementType.TYPE, ElementType.METHOD })
         const val OBSERVED_FQN = "io.micrometer.observation.annotation.Observed"
+        const val OBSERVED_DEPENDENCY_DESCRIPTION = "micrometer.observation"
         const val OBSERVED_INST_LIB = "org.springframework.boot"
         const val OBSERVED_MAX_LEN_OF_SPAN_NAME = 50
 

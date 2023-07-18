@@ -121,7 +121,7 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
         }
     }
 
-    protected fun addMissingDependenciesForSpringBootObservability(moduleExt: ModuleExt) {
+    fun addMissingDependenciesForSpringBootObservability(moduleExt: ModuleExt) {
         val module = moduleExt.module
         val moduleBuildSystem = determineBuildSystem(module)
 
@@ -139,7 +139,7 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
             uniDeps.add(buildUnifiedDependency(DigmaSpringBootMicrometerAutoconfCoordinates, moduleBuildSystem))
         }
 
-        println("adding spring boot deps to module '${module.name}' deps: ${uniDeps}")
+//        println("adding spring boot deps to module '${module.name}' deps: ${uniDeps}")
 
         val dependencyModifierService = DependencyModifierService.getInstance(project)
 

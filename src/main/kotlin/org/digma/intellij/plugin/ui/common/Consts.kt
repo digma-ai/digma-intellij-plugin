@@ -7,16 +7,13 @@ object Html {
 }
 
 object Text {
-    const val NO_DATA_YET_DETAIL_DESCRIPTION = "Trigger actions that call this code object to learn more about its runtime behavior"
     const val NO_OBSERVABILITY_DETAIL_DESCRIPTION = "Add an annotation to observe this method and collect data about its runtime behavior"
-    const val NO_OBSERVABILITY_MISSING_DEPENDENCY_DESCRIPTION = "missing dependency: opentelemetry.annotation"
     const val NO_OBSERVABILITY_WORKING_ON_IT_DESCRIPTION =
         "Working on it! This page will refresh automatically when ready. this should take a few minutes"
-
 }
 
 
-object Links{
+object Links {
     const val DIGMA_SLACK_SUPPORT_CHANNEL = "https://join.slack.com/t/continuous-feedback/shared_invite/zt-1hk5rbjow-yXOIxyyYOLSXpCZ4RXstgA"
     const val DIGMA_DOCKER_APP_URL = "https://open.docker.com/extensions/marketplace?extensionId=digmaai/digma-docker-extension"
 }

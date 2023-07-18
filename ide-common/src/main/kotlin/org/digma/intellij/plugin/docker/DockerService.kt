@@ -4,8 +4,12 @@ import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.SystemInfo
+import org.digma.intellij.plugin.analytics.BackendConnectionUtil
+import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.log.Log
+import java.util.function.Consumer
 
 
 @Service(Service.Level.APP)
@@ -24,14 +28,27 @@ class DockerService {
 
 
     init {
-        if (!downloader.findComposeFile()) {
-            downloader.downloadComposeFile()
-        }
+//        downloader.findComposeFile()
+//        if (!downloader.findComposeFile()) {
+//            downloader.downloadComposeFile()
+//        }
     }
 
 
     fun isDockerInstalled(): Boolean {
-        return isInstalled(DOCKER_COMMAND) && isInstalled(DOCKER_COMPOSE_COMMAND)
+        return isInstalled(DOCKER_COMMAND)
+    }
+
+    fun isDockerComposeInstalled(): Boolean {
+        return isInstalled(DOCKER_COMPOSE_COMMAND)
+    }
+
+    fun isEngineInstalled(): Boolean {
+        return downloader.findComposeFile()
+    }
+
+    fun isEngineRunning(project: Project): Boolean {
+        return BackendConnectionUtil.getInstance(project).testConnectionToBackend()
     }
 
 
@@ -64,37 +81,75 @@ class DockerService {
     }
 
 
-    fun installEngine(): Boolean {
-        if (downloader.downloadComposeFile()) {
-            val dockerComposeCmd = getCommand(DOCKER_COMPOSE_COMMAND)
-            return dockerComposeCmd?.let {
-                return engine.up(downloader.composeFile!!, it)
-            } ?: false
+    fun installEngine(project: Project, resultTask: Consumer<String>) {
+        Backgroundable.runInNewBackgroundThread(project, "installing digma engine") {
+            if (downloader.downloadComposeFile()) {
+                val dockerComposeCmd = getCommand(DOCKER_COMPOSE_COMMAND)
+
+                if (dockerComposeCmd != null) {
+                    val exitValue = engine.up(downloader.composeFile!!, dockerComposeCmd)
+                    notifyResult("$exitValue", resultTask)
+                } else {
+                    notifyResult("no docker-compose command", resultTask)
+                }
+            }
         }
-        return false
     }
 
-    fun stopEngine(): Boolean {
-        val dockerComposeCmd = getCommand(DOCKER_COMPOSE_COMMAND)
-        return dockerComposeCmd?.let {
-            return engine.down(downloader.composeFile!!, it)
-        } ?: false
+
+    fun stopEngine(project: Project, resultTask: Consumer<String>) {
+
+        Backgroundable.runInNewBackgroundThread(project, "stopping digma engine") {
+            if (downloader.downloadComposeFile()) {
+                val dockerComposeCmd = getCommand(DOCKER_COMPOSE_COMMAND)
+
+                if (dockerComposeCmd != null) {
+                    val exitValue = engine.down(downloader.composeFile!!, dockerComposeCmd)
+                    notifyResult("$exitValue", resultTask)
+                } else {
+                    notifyResult("no docker-compose command", resultTask)
+                }
+            }
+        }
     }
 
-    fun startEngine(): Boolean {
-        val dockerComposeCmd = getCommand(DOCKER_COMPOSE_COMMAND)
-        return dockerComposeCmd?.let {
-            return engine.up(downloader.composeFile!!, it)
-        } ?: false
+    fun startEngine(project: Project, resultTask: Consumer<String>) {
+
+        Backgroundable.runInNewBackgroundThread(project, "starting digma engine") {
+            if (downloader.downloadComposeFile()) {
+                val dockerComposeCmd = getCommand(DOCKER_COMPOSE_COMMAND)
+
+                if (dockerComposeCmd != null) {
+                    val exitValue = engine.up(downloader.composeFile!!, dockerComposeCmd)
+                    notifyResult("$exitValue", resultTask)
+                } else {
+                    notifyResult("no docker-compose command", resultTask)
+                }
+            }
+        }
+
     }
 
-    fun removeEngine(): Boolean {
-        val dockerComposeCmd = getCommand(DOCKER_COMPOSE_COMMAND)
-        return dockerComposeCmd?.let {
-            engine.down(downloader.composeFile!!, it)
-            return engine.remove(downloader.composeFile!!, it)
-        } ?: false
+
+    fun removeEngine(project: Project, resultTask: Consumer<String>) {
+
+        Backgroundable.runInNewBackgroundThread(project, "starting digma engine") {
+            if (downloader.downloadComposeFile()) {
+                val dockerComposeCmd = getCommand(DOCKER_COMPOSE_COMMAND)
+
+                if (dockerComposeCmd != null) {
+                    val exitValue = engine.remove(downloader.composeFile!!, dockerComposeCmd)
+                    notifyResult("$exitValue", resultTask)
+                } else {
+                    notifyResult("no docker-compose command", resultTask)
+                }
+            }
+        }
     }
 
+
+    private fun notifyResult(errorMsg: String, resultTask: Consumer<String>) {
+        resultTask.accept(errorMsg)
+    }
 
 }

@@ -3,9 +3,11 @@ package org.digma.intellij.plugin.ui.common
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ApplicationNamesInfo
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.ui.jcef.JBCefApp
+import com.intellij.ui.jcef.JBCefBrowser
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
@@ -16,6 +18,7 @@ import org.digma.intellij.plugin.analytics.BackendConnectionUtil
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator
+import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.jcef.common.CustomSchemeHandlerFactory
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
@@ -29,6 +32,8 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.recentactivity.ConnectionCheckResult
 import org.digma.intellij.plugin.recentactivity.JcefConnectionCheckMessagePayload
 import org.digma.intellij.plugin.recentactivity.JcefConnectionCheckMessageRequest
+import org.digma.intellij.plugin.recentactivity.JcefDockerResultPayload
+import org.digma.intellij.plugin.recentactivity.JcefDockerResultRequest
 import org.digma.intellij.plugin.recentactivity.JcefMessageRequest
 import org.digma.intellij.plugin.recentactivity.RecentActivityToolWindowShower
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
@@ -46,6 +51,11 @@ private const val ENV_VARIABLE_IDE: String = "ide"
 private const val WIZARD_SKIP_INSTALLATION_STEP_VARIABLE: String = "wizardSkipInstallationStep"
 private const val USER_EMAIL_VARIABLE: String = "userEmail"
 private const val IS_OBSERVABILITY_ENABLED_VARIABLE: String = "isObservabilityEnabled"
+private const val IS_DOCKER_INSTALLED: String = "isDockerInstalled"
+private const val IS_DOCKER_COMPOSE_INSTALLED: String = "isDockerComposeInstalled"
+private const val IS_DIGMA_ENGINE_INSTALLED: String = "isDigmaEngineInstalled"
+private const val IS_DIGMA_ENGINE_RUNNING: String = "isDigmaEngineRunning"
+private const val IS_WIZARD_FIRST_LAUNCH: String = "wizardFirstLaunch"
 
 private val logger: Logger =
     Logger.getInstance("org.digma.intellij.plugin.ui.common.InstallationWizardSidePanelWindowPanel")
@@ -69,6 +79,11 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): DisposablePa
             ENV_VARIABLE_IDE to ApplicationNamesInfo.getInstance().productName, //Available values: "IDEA", "Rider", "PyCharm"
             USER_EMAIL_VARIABLE to (PersistenceService.getInstance().state.userEmail ?: ""),
             IS_OBSERVABILITY_ENABLED_VARIABLE to PersistenceService.getInstance().state.isAutoOtel,
+        IS_DOCKER_INSTALLED to service<DockerService>().isDockerInstalled(),
+        IS_DOCKER_COMPOSE_INSTALLED to service<DockerService>().isDockerComposeInstalled(),
+        IS_DIGMA_ENGINE_INSTALLED to service<DockerService>().isEngineInstalled(),
+        IS_DIGMA_ENGINE_RUNNING to service<DockerService>().isEngineRunning(project),
+        IS_WIZARD_FIRST_LAUNCH to service<DockerService>().isEngineInstalled(),
     )
     CefApp.getInstance()
         .registerSchemeHandlerFactory(
@@ -161,9 +176,30 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): DisposablePa
                 )
                 JCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser)
             }
+            if (JCefMessagesUtils.INSTALLATION_WIZARD_INSTALL_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
+                service<DockerService>().installEngine(project) {
+                    sendDockerResult(it, jbCefBrowser, JCefMessagesUtils.INSTALLATION_WIZARD_SET_INSTALL_DIGMA_ENGINE_RESULT)
+                }
+            }
+            if (JCefMessagesUtils.INSTALLATION_WIZARD_UNINSTALL_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
+                service<DockerService>().removeEngine(project) {
+                    sendDockerResult(it, jbCefBrowser, JCefMessagesUtils.INSTALLATION_WIZARD_SET_UNINSTALL_DIGMA_ENGINE_RESULT)
+                }
+            }
+            if (JCefMessagesUtils.INSTALLATION_WIZARD_START_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
+                service<DockerService>().startEngine(project) {
+                    sendDockerResult(it, jbCefBrowser, JCefMessagesUtils.INSTALLATION_WIZARD_SET_START_DIGMA_ENGINE_RESULT)
+                }
+            }
+            if (JCefMessagesUtils.INSTALLATION_WIZARD_STOP_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
+                service<DockerService>().stopEngine(project) {
+                    sendDockerResult(it, jbCefBrowser, JCefMessagesUtils.INSTALLATION_WIZARD_SET_STOP_DIGMA_ENGINE_RESULT)
+                }
+            }
             callback.success("")
             return true
         }
+
     }, true)
 
     jbCefClient.cefClient.addMessageRouter(msgRouter)
@@ -221,4 +257,22 @@ private fun updateInstallationWizardFlag() {
             PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForPyCharmIDE = true
         }
     }
+}
+
+
+private fun sendDockerResult(msg: String, jbCefBrowser: JBCefBrowser, messageType: String) {
+    val payload = if (msg == "0") {
+        JcefDockerResultPayload("success", "")
+    } else {
+        JcefDockerResultPayload("failure", msg)
+    }
+
+    val requestMessage = JCefBrowserUtil.resultToString(
+        JcefDockerResultRequest(
+            JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
+            messageType,
+            payload
+        )
+    )
+    JCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser)
 }

@@ -22,5 +22,15 @@ data class JcefConnectionCheckMessageRequest
 constructor(
         val type: String?,
         val action: String,
-        val payload: JcefConnectionCheckMessagePayload?
+        val payload: JcefConnectionCheckMessagePayload?,
+)
+
+data class JcefDockerResultRequest
+@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+@JsonIgnoreProperties(ignoreUnknown = true)
+@ConstructorProperties("type", "action", "payload")
+constructor(
+        val type: String?,
+        val action: String,
+        val payload: JcefDockerResultPayload?,
 )

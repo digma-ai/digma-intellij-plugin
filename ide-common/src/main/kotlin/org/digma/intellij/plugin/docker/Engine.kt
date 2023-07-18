@@ -14,15 +14,11 @@ internal class Engine {
     private val streamExecutor = Executors.newFixedThreadPool(2)
 
 
-    fun up(composeFile: Path, dockerComposeCmd: String): Boolean {
+    fun up(composeFile: Path, dockerComposeCmd: String): Int {
 
         try {
 
             Log.log(logger::info, "starting installation")
-
-//            val process = GeneralCommandLine(dockerComposeCmd, "-f", composeFile.toString(), "up", "-d")
-//                .withWorkDirectory(composeFile.toFile().parent)
-//                .createProcess()
 
             val processBuilder = ProcessBuilder()
             processBuilder.command(dockerComposeCmd, "-f", composeFile.toString(), "up", "-d")
@@ -49,23 +45,19 @@ internal class Engine {
                 Log.log(logger::info, "installation unsuccessful [exit code {}] for {}", exitValue, process.info())
             }
 
-            return success
+            return exitValue
 
         } catch (e: Exception) {
             Log.warnWithException(logger, e, "error installing engined")
         }
-        return false
+        return -1
     }
 
 
-    fun down(composeFile: Path, dockerComposeCmd: String): Boolean {
+    fun down(composeFile: Path, dockerComposeCmd: String): Int {
         try {
 
             Log.log(logger::info, "starting shutdown")
-
-//            val process = GeneralCommandLine(dockerComposeCmd, "-f", composeFile.toString(), "up", "-d")
-//                .withWorkDirectory(composeFile.toFile().parent)
-//                .createProcess()
 
             val processBuilder = ProcessBuilder()
             processBuilder.command(dockerComposeCmd, "-f", composeFile.toString(), "down")
@@ -92,23 +84,19 @@ internal class Engine {
                 Log.log(logger::info, "shutdown unsuccessful [exit code {}] for {}", exitValue, process.info())
             }
 
-            return success
+            return exitValue
 
         } catch (e: Exception) {
             Log.warnWithException(logger, e, "error shutdown engine")
         }
-        return false
+        return -1
     }
 
 
-    fun remove(composeFile: Path, dockerComposeCmd: String): Boolean {
+    fun remove(composeFile: Path, dockerComposeCmd: String): Int {
         try {
 
             Log.log(logger::info, "starting uninstall")
-
-//            val process = GeneralCommandLine(dockerComposeCmd, "-f", composeFile.toString(), "up", "-d")
-//                .withWorkDirectory(composeFile.toFile().parent)
-//                .createProcess()
 
             val processBuilder = ProcessBuilder()
             processBuilder.command(dockerComposeCmd, "-f", composeFile.toString(), "down", "--rmi", "all", "-v", "--remove-orphans")
@@ -135,12 +123,12 @@ internal class Engine {
                 Log.log(logger::info, "uninstall unsuccessful [exit code {}] for {}", exitValue, process.info())
             }
 
-            return success
+            return exitValue
 
         } catch (e: Exception) {
             Log.warnWithException(logger, e, "error uninstalling engine")
         }
-        return false
+        return -1
     }
 
 

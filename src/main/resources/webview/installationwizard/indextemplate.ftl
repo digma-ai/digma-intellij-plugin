@@ -15,13 +15,20 @@
 <div id="root"></div>
 <!-- Environment variables -->
 <script>
+  window.theme = "${theme}";
   window.platform = "JetBrains";
   window.ide = "${ide}";
-  window.theme = "${theme}";
   window.mainFont = "${mainFont}";
   window.codeFont = "${codeFont}";
+  window.isJaegerEnabled;
   window.userEmail = "${userEmail}";
   window.isObservabilityEnabled = ${isObservabilityEnabled?string('true', 'false')};
+  window.isDigmaEngineInstalled = "${isDigmaEngineInstalled}";
+  window.isDigmaEngineRunning = "${isDigmaEngineRunning}";
+  window.isDockerInstalled = "${isDockerInstalled}";
+  window.isDockerComposeInstalled = "${isDockerComposeInstalled}";
+
+  window.wizardFirstLaunch = "${wizardFirstLaunch}";
   window.wizardSkipInstallationStep = ${wizardSkipInstallationStep?string('true', 'false')};
 </script>
 <script src="/index.js"></script>

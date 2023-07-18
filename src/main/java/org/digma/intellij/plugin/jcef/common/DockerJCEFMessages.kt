@@ -92,19 +92,3 @@ constructor(
     val payload: JcefDockerIsDockerComposeInstalledPayload?,
 )
 
-
-data class InstallationWizardSetCurrentStepPayload
-@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-constructor(
-    val currentStep: String,
-)
-
-data class InstallationWizardSetCurrentStepRequest
-@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@JsonIgnoreProperties(ignoreUnknown = true)
-@ConstructorProperties("type", "action", "payload")
-constructor(
-    val type: String?,
-    val action: String,
-    val payload: InstallationWizardSetCurrentStepPayload?,
-)

@@ -195,20 +195,15 @@ internal class Engine {
 
             val processBuilder = ProcessBuilder()
             if (dockerComposeCmd.size == 1) {
-                processBuilder.command(dockerComposeCmd[0], "-f", composeFile.toString(), "down", "--rmi", "all", "-v", "--remove-orphans")
+                processBuilder.command(dockerComposeCmd[0], "-f", composeFile.toString(), "down")
             } else {
-                processBuilder.command(
-                    dockerComposeCmd[0],
-                    dockerComposeCmd[1],
-                    "-f",
-                    composeFile.toString(),
-                    "down",
-                    "--rmi",
-                    "all",
-                    "-v",
-                    "--remove-orphans"
-                )
+                processBuilder.command(dockerComposeCmd[0], dockerComposeCmd[1], "-f", composeFile.toString(), "down")
             }
+//            if (dockerComposeCmd.size == 1) {
+//                processBuilder.command(dockerComposeCmd[0], "-f", composeFile.toString(), "down", "--rmi", "all", "-v", "--remove-orphans")
+//            } else {
+//                processBuilder.command(dockerComposeCmd[0],dockerComposeCmd[1],"-f",composeFile.toString(),"down","--rmi","all","-v","--remove-orphans")
+//            }
             processBuilder.directory(composeFile.toFile().parentFile)
             processBuilder.redirectErrorStream(true)
             val process = processBuilder.start()

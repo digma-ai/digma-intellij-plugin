@@ -28,7 +28,7 @@
   window.isDockerInstalled = ${isDockerInstalled?string('true', 'false')};
   window.isDockerComposeInstalled = ${isDockerComposeInstalled?string('true', 'false')};
 
-  window.wizardFirstLaunch = "${wizardFirstLaunch?string('true', 'false')}";
+  window.wizardFirstLaunch = ${wizardFirstLaunch?string('true', 'false')};
   window.wizardSkipInstallationStep = ${wizardSkipInstallationStep?string('true', 'false')};
 </script>
 <script src="/index.js"></script>

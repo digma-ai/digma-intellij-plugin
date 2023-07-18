@@ -93,7 +93,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project): DisposablePa
         IS_DOCKER_COMPOSE_INSTALLED to service<DockerService>().isDockerComposeInstalled(),
         IS_DIGMA_ENGINE_INSTALLED to service<DockerService>().isEngineInstalled(),
         IS_DIGMA_ENGINE_RUNNING to service<DockerService>().isEngineRunning(project),
-        IS_WIZARD_FIRST_LAUNCH to service<DockerService>().isEngineInstalled(),
+        IS_WIZARD_FIRST_LAUNCH to !service<DockerService>().isEngineInstalled(),
         IS_JAEGER_ENABLED to isJaegerButtonEnabled(),
     )
     CefApp.getInstance()

@@ -70,7 +70,7 @@ class SettingsHintPanel(project: Project) : JPanel() {
         isOpaque = true
 
 
-        layout = GridLayout(0, 1, 5, 2)
+        layout = GridLayout(0, 1, 5, 5)
 
         val settingsLabel = JLabel("Settings")
         settingsLabel.foreground = Laf.Colors.DROP_DOWN_HEADER_TEXT_COLOR
@@ -79,6 +79,39 @@ class SettingsHintPanel(project: Project) : JPanel() {
         topPanel.isOpaque = true
         topPanel.add(settingsLabel)
         add(topPanel)
+
+
+        /// Local Engine
+        val localeEnginePanel = Box.createHorizontalBox()
+        localeEnginePanel.background = Laf.Colors.EDITOR_BACKGROUND
+        localeEnginePanel.isOpaque = true
+        localeEnginePanel.add(Box.createHorizontalStrut(5))
+        localeEnginePanel.add(JLabel(Laf.Icons.General.ACTIVE_GREEN))
+        localeEnginePanel.add(Box.createHorizontalStrut(15))
+
+        val localeEngineLabel = JLabel("Local Engine")
+        localeEngineLabel.cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        localeEngineLabel.addMouseListener(object : MouseAdapter() {
+            override fun mouseClicked(e: MouseEvent?) {
+                try {
+                    MainToolWindowCardsController.getInstance(project).showWizard();
+                    ToolWindowShower.getInstance(project).showToolWindow()
+                    HintManager.getInstance().hideAllHints()
+                } catch (ex: Exception) {
+                    Log.log(logger::debug, "exception opening 'Local Engine' message: {}. ", ex.message)
+                }
+            }
+        })
+
+        localeEnginePanel.add(localeEngineLabel)
+        localeEnginePanel.add(Box.createHorizontalStrut(5))
+        localeEnginePanel.border = BorderFactory.createMatteBorder(0, 0, 1, 0, Laf.Colors.PLUGIN_BACKGROUND)
+        add(localeEnginePanel)
+
+        ///
+
+
+
 
         if(IDEUtilsService.getInstance(project).isJavaProject) {
             val secondPanel = Box.createHorizontalBox()

@@ -1,21 +1,11 @@
 package org.digma.intellij.plugin.idea.runcfg
 
-import com.intellij.execution.Executor
-import com.intellij.execution.RunConfigurationExtension
 import com.intellij.execution.configurations.JavaParameters
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunnerSettings
-import com.intellij.execution.process.ProcessEvent
-import com.intellij.execution.process.ProcessHandler
-import com.intellij.execution.process.ProcessListener
-import com.intellij.execution.ui.ConsoleView
-import com.intellij.execution.ui.ConsoleViewContentType
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
-import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
-import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.persistence.PersistenceService
-import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.settings.SettingsState
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.idea.maven.execution.MavenRunConfiguration
@@ -25,19 +15,25 @@ import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
 // consider to combine them together with abstract class
 //
 // for quarkus, look at https://quarkus.io/guides/opentelemetry
-class QuarkusRunConfigurationExtension : RunConfigurationExtension() {
+class QuarkusRunConfigurationWrapper : IRunConfigurationWrapper {
 
     companion object {
-        val logger: Logger = Logger.getInstance(QuarkusRunConfigurationExtension::class.java)
+        val logger: Logger = Logger.getInstance(QuarkusRunConfigurationWrapper::class.java)
         const val ORG_GRADLE_JAVA_TOOL_OPTIONS = "ORG_GRADLE_JAVA_TOOL_OPTIONS"
+
+
+        @JvmStatic
+        fun getInstance(project: Project): QuarkusRunConfigurationWrapper {
+            return project.getService(QuarkusRunConfigurationWrapper::class.java)
+        }
     }
 
-    private fun enabled(): Boolean {
-        return PersistenceService.getInstance().state.isAutoOtel
+    override fun canWrap(configuration: RunConfigurationBase<*>): Boolean {
+        return evalRunConfigType(configuration) != RunConfigType.Unknown
     }
 
-    protected fun isBackendOk(project: Project): Boolean {
-        return BackendConnectionMonitor.getInstance(project).isConnectionOk()
+    override fun getRunConfigType(configuration: RunConfigurationBase<*>): RunConfigType {
+        return evalRunConfigType(configuration)
     }
 
     /*
@@ -49,51 +45,13 @@ class QuarkusRunConfigurationExtension : RunConfigurationExtension() {
     unit tests will be executed by calling gradle :test task.
      */
 
-
-    override fun isApplicableFor(configuration: RunConfigurationBase<*>): Boolean {
-        Log.log(
-            logger::debug, "isApplicableFor, project:{}, id:{}, name:{}, type:{}",
-            configuration.project, configuration.id, configuration.name, configuration.type
-        )
-
-        val runConfigType = evalRunConfigType(configuration)
-
-        return runConfigType != RunConfigType.Unknown
-    }
-
-
     override fun <T : RunConfigurationBase<*>?> updateJavaParameters(
         configuration: T & Any,
         params: JavaParameters,
         runnerSettings: RunnerSettings?,
+        resolvedModule: Module?,
     ) {
-
-        val resolvedModule = RunCfgTools.resolveModule(configuration, params, runnerSettings)
-
-        Log.log(
-            logger::debug, "updateJavaParameters, project:{}, id:{}, name:{}, type:{}, module: {}",
-            configuration.project, configuration.id, configuration.name, configuration.type, resolvedModule
-        )
-
-        val project = configuration.project
-        val runConfigType = evalRunConfigType(configuration)
-        val autoInstrumentationEnabled = enabled()
-        val connectedToBackend = isBackendOk(project)
-
-        reportToPosthog(project, runConfigType, autoInstrumentationEnabled, connectedToBackend)
-
-        //testing if enabled must be done here just before running.
-        if (!autoInstrumentationEnabled) {
-            Log.log(logger::debug, "autoInstrumentation is not enabled")
-            return
-        }
-
-        if (!connectedToBackend) {
-            Log.log(logger::warn, "No connection to Digma backend. Otel won't be exported")
-            return
-        }
-
-        when (runConfigType) {
+        when (evalRunConfigType(configuration)) {
             RunConfigType.GradleRun -> {
                 //when injecting JAVA_TOOL_OPTIONS to GradleRunConfiguration the GradleRunConfiguration will also run with
                 // JAVA_TOOL_OPTIONS which is not ideal. for example, gradle will execute with JAVA_TOOL_OPTIONS and then fork
@@ -152,53 +110,6 @@ class QuarkusRunConfigurationExtension : RunConfigurationExtension() {
         params.env[JAVA_TOOL_OPTIONS] = javaToolOptions
     }
 
-
-    override fun attachToProcess(
-        configuration: RunConfigurationBase<*>,
-        handler: ProcessHandler,
-        runnerSettings: RunnerSettings?,
-    ) {
-        //we need to clean gradle configuration from our JAVA_TOOL_OPTIONS
-        if (isGradleConfiguration(configuration)) {
-            handler.addProcessListener(object : ProcessListener {
-
-                override fun processWillTerminate(event: ProcessEvent, willBeDestroyed: Boolean) {
-                    cleanGradleSettings(configuration)
-                }
-
-                private fun cleanGradleSettings(configuration: RunConfigurationBase<*>) {
-                    configuration as GradleRunConfiguration
-                    Log.log(logger::debug, "Cleaning gradle configuration {}", configuration)
-                    if (configuration.settings.env.containsKey(ORG_GRADLE_JAVA_TOOL_OPTIONS)) {
-                        val orgJavaToolOptions = configuration.settings.env[ORG_GRADLE_JAVA_TOOL_OPTIONS]
-                        configuration.settings.env[JAVA_TOOL_OPTIONS] = orgJavaToolOptions
-                        configuration.settings.env.remove(ORG_GRADLE_JAVA_TOOL_OPTIONS)
-                    } else if (configuration.settings.env.containsKey(JAVA_TOOL_OPTIONS)) {
-                        configuration.settings.env.remove(JAVA_TOOL_OPTIONS)
-                    }
-                }
-            })
-        }
-
-    }
-
-
-    override fun decorate(
-        console: ConsoleView,
-        configuration: RunConfigurationBase<*>,
-        executor: Executor,
-    ): ConsoleView {
-        if (enabled() &&
-            isBackendOk(configuration.project) &&
-            (isMavenConfiguration(configuration))
-        ) {
-            //that only works for java and maven run configurations.
-            console.print("This process is enhanced by Digma!\n", ConsoleViewContentType.LOG_WARNING_OUTPUT)
-        }
-
-        return console
-    }
-
     /**
      * @see <a href="https://quarkus.io/guides/opentelemetry">Quarkus with opentelemetry</a>
      */
@@ -214,11 +125,6 @@ class QuarkusRunConfigurationExtension : RunConfigurationExtension() {
         return SettingsState.getInstance().runtimeObservabilityBackendUrl
     }
 
-    private fun reportToPosthog(project: Project, runConfigType: RunConfigType, observabilityEnabled: Boolean, connectedToBackend: Boolean) {
-        val activityMonitor = ActivityMonitor.getInstance(project)
-        activityMonitor.reportRunConfig(runConfigType.name, observabilityEnabled, connectedToBackend)
-    }
-
     @NotNull
     private fun evalRunConfigType(configuration: RunConfigurationBase<*>): RunConfigType {
         if (isGradleConfiguration(configuration)) return RunConfigType.GradleRun
@@ -229,7 +135,7 @@ class QuarkusRunConfigurationExtension : RunConfigurationExtension() {
     /**
      * @see <a href="https://quarkus.io/guides/opentelemetry">Quarkus with opentelemetry</a>
      */
-    private fun isGradleConfiguration(configuration: RunConfigurationBase<*>): Boolean {
+    override fun isGradleConfiguration(configuration: RunConfigurationBase<*>): Boolean {
         //TODO: support Quarkus with gradle
         return false
     }

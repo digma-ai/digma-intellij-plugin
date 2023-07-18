@@ -57,7 +57,12 @@ class AutoOtelAgentRunConfigurationExtension : RunConfigurationExtension() {
 
         val runConfigType = evalRunConfigType(configuration)
 
-        return runConfigType != RunConfigType.Unknown
+        if(runConfigType == RunConfigType.Unknown) {
+            RunCfgTools.reportUnknownTasksToPosthog(configuration)
+            return false
+        }
+
+        return true
     }
 
 

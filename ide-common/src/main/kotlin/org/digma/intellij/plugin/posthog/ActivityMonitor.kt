@@ -14,6 +14,8 @@ import java.io.StringWriter
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentMap
 
 class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
 
@@ -26,6 +28,7 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
 
     private val userId: String
     private val isDevUser: Boolean
+    private val latestUnknownRunConfigTasks: HashMap<String, Instant> = HashMap()
 
     //    private val tokenFetcherThread = Thread(this, "Token fetcher thread")
     private var postHog: PostHog? = null
@@ -178,6 +181,27 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
         )
     }
 
+    fun reportUnknownTaskRunning(configType: String, taskNames: List<String>) {
+
+        // Remove keys older than 1 minute
+        latestUnknownRunConfigTasks.entries.removeIf {
+            it.value.isBefore(Instant.now().minusSeconds(60))
+        }
+
+        val taskNamesToReport = taskNames.stream()
+            .filter{ !latestUnknownRunConfigTasks.containsKey(it)}
+            .toList()
+        for (task in taskNames)
+            latestUnknownRunConfigTasks[task] = Instant.now()
+
+        postHog?.capture(
+            userId, "unknown-config ran", mapOf(
+                "config.type" to configType,
+                "config.tasks" to taskNamesToReport
+            )
+        )
+    }
+
     fun registerInsightsViewed(insightTypes: List<out InsightType>) {
         val newInsightsViewed = HashSet(insightTypes)
         if (lastInsightsViewed != null && lastInsightsViewed == newInsightsViewed)
@@ -202,18 +226,18 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
         )
     }
 
-   fun registerSpanLinkClicked(insight: InsightType) {
-       postHog?.capture(
-           userId,
-           "span-link clicked",
-           mapOf(
-               "panel" to MonitoredPanel.Insights.name,
-               "insight" to insight.name
-           )
-       )
-   }
+    fun registerSpanLinkClicked(insight: InsightType) {
+        postHog?.capture(
+            userId,
+            "span-link clicked",
+            mapOf(
+                "panel" to MonitoredPanel.Insights.name,
+                "insight" to insight.name
+            )
+        )
+    }
 
-   fun registerSpanLinkClicked(panel: MonitoredPanel) {
+    fun registerSpanLinkClicked(panel: MonitoredPanel) {
         postHog?.capture(
             userId,
             "span-link clicked",
@@ -243,8 +267,10 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
     fun registerServerInfo(serverInfo: AboutResult) {
         postHog?.set(
             userId,
-            mapOf("server.version" to serverInfo.applicationVersion,
-                "server.deploymentType" to if(serverInfo.deploymentType != null) serverInfo.deploymentType else BackendDeploymentType.Unknown )
+            mapOf(
+                "server.version" to serverInfo.applicationVersion,
+                "server.deploymentType" to if (serverInfo.deploymentType != null) serverInfo.deploymentType else BackendDeploymentType.Unknown
+            )
         )
     }
 
@@ -275,7 +301,6 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
             )
         )
     }
-
 
 //    override fun dispose() {
 //        try {

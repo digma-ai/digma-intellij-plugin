@@ -16,6 +16,7 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.util.keyFMap.KeyFMap
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.jetbrains.annotations.VisibleForTesting
 import org.jetbrains.idea.maven.execution.MavenRunConfiguration
 import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
@@ -54,6 +55,22 @@ class RunCfgTools {
             return null
         }
 
+        @JvmStatic
+        fun reportUnknownTasksToPosthog(configuration: RunConfigurationBase<*>){
+            val activityMonitor = ActivityMonitor.getInstance(configuration.project)
+
+            if (configuration is GradleRunConfiguration) {
+                val taskNames = configuration.settings.taskNames
+                if(taskNames.isNotEmpty())
+                    activityMonitor.reportUnknownTaskRunning("gradle", taskNames)
+            }
+
+            if (configuration is MavenRunConfiguration) {
+                val goals = configuration.runnerParameters.goals
+                if(goals.isNotEmpty())
+                    activityMonitor.reportUnknownTaskRunning("maven", goals)
+            }
+        }
     }
 
 }

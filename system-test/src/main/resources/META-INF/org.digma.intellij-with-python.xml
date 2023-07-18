@@ -9,6 +9,8 @@
 
     </extensions>
 
+
+
     <projectListeners>
         <listener
                 class="org.digma.intellij.plugin.psi.python.DocumentsChangeListenerForPythonSpanNavigation"

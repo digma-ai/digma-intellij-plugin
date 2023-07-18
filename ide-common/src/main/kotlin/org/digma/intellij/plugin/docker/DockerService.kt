@@ -98,6 +98,9 @@ class DockerService {
                 } else {
                     notifyResult("no docker-compose command", resultTask)
                 }
+            } else {
+                Log.log(logger::warn, "Failed to download compose file")
+                notifyResult("Failed to download compose file", resultTask)
             }
         }
     }
@@ -106,7 +109,8 @@ class DockerService {
     fun stopEngine(project: Project, resultTask: Consumer<String>) {
 
         Backgroundable.runInNewBackgroundThread(project, "stopping digma engine") {
-            if (downloader.downloadComposeFile()) {
+
+            if (downloader.findComposeFile()) {
                 val dockerComposeCmd = getDockerComposeCommand()
 
                 if (dockerComposeCmd != null) {
@@ -115,6 +119,9 @@ class DockerService {
                 } else {
                     notifyResult("no docker-compose command", resultTask)
                 }
+            } else {
+                Log.log(logger::warn, "Failed to find compose file")
+                notifyResult("Failed to find compose file", resultTask)
             }
         }
     }
@@ -122,7 +129,12 @@ class DockerService {
     fun startEngine(project: Project, resultTask: Consumer<String>) {
 
         Backgroundable.runInNewBackgroundThread(project, "starting digma engine") {
-            if (downloader.downloadComposeFile()) {
+
+            if (!downloader.findComposeFile()) {
+                downloader.downloadComposeFile()
+            }
+
+            if (downloader.findComposeFile()) {
                 val dockerComposeCmd = getDockerComposeCommand()
 
                 if (dockerComposeCmd != null) {
@@ -131,6 +143,9 @@ class DockerService {
                 } else {
                     notifyResult("no docker-compose command", resultTask)
                 }
+            } else {
+                Log.log(logger::warn, "Failed to find compose file")
+                notifyResult("Failed to find compose file", resultTask)
             }
         }
 
@@ -140,7 +155,7 @@ class DockerService {
     fun removeEngine(project: Project, resultTask: Consumer<String>) {
 
         Backgroundable.runInNewBackgroundThread(project, "starting digma engine") {
-            if (downloader.downloadComposeFile()) {
+            if (downloader.findComposeFile()) {
                 val dockerComposeCmd = getDockerComposeCommand()
 
                 if (dockerComposeCmd != null) {
@@ -149,6 +164,9 @@ class DockerService {
                 } else {
                     notifyResult("no docker-compose command", resultTask)
                 }
+            } else {
+                Log.log(logger::warn, "Failed to find compose file")
+                notifyResult("Failed to find compose file", resultTask)
             }
         }
     }

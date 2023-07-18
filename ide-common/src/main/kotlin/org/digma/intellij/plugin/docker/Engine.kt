@@ -106,9 +106,9 @@ internal class Engine {
 
             val processBuilder = ProcessBuilder()
             if (dockerComposeCmd.size == 1) {
-                processBuilder.command(dockerComposeCmd[0], "-f", composeFile.toString(), "start")
+                processBuilder.command(dockerComposeCmd[0], "-f", composeFile.toString(), "up", "-d")
             } else {
-                processBuilder.command(dockerComposeCmd[0], dockerComposeCmd[1], "-f", composeFile.toString(), "start")
+                processBuilder.command(dockerComposeCmd[0], dockerComposeCmd[1], "-f", composeFile.toString(), "up", "-d")
             }
             processBuilder.directory(composeFile.toFile().parentFile)
             processBuilder.redirectErrorStream(true)

@@ -179,7 +179,7 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
         )
     }
 
-    fun reportUnknownTaskRunning(configType: String, taskNames: List<String>) {
+    fun reportUnknownTaskRunning(buildSystem: String, taskNames: List<String>, configurationClassName: String, configurationType: String) {
 
         // Purge tasks older than 1 minute
         latestUnknownRunConfigTasks.entries.removeIf {
@@ -198,8 +198,10 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
 
         postHog?.capture(
             userId, "unknown-config ran", mapOf(
-                "config.type" to configType,
-                "config.tasks" to taskNamesToReport
+                "config.build-system" to buildSystem,
+                "config.tasks" to taskNamesToReport,
+                "config.class-name" to configurationClassName,
+                "config.type" to configurationType,
             )
         )
     }
@@ -271,7 +273,7 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
             userId,
             mapOf(
                 "server.version" to serverInfo.applicationVersion,
-                "server.deploymentType" to if (serverInfo.deploymentType != null) serverInfo.deploymentType else BackendDeploymentType.Unknown
+                "server.deploymentType" to (serverInfo.deploymentType ?: BackendDeploymentType.Unknown)
             )
         )
     }

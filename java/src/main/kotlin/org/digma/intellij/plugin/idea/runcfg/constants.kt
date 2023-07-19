@@ -7,7 +7,7 @@ const val DIGMA_AGENT_EXTENSION_JAR_URL = "https://github.com/digma-ai/otel-java
 const val OTEL_AGENT_JAR_NAME = "opentelemetry-javaagent.jar"
 const val DIGMA_AGENT_EXTENSION_JAR_NAME = "digma-otel-agent-extension.jar"
 
-val UNIMPORTANT_TASKS = listOf(
+val KNOWN_IRRELEVANT_TASKS = listOf(
     /*
      * Maven
      */
@@ -68,5 +68,13 @@ val UNIMPORTANT_TASKS = listOf(
      */
     "check",
     "test",
+
+    /*
+     * Gradle -> other
+     */
+    "compileJava",
+    "compileKotlin",
+    "compileTestJava",
+    "compileTestKotlin",
 
 )

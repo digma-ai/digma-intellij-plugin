@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.115] - 2023-07-19
+## [2.0.116] - 2023-07-19
+- Update Installation Wizard UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/983
+- Bug fix/bring back the quarkus pop-up by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/984
+- process env by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/985
+
+## 2.0.115 - 2023-07-19
 - Bug fix/quarkus tests do not use OTEL agent by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/981
 
 ## 2.0.114 - 2023-07-19

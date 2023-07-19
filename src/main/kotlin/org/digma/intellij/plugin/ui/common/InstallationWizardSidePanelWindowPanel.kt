@@ -216,7 +216,8 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
 
                         if (success) {
                             var i = 0
-                            while (!BackendConnectionMonitor.getInstance(project).isConnectionOk() && i < 4) {
+                            while (!BackendConnectionMonitor.getInstance(project).isConnectionOk() && i < 6) {
+                                Log.log(logger::warn, "waiting for connection")
                                 BackendConnectionUtil.getInstance(project).testConnectionToBackend()
                                 delay(5000)
                                 i++
@@ -312,7 +313,8 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
 
                         if (success) {
                             var i = 0
-                            while (!BackendConnectionMonitor.getInstance(project).isConnectionOk() && i < 4) {
+                            while (!BackendConnectionMonitor.getInstance(project).isConnectionOk() && i < 6) {
+                                Log.log(logger::warn, "waiting for connection")
                                 BackendConnectionUtil.getInstance(project).testConnectionToBackend()
                                 delay(5000)
                                 i++

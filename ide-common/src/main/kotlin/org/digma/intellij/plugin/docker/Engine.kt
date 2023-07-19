@@ -164,13 +164,13 @@ internal class Engine {
         if (!success || exitValue != 0) {
             var exitMessage = "process failed with code $exitValue"
             if (errorMessages.isNotEmpty()) {
-                exitMessage = exitMessage.plus(":").plus(System.lineSeparator()).plus(buildErrorMessages(errorMessages))
+                exitMessage = exitMessage.plus(":").plus(buildErrorMessages(errorMessages))
             }
             return exitMessage
         }
 
         if (errorMessages.isNotEmpty()) {
-            return "process succeeded but some containers failed:".plus(System.lineSeparator()).plus(buildErrorMessages(errorMessages))
+            return "process succeeded but some containers failed:".plus(buildErrorMessages(errorMessages))
         }
 
         return "0"
@@ -181,7 +181,7 @@ internal class Engine {
         var message = ""
 
         errorMessages.forEach {
-            message = message.plus(it).plus(System.lineSeparator())
+            message = message.plus(it).plus(",")
         }
         return message
     }

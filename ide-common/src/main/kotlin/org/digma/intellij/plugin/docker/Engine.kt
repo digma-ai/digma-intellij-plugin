@@ -5,12 +5,15 @@ import org.digma.intellij.plugin.log.Log
 import java.nio.file.Path
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.ReentrantLock
 
 internal class Engine {
 
     private val logger = Logger.getInstance(this::class.java)
 
     private val streamExecutor = Executors.newFixedThreadPool(2)
+
+    private val engineLock = ReentrantLock()
 
 
     fun up(composeFile: Path, dockerComposeCmd: List<String>): String {
@@ -104,6 +107,7 @@ internal class Engine {
         val errorMessages = mutableListOf<String>()
 
         try {
+            engineLock.lock()
 
             processBuilder.directory(composeFile.toFile().parentFile)
             processBuilder.redirectErrorStream(true)
@@ -147,6 +151,10 @@ internal class Engine {
         } catch (e: Exception) {
             Log.warnWithException(logger, e, "error running docker command {}", processBuilder.command())
             return e.message ?: e.toString()
+        } finally {
+            if (engineLock.isHeldByCurrentThread) {
+                engineLock.unlock()
+            }
         }
     }
 

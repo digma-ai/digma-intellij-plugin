@@ -114,7 +114,7 @@
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  font-size: 10px;
+  font-size: 12px;
   font-style: normal;
   font-weight: 500;
   color: ${({theme:e})=>{switch(e.mode){case"light":return"#828797";case"dark":case"dark-jetbrains":return"#9b9b9b"}}};

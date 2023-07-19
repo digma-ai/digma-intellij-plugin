@@ -1,7 +1,7 @@
 package org.digma.intellij.plugin.docker
 
+import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.util.EnvironmentUtil
 import org.digma.intellij.plugin.log.Log
 import java.nio.file.Path
 import java.util.concurrent.Executors
@@ -21,12 +21,12 @@ internal class Engine {
 
         Log.log(logger::info, "starting docker compose up")
 
-        val processBuilder = ProcessBuilder()
-        if (dockerComposeCmd.size == 1) {
-            processBuilder.command(dockerComposeCmd[0], "-f", composeFile.toString(), "up", "-d")
-        } else {
-            processBuilder.command(dockerComposeCmd[0], dockerComposeCmd[1], "-f", composeFile.toString(), "up", "-d")
-        }
+        val processBuilder = GeneralCommandLine(dockerComposeCmd)
+            .withParameters("-f", composeFile.toString(), "up", "-d")
+            .withWorkDirectory(composeFile.toFile().parentFile)
+            .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
+            .withRedirectErrorStream(true)
+            .toProcessBuilder()
 
         return executeCommand("up", composeFile, processBuilder)
     }
@@ -36,12 +36,12 @@ internal class Engine {
 
         Log.log(logger::info, "starting docker compose down")
 
-        val processBuilder = ProcessBuilder()
-        if (dockerComposeCmd.size == 1) {
-            processBuilder.command(dockerComposeCmd[0], "-f", composeFile.toString(), "down")
-        } else {
-            processBuilder.command(dockerComposeCmd[0], dockerComposeCmd[1], "-f", composeFile.toString(), "down")
-        }
+        val processBuilder = GeneralCommandLine(dockerComposeCmd)
+            .withParameters("-f", composeFile.toString(), "down")
+            .withWorkDirectory(composeFile.toFile().parentFile)
+            .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
+            .withRedirectErrorStream(true)
+            .toProcessBuilder()
 
         return executeCommand("down", composeFile, processBuilder)
 
@@ -52,12 +52,12 @@ internal class Engine {
 
         Log.log(logger::info, "starting docker compose start")
 
-        val processBuilder = ProcessBuilder()
-        if (dockerComposeCmd.size == 1) {
-            processBuilder.command(dockerComposeCmd[0], "-f", composeFile.toString(), "up", "-d")
-        } else {
-            processBuilder.command(dockerComposeCmd[0], dockerComposeCmd[1], "-f", composeFile.toString(), "up", "-d")
-        }
+        val processBuilder = GeneralCommandLine(dockerComposeCmd)
+            .withParameters("-f", composeFile.toString(), "up", "-d")
+            .withWorkDirectory(composeFile.toFile().parentFile)
+            .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
+            .withRedirectErrorStream(true)
+            .toProcessBuilder()
 
         return executeCommand("start", composeFile, processBuilder)
 
@@ -68,12 +68,12 @@ internal class Engine {
 
         Log.log(logger::info, "starting docker compose stop")
 
-        val processBuilder = ProcessBuilder()
-        if (dockerComposeCmd.size == 1) {
-            processBuilder.command(dockerComposeCmd[0], "-f", composeFile.toString(), "stop")
-        } else {
-            processBuilder.command(dockerComposeCmd[0], dockerComposeCmd[1], "-f", composeFile.toString(), "stop")
-        }
+        val processBuilder = GeneralCommandLine(dockerComposeCmd)
+            .withParameters("-f", composeFile.toString(), "stop")
+            .withWorkDirectory(composeFile.toFile().parentFile)
+            .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
+            .withRedirectErrorStream(true)
+            .toProcessBuilder()
 
         return executeCommand("stop", composeFile, processBuilder)
 
@@ -84,17 +84,15 @@ internal class Engine {
 
         Log.log(logger::info, "starting uninstall")
 
-        val processBuilder = ProcessBuilder()
-        if (dockerComposeCmd.size == 1) {
-            processBuilder.command(dockerComposeCmd[0], "-f", composeFile.toString(), "down")
-        } else {
-            processBuilder.command(dockerComposeCmd[0], dockerComposeCmd[1], "-f", composeFile.toString(), "down")
-        }
-//            if (dockerComposeCmd.size == 1) {
-//                processBuilder.command(dockerComposeCmd[0], "-f", composeFile.toString(), "down", "--rmi", "all", "-v", "--remove-orphans")
-//            } else {
-//                processBuilder.command(dockerComposeCmd[0],dockerComposeCmd[1],"-f",composeFile.toString(),"down","--rmi","all","-v","--remove-orphans")
-//            }
+        //to remove images use parameters
+        //"-f", composeFile.toString(), "down", "--rmi", "all", "-v", "--remove-orphans"
+
+        val processBuilder = GeneralCommandLine(dockerComposeCmd)
+            .withParameters("-f", composeFile.toString(), "down")
+            .withWorkDirectory(composeFile.toFile().parentFile)
+            .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
+            .withRedirectErrorStream(true)
+            .toProcessBuilder()
 
         return executeCommand("down", composeFile, processBuilder)
 
@@ -103,19 +101,13 @@ internal class Engine {
 
     private fun executeCommand(name: String, composeFile: Path, processBuilder: ProcessBuilder): String {
 
-        Log.log(logger::info, "executing {}, command {}", name, processBuilder.command())
+        Log.log(logger::info, "executing {}, compose file {}, command {}", name, composeFile, processBuilder.command())
 
         val errorMessages = mutableListOf<String>()
 
         try {
             engineLock.lock()
 
-            EnvironmentUtil.getEnvironmentMap().forEach {
-                processBuilder.environment()[it.key] = it.value
-            }
-
-            processBuilder.directory(composeFile.toFile().parentFile)
-            processBuilder.redirectErrorStream(true)
             val process = processBuilder.start()
 
             Log.log(logger::info, "started process {}", process.info())
@@ -204,6 +196,5 @@ internal class Engine {
             //ignore
         }
     }
-
 
 }

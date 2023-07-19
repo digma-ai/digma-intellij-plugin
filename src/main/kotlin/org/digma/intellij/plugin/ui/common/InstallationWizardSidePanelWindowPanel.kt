@@ -240,13 +240,15 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                             sendIsDigmaEngineInstalled(true, jbCefBrowser)
                             sendIsDigmaEngineRunning(true, jbCefBrowser)
                         } else {
-                            Log.log(logger::warn, "error installing engine {}", exitValue)
+                            Log.log(logger::warn, "error installing engine, {}", exitValue)
 
                             //remove if installation failed and only then notify the app so that the retry will
                             // show only after remove completes
                             Log.log(logger::warn, "removing engine after installation failed")
                             service<DockerService>().removeEngine(project) { exitValue ->
-                                Log.log(logger::warn, "error removing engine after failure {}", exitValue)
+                                if (exitValue != "0") {
+                                    Log.log(logger::warn, "error removing engine after failure {}", exitValue)
+                                }
 
                                 sendDockerResult(
                                     ConnectionCheckResult.FAILURE.value,

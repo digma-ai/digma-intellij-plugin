@@ -121,6 +121,7 @@
 `,t.ErrorMessage=a.default.span`
   word-break: break-word;
   max-width: 300px;
+  white-space: pre-line;
   color: ${({theme:e})=>{switch(e.mode){case"light":return"#e00036";case"dark":case"dark-jetbrains":return"#f93967"}}};
 `,t.ButtonsContainer=a.default.div`
   display: flex;

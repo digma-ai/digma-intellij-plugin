@@ -16,6 +16,7 @@ import org.cef.browser.CefFrame
 import org.cef.browser.CefMessageRouter
 import org.cef.callback.CefQueryCallback
 import org.cef.handler.CefMessageRouterHandlerAdapter
+import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.analytics.BackendConnectionUtil
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.IDEUtilsService
@@ -202,11 +203,20 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                 service<DockerService>().installEngine(project) { exitValue ->
 
                     runBlocking {
-                        delay(5000)
-                        BackendConnectionUtil.getInstance(project).testConnectionToBackend()
-                        delay(2000)
-                        val connectionOk = BackendConnectionUtil.getInstance(project).testConnectionToBackend()
+
                         val success = exitValue == "0"
+
+                        if (success) {
+                            var i = 0
+                            while (!BackendConnectionMonitor.getInstance(project).isConnectionOk() && i < 4) {
+                                BackendConnectionUtil.getInstance(project).testConnectionToBackend()
+                                delay(5000)
+                                i++
+                            }
+                        }
+
+
+                        val connectionOk = BackendConnectionMonitor.getInstance(project).isConnectionOk()
                         val isEngineUp = connectionOk && success
                         if (isEngineUp) {
                             sendDockerResult(
@@ -262,11 +272,19 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                 service<DockerService>().startEngine(project) { exitValue ->
 
                     runBlocking {
-                        delay(5000)
-                        BackendConnectionUtil.getInstance(project).testConnectionToBackend()
-                        delay(2000)
-                        val connectionOk = BackendConnectionUtil.getInstance(project).testConnectionToBackend()
+
                         val success = exitValue == "0"
+
+                        if (success) {
+                            var i = 0
+                            while (!BackendConnectionMonitor.getInstance(project).isConnectionOk() && i < 4) {
+                                BackendConnectionUtil.getInstance(project).testConnectionToBackend()
+                                delay(5000)
+                                i++
+                            }
+                        }
+
+                        val connectionOk = BackendConnectionMonitor.getInstance(project).isConnectionOk()
                         val isEngineUp = connectionOk && success
                         if (isEngineUp) {
                             sendDockerResult(

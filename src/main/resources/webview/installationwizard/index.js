@@ -102,6 +102,7 @@
   align-items: center;
   gap: 20px;
   padding: 40px 8px 0;
+  text-align: center;
 `,t.Title=a.default.span`
   font-size: 14px;
   font-weight: 500;
@@ -113,12 +114,13 @@
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  text-align: center;
   font-size: 10px;
   font-style: normal;
   font-weight: 500;
   color: ${({theme:e})=>{switch(e.mode){case"light":return"#828797";case"dark":case"dark-jetbrains":return"#9b9b9b"}}};
 `,t.ErrorMessage=a.default.span`
+  word-break: break-word;
+  max-width: 300px;
   color: ${({theme:e})=>{switch(e.mode){case"light":return"#e00036";case"dark":case"dark-jetbrains":return"#f93967"}}};
 `,t.ButtonsContainer=a.default.div`
   display: flex;

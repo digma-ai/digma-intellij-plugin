@@ -94,19 +94,23 @@ class DockerService {
 
 
     fun installEngine(project: Project, resultTask: Consumer<String>) {
+
         Backgroundable.runInNewBackgroundThread(project, "installing digma engine") {
+
             if (downloader.downloadComposeFile()) {
                 val dockerComposeCmd = getDockerComposeCommand()
 
                 if (dockerComposeCmd != null) {
                     val exitValue = engine.up(downloader.composeFile!!, dockerComposeCmd)
-                    notifyResult(exitValue, resultTask)
                     if (exitValue != "0") {
+                        Log.log(logger::warn, "error installing engine {}", exitValue)
                         downloader.deleteFile()
                     }
+                    notifyResult(exitValue, resultTask)
                 } else {
-                    notifyResult("no docker-compose command", resultTask)
+                    Log.log(logger::warn, "could not find docker compose command")
                     downloader.deleteFile()
+                    notifyResult("no docker-compose command", resultTask)
                 }
             } else {
                 Log.log(logger::warn, "Failed to download compose file")
@@ -116,16 +120,20 @@ class DockerService {
     }
 
     fun upgradeEngine(project: Project) {
+
         Backgroundable.runInNewBackgroundThread(project, "upgrading digma engine") {
+
             if (downloader.downloadComposeFile()) {
                 val dockerComposeCmd = getDockerComposeCommand()
 
                 if (dockerComposeCmd != null) {
                     val exitValue = engine.up(downloader.composeFile!!, dockerComposeCmd)
                     if (exitValue != "0") {
+                        Log.log(logger::warn, "error upgrading engine {}", exitValue)
                         downloader.deleteFile()
                     }
                 } else {
+                    Log.log(logger::warn, "could not find docker compose command")
                     downloader.deleteFile()
                 }
             } else {
@@ -143,10 +151,14 @@ class DockerService {
 
                 if (dockerComposeCmd != null) {
                     val exitValue = engine.stop(downloader.composeFile!!, dockerComposeCmd)
+                    if (exitValue != "0") {
+                        Log.log(logger::warn, "error stopping engine {}", exitValue)
+                    }
                     notifyResult(exitValue, resultTask)
                 } else {
-                    notifyResult("no docker-compose command", resultTask)
+                    Log.log(logger::warn, "could not find docker compose command")
                     downloader.deleteFile()
+                    notifyResult("no docker-compose command", resultTask)
                 }
             } else {
                 Log.log(logger::warn, "Failed to find compose file")
@@ -168,13 +180,15 @@ class DockerService {
 
                 if (dockerComposeCmd != null) {
                     val exitValue = engine.start(downloader.composeFile!!, dockerComposeCmd)
-                    notifyResult(exitValue, resultTask)
                     if (exitValue != "0") {
+                        Log.log(logger::warn, "error starting engine {}", exitValue)
                         downloader.deleteFile()
                     }
+                    notifyResult(exitValue, resultTask)
                 } else {
-                    notifyResult("no docker-compose command", resultTask)
+                    Log.log(logger::warn, "could not find docker compose command")
                     downloader.deleteFile()
+                    notifyResult("no docker-compose command", resultTask)
                 }
             } else {
                 Log.log(logger::warn, "Failed to find compose file")
@@ -188,22 +202,32 @@ class DockerService {
     fun removeEngine(project: Project, resultTask: Consumer<String>) {
 
         Backgroundable.runInNewBackgroundThread(project, "uninstalling digma engine") {
+
+            if (!downloader.findComposeFile()) {
+                downloader.downloadComposeFile()
+            }
+
             if (downloader.findComposeFile()) {
                 val dockerComposeCmd = getDockerComposeCommand()
 
                 if (dockerComposeCmd != null) {
                     val exitValue = engine.remove(downloader.composeFile!!, dockerComposeCmd)
+                    if (exitValue != "0") {
+                        Log.log(logger::warn, "error uninstalling engine {}", exitValue)
+                    }
                     notifyResult(exitValue, resultTask)
                 } else {
+                    Log.log(logger::warn, "could not find docker compose command")
                     notifyResult("no docker-compose command", resultTask)
-                    downloader.deleteFile()
                 }
+
+                //always delete fine here, it's an uninstallation
+                downloader.deleteFile()
+
             } else {
                 Log.log(logger::warn, "Failed to find compose file")
                 notifyResult("Failed to find compose file", resultTask)
             }
-
-            downloader.deleteFile()
         }
     }
 

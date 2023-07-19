@@ -236,6 +236,9 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                             )
                             sendIsDigmaEngineInstalled(false, jbCefBrowser)
                             sendIsDigmaEngineRunning(false, jbCefBrowser)
+                            service<DockerService>().removeEngine(project) { exitValue ->
+                                Log.log(logger::warn, "error removing engine after failure {}", exitValue)
+                            }
                         }
 
                         sendIsDockerInstalled(success, jbCefBrowser)
@@ -304,6 +307,9 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                             )
                             sendIsDigmaEngineInstalled(false, jbCefBrowser)
                             sendIsDigmaEngineRunning(false, jbCefBrowser)
+                            service<DockerService>().removeEngine(project) { exitValue ->
+                                Log.log(logger::warn, "error removing engine after failure {}", exitValue)
+                            }
                         }
 
                         sendIsDockerInstalled(success, jbCefBrowser)

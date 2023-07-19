@@ -4,11 +4,14 @@ import com.intellij.codeInsight.hint.HintManager
 import com.intellij.codeInsight.hint.HintUtil
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.util.ui.JBUI
+import org.digma.intellij.plugin.analytics.BackendConnectionUtil
 import org.digma.intellij.plugin.common.IDEUtilsService
+import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
@@ -81,34 +84,38 @@ class SettingsHintPanel(project: Project) : JPanel() {
         add(topPanel)
 
 
-        /// Local Engine
-        val localeEnginePanel = Box.createHorizontalBox()
-        localeEnginePanel.background = Laf.Colors.EDITOR_BACKGROUND
-        localeEnginePanel.isOpaque = true
-        localeEnginePanel.add(Box.createHorizontalStrut(5))
-        localeEnginePanel.add(JLabel(Laf.Icons.General.ACTIVE_GREEN))
-        localeEnginePanel.add(Box.createHorizontalStrut(15))
 
-        val localeEngineLabel = JLabel("Local Engine")
-        localeEngineLabel.cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
-        localeEngineLabel.addMouseListener(object : MouseAdapter() {
-            override fun mouseClicked(e: MouseEvent?) {
-                try {
-                    MainToolWindowCardsController.getInstance(project).showWizard(false);
-                    ToolWindowShower.getInstance(project).showToolWindow()
-                    HintManager.getInstance().hideAllHints()
-                } catch (ex: Exception) {
-                    Log.log(logger::debug, "exception opening 'Local Engine' message: {}. ", ex.message)
-                }
+        if (service<DockerService>().isEngineInstalled()) {
+
+            val localeEnginePanel = Box.createHorizontalBox()
+            localeEnginePanel.background = Laf.Colors.EDITOR_BACKGROUND
+            localeEnginePanel.isOpaque = true
+
+            if (BackendConnectionUtil.getInstance(project).testConnectionToBackend()) {
+                localeEnginePanel.add(Box.createHorizontalStrut(5))
+                localeEnginePanel.add(JLabel(Laf.Icons.General.ACTIVE_GREEN))
             }
-        })
 
-        localeEnginePanel.add(localeEngineLabel)
-        localeEnginePanel.add(Box.createHorizontalStrut(5))
-        localeEnginePanel.border = BorderFactory.createMatteBorder(0, 0, 1, 0, Laf.Colors.PLUGIN_BACKGROUND)
-        add(localeEnginePanel)
+            localeEnginePanel.add(Box.createHorizontalStrut(15))
+            val localeEngineLabel = JLabel("Local Engine")
+            localeEngineLabel.cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+            localeEngineLabel.addMouseListener(object : MouseAdapter() {
+                override fun mouseClicked(e: MouseEvent?) {
+                    try {
+                        MainToolWindowCardsController.getInstance(project).showWizard(false);
+                        ToolWindowShower.getInstance(project).showToolWindow()
+                        HintManager.getInstance().hideAllHints()
+                    } catch (ex: Exception) {
+                        Log.log(logger::debug, "exception opening 'Local Engine' message: {}. ", ex.message)
+                    }
+                }
+            })
 
-        ///
+            localeEnginePanel.add(localeEngineLabel)
+            localeEnginePanel.add(Box.createHorizontalStrut(5))
+            localeEnginePanel.border = BorderFactory.createMatteBorder(0, 0, 1, 0, Laf.Colors.PLUGIN_BACKGROUND)
+            add(localeEnginePanel)
+        }
 
 
 

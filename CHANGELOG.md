@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.113] - 2023-07-19
+## [2.0.114] - 2023-07-19
+- Feature/auto installation by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/980
+
+## 2.0.113 - 2023-07-19
 - Report unknown gradle/maven tasks by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/979
 
 ## 2.0.112 - 2023-07-18

@@ -22,7 +22,6 @@ import org.digma.intellij.plugin.model.rest.navigation.SpanNavigationItem
 import org.digma.intellij.plugin.navigation.NavigationModel
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.ui.list.RoundedPanel
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
 import org.digma.intellij.plugin.ui.model.DocumentScope
@@ -56,11 +55,9 @@ class CodeNavigationButton(val project: Project) : TargetButton(project, true) {
 
         addActionListener {
 
-            ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.Scope,"NavigateToCode")
             try {
                 val codeLessSpan = getCodeLessSpan()
                 if (codeLessSpan != null) {
-
                     val objectIdToUse = CodeObjectsUtil.addSpanTypeToId(codeLessSpan.spanId)
                     val codeObjectNavigation =
                         project.service<AnalyticsService>().getCodeObjectNavigation(objectIdToUse)
@@ -75,8 +72,10 @@ class CodeNavigationButton(val project: Project) : TargetButton(project, true) {
                     val methodId = methodInfo.id
                     val codeNavigator = project.service<CodeNavigator>()
                     if (codeNavigator.canNavigateToMethod(methodId)) {
+                        ActivityMonitor.getInstance(project).registerNavigationButtonClicked(true)
                         codeNavigator.maybeNavigateToMethod(methodInfo.id)
                     } else {
+                        ActivityMonitor.getInstance(project).registerNavigationButtonClicked(false)
                         HintManager.getInstance().showHint(
                             JLabel(CODE_NOT_FOUND), RelativePoint.getSouthWestOf(this),
                             HintManager.HIDE_BY_ESCAPE, 5000
@@ -92,8 +91,10 @@ class CodeNavigationButton(val project: Project) : TargetButton(project, true) {
                     val fileUri = documentInfo.fileUri
                     val codeNavigator = project.service<CodeNavigator>()
                     if (codeNavigator.canNavigateToFile(fileUri)) {
+                        ActivityMonitor.getInstance(project).registerNavigationButtonClicked(true)
                         codeNavigator.maybeNavigateToFile(fileUri)
                     } else {
+                        ActivityMonitor.getInstance(project).registerNavigationButtonClicked(false)
                         HintManager.getInstance().showHint(
                             JLabel(CODE_NOT_FOUND), RelativePoint.getSouthWestOf(this),
                             HintManager.HIDE_BY_ESCAPE, 5000
@@ -144,6 +145,7 @@ class CodeNavigationButton(val project: Project) : TargetButton(project, true) {
         if (codeNavigator.canNavigateToSpan(spanId) || codeNavigator.canNavigateToMethod(methodId)) {
             project.service<InsightsViewOrchestrator>().showInsightsForSpanOrMethodAndNavigateToCode(spanId, methodId)
             Log.log(logger::debug, project, "Navigation to direct span succeeded for {},{}", spanId, methodId)
+            ActivityMonitor.getInstance(project).registerNavigationButtonClicked(true)
         } else {
 
             val closestParentItems = codeObjectNavigation.navigationEntry.closestParentSpans
@@ -164,11 +166,13 @@ class CodeNavigationButton(val project: Project) : TargetButton(project, true) {
 
 
             if (closestParentItems.isEmpty() && closestParentWithMethodItems.isEmpty()) {
+                ActivityMonitor.getInstance(project).registerNavigationButtonClicked(false)
                 HintManager.getInstance().showHint(
                     JLabel(CODE_NOT_FOUND), RelativePoint.getSouthWestOf(this),
                     HintManager.HIDE_BY_ESCAPE, 5000
                 )
             } else {
+                ActivityMonitor.getInstance(project).registerNavigationButtonClicked(true)
                 HintManager.getInstance().showHint(
                     NavigationList(project, closestParentItems, closestParentWithMethodItems), RelativePoint.getSouthWestOf(this),
                     HintManager.HIDE_BY_ESCAPE, 5000

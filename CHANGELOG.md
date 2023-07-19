@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.114] - 2023-07-19
+## [2.0.115] - 2023-07-19
+- Bug fix/quarkus tests do not use OTEL agent by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/981
+
+## 2.0.114 - 2023-07-19
 - Feature/auto installation by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/980
 
 ## 2.0.113 - 2023-07-19

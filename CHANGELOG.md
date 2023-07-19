@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.112] - 2023-07-18
+## [2.0.113] - 2023-07-19
+- Report unknown gradle/maven tasks by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/979
+
+## 2.0.112 - 2023-07-18
 - register email by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/955
 - Small bug fix/print only if backend is ok by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/974
 - Project framework discovery+posthog by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/972

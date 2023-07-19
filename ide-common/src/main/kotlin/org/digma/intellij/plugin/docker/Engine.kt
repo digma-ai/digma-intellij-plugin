@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.docker
 
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.util.EnvironmentUtil
 import org.digma.intellij.plugin.log.Log
 import java.nio.file.Path
 import java.util.concurrent.Executors
@@ -108,6 +109,10 @@ internal class Engine {
 
         try {
             engineLock.lock()
+
+            EnvironmentUtil.getEnvironmentMap().forEach {
+                processBuilder.environment()[it.key] = it.value
+            }
 
             processBuilder.directory(composeFile.toFile().parentFile)
             processBuilder.redirectErrorStream(true)

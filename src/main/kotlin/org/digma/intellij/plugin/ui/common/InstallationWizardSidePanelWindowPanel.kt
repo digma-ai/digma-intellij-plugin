@@ -73,7 +73,7 @@ private const val IS_JAEGER_ENABLED: String = "isJaegerEnabled"
 private const val IS_WIZARD_SKIP_INSTALLATION_STEP: String = "wizardSkipInstallationStep"
 
 private val logger: Logger =
-    Logger.getInstance("org.digma.intellij.plugin.ui.common.InstallationWizardSidePanelWindowPanel")
+    Logger.getInstance("org.digma.intellij.plugin.ui.common.InstallationWizard")
 
 
 fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipInstallationStep: Boolean): DisposablePanel? {
@@ -217,6 +217,9 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
 
 
                         val connectionOk = BackendConnectionMonitor.getInstance(project).isConnectionOk()
+                        if (!connectionOk) {
+                            Log.log(logger::warn, "no connection after engine installation")
+                        }
                         val isEngineUp = connectionOk && success
                         if (isEngineUp) {
                             sendDockerResult(
@@ -228,17 +231,19 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                             sendIsDigmaEngineInstalled(true, jbCefBrowser)
                             sendIsDigmaEngineRunning(true, jbCefBrowser)
                         } else {
+                            Log.log(logger::warn, "error installing engine {}", exitValue)
+                            Log.log(logger::warn, "removing engine after installation failed")
+                            service<DockerService>().removeEngine(project) { exitValue ->
+                                Log.log(logger::warn, "error removing engine after failure {}", exitValue)
+                            }
                             sendDockerResult(
                                 ConnectionCheckResult.FAILURE.value,
-                                exitValue,
+                                "Could not install engine",
                                 jbCefBrowser,
                                 JCefMessagesUtils.INSTALLATION_WIZARD_SET_INSTALL_DIGMA_ENGINE_RESULT
                             )
                             sendIsDigmaEngineInstalled(false, jbCefBrowser)
                             sendIsDigmaEngineRunning(false, jbCefBrowser)
-                            service<DockerService>().removeEngine(project) { exitValue ->
-                                Log.log(logger::warn, "error removing engine after failure {}", exitValue)
-                            }
                         }
 
                         sendIsDockerInstalled(success, jbCefBrowser)
@@ -261,9 +266,10 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                             sendIsDigmaEngineRunning(false, jbCefBrowser)
                             sendIsDigmaEngineInstalled(false, jbCefBrowser)
                         } else {
+                            Log.log(logger::warn, "error uninstalling engine {}", exitValue)
                             sendDockerResult(
                                 ConnectionCheckResult.FAILURE.value,
-                                exitValue,
+                                "Could not uninstall engine",
                                 jbCefBrowser,
                                 JCefMessagesUtils.INSTALLATION_WIZARD_SET_UNINSTALL_DIGMA_ENGINE_RESULT
                             )
@@ -288,6 +294,10 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                         }
 
                         val connectionOk = BackendConnectionMonitor.getInstance(project).isConnectionOk()
+                        if (!connectionOk) {
+                            Log.log(logger::warn, "no connection after engine start")
+                        }
+
                         val isEngineUp = connectionOk && success
                         if (isEngineUp) {
                             sendDockerResult(
@@ -299,17 +309,20 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                             sendIsDigmaEngineInstalled(true, jbCefBrowser)
                             sendIsDigmaEngineRunning(true, jbCefBrowser)
                         } else {
+                            Log.log(logger::warn, "error starting engine {}", exitValue)
+                            Log.log(logger::warn, "removing engine after start failed")
+                            service<DockerService>().removeEngine(project) { exitValue ->
+                                Log.log(logger::warn, "error removing engine after failure {}", exitValue)
+                            }
                             sendDockerResult(
                                 ConnectionCheckResult.FAILURE.value,
-                                exitValue,
+                                "Could not start engine",
                                 jbCefBrowser,
                                 JCefMessagesUtils.INSTALLATION_WIZARD_SET_START_DIGMA_ENGINE_RESULT
                             )
                             sendIsDigmaEngineInstalled(false, jbCefBrowser)
                             sendIsDigmaEngineRunning(false, jbCefBrowser)
-                            service<DockerService>().removeEngine(project) { exitValue ->
-                                Log.log(logger::warn, "error removing engine after failure {}", exitValue)
-                            }
+
                         }
 
                         sendIsDockerInstalled(success, jbCefBrowser)
@@ -332,9 +345,10 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                             )
                             sendIsDigmaEngineRunning(false, jbCefBrowser)
                         } else {
+                            Log.log(logger::warn, "error stopping engine {}", exitValue)
                             sendDockerResult(
                                 ConnectionCheckResult.FAILURE.value,
-                                exitValue,
+                                "Could not stop engine",
                                 jbCefBrowser,
                                 JCefMessagesUtils.INSTALLATION_WIZARD_SET_STOP_DIGMA_ENGINE_RESULT
                             )

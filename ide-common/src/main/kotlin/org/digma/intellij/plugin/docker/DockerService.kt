@@ -179,6 +179,17 @@ class DockerService {
                 val dockerComposeCmd = getDockerComposeCommand()
 
                 if (dockerComposeCmd != null) {
+                    //we try to detect errors when running the docker command. engine.start executes docker-compose up,
+                    // if executing docker-compose up while containers exist it will print many errors that are ok but
+                    // that interferes with our attempt to detect errors.
+                    //so running down and then up solves it
+                    engine.down(downloader.composeFile!!, dockerComposeCmd)
+                    try {
+                        Thread.sleep(2000)
+                    } catch (e: Exception) {
+                        //ignore
+                    }
+
                     val exitValue = engine.start(downloader.composeFile!!, dockerComposeCmd)
                     if (exitValue != "0") {
                         Log.log(logger::warn, "error starting engine {}", exitValue)

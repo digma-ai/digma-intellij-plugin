@@ -101,7 +101,7 @@ internal class Engine {
 
         Log.log(logger::info, "executing {}, command {}", name, processBuilder.command())
 
-        val errorCodes = mutableSetOf<Int>()
+        val errorMessages = mutableListOf<String>()
 
         try {
 
@@ -112,11 +112,11 @@ internal class Engine {
             Log.log(logger::info, "started process {}", process.info())
 
             streamExecutor.submit(StreamGobbler(process.inputStream) {
-                collectErrorCode(it, errorCodes)
+                collectErrors(it, errorMessages)
                 Log.log(logger::info, "DigmaDocker: $it")
             })
             streamExecutor.submit(StreamGobbler(process.errorStream) {
-                collectErrorCode(it, errorCodes)
+                collectErrors(it, errorMessages)
                 Log.log(logger::info, "DigmaDockerError: $it")
             })
 
@@ -142,7 +142,7 @@ internal class Engine {
                 )
             }
 
-            return buildExitValue(exitValue, success, errorCodes)
+            return buildExitValue(exitValue, success, errorMessages)
 
         } catch (e: Exception) {
             Log.warnWithException(logger, e, "error running docker command {}", processBuilder.command())
@@ -151,68 +151,41 @@ internal class Engine {
     }
 
 
-    private fun buildExitValue(exitValue: Int, success: Boolean, errorCodes: Set<Int>): String {
+    private fun buildExitValue(exitValue: Int, success: Boolean, errorMessages: List<String>): String {
 
         if (!success || exitValue != 0) {
             var exitMessage = "process failed with code $exitValue"
-            if (errorCodes.isNotEmpty()) {
-                exitMessage = exitMessage.plus(":").plus(System.lineSeparator()).plus(buildErrorMessagesFromCodes(errorCodes))
+            if (errorMessages.isNotEmpty()) {
+                exitMessage = exitMessage.plus(":").plus(System.lineSeparator()).plus(buildErrorMessages(errorMessages))
             }
             return exitMessage
         }
 
-        if (errorCodes.isNotEmpty()) {
-            return "process succeeded but some containers failed:".plus(System.lineSeparator()).plus(buildErrorMessagesFromCodes(errorCodes))
+        if (errorMessages.isNotEmpty()) {
+            return "process succeeded but some containers failed:".plus(System.lineSeparator()).plus(buildErrorMessages(errorMessages))
         }
 
         return "0"
     }
 
-    private fun buildErrorMessagesFromCodes(errorCodes: Set<Int>): String {
+    private fun buildErrorMessages(errorMessages: List<String>): String {
 
         var message = ""
 
-        errorCodes.forEach {
-            message = message.plus("[$it] ")
-            when (it) {
-                1 -> message = message.plus("Application error").plus(System.lineSeparator())
-                125 -> message = message.plus("Container failed to run error").plus(System.lineSeparator())
-                126 -> message = message.plus("Command invoke error").plus(System.lineSeparator())
-                127 -> message = message.plus("File or directory not found").plus(System.lineSeparator())
-                128 -> message = message.plus("Invalid argument used on exit").plus(System.lineSeparator())
-                134 -> message = message.plus("Abnormal termination").plus(System.lineSeparator())
-                137 -> message = message.plus("Immediate termination").plus(System.lineSeparator())
-                139 -> message = message.plus("Segmentation fault").plus(System.lineSeparator())
-                143 -> message = message.plus("Graceful termination").plus(System.lineSeparator())
-                255 -> message = message.plus("Exit Status Out Of Range").plus(System.lineSeparator())
-            }
+        errorMessages.forEach {
+            message = message.plus(it).plus(System.lineSeparator())
         }
         return message
     }
 
-    /*
-    Exit Code 1	Application error	Container was stopped due to application error or incorrect reference in the image specification
-    Exit Code 125	Container failed to run error	The docker run command did not execute successfully
-    Exit Code 126	Command invoke error	A command specified in the image specification could not be invoked
-    Exit Code 127	File or directory not found	File or directory specified in the image specification was not found
-    Exit Code 128	Invalid argument used on exit	Exit was triggered with an invalid exit code (valid codes are integers between 0-255)
-    Exit Code 134	Abnormal termination (SIGABRT)	The container aborted itself using the abort() function.
-    Exit Code 137	Immediate termination (SIGKILL)	Container was immediately terminated by the operating system via SIGKILL signal
-    Exit Code 139	Segmentation fault (SIGSEGV)	Container attempted to access memory that was not assigned to it and was terminated
-    Exit Code 143	Graceful termination (SIGTERM)	Container received warning that it was about to be terminated, then terminated
-    Exit Code 255	Exit Status Out Of Range	Container exited, returning an exit code outside the acceptable range, meaning the cause of the error is not known
-     */
 
 
     //best effort to collect error codes
-    private fun collectErrorCode(line: String, errorCodes: MutableSet<Int>) {
+    private fun collectErrors(line: String, errorMessages: MutableList<String>) {
 
         try {
-            if (line.contains("exit code")) {
-                val code = line.substringAfterLast(" ").toInt()
-                if (code != 0) {
-                    errorCodes.add(code)
-                }
+            if (line.trim().startsWith("Error ") || line.trim().startsWith("Error: ")) {
+                errorMessages.add(line)
             }
         } catch (e: Exception) {
             //ignore

@@ -1,13 +1,14 @@
 package org.digma.intellij.plugin.idea.runcfg
 
+import com.intellij.execution.JavaRunConfigurationBase
 import com.intellij.execution.configurations.JavaParameters
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.idea.deps.ModulesDepsService
 import org.digma.intellij.plugin.settings.SettingsState
-import org.jetbrains.annotations.NotNull
 import org.jetbrains.idea.maven.execution.MavenRunConfiguration
 import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
 
@@ -28,12 +29,8 @@ class QuarkusRunConfigurationWrapper : IRunConfigurationWrapper {
         }
     }
 
-    override fun canWrap(configuration: RunConfigurationBase<*>): Boolean {
-        return evalRunConfigType(configuration) != RunConfigType.Unknown
-    }
-
-    override fun getRunConfigType(configuration: RunConfigurationBase<*>): RunConfigType {
-        return evalRunConfigType(configuration)
+    override fun getRunConfigType(configuration: RunConfigurationBase<*>, module: Module?): RunConfigType {
+        return evalRunConfigType(configuration, module)
     }
 
     /*
@@ -51,7 +48,7 @@ class QuarkusRunConfigurationWrapper : IRunConfigurationWrapper {
         runnerSettings: RunnerSettings?,
         resolvedModule: Module?,
     ) {
-        when (evalRunConfigType(configuration)) {
+        when (evalRunConfigType(configuration, resolvedModule)) {
             RunConfigType.GradleRun -> {
                 //when injecting JAVA_TOOL_OPTIONS to GradleRunConfiguration the GradleRunConfiguration will also run with
                 // JAVA_TOOL_OPTIONS which is not ideal. for example, gradle will execute with JAVA_TOOL_OPTIONS and then fork
@@ -72,6 +69,13 @@ class QuarkusRunConfigurationWrapper : IRunConfigurationWrapper {
 
             RunConfigType.MavenRun -> {
                 configuration as MavenRunConfiguration
+                val javaToolOptions = buildJavaToolOptions()
+                javaToolOptions?.let {
+                    mergeJavaToolOptions(params, it)
+                }
+            }
+
+            RunConfigType.JavaTest -> {
                 val javaToolOptions = buildJavaToolOptions()
                 javaToolOptions?.let {
                     mergeJavaToolOptions(params, it)
@@ -113,7 +117,7 @@ class QuarkusRunConfigurationWrapper : IRunConfigurationWrapper {
     /**
      * @see <a href="https://quarkus.io/guides/opentelemetry">Quarkus with opentelemetry</a>
      */
-    private fun buildJavaToolOptions(): String? {
+    private fun buildJavaToolOptions(): String {
         val retVal = " "
             .plus("-Dquarkus.otel.exporter.otlp.traces.endpoint=${getExporterUrl()}")
             .plus(" ")
@@ -125,10 +129,17 @@ class QuarkusRunConfigurationWrapper : IRunConfigurationWrapper {
         return SettingsState.getInstance().runtimeObservabilityBackendUrl
     }
 
-    @NotNull
-    private fun evalRunConfigType(configuration: RunConfigurationBase<*>): RunConfigType {
+    private fun isQuarkusModule(module: Module?): Boolean {
+        if (module == null) return false
+
+        val modulesDepsService = ModulesDepsService.getInstance(module.project)
+        return modulesDepsService.isQuarkusModule(module)
+    }
+
+    private fun evalRunConfigType(configuration: RunConfigurationBase<*>, module: Module?): RunConfigType {
         if (isGradleConfiguration(configuration)) return RunConfigType.GradleRun
         if (isMavenConfiguration(configuration)) return RunConfigType.MavenRun
+        if (isJavaTest(configuration, module)) return RunConfigType.JavaTest
         return RunConfigType.Unknown
     }
 
@@ -154,4 +165,14 @@ class QuarkusRunConfigurationWrapper : IRunConfigurationWrapper {
         }
         return false
     }
+
+    private fun isJavaTest(configuration: RunConfigurationBase<*>, module: Module?): Boolean {
+        if (configuration is JavaRunConfigurationBase) {
+            if (isQuarkusModule(module)) {
+                return true
+            }
+        }
+        return false
+    }
+
 }

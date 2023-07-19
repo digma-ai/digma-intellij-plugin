@@ -6,9 +6,12 @@ import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.openapi.module.Module
 
 interface IRunConfigurationWrapper {
-    fun canWrap(configuration: RunConfigurationBase<*>): Boolean
 
-    fun getRunConfigType(configuration: RunConfigurationBase<*>): RunConfigType
+    fun canWrap(configuration: RunConfigurationBase<*>, module: Module?): Boolean {
+        return getRunConfigType(configuration, module) != RunConfigType.Unknown
+    }
+
+    fun getRunConfigType(configuration: RunConfigurationBase<*>, module: Module?): RunConfigType
 
     fun <T : RunConfigurationBase<*>?> updateJavaParameters(
         configuration: T & Any,

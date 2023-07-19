@@ -32,11 +32,7 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
         }
     }
 
-    override fun canWrap(configuration: RunConfigurationBase<*>): Boolean {
-        return evalRunConfigType(configuration) != RunConfigType.Unknown
-    }
-
-    override fun getRunConfigType(configuration: RunConfigurationBase<*>): RunConfigType {
+    override fun getRunConfigType(configuration: RunConfigurationBase<*>, module: Module?): RunConfigType {
         return evalRunConfigType(configuration)
     }
 

@@ -11,6 +11,7 @@ import com.intellij.execution.process.ProcessListener
 import com.intellij.execution.ui.ConsoleView
 import com.intellij.execution.ui.ConsoleViewContentType
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.log.Log
@@ -34,11 +35,19 @@ class OtelRunConfigurationExtension : RunConfigurationExtension() {
         return BackendConnectionMonitor.getInstance(project).isConnectionOk()
     }
 
-    private fun getWrapperFor(configuration: RunConfigurationBase<*>): IRunConfigurationWrapper? {
+    private fun getWrapperFor(configuration: RunConfigurationBase<*>, module: Module?): IRunConfigurationWrapper? {
         return listOf(
+            QuarkusRunConfigurationWrapper.getInstance(configuration.project), // quarkus is first so could catch unit tests before the standard AutoOtelAgent
             AutoOtelAgentRunConfigurationWrapper.getInstance(configuration.project),
-            QuarkusRunConfigurationWrapper.getInstance(configuration.project)
-        ).firstOrNull { it.canWrap(configuration) }
+        ).firstOrNull {
+            it.canWrap(configuration, module)
+        }
+    }
+
+    // not the ideal call but might manage without the JavaParameters
+    private fun getWrapperFor(configuration: RunConfigurationBase<*>): IRunConfigurationWrapper? {
+        val module = RunCfgTools.tryResolveModule(configuration, null)
+        return getWrapperFor(configuration, module)
     }
 
     override fun isApplicableFor(configuration: RunConfigurationBase<*>): Boolean {
@@ -51,7 +60,9 @@ class OtelRunConfigurationExtension : RunConfigurationExtension() {
         params: JavaParameters,
         runnerSettings: RunnerSettings?,
     ) {
-        val wrapper = getWrapperFor(configuration)
+        val resolvedModule = RunCfgTools.tryResolveModule(configuration, params)
+
+        val wrapper = getWrapperFor(configuration, resolvedModule)
         if (wrapper == null) {
             reportUnknownTasksToPosthog(configuration)
             return
@@ -59,7 +70,6 @@ class OtelRunConfigurationExtension : RunConfigurationExtension() {
 
         val isAutoOtelEnabled = isAutoOtelEnabled()
         val isConnectedToBackend = isConnectedToBackend(configuration.project)
-        val resolvedModule = RunCfgTools.resolveModule(configuration, params, runnerSettings)
 
         Log.log(
             logger::debug, "updateJavaParameters, project:{}, id:{}, name:{}, type:{}, module: {}",
@@ -68,7 +78,7 @@ class OtelRunConfigurationExtension : RunConfigurationExtension() {
 
         ActivityMonitor
             .getInstance(configuration.project)
-            .reportRunConfig(wrapper.getRunConfigType(configuration).name, isAutoOtelEnabled, isConnectedToBackend)
+            .reportRunConfig(wrapper.getRunConfigType(configuration, resolvedModule).name, isAutoOtelEnabled, isConnectedToBackend)
 
         //testing if enabled must be done here just before running.
         if (!isAutoOtelEnabled) {

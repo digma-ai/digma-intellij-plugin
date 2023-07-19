@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.116] - 2023-07-19
+## [2.0.117] - 2023-07-19
+- Update Installation Wizard UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/987
+
+## 2.0.116 - 2023-07-19
 - Update Installation Wizard UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/983
 - Bug fix/bring back the quarkus pop-up by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/984
 - process env by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/985

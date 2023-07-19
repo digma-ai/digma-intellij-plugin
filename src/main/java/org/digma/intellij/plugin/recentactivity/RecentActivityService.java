@@ -256,7 +256,6 @@ public class RecentActivityService implements Disposable {
 
                 var spanId = payload.getSpan().getSpanCodeObjectId();
                 var methodId = payload.getSpan().getMethodCodeObjectId();
-                ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.RecentActivity);
 
                 var canNavigate = project.getService(CodeNavigator.class).canNavigateToSpanOrMethod(spanId, methodId);
                 if (canNavigate) {
@@ -277,6 +276,8 @@ public class RecentActivityService implements Disposable {
                         project.getService(InsightsViewOrchestrator.class).showInsightsForCodelessSpan(payload.getSpan().getSpanCodeObjectId());
                     }));
                 }
+
+                ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.RecentActivity, canNavigate);
             });
         }
     }

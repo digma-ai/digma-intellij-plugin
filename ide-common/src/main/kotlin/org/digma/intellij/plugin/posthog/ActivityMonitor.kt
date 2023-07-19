@@ -239,6 +239,18 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
         )
     }
 
+    fun registerNavigationButtonClicked(navigable: Boolean) {
+        postHog?.capture(
+            userId,
+            "button-clicked",
+            mapOf(
+                "panel" to MonitoredPanel.Scope.name,
+                "button" to "NavigateToCode",
+                "navigable" to navigable.toString()
+            )
+        )
+    }
+
     fun registerSpanLinkClicked(insight: InsightType) {
         postHog?.capture(
             userId,
@@ -250,11 +262,16 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
         )
     }
 
-    fun registerSpanLinkClicked(panel: MonitoredPanel) {
+   fun registerSpanLinkClicked(panel: MonitoredPanel) {
+       registerSpanLinkClicked(panel, null)
+   }
+   fun registerSpanLinkClicked(panel: MonitoredPanel, navigable: Boolean?) {
         postHog?.capture(
             userId,
             "span-link clicked",
-            mapOf("panel" to panel.name)
+            mapOf(
+                "panel" to panel.name,
+                "navigable" to (navigable?.toString() ?: "unknown"))
         )
     }
 

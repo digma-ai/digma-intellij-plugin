@@ -4,5 +4,6 @@ enum class RunConfigType {
     JavaRun,
     GradleRun,
     MavenRun,
+    JavaTest,
     Unknown,
 }

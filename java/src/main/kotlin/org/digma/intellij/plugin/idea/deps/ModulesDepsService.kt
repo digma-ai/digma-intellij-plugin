@@ -250,8 +250,8 @@ class ModulesDepsService(private val project: Project) : Disposable {
         return theMap
     }
 
-    private fun notifyOfNewDetections(newValues: MutableCollection<ModuleExt>){
-        val previousValues = mapName2Module.values;
+    private fun notifyOfNewDetections(newValues: Collection<ModuleExt>) {
+        val previousValues = mapName2Module.values
         val activityMonitor = ActivityMonitor.getInstance(project)
 
         fun changedToTrue(getter: (ModuleMetadata) -> Boolean): Boolean {
@@ -314,7 +314,12 @@ class ModulesDepsService(private val project: Project) : Disposable {
 
     fun isSpringBootModule(module: Module): Boolean {
         val metadata = buildMetadata(module)
-        return metadata.hasSpringBoot();
+        return metadata.hasSpringBoot()
+    }
+
+    fun isQuarkusModule(module: Module): Boolean {
+        val metadata = buildMetadata(module)
+        return metadata.hasQuarkus()
     }
 
     // some Gradle modules might have be non relevant ones

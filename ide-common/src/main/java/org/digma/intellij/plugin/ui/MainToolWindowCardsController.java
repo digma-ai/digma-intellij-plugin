@@ -16,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import java.awt.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 /**
  * Controls the current view in digma tool window.
@@ -54,7 +54,7 @@ public class MainToolWindowCardsController implements Disposable {
 
     //wizard content is created and disposed when necessary. WizardComponents keeps the reference to the content and the panel.
     private final WizardComponents wizard = new WizardComponents();
-    private Supplier<DisposablePanel> wizardPanelBuilder;
+    private Function<Boolean, DisposablePanel> wizardPanelBuilder;
 
     private final AtomicBoolean isConnectionLost = new AtomicBoolean(false);
 
@@ -101,7 +101,7 @@ public class MainToolWindowCardsController implements Disposable {
                                @NotNull Content mainContent,
                                @NotNull JPanel mainCardsPanel,
                                @NotNull JPanel contentPanel,
-                               @NotNull Supplier<DisposablePanel> wizardPanelBuilder) {
+                               @NotNull Function<Boolean, DisposablePanel> wizardPanelBuilder) {
 
         Log.log(LOGGER::debug, "initComponents called");
 
@@ -126,7 +126,7 @@ public class MainToolWindowCardsController implements Disposable {
     }
 
 
-    public void showWizard() {
+    public void showWizard(Boolean wizardSkipInstallationStep) {
         Log.log(LOGGER::debug, "showWizard called");
 
         //in case showWizard is called while wizard is already on
@@ -136,7 +136,7 @@ public class MainToolWindowCardsController implements Disposable {
         }
 
         //build the wizard panel every time its necessary and dispose it when the wizard finishes.
-        var wizardPanel = wizardPanelBuilder.get();
+        var wizardPanel = wizardPanelBuilder.apply(wizardSkipInstallationStep);
         if (wizardPanel != null) {
             Content wizardContent = ContentFactory.getInstance().createContent(wizardPanel, null, false);
             toolWindow.getContentManager().removeContent(mainContent, false);

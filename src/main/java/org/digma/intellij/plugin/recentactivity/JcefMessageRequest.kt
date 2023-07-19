@@ -22,5 +22,5 @@ data class JcefConnectionCheckMessageRequest
 constructor(
         val type: String?,
         val action: String,
-        val payload: JcefConnectionCheckMessagePayload?
+        val payload: JcefConnectionCheckMessagePayload?,
 )

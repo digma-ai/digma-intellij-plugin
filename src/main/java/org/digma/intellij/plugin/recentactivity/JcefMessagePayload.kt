@@ -12,8 +12,12 @@ data class JcefConnectionCheckMessagePayload
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 constructor(val result: String)
 
+data class JcefDockerResultPayload
+@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+constructor(val result: String, val error: String)
 
 enum class ConnectionCheckResult(val value: String) {
     SUCCESS("success"),
     FAILURE("failure")
 }
+

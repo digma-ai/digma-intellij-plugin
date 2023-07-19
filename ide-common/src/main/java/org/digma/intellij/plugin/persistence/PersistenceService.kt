@@ -33,4 +33,14 @@ open class PersistenceService : PersistentStateComponent<PersistenceData> {
     override fun loadState(state: PersistenceData) {
         myPersistenceData = state
     }
+
+    fun firstWizardLaunchDone() {
+        state.firstWizardLaunch = false
+    }
+
+    fun isFirstWizardLaunch(): Boolean {
+        return state.firstWizardLaunch
+    }
+
+
 }

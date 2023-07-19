@@ -95,6 +95,8 @@ object Laf {
                 @JvmStatic val TARGET: Icon = SvgIcon.asIs("/icons/target.svg")
                 @JvmStatic val TARGET_PRESSED: Icon = SvgIcon.asIs("/icons/target-pressed.svg")
                 @JvmStatic val CODE_LOCATION_LINK: Icon = SvgIcon.asIs("/icons/code-location-link.svg")
+                @JvmStatic
+                val ACTIVE_GREEN: Icon = SvgIcon.asIs("/icons/active-green.svg")
             }
         }
 

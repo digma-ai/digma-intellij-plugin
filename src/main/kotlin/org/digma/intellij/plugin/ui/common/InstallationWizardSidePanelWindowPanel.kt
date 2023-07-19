@@ -202,6 +202,14 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
             if (JCefMessagesUtils.INSTALLATION_WIZARD_INSTALL_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
                 service<DockerService>().installEngine(project) { exitValue ->
 
+                    if (exitValue == DockerService.NO_DOCKER_COMPOSE_COMMAND){
+                        sendIsDockerInstalled(false, jbCefBrowser)
+                        sendIsDockerComposeInstalled(false, jbCefBrowser)
+                    }else{
+                        sendIsDockerInstalled(true, jbCefBrowser)
+                        sendIsDockerComposeInstalled(true, jbCefBrowser)
+                    }
+
                     runBlocking {
 
                         val success = exitValue == "0"
@@ -250,14 +258,19 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                             }
 
                         }
-
-                        sendIsDockerInstalled(success, jbCefBrowser)
-                        sendIsDockerComposeInstalled(success, jbCefBrowser)
                     }
                 }
             }
             if (JCefMessagesUtils.INSTALLATION_WIZARD_UNINSTALL_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
                 service<DockerService>().removeEngine(project) { exitValue ->
+
+                    if (exitValue == DockerService.NO_DOCKER_COMPOSE_COMMAND){
+                        sendIsDockerInstalled(false, jbCefBrowser)
+                        sendIsDockerComposeInstalled(false, jbCefBrowser)
+                    }else{
+                        sendIsDockerInstalled(true, jbCefBrowser)
+                        sendIsDockerComposeInstalled(true, jbCefBrowser)
+                    }
 
                     runBlocking {
                         val success = exitValue == "0"
@@ -284,6 +297,14 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
             }
             if (JCefMessagesUtils.INSTALLATION_WIZARD_START_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
                 service<DockerService>().startEngine(project) { exitValue ->
+
+                    if (exitValue == DockerService.NO_DOCKER_COMPOSE_COMMAND){
+                        sendIsDockerInstalled(false, jbCefBrowser)
+                        sendIsDockerComposeInstalled(false, jbCefBrowser)
+                    }else{
+                        sendIsDockerInstalled(true, jbCefBrowser)
+                        sendIsDockerComposeInstalled(true, jbCefBrowser)
+                    }
 
                     runBlocking {
 
@@ -326,14 +347,20 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                             sendIsDigmaEngineRunning(false, jbCefBrowser)
                         }
 
-                        sendIsDockerInstalled(success, jbCefBrowser)
-                        sendIsDockerComposeInstalled(success, jbCefBrowser)
                     }
 
                 }
             }
             if (JCefMessagesUtils.INSTALLATION_WIZARD_STOP_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
                 service<DockerService>().stopEngine(project) { exitValue ->
+
+                    if (exitValue == DockerService.NO_DOCKER_COMPOSE_COMMAND){
+                        sendIsDockerInstalled(false, jbCefBrowser)
+                        sendIsDockerComposeInstalled(false, jbCefBrowser)
+                    }else{
+                        sendIsDockerInstalled(true, jbCefBrowser)
+                        sendIsDockerComposeInstalled(true, jbCefBrowser)
+                    }
 
                     runBlocking {
                         val success = exitValue == "0"

@@ -24,6 +24,7 @@ class DockerService {
         val WHICH_COMMAND = if (SystemInfo.isWindows) "where" else "which"
         const val DOCKER_COMMAND = "docker"
         const val DOCKER_COMPOSE_COMMAND = "docker-compose"
+        const val NO_DOCKER_COMPOSE_COMMAND = "no docker-compose command"
     }
 
 
@@ -110,7 +111,7 @@ class DockerService {
                 } else {
                     Log.log(logger::warn, "could not find docker compose command")
                     downloader.deleteFile()
-                    notifyResult("no docker-compose command", resultTask)
+                    notifyResult(NO_DOCKER_COMPOSE_COMMAND, resultTask)
                 }
             } else {
                 Log.log(logger::warn, "Failed to download compose file")
@@ -158,7 +159,7 @@ class DockerService {
                 } else {
                     Log.log(logger::warn, "could not find docker compose command")
                     downloader.deleteFile()
-                    notifyResult("no docker-compose command", resultTask)
+                    notifyResult(NO_DOCKER_COMPOSE_COMMAND, resultTask)
                 }
             } else {
                 Log.log(logger::warn, "Failed to find compose file")
@@ -199,7 +200,7 @@ class DockerService {
                 } else {
                     Log.log(logger::warn, "could not find docker compose command")
                     downloader.deleteFile()
-                    notifyResult("no docker-compose command", resultTask)
+                    notifyResult(NO_DOCKER_COMPOSE_COMMAND, resultTask)
                 }
             } else {
                 Log.log(logger::warn, "Failed to find compose file")
@@ -229,7 +230,7 @@ class DockerService {
                     notifyResult(exitValue, resultTask)
                 } else {
                     Log.log(logger::warn, "could not find docker compose command")
-                    notifyResult("no docker-compose command", resultTask)
+                    notifyResult(NO_DOCKER_COMPOSE_COMMAND, resultTask)
                 }
 
                 //always delete fine here, it's an uninstallation

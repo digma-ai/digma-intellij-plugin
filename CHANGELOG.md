@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.118] - 2023-07-19
+## [2.0.119] - 2023-07-20
+**Full Changelog**: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.118...v2.0.119
+
+## 2.0.118 - 2023-07-19
 - Use general command line by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/989
 
 ## 2.0.117 - 2023-07-19

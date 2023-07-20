@@ -7,6 +7,7 @@ import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI.Borders.empty
+import org.apache.commons.lang3.StringUtils
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.DurationSlowdownSource
@@ -61,13 +62,14 @@ class SpanPanels {
 fun getLink(project: Project, spanInfo: SpanInfo): ActionLink {
 
     val spanId = spanInfo.spanCodeObjectId
-    val link = ActionLink(spanInfo.name) {
+
+    val normalizedDisplayName = StringUtils.normalizeSpace(spanInfo.displayName)
+    val link = ActionLink(asHtml(normalizedDisplayName)) {
         ActivityMonitor.getInstance(project).registerSpanLinkClicked(InsightType.EndpointDurationSlowdown)
         project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanId)
     }
-    val targetClass = spanId.substringBeforeLast("\$_\$")
 
-    link.toolTipText = asHtml("$targetClass: $spanInfo.name")
+    link.toolTipText = asHtml(normalizedDisplayName)
     link.border = empty()
     link.isOpaque = false
 
@@ -81,7 +83,7 @@ fun slowdownDurationRowPanel(
     panelsLayoutHelper: PanelsLayoutHelper,
     gridPanel: JPanel,
     gridLayout: GridBagLayout,
-    row: Int
+    row: Int,
 ) {
     val c = GridBagConstraints()
     c.fill = GridBagConstraints.HORIZONTAL
@@ -129,7 +131,8 @@ fun slowdownDurationRowPanel(
     val change = createDurationChangeLabel(
         source.currentDuration,
         source.previousDuration,
-        source.changeTime)
+        source.changeTime
+    )
     gridPanel.add(change)
     c.gridx = 2
     gridLayout.setConstraints(change, c)

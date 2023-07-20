@@ -144,6 +144,11 @@
     </extensions>
 
 
+    <actions>
+        <action id="DigmaSpanNavBackAction" class="org.digma.intellij.plugin.ui.common.actions.SpanNavBackAction"/>
+    </actions>
+
+
     <projectListeners>
         <listener
                 class="org.digma.intellij.plugin.emvironment.EnvironmentChangeHandler"

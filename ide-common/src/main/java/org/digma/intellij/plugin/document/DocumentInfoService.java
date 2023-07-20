@@ -8,7 +8,6 @@ import com.intellij.psi.PsiFile;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
@@ -18,8 +17,6 @@ import org.digma.intellij.plugin.psi.PsiUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -29,7 +26,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 /**
  * DocumentInfoService holds the open documents containers and has various services to query the documents containers.
@@ -206,14 +202,18 @@ public class DocumentInfoService {
         return documentInfoContainer == null ? null : documentInfoContainer.getMethodInfo(methodUnderCaret.getId());
     }
 
-    public MethodInfo findMethodInfo(String sourceCodeObjectId) {
-        return this.documents.values().stream().
-                filter(documentInfoContainer -> documentInfoContainer.getDocumentInfo().getMethods().containsKey(sourceCodeObjectId)).
-                findAny().map(documentInfoContainer -> documentInfoContainer.getMethodInfo(sourceCodeObjectId)).
-                orElse(null);
+
+    @Nullable
+    public MethodInfo findMethodInfo(String methodId) {
+        return this.documents.values().stream()
+                .filter(documentInfoContainer -> documentInfoContainer.getDocumentInfo().getMethods().containsKey(methodId))
+                .findAny()
+                .map(documentInfoContainer -> documentInfoContainer.getMethodInfo(methodId))
+                .orElse(null);
     }
 
 
+    @Nullable
     public PsiFile findPsiFileByMethodId(String methodCodeObjectId) {
         return this.documents.values().stream().
                 filter(documentInfoContainer -> documentInfoContainer.getDocumentInfo().getMethods().containsKey(methodCodeObjectId)).

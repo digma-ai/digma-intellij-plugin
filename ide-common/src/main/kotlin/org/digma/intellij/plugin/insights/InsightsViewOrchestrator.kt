@@ -49,6 +49,7 @@ class InsightsViewOrchestrator(val project: Project) {
         NonSupportedFile,
         NoFile,
         MethodFromSourceCode,
+        MethodFromBackNavigation,
         DummyMethod,
         DocumentPreviewList
     }
@@ -84,6 +85,32 @@ class InsightsViewOrchestrator(val project: Project) {
         project.service<CurrentContextUpdater>().clearLatestMethod()
 
         ToolWindowShower.getInstance(project).showToolWindow()
+    }
+
+    fun showInsightsForMethod(methodId: String, viewState: ViewState = ViewState.MethodFromBackNavigation) {
+
+        currentState.set(viewState)
+
+        Log.log(logger::debug, project, "Got showInsightsForMethod {}", methodId)
+
+        val documentInfoService = project.service<DocumentInfoService>()
+        val methodInfo = documentInfoService.findMethodInfo(methodId)
+        if (methodInfo == null) {
+            Log.log(logger::warn, project, "showInsightsForMethod cannot show insights for method '{}' since not found", methodId)
+            return
+        }
+
+        project.service<InsightsViewService>().updateInsightsModel(
+            methodInfo
+        )
+
+        project.service<ErrorsViewService>().updateErrorsModel(
+            methodInfo
+        )
+
+        project.service<ErrorsActionsService>().closeErrorDetailsBackButton()
+
+        project.service<ToolWindowShower>().showToolWindow()
     }
 
     /**

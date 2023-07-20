@@ -2,7 +2,11 @@ package org.digma.intellij.plugin.docker
 
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.posthog.ActivityMonitor
+import java.io.PrintWriter
+import java.io.StringWriter
 import java.nio.file.Path
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -17,7 +21,7 @@ internal class Engine {
     private val engineLock = ReentrantLock()
 
 
-    fun up(composeFile: Path, dockerComposeCmd: List<String>): String {
+    fun up(project: Project, composeFile: Path, dockerComposeCmd: List<String>): String {
 
         Log.log(logger::info, "starting docker compose up")
 
@@ -28,11 +32,11 @@ internal class Engine {
             .withRedirectErrorStream(true)
             .toProcessBuilder()
 
-        return executeCommand("up", composeFile, processBuilder)
+        return executeCommand(project, "up", composeFile, processBuilder)
     }
 
 
-    fun down(composeFile: Path, dockerComposeCmd: List<String>): String {
+    fun down(project: Project, composeFile: Path, dockerComposeCmd: List<String>): String {
 
         Log.log(logger::info, "starting docker compose down")
 
@@ -43,12 +47,12 @@ internal class Engine {
             .withRedirectErrorStream(true)
             .toProcessBuilder()
 
-        return executeCommand("down", composeFile, processBuilder)
+        return executeCommand(project, "down", composeFile, processBuilder)
 
     }
 
 
-    fun start(composeFile: Path, dockerComposeCmd: List<String>): String {
+    fun start(project: Project, composeFile: Path, dockerComposeCmd: List<String>): String {
 
         Log.log(logger::info, "starting docker compose start")
 
@@ -59,12 +63,12 @@ internal class Engine {
             .withRedirectErrorStream(true)
             .toProcessBuilder()
 
-        return executeCommand("start", composeFile, processBuilder)
+        return executeCommand(project, "start", composeFile, processBuilder)
 
     }
 
 
-    fun stop(composeFile: Path, dockerComposeCmd: List<String>): String {
+    fun stop(project: Project, composeFile: Path, dockerComposeCmd: List<String>): String {
 
         Log.log(logger::info, "starting docker compose stop")
 
@@ -75,12 +79,12 @@ internal class Engine {
             .withRedirectErrorStream(true)
             .toProcessBuilder()
 
-        return executeCommand("stop", composeFile, processBuilder)
+        return executeCommand(project, "stop", composeFile, processBuilder)
 
     }
 
 
-    fun remove(composeFile: Path, dockerComposeCmd: List<String>): String {
+    fun remove(project: Project, composeFile: Path, dockerComposeCmd: List<String>): String {
 
         Log.log(logger::info, "starting uninstall")
 
@@ -94,14 +98,39 @@ internal class Engine {
             .withRedirectErrorStream(true)
             .toProcessBuilder()
 
-        return executeCommand("down", composeFile, processBuilder)
+        return executeCommand(project, "remove", composeFile, processBuilder)
+
+    }
+
+    fun removeBeforeInstall(project: Project, composeFile: Path, dockerComposeCmd: List<String>): String {
+
+        Log.log(logger::info, "starting uninstall before install")
+
+        //to remove images use parameters
+        //"-f", composeFile.toString(), "down", "--rmi", "all", "-v", "--remove-orphans"
+
+        val processBuilder = GeneralCommandLine(dockerComposeCmd)
+            .withParameters("-f", composeFile.toString(), "down")
+            .withWorkDirectory(composeFile.toFile().parentFile)
+            .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
+            .withRedirectErrorStream(true)
+            .toProcessBuilder()
+
+        return executeCommand(project, "removeBeforeInstall", composeFile, processBuilder)
 
     }
 
 
-    private fun executeCommand(name: String, composeFile: Path, processBuilder: ProcessBuilder): String {
+    private fun executeCommand(project: Project, name: String, composeFile: Path, processBuilder: ProcessBuilder): String {
 
         Log.log(logger::info, "executing {}, compose file {}, command {}", name, composeFile, processBuilder.command())
+
+        ActivityMonitor.getInstance(project).registerDigmaEngineEventStart(
+            name, mapOf(
+                "command" to processBuilder.command().joinToString(" "),
+                "composeFile" to composeFile.toString()
+            )
+        )
 
         val errorMessages = mutableListOf<String>()
 
@@ -123,13 +152,13 @@ internal class Engine {
 
             val success = process.waitFor(10, TimeUnit.MINUTES)
 
-            val exitValue = process.exitValue()
+            val exitCode = process.exitValue()
 
             if (success) {
                 Log.log(
                     logger::info,
                     "docker compose completed successfully exit code: [{}], command: [{}], process info: [{}]",
-                    exitValue,
+                    exitCode,
                     processBuilder.command(),
                     process.info()
                 )
@@ -137,15 +166,28 @@ internal class Engine {
                 Log.log(
                     logger::info,
                     "docker compose unsuccessful exit code: [{}], command: [{}], process info: [{}]",
-                    exitValue,
+                    exitCode,
                     processBuilder.command(),
                     process.info()
                 )
             }
 
-            return buildExitValue(exitValue, success, errorMessages)
+            val exitValue = buildExitValue(exitCode, success, errorMessages)
+
+            ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd(
+                name, mapOf(
+                    "command" to processBuilder.command().joinToString(" "),
+                    "composeFile" to composeFile.toString(),
+                    "exitValue" to exitValue
+                )
+            )
+
+            return exitValue
 
         } catch (e: Exception) {
+            val stringWriter = StringWriter()
+            e.printStackTrace(PrintWriter(stringWriter))
+            ActivityMonitor.getInstance(project).registerDigmaEngineEventError(name, stringWriter.toString())
             Log.warnWithException(logger, e, "error running docker command {}", processBuilder.command())
             return e.message ?: e.toString()
         } finally {

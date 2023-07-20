@@ -9,6 +9,7 @@ import com.intellij.openapi.util.SystemInfo
 import org.digma.intellij.plugin.analytics.BackendConnectionUtil
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import java.util.function.Consumer
 
 
@@ -29,12 +30,12 @@ class DockerService {
 
 
     fun isDockerInstalled(): Boolean {
-        return isInstalled(DOCKER_COMMAND)
+        return isInstalled(DOCKER_COMMAND) || isInstalled(DOCKER_COMPOSE_COMMAND)
     }
 
-    fun isDockerComposeInstalled(): Boolean {
-        return isInstalled(DOCKER_COMPOSE_COMMAND)
-    }
+//    fun isDockerComposeInstalled(): Boolean {
+//        return isInstalled(DOCKER_COMPOSE_COMMAND)
+//    }
 
     fun isEngineInstalled(): Boolean {
         return downloader.findComposeFile()
@@ -96,31 +97,50 @@ class DockerService {
 
     fun installEngine(project: Project, resultTask: Consumer<String>) {
 
+        ActivityMonitor.getInstance(project).registerDigmaEngineEventStart("installEngine", mapOf())
+
         Backgroundable.runInNewBackgroundThread(project, "installing digma engine") {
 
             if (downloader.downloadComposeFile()) {
                 val dockerComposeCmd = getDockerComposeCommand()
 
                 if (dockerComposeCmd != null) {
-                    val exitValue = engine.up(downloader.composeFile!!, dockerComposeCmd)
+
+                    //always call remove before install in case containers exist from previous installation
+                    //even if not nothing will happen.
+                    //ignore any exit value
+                    engine.removeBeforeInstall(project, downloader.composeFile!!, dockerComposeCmd)
+                    try {
+                        Thread.sleep(2000)
+                    } catch (e: Exception) {
+                        //ignore
+                    }
+
+                    val exitValue = engine.up(project, downloader.composeFile!!, dockerComposeCmd)
                     if (exitValue != "0") {
                         Log.log(logger::warn, "error installing engine {}", exitValue)
                         downloader.deleteFile()
                     }
                     notifyResult(exitValue, resultTask)
                 } else {
+                    ActivityMonitor.getInstance(project).registerDigmaEngineEventError("installEngine", "could not find docker compose command")
                     Log.log(logger::warn, "could not find docker compose command")
                     downloader.deleteFile()
                     notifyResult(NO_DOCKER_COMPOSE_COMMAND, resultTask)
                 }
             } else {
+                ActivityMonitor.getInstance(project).registerDigmaEngineEventError("installEngine", "Failed to download compose file")
                 Log.log(logger::warn, "Failed to download compose file")
                 notifyResult("Failed to download compose file", resultTask)
             }
+
+            ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd("installEngine", mapOf())
         }
     }
 
     fun upgradeEngine(project: Project) {
+
+        ActivityMonitor.getInstance(project).registerDigmaEngineEventStart("upgradeEngine", mapOf())
 
         Backgroundable.runInNewBackgroundThread(project, "upgrading digma engine") {
 
@@ -128,22 +148,30 @@ class DockerService {
                 val dockerComposeCmd = getDockerComposeCommand()
 
                 if (dockerComposeCmd != null) {
-                    val exitValue = engine.up(downloader.composeFile!!, dockerComposeCmd)
+                    val exitValue = engine.up(project, downloader.composeFile!!, dockerComposeCmd)
                     if (exitValue != "0") {
                         Log.log(logger::warn, "error upgrading engine {}", exitValue)
                         downloader.deleteFile()
                     }
                 } else {
+                    ActivityMonitor.getInstance(project).registerDigmaEngineEventError("upgradeEngine", "could not find docker compose command")
                     Log.log(logger::warn, "could not find docker compose command")
                     downloader.deleteFile()
                 }
             } else {
+                ActivityMonitor.getInstance(project).registerDigmaEngineEventError("upgradeEngine", "Failed to download compose file")
                 Log.log(logger::warn, "Failed to download compose file")
             }
+
+            ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd("upgradeEngine", mapOf())
         }
+
+
     }
 
     fun stopEngine(project: Project, resultTask: Consumer<String>) {
+
+        ActivityMonitor.getInstance(project).registerDigmaEngineEventStart("stopEngine", mapOf())
 
         Backgroundable.runInNewBackgroundThread(project, "stopping digma engine") {
 
@@ -151,24 +179,31 @@ class DockerService {
                 val dockerComposeCmd = getDockerComposeCommand()
 
                 if (dockerComposeCmd != null) {
-                    val exitValue = engine.stop(downloader.composeFile!!, dockerComposeCmd)
+
+                    val exitValue = engine.stop(project, downloader.composeFile!!, dockerComposeCmd)
                     if (exitValue != "0") {
                         Log.log(logger::warn, "error stopping engine {}", exitValue)
                     }
                     notifyResult(exitValue, resultTask)
                 } else {
+                    ActivityMonitor.getInstance(project).registerDigmaEngineEventError("stopEngine", "could not find docker compose command")
                     Log.log(logger::warn, "could not find docker compose command")
                     downloader.deleteFile()
                     notifyResult(NO_DOCKER_COMPOSE_COMMAND, resultTask)
                 }
             } else {
+                ActivityMonitor.getInstance(project).registerDigmaEngineEventError("stopEngine", "Failed to find compose file")
                 Log.log(logger::warn, "Failed to find compose file")
                 notifyResult("Failed to find compose file", resultTask)
             }
+
+            ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd("stopEngine", mapOf())
         }
     }
 
     fun startEngine(project: Project, resultTask: Consumer<String>) {
+
+        ActivityMonitor.getInstance(project).registerDigmaEngineEventStart("startEngine", mapOf())
 
         Backgroundable.runInNewBackgroundThread(project, "starting digma engine") {
 
@@ -184,34 +219,40 @@ class DockerService {
                     // if executing docker-compose up while containers exist it will print many errors that are ok but
                     // that interferes with our attempt to detect errors.
                     //so running down and then up solves it
-                    engine.down(downloader.composeFile!!, dockerComposeCmd)
+                    engine.down(project, downloader.composeFile!!, dockerComposeCmd)
                     try {
                         Thread.sleep(2000)
                     } catch (e: Exception) {
                         //ignore
                     }
 
-                    val exitValue = engine.start(downloader.composeFile!!, dockerComposeCmd)
+                    val exitValue = engine.start(project, downloader.composeFile!!, dockerComposeCmd)
                     if (exitValue != "0") {
                         Log.log(logger::warn, "error starting engine {}", exitValue)
                         downloader.deleteFile()
                     }
                     notifyResult(exitValue, resultTask)
                 } else {
+                    ActivityMonitor.getInstance(project).registerDigmaEngineEventError("startEngine", "could not find docker compose command")
                     Log.log(logger::warn, "could not find docker compose command")
                     downloader.deleteFile()
                     notifyResult(NO_DOCKER_COMPOSE_COMMAND, resultTask)
                 }
             } else {
+                ActivityMonitor.getInstance(project).registerDigmaEngineEventError("startEngine", "Failed to find compose file")
                 Log.log(logger::warn, "Failed to find compose file")
                 notifyResult("Failed to find compose file", resultTask)
             }
+
+            ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd("startEngine", mapOf())
         }
 
     }
 
 
     fun removeEngine(project: Project, resultTask: Consumer<String>) {
+
+        ActivityMonitor.getInstance(project).registerDigmaEngineEventStart("removeEngine", mapOf())
 
         Backgroundable.runInNewBackgroundThread(project, "uninstalling digma engine") {
 
@@ -223,12 +264,13 @@ class DockerService {
                 val dockerComposeCmd = getDockerComposeCommand()
 
                 if (dockerComposeCmd != null) {
-                    val exitValue = engine.remove(downloader.composeFile!!, dockerComposeCmd)
+                    val exitValue = engine.remove(project, downloader.composeFile!!, dockerComposeCmd)
                     if (exitValue != "0") {
                         Log.log(logger::warn, "error uninstalling engine {}", exitValue)
                     }
                     notifyResult(exitValue, resultTask)
                 } else {
+                    ActivityMonitor.getInstance(project).registerDigmaEngineEventError("removeEngine", "could not find docker compose command")
                     Log.log(logger::warn, "could not find docker compose command")
                     notifyResult(NO_DOCKER_COMPOSE_COMMAND, resultTask)
                 }
@@ -237,9 +279,12 @@ class DockerService {
                 downloader.deleteFile()
 
             } else {
+                ActivityMonitor.getInstance(project).registerDigmaEngineEventError("removeEngine", "Failed to find compose file")
                 Log.log(logger::warn, "Failed to find compose file")
                 notifyResult("Failed to find compose file", resultTask)
             }
+
+            ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd("removeEngine", mapOf())
         }
     }
 

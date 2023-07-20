@@ -312,6 +312,35 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
         )
     }
 
+
+    fun registerDigmaEngineEventStart(eventName: String, eventDetails: Map<String, Any>) {
+        postHog?.capture(
+            userId,
+            "Engine.".plus(eventName).plus(".start"),
+            eventDetails
+        )
+    }
+
+
+    fun registerDigmaEngineEventEnd(eventName: String, eventDetails: Map<String, Any>) {
+        postHog?.capture(
+            userId,
+            "Engine.".plus(eventName).plus(".end"),
+            eventDetails
+        )
+    }
+
+    fun registerDigmaEngineEventError(eventName: String, errorMessage: String) {
+        postHog?.capture(
+            userId,
+            "Engine.".plus(eventName).plus(".error"),
+            mapOf("errorMessage" to errorMessage)
+        )
+    }
+
+
+
+
     private fun registerSessionDetails() {
         val osType = System.getProperty("os.name")
         val ideInfo = ApplicationInfo.getInstance()

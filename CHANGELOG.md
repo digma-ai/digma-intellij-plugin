@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.120] - 2023-07-20
+## [2.0.121] - 2023-07-20
+- run code navigation action in background by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/999, fixes issue https://github.com/digma-ai/digma-intellij-plugin/issues/889
+
+## 2.0.120 - 2023-07-20
 - Provide analytics for failed code navigation by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/990
 - Bug fix/use span display name in links at Endpoint Duration Slowdown  by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/991
 - Update Installation Wizard UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/993

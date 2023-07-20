@@ -12,7 +12,7 @@ import org.digma.intellij.plugin.ui.model.UIInsightsStatus
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.util.Collections
 
-class InsightsPreviewListItem(val name: String, val hasInsights: Boolean, val hasRelatedCodeObjects: Boolean )
+class InsightsPreviewListItem(val name: String, val hasInsights: Boolean, val hasRelatedCodeObjects: Boolean)
 
 enum class InsightsTabCard {
     INSIGHTS, PREVIEW
@@ -28,7 +28,7 @@ class InsightsModel : PanelModel {
     var status: UIInsightsStatus = UIInsightsStatus.Startup
     var scope: Scope = EmptyScope("Nothing here")
 
-    fun getMethodNamesWithInsights(): List<ListViewItem<String>>{
+    fun getMethodNamesWithInsights(): List<ListViewItem<String>> {
         val methodsWithInsights = mutableListOf<ListViewItem<String>>()
 
         var index = 0
@@ -38,16 +38,20 @@ class InsightsModel : PanelModel {
         return methodsWithInsights
     }
 
-    fun hasInsights(): Boolean{
+    fun hasInsights(): Boolean {
         return previewListViewItems.any { o -> o.hasInsights }
     }
 
-    fun hasDiscoverableCodeObjects(): Boolean{
-        return previewListViewItems.any{ o -> o.hasRelatedCodeObjects}
+    fun hasDiscoverableCodeObjects(): Boolean {
+        return previewListViewItems.any { o -> o.hasRelatedCodeObjects }
     }
 
     override fun count(): String {
         return insightsCount.toString()
+    }
+
+    override fun getTheScope(): Scope {
+        return scope
     }
 
     override fun isMethodScope(): Boolean {

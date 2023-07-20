@@ -76,6 +76,20 @@ class CodeLessSpanScope(private val codeLessSpan: CodeLessSpan, private val span
     }
 }
 
+class CurrentEnvironmentScope : Scope {
+
+    override fun getScope(): String {
+        return "Current environment"
+    }
+
+    override fun getScopeTooltip(): String {
+        return ""
+    }
+
+    override fun getFileUri(): String? {
+        return null
+    }
+}
 
 class DocumentScope(private val documentInfo: DocumentInfo) : Scope {
     override fun getScope(): String {

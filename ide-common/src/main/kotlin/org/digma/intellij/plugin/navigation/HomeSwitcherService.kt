@@ -1,6 +1,8 @@
 package org.digma.intellij.plugin.navigation
 
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
+import com.intellij.openapi.project.Project
 import javax.swing.JToggleButton
 
 /**
@@ -9,9 +11,14 @@ import javax.swing.JToggleButton
  * card
  */
 @Service(Service.Level.PROJECT)
-class HomeSwitcherService {
+class HomeSwitcherService(project: Project) {
 
     private var homeButton:JToggleButton? = null
+
+    init {
+        // just loading HistoryScopeNavigation
+        val historyScopeNavigation = project.service<HistoryScopeNavigation>()
+    }
 
     fun setButton(homeButton: JToggleButton) {
         this.homeButton = homeButton

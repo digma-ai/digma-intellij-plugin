@@ -181,6 +181,8 @@ object Laf {
                 @JvmStatic val LiveButtonFullIconLight = SvgIcon.asIs("/icons/live-view-button-full-icon-light.svg")
                 @JvmStatic val LiveIconDark = SvgIcon.asIs("/icons/live-icon-dark.svg")
                 @JvmStatic val LiveIconLight = SvgIcon.asIs("/icons/live-icon-light.svg")
+                @JvmStatic val NavPrevDark = SvgIcon.asIs("/icons/nav-prev-dark.svg")
+                @JvmStatic val NavPrevLight = SvgIcon.asIs("/icons/nav-prev-light.svg")
             }
         }
 

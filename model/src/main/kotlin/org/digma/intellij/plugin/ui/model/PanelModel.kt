@@ -6,6 +6,8 @@ interface PanelModel {
 
     fun count(): String
 
+    fun getTheScope(): Scope
+
     fun isMethodScope(): Boolean
 
     fun isDocumentScope(): Boolean

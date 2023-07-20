@@ -11,7 +11,6 @@ import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.ChattyApiSpanInfo
 import org.digma.intellij.plugin.model.rest.insights.EndpointChattyApiInsight
-import org.digma.intellij.plugin.model.rest.insights.SessionInViewSpanInfo
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
 import org.digma.intellij.plugin.ui.model.TraceSample
@@ -95,6 +94,8 @@ private fun sivSpanRowPanel(span: ChattyApiSpanInfo, project: Project): JPanel {
     return resultPanel
 }
 private fun getButtonToJaeger(project: Project, insight: EndpointChattyApiInsight): JButton? {
+    if (insight.spans.isEmpty()) return null
+
     val spanName = insight.endpointSpanName()
     val sampleTraceId = insight.spans.first().traceId
     val traceSample = TraceSample(spanName, sampleTraceId)

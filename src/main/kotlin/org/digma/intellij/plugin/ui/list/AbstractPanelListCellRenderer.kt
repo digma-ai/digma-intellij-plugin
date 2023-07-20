@@ -1,6 +1,9 @@
 package org.digma.intellij.plugin.ui.list
 
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import javax.swing.JPanel
 import javax.swing.event.ListDataEvent
@@ -21,11 +24,22 @@ abstract class AbstractPanelListCellRenderer: PanelListCellRenderer {
             return panels[index]!!
         }
 
-        val panel = createPanel(project,value,index,panelsLayoutHelper)
+        //catch any exception so if a panel throws exception the following panels will still be built.
+        //will return a JPanel instead that is not visible. the user will not see any error, error is in the log
+        return try {
+            val panel = createPanel(project, value, index, panelsLayoutHelper)
 
-        panels[index] = panel
+            panels[index] = panel
 
-        return wrap(panel)
+            wrap(panel)
+
+        } catch (e: Exception) {
+            ActivityMonitor.getInstance(project).registerError(e, "error creating list panel for ${value.modelObject}")
+            Log.warnWithException(Logger.getInstance(this::class.java), e, "Error creating panel for {}", value.modelObject)
+            val p = JPanel()
+            p.isVisible = false
+            p
+        }
     }
 
 

@@ -191,7 +191,9 @@ class CodeNavigator(val project: Project) {
     }
 
     fun maybeNavigateToFile(fileUri: String) {
-        project.service<EditorService>().openWorkspaceFileInEditor(fileUri,1)
+        EDT.ensureEDT {
+            project.service<EditorService>().openWorkspaceFileInEditor(fileUri, 1)
+        }
     }
 
 

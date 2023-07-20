@@ -31,6 +31,7 @@ import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
 import org.digma.intellij.plugin.model.rest.insights.InsightStatus;
 import org.digma.intellij.plugin.model.rest.insights.MethodWithInsightStatus;
@@ -64,7 +65,9 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 public final class InsightsServiceImpl implements InsightsService, Disposable {
 
@@ -214,7 +217,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 //            }
                 messageHandler.pushInsights(insights, Collections.emptyList(), codeLessSpan.getSpanId(), EMPTY_SERVICE_NAME,
                         AnalyticsService.getInstance(project).getEnvironment().getCurrent(), status,
-                        ViewMode.INSIGHTS.name(), Collections.emptyList(), false, false);
+                        ViewMode.INSIGHTS.name(), Collections.emptyList(), false, false, false);
 
             } catch (AnalyticsServiceException e) {
                 Log.warnWithException(logger, project, e, "Error in getInsightsForSingleSpan");
@@ -250,11 +253,16 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
                 status = UIInsightsStatus.Loading.name();
                 updateStatusInBackground(methodInfo);
             }
+
+
+            boolean needsObservabilityFix = checkObservability(methodInfo, insights);
+
             messageHandler.pushInsights(insights, spans, methodInfo.getId(), EMPTY_SERVICE_NAME,
                     AnalyticsService.getInstance(project).getEnvironment().getCurrent(), status,
-                    ViewMode.INSIGHTS.name(), Collections.emptyList(), hasMissingDependency, canInstrumentMethod);
+                    ViewMode.INSIGHTS.name(), Collections.emptyList(), hasMissingDependency, canInstrumentMethod, needsObservabilityFix);
         });
     }
+
 
     private void updateStatusInBackground(@NotNull MethodInfo methodInfo) {
 
@@ -292,9 +300,12 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
                 if (insights.isEmpty()) {
                     statusToUse = status;
                 }
+
+                boolean needsObservabilityFix = checkObservability(methodInfo, insights);
+
                 messageHandler.pushInsights(insights, spans, methodInfo.getId(), EMPTY_SERVICE_NAME,
                         AnalyticsService.getInstance(project).getEnvironment().getCurrent(), statusToUse.name(),
-                        ViewMode.INSIGHTS.name(), Collections.emptyList(), false, false);
+                        ViewMode.INSIGHTS.name(), Collections.emptyList(), false, false, needsObservabilityFix);
             }
         });
     }
@@ -368,7 +379,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
                 }
 
                 messageHandler.pushInsights(Collections.emptyList(), Collections.emptyList(), fileUri, EMPTY_SERVICE_NAME,
-                        AnalyticsService.getInstance(project).getEnvironment().getCurrent(), status.name(), ViewMode.PREVIEW.name(), functionsList, false, false);
+                        AnalyticsService.getInstance(project).getEnvironment().getCurrent(), status.name(), ViewMode.PREVIEW.name(), functionsList, false, false, false);
 
             }
         });
@@ -407,6 +418,28 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
                 emptyInsights();
             }
         });
+    }
+
+
+    private boolean checkObservability(@NotNull MethodInfo methodInfo, List<CodeObjectInsight> insights) {
+        if (!IDEUtilsService.getInstance(project).isJavaProject()) return false;
+        if (methodInfo.hasRelatedCodeObjectIds()) return false;
+
+        Set<InsightType> insightTypes = insights.stream()
+                .map(CodeObjectInsight::getType)
+                .collect(Collectors.toSet());
+
+        boolean hasInsightOfErrors = insightTypes.remove(InsightType.Errors);
+        boolean hasInsightOfHotSpot = insightTypes.remove(InsightType.HotSpot);
+
+        if (hasInsightOfErrors || hasInsightOfHotSpot) {
+            boolean onlyErrorInsights = insightTypes.isEmpty();
+            if (onlyErrorInsights) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
 

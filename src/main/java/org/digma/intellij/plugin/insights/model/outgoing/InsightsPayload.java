@@ -25,7 +25,8 @@ public record InsightsPayload(List<CodeObjectInsight> insights,
                               String viewMode,
                               List<Method> methods,
                               boolean hasMissingDependency,
-                              boolean canInstrumentMethod) {
+                              boolean canInstrumentMethod,
+                              boolean needsObservabilityFix) {
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     public InsightsPayload {
@@ -34,7 +35,7 @@ public record InsightsPayload(List<CodeObjectInsight> insights,
 
 
     public static final InsightsPayload EMPTY_INSIGHTS = new InsightsPayload(Collections.emptyList(), Collections.emptyList(),
-            "", "", "", UIInsightsStatus.NoInsights.name(), ViewMode.INSIGHTS.name(), Collections.emptyList(), false, false);
+            "", "", "", UIInsightsStatus.NoInsights.name(), ViewMode.INSIGHTS.name(), Collections.emptyList(), false, false, false);
     public static final InsightsPayload EMPTY_PREVIEW = new InsightsPayload(Collections.emptyList(), Collections.emptyList(),
-            "", "", "", UIInsightsStatus.NoInsights.name(), ViewMode.PREVIEW.name(), Collections.emptyList(), false, false);
+            "", "", "", UIInsightsStatus.NoInsights.name(), ViewMode.PREVIEW.name(), Collections.emptyList(), false, false, false);
 }

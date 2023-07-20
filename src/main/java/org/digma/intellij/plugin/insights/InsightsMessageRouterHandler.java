@@ -219,10 +219,11 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
                       String serviceName, String environment, String uiInsightsStatus, String viewMode,
                       List<Method> methods,
                       boolean hasMissingDependency,
-                      boolean canInstrumentMethod) {
+                      boolean canInstrumentMethod,
+                      boolean needsObservabilityFix) {
 
 
-        var payload = new InsightsPayload(insights, spans, assetId, serviceName, environment, uiInsightsStatus, viewMode, methods, hasMissingDependency, canInstrumentMethod);
+        var payload = new InsightsPayload(insights, spans, assetId, serviceName, environment, uiInsightsStatus, viewMode, methods, hasMissingDependency, canInstrumentMethod, needsObservabilityFix);
 
 
         var message = new SetInsightsDataMessage("digma", "INSIGHTS/SET_DATA", payload);

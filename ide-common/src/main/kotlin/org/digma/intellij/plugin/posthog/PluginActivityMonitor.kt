@@ -31,9 +31,12 @@ class PluginActivityMonitor(private val project: Project) : PluginStateListener,
             val userId = ActivityMonitor.getInstance(project).registerPluginUninstalled()
             BrowserUtil.browse("https://digma.ai/uninstall?u=$userId", project)
 
-            Log.log(LOGGER::info, "removing digma engine on plugin uninstall")
-            service<DockerService>().removeEngine(project) {
-                Log.log(LOGGER::info, "removed digma engine on plugin uninstall completed with {}", it)
+
+            if (service<DockerService>().isEngineInstalled()) {
+                Log.log(LOGGER::info, "removing digma engine on plugin uninstall")
+                service<DockerService>().removeEngine(project) {
+                    Log.log(LOGGER::info, "removed digma engine on plugin uninstall completed with {}", it)
+                }
             }
         }
         super.uninstall(descriptor)

@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.recentactivity;
 
 import com.intellij.execution.runners.ExecutionUtil;
+import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
@@ -30,7 +31,9 @@ import org.digma.intellij.plugin.icons.AppIcons;
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator;
 import org.digma.intellij.plugin.jcef.common.CustomSchemeHandlerFactory;
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil;
+import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.rest.jcef.common.OpenInBrowserRequest;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityEntrySpanForTracePayload;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityEntrySpanPayload;
@@ -191,7 +194,12 @@ public class RecentActivityService implements Disposable {
                         RecentActivityService.getInstance(project).liveViewClosed(null);
                     }
                 }
-
+                if (JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER.equalsIgnoreCase(reactMessageRequest.getAction())) {
+                    OpenInBrowserRequest openBrowserRequest = JCefMessagesUtils.parseJsonToObject(request, OpenInBrowserRequest.class);
+                    if (openBrowserRequest != null && openBrowserRequest.getPayload() != null) {
+                        BrowserUtil.browse(openBrowserRequest.getPayload().getUrl());
+                    }
+                }
                 callback.success("");
                 return true;
             }

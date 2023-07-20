@@ -5,6 +5,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.observable.properties.AtomicProperty
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.document.DocumentInfoService
@@ -133,7 +134,10 @@ class InsightsViewOrchestrator(val project: Project) {
 
         //methodLocation equals currentCaretLocation, so we have to emulate a caret event to show the method insights
         if (methodLocation != null) {
-            return emulateCaretEvent(methodCodeObjectId, methodLocation.first)
+            Backgroundable.ensureBackground(project, "Navigate to method") {
+                emulateCaretEvent(methodCodeObjectId, methodLocation.first)
+            }
+            return true
         }
 
         //todo: not sure about that

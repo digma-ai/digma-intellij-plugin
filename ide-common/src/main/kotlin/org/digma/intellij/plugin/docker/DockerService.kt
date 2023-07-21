@@ -42,7 +42,7 @@ class DockerService {
     }
 
     fun isEngineRunning(project: Project): Boolean {
-        return BackendConnectionUtil.getInstance(project).testConnectionToBackend()
+        return isEngineInstalled() && BackendConnectionUtil.getInstance(project).testConnectionToBackend()
     }
 
 

@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.121] - 2023-07-20
+## [2.0.122] - 2023-07-21
+- Update Assets UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1001
+- fix is engine running by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1003
+
+## 2.0.121 - 2023-07-20
 - run code navigation action in background by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/999, fixes issue https://github.com/digma-ai/digma-intellij-plugin/issues/889
 
 ## 2.0.120 - 2023-07-20

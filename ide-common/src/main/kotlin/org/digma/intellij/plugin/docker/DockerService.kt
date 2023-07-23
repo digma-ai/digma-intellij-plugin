@@ -106,16 +106,6 @@ class DockerService {
 
                 if (dockerComposeCmd != null) {
 
-                    //always call remove before install in case containers exist from previous installation
-                    //even if not nothing will happen.
-                    //ignore any exit value
-                    engine.removeBeforeInstall(project, downloader.composeFile!!, dockerComposeCmd)
-                    try {
-                        Thread.sleep(2000)
-                    } catch (e: Exception) {
-                        //ignore
-                    }
-
                     val exitValue = engine.up(project, downloader.composeFile!!, dockerComposeCmd)
                     if (exitValue != "0") {
                         Log.log(logger::warn, "error installing engine {}", exitValue)
@@ -165,9 +155,8 @@ class DockerService {
 
             ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd("upgradeEngine", mapOf())
         }
-
-
     }
+
 
     fun stopEngine(project: Project, resultTask: Consumer<String>) {
 
@@ -219,7 +208,7 @@ class DockerService {
                     // if executing docker-compose up while containers exist it will print many errors that are ok but
                     // that interferes with our attempt to detect errors.
                     //so running down and then up solves it
-                    engine.down(project, downloader.composeFile!!, dockerComposeCmd)
+                    engine.down(project, downloader.composeFile!!, dockerComposeCmd, false)
                     try {
                         Thread.sleep(2000)
                     } catch (e: Exception) {

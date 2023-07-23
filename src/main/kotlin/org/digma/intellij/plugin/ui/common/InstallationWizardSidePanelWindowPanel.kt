@@ -18,6 +18,7 @@ import org.cef.callback.CefQueryCallback
 import org.cef.handler.CefMessageRouterHandlerAdapter
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.analytics.BackendConnectionUtil
+import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator
@@ -242,22 +243,30 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                         } else {
                             Log.log(logger::warn, "error installing engine, {}", exitValue)
 
-                            //remove if installation failed and only then notify the app so that the retry will
-                            // show only after remove completes
-                            Log.log(logger::warn, "removing engine after installation failed")
-                            service<DockerService>().removeEngine(project) { exitValue ->
-                                if (exitValue != "0") {
-                                    Log.log(logger::warn, "error removing engine after failure {}", exitValue)
-                                }
+                            sendDockerResult(
+                                ConnectionCheckResult.FAILURE.value,
+                                "Could not install engine",
+                                jbCefBrowser,
+                                JCefMessagesUtils.INSTALLATION_WIZARD_SET_INSTALL_DIGMA_ENGINE_RESULT
+                            )
+                            sendIsDigmaEngineInstalled(false, jbCefBrowser)
+                            sendIsDigmaEngineRunning(false, jbCefBrowser)
 
-                                sendDockerResult(
-                                    ConnectionCheckResult.FAILURE.value,
-                                    "Could not install engine",
-                                    jbCefBrowser,
-                                    JCefMessagesUtils.INSTALLATION_WIZARD_SET_INSTALL_DIGMA_ENGINE_RESULT
-                                )
-                                sendIsDigmaEngineInstalled(false, jbCefBrowser)
-                                sendIsDigmaEngineRunning(false, jbCefBrowser)
+
+                            //start remove if install failed. wait a second to let the installEngine finish and
+                            // report installEngine.end to posthog
+                            Backgroundable.runInNewBackgroundThread(project, "removing engine") {
+                                try {
+                                    Thread.sleep(1000)
+                                } catch (e: Exception) {
+                                    //ignore
+                                }
+                                Log.log(logger::warn, "removing engine after installation failed")
+                                service<DockerService>().removeEngine(project) { exitValue ->
+                                    if (exitValue != "0") {
+                                        Log.log(logger::warn, "error removing engine after failure {}", exitValue)
+                                    }
+                                }
                             }
 
                         }

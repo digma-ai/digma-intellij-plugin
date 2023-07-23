@@ -36,7 +36,7 @@ internal class Engine {
     }
 
 
-    fun down(project: Project, composeFile: Path, dockerComposeCmd: List<String>): String {
+    fun down(project: Project, composeFile: Path, dockerComposeCmd: List<String>, reportToPosthog: Boolean = true): String {
 
         Log.log(logger::info, "starting docker compose down")
 
@@ -47,7 +47,7 @@ internal class Engine {
             .withRedirectErrorStream(true)
             .toProcessBuilder()
 
-        return executeCommand(project, "down", composeFile, processBuilder)
+        return executeCommand(project, "down", composeFile, processBuilder, reportToPosthog)
 
     }
 
@@ -63,7 +63,7 @@ internal class Engine {
             .withRedirectErrorStream(true)
             .toProcessBuilder()
 
-        return executeCommand(project, "start", composeFile, processBuilder)
+        return executeCommand(project, "up", composeFile, processBuilder)
 
     }
 
@@ -98,44 +98,33 @@ internal class Engine {
             .withRedirectErrorStream(true)
             .toProcessBuilder()
 
-        return executeCommand(project, "remove", composeFile, processBuilder)
-
-    }
-
-    fun removeBeforeInstall(project: Project, composeFile: Path, dockerComposeCmd: List<String>): String {
-
-        Log.log(logger::info, "starting uninstall before install")
-
-        //to remove images use parameters
-        //"-f", composeFile.toString(), "down", "--rmi", "all", "-v", "--remove-orphans"
-
-        val processBuilder = GeneralCommandLine(dockerComposeCmd)
-            .withParameters("-f", composeFile.toString(), "down")
-            .withWorkDirectory(composeFile.toFile().parentFile)
-            .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
-            .withRedirectErrorStream(true)
-            .toProcessBuilder()
-
-        return executeCommand(project, "removeBeforeInstall", composeFile, processBuilder)
+        return executeCommand(project, "down", composeFile, processBuilder)
 
     }
 
 
-    private fun executeCommand(project: Project, name: String, composeFile: Path, processBuilder: ProcessBuilder): String {
-
-        Log.log(logger::info, "executing {}, compose file {}, command {}", name, composeFile, processBuilder.command())
-
-        ActivityMonitor.getInstance(project).registerDigmaEngineEventStart(
-            name, mapOf(
-                "command" to processBuilder.command().joinToString(" "),
-                "composeFile" to composeFile.toString()
-            )
-        )
-
-        val errorMessages = mutableListOf<String>()
+    private fun executeCommand(
+        project: Project,
+        name: String,
+        composeFile: Path,
+        processBuilder: ProcessBuilder,
+        reportToPosthog: Boolean = true,
+    ): String {
 
         try {
             engineLock.lock()
+
+            Log.log(logger::info, "executing {}, compose file {}, command {}", name, composeFile, processBuilder.command())
+
+            if (reportToPosthog) {
+                ActivityMonitor.getInstance(project).registerDigmaEngineEventStart(
+                    name, mapOf()
+                )
+            }
+
+            val errorMessages = mutableListOf<String>()
+            val allOutputLines = mutableListOf<String>()
+
 
             val process = processBuilder.start()
 
@@ -143,10 +132,12 @@ internal class Engine {
 
             streamExecutor.submit(StreamGobbler(process.inputStream) {
                 collectErrors(it, errorMessages)
+                collectAll(it, allOutputLines)
                 Log.log(logger::info, "DigmaDocker: $it")
             })
             streamExecutor.submit(StreamGobbler(process.errorStream) {
                 collectErrors(it, errorMessages)
+                collectAll(it, allOutputLines)
                 Log.log(logger::info, "DigmaDockerError: $it")
             })
 
@@ -172,22 +163,24 @@ internal class Engine {
                 )
             }
 
-            val exitValue = buildExitValue(exitCode, success, errorMessages)
+            val exitValue = buildExitValue(exitCode, success, errorMessages, allOutputLines)
 
-            ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd(
-                name, mapOf(
-                    "command" to processBuilder.command().joinToString(" "),
-                    "composeFile" to composeFile.toString(),
-                    "exitValue" to exitValue
+            if (reportToPosthog) {
+                ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd(
+                    name, mapOf(
+                        "exitValue" to exitValue
+                    )
                 )
-            )
+            }
 
             return exitValue
 
         } catch (e: Exception) {
             val stringWriter = StringWriter()
             e.printStackTrace(PrintWriter(stringWriter))
-            ActivityMonitor.getInstance(project).registerDigmaEngineEventError(name, stringWriter.toString())
+            if (reportToPosthog) {
+                ActivityMonitor.getInstance(project).registerDigmaEngineEventError(name, stringWriter.toString())
+            }
             Log.warnWithException(logger, e, "error running docker command {}", processBuilder.command())
             return e.message ?: e.toString()
         } finally {
@@ -198,18 +191,23 @@ internal class Engine {
     }
 
 
-    private fun buildExitValue(exitValue: Int, success: Boolean, errorMessages: List<String>): String {
+    private fun buildExitValue(exitValue: Int, success: Boolean, errorMessages: List<String>, allOutputLines: MutableList<String>): String {
 
         if (!success || exitValue != 0) {
             var exitMessage = "process failed with code $exitValue"
             if (errorMessages.isNotEmpty()) {
                 exitMessage = exitMessage.plus(":").plus(buildErrorMessages(errorMessages))
             }
+
+            if (allOutputLines.isNotEmpty()) {
+                exitMessage = exitMessage.plus(":").plus(System.lineSeparator()).plus(buildOutputMessages(allOutputLines))
+            }
+
             return exitMessage
         }
 
         if (errorMessages.isNotEmpty()) {
-            return "process succeeded but some containers failed:".plus(buildErrorMessages(errorMessages))
+            return "process succeeded but there are error messages:".plus(buildErrorMessages(errorMessages))
         }
 
         return "0"
@@ -225,6 +223,15 @@ internal class Engine {
         return message
     }
 
+    private fun buildOutputMessages(errorMessages: List<String>): String {
+
+        var message = ""
+
+        errorMessages.forEach {
+            message = message.plus(it).plus(System.lineSeparator())
+        }
+        return message
+    }
 
 
     //best effort to collect error codes
@@ -237,6 +244,10 @@ internal class Engine {
         } catch (e: Exception) {
             //ignore
         }
+    }
+
+    private fun collectAll(line: String, allLines: MutableList<String>) {
+        allLines.add(line)
     }
 
 }

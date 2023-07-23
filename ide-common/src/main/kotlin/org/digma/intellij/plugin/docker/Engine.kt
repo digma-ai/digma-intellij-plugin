@@ -178,7 +178,9 @@ internal class Engine {
         } catch (e: Exception) {
             val stringWriter = StringWriter()
             e.printStackTrace(PrintWriter(stringWriter))
-            ActivityMonitor.getInstance(project).registerDigmaEngineEventError(name, stringWriter.toString())
+            if (reportToPosthog) {
+                ActivityMonitor.getInstance(project).registerDigmaEngineEventError(name, stringWriter.toString())
+            }
             Log.warnWithException(logger, e, "error running docker command {}", processBuilder.command())
             return e.message ?: e.toString()
         } finally {

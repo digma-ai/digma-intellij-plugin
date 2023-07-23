@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.122] - 2023-07-21
+## [2.0.123] - 2023-07-23
+- update eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1007
+- Improve auto install posthog events by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1008
+
+## 2.0.122 - 2023-07-21
 - Update Assets UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1001
 - fix is engine running by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1003
 

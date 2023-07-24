@@ -130,6 +130,10 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
         }
     }
 
+    fun registerConnectionGained() {
+        postHog?.capture(userId, "connection gained")
+    }
+
     fun registerFirstInsightReceived() {
         postHog?.capture(userId, "insight first-received")
     }

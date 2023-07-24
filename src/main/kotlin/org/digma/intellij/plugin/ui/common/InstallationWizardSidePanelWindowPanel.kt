@@ -6,6 +6,7 @@ import com.intellij.openapi.application.ApplicationNamesInfo
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.ui.jcef.JBCefBrowser
 import kotlinx.coroutines.delay
@@ -129,6 +130,9 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
 
     jbCefBrowser.jbCefClient.addLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
 
+    Disposer.register(InstallationWizardService.getInstance(project)) {
+        jbCefBrowser.jbCefClient.removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
+    }
 
     val jbCefClient = jbCefBrowser.jbCefClient
 

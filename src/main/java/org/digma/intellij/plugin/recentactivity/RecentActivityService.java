@@ -6,6 +6,7 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.ui.content.Content;
@@ -167,13 +168,8 @@ public class RecentActivityService implements Disposable {
 
         jbCefBrowser.getJBCefClient().addLifeSpanHandler(lifeSpanHandler, jbCefBrowser.getCefBrowser());
 
+        Disposer.register(this, () -> jbCefBrowser.getJBCefClient().removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.getCefBrowser()));
 
-//        CefApp.getInstance()
-//                .registerSchemeHandlerFactory(
-//                        "https",
-//                        RESOURCE_FOLDER_NAME,
-//                        new CustomSchemeHandlerFactory(RESOURCE_FOLDER_NAME,indexTemplateData)
-//                );
         jbCefBrowser.getCefBrowser().setFocus(true);
 
         JBCefClient jbCefClient = jbCefBrowser.getJBCefClient();

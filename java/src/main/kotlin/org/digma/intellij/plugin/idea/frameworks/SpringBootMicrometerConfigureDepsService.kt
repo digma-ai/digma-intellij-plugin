@@ -36,7 +36,7 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
         val MicrometerTracingBridgeOtelCoordinates = UnifiedCoordinates("io.micrometer", "micrometer-tracing-bridge-otel", "1.1.2")
         val OtelExporterOtlpCoordinates = UnifiedCoordinates("io.opentelemetry", "opentelemetry-exporter-otlp", "1.26.0")
         val DigmaSpringBootMicrometerAutoconfCoordinates =
-            UnifiedCoordinates("io.github.digma-ai", "digma-spring-boot-micrometer-tracing-autoconf", "0.7.2")
+            UnifiedCoordinates("io.github.digma-ai", "digma-spring-boot-micrometer-tracing-autoconf", "0.7.4")
 
         @JvmStatic
         fun getInstance(project: Project): SpringBootMicrometerConfigureDepsService {
@@ -45,6 +45,12 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
 
         fun getSpringBootStarterActuatorDependency(javaBuildSystem: JavaBuildSystem, springBootVersion: String): UnifiedDependency {
             val libCoordinates = UnifiedCoordinates("org.springframework.boot", "spring-boot-starter-actuator", springBootVersion)
+
+            return buildUnifiedDependency(libCoordinates, javaBuildSystem)
+        }
+
+        fun getSpringBootStarterAopDependency(javaBuildSystem: JavaBuildSystem, springBootVersion: String): UnifiedDependency {
+            val libCoordinates = UnifiedCoordinates("org.springframework.boot", "spring-boot-starter-aop", springBootVersion)
 
             return buildUnifiedDependency(libCoordinates, javaBuildSystem)
         }
@@ -128,6 +134,9 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
         val uniDeps = mutableSetOf<UnifiedDependency>()
         if (!moduleExt.metadata.hasSpringBootStarterActuator) {
             uniDeps.add(getSpringBootStarterActuatorDependency(moduleBuildSystem, moduleExt.metadata.springBootVersion!!))
+        }
+        if (!moduleExt.metadata.hasSpringBootStarterAop) {
+            uniDeps.add(getSpringBootStarterAopDependency(moduleBuildSystem, moduleExt.metadata.springBootVersion!!))
         }
         if (!moduleExt.metadata.hasMicrometerTracingBridgeOtel) {
             uniDeps.add(buildUnifiedDependency(MicrometerTracingBridgeOtelCoordinates, moduleBuildSystem))

@@ -63,6 +63,7 @@ class ModulesDepsService(private val project: Project) : Disposable {
 
             // spring boot
             var hasSpringBootStarterActuator = false
+            var hasSpringBootStarterAop = false
             var hasMicrometerTracingBridgeOtel = false
             var hasOtelExporterOtlp = false
             var hasDigmaSpringBootMicrometerAutoconf = false
@@ -97,6 +98,9 @@ class ModulesDepsService(private val project: Project) : Disposable {
                 }
                 if (!hasSpringBootStarterActuator) {
                     hasSpringBootStarterActuator = checkSpringBootStarterActuator(libCoord)
+                }
+                if (!hasSpringBootStarterAop) {
+                    hasSpringBootStarterAop = checkSpringBootStarterAop(libCoord)
                 }
                 if (!hasMicrometerTracingBridgeOtel) {
                     hasMicrometerTracingBridgeOtel = checkMicrometerTracingBridgeOtel(libCoord)
@@ -136,7 +140,8 @@ class ModulesDepsService(private val project: Project) : Disposable {
 
             return ModuleMetadata(
                 hasOpenTelemetryAnnotations, quarkusVersion, hasQuarkusOpenTelemetry,
-                springBootVersion, hasSpringBootStarterActuator, hasMicrometerTracingBridgeOtel, hasOtelExporterOtlp,
+                springBootVersion, hasSpringBootStarterActuator, hasSpringBootStarterAop,
+                hasMicrometerTracingBridgeOtel, hasOtelExporterOtlp,
                 hasDigmaSpringBootMicrometerAutoconf, micronautVersion, dropwizardVersion, springVersion
             )
         }
@@ -180,6 +185,12 @@ class ModulesDepsService(private val project: Project) : Disposable {
         fun checkSpringBootStarterActuator(libCoord: UnifiedCoordinates): Boolean {
             return libCoord.groupId == "org.springframework.boot" &&
                     libCoord.artifactId == "spring-boot-starter-actuator"
+        }
+
+        @JvmStatic
+        fun checkSpringBootStarterAop(libCoord: UnifiedCoordinates): Boolean {
+            return libCoord.groupId == "org.springframework.boot" &&
+                    libCoord.artifactId == "spring-boot-starter-aop"
         }
 
         @JvmStatic
@@ -305,6 +316,7 @@ class ModulesDepsService(private val project: Project) : Disposable {
     fun isModuleHasNeededDependenciesForSpringBootWithMicrometer(metadata: ModuleMetadata): Boolean {
         val retval = (true
                 && metadata.hasSpringBootStarterActuator
+                && metadata.hasSpringBootStarterAop
                 && metadata.hasMicrometerTracingBridgeOtel
                 && metadata.hasOtelExporterOtlp
                 && metadata.hasDigmaSpringBootMicrometerAutoconf
@@ -349,6 +361,7 @@ data class ModuleMetadata(
     // spring boot
     val springBootVersion: String?,
     val hasSpringBootStarterActuator: Boolean,
+    val hasSpringBootStarterAop: Boolean,
     val hasMicrometerTracingBridgeOtel: Boolean,
     val hasOtelExporterOtlp: Boolean,
     val hasDigmaSpringBootMicrometerAutoconf: Boolean,

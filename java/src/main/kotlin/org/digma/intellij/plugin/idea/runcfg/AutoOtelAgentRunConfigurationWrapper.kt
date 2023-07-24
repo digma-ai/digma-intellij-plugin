@@ -52,7 +52,7 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
     ) {
 
         val project = configuration.project
-        val useOtelAgent = evalToUseAgent(resolvedModule)
+        val isSpringBootWithMicrometerTracing = evalSpringBootMicrometerTracing(resolvedModule)
         val runConfigType = evalRunConfigType(configuration)
 
         when (runConfigType) {
@@ -61,7 +61,7 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
                 //params.vmParametersList.addParametersString("-verbose:class -javaagent:/home/shalom/tmp/run-configuration/opentelemetry-javaagent.jar")
                 //params.vmParametersList.addProperty("myprop","myvalue")
                 val javaToolOptions =
-                    buildJavaToolOptions(configuration, project, useOtelAgent, isOtelServiceNameAlreadyDefined(params))
+                    buildJavaToolOptions(configuration, project, isSpringBootWithMicrometerTracing, isOtelServiceNameAlreadyDefined(params))
                 javaToolOptions?.let {
                     mergeJavaToolOptions(params, it)
                 }
@@ -80,7 +80,7 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
                 // JAVA_TOOL_OPTIONS is not the best as said above, but it works.
                 configuration as GradleRunConfiguration
                 val javaToolOptions =
-                    buildJavaToolOptions(configuration, project, useOtelAgent, isOtelServiceNameAlreadyDefined(configuration))
+                    buildJavaToolOptions(configuration, project, isSpringBootWithMicrometerTracing, isOtelServiceNameAlreadyDefined(configuration))
                 javaToolOptions?.let {
                     mergeGradleJavaToolOptions(configuration, javaToolOptions)
                 }
@@ -89,7 +89,7 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
             RunConfigType.MavenRun -> {
                 configuration as MavenRunConfiguration
                 val javaToolOptions =
-                    buildJavaToolOptions(configuration, project, useOtelAgent, isOtelServiceNameAlreadyDefined(params))
+                    buildJavaToolOptions(configuration, project, isSpringBootWithMicrometerTracing, isOtelServiceNameAlreadyDefined(params))
                 javaToolOptions?.let {
                     mergeJavaToolOptions(params, it)
                 }
@@ -102,8 +102,8 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
     }
 
     // this one is used AFTER of settings.observability enabled
-    private fun evalToUseAgent(module: Module?): Boolean {
-        if (module == null) return true
+    private fun evalSpringBootMicrometerTracing(module: Module?): Boolean {
+        if (module == null) return false
         val useAgentForSpringBoot = getConfigUseAgentForSpringBoot()
 
         val modulesDepsService = ModulesDepsService.getInstance(module.project)
@@ -111,10 +111,10 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
         if (moduleExt != null) {
             if (moduleExt.metadata.hasSpringBoot() && !useAgentForSpringBoot) {
                 // use Micrometer tracing, instead of OtelAgent
-                return false
+                return true
             }
         }
-        return true
+        return false
     }
 
     //this is only for gradle. we need to keep original JAVA_TOOL_OPTIONS if exists and restore when the process is
@@ -146,7 +146,7 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
     private fun buildJavaToolOptions(
         configuration: RunConfigurationBase<*>,
         project: Project,
-        useOtelAgent: Boolean,
+        isSpringBootWithMicrometerTracing: Boolean,
         serviceAlreadyDefined: Boolean,
     ): String? {
 
@@ -161,19 +161,23 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
         }
 
         var retVal = " "
-        if (useOtelAgent) {
+        if (isSpringBootWithMicrometerTracing) {
+            retVal = retVal
+                .plus("-Dmanagement.otlp.tracing.endpoint=${getExporterUrl()}")
+                .plus(" ")
+        } else {
             retVal = retVal
                 .plus("-javaagent:$otelAgentPath")
                 .plus(" ")
                 .plus("-Dotel.javaagent.extensions=$digmaExtensionPath")
+                .plus(" ")
+                .plus("-Dotel.exporter.otlp.traces.endpoint=${getExporterUrl()}")
                 .plus(" ")
         }
         retVal = retVal
             .plus("-Dotel.traces.exporter=otlp")
             .plus(" ")
             .plus("-Dotel.metrics.exporter=none")
-            .plus(" ")
-            .plus("-Dotel.exporter.otlp.traces.endpoint=${getExporterUrl()}")
             .plus(" ")
 
         if (!serviceAlreadyDefined) {

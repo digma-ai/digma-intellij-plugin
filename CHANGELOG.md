@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.123] - 2023-07-23
+## [2.0.124] - 2023-07-24
+- skip-installation-step-if-local-engine-not-installed by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1010
+- add-posthon-event-no-connection-after-successful-install by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1011
+
+## 2.0.123 - 2023-07-23
 - update eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1007
 - Improve auto install posthog events by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1008
 

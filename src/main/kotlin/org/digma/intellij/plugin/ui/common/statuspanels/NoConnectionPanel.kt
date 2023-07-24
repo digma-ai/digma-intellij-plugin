@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.ui.common.statuspanels
 
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.components.service
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
@@ -10,7 +9,6 @@ import com.intellij.ui.components.ActionLink
 import com.intellij.util.ui.JBUI.Borders.empty
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.settings.ProjectSettings
@@ -85,8 +83,7 @@ fun createNoConnectionPanel(project: Project, parentDisposable: Disposable):JPan
     val setupLink = ActionLink("Set-up Digma"){
         ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.NoConnection, "set-up")
         EDT.ensureEDT{
-            val skipInstallationStep = !project.service<DockerService>().isEngineInstalled()
-            MainToolWindowCardsController.getInstance(project).showWizard(skipInstallationStep)
+            MainToolWindowCardsController.getInstance(project).showWizard(false)
             ToolWindowShower.getInstance(project).showToolWindow()
         }
     }

@@ -217,7 +217,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
 
                         if (success) {
                             var i = 0
-                            while (!BackendConnectionMonitor.getInstance(project).isConnectionOk() && i < 6) {
+                            while (!BackendConnectionMonitor.getInstance(project).isConnectionOk() && i < 8) {
                                 Log.log(logger::warn, "waiting for connection")
                                 BackendConnectionUtil.getInstance(project).testConnectionToBackend()
                                 delay(5000)
@@ -229,6 +229,10 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                         val connectionOk = BackendConnectionMonitor.getInstance(project).isConnectionOk()
                         if (!connectionOk) {
                             Log.log(logger::warn, "no connection after engine installation")
+                            if (success) {
+                                ActivityMonitor.getInstance(project)
+                                    .registerDigmaEngineEventError("installEngine", "No connection after successful engine install")
+                            }
                         }
                         val isEngineUp = connectionOk && success
                         if (isEngineUp) {
@@ -324,7 +328,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
 
                         if (success) {
                             var i = 0
-                            while (!BackendConnectionMonitor.getInstance(project).isConnectionOk() && i < 6) {
+                            while (!BackendConnectionMonitor.getInstance(project).isConnectionOk() && i < 8) {
                                 Log.log(logger::warn, "waiting for connection")
                                 BackendConnectionUtil.getInstance(project).testConnectionToBackend()
                                 delay(5000)
@@ -335,6 +339,10 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                         val connectionOk = BackendConnectionMonitor.getInstance(project).isConnectionOk()
                         if (!connectionOk) {
                             Log.log(logger::warn, "no connection after engine start")
+                            if (success) {
+                                ActivityMonitor.getInstance(project)
+                                    .registerDigmaEngineEventError("startEngine", "No connection after successful engine start")
+                            }
                         }
 
                         val isEngineUp = connectionOk && success

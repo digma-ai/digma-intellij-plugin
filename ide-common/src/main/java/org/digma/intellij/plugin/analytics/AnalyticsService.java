@@ -597,6 +597,7 @@ public class AnalyticsService implements Disposable {
                     myConnectionStatusNotifyAlarm.addRequest(() -> {
                         Log.log(LOGGER::info, "notifying connectionGained");
                         project.getMessageBus().syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC).connectionGained();
+                        ActivityMonitor.getInstance(project).registerConnectionGained();
                     },500);
 
 

@@ -109,13 +109,6 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
 
     PersistenceService.getInstance().firstWizardLaunchDone()
 
-//    CefApp.getInstance()
-//        .registerSchemeHandlerFactory(
-//            "https",
-//            RESOURCE_FOLDER_NAME,
-//            CustomSchemeHandlerFactory(RESOURCE_FOLDER_NAME, indexTemplateData)
-//        )
-
 
     val lifeSpanHandler: CefLifeSpanHandlerAdapter = object : CefLifeSpanHandlerAdapter() {
         override fun onAfterCreated(browser: CefBrowser) {

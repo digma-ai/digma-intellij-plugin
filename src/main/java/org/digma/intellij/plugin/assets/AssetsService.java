@@ -57,7 +57,6 @@ public final class AssetsService implements Disposable {
             jbCefBrowser = JBCefBrowserBuilderCreator.create()
                     .setUrl("http://" + DOMAIN_NAME + "/index.html")
                     .build();
-//            registerAppSchemeHandler(project);
 
             var jbCefClient = jbCefBrowser.getJBCefClient();
             cefMessageRouter = CefMessageRouter.create();

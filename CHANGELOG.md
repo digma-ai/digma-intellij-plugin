@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.125] - 2023-07-24
+## [2.0.126] - 2023-07-24
+- Fixes/SpringBootMicrometer - OTLP GRPC  by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1015
+- fix show tabs by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1016
+
+## 2.0.125 - 2023-07-24
 - connection gained posthog event by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1012
 - Register schema handler after created by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1013
 - icons fix by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1014

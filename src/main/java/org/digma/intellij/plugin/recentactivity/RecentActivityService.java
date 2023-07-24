@@ -18,6 +18,7 @@ import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.browser.CefMessageRouter;
 import org.cef.callback.CefQueryCallback;
+import org.cef.handler.CefLifeSpanHandlerAdapter;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
 import org.digma.intellij.plugin.PluginId;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
@@ -150,12 +151,29 @@ public class RecentActivityService implements Disposable {
 
         var indexTemplateData = new HashMap<String,Object>();
         indexTemplateData.put(RECENT_EXPIRATION_LIMIT_VARIABLE, RECENT_EXPIRATION_LIMIT_MILLIS);
-        CefApp.getInstance()
-                .registerSchemeHandlerFactory(
-                        "https",
-                        RESOURCE_FOLDER_NAME,
-                        new CustomSchemeHandlerFactory(RESOURCE_FOLDER_NAME,indexTemplateData)
-                );
+
+
+        var lifeSpanHandler = new CefLifeSpanHandlerAdapter() {
+            @Override
+            public void onAfterCreated(CefBrowser browser) {
+                CefApp.getInstance()
+                        .registerSchemeHandlerFactory(
+                                "https",
+                                RESOURCE_FOLDER_NAME,
+                                new CustomSchemeHandlerFactory(RESOURCE_FOLDER_NAME, indexTemplateData)
+                        );
+            }
+        };
+
+        jbCefBrowser.getJBCefClient().addLifeSpanHandler(lifeSpanHandler, jbCefBrowser.getCefBrowser());
+
+
+//        CefApp.getInstance()
+//                .registerSchemeHandlerFactory(
+//                        "https",
+//                        RESOURCE_FOLDER_NAME,
+//                        new CustomSchemeHandlerFactory(RESOURCE_FOLDER_NAME,indexTemplateData)
+//                );
         jbCefBrowser.getCefBrowser().setFocus(true);
 
         JBCefClient jbCefClient = jbCefBrowser.getJBCefClient();

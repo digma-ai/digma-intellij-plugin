@@ -15,6 +15,7 @@ import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.browser.CefMessageRouter
 import org.cef.callback.CefQueryCallback
+import org.cef.handler.CefLifeSpanHandlerAdapter
 import org.cef.handler.CefMessageRouterHandlerAdapter
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.analytics.BackendConnectionUtil
@@ -107,12 +108,27 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
 
     PersistenceService.getInstance().firstWizardLaunchDone()
 
-    CefApp.getInstance()
-        .registerSchemeHandlerFactory(
-            "https",
-            RESOURCE_FOLDER_NAME,
-            CustomSchemeHandlerFactory(RESOURCE_FOLDER_NAME, indexTemplateData)
-        )
+//    CefApp.getInstance()
+//        .registerSchemeHandlerFactory(
+//            "https",
+//            RESOURCE_FOLDER_NAME,
+//            CustomSchemeHandlerFactory(RESOURCE_FOLDER_NAME, indexTemplateData)
+//        )
+
+
+    val lifeSpanHandler: CefLifeSpanHandlerAdapter = object : CefLifeSpanHandlerAdapter() {
+        override fun onAfterCreated(browser: CefBrowser) {
+            CefApp.getInstance()
+                .registerSchemeHandlerFactory(
+                    "https",
+                    RESOURCE_FOLDER_NAME,
+                    CustomSchemeHandlerFactory(RESOURCE_FOLDER_NAME, indexTemplateData)
+                )
+        }
+    }
+
+    jbCefBrowser.jbCefClient.addLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
+
 
     val jbCefClient = jbCefBrowser.jbCefClient
 

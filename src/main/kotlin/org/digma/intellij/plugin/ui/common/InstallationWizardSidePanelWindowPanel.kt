@@ -123,7 +123,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
 
     jbCefBrowser.jbCefClient.addLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
 
-    Disposer.register(InstallationWizardService.getInstance(project)) {
+    Disposer.register(jbCefBrowser) {
         jbCefBrowser.jbCefClient.removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
     }
 

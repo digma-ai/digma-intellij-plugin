@@ -5,10 +5,13 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.ui.jcef.JBCefApp;
 import com.intellij.ui.jcef.JBCefBrowser;
 import org.cef.CefApp;
+import org.cef.browser.CefBrowser;
 import org.cef.browser.CefMessageRouter;
+import org.cef.handler.CefLifeSpanHandlerAdapter;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.analytics.EnvironmentChanged;
@@ -54,13 +57,24 @@ public final class AssetsService implements Disposable {
             jbCefBrowser = JBCefBrowserBuilderCreator.create()
                     .setUrl("http://" + DOMAIN_NAME + "/index.html")
                     .build();
-            registerAppSchemeHandler(project);
 
             var jbCefClient = jbCefBrowser.getJBCefClient();
             cefMessageRouter = CefMessageRouter.create();
             messageHandler = new AssetsMessageRouterHandler(project, jbCefBrowser);
             cefMessageRouter.addHandler(messageHandler, true);
             jbCefClient.getCefClient().addMessageRouter(cefMessageRouter);
+
+
+            var lifeSpanHandler = new CefLifeSpanHandlerAdapter() {
+                @Override
+                public void onAfterCreated(CefBrowser browser) {
+                    registerAppSchemeHandler(project);
+                }
+            };
+
+            jbCefBrowser.getJBCefClient().addLifeSpanHandler(lifeSpanHandler, jbCefBrowser.getCefBrowser());
+
+            Disposer.register(this, () -> jbCefBrowser.getJBCefClient().removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.getCefBrowser()));
 
             ApplicationUISettingsChangeNotifier.getInstance(project).addSettingsChangeListener(new SettingsChangeListener() {
                 @Override

@@ -6,6 +6,7 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.ui.content.Content;
@@ -18,6 +19,7 @@ import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.browser.CefMessageRouter;
 import org.cef.callback.CefQueryCallback;
+import org.cef.handler.CefLifeSpanHandlerAdapter;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
 import org.digma.intellij.plugin.PluginId;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
@@ -150,12 +152,24 @@ public class RecentActivityService implements Disposable {
 
         var indexTemplateData = new HashMap<String,Object>();
         indexTemplateData.put(RECENT_EXPIRATION_LIMIT_VARIABLE, RECENT_EXPIRATION_LIMIT_MILLIS);
-        CefApp.getInstance()
-                .registerSchemeHandlerFactory(
-                        "https",
-                        RESOURCE_FOLDER_NAME,
-                        new CustomSchemeHandlerFactory(RESOURCE_FOLDER_NAME,indexTemplateData)
-                );
+
+
+        var lifeSpanHandler = new CefLifeSpanHandlerAdapter() {
+            @Override
+            public void onAfterCreated(CefBrowser browser) {
+                CefApp.getInstance()
+                        .registerSchemeHandlerFactory(
+                                "https",
+                                RESOURCE_FOLDER_NAME,
+                                new CustomSchemeHandlerFactory(RESOURCE_FOLDER_NAME, indexTemplateData)
+                        );
+            }
+        };
+
+        jbCefBrowser.getJBCefClient().addLifeSpanHandler(lifeSpanHandler, jbCefBrowser.getCefBrowser());
+
+        Disposer.register(this, () -> jbCefBrowser.getJBCefClient().removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.getCefBrowser()));
+
         jbCefBrowser.getCefBrowser().setFocus(true);
 
         JBCefClient jbCefClient = jbCefBrowser.getJBCefClient();

@@ -3,11 +3,14 @@ package org.digma.intellij.plugin.jaegerui;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorState;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.UserDataHolderBase;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.jcef.JBCefBrowser;
 import org.cef.CefApp;
+import org.cef.browser.CefBrowser;
 import org.cef.browser.CefMessageRouter;
+import org.cef.handler.CefLifeSpanHandlerAdapter;
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
@@ -31,12 +34,24 @@ public class JaegerUIFileEditor extends UserDataHolderBase implements FileEditor
         jbCefBrowser = JBCefBrowserBuilderCreator.create()
                 .setUrl("http://" + DOMAIN_NAME + "/index.html")
                 .build();
-        registerAppSchemeHandler(project, (JaegerUIVirtualFile) file);
 
         var jbCefClient = jbCefBrowser.getJBCefClient();
         cefMessageRouter = CefMessageRouter.create();
         cefMessageRouter.addHandler(new JaegerUIMessageRouterHandler(project, jbCefBrowser), true);
         jbCefClient.getCefClient().addMessageRouter(cefMessageRouter);
+
+        var lifeSpanHandler = new CefLifeSpanHandlerAdapter() {
+            @Override
+            public void onAfterCreated(CefBrowser browser) {
+                registerAppSchemeHandler(project, (JaegerUIVirtualFile) file);
+            }
+        };
+
+        jbCefBrowser.getJBCefClient().addLifeSpanHandler(lifeSpanHandler, jbCefBrowser.getCefBrowser());
+
+        Disposer.register(this, () -> jbCefBrowser.getJBCefClient().removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.getCefBrowser()));
+
+
     }
 
 

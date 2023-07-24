@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.list.insights
 
+import LabeledSwitch
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
@@ -24,7 +25,7 @@ import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.SwingConstants
 
-
+private const val P_95: Float = 0.95F
 private const val P_50: Float = 0.5F
 private const val RECORDS_PER_PAGE_DURATION_BREAKDOWN = 3
 
@@ -35,75 +36,145 @@ fun spanDurationBreakdownPanel(
 
     val uniqueInsightId = insight.codeObjectId + insight.type
     val lastPageNum: Int
+    var activePercentile: Float = P_50;
     var resultBreakdownPanel: DigmaResettablePanel? = null
     val paginationPanel = JPanel()
     val durationBreakdownEntriesToDisplay = ArrayList<SpanDurationBreakdown>()
 
-    val validBreakdownEntries = insight.breakdownEntries
-            .filter { entry -> entry.percentiles.any { breakdown -> breakdown.percentile.equals(P_50) } }
-            .sortedWith(compareByDescending { getValueOfPercentile(it, P_50) })
+    var filteredBreakdownEntities = ArrayList<SpanDurationBreakdown>()
+
+    filterDurationBreakdownData(insight, filteredBreakdownEntities, activePercentile)
 
     //calculate how many pages there are
-    lastPageNum = validBreakdownEntries.size / RECORDS_PER_PAGE_DURATION_BREAKDOWN + if (validBreakdownEntries.size % RECORDS_PER_PAGE_DURATION_BREAKDOWN != 0) 1 else 0
+    lastPageNum =
+        filteredBreakdownEntities.size / RECORDS_PER_PAGE_DURATION_BREAKDOWN + if (filteredBreakdownEntities.size % RECORDS_PER_PAGE_DURATION_BREAKDOWN != 0) 1 else 0
+
+    val switchLabelPanel = JBPanel<JBPanel<*>>()
+    switchLabelPanel.layout = BorderLayout(5, 5)
+    switchLabelPanel.border = empty(5, 0, 5, 0)
+    switchLabelPanel.isOpaque = false
+
+    val labeledSwitch = LabeledSwitch("Median", "Slowest 5%") { isOn ->
+        var percentile = if (isOn) P_50 else P_95
+        activePercentile = percentile;
+        filterDurationBreakdownData(insight, filteredBreakdownEntities, percentile)
+        resultBreakdownPanel!!.reset();
+    }
+
+    switchLabelPanel.add(labeledSwitch, BorderLayout.WEST)
 
     resultBreakdownPanel = object : DigmaResettablePanel() {
         override fun reset() {
-            rebuildDurationBreakdownRowPanel(
-                    resultBreakdownPanel!!,
-                    durationBreakdownEntriesToDisplay,
-                    project
+            updateListOfEntriesToDisplay(
+                filteredBreakdownEntities,
+                durationBreakdownEntriesToDisplay,
+                getCurrentPageNumberForInsight(uniqueInsightId, lastPageNum),
+                RECORDS_PER_PAGE_DURATION_BREAKDOWN,
+                project
             )
-            rebuildPaginationPanel(paginationPanel, lastPageNum,
-                    validBreakdownEntries, resultBreakdownPanel, durationBreakdownEntriesToDisplay, uniqueInsightId, RECORDS_PER_PAGE_DURATION_BREAKDOWN, project, insight.type)
+            rebuildDurationBreakdownRowPanel(
+                resultBreakdownPanel!!,
+                durationBreakdownEntriesToDisplay,
+                switchLabelPanel,
+                activePercentile,
+                project
+            )
+            rebuildPaginationPanel(
+                paginationPanel,
+                lastPageNum,
+                filteredBreakdownEntities,
+                resultBreakdownPanel,
+                durationBreakdownEntriesToDisplay,
+                uniqueInsightId,
+                RECORDS_PER_PAGE_DURATION_BREAKDOWN,
+                project,
+                insight.type
+            )
         }
     }
+    resultBreakdownPanel.add(switchLabelPanel);
 
-    updateListOfEntriesToDisplay(validBreakdownEntries, durationBreakdownEntriesToDisplay, getCurrentPageNumberForInsight(uniqueInsightId, lastPageNum), RECORDS_PER_PAGE_DURATION_BREAKDOWN, project)
-    buildDurationBreakdownRowPanel(resultBreakdownPanel, durationBreakdownEntriesToDisplay, project)
+    updateListOfEntriesToDisplay(
+        filteredBreakdownEntities,
+        durationBreakdownEntriesToDisplay,
+        getCurrentPageNumberForInsight(uniqueInsightId, lastPageNum),
+        RECORDS_PER_PAGE_DURATION_BREAKDOWN,
+        project
+    )
+    buildDurationBreakdownRowPanel(resultBreakdownPanel, durationBreakdownEntriesToDisplay, activePercentile, project)
 
     return createInsightPanel(
-            project = project,
-            insight = insight,
-            title = "Duration Breakdown",
-            description = "",
-            iconsList = listOf(Laf.Icons.Insight.DURATION),
-            bodyPanel = resultBreakdownPanel,
-            buttons = null,
-            paginationComponent = buildPaginationRowPanel(lastPageNum, paginationPanel,
-                    validBreakdownEntries, resultBreakdownPanel, durationBreakdownEntriesToDisplay, uniqueInsightId, RECORDS_PER_PAGE_DURATION_BREAKDOWN, project, insight.type),
+        project = project,
+        insight = insight,
+        title = "Duration Breakdown",
+        description = "",
+        iconsList = listOf(Laf.Icons.Insight.DURATION),
+        bodyPanel = resultBreakdownPanel,
+        buttons = null,
+        paginationComponent = buildPaginationRowPanel(
+            lastPageNum,
+            paginationPanel,
+            filteredBreakdownEntities,
+            resultBreakdownPanel,
+            durationBreakdownEntriesToDisplay,
+            uniqueInsightId,
+            RECORDS_PER_PAGE_DURATION_BREAKDOWN,
+            project,
+            insight.type
+        ),
     )
+}
+
+private fun filterDurationBreakdownData(
+    insight: SpanDurationBreakdownInsight,
+    filteredBreakdownEntities: ArrayList<SpanDurationBreakdown>,
+    percentile: Float){
+    filteredBreakdownEntities.clear();
+    insight.breakdownEntries.sortedWith(compareByDescending { getValueOfPercentile(it, percentile) }).forEach { item ->
+        var percentiles = item.percentiles.filter { p -> p.percentile.equals(percentile) };
+        var clone = SpanDurationBreakdown(
+            item.spanName, item.spanDisplayName, item.spanInstrumentationLibrary, item.spanCodeObjectId,
+            percentiles
+        );
+        filteredBreakdownEntities.add(clone);
+    }
 }
 
 private fun buildDurationBreakdownRowPanel(
     durationBreakdownPanel: DigmaResettablePanel,
     durationBreakdownEntriesToDisplay: List<SpanDurationBreakdown>,
+    percentile: Float,
     project: Project,
 ) {
     durationBreakdownPanel.layout = BoxLayout(durationBreakdownPanel, BoxLayout.Y_AXIS)
     durationBreakdownPanel.isOpaque = false
 
     durationBreakdownEntriesToDisplay.forEach { durationBreakdown: SpanDurationBreakdown ->
-        durationBreakdownPanel.add(durationBreakdownRowPanel(durationBreakdown, project))
+        durationBreakdownPanel.add(durationBreakdownRowPanel(durationBreakdown, project, percentile))
     }
 }
 
 private fun rebuildDurationBreakdownRowPanel(
     durationBreakdownPanel: DigmaResettablePanel,
     durationBreakdownEntriesToDisplay: List<SpanDurationBreakdown>,
+    switchPanel: JPanel,
+    percentile: Float,
     project: Project,
 ) {
     durationBreakdownPanel.removeAll()
-    buildDurationBreakdownRowPanel(durationBreakdownPanel, durationBreakdownEntriesToDisplay, project)
+    durationBreakdownPanel.add(switchPanel);
+    buildDurationBreakdownRowPanel(durationBreakdownPanel, durationBreakdownEntriesToDisplay, percentile, project)
 }
 
 private fun durationBreakdownRowPanel(
     durationBreakdown: SpanDurationBreakdown,
     project: Project,
+    percentile: Float
 ): JPanel {
     val durationBreakdownPanel = getDurationBreakdownPanel()
     val telescopeIconLabel = getTelescopeIconLabel()
     val spanDisplayNameLabel = getSpanDisplayNameLabel(durationBreakdown, project)
-    val breakdownDurationLabelPanel = getBreakdownDurationLabel(durationBreakdown)
+    val breakdownDurationLabelPanel = getBreakdownDurationLabel(durationBreakdown, percentile)
 
     durationBreakdownPanel.add(telescopeIconLabel, BorderLayout.WEST)
     durationBreakdownPanel.add(spanDisplayNameLabel, BorderLayout.CENTER)
@@ -150,8 +221,9 @@ private fun getSpanDisplayNameLabel(
 
 private fun getBreakdownDurationLabel(
     durationBreakdown: SpanDurationBreakdown,
+    percentile: Float
 ): JComponent {
-    val pLabelText = getDisplayValueOfPercentile(durationBreakdown, P_50)
+    val pLabelText = getDisplayValueOfPercentile(durationBreakdown, percentile)
     val pLabel = JLabel(pLabelText)
     pLabel.toolTipText = getTooltipForDurationLabel(durationBreakdown)
     boldFonts(pLabel)
@@ -185,3 +257,4 @@ private fun getTooltipForDurationLabel(breakdownEntry: SpanDurationBreakdown): S
     }
     return asHtml(tooltip)
 }
+

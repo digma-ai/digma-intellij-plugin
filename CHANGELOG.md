@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.126] - 2023-07-24
+## [2.0.127] - 2023-07-25
+- Feature/navigate back to recent spans by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/996
+- redesign bulk listeners by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1021
+- Feature/span navigation to Observed by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1023
+
+## 2.0.126 - 2023-07-24
 - Fixes/SpringBootMicrometer - OTLP GRPC  by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1015
 - fix show tabs by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1016
 

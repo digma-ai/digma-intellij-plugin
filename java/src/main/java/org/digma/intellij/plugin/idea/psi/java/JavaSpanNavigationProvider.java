@@ -185,6 +185,8 @@ public class JavaSpanNavigationProvider implements Disposable {
             if (virtualFile != null && virtualFile.isValid()) {
                 buildSpansLock.lock();
                 try {
+                    //if file moved then removeDocumentSpans will not remove anything but building span locations will
+                    // override the entries anyway
                     removeDocumentSpans(virtualFile);
                     buildWithSpanAnnotation(GlobalSearchScope.fileScope(project, virtualFile));
                     buildStartSpanMethodCall(GlobalSearchScope.fileScope(project, virtualFile));

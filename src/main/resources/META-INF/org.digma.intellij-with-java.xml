@@ -31,10 +31,13 @@
         <listener
                 class="org.digma.intellij.plugin.idea.psi.java.DocumentsChangeListenerForJavaSpanNavigation"
                 topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
+    </projectListeners>
+
+    <applicationListeners>
         <listener
                 class="org.digma.intellij.plugin.idea.psi.java.BulkFileChangeListenerForJavaSpanNavigation"
                 topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
-    </projectListeners>
+    </applicationListeners>
 
 
 </idea-plugin>

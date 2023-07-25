@@ -15,9 +15,13 @@
         <listener
                 class="org.digma.intellij.plugin.psi.python.DocumentsChangeListenerForPythonSpanNavigation"
                 topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
+
+    </projectListeners>
+
+    <applicationListeners>
         <listener
                 class="org.digma.intellij.plugin.psi.python.BulkFileChangeListenerForPythonSpanNavigation"
                 topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
-    </projectListeners>
+    </applicationListeners>
 
 </idea-plugin>

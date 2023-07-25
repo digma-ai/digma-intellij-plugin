@@ -89,6 +89,8 @@ public class JavaSpanNavigationProvider implements Disposable {
                 buildWithSpanAnnotation(GlobalSearchScope.projectScope(project));
                 buildStartSpanMethodCall(GlobalSearchScope.projectScope(project));
 
+                buildObservedAnnotation(GlobalSearchScope.projectScope(project));
+
                 //trigger a refresh after span navigation is built. this is necessary because the insights and errors
                 //views may be populated before span navigation is ready and spans links can not be built.
                 //for example is the IDE is closed when the cursor is on a method with Duration Breakdown that
@@ -149,6 +151,25 @@ public class JavaSpanNavigationProvider implements Disposable {
         }
     }
 
+    private void buildObservedAnnotation(@NotNull SearchScope searchScope) {
+        PsiClass observedClass = JavaPsiFacade.getInstance(project).findClass(MicrometerTracingFramework.OBSERVED_FQN, GlobalSearchScope.allScope(project));
+        //maybe the annotation is not in the classpath
+        if (observedClass != null) {
+            var micrometerTracingFramework = new MicrometerTracingFramework(project);
+            Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(observedClass, searchScope);
+            psiMethods = filterNonRelevantMethodsForSpanDiscovery(psiMethods);
+            psiMethods.forEach(psiMethod -> {
+                var spanInfo = micrometerTracingFramework.getSpanInfoFromObservedAnnotatedMethod(psiMethod);
+                if (spanInfo != null) {
+                    Log.log(LOGGER::debug, "Found span info {} for method {}", spanInfo.getId(), spanInfo.getContainingMethodId());
+                    int offset = psiMethod.getTextOffset();
+                    var location = new SpanLocation(spanInfo.getContainingFileUri(), offset);
+                    spanLocations.put(spanInfo.getId(), location);
+                }
+            });
+        }
+    }
+
 
     /*
     This method must be called with a document that is relevant for span discovery and span navigation.
@@ -190,6 +211,8 @@ public class JavaSpanNavigationProvider implements Disposable {
                     removeDocumentSpans(virtualFile);
                     buildWithSpanAnnotation(GlobalSearchScope.fileScope(project, virtualFile));
                     buildStartSpanMethodCall(GlobalSearchScope.fileScope(project, virtualFile));
+
+                    buildObservedAnnotation(GlobalSearchScope.fileScope(project, virtualFile));
                 } finally {
                     buildSpansLock.unlock();
                 }

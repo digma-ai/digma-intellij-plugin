@@ -104,16 +104,16 @@ object BuildProfiles {
         Profiles.latest to BuildProfile(
             profile = Profiles.latest,
             // platformVersion is Intellij IDEA Community and Ultimate
-            platformVersion = "2023.1.4",
+            platformVersion = "2023.1.5",
             riderVersion = "2023.1.4",
             pycharmVersion = "2023.1.4",
-            riderResharperVersion = "2023.1.3",
+            riderResharperVersion = "2023.1.4",
             riderResharperVersionConstant = "PROFILE_2023_1",
             pythonPluginVersion = "231.8770.65",
             platformVersionCode = "231",
             pluginSinceBuild = "231",
             pluginUntilBuild = "231.*",
-            versionToRunPluginVerifier = "2023.1.3",
+            versionToRunPluginVerifier = "2023.1.5",
             kotlinTarget = KotlinVersion.KOTLIN_1_8.version,
             javaVersion = JavaVersion.VERSION_17.majorVersion
         ),

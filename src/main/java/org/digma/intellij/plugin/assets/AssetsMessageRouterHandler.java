@@ -87,7 +87,7 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
 
     private synchronized void pushAssets(CefBrowser browser, ObjectMapper objectMapper) throws JsonProcessingException {
-        Log.log(LOGGER::debug, project, "pushAssets called");
+        Log.log(LOGGER::trace, project, "pushAssets called");
         var payload = objectMapper.readTree(AssetsService.getInstance(project).getAssets());
         if (!payload.isMissingNode() && !PersistenceService.getInstance().getState().getFirstTimeAssetsReceived()) {
             ActivityMonitor.getInstance(project).registerFirstAssetsReceived();

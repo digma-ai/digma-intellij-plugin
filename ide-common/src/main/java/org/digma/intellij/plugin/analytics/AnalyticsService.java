@@ -576,7 +576,7 @@ public class AnalyticsService implements Disposable {
         private void resetConnectionLostAndNotifyIfNecessary() {
 
 
-            Log.log(LOGGER::warn, "resetConnectionLostAndNotifyIfNecessary called");
+            Log.log(LOGGER::trace, "resetConnectionLostAndNotifyIfNecessary called");
 
             //this is the critical section of the race condition, there is a performance penalty
             // for the locking , and if we recover from exception then also for the notification,
@@ -587,7 +587,7 @@ public class AnalyticsService implements Disposable {
             try{
                 //if connection is ok do nothing.
                 if (isConnectionOK()){
-                    Log.log(LOGGER::warn, "resetConnectionLostAndNotifyIfNecessary called, connection ok nothing to do.");
+                    Log.log(LOGGER::trace, "resetConnectionLostAndNotifyIfNecessary called, connection ok nothing to do.");
                     return;
                 }
                 Log.log(LOGGER::info, "acquiring lock to reset connection status after connection lost");

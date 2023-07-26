@@ -41,7 +41,7 @@ class RefreshService(private val project: Project) {
     }
 
     suspend fun refreshAllForCurrentFile(file: VirtualFile) {
-        Log.log(logger::debug, "Automatic refreshAllForCurrentFile started for file = {}", file.name)
+        Log.log(logger::trace, "Automatic refreshAllForCurrentFile started for file = {}", file.name)
 
         val selectedTextEditor = withUiContext {
             // this code is on the UI thread
@@ -51,9 +51,9 @@ class RefreshService(private val project: Project) {
         if (scope is MethodScope) {
             val documentInfoContainer = documentInfoService.getDocumentInfoByMethodInfo(scope.getMethodInfo())
 
-            Log.log(logger::debug, "updateInsightsCacheForActiveDocument starts for file = {}", file.name)
+            Log.log(logger::trace, "updateInsightsCacheForActiveDocument starts for file = {}", file.name)
             updateInsightsCacheForActiveDocumentAndRefreshViewIfNeeded(selectedTextEditor, documentInfoContainer, scope)
-            Log.log(logger::debug, "updateInsightsCacheForActiveDocument finished for file = {}", file.name)
+            Log.log(logger::trace, "updateInsightsCacheForActiveDocument finished for file = {}", file.name)
         } else {
             val documentInfoContainer = documentInfoService.getDocumentInfo(file)
             updateInsightsCacheForActiveDocument(selectedTextEditor, documentInfoContainer)
@@ -81,7 +81,7 @@ class RefreshService(private val project: Project) {
             //update InsightsCache at the same time.
             val task = Runnable {
                 refreshInsightsTaskScheduledLock.lock()
-                Log.log(logger::debug, "Lock acquired for refreshAll to {}. ", documentInfoContainer?.documentInfo?.fileUri)
+                Log.log(logger::trace, "Lock acquired for refreshAll to {}. ", documentInfoContainer?.documentInfo?.fileUri)
                 try {
                     notifyRefreshInsightsTaskStarted(documentInfoContainer?.documentInfo?.fileUri)
                     if (scope is MethodScope) {
@@ -97,7 +97,7 @@ class RefreshService(private val project: Project) {
                 } finally {
                     refreshInsightsTaskScheduledLock.unlock()
                     isGeneralRefreshButtonEnabled.set(true)
-                    Log.log(logger::debug, "Lock released for refreshAll to {}. ", documentInfoContainer?.documentInfo?.fileUri)
+                    Log.log(logger::trace, "Lock released for refreshAll to {}. ", documentInfoContainer?.documentInfo?.fileUri)
                     notifyRefreshInsightsTaskFinished(documentInfoContainer?.documentInfo?.fileUri)
                 }
             }
@@ -161,7 +161,7 @@ class RefreshService(private val project: Project) {
     }
 
     private fun notifyRefreshInsightsTaskStarted(fileUri: String?) {
-        Log.log(logger::debug, "Notifying RefreshInsightsTaskStarted for {}. ", fileUri)
+        Log.log(logger::trace, "Notifying RefreshInsightsTaskStarted for {}. ", fileUri)
         if (project.isDisposed) {
             return
         }
@@ -169,7 +169,7 @@ class RefreshService(private val project: Project) {
     }
 
     private fun notifyRefreshInsightsTaskFinished(fileUri: String?) {
-        Log.log(logger::debug, "Notifying RefreshInsightsTaskFinished for {}. ", fileUri)
+        Log.log(logger::trace, "Notifying RefreshInsightsTaskFinished for {}. ", fileUri)
         if (project.isDisposed) {
             return
         }

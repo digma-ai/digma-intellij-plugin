@@ -65,7 +65,7 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
 
         documentInfoChangedConnection.subscribe(DocumentInfoChanged.DOCUMENT_INFO_CHANGED_TOPIC,DocumentInfoChanged { psiFile: PsiFile ->
             val psiUri = PsiUtils.psiFileToUri(psiFile)
-            Log.log(logger::debug, "got documentInfoChanged, restarting DaemonCodeAnalyzer for {}", psiUri)
+            Log.log(logger::trace, "got documentInfoChanged, restarting DaemonCodeAnalyzer for {}", psiUri)
             codeLensCache.remove(PsiUtils.psiFileToUri(psiFile))
             ReadAction.nonBlocking(RunnableCallable{
 //                restartFile(psiFile)
@@ -79,7 +79,7 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
 
     fun getCodeLens(psiFile: PsiFile): List<Pair<TextRange, CodeVisionEntry>> {
 
-        Log.log(logger::debug,"got request for code lens for {}",psiFile.virtualFile)
+        Log.log(logger::trace, "got request for code lens for {}", psiFile.virtualFile)
 
         val psiUri = PsiUtils.psiFileToUri(psiFile)
 
@@ -87,13 +87,13 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
         //testing also isNotEmpty to prevent cache misses,the cache may be empty but maybe the document info
         // has changed and the cache was not notified, if It's still empty buildCodeLens will be fast anyway.
         if (codeLensContainer != null && codeLensContainer.codeLensList.isNotEmpty()){
-            Log.log(logger::debug,"returning code lens from cache for {}",psiFile.virtualFile)
+            Log.log(logger::trace, "returning code lens from cache for {}", psiFile.virtualFile)
             return codeLensContainer.codeLensList
         }
 
-        Log.log(logger::debug,"building code lens for {}",psiFile.virtualFile)
+        Log.log(logger::trace, "building code lens for {}", psiFile.virtualFile)
         codeLensContainer = buildCodeLens(psiFile)
-        Log.log(logger::debug,"adding code lens to cache for {}",psiFile.virtualFile)
+        Log.log(logger::trace, "adding code lens to cache for {}", psiFile.virtualFile)
         codeLensCache[psiUri] = codeLensContainer
         return codeLensContainer.codeLensList
     }

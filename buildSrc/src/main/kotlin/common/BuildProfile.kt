@@ -121,12 +121,12 @@ object BuildProfiles {
         Profiles.eap to BuildProfile(
             profile = Profiles.eap,
             // platformVersion is Intellij IDEA Community and Ultimate
-            platformVersion = "232-EAP-SNAPSHOT",
+            platformVersion = "2023.2",
             riderVersion = "2023.2-SNAPSHOT",
             pycharmVersion = "232-EAP-SNAPSHOT",
             riderResharperVersion = "2023.2.0-eap10",
             riderResharperVersionConstant = "PROFILE_2023_2",
-            pythonPluginVersion = "232.8660.142",
+            pythonPluginVersion = "232.8660.185",
             platformVersionCode = "232",
             pluginSinceBuild = "232",
             pluginUntilBuild = "232.*",

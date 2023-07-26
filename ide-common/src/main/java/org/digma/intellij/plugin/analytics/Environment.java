@@ -125,7 +125,7 @@ public class Environment implements EnvironmentsSupplier {
     @Override
     public void refreshNowOnBackground() {
 
-        Log.log(LOGGER::debug, "Refreshing Environments on background thread.");
+        Log.log(LOGGER::trace, "Refreshing Environments on background thread.");
         Backgroundable.ensureBackground(project, "Refreshing Environments", () -> {
             envChangeLock.lock();
             try {
@@ -142,7 +142,7 @@ public class Environment implements EnvironmentsSupplier {
 
     void refreshNow() {
 
-        Log.log(LOGGER::debug, "Refreshing Environments on current thread.");
+        Log.log(LOGGER::info, "Refreshing Environments now on current thread.");
         envChangeLock.lock();
         try {
             //run both refreshEnvironments and updateCurrentEnv under same lock
@@ -164,12 +164,12 @@ public class Environment implements EnvironmentsSupplier {
         envChangeLock.lock();
 
         try {
-            Log.log(LOGGER::debug, "Refresh Environments called");
+            Log.log(LOGGER::trace, "Refresh Environments called");
 
-            Log.log(LOGGER::debug, "Refreshing Environments list");
+            Log.log(LOGGER::trace, "Refreshing Environments list");
             var newEnvironments = analyticsService.getEnvironments();
             if (newEnvironments != null && !newEnvironments.isEmpty()) {
-                Log.log(LOGGER::debug, "Got environments {}", newEnvironments);
+                Log.log(LOGGER::trace, "Got environments {}", newEnvironments);
             } else {
                 Log.log(LOGGER::warn, "Error loading environments: {}", newEnvironments);
                 newEnvironments = new ArrayList<>();
@@ -189,7 +189,7 @@ public class Environment implements EnvironmentsSupplier {
             }
 
             stopWatch.stop();
-            Log.log(LOGGER::debug, "Refresh environments took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS));
+            Log.log(LOGGER::trace, "Refresh environments took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS));
         }
     }
 
@@ -230,7 +230,7 @@ public class Environment implements EnvironmentsSupplier {
 
 
     private void notifyEnvironmentsListChange() {
-        Log.log(LOGGER::debug, "Firing EnvironmentsListChange event for {}", environments);
+        Log.log(LOGGER::trace, "Firing EnvironmentsListChange event for {}", environments);
         if (project.isDisposed()) {
             return;
         }
@@ -245,7 +245,7 @@ public class Environment implements EnvironmentsSupplier {
 
 
     private void notifyEnvironmentChanged(String oldEnv, String newEnv, boolean refreshInsightsView) {
-        Log.log(LOGGER::debug, "Firing EnvironmentChanged event for {}", newEnv);
+        Log.log(LOGGER::trace, "Firing EnvironmentChanged event for {}", newEnv);
         if (project.isDisposed()) {
             return;
         }

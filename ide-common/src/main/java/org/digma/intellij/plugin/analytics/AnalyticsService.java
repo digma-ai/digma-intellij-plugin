@@ -435,18 +435,17 @@ public class AnalyticsService implements Disposable {
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
-
-            ApplicationManager.getApplication().assertIsNonDispatchThread();
-
-
-            //these methods are called by idea debugger and flags are changed while debugging when they should not.
-            //and anyway there methods do not need cross-cutting concerns that this proxy offers.
+            //these methods do not need cross-cutting concerns that this proxy offers and may be called on ui thread.
+            // toString for example will only be called by idea debugger.
             if (method.getName().equals("toString") ||
                     method.getName().equals("hashCode") ||
                     method.getName().equals("equals") ||
                     method.getName().equals("close")) {
                 return method.invoke(analyticsProvider, args);
             }
+
+            //assert not UI thread, should never happen.
+            ApplicationManager.getApplication().assertIsNonDispatchThread();
 
 
             var stopWatch = StopWatch.createStarted();

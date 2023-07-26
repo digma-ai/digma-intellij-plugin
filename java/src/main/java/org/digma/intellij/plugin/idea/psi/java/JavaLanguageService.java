@@ -41,6 +41,7 @@ import org.digma.intellij.plugin.idea.deps.ModulesDepsService;
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
+import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.psi.CanInstrumentMethodResult;
 import org.digma.intellij.plugin.psi.LanguageService;
@@ -54,6 +55,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public class JavaLanguageService implements LanguageService {
 
@@ -96,6 +98,9 @@ public class JavaLanguageService implements LanguageService {
         this.endpointDiscoveryList = List.of(micronautFramework, jaxrsFramework, grpcFramework, springBootFramework);
     }
 
+    public List<IEndpointDiscovery> getListOfEndpointDiscovery() {
+        return endpointDiscoveryList;
+    }
 
     @Override
     public void ensureStartupOnEDT(@NotNull Project project) {
@@ -476,6 +481,11 @@ public class JavaLanguageService implements LanguageService {
     @Override
     public Map<String, Pair<String, Integer>> findWorkspaceUrisForSpanIds(@NotNull List<String> spanIds) {
         return JavaSpanNavigationProvider.getInstance(project).getUrisForSpanIds(spanIds);
+    }
+
+    @Override
+    public Set<EndpointInfo> lookForDiscoveredEndpoints(String endpointId) {
+        return JavaEndpointNavigationProvider.getInstance(project).getEndpointInfos(endpointId);
     }
 
     @Override

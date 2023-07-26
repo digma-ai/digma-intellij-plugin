@@ -9,6 +9,8 @@ import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.discovery.EndpointInfo
+import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.SupportedLanguages
 import org.digma.intellij.plugin.service.EditorService
@@ -45,7 +47,7 @@ class CodeNavigator(val project: Project) {
                     languageService.findWorkspaceUrisForSpanIds(listOf(spanIdWithoutType))
                 }
 
-                val pair:Pair<String, Int>? = spanWorkspaceUris[spanIdWithoutType]
+                val pair: Pair<String, Int>? = spanWorkspaceUris[spanIdWithoutType]
                 if (pair != null) {
                     Log.log(logger::debug, project, "found span code location in maybeNavigateToSpan for span {}", spanIdWithoutType)
                     EDT.ensureEDT {
@@ -78,7 +80,7 @@ class CodeNavigator(val project: Project) {
                     languageService.findWorkspaceUrisForMethodCodeObjectIds(listOf(methodIdWithoutType))
                 }
 
-                val pair:Pair<String, Int>? = methodWorkspaceUris[methodIdWithoutType]
+                val pair: Pair<String, Int>? = methodWorkspaceUris[methodIdWithoutType]
                 if (pair != null) {
                     Log.log(logger::debug, project, "found method code location in maybeNavigateToSpan for method {}", methodIdWithoutType)
                     EDT.ensureEDT {
@@ -100,7 +102,7 @@ class CodeNavigator(val project: Project) {
         return canNavigateToSpan(spanCodeObjectId) || canNavigateToMethod(methodCodeObjectId)
     }
 
-     fun canNavigateToMethod(methodCodeObjectId: String?): Boolean {
+    fun canNavigateToMethod(methodCodeObjectId: String?): Boolean {
         if (methodCodeObjectId == null) {
             return false
         }
@@ -183,6 +185,39 @@ class CodeNavigator(val project: Project) {
             }
         }
         return null
+    }
+
+    fun buildPotentialMethodIds(codeObjectNavigation: CodeObjectNavigation): List<String> {
+        val candidateSet = mutableSetOf<String>()
+        codeObjectNavigation.navigationEntry.spanInfo?.methodCodeObjectId?.let {
+            candidateSet.add(it)
+        }
+        codeObjectNavigation.navigationEntry.navEndpointEntry?.methodCodeObjectId?.let {
+            candidateSet.add(it)
+        }
+
+        codeObjectNavigation.navigationEntry.navEndpointEntry?.endpointCodeObjectId?.also { it ->
+            val endpointId = CodeObjectsUtil.stripEndpointPrefix(it)
+
+            SupportedLanguages.values().forEach { language ->
+                val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
+                if (languageService != null) {
+                    val endpointInfos = ReadActions.ensureReadAction<Set<EndpointInfo>> {
+                        languageService.lookForDiscoveredEndpoints(endpointId)
+                    }
+
+                    endpointInfos.forEach { endpointInfo ->
+                        candidateSet.add(endpointInfo.containingMethodId)
+                    }
+                }
+            }
+        }
+
+        val retList = candidateSet.filter {
+            canNavigateToMethod(it)
+        }
+
+        return retList
     }
 
     fun canNavigateToFile(fileUri: String): Boolean {

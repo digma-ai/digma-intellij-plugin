@@ -10,13 +10,16 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import kotlin.Pair;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
+import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class NoOpLanguageService implements LanguageService {
 
@@ -77,6 +80,11 @@ public class NoOpLanguageService implements LanguageService {
     @Override
     public Map<String, Pair<String, Integer>> findWorkspaceUrisForSpanIds(List<String> spanIds) {
         return new HashMap<>();
+    }
+
+    @Override
+    public Set<EndpointInfo> lookForDiscoveredEndpoints(String endpointId) {
+        return Collections.emptySet();
     }
 
     @Override

@@ -8,13 +8,16 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.SearchScope;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -70,6 +73,7 @@ public class JaxrsFramework implements IEndpointDiscovery {
         return jaxrsPathAnnotationClass != null;
     }
 
+    @Override
     public void endpointDiscovery(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
         lateInit();
         if (!isJaxRsHttpRelevant()) {
@@ -96,7 +100,7 @@ public class JaxrsFramework implements IEndpointDiscovery {
 
                     String httpEndpointCodeObjectId = createHttpEndpointCodeObjectId(currExpectedAnnotation, endpointFullUri);
 
-                    EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, JavaLanguageUtils.createJavaMethodCodeObjectId(currPsiMethod), documentInfo.getFileUri());
+                    EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, JavaLanguageUtils.createJavaMethodCodeObjectId(currPsiMethod), JavaPsiUtils.toFileUri(currPsiMethod), currPsiMethod.getTextOffset());
                     Log.log(LOGGER::debug, "Found endpoint info '{}' for method '{}'", endpointInfo.getId(), endpointInfo.getContainingMethodId());
 
                     MethodInfo methodInfo = documentInfo.getMethods().get(endpointInfo.getContainingMethodId());
@@ -106,6 +110,20 @@ public class JaxrsFramework implements IEndpointDiscovery {
                 }
             }
         }
+    }
+
+    @Override
+    public List<EndpointInfo> lookForEndpoints(@NotNull SearchScope searchScope) {
+        lateInit();
+        if (!isJaxRsHttpRelevant()) {
+            return Collections.emptyList();
+        }
+
+        List<EndpointInfo> retList = new ArrayList<>();
+
+        //TODO: impl and combine with method endpointDiscovery
+
+        return retList;
     }
 
     protected static String combinePaths(PsiAnnotation annotOfPrefix, PsiAnnotation annotOfSuffix) {

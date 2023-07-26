@@ -128,25 +128,25 @@ public class DocumentInfoService {
     }
 
     public UsageStatusResult getCachedUsageStatus(@NotNull MethodInfo methodInfo, List<String> objectIds) {
-        Log.log(LOGGER::debug, "Requesting cached usage status for MethodInfo {} and for objectIds {} ", methodInfo.getId(), objectIds);
+        Log.log(LOGGER::trace, "Requesting cached usage status for MethodInfo {} and for objectIds {} ", methodInfo.getId(), objectIds);
 
         DocumentInfoContainer documentInfoContainer = documents.get(methodInfo.getContainingFileUri());
         if (documentInfoContainer == null) {
-            Log.log(LOGGER::debug, "DocumentInfoContainer is null ");
+            Log.log(LOGGER::trace, "DocumentInfoContainer is null ");
             return new UsageStatusResult(Collections.emptyList(), Collections.emptyList());
         }
         return documentInfoContainer.getUsageStatus();
     }
 
     public List<CodeObjectInsight> getCachedMethodInsights(@NotNull MethodInfo methodInfo) {
-        Log.log(LOGGER::debug, "Requesting cached insights for MethodInfo {}", methodInfo.getId());
+        Log.log(LOGGER::trace, "Requesting cached insights for MethodInfo {}", methodInfo.getId());
 
         DocumentInfoContainer documentInfoContainer = documents.get(methodInfo.getContainingFileUri());
         if (documentInfoContainer != null) {
-            Log.log(LOGGER::debug, "DocumentInfoContainer exists for MethodInfo {}, getting insights", methodInfo.getId());
+            Log.log(LOGGER::trace, "DocumentInfoContainer exists for MethodInfo {}, getting insights", methodInfo.getId());
             return documentInfoContainer.getInsightsForMethod(methodInfo.getId());
         }
-        Log.log(LOGGER::debug, "DocumentInfoContainer does not exist for MethodInfo {}", methodInfo.getId());
+        Log.log(LOGGER::trace, "DocumentInfoContainer does not exist for MethodInfo {}", methodInfo.getId());
         return Collections.emptyList();
     }
 

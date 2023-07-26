@@ -70,7 +70,7 @@ public class DocumentInfoContainer {
      */
     public void update(@NotNull DocumentInfo documentInfo) {
 
-        Log.log(LOGGER::debug, "Updating document for {}: {}", psiFile.getVirtualFile(), documentInfo);
+        Log.log(LOGGER::trace, "Updating document for {}: {}", psiFile.getVirtualFile(), documentInfo);
 
         //maybe documentInfo already exists, override it anyway with a new one from analysis
         this.documentInfo = documentInfo;
@@ -79,7 +79,7 @@ public class DocumentInfoContainer {
     }
 
     public void updateCache() {
-        Log.log(LOGGER::debug, "Refreshing document backend data for {}: ", psiFile.getVirtualFile());
+        Log.log(LOGGER::trace, "Refreshing document backend data for {}: ", psiFile.getVirtualFile());
         loadAllInsightsForCurrentDocument();
     }
 

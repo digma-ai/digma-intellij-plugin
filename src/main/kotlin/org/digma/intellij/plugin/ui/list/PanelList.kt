@@ -8,7 +8,6 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.common.Laf.scaleBorders
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
-import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.Graphics
@@ -87,7 +86,7 @@ abstract class PanelList(val project: Project, private var model: PanelListModel
         //create a new instance for every rebuild
         val panelsLayoutHelper = PanelsLayoutHelper()
 
-        Log.log(logger::debug, "{} in rebuild,model size: {}",this.javaClass.simpleName, model.size)
+        Log.log(logger::trace, "{} in rebuild,model size: {}", this.javaClass.simpleName, model.size)
 
         if (components.isNotEmpty()) {
             this.components.forEach {
@@ -154,7 +153,7 @@ abstract class PanelList(val project: Project, private var model: PanelListModel
 
     override fun getPreferredScrollableViewportSize(): Dimension? {
 
-        Log.log(logger::debug, "in getPreferredScrollableViewportSize,my size: {}", size)
+        Log.log(logger::trace, "in getPreferredScrollableViewportSize,my size: {}", size)
 
         if (scrollablePanelList != null){
             return Dimension(scrollablePanelList!!.size.width-20, scrollablePanelList!!.size.height-20)

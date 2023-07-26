@@ -8,16 +8,16 @@ set -e
 
 # there is no need to send the lowest profile, its the default if not sent,its here just as example
 
-./gradlew clean buildPlugin -PbuildProfile=lowest
-./gradlew clean buildPlugin -PbuildProfile=latest
-./gradlew clean buildPlugin -PbuildProfile=eap
+./gradlew clean buildPlugin runPluginVerifier -PbuildProfile=lowest
+./gradlew clean buildPlugin runPluginVerifier -PbuildProfile=latest
+./gradlew clean buildPlugin runPluginVerifier -PbuildProfile=eap
 
 
 ###################### idea ultimate
 
-./gradlew clean buildPlugin -PbuildWIthUltimate=true
-./gradlew clean buildPlugin -PbuildWIthUltimate=true -PbuildProfile=latest
-./gradlew clean buildPlugin -PbuildWIthUltimate=true -PbuildProfile=eap
+./gradlew clean buildPlugin runPluginVerifier -PbuildWIthUltimate=true
+./gradlew clean buildPlugin runPluginVerifier -PbuildWIthUltimate=true -PbuildProfile=latest
+./gradlew clean buildPlugin runPluginVerifier -PbuildWIthUltimate=true -PbuildProfile=eap
 
 
 

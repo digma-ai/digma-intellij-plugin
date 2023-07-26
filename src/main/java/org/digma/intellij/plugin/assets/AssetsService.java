@@ -162,7 +162,7 @@ public final class AssetsService implements Disposable {
         try {
             Log.log(logger::debug, project, "got get assets request");
             String assets = AnalyticsService.getInstance(project).getAssets();
-            Log.log(logger::debug, project, "got assets [{}]", assets);
+            Log.log(logger::trace, project, "got assets [{}]", assets);
             return assets;
         } catch (AnalyticsServiceException e) {
             Log.warnWithException(logger,project,e,"Error loading assets {}",e.getMessage());

@@ -44,7 +44,7 @@ public class CodeLensProvider {
         }
 
         var codeLens = buildCodeLens(documentInfo, false);
-        Log.log(LOGGER::debug, "Got code lens for {}, {}", psiFile.getVirtualFile(), codeLens);
+        Log.log(LOGGER::trace, "Got code lens for {}, {}", psiFile.getVirtualFile(), codeLens);
         return codeLens;
     }
 

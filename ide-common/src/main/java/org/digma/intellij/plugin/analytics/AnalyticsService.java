@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.analytics;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
@@ -434,6 +435,10 @@ public class AnalyticsService implements Disposable {
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
+
+            ApplicationManager.getApplication().assertIsNonDispatchThread();
+
+
             //these methods are called by idea debugger and flags are changed while debugging when they should not.
             //and anyway there methods do not need cross-cutting concerns that this proxy offers.
             if (method.getName().equals("toString") ||
@@ -448,8 +453,8 @@ public class AnalyticsService implements Disposable {
 
             try {
 
-                if (LOGGER.isDebugEnabled()) {
-                    Log.log(LOGGER::debug, "Sending request to {}: args '{}'", method.getName(), argsToString(args));
+                if (LOGGER.isTraceEnabled()) {
+                    Log.log(LOGGER::trace, "Sending request to {}: args '{}'", method.getName(), argsToString(args));
                 }
 
                 Object result;
@@ -462,8 +467,8 @@ public class AnalyticsService implements Disposable {
                     result = method.invoke(analyticsProvider, args);
                 }
 
-                if (LOGGER.isDebugEnabled()) {
-                    Log.log(LOGGER::debug, "Got response from {}: args '{}', -----------------" +
+                if (LOGGER.isTraceEnabled()) {
+                    Log.log(LOGGER::trace, "Got response from {}: args '{}', -----------------" +
                             "Result '{}'", method.getName(), argsToString(args), resultToString(result));
                 }
 
@@ -506,13 +511,13 @@ public class AnalyticsService implements Disposable {
 
             } catch (Exception e) {
                 errorReportingHelper.addIfNewError(e);
-                Log.log(LOGGER::debug, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getMessage());
+                Log.log(LOGGER::warn, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getMessage());
                 LOGGER.error(e);
                 ActivityMonitor.getInstance(project).registerError(e, "Error invoking AnalyticsProvider");
                 throw e;
             } finally {
                 stopWatch.stop();
-                Log.log(LOGGER::debug, "Api call {} took {} milliseconds", method.getName(), stopWatch.getTime(TimeUnit.MILLISECONDS));
+                Log.log(LOGGER::trace, "Api call {} took {} milliseconds", method.getName(), stopWatch.getTime(TimeUnit.MILLISECONDS));
             }
         }
 

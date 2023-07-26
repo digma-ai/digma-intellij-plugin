@@ -57,7 +57,7 @@ public class InsightsProvider {
             final UsageStatusResult usageStatus = documentInfoService.getCachedUsageStatus(methodInfo, objectIds);
             InsightsViewBuilder insightsViewBuilder = new InsightsViewBuilder(buildersHolder);
             List<ListViewItem<?>> listViewItems = insightsViewBuilder.build(project, methodInfo, codeObjectInsights);
-            Log.log(LOGGER::debug, "ListViewItems for {}: {}", methodInfo.getId(), listViewItems);
+            Log.log(LOGGER::trace, "ListViewItems for {}: {}", methodInfo.getId(), listViewItems);
             return new InsightsListContainer(listViewItems, codeObjectInsights.size(), usageStatus);
         } finally {
             stopWatch.stop();

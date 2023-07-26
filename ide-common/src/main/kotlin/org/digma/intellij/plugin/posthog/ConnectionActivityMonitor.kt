@@ -36,7 +36,7 @@ class ConnectionActivityMonitor(private val project: Project) : AnalyticsService
 
     private fun asyncFetchAndRegisterServerVersion(){
         Log.log(LOGGER::trace, "Fetching server about info")
-        Backgroundable.ensureBackground(project, "Fetching server about info") {
+        Backgroundable.runInNewBackgroundThread(project, "Fetching server about info") {
             try {
                 // [!] The "about" endpoint must NOT be called via the proxy
                 //     so failing requests won't mark the connection as "lost",

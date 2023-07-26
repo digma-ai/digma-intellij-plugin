@@ -29,13 +29,13 @@ public class BulkFileChangeListenerForJavaSpanNavigation extends AbstractBulkFil
                 if (javaLanguageService.isRelevant(file)) {
                     if (vFileEvent instanceof VFileDeleteEvent) {
                         JavaSpanNavigationProvider.getInstance(project).fileDeleted(vFileEvent.getFile());
+                        JavaEndpointNavigationProvider.getInstance(project).fileDeleted(vFileEvent.getFile());
                     } else {
                         JavaSpanNavigationProvider.getInstance(project).fileChanged(vFileEvent.getFile());
+                        JavaEndpointNavigationProvider.getInstance(project).fileChanged(vFileEvent.getFile());
                     }
                 }
             }
         });
     }
 }
-
-

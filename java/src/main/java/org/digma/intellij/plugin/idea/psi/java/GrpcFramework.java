@@ -5,20 +5,20 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiField;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.ClassInheritorsSearch;
 import com.intellij.util.Query;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
-import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Objects;
+import java.util.Collections;
+import java.util.List;
 
 public class GrpcFramework implements IEndpointDiscovery {
     private static final Logger LOGGER = Logger.getInstance(GrpcFramework.class);
@@ -50,13 +50,16 @@ public class GrpcFramework implements IEndpointDiscovery {
         return bindableServiceAnnotationClass != null;
     }
 
-    public void endpointDiscovery(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
+    @Override
+    public List<EndpointInfo> lookForEndpoints(@NotNull SearchScope searchScope) {
         lateInit();
         if (!isGrpcServerRelevant()) {
-            return;
+            return Collections.emptyList();
         }
 
-        Query<PsiClass> grpcServerClassesInFile = ClassInheritorsSearch.search(bindableServiceAnnotationClass, GlobalSearchScope.fileScope(psiFile), true);
+        List<EndpointInfo> retList = new ArrayList<>();
+
+        Query<PsiClass> grpcServerClassesInFile = ClassInheritorsSearch.search(bindableServiceAnnotationClass, searchScope, true);
 
         for (PsiClass currGrpcServerClass : grpcServerClassesInFile) {
             if (JavaPsiUtils.isBaseClass(currGrpcServerClass)) {
@@ -65,27 +68,27 @@ public class GrpcFramework implements IEndpointDiscovery {
                 continue;
             }
             Log.log(LOGGER::debug, "endpointDiscovery, bingo - its a GRPC server class, its fqn='{}'", currGrpcServerClass.getQualifiedName());
-            addEndpointMethods(currGrpcServerClass, documentInfo);
+            List<EndpointInfo> endpointsAtClass = addEndpointMethods(currGrpcServerClass);
+            retList.addAll(endpointsAtClass);
         }
+        return retList;
     }
 
-    protected void addEndpointMethods(@NotNull PsiClass grpcServerClass, @NotNull DocumentInfo documentInfo) {
+    protected List<EndpointInfo> addEndpointMethods(@NotNull PsiClass grpcServerClass) {
         String grpcServiceName = evaluateServiceName(grpcServerClass);
         Log.log(LOGGER::debug, "addEndpointMethods for grpcServerClass fqn='{}' with evaluated serviceName='{}'", grpcServerClass.getQualifiedName(), grpcServiceName);
 
+        List<EndpointInfo> retList = new ArrayList<>(16);
         Collection<PsiMethod> psiMethods = Arrays.asList(grpcServerClass.getMethods());
         for (PsiMethod currPsiMethod : psiMethods) {
             String methodCodeObjectId = JavaLanguageUtils.createJavaMethodCodeObjectId(currPsiMethod);
 
             String endpointId = createEndpointId(grpcServiceName, currPsiMethod);
             //PsiParameterList parameterList = currPsiMethod.getParameterList(); //TODO: maybe search for parameters of type io.grpc.stub.StreamObserver
-            EndpointInfo endpointInfo = new EndpointInfo(endpointId, methodCodeObjectId, documentInfo.getFileUri());
-
-            MethodInfo methodInfo = documentInfo.getMethods().get(endpointInfo.getContainingMethodId());
-            //this method must exist in the document info
-            Objects.requireNonNull(methodInfo, "method info " + endpointInfo.getContainingMethodId() + " must exist in DocumentInfo for " + documentInfo.getFileUri());
-            methodInfo.addEndpoint(endpointInfo);
+            EndpointInfo endpointInfo = new EndpointInfo(endpointId, methodCodeObjectId, JavaPsiUtils.toFileUri(currPsiMethod), currPsiMethod.getTextOffset());
+            retList.add(endpointInfo);
         }
+        return retList;
     }
 
     @NotNull

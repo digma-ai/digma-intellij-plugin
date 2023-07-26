@@ -15,6 +15,7 @@ import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
+import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.jetbrains.annotations.NotNull;
@@ -22,11 +23,11 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public interface LanguageService extends Disposable {
 
     Logger LOGGER = Logger.getInstance(LanguageService.class);
-
 
 
     @Override
@@ -62,7 +63,7 @@ public interface LanguageService extends Disposable {
                     languageService.ensureStartupOnEDT(project);
                 }
             } catch (Throwable e) {
-                Log.debugWithException(LOGGER,e,"exception in ensureStartupOnEDTForAll {}",e.getMessage());
+                Log.debugWithException(LOGGER, e, "exception in ensureStartupOnEDTForAll {}", e.getMessage());
                 //catch Throwable because there may be errors.
                 //ignore: some classes will fail to load , for example the CSharpLanguageService
                 //will fail to load if it's not rider because it depends on rider classes.
@@ -90,8 +91,8 @@ public interface LanguageService extends Disposable {
      * C# on Rider is the main reason for this method because only the C# language service has access to the solution
      * and can test if it's fully loaded.
      */
-    static void runWhenSmartForAll(@NotNull Project project,@NotNull Runnable task){
-        Log.log(LOGGER::debug,"runWhenSmartForAll invoked");
+    static void runWhenSmartForAll(@NotNull Project project, @NotNull Runnable task) {
+        Log.log(LOGGER::debug, "runWhenSmartForAll invoked");
         for (SupportedLanguages value : SupportedLanguages.values()) {
 
             try {
@@ -99,11 +100,11 @@ public interface LanguageService extends Disposable {
                 Class<? extends LanguageService> clazz = (Class<? extends LanguageService>) Class.forName(value.getLanguageServiceClassName());
                 LanguageService languageService = project.getService(clazz);
                 if (languageService != null) {
-                    Log.log(LOGGER::debug,"calling runWhenSmart for {}",languageService);
+                    Log.log(LOGGER::debug, "calling runWhenSmart for {}", languageService);
                     languageService.runWhenSmart(task);
                 }
             } catch (Throwable e) {
-                Log.debugWithException(LOGGER,e,"exception in runWhenSmartForAll {}",e.getMessage());
+                Log.debugWithException(LOGGER, e, "exception in runWhenSmartForAll {}", e.getMessage());
                 //catch Throwable because there may be errors.
                 //ignore: some classes will fail to load , for example the CSharpLanguageService
                 //will fail to load if it's not rider because it depends on rider classes.
@@ -184,7 +185,6 @@ public interface LanguageService extends Disposable {
     }
 
 
-
     static LanguageService findLanguageServiceByName(Project project, String languageServiceClassName) {
         try {
             return (LanguageService) project.getService(Class.forName(languageServiceClassName));
@@ -243,7 +243,7 @@ public interface LanguageService extends Disposable {
     //some language services need the editor, for example CSharpLanguageService needs to take
     // getProjectModelId from the selected editor which is the preferred way to find a IPsiSourceFile in resharper. it may be null.
     @NotNull
-    MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile,@Nullable Editor selectedEditor, int caretOffset);
+    MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int caretOffset);
 
 
     /**
@@ -261,6 +261,8 @@ public interface LanguageService extends Disposable {
     Map<String, Pair<String, Integer>> findWorkspaceUrisForMethodCodeObjectIds(List<String> methodCodeObjectIds);
 
     Map<String, Pair<String, Integer>> findWorkspaceUrisForSpanIds(List<String> spanIds);
+
+    Set<EndpointInfo> lookForDiscoveredEndpoints(String endpointId);
 
     /**
      * let language services do something on environmentChanged. for example to update the current method context.
@@ -281,17 +283,17 @@ public interface LanguageService extends Disposable {
 
     boolean isRelevant(PsiFile psiFile);
 
-    void refreshMethodUnderCaret(@NotNull Project project,@NotNull  PsiFile psiFile, @Nullable Editor selectedEditor, int offset);
+    void refreshMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int offset);
 
     boolean isCodeVisionSupported();
 
     @NotNull List<Pair<TextRange, CodeVisionEntry>> getCodeLens(@NotNull PsiFile psiFile);
 
-    default CanInstrumentMethodResult canInstrumentMethod(@NotNull Project project, String methodId){
+    default CanInstrumentMethodResult canInstrumentMethod(@NotNull Project project, String methodId) {
         return CanInstrumentMethodResult.Failure();
     }
 
-    default boolean instrumentMethod(@NotNull CanInstrumentMethodResult result){
+    default boolean instrumentMethod(@NotNull CanInstrumentMethodResult result) {
         return false;
     }
 

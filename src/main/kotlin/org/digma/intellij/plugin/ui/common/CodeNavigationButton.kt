@@ -18,7 +18,6 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
-import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation
 import org.digma.intellij.plugin.model.rest.navigation.NavItemType
 import org.digma.intellij.plugin.model.rest.navigation.SpanNavigationItem
 import org.digma.intellij.plugin.navigation.NavigationModel
@@ -69,11 +68,7 @@ class CodeNavigationButton(val project: Project) : TargetButton(project, true) {
         try {
             val codeLessSpan = getCodeLessSpan()
             if (codeLessSpan != null) {
-                val objectIdToUse = CodeObjectsUtil.addSpanTypeToId(codeLessSpan.spanId)
-                val codeObjectNavigation =
-                    project.service<AnalyticsService>().getCodeObjectNavigation(objectIdToUse)
-
-                navigate(codeObjectNavigation)
+                tryNavigate(codeLessSpan.spanId)
                 return
             }
 
@@ -132,8 +127,6 @@ class CodeNavigationButton(val project: Project) : TargetButton(project, true) {
     }
 
 
-
-
     private fun updateState() {
         if (isEnabled) {
             cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
@@ -149,29 +142,45 @@ class CodeNavigationButton(val project: Project) : TargetButton(project, true) {
     }
 
 
-    private fun navigate(
-        codeObjectNavigation: CodeObjectNavigation,
-    ) {
-
-        val spanId = codeObjectNavigation.navigationEntry.spanInfo?.spanCodeObjectId
-        val methodId = codeObjectNavigation.navigationEntry.spanInfo?.methodCodeObjectId
-
+    private fun tryNavigate(spanId: String) {
         val codeNavigator = project.service<CodeNavigator>()
 
         //first try direct navigation, if can't then build navigation list and show user
-        if (codeNavigator.canNavigateToSpan(spanId) || codeNavigator.canNavigateToMethod(methodId)) {
-            EDT.ensureEDT {
-                project.service<InsightsViewOrchestrator>().showInsightsForSpanOrMethodAndNavigateToCode(spanId, methodId)
-            }
-            Log.log(logger::debug, project, "Navigation to direct span succeeded for {},{}", spanId, methodId)
+        if (codeNavigator.maybeNavigateToSpan(spanId)) {
+            Log.log(logger::debug, project, "Navigation to direct span succeeded for span {}", spanId)
             ActivityMonitor.getInstance(project).registerNavigationButtonClicked(true)
         } else {
+            tryNavigateToCorrelatedMethods(spanId)
+        }
+    }
 
+    private fun tryNavigateToCorrelatedMethods(spanId: String) {
+        val spanCodeObjectId = CodeObjectsUtil.addSpanTypeToId(spanId)
+
+        val codeNavigator = project.service<CodeNavigator>()
+        val codeObjectNavigation = project.service<AnalyticsService>().getCodeObjectNavigation(spanCodeObjectId)
+        val methodIds = codeNavigator.buildPotentialMethodIds(codeObjectNavigation)
+
+        var managedToNav = false
+        if (methodIds.size == 1) {
+            val methodId = methodIds.first()
+
+            if (codeNavigator.canNavigateToMethod(methodId)) {
+                managedToNav = true
+                EDT.ensureEDT {
+                    project.service<InsightsViewOrchestrator>().showInsightsForSpanOrMethodAndNavigateToCode(spanCodeObjectId, methodId)
+                }
+                Log.log(logger::debug, project, "Navigation to method '{}' succeeded for span {}", methodId, spanCodeObjectId)
+            }
+            ActivityMonitor.getInstance(project).registerNavigationButtonClicked(true)
+        }
+
+        if (!managedToNav) {
             val closestParentItems = codeObjectNavigation.navigationEntry.closestParentSpans
                 .filter { spanNavigationItem -> spanNavigationItem.navItemType == NavItemType.ClosestParentInternal }
                 .sortedBy { spanNavigationItem -> spanNavigationItem.distance }
                 .filter { spanNavigationItem ->
-                    project.service<CodeNavigator>()
+                    codeNavigator
                         .canNavigateToSpanOrMethod(spanNavigationItem.spanCodeObjectId, spanNavigationItem.methodCodeObjectId)
                 }
 
@@ -179,12 +188,14 @@ class CodeNavigationButton(val project: Project) : TargetButton(project, true) {
                 .filter { spanNavigationItem -> spanNavigationItem.navItemType == NavItemType.ClosestParentWithMethodCodeObjectId }
                 .sortedBy { spanNavigationItem -> spanNavigationItem.distance }
                 .filter { spanNavigationItem ->
-                    project.service<CodeNavigator>()
+                    codeNavigator
                         .canNavigateToSpanOrMethod(spanNavigationItem.spanCodeObjectId, spanNavigationItem.methodCodeObjectId)
                 }
 
+            val hasAnyCodeLocation =
+                closestParentItems.isNotEmpty() || closestParentWithMethodItems.isNotEmpty() || methodIds.isNotEmpty()
 
-            if (closestParentItems.isEmpty() && closestParentWithMethodItems.isEmpty()) {
+            if (!hasAnyCodeLocation) {
                 ActivityMonitor.getInstance(project).registerNavigationButtonClicked(false)
                 EDT.ensureEDT {
                     HintManager.getInstance().showHint(
@@ -196,12 +207,12 @@ class CodeNavigationButton(val project: Project) : TargetButton(project, true) {
                 ActivityMonitor.getInstance(project).registerNavigationButtonClicked(true)
                 EDT.ensureEDT {
                     HintManager.getInstance().showHint(
-                        NavigationList(project, closestParentItems, closestParentWithMethodItems), RelativePoint.getSouthWestOf(this),
+                        NavigationList(project, methodIds, closestParentItems, closestParentWithMethodItems),
+                        RelativePoint.getSouthWestOf(this),
                         HintManager.HIDE_BY_ESCAPE, 5000
                     )
                 }
             }
-
         }
     }
 
@@ -210,16 +221,16 @@ class CodeNavigationButton(val project: Project) : TargetButton(project, true) {
         val panelModel = project.service<InsightsViewService>().model
         return if (panelModel.scope is CodeLessSpanScope) {
             (panelModel.scope as CodeLessSpanScope).getSpan()
-        }else {
+        } else {
             null
         }
     }
 
     private fun getMethodInfo(): MethodInfo? {
         val panelModel = project.service<InsightsViewService>().model
-        return if ( panelModel.scope is MethodScope) {
+        return if (panelModel.scope is MethodScope) {
             (panelModel.scope as MethodScope).getMethodInfo()
-        }else{
+        } else {
             null
         }
     }
@@ -228,13 +239,14 @@ class CodeNavigationButton(val project: Project) : TargetButton(project, true) {
         val panelModel = project.service<InsightsViewService>().model
         return if (panelModel.scope is DocumentScope) {
             (panelModel.scope as DocumentScope).getDocumentInfo()
-        }else {
+        } else {
             null
         }
     }
 
     private class NavigationList(
         project: Project,
+        methodIds: List<String>,
         closestParentItems: List<SpanNavigationItem>,
         closestParentWithMethodItems: List<SpanNavigationItem>,
     ) : RoundedPanel(30) {
@@ -242,6 +254,24 @@ class CodeNavigationButton(val project: Project) : TargetButton(project, true) {
         init {
 
             val panel = panel {
+
+                if (methodIds.isNotEmpty()) {
+                    row {
+                        @Suppress("DialogTitleCapitalization")
+                        label("Code Location")
+                    }
+                    methodIds.forEach { methodId ->
+                        val displayName = CodeObjectsUtil.getShortNameForDisplay(methodId)
+                        row {
+                            icon(Laf.Icons.General.CODE_LOCATION_LINK).gap(RightGap.SMALL)
+                            link(displayName) {
+                                project.service<InsightsViewOrchestrator>()
+                                    .showInsightsForSpanOrMethodAndNavigateToCode(null, methodId)
+                                HintManager.getInstance().hideAllHints()
+                            }
+                        }
+                    }
+                }
 
                 if (closestParentItems.isNotEmpty()) {
                     row {

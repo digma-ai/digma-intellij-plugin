@@ -8,15 +8,17 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.util.Query;
-import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -87,21 +89,20 @@ public class SpringBootFramework implements IEndpointDiscovery {
         return controllerAnnotationClass != null;
     }
 
-    public void endpointDiscovery(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
+    @Override
+    public List<EndpointInfo> lookForEndpoints(@NotNull SearchScope searchScope) {
         lateInit();
         if (!isSpringBootWebRelevant()) {
-            return;
+            return Collections.emptyList();
         }
 
+        List<EndpointInfo> retList = new ArrayList<>();
+
         httpMethodsAnnotations.forEach(currAnnotation -> {
-            Query<PsiMethod> psiMethodsInFile = AnnotatedElementsSearch.searchPsiMethods(currAnnotation.getPsiClass(), GlobalSearchScope.fileScope(psiFile));
+            Query<PsiMethod> psiMethodsInFile = AnnotatedElementsSearch.searchPsiMethods(currAnnotation.getPsiClass(), searchScope);
 
             for (PsiMethod currPsiMethod : psiMethodsInFile) {
                 final String methodId = JavaLanguageUtils.createJavaMethodCodeObjectId(currPsiMethod);
-                final MethodInfo methodInfo = documentInfo.getMethods().get(methodId);
-                //this method must exist in the document info
-                Objects.requireNonNull(methodInfo, "method info " + methodId + " must exist in DocumentInfo for " + documentInfo.getFileUri());
-
                 final PsiAnnotation mappingPsiAnnotationOnMethod = currPsiMethod.getAnnotation(currAnnotation.getClassNameFqn());
                 if (mappingPsiAnnotationOnMethod == null) {
                     continue; // very unlikely
@@ -131,13 +132,12 @@ public class SpringBootFramework implements IEndpointDiscovery {
 
                 for (String currSuffix : endpointUriSuffixes) {
                     String httpEndpointCodeObjectId = createHttpEndpointCodeObjectId(httpMethodName, endpointUriPrefix, currSuffix);
-                    EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, methodId, documentInfo.getFileUri());
-                    Log.log(LOGGER::debug, "Found endpoint info '{}' for method '{}'", endpointInfo.getId(), endpointInfo.getContainingMethodId());
-
-                    methodInfo.addEndpoint(endpointInfo);
+                    EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, methodId, JavaPsiUtils.toFileUri(currPsiMethod), currPsiMethod.getTextOffset());
+                    retList.add(endpointInfo);
                 }
             }
         });
+        return retList;
     }
 
     @Nullable

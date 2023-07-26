@@ -6,18 +6,18 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.util.Query;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
-import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -76,14 +76,17 @@ public class MicronautFramework implements IEndpointDiscovery {
         return controllerAnnotationClass != null;
     }
 
-    public void endpointDiscovery(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
+    @Override
+    public List<EndpointInfo> lookForEndpoints(@NotNull SearchScope searchScope) {
         lateInit();
         if (!isMicronautHttpRelevant()) {
-            return;
+            return Collections.emptyList();
         }
 
+        List<EndpointInfo> retList = new ArrayList<>();
+
         httpMethodsAnnotations.forEach(currAnnotation -> {
-            Query<PsiMethod> psiMethodsInFile = AnnotatedElementsSearch.searchPsiMethods(currAnnotation.getPsiClass(), GlobalSearchScope.fileScope(psiFile));
+            Query<PsiMethod> psiMethodsInFile = AnnotatedElementsSearch.searchPsiMethods(currAnnotation.getPsiClass(), searchScope);
 
             for (PsiMethod currPsiMethod : psiMethodsInFile) {
                 PsiClass controllerClass = currPsiMethod.getContainingClass();
@@ -102,15 +105,14 @@ public class MicronautFramework implements IEndpointDiscovery {
                     continue; // skip this method, since endpoint value could not be determined
                 }
 
-                EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, methodCodeObjectId, documentInfo.getFileUri());
+                EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, methodCodeObjectId, JavaPsiUtils.toFileUri(currPsiMethod), currPsiMethod.getTextOffset());
                 Log.log(LOGGER::debug, "Found endpoint info '{}' for method '{}'", endpointInfo.getId(), endpointInfo.getContainingMethodId());
 
-                MethodInfo methodInfo = documentInfo.getMethods().get(endpointInfo.getContainingMethodId());
-                //this method must exist in the document info
-                Objects.requireNonNull(methodInfo, "method info " + endpointInfo.getContainingMethodId() + " must exist in DocumentInfo for " + documentInfo.getFileUri());
-                methodInfo.addEndpoint(endpointInfo);
+                retList.add(endpointInfo);
+
             }
         });
+        return retList;
     }
 
     @Nullable

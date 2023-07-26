@@ -115,7 +115,10 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
 
     private fun reload() {
         Log.log(logger::debug, "reload called")
-        val insights = summariesProvider.globalInsights
+        var insights = summariesProvider.globalInsights
+        if (insights.size > 10) {
+            insights = insights.subList(0, 20)
+        }
         val environmentStatuses = summariesProvider.environmentStatuses
         model.insights = insights
         model.usageStatusResult = UsageStatusResult(emptyList(), environmentStatuses)

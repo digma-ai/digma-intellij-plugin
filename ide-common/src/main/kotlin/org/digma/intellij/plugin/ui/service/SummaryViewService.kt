@@ -94,7 +94,7 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
     }
 
     private fun reloadSummariesPanelInBackground(project: Project) {
-        Log.log(logger::debug, "reloadSummariesPanelInBackground called")
+        Log.log(logger::trace, "reloadSummariesPanelInBackground called")
         val task = Runnable {
             reloadSummariesPanel()
         }
@@ -103,18 +103,18 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
 
     private fun reloadSummariesPanel() {
         rebuildPanelLock.lock()
-        Log.log(logger::debug, "Lock acquired for reload Summaries panel process.")
+        Log.log(logger::trace, "Lock acquired for reload Summaries panel process.")
         try {
             reload()
         } finally {
             rebuildPanelLock.unlock()
-            Log.log(logger::debug, "Lock released for reload Summaries panel process.")
+            Log.log(logger::trace, "Lock released for reload Summaries panel process.")
         }
     }
 
 
     private fun reload() {
-        Log.log(logger::debug, "reload called")
+        Log.log(logger::trace, "reload called")
         var insights = summariesProvider.globalInsights
         if (insights.size > 10) {
             insights = insights.subList(0, 20)
@@ -127,7 +127,7 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
     }
 
     fun empty() {
-        Log.log(logger::debug, "empty called")
+        Log.log(logger::trace, "empty called")
         model.insights = Collections.emptyList()
         model.usageStatusResult = Models.Empties.EmptyUsageStatusResult
         model.count = 0

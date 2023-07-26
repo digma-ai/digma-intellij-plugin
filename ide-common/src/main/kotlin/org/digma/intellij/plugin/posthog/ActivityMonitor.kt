@@ -167,7 +167,6 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
         var hash = hash(message);
         if (errorCache!!.getIfPresent(hash) != null)
             return;
-
         errorCache!!.put(hash, hash);
 
         postHog?.capture(
@@ -185,6 +184,12 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
     }
 
     fun reportBackendError(message: String, action: String) {
+
+        var hash = hash(message);
+        if (errorCache!!.getIfPresent(hash) != null)
+            return;
+        errorCache!!.put(hash, hash);
+
         postHog?.capture(
             userId,
             "error",

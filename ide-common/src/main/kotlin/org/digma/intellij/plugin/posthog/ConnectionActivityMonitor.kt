@@ -35,6 +35,7 @@ class ConnectionActivityMonitor(private val project: Project) : AnalyticsService
     }
 
     private fun asyncFetchAndRegisterServerVersion(){
+        Log.log(LOGGER::trace, "Fetching server about info")
         Backgroundable.ensureBackground(project, "Fetching server about info") {
             try {
                 // [!] The "about" endpoint must NOT be called via the proxy
@@ -44,7 +45,7 @@ class ConnectionActivityMonitor(private val project: Project) : AnalyticsService
                 val about = AnalyticsService.getInstance(project).analyticsProvider.about
                 ActivityMonitor.getInstance(project).registerServerInfo(about)
             } catch (e: Exception) {
-                Log.log(LOGGER::debug, "Failed to get+register server version: {}", e.message);
+                Log.warnWithException(LOGGER, e, "Failed to get+register server version: {}", e.message);
             }
         }
     }

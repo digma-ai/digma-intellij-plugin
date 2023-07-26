@@ -24,6 +24,7 @@ import org.cef.handler.CefMessageRouterHandlerAdapter;
 import org.digma.intellij.plugin.PluginId;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
+import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.CommonUtils;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator;
@@ -183,38 +184,43 @@ public class RecentActivityService implements Disposable {
         msgRouter.addHandler(new CefMessageRouterHandlerAdapter() {
             @Override
             public boolean onQuery(CefBrowser browser, CefFrame frame, long queryId, String request, boolean persistent, CefQueryCallback callback) {
-                Log.log(logger::debug, "request: {}", request);
-                JcefMessageRequest reactMessageRequest = parseJsonToObject(request, JcefMessageRequest.class);
-                if (RECENT_ACTIVITY_INITIALIZE.equalsIgnoreCase(reactMessageRequest.getAction())) {
-                    processRecentActivityInitialized();
-                    RecentActivityService.getInstance(project).runInitTask();
-                }
-                if (RECENT_ACTIVITY_GO_TO_SPAN.equalsIgnoreCase(reactMessageRequest.getAction())) {
-                    RecentActivityGoToSpanRequest recentActivityGoToSpanRequest = parseJsonToObject(request, RecentActivityGoToSpanRequest.class);
-                    processRecentActivityGoToSpanRequest(recentActivityGoToSpanRequest.getPayload(), project);
-                }
-                if (RECENT_ACTIVITY_GO_TO_TRACE.equalsIgnoreCase(reactMessageRequest.getAction())) {
-                    ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.RecentActivity, traceButtonName);
-                    RecentActivityGoToTraceRequest recentActivityGoToTraceRequest = parseJsonToObject(request, RecentActivityGoToTraceRequest.class);
-                    processRecentActivityGoToTraceRequest(recentActivityGoToTraceRequest, project);
-                }
-                if (RECENT_ACTIVITY_CLOSE_LIVE_VIEW.equalsIgnoreCase(reactMessageRequest.getAction())) {
-                    try {
-                        CloseLiveViewMessage closeLiveViewMessage = JsonUtils.stringToJavaRecord(request, CloseLiveViewMessage.class);
-                        RecentActivityService.getInstance(project).liveViewClosed(closeLiveViewMessage);
-                    } catch (Exception e) {
-                        //we can't miss the close message because then the live view will stay open.
-                        // close the live view even if there is an error parsing the message.
-                        Log.debugWithException(logger, project, e, "Exception while parsing CloseLiveViewMessage {}", e.getMessage());
-                        RecentActivityService.getInstance(project).liveViewClosed(null);
+
+                Backgroundable.runInNewBackgroundThread(project, "recent activity request", () -> {
+                    Log.log(logger::trace, "request: {}", request);
+                    JcefMessageRequest reactMessageRequest = parseJsonToObject(request, JcefMessageRequest.class);
+                    if (RECENT_ACTIVITY_INITIALIZE.equalsIgnoreCase(reactMessageRequest.getAction())) {
+                        processRecentActivityInitialized();
+                        RecentActivityService.getInstance(project).runInitTask();
                     }
-                }
-                if (JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER.equalsIgnoreCase(reactMessageRequest.getAction())) {
-                    OpenInBrowserRequest openBrowserRequest = JCefMessagesUtils.parseJsonToObject(request, OpenInBrowserRequest.class);
-                    if (openBrowserRequest != null && openBrowserRequest.getPayload() != null) {
-                        BrowserUtil.browse(openBrowserRequest.getPayload().getUrl());
+                    if (RECENT_ACTIVITY_GO_TO_SPAN.equalsIgnoreCase(reactMessageRequest.getAction())) {
+                        RecentActivityGoToSpanRequest recentActivityGoToSpanRequest = parseJsonToObject(request, RecentActivityGoToSpanRequest.class);
+                        processRecentActivityGoToSpanRequest(recentActivityGoToSpanRequest.getPayload(), project);
                     }
-                }
+                    if (RECENT_ACTIVITY_GO_TO_TRACE.equalsIgnoreCase(reactMessageRequest.getAction())) {
+                        ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.RecentActivity, traceButtonName);
+                        RecentActivityGoToTraceRequest recentActivityGoToTraceRequest = parseJsonToObject(request, RecentActivityGoToTraceRequest.class);
+                        processRecentActivityGoToTraceRequest(recentActivityGoToTraceRequest, project);
+                    }
+                    if (RECENT_ACTIVITY_CLOSE_LIVE_VIEW.equalsIgnoreCase(reactMessageRequest.getAction())) {
+                        try {
+                            CloseLiveViewMessage closeLiveViewMessage = JsonUtils.stringToJavaRecord(request, CloseLiveViewMessage.class);
+                            RecentActivityService.getInstance(project).liveViewClosed(closeLiveViewMessage);
+                        } catch (Exception e) {
+                            //we can't miss the close message because then the live view will stay open.
+                            // close the live view even if there is an error parsing the message.
+                            Log.debugWithException(logger, project, e, "Exception while parsing CloseLiveViewMessage {}", e.getMessage());
+                            RecentActivityService.getInstance(project).liveViewClosed(null);
+                        }
+                    }
+                    if (JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER.equalsIgnoreCase(reactMessageRequest.getAction())) {
+                        OpenInBrowserRequest openBrowserRequest = JCefMessagesUtils.parseJsonToObject(request, OpenInBrowserRequest.class);
+                        if (openBrowserRequest != null && openBrowserRequest.getPayload() != null) {
+                            BrowserUtil.browse(openBrowserRequest.getPayload().getUrl());
+                        }
+                    }
+                });
+
+
                 callback.success("");
                 return true;
             }

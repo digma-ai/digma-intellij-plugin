@@ -204,7 +204,7 @@ public class AnalyticsService implements Disposable {
 
     public List<GlobalInsight> getGlobalInsights() throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
-        Log.log(LOGGER::debug, "Requesting Global Insights for next environment {}", env);
+        Log.log(LOGGER::trace, "Requesting Global Insights for next environment {}", env);
         var insights = executeCatching(() -> analyticsProviderProxy.getGlobalInsights(new InsightsRequest(env, Collections.emptyList())));
         if (insights == null) {
             insights = Collections.emptyList();

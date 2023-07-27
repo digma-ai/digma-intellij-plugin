@@ -123,7 +123,7 @@ object BuildProfiles {
             // platformVersion is Intellij IDEA Community and Ultimate
             platformVersion = "2023.2",
             riderVersion = "2023.2-SNAPSHOT",
-            pycharmVersion = "232-EAP-SNAPSHOT",
+            pycharmVersion = "2023.2",
             riderResharperVersion = "2023.2.0-eap10",
             riderResharperVersionConstant = "PROFILE_2023_2",
             pythonPluginVersion = "232.8660.185",

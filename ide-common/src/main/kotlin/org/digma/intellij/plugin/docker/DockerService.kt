@@ -2,9 +2,12 @@ package org.digma.intellij.plugin.docker
 
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.MessageConstants
+import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.SystemInfo
 import org.digma.intellij.plugin.analytics.BackendConnectionUtil
 import org.digma.intellij.plugin.common.Backgroundable
@@ -95,6 +98,10 @@ class DockerService {
     }
 
 
+    private fun isDockerDeamonDownExitValue(exitValue: String): Boolean {
+        return exitValue.contains("Cannot connect to the Docker daemon", true) ||//mac, linux
+                exitValue.contains("docker daemon is not running", true)//win
+    }
     fun installEngine(project: Project, resultTask: Consumer<String>) {
 
         ActivityMonitor.getInstance(project).registerDigmaEngineEventStart("installEngine", mapOf())
@@ -106,10 +113,40 @@ class DockerService {
 
                 if (dockerComposeCmd != null) {
 
-                    val exitValue = engine.up(project, downloader.composeFile!!, dockerComposeCmd)
+                    var exitValue = engine.up(project, downloader.composeFile!!, dockerComposeCmd)
                     if (exitValue != "0") {
                         Log.log(logger::warn, "error installing engine {}", exitValue)
-                        downloader.deleteFile()
+                        val eventName = "docker-daemon-is-down"
+                        if(isDockerDeamonDownExitValue(exitValue)) {
+                            ActivityMonitor.getInstance(project).registerCustomEvent(eventName, null)
+                            var res =  MessageConstants.YES
+                            ApplicationManager.getApplication().invokeAndWait {
+                                res = Messages.showYesNoDialog(
+                                    project,
+                                    "Please make sure the Docker daemon is running\n" +
+                                            "Once the Docker daemon is running, press the retry button.\n",
+                                    "Digma engine failed to run",
+                                    "Retry",
+                                    "Cancel",
+                                    null
+                                )
+                            }
+                            if(res == MessageConstants.YES){
+                                ActivityMonitor.getInstance(project).registerCustomEvent(eventName, mapOf("action" to "retry triggered by user"))
+                                exitValue = engine.up(project, downloader.composeFile!!, dockerComposeCmd)
+                                if(isDockerDeamonDownExitValue(exitValue)){
+                                    ActivityMonitor.getInstance(project).registerCustomEvent(eventName, null)
+                                    ApplicationManager.getApplication().invokeAndWait {
+                                        Messages.showMessageDialog(project, "Digma engine failed to run\nDocker daemon is down", "", null);
+                                    }
+                                }
+                            }else{
+                                ActivityMonitor.getInstance(project).registerCustomEvent(eventName, mapOf("action" to "retry canceled by user"))
+                            }
+                        }
+                        if (exitValue != "0") {
+                            downloader.deleteFile()
+                        }
                     }
                     notifyResult(exitValue, resultTask)
                 } else {

@@ -1,6 +1,14 @@
 # Changelog
 
-## [2.0.127] - 2023-07-25
+## [2.0.128] - 2023-07-27
+- update latest profile versions by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1027
+- update-profile-to-232 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1028
+- update pycharm version by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1033
+- limit insights list in summary view to 20 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1030
+- skip user installation selection by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1035
+- Feature/allow navigation to discovered endpoints by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1032
+
+## 2.0.127 - 2023-07-25
 - Feature/navigate back to recent spans by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/996
 - redesign bulk listeners by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1021
 - Feature/span navigation to Observed by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1023

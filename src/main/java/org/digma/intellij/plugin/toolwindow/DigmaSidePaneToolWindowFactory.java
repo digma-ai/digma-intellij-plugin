@@ -11,6 +11,7 @@ import com.intellij.util.ui.JBUI;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.common.IDEUtilsService;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.digma.intellij.plugin.ui.ToolWindowShower;
@@ -82,8 +83,13 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         MainToolWindowCardsController.getInstance(project).initComponents(toolWindow,mainContent,cardsPanel,contentPanel,wizardPanelBuilder);
 
         if (IDEUtilsService.shouldOpenWizard()) {
+            ActivityMonitor.getInstance(project).registerCustomEvent("show-installation-wizard", null);
             MainToolWindowCardsController.getInstance(project).showWizard(false);
         }
+        else{
+            ActivityMonitor.getInstance(project).registerCustomEvent("skip-installation-wizard", null);
+        }
+
 
         //todo: runWhenSmart is ok for java,python , but in Rider runWhenSmart does not guarantee that the solution
         // is fully loaded. consider replacing that with LanguageService.runWhenSmartForAll so that C# language service

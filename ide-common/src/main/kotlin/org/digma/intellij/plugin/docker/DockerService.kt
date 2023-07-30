@@ -299,7 +299,7 @@ class DockerService {
 
         ActivityMonitor.getInstance(project).registerCustomEvent(eventName, null)
 
-        tryStartDockerDaemon()
+        tryStartDockerDaemon(project)
 
         ActivityMonitor.getInstance(project).registerCustomEvent(eventName, mapOf("action" to "retry triggered by system"))
         var exitValue = runCommand.get()
@@ -335,13 +335,13 @@ class DockerService {
         return exitValue
     }
 
-    private fun tryStartDockerDaemon() {
+    private fun tryStartDockerDaemon(project: Project) {
 
         Log.log(logger::info, "Trying to start docker daemon")
 
-        val command = if (SystemInfo.isWindows) {
+        val command = if (SystemInfo.isMac) {
             listOf("docker-machine", "restart")
-        } else if (SystemInfo.isMac) {
+        } else if (SystemInfo.isWindows) {
             listOf("wsl.exe", "-u", "root", "-e", "sh", "-c", "service docker status || service docker start")
         } else if (SystemInfo.isLinux) {
             listOf("systemctl", "start", "docker.service")
@@ -354,8 +354,10 @@ class DockerService {
 
         try {
             val result = ExecUtil.execAndReadLine(cmd)
+            ActivityMonitor.getInstance(project).registerCustomEvent("Engine.start-docker-daemon", mapOf("result" to result.toString()))
             Log.log(logger::info, "start docker command result: {}", result)
         } catch (ex: Exception) {
+            ActivityMonitor.getInstance(project).registerCustomEvent("Engine.start-docker-daemon", mapOf("error" to ex.message.toString()))
             Log.warnWithException(logger, ex, "Failed to run '{}'", cmd.commandLineString)
         }
     }

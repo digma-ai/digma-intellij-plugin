@@ -152,6 +152,10 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
         postHog?.capture(userId, "plugin first-assets")
     }
 
+    fun registerFirstTimeRecentActivityReceived() {
+        postHog?.capture(userId, "plugin first-activity")
+    }
+
     fun registerObservabilityOn() {
         postHog?.capture(userId, "observability is turned on")
     }
@@ -164,10 +168,10 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
         val stringWriter = StringWriter()
         exception.printStackTrace(PrintWriter(stringWriter))
 
-        var hash = hash(message);
+        var hash = hash(message)
         if (errorCache!!.getIfPresent(hash) != null)
-            return;
-        errorCache!!.put(hash, hash);
+            return
+        errorCache!!.put(hash, hash)
 
         postHog?.capture(
             userId,
@@ -185,10 +189,10 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
 
     fun reportBackendError(message: String, action: String) {
 
-        var hash = hash(message);
+        val hash = hash(message)
         if (errorCache!!.getIfPresent(hash) != null)
-            return;
-        errorCache!!.put(hash, hash);
+            return
+        errorCache!!.put(hash, hash)
 
         postHog?.capture(
             userId,

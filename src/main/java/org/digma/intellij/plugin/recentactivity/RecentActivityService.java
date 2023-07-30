@@ -47,6 +47,7 @@ import org.digma.intellij.plugin.navigation.HomeSwitcherService;
 import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper;
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
+import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.posthog.MonitoredPanel;
 import org.digma.intellij.plugin.recentactivity.incoming.CloseLiveViewMessage;
@@ -147,10 +148,10 @@ public class RecentActivityService implements Disposable {
         var contentFactory = ContentFactory.getInstance();
 
         jbCefBrowser = JBCefBrowserBuilderCreator.create()
-                .setUrl("https://"+RESOURCE_FOLDER_NAME+"/index.html")
+                .setUrl("https://" + RESOURCE_FOLDER_NAME + "/index.html")
                 .build();
 
-        var indexTemplateData = new HashMap<String,Object>();
+        var indexTemplateData = new HashMap<String, Object>();
         indexTemplateData.put(RECENT_EXPIRATION_LIMIT_VARIABLE, RECENT_EXPIRATION_LIMIT_MILLIS);
 
 
@@ -177,7 +178,7 @@ public class RecentActivityService implements Disposable {
         msgRouter = CefMessageRouter.create();
 
 
-        SettingsState.getInstance().addChangeListener(settingsState1 -> sendRequestToChangeTraceButtonDisplaying(jbCefBrowser),this);
+        SettingsState.getInstance().addChangeListener(settingsState1 -> sendRequestToChangeTraceButtonDisplaying(jbCefBrowser), this);
 
         msgRouter.addHandler(new CefMessageRouterHandlerAdapter() {
             @Override
@@ -232,25 +233,22 @@ public class RecentActivityService implements Disposable {
         jcefDigmaPanel.add(browserPanel, BorderLayout.CENTER);
 
 
-
-
         ApplicationUISettingsChangeNotifier.getInstance(project).addSettingsChangeListener(new SettingsChangeListener() {
             @Override
             public void systemFontChange(@NotNull String fontName) {
-                JCefBrowserUtil.sendRequestToChangeFont(fontName,jbCefBrowser);
+                JCefBrowserUtil.sendRequestToChangeFont(fontName, jbCefBrowser);
             }
 
             @Override
             public void systemThemeChange(@NotNull Theme theme) {
-                JCefBrowserUtil.sendRequestToChangeUiTheme(theme,jbCefBrowser);
+                JCefBrowserUtil.sendRequestToChangeUiTheme(theme, jbCefBrowser);
             }
 
             @Override
             public void editorFontChange(@NotNull String fontName) {
-                JCefBrowserUtil.sendRequestToChangeCodeFont(fontName,jbCefBrowser);
+                JCefBrowserUtil.sendRequestToChangeCodeFont(fontName, jbCefBrowser);
             }
         });
-
 
 
         return contentFactory.createContent(jcefDigmaPanel, null, false);
@@ -327,6 +325,11 @@ public class RecentActivityService implements Disposable {
         }
 
         if (recentActivityData != null) {
+            if (!PersistenceService.getInstance().getState().getFirstTimeRecentActivityReceived() && !recentActivityData.getEntries().isEmpty()) {
+                ActivityMonitor.getInstance(project).registerFirstTimeRecentActivityReceived();
+                PersistenceService.getInstance().getState().setFirstTimeRecentActivityReceived(true);
+            }
+
             latestActivityResult = recentActivityData;
 
             // Tool window may not be opened yet
@@ -546,7 +549,6 @@ public class RecentActivityService implements Disposable {
         if (jbCefBrowser != null)
             jbCefBrowser.dispose();
     }
-
 
 
     private abstract static class MyInitTask implements Runnable {

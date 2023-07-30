@@ -11,5 +11,6 @@ data class PersistenceData(
         var firstWizardLaunch: Boolean = true,
         var firstTimeInsightReceived: Boolean = false,
         var firstTimeAssetsReceived: Boolean = false,
+        var firstTimeRecentActivityReceived: Boolean = false,
         var userEmail: String? = null,
 )

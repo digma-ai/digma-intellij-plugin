@@ -11,6 +11,7 @@ import com.intellij.util.ui.JBUI;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.common.IDEUtilsService;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
@@ -48,6 +49,14 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
      */
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
+
+        if (!PersistenceService.getInstance().isFirstTimePluginLoaded()) {
+            PersistenceService.getInstance().setFirstTimePluginLoaded();
+            ActivityMonitor.getInstance(project).registerFirstTimePluginLoadedNew();
+        }
+
+
+
         Log.log(LOGGER::debug, "createToolWindowContent for project  {}", project);
 
         toolWindow.setTitle(DIGMA_NAME);

@@ -14,4 +14,5 @@ data class PersistenceData(
         var firstTimeRecentActivityReceived: Boolean = false,
         var userEmail: String? = null,
         var isLocalEngineInstalled: Boolean = false,
+        var isFirstTimePluginLoaded: Boolean = false,
 )

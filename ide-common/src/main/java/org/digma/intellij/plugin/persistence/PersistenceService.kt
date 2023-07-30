@@ -21,6 +21,7 @@ open class PersistenceService : PersistentStateComponent<PersistenceData> {
         }
     }
 
+
     // the component will always keep our state as a variable
     private var myPersistenceData: PersistenceData = PersistenceData()
 
@@ -48,6 +49,14 @@ open class PersistenceService : PersistentStateComponent<PersistenceData> {
 
     fun setLocalEngineInstalled(isInstalled: Boolean) {
         state.isLocalEngineInstalled = isInstalled
+    }
+
+    fun isFirstTimePluginLoaded(): Boolean {
+        return state.isFirstTimePluginLoaded
+    }
+
+    fun setFirstTimePluginLoaded() {
+        state.isFirstTimePluginLoaded = true
     }
 
 

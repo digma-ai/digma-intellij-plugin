@@ -141,7 +141,7 @@ internal class Engine {
                 Log.log(logger::info, "DigmaDockerError: $it")
             })
 
-            val success = process.waitFor(10, TimeUnit.MINUTES)
+            val success = process.waitFor(15, TimeUnit.MINUTES)
 
             val exitCode = process.exitValue()
 

@@ -14,6 +14,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
+import org.digma.intellij.plugin.idea.build.JavaBuildSystem
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -76,9 +77,11 @@ class OtelRunConfigurationExtension : RunConfigurationExtension() {
             configuration.project, configuration.id, configuration.name, configuration.type, resolvedModule
         )
 
-        ActivityMonitor
-            .getInstance(configuration.project)
-            .reportRunConfig(wrapper.getRunConfigType(configuration, resolvedModule).name, isAutoOtelEnabled, isConnectedToBackend)
+        run {
+            val taskNames = extractTasks(configuration)
+            ActivityMonitor.getInstance(configuration.project)
+                .reportRunConfig(wrapper.getRunConfigType(configuration, resolvedModule).name, taskNames, isAutoOtelEnabled, isConnectedToBackend)
+        }
 
         //testing if enabled must be done here just before running.
         if (!isAutoOtelEnabled) {
@@ -141,18 +144,32 @@ class OtelRunConfigurationExtension : RunConfigurationExtension() {
     }
 
     private fun reportUnknownTasksToPosthog(configuration: RunConfigurationBase<*>) {
-        val activityMonitor = ActivityMonitor.getInstance(configuration.project)
+        val buildSystem = extractBuildSystem(configuration)
 
-        if (configuration is GradleRunConfiguration) {
-            val taskNames = configuration.settings.taskNames.toMutableSet()
+        if (buildSystem != JavaBuildSystem.UNKNOWN) {
+            val buildSystemName = buildSystem.name.lowercase()
+            val taskNames = extractTasks(configuration).toMutableSet()
             taskNames.removeAll(KNOWN_IRRELEVANT_TASKS)
-            activityMonitor.reportUnknownTaskRunning("gradle", taskNames, configuration.javaClass.name, configuration.type.displayName)
-        }
 
-        if (configuration is MavenRunConfiguration) {
-            val goals = configuration.runnerParameters.goals.toMutableSet()
-            goals.removeAll(KNOWN_IRRELEVANT_TASKS)
-            activityMonitor.reportUnknownTaskRunning("maven", goals, configuration.javaClass.name, configuration.type.displayName)
+            val activityMonitor = ActivityMonitor.getInstance(configuration.project)
+            activityMonitor.reportUnknownTaskRunning(buildSystemName, taskNames, configuration.javaClass.name, configuration.type.displayName)
         }
     }
+
+    private fun extractTasks(configuration: RunConfigurationBase<*>): List<String> {
+        return when (configuration) {
+            is GradleRunConfiguration -> configuration.settings.taskNames
+            is MavenRunConfiguration -> configuration.runnerParameters.goals
+            else -> listOf()
+        }
+    }
+
+    private fun extractBuildSystem(configuration: RunConfigurationBase<*>): JavaBuildSystem {
+        return when (configuration) {
+            is GradleRunConfiguration -> JavaBuildSystem.GRADLE
+            is MavenRunConfiguration -> JavaBuildSystem.MAVEN
+            else -> JavaBuildSystem.UNKNOWN
+        }
+    }
+
 }

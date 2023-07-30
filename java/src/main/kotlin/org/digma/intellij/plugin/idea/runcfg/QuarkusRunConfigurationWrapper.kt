@@ -1,6 +1,6 @@
 package org.digma.intellij.plugin.idea.runcfg
 
-import com.intellij.execution.JavaRunConfigurationBase
+import com.intellij.execution.JavaTestConfigurationBase
 import com.intellij.execution.configurations.JavaParameters
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunnerSettings
@@ -12,6 +12,7 @@ import org.digma.intellij.plugin.settings.SettingsState
 import org.jetbrains.idea.maven.execution.MavenRunConfiguration
 import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
 
+//
 // this class is derived from AutoOtelAgentRunConfigurationExtension.
 // consider to combine them together with abstract class
 //
@@ -167,7 +168,7 @@ class QuarkusRunConfigurationWrapper : IRunConfigurationWrapper {
     }
 
     private fun isJavaTest(configuration: RunConfigurationBase<*>, module: Module?): Boolean {
-        if (configuration is JavaRunConfigurationBase) {
+        if (configuration is JavaTestConfigurationBase) {
             if (isQuarkusModule(module)) {
                 return true
             }

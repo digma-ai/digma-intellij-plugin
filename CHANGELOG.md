@@ -1,6 +1,17 @@
 # Changelog
 
-## [2.0.128] - 2023-07-27
+## [2.0.129] - 2023-07-30
+- Cache error hash to decrease error sending rate by @borisermakof in https://github.com/digma-ai/digma-intellij-plugin/pull/1024
+- skip installation wizard event by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1036
+- Feature/JAXRS - support both javax and jakarta by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1038
+- Send event on every load of the ide by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1037
+- Feature/report task names for run config by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1045
+- Send event on first received recent-activity by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1044
+- Start docker daemon by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1046
+- save docker-compose.yml to tmp by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1048
+- first time plugin init by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1050
+
+## 2.0.128 - 2023-07-27
 - update latest profile versions by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1027
 - update-profile-to-232 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1028
 - update pycharm version by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1033

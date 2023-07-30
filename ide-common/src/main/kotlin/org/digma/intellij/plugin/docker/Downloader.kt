@@ -39,7 +39,7 @@ class Downloader {
 
         val fileDesc = DownloadableFileService.getInstance().createFileDescription(COMPOSE_FILE_URL, COMPOSE_FILE_NAME)
 
-        val downloader = DownloadableFileService.getInstance().createDownloader(listOf(fileDesc), "downloading engine config")
+        val downloader = DownloadableFileService.getInstance().createDownloader(listOf(fileDesc), "downloading digma engine config")
 
         composeFile = downloadWithProgress(downloader, downloadDir)
 

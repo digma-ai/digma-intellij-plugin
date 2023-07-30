@@ -321,8 +321,14 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
         )
     }
 
+
+    //todo: remove at some point
     fun registerFirstTimePluginLoaded() {
         postHog?.capture(userId, "plugin first-loaded")
+    }
+
+    fun registerFirstTimePluginLoadedNew() {
+        postHog?.capture(userId, "plugin first-init")
     }
 
     fun registerPluginLoaded() {

@@ -230,11 +230,19 @@ class DockerService {
                         //ignore
                     }
 
-                    val exitValue = engine.start(project, downloader.composeFile!!, dockerComposeCmd)
+                    var exitValue = engine.start(project, downloader.composeFile!!, dockerComposeCmd)
                     if (exitValue != "0") {
                         Log.log(logger::warn, "error starting engine {}", exitValue)
-                        downloader.deleteFile()
+                        if (isDockerDeamonDownExitValue(exitValue)) {
+                            exitValue = doRetryFlowWhenDockerDaemonIsDown(project) {
+                                engine.start(project, downloader.composeFile!!, dockerComposeCmd)
+                            }
+                        }
+                        if (exitValue != "0") {
+                            downloader.deleteFile()
+                        }
                     }
+
                     notifyResult(exitValue, resultTask)
                 } else {
                     ActivityMonitor.getInstance(project).registerDigmaEngineEventError("startEngine", "could not find docker compose command")

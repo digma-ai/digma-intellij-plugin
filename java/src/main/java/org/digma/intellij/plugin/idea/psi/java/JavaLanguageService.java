@@ -67,7 +67,6 @@ public class JavaLanguageService implements LanguageService {
     private final ProjectFileIndex projectFileIndex;
 
     private final MicronautFramework micronautFramework;
-    private final JaxrsFramework jaxrsFramework;
     private final GrpcFramework grpcFramework;
     private final SpringBootFramework springBootFramework;
     private final List<IEndpointDiscovery> endpointDiscoveryList;
@@ -92,10 +91,11 @@ public class JavaLanguageService implements LanguageService {
         this.project = project;
         this.projectFileIndex = project.getService(ProjectFileIndex.class);
         this.micronautFramework = new MicronautFramework(project);
-        this.jaxrsFramework = new JaxrsFramework(project);
+        var jaxrsJavaxFramework = new JaxrsJavaxFramework(project);
+        var jaxrsJakartaFramework = new JaxrsJakartaFramework(project);
         this.grpcFramework = new GrpcFramework(project);
         this.springBootFramework = new SpringBootFramework(project);
-        this.endpointDiscoveryList = List.of(micronautFramework, jaxrsFramework, grpcFramework, springBootFramework);
+        this.endpointDiscoveryList = List.of(micronautFramework, jaxrsJavaxFramework, jaxrsJakartaFramework, grpcFramework, springBootFramework);
     }
 
     public List<IEndpointDiscovery> getListOfEndpointDiscovery() {

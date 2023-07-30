@@ -22,20 +22,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class JaxrsFramework implements IEndpointDiscovery {
+public abstract class AbsJaxrsFramework implements IEndpointDiscovery {
 
-    private static final Logger LOGGER = Logger.getInstance(JaxrsFramework.class);
-    private static final String JAX_RS_PATH_ANNOTATION_STR = "javax.ws.rs.Path";
-    private static final String HTTP_DELETE_ANNOTATION_STR = "javax.ws.rs.DELETE";
-    private static final String HTTP_GET_ANNOTATION_STR = "javax.ws.rs.GET";
-    private static final String HTTP_HEAD_ANNOTATION_STR = "javax.ws.rs.HEAD";
-    private static final String HTTP_OPTIONS_ANNOTATION_STR = "javax.ws.rs.OPTIONS";
-    private static final String HTTP_PATCH_ANNOTATION_STR = "javax.ws.rs.PATCH";
-    private static final String HTTP_POST_ANNOTATION_STR = "javax.ws.rs.POST";
-    private static final String HTTP_PUT_ANNOTATION_STR = "javax.ws.rs.PUT";
-    private static final List<String> HTTP_METHODS_ANNOTATION_STR_LIST = List.of(
-            HTTP_DELETE_ANNOTATION_STR, HTTP_GET_ANNOTATION_STR, HTTP_HEAD_ANNOTATION_STR, HTTP_OPTIONS_ANNOTATION_STR,
-            HTTP_PATCH_ANNOTATION_STR, HTTP_POST_ANNOTATION_STR, HTTP_PUT_ANNOTATION_STR);
+    private static final Logger LOGGER = Logger.getInstance(AbsJaxrsFramework.class);
+
+    abstract String getJaxRsPackageName();
+
+    private final List<String> HTTP_METHODS_ANNOTATION_STR_LIST;
 
     private final Project project;
 
@@ -44,15 +37,53 @@ public class JaxrsFramework implements IEndpointDiscovery {
     private PsiClass jaxrsPathAnnotationClass;
     private List<JavaAnnotation> httpMethodsAnnotations;
 
-    public JaxrsFramework(Project project) {
+    public AbsJaxrsFramework(Project project) {
         this.project = project;
+
+        this.HTTP_METHODS_ANNOTATION_STR_LIST = List.of(
+                HTTP_DELETE_ANNOTATION_STR(), HTTP_GET_ANNOTATION_STR(), HTTP_HEAD_ANNOTATION_STR(), HTTP_OPTIONS_ANNOTATION_STR(),
+                HTTP_PATCH_ANNOTATION_STR(), HTTP_POST_ANNOTATION_STR(), HTTP_PUT_ANNOTATION_STR());
     }
+
+    protected String JAX_RS_PATH_ANNOTATION_STR() {
+        // "jakarta.ws.rs.Path" or "javax.ws.rs.Path"
+        return getJaxRsPackageName() + ".Path";
+    }
+
+    protected String HTTP_DELETE_ANNOTATION_STR() {
+        return getJaxRsPackageName() + ".DELETE";
+    }
+
+    protected String HTTP_GET_ANNOTATION_STR() {
+        return getJaxRsPackageName() + ".GET";
+    }
+
+    protected String HTTP_HEAD_ANNOTATION_STR() {
+        return getJaxRsPackageName() + ".HEAD";
+    }
+
+    protected String HTTP_OPTIONS_ANNOTATION_STR() {
+        return getJaxRsPackageName() + ".OPTIONS";
+    }
+
+    protected String HTTP_PATCH_ANNOTATION_STR() {
+        return getJaxRsPackageName() + ".PATCH";
+    }
+
+    protected String HTTP_POST_ANNOTATION_STR() {
+        return getJaxRsPackageName() + ".POST";
+    }
+
+    protected String HTTP_PUT_ANNOTATION_STR() {
+        return getJaxRsPackageName() + ".PUT";
+    }
+
 
     private void lateInit() {
         if (lateInitAlready) return;
 
         JavaPsiFacade psiFacade = JavaPsiFacade.getInstance(project);
-        jaxrsPathAnnotationClass = psiFacade.findClass(JAX_RS_PATH_ANNOTATION_STR, GlobalSearchScope.allScope(project));
+        jaxrsPathAnnotationClass = psiFacade.findClass(JAX_RS_PATH_ANNOTATION_STR(), GlobalSearchScope.allScope(project));
         initHttpMethodAnnotations(psiFacade);
 
         lateInitAlready = true;
@@ -82,11 +113,11 @@ public class JaxrsFramework implements IEndpointDiscovery {
 
         List<PsiClass> allClassesInFile = JavaPsiUtils.getClassesWithin(psiFile);
         for (PsiClass currClass : allClassesInFile) {
-            final PsiAnnotation controllerPathAnnotation = JavaPsiUtils.findNearestAnnotation(currClass, JAX_RS_PATH_ANNOTATION_STR);
+            final PsiAnnotation controllerPathAnnotation = JavaPsiUtils.findNearestAnnotation(currClass, JAX_RS_PATH_ANNOTATION_STR());
 
             List<PsiMethod> methodsInClass = Arrays.asList(currClass.getMethods());
             for (PsiMethod currPsiMethod : methodsInClass) {
-                final PsiAnnotation methodPathAnnotation = JavaPsiUtils.findNearestAnnotation(currPsiMethod, JAX_RS_PATH_ANNOTATION_STR);
+                final PsiAnnotation methodPathAnnotation = JavaPsiUtils.findNearestAnnotation(currPsiMethod, JAX_RS_PATH_ANNOTATION_STR());
                 if (methodPathAnnotation == null && controllerPathAnnotation == null) {
                     continue; // skip since could not find annotation of @Path, in either class and or method
                 }

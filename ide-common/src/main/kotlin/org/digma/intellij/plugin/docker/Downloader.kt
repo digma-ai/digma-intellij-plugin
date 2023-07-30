@@ -7,6 +7,7 @@ import com.intellij.util.download.FileDownloader
 import org.digma.intellij.plugin.log.Log
 import java.io.File
 import java.nio.file.Path
+import kotlin.io.path.exists
 
 const val COMPOSE_FILE_URL = "https://get.digma.ai/"
 const val COMPOSE_FILE_NAME = "docker-compose.yml"
@@ -18,7 +19,7 @@ class Downloader {
     var composeFile: Path? = null
 
 
-    fun downloadComposeFile(): Boolean {
+    fun downloadComposeFile(forceDownloadIfExists: Boolean = false): Boolean {
 
         createComposeFilePath()
 
@@ -27,16 +28,18 @@ class Downloader {
             return false
         }
 
-        if (composeFile!!.toFile().exists()) {
-            val deleted = composeFile!!.toFile().delete()
-            Log.log(logger::warn, "Deleted old compose file {}", deleted)
+        if (composeFile!!.exists() && !forceDownloadIfExists) {
+            //val deleted = composeFile!!.toFile().delete()
+            //Log.log(logger::warn, "Deleted old compose file {}", deleted)
+            Log.log(logger::warn, "compose file already exists {}", composeFile)
+            return true
         }
 
         val downloadDir = composeFile!!.toFile().parentFile
 
         val fileDesc = DownloadableFileService.getInstance().createFileDescription(COMPOSE_FILE_URL, COMPOSE_FILE_NAME)
 
-        val downloader = DownloadableFileService.getInstance().createDownloader(listOf(fileDesc), "digma docker compose")
+        val downloader = DownloadableFileService.getInstance().createDownloader(listOf(fileDesc), "downloading digma engine config")
 
         composeFile = downloadWithProgress(downloader, downloadDir)
 
@@ -45,34 +48,72 @@ class Downloader {
     }
 
 
-    fun findComposeFile(): Boolean {
-        createComposeFilePath()
-        return composeFile != null && composeFile!!.toFile().exists()
+    //todo: backwards compatibility support for users that installed local engine before
+    // we changed to save the is-installed in persistence
+    // can be removed in few versions
+    fun findOldComposeFile(): Boolean {
+        val homeDir = SystemProperties.getUserHome()
+        val downloadDir = File(homeDir, "digma")
+        val composeFile = File(downloadDir, COMPOSE_FILE_NAME)
+        return composeFile.exists()
+    }
+
+
+    //todo: backwards compatibility support for users that installed local engine before
+    // we changed to save the is-installed in persistence
+    // can be removed in few versions
+    fun deleteOldFileIfExists() {
+        //delete file in user home if exists
+        try {
+            val homeDir = SystemProperties.getUserHome()
+            val downloadDir = File(homeDir, "digma")
+            val composeFile = File(downloadDir, COMPOSE_FILE_NAME)
+            val dir = composeFile.parentFile
+            if (composeFile.exists()) {
+                composeFile.delete()
+            }
+            if (dir.exists()) {
+                dir.delete()
+            }
+        } catch (e: Exception) {
+            //ignore
+        }
+
     }
 
 
     private fun createComposeFilePath() {
-        val homeDir = SystemProperties.getUserHome()
-        val downloadDir = File(homeDir, "digma")
+        val tmpDir = System.getProperty("java.io.tmpdir", SystemProperties.getUserHome())
+        val downloadDir = File(tmpDir, "digma")
         composeFile = File(downloadDir, COMPOSE_FILE_NAME).toPath()
     }
 
 
     private fun downloadWithProgress(downloader: FileDownloader, downloadDir: File): Path? {
-        try {
-            val files = downloader.downloadFilesWithProgress(downloadDir.absolutePath, null, null)
 
-            return files?.let {
-                return if (it.isNotEmpty()) {
-                    it[0].toNioPath()
-                } else {
-                    null
+        repeat((1..3).count()) {
+            val file = try {
+
+                val files = downloader.downloadFilesWithProgress(downloadDir.absolutePath, null, null)
+
+                files?.let {
+                    if (it.isNotEmpty()) {
+                        it[0].toNioPath()
+                    } else {
+                        null
+                    }
                 }
+
+            } catch (e: Exception) {
+                Log.debugWithException(logger, e, "Could not download docker compose file")
+                null
             }
 
-        } catch (e: Exception) {
-            Log.debugWithException(logger, e, "Could not download docker compose file")
+            if (file != null) {
+                return file
+            }
         }
+
 
         return null
     }

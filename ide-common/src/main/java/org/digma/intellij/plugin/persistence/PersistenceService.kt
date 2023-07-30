@@ -42,5 +42,13 @@ open class PersistenceService : PersistentStateComponent<PersistenceData> {
         return state.firstWizardLaunch
     }
 
+    fun isLocalEngineInstalled(): Boolean {
+        return state.isLocalEngineInstalled
+    }
+
+    fun setLocalEngineInstalled(isInstalled: Boolean) {
+        state.isLocalEngineInstalled = isInstalled
+    }
+
 
 }

@@ -34,5 +34,6 @@ public class RunOnceStartupActivity implements StartupActivity {
             ActivityMonitor.getInstance(project).registerFirstTimePluginLoaded();
             EDT.ensureEDT(() -> ToolWindowShower.getInstance(project).showToolWindow());
         });
+        ActivityMonitor.getInstance(project).registerPluginLoaded();
     }
 }

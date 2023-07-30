@@ -294,6 +294,10 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
         postHog?.capture(userId, "plugin first-loaded")
     }
 
+    fun registerPluginLoaded() {
+        postHog?.capture(userId, "plugin loaded")
+    }
+
     fun registerPluginUninstalled():String {
         postHog?.capture(userId, "plugin uninstalled")
         return userId

@@ -42,7 +42,13 @@ class DockerService {
 //    }
 
     fun isEngineInstalled(): Boolean {
-        return PersistenceService.getInstance().isLocalEngineInstalled()
+        val result = PersistenceService.getInstance().isLocalEngineInstalled()
+                || downloader.findOldComposeFile()
+        //todo:remove in few versions
+        if (PersistenceService.getInstance().isLocalEngineInstalled()) {
+            downloader.deleteOldFileIfExists()
+        }
+        return result
     }
 
     fun isEngineRunning(project: Project): Boolean {

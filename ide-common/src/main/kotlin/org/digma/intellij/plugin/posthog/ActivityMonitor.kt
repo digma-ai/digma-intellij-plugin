@@ -33,6 +33,7 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
     private val isDevUser: Boolean
     private val latestUnknownRunConfigTasks = mutableMapOf<String, Instant>()
     private var errorCache: Cache<String, String>? = null
+
     //    private val tokenFetcherThread = Thread(this, "Token fetcher thread")
     private var postHog: PostHog? = null
     private var lastLensClick: LocalDateTime? = null
@@ -87,10 +88,12 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
 
     fun registerFramework(framework: MonitoredFramework) {
         postHog?.capture(userId, "framework detected", mapOf("framework.name" to framework.name))
-        postHog?.set(userId, mapOf(
-            "framework.last" to framework.name,
-            "framework.${framework.name}.last-seen" to Instant.now().toString()
-        ))
+        postHog?.set(
+            userId, mapOf(
+                "framework.last" to framework.name,
+                "framework.${framework.name}.last-seen" to Instant.now().toString()
+            )
+        )
     }
 
     fun registerEmail(email: String) {
@@ -201,12 +204,13 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
         )
     }
 
-    fun reportRunConfig(runConfigTypeName: String, observabilityEnabled: Boolean, connectedToBackend: Boolean) {
+    fun reportRunConfig(runConfigTypeName: String, taskNames: Collection<String>, observabilityEnabled: Boolean, connectedToBackend: Boolean) {
         postHog?.capture(
             userId,
             "run config",
             mapOf(
                 "run.config.type" to runConfigTypeName,
+                "task.names" to taskNames,
                 "observability.enabled" to observabilityEnabled,
                 "backend.connected" to connectedToBackend,
             )
@@ -222,12 +226,12 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
 
         // Filter out tasks seen in the last 1 minute
         val taskNamesToReport = taskNames.stream()
-            .filter{ !latestUnknownRunConfigTasks.containsKey(it)}
+            .filter { !latestUnknownRunConfigTasks.containsKey(it) }
             .toList()
         for (task in taskNames)
             latestUnknownRunConfigTasks[task] = Instant.now()
 
-        if(taskNamesToReport.isEmpty())
+        if (taskNamesToReport.isEmpty())
             return
 
         postHog?.capture(
@@ -287,16 +291,18 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
         )
     }
 
-   fun registerSpanLinkClicked(panel: MonitoredPanel) {
-       registerSpanLinkClicked(panel, null)
-   }
-   fun registerSpanLinkClicked(panel: MonitoredPanel, navigable: Boolean?) {
+    fun registerSpanLinkClicked(panel: MonitoredPanel) {
+        registerSpanLinkClicked(panel, null)
+    }
+
+    fun registerSpanLinkClicked(panel: MonitoredPanel, navigable: Boolean?) {
         postHog?.capture(
             userId,
             "span-link clicked",
             mapOf(
                 "panel" to panel.name,
-                "navigable" to (navigable?.toString() ?: "unknown"))
+                "navigable" to (navigable?.toString() ?: "unknown")
+            )
         )
     }
 
@@ -319,7 +325,7 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
         postHog?.capture(userId, "plugin loaded")
     }
 
-    fun registerPluginUninstalled():String {
+    fun registerPluginUninstalled(): String {
         postHog?.capture(userId, "plugin uninstalled")
         return userId
     }

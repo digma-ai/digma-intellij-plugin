@@ -19,7 +19,7 @@ class Downloader {
     var composeFile: Path? = null
 
 
-    fun downloadComposeFile(): Boolean {
+    fun downloadComposeFile(forceDownloadIfExists: Boolean = false): Boolean {
 
         createComposeFilePath()
 
@@ -28,7 +28,7 @@ class Downloader {
             return false
         }
 
-        if (composeFile!!.exists()) {
+        if (composeFile!!.exists() && !forceDownloadIfExists) {
             //val deleted = composeFile!!.toFile().delete()
             //Log.log(logger::warn, "Deleted old compose file {}", deleted)
             Log.log(logger::warn, "compose file already exists {}", composeFile)
@@ -39,7 +39,7 @@ class Downloader {
 
         val fileDesc = DownloadableFileService.getInstance().createFileDescription(COMPOSE_FILE_URL, COMPOSE_FILE_NAME)
 
-        val downloader = DownloadableFileService.getInstance().createDownloader(listOf(fileDesc), "digma docker compose")
+        val downloader = DownloadableFileService.getInstance().createDownloader(listOf(fileDesc), "downloading engine config")
 
         composeFile = downloadWithProgress(downloader, downloadDir)
 

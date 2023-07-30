@@ -162,7 +162,7 @@ class DockerService {
 
         Backgroundable.runInNewBackgroundThread(project, "upgrading digma engine") {
 
-            if (downloader.downloadComposeFile()) {
+            if (downloader.downloadComposeFile(true)) {
                 val dockerComposeCmd = getDockerComposeCommand()
 
                 if (dockerComposeCmd != null) {

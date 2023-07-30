@@ -17,6 +17,10 @@ class Downloader {
 
     var composeFile: Path? = null
 
+    init {
+        //todo: delete old file in user home, remove that at some point in the future
+        tempDeletePreviousFileIfExists()
+    }
 
     fun downloadComposeFile(): Boolean {
 
@@ -45,15 +49,29 @@ class Downloader {
     }
 
 
-    fun findComposeFile(): Boolean {
-        createComposeFilePath()
-        return composeFile != null && composeFile!!.toFile().exists()
+    private fun tempDeletePreviousFileIfExists() {
+        //delete file in user home if exists
+        try {
+            val homeDir = SystemProperties.getUserHome()
+            val downloadDir = File(homeDir, "digma")
+            val composeFile = File(downloadDir, COMPOSE_FILE_NAME)
+            val dir = composeFile.parentFile
+            if (composeFile.exists()) {
+                composeFile.delete()
+            }
+            if (dir.exists()) {
+                dir.delete()
+            }
+        } catch (e: Exception) {
+            //ignore
+        }
+
     }
 
 
     private fun createComposeFilePath() {
-        val homeDir = SystemProperties.getUserHome()
-        val downloadDir = File(homeDir, "digma")
+        val tmpDir = System.getProperty("java.io.tmpdir", SystemProperties.getUserHome())
+        val downloadDir = File(tmpDir, "digma")
         composeFile = File(downloadDir, COMPOSE_FILE_NAME).toPath()
     }
 

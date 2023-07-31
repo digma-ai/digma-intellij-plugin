@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.130] - 2023-07-31
+## [2.0.131] - 2023-07-31
+- remove UI thread assert by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1059
+
+## 2.0.130 - 2023-07-31
 - Save user id in persisted storage by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1052
 - Log trace by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1029
 - SpringBoot gradle - remove implicit version deps by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1058

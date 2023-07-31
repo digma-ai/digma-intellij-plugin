@@ -38,9 +38,6 @@ class DockerService {
         return isInstalled(DOCKER_COMMAND) || isInstalled(DOCKER_COMPOSE_COMMAND)
     }
 
-//    fun isDockerComposeInstalled(): Boolean {
-//        return isInstalled(DOCKER_COMPOSE_COMMAND)
-//    }
 
     fun isEngineInstalled(): Boolean {
         val result = PersistenceService.getInstance().isLocalEngineInstalled()
@@ -340,7 +337,7 @@ class DockerService {
                 if (isDockerDeamonDownExitValue(exitValue)) {
                     ActivityMonitor.getInstance(project).registerCustomEvent(eventName, null)
                     ApplicationManager.getApplication().invokeAndWait {
-                        Messages.showMessageDialog(project, "Digma engine failed to run\nDocker daemon is down", "", null);
+                        Messages.showMessageDialog(project, "Digma engine failed to run\nDocker daemon is down", "", null)
                     }
                 }
             } else {
@@ -370,12 +367,15 @@ class DockerService {
             .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
 
         try {
-            val result = ExecUtil.execAndReadLine(cmd)
-            ActivityMonitor.getInstance(project).registerCustomEvent("Engine.start-docker-daemon", mapOf("result" to result.toString()))
-            Log.log(logger::info, "start docker command result: {}", result)
+            Log.log(logger::info, "executing command: {}", cmd.commandLineString)
+            val processOutput = ExecUtil.execAndGetOutput(cmd, 10000)
+            val output = "exitCode:${processOutput.exitCode}, stdout:${processOutput.stdout}, stderr:${processOutput.stderr}"
+            ActivityMonitor.getInstance(project).registerCustomEvent("Engine.start-docker-daemon", mapOf("result" to output))
+            Log.log(logger::info, "start docker command result: {}", output)
         } catch (ex: Exception) {
             ActivityMonitor.getInstance(project).registerCustomEvent("Engine.start-docker-daemon", mapOf("error" to ex.message.toString()))
-            Log.warnWithException(logger, ex, "Failed to run '{}'", cmd.commandLineString)
+            ActivityMonitor.getInstance(project).registerError(ex, "failed trying to start docker daemon")
+            Log.warnWithException(logger, ex, "Failed trying to start docker daemon '{}'", cmd.commandLineString)
         }
     }
 

@@ -9,6 +9,7 @@ import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.AboutResult
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
+import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.semanticversion.SemanticVersionUtil
 import org.threeten.extra.Hours
 import java.io.PrintWriter
@@ -17,6 +18,7 @@ import java.security.MessageDigest
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 
@@ -46,7 +48,13 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
             userId = hostname
             isDevUser = true
         } else {
-            userId = Integer.toHexString(hostname.hashCode())
+            if (PersistenceService.getInstance().state.userId == null) {
+                // Phase #1
+                PersistenceService.getInstance().state.userId = Integer.toHexString(hostname.hashCode())
+                // Phase #2 (after 14/08/2023 uncomment this phase, and comment the phase #1)
+                // PersistenceService.getInstance().state.userId = UUID.randomUUID().toString()
+            }
+            userId = PersistenceService.getInstance().state.userId!!
             isDevUser = false
         }
 

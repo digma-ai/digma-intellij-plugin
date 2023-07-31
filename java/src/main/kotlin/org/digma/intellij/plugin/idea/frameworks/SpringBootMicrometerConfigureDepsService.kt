@@ -56,14 +56,36 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
         }
 
         fun buildUnifiedDependency(libCoordinates: UnifiedCoordinates, javaBuildSystem: JavaBuildSystem): UnifiedDependency {
+            return buildUnifiedDependency(libCoordinates, javaBuildSystem, true)
+        }
+
+        fun buildUnifiedDependency(
+            libCoordinates: UnifiedCoordinates,
+            javaBuildSystem: JavaBuildSystem,
+            removeVersionIfCan: Boolean,
+        ): UnifiedDependency {
             val dep: UnifiedDependency =
                 when (javaBuildSystem) {
                     JavaBuildSystem.MAVEN -> UnifiedDependency(libCoordinates, null)
-                    JavaBuildSystem.GRADLE -> UnifiedDependency(libCoordinates, "implementation")
+                    JavaBuildSystem.GRADLE -> {
+                        val newLibCoordinates =
+                            if (!removeVersionIfCan) {
+                                libCoordinates
+                            } else {
+                                coordsWithoutVersion(libCoordinates)
+                            }
+                        return UnifiedDependency(newLibCoordinates, "implementation")
+                    }
+
                     else -> UnifiedDependency(libCoordinates, "compile")
                 }
 
             return dep
+        }
+
+        fun coordsWithoutVersion(orig: UnifiedCoordinates): UnifiedCoordinates {
+            // version as empty string works well, while null value throws exception (both for maven and gradle)
+            return UnifiedCoordinates(orig.groupId, orig.artifactId, "")
         }
     }
 
@@ -145,7 +167,7 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
             uniDeps.add(buildUnifiedDependency(OtelExporterOtlpCoordinates, moduleBuildSystem))
         }
         if (!moduleExt.metadata.hasDigmaSpringBootMicrometerAutoconf) {
-            uniDeps.add(buildUnifiedDependency(DigmaSpringBootMicrometerAutoconfCoordinates, moduleBuildSystem))
+            uniDeps.add(buildUnifiedDependency(DigmaSpringBootMicrometerAutoconfCoordinates, moduleBuildSystem, false))
         }
 
 //        println("adding spring boot deps to module '${module.name}' deps: ${uniDeps}")

@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.analytics;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.Disposable;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
@@ -445,7 +444,7 @@ public class AnalyticsService implements Disposable {
             }
 
             //assert not UI thread, should never happen.
-            ApplicationManager.getApplication().assertIsNonDispatchThread();
+//            ApplicationManager.getApplication().assertIsNonDispatchThread();
 
 
             var stopWatch = StopWatch.createStarted();

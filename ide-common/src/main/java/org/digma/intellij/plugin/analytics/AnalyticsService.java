@@ -2,7 +2,9 @@ package org.digma.intellij.plugin.analytics;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.diagnostic.RuntimeExceptionWithAttachments;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
 import com.intellij.util.Alarm;
@@ -395,6 +397,9 @@ public class AnalyticsService implements Disposable {
             throw new AnalyticsServiceException("An AnalyticsProviderException was caught", e);
         } catch (UndeclaredThrowableException e) {
             throw new AnalyticsServiceException("UndeclaredThrowableException caught", e.getUndeclaredThrowable());
+        } catch (RuntimeExceptionWithAttachments e) {
+            //this is a platform exception as a result of asserting non UI thread when calling backend API
+            throw e;
         } catch (Exception e) {
             throw new AnalyticsServiceException("Unknown exception", e);
         }
@@ -450,13 +455,13 @@ public class AnalyticsService implements Disposable {
                 return method.invoke(analyticsProvider, args);
             }
 
-            //assert not UI thread, should never happen.
-//            ApplicationManager.getApplication().assertIsNonDispatchThread();
-
-
             var stopWatch = StopWatch.createStarted();
 
             try {
+
+                //assert not UI thread, should never happen.
+                ApplicationManager.getApplication().assertIsNonDispatchThread();
+
 
                 if (LOGGER.isTraceEnabled()) {
                     Log.log(LOGGER::trace, "Sending request to {}: args '{}'", method.getName(), argsToString(args));

@@ -1,6 +1,14 @@
 # Changelog
 
-## [2.0.129] - 2023-07-30
+## [2.0.130] - 2023-07-31
+- Save user id in persisted storage by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1052
+- Log trace by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1029
+- SpringBoot gradle - remove implicit version deps by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1058
+- fix Already disposed error by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1057
+- better output when starting docker daemon by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1056
+- change scale icon by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1051
+
+## 2.0.129 - 2023-07-30
 - Cache error hash to decrease error sending rate by @borisermakof in https://github.com/digma-ai/digma-intellij-plugin/pull/1024
 - skip installation wizard event by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1036
 - Feature/JAXRS - support both javax and jakarta by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1038

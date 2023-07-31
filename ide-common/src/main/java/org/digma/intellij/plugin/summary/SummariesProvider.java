@@ -28,14 +28,14 @@ public class SummariesProvider {
 
         try {
             List<GlobalInsight> globalInsights = analyticsService.getGlobalInsights();
-            Log.log(LOGGER::debug, "GlobalInsights: {}", globalInsights);
+            Log.log(LOGGER::trace, "GlobalInsights: {}", globalInsights);
             return toListViewItems(globalInsights);
         } catch (AnalyticsServiceException e) {
             //if analyticsService.getGlobalInsights throws exception it means insights could not be loaded, usually when
             //the backend is not available. return an empty List<GlobalInsight> to keep everything running and don't
             //crash the plugin. don't log the exception, it was logged in AnalyticsService, keep the log quite because
             //it may happen many times.
-            Log.log(LOGGER::debug, "AnalyticsServiceException for getGlobalInsights: {}", e.getMessage());
+            Log.warnWithException(LOGGER, e, "AnalyticsServiceException for getGlobalInsights: {}", e.getMessage());
             return Collections.emptyList();
         }
     }
@@ -47,7 +47,7 @@ public class SummariesProvider {
                     ? usageStatus.getEnvironmentStatuses()
                     : Collections.emptyList();
         } catch (AnalyticsServiceException e) {
-            Log.log(LOGGER::debug, "AnalyticsServiceException for getGlobalInsights: {}", e.getMessage());
+            Log.warnWithException(LOGGER, e, "AnalyticsServiceException for getGlobalInsights: {}", e.getMessage());
             return Collections.emptyList();
         }
     }

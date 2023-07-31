@@ -16,7 +16,7 @@ abstract class AbstractPanelListModel : AbstractListModel<ListViewItem<*>>(),
     override fun setListData(listViewItems: List<ListViewItem<*>>) {
         this.items = listViewItems
 
-        Log.log(LOGGER::debug, "setListData {}", items)
+        Log.log(LOGGER::trace, "setListData {}", items)
 
         Collections.sort(this.items, Comparator.comparingInt(ListViewItem<*>::sortIndex))
         fireContentsChanged(this, 0, items.size - 1)

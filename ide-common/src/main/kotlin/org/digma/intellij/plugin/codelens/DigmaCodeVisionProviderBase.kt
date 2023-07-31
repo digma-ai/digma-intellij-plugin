@@ -30,19 +30,19 @@ abstract class DigmaCodeVisionProviderBase: DaemonBoundCodeVisionProvider {
 
     override fun computeForEditor(editor: Editor, file: PsiFile): List<Pair<TextRange, CodeVisionEntry>> {
 
-        Log.log(logger::debug,"got request to computeForEditor code lens for {}",file.virtualFile)
+        Log.log(logger::trace, "got request to computeForEditor code lens for {}", file.virtualFile)
 
         val project: Project = editor.project ?: return emptyList()
 
         val languageService = LanguageServiceLocator.getInstance(project).locate(file.language)
-        Log.log(logger::debug,"found LanguageService for for {}, {}",file.virtualFile,languageService)
+        Log.log(logger::trace, "found LanguageService for for {}, {}", file.virtualFile, languageService)
         //not all languages support DaemonBoundCodeVisionProvider, C# does it in resharper
         if (languageService.isCodeVisionSupported){
-            Log.log(logger::debug,"file is supported, computing code lens for {}",file.virtualFile)
+            Log.log(logger::trace, "file is supported, computing code lens for {}", file.virtualFile)
             return computeLenses(editor, file,languageService)
         }
 
-        Log.log(logger::debug,"returning empty code lens list for {}",file.virtualFile)
+        Log.log(logger::trace, "returning empty code lens list for {}", file.virtualFile)
         return emptyList()
     }
 

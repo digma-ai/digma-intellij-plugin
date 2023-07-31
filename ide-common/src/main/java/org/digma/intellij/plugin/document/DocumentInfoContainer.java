@@ -70,7 +70,7 @@ public class DocumentInfoContainer {
      */
     public void update(@NotNull DocumentInfo documentInfo) {
 
-        Log.log(LOGGER::debug, "Updating document for {}: {}", psiFile.getVirtualFile(), documentInfo);
+        Log.log(LOGGER::trace, "Updating document for {}: {}", psiFile.getVirtualFile(), documentInfo);
 
         //maybe documentInfo already exists, override it anyway with a new one from analysis
         this.documentInfo = documentInfo;
@@ -79,7 +79,7 @@ public class DocumentInfoContainer {
     }
 
     public void updateCache() {
-        Log.log(LOGGER::debug, "Refreshing document backend data for {}: ", psiFile.getVirtualFile());
+        Log.log(LOGGER::trace, "Refreshing document backend data for {}: ", psiFile.getVirtualFile());
         loadAllInsightsForCurrentDocument();
     }
 
@@ -87,12 +87,12 @@ public class DocumentInfoContainer {
         List<String> objectIds = getObjectIdsForCurrentDocument();
         List<MethodInfo> methodInfos = getMethodInfos();
         try {
-            Log.log(LOGGER::debug, "Requesting insights by methodInfos {}", methodInfos);
+            Log.log(LOGGER::trace, "Requesting insights by methodInfos {}", methodInfos);
             InsightsOfMethodsResponse response = analyticsService.getInsightsOfMethods(methodInfos);
 
             insightsMap = createMapOfInsights(response); // replace the existing map with a new one
 
-            Log.log(LOGGER::debug, "Got insights for {}: {}", psiFile.getVirtualFile(), insightsMap.values());
+            Log.log(LOGGER::trace, "Got insights for {}: {}", psiFile.getVirtualFile(), insightsMap.values());
         } catch (AnalyticsServiceException e) {
             //insights = Collections.emptyList() means there was an error loading insights, usually if the backend is not available.
             //don't log the exception, it was logged in AnalyticsService, keep the log quite because it can happen many times.
@@ -101,13 +101,13 @@ public class DocumentInfoContainer {
         }
 
         try {
-            Log.log(LOGGER::debug, "Requesting usage status for {}: with ids {}", psiFile.getVirtualFile(), objectIds);
+            Log.log(LOGGER::trace, "Requesting usage status for {}: with ids {}", psiFile.getVirtualFile(), objectIds);
             usageStatus = analyticsService.getUsageStatus(objectIds);
-            Log.log(LOGGER::debug, "Got usage status for {}: {}", psiFile.getVirtualFile(), usageStatus);
+            Log.log(LOGGER::trace, "Got usage status for {}: {}", psiFile.getVirtualFile(), usageStatus);
 
-            Log.log(LOGGER::debug, "Requesting usage status of errors for {}: with ids {}", psiFile.getVirtualFile(), objectIds);
+            Log.log(LOGGER::trace, "Requesting usage status of errors for {}: with ids {}", psiFile.getVirtualFile(), objectIds);
             usageStatusOfErrors = analyticsService.getUsageStatusOfErrors(objectIds);
-            Log.log(LOGGER::debug, "Got usage status of errors for {}: {}", psiFile.getVirtualFile(), usageStatusOfErrors);
+            Log.log(LOGGER::trace, "Got usage status of errors for {}: {}", psiFile.getVirtualFile(), usageStatusOfErrors);
         } catch (AnalyticsServiceException e) {
             usageStatus = EmptyUsageStatusResult;
             usageStatusOfErrors = EmptyUsageStatusResult;

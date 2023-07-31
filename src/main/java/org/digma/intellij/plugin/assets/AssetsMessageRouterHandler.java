@@ -79,22 +79,22 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     }
 
     private void goToAsset(JsonNode jsonNode) throws JsonProcessingException {
-        Log.log(LOGGER::debug, project, "got ASSETS/GO_TO_ASSET message");
+        Log.log(LOGGER::trace, project, "got ASSETS/GO_TO_ASSET message");
         var spanId = objectMapper.readTree(jsonNode.get("payload").toString()).get("entry").get("span").get("spanCodeObjectId").asText();
-        Log.log(LOGGER::debug, project, "got span id {}", spanId);
+        Log.log(LOGGER::trace, project, "got span id {}", spanId);
         AssetsService.getInstance(project).showAsset(spanId);
     }
 
 
     private synchronized void pushAssets(CefBrowser browser, ObjectMapper objectMapper) throws JsonProcessingException {
-        Log.log(LOGGER::debug, project, "pushAssets called");
+        Log.log(LOGGER::trace, project, "pushAssets called");
         var payload = objectMapper.readTree(AssetsService.getInstance(project).getAssets());
         if (!payload.isMissingNode() && !PersistenceService.getInstance().getState().getFirstTimeAssetsReceived()) {
             ActivityMonitor.getInstance(project).registerFirstAssetsReceived();
             PersistenceService.getInstance().getState().setFirstTimeAssetsReceived(true);
         }
         var message = new SetAssetsDataMessage("digma", "ASSETS/SET_DATA", payload);
-        Log.log(LOGGER::debug, project, "sending ASSETS/SET_DATA message");
+        Log.log(LOGGER::trace, project, "sending ASSETS/SET_DATA message");
         browser.executeJavaScript(
                 "window.postMessage(" + objectMapper.writeValueAsString(message) + ");",
                 jbCefBrowser.getCefBrowser().getURL(),
@@ -103,12 +103,12 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
 
     private void pushAssetsFromGetData(CefBrowser browser, ObjectMapper objectMapper) throws JsonProcessingException {
-        Log.log(LOGGER::debug, project, "got ASSETS/GET_DATA message");
+        Log.log(LOGGER::trace, project, "got ASSETS/GET_DATA message");
         pushAssets(browser, objectMapper);
     }
 
     void pushAssetsOnEnvironmentChange() throws JsonProcessingException {
-        Log.log(LOGGER::debug, project, "pushAssetsOnEnvironmentChange called");
+        Log.log(LOGGER::trace, project, "pushAssetsOnEnvironmentChange called");
         pushAssets(jbCefBrowser.getCefBrowser(), objectMapper);
     }
 

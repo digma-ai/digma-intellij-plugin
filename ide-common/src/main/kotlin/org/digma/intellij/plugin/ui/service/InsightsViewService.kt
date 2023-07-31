@@ -163,9 +163,9 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
 
     private fun updateInsightsModelWithInsightsProvider(methodInfo: MethodInfo, insightsProvider: InsightsProvider) {
         lock.lock()
-        Log.log(logger::debug, "Lock acquired for updateInsightsModel to {}. ", methodInfo)
+        Log.log(logger::trace, "Lock acquired for updateInsightsModel to {}. ", methodInfo)
         try {
-            Log.log(logger::debug, "updateInsightsModel to {}. ", methodInfo)
+            Log.log(logger::trace, "updateInsightsModel to {}. ", methodInfo)
 
             val insightsListContainer = insightsProvider.getCachedInsights(methodInfo)
 
@@ -203,7 +203,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
         } finally {
             if (lock.isHeldByCurrentThread) {
                 lock.unlock()
-                Log.log(logger::debug, "Lock released for updateInsightsModel to {}. ", methodInfo)
+                Log.log(logger::trace, "Lock released for updateInsightsModel to {}. ", methodInfo)
             }
         }
     }
@@ -231,7 +231,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
 
     fun contextChangeNoMethodInfo(dummy: MethodInfo) {
 
-        Log.log(logger::debug, "contextChangeNoMethodInfo to {}. ", dummy)
+        Log.log(logger::trace, "contextChangeNoMethodInfo to {}. ", dummy)
 
         model.listViewItems = ArrayList()
         model.previewListViewItems = ArrayList()
@@ -296,7 +296,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
     ) {
 
 
-        Log.log(logger::debug, "showDocumentPreviewList for {}. ", fileUri)
+        Log.log(logger::trace, "showDocumentPreviewList for {}. ", fileUri)
 
         if (documentInfoContainer == null) {
             model.previewListViewItems = ArrayList()
@@ -362,7 +362,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
     }
 
     private fun notifyModelChanged() {
-        Log.log(logger::debug, "Firing ModelChange event for {}", model)
+        Log.log(logger::trace, "Firing ModelChange event for {}", model)
         if (project.isDisposed) {
             return
         }

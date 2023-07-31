@@ -160,9 +160,9 @@ public final class AssetsService implements Disposable {
 
     public String getAssets() {
         try {
-            Log.log(logger::debug, project, "got get assets request");
+            Log.log(logger::trace, project, "got get assets request");
             String assets = AnalyticsService.getInstance(project).getAssets();
-            Log.log(logger::debug, project, "got assets [{}]", assets);
+            Log.log(logger::trace, project, "got assets [{}]", assets);
             return assets;
         } catch (AnalyticsServiceException e) {
             Log.warnWithException(logger,project,e,"Error loading assets {}",e.getMessage());
@@ -171,7 +171,7 @@ public final class AssetsService implements Disposable {
     }
 
     public void showAsset(String spanId) {
-        Log.log(logger::debug, project, "showAsset called");
+        Log.log(logger::trace, project, "showAsset called");
         ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Assets);
         project.getService(HomeSwitcherService.class).switchToInsights();
         project.getService(InsightsViewOrchestrator.class).showInsightsForCodelessSpan(spanId);

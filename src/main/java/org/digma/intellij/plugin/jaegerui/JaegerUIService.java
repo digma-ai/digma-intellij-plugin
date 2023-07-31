@@ -236,7 +236,7 @@ public class JaegerUIService {
     //show insight without navigating to source
     public void goToInsight(GoToSpanMessage goToSpanMessage) {
 
-        Log.log(logger::debug, project, "goToInsight request {}", goToSpanMessage);
+        Log.log(logger::trace, project, "goToInsight request {}", goToSpanMessage);
 
         var span = goToSpanMessage.payload();
         //if we're here then code location was not found

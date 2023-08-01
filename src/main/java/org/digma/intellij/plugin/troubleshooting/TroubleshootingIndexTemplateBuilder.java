@@ -1,12 +1,9 @@
-package org.digma.intellij.plugin.assets;
+package org.digma.intellij.plugin.troubleshooting;
 
-import com.intellij.openapi.application.ApplicationInfo;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ApplicationNamesInfo;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.SystemInfo;
-import com.intellij.util.text.VersionComparatorUtil;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateExceptionHandler;
@@ -22,12 +19,11 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
-class AssetsIndexTemplateBuilder {
+class TroubleshootingIndexTemplateBuilder {
 
-    private final Logger logger = Logger.getInstance(AssetsIndexTemplateBuilder.class);
+    private final Logger logger = Logger.getInstance(TroubleshootingIndexTemplateBuilder.class);
 
-    private static final String INDEX_TEMPLATE_NAME = "assetstemplate.ftl";
-    private static final String ASSET_SEARCH_ENV_NAME = "assetsSearch";
+    private static final String INDEX_TEMPLATE_NAME = "troubleshooting.ftl";
 
     private static final String ENV_VARIABLE_IDE = "ide";
     private static final String USER_EMAIL_VARIABLE = "userEmail";
@@ -40,8 +36,8 @@ class AssetsIndexTemplateBuilder {
 
     private final Configuration freemarketConfiguration = new Configuration(Configuration.VERSION_2_3_30);
 
-    public AssetsIndexTemplateBuilder() {
-        freemarketConfiguration.setClassForTemplateLoading(this.getClass(), AssetsService.RESOURCE_FOLDER_NAME);
+    public TroubleshootingIndexTemplateBuilder() {
+        freemarketConfiguration.setClassForTemplateLoading(this.getClass(), TroubleshootingService.RESOURCE_FOLDER_NAME);
         freemarketConfiguration.setDefaultEncoding(StandardCharsets.UTF_8.name());
         freemarketConfiguration.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
         freemarketConfiguration.setNumberFormat("computer");
@@ -52,9 +48,6 @@ class AssetsIndexTemplateBuilder {
         try {
             var data = new HashMap<String, Object>();
             JCefTemplateUtils.addCommonEnvVariables(data);
-
-            var assetSearchEnabledForLinux = VersionComparatorUtil.compare(ApplicationInfo.getInstance().getMajorVersion(),"2023") >= 0;
-            data.put(ASSET_SEARCH_ENV_NAME, SystemInfo.isLinux ? String.valueOf(assetSearchEnabledForLinux) : "true");
 
             data.put(ENV_VARIABLE_IDE, ApplicationNamesInfo.getInstance().getProductName());
             data.put(IS_JAEGER_ENABLED, JaegerUtilKt.isJaegerButtonEnabled());

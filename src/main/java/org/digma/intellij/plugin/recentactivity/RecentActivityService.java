@@ -4,6 +4,7 @@ import com.intellij.execution.runners.ExecutionUtil;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ApplicationNamesInfo;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
@@ -29,12 +30,14 @@ import org.digma.intellij.plugin.common.CommonUtils;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator;
 import org.digma.intellij.plugin.common.JsonUtils;
+import org.digma.intellij.plugin.docker.DockerService;
 import org.digma.intellij.plugin.document.CodeObjectsUtil;
 import org.digma.intellij.plugin.icons.AppIcons;
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator;
 import org.digma.intellij.plugin.jcef.common.CustomSchemeHandlerFactory;
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil;
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils;
+import org.digma.intellij.plugin.jcef.common.JCefTemplateUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.rest.jcef.common.OpenInBrowserRequest;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
@@ -57,6 +60,7 @@ import org.digma.intellij.plugin.recentactivity.outgoing.JaegerUrlChangedRequest
 import org.digma.intellij.plugin.recentactivity.outgoing.LiveDataMessage;
 import org.digma.intellij.plugin.recentactivity.outgoing.LiveDataPayload;
 import org.digma.intellij.plugin.settings.SettingsState;
+import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt;
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier;
@@ -96,6 +100,15 @@ public class RecentActivityService implements Disposable {
     private static final String RECENT_EXPIRATION_LIMIT_VARIABLE = "recentActivityExpirationLimit";
     private static final int FETCHING_LOOP_INTERVAL = 10 * 1000; // 10sec
     private static final Icon icon = AppIcons.TOOL_WINDOW_OBSERVABILITY;
+
+    private static final String ENV_VARIABLE_IDE = "ide";
+    private static final String USER_EMAIL_VARIABLE = "userEmail";
+    private static final String IS_OBSERVABILITY_ENABLED_VARIABLE = "isObservabilityEnabled";
+    private static final String IS_DOCKER_INSTALLED = "isDockerInstalled";
+    private static final String IS_DOCKER_COMPOSE_INSTALLED = "isDockerComposeInstalled";
+    private static final String IS_DIGMA_ENGINE_INSTALLED = "isDigmaEngineInstalled";
+    private static final String IS_DIGMA_ENGINE_RUNNING = "isDigmaEngineRunning";
+    private static final String IS_JAEGER_ENABLED = "isJaegerEnabled";
 
     private final Logger logger = Logger.getInstance(RecentActivityService.class);
     private final Icon iconWithGreenDot = ExecutionUtil.getLiveIndicator(icon);
@@ -152,8 +165,22 @@ public class RecentActivityService implements Disposable {
                 .setUrl("https://" + RESOURCE_FOLDER_NAME + "/index.html")
                 .build();
 
-        var indexTemplateData = new HashMap<String, Object>();
-        indexTemplateData.put(RECENT_EXPIRATION_LIMIT_VARIABLE, RECENT_EXPIRATION_LIMIT_MILLIS);
+        var data = new HashMap<String, Object>();
+        JCefTemplateUtils.addCommonEnvVariables(data);
+        data.put(RECENT_EXPIRATION_LIMIT_VARIABLE, RECENT_EXPIRATION_LIMIT_MILLIS);
+
+        data.put(ENV_VARIABLE_IDE, ApplicationNamesInfo.getInstance().getProductName());
+        data.put(IS_JAEGER_ENABLED, JaegerUtilKt.isJaegerButtonEnabled());
+        var userEmail = PersistenceService.getInstance().getState().getUserEmail();
+        data.put(USER_EMAIL_VARIABLE, userEmail == null ? "" : userEmail);
+        data.put(IS_OBSERVABILITY_ENABLED_VARIABLE, PersistenceService.getInstance().getState().isAutoOtel());
+        data.put(IS_DIGMA_ENGINE_INSTALLED, ApplicationManager.getApplication().getService(DockerService.class).isEngineInstalled());
+        data.put(IS_DIGMA_ENGINE_RUNNING, ApplicationManager.getApplication().getService(DockerService.class).isEngineRunning(project));
+        data.put(IS_DOCKER_INSTALLED, ApplicationManager.getApplication().getService(DockerService.class).isDockerInstalled());
+        data.put(IS_DOCKER_COMPOSE_INSTALLED, ApplicationManager.getApplication().getService(DockerService.class).isDockerInstalled());
+
+
+
 
 
         var lifeSpanHandler = new CefLifeSpanHandlerAdapter() {
@@ -163,7 +190,7 @@ public class RecentActivityService implements Disposable {
                         .registerSchemeHandlerFactory(
                                 "https",
                                 RESOURCE_FOLDER_NAME,
-                                new CustomSchemeHandlerFactory(RESOURCE_FOLDER_NAME, indexTemplateData)
+                                new CustomSchemeHandlerFactory(RESOURCE_FOLDER_NAME, data)
                         );
             }
         };
@@ -217,6 +244,10 @@ public class RecentActivityService implements Disposable {
                         if (openBrowserRequest != null && openBrowserRequest.getPayload() != null) {
                             BrowserUtil.browse(openBrowserRequest.getPayload().getUrl());
                         }
+                    }
+                    if (JCefMessagesUtils.GLOBAL_OPEN_TROUBLESHOOTING_GUIDE.equalsIgnoreCase(reactMessageRequest.getAction())) {
+                        EDT.ensureEDT(() -> MainToolWindowCardsController.getInstance(project).showTroubleshooting());
+
                     }
                 });
 

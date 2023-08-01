@@ -107,7 +107,7 @@ private fun wrapWithEmptyStatuses(project: Project, insightsPanel: DigmaTabPanel
     val noInsightsPanel = createNoInsightsPanel()
     val pendingInsightsPanel = createPendingInsightsPanel()
     val loadingInsightsPanel = createLoadingInsightsPanel()
-    val noDataYetPanel = createNoDataYetEmptyStatePanel()
+    val noDataYetPanel = createNoDataYetEmptyStatePanel(project)
     val noObservabilityPanel = createNoObservabilityPanel(project, insightsModel)
 
     val startupEmpty = createStartupEmptyStatePanel(project)

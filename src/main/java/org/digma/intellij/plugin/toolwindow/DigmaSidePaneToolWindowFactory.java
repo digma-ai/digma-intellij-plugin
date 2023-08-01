@@ -14,6 +14,7 @@ import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.psi.LanguageService;
+import org.digma.intellij.plugin.troubleshooting.TroubleshootingPanel;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.digma.intellij.plugin.ui.ToolWindowShower;
 import org.digma.intellij.plugin.ui.common.ContentPanel;
@@ -27,6 +28,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import java.awt.*;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static org.digma.intellij.plugin.ui.common.InstallationWizardSidePanelWindowPanelKt.createInstallationWizardSidePanelWindowPanel;
 import static org.digma.intellij.plugin.ui.common.MainToolWindowPanelKt.createMainToolWindowPanel;
@@ -89,7 +91,12 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         //when ever we need to show the wizard it will be created new and disposed when finished, its probably not a
         // good idea to keep it in memory after its finished.
         Function<Boolean, DisposablePanel> wizardPanelBuilder = wizardSkipInstallationStep -> createInstallationWizardSidePanelWindowPanel(project, wizardSkipInstallationStep);
-        MainToolWindowCardsController.getInstance(project).initComponents(toolWindow,mainContent,cardsPanel,contentPanel,wizardPanelBuilder);
+
+        Supplier<DisposablePanel> troubleshootingPanelBuilder = () -> new TroubleshootingPanel(project);
+
+        MainToolWindowCardsController.getInstance(project).initComponents(toolWindow, mainContent, cardsPanel, contentPanel,
+                wizardPanelBuilder,
+                troubleshootingPanelBuilder);
 
         if (IDEUtilsService.shouldOpenWizard()) {
             ActivityMonitor.getInstance(project).registerCustomEvent("show-installation-wizard", null);

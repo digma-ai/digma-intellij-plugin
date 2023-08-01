@@ -27,10 +27,6 @@
       window.isDigmaEngineRunning = ${isDigmaEngineRunning?string('true', 'false')};
       window.isDockerInstalled = ${isDockerInstalled?string('true', 'false')};
       window.isDockerComposeInstalled = ${isDockerComposeInstalled?string('true', 'false')};
-
-      window.assetsSearch = ${assetsSearch};
-      window.assetsRefreshInterval;
-
     </script>
     <script src="/index.js"></script>
   </body>

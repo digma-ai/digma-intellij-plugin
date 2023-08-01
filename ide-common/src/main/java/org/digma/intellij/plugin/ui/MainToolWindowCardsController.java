@@ -182,7 +182,7 @@ public class MainToolWindowCardsController implements Disposable {
         Log.log(LOGGER::debug, "showTroubleshooting called");
 
         //in case showWizard is called while wizard is already on
-        if (troubleshooting.isOn()) {
+        if (troubleshooting.isOn() || wizard.isOn()) {
             Log.log(LOGGER::debug, project, "showTroubleshooting was called but troubleshooting on. nothing to do.");
             return;
         }
@@ -192,9 +192,9 @@ public class MainToolWindowCardsController implements Disposable {
         if (troubleshootingPanel != null) {
 
             Content troubleshootingContent = ContentFactory.getInstance().createContent(troubleshootingPanel, null, false);
-            if (wizard.isOn()) {
-                wizardFinished();
-            }
+//            if (wizard.isOn()) {
+//                wizardFinished();
+//            }
 
             toolWindow.getContentManager().removeContent(mainContent, false);
             toolWindow.getContentManager().addContent(troubleshootingContent);

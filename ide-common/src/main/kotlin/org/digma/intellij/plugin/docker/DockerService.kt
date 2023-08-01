@@ -25,7 +25,7 @@ class DockerService {
 
     private val engine = Engine()
     private val downloader = Downloader()
-
+    private var installationInProgress: Boolean = false;
     companion object {
         val WHICH_COMMAND = if (SystemInfo.isWindows) "where" else "which"
         const val DOCKER_COMMAND = "docker"
@@ -34,6 +34,9 @@ class DockerService {
     }
 
 
+    fun isInstallationInProgress(): Boolean{
+        return installationInProgress
+    }
     fun isDockerInstalled(): Boolean {
         return isInstalled(DOCKER_COMMAND) || isInstalled(DOCKER_COMPOSE_COMMAND)
     }
@@ -109,6 +112,11 @@ class DockerService {
     }
 
     fun installEngine(project: Project, resultTask: Consumer<String>) {
+        installationInProgress = true
+
+        val onCompleted = Consumer { _: String ->
+            installationInProgress = false
+        }.andThen(resultTask)
 
         ActivityMonitor.getInstance(project).registerDigmaEngineEventStart("installEngine", mapOf())
 
@@ -136,17 +144,17 @@ class DockerService {
                         PersistenceService.getInstance().setLocalEngineInstalled(true)
                     }
 
-                    notifyResult(exitValue, resultTask)
+                    notifyResult(exitValue, onCompleted)
                 } else {
                     ActivityMonitor.getInstance(project).registerDigmaEngineEventError("installEngine", "could not find docker compose command")
                     Log.log(logger::warn, "could not find docker compose command")
                     downloader.deleteFile()
-                    notifyResult(NO_DOCKER_COMPOSE_COMMAND, resultTask)
+                    notifyResult(NO_DOCKER_COMPOSE_COMMAND, onCompleted)
                 }
             } else {
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventError("installEngine", "Failed to download compose file")
                 Log.log(logger::warn, "Failed to download compose file")
-                notifyResult("Failed to download compose file", resultTask)
+                notifyResult("Failed to download compose file", onCompleted)
             }
 
             ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd("installEngine", mapOf())

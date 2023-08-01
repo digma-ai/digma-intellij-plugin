@@ -11,6 +11,7 @@ import org.cef.callback.CefQueryCallback;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.EDT;
+import org.digma.intellij.plugin.documentation.DocumentationService;
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil;
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils;
 import org.digma.intellij.plugin.log.Log;
@@ -46,6 +47,13 @@ class TroubleshootingMessageRouterHandler extends CefMessageRouterHandlerAdapter
                 String action = jsonNode.get("action").asText();
                 switch (action) {
                     case "TROUBLESHOOTING/CLOSE" -> EDT.ensureEDT(() -> MainToolWindowCardsController.getInstance(project).troubleshootingFinished());
+
+                    case JCefMessagesUtils.GLOBAL_OPEN_DOCUMENTATION -> {
+                        Log.log(LOGGER::trace, project, "got {} message", JCefMessagesUtils.GLOBAL_OPEN_DOCUMENTATION);
+                        var page = objectMapper.readTree(jsonNode.get("payload").toString()).get("page").asText();
+                        Log.log(LOGGER::trace, project, "got page {}", page);
+                        DocumentationService.getInstance(project).openDocumentation(page);
+                    }
 
 
                     case JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {

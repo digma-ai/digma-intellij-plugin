@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.troubleshooting;
+package org.digma.intellij.plugin.documentation;
 
 import com.intellij.openapi.project.Project;
 import org.cef.browser.CefBrowser;
@@ -11,11 +11,13 @@ import org.jetbrains.annotations.Nullable;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-class TroubleshootingSchemeHandlerFactory implements CefSchemeHandlerFactory {
+public class DocumentationSchemeHandlerFactory implements CefSchemeHandlerFactory {
     private final Project project;
+    private final DocumentationVirtualFile documentationVirtualFile;
 
-    public TroubleshootingSchemeHandlerFactory(Project project) {
+    public DocumentationSchemeHandlerFactory(Project project, DocumentationVirtualFile file) {
         this.project = project;
+        this.documentationVirtualFile = file;
     }
 
     @Override
@@ -24,16 +26,16 @@ class TroubleshootingSchemeHandlerFactory implements CefSchemeHandlerFactory {
         if (url != null) {
             var host = url.getHost();
             var file = url.getFile();
-            if (TroubleshootingService.DOMAIN_NAME.equals(host) &&
-                    TroubleshootingService.SCHEMA_NAME.equals(schemeName)) {
-                var resourceName = TroubleshootingService.RESOURCE_FOLDER_NAME + file;
+            if (DocumentationFileEditor.DOMAIN_NAME.equals(host) &&
+                    DocumentationFileEditor.SCHEMA_NAME.equals(schemeName)) {
+                var resourceName = DocumentationFileEditor.RESOURCE_FOLDER_NAME + file;
                 var resource = getClass().getResource(resourceName);
                 if (resource != null) {
-                    return new TroubleshootingResourceHandler(project, resourceName);
+                    return new DocumentationResourceHandler(project, resourceName, documentationVirtualFile);
                 } else if (getClass().getResource("/webview/common" + file) != null) {
-                    return new TroubleshootingResourceHandler(project, "/webview/common" + file);
+                    return new DocumentationResourceHandler(project, "/webview/common" + file, documentationVirtualFile);
                 } else {
-                    return new TroubleshootingResourceHandler(project, TroubleshootingService.RESOURCE_FOLDER_NAME + "/index.html");
+                    return new DocumentationResourceHandler(project, DocumentationFileEditor.RESOURCE_FOLDER_NAME + "/index.html", documentationVirtualFile);
                 }
             }
         }

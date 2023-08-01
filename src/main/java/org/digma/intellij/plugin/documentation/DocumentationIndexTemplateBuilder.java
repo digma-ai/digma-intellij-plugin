@@ -23,7 +23,7 @@ class DocumentationIndexTemplateBuilder {
 
     private final Logger logger = Logger.getInstance(DocumentationIndexTemplateBuilder.class);
 
-    private static final String INDEX_TEMPLATE_NAME = "documentation.tfl";
+    private static final String INDEX_TEMPLATE_NAME = "documentation.ftl";
 
     private static final String DOCUMENTATION_PAGE = "documentationPage";
     private static final String ENV_VARIABLE_IDE = "ide";

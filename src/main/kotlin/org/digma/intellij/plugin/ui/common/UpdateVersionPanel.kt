@@ -100,13 +100,17 @@ class UpdateVersionPanel(
                     }
 
                     BackendDeploymentType.DockerCompose -> {
-                        val upgradePopupLabel = JLabel(asHtml("<p>" +
-                                "<b>The Digma local engine is being updated</b>" +
-                                "</p><p>This can take a few minutes in which Digma may be offline</p>"))
-                        upgradePopupLabel.border = JBUI.Borders.empty(3)
-                        HintManager.getInstance().showHint(upgradePopupLabel, RelativePoint.getNorthWestOf(updateButton), HintManager.HIDE_BY_ESCAPE, 3000)
-                        project.service<DockerService>().upgradeEngine(project);
-                        //EditorService.getInstance(project).openClasspathResourceReadOnly(UPDATE_GUIDE_DOCKER_COMPOSE_NAME,UPDATE_GUIDE_DOCKER_COMPOSE_PATH)
+                        if(project.service<DockerService>().isEngineInstalled()){
+                            val upgradePopupLabel = JLabel(asHtml("<p>" +
+                                    "<b>The Digma local engine is being updated</b>" +
+                                    "</p><p>This can take a few minutes in which Digma may be offline</p>"))
+                            upgradePopupLabel.border = JBUI.Borders.empty(3)
+                            HintManager.getInstance().showHint(upgradePopupLabel, RelativePoint.getNorthWestOf(updateButton), HintManager.HIDE_BY_ESCAPE, 3000)
+                            project.service<DockerService>().upgradeEngine(project);
+                        }
+                        else{
+                            EditorService.getInstance(project).openClasspathResourceReadOnly(UPDATE_GUIDE_DOCKER_COMPOSE_NAME,UPDATE_GUIDE_DOCKER_COMPOSE_PATH)
+                        }
                     }
 
                     BackendDeploymentType.DockerExtension -> {

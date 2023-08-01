@@ -7,6 +7,7 @@ import com.intellij.ui.JBColor
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.model.nav.ScopeType
 import org.digma.intellij.plugin.navigation.HistoryScopeNavigation
+import org.digma.intellij.plugin.navigation.HomeSwitcherService
 import org.digma.intellij.plugin.ui.common.Laf
 
 class SpanNavBackAction : AnAction("Go to previous span") {
@@ -43,6 +44,10 @@ class SpanNavBackAction : AnAction("Go to previous span") {
 
                 else -> Unit
             }
+        }
+
+        if (miniScope == null) {
+            project.service<HomeSwitcherService>().switchToHome()
         }
     }
 

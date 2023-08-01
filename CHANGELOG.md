@@ -1,6 +1,14 @@
 # Changelog
 
-## [2.0.131] - 2023-07-31
+## [2.0.132] - 2023-08-01
+- SidePanel closed posthog event by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1061
+- First server perf posthog event by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1062
+- in case of docker-compose deployment type and no local engine install… by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1063
+- Feature/nav back - when its the last scope then toggle home by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1066
+- show notification when digma installation still running and the side … by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1065
+- Troubleshooting and documentation by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1067
+
+## 2.0.131 - 2023-07-31
 - remove UI thread assert by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1059
 
 ## 2.0.130 - 2023-07-31

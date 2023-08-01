@@ -9,8 +9,6 @@ import org.cef.misc.IntRef;
 import org.cef.misc.StringRef;
 import org.cef.network.CefRequest;
 import org.cef.network.CefResponse;
-import org.digma.intellij.plugin.assets.AssetsService;
-import org.digma.intellij.plugin.assets.AssetsUIException;
 import org.digma.intellij.plugin.log.Log;
 
 import java.io.IOException;
@@ -36,7 +34,7 @@ class TroubleshootingResourceHandler implements CefResourceHandler {
     public boolean processRequest(CefRequest request, CefCallback callback) {
 
         if (TroubleshootingService.getInstance(project).isIndexHtml(path)) {
-            inputStream = AssetsService.getInstance(project).buildIndexFromTemplate(path);
+            inputStream = TroubleshootingService.getInstance(project).buildIndexFromTemplate(path);
         } else {
             inputStream = getClass().getResourceAsStream(path);
         }
@@ -112,7 +110,7 @@ class TroubleshootingResourceHandler implements CefResourceHandler {
             bytesRead.set(read);
             return true;
         } catch (Exception e) {
-            throw new AssetsUIException(e);
+            throw new TroubleshootingException(e);
         }
     }
 

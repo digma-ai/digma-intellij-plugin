@@ -39,7 +39,7 @@ class TroubleshootingMessageRouterHandler extends CefMessageRouterHandlerAdapter
     @Override
     public boolean onQuery(CefBrowser browser, CefFrame frame, long queryId, String request, boolean persistent, CefQueryCallback callback) {
 
-        Backgroundable.runInNewBackgroundThread(project, "Processing Assets message", () -> {
+        Backgroundable.runInNewBackgroundThread(project, "Processing troubleshooting message", () -> {
             try {
 
                 var jsonNode = objectMapper.readTree(request);

@@ -23,6 +23,7 @@ import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
+import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse;
 import org.digma.intellij.plugin.model.rest.version.VersionRequest;
 import org.digma.intellij.plugin.model.rest.version.VersionResponse;
 
@@ -73,4 +74,6 @@ public interface AnalyticsProvider extends Closeable {
     VersionResponse getVersions(VersionRequest request);
 
     AboutResult getAbout();
+
+    PerformanceMetricsResponse getPerformanceMetrics();
 }

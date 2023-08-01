@@ -9,6 +9,7 @@ import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.AboutResult
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
+import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.semanticversion.SemanticVersionUtil
 import org.threeten.extra.Hours
@@ -76,6 +77,7 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
 
         ConnectionActivityMonitor.loadInstance(project)
         PluginActivityMonitor.loadInstance(project)
+        ServerPerformanceActivityMonitor.loadInstance(project)
     }
 
 //    override fun run() {
@@ -357,6 +359,22 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
             )
         )
     }
+
+
+    fun registerPerformanceMetrics(result: PerformanceMetricsResponse) {
+        val properties = mutableMapOf<String, Any>(
+            "server.startTime" to result.serverStartTime,
+            //"server.aliveTime" to result.serverAliveTime,
+            "probeTime" to result.probeTime
+        )
+        for (metric in result.metrics){
+            val uncapitalizedMetric = Character.toLowerCase(metric.metric[0]) + metric.metric.substring(1);
+            properties["server.metric.$uncapitalizedMetric"] = metric.value
+        }
+
+        postHog?.capture(userId,"server received-data", properties)
+    }
+
 
     fun registerContainerEngine(containerPlatform: String) {
         postHog?.set(

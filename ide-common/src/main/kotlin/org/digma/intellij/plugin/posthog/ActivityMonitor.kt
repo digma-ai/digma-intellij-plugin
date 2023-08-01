@@ -135,8 +135,16 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
         )
     }
 
+    fun registerSidePanelClosed() {
+        postHog?.capture(userId, "side-panel closed")
+    }
+
     fun registerObservabilityPanelOpened() {
         postHog?.capture(userId, "observability-panel opened")
+    }
+
+    fun registerObservabilityPanelClosed() {
+        postHog?.capture(userId, "observability-panel closed")
     }
 
     fun registerFirstConnectionEstablished() {

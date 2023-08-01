@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.troubleshooting;
 
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.components.Service;
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.ui.jcef.JBCefApp;
@@ -23,8 +22,6 @@ import java.io.InputStream;
 @Service(Service.Level.PROJECT)
 public final class TroubleshootingService implements Disposable {
 
-    private final Logger logger = Logger.getInstance(TroubleshootingService.class);
-
     private final Project project;
 
     static final String RESOURCE_FOLDER_NAME = "/webview/troubleshooting";
@@ -39,6 +36,10 @@ public final class TroubleshootingService implements Disposable {
     public TroubleshootingService(Project project) {
 
         this.project = project;
+    }
+
+
+    JComponent getComponent() {
 
         if (JBCefApp.isSupported()) {
 
@@ -81,16 +82,12 @@ public final class TroubleshootingService implements Disposable {
                 }
             });
 
-        }
-
-    }
-
-
-    JComponent getComponent() {
-        if (JBCefApp.isSupported()) {
             return jbCefBrowser.getComponent();
+
+        } else {
+            return null;
         }
-        return null;
+
     }
 
     private void registerAppSchemeHandler(Project project) {
@@ -129,4 +126,7 @@ public final class TroubleshootingService implements Disposable {
     }
 
 
+    public void disposeBrowser() {
+        dispose();
+    }
 }

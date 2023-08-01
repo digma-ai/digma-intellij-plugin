@@ -190,7 +190,12 @@ public class MainToolWindowCardsController implements Disposable {
         //build the wizard panel every time its necessary and dispose it when the wizard finishes.
         var troubleshootingPanel = troubleshootingPanelBuilder.get();
         if (troubleshootingPanel != null) {
+
             Content troubleshootingContent = ContentFactory.getInstance().createContent(troubleshootingPanel, null, false);
+            if (wizard.isOn()) {
+                wizardFinished();
+            }
+
             toolWindow.getContentManager().removeContent(mainContent, false);
             toolWindow.getContentManager().addContent(troubleshootingContent);
             troubleshooting.troubleshootingContent = troubleshootingContent;

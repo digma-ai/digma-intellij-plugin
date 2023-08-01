@@ -11,7 +11,10 @@ import static org.digma.intellij.plugin.ui.list.ListCommonKt.listBackground;
 public class TroubleshootingPanel extends DisposablePanel {
 
 
+    private final Project project;
+
     public TroubleshootingPanel(Project project) {
+        this.project = project;
         setLayout(new BorderLayout());
         setBorder(JBUI.Borders.empty());
         add(TroubleshootingService.getInstance(project).getComponent());
@@ -20,6 +23,6 @@ public class TroubleshootingPanel extends DisposablePanel {
 
     @Override
     public void dispose() {
-        //nothing to do yet
+        TroubleshootingService.getInstance(project).disposeBrowser();
     }
 }

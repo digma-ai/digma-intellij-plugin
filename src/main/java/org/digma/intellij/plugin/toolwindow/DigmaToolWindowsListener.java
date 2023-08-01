@@ -38,6 +38,12 @@ public class DigmaToolWindowsListener implements ToolWindowManagerListener {
 
             if (toolWindowId.equals(PluginId.TOOL_WINDOW_ID)) {
                 ActivityMonitor.getInstance(project).registerSidePanelClosed();
+
+                /*if(ApplicationManager.getApplication().getService(DockerService.class).isInstallationInProgress()){
+                    ApplicationManager.getApplication().invokeAndWait(() -> {
+                        Messages.showMessageDialog(project, "Digma installation is still running", "Installing Digma engine", null);
+                    });
+                }*/
             }
 
             if (toolWindowId.equals(PluginId.OBSERVABILITY_WINDOW_ID)) {

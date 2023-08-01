@@ -6,7 +6,9 @@ import com.intellij.openapi.application.ApplicationNamesInfo
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.Disposer
+import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.ui.jcef.JBCefBrowser
 import kotlinx.coroutines.delay
@@ -18,6 +20,7 @@ import org.cef.browser.CefMessageRouter
 import org.cef.callback.CefQueryCallback
 import org.cef.handler.CefLifeSpanHandlerAdapter
 import org.cef.handler.CefMessageRouterHandlerAdapter
+import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.analytics.BackendConnectionUtil
 import org.digma.intellij.plugin.common.Backgroundable
@@ -257,6 +260,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                             )
                             sendIsDigmaEngineInstalled(true, jbCefBrowser)
                             sendIsDigmaEngineRunning(true, jbCefBrowser)
+                            considerNotifyingOnLocalEngineInstallationFinish(project)
                         } else {
                             Log.log(logger::warn, "error installing engine, {}", exitValue)
 
@@ -460,6 +464,25 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
 
 
     return jcefDigmaPanel
+}
+
+private fun considerNotifyingOnLocalEngineInstallationFinish(project: Project){
+    val tw = ToolWindowManager.getInstance(project).getToolWindow(PluginId.TOOL_WINDOW_ID)
+    if (tw == null || tw.isVisible) {
+        return;
+    }
+
+    ApplicationManager.getApplication().invokeAndWait {
+        Messages.showMessageDialog(project, "Please follow the onboarding steps to run your application with Digma", "Digma successfully installed", null)
+    }
+
+    val ow = ToolWindowManager.getInstance(project).getToolWindow(PluginId.OBSERVABILITY_WINDOW_ID)
+    EDT.ensureEDT {
+        tw.show()
+        if (ow != null && !ow.isVisible) {
+            ow.show()
+        }
+    }
 }
 
 /**

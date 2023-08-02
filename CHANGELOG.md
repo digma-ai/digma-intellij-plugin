@@ -1,6 +1,12 @@
 # Changelog
 
-## [2.0.132] - 2023-08-01
+## [2.0.133] - 2023-08-02
+- Feature/SpringBoot add sampling probability by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1068
+- Bug fix/add small gap at project panel by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1070
+- fix insights statuses by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1071
+- Update Documentation UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1072
+
+## 2.0.132 - 2023-08-01
 - SidePanel closed posthog event by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1061
 - First server perf posthog event by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1062
 - in case of docker-compose deployment type and no local engine install… by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1063

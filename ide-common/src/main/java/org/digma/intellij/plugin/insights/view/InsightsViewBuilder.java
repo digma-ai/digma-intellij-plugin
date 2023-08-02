@@ -56,7 +56,7 @@ public class InsightsViewBuilder extends ListViewBuilder {
         });
 
 
-        if (methodInfo != null) {
+        if (methodInfo != null && !codeObjectInsights.isEmpty()) {
             Set<String> spansThatHaveNoInsight = findLocalSpansThatHaveNoInsights(methodInfo, codeObjectInsights);
             if (!spansThatHaveNoInsight.isEmpty()) {
                 buildItemsForNoDataYet(spansThatHaveNoInsight);

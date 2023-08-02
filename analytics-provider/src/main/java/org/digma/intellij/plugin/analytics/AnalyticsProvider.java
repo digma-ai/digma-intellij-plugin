@@ -5,6 +5,8 @@ import org.digma.intellij.plugin.model.rest.assets.AssetsRequest;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
+import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsRequest;
+import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsResponse;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
 import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightRequest;
@@ -48,6 +50,8 @@ public interface AnalyticsProvider extends Closeable {
     InsightsOfSingleSpanResponse getInsightsForSingleSpan(InsightsOfSingleSpanRequest insightsOfSingleSpanRequest);
 
     List<GlobalInsight> getGlobalInsights(InsightsRequest insightsRequest);
+
+    LatestCodeObjectEventsResponse getLatestEvents(LatestCodeObjectEventsRequest latestCodeObjectEventsRequest);
 
     List<CodeObjectError> getErrorsOfCodeObject(String environment, List<String> codeObjectIds);
 

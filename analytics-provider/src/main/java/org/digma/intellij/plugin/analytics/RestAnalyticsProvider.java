@@ -11,6 +11,8 @@ import org.digma.intellij.plugin.model.rest.assets.AssetsRequest;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
+import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsRequest;
+import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsResponse;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
 import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightRequest;
@@ -104,6 +106,10 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     @Override
     public List<GlobalInsight> getGlobalInsights(InsightsRequest insightsRequest) {
         return execute(() -> client.analyticsProvider.getGlobalInsights(insightsRequest));
+    }
+    @Override
+    public LatestCodeObjectEventsResponse getLatestEvents(LatestCodeObjectEventsRequest latestCodeObjectEventsRequest) {
+        return execute(() -> client.analyticsProvider.getLatestEvents(latestCodeObjectEventsRequest));
     }
 
     @Override
@@ -379,6 +385,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @POST("/CodeAnalytics/insights")
         Call<List<GlobalInsight>> getGlobalInsights(@Body InsightsRequest insightsRequest);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/CodeAnalytics/events/latest")
+        Call<LatestCodeObjectEventsResponse> getLatestEvents(@Body LatestCodeObjectEventsRequest latestCodeObjectEventsRequest);
 
         @Headers({
                 "Accept: application/+json",

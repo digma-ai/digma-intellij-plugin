@@ -165,6 +165,8 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
             retVal = retVal
                 .plus("-Dmanagement.otlp.tracing.endpoint=${getExporterUrl()}")
                 .plus(" ")
+                .plus("-Dmanagement.tracing.sampling.probability=1.0")
+                .plus(" ")
         } else {
             retVal = retVal
                 .plus("-javaagent:$otelAgentPath")

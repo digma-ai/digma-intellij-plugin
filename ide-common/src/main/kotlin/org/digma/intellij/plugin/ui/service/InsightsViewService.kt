@@ -187,10 +187,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
                     Log.log(logger::debug, "Loading backend status in background for method {}", methodInfo.name)
                     val insightStatus = insightsProvider.getInsightStatus(methodInfo)
                     Log.log(logger::debug, "Got status from backend {} for method {}", insightStatus, methodInfo.name)
-                    //if status is null assign EmptyStatus, it probably means there was a communication error
-                    model.status = insightStatus?.let {
-                        return@let toUiInsightStatus(it, methodInfo.hasRelatedCodeObjectIds())
-                    } ?: UIInsightsStatus.NoInsights
+                    model.status = toUiInsightStatus(insightStatus, methodInfo.hasRelatedCodeObjectIds())
 
                     Log.log(logger::debug, "UIInsightsStatus for method {} is {}", methodInfo.name, model.status)
 
@@ -210,12 +207,12 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
 
 
     @VisibleForTesting
-    fun toUiInsightStatus(status: InsightStatus, methodHasRelatedCodeObjectIds: Boolean): UIInsightsStatus {
+    fun toUiInsightStatus(status: InsightStatus?, methodHasRelatedCodeObjectIds: Boolean): UIInsightsStatus {
         //no need for else branch, all possible values are handled
         return when (status) {
             InsightStatus.InsightExist -> UIInsightsStatus.InsightPending
             InsightStatus.InsightPending -> UIInsightsStatus.InsightPending
-            InsightStatus.NoSpanData -> {
+            InsightStatus.NoSpanData,null -> {
                 return if (methodHasRelatedCodeObjectIds) {
                     UIInsightsStatus.NoSpanData // the client(this plugin) is aware of code objects, but server is not (yet)
                 } else {

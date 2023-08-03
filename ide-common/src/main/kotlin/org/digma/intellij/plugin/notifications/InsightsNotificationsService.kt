@@ -48,7 +48,7 @@ class InsightsNotificationsService(val project: Project) : Disposable {
 
             while (true) {
 
-                delay(10000)
+                delay(60000)
 
                 try {
 
@@ -77,6 +77,10 @@ class InsightsNotificationsService(val project: Project) : Disposable {
 
 
     private fun updateLastEventTime(events: LatestCodeObjectEventsResponse) {
+
+        if (events.events.isEmpty()){
+            return
+        }
 
         val latest = events.events.maxByOrNull { codeObjectEvent: CodeObjectEvent -> codeObjectEvent.eventTime }
         latest?.let {

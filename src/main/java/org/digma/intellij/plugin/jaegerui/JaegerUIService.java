@@ -74,6 +74,7 @@ public class JaegerUIService {
 
 
     public static JaegerUIService getInstance(Project project) {
+        Log.log(logger::warn, "Getting instance of " + JaegerUIService.class.getSimpleName());
         return project.getService(JaegerUIService.class);
     }
 

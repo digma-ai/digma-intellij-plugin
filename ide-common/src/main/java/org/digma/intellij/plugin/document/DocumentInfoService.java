@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class DocumentInfoService {
 
-    private final Logger LOGGER = Logger.getInstance(DocumentInfoService.class);
+    private static final Logger LOGGER = Logger.getInstance(DocumentInfoService.class);
 
     private final Project project;
     private final AnalyticsService analyticsService;
@@ -66,6 +66,7 @@ public class DocumentInfoService {
 
 
     public static DocumentInfoService getInstance(Project project) {
+        Log.log(LOGGER::warn, "Getting instance of " + DocumentInfoService.class.getSimpleName());
         return project.getService(DocumentInfoService.class);
     }
 

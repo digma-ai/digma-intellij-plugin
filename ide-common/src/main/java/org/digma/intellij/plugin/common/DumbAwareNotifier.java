@@ -18,7 +18,10 @@ public class DumbAwareNotifier {
     }
 
     public static DumbAwareNotifier getInstance(Project project) {
-        return project.getService(DumbAwareNotifier.class);
+        Log.log(LOGGER::warn, "Getting instance of " + DumbAwareNotifier.class.getSimpleName());
+        DumbAwareNotifier service = project.getService(DumbAwareNotifier.class);
+        Log.log(LOGGER::warn, "Returning " + DumbAwareNotifier.class.getSimpleName());
+        return service;
     }
 
     public void whenSmart(@NotNull Runnable runnable) {

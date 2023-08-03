@@ -1,6 +1,8 @@
 package org.digma.intellij.plugin.idea.psi.java;
 
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.PsiAnnotation;
@@ -9,17 +11,22 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.SearchScope;
+import com.intellij.psi.search.searches.AnnotatedElementsSearch;
+import com.intellij.util.Query;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public abstract class AbsJaxrsFramework implements IEndpointDiscovery {
@@ -78,6 +85,9 @@ public abstract class AbsJaxrsFramework implements IEndpointDiscovery {
         return getJaxRsPackageName() + ".PUT";
     }
 
+    protected String getApplicationPathAnnotationClassFqn() {
+        return getJaxRsPackageName() + ".ApplicationPath";
+    }
 
     private void lateInit() {
         if (lateInitAlready) return;
@@ -111,6 +121,9 @@ public abstract class AbsJaxrsFramework implements IEndpointDiscovery {
             return;
         }
 
+        var psiFacade = JavaPsiFacade.getInstance(project);
+        final PsiClass appPathAnnotationClass = psiFacade.findClass(getApplicationPathAnnotationClassFqn(), GlobalSearchScope.allScope(project));
+
         List<PsiClass> allClassesInFile = JavaPsiUtils.getClassesWithin(psiFile);
         for (PsiClass currClass : allClassesInFile) {
             final PsiAnnotation controllerPathAnnotation = JavaPsiUtils.findNearestAnnotation(currClass, JAX_RS_PATH_ANNOTATION_STR());
@@ -122,25 +135,57 @@ public abstract class AbsJaxrsFramework implements IEndpointDiscovery {
                     continue; // skip since could not find annotation of @Path, in either class and or method
                 }
 
+                Set<String> appPaths = evaluateApplicationPaths(appPathAnnotationClass, currClass);
+
                 for (JavaAnnotation currExpectedAnnotation : httpMethodsAnnotations) {
                     PsiAnnotation httpMethodAnnotation = JavaPsiUtils.findNearestAnnotation(currPsiMethod, currExpectedAnnotation.getClassNameFqn());
                     if (httpMethodAnnotation == null) {
                         continue; // skipping since could not find annotation of HTTP Method, such as @GET
                     }
-                    String endpointFullUri = combinePaths(controllerPathAnnotation, methodPathAnnotation);
+                    String endpointSuffixUri = combinePaths(controllerPathAnnotation, methodPathAnnotation);
 
-                    String httpEndpointCodeObjectId = createHttpEndpointCodeObjectId(currExpectedAnnotation, endpointFullUri);
+                    for (String appPath : appPaths) {
+                        String endpointFullUri = JavaUtils.combineUri(appPath, endpointSuffixUri);
+                        String httpEndpointCodeObjectId = createHttpEndpointCodeObjectId(currExpectedAnnotation, endpointFullUri);
 
-                    EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, JavaLanguageUtils.createJavaMethodCodeObjectId(currPsiMethod), JavaPsiUtils.toFileUri(currPsiMethod), currPsiMethod.getTextOffset());
-                    Log.log(LOGGER::debug, "Found endpoint info '{}' for method '{}'", endpointInfo.getId(), endpointInfo.getContainingMethodId());
+                        EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, JavaLanguageUtils.createJavaMethodCodeObjectId(currPsiMethod), JavaPsiUtils.toFileUri(currPsiMethod), currPsiMethod.getTextOffset());
+                        Log.log(LOGGER::debug, "Found endpoint info '{}' for method '{}'", endpointInfo.getId(), endpointInfo.getContainingMethodId());
 
-                    MethodInfo methodInfo = documentInfo.getMethods().get(endpointInfo.getContainingMethodId());
-                    //this method must exist in the document info
-                    Objects.requireNonNull(methodInfo, "method info " + endpointInfo.getContainingMethodId() + " must exist in DocumentInfo for " + documentInfo.getFileUri());
-                    methodInfo.addEndpoint(endpointInfo);
+                        MethodInfo methodInfo = documentInfo.getMethods().get(endpointInfo.getContainingMethodId());
+                        //this method must exist in the document info
+                        Objects.requireNonNull(methodInfo, "method info " + endpointInfo.getContainingMethodId() + " must exist in DocumentInfo for " + documentInfo.getFileUri());
+                        methodInfo.addEndpoint(endpointInfo);
+                    }
                 }
             }
         }
+    }
+
+    protected Set<String> evaluateApplicationPaths(@Nullable PsiClass appPathAnnotationClass, @NotNull PsiClass checkedClass) {
+        Set<String> appPaths = new HashSet<>();
+
+        // check for ApplicationPath in context of module
+        if (appPathAnnotationClass != null) {
+            Module module = ModuleUtilCore.findModuleForPsiElement(checkedClass);
+            if (module != null) {
+                Query<PsiClass> appPathPsiClasses = AnnotatedElementsSearch.searchPsiClasses(appPathAnnotationClass, GlobalSearchScope.moduleScope(module));
+                for (PsiClass appPathClass : appPathPsiClasses) {
+                    PsiAnnotation appPathAnnotation = appPathClass.getAnnotation(getApplicationPathAnnotationClassFqn());
+                    if (appPathAnnotation == null) {
+                        // very unlikely, maybe need to log an error
+                        continue;
+                    }
+                    String appPathValue = JavaLanguageUtils.getPsiAnnotationAttributeValue(appPathAnnotation, "value");
+                    appPaths.add(appPathValue);
+                }
+            }
+        }
+
+        if (appPaths.isEmpty()) {
+            appPaths.add("/"); // make sure have at least one entry
+        }
+
+        return appPaths;
     }
 
     @Override

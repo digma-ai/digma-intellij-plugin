@@ -16,7 +16,7 @@ data class UnmappedEvent
         "eventRecognitionTime"
 )
 constructor(
-        override val codeObjectId: String,
+        override val codeObjectId: String?,
         override val environment: String,
         override val eventTime: ZonedDateTime,
         override val eventRecognitionTime: ZonedDateTime,

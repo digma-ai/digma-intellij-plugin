@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.134] - 2023-08-03
+## [2.0.135] - 2023-08-03
+- update to rider 2023.2 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1082
+- Feature/first importance insight notification by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1079
+
+## 2.0.134 - 2023-08-03
 - Feature/support annotation WithSpan of OpenLiberty-MicroProfile by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1078
 - Update Installation Wizard UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1077
 - Feature/JAX-RS endpoints - respect annotation ApplicationPath by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1080

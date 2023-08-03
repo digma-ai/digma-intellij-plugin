@@ -88,67 +88,80 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     public void sendDebuggerEvent(DebuggerEventRequest debuggerEventRequest) {
+        LOGGER.warning("sendDebuggerEvent");
         execute(() -> client.analyticsProvider.sendDebuggerEvent(debuggerEventRequest));
     }
 
     @Override
     public List<CodeObjectInsight> getInsights(InsightsRequest insightsRequest) {
+        LOGGER.warning("getInsights");
         return execute(() -> client.analyticsProvider.getInsights(insightsRequest));
     }
 
     @Override
     public InsightsOfMethodsResponse getInsightsOfMethods(InsightsOfMethodsRequest insightsOfMethodsRequest) {
+        LOGGER.warning("getInsightsOfMethods");
         return execute(() -> client.analyticsProvider.getInsightsOfMethods(insightsOfMethodsRequest));
     }
 
     public InsightsOfSingleSpanResponse getInsightsForSingleSpan(InsightsOfSingleSpanRequest insightsOfSingleSpanRequest){
+        LOGGER.warning("getInsightsForSingleSpan");
         return execute(() -> client.analyticsProvider.getInsightsForSingleSpan(insightsOfSingleSpanRequest));
     }
 
     @Override
     public List<GlobalInsight> getGlobalInsights(InsightsRequest insightsRequest) {
+        LOGGER.warning("getGlobalInsights");
         return execute(() -> client.analyticsProvider.getGlobalInsights(insightsRequest));
     }
 
     @Override
     public List<CodeObjectError> getErrorsOfCodeObject(String environment, List<String> codeObjectIds) {
+        LOGGER.warning("getErrorsOfCodeObject");
         return execute(() -> client.analyticsProvider.getErrorsOfCodeObject(environment, codeObjectIds));
     }
 
     @Override
     public CodeObjectInsightsStatusResponse getCodeObjectInsightStatus(InsightsOfMethodsRequest request) {
+        LOGGER.warning("getCodeObjectInsightStatus");
         return execute(() -> client.analyticsProvider.getCodeObjectInsightStatus(request));
     }
 
     @Override
     public void setInsightCustomStartTime(CustomStartTimeInsightRequest customStartTimeInsightRequest) {
+        LOGGER.warning("setInsightCustomStartTime");
         execute(() -> client.analyticsProvider.setInsightCustomStartTime(customStartTimeInsightRequest));
     }
 
     @Override
     public CodeObjectErrorDetails getCodeObjectErrorDetails(String errorSourceId) {
+        LOGGER.warning("getCodeObjectErrorDetails");
         return execute(() -> client.analyticsProvider.getCodeObjectErrorDetails(errorSourceId));
     }
 
     @Override
     public UsageStatusResult getUsageStatus(UsageStatusRequest usageStatusRequest) {
+        LOGGER.warning("getUsageStatus");
         return execute(() -> client.analyticsProvider.getUsageStatus(usageStatusRequest));
     }
 
     @Override
     public String getHtmlGraphForSpanPercentiles(SpanHistogramQuery request) {
+        LOGGER.warning("getHtmlGraphForSpanPercentiles");
         final ResponseBody responseBody = execute(() -> client.analyticsProvider.getHtmlGraphForSpanPercentiles(request));
         return readEntire(responseBody);
     }
 
     @Override
     public String getHtmlGraphForSpanScaling(SpanHistogramQuery request) {
+        LOGGER.warning("getHtmlGraphForSpanScaling");
         final ResponseBody responseBody = execute(() -> client.analyticsProvider.getHtmlGraphForSpanScaling(request));
         return readEntire(responseBody);
     }
 
     @Override
     public RecentActivityResult getRecentActivity(RecentActivityRequest recentActivityRequest) {
+        LOGGER.warning("getRecentActivity");
         return execute(() -> client.analyticsProvider.getRecentActivity(recentActivityRequest));
     }
 
@@ -164,11 +177,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
     @Override
     public String getAssets(AssetsRequest assetsRequest) {
+        LOGGER.warning("getAssets");
         return execute(() -> client.analyticsProvider.getAssets(assetsRequest));
     }
 
     @Override
     public VersionResponse getVersions(VersionRequest request) {
+        LOGGER.warning("getVersions");
         return execute(() -> client.analyticsProvider.getVersions(request));
     }
 

@@ -16,8 +16,9 @@ import java.sql.Timestamp
 )
 @JsonSubTypes(
     JsonSubTypes.Type(value = CodeObjectDurationChangeEvent::class, name = "DurationChangeEvent"),
+    JsonSubTypes.Type(value = FirstImportantInsightEvent::class, name = "FirstImportantInsight"),
 )
-interface CodeObjectEvent{
+interface CodeObjectEvent {
     val type: CodeObjectEventType
     val codeObjectId: String
     val eventTime: Timestamp

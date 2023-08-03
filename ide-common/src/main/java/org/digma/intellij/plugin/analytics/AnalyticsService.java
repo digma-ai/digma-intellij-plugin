@@ -19,6 +19,8 @@ import org.digma.intellij.plugin.model.rest.assets.AssetsRequest;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
+import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsRequest;
+import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsResponse;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
 import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightRequest;
@@ -211,6 +213,12 @@ public class AnalyticsService implements Disposable {
         onInsightReceived(insights);
         return insights;
     }
+
+
+    public LatestCodeObjectEventsResponse getLatestEvents(@NotNull String lastReceivedTime) throws AnalyticsServiceException{
+        return executeCatching(() -> analyticsProviderProxy.getLatestEvents(new LatestCodeObjectEventsRequest(environment.getEnvironments(),lastReceivedTime)));
+    }
+
 
     /**
      * removed deprecation because its necessary for JaegerUIService#getImportance(java.util.List)

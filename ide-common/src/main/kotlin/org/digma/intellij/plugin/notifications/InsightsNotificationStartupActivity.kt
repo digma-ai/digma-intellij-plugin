@@ -6,6 +6,6 @@ import com.intellij.openapi.startup.StartupActivity
 
 class InsightsNotificationStartupActivity: StartupActivity {
     override fun runActivity(project: Project) {
-        project.service<InsightsNotificationsService>().waitForFirstImportantInsight()
+        project.service<InsightsNotificationsService>().waitForEvents()
     }
 }

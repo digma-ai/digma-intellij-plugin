@@ -39,7 +39,7 @@ class InsightsNotificationsService(val project: Project) : Disposable {
 
     private val logger = Logger.getInstance(this::class.java)
 
-    fun waitForFirstImportantInsight() {
+    fun waitForEvents() {
 
         Log.log(logger::info, "starting insights notification service")
 

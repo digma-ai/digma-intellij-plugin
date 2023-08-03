@@ -13,6 +13,7 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.lens.CodeLens
 import org.digma.intellij.plugin.psi.PsiFileNotFountException
 import org.digma.intellij.plugin.psi.PsiUtils
+import org.digma.intellij.plugin.ui.service.InsightsViewService
 import org.jetbrains.annotations.NotNull
 import java.util.function.Consumer
 
@@ -28,8 +29,10 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
     // when injecting directly in constructor of other services it needs to load the solution model
     // and that required EDT which is not always a good idea.
     companion object {
+        private val logger = Logger.getInstance(CodeLensHost::class.java)
         @JvmStatic
         fun getInstance(project: Project): CodeLensHost {
+            logger.warn("Getting instance of ${CodeLensHost::class.simpleName}")
             return project.getService(CodeLensHost::class.java)
         }
     }

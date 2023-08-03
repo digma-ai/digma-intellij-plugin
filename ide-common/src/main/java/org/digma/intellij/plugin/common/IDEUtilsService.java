@@ -1,10 +1,13 @@
 package org.digma.intellij.plugin.common;
 
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.util.PlatformUtils;
+import org.digma.intellij.plugin.analytics.AnalyticsService;
+import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.persistence.PersistenceData;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.psi.LanguageService;
@@ -13,6 +16,8 @@ import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("UnstableApiUsage")
 public class IDEUtilsService {
+
+    private static final Logger LOGGER = Logger.getInstance(IDEUtilsService.class);
 
     private final IsRider isRider;
     private final IsIdea isIdea;
@@ -24,6 +29,7 @@ public class IDEUtilsService {
     }
 
     public static IDEUtilsService getInstance(@NotNull Project project){
+        Log.log(LOGGER::warn, "Getting instance of " + IDEUtilsService.class.getSimpleName());
         return project.getService(IDEUtilsService.class);
     }
 

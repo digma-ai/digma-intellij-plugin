@@ -7,6 +7,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
+import org.digma.intellij.plugin.common.DumbAwareNotifier;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
@@ -34,7 +35,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class DocumentInfoService {
 
-    private final Logger LOGGER = Logger.getInstance(DocumentInfoService.class);
+    private static final Logger LOGGER = Logger.getInstance(DocumentInfoService.class);
 
     private final Project project;
     private final AnalyticsService analyticsService;
@@ -65,6 +66,7 @@ public class DocumentInfoService {
 
 
     public static DocumentInfoService getInstance(Project project) {
+        Log.log(LOGGER::warn, "Getting instance of " + DocumentInfoService.class.getSimpleName());
         return project.getService(DocumentInfoService.class);
     }
 

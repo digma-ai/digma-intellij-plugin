@@ -12,6 +12,7 @@ import org.digma.intellij.plugin.insights.InsightsViewOrchestrator;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
+import org.digma.intellij.plugin.psi.LanguageServiceLocator;
 import org.digma.intellij.plugin.ui.CaretContextService;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 
@@ -21,7 +22,7 @@ import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
  */
 public class EditorInteractionService implements CaretContextService, Disposable {
 
-    private final Logger logger = Logger.getInstance(EditorInteractionService.class);
+    private static final Logger logger = Logger.getInstance(EditorInteractionService.class);
 
     private final Project project;
 
@@ -41,6 +42,7 @@ public class EditorInteractionService implements CaretContextService, Disposable
     }
 
     public static CaretContextService getInstance(Project project) {
+        Log.log(logger::warn, "Getting instance of " + CaretContextService.class.getSimpleName());
         return project.getService(CaretContextService.class);
     }
 

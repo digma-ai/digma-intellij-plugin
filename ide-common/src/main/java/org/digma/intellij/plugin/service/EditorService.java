@@ -22,6 +22,7 @@ import kotlin.Triple;
 import org.apache.commons.io.IOUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
+import org.digma.intellij.plugin.ui.CaretContextService;
 import org.digma.intellij.plugin.vcs.VcsService;
 import org.digma.intellij.plugin.vf.DigmaStackTraceVirtualFile;
 import org.jetbrains.annotations.NotNull;
@@ -35,7 +36,7 @@ public class EditorService implements Disposable {
     public static final String STACKTRACE_PREFIX = "digma-stacktrace";
     public static final String VCS_PREFIX = "digma-vcs";
 
-    private final Logger LOGGER = Logger.getInstance(EditorService.class);
+    private static final Logger LOGGER = Logger.getInstance(EditorService.class);
 
     private final Project project;
 
@@ -48,6 +49,7 @@ public class EditorService implements Disposable {
     }
 
     public static EditorService getInstance(Project project) {
+        Log.log(LOGGER::warn, "Getting instance of " + EditorService.class.getSimpleName());
         return project.getService(EditorService.class);
     }
 

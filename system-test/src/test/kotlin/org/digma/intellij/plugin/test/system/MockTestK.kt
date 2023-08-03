@@ -3,15 +3,14 @@ package org.digma.intellij.plugin.test.system
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import org.digma.intellij.plugin.analytics.AnalyticsService
-import org.digma.intellij.plugin.posthog.ActivityMonitor
 
 class MockTestK : BasePlatformTestCase() {
 
     private val logger = Logger.getInstance(MockTestK::class.java)
 
     fun `test that all services are up and running`() {
-        logger.warn("Requesting ActivityMonitor")
-        ActivityMonitor.getInstance(project)
+        logger.warn("Requesting AnalyticsService")
+        AnalyticsService.getInstance(project)
     }
 
 }

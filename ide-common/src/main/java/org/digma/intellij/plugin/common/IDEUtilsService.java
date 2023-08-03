@@ -29,6 +29,7 @@ public class IDEUtilsService {
     }
 
     public static IDEUtilsService getInstance(@NotNull Project project){
+        Log.log(LOGGER::warn, "Getting instance of " + IDEUtilsService.class.getSimpleName());
         return project.getService(IDEUtilsService.class);
     }
 

@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.135] - 2023-08-03
+## [2.0.136] - 2023-08-03
+- Update Assets UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1084
+
+## 2.0.135 - 2023-08-03
 - update to rider 2023.2 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1082
 - Feature/first importance insight notification by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1079
 

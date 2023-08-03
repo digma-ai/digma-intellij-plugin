@@ -36,6 +36,7 @@ import static org.digma.intellij.plugin.idea.psi.java.Constants.WITH_SPAN_INST_L
 import static org.digma.intellij.plugin.idea.psi.java.Constants.WITH_SPAN_INST_LIBRARY_2;
 import static org.digma.intellij.plugin.idea.psi.java.Constants.WITH_SPAN_INST_LIBRARY_3;
 import static org.digma.intellij.plugin.idea.psi.java.Constants.WITH_SPAN_INST_LIBRARY_4;
+import static org.digma.intellij.plugin.idea.psi.java.Constants.WITH_SPAN_INST_LIBRARY_5;
 import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.createJavaMethodCodeObjectId;
 import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.createSpanIdForWithSpanAnnotation;
 import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.createSpanIdFromInstLibraryAndSpanName;
@@ -89,6 +90,7 @@ public class JavaSpanDiscoveryUtils {
             spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass, WITH_SPAN_INST_LIBRARY_2), spanName, methodId, containingFileUri));
             spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass, WITH_SPAN_INST_LIBRARY_3), spanName, methodId, containingFileUri));
             spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass, WITH_SPAN_INST_LIBRARY_4), spanName, methodId, containingFileUri));
+            spanInfos.add(new SpanInfo(createSpanIdForWithSpanAnnotation(psiMethod, withSpanAnnotation, containingClass, WITH_SPAN_INST_LIBRARY_5), spanName, methodId, containingFileUri));
             return spanInfos;
         }
 

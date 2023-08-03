@@ -31,7 +31,7 @@ class BackendConnectionUtil(project: Project) {
         //if called on background thread refreshNowOnBackground will run on the same thread ,
         // otherwise refreshNowOnBackground will run on background and isConnectionOk will return old result,
         // next call will be ok
-        Log.log(logger::debug, "Triggering environmentsSupplier.refresh")
+        Log.log(logger::warn, "Triggering environmentsSupplier.refresh")
         environmentsSupplier.refreshNowOnBackground()
 
         return backendConnectionMonitor.isConnectionOk()

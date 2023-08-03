@@ -49,11 +49,13 @@ public class Environment implements EnvironmentsSupplier {
         project.getMessageBus().connect(analyticsService).subscribe(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, new AnalyticsServiceConnectionEvent() {
             @Override
             public void connectionLost() {
+                Log.log(LOGGER::warn, "connectionLost");
                 refreshNowOnBackground();
             }
 
             @Override
             public void connectionGained() {
+                Log.log(LOGGER::warn, "connectionGained");
                 refreshNowOnBackground();
             }
         });
@@ -127,12 +129,15 @@ public class Environment implements EnvironmentsSupplier {
     @Override
     public void refreshNowOnBackground() {
 
-        Log.log(LOGGER::warn, "Refreshing Environments on background thread.");
+        Log.log(LOGGER::warn, "Inside {}: Refreshing Environments on background thread.", Thread.currentThread().getName());
         Backgroundable.ensureBackground(project, "Refreshing Environments", () -> {
+            Log.log(LOGGER::warn, "Inside {}: Inside Refreshing Environments - get lock", Thread.currentThread().getName());
             envChangeLock.lock();
             try {
                 //run both refreshEnvironments and updateCurrentEnv under same lock
+                Log.log(LOGGER::warn, "Inside {}: Inside Refreshing Environments - call refreshEnvironments", Thread.currentThread().getName());
                 refreshEnvironments();
+                Log.log(LOGGER::warn, "Inside {}: Inside Refreshing Environments - call updateCurrentEnv ", Thread.currentThread().getName());
                 updateCurrentEnv(persistenceData.getCurrentEnv(), true);
             } finally {
                 if (envChangeLock.isHeldByCurrentThread()) {
@@ -144,11 +149,14 @@ public class Environment implements EnvironmentsSupplier {
 
     void refreshNow() {
 
-        Log.log(LOGGER::warn, "Refreshing Environments on current thread.");
+        Log.log(LOGGER::warn, "Inside {}: Refreshing Environments on current thread.", Thread.currentThread().getName());
+        Log.log(LOGGER::warn, "Inside {}: Refreshing Environments Now - get lock", Thread.currentThread().getName());
         envChangeLock.lock();
         try {
             //run both refreshEnvironments and updateCurrentEnv under same lock
+            Log.log(LOGGER::warn, "Inside {}: Inside Refreshing Environments Now - call refreshEnvironments", Thread.currentThread().getName());
             refreshEnvironments();
+            Log.log(LOGGER::warn, "Inside {}: Inside Refreshing Environments Now - call updateCurrentEnv ", Thread.currentThread().getName());
             updateCurrentEnv(persistenceData.getCurrentEnv(), true);
         } finally {
             if (envChangeLock.isHeldByCurrentThread()) {

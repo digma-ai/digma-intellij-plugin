@@ -118,6 +118,7 @@ public class AnalyticsService implements Disposable {
         myApiToken = settingsState.apiToken;
         replaceClient(myApiUrl, myApiToken);
         initializeEnvironmentsList();
+        Log.log(LOGGER::warn, "Registering replaceClientAndFireChange");
         settingsState.addChangeListener(state -> {
             if (!Objects.equals(state.apiUrl, myApiUrl)) {
                 myApiUrl = state.apiUrl;
@@ -167,7 +168,7 @@ public class AnalyticsService implements Disposable {
 
 
     private void replaceClientAndFireChange(String url, String token) {
-
+        Log.log(LOGGER::warn, "Inside thread: {}: replaceClientAndFireChange", Thread.currentThread().getName());
         Backgroundable.ensureBackground(project, "Digma: Environments list changed", () -> {
             replaceClient(url, token);
             environment.refreshNowOnBackground();
@@ -466,8 +467,8 @@ public class AnalyticsService implements Disposable {
                 }
 
                 if (LOGGER.isDebugEnabled()) {
-                    Log.log(LOGGER::warn, "Got response from {}: args '{}', -----------------" +
-                            "Result '{}'", method.getName(), argsToString(args), resultToString(result));
+                    Log.log(LOGGER::warn, "Inside {}: Got response from {}: args '{}', -----------------" +
+                            "Result '{}'", Thread.currentThread().getName(), method.getName(), argsToString(args), resultToString(result));
                 }
 
                 if (!PersistenceService.getInstance().getState().getFirstTimeConnectionEstablished()) {

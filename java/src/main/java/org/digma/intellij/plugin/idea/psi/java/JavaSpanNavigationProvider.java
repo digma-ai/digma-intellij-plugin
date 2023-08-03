@@ -65,6 +65,7 @@ public class JavaSpanNavigationProvider implements Disposable {
     }
 
     public static JavaSpanNavigationProvider getInstance(@NotNull Project project) {
+        Log.log(LOGGER::warn, "Getting instance of " + JavaSpanNavigationProvider.class.getSimpleName());
         return project.getService(JavaSpanNavigationProvider.class);
     }
 

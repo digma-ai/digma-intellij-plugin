@@ -24,6 +24,7 @@ public class LanguageServiceLocator {
     }
 
     public static LanguageServiceLocator getInstance(Project project){
+        Log.log(LOGGER::warn, "Getting instance of " + LanguageServiceLocator.class.getSimpleName());
         return project.getService(LanguageServiceLocator.class);
     }
 

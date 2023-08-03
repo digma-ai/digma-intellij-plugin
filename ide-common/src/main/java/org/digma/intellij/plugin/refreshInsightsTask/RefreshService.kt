@@ -38,6 +38,7 @@ class RefreshService(private val project: Project) {
         private val logger = Logger.getInstance(RefreshService::class.java)
         @JvmStatic
         fun getInstance(project: Project): RefreshService {
+            logger.warn("Getting instance of ${RefreshService::class.simpleName}")
             return project.getService(RefreshService::class.java)
         }
     }

@@ -19,6 +19,7 @@ import com.intellij.util.concurrency.NonUrgentExecutor;
 import kotlin.Pair;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
+import org.digma.intellij.plugin.ui.ToolWindowShower;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
 import org.jetbrains.annotations.NotNull;
@@ -51,6 +52,7 @@ public class JavaSpanNavigationProvider implements Disposable {
     }
 
     public static JavaSpanNavigationProvider getInstance(@NotNull Project project) {
+        Log.log(LOGGER::warn, "Getting instance of " + JavaSpanNavigationProvider.class.getSimpleName());
         return project.getService(JavaSpanNavigationProvider.class);
     }
 

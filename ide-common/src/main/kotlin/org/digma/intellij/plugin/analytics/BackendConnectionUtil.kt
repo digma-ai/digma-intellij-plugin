@@ -12,8 +12,10 @@ class BackendConnectionUtil(project: Project) {
     private var environmentsSupplier: EnvironmentsSupplier
 
     companion object {
+        private val logger: Logger = Logger.getInstance(BackendConnectionUtil::class.java)
         @JvmStatic
         fun getInstance(project: Project): BackendConnectionUtil {
+            logger.warn("Getting instance of ${BackendConnectionUtil::class.simpleName}")
             return project.getService(BackendConnectionUtil::class.java)
         }
     }

@@ -21,6 +21,7 @@ import com.jetbrains.python.psi.PyCallExpression;
 import com.jetbrains.python.psi.PyFunction;
 import com.jetbrains.python.psi.stubs.PyFunctionNameIndex;
 import kotlin.Pair;
+import org.digma.intellij.plugin.common.DumbAwareNotifier;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.digma.intellij.plugin.psi.PsiUtils;
@@ -53,6 +54,7 @@ public class PythonSpanNavigationProvider implements Disposable {
 
 
     public static PythonSpanNavigationProvider getInstance(Project project) {
+        Log.log(LOGGER::warn, "Getting instance of " + PythonSpanNavigationProvider.class.getSimpleName());
         return project.getService(PythonSpanNavigationProvider.class);
     }
 

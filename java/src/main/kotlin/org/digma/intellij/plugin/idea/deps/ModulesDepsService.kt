@@ -2,12 +2,15 @@ package org.digma.intellij.plugin.idea.deps
 
 import com.intellij.buildsystem.model.unified.UnifiedCoordinates
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.LibraryOrderEntry
 import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.startup.StartupActivity
+import org.digma.intellij.plugin.ui.service.InsightsViewService
+import org.digma.intellij.plugin.updates.UpdatesService
 import org.jetbrains.annotations.NotNull
 import java.util.Timer
 import java.util.TimerTask
@@ -18,9 +21,12 @@ import java.util.concurrent.TimeUnit
 class ModulesDepsService(private val project: Project) : Disposable {
 
     companion object {
+        private val logger = Logger.getInstance(ModulesDepsService::class.java)
         @JvmStatic
         fun getInstance(project: Project): ModulesDepsService {
+            logger.warn("Getting instance of ${ModulesDepsService::class.simpleName}")
             return project.getService(ModulesDepsService::class.java)
+            logger.warn("Returning ${ModulesDepsService::class.simpleName}")
         }
 
         @JvmStatic
@@ -162,6 +168,7 @@ class ModulesDepsService(private val project: Project) : Disposable {
     private var mapName2Module: ConcurrentMap<String, ModuleExt> = ConcurrentHashMap<String, ModuleExt>()
 
     init {
+        logger.warn("Initializing ${ModulesDepsService::class.simpleName}")
         val fetchTask = object : TimerTask() {
             override fun run() {
                 periodicAction()
@@ -171,6 +178,7 @@ class ModulesDepsService(private val project: Project) : Disposable {
         timer.schedule(
             fetchTask, DelayMilliseconds, PeriodMilliseconds
         )
+        logger.warn("Finished ${ModulesDepsService::class.simpleName} initialization")
     }
 
     override fun dispose() {

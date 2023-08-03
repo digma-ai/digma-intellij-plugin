@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.psi;
 import com.intellij.lang.Language;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider;
 import org.digma.intellij.plugin.log.Log;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,6 +24,7 @@ public class LanguageServiceLocator {
     }
 
     public static LanguageServiceLocator getInstance(Project project){
+        Log.log(LOGGER::warn, "Getting instance of " + LanguageServiceLocator.class.getSimpleName());
         return project.getService(LanguageServiceLocator.class);
     }
 

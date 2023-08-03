@@ -29,6 +29,7 @@ import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
+import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType;
 import org.digma.intellij.plugin.model.rest.version.VersionRequest;
 import org.digma.intellij.plugin.model.rest.version.VersionResponse;
 import retrofit2.Call;
@@ -59,12 +60,15 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-
+import java.util.logging.Logger;
 public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
+
+    private final static Logger LOGGER = Logger.getLogger(RestAnalyticsProvider.class.getName());
 
     private final Client client;
 
@@ -78,9 +82,10 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
 
     public List<String> getEnvironments() {
-        return execute(client.analyticsProvider::getEnvironments);
+        LOGGER.warning("getEnvironments");
+        return Arrays.asList("env1", "env2", "env3");
+//        return execute(client.analyticsProvider::getEnvironments);
     }
-
 
     public void sendDebuggerEvent(DebuggerEventRequest debuggerEventRequest) {
         execute(() -> client.analyticsProvider.sendDebuggerEvent(debuggerEventRequest));
@@ -169,7 +174,9 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
     @Override
     public AboutResult getAbout() {
-        return execute(() -> client.analyticsProvider.getAbout());
+        LOGGER.warning("getAbout");
+        return new AboutResult("0.0.0", BackendDeploymentType.Unknown);
+//        return execute(() -> client.analyticsProvider.getAbout());
     }
 
     protected static String readEntire(ResponseBody responseBody) {
@@ -182,11 +189,14 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
     public <T> T execute(Supplier<Call<T>> supplier) {
 
+        LOGGER.warning("Executing " + supplier.toString());
+
         Response<T> response;
         try {
             Call<T> call = supplier.get();
             response = call.execute();
         } catch (Exception e) {
+            LOGGER.warning("AAA");
             throw new AnalyticsProviderException(e);
         }
 

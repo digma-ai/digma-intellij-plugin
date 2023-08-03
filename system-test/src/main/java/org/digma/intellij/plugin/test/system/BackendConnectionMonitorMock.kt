@@ -1,26 +1,26 @@
-package org.digma.intellij.plugin.analytics
+package org.digma.intellij.plugin.test.system
 
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.util.messages.MessageBusConnection
-import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
+import org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService
+import org.digma.intellij.plugin.ui.service.InsightsViewService
 
 /**
  * This service keeps track of the analytics service connection status. it is used to decide when to show the
  * no connection message in the plugin window.
  * see also class NoConnectionPanel
  */
-class BackendConnectionMonitor(val project: Project) : Disposable, AnalyticsServiceConnectionEvent {
+class BackendConnectionMonitorMock(val project: Project) : Disposable, AnalyticsServiceConnectionEvent {
 
     companion object {
-        private val logger = Logger.getInstance(BackendConnectionMonitor::class.java)
+        private val logger = Logger.getInstance(BackendConnectionMonitorMock::class.java)
         @JvmStatic
-        fun getInstance(project: Project): BackendConnectionMonitor {
-            logger.warn("Getting instance of ${BackendConnectionMonitor::class.simpleName}")
-            var service = project.getService(BackendConnectionMonitor::class.java)
-            logger.warn("Returning ${BackendConnectionMonitor::class.simpleName}")
-            return service;
+        fun getInstance(project: Project): BackendConnectionMonitorMock {
+            logger.warn("Getting instance of ${BackendConnectionMonitorMock::class.simpleName}")
+            return project.getService(BackendConnectionMonitorMock::class.java)
         }
     }
 
@@ -29,29 +29,23 @@ class BackendConnectionMonitor(val project: Project) : Disposable, AnalyticsServ
     private val analyticsConnectionEventsConnection: MessageBusConnection = project.messageBus.connect()
 
     init {
-        logger.warn("Initializing ${BackendConnectionMonitor::class.simpleName}")
         analyticsConnectionEventsConnection.subscribe(
             AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC,
             this
         )
-        logger.warn("Finished ${BackendConnectionMonitor::class.simpleName} initialization")
     }
 
     override fun dispose() {
-        logger.warn("Disposing")
         analyticsConnectionEventsConnection.dispose()
         hasConnectionError = false
-        logger.warn("Finished disposing")
     }
 
     fun isConnectionError(): Boolean {
-        logger.warn("isConnectionError")
-        return false
+        return hasConnectionError
     }
 
     fun isConnectionOk(): Boolean {
-        logger.warn("isConnectionOk")
-        return true
+        return !hasConnectionError
     }
 
     private fun connectionError() {

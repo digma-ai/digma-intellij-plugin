@@ -1,7 +1,10 @@
 package org.digma.intellij.plugin.htmleditor;
 
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileEditor.impl.HTMLEditorProvider;
 import com.intellij.openapi.project.Project;
+import org.digma.intellij.plugin.document.DocumentInfoService;
+import org.digma.intellij.plugin.log.Log;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.LinkedHashMap;
@@ -20,6 +23,7 @@ import java.util.Map;
  */
 public class DigmaHTMLEditorProvider {
 
+    private static final Logger LOGGER = Logger.getInstance(DigmaHTMLEditorProvider.class);
 
     private final LinkedHashMap<String,String> ourTitles = new LinkedHashMap<>(){
         @Override
@@ -35,6 +39,7 @@ public class DigmaHTMLEditorProvider {
     }
 
     public static DigmaHTMLEditorProvider getInstance(Project project){
+        Log.log(LOGGER::warn, "Getting instance of " + DigmaHTMLEditorProvider.class.getSimpleName());
         return project.getService(DigmaHTMLEditorProvider.class);
     }
 

@@ -1,12 +1,17 @@
 package org.digma.intellij.plugin.posthog
 
 import com.intellij.openapi.application.ApplicationInfo
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.posthog.java.PostHog
+import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.CommonUtils
+import org.digma.intellij.plugin.editor.EditorEventsHandler
+import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.AboutResult
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
+import org.digma.intellij.plugin.refreshInsightsTask.RefreshService
 import org.digma.intellij.plugin.semanticversion.SemanticVersionUtil
 import org.threeten.extra.Hours
 import java.io.PrintWriter
@@ -17,10 +22,16 @@ import java.time.LocalDateTime
 
 class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
 
+    private val logger = Logger.getInstance(ActivityMonitor::class.java)
+
     companion object {
+        private val logger = Logger.getInstance(ActivityMonitor::class.java)
         @JvmStatic
         fun getInstance(project: Project): ActivityMonitor {
-            return project.getService(ActivityMonitor::class.java)
+            logger.warn("Getting instance of ${ActivityMonitor::class.simpleName}")
+            var service = project.getService(ActivityMonitor::class.java)
+            logger.warn("Returning ${ActivityMonitor::class.simpleName}")
+            return service
         }
     }
 
@@ -34,6 +45,7 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
     private var lastConnectionErrorTime: Instant = Instant.MIN
 
     init {
+        logger.warn("Initializing ${ActivityMonitor::class.simpleName}")
         val hostname = CommonUtils.getLocalHostname()
         if (System.getenv("devenv") == "digma") {
             userId = hostname
@@ -54,8 +66,11 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
         postHog = PostHog.Builder(token).build()
         registerSessionDetails()
 
+        logger.warn("Requesting ConnectionActivityMonitor")
         ConnectionActivityMonitor.loadInstance(project)
+        logger.warn("Requesting PluginActivityMonitor")
         PluginActivityMonitor.loadInstance(project)
+        logger.warn("Finished ${ActivityMonitor::class.simpleName} initialization")
     }
 
 //    override fun run() {

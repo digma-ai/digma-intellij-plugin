@@ -23,6 +23,7 @@ import org.digma.intellij.plugin.model.rest.version.VersionResponse
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.semanticversion.SemanticVersionUtil
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
+import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.VisibleForTesting
 import java.time.LocalDateTime
@@ -37,6 +38,7 @@ class UpdatesService(private val project: Project) : Disposable {
 
         @JvmStatic
         fun getInstance(project: Project): UpdatesService {
+            logger.warn("Getting instance of ${UpdatesService::class.simpleName}")
             return project.getService(UpdatesService::class.java)
         }
     }

@@ -9,6 +9,7 @@ import freemarker.template.TemplateExceptionHandler;
 import org.apache.commons.collections.CollectionUtils;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
+import org.digma.intellij.plugin.assets.AssetsService;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.ReadActions;
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator;
@@ -46,7 +47,7 @@ import static org.digma.intellij.plugin.document.CodeObjectsUtil.addSpanTypeToId
 
 public class JaegerUIService {
 
-    private final Logger logger = Logger.getInstance(JaegerUIService.class);
+    private static final Logger logger = Logger.getInstance(JaegerUIService.class);
 
     private final Project project;
 
@@ -70,6 +71,7 @@ public class JaegerUIService {
 
 
     public static JaegerUIService getInstance(Project project) {
+        Log.log(logger::warn, "Getting instance of " + JaegerUIService.class.getSimpleName());
         return project.getService(JaegerUIService.class);
     }
 

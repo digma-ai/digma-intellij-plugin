@@ -14,16 +14,20 @@ class ConnectionActivityMonitor(private val project: Project) : AnalyticsService
 
         @JvmStatic
         fun loadInstance(project: Project) {
+            LOGGER.warn("Getting instance of ${ConnectionActivityMonitor::class.simpleName}")
             project.getService(ConnectionActivityMonitor::class.java)
+            LOGGER.warn("Returning ${ConnectionActivityMonitor::class.simpleName}")
         }
     }
 
     init {
+        LOGGER.warn("Initializing ${ConnectionActivityMonitor::class.simpleName}")
         project.messageBus.connect().subscribe(
             AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC,
             this
         )
         asyncFetchAndRegisterServerVersion()
+        LOGGER.warn("Finished ${ConnectionActivityMonitor::class.simpleName} initialization")
     }
 
     override fun connectionLost() {
@@ -44,8 +48,8 @@ class ConnectionActivityMonitor(private val project: Project) : AnalyticsService
                 val about = AnalyticsService.getInstance(project).analyticsProvider.about
                 ActivityMonitor.getInstance(project).registerServerInfo(about)
             } catch (e: Exception) {
-                Log.log(LOGGER::debug, "Failed to get+register server version: {}", e.message);
+                Log.log(LOGGER::warn, "Failed to get+register server version: {}", e.message);
             }
         }
-    }
+    } 
 }

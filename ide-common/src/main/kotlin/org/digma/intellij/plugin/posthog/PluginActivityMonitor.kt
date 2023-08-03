@@ -11,16 +11,19 @@ import org.digma.intellij.plugin.PluginId
 
 class PluginActivityMonitor(private val project: Project) : PluginStateListener, Disposable {
     companion object {
-        private val LOGGER = Logger.getInstance(PluginActivityMonitor::class.java)
-
+        private val logger = Logger.getInstance(PluginActivityMonitor::class.java)
         @JvmStatic
         fun loadInstance(project: Project) {
+            logger.warn("Getting instance of ${PluginActivityMonitor::class.simpleName}")
             project.getService(PluginActivityMonitor::class.java)
+            logger.warn("Returning ${PluginActivityMonitor::class.simpleName}")
         }
     }
 
     init {
+        logger.warn("Initializing ${PluginActivityMonitor::class.simpleName}")
         PluginStateManager.addStateListener(this)
+        logger.warn("Finished ${PluginActivityMonitor::class.simpleName} initialization")
     }
 
     override fun uninstall(descriptor: IdeaPluginDescriptor) {

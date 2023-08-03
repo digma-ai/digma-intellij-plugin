@@ -9,6 +9,7 @@ import com.intellij.openapi.rd.util.withUiContext
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.RunnableCallable
 import com.intellij.util.concurrency.NonUrgentExecutor
+import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.document.DocumentInfoService
@@ -16,6 +17,7 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
 import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.service.ErrorsViewService
@@ -33,9 +35,10 @@ class RefreshService(private val project: Project) {
     private val isGeneralRefreshButtonEnabled = AtomicBoolean(true)
 
     companion object {
-
+        private val logger = Logger.getInstance(RefreshService::class.java)
         @JvmStatic
         fun getInstance(project: Project): RefreshService {
+            logger.warn("Getting instance of ${RefreshService::class.simpleName}")
             return project.getService(RefreshService::class.java)
         }
     }

@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
 import org.digma.intellij.plugin.PluginId;
+import org.digma.intellij.plugin.idea.psi.java.JavaSpanNavigationProvider;
 import org.digma.intellij.plugin.log.Log;
 import org.jetbrains.annotations.NotNull;
 
@@ -14,6 +15,7 @@ public class RecentActivityToolWindowShower {
 
 
     public static RecentActivityToolWindowShower getInstance(@NotNull Project project) {
+        Log.log(LOGGER::warn, "Getting instance of " + RecentActivityToolWindowShower.class.getSimpleName());
         return project.getService(RecentActivityToolWindowShower.class);
     }
 

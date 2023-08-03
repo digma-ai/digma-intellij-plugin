@@ -37,7 +37,9 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
     private val environmentChangeConnection: MessageBusConnection = project.messageBus.connect()
 
     companion object {
+        private val logger = Logger.getInstance(SummaryViewService::class.java)
         fun getInstance(project: Project): SummaryViewService {
+            logger.warn("Getting instance of ${SummaryViewService::class.simpleName}")
             return project.getService(SummaryViewService::class.java)
         }
     }

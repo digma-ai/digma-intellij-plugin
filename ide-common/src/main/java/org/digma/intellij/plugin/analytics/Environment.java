@@ -67,6 +67,7 @@ public class Environment implements EnvironmentsSupplier {
 
     @Override
     public void setCurrent(@Nullable String newEnv) {
+        Log.log(LOGGER::warn, "setCurrent 1 " + newEnv);
 
         if (StringUtils.isEmpty(newEnv) || NO_ENVIRONMENTS_MESSAGE.equals(newEnv)) {
             return;
@@ -80,6 +81,7 @@ public class Environment implements EnvironmentsSupplier {
     // that exists in the DB.
     @Override
     public void setCurrent(@NotNull String newEnv, boolean refreshInsightsView, @Nullable Runnable taskToRunAfterChange) {
+        Log.log(LOGGER::warn, "setCurrent 2 " + newEnv);
 
         Log.log(LOGGER::debug, "Setting current environment , old={},new={}", this.current, newEnv);
 
@@ -125,7 +127,7 @@ public class Environment implements EnvironmentsSupplier {
     @Override
     public void refreshNowOnBackground() {
 
-        Log.log(LOGGER::debug, "Refreshing Environments on background thread.");
+        Log.log(LOGGER::warn, "Refreshing Environments on background thread.");
         Backgroundable.ensureBackground(project, "Refreshing Environments", () -> {
             envChangeLock.lock();
             try {
@@ -142,7 +144,7 @@ public class Environment implements EnvironmentsSupplier {
 
     void refreshNow() {
 
-        Log.log(LOGGER::debug, "Refreshing Environments on current thread.");
+        Log.log(LOGGER::warn, "Refreshing Environments on current thread.");
         envChangeLock.lock();
         try {
             //run both refreshEnvironments and updateCurrentEnv under same lock
@@ -158,18 +160,19 @@ public class Environment implements EnvironmentsSupplier {
 
     //this method should not be called on ui threads, it may hang and cause a freeze
     private void refreshEnvironments() {
+        Log.log(LOGGER::warn, "refreshEnvironments");
 
         var stopWatch = StopWatch.createStarted();
 
         envChangeLock.lock();
 
         try {
-            Log.log(LOGGER::debug, "Refresh Environments called");
+            Log.log(LOGGER::warn, "Refresh Environments called");
 
-            Log.log(LOGGER::debug, "Refreshing Environments list");
+            Log.log(LOGGER::warn, "Refreshing Environments list");
             var newEnvironments = analyticsService.getEnvironments();
             if (newEnvironments != null && !newEnvironments.isEmpty()) {
-                Log.log(LOGGER::debug, "Got environments {}", newEnvironments);
+                Log.log(LOGGER::warn, "Got environments {}", newEnvironments);
             } else {
                 Log.log(LOGGER::warn, "Error loading environments: {}", newEnvironments);
                 newEnvironments = new ArrayList<>();
@@ -189,12 +192,13 @@ public class Environment implements EnvironmentsSupplier {
             }
 
             stopWatch.stop();
-            Log.log(LOGGER::debug, "Refresh environments took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS));
+            Log.log(LOGGER::warn, "Refresh environments took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS));
         }
     }
 
 
     private void updateCurrentEnv(@Nullable String preferred, boolean refreshInsightsView) {
+        Log.log(LOGGER::warn, "updateCurrentEnv");
 
         var oldEnv = current;
 
@@ -230,7 +234,7 @@ public class Environment implements EnvironmentsSupplier {
 
 
     private void notifyEnvironmentsListChange() {
-        Log.log(LOGGER::debug, "Firing EnvironmentsListChange event for {}", environments);
+        Log.log(LOGGER::warn, "Firing EnvironmentsListChange event for {}", environments);
         if (project.isDisposed()) {
             return;
         }
@@ -245,7 +249,7 @@ public class Environment implements EnvironmentsSupplier {
 
 
     private void notifyEnvironmentChanged(String oldEnv, String newEnv, boolean refreshInsightsView) {
-        Log.log(LOGGER::debug, "Firing EnvironmentChanged event for {}", newEnv);
+        Log.log(LOGGER::warn, "Firing EnvironmentChanged event for {}", newEnv);
         if (project.isDisposed()) {
             return;
         }

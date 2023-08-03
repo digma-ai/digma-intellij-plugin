@@ -32,6 +32,7 @@ class QuarkusConfigureDepsService(private val project: Project) : Disposable {
 
         @JvmStatic
         fun getInstance(project: Project): QuarkusConfigureDepsService {
+            logger.warn("Getting instance of ${QuarkusConfigureDepsService::class.simpleName}")
             return project.getService(QuarkusConfigureDepsService::class.java)
         }
 

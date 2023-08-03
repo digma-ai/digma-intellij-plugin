@@ -106,6 +106,7 @@ public class AnalyticsService implements Disposable {
     private RestAnalyticsProvider analyticsProvider;
 
     public AnalyticsService(@NotNull Project project) {
+        Log.log(LOGGER::warn, "Initializing " + AnalyticsService.class.getSimpleName());
         //initialize BackendConnectionMonitor when starting, so it is aware early on connection statuses
         BackendConnectionMonitor.getInstance(project);
         //initialize MainToolWindowCardsController when starting, so it is aware early on connection statuses
@@ -130,9 +131,11 @@ public class AnalyticsService implements Disposable {
         },this);
     }
 
-
     public static AnalyticsService getInstance(@NotNull Project project) {
-        return project.getService(AnalyticsService.class);
+        Log.log(LOGGER::warn, "Getting instance of " + AnalyticsService.class.getSimpleName());
+        AnalyticsService service = project.getService(AnalyticsService.class);
+        Log.log(LOGGER::warn, "Returning " + AnalyticsService.class.getSimpleName());
+        return service;
     }
 
     public Environment getEnvironment() {
@@ -463,7 +466,7 @@ public class AnalyticsService implements Disposable {
                 }
 
                 if (LOGGER.isDebugEnabled()) {
-                    Log.log(LOGGER::debug, "Got response from {}: args '{}', -----------------" +
+                    Log.log(LOGGER::warn, "Got response from {}: args '{}', -----------------" +
                             "Result '{}'", method.getName(), argsToString(args), resultToString(result));
                 }
 
@@ -565,7 +568,7 @@ public class AnalyticsService implements Disposable {
 
 
         private boolean isConnectionOK(){
-            return !myConnectionLostFlag.get();
+            return true;
         }
 
 

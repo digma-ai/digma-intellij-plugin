@@ -28,6 +28,7 @@ import org.digma.intellij.plugin.common.JsonUtils;
 import org.digma.intellij.plugin.document.CodeObjectsUtil;
 import org.digma.intellij.plugin.icons.AppIcons;
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator;
+import org.digma.intellij.plugin.jaegerui.JaegerUIService;
 import org.digma.intellij.plugin.jcef.common.CustomSchemeHandlerFactory;
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil;
 import org.digma.intellij.plugin.log.Log;
@@ -89,8 +90,8 @@ public class RecentActivityService implements Disposable {
     private static final String RECENT_EXPIRATION_LIMIT_VARIABLE = "recentActivityExpirationLimit";
     private static final int FETCHING_LOOP_INTERVAL = 10 * 1000; // 10sec
     private static final Icon icon = AppIcons.TOOL_WINDOW_OBSERVABILITY;
+    private static final Logger logger = Logger.getInstance(RecentActivityService.class);
 
-    private final Logger logger = Logger.getInstance(RecentActivityService.class);
     private final Icon iconWithGreenDot = ExecutionUtil.getLiveIndicator(icon);
     private final String localHostname;
     private final Project project;
@@ -108,12 +109,16 @@ public class RecentActivityService implements Disposable {
     private boolean webAppInitialized;
 
     public static RecentActivityService getInstance(Project project) {
-        return project.getService(RecentActivityService.class);
+        Log.log(logger::warn, "Getting instance of " + RecentActivityService.class.getSimpleName());
+        RecentActivityService service = project.getService(RecentActivityService.class);
+        Log.log(logger::warn, "Returning " + RecentActivityService.class.getSimpleName());
+        return service;
     }
 
     public RecentActivityService(Project project) {
         this.project = project;
         //initialize AnalyticsService early so the UI already can detect the connection status when created
+        Log.log(logger::warn, "Initializing " + RecentActivityService.class.getSimpleName());
         this.analyticsService = project.getService(AnalyticsService.class);
         this.localHostname = CommonUtils.getLocalHostname();
         this.latestActivityResult = new RecentActivityResult(null, new ArrayList<>());

@@ -17,6 +17,7 @@ import org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.rest.insights.InsightStatus
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
 import org.digma.intellij.plugin.ui.model.DocumentScope
@@ -46,8 +47,10 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
 
 
     companion object {
+        private val logger = Logger.getInstance(InsightsViewService::class.java)
         @JvmStatic
         fun getInstance(project: Project): InsightsViewService {
+            logger.warn("Getting instance of ${InsightsViewService::class.simpleName}")
             return project.getService(InsightsViewService::class.java)
         }
     }

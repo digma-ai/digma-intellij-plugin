@@ -19,11 +19,9 @@ import java.io.InputStream;
 @Service(Service.Level.PROJECT)
 public final class AssetsService implements Disposable {
 
-    private final Logger logger = Logger.getInstance(JaegerUIService.class);
+    private static final Logger logger = Logger.getInstance(AssetsService.class);
 
     private final Project project;
-
-
 
     public AssetsService(Project project) {
         this.project = project;
@@ -31,6 +29,7 @@ public final class AssetsService implements Disposable {
     }
 
     public static AssetsService getInstance(Project project) {
+        Log.log(logger::warn, "Getting instance of " + AssetsService.class.getSimpleName());
         return project.getService(AssetsService.class);
     }
 

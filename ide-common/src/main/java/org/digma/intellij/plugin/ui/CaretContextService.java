@@ -14,6 +14,7 @@ import org.digma.intellij.plugin.service.EditorService;
 public interface CaretContextService extends Disposable {
 
     static CaretContextService getInstance(Project project) {
+        Log.log(Logger.getInstance(CaretContextService.class)::warn, "Getting instance of " + CaretContextService.class.getSimpleName());
         return project.getService(CaretContextService.class);
     }
 

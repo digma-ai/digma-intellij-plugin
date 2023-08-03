@@ -1,6 +1,12 @@
 # Changelog
 
-## [2.0.133] - 2023-08-02
+## [2.0.134] - 2023-08-03
+- Feature/support annotation WithSpan of OpenLiberty-MicroProfile by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1078
+- Update Installation Wizard UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1077
+- Feature/JAX-RS endpoints - respect annotation ApplicationPath by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1080
+- Update Assets UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1081
+
+## 2.0.133 - 2023-08-02
 - Feature/SpringBoot add sampling probability by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1068
 - Bug fix/add small gap at project panel by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1070
 - fix insights statuses by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1071

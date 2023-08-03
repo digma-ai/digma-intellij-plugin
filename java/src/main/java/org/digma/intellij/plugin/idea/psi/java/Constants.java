@@ -11,6 +11,7 @@ public interface Constants {
     String WITH_SPAN_INST_LIBRARY_2 = "io.opentelemetry.opentelemetry-instrumentation-annotations-1.16";
     String WITH_SPAN_INST_LIBRARY_3 = "io.quarkus.opentelemetry";
     String WITH_SPAN_INST_LIBRARY_4 = "io.micronaut.code";
+    String WITH_SPAN_INST_LIBRARY_5 = "io.openliberty.microprofile.telemetry";
     String SPAN_BUILDER_FQN = "io.opentelemetry.api.trace.SpanBuilder";
     String TRACER_FQN = "io.opentelemetry.api.trace.Tracer";
 }

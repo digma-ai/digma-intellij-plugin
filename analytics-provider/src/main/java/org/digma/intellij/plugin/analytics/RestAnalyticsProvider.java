@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.analytics;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.io.CharStreams;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -64,6 +65,7 @@ import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Objects;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -293,6 +295,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
         private ObjectMapper createObjectMapper() {
             ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.setTimeZone(TimeZone.getTimeZone("UTC"));
+            objectMapper.registerModule(new JavaTimeModule());
             //objectMapper can be configured here is necessary
             objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
             objectMapper.disable(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES);

@@ -11,6 +11,7 @@ dependencies {
     implementation(libs.retrofit.client)
     implementation(libs.retrofit.jackson)
     implementation(libs.retrofit.scalars)
+    implementation(libs.jackson.datetime)
     implementation(libs.guava)
 }
 

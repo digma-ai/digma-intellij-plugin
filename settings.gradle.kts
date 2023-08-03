@@ -56,6 +56,7 @@ dependencyResolutionManagement {
             library("retrofit-client", "com.squareup.retrofit2", "retrofit").versionRef("retrofit")
             library("retrofit-jackson", "com.squareup.retrofit2", "converter-jackson").versionRef("retrofit")
             library("retrofit-scalars", "com.squareup.retrofit2", "converter-scalars").versionRef("retrofit")
+            library("jackson-datetime", "com.fasterxml.jackson.datatype", "jackson-datatype-jsr310").version("2.10.1")
             version("okhttp", "4.9.3")
             library("okhttp", "com.squareup.okhttp3", "okhttp").versionRef("okhttp")
             library("okhttp-mockwebserver", "com.squareup.okhttp3", "mockwebserver").versionRef("okhttp")

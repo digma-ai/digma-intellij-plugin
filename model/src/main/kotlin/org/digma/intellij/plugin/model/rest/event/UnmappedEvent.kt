@@ -4,20 +4,22 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.beans.ConstructorProperties
-import java.sql.Timestamp
+import java.time.ZonedDateTime
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class UnmappedEvent
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties(
         "codeObjectId",
+        "environment",
         "eventTime",
         "eventRecognitionTime"
 )
 constructor(
         override val codeObjectId: String,
-        override val eventTime: Timestamp,
-        override val eventRecognitionTime: Timestamp,
+        override val environment: String,
+        override val eventTime: ZonedDateTime,
+        override val eventRecognitionTime: ZonedDateTime,
         @JsonProperty("type")
         val theType: String,
 ) : CodeObjectEvent {

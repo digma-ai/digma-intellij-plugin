@@ -4,20 +4,22 @@ import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import java.beans.ConstructorProperties
-import java.sql.Timestamp
+import java.time.ZonedDateTime
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class FirstImportantInsightEvent @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties(
     "codeObjectId",
+    "environment",
     "eventTime",
     "eventRecognitionTime",
     "insight",
 )
 constructor(
-    override val codeObjectId: String,
-    override val eventTime: Timestamp,
-    override val eventRecognitionTime: Timestamp,
+    override val codeObjectId: String?,
+    override val environment: String,
+    override val eventTime: ZonedDateTime,
+    override val eventRecognitionTime: ZonedDateTime,
     val insight: CodeObjectInsight,
 ) : CodeObjectEvent {
 

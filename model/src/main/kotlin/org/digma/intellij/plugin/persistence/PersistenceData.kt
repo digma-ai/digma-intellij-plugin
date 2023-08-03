@@ -17,5 +17,5 @@ data class PersistenceData(
         var isFirstTimePluginLoaded: Boolean = false,
         var userId: String? = null,
         var firstTimePerformanceMetrics: Boolean = false,
-        var isFirstImportantInsightReceived: Boolean = false,
+        var lastInsightsEventTime: String? = null,
 )

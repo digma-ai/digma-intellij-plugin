@@ -82,9 +82,9 @@ class InsightsNotificationsService(val project: Project) : Disposable {
             return
         }
 
-        val latest = events.events.maxByOrNull { codeObjectEvent: CodeObjectEvent -> codeObjectEvent.eventTime }
+        val latest = events.events.maxByOrNull { codeObjectEvent: CodeObjectEvent -> codeObjectEvent.eventRecognitionTime }
         latest?.let {
-            PersistenceService.getInstance().state.lastInsightsEventTime = it.eventTime.withZoneSameInstant(ZoneOffset.UTC).toString()
+            PersistenceService.getInstance().state.lastInsightsEventTime = it.eventRecognitionTime.withZoneSameInstant(ZoneOffset.UTC).toString()
         }
     }
 

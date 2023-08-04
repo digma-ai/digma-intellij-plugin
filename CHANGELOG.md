@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.136] - 2023-08-03
+## [2.0.137] - 2023-08-04
+- Update Assets UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1085
+
+## 2.0.136 - 2023-08-03
 - Update Assets UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1084
 
 ## 2.0.135 - 2023-08-03

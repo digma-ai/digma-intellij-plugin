@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.137] - 2023-08-04
+## [2.0.138] - 2023-08-04
+- use eventRecognitionTime by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1086
+
+## 2.0.137 - 2023-08-04
 - Update Assets UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1085
 
 ## 2.0.136 - 2023-08-03

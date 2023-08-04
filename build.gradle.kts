@@ -218,6 +218,7 @@ tasks {
         // part of a plugin, but there are dangers about keeping plugins in sync
         autoReloadPlugins.set(false)
         systemProperties(
+            "idea.log.trace.categories" to "#org.digma",
             "idea.log.debug.categories" to "#org.digma",
         )
     }

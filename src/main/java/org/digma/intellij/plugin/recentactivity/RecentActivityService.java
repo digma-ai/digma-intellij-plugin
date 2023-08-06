@@ -79,7 +79,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import static org.digma.intellij.plugin.common.EnvironmentUtilKt.LOCAL_ENV;
+import static org.digma.intellij.plugin.common.EnvironmentUtilKt.LOCAL_TESTS_ENV;
 import static org.digma.intellij.plugin.common.EnvironmentUtilKt.SUFFIX_OF_LOCAL;
+import static org.digma.intellij.plugin.common.EnvironmentUtilKt.SUFFIX_OF_LOCAL_TESTS;
 import static org.digma.intellij.plugin.common.EnvironmentUtilKt.getSortedEnvironments;
 import static org.digma.intellij.plugin.jcef.common.JCefMessagesUtils.GLOBAL_SET_IS_JAEGER_ENABLED;
 import static org.digma.intellij.plugin.jcef.common.JCefMessagesUtils.RECENT_ACTIVITY_CLOSE_LIVE_VIEW;
@@ -178,9 +180,6 @@ public class RecentActivityService implements Disposable {
         data.put(IS_DIGMA_ENGINE_RUNNING, ApplicationManager.getApplication().getService(DockerService.class).isEngineRunning(project));
         data.put(IS_DOCKER_INSTALLED, ApplicationManager.getApplication().getService(DockerService.class).isDockerInstalled());
         data.put(IS_DOCKER_COMPOSE_INSTALLED, ApplicationManager.getApplication().getService(DockerService.class).isDockerInstalled());
-
-
-
 
 
         var lifeSpanHandler = new CefLifeSpanHandlerAdapter() {
@@ -421,12 +420,22 @@ public class RecentActivityService implements Disposable {
     }
 
     private String getAdjustedEnvName(String environment) {
-        return environment.toUpperCase().endsWith(SUFFIX_OF_LOCAL) ? LOCAL_ENV : environment;
+        String envUcase = environment.toUpperCase();
+
+        if (envUcase.endsWith(SUFFIX_OF_LOCAL))
+            return LOCAL_ENV;
+        if (envUcase.endsWith(SUFFIX_OF_LOCAL_TESTS))
+            return LOCAL_TESTS_ENV;
+
+        return environment;
     }
 
     private String adjustBackEnvNameIfNeeded(String environment) {
         if (environment.equalsIgnoreCase(LOCAL_ENV)) {
             return (localHostname + SUFFIX_OF_LOCAL).toUpperCase();
+        }
+        if (environment.equalsIgnoreCase(LOCAL_TESTS_ENV)) {
+            return (localHostname + SUFFIX_OF_LOCAL_TESTS).toUpperCase();
         }
         return environment;
     }

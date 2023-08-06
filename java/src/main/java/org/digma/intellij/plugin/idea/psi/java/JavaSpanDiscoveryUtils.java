@@ -283,6 +283,12 @@ public class JavaSpanDiscoveryUtils {
             PsiExpression initializer = tracerVariable.getInitializer();
             if (initializer instanceof PsiMethodCallExpression) {
                 return getInstLibraryFromMethodCallExpression(project, (PsiMethodCallExpression) initializer);
+            } else {
+                if (tracerVariable.hasAnnotation(Constants.JAKARTA_INJECT_FQN)
+                        || tracerVariable.hasAnnotation(Constants.JAVAX_INJECT_FQN)) {
+                    //TODO: seems that Quarkus also supports this kind of injection, so maybe need to return List<String> (list of inst libs)
+                    return Constants.OPENLIBERTY_MICROPROFILE_INST_LIB;
+                }
             }
         }
 

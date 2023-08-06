@@ -23,6 +23,14 @@ public class Log {
         consumer.accept(DIGMA + String.format(format.replace("{}", "%s"), args));
     }
 
+    public static void test(Logger logger, String format, Object... args) {
+        StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+        String callingMethodName = stackTraceElements[2].getMethodName();
+        String threadName = Thread.currentThread().getName();
+        String header = callingMethodName + " - " + threadName;
+        logger.warn(header + " - " + String.format(format.replace("{}", "%s"), args));
+    }
+
     public static void debugWithException(Logger logger,Throwable e, String format, Object... args) {
         logger.debug(DIGMA + String.format(format.replace("{}", "%s"), args),e);
     }
@@ -60,7 +68,6 @@ public class Log {
     public static void error(Logger logger, Exception exception, String msg) {
         logger.error(DIGMA + msg, exception);
     }
-
 
 
 }

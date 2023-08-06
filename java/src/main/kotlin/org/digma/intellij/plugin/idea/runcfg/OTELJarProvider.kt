@@ -144,7 +144,7 @@ class OTELJarProvider {
         Backgroundable.ensureBackground(project, "download otel agent jars") {
             try {
                 downloader.download(downloadDir)
-                Log.log(logger::debug,"otel agent jars downloaded to {}",downloadDir)
+                Log.test(logger,"otel agent jars downloaded to {}", downloadDir)
             } catch (e: Exception) {
                 Log.debugWithException(logger, e, "Could not download otel agent jars")
             }

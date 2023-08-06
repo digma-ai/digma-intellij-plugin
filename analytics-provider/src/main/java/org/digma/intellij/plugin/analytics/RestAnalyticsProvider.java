@@ -82,86 +82,86 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
 
     public List<String> getEnvironments() {
-        LOGGER.warning("getEnvironments");
+        Log.test(LOGGER, "getEnvironments");
         return Arrays.asList("env1", "env2", "env3");
 //        return execute(client.analyticsProvider::getEnvironments);
     }
 
     public void sendDebuggerEvent(DebuggerEventRequest debuggerEventRequest) {
-        LOGGER.warning("sendDebuggerEvent");
+        Log.test(LOGGER, "sendDebuggerEvent");
         execute(() -> client.analyticsProvider.sendDebuggerEvent(debuggerEventRequest));
     }
 
     @Override
     public List<CodeObjectInsight> getInsights(InsightsRequest insightsRequest) {
-        LOGGER.warning("getInsights");
+        Log.test(LOGGER, "getInsights");
         return execute(() -> client.analyticsProvider.getInsights(insightsRequest));
     }
 
     @Override
     public InsightsOfMethodsResponse getInsightsOfMethods(InsightsOfMethodsRequest insightsOfMethodsRequest) {
-        LOGGER.warning("getInsightsOfMethods");
+        Log.test(LOGGER, "getInsightsOfMethods");
         return execute(() -> client.analyticsProvider.getInsightsOfMethods(insightsOfMethodsRequest));
     }
 
     public InsightsOfSingleSpanResponse getInsightsForSingleSpan(InsightsOfSingleSpanRequest insightsOfSingleSpanRequest){
-        LOGGER.warning("getInsightsForSingleSpan");
+        Log.test(LOGGER, "getInsightsForSingleSpan");
         return execute(() -> client.analyticsProvider.getInsightsForSingleSpan(insightsOfSingleSpanRequest));
     }
 
     @Override
     public List<GlobalInsight> getGlobalInsights(InsightsRequest insightsRequest) {
-        LOGGER.warning("getGlobalInsights");
+        Log.test(LOGGER, "getGlobalInsights");
         return execute(() -> client.analyticsProvider.getGlobalInsights(insightsRequest));
     }
 
     @Override
     public List<CodeObjectError> getErrorsOfCodeObject(String environment, List<String> codeObjectIds) {
-        LOGGER.warning("getErrorsOfCodeObject");
+        Log.test(LOGGER, "getErrorsOfCodeObject");
         return execute(() -> client.analyticsProvider.getErrorsOfCodeObject(environment, codeObjectIds));
     }
 
     @Override
     public CodeObjectInsightsStatusResponse getCodeObjectInsightStatus(InsightsOfMethodsRequest request) {
-        LOGGER.warning("getCodeObjectInsightStatus");
+        Log.test(LOGGER, "getCodeObjectInsightStatus");
         return execute(() -> client.analyticsProvider.getCodeObjectInsightStatus(request));
     }
 
     @Override
     public void setInsightCustomStartTime(CustomStartTimeInsightRequest customStartTimeInsightRequest) {
-        LOGGER.warning("setInsightCustomStartTime");
+        Log.test(LOGGER, "setInsightCustomStartTime");
         execute(() -> client.analyticsProvider.setInsightCustomStartTime(customStartTimeInsightRequest));
     }
 
     @Override
     public CodeObjectErrorDetails getCodeObjectErrorDetails(String errorSourceId) {
-        LOGGER.warning("getCodeObjectErrorDetails");
+        Log.test(LOGGER, "getCodeObjectErrorDetails");
         return execute(() -> client.analyticsProvider.getCodeObjectErrorDetails(errorSourceId));
     }
 
     @Override
     public UsageStatusResult getUsageStatus(UsageStatusRequest usageStatusRequest) {
-        LOGGER.warning("getUsageStatus");
+        Log.test(LOGGER, "getUsageStatus");
         return execute(() -> client.analyticsProvider.getUsageStatus(usageStatusRequest));
     }
 
     @Override
     public String getHtmlGraphForSpanPercentiles(SpanHistogramQuery request) {
-        LOGGER.warning("getHtmlGraphForSpanPercentiles");
+        Log.test(LOGGER, "getHtmlGraphForSpanPercentiles");
         final ResponseBody responseBody = execute(() -> client.analyticsProvider.getHtmlGraphForSpanPercentiles(request));
         return readEntire(responseBody);
     }
 
     @Override
     public String getHtmlGraphForSpanScaling(SpanHistogramQuery request) {
-        LOGGER.warning("getHtmlGraphForSpanScaling");
+        Log.test(LOGGER, "getHtmlGraphForSpanScaling");
         final ResponseBody responseBody = execute(() -> client.analyticsProvider.getHtmlGraphForSpanScaling(request));
         return readEntire(responseBody);
     }
 
     @Override
     public RecentActivityResult getRecentActivity(RecentActivityRequest recentActivityRequest) {
-        LOGGER.warning("getRecentActivity");
+        Log.test(LOGGER, "getRecentActivity");
         return execute(() -> client.analyticsProvider.getRecentActivity(recentActivityRequest));
     }
 
@@ -177,19 +177,19 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
     @Override
     public String getAssets(AssetsRequest assetsRequest) {
-        LOGGER.warning("getAssets");
+        Log.test(LOGGER, "getAssets");
         return execute(() -> client.analyticsProvider.getAssets(assetsRequest));
     }
 
     @Override
     public VersionResponse getVersions(VersionRequest request) {
-        LOGGER.warning("getVersions");
+        Log.test(LOGGER, "getVersions");
         return execute(() -> client.analyticsProvider.getVersions(request));
     }
 
     @Override
     public AboutResult getAbout() {
-        LOGGER.warning("getAbout");
+        Log.test(LOGGER, "getAbout");
         return new AboutResult("0.0.0", BackendDeploymentType.Unknown);
 //        return execute(() -> client.analyticsProvider.getAbout());
     }
@@ -204,14 +204,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
     public <T> T execute(Supplier<Call<T>> supplier) {
 
-        LOGGER.warning("Executing " + supplier.toString());
+        Log.test(LOGGER, "Executing {}", supplier.toString());
 
         Response<T> response;
         try {
             Call<T> call = supplier.get();
             response = call.execute();
         } catch (Exception e) {
-            LOGGER.warning("AAA");
             throw new AnalyticsProviderException(e);
         }
 

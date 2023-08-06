@@ -28,9 +28,9 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
         private val logger = Logger.getInstance(ActivityMonitor::class.java)
         @JvmStatic
         fun getInstance(project: Project): ActivityMonitor {
-            logger.warn("Getting instance of ${ActivityMonitor::class.simpleName}")
-            var service = project.getService(ActivityMonitor::class.java)
-            logger.warn("Returning ${ActivityMonitor::class.simpleName}")
+            Log.test(logger,"Getting instance of ${ActivityMonitor::class.simpleName}")
+            val service = project.getService(ActivityMonitor::class.java)
+            Log.test(logger,"Returning ${ActivityMonitor::class.simpleName}")
             return service
         }
     }
@@ -45,7 +45,7 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
     private var lastConnectionErrorTime: Instant = Instant.MIN
 
     init {
-        logger.warn("Initializing ${ActivityMonitor::class.simpleName}")
+        Log.test(logger, "Initializing ${ActivityMonitor::class.simpleName}")
         val hostname = CommonUtils.getLocalHostname()
         if (System.getenv("devenv") == "digma") {
             userId = hostname
@@ -66,11 +66,11 @@ class ActivityMonitor(private val project: Project) /*: Runnable, Disposable*/ {
         postHog = PostHog.Builder(token).build()
         registerSessionDetails()
 
-        logger.warn("Requesting ConnectionActivityMonitor")
+        Log.test(logger,"Requesting ConnectionActivityMonitor")
         ConnectionActivityMonitor.loadInstance(project)
-        logger.warn("Requesting PluginActivityMonitor")
+        Log.test(logger,"Requesting PluginActivityMonitor")
         PluginActivityMonitor.loadInstance(project)
-        logger.warn("Finished ${ActivityMonitor::class.simpleName} initialization")
+        Log.test(logger,"Finished ${ActivityMonitor::class.simpleName} initialization")
     }
 
 //    override fun run() {

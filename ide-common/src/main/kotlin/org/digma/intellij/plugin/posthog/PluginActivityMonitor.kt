@@ -8,22 +8,23 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.PluginId
+import org.digma.intellij.plugin.log.Log
 
 class PluginActivityMonitor(private val project: Project) : PluginStateListener, Disposable {
     companion object {
         private val logger = Logger.getInstance(PluginActivityMonitor::class.java)
         @JvmStatic
         fun loadInstance(project: Project) {
-            logger.warn("Getting instance of ${PluginActivityMonitor::class.simpleName}")
+            Log.test(logger,"Getting instance of ${PluginActivityMonitor::class.simpleName}")
             project.getService(PluginActivityMonitor::class.java)
-            logger.warn("Returning ${PluginActivityMonitor::class.simpleName}")
+            Log.test(logger,"Returning ${PluginActivityMonitor::class.simpleName}")
         }
     }
 
     init {
-        logger.warn("Initializing ${PluginActivityMonitor::class.simpleName}")
+        Log.test(logger, "Initializing ${PluginActivityMonitor::class.simpleName}")
         PluginStateManager.addStateListener(this)
-        logger.warn("Finished ${PluginActivityMonitor::class.simpleName} initialization")
+        Log.test(logger, "Finished ${PluginActivityMonitor::class.simpleName} initialization")
     }
 
     override fun uninstall(descriptor: IdeaPluginDescriptor) {

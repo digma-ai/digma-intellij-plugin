@@ -83,7 +83,7 @@ public class Environment implements EnvironmentsSupplier {
     // that exists in the DB.
     @Override
     public void setCurrent(@NotNull String newEnv, boolean refreshInsightsView, @Nullable Runnable taskToRunAfterChange) {
-        Log.log(LOGGER::warn, "setCurrent 2 " + newEnv);
+        Log.test(LOGGER, "setCurrent 2 " + newEnv);
 
         Log.log(LOGGER::debug, "Setting current environment , old={},new={}", this.current, newEnv);
 
@@ -129,38 +129,43 @@ public class Environment implements EnvironmentsSupplier {
     @Override
     public void refreshNowOnBackground() {
 
-        Log.log(LOGGER::warn, "Inside {}: Refreshing Environments on background thread.", Thread.currentThread().getName());
+        Log.test(LOGGER, "Firing Refreshing Environments");
         Backgroundable.ensureBackground(project, "Refreshing Environments", () -> {
-            Log.log(LOGGER::warn, "Inside {}: Inside Refreshing Environments - get lock", Thread.currentThread().getName());
+            Log.test(LOGGER, "Going to lock envChangeLock");
             envChangeLock.lock();
+            Log.test(LOGGER, "envChangeLock locked");
             try {
                 //run both refreshEnvironments and updateCurrentEnv under same lock
-                Log.log(LOGGER::warn, "Inside {}: Inside Refreshing Environments - call refreshEnvironments", Thread.currentThread().getName());
+                Log.test(LOGGER, "call refreshEnvironments");
                 refreshEnvironments();
-                Log.log(LOGGER::warn, "Inside {}: Inside Refreshing Environments - call updateCurrentEnv ", Thread.currentThread().getName());
+                Log.test(LOGGER, "call updateCurrentEnv");
                 updateCurrentEnv(persistenceData.getCurrentEnv(), true);
             } finally {
+                Log.test(LOGGER, "Going to unlock envChangeLock");
                 if (envChangeLock.isHeldByCurrentThread()) {
                     envChangeLock.unlock();
                 }
+                Log.test(LOGGER, "envChangeLock unlocked");
             }
         });
     }
 
     void refreshNow() {
 
-        Log.log(LOGGER::warn, "Inside {}: Refreshing Environments on current thread.", Thread.currentThread().getName());
-        Log.log(LOGGER::warn, "Inside {}: Refreshing Environments Now - get lock", Thread.currentThread().getName());
+        Log.test(LOGGER, "Going to lock envChangeLock");
         envChangeLock.lock();
+        Log.test(LOGGER, "envChangeLock locked");
         try {
             //run both refreshEnvironments and updateCurrentEnv under same lock
-            Log.log(LOGGER::warn, "Inside {}: Inside Refreshing Environments Now - call refreshEnvironments", Thread.currentThread().getName());
+            Log.test(LOGGER, "Calling refreshEnvironments");
             refreshEnvironments();
-            Log.log(LOGGER::warn, "Inside {}: Inside Refreshing Environments Now - call updateCurrentEnv ", Thread.currentThread().getName());
+            Log.test(LOGGER, "Calling updateCurrentEnv ");
             updateCurrentEnv(persistenceData.getCurrentEnv(), true);
         } finally {
+            Log.test(LOGGER, "Going to unlock envChangeLock");
             if (envChangeLock.isHeldByCurrentThread()) {
                 envChangeLock.unlock();
+                Log.test(LOGGER, "envChangeLock unlocked");
             }
         }
     }
@@ -168,21 +173,18 @@ public class Environment implements EnvironmentsSupplier {
 
     //this method should not be called on ui threads, it may hang and cause a freeze
     private void refreshEnvironments() {
-        Log.log(LOGGER::warn, "refreshEnvironments");
-
         var stopWatch = StopWatch.createStarted();
 
+        Log.test(LOGGER, "Going to lock envChangeLock");
         envChangeLock.lock();
-
+        Log.test(LOGGER, "envChangeLock locked");
         try {
-            Log.log(LOGGER::warn, "Refresh Environments called");
-
-            Log.log(LOGGER::warn, "Refreshing Environments list");
+            Log.test(LOGGER, "Calling analyticsService.getEnvironments()");
             var newEnvironments = analyticsService.getEnvironments();
             if (newEnvironments != null && !newEnvironments.isEmpty()) {
-                Log.log(LOGGER::warn, "Got environments {}", newEnvironments);
+                Log.test(LOGGER, "Got environments {}", newEnvironments);
             } else {
-                Log.log(LOGGER::warn, "Error loading environments: {}", newEnvironments);
+                Log.test(LOGGER, "Error loading environments: {}", newEnvironments);
                 newEnvironments = new ArrayList<>();
             }
 
@@ -200,7 +202,7 @@ public class Environment implements EnvironmentsSupplier {
             }
 
             stopWatch.stop();
-            Log.log(LOGGER::warn, "Refresh environments took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS));
+            Log.test(LOGGER, "Refresh environments took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS));
         }
     }
 
@@ -242,13 +244,15 @@ public class Environment implements EnvironmentsSupplier {
 
 
     private void notifyEnvironmentsListChange() {
-        Log.log(LOGGER::warn, "Firing EnvironmentsListChange event for {}", environments);
+        Log.test(LOGGER, "Going to fire environmentsListChanged for {}", environments);
         if (project.isDisposed()) {
             return;
         }
 
+        Log.test(LOGGER, "Firing environmentsListChanged for {}", environments);
         //run in new background thread so locks can be freeied because this method is called under lock
         Backgroundable.runInNewBackgroundThread(project, "environmentsListChanged", () -> {
+            Log.test(LOGGER, "environmentsListChanged for {}", environments);
             EnvironmentChanged publisher = project.getMessageBus().syncPublisher(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC);
             publisher.environmentsListChanged(environments);
         });
@@ -257,15 +261,15 @@ public class Environment implements EnvironmentsSupplier {
 
 
     private void notifyEnvironmentChanged(String oldEnv, String newEnv, boolean refreshInsightsView) {
-        Log.log(LOGGER::warn, "Firing EnvironmentChanged event for {}", newEnv);
+        Log.test(LOGGER, "Going to fire environmentChanged for {}", environments);
         if (project.isDisposed()) {
             return;
         }
 
-        Log.log(LOGGER::info, "Digma: Changing environment " + oldEnv + " to " + newEnv);
-
-        //run in new background thread so locks can be freeied because this method is called under lock
+        Log.test(LOGGER, "Firing environmentChanged for {}", newEnv);
+        //run in new background thread so locks can be freed because this method is called under lock
         Backgroundable.runInNewBackgroundThread(project, "environmentChanged", () -> {
+            Log.test(LOGGER, "environmentChanged for {}", newEnv);
             EnvironmentChanged publisher = project.getMessageBus().syncPublisher(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC);
             publisher.environmentChanged(newEnv, refreshInsightsView);
         });

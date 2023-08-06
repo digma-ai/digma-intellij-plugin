@@ -109,19 +109,20 @@ public class RecentActivityService implements Disposable {
     private boolean webAppInitialized;
 
     public static RecentActivityService getInstance(Project project) {
-        Log.log(logger::warn, "Getting instance of " + RecentActivityService.class.getSimpleName());
+        Log.test(logger, "Getting instance of {}", RecentActivityService.class.getSimpleName());
         RecentActivityService service = project.getService(RecentActivityService.class);
-        Log.log(logger::warn, "Returning " + RecentActivityService.class.getSimpleName());
+        Log.test(logger, "Returning {}", RecentActivityService.class.getSimpleName());
         return service;
     }
 
     public RecentActivityService(Project project) {
         this.project = project;
         //initialize AnalyticsService early so the UI already can detect the connection status when created
-        Log.log(logger::warn, "Initializing " + RecentActivityService.class.getSimpleName());
+        Log.test(logger, "Initializing {}", RecentActivityService.class.getSimpleName());
         this.analyticsService = project.getService(AnalyticsService.class);
         this.localHostname = CommonUtils.getLocalHostname();
         this.latestActivityResult = new RecentActivityResult(null, new ArrayList<>());
+        Log.log(logger::warn, "Finished {} initialization", RecentActivityService.class.getSimpleName());
     }
 
     public void startFetchingActivities() {

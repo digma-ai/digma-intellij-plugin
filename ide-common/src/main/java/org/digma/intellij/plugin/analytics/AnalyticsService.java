@@ -106,19 +106,22 @@ public class AnalyticsService implements Disposable {
     private RestAnalyticsProvider analyticsProvider;
 
     public AnalyticsService(@NotNull Project project) {
-        Log.log(LOGGER::warn, "Initializing " + AnalyticsService.class.getSimpleName());
+        Log.test(LOGGER, "Initializing {}", AnalyticsService.class.getSimpleName());
         //initialize BackendConnectionMonitor when starting, so it is aware early on connection statuses
         BackendConnectionMonitor.getInstance(project);
         //initialize MainToolWindowCardsController when starting, so it is aware early on connection statuses
         MainToolWindowCardsController.getInstance(project);
         SettingsState settingsState = SettingsState.getInstance();
+        Log.test(LOGGER, "Creating Environment object");
         environment = new Environment(project, this, PersistenceService.getInstance().getState());
+        Log.test(LOGGER, "Environment object created");
         this.project = project;
         myApiUrl = settingsState.apiUrl;
         myApiToken = settingsState.apiToken;
         replaceClient(myApiUrl, myApiToken);
+        Log.test(LOGGER, "Client replaced");
         initializeEnvironmentsList();
-        Log.log(LOGGER::warn, "Registering replaceClientAndFireChange");
+        Log.test(LOGGER, "Registering replaceClientAndFireChange");
         settingsState.addChangeListener(state -> {
             if (!Objects.equals(state.apiUrl, myApiUrl)) {
                 myApiUrl = state.apiUrl;
@@ -130,12 +133,13 @@ public class AnalyticsService implements Disposable {
                 replaceClient(myApiUrl, myApiToken);
             }
         },this);
+        Log.test(LOGGER, "Initializing {}", AnalyticsService.class.getSimpleName());
     }
 
     public static AnalyticsService getInstance(@NotNull Project project) {
-        Log.log(LOGGER::warn, "Getting instance of " + AnalyticsService.class.getSimpleName());
+        Log.test(LOGGER, "Getting instance of {}", AnalyticsService.class.getSimpleName());
         AnalyticsService service = project.getService(AnalyticsService.class);
-        Log.log(LOGGER::warn, "Returning " + AnalyticsService.class.getSimpleName());
+        Log.test(LOGGER, "Returning {}", AnalyticsService.class.getSimpleName());
         return service;
     }
 
@@ -150,6 +154,7 @@ public class AnalyticsService implements Disposable {
     //just replace the client and do not fire any events
     //this method should be synchronized, and it shouldn't be a problem that really doesn't happen too often.
     private synchronized void replaceClient(String url, String token) {
+        Log.test(LOGGER, "Asking to replace client");
         if (analyticsProviderProxy != null) {
             try {
                 analyticsProviderProxy.close();
@@ -163,13 +168,15 @@ public class AnalyticsService implements Disposable {
 
 
     private void initializeEnvironmentsList() {
+        Log.test(LOGGER, "Calling environment.refreshNow()");
         environment.refreshNow();
     }
 
 
     private void replaceClientAndFireChange(String url, String token) {
-        Log.log(LOGGER::warn, "Inside thread: {}: replaceClientAndFireChange", Thread.currentThread().getName());
+        Log.test(LOGGER, "Firing Digma: Environments list changed");
         Backgroundable.ensureBackground(project, "Digma: Environments list changed", () -> {
+            Log.test(LOGGER, "Calling replaceClient");
             replaceClient(url, token);
             environment.refreshNowOnBackground();
         });
@@ -458,20 +465,21 @@ public class AnalyticsService implements Disposable {
 
                 Object result;
                 try {
+                    Log.test(LOGGER, "Invoking analyticsProvider.{} with args", method.getName(), argsToString(args));
                     result = method.invoke(analyticsProvider, args);
                 }catch (Exception e){
                     //this is a poor retry, we don't have a retry mechanism, but sometimes there is a momentary
                     // connection issue and the next call will succeed, instead of going through the exception handling
                     // and events , just try again once. the performance penalty is minor, we are in error state anyway.
+                    Log.test(LOGGER, "Invoking analyticsProvider.{} failed - e", method.getName(), e.getMessage());
+                    Log.test(LOGGER, "Retry invoking analyticsProvider.{} with args", method.getName(), argsToString(args));
                     result = method.invoke(analyticsProvider, args);
                 }
 
-                if (LOGGER.isDebugEnabled()) {
-                    Log.log(LOGGER::warn, "Inside {}: Got response from {}: args '{}', -----------------" +
-                            "Result '{}'", Thread.currentThread().getName(), method.getName(), argsToString(args), resultToString(result));
-                }
+                Log.test(LOGGER, "Result = '{}'", resultToString(result));
 
                 if (!PersistenceService.getInstance().getState().getFirstTimeConnectionEstablished()) {
+                    Log.test(LOGGER, "Calling ActivityMonitor.getInstance(project).registerFirstConnectionEstablished()");
                     ActivityMonitor.getInstance(project).registerFirstConnectionEstablished();
                     PersistenceService.getInstance().getState().setFirstTimeConnectionEstablished(true);
                 }

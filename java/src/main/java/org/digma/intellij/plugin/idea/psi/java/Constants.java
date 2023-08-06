@@ -14,4 +14,7 @@ public interface Constants {
     String WITH_SPAN_INST_LIBRARY_5 = "io.openliberty.microprofile.telemetry";
     String SPAN_BUILDER_FQN = "io.opentelemetry.api.trace.SpanBuilder";
     String TRACER_FQN = "io.opentelemetry.api.trace.Tracer";
+    String JAKARTA_INJECT_FQN = "jakarta.inject.Inject";
+    String JAVAX_INJECT_FQN = "javax.inject.Inject";
+    String OPENLIBERTY_MICROPROFILE_INST_LIB = "io.openliberty.microprofile.telemetry";
 }

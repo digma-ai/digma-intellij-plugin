@@ -7,6 +7,7 @@ import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.common.buildEnvForLocalTests
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
 import org.digma.intellij.plugin.settings.SettingsState
 import org.jetbrains.idea.maven.execution.MavenRunConfiguration
@@ -49,7 +50,8 @@ class QuarkusRunConfigurationWrapper : IRunConfigurationWrapper {
         runnerSettings: RunnerSettings?,
         resolvedModule: Module?,
     ) {
-        when (evalRunConfigType(configuration, resolvedModule)) {
+        val runConfigType = evalRunConfigType(configuration, resolvedModule)
+        when (runConfigType) {
             RunConfigType.GradleRun -> {
                 //when injecting JAVA_TOOL_OPTIONS to GradleRunConfiguration the GradleRunConfiguration will also run with
                 // JAVA_TOOL_OPTIONS which is not ideal. for example, gradle will execute with JAVA_TOOL_OPTIONS and then fork
@@ -62,22 +64,24 @@ class QuarkusRunConfigurationWrapper : IRunConfigurationWrapper {
                 //when gradle runs the :test task it's not possible to pass system properties to the task.
                 // JAVA_TOOL_OPTIONS is not the best as said above, but it works.
                 configuration as GradleRunConfiguration
-                val javaToolOptions = buildJavaToolOptions()
+                val javaToolOptions = buildJavaToolOptions(runConfigType.isTest)
                 javaToolOptions?.let {
                     mergeGradleJavaToolOptions(configuration, javaToolOptions)
                 }
             }
 
-            RunConfigType.MavenRun -> {
+            RunConfigType.MavenTest,
+            RunConfigType.MavenRun,
+            -> {
                 configuration as MavenRunConfiguration
-                val javaToolOptions = buildJavaToolOptions()
+                val javaToolOptions = buildJavaToolOptions(runConfigType.isTest)
                 javaToolOptions?.let {
                     mergeJavaToolOptions(params, it)
                 }
             }
 
             RunConfigType.JavaTest -> {
-                val javaToolOptions = buildJavaToolOptions()
+                val javaToolOptions = buildJavaToolOptions(runConfigType.isTest)
                 javaToolOptions?.let {
                     mergeJavaToolOptions(params, it)
                 }
@@ -118,10 +122,17 @@ class QuarkusRunConfigurationWrapper : IRunConfigurationWrapper {
     /**
      * @see <a href="https://quarkus.io/guides/opentelemetry">Quarkus with opentelemetry</a>
      */
-    private fun buildJavaToolOptions(): String {
-        val retVal = " "
+    private fun buildJavaToolOptions(isTest: Boolean): String {
+        var retVal = " "
             .plus("-Dquarkus.otel.exporter.otlp.traces.endpoint=${getExporterUrl()}")
             .plus(" ")
+
+        if (isTest) {
+            val envPart = "digma.environment=${buildEnvForLocalTests()}"
+            retVal = retVal
+                .plus("-Dquarkus.otel.resource.attributes=\"$envPart\"")
+                .plus(" ")
+        }
 
         return retVal
     }
@@ -140,6 +151,7 @@ class QuarkusRunConfigurationWrapper : IRunConfigurationWrapper {
     private fun evalRunConfigType(configuration: RunConfigurationBase<*>, module: Module?): RunConfigType {
         if (isGradleConfiguration(configuration)) return RunConfigType.GradleRun
         if (isMavenConfiguration(configuration)) return RunConfigType.MavenRun
+        if (isMavenTestConfiguration(configuration)) return RunConfigType.MavenTest
         if (isJavaTest(configuration, module)) return RunConfigType.JavaTest
         return RunConfigType.Unknown
     }
@@ -157,12 +169,31 @@ class QuarkusRunConfigurationWrapper : IRunConfigurationWrapper {
      * @see <a href="https://quarkus.io/guides/opentelemetry">Quarkus with opentelemetry</a>
      */
     private fun isMavenConfiguration(configuration: RunConfigurationBase<*>): Boolean {
-        //will catch maven exec plugin goals, bootRun and uni tests
+        //will catch maven tasks of quarkus:dev and quarkus:run
         if (configuration is MavenRunConfiguration) {
-            val goals = configuration.runnerParameters.goals
-            if (goals.contains("quarkus:dev")) {
-                return true
+            val goalNames = configuration.runnerParameters.goals
+            val hasRelevantTask = goalNames.any {
+                false
+                        || it.equals("quarkus:dev")
+                        || it.equals("quarkus:run")
+                        || (it.contains(":quarkus-maven-plugin:") && it.endsWith(":dev"))
+                        || (it.contains(":quarkus-maven-plugin:") && it.endsWith(":run"))
             }
+            return hasRelevantTask
+        }
+        return false
+    }
+
+    private fun isMavenTestConfiguration(configuration: RunConfigurationBase<*>): Boolean {
+        //will catch maven tasks quarkus:test
+        if (configuration is MavenRunConfiguration) {
+            val goalNames = configuration.runnerParameters.goals
+            val hasRelevantTask = goalNames.any {
+                false
+                        || it.equals("quarkus:test")
+                        || (it.contains(":quarkus-maven-plugin:") && it.endsWith(":test"))
+            }
+            return hasRelevantTask
         }
         return false
     }

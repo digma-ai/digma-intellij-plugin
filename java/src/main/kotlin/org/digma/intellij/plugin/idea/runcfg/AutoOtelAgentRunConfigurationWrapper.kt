@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.idea.runcfg
 
-import com.intellij.execution.CommonJavaRunConfigurationParameters
+import com.intellij.execution.JavaTestConfigurationBase
+import com.intellij.execution.application.ApplicationConfiguration
 import com.intellij.execution.configurations.JavaParameters
 import com.intellij.execution.configurations.ModuleRunConfiguration
 import com.intellij.execution.configurations.ParametersList
@@ -9,6 +10,7 @@ import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.common.buildEnvForLocalTests
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.settings.SettingsState
@@ -56,18 +58,20 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
         val runConfigType = evalRunConfigType(configuration)
 
         when (runConfigType) {
-            RunConfigType.JavaRun -> {
+            RunConfigType.JavaTest,
+            RunConfigType.JavaRun, -> {
                 //this also works for: CommonJavaRunConfigurationParameters
                 //params.vmParametersList.addParametersString("-verbose:class -javaagent:/home/shalom/tmp/run-configuration/opentelemetry-javaagent.jar")
                 //params.vmParametersList.addProperty("myprop","myvalue")
                 val javaToolOptions =
-                    buildJavaToolOptions(configuration, project, isSpringBootWithMicrometerTracing, isOtelServiceNameAlreadyDefined(params))
+                    buildJavaToolOptions(configuration, project, isSpringBootWithMicrometerTracing, isOtelServiceNameAlreadyDefined(params), runConfigType.isTest)
                 javaToolOptions?.let {
                     mergeJavaToolOptions(params, it)
                 }
             }
 
-            RunConfigType.GradleRun -> {
+            RunConfigType.GradleTest,
+            RunConfigType.GradleRun, -> {
                 //when injecting JAVA_TOOL_OPTIONS to GradleRunConfiguration the GradleRunConfiguration will also run with
                 // JAVA_TOOL_OPTIONS which is not ideal. for example, gradle will execute with JAVA_TOOL_OPTIONS and then fork
                 // a process for the main method or unit test with JAVA_TOOL_OPTIONS. ideally we want only the forked process
@@ -80,16 +84,17 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
                 // JAVA_TOOL_OPTIONS is not the best as said above, but it works.
                 configuration as GradleRunConfiguration
                 val javaToolOptions =
-                    buildJavaToolOptions(configuration, project, isSpringBootWithMicrometerTracing, isOtelServiceNameAlreadyDefined(configuration))
+                    buildJavaToolOptions(configuration, project, isSpringBootWithMicrometerTracing, isOtelServiceNameAlreadyDefined(configuration), runConfigType.isTest)
                 javaToolOptions?.let {
                     mergeGradleJavaToolOptions(configuration, javaToolOptions)
                 }
             }
 
-            RunConfigType.MavenRun -> {
+            RunConfigType.MavenTest,
+            RunConfigType.MavenRun, -> {
                 configuration as MavenRunConfiguration
                 val javaToolOptions =
-                    buildJavaToolOptions(configuration, project, isSpringBootWithMicrometerTracing, isOtelServiceNameAlreadyDefined(params))
+                    buildJavaToolOptions(configuration, project, isSpringBootWithMicrometerTracing, isOtelServiceNameAlreadyDefined(params), runConfigType.isTest)
                 javaToolOptions?.let {
                     mergeJavaToolOptions(params, it)
                 }
@@ -148,6 +153,7 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
         project: Project,
         isSpringBootWithMicrometerTracing: Boolean,
         serviceAlreadyDefined: Boolean,
+        isTest: Boolean,
     ): String? {
 
         val otelAgentPath = OTELJarProvider.getInstance().getOtelAgentJarPath(project)
@@ -176,6 +182,14 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
                 .plus("-Dotel.exporter.otlp.traces.endpoint=${getExporterUrl()}")
                 .plus(" ")
         }
+
+        if (isTest) {
+            val envPart = "digma.environment=${buildEnvForLocalTests()}"
+            retVal = retVal
+                .plus("-Dotel.resource.attributes=\"$envPart\"")
+                .plus(" ")
+        }
+
         retVal = retVal
             .plus("-Dotel.traces.exporter=otlp")
             .plus(" ")
@@ -240,8 +254,11 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
     @NotNull
     private fun evalRunConfigType(configuration: RunConfigurationBase<*>): RunConfigType {
         if (isJavaConfiguration(configuration)) return RunConfigType.JavaRun
+        if (isJavaTestConfiguration(configuration)) return RunConfigType.JavaTest
         if (isGradleConfiguration(configuration)) return RunConfigType.GradleRun
+        if (isGradleTestConfiguration(configuration)) return RunConfigType.GradleTest
         if (isMavenConfiguration(configuration)) return RunConfigType.MavenRun
+        if (isMavenTestConfiguration(configuration)) return RunConfigType.MavenTest
         return RunConfigType.Unknown
     }
 
@@ -251,13 +268,20 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
         ApplicationConfiguration,JUnitConfiguration,TestNGConfiguration,KotlinRunConfiguration,
         KotlinStandaloneScriptRunConfiguration,GroovyScriptRunConfiguration,JarApplicationConfiguration
          */
-        return configuration is CommonJavaRunConfigurationParameters
+        return configuration is ApplicationConfiguration
     }
 
+    private fun isJavaTestConfiguration(configuration: RunConfigurationBase<*>): Boolean {
+        /*
+        this will catch the following run configuration types:
+        JavaTestConfigurationBase, TestNGConfiguration
+         */
+        return configuration is JavaTestConfigurationBase
+    }
 
     override fun isGradleConfiguration(configuration: RunConfigurationBase<*>): Boolean {
         /*
-        this will catch gradle running a main method or a unit test or spring bootRun.
+        this will catch gradle running a main method or spring bootRun.
         all other gradle tasks are ignored.
          */
         if (configuration is GradleRunConfiguration) {
@@ -265,13 +289,10 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
             val isMainMethod = taskNames.any {
                 it.contains(".main")
             }
-            val hasTestTask = taskNames.any {
-                it.contains(":test") || it.equals("test")
-            }
             val hasBootRun = taskNames.any {
                 it.contains(":bootRun") || it.equals("bootRun")
             }
-            if (isMainMethod || hasTestTask || hasBootRun) {
+            if (isMainMethod || hasBootRun) {
                 return true
             }
 
@@ -297,20 +318,52 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
         return false
     }
 
-
-    private fun isMavenConfiguration(configuration: RunConfigurationBase<*>): Boolean {
-        //will catch maven exec plugin goals, bootRun and uni tests
-        if (configuration is MavenRunConfiguration) {
-            val goals = configuration.runnerParameters.goals
-            val isExecExecJava = goals.contains("exec:exec") && goals.contains("-Dexec.executable=java")
-            if (isExecExecJava ||
-                goals.contains("spring-boot:run") ||
-                goals.contains("exec:java") ||
-                goals.contains("surefire:test")
-            ) {
-                return true
+    private fun isGradleTestConfiguration(configuration: RunConfigurationBase<*>): Boolean {
+        /*
+        this will catch gradle running a main method or a unit test or spring bootRun.
+        all other gradle tasks are ignored.
+         */
+        if (configuration is GradleRunConfiguration) {
+            val taskNames = configuration.settings.taskNames
+            val hasTestTask = taskNames.any {
+                it.contains(":test") || it.equals("test")
             }
+            return hasTestTask
         }
         return false
     }
+
+    private fun isMavenConfiguration(configuration: RunConfigurationBase<*>): Boolean {
+        //will catch maven exec plugin goals, bootRun
+        if (configuration is MavenRunConfiguration) {
+            val goalNames = configuration.runnerParameters.goals
+            val hasRelevantTask = goalNames.any {
+                false
+                        || it.equals("exec:exec")
+                        || it.equals("exec:java")
+                        || it.equals("-Dexec.executable=java")
+                        || it.equals("spring-boot:run")
+                        || (it.contains(":spring-boot-maven-plugin:") && it.endsWith(":run"))
+            }
+            return hasRelevantTask
+        }
+        return false
+    }
+
+    private fun isMavenTestConfiguration(configuration: RunConfigurationBase<*>): Boolean {
+        //will unit tests
+        if (configuration is MavenRunConfiguration) {
+            val goalNames = configuration.runnerParameters.goals
+            val hasTestTask = goalNames.any {
+                false
+                        || it.equals("surefire:test")
+                        || (it.contains(":maven-surefire-plugin:") && it.endsWith(":test"))
+                        || it.equals("spring-boot:test-run")
+                        || (it.contains(":spring-boot-maven-plugin:") && it.endsWith(":test-run"))
+            }
+            return hasTestTask
+        }
+        return false
+    }
+
 }

@@ -11,7 +11,10 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
 import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.common.LOCAL_ENV
+import org.digma.intellij.plugin.common.LOCAL_TESTS_ENV
 import org.digma.intellij.plugin.common.isEnvironmentLocal
+import org.digma.intellij.plugin.common.isEnvironmentLocalTests
 import org.digma.intellij.plugin.common.isLocalEnvironmentMine
 import org.digma.intellij.plugin.model.ModelChangeListener
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
@@ -25,7 +28,7 @@ import javax.swing.JList
 class EnvironmentsCombo(val project: Project, navigationPanel: NavigationPanel) : ComboBox<EnvironmentsCombo.EnvItem>(CollectionComboBoxModel()) {
 
     private val myParentDisposable = project.service<AnalyticsService>()
-    private val selectionAlarm = Alarm(Alarm.ThreadToUse.POOLED_THREAD,myParentDisposable)
+    private val selectionAlarm = Alarm(Alarm.ThreadToUse.POOLED_THREAD, myParentDisposable)
 
     init {
 
@@ -41,7 +44,7 @@ class EnvironmentsCombo(val project: Project, navigationPanel: NavigationPanel) 
 
         this.addItemListener(ItemListener {
 
-            if (it.stateChange == java.awt.event.ItemEvent.DESELECTED){
+            if (it.stateChange == java.awt.event.ItemEvent.DESELECTED) {
                 return@ItemListener
             }
 
@@ -64,19 +67,19 @@ class EnvironmentsCombo(val project: Project, navigationPanel: NavigationPanel) 
         })
 
 
-        project.messageBus.connect(myParentDisposable).subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC,object: EnvironmentChanged{
+        project.messageBus.connect(myParentDisposable).subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, object : EnvironmentChanged {
             override fun environmentChanged(newEnv: String?, refreshInsightsView: Boolean) {
 
                 cursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR)
                 navigationPanel.cursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR)
                 isEnabled = true
 
-                if (selectedItem == null || newEnv == null){
+                if (selectedItem == null || newEnv == null) {
                     return
                 }
 
                 //otherwise we have a stack overflow because selection will change environment too
-                if ((selectedItem as? EnvItem)?.text == newEnv){
+                if ((selectedItem as? EnvItem)?.text == newEnv) {
                     return
                 }
                 EDT.ensureEDT {
@@ -101,8 +104,7 @@ class EnvironmentsCombo(val project: Project, navigationPanel: NavigationPanel) 
     }
 
 
-
-    private fun buildAndUpdateModel(){
+    private fun buildAndUpdateModel() {
         val envs = buildEnvsList()
         EDT.ensureEDT {
             (model as CollectionComboBoxModel).removeAll()
@@ -115,7 +117,7 @@ class EnvironmentsCombo(val project: Project, navigationPanel: NavigationPanel) 
     private fun buildEnvsList(): List<EnvItem> {
         val environmentsSupplier: EnvironmentsSupplier = project.service<AnalyticsService>().environment
 
-        if (environmentsSupplier.getEnvironments().isEmpty()){
+        if (environmentsSupplier.getEnvironments().isEmpty()) {
             return listOf()
         }
 
@@ -137,11 +139,16 @@ class EnvironmentsCombo(val project: Project, navigationPanel: NavigationPanel) 
         environmentsSupplier.getEnvironments().forEach { env ->
 
             val isSelected = environmentsSupplier.getCurrent() == env
-            val isLocalEnv = isEnvironmentLocal(env)
-            val isLocalEnvMine = isLocalEnv && isLocalEnvironmentMine(env, localHostName)
+            val isMine = isLocalEnvironmentMine(env, localHostName)
 
-            if (!isLocalEnv || isLocalEnvMine){
-                envs.add(EnvItem(env,isSelected,hasUsageFunction(env),isLocalEnvMine))
+            val isLocalEnv = isEnvironmentLocal(env)
+            val isLocalEnvMine = isLocalEnv && isMine
+
+            val isLocalTestsEnv = isEnvironmentLocalTests(env)
+            val isLocalTestsEnvMine = isLocalTestsEnv && isMine
+
+            if ((!isLocalEnv && !isLocalTestsEnv) || isLocalEnvMine || isLocalTestsEnvMine) {
+                envs.add(EnvItem(env, isSelected, hasUsageFunction(env), isLocalEnvMine, isLocalTestsEnvMine))
             }
         }
 
@@ -151,40 +158,49 @@ class EnvironmentsCombo(val project: Project, navigationPanel: NavigationPanel) 
 
     private fun getEnvsWithUsages(usageStatusesOfInsights: UsageStatusResult, usageStatusesOfErrors: UsageStatusResult): Set<String> {
         val envsWithUsages = mutableSetOf<String>()
-        usageStatusesOfInsights.codeObjectStatuses.forEach { codeObjectUsageStatus -> envsWithUsages.add(codeObjectUsageStatus.environment)  }
-        usageStatusesOfErrors.codeObjectStatuses.forEach { codeObjectUsageStatus -> envsWithUsages.add(codeObjectUsageStatus.environment)  }
+        usageStatusesOfInsights.codeObjectStatuses.forEach { codeObjectUsageStatus -> envsWithUsages.add(codeObjectUsageStatus.environment) }
+        usageStatusesOfErrors.codeObjectStatuses.forEach { codeObjectUsageStatus -> envsWithUsages.add(codeObjectUsageStatus.environment) }
         return envsWithUsages
     }
 
 
-    class EnvItem(val text: String,val isSelected:Boolean = false,val hasUsage:Boolean = false,val isMine:Boolean = false)
+    class EnvItem(
+        val text: String, val isSelected: Boolean = false, val hasUsage: Boolean = false,
+        val isMine: Boolean = false, val isMineTests: Boolean = false,
+    )
 
-    private class EnvItemComparator: Comparator<EnvItem>{
+    private class EnvItemComparator : Comparator<EnvItem> {
         override fun compare(env1: EnvItem?, env2: EnvItem?): Int {
-            if (env1 == null && env2 == null){
+            if (env1 == null && env2 == null) {
                 return 0
             }
-            if (env1 == null){
+            if (env1 == null) {
                 return -1
             }
-            if (env2 == null){
+            if (env2 == null) {
                 return 1
             }
 
-            if (env1.isMine){
+            if (env1.isMine) {
                 return -1
             }
-            if (env2.isMine){
+            if (env2.isMine) {
+                return 1
+            }
+            if (env1.isMineTests) {
+                return -1
+            }
+            if (env2.isMineTests) {
                 return 1
             }
 
-            if (env1.hasUsage && env2.hasUsage){
-                return String.CASE_INSENSITIVE_ORDER.compare(env1.text,env2.text)
+            if (env1.hasUsage && env2.hasUsage) {
+                return String.CASE_INSENSITIVE_ORDER.compare(env1.text, env2.text)
             }
-            if (env1.hasUsage){
+            if (env1.hasUsage) {
                 return -1
             }
-            if (env2.hasUsage){
+            if (env2.hasUsage) {
                 return 1
             }
             return 0
@@ -193,33 +209,33 @@ class EnvironmentsCombo(val project: Project, navigationPanel: NavigationPanel) 
     }
 
 
-
-
     private class MyRenderer : SimpleListCellRenderer<EnvItem>() {
-
-        companion object{
-            const val LOCAL_ENV = "LOCAL"
-        }
 
         @Suppress("DialogTitleCapitalization")
         override fun customize(list: JList<out EnvItem>, envItem: EnvItem?, index: Int, selected: Boolean, hasFocus: Boolean) {
 
             this.iconTextGap = 20
 
-            if (envItem == null){
+            if (envItem == null) {
                 text = "No Environments"
                 icon = null
-            }else{
-                text = if(envItem.isMine) LOCAL_ENV else envItem.text
-                icon = if(envItem.hasUsage) Laf.Icons.Environment.ENVIRONMENT_HAS_USAGE else Laf.Icons.Environment.ENVIRONMENT_HAS_NO_USAGE
+            } else {
+                text = evalText(envItem)
+                icon = if (envItem.hasUsage) Laf.Icons.Environment.ENVIRONMENT_HAS_USAGE else Laf.Icons.Environment.ENVIRONMENT_HAS_NO_USAGE
                 this.toolTipText = envItem.text + if (envItem.isMine) "(my)" else ""
             }
+        }
+
+        fun evalText(envItem: EnvItem): String {
+            if (envItem.isMine)
+                return LOCAL_ENV
+
+            if (envItem.isMineTests)
+                return LOCAL_TESTS_ENV
+
+            return envItem.text
         }
 
     }
 
 }
-
-
-
-

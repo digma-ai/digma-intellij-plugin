@@ -5,7 +5,7 @@ import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.openapi.diagnostic.Logger
-import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.log.Log
 
 
 // the @State annotation helps IntelliJ automatically serialize and save our state
@@ -20,9 +20,9 @@ open class PersistenceService : PersistentStateComponent<PersistenceData> {
         private val logger = Logger.getInstance(PersistenceService::class.java)
         @JvmStatic
         fun getInstance() : PersistenceService {
-            logger.warn("Getting instance of ${PersistenceService::class.simpleName}")
+            Log.test(logger, "Getting instance of ${PersistenceService::class.simpleName}")
             val service = ApplicationManager.getApplication().getService(PersistenceService::class.java)
-            logger.warn("Returning ${PersistenceService::class.simpleName}")
+            Log.test(logger, "Returning ${PersistenceService::class.simpleName}")
             return service
         }
     }

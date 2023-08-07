@@ -159,7 +159,7 @@ public class Environment implements EnvironmentsSupplier {
             //run both refreshEnvironments and updateCurrentEnv under same lock
             Log.test(LOGGER, "Calling refreshEnvironments");
             refreshEnvironments();
-            Log.test(LOGGER, "Calling updateCurrentEnv ");
+            Log.test(LOGGER, "Calling updateCurrentEnv");
             updateCurrentEnv(persistenceData.getCurrentEnv(), true);
         } finally {
             Log.test(LOGGER, "Going to unlock envChangeLock");
@@ -196,11 +196,11 @@ public class Environment implements EnvironmentsSupplier {
             notifyEnvironmentsListChange();
 
         } finally {
-
+            Log.test(LOGGER, "Going to unlock envChangeLock");
             if (envChangeLock.isHeldByCurrentThread()) {
                 envChangeLock.unlock();
+                Log.test(LOGGER, "envChangeLock unlocked");
             }
-
             stopWatch.stop();
             Log.test(LOGGER, "Refresh environments took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS));
         }
@@ -208,7 +208,7 @@ public class Environment implements EnvironmentsSupplier {
 
 
     private void updateCurrentEnv(@Nullable String preferred, boolean refreshInsightsView) {
-        Log.log(LOGGER::warn, "updateCurrentEnv");
+        Log.test(LOGGER, "updateCurrentEnv");
 
         var oldEnv = current;
 

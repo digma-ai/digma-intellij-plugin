@@ -7,7 +7,7 @@ data class PersistenceData(
         var alreadyPassedTheInstallationWizardForIdeaIDE: Boolean = false,
         var alreadyPassedTheInstallationWizardForRiderIDE: Boolean = false,
         var alreadyPassedTheInstallationWizardForPyCharmIDE: Boolean = false,
-        var firstTimeConnectionEstablished: Boolean = false,
+        var firstTimeConnectionEstablished: Boolean = true,
         var firstTimePluginLoaded: Boolean = false,
         var firstTimeInsightReceived: Boolean = false,
         var firstTimeAssetsReceived: Boolean = false,

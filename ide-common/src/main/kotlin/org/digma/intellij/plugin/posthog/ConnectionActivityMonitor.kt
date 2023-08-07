@@ -1,13 +1,19 @@
 package org.digma.intellij.plugin.posthog
 
+import com.intellij.collaboration.async.DisposingScope
+import com.intellij.openapi.Disposable
+import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
-import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.log.Log
 
-class ConnectionActivityMonitor(private val project: Project) : AnalyticsServiceConnectionEvent {
+@Service(Service.Level.PROJECT)
+class ConnectionActivityMonitor(private val project: Project) : AnalyticsServiceConnectionEvent,Disposable {
+
+    private var appVersion: String? = null
 
     companion object {
         private val LOGGER = Logger.getInstance(ConnectionActivityMonitor::class.java)
@@ -27,7 +33,7 @@ class ConnectionActivityMonitor(private val project: Project) : AnalyticsService
     }
 
     override fun connectionLost() {
-
+        //nothing to do
     }
 
     override fun connectionGained() {
@@ -36,17 +42,22 @@ class ConnectionActivityMonitor(private val project: Project) : AnalyticsService
 
     private fun asyncFetchAndRegisterServerVersion(){
         Log.log(LOGGER::trace, "Fetching server about info")
-        Backgroundable.runInNewBackgroundThread(project, "Fetching server about info") {
+
+        @Suppress("UnstableApiUsage")
+        DisposingScope(this).launch {
             try {
-                // [!] The "about" endpoint must NOT be called via the proxy
-                //     so failing requests won't mark the connection as "lost",
-                //     due to older server versions which does not contain this
-                //     endpoint yet
-                val about = AnalyticsService.getInstance(project).analyticsProvider.about
-                ActivityMonitor.getInstance(project).registerServerInfo(about)
+                val about = AnalyticsService.getInstance(project).about
+                if (appVersion != about.applicationVersion) {
+                    appVersion = about.applicationVersion
+                    ActivityMonitor.getInstance(project).registerServerInfo(about)
+                }
             } catch (e: Exception) {
-                Log.warnWithException(LOGGER, e, "Failed to get+register server version: {}", e.message);
+                Log.warnWithException(LOGGER, e, "Failed to get+register server version: {}", e.message)
             }
         }
+    }
+
+    override fun dispose() {
+        //nothing to do, used as parent disposable
     }
 }

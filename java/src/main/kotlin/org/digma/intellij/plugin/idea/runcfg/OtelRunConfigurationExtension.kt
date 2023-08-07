@@ -39,6 +39,7 @@ class OtelRunConfigurationExtension : RunConfigurationExtension() {
     private fun getWrapperFor(configuration: RunConfigurationBase<*>, module: Module?): IRunConfigurationWrapper? {
         return listOf(
             QuarkusRunConfigurationWrapper.getInstance(configuration.project), // quarkus is first so could catch unit tests before the standard AutoOtelAgent
+            OpenLibertyRunConfigurationWrapper.getInstance(configuration.project),
             AutoOtelAgentRunConfigurationWrapper.getInstance(configuration.project),
         ).firstOrNull {
             it.canWrap(configuration, module)

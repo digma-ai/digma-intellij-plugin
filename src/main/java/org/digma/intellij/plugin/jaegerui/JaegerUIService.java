@@ -268,7 +268,7 @@ public class JaegerUIService {
                 var spanWorkspaceUris = ReadActions.ensureReadAction(() -> languageService.findWorkspaceUrisForSpanIds(spanIds));
                 var methodWorkspaceUris = ReadActions.ensureReadAction(() -> languageService.findWorkspaceUrisForMethodCodeObjectIds(methodIds));
                 spansMessage.payload().spans().forEach(span -> {
-                    var spanId = span.id();
+                    var spanId = span.spanId();
                     var methodId = span.methodId();
                     var hasCodeLocation = (spanWorkspaceUris.containsKey(spanId) || methodWorkspaceUris.containsKey(methodId));
 

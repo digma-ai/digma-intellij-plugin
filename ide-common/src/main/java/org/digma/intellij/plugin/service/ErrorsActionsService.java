@@ -1,6 +1,8 @@
 package org.digma.intellij.plugin.service;
 
 import com.intellij.openapi.project.Project;
+import org.digma.intellij.plugin.common.Backgroundable;
+import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.errors.ErrorsProvider;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsightNamedError;
@@ -74,10 +76,18 @@ public class ErrorsActionsService{
             scopeBeforeErrorDetails = null;
             statusBeforeErrorDetails = null;
         }
-        errorsViewService.showErrorDetails(uid,errorsProvider,replaceScope);
-        //this is necessary so the scope line will update with the error scope
-        insightsViewService.notifyModelChangedAndUpdateUi();
-        insightsAndErrorsTabsHelper.errorDetailsOn();
+
+        var finalReplaceScope = replaceScope;
+        Backgroundable.ensureBackground(project, "Show error details", () -> {
+            errorsViewService.showErrorDetails(uid, errorsProvider, finalReplaceScope);
+            //this is necessary so the scope line will update with the error scope
+            insightsViewService.notifyModelChangedAndUpdateUi();
+
+            EDT.ensureEDT(insightsAndErrorsTabsHelper::errorDetailsOn);
+
+        });
+
+
     }
 
     public void closeErrorDetailsBackButton() {

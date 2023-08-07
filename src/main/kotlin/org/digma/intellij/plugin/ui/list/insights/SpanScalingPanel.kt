@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.list.insights
 
 import com.intellij.openapi.components.service
+import com.intellij.openapi.progress.runBackgroundableTask
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.util.ui.JBUI.Borders.empty
@@ -8,6 +9,7 @@ import com.intellij.util.ui.JBUI.Borders.emptyBottom
 import com.intellij.util.ui.JBUI.Borders.emptyTop
 import org.apache.commons.lang3.StringUtils
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.editor.getCurrentPageNumberForInsight
 import org.digma.intellij.plugin.editor.updateListOfEntriesToDisplay
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider
@@ -230,9 +232,16 @@ private fun buildButtonToScalingGraph(project: Project, spanName: String, instLi
     val analyticsService = AnalyticsService.getInstance(project)
     val button = ListItemActionButton("Histogram")
     button.addActionListener {
-        val htmlContent = analyticsService.getHtmlGraphForSpanScaling(instLibrary, spanName, Laf.Colors.PLUGIN_BACKGROUND.getHex())
-        DigmaHTMLEditorProvider.openEditor(project, "Scaling Graph of Span $spanName", htmlContent)
-        ActivityMonitor.getInstance(project).registerButtonClicked("histogram", insightType)
+
+        runBackgroundableTask("Open histogram", project, true) {
+            val htmlContent = analyticsService.getHtmlGraphForSpanScaling(instLibrary, spanName, Laf.Colors.PLUGIN_BACKGROUND.getHex())
+            ActivityMonitor.getInstance(project).registerButtonClicked("histogram", insightType)
+            EDT.ensureEDT {
+                DigmaHTMLEditorProvider.openEditor(project, "Scaling Graph of Span $spanName", htmlContent)
+            }
+        }
+
+
     }
 
     return button

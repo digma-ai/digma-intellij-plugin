@@ -85,11 +85,7 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.posthog.ActivityMonitor"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.posthog.ConnectionActivityMonitor"/>
-
         <projectService serviceImplementation="org.digma.intellij.plugin.posthog.PluginActivityMonitor"/>
-
-        <projectService serviceImplementation="org.digma.intellij.plugin.posthog.ServerPerformanceActivityMonitor"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.updates.UpdatesService"/>
 
@@ -127,6 +123,7 @@
         <postStartupActivity implementation="org.digma.intellij.plugin.posthog.ContainerEngineStartupActivity"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.notifications.InsightsNotificationStartupActivity"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.analytics.AnalyticsServiceStarter"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.posthog.FirstTimePerformanceMetricsMonitor"/>
 
 
         <!-- Code lens providers are used only for some languages, for example java,python.

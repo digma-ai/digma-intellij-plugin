@@ -77,7 +77,6 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
 
         ConnectionActivityMonitor.loadInstance(project)
         PluginActivityMonitor.loadInstance(project)
-        ServerPerformanceActivityMonitor.loadInstance(project)
     }
 
 //    override fun run() {

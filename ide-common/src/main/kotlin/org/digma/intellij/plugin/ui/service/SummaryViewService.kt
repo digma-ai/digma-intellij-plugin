@@ -116,9 +116,11 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
     private fun reload() {
         Log.log(logger::trace, "reload called")
         var insights = summariesProvider.globalInsights
+        //todo:limit by size because long lists cause UI freeze
         if (insights.size > 10) {
-            insights = insights.subList(0, 20)
+            insights = insights.subList(0, 10)
         }
+
         val environmentStatuses = summariesProvider.environmentStatuses
         model.insights = insights
         model.usageStatusResult = UsageStatusResult(emptyList(), environmentStatuses)

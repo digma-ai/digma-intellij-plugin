@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.ui.list.PanelList
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import org.digma.intellij.plugin.ui.needToShowDurationChange
 import java.util.Collections
+import kotlin.math.min
 
 class SummaryPanelList(project: Project, listViewItems: List<ListViewItem<*>>) : PanelList(project, Model(listViewItems)) {
 
@@ -36,13 +37,15 @@ class SummaryPanelList(project: Project, listViewItems: List<ListViewItem<*>>) :
                 when (val model = value.modelObject) {
                     is TopErrorFlowsInsight -> {
                         newViewItems.add(ListViewItem(SummaryTypeTitle(model.type), index++))
-                        for (error in model.errors) {
+                        //limit to 10 because of UI freeze when the list is large
+                        for (error in model.errors.subList(0, min(model.errors.size,10))) {
                             newViewItems.add(ListViewItem(error, index++))
                         }
                     }
                     is SpanDurationChangeInsight -> {
                         newViewItems.add(ListViewItem(SummaryTypeTitle(model.type), index++))
-                        for (change in model.spanDurationChanges) {
+                        //limit to 10 because of UI freeze when the list is largea
+                        for (change in model.spanDurationChanges.subList(0, min(model.spanDurationChanges.size,10))) {
                             val changedPercentiles = change.percentiles.filter { needToShowDurationChange(it) } // Should be server side?
                             if (changedPercentiles.isNotEmpty()) {
                                 val item = ListViewItem(SpanDurationChangeInsight.Change(change.codeObjectId, change.span, changedPercentiles), index++)

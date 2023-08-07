@@ -5,6 +5,7 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.diagnostic.RuntimeExceptionWithAttachments;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
 import com.intellij.util.Alarm;
@@ -164,7 +165,26 @@ public class AnalyticsService implements Disposable {
 
 
     private void initializeEnvironmentsList() {
-        environment.refreshNow();
+
+        //when initializing AnalyticsService we must ensure that environments are loaded befre the constructor completes.
+        // but there is a restriction to call backend from UI thread so we need to make sure it is called on background.
+        //we try to initialize AnalyticsService on background thread as early as possible with AnalyticsServiceStarter.
+        // it should always succeed, but it is not guaranteed. AnalyticsService.getInstance is also called from the
+        // tool window factory that is executed on UI thread. there is no guarantee that AnalyticsServiceStarter will
+        // execute before the tool window factory.
+        //so this code is ready to be executed on background thread and also on UI thread. if executed on UI thread
+        // it will use runProcessWithProgressSynchronously which will run the task on background but waits for completion.
+
+        if(EDT.isEdt()){
+            ProgressManager.getInstance().runProcessWithProgressSynchronously(new Runnable() {
+                @Override
+                public void run() {
+                    environment.refreshNow();
+                }
+            },"loading environments",false,project);
+        }else{
+            environment.refreshNow();
+        }
     }
 
 

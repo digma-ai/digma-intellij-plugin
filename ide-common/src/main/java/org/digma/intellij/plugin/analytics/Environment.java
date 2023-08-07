@@ -140,7 +140,11 @@ public class Environment implements EnvironmentsSupplier {
         });
     }
 
+
     void refreshNow() {
+
+        //this method should not be called, it will refresh environments on current thread. it is meant for
+        // first initialization of AnalyticsService and should never be called again.
 
         Log.log(LOGGER::info, "Refreshing Environments now on current thread.");
         envChangeLock.lock();

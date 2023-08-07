@@ -39,7 +39,7 @@ class SpanNavBackAction : AnAction("Go to previous span") {
                 }
 
                 ScopeType.Method -> {
-                    insightViewOrch.showInsightsForMethod(it.id, InsightsViewOrchestrator.ViewState.MethodFromBackNavigation)
+                    insightViewOrch.showInsightsForMethodFromBackNavigation(it.id)
                 }
 
                 else -> Unit

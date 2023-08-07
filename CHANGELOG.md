@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.139] - 2023-08-06
+## [2.0.140] - 2023-08-07
+- Feature/local tests environment - similar to LOCAL one by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1089
+- Bug fix/jaeger links to spans by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1092
+
+## 2.0.139 - 2023-08-06
 - turn on trace in development instance by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1087
 - Feature/support inject tracer by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1088
 

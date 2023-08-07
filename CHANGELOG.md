@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.140] - 2023-08-07
+## [2.0.141] - 2023-08-07
+- Fix UI freeze and assert non UI thread by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1094
+
+## 2.0.140 - 2023-08-07
 - Feature/local tests environment - similar to LOCAL one by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1089
 - Bug fix/jaeger links to spans by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1092
 

@@ -1,11 +1,11 @@
 package org.digma.intellij.plugin.test.system
 
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.testFramework.fixtures.BasePlatformTestCase
+import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.log.Log
 
-class MockTestK : BasePlatformTestCase() {
+class MockTestK : LightJavaCodeInsightFixtureTestCase() {
 
     private val logger = Logger.getInstance(MockTestK::class.java)
 

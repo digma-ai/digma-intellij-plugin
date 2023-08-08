@@ -26,5 +26,6 @@ dependencies {
 }
 
 tasks.test {
+    systemProperty("intellij.progress.task.ignoreHeadless", true)
     useJUnit()
 }

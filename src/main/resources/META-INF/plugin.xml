@@ -114,10 +114,10 @@
         <editorNotificationProvider implementation="org.digma.intellij.plugin.notifications.DigmaEditorNotificationProvider"
                                     id="org.digma.intellij.plugin.notifications.DigmaEditorNotificationProvider"/>
 
-<!--        <postStartupActivity implementation="org.digma.intellij.plugin.common.DumbAwareStartupActivity"/>-->
-<!--        <postStartupActivity implementation="org.digma.intellij.plugin.common.RunOnceStartupActivity"/>-->
-<!--        <postStartupActivity implementation="org.digma.intellij.plugin.recentactivity.RecentActivityStartupActivity"/>-->
-<!--        <postStartupActivity implementation="org.digma.intellij.plugin.posthog.ContainerEngineStartupActivity"/>-->
+        <postStartupActivity implementation="org.digma.intellij.plugin.common.DumbAwareStartupActivity"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.common.RunOnceStartupActivity"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.recentactivity.RecentActivityStartupActivity"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.posthog.ContainerEngineStartupActivity"/>
 
 
         <!-- Code lens providers are used only for some languages, for example java,python.

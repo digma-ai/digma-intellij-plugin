@@ -115,6 +115,7 @@ class OpenLibertyRunConfigurationWrapper : IRunConfigurationWrapper {
                 false
                         || it.contains("libertyDev")
                         || it.contains("libertyRun")
+                        || it.contains("libertyStart")
             }
             return hasRelevantTask
         }
@@ -126,16 +127,21 @@ class OpenLibertyRunConfigurationWrapper : IRunConfigurationWrapper {
         return false
     }
 
+    /**
+     * @see <a href="https://github.com/OpenLiberty/ci.maven#goals">Liberty Maven Goals</a>
+     */
     private fun isMavenConfiguration(configuration: RunConfigurationBase<*>): Boolean {
-        //will catch maven tasks of liberty:dev and liberty:run
+        //will catch maven tasks of liberty:dev and liberty:run, and liberty:start
         if (configuration is MavenRunConfiguration) {
             val goalNames = configuration.runnerParameters.goals
             val hasRelevantTask = goalNames.any {
                 false
                         || it.equals("liberty:dev")
                         || it.equals("liberty:run")
+                        || it.equals("liberty:start")
                         || (it.contains(":liberty-maven-plugin:") && it.endsWith(":dev"))
                         || (it.contains(":liberty-maven-plugin:") && it.endsWith(":run"))
+                        || (it.contains(":liberty-maven-plugin:") && it.endsWith(":start"))
             }
             return hasRelevantTask
         }

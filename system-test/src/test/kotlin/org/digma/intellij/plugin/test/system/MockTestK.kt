@@ -1,14 +1,17 @@
 package org.digma.intellij.plugin.test.system
 
+import ai.grazie.nlp.utils.dropWhitespaces
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase
 import junit.framework.TestCase
 import org.digma.intellij.plugin.analytics.AnalyticsProvider
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
+import org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.AboutResult
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
+import org.gradle.internal.impldep.org.junit.Assert
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 
@@ -30,16 +33,16 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
         Log.test(logger, "Starting SetUp")
         Log.test(logger, "Mocking AnalyticsProvider")
 
-//        val analyticsProviderMock = mock(AnalyticsProvider::class.java)
-//        val field = analyticsService.javaClass.getDeclaredField("analyticsProviderProxy")
-//        field.isAccessible = true
-//        field.set(analyticsService, analyticsProviderMock)
-//        `when`(analyticsProviderMock.getEnvironments()).thenReturn(environmentList)
+
         val mock = prepareMock()
         analyticsProviderProxyMock = mock
         analyticsProvider = mock
 
 
+    }
+
+    override fun getTestDataPath(): String {
+        return "src/test/resources"
     }
 
     private fun prepareMock(): RestAnalyticsProvider {
@@ -76,7 +79,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
         TestCase.assertNotNull(analyticsImpl)
     }
 
-    fun `test mock injection to Analytics service`(){
+    fun `test mock injection to Analytics service`() {
         val analyticsProviderMock = prepareMock()
 //        `when`(analyticsProviderMock.getEnvironments()).thenReturn(environmentList)
         val field = analyticsService.javaClass.getDeclaredField("analyticsProvider")
@@ -93,6 +96,39 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
         TestCase.assertEquals(environmentList, environments)
     }
 
+    fun `test open file and move caret`() {
+        val file = myFixture.configureByFile("EditorEventsHandler.java")
+        myFixture.openFileInEditor(file.virtualFile)
+        val editor = myFixture.editor
+
+        val caretPosition = editor.caretModel.currentCaret.offset
+        Log.test(logger, "Caret position: $caretPosition")
+
+        val fileText = editor.document.text
+//        Log.test(logger, "File text:\n {}", fileText)
+
+        val classKeywordIndex = fileText.indexOf("class")
+        if (classKeywordIndex != -1) {
+            //mover caret to line 37
+
+            val newCaretPosition = editor.offsetToLogicalPosition(classKeywordIndex)
+            editor.caretModel.moveToLogicalPosition(newCaretPosition)
+
+            val lineNumber = editor.document.getLineNumber(classKeywordIndex)
+            editor.selectionModel.selectLineAtCaret()
+
+            val selectedText = editor.selectionModel.selectedText
+            Log.test(logger, "Selected text: $selectedText")
+
+            TestCase.assertNotNull(selectedText)
+            TestCase.assertEquals("public class EditorEventsHandler implements FileEditorManagerListener {\n", selectedText?.dropWhitespaces())
+
+            val javaCodeLens = JavaCodeLensService.getInstance(project)
+            val codeLens = javaCodeLens.getCodeLens(file)
+
+            TestCase.assertNotNull(codeLens)
+        }
+    }
 
 
 }

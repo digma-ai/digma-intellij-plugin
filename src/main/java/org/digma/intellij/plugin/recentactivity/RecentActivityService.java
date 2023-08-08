@@ -478,7 +478,7 @@ public class RecentActivityService implements Disposable {
 
         if (jbCefBrowser == null) {
             Log.log(logger::debug, project, "jbCefBrowser is not initialized, calling showToolWindow");
-            RecentActivityToolWindowShower.getInstance(project).showToolWindow();
+
             //ugly hack for initialization when RECENT_ACTIVITY_INITIALIZE message is sent.
             // if the recent activity window was not yet initialized then we need to send the live data only after
             // RECENT_ACTIVITY_INITIALIZE message is sent.
@@ -488,6 +488,9 @@ public class RecentActivityService implements Disposable {
                     sendLiveDataImpl(durationLiveData);
                 }
             };
+
+            RecentActivityToolWindowShower.getInstance(project).showToolWindow();
+
         } else {
             RecentActivityToolWindowShower.getInstance(project).showToolWindow();
             sendLiveDataImpl(durationLiveData);

@@ -60,7 +60,6 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -83,8 +82,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
     public List<String> getEnvironments() {
         Log.test(LOGGER, "getEnvironments");
-        return Arrays.asList("env1", "env2", "env3");
-//        return execute(client.analyticsProvider::getEnvironments);
+        return execute(client.analyticsProvider::getEnvironments);
     }
 
     public void sendDebuggerEvent(DebuggerEventRequest debuggerEventRequest) {

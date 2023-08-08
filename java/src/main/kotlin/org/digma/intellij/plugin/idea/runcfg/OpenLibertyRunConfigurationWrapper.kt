@@ -86,7 +86,7 @@ class OpenLibertyRunConfigurationWrapper : IRunConfigurationWrapper {
         if (isTest) {
             val envPart = "digma.environment=${buildEnvForLocalTests()}"
             retVal = retVal
-                .plus("-Dquarkus.otel.resource.attributes=\"$envPart\"")
+                .plus("-Dotel.resource.attributes=\"$envPart\"")
                 .plus(" ")
         }
 

@@ -38,6 +38,23 @@ class OtelRunConfigurationExtension : RunConfigurationExtension() {
             }
             params.env[JAVA_TOOL_OPTIONS] = javaToolOptions
         }
+
+        //this is only for gradle. we need to keep original JAVA_TOOL_OPTIONS if exists and restore when the process is
+        // finished, anyway we need to clean our JAVA_TOOL_OPTIONS because it will be saved in the run configuration settings.
+        @JvmStatic
+        fun mergeGradleJavaToolOptions(configuration: GradleRunConfiguration, myJavaToolOptions: String) {
+            var javaToolOptions = myJavaToolOptions
+            //need to replace the env because it may be immutable map
+            val newEnv = configuration.settings.env.toMutableMap()
+            if (configuration.settings.env.containsKey(JAVA_TOOL_OPTIONS)) {
+                val currentJavaToolOptions = configuration.settings.env[JAVA_TOOL_OPTIONS]
+                javaToolOptions = "$myJavaToolOptions $currentJavaToolOptions"
+                newEnv[ORG_GRADLE_JAVA_TOOL_OPTIONS] = currentJavaToolOptions!!
+            }
+            newEnv[JAVA_TOOL_OPTIONS] = javaToolOptions
+            configuration.settings.env = newEnv
+        }
+
     }
 
     private fun isAutoOtelEnabled(): Boolean {

@@ -63,7 +63,7 @@ class OpenLibertyRunConfigurationWrapper : IRunConfigurationWrapper {
                 configuration as GradleRunConfiguration
                 val javaToolOptions = buildJavaToolOptions(runConfigType.isTest)
                 javaToolOptions?.let {
-                    //TODO: handle gradle
+                    OtelRunConfigurationExtension.mergeGradleJavaToolOptions(configuration, javaToolOptions)
                 }
             }
 

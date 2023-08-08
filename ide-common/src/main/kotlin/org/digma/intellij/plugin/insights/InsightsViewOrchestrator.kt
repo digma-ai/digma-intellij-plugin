@@ -116,6 +116,9 @@ class InsightsViewOrchestrator(val project: Project) {
                     methodInfo
                 )
 
+                //the new React app insights
+                project.service<InsightsService>().updateInsights(methodInfo)
+
                 project.service<ErrorsActionsService>().closeErrorDetailsBackButton()
 
                 project.service<ToolWindowShower>().showToolWindow()

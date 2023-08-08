@@ -27,6 +27,7 @@ import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.service.ErrorsActionsService;
 import org.digma.intellij.plugin.service.InsightsActionsService;
+import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.digma.intellij.plugin.ui.service.InsightsService;
 import org.digma.intellij.plugin.ui.settings.Theme;
 import org.jetbrains.annotations.NotNull;
@@ -46,8 +47,6 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     public InsightsMessageRouterHandler(Project project, JBCefBrowser jbCefBrowser) {
         this.project = project;
         this.jbCefBrowser = jbCefBrowser;
-
-
     }
 
 
@@ -86,6 +85,8 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
                     case "INSIGHTS/ADD_ANNOTATION" -> addAnnotation(jsonNode);
 
+                    case JCefMessagesUtils.GLOBAL_OPEN_TROUBLESHOOTING_GUIDE ->
+                            EDT.ensureEDT(() -> MainToolWindowCardsController.getInstance(project).showTroubleshooting());
 
                     case JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
                         OpenInBrowserRequest openBrowserRequest = JCefMessagesUtils.parseJsonToObject(request, OpenInBrowserRequest.class);

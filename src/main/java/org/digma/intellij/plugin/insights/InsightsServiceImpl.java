@@ -7,12 +7,15 @@ import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.ui.jcef.JBCefApp;
 import com.intellij.ui.jcef.JBCefBrowser;
 import com.intellij.util.RunnableCallable;
 import com.intellij.util.concurrency.NonUrgentExecutor;
 import org.cef.CefApp;
+import org.cef.browser.CefBrowser;
 import org.cef.browser.CefMessageRouter;
+import org.cef.handler.CefLifeSpanHandlerAdapter;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.analytics.EnvironmentChanged;
@@ -85,6 +88,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
     static final String MODEL_PROP_INSTRUMENTATION = "MODEL_PROP_INSTRUMENTATION";
 
+
     static final Long MAX_SECONDS_WAIT_FOR_DEPENDENCY = 6L;
     static final Long WAIT_FOR_DEPENDENCY_INTERVAL_MILLIS = 250L;
 
@@ -105,13 +109,24 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
             jbCefBrowser = JBCefBrowserBuilderCreator.create()
                     .setUrl("http://" + DOMAIN_NAME + "/index.html")
                     .build();
-            registerAppSchemeHandler(project);
 
             var jbCefClient = jbCefBrowser.getJBCefClient();
             cefMessageRouter = CefMessageRouter.create();
             messageHandler = new InsightsMessageRouterHandler(project, jbCefBrowser);
             cefMessageRouter.addHandler(messageHandler, true);
             jbCefClient.getCefClient().addMessageRouter(cefMessageRouter);
+
+
+            var lifeSpanHandler = new CefLifeSpanHandlerAdapter() {
+                @Override
+                public void onAfterCreated(CefBrowser browser) {
+                    registerAppSchemeHandler(project);
+                }
+            };
+
+            jbCefBrowser.getJBCefClient().addLifeSpanHandler(lifeSpanHandler, jbCefBrowser.getCefBrowser());
+
+            Disposer.register(this, () -> jbCefBrowser.getJBCefClient().removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.getCefBrowser()));
 
 
             ApplicationUISettingsChangeNotifier.getInstance(project).addSettingsChangeListener(new SettingsChangeListener() {
@@ -190,7 +205,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
             return null;
         }
 
-        return new InsightsIndexTemplateBuilder().build();
+        return new InsightsIndexTemplateBuilder().build(project);
     }
 
 

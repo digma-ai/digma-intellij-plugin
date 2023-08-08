@@ -39,6 +39,8 @@ class DockerService {
         //todo: fix to delete old compose file, remove after few releases
         if (downloader.findOldComposeFile() && PersistenceService.getInstance().isLocalEngineInstalled() == null){
             PersistenceService.getInstance().setLocalEngineInstalled(true)
+        }else if (PersistenceService.getInstance().isLocalEngineInstalled() == null){
+            PersistenceService.getInstance().setLocalEngineInstalled(false)
         }
 
         downloader.deleteOldFileIfExists()
@@ -54,11 +56,6 @@ class DockerService {
 
 
     fun isEngineInstalled(): Boolean {
-
-        if (PersistenceService.getInstance().isLocalEngineInstalled() == null){
-            PersistenceService.getInstance().setLocalEngineInstalled(false)
-        }
-
         return PersistenceService.getInstance().isLocalEngineInstalled()!!
     }
 

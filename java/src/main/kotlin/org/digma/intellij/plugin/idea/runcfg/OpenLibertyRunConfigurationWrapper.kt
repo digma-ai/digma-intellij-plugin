@@ -9,12 +9,12 @@ import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.common.buildEnvForLocalTests
 import org.digma.intellij.plugin.settings.SettingsState
 import org.jetbrains.idea.maven.execution.MavenRunConfiguration
+import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
 
 //
 // this class is derived from AutoOtelAgentRunConfigurationExtension.
 // consider to combine them together with abstract class
 //
-// for quarkus, look at https://quarkus.io/guides/opentelemetry
 class OpenLibertyRunConfigurationWrapper : IRunConfigurationWrapper {
 
     companion object {
@@ -54,6 +54,16 @@ class OpenLibertyRunConfigurationWrapper : IRunConfigurationWrapper {
                 val javaToolOptions = buildJavaToolOptions(runConfigType.isTest)
                 javaToolOptions?.let {
                     mergeJavaToolOptions(params, it)
+                }
+            }
+
+            RunConfigType.GradleTest,
+            RunConfigType.GradleRun,
+            -> {
+                configuration as GradleRunConfiguration
+                val javaToolOptions = buildJavaToolOptions(runConfigType.isTest)
+                javaToolOptions?.let {
+                    //TODO: handle gradle
                 }
             }
 
@@ -100,19 +110,34 @@ class OpenLibertyRunConfigurationWrapper : IRunConfigurationWrapper {
     private fun evalRunConfigType(configuration: RunConfigurationBase<*>, module: Module?): RunConfigType {
         if (isMavenConfiguration(configuration)) return RunConfigType.MavenRun
         if (isMavenTestConfiguration(configuration)) return RunConfigType.MavenTest
+        if (isGradleConfiguration(configuration)) return RunConfigType.GradleRun
+        if (isGradleTestConfiguration(configuration)) return RunConfigType.GradleTest
         return RunConfigType.Unknown
     }
 
     /**
-     * @see <a href="https://quarkus.io/guides/opentelemetry">Quarkus with opentelemetry</a>
+     * @see <a href="https://github.com/OpenLiberty/ci.gradle/tree/main#tasks">Liberty Gradle Tasks</a>
      */
     override fun isGradleConfiguration(configuration: RunConfigurationBase<*>): Boolean {
-        //TODO: support OpenLiberty with gradle
+        if (configuration is GradleRunConfiguration) {
+            val taskNames = configuration.settings.taskNames
+            val hasRelevantTask = taskNames.any {
+                false
+                        || it.contains("libertyDev")
+                        || it.contains("libertyRun")
+            }
+            return hasRelevantTask
+        }
+        return false
+    }
+
+    private fun isGradleTestConfiguration(configuration: RunConfigurationBase<*>): Boolean {
+        // currently no special task for liberty test
         return false
     }
 
     private fun isMavenConfiguration(configuration: RunConfigurationBase<*>): Boolean {
-        //will catch maven tasks of quarkus:dev and quarkus:run
+        //will catch maven tasks of liberty:dev and liberty:run
         if (configuration is MavenRunConfiguration) {
             val goalNames = configuration.runnerParameters.goals
             val hasRelevantTask = goalNames.any {
@@ -128,7 +153,7 @@ class OpenLibertyRunConfigurationWrapper : IRunConfigurationWrapper {
     }
 
     private fun isMavenTestConfiguration(configuration: RunConfigurationBase<*>): Boolean {
-        //will catch maven tasks quarkus:test
+        //will catch maven tasks liberty:test-start
         if (configuration is MavenRunConfiguration) {
             val goalNames = configuration.runnerParameters.goals
             val hasRelevantTask = goalNames.any {

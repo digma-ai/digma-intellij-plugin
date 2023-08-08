@@ -66,7 +66,7 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
                 val javaToolOptions =
                     buildJavaToolOptions(configuration, project, isSpringBootWithMicrometerTracing, isOtelServiceNameAlreadyDefined(params), runConfigType.isTest)
                 javaToolOptions?.let {
-                    mergeJavaToolOptions(params, it)
+                    OtelRunConfigurationExtension.mergeJavaToolOptions(params, it)
                 }
             }
 
@@ -96,7 +96,7 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
                 val javaToolOptions =
                     buildJavaToolOptions(configuration, project, isSpringBootWithMicrometerTracing, isOtelServiceNameAlreadyDefined(params), runConfigType.isTest)
                 javaToolOptions?.let {
-                    mergeJavaToolOptions(params, it)
+                    OtelRunConfigurationExtension.mergeJavaToolOptions(params, it)
                 }
             }
 
@@ -135,17 +135,6 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
         }
         newEnv[JAVA_TOOL_OPTIONS] = javaToolOptions
         configuration.settings.env = newEnv
-    }
-
-
-    //this is for java and maven run configurations. merge in case users have their own JAVA_TOOL_OPTIONS
-    private fun mergeJavaToolOptions(params: JavaParameters, myJavaToolOptions: String) {
-        var javaToolOptions = myJavaToolOptions
-        if (params.env.containsKey(JAVA_TOOL_OPTIONS)) {
-            val currentJavaToolOptions = params.env[JAVA_TOOL_OPTIONS]
-            javaToolOptions = "$myJavaToolOptions $currentJavaToolOptions"
-        }
-        params.env[JAVA_TOOL_OPTIONS] = javaToolOptions
     }
 
     private fun buildJavaToolOptions(

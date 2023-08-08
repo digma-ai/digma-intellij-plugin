@@ -26,6 +26,18 @@ class OtelRunConfigurationExtension : RunConfigurationExtension() {
     companion object {
         val logger: Logger = Logger.getInstance(OtelRunConfigurationExtension::class.java)
         const val ORG_GRADLE_JAVA_TOOL_OPTIONS = "ORG_GRADLE_JAVA_TOOL_OPTIONS"
+
+
+        //this is for java and maven run configurations. merge in case users have their own JAVA_TOOL_OPTIONS
+        @JvmStatic
+        fun mergeJavaToolOptions(params: JavaParameters, myJavaToolOptions: String) {
+            var javaToolOptions = myJavaToolOptions
+            if (params.env.containsKey(JAVA_TOOL_OPTIONS)) {
+                val currentJavaToolOptions = params.env[JAVA_TOOL_OPTIONS]
+                javaToolOptions = "$myJavaToolOptions $currentJavaToolOptions"
+            }
+            params.env[JAVA_TOOL_OPTIONS] = javaToolOptions
+        }
     }
 
     private fun isAutoOtelEnabled(): Boolean {

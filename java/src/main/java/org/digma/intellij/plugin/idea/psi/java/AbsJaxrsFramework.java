@@ -7,16 +7,13 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.SearchScope;
+import com.intellij.psi.search.searches.AllClassesSearch;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.util.Query;
-import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
-import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -114,17 +111,13 @@ public abstract class AbsJaxrsFramework implements IEndpointDiscovery {
         return jaxrsPathAnnotationClass != null;
     }
 
-    @Override
-    public void endpointDiscovery(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
-        lateInit();
-        if (!isJaxRsHttpRelevant()) {
-            return;
-        }
+    protected List<EndpointInfo> getEndpointsOfFile(@NotNull SearchScope searchScope) {
+        final List<EndpointInfo> retList = new ArrayList<>();
 
         var psiFacade = JavaPsiFacade.getInstance(project);
         final PsiClass appPathAnnotationClass = psiFacade.findClass(getApplicationPathAnnotationClassFqn(), GlobalSearchScope.allScope(project));
 
-        List<PsiClass> allClassesInFile = JavaPsiUtils.getClassesWithin(psiFile);
+        Query<PsiClass> allClassesInFile = AllClassesSearch.search(searchScope, project);
         for (PsiClass currClass : allClassesInFile) {
             final PsiAnnotation controllerPathAnnotation = JavaPsiUtils.findNearestAnnotation(currClass, JAX_RS_PATH_ANNOTATION_STR());
 
@@ -149,16 +142,22 @@ public abstract class AbsJaxrsFramework implements IEndpointDiscovery {
                         String httpEndpointCodeObjectId = createHttpEndpointCodeObjectId(currExpectedAnnotation, endpointFullUri);
 
                         EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, JavaLanguageUtils.createJavaMethodCodeObjectId(currPsiMethod), JavaPsiUtils.toFileUri(currPsiMethod), currPsiMethod.getTextOffset());
-                        Log.log(LOGGER::debug, "Found endpoint info '{}' for method '{}'", endpointInfo.getId(), endpointInfo.getContainingMethodId());
-
-                        MethodInfo methodInfo = documentInfo.getMethods().get(endpointInfo.getContainingMethodId());
-                        //this method must exist in the document info
-                        Objects.requireNonNull(methodInfo, "method info " + endpointInfo.getContainingMethodId() + " must exist in DocumentInfo for " + documentInfo.getFileUri());
-                        methodInfo.addEndpoint(endpointInfo);
+                        retList.add(endpointInfo);
                     }
                 }
             }
         }
+        return retList;
+    }
+
+    protected List<EndpointInfo> getEndpointsOfOtherScope(SearchScope searchScope) {
+        List<EndpointInfo> retList = new ArrayList<>();
+
+        //Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(jaxrsPathAnnotationClass, searchScope);
+
+        //TODO: impl and combine with method endpointDiscovery
+
+        return retList;
     }
 
     protected Set<String> evaluateApplicationPaths(@Nullable PsiClass appPathAnnotationClass, @NotNull PsiClass checkedClass) {
@@ -189,17 +188,17 @@ public abstract class AbsJaxrsFramework implements IEndpointDiscovery {
     }
 
     @Override
-    public List<EndpointInfo> lookForEndpoints(@NotNull SearchScope searchScope) {
+    public List<EndpointInfo> lookForEndpoints(@NotNull SearchScope searchScope, boolean isFileScope) {
         lateInit();
         if (!isJaxRsHttpRelevant()) {
             return Collections.emptyList();
         }
 
-        List<EndpointInfo> retList = new ArrayList<>();
-
-        //TODO: impl and combine with method endpointDiscovery
-
-        return retList;
+        if (isFileScope) {
+            return getEndpointsOfFile(searchScope);
+        } else {
+            return getEndpointsOfOtherScope(searchScope);
+        }
     }
 
     protected static String combinePaths(PsiAnnotation annotOfPrefix, PsiAnnotation annotOfSuffix) {

@@ -15,7 +15,6 @@ import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -79,7 +78,7 @@ public class GrpcFramework implements IEndpointDiscovery {
         Log.log(LOGGER::debug, "addEndpointMethods for grpcServerClass fqn='{}' with evaluated serviceName='{}'", grpcServerClass.getQualifiedName(), grpcServiceName);
 
         List<EndpointInfo> retList = new ArrayList<>(16);
-        Collection<PsiMethod> psiMethods = Arrays.asList(grpcServerClass.getMethods());
+        Collection<PsiMethod> psiMethods = JavaPsiUtils.getMethodsOf(grpcServerClass);
         for (PsiMethod currPsiMethod : psiMethods) {
             String methodCodeObjectId = JavaLanguageUtils.createJavaMethodCodeObjectId(currPsiMethod);
 

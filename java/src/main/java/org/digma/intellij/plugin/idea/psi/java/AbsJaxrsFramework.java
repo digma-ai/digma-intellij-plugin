@@ -18,7 +18,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -121,7 +120,7 @@ public abstract class AbsJaxrsFramework implements IEndpointDiscovery {
         for (PsiClass currClass : allClassesInFile) {
             final PsiAnnotation controllerPathAnnotation = JavaPsiUtils.findNearestAnnotation(currClass, JAX_RS_PATH_ANNOTATION_STR());
 
-            List<PsiMethod> methodsInClass = Arrays.asList(currClass.getMethods());
+            List<PsiMethod> methodsInClass = JavaPsiUtils.getMethodsOf(currClass);
             for (PsiMethod currPsiMethod : methodsInClass) {
                 final PsiAnnotation methodPathAnnotation = JavaPsiUtils.findNearestAnnotation(currPsiMethod, JAX_RS_PATH_ANNOTATION_STR());
                 if (methodPathAnnotation == null && controllerPathAnnotation == null) {

@@ -354,7 +354,7 @@ public class JavaLanguageService implements LanguageService {
                 //hopefully there is only one class by that name in the project
                 Optional<PsiClass> psiClassOptional = psiClasses.stream().findAny();
                 PsiClass psiClass = psiClassOptional.get();
-                for (PsiMethod method : psiClass.getMethods()) {
+                for (PsiMethod method : JavaPsiUtils.getMethodsOf(psiClass)) {
                     var id = JavaLanguageUtils.createJavaMethodCodeObjectId(method);
                     if (id.equals(methodId) && method.canNavigate()) {
                         Log.log(LOGGER::debug, "navigating to method {}", method);
@@ -467,7 +467,7 @@ public class JavaLanguageService implements LanguageService {
             //hopefully there is only one class by that name in the project
             PsiClass psiClass = psiClasses.stream().findAny().get();
             PsiFile psiFile = PsiTreeUtil.getParentOfType(psiClass, PsiFile.class);
-            for (PsiMethod method : psiClass.getMethods()) {
+            for (PsiMethod method : JavaPsiUtils.getMethodsOf(psiClass)) {
                 String javaMethodCodeObjectId = JavaLanguageUtils.createJavaMethodCodeObjectId(method);
                 if (javaMethodCodeObjectId.equals(methodId) && psiFile != null) {
                     return method;

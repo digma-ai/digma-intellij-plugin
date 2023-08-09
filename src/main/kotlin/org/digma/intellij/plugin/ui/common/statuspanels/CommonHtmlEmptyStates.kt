@@ -75,7 +75,9 @@ fun createNoDataYetEmptyStatePanel(project: Project): JPanel {
     val constraints = GridBagConstraints()
     constraints.gridx = 0
     constraints.gridy = 0
+    constraints.ipady = 20
     componentsPanel.add(messagePanel, constraints)
+
 
     val link = ActionLink("Not Seeing Your Application Data?") {
         MainToolWindowCardsController.getInstance(project).showTroubleshooting()
@@ -83,6 +85,7 @@ fun createNoDataYetEmptyStatePanel(project: Project): JPanel {
 
     constraints.gridx = 0
     constraints.gridy = 1
+    constraints.ipady = 0
     componentsPanel.add(link, constraints)
     return componentsPanel
 }

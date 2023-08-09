@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.docker
 
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
@@ -9,17 +10,18 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.MessageConstants
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.SystemInfo
-import org.digma.intellij.plugin.analytics.BackendConnectionUtil
+import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.settings.SettingsState
 import java.util.function.Consumer
 import java.util.function.Supplier
 
 
 @Service(Service.Level.APP)
-class DockerService {
+class DockerService: Disposable {
 
     private val logger = Logger.getInstance(this::class.java)
 
@@ -44,6 +46,20 @@ class DockerService {
         }
 
         downloader.deleteOldFileIfExists()
+
+
+        val apiUrl = SettingsState.getInstance().apiUrl
+        SettingsState.getInstance().addChangeListener({
+            if (it.apiUrl != apiUrl && isEngineInstalled()){
+                PersistenceService.getInstance().setLocalEngineInstalled(false)
+                //todo: maybe remove engine
+            }
+        },this)
+    }
+
+
+    override fun dispose() {
+        //nothing to do, used as parent disposable
     }
 
 
@@ -60,7 +76,7 @@ class DockerService {
     }
 
     fun isEngineRunning(project: Project): Boolean {
-        return isEngineInstalled() && BackendConnectionUtil.getInstance(project).testConnectionToBackend()
+        return isEngineInstalled() && BackendConnectionMonitor.getInstance(project).isConnectionOk()
     }
 
 
@@ -287,6 +303,9 @@ class DockerService {
 
     fun removeEngine(project: Project, resultTask: Consumer<String>) {
 
+        //no matter what happens here, mark LocalEngineInstalled to false
+        PersistenceService.getInstance().setLocalEngineInstalled(false)
+
         ActivityMonitor.getInstance(project).registerDigmaEngineEventStart("removeEngine", mapOf())
 
         Backgroundable.runInNewBackgroundThread(project, "uninstalling digma engine") {
@@ -309,7 +328,6 @@ class DockerService {
                 //always delete fine here, it's an uninstallation
                 downloader.deleteFile()
 
-                PersistenceService.getInstance().setLocalEngineInstalled(false)
 
             } else {
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventError("removeEngine", "Failed to download compose file")

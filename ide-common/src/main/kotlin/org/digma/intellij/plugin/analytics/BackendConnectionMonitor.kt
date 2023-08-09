@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.analytics
 
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
 import com.intellij.util.messages.MessageBusConnection
 
@@ -9,6 +10,7 @@ import com.intellij.util.messages.MessageBusConnection
  * no connection message in the plugin window.
  * see also class NoConnectionPanel
  */
+@Service(Service.Level.PROJECT)
 class BackendConnectionMonitor(val project: Project) : Disposable, AnalyticsServiceConnectionEvent {
 
     companion object {

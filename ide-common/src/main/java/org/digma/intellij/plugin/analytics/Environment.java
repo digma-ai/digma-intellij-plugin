@@ -6,7 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.persistence.PersistenceData;
+import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -17,8 +17,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
-
-import static org.digma.intellij.plugin.analytics.EnvironmentRefreshSchedulerKt.scheduleEnvironmentRefresh;
 
 public class Environment implements EnvironmentsSupplier {
 
@@ -32,32 +30,22 @@ public class Environment implements EnvironmentsSupplier {
 
     private final Project project;
     private final AnalyticsService analyticsService;
-    private final PersistenceData persistenceData;
 
     private final ReentrantLock envChangeLock = new ReentrantLock();
 
-    public Environment(@NotNull Project project, @NotNull AnalyticsService analyticsService, @NotNull PersistenceData persistenceData) {
+    public Environment(@NotNull Project project, @NotNull AnalyticsService analyticsService) {
         this.project = project;
         this.analyticsService = analyticsService;
-        this.persistenceData = persistenceData;
-        this.current = persistenceData.getCurrentEnv();
-        scheduleEnvironmentRefresh(analyticsService, this);
-
-        //call refresh on environment when connection is lost, in some cases its necessary for some components to reset or update ui.
-        //usually these components react to environment change events, so this will trigger an environment change if not already happened before.
-        //if the connection lost happened during environment refresh then it may cause a second redundant event but will do no harm.
-        project.getMessageBus().connect(analyticsService).subscribe(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, new AnalyticsServiceConnectionEvent() {
-            @Override
-            public void connectionLost() {
-                refreshNowOnBackground();
-            }
-
-            @Override
-            public void connectionGained() {
-                refreshNowOnBackground();
-            }
-        });
     }
+
+
+
+    //this method is for internal use during initialization of AnalyticsService,
+    // its package protected and should never be used elsewhere
+    void setCurrentInternal(String current) {
+        this.current = current;
+    }
+
 
 
     @Override
@@ -131,32 +119,13 @@ public class Environment implements EnvironmentsSupplier {
             try {
                 //run both refreshEnvironments and updateCurrentEnv under same lock
                 refreshEnvironments();
-                updateCurrentEnv(persistenceData.getCurrentEnv(), true);
+                updateCurrentEnv(PersistenceService.getInstance().getState().getCurrentEnv(), true);
             } finally {
                 if (envChangeLock.isHeldByCurrentThread()) {
                     envChangeLock.unlock();
                 }
             }
         });
-    }
-
-
-    void refreshNow() {
-
-        //this method should not be called, it will refresh environments on current thread. it is meant for
-        // first initialization of AnalyticsService and should never be called again.
-
-        Log.log(LOGGER::info, "Refreshing Environments now on current thread.");
-        envChangeLock.lock();
-        try {
-            //run both refreshEnvironments and updateCurrentEnv under same lock
-            refreshEnvironments();
-            updateCurrentEnv(persistenceData.getCurrentEnv(), true);
-        } finally {
-            if (envChangeLock.isHeldByCurrentThread()) {
-                envChangeLock.unlock();
-            }
-        }
     }
 
 
@@ -211,7 +180,7 @@ public class Environment implements EnvironmentsSupplier {
         if (current != null) {
             //don't update the persistent data with null,null will happen on connection lost,
             //so when connection is back the current env can be restored to the last one.
-            persistenceData.setCurrentEnv(current);
+            PersistenceService.getInstance().getState().setCurrentEnv(current);
         }
 
         if (!Objects.equals(oldEnv, current)) {
@@ -239,7 +208,7 @@ public class Environment implements EnvironmentsSupplier {
             return;
         }
 
-        //run in new background thread so locks can be freeied because this method is called under lock
+        //run in new background thread so locks can be freed because this method is called under lock
         Backgroundable.runInNewBackgroundThread(project, "environmentsListChanged", () -> {
             EnvironmentChanged publisher = project.getMessageBus().syncPublisher(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC);
             publisher.environmentsListChanged(environments);
@@ -256,11 +225,19 @@ public class Environment implements EnvironmentsSupplier {
 
         Log.log(LOGGER::info, "Digma: Changing environment " + oldEnv + " to " + newEnv);
 
-        //run in new background thread so locks can be freeied because this method is called under lock
+        //run in new background thread so locks can be freed because this method is called under lock
         Backgroundable.runInNewBackgroundThread(project, "environmentChanged", () -> {
             EnvironmentChanged publisher = project.getMessageBus().syncPublisher(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC);
             publisher.environmentChanged(newEnv, refreshInsightsView);
         });
     }
+
+
+    //this method is for internal use of the package
+    void notifyChange(String oldEnv) {
+        notifyEnvironmentsListChange();
+        notifyEnvironmentChanged(oldEnv,current,true);
+    }
+
 
 }

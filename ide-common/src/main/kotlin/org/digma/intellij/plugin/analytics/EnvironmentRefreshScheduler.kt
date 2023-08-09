@@ -13,8 +13,6 @@ import org.digma.intellij.plugin.settings.SettingsState
 fun scheduleEnvironmentRefresh(parentDisposable: Disposable, environemnt: Environment) {
 
     DisposingScope(parentDisposable).launch {
-        //start refreshing after one minute,let the IDE full start
-        delay(60000)
         while (this.isActive) {
             delay(service<SettingsState>().refreshDelay.toLong() * 1000)
             environemnt.refreshNowOnBackground()

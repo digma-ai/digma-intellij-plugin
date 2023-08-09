@@ -25,7 +25,6 @@ import org.cef.handler.CefMessageRouterHandlerAdapter;
 import org.digma.intellij.plugin.PluginId;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
-import org.digma.intellij.plugin.analytics.BackendConnectionMonitor;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.CommonUtils;
 import org.digma.intellij.plugin.common.EDT;
@@ -117,6 +116,7 @@ public class RecentActivityService implements Disposable {
     private final Icon iconWithGreenDot = ExecutionUtil.getLiveIndicator(icon);
     private final String localHostname;
     private final Project project;
+    private final AnalyticsService analyticsService;
 
     //the recent activity code is not managed in one place that is accessible from the plugin code
     // like a project service, so currently need an init task.
@@ -135,6 +135,8 @@ public class RecentActivityService implements Disposable {
 
     public RecentActivityService(Project project) {
         this.project = project;
+        //initialize AnalyticsService early so the UI already can detect the connection status when created
+        this.analyticsService = project.getService(AnalyticsService.class);
         this.localHostname = CommonUtils.getLocalHostname();
         this.latestActivityResult = new RecentActivityResult(null, new ArrayList<>());
     }
@@ -146,9 +148,7 @@ public class RecentActivityService implements Disposable {
         var activityFetchingTask = new TimerTask() {
             @Override
             public void run() {
-                if (BackendConnectionMonitor.getInstance(project).isConnectionOk()) {
-                    fetchRecentActivities();
-                }
+                fetchRecentActivities();
             }
         };
         activityFetchingTimer = new Timer();
@@ -292,7 +292,7 @@ public class RecentActivityService implements Disposable {
 
     private void processRecentActivityInitialized() {
         webAppInitialized = true;
-        java.util.List<String> allEnvironments = AnalyticsService.getInstance(project).getEnvironment().getEnvironments();
+        java.util.List<String> allEnvironments = analyticsService.getEnvironment().getEnvironments();
         sendLatestActivities(allEnvironments);
     }
 
@@ -315,7 +315,7 @@ public class RecentActivityService implements Disposable {
 
                 var canNavigate = project.getService(CodeNavigator.class).canNavigateToSpanOrMethod(spanId, methodId);
                 if (canNavigate) {
-                    EnvironmentsSupplier environmentsSupplier = AnalyticsService.getInstance(project).getEnvironment();
+                    EnvironmentsSupplier environmentsSupplier = analyticsService.getEnvironment();
                     String actualEnvName = adjustBackEnvNameIfNeeded(payload.getEnvironment());
                     environmentsSupplier.setCurrent(actualEnvName, false, () -> EDT.ensureEDT(() -> {
                         project.getService(HomeSwitcherService.class).switchToInsights();
@@ -324,7 +324,7 @@ public class RecentActivityService implements Disposable {
                     }));
                 } else {
                     NotificationUtil.showNotification(project, "code object could not be found in the workspace");
-                    EnvironmentsSupplier environmentsSupplier = AnalyticsService.getInstance(project).getEnvironment();
+                    EnvironmentsSupplier environmentsSupplier = analyticsService.getEnvironment();
                     String actualEnvName = adjustBackEnvNameIfNeeded(payload.getEnvironment());
                     environmentsSupplier.setCurrent(actualEnvName, false, () -> EDT.ensureEDT(() -> {
                         project.getService(HomeSwitcherService.class).switchToInsights();
@@ -348,14 +348,14 @@ public class RecentActivityService implements Disposable {
     }
 
     private void fetchRecentActivities() {
-        java.util.List<String> allEnvironments = AnalyticsService.getInstance(project).getEnvironments();
+        java.util.List<String> allEnvironments = analyticsService.getEnvironments();
         if (allEnvironments == null) {
             Log.log(logger::warn, "error while getting environments from server");
             return;
         }
         RecentActivityResult recentActivityData = null;
         try {
-            recentActivityData = AnalyticsService.getInstance(project).getRecentActivity(allEnvironments);
+            recentActivityData = analyticsService.getRecentActivity(allEnvironments);
         } catch (AnalyticsServiceException e) {
             Log.log(logger::warn, "AnalyticsServiceException for getRecentActivity: {}", e.getMessage());
         }

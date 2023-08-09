@@ -52,14 +52,12 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
 
-
-        //initialize AnalyticsService early so the UI can detect the connection status when created
-        AnalyticsService.getInstance(project);
-
         if (!PersistenceService.getInstance().isFirstTimePluginLoaded()) {
             PersistenceService.getInstance().setFirstTimePluginLoaded();
             ActivityMonitor.getInstance(project).registerFirstTimePluginLoadedNew();
         }
+
+
 
         Log.log(LOGGER::debug, "createToolWindowContent for project  {}", project);
 
@@ -70,6 +68,9 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         // when the first document is opened.
         LanguageService.ensureStartupOnEDTForAll(project);
 
+        //initialize AnalyticsService early so the UI can detect the connection status when created
+        AnalyticsService.getInstance(project);
+
         ToolWindowShower.getInstance(project).setToolWindow(toolWindow);
 
         var contentPanel = new ContentPanel(project);
@@ -79,7 +80,7 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         toolWindow.getContentManager().addContent(mainContent);
 
         //start at home
-        MainToolWindowCardsController.getInstance(project).showHome();
+        project.getService(MainToolWindowCardsController.class).showHome();
 
         //the mainContent is added by default to the tool window. it will be replaced if we need to show
         // the wizard.

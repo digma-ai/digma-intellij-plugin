@@ -14,7 +14,6 @@ import com.intellij.openapi.project.Project
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.analytics.AnalyticsService
-import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.log.Log
@@ -53,23 +52,21 @@ class InsightsNotificationsService(val project: Project) : Disposable {
 
                 try {
 
-                    if (BackendConnectionMonitor.getInstance(project).isConnectionOk()) {
-                        var lastEventTime = PersistenceService.getInstance().state.lastInsightsEventTime
-                        if (lastEventTime == null) {
-                            lastEventTime = ZonedDateTime.now().minus(7, ChronoUnit.DAYS).withZoneSameInstant(ZoneOffset.UTC).toString()
-                        }
-
-                        val events = project.service<AnalyticsService>().getLatestEvents(lastEventTime)
-
-                        events.events.forEach {
-                            when (it) {
-                                is FirstImportantInsightEvent -> showNotificationForFirstImportantInsight(it)
-//                            is CodeObjectDurationChangeEvent -> showNotificationForDurationChangeEvent(it)
-                            }
-                        }
-
-                        updateLastEventTime(events)
+                    var lastEventTime = PersistenceService.getInstance().state.lastInsightsEventTime
+                    if (lastEventTime == null) {
+                        lastEventTime = ZonedDateTime.now().minus(7, ChronoUnit.DAYS).withZoneSameInstant(ZoneOffset.UTC).toString()
                     }
+
+                    val events = project.service<AnalyticsService>().getLatestEvents(lastEventTime)
+
+                    events.events.forEach {
+                        when (it) {
+                            is FirstImportantInsightEvent -> showNotificationForFirstImportantInsight(it)
+//                            is CodeObjectDurationChangeEvent -> showNotificationForDurationChangeEvent(it)
+                        }
+                    }
+
+                    updateLastEventTime(events)
 
                 } catch (e: Exception) {
                     Log.log(logger::warn, "could not get latest events {}", e.message)

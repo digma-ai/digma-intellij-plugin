@@ -82,5 +82,5 @@ jobs:
           git stash pop
           git add version.properties
           git add CHANGELOG.md
-          git commit -m "increment version after publish to ${VERSION} and update changelog"
+          git commit -m "increment version after publish to ${VERSION} and update changelog [skip ci]"
           git push

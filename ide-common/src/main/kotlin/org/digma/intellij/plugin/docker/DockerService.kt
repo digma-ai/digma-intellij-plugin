@@ -47,14 +47,6 @@ class DockerService: Disposable {
 
         downloader.deleteOldFileIfExists()
 
-
-        val apiUrl = SettingsState.getInstance().apiUrl
-        SettingsState.getInstance().addChangeListener({
-            if (it.apiUrl != apiUrl && isEngineInstalled()){
-                PersistenceService.getInstance().setLocalEngineInstalled(false)
-                //todo: maybe remove engine
-            }
-        },this)
     }
 
 

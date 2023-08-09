@@ -8,7 +8,6 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiJavaFile;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiReference;
-import com.intellij.psi.impl.source.PsiExtensibleClass;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.psi.search.searches.MethodReferencesSearch;
@@ -93,17 +92,7 @@ public class JavaCodeObjectDiscovery {
                 continue;
             }
 
-            final List<PsiMethod> methods;
-            if (aClass instanceof PsiExtensibleClass extClass) {
-                // avoid cases when there are generated methods and/or constructors such as lombok creates,
-                // see issue https://github.com/digma-ai/digma-intellij-plugin/issues/833
-                // see issue https://youtrack.jetbrains.com/issue/IDEA-323198
-                methods = extClass.getOwnMethods();
-            } else {
-                // call to getMethods might cause issue https://github.com/digma-ai/digma-intellij-plugin/issues/833, so avoiding it if possible
-                PsiMethod[] methodsArr = aClass.getMethods(); // call to getMethods might cause issue 833
-                methods = List.of(methodsArr);
-            }
+            final List<PsiMethod> methods = JavaPsiUtils.getMethodsOf(aClass);
 
             for (PsiMethod method : methods) {
                 String id = createJavaMethodCodeObjectId(method);

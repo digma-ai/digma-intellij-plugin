@@ -9,7 +9,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.util.ui.JBUI
-import org.digma.intellij.plugin.analytics.BackendConnectionUtil
+import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.log.Log
@@ -91,7 +91,7 @@ class SettingsHintPanel(project: Project) : JPanel() {
             localeEnginePanel.background = Laf.Colors.EDITOR_BACKGROUND
             localeEnginePanel.isOpaque = true
 
-            if (BackendConnectionUtil.getInstance(project).testConnectionToBackend()) {
+            if (BackendConnectionMonitor.getInstance(project).isConnectionOk()) {
                 localeEnginePanel.add(Box.createHorizontalStrut(5))
                 localeEnginePanel.add(JLabel(Laf.Icons.General.ACTIVE_GREEN))
             }
@@ -102,7 +102,7 @@ class SettingsHintPanel(project: Project) : JPanel() {
             localeEngineLabel.addMouseListener(object : MouseAdapter() {
                 override fun mouseClicked(e: MouseEvent?) {
                     try {
-                        MainToolWindowCardsController.getInstance(project).showWizard(false);
+                        MainToolWindowCardsController.getInstance(project).showWizard(false)
                         ToolWindowShower.getInstance(project).showToolWindow()
                         HintManager.getInstance().hideAllHints()
                     } catch (ex: Exception) {
@@ -155,7 +155,7 @@ class SettingsHintPanel(project: Project) : JPanel() {
         onboardingLinkLabel.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent?) {
                 try {
-                    MainToolWindowCardsController.getInstance(project).showWizard(true);
+                    MainToolWindowCardsController.getInstance(project).showWizard(true)
                     ToolWindowShower.getInstance(project).showToolWindow()
                     HintManager.getInstance().hideAllHints()
                 } catch (ex: Exception) {

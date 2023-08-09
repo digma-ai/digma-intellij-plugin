@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.util.messages.MessageBusConnection
+import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.log.Log
@@ -56,7 +57,9 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
             Log.log(logger::debug, "runWhenSmart called")
             val reloadTask = object : TimerTask() {
                 override fun run() {
-                    reloadSummariesPanel()
+                    if (BackendConnectionMonitor.getInstance(project).isConnectionOk()) {
+                        reloadSummariesPanel()
+                    }
                 }
             }
             time.schedule(reloadTask, 0, settingsState.refreshDelay * 1000L)

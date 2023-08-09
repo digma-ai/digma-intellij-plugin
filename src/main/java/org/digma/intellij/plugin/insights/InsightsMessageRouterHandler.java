@@ -3,6 +3,8 @@ package org.digma.intellij.plugin.insights;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.util.StdDateFormat;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
@@ -42,11 +44,14 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     private final JBCefBrowser jbCefBrowser;
 
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     public InsightsMessageRouterHandler(Project project, JBCefBrowser jbCefBrowser) {
         this.project = project;
         this.jbCefBrowser = jbCefBrowser;
+        objectMapper = new ObjectMapper();
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        objectMapper.setDateFormat( new StdDateFormat());
     }
 
 

@@ -1,6 +1,8 @@
 package org.digma.intellij.plugin.jcef.common;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.util.StdDateFormat;
 import com.intellij.ui.jcef.JBCefBrowser;
 import org.digma.intellij.plugin.recentactivity.outgoing.JaegerUrlChangedPayload;
 import org.digma.intellij.plugin.recentactivity.outgoing.JaegerUrlChangedRequest;
@@ -73,11 +75,20 @@ public class JCefBrowserUtil {
 
     public static String resultToString(Object result) {
         try {
-            return new ObjectMapper().writeValueAsString(result);
+            return getObjectMapper().writeValueAsString(result);
         } catch (Exception e) {
             return "Error parsing object " + e.getMessage();
         }
     }
 
+
+
+    public static ObjectMapper getObjectMapper(){
+        var objectMapper = new ObjectMapper();
+        objectMapper = new ObjectMapper();
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        objectMapper.setDateFormat( new StdDateFormat());
+        return objectMapper;
+    }
 
 }

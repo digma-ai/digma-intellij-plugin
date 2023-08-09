@@ -218,7 +218,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
             model.clearProperties();
 
             try {
-                var insightsResponse = project.getService(AnalyticsService.class).getInsightsForSingleSpan(codeLessSpan.getSpanId());
+                var insightsResponse = AnalyticsService.getInstance(project).getInsightsForSingleSpan(codeLessSpan.getSpanId());
                 model.setScope(new CodeLessSpanScope(codeLessSpan, insightsResponse.getSpanInfo()));
 
                 var insights = insightsResponse.getInsights();
@@ -244,6 +244,19 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
     @Override
     public void updateInsights(@NotNull MethodInfo methodInfo) {
+        updateInsightsImpl(methodInfo,null);
+    }
+
+    private void updateInsights(@NotNull MethodInfo methodInfo, @Nullable UIInsightsStatus predefinedStatus) {
+        withUpdateLock(() -> {
+            //check we are still on the same method. while updating the status the scope may already change
+            if (model.getScope() instanceof MethodScope methodScope && methodScope.getMethodInfo().getId().equals(methodInfo.getId())) {
+                updateInsightsImpl(methodInfo, predefinedStatus);
+            }
+        });
+    }
+
+    private void updateInsightsImpl(@NotNull MethodInfo methodInfo,@Nullable UIInsightsStatus predefinedStatus) {
 
         withUpdateLock(() -> {
             Log.log(logger::debug, "updateInsightsModel to {}. ", methodInfo);
@@ -262,18 +275,21 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
             var spans = methodInfo.getSpans().stream().map(spanInfo -> new Span(spanInfo.getId(), spanInfo.getName())).toList();
 
-            var status = UIInsightsStatus.Default.name();
-            if (insights.isEmpty()) {
-                Log.log(logger::debug, "No insights for method {}, Starting background thread to update status.", methodInfo.getName());
-                status = UIInsightsStatus.Loading.name();
-                updateStatusInBackground(methodInfo);
+            var statusToUse = predefinedStatus != null ? predefinedStatus.name() : null;
+            if (predefinedStatus == null) {
+                statusToUse = UIInsightsStatus.Default.name();
+                if (insights.isEmpty()) {
+                    Log.log(logger::debug, "No insights for method {}, Starting background thread to update status.", methodInfo.getName());
+                    statusToUse = UIInsightsStatus.Loading.name();
+                    updateStatusInBackground(methodInfo);
+                }
             }
 
 
             boolean needsObservabilityFix = checkObservability(methodInfo, insights);
 
             messageHandler.pushInsights(insights, spans, methodInfo.getId(), EMPTY_SERVICE_NAME,
-                    AnalyticsService.getInstance(project).getEnvironment().getCurrent(), status,
+                    AnalyticsService.getInstance(project).getEnvironment().getCurrent(), statusToUse,
                     ViewMode.INSIGHTS.name(), Collections.emptyList(), hasMissingDependency, canInstrumentMethod, needsObservabilityFix);
         });
     }
@@ -287,60 +303,27 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
             var insightStatus = getInsightStatus(methodInfo);
             Log.log(logger::debug, "Got status from backend {} for method {}", insightStatus, methodInfo.getName());
 
-            UIInsightsStatus status;
-            //if status is null assign EmptyStatus, it probably means there was a communication error
-            if (insightStatus == null) {
-                status = UIInsightsStatus.NoInsights;
-            } else {
-                status = toUiInsightStatus(insightStatus, methodInfo.hasRelatedCodeObjectIds());
-            }
+            UIInsightsStatus status = toUiInsightStatus(insightStatus,methodInfo.hasRelatedCodeObjectIds());
 
-            updateInsightsWithStatus(methodInfo, status);
+            updateInsights(methodInfo, status);
 
-        });
-    }
-
-    private void updateInsightsWithStatus(@NotNull MethodInfo methodInfo, UIInsightsStatus status) {
-
-        withUpdateLock(() -> {
-            if (model.getScope() instanceof MethodScope methodScope && methodScope.getMethodInfo().getId().equals(methodInfo.getId())) {
-
-                Log.log(logger::debug, "updateInsightsWithStatus to {}, {} ", methodInfo, status);
-
-                var insights = DocumentInfoService.getInstance(project).getCachedMethodInsights(methodInfo);
-
-                var spans = methodInfo.getSpans().stream().map(spanInfo -> new Span(spanInfo.getId(), spanInfo.getName())).toList();
-
-                var statusToUse = UIInsightsStatus.Default;
-                if (insights.isEmpty()) {
-                    statusToUse = status;
-                }
-
-                boolean needsObservabilityFix = checkObservability(methodInfo, insights);
-
-                messageHandler.pushInsights(insights, spans, methodInfo.getId(), EMPTY_SERVICE_NAME,
-                        AnalyticsService.getInstance(project).getEnvironment().getCurrent(), statusToUse.name(),
-                        ViewMode.INSIGHTS.name(), Collections.emptyList(), false, false, needsObservabilityFix);
-            }
         });
     }
 
 
     private UIInsightsStatus toUiInsightStatus(InsightStatus status, Boolean methodHasRelatedCodeObjectIds) {
 
-        switch (status) {
-            case InsightExist, InsightPending -> {
-                return UIInsightsStatus.InsightPending;
-            }
-            case NoSpanData -> {
-                if (Boolean.TRUE.equals(methodHasRelatedCodeObjectIds)) {
-                    return UIInsightsStatus.NoSpanData;
+        if (status == InsightStatus.InsightExist || status == InsightStatus.InsightPending){
+            return UIInsightsStatus.InsightPending;
+        }
+        if (status == InsightStatus.NoSpanData || status == null){
+            if (Boolean.TRUE.equals(methodHasRelatedCodeObjectIds)) {
+                return UIInsightsStatus.NoSpanData;
+            } else {
+                if (IDEUtilsService.getInstance(project).isJavaProject()) {
+                    return UIInsightsStatus.NoObservability;
                 } else {
-                    if (IDEUtilsService.getInstance(project).isJavaProject()) {
-                        return UIInsightsStatus.NoObservability;
-                    } else {
-                        return UIInsightsStatus.NoInsights;
-                    }
+                    return UIInsightsStatus.NoInsights;
                 }
             }
         }

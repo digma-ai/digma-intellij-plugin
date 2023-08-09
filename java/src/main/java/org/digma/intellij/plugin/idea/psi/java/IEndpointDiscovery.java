@@ -13,10 +13,10 @@ import java.util.Objects;
 
 public interface IEndpointDiscovery {
 
-    List<EndpointInfo> lookForEndpoints(@NotNull SearchScope searchScope);
+    List<EndpointInfo> lookForEndpoints(@NotNull SearchScope searchScope, boolean isFileScope);
 
     default void endpointDiscovery(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
-        List<EndpointInfo> endpointInfos = lookForEndpoints(GlobalSearchScope.fileScope(psiFile));
+        List<EndpointInfo> endpointInfos = lookForEndpoints(GlobalSearchScope.fileScope(psiFile), true);
 
         for (EndpointInfo endpointInfo : endpointInfos) {
             var methodId = endpointInfo.getContainingMethodId();

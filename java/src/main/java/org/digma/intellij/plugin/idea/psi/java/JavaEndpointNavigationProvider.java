@@ -68,7 +68,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
             buildLock.lock();
             try {
                 Log.log(LOGGER::info, "Building endpoint navigation");
-                buildEndpointAnnotations(GlobalSearchScope.projectScope(project));
+                buildEndpointAnnotations(GlobalSearchScope.projectScope(project), false);
 
                 //trigger a refresh after endpoint navigation is built. this is necessary because the insights and errors
                 //views may be populated before endpoint navigation is ready and endpoints links can not be built.
@@ -85,12 +85,12 @@ public class JavaEndpointNavigationProvider implements Disposable {
 
     }
 
-    private void buildEndpointAnnotations(@NotNull SearchScope searchScope) {
+    private void buildEndpointAnnotations(@NotNull SearchScope searchScope, boolean isFileScope) {
         var javaLanguageService = project.getService(JavaLanguageService.class);
         var endpointDiscoveries = javaLanguageService.getListOfEndpointDiscovery();
 
         endpointDiscoveries.forEach(endpointDiscovery -> {
-            var endpointInfos = endpointDiscovery.lookForEndpoints(searchScope);
+            var endpointInfos = endpointDiscovery.lookForEndpoints(searchScope, isFileScope);
             endpointInfos.forEach(endpointInfo -> {
                 addToMethodsMap(endpointInfo);
             });
@@ -140,7 +140,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
                     //if file moved then removeDocumentEndpoints will not remove anything but building endpoint locations will
                     // override the entries anyway
                     removeDocumentEndpoint(virtualFile);
-                    buildEndpointAnnotations(GlobalSearchScope.fileScope(project, virtualFile));
+                    buildEndpointAnnotations(GlobalSearchScope.fileScope(project, virtualFile), true);
                 } finally {
                     buildLock.unlock();
                 }

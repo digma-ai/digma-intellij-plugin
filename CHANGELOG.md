@@ -1,6 +1,13 @@
 # Changelog
 
-## [2.0.141] - 2023-08-07
+## [2.0.142] - 2023-08-09
+- show recent activity tool window on edt by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1095
+- Feature/OpenLiberty RunConfiguration by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1099
+- delete old compose file by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1101
+- fix possible cyclic dependency by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1103
+- skip ci after increment version by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1107
+
+## 2.0.141 - 2023-08-07
 - Fix UI freeze and assert non UI thread by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1094
 
 ## 2.0.140 - 2023-08-07

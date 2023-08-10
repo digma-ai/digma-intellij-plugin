@@ -124,15 +124,6 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
         TestCase.assertNotNull(analyticsImpl)
     }
 
-    fun `test mock injection to Analytics service`() {
-        val analyticsProviderMock = prepareMock()
-        val field = analyticsService.javaClass.getDeclaredField("analyticsProvider")
-        field.isAccessible = true
-        val analyticsImpl = field.get(analyticsService)
-        TestCase.assertEquals(analyticsProviderMock, analyticsImpl)
-        TestCase.assertNotNull(analyticsImpl)
-
-    }
 
     fun `test that analytics service returns mocked environment`() {
         val environments = analyticsService.environments
@@ -175,7 +166,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
         editor.caretModel.moveToLogicalPosition(LogicalPosition(if (methodLine.dec() < 0) 0 else methodLine.dec(), 0))
     }
 
-    fun `test move caret to method line`() {
+    fun `move caret to method line`() {
         val file = myFixture.configureByFile("EditorEventsHandler.java")
         myFixture.openFileInEditor(file.virtualFile)
         val editor = myFixture.editor

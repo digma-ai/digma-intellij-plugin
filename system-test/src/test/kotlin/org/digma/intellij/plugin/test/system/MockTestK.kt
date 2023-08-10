@@ -52,7 +52,12 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
 
     override fun tearDown() {
         Log.test(logger, "Tearing down")
-//        super.tearDown()
+
+        runBlocking {
+            delay(2000L)
+        }
+
+        super.tearDown()
     }
 
     override fun getTestDataPath(): String {

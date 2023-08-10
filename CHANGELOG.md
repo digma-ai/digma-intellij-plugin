@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.142] - 2023-08-09
+## [2.0.143] - 2023-08-10
+- make sure environments list is mutable by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1109
+
+## 2.0.142 - 2023-08-09
 - show recent activity tool window on edt by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1095
 - Feature/OpenLiberty RunConfiguration by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1099
 - delete old compose file by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1101

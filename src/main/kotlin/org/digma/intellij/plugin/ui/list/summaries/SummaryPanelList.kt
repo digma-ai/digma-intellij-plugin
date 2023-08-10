@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.ui.list.PanelList
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import org.digma.intellij.plugin.ui.needToShowDurationChange
 import java.util.Collections
+import kotlin.math.abs
 import kotlin.math.min
 
 class SummaryPanelList(project: Project, listViewItems: List<ListViewItem<*>>) : PanelList(project, Model(listViewItems)) {
@@ -45,11 +46,33 @@ class SummaryPanelList(project: Project, listViewItems: List<ListViewItem<*>>) :
                     is SpanDurationChangeInsight -> {
                         newViewItems.add(ListViewItem(SummaryTypeTitle(model.type), index++))
 
-                        //todo: limit changes because long lists cause UI freeze. first filter then limit to 10
-                        val changes = model.spanDurationChanges.filter {
-                            it.percentiles.any { needToShowDurationChange(it) }
+                        val changes = model.spanDurationChanges.filter { change -> change.percentiles.any{needToShowDurationChange(it)} }.toMutableList()
+                        if (changes.size > 20) {
+
+                            var increasing = changes.filter { change -> isIncreasing(change)}
+                                .sortedByDescending {
+                                    diff(it)
+                                }
+
+                            if (increasing.size > 10) {
+                                increasing = increasing.subList(0, 10)
+                            }
+
+                            var decreasing = changes.filter { change -> isDecreasing(change)}
+                                .sortedBy {
+                                    diff(it)
+                                }
+
+                            if (decreasing.size > 10) {
+                                decreasing = decreasing.subList(0, 10)
+                            }
+
+                            changes.clear()
+                            changes.addAll(increasing)
+                            changes.addAll(decreasing)
                         }
-                        for (change in changes.subList(0, min(changes.size,10))) {
+
+                        for (change in changes) {
                             val changedPercentiles = change.percentiles.filter { needToShowDurationChange(it) } // Should be server side?
                             if (changedPercentiles.isNotEmpty()) {
                                 val item = ListViewItem(SpanDurationChangeInsight.Change(change.codeObjectId, change.span, changedPercentiles), index++)
@@ -65,6 +88,28 @@ class SummaryPanelList(project: Project, listViewItems: List<ListViewItem<*>>) :
             }
 
             super.setListData(newViewItems)
+        }
+
+        private fun isIncreasing(change: SpanDurationChangeInsight.Change): Boolean {
+            return change.percentiles.any {
+                it.previousDuration != null && it.changeTime != null && it.currentDuration.raw > it.previousDuration!!.raw
+            }
+        }
+
+        private fun isDecreasing(change: SpanDurationChangeInsight.Change): Boolean {
+            return change.percentiles.any {
+                it.previousDuration != null && it.changeTime != null && it.currentDuration.raw < it.previousDuration!!.raw
+            }
+        }
+
+        fun diff(change: SpanDurationChangeInsight.Change): Long {
+            var diff = 0L
+            change.percentiles.forEach {
+                if (it.previousDuration != null){
+                    diff = abs(it.previousDuration!!.raw - it.currentDuration.raw)
+                }
+            }
+            return diff
         }
     }
 }

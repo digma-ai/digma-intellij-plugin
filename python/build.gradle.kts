@@ -14,7 +14,7 @@ dependencies {
     testImplementation(project(":model"))
 }
 
-//python module should always build with IC
+//python module should always build with IC or PC
 val platformType by extra(IdeFlavor.IC.name)
 
 logBuildProfile(project)
@@ -25,19 +25,20 @@ intellij {
     //there is no source code for pycharm or python plugin
     downloadSources.set(false)
 
-    //the best would be to depend on pycharm. but github build fails with no space left on device especially if running
-    //plugin verifier with PC.
-    //So it is possible not to depend on pycharm but to depend on IC with PythonCore plugin. that means we are limited
-    //to what PythonCore provides. if we ever need specific pycharm functionality we will need to depend on pycharm.
+    //there are two ways to build the python module:
+
+    //with Idea and python plugin, python plugin version must be specified.
+    //the python plugin version must be compatible with platformVersion
+//    platformType = IC
+//    version.set("$platformType-${project.platformVersion()}")
+//    plugins.set(listOf("PythonCore:${project.currentProfile().pythonPluginVersion}"))
+
+    //or with pycharm, python plugin version does not need to be specified.
+//   platformType = PC
+//   version.set("$platformType-${project.currentProfile().pycharmVersion}")
+//   plugins.set(listOf("PythonCore"))
 
     version.set("$platformType-${project.platformVersion()}")
-    //the python plugin version must be compatible with platformVersion
     plugins.set(listOf("PythonCore:${project.currentProfile().pythonPluginVersion}"))
 
-    //to depend on pycharm community:
-//    version.set("PC-" + platformVersion(project))
-//    plugins.set(listOf("PythonCore:223.7571.182"))
-    //to depend on pycharm professional:
-//    version.set("PY-" + platformVersion(project))
-//    plugins.set(listOf("Pythonid"))
 }

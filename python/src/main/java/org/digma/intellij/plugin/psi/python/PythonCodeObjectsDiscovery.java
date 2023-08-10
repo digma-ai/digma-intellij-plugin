@@ -87,7 +87,7 @@ public class PythonCodeObjectsDiscovery {
             namespace = namespace.substring(0, pyFunction.getQualifiedName().lastIndexOf(".py"));
         }
 
-        var methodInfo = new MethodInfo(methodId, name, className, namespace, fileUri, pyFunction.getTextOffset(), new ArrayList<>());
+        var methodInfo = new MethodInfo(methodId, name, className, namespace, fileUri, pyFunction.getTextOffset());
         methodInfo.setAdditionalIdsProvider(new PythonAdditionalIdsProvider());
         return methodInfo;
     }

@@ -16,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import java.awt.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -54,7 +55,10 @@ public class MainToolWindowCardsController implements Disposable {
 
     //wizard content is created and disposed when necessary. WizardComponents keeps the reference to the content and the panel.
     private final WizardComponents wizard = new WizardComponents();
-    private Supplier<DisposablePanel> wizardPanelBuilder;
+    private Function<Boolean, DisposablePanel> wizardPanelBuilder;
+
+    private TroubleshootingComponents troubleshooting = new TroubleshootingComponents();
+    private Supplier<DisposablePanel> troubleshootingPanelBuilder;
 
     private final AtomicBoolean isConnectionLost = new AtomicBoolean(false);
 
@@ -104,7 +108,8 @@ public class MainToolWindowCardsController implements Disposable {
                                @NotNull Content mainContent,
                                @NotNull JPanel mainCardsPanel,
                                @NotNull JPanel contentPanel,
-                               @NotNull Supplier<DisposablePanel> wizardPanelBuilder) {
+                               @NotNull Function<Boolean, DisposablePanel> wizardPanelBuilder,
+                               Supplier<DisposablePanel> troubleshootingPanelBuilder) {
 
         Log.log(LOGGER::debug, "initComponents called");
 
@@ -121,6 +126,8 @@ public class MainToolWindowCardsController implements Disposable {
 
         this.wizardPanelBuilder = wizardPanelBuilder;
 
+        this.troubleshootingPanelBuilder = troubleshootingPanelBuilder;
+
         //it may be that there was a connection lost event before the panels were ready.
         // in that case show connection lost panel
         if (isConnectionLost.get()) {
@@ -129,7 +136,7 @@ public class MainToolWindowCardsController implements Disposable {
     }
 
 
-    public void showWizard() {
+    public void showWizard(Boolean wizardSkipInstallationStep) {
         Log.log(LOGGER::debug, "showWizard called");
 
         //in case showWizard is called while wizard is already on
@@ -139,7 +146,7 @@ public class MainToolWindowCardsController implements Disposable {
         }
 
         //build the wizard panel every time its necessary and dispose it when the wizard finishes.
-        var wizardPanel = wizardPanelBuilder.get();
+        var wizardPanel = wizardPanelBuilder.apply(wizardSkipInstallationStep);
         if (wizardPanel != null) {
             Content wizardContent = ContentFactory.getInstance().createContent(wizardPanel, null, false);
             toolWindow.getContentManager().removeContent(mainContent, false);
@@ -170,6 +177,56 @@ public class MainToolWindowCardsController implements Disposable {
 
         } else {
             Log.log(LOGGER::debug, project, "wizardFinished was called but wizard is not on.");
+        }
+    }
+
+
+    public void showTroubleshooting() {
+        Log.log(LOGGER::debug, "showTroubleshooting called");
+
+        //in case showWizard is called while wizard is already on
+        if (troubleshooting.isOn() || wizard.isOn()) {
+            Log.log(LOGGER::debug, project, "showTroubleshooting was called but troubleshooting on. nothing to do.");
+            return;
+        }
+
+        //build the wizard panel every time its necessary and dispose it when the wizard finishes.
+        var troubleshootingPanel = troubleshootingPanelBuilder.get();
+        if (troubleshootingPanel != null) {
+
+            Content troubleshootingContent = ContentFactory.getInstance().createContent(troubleshootingPanel, null, false);
+//            if (wizard.isOn()) {
+//                wizardFinished();
+//            }
+
+            toolWindow.getContentManager().removeContent(mainContent, false);
+            toolWindow.getContentManager().addContent(troubleshootingContent);
+            troubleshooting.troubleshootingContent = troubleshootingContent;
+            troubleshooting.troubleshootingPanel = troubleshootingPanel;
+        } else {
+            Log.log(LOGGER::debug, project, "showTroubleshooting was called but troubleshootingPanel is null. it may happen if the runtime JVM does not support JCEF");
+        }
+    }
+
+
+    //this is the only place to remove the wizard and add the main content.
+    // it must be called when the wizard is finished or the wizard will stay on top.
+    public void troubleshootingFinished() {
+        Log.log(LOGGER::debug, "troubleshootingFinished called");
+
+        if (troubleshooting.isOn()) {
+            toolWindow.getContentManager().removeContent(troubleshooting.troubleshootingContent, true);
+            toolWindow.getContentManager().addContent(mainContent);
+            //dispose the wizard panel which will dispose the jcef browser
+            troubleshooting.troubleshootingPanel.dispose();
+            troubleshooting.troubleshootingContent = null;
+            troubleshooting.troubleshootingPanel = null;
+
+            //refresh after troubleshooting finished will refresh environments and insights view
+            AnalyticsService.getInstance(project).getEnvironment().refreshNowOnBackground();
+
+        } else {
+            Log.log(LOGGER::debug, project, "troubleshootingFinished was called but troubleshooting is not on.");
         }
     }
 
@@ -240,6 +297,15 @@ public class MainToolWindowCardsController implements Disposable {
 
         public boolean isOn() {
             return wizardContent != null && wizardPanel != null;
+        }
+    }
+
+    private static class TroubleshootingComponents {
+        Content troubleshootingContent;
+        DisposablePanel troubleshootingPanel;
+
+        public boolean isOn() {
+            return troubleshootingContent != null && troubleshootingPanel != null;
         }
     }
 

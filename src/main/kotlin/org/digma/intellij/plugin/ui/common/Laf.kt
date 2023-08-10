@@ -95,6 +95,8 @@ object Laf {
                 @JvmStatic val TARGET: Icon = SvgIcon.asIs("/icons/target.svg")
                 @JvmStatic val TARGET_PRESSED: Icon = SvgIcon.asIs("/icons/target-pressed.svg")
                 @JvmStatic val CODE_LOCATION_LINK: Icon = SvgIcon.asIs("/icons/code-location-link.svg")
+                @JvmStatic
+                val ACTIVE_GREEN: Icon = SvgIcon.asIs("/icons/active-green.svg")
             }
         }
 
@@ -179,6 +181,8 @@ object Laf {
                 @JvmStatic val LiveButtonFullIconLight = SvgIcon.asIs("/icons/live-view-button-full-icon-light.svg")
                 @JvmStatic val LiveIconDark = SvgIcon.asIs("/icons/live-icon-dark.svg")
                 @JvmStatic val LiveIconLight = SvgIcon.asIs("/icons/live-icon-light.svg")
+                @JvmStatic val NavPrevDark = SvgIcon.asIs("/icons/nav-prev-dark.svg")
+                @JvmStatic val NavPrevLight = SvgIcon.asIs("/icons/nav-prev-light.svg")
             }
         }
 

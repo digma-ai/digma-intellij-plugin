@@ -49,11 +49,11 @@ public class DocumentsChangeListenerForJavaSpanNavigation implements FileEditorM
     @Override
     public void fileOpened(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
 
-        if (project.isDisposed()){
+        if (project.isDisposed()) {
             return;
         }
 
-        if (!javaLanguageService.isRelevant(file)){
+        if (!javaLanguageService.isRelevant(file)) {
             return;
         }
 
@@ -62,7 +62,7 @@ public class DocumentsChangeListenerForJavaSpanNavigation implements FileEditorM
         }
 
         PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
-        if (psiFile != null){
+        if (psiFile != null) {
             Document document = PsiDocumentManager.getInstance(project).getDocument(psiFile);
             if (document != null) {
                 Disposable parentDisposable = Disposer.newDisposable();
@@ -75,16 +75,23 @@ public class DocumentsChangeListenerForJavaSpanNavigation implements FileEditorM
                     @Override
                     public void documentChanged(@NotNull DocumentEvent event) {
 
-                        if (project.isDisposed()){
+                        if (project.isDisposed()) {
                             return;
                         }
 
-                        JavaSpanNavigationProvider javaSpanNavigationProvider = project.getService(JavaSpanNavigationProvider.class);
+                        var javaSpanNavigationProvider = project.getService(JavaSpanNavigationProvider.class);
+                        var javaEndpointNavigationProvider = project.getService(JavaEndpointNavigationProvider.class);
                         documentChangeAlarm.cancelAllRequests();
-                        documentChangeAlarm.addRequest(() -> ReadAction.nonBlocking(new RunnableCallable(() -> javaSpanNavigationProvider.documentChanged(event.getDocument())))
-                                .inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance()), 5000);
+                        documentChangeAlarm.addRequest(() -> ReadAction.nonBlocking(
+                                        new RunnableCallable(() -> {
+                                            javaSpanNavigationProvider.documentChanged(event.getDocument());
+                                            javaEndpointNavigationProvider.documentChanged(event.getDocument());
+                                        })
+                                ).inSmartMode(project)
+                                .withDocumentsCommitted(project)
+                                .submit(NonUrgentExecutor.getInstance()), 5000);
                     }
-                },parentDisposable );
+                }, parentDisposable);
             }
 
         }

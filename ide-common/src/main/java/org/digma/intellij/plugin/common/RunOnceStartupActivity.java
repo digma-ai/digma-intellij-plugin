@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.common;
 import com.intellij.ide.util.RunOnceUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.startup.StartupActivity;
-import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.ui.ToolWindowShower;
 import org.jetbrains.annotations.NotNull;
@@ -33,8 +32,8 @@ public class RunOnceStartupActivity implements StartupActivity {
     public void runActivity(@NotNull Project project) {
         RunOnceUtil.runOnceForApp(RUN_ONCE_ID, () -> {
             ActivityMonitor.getInstance(project).registerFirstTimePluginLoaded();
-            PersistenceService.getInstance().getState().setFirstTimePluginLoaded(true);
             EDT.ensureEDT(() -> ToolWindowShower.getInstance(project).showToolWindow());
         });
+        ActivityMonitor.getInstance(project).registerPluginLoaded();
     }
 }

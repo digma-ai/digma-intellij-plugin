@@ -35,7 +35,7 @@ public class CodeLensProvider {
     @NotNull
     public Set<CodeLens> provideCodeLens(@NotNull PsiFile psiFile) {
 
-        Log.log(LOGGER::debug, "Got request for code lens for {}", psiFile.getVirtualFile());
+        Log.log(LOGGER::trace, "Got request for code lens for {}", psiFile.getVirtualFile());
 
         DocumentInfoContainer documentInfo = documentInfoService.getDocumentInfo(psiFile);
         if (documentInfo == null) {
@@ -44,7 +44,7 @@ public class CodeLensProvider {
         }
 
         var codeLens = buildCodeLens(documentInfo, false);
-        Log.log(LOGGER::debug, "Got code lens for {}, {}", psiFile.getVirtualFile(), codeLens);
+        Log.log(LOGGER::trace, "Got code lens for {}, {}", psiFile.getVirtualFile(), codeLens);
         return codeLens;
     }
 

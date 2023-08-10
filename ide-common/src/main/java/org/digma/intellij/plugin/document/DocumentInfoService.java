@@ -9,7 +9,6 @@ import org.apache.commons.lang3.mutable.MutableInt;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.common.DumbAwareNotifier;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
@@ -19,8 +18,6 @@ import org.digma.intellij.plugin.psi.PsiUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -30,7 +27,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 /**
  * DocumentInfoService holds the open documents containers and has various services to query the documents containers.
@@ -135,25 +131,25 @@ public class DocumentInfoService {
     }
 
     public UsageStatusResult getCachedUsageStatus(@NotNull MethodInfo methodInfo, List<String> objectIds) {
-        Log.log(LOGGER::debug, "Requesting cached usage status for MethodInfo {} and for objectIds {} ", methodInfo.getId(), objectIds);
+        Log.log(LOGGER::trace, "Requesting cached usage status for MethodInfo {} and for objectIds {} ", methodInfo.getId(), objectIds);
 
         DocumentInfoContainer documentInfoContainer = documents.get(methodInfo.getContainingFileUri());
         if (documentInfoContainer == null) {
-            Log.log(LOGGER::debug, "DocumentInfoContainer is null ");
+            Log.log(LOGGER::trace, "DocumentInfoContainer is null ");
             return new UsageStatusResult(Collections.emptyList(), Collections.emptyList());
         }
         return documentInfoContainer.getUsageStatus();
     }
 
     public List<CodeObjectInsight> getCachedMethodInsights(@NotNull MethodInfo methodInfo) {
-        Log.log(LOGGER::debug, "Requesting cached insights for MethodInfo {}", methodInfo.getId());
+        Log.log(LOGGER::trace, "Requesting cached insights for MethodInfo {}", methodInfo.getId());
 
         DocumentInfoContainer documentInfoContainer = documents.get(methodInfo.getContainingFileUri());
         if (documentInfoContainer != null) {
-            Log.log(LOGGER::debug, "DocumentInfoContainer exists for MethodInfo {}, getting insights", methodInfo.getId());
+            Log.log(LOGGER::trace, "DocumentInfoContainer exists for MethodInfo {}, getting insights", methodInfo.getId());
             return documentInfoContainer.getInsightsForMethod(methodInfo.getId());
         }
-        Log.log(LOGGER::debug, "DocumentInfoContainer does not exist for MethodInfo {}", methodInfo.getId());
+        Log.log(LOGGER::trace, "DocumentInfoContainer does not exist for MethodInfo {}", methodInfo.getId());
         return Collections.emptyList();
     }
 
@@ -209,14 +205,18 @@ public class DocumentInfoService {
         return documentInfoContainer == null ? null : documentInfoContainer.getMethodInfo(methodUnderCaret.getId());
     }
 
-    public MethodInfo findMethodInfo(String sourceCodeObjectId) {
-        return this.documents.values().stream().
-                filter(documentInfoContainer -> documentInfoContainer.getDocumentInfo().getMethods().containsKey(sourceCodeObjectId)).
-                findAny().map(documentInfoContainer -> documentInfoContainer.getMethodInfo(sourceCodeObjectId)).
-                orElse(null);
+
+    @Nullable
+    public MethodInfo findMethodInfo(String methodId) {
+        return this.documents.values().stream()
+                .filter(documentInfoContainer -> documentInfoContainer.getDocumentInfo().getMethods().containsKey(methodId))
+                .findAny()
+                .map(documentInfoContainer -> documentInfoContainer.getMethodInfo(methodId))
+                .orElse(null);
     }
 
 
+    @Nullable
     public PsiFile findPsiFileByMethodId(String methodCodeObjectId) {
         return this.documents.values().stream().
                 filter(documentInfoContainer -> documentInfoContainer.getDocumentInfo().getMethods().containsKey(methodCodeObjectId)).

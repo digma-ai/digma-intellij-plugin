@@ -238,7 +238,7 @@ public class JaegerUIService {
     //show insight without navigating to source
     public void goToInsight(GoToSpanMessage goToSpanMessage) {
 
-        Log.log(logger::debug, project, "goToInsight request {}", goToSpanMessage);
+        Log.log(logger::trace, project, "goToInsight request {}", goToSpanMessage);
 
         var span = goToSpanMessage.payload();
         //if we're here then code location was not found
@@ -270,7 +270,7 @@ public class JaegerUIService {
                 var spanWorkspaceUris = ReadActions.ensureReadAction(() -> languageService.findWorkspaceUrisForSpanIds(spanIds));
                 var methodWorkspaceUris = ReadActions.ensureReadAction(() -> languageService.findWorkspaceUrisForMethodCodeObjectIds(methodIds));
                 spansMessage.payload().spans().forEach(span -> {
-                    var spanId = span.id();
+                    var spanId = span.spanId();
                     var methodId = span.methodId();
                     var hasCodeLocation = (spanWorkspaceUris.containsKey(spanId) || methodWorkspaceUris.containsKey(methodId));
 

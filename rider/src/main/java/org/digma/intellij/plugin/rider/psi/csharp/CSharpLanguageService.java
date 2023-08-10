@@ -23,6 +23,7 @@ import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.editor.EditorUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
+import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.psi.PsiUtils;
@@ -32,9 +33,11 @@ import org.digma.intellij.plugin.ui.CaretContextService;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class CSharpLanguageService extends LifetimedProjectComponent implements LanguageService {
@@ -55,7 +58,7 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
 
     @Override
     public void ensureStartupOnEDT(@NotNull Project project) {
-        Log.log(LOGGER::debug, "ensureStartupOnEDT called, backend loaded: {}",SolutionLifecycleHost.Companion.getInstance(project).isBackendLoaded().getValue());
+        Log.log(LOGGER::debug, "ensureStartupOnEDT called, backend loaded: {}", SolutionLifecycleHost.Companion.getInstance(project).isBackendLoaded().getValue());
         //make sure LanguageServiceHost is initialized on EDT, for example project.solution.languageServiceModel must be
         // called on EDT
         LanguageServiceHost.getInstance(project);
@@ -81,7 +84,7 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     @Override
     public Language getLanguageForMethodCodeObjectId(@NotNull String methodId) {
 
-        if (methodId.indexOf("$_$") <= 0){
+        if (methodId.indexOf("$_$") <= 0) {
             Log.log(LOGGER::debug, "method id in getLanguageForMethodCodeObjectId does not contain $_$ {}", methodId);
             return null;
         }
@@ -112,14 +115,14 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     @Override
     @NotNull
     public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int caretOffset) {
-        return LanguageServiceHost.getInstance(project).detectMethodUnderCaret(psiFile,selectedEditor,caretOffset);
+        return LanguageServiceHost.getInstance(project).detectMethodUnderCaret(psiFile, selectedEditor, caretOffset);
     }
 
     @Override
     public void navigateToMethod(String methodId) {
 
         Log.log(LOGGER::debug, "got navigate to method request {}", methodId);
-        if (methodId.indexOf("$_$") <= 0){
+        if (methodId.indexOf("$_$") <= 0) {
             Log.log(LOGGER::debug, "method id in navigateToMethod does not contain $_$, can not navigate {}", methodId);
             return;
         }
@@ -136,13 +139,13 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     @Override
     public Map<String, String> findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(List<String> codeObjectIds) {
         return ProgressManager.getInstance().
-                computeInNonCancelableSection(() ->  LanguageServiceHost.getInstance(project).findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(codeObjectIds));
+                computeInNonCancelableSection(() -> LanguageServiceHost.getInstance(project).findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(codeObjectIds));
     }
 
     @Override
     public Map<String, Pair<String, Integer>> findWorkspaceUrisForMethodCodeObjectIds(List<String> methodCodeObjectIds) {
         return ProgressManager.getInstance().
-                computeInNonCancelableSection(() ->  LanguageServiceHost.getInstance(project).findWorkspaceUrisForMethodCodeObjectIds(methodCodeObjectIds));
+                computeInNonCancelableSection(() -> LanguageServiceHost.getInstance(project).findWorkspaceUrisForMethodCodeObjectIds(methodCodeObjectIds));
     }
 
     @Override
@@ -156,6 +159,11 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
             stopWatch.stop();
             Log.log(LOGGER::debug, "findWorkspaceUrisForSpanIds time took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS));
         }
+    }
+
+    @Override
+    public Set<EndpointInfo> lookForDiscoveredEndpoints(String endpointId) {
+        return Collections.emptySet();
     }
 
     @Override
@@ -186,7 +194,7 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
 
     @Override
     public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile) {
-        return buildDocumentInfo(psiFile,null);
+        return buildDocumentInfo(psiFile, null);
     }
 
     @Override
@@ -195,13 +203,13 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
         Log.log(LOGGER::debug, "got buildDocumentInfo request for {}", psiFile);
         //must be PsiJavaFile , this method should be called only for java files
         if (psiFile instanceof CSharpFile cSharpFile) {
-            DocumentInfo documentInfo =  LanguageServiceHost.getInstance(project).getDocumentInfo(cSharpFile,newEditor);
+            DocumentInfo documentInfo = LanguageServiceHost.getInstance(project).getDocumentInfo(cSharpFile, newEditor);
             if (documentInfo == null) {
                 Log.log(LOGGER::warn, "DocumentInfo not found for {}, returning empty DocumentInfo", psiFile);
-                documentInfo = new DocumentInfo(PsiUtils.psiFileToUri(psiFile),new HashMap<>());
+                documentInfo = new DocumentInfo(PsiUtils.psiFileToUri(psiFile), new HashMap<>());
             }
             return documentInfo;
-        }else{
+        } else {
             Log.log(LOGGER::debug, "psi file is noy CSharpFile, returning empty DocumentInfo for {}", psiFile);
             return new DocumentInfo(PsiUtils.psiFileToUri(psiFile), new HashMap<>());
         }
@@ -210,7 +218,7 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
 
     @Override
     public boolean isRelevant(VirtualFile file) {
-        if (file.isDirectory()){
+        if (file.isDirectory()) {
             return false;
         }
 

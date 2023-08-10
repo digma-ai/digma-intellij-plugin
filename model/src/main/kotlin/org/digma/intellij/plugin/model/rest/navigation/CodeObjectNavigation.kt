@@ -13,18 +13,16 @@ data class CodeObjectNavigation
     "spanCodeObjectId",
     "navigationEntry"
 )
-constructor(val spanCodeObjectId: String,val navigationEntry: NavigationEntry)
+constructor(val spanCodeObjectId: String, val navigationEntry: NavigationEntry)
 
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class NavigationEntry
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties(
-    "spanInfo", "closestParentSpans"
+    "spanInfo", "closestParentSpans", "navEndpointEntry"
 )
-constructor(val spanInfo: SpanInfo?, val closestParentSpans: List<SpanNavigationItem>)
-
-
+constructor(val spanInfo: SpanInfo?, val closestParentSpans: List<SpanNavigationItem>, val navEndpointEntry: NavEndpointEntry?)
 
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -49,10 +47,21 @@ constructor(
     override val kind: String,
     val navItemType: NavItemType,
     val distance: Int,
-): SpanInfo(instrumentationLibrary,name,spanCodeObjectId,displayName,methodCodeObjectId,kind)
+) : SpanInfo(instrumentationLibrary, name, spanCodeObjectId, displayName, methodCodeObjectId, kind)
 
 
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class NavEndpointEntry
+@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+@ConstructorProperties(
+    "endpointCodeObjectId",
+    "methodCodeObjectId",
+)
+constructor(
+    val endpointCodeObjectId: String,
+    val methodCodeObjectId: String?,
+)
 
 enum class NavItemType {
-    ClosestParentInternal,ClosestParentWithMethodCodeObjectId
+    ClosestParentInternal, ClosestParentWithMethodCodeObjectId
 }

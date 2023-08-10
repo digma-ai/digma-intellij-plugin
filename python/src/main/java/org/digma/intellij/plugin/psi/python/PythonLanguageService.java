@@ -28,6 +28,7 @@ import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.editor.EditorUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
+import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.psi.PsiUtils;
@@ -35,9 +36,11 @@ import org.digma.intellij.plugin.ui.CaretContextService;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class PythonLanguageService implements LanguageService {
 
@@ -64,9 +67,9 @@ public class PythonLanguageService implements LanguageService {
 
     @Override
     public void runWhenSmart(Runnable task) {
-        if (DumbService.isDumb(project)){
+        if (DumbService.isDumb(project)) {
             DumbService.getInstance(project).runWhenSmart(task);
-        }else{
+        } else {
             task.run();
         }
     }
@@ -80,7 +83,7 @@ public class PythonLanguageService implements LanguageService {
         //try to find a function that produces the same code object id,
         // if found return its language, else null
         return ReadAction.compute(() -> {
-            var functions = PyFunctionNameIndex.find(functionName, project,GlobalSearchScope.projectScope(project));
+            var functions = PyFunctionNameIndex.find(functionName, project, GlobalSearchScope.projectScope(project));
 
             for (PyFunction function : functions) {
                 var codeObjectId = PythonLanguageUtils.createPythonMethodCodeObjectId(project, function);
@@ -110,11 +113,11 @@ public class PythonLanguageService implements LanguageService {
     @NotNull
     public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, Editor selectedEditor, int caretOffset) {
         if (!isSupportedFile(project, psiFile)) {
-            return new MethodUnderCaret("", "", "", "",PsiUtils.psiFileToUri(psiFile), false);
+            return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), false);
         }
         PsiElement underCaret = psiFile.findElementAt(caretOffset);
         if (underCaret == null) {
-            return new MethodUnderCaret("", "", "","", PsiUtils.psiFileToUri(psiFile), true);
+            return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), true);
         }
         PyFunction pyFunction = PsiTreeUtil.getParentOfType(underCaret, PyFunction.class);
         if (pyFunction != null) {
@@ -274,6 +277,11 @@ public class PythonLanguageService implements LanguageService {
     }
 
     @Override
+    public Set<EndpointInfo> lookForDiscoveredEndpoints(String endpointId) {
+        return Collections.emptySet();
+    }
+
+    @Override
     public void environmentChanged(String newEnv, boolean refreshInsightsView) {
         if (refreshInsightsView) {
             EDT.ensureEDT(() -> {
@@ -302,7 +310,7 @@ public class PythonLanguageService implements LanguageService {
         Log.log(LOGGER::debug, "got buildDocumentInfo request for {}", psiFile);
         if (psiFile instanceof PyFile pyFile) {
             return PythonCodeObjectsDiscovery.buildDocumentInfo(project, pyFile);
-        }else {
+        } else {
             Log.log(LOGGER::debug, "psi file is noy python, returning empty DocumentInfo for {}", psiFile);
             return new DocumentInfo(PsiUtils.psiFileToUri(psiFile), new HashMap<>());
         }

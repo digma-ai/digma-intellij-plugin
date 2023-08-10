@@ -11,7 +11,10 @@ import com.intellij.util.ui.JBUI;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.common.IDEUtilsService;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.persistence.PersistenceService;
+import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.psi.LanguageService;
+import org.digma.intellij.plugin.troubleshooting.TroubleshootingPanel;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.digma.intellij.plugin.ui.ToolWindowShower;
 import org.digma.intellij.plugin.ui.common.ContentPanel;
@@ -24,6 +27,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static org.digma.intellij.plugin.ui.common.InstallationWizardSidePanelWindowPanelKt.createInstallationWizardSidePanelWindowPanel;
@@ -47,6 +51,14 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
      */
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
+
+        if (!PersistenceService.getInstance().isFirstTimePluginLoaded()) {
+            PersistenceService.getInstance().setFirstTimePluginLoaded();
+            ActivityMonitor.getInstance(project).registerFirstTimePluginLoadedNew();
+        }
+
+
+
         Log.log(LOGGER::debug, "createToolWindowContent for project  {}", project);
 
         toolWindow.setTitle(DIGMA_NAME);
@@ -78,12 +90,22 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         // necessary to move more code. but anyway the Supplier is fine here.
         //when ever we need to show the wizard it will be created new and disposed when finished, its probably not a
         // good idea to keep it in memory after its finished.
-        Supplier<DisposablePanel> wizardPanelBuilder = () -> createInstallationWizardSidePanelWindowPanel(project);
-        MainToolWindowCardsController.getInstance(project).initComponents(toolWindow,mainContent,cardsPanel,contentPanel,wizardPanelBuilder);
+        Function<Boolean, DisposablePanel> wizardPanelBuilder = wizardSkipInstallationStep -> createInstallationWizardSidePanelWindowPanel(project, wizardSkipInstallationStep);
+
+        Supplier<DisposablePanel> troubleshootingPanelBuilder = () -> new TroubleshootingPanel(project);
+
+        MainToolWindowCardsController.getInstance(project).initComponents(toolWindow, mainContent, cardsPanel, contentPanel,
+                wizardPanelBuilder,
+                troubleshootingPanelBuilder);
 
         if (IDEUtilsService.shouldOpenWizard()) {
-            MainToolWindowCardsController.getInstance(project).showWizard();
+            ActivityMonitor.getInstance(project).registerCustomEvent("show-installation-wizard", null);
+            MainToolWindowCardsController.getInstance(project).showWizard(false);
         }
+        else{
+            ActivityMonitor.getInstance(project).registerCustomEvent("skip-installation-wizard", null);
+        }
+
 
         //todo: runWhenSmart is ok for java,python , but in Rider runWhenSmart does not guarantee that the solution
         // is fully loaded. consider replacing that with LanguageService.runWhenSmartForAll so that C# language service

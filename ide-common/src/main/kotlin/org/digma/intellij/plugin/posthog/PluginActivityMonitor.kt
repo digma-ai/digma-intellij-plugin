@@ -5,14 +5,18 @@ import com.intellij.ide.plugins.IdeaPluginDescriptor
 import com.intellij.ide.plugins.PluginStateListener
 import com.intellij.ide.plugins.PluginStateManager
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.PluginId
+import org.digma.intellij.plugin.docker.DockerService
+import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.log.Log
 
 class PluginActivityMonitor(private val project: Project) : PluginStateListener, Disposable {
     companion object {
-        private val logger = Logger.getInstance(PluginActivityMonitor::class.java)
+        private val LOGGER = Logger.getInstance(PluginActivityMonitor::class.java)
+
         @JvmStatic
         fun loadInstance(project: Project) {
             Log.test(logger,"Getting instance of ${PluginActivityMonitor::class.simpleName}")
@@ -22,16 +26,22 @@ class PluginActivityMonitor(private val project: Project) : PluginStateListener,
     }
 
     init {
-        Log.test(logger, "Initializing ${PluginActivityMonitor::class.simpleName}")
         PluginStateManager.addStateListener(this)
-        Log.test(logger, "Finished ${PluginActivityMonitor::class.simpleName} initialization")
     }
 
     override fun uninstall(descriptor: IdeaPluginDescriptor) {
         if(descriptor.pluginId.idString == PluginId.PLUGIN_ID){
-            ActivityMonitor.getInstance(project).registerPluginUninstalled()
+            val userId = ActivityMonitor.getInstance(project).registerPluginUninstalled()
+            BrowserUtil.browse("https://digma.ai/uninstall?u=$userId", project)
+
+
+            if (service<DockerService>().isEngineInstalled()) {
+                Log.log(LOGGER::info, "removing digma engine on plugin uninstall")
+                service<DockerService>().removeEngine(project) {
+                    Log.log(LOGGER::info, "removed digma engine on plugin uninstall completed with {}", it)
+                }
+            }
         }
-        BrowserUtil.browse("https://digma.ai/uninstall/", project)
         super.uninstall(descriptor)
     }
 

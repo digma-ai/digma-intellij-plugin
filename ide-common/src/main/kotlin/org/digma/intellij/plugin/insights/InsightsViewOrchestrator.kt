@@ -5,6 +5,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.observable.properties.AtomicProperty
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.document.DocumentInfoService
@@ -48,6 +49,7 @@ class InsightsViewOrchestrator(val project: Project) {
         NonSupportedFile,
         NoFile,
         MethodFromSourceCode,
+        MethodFromBackNavigation,
         DummyMethod,
         DocumentPreviewList
     }
@@ -69,35 +71,61 @@ class InsightsViewOrchestrator(val project: Project) {
 
         Log.log(logger::debug, project, "Got showInsightsForSpan {}", spanId)
 
-        project.service<InsightsViewService>().updateInsightsModel(
-            CodeLessSpan(spanId)
-        )
+        Backgroundable.ensureBackground(project, "show insights"){
 
-        project.service<ErrorsViewService>().updateErrorsModel(
-            CodeLessSpan(spanId)
-        )
+            project.service<InsightsViewService>().updateInsightsModel(
+                CodeLessSpan(spanId)
+            )
 
-        project.service<ErrorsActionsService>().closeErrorDetailsBackButton()
+            project.service<ErrorsViewService>().updateErrorsModel(
+                CodeLessSpan(spanId)
+            )
 
-        //clear the latest method so that if user clicks on the editor again after watching code less insights the context will change
-        project.service<CurrentContextUpdater>().clearLatestMethod()
+            project.service<ErrorsActionsService>().closeErrorDetailsBackButton()
 
-        ToolWindowShower.getInstance(project).showToolWindow()
+            //clear the latest method so that if user clicks on the editor again after watching code less insights the context will change
+            project.service<CurrentContextUpdater>().clearLatestMethod()
+
+            ToolWindowShower.getInstance(project).showToolWindow()
+        }
+    }
+
+    fun showInsightsForMethodFromBackNavigation(methodId: String) {
+
+        currentState.set(ViewState.MethodFromBackNavigation)
+
+        Log.log(logger::debug, project, "Got showInsightsForMethod {}", methodId)
+
+        Backgroundable.ensureBackground(project,"show insights") {
+
+            val documentInfoService = project.service<DocumentInfoService>()
+            val methodInfo = documentInfoService.findMethodInfo(methodId)
+            if (methodInfo == null) {
+                Log.log(logger::warn, project, "showInsightsForMethod cannot show insights for method '{}' since not found", methodId)
+            }else {
+
+                project.service<InsightsViewService>().updateInsightsModel(
+                    methodInfo
+                )
+
+                project.service<ErrorsViewService>().updateErrorsModel(
+                    methodInfo
+                )
+
+                project.service<ErrorsActionsService>().closeErrorDetailsBackButton()
+
+                project.service<ToolWindowShower>().showToolWindow()
+            }
+        }
     }
 
     /**
-     * shows insights for span or method by which ever is non-null, and be navigated to code.
+     * shows insights for span or method by which ever is non-null, and can be navigated to code.
      * This method should be called only if it is possible to navigate to code. can be checked with
      * codeNavigator.canNavigateToSpan(spanId) || codeNavigator.canNavigateToMethod(methodId)
      */
-    //todo: this method needs clarification. what do we want to do?
-    // first option is show insights for the span and navigate to either span location or method location, which ever is possible.
-    // second option is just navigate to code location and rely on caret event to show insights. usually navigating to span will show
-    // insights for the enclosing method, but maybe we want to show only the span insights and navigate to code. as said above caret listener
-    // events should be processed by this class.
-    // currently we can not do both because one will override the other. we need to separate the flows of showing insights and navigating
-    // to code.
     fun showInsightsForSpanOrMethodAndNavigateToCode(spanCodeObjectId: String?, methodCodeObjectId: String?): Boolean {
+
 
         currentState.set(ViewState.SpanOrMethodWithNavigation)
 
@@ -133,7 +161,10 @@ class InsightsViewOrchestrator(val project: Project) {
 
         //methodLocation equals currentCaretLocation, so we have to emulate a caret event to show the method insights
         if (methodLocation != null) {
-            return emulateCaretEvent(methodCodeObjectId, methodLocation.first)
+            Backgroundable.ensureBackground(project, "Navigate to method") {
+                emulateCaretEvent(methodCodeObjectId, methodLocation.first)
+            }
+            return true
         }
 
         //todo: not sure about that
@@ -163,7 +194,7 @@ class InsightsViewOrchestrator(val project: Project) {
             Log.log({ message: String? -> logger.warn(message) }, "Could not find MethodInfo for MethodUnderCaret {}. ", methodUnderCaret)
             val dummyMethodInfo = MethodInfo(
                 methodUnderCaret.id, methodUnderCaret.name, methodUnderCaret.className, "",
-                methodUnderCaret.fileUri, 0, ArrayList()
+                methodUnderCaret.fileUri, 0
             )
             Log.log({ message: String? -> logger.warn(message) }, "Using dummy MethodInfo for to update views {}. ", dummyMethodInfo)
             updateInsightsWithDummyMethodInfo(methodUnderCaret, dummyMethodInfo)

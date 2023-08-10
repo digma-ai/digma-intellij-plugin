@@ -10,11 +10,17 @@ data class MethodInfo(
     val containingNamespace: String, //namespace for c# is namespace, for java its the package
     val containingFileUri: String,
     val offsetAtFileUri: Int,
-    val spans: List<SpanInfo>,
 ) : CodeObjectInfo {
 
-    val endpoints: MutableList<EndpointInfo> = mutableListOf()
+    private val innerSpans: MutableList<SpanInfo> = mutableListOf()
 
+    val spans: List<SpanInfo>
+        get() = innerSpans
+
+    private val innerEndpoints: MutableList<EndpointInfo> = mutableListOf()
+
+    val endpoints: List<EndpointInfo>
+        get() = innerEndpoints
 
     /*
         Note about id:
@@ -106,8 +112,16 @@ data class MethodInfo(
         return ""
     }
 
+    fun addSpan(theSpan: SpanInfo) {
+        innerSpans.add(theSpan)
+    }
+
+    fun addSpans(theSpans: Collection<SpanInfo>) {
+        innerSpans.addAll(theSpans)
+    }
+
     fun addEndpoint(endpoint: EndpointInfo) {
-        endpoints.add(endpoint)
+        innerEndpoints.add(endpoint)
     }
 
 

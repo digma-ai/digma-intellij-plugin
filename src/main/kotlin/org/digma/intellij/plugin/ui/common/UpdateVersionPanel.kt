@@ -1,12 +1,15 @@
 package org.digma.intellij.plugin.ui.common
 
+import com.intellij.codeInsight.hint.HintManager
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.components.service
 import com.intellij.openapi.observable.properties.AtomicProperty
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
+import com.intellij.ui.awt.RelativePoint
 import com.intellij.util.ui.JBUI
+import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.digma.intellij.plugin.service.EditorService
 import org.digma.intellij.plugin.ui.common.Links.DIGMA_DOCKER_APP_URL
@@ -97,7 +100,17 @@ class UpdateVersionPanel(
                     }
 
                     BackendDeploymentType.DockerCompose -> {
-                        EditorService.getInstance(project).openClasspathResourceReadOnly(UPDATE_GUIDE_DOCKER_COMPOSE_NAME,UPDATE_GUIDE_DOCKER_COMPOSE_PATH)
+                        if(project.service<DockerService>().isEngineInstalled()){
+                            val upgradePopupLabel = JLabel(asHtml("<p>" +
+                                    "<b>The Digma local engine is being updated</b>" +
+                                    "</p><p>This can take a few minutes in which Digma may be offline</p>"))
+                            upgradePopupLabel.border = JBUI.Borders.empty(3)
+                            HintManager.getInstance().showHint(upgradePopupLabel, RelativePoint.getNorthWestOf(updateButton), HintManager.HIDE_BY_ESCAPE, 3000)
+                            project.service<DockerService>().upgradeEngine(project);
+                        }
+                        else{
+                            EditorService.getInstance(project).openClasspathResourceReadOnly(UPDATE_GUIDE_DOCKER_COMPOSE_NAME,UPDATE_GUIDE_DOCKER_COMPOSE_PATH)
+                        }
                     }
 
                     BackendDeploymentType.DockerExtension -> {

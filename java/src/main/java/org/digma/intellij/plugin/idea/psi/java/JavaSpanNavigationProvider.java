@@ -8,7 +8,11 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.*;
+import com.intellij.psi.JavaPsiFacade;
+import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiDocumentManager;
+import com.intellij.psi.PsiMethod;
+import com.intellij.psi.PsiReference;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
@@ -17,6 +21,7 @@ import com.intellij.util.Query;
 import com.intellij.util.RunnableCallable;
 import com.intellij.util.concurrency.NonUrgentExecutor;
 import kotlin.Pair;
+import org.apache.commons.collections4.CollectionUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.digma.intellij.plugin.ui.ToolWindowShower;
@@ -86,6 +91,8 @@ public class JavaSpanNavigationProvider implements Disposable {
                 buildWithSpanAnnotation(GlobalSearchScope.projectScope(project));
                 buildStartSpanMethodCall(GlobalSearchScope.projectScope(project));
 
+                buildObservedAnnotation(GlobalSearchScope.projectScope(project));
+
                 //trigger a refresh after span navigation is built. this is necessary because the insights and errors
                 //views may be populated before span navigation is ready and spans links can not be built.
                 //for example is the IDE is closed when the cursor is on a method with Duration Breakdown that
@@ -102,7 +109,7 @@ public class JavaSpanNavigationProvider implements Disposable {
     }
 
 
-    private void buildStartSpanMethodCall( @NotNull SearchScope searchScope) {
+    private void buildStartSpanMethodCall(@NotNull SearchScope searchScope) {
         PsiClass tracerBuilderClass = JavaPsiFacade.getInstance(project).findClass(SPAN_BUILDER_FQN, GlobalSearchScope.allScope(project));
         if (tracerBuilderClass != null) {
             PsiMethod startSpanMethod =
@@ -116,7 +123,7 @@ public class JavaSpanNavigationProvider implements Disposable {
             startSpanReferences.forEach(psiReference -> {
                 SpanInfo spanInfo = JavaSpanDiscoveryUtils.getSpanInfoFromStartSpanMethodReference(project, psiReference);
                 if (spanInfo != null) {
-                    Log.log(LOGGER::debug, "Found span info {} in method {}",spanInfo.getId(),spanInfo.getContainingMethodId());
+                    Log.log(LOGGER::debug, "Found span info {} in method {}", spanInfo.getId(), spanInfo.getContainingMethodId());
                     int lineNumber = psiReference.getElement().getTextOffset();
                     var location = new SpanLocation(spanInfo.getContainingFileUri(), lineNumber);
                     spanLocations.put(spanInfo.getId(), location);
@@ -126,7 +133,7 @@ public class JavaSpanNavigationProvider implements Disposable {
     }
 
 
-    private void buildWithSpanAnnotation( @NotNull SearchScope searchScope) {
+    private void buildWithSpanAnnotation(@NotNull SearchScope searchScope) {
         PsiClass withSpanClass = JavaPsiFacade.getInstance(project).findClass(Constants.WITH_SPAN_FQN, GlobalSearchScope.allScope(project));
         //maybe the annotation is not in the classpath
         if (withSpanClass != null) {
@@ -134,13 +141,32 @@ public class JavaSpanNavigationProvider implements Disposable {
             psiMethods = filterNonRelevantMethodsForSpanDiscovery(psiMethods);
             psiMethods.forEach(psiMethod -> {
                 List<SpanInfo> spanInfos = JavaSpanDiscoveryUtils.getSpanInfoFromWithSpanAnnotatedMethod(psiMethod);
-                if (spanInfos != null) {
+                if (CollectionUtils.isNotEmpty(spanInfos)) {
                     spanInfos.forEach(spanInfo -> {
-                        Log.log(LOGGER::debug, "Found span info {} for method {}",spanInfo.getId(),spanInfo.getContainingMethodId());
+                        Log.log(LOGGER::debug, "Found span info {} for method {}", spanInfo.getId(), spanInfo.getContainingMethodId());
                         int offset = psiMethod.getTextOffset();
                         var location = new SpanLocation(spanInfo.getContainingFileUri(), offset);
                         spanLocations.put(spanInfo.getId(), location);
                     });
+                }
+            });
+        }
+    }
+
+    private void buildObservedAnnotation(@NotNull SearchScope searchScope) {
+        PsiClass observedClass = JavaPsiFacade.getInstance(project).findClass(MicrometerTracingFramework.OBSERVED_FQN, GlobalSearchScope.allScope(project));
+        //maybe the annotation is not in the classpath
+        if (observedClass != null) {
+            var micrometerTracingFramework = new MicrometerTracingFramework(project);
+            Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(observedClass, searchScope);
+            psiMethods = filterNonRelevantMethodsForSpanDiscovery(psiMethods);
+            psiMethods.forEach(psiMethod -> {
+                var spanInfo = micrometerTracingFramework.getSpanInfoFromObservedAnnotatedMethod(psiMethod);
+                if (spanInfo != null) {
+                    Log.log(LOGGER::debug, "Found span info {} for method {}", spanInfo.getId(), spanInfo.getContainingMethodId());
+                    int offset = psiMethod.getTextOffset();
+                    var location = new SpanLocation(spanInfo.getContainingFileUri(), offset);
+                    spanLocations.put(spanInfo.getId(), location);
                 }
             });
         }
@@ -182,9 +208,13 @@ public class JavaSpanNavigationProvider implements Disposable {
             if (virtualFile != null && virtualFile.isValid()) {
                 buildSpansLock.lock();
                 try {
+                    //if file moved then removeDocumentSpans will not remove anything but building span locations will
+                    // override the entries anyway
                     removeDocumentSpans(virtualFile);
                     buildWithSpanAnnotation(GlobalSearchScope.fileScope(project, virtualFile));
                     buildStartSpanMethodCall(GlobalSearchScope.fileScope(project, virtualFile));
+
+                    buildObservedAnnotation(GlobalSearchScope.fileScope(project, virtualFile));
                 } finally {
                     buildSpansLock.unlock();
                 }
@@ -220,7 +250,6 @@ public class JavaSpanNavigationProvider implements Disposable {
         //remove all spans for virtualFile
         fileSpans.forEach(spanLocations::remove);
     }
-
 
 
     private static class SpanLocation {

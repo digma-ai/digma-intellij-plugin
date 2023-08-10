@@ -9,7 +9,6 @@ import org.cef.misc.IntRef;
 import org.cef.misc.StringRef;
 import org.cef.network.CefRequest;
 import org.cef.network.CefResponse;
-import org.digma.intellij.plugin.jaegerui.JaegerUIException;
 import org.digma.intellij.plugin.log.Log;
 
 import java.io.IOException;
@@ -111,7 +110,7 @@ class AssetsResourceHandler implements CefResourceHandler {
             bytesRead.set(read);
             return true;
         } catch (Exception e) {
-            throw new JaegerUIException(e);
+            throw new AssetsUIException(e);
         }
     }
 

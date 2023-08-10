@@ -13,10 +13,10 @@ import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.lang.Integer.max
 import java.util.Collections
 
-class ErrorsPreviewListItem(val name: String, val hasErrors: Boolean, val hasRelatedCodeObjects: Boolean )
+class ErrorsPreviewListItem(val name: String, val hasErrors: Boolean, val hasRelatedCodeObjects: Boolean)
 
 enum class ErrorsTabCard {
-    ERRORS_LIST, ERROR_DETAILS,PREVIEW_LIST
+    ERRORS_LIST, ERROR_DETAILS, PREVIEW_LIST
 }
 
 class ErrorsModel : PanelModel {
@@ -30,7 +30,7 @@ class ErrorsModel : PanelModel {
     var card: ErrorsTabCard = ErrorsTabCard.ERRORS_LIST
 
 
-    fun getMethodNamesWithErrors(): List<ListViewItem<String>>{
+    fun getMethodNamesWithErrors(): List<ListViewItem<String>> {
         val methodsWithErrors = mutableListOf<ListViewItem<String>>()
 
         var index = 0
@@ -40,17 +40,21 @@ class ErrorsModel : PanelModel {
         return methodsWithErrors
     }
 
-    fun hasErrors(): Boolean{
+    fun hasErrors(): Boolean {
         return previewListViewItems.any { o -> o.hasErrors }
     }
 
-    fun hasDiscoverableCodeObjects(): Boolean{
-        return previewListViewItems.any{ o -> o.hasRelatedCodeObjects}
+    fun hasDiscoverableCodeObjects(): Boolean {
+        return previewListViewItems.any { o -> o.hasRelatedCodeObjects }
     }
 
 
     override fun count(): String {
         return max(listViewItems.size, errorsCount).toString()
+    }
+
+    override fun getTheScope(): Scope {
+        return scope
     }
 
     override fun isMethodScope(): Boolean {

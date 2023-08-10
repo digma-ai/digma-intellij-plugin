@@ -6,7 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.persistence.PersistenceData;
+import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -17,8 +17,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
-
-import static org.digma.intellij.plugin.analytics.EnvironmentRefreshSchedulerKt.scheduleEnvironmentRefresh;
 
 public class Environment implements EnvironmentsSupplier {
 
@@ -32,34 +30,22 @@ public class Environment implements EnvironmentsSupplier {
 
     private final Project project;
     private final AnalyticsService analyticsService;
-    private final PersistenceData persistenceData;
 
     private final ReentrantLock envChangeLock = new ReentrantLock();
 
-    public Environment(@NotNull Project project, @NotNull AnalyticsService analyticsService, @NotNull PersistenceData persistenceData) {
+    public Environment(@NotNull Project project, @NotNull AnalyticsService analyticsService) {
         this.project = project;
         this.analyticsService = analyticsService;
-        this.persistenceData = persistenceData;
-        this.current = persistenceData.getCurrentEnv();
-        scheduleEnvironmentRefresh(analyticsService, this);
-
-        //call refresh on environment when connection is lost, in some cases its necessary for some components to reset or update ui.
-        //usually these components react to environment change events, so this will trigger an environment change if not already happened before.
-        //if the connection lost happened during environment refresh then it may cause a second redundant event but will do no harm.
-        project.getMessageBus().connect(analyticsService).subscribe(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, new AnalyticsServiceConnectionEvent() {
-            @Override
-            public void connectionLost() {
-                Log.log(LOGGER::warn, "connectionLost");
-                refreshNowOnBackground();
-            }
-
-            @Override
-            public void connectionGained() {
-                Log.log(LOGGER::warn, "connectionGained");
-                refreshNowOnBackground();
-            }
-        });
     }
+
+
+
+    //this method is for internal use during initialization of AnalyticsService,
+    // its package protected and should never be used elsewhere
+    void setCurrentInternal(String current) {
+        this.current = current;
+    }
+
 
 
     @Override
@@ -69,7 +55,6 @@ public class Environment implements EnvironmentsSupplier {
 
     @Override
     public void setCurrent(@Nullable String newEnv) {
-        Log.log(LOGGER::warn, "setCurrent 1 " + newEnv);
 
         if (StringUtils.isEmpty(newEnv) || NO_ENVIRONMENTS_MESSAGE.equals(newEnv)) {
             return;
@@ -129,6 +114,7 @@ public class Environment implements EnvironmentsSupplier {
     @Override
     public void refreshNowOnBackground() {
 
+        Log.log(LOGGER::trace, "Refreshing Environments on background thread.");
         Log.test(LOGGER, "Firing Refreshing Environments");
         Backgroundable.ensureBackground(project, "Refreshing Environments", () -> {
             Log.test(LOGGER, "Going to lock envChangeLock");
@@ -138,8 +124,8 @@ public class Environment implements EnvironmentsSupplier {
                 //run both refreshEnvironments and updateCurrentEnv under same lock
                 Log.test(LOGGER, "call refreshEnvironments");
                 refreshEnvironments();
+                updateCurrentEnv(PersistenceService.getInstance().getState().getCurrentEnv(), true);
                 Log.test(LOGGER, "call updateCurrentEnv");
-                updateCurrentEnv(persistenceData.getCurrentEnv(), true);
             } finally {
                 Log.test(LOGGER, "Going to unlock envChangeLock");
                 if (envChangeLock.isHeldByCurrentThread()) {
@@ -150,41 +136,24 @@ public class Environment implements EnvironmentsSupplier {
         });
     }
 
-    void refreshNow() {
-
-        Log.test(LOGGER, "Going to lock envChangeLock");
-        envChangeLock.lock();
-        Log.test(LOGGER, "envChangeLock locked");
-        try {
-            //run both refreshEnvironments and updateCurrentEnv under same lock
-            Log.test(LOGGER, "Calling refreshEnvironments");
-            refreshEnvironments();
-            Log.test(LOGGER, "Calling updateCurrentEnv");
-            updateCurrentEnv(persistenceData.getCurrentEnv(), true);
-        } finally {
-            Log.test(LOGGER, "Going to unlock envChangeLock");
-            if (envChangeLock.isHeldByCurrentThread()) {
-                envChangeLock.unlock();
-                Log.test(LOGGER, "envChangeLock unlocked");
-            }
-        }
-    }
-
 
     //this method should not be called on ui threads, it may hang and cause a freeze
     private void refreshEnvironments() {
+
         var stopWatch = StopWatch.createStarted();
 
-        Log.test(LOGGER, "Going to lock envChangeLock");
         envChangeLock.lock();
-        Log.test(LOGGER, "envChangeLock locked");
+
         try {
-            Log.test(LOGGER, "Calling analyticsService.getEnvironments()");
+            Log.log(LOGGER::trace, "Refresh Environments called");
+
+            Log.log(LOGGER::trace, "Refreshing Environments list");
             var newEnvironments = analyticsService.getEnvironments();
             if (newEnvironments != null && !newEnvironments.isEmpty()) {
+                Log.log(LOGGER::trace, "Got environments {}", newEnvironments);
                 Log.test(LOGGER, "Got environments {}", newEnvironments);
             } else {
-                Log.test(LOGGER, "Error loading environments: {}", newEnvironments);
+                Log.log(LOGGER::warn, "Error loading environments: {}", newEnvironments);
                 newEnvironments = new ArrayList<>();
             }
 
@@ -201,7 +170,9 @@ public class Environment implements EnvironmentsSupplier {
                 envChangeLock.unlock();
                 Log.test(LOGGER, "envChangeLock unlocked");
             }
+
             stopWatch.stop();
+            Log.log(LOGGER::trace, "Refresh environments took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS));
             Log.test(LOGGER, "Refresh environments took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS));
         }
     }
@@ -221,7 +192,7 @@ public class Environment implements EnvironmentsSupplier {
         if (current != null) {
             //don't update the persistent data with null,null will happen on connection lost,
             //so when connection is back the current env can be restored to the last one.
-            persistenceData.setCurrentEnv(current);
+            PersistenceService.getInstance().getState().setCurrentEnv(current);
         }
 
         if (!Objects.equals(oldEnv, current)) {
@@ -244,11 +215,13 @@ public class Environment implements EnvironmentsSupplier {
 
 
     private void notifyEnvironmentsListChange() {
+        Log.log(LOGGER::trace, "Firing EnvironmentsListChange event for {}", environments);
         Log.test(LOGGER, "Going to fire environmentsListChanged for {}", environments);
         if (project.isDisposed()) {
             return;
         }
 
+        //run in new background thread so locks can be freed because this method is called under lock
         Log.test(LOGGER, "Firing environmentsListChanged for {}", environments);
         //run in new background thread so locks can be freeied because this method is called under lock
         Backgroundable.runInNewBackgroundThread(project, "environmentsListChanged", () -> {
@@ -261,18 +234,29 @@ public class Environment implements EnvironmentsSupplier {
 
 
     private void notifyEnvironmentChanged(String oldEnv, String newEnv, boolean refreshInsightsView) {
+        Log.log(LOGGER::trace, "Firing EnvironmentChanged event for {}", newEnv);
         Log.test(LOGGER, "Going to fire environmentChanged for {}", environments);
         if (project.isDisposed()) {
             return;
         }
 
+        Log.log(LOGGER::info, "Digma: Changing environment " + oldEnv + " to " + newEnv);
+
+        //run in new background thread so locks can be freed because this method is called under lock
         Log.test(LOGGER, "Firing environmentChanged for {}", newEnv);
         //run in new background thread so locks can be freed because this method is called under lock
         Backgroundable.runInNewBackgroundThread(project, "environmentChanged", () -> {
-            Log.test(LOGGER, "!!!!!!!!!!!!!environmentChanged for {}", newEnv);
             EnvironmentChanged publisher = project.getMessageBus().syncPublisher(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC);
             publisher.environmentChanged(newEnv, refreshInsightsView);
         });
     }
+
+
+    //this method is for internal use of the package
+    void notifyChange(String oldEnv) {
+        notifyEnvironmentsListChange();
+        notifyEnvironmentChanged(oldEnv,current,true);
+    }
+
 
 }

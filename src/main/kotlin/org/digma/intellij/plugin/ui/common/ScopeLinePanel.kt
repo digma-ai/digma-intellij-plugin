@@ -15,7 +15,7 @@ import javax.swing.JButton
 import javax.swing.JPanel
 
 
-class ScopeLinePanel(project: Project): JPanel(BorderLayout()) {
+class ScopeLinePanel(project: Project) : JPanel(BorderLayout()) {
 
 
     init {
@@ -26,16 +26,16 @@ class ScopeLinePanel(project: Project): JPanel(BorderLayout()) {
         val insightsModel = project.service<InsightsViewService>().model
         val scopeLine = scopeLine({ insightsModel.getScopeString() }, { insightsModel.getScopeTooltip() }, ScopeLineIconProducer(insightsModel))
 
-        val buttonsPanel = JPanel(GridLayout(1,2,5,0))
+        val buttonsPanel = JPanel(GridLayout(1, 2, 5, 0))
         buttonsPanel.isOpaque = false
         buttonsPanel.border = JBUI.Borders.empty()
         buttonsPanel.add(getCodeLocationButton(project))
         buttonsPanel.add(getGeneralRefreshButton(project))
-        this.add(scopeLine,BorderLayout.CENTER)
-        this.add(buttonsPanel,BorderLayout.EAST)
+        this.add(scopeLine, BorderLayout.CENTER)
+        this.add(buttonsPanel, BorderLayout.EAST)
 
         project.messageBus.connect(project.service<InsightsViewService>()).subscribe(
-            ModelChangeListener.MODEL_CHANGED_TOPIC,ModelChangeListener
+            ModelChangeListener.MODEL_CHANGED_TOPIC, ModelChangeListener
             { scopeLine.reset() }
         )
     }
@@ -49,7 +49,6 @@ class ScopeLinePanel(project: Project): JPanel(BorderLayout()) {
         button.maximumSize = buttonsSize
         return button
     }
-
 
 
     private fun getGeneralRefreshButton(project: Project): JButton {

@@ -14,7 +14,9 @@ import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.summary.SummariesProvider
+import org.digma.intellij.plugin.ui.model.CurrentEnvironmentScope
 import org.digma.intellij.plugin.ui.model.PanelModel
+import org.digma.intellij.plugin.ui.model.Scope
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import org.digma.intellij.plugin.ui.needToShowDurationChange
 import java.util.Collections
@@ -52,7 +54,7 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
         // usually there is only one registered language service, but if python is installed on Rider there will be
         // C# and python language service, same if python is installed on idea. worst case the reload will be called
         // more than once.
-        LanguageService.runWhenSmartForAll(project){
+        LanguageService.runWhenSmartForAll(project) {
             Log.log(logger::debug, "runWhenSmart called")
             val reloadTask = object : TimerTask() {
                 override fun run() {
@@ -94,7 +96,7 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
     }
 
     private fun reloadSummariesPanelInBackground(project: Project) {
-        Log.log(logger::debug, "reloadSummariesPanelInBackground called")
+        Log.log(logger::trace, "reloadSummariesPanelInBackground called")
         val task = Runnable {
             reloadSummariesPanel()
         }
@@ -103,19 +105,24 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
 
     private fun reloadSummariesPanel() {
         rebuildPanelLock.lock()
-        Log.log(logger::debug, "Lock acquired for reload Summaries panel process.")
+        Log.log(logger::trace, "Lock acquired for reload Summaries panel process.")
         try {
             reload()
         } finally {
             rebuildPanelLock.unlock()
-            Log.log(logger::debug, "Lock released for reload Summaries panel process.")
+            Log.log(logger::trace, "Lock released for reload Summaries panel process.")
         }
     }
 
 
     private fun reload() {
-        Log.log(logger::debug, "reload called")
-        val insights = summariesProvider.globalInsights
+        Log.log(logger::trace, "reload called")
+        var insights = summariesProvider.globalInsights
+        //todo:limit by size because long lists cause UI freeze
+        if (insights.size > 10) {
+            insights = insights.subList(0, 10)
+        }
+
         val environmentStatuses = summariesProvider.environmentStatuses
         model.insights = insights
         model.usageStatusResult = UsageStatusResult(emptyList(), environmentStatuses)
@@ -124,7 +131,7 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
     }
 
     fun empty() {
-        Log.log(logger::debug, "empty called")
+        Log.log(logger::trace, "empty called")
         model.insights = Collections.emptyList()
         model.usageStatusResult = Models.Empties.EmptyUsageStatusResult
         model.count = 0
@@ -139,8 +146,13 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
         var insights: List<ListViewItem<GlobalInsight>> = Collections.emptyList()
         var count = 0
         var usageStatusResult: UsageStatusResult = Models.Empties.EmptyUsageStatusResult
+        var scope = CurrentEnvironmentScope()
 
         override fun count(): String = count.toString()
+
+        override fun getTheScope(): Scope {
+            return scope
+        }
 
         override fun isMethodScope(): Boolean = false
 
@@ -148,9 +160,9 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
 
         override fun isCodeLessSpanScope(): Boolean = false
 
-        override fun getScopeString(): String = "Current environment"
+        override fun getScopeString(): String = scope.getScope()
 
-        override fun getScopeTooltip(): String = ""
+        override fun getScopeTooltip(): String = scope.getScopeTooltip()
 
         override fun getUsageStatus(): UsageStatusResult = usageStatusResult
     }
@@ -161,14 +173,15 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
             when (val model = insight.modelObject) {
                 is TopErrorFlowsInsight -> {
                     for (error in model.errors) {
-                        counter ++
+                        counter++
                     }
                 }
+
                 is SpanDurationChangeInsight -> {
                     for (change in model.spanDurationChanges) {
                         val changedPercentiles = change.percentiles.filter { needToShowDurationChange(it) }
                         if (changedPercentiles.isNotEmpty()) {
-                            counter ++
+                            counter++
                         }
                     }
                 }

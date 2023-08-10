@@ -5,7 +5,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
 import org.digma.intellij.plugin.PluginId;
-import org.digma.intellij.plugin.idea.psi.java.JavaSpanNavigationProvider;
+import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.log.Log;
 import org.jetbrains.annotations.NotNull;
 
@@ -37,19 +37,21 @@ public class RecentActivityToolWindowShower {
 
         Log.log(LOGGER::debug, "showToolWindow invoked");
 
-        if (toolWindow != null) {
-            Log.log(LOGGER::debug, "Got reference to tool window, showing..");
-            show(toolWindow);
-        } else {
-            Log.log(LOGGER::debug, "Don't have reference to tool window, showing with ToolWindowManager..");
-            ToolWindow tw = ToolWindowManager.getInstance(project).getToolWindow(PluginId.OBSERVABILITY_WINDOW_ID);
-            if (tw != null) {
-                Log.log(LOGGER::debug, "Got tool window from ToolWindowManager");
-                show(tw);
+        EDT.ensureEDT(() -> {
+            if (toolWindow != null) {
+                Log.log(LOGGER::debug, "Got reference to tool window, showing..");
+                show(toolWindow);
             } else {
-                Log.log(LOGGER::debug, "Could not find tool window");
+                Log.log(LOGGER::debug, "Don't have reference to tool window, showing with ToolWindowManager..");
+                ToolWindow tw = ToolWindowManager.getInstance(project).getToolWindow(PluginId.OBSERVABILITY_WINDOW_ID);
+                if (tw != null) {
+                    Log.log(LOGGER::debug, "Got tool window from ToolWindowManager");
+                    show(tw);
+                } else {
+                    Log.log(LOGGER::debug, "Could not find tool window");
+                }
             }
-        }
+        });
     }
 
 

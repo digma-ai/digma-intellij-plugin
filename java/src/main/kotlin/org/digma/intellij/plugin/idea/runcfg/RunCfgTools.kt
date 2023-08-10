@@ -4,7 +4,6 @@ import com.intellij.execution.JavaRunConfigurationBase
 import com.intellij.execution.configurations.JavaParameters
 import com.intellij.execution.configurations.ModuleBasedConfiguration
 import com.intellij.execution.configurations.RunConfigurationBase
-import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
@@ -27,8 +26,8 @@ class RunCfgTools {
         private val logger: Logger = Logger.getInstance(RunCfgTools::class.java)
 
         @JvmStatic
-        fun <T : RunConfigurationBase<*>?> resolveModule(
-            configuration: T & Any, params: JavaParameters, runnerSettings: RunnerSettings?,
+        fun <T : RunConfigurationBase<*>?> tryResolveModule(
+            configuration: T & Any, params: JavaParameters?,
         ): Module? {
 
             val runCfgFlavor = evalFlavor(configuration)
@@ -40,7 +39,7 @@ class RunCfgTools {
                 return null
             }
 
-            val theModule = runCfgFlavor.resolveModule(params, runnerSettings)
+            val theModule = runCfgFlavor.tryResolveModule(params)
             return theModule
         }
 
@@ -53,7 +52,6 @@ class RunCfgTools {
             // no match, need to log warning
             return null
         }
-
     }
 
 }
@@ -74,7 +72,7 @@ private abstract class RunCfgFlavor<T : RunConfigurationBase<*>>(protected val r
 
     abstract fun evalMainClass(params: JavaParameters): String?
 
-    fun resolveModule(params: JavaParameters, runnerSettings: RunnerSettings?): Module? {
+    fun tryResolveModule(params: JavaParameters?): Module? {
         // first strategy, maybe module is just given
         if (runCfgBase is ModuleBasedConfiguration<*, *>) {
             val theCfgModule = runCfgBase.configurationModule
@@ -83,6 +81,13 @@ private abstract class RunCfgFlavor<T : RunConfigurationBase<*>>(protected val r
             }
         }
 
+        if (params != null) {
+            return tryResolveByJavaParameters(params)
+        }
+        return null
+    }
+
+    private fun tryResolveByJavaParameters(params: JavaParameters): Module? {
         // second strategy, maybe module is just given
         if (!params.moduleName.isNullOrBlank()) {
             val theModule = moduleManager.findModuleByName(params.moduleName)

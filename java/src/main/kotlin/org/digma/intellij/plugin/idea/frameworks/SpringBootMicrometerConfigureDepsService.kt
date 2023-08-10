@@ -35,6 +35,8 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
 
         val MicrometerTracingBridgeOtelCoordinates = UnifiedCoordinates("io.micrometer", "micrometer-tracing-bridge-otel", "1.1.2")
         val OtelExporterOtlpCoordinates = UnifiedCoordinates("io.opentelemetry", "opentelemetry-exporter-otlp", "1.26.0")
+        val DigmaSpringBootMicrometerAutoconfCoordinates =
+            UnifiedCoordinates("io.github.digma-ai", "digma-spring-boot-micrometer-tracing-autoconf", "0.7.4")
 
         @JvmStatic
         fun getInstance(project: Project): SpringBootMicrometerConfigureDepsService {
@@ -48,15 +50,43 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
             return buildUnifiedDependency(libCoordinates, javaBuildSystem)
         }
 
+        fun getSpringBootStarterAopDependency(javaBuildSystem: JavaBuildSystem, springBootVersion: String): UnifiedDependency {
+            val libCoordinates = UnifiedCoordinates("org.springframework.boot", "spring-boot-starter-aop", springBootVersion)
+
+            return buildUnifiedDependency(libCoordinates, javaBuildSystem)
+        }
+
         fun buildUnifiedDependency(libCoordinates: UnifiedCoordinates, javaBuildSystem: JavaBuildSystem): UnifiedDependency {
+            return buildUnifiedDependency(libCoordinates, javaBuildSystem, true)
+        }
+
+        fun buildUnifiedDependency(
+            libCoordinates: UnifiedCoordinates,
+            javaBuildSystem: JavaBuildSystem,
+            removeVersionIfCan: Boolean,
+        ): UnifiedDependency {
             val dep: UnifiedDependency =
                 when (javaBuildSystem) {
                     JavaBuildSystem.MAVEN -> UnifiedDependency(libCoordinates, null)
-                    JavaBuildSystem.GRADLE -> UnifiedDependency(libCoordinates, "implementation")
+                    JavaBuildSystem.GRADLE -> {
+                        val newLibCoordinates =
+                            if (!removeVersionIfCan) {
+                                libCoordinates
+                            } else {
+                                coordsWithoutVersion(libCoordinates)
+                            }
+                        return UnifiedDependency(newLibCoordinates, "implementation")
+                    }
+
                     else -> UnifiedDependency(libCoordinates, "compile")
                 }
 
             return dep
+        }
+
+        fun coordsWithoutVersion(orig: UnifiedCoordinates): UnifiedCoordinates {
+            // version as empty string works well, while null value throws exception (both for maven and gradle)
+            return UnifiedCoordinates(orig.groupId, orig.artifactId, "")
         }
     }
 
@@ -120,7 +150,7 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
         }
     }
 
-    protected fun addMissingDependenciesForSpringBootObservability(moduleExt: ModuleExt) {
+    fun addMissingDependenciesForSpringBootObservability(moduleExt: ModuleExt) {
         val module = moduleExt.module
         val moduleBuildSystem = determineBuildSystem(module)
 
@@ -128,14 +158,20 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
         if (!moduleExt.metadata.hasSpringBootStarterActuator) {
             uniDeps.add(getSpringBootStarterActuatorDependency(moduleBuildSystem, moduleExt.metadata.springBootVersion!!))
         }
+        if (!moduleExt.metadata.hasSpringBootStarterAop) {
+            uniDeps.add(getSpringBootStarterAopDependency(moduleBuildSystem, moduleExt.metadata.springBootVersion!!))
+        }
         if (!moduleExt.metadata.hasMicrometerTracingBridgeOtel) {
             uniDeps.add(buildUnifiedDependency(MicrometerTracingBridgeOtelCoordinates, moduleBuildSystem))
         }
         if (!moduleExt.metadata.hasOtelExporterOtlp) {
             uniDeps.add(buildUnifiedDependency(OtelExporterOtlpCoordinates, moduleBuildSystem))
         }
+        if (!moduleExt.metadata.hasDigmaSpringBootMicrometerAutoconf) {
+            uniDeps.add(buildUnifiedDependency(DigmaSpringBootMicrometerAutoconfCoordinates, moduleBuildSystem, false))
+        }
 
-        println("adding spring boot deps to module '${module.name}' deps: ${uniDeps}")
+//        println("adding spring boot deps to module '${module.name}' deps: ${uniDeps}")
 
         val dependencyModifierService = DependencyModifierService.getInstance(project)
 

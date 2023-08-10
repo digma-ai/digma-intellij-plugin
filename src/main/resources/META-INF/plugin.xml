@@ -36,6 +36,7 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.jaegerui.JaegerUIService"/>
         <fileEditorProvider implementation="org.digma.intellij.plugin.jaegerui.JaegerUIFileEditorProvider"/>
+        <fileEditorProvider implementation="org.digma.intellij.plugin.documentation.DocumentationFileEditorProvider"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.ToolWindowShower"/>
         <projectService serviceImplementation="org.digma.intellij.plugin.recentactivity.RecentActivityToolWindowShower"/>
@@ -84,8 +85,6 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.posthog.ActivityMonitor"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.posthog.ConnectionActivityMonitor"/>
-
         <projectService serviceImplementation="org.digma.intellij.plugin.posthog.PluginActivityMonitor"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.updates.UpdatesService"/>
@@ -97,6 +96,10 @@
 
         <notificationGroup id="Digma Notification Group"
                            displayType="NONE"
+                           toolWindowId="Digma"/>
+
+        <notificationGroup id="Digma Events Group"
+                           displayType="STICKY_BALLOON"
                            toolWindowId="Digma"/>
 
 
@@ -118,6 +121,9 @@
         <postStartupActivity implementation="org.digma.intellij.plugin.common.RunOnceStartupActivity"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.recentactivity.RecentActivityStartupActivity"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.posthog.ContainerEngineStartupActivity"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.notifications.InsightsNotificationStartupActivity"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.analytics.AnalyticsServiceStarter"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.posthog.FirstTimePerformanceMetricsMonitor"/>
 
 
         <!-- Code lens providers are used only for some languages, for example java,python.
@@ -142,6 +148,11 @@
 
 
     </extensions>
+
+
+    <actions>
+        <action id="DigmaSpanNavBackAction" class="org.digma.intellij.plugin.ui.common.actions.SpanNavBackAction"/>
+    </actions>
 
 
     <projectListeners>

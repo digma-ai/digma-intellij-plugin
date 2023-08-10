@@ -1,61 +1,69 @@
 package org.digma.intellij.plugin.posthog
 
+import com.intellij.collaboration.async.DisposingScope
+import com.intellij.openapi.Disposable
+import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
-import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.log.Log
 
-class ConnectionActivityMonitor(private val project: Project) : AnalyticsServiceConnectionEvent {
+@Service(Service.Level.PROJECT)
+class ConnectionActivityMonitor(private val project: Project) : AnalyticsServiceConnectionEvent,Disposable {
+
+    private var appVersion: String? = null
 
     companion object {
-        private val logger = Logger.getInstance(ConnectionActivityMonitor::class.java)
+        private val LOGGER = Logger.getInstance(ConnectionActivityMonitor::class.java)
 
         @JvmStatic
         fun loadInstance(project: Project) {
-            Log.test(logger,"Getting instance of ${ConnectionActivityMonitor::class.simpleName}")
+            Log.test(LOGGER,"Getting instance of ${ConnectionActivityMonitor::class.simpleName}")
             project.getService(ConnectionActivityMonitor::class.java)
-            Log.test(logger,"Returning ${ConnectionActivityMonitor::class.simpleName}")
+            Log.test(LOGGER,"Returning ${ConnectionActivityMonitor::class.simpleName}")
         }
     }
 
 
     init {
-        Log.test(logger,"Initializing ${ConnectionActivityMonitor::class.simpleName}")
+        Log.test(LOGGER,"Initializing ${ConnectionActivityMonitor::class.simpleName}")
         project.messageBus.connect().subscribe(
             AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC,
             this
         )
-//        Log.test(logger,"Skipping call to asyncFetchAndRegisterServerVersion")
         asyncFetchAndRegisterServerVersion()
-        Log.test(logger,"Finished ${ConnectionActivityMonitor::class.simpleName} initialization")
+        Log.test(LOGGER,"Finished ${ConnectionActivityMonitor::class.simpleName} initialization")
     }
 
     override fun connectionLost() {
-
+        //nothing to do
     }
 
     override fun connectionGained() {
-//        Log.test(logger,"Skipping call to asyncFetchAndRegisterServerVersion")
         asyncFetchAndRegisterServerVersion()
     }
 
     private fun asyncFetchAndRegisterServerVersion(){
-        Backgroundable.ensureBackground(project, "Fetching server about info") {
+        Log.log(LOGGER::trace, "Fetching server about info")
+
+        @Suppress("UnstableApiUsage")
+        DisposingScope(this).launch {
             try {
-                // [!] The "about" endpoint must NOT be called via the proxy
-                //     so failing requests won't mark the connection as "lost",
-                //     due to older server versions which does not contain this
-                //     endpoint yet
-                Log.test(logger, "Calling AnalyticsService.getInstance(project).analyticsProvider.about");
-                val about = AnalyticsService.getInstance(project).analyticsProvider.about
-                Log.test(logger, "Calling ActivityMonitor.getInstance(project).registerServerInfo(about)");
-                ActivityMonitor.getInstance(project).registerServerInfo(about)
+                val about = AnalyticsService.getInstance(project).about
+                if (appVersion != about.applicationVersion) {
+                    appVersion = about.applicationVersion
+                    ActivityMonitor.getInstance(project).registerServerInfo(about)
+                }
             } catch (e: Exception) {
-                Log.log(logger::warn, "Failed to get+register server version: {}", e.message);
+                Log.warnWithException(LOGGER, e, "Failed to get+register server version: {}", e.message)
             }
-            Log.test(logger, "Done fetching server about info");
+            Log.test(LOGGER, "Done fetching server about info");
         }
-    } 
+    }
+
+    override fun dispose() {
+        //nothing to do, used as parent disposable
+    }
 }

@@ -1,11 +1,9 @@
 package org.digma.intellij.plugin.ui.common
 
-import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBTabbedPane
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.assets.AssetsPanel
-import org.digma.intellij.plugin.assets.AssetsService
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import org.digma.intellij.plugin.ui.service.SummaryViewService
 import org.digma.intellij.plugin.ui.summary.dashboardPanel
@@ -42,7 +40,7 @@ class HomePanel(project: Project) : JPanel() {
 
 
     private fun createAssetsPanel(project: Project): Component {
-        return AssetsPanel(project,project.service<AssetsService>())
+        return AssetsPanel(project)
     }
 
     private fun createDashboardPanel(project: Project): DigmaTabPanel {

@@ -37,8 +37,11 @@ import org.digma.intellij.plugin.common.ReadActions;
 import org.digma.intellij.plugin.editor.EditorUtils;
 import org.digma.intellij.plugin.idea.build.BuildSystemChecker;
 import org.digma.intellij.plugin.idea.build.JavaBuildSystem;
+import org.digma.intellij.plugin.idea.deps.ModulesDepsService;
+import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
+import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.psi.CanInstrumentMethodResult;
 import org.digma.intellij.plugin.psi.LanguageService;
@@ -52,6 +55,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public class JavaLanguageService implements LanguageService {
 
@@ -63,7 +67,6 @@ public class JavaLanguageService implements LanguageService {
     private final ProjectFileIndex projectFileIndex;
 
     private final MicronautFramework micronautFramework;
-    private final JaxrsFramework jaxrsFramework;
     private final GrpcFramework grpcFramework;
     private final SpringBootFramework springBootFramework;
     private final List<IEndpointDiscovery> endpointDiscoveryList;
@@ -88,12 +91,16 @@ public class JavaLanguageService implements LanguageService {
         this.project = project;
         this.projectFileIndex = project.getService(ProjectFileIndex.class);
         this.micronautFramework = new MicronautFramework(project);
-        this.jaxrsFramework = new JaxrsFramework(project);
+        var jaxrsJavaxFramework = new JaxrsJavaxFramework(project);
+        var jaxrsJakartaFramework = new JaxrsJakartaFramework(project);
         this.grpcFramework = new GrpcFramework(project);
         this.springBootFramework = new SpringBootFramework(project);
-        this.endpointDiscoveryList = List.of(micronautFramework, jaxrsFramework, grpcFramework, springBootFramework);
+        this.endpointDiscoveryList = List.of(micronautFramework, jaxrsJavaxFramework, jaxrsJakartaFramework, grpcFramework, springBootFramework);
     }
 
+    public List<IEndpointDiscovery> getListOfEndpointDiscovery() {
+        return endpointDiscoveryList;
+    }
 
     @Override
     public void ensureStartupOnEDT(@NotNull Project project) {
@@ -183,6 +190,15 @@ public class JavaLanguageService implements LanguageService {
         return "";
     }
 
+    protected boolean isSpringBootAndMicrometer(@NotNull Module module) {
+        var modulesDepsService = ModulesDepsService.getInstance(project);
+        var springBootMicrometerConfigureDepsService = SpringBootMicrometerConfigureDepsService.getInstance(project);
+
+        var retVal = (modulesDepsService.isSpringBootModule(module)
+                && springBootMicrometerConfigureDepsService.isSpringBootWithMicrometer());
+        return retVal;
+    }
+
     @NotNull
     public CanInstrumentMethodResult canInstrumentMethod(@NotNull Project project, @Nullable String methodId) {
 
@@ -204,15 +220,32 @@ public class JavaLanguageService implements LanguageService {
             return CanInstrumentMethodResult.Failure();
         }
 
-        var withSpanClass = JavaPsiFacade.getInstance(project).findClass(
-                "io.opentelemetry.instrumentation.annotations.WithSpan",
-                GlobalSearchScope.allScope(project));
-        if (withSpanClass == null) {
-            Log.log(LOGGER::warn, "Failed to get WithSpan PsiClass (methodId: {})", methodId);
-            return new CanInstrumentMethodResult(new CanInstrumentMethodResult.MissingDependencyCause("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations"));
+        var annotationClassFqn = Constants.WITH_SPAN_FQN;
+        var dependencyCause = Constants.WITH_SPAN_DEPENDENCY_DESCRIPTION;
+        if (isSpringBootAndMicrometer(module)) {
+            annotationClassFqn = MicrometerTracingFramework.OBSERVED_FQN;
+            dependencyCause = MicrometerTracingFramework.OBSERVED_DEPENDENCY_DESCRIPTION;
+
+            var modulesDepsService = ModulesDepsService.getInstance(project);
+            var moduleExt = modulesDepsService.getModuleExt(module.getName());
+            if (moduleExt == null) {
+                Log.log(LOGGER::warn, "Failed to not lookup module ext by module name='{}'", module.getName());
+                return CanInstrumentMethodResult.Failure();
+            }
+            boolean hasDeps = modulesDepsService.isModuleHasNeededDependenciesForSpringBootWithMicrometer(moduleExt.getMetadata());
+            if (!hasDeps) {
+                return new CanInstrumentMethodResult(new CanInstrumentMethodResult.MissingDependencyCause(dependencyCause));
+            }
         }
 
-        return new JavaCanInstrumentMethodResult(methodId, psiMethod, withSpanClass, psiJavaFile);
+        var annotationPsiClass = JavaPsiFacade.getInstance(project).findClass(annotationClassFqn,
+                GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module, false));
+        if (annotationPsiClass == null) {
+            Log.log(LOGGER::warn, "Cannot find WithSpan PsiClass (methodId: {}) (module:{})", methodId, module);
+            return new CanInstrumentMethodResult(new CanInstrumentMethodResult.MissingDependencyCause(dependencyCause));
+        }
+
+        return new JavaCanInstrumentMethodResult(methodId, psiMethod, annotationPsiClass, psiJavaFile);
     }
 
     public boolean instrumentMethod(@NotNull CanInstrumentMethodResult result) {
@@ -236,7 +269,8 @@ public class JavaLanguageService implements LanguageService {
         WriteCommandAction.runWriteCommandAction(project, () -> {
             var psiFactory = PsiElementFactory.getInstance(project);
 
-            psiMethod.getModifierList().addAnnotation("WithSpan");
+            var shortClassNameAnnotation = withSpanClass.getName();
+            psiMethod.getModifierList().addAnnotation(shortClassNameAnnotation);
 
             var existing = importList.findSingleClassImportStatement(withSpanClass.getQualifiedName());
             if (existing == null) {
@@ -267,12 +301,33 @@ public class JavaLanguageService implements LanguageService {
     @Override
     public void addDependencyToOtelLib(@NotNull Project project, @NotNull String methodId) {
         Module module = getModuleOfMethodId(methodId);
-        JavaBuildSystem moduleBuildSystem = BuildSystemChecker.Companion.determineBuildSystem(module);
-        UnifiedDependency dependencyLib = MapBuildSystem2Dependency.get(moduleBuildSystem);
+        if (module == null) {
+            Log.log(LOGGER::warn, "Failed to add dependencies OTEL lib since could not lookup module by methodId='{}'", methodId);
+            return;
+        }
+        if (!isSpringBootAndMicrometer(module)) {
+            JavaBuildSystem moduleBuildSystem = BuildSystemChecker.Companion.determineBuildSystem(module);
+            UnifiedDependency dependencyLib = MapBuildSystem2Dependency.get(moduleBuildSystem);
 
-        var dependencyModifierService = DependencyModifierService.getInstance(project);
+            var dependencyModifierService = DependencyModifierService.getInstance(project);
 
-        dependencyModifierService.addDependency(module, dependencyLib);
+            dependencyModifierService.addDependency(module, dependencyLib);
+            return;
+        }
+        // handling spring boot with micrometer tracing
+        addDepsForSpringBootAndMicrometer(module);
+    }
+
+    protected void addDepsForSpringBootAndMicrometer(@NotNull Module module) {
+        var modulesDepsService = ModulesDepsService.getInstance(project);
+        var moduleExt = modulesDepsService.getModuleExt(module.getName());
+        if (moduleExt == null) {
+            Log.log(LOGGER::warn, "Failed add dependencies of Spring Boot Micrometer since could not lookup module ext by module name='{}'", module.getName());
+            return;
+        }
+        var project = module.getProject();
+        var springBootMicrometerConfigureDepsService = SpringBootMicrometerConfigureDepsService.getInstance(project);
+        springBootMicrometerConfigureDepsService.addMissingDependenciesForSpringBootObservability(moduleExt);
     }
 
     /**
@@ -311,7 +366,6 @@ public class JavaLanguageService implements LanguageService {
         });
 
     }
-
 
 
     @Override
@@ -427,6 +481,11 @@ public class JavaLanguageService implements LanguageService {
     @Override
     public Map<String, Pair<String, Integer>> findWorkspaceUrisForSpanIds(@NotNull List<String> spanIds) {
         return JavaSpanNavigationProvider.getInstance(project).getUrisForSpanIds(spanIds);
+    }
+
+    @Override
+    public Set<EndpointInfo> lookForDiscoveredEndpoints(String endpointId) {
+        return JavaEndpointNavigationProvider.getInstance(project).getEndpointInfos(endpointId);
     }
 
     @Override

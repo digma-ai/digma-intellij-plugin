@@ -2,7 +2,10 @@ package org.digma.intellij.plugin.analytics;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.diagnostic.RuntimeExceptionWithAttachments;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
 import com.intellij.util.Alarm;
@@ -15,10 +18,13 @@ import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
+import org.digma.intellij.plugin.model.rest.AboutResult;
 import org.digma.intellij.plugin.model.rest.assets.AssetsRequest;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
+import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsRequest;
+import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsResponse;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
 import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightRequest;
@@ -38,6 +44,7 @@ import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
+import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse;
 import org.digma.intellij.plugin.model.rest.version.VersionRequest;
 import org.digma.intellij.plugin.model.rest.version.VersionResponse;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
@@ -73,7 +80,9 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static org.digma.intellij.plugin.analytics.EnvironmentRefreshSchedulerKt.scheduleEnvironmentRefresh;
 import static org.digma.intellij.plugin.common.EnvironmentUtilKt.isEnvironmentLocal;
+import static org.digma.intellij.plugin.common.EnvironmentUtilKt.isEnvironmentLocalTests;
 import static org.digma.intellij.plugin.common.EnvironmentUtilKt.isLocalEnvironmentMine;
 import static org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult;
 
@@ -103,25 +112,21 @@ public class AnalyticsService implements Disposable {
 
     private AnalyticsProvider analyticsProviderProxy;
 
-    private RestAnalyticsProvider analyticsProvider;
-
     public AnalyticsService(@NotNull Project project) {
-        Log.test(LOGGER, "Initializing {}", AnalyticsService.class.getSimpleName());
         //initialize BackendConnectionMonitor when starting, so it is aware early on connection statuses
         BackendConnectionMonitor.getInstance(project);
         //initialize MainToolWindowCardsController when starting, so it is aware early on connection statuses
         MainToolWindowCardsController.getInstance(project);
         SettingsState settingsState = SettingsState.getInstance();
         Log.test(LOGGER, "Creating Environment object");
-        environment = new Environment(project, this, PersistenceService.getInstance().getState());
+        environment = new Environment(project, this);
         Log.test(LOGGER, "Environment object created");
         this.project = project;
         myApiUrl = settingsState.apiUrl;
         myApiToken = settingsState.apiToken;
         replaceClient(myApiUrl, myApiToken);
-        Log.test(LOGGER, "Client replaced");
-        initializeEnvironmentsList();
-        Log.test(LOGGER, "Registering replaceClientAndFireChange");
+        scheduleEnvironmentRefresh(this, environment);
+
         settingsState.addChangeListener(state -> {
             if (!Objects.equals(state.apiUrl, myApiUrl)) {
                 myApiUrl = state.apiUrl;
@@ -147,9 +152,6 @@ public class AnalyticsService implements Disposable {
         return environment;
     }
 
-    public AnalyticsProvider getAnalyticsProvider() {
-        return analyticsProvider;
-    }
 
     //just replace the client and do not fire any events
     //this method should be synchronized, and it shouldn't be a problem that really doesn't happen too often.
@@ -162,33 +164,53 @@ public class AnalyticsService implements Disposable {
                 Log.log(LOGGER::warn, e.getMessage());
             }
         }
-        analyticsProvider = new RestAnalyticsProvider(url, token);
+        RestAnalyticsProvider analyticsProvider = new RestAnalyticsProvider(url, token);
         analyticsProviderProxy = newAnalyticsProviderProxy(analyticsProvider);
+
+        updateEnvironments(analyticsProvider);
     }
 
+    private void updateEnvironments(RestAnalyticsProvider analyticsProvider) {
+        try{
+            var envs = analyticsProvider.getEnvironments();
+            environment.getEnvironments().clear();
+            environment.getEnvironments().addAll(envs);
+            var current = PersistenceService.getInstance().getState().getCurrentEnv();
+            if (environment.getEnvironments().contains(current)){
+                environment.setCurrentInternal(current);
+            }else if (!environment.getEnvironments().isEmpty()){
+                environment.setCurrentInternal(environment.getEnvironments().get(0));
+            }
 
-    private void initializeEnvironmentsList() {
-        Log.test(LOGGER, "Calling environment.refreshNow()");
-        environment.refreshNow();
+        }catch (Exception e){
+            Log.warnWithException(LOGGER,e,"error fetching environments");
+            environment.getEnvironments().clear();
+            environment.setCurrentInternal(null);
+            BackendConnectionMonitor.getInstance(project).connectionLost();
+        }
     }
+
 
 
     private void replaceClientAndFireChange(String url, String token) {
         Log.test(LOGGER, "Firing Digma: Environments list changed");
         Backgroundable.ensureBackground(project, "Digma: Environments list changed", () -> {
-            Log.test(LOGGER, "Calling replaceClient");
+            var currentEnv = environment.getCurrent();
             replaceClient(url, token);
-            environment.refreshNowOnBackground();
+            environment.notifyChange(currentEnv);
         });
 
     }
 
 
+    @Nullable
     public List<String> getEnvironments() {
         try {
-            var environments =  analyticsProviderProxy.getEnvironments();
+            var environments = analyticsProviderProxy.getEnvironments();
             var hostName = CommonUtils.getLocalHostname();
-            return environments.stream().filter(o->!isEnvironmentLocal(o) || isLocalEnvironmentMine(o,  hostName)).toList();
+            return environments.stream()
+                    .filter(env -> (!isEnvironmentLocal(env) && !isEnvironmentLocalTests(env)) || isLocalEnvironmentMine(env, hostName))
+                    .toList();
         } catch (Exception e) {
             //getEnvironments should never throw exception.
             // it is called only from this class or from the Environment object and both can handle null.
@@ -214,7 +236,7 @@ public class AnalyticsService implements Disposable {
 
     public List<GlobalInsight> getGlobalInsights() throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
-        Log.log(LOGGER::debug, "Requesting Global Insights for next environment {}", env);
+        Log.log(LOGGER::trace, "Requesting Global Insights for next environment {}", env);
         var insights = executeCatching(() -> analyticsProviderProxy.getGlobalInsights(new InsightsRequest(env, Collections.emptyList())));
         if (insights == null) {
             insights = Collections.emptyList();
@@ -223,6 +245,12 @@ public class AnalyticsService implements Disposable {
         return insights;
     }
 
+
+    public LatestCodeObjectEventsResponse getLatestEvents(@NotNull String lastReceivedTime) throws AnalyticsServiceException{
+        return executeCatching(() -> analyticsProviderProxy.getLatestEvents(new LatestCodeObjectEventsRequest(environment.getEnvironments(),lastReceivedTime)));
+    }
+
+
     /**
      * removed deprecation because its necessary for JaegerUIService#getImportance(java.util.List)
      */
@@ -230,7 +258,7 @@ public class AnalyticsService implements Disposable {
     //Use {@link #getInsightsOfMethods(List<MethodInfo>)} instead.
     public List<CodeObjectInsight> getInsights(List<String> objectIds) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
-        Log.log(LOGGER::debug, "Requesting insights for next objectIds {} and next environment {}", objectIds, env);
+        Log.log(LOGGER::trace, "Requesting insights for next objectIds {} and next environment {}", objectIds, env);
         var insights = executeCatching(() -> analyticsProviderProxy.getInsights(new InsightsRequest(env, objectIds)));
         if (insights == null) {
             insights = Collections.emptyList();
@@ -260,12 +288,12 @@ public class AnalyticsService implements Disposable {
 
     public InsightsOfMethodsResponse getInsightsOfMethods(List<MethodInfo> methodInfos) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
-        Log.log(LOGGER::debug, "Requesting insights for next methodInfos {} and next environment {}", methodInfos, env);
+        Log.log(LOGGER::trace, "Requesting insights for next methodInfos {} and next environment {}", methodInfos, env);
         var methodWithCodeObjects = methodInfos.stream()
                 .map(AnalyticsService::toMethodWithCodeObjects)
                 .toList();
         InsightsOfMethodsResponse insightsOfMethodsResponse = executeCatching(() -> analyticsProviderProxy.getInsightsOfMethods(new InsightsOfMethodsRequest(env, methodWithCodeObjects)));
-        if (insightsOfMethodsResponse != null && insightsOfMethodsResponse.getMethodsWithInsights().size() > 0) {
+        if (insightsOfMethodsResponse != null && !insightsOfMethodsResponse.getMethodsWithInsights().isEmpty()) {
             onInsightReceived(insightsOfMethodsResponse.getMethodsWithInsights());
         }
         return insightsOfMethodsResponse;
@@ -273,7 +301,7 @@ public class AnalyticsService implements Disposable {
 
     public List<CodeObjectError> getErrorsOfCodeObject(List<String> codeObjectIds) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
-        Log.log(LOGGER::debug, "Requesting insights for next codeObjectId {} and next environment {}", codeObjectIds, env);
+        Log.log(LOGGER::trace, "Requesting insights for next codeObjectId {} and next environment {}", codeObjectIds, env);
         var errors = executeCatching(() -> analyticsProviderProxy.getErrorsOfCodeObject(env, codeObjectIds));
         if (errors == null) {
             errors = Collections.emptyList();
@@ -370,6 +398,14 @@ public class AnalyticsService implements Disposable {
     }
 
 
+    public PerformanceMetricsResponse getPerformanceMetrics() throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getPerformanceMetrics());
+    }
+
+
+    public AboutResult getAbout() throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getAbout());
+    }
 
 
     @Override
@@ -399,6 +435,9 @@ public class AnalyticsService implements Disposable {
             throw new AnalyticsServiceException("An AnalyticsProviderException was caught", e);
         } catch (UndeclaredThrowableException e) {
             throw new AnalyticsServiceException("UndeclaredThrowableException caught", e.getUndeclaredThrowable());
+        } catch (RuntimeExceptionWithAttachments e) {
+            //this is a platform exception as a result of asserting non UI thread when calling backend API
+            throw e;
         } catch (Exception e) {
             throw new AnalyticsServiceException("Unknown exception", e);
         }
@@ -432,6 +471,9 @@ public class AnalyticsService implements Disposable {
 
         private final ReentrantLock myConnectionLostLock = new ReentrantLock();
 
+
+        private final Set<String> methodsToIgnoreExceptions = Set.of(new String[]{"getPerformanceMetrics","getAbout"});
+
         //sometimes the connection lost is momentary or regaining is momentary, use the alarm to wait
         // before notifying listeners of connectionLost/ConnectionGained
         private final Alarm myConnectionStatusNotifyAlarm = new Alarm(Alarm.ThreadToUse.POOLED_THREAD,AnalyticsService.this);
@@ -445,8 +487,8 @@ public class AnalyticsService implements Disposable {
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
-            //these methods are called by idea debugger and flags are changed while debugging when they should not.
-            //and anyway there methods do not need cross-cutting concerns that this proxy offers.
+            //these methods do not need cross-cutting concerns that this proxy offers and may be called on ui thread.
+            // toString for example will only be called by idea debugger.
             if (method.getName().equals("toString") ||
                     method.getName().equals("hashCode") ||
                     method.getName().equals("equals") ||
@@ -454,13 +496,17 @@ public class AnalyticsService implements Disposable {
                 return method.invoke(analyticsProvider, args);
             }
 
-
             var stopWatch = StopWatch.createStarted();
 
             try {
 
-                if (LOGGER.isDebugEnabled()) {
-                    Log.log(LOGGER::debug, "Sending request to {}: args '{}'", method.getName(), argsToString(args));
+                //assert not UI thread, should never happen.
+                //noinspection UnstableApiUsage
+                ApplicationManager.getApplication().assertIsNonDispatchThread();
+
+
+                if (LOGGER.isTraceEnabled()) {
+                    Log.log(LOGGER::trace, "Sending request to {}: args '{}'", method.getName(), argsToString(args));
                 }
 
                 Object result;
@@ -476,7 +522,10 @@ public class AnalyticsService implements Disposable {
                     result = method.invoke(analyticsProvider, args);
                 }
 
-                Log.test(LOGGER, "Result = '{}'", resultToString(result));
+                if (LOGGER.isTraceEnabled()) {
+                    Log.log(LOGGER::trace, "Got response from {}: args '{}', -----------------" +
+                            "Result '{}'", method.getName(), argsToString(args), resultToString(result));
+                }
 
                 if (!PersistenceService.getInstance().getState().getFirstTimeConnectionEstablished()) {
                     Log.test(LOGGER, "Calling ActivityMonitor.getInstance(project).registerFirstConnectionEstablished()");
@@ -504,6 +553,14 @@ public class AnalyticsService implements Disposable {
 
             } catch (InvocationTargetException e) {
 
+                //some methods may fail due to missing endpoint or some other technical issue that
+                // is known. these methods should not impact the connection status or mark connectionLost.
+                //so just throw an exception, code that calls these methods should be ready for AnalyticsServiceException.
+                if (methodsToIgnoreExceptions.contains(method.getName())){
+                    Log.warnWithException(LOGGER,e, "failed executing method {}",method);
+                    throw new AnalyticsServiceException(e);
+                }
+
                 //Note: when logging LOGGER.error idea will pop up a red message which we don't want, so only report warn messages.
 
                 //handle only InvocationTargetException, other exceptions are probably a bug.
@@ -518,13 +575,13 @@ public class AnalyticsService implements Disposable {
 
             } catch (Exception e) {
                 errorReportingHelper.addIfNewError(e);
-                Log.log(LOGGER::debug, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getMessage());
+                Log.log(LOGGER::warn, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getMessage());
                 LOGGER.error(e);
                 ActivityMonitor.getInstance(project).registerError(e, "Error invoking AnalyticsProvider");
                 throw e;
             } finally {
                 stopWatch.stop();
-                Log.log(LOGGER::debug, "Api call {} took {} milliseconds", method.getName(), stopWatch.getTime(TimeUnit.MILLISECONDS));
+                Log.log(LOGGER::trace, "Api call {} took {} milliseconds", method.getName(), stopWatch.getTime(TimeUnit.MILLISECONDS));
             }
         }
 
@@ -577,14 +634,14 @@ public class AnalyticsService implements Disposable {
 
 
         private boolean isConnectionOK(){
-            return true;
+            return !myConnectionLostFlag.get();
         }
 
 
         private void resetConnectionLostAndNotifyIfNecessary() {
 
 
-            Log.log(LOGGER::debug, "resetConnectionLostAndNotifyIfNecessary called");
+            Log.log(LOGGER::trace, "resetConnectionLostAndNotifyIfNecessary called");
 
             //this is the critical section of the race condition, there is a performance penalty
             // for the locking , and if we recover from exception then also for the notification,
@@ -595,20 +652,21 @@ public class AnalyticsService implements Disposable {
             try{
                 //if connection is ok do nothing.
                 if (isConnectionOK()){
-                    Log.log(LOGGER::debug, "resetConnectionLostAndNotifyIfNecessary called, connection ok nothing to do.");
+                    Log.log(LOGGER::trace, "resetConnectionLostAndNotifyIfNecessary called, connection ok nothing to do.");
                     return;
                 }
                 Log.log(LOGGER::info, "acquiring lock to reset connection status after connection lost");
                 myConnectionLostLock.lock();
                 if (myConnectionLostFlag.get()) {
-                    Log.log(LOGGER::info, "resetting connection status after connection lost");
+                    Log.log(LOGGER::warn, "resetting connection status after connection lost");
                     myConnectionLostFlag.set(false);
                     errorReportingHelper.reset();
                     myConnectionStatusNotifyAlarm.cancelAllRequests();
 
                     myConnectionStatusNotifyAlarm.addRequest(() -> {
-                        Log.log(LOGGER::info, "notifying connectionGained");
+                        Log.log(LOGGER::warn, "notifying connectionGained");
                         project.getMessageBus().syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC).connectionGained();
+                        ActivityMonitor.getInstance(project).registerConnectionGained();
                     },500);
 
 
@@ -624,30 +682,30 @@ public class AnalyticsService implements Disposable {
 
         private void markConnectionLostAndNotify() {
 
-            Log.log(LOGGER::debug, "markConnectionLostAndNotify called");
+            Log.log(LOGGER::warn, "markConnectionLostAndNotify called");
 
             //this is the second critical section of the race condition,
             // we are in error state so the performance penalty of locking is insignificant.
             try {
-                Log.log(LOGGER::info, "acquiring lock to mark connection lost");
+                Log.log(LOGGER::warn, "acquiring lock to mark connection lost");
                 myConnectionLostLock.lock();
                 //only mark and fire the event if connection is ok, avoid firing the event more than once.
                 // this code block should be as fast as possible.
                 if (isConnectionOK()) {
-                    Log.log(LOGGER::info, "marking connection lost");
+                    Log.log(LOGGER::warn, "marking connection lost");
                     myConnectionLostFlag.set(true);
 
                     //must notify BackendConnectionMonitor immediately and not on background thread, the main reason is
                     // that on startup it must be notified immediately before starting to create UI components
                     // it will also catch the connection lost event
-                    project.getService(BackendConnectionMonitor.class).connectionLost();
+                    BackendConnectionMonitor.getInstance(project).connectionLost();
 
                     //wait half a second because maybe the connection lost is momentary, and it will be back
                     // very soon
                     myConnectionStatusNotifyAlarm.cancelAllRequests();
                     myConnectionStatusNotifyAlarm
                             .addRequest(() -> {
-                                Log.log(LOGGER::info, "notifying connectionLost");
+                                Log.log(LOGGER::warn, "notifying connectionLost");
                                 project.getMessageBus().syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC).connectionLost();
                             }, 500);
                 }
@@ -716,18 +774,6 @@ public class AnalyticsService implements Disposable {
             return e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
         }
 
-
-        private String getExceptionMessage(InvocationTargetException e) {
-            var ex = e.getCause();
-            while (ex != null && !(ex instanceof AnalyticsProviderException)) {
-                ex = ex.getCause();
-            }
-            if (ex != null) {
-                return ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage();
-            }
-
-            return e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
-        }
 
 
         private String resultToString(Object result) {

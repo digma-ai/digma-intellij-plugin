@@ -27,6 +27,7 @@ open class PersistenceService : PersistentStateComponent<PersistenceData> {
         }
     }
 
+
     // the component will always keep our state as a variable
     private var myPersistenceData: PersistenceData = PersistenceData()
 
@@ -39,4 +40,30 @@ open class PersistenceService : PersistentStateComponent<PersistenceData> {
     override fun loadState(state: PersistenceData) {
         myPersistenceData = state
     }
+
+    fun firstWizardLaunchDone() {
+        state.firstWizardLaunch = false
+    }
+
+    fun isFirstWizardLaunch(): Boolean {
+        return state.firstWizardLaunch
+    }
+
+    fun isLocalEngineInstalled(): Boolean? {
+        return state.isLocalEngineInstalled
+    }
+
+    fun setLocalEngineInstalled(isInstalled: Boolean) {
+        state.isLocalEngineInstalled = isInstalled
+    }
+
+    fun isFirstTimePluginLoaded(): Boolean {
+        return state.isFirstTimePluginLoaded
+    }
+
+    fun setFirstTimePluginLoaded() {
+        state.isFirstTimePluginLoaded = true
+    }
+
+
 }

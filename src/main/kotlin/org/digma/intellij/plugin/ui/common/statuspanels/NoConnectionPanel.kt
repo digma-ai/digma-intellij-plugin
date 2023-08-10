@@ -83,7 +83,7 @@ fun createNoConnectionPanel(project: Project, parentDisposable: Disposable):JPan
     val setupLink = ActionLink("Set-up Digma"){
         ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.NoConnection, "set-up")
         EDT.ensureEDT{
-            MainToolWindowCardsController.getInstance(project).showWizard()
+            MainToolWindowCardsController.getInstance(project).showWizard(false)
             ToolWindowShower.getInstance(project).showToolWindow()
         }
     }

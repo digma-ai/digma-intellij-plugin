@@ -1,10 +1,13 @@
 package org.digma.intellij.plugin.recentactivity;
 
 import com.intellij.execution.runners.ExecutionUtil;
+import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ApplicationNamesInfo;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.ui.content.Content;
@@ -17,21 +20,26 @@ import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.browser.CefMessageRouter;
 import org.cef.callback.CefQueryCallback;
+import org.cef.handler.CefLifeSpanHandlerAdapter;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
 import org.digma.intellij.plugin.PluginId;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
+import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.CommonUtils;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator;
 import org.digma.intellij.plugin.common.JsonUtils;
+import org.digma.intellij.plugin.docker.DockerService;
 import org.digma.intellij.plugin.document.CodeObjectsUtil;
 import org.digma.intellij.plugin.icons.AppIcons;
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator;
-import org.digma.intellij.plugin.jaegerui.JaegerUIService;
 import org.digma.intellij.plugin.jcef.common.CustomSchemeHandlerFactory;
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil;
+import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils;
+import org.digma.intellij.plugin.jcef.common.JCefTemplateUtils;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.rest.jcef.common.OpenInBrowserRequest;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityEntrySpanForTracePayload;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityEntrySpanPayload;
@@ -43,6 +51,7 @@ import org.digma.intellij.plugin.navigation.HomeSwitcherService;
 import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper;
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
+import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.posthog.MonitoredPanel;
 import org.digma.intellij.plugin.recentactivity.incoming.CloseLiveViewMessage;
@@ -51,6 +60,7 @@ import org.digma.intellij.plugin.recentactivity.outgoing.JaegerUrlChangedRequest
 import org.digma.intellij.plugin.recentactivity.outgoing.LiveDataMessage;
 import org.digma.intellij.plugin.recentactivity.outgoing.LiveDataPayload;
 import org.digma.intellij.plugin.settings.SettingsState;
+import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt;
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier;
@@ -69,7 +79,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import static org.digma.intellij.plugin.common.EnvironmentUtilKt.LOCAL_ENV;
+import static org.digma.intellij.plugin.common.EnvironmentUtilKt.LOCAL_TESTS_ENV;
 import static org.digma.intellij.plugin.common.EnvironmentUtilKt.SUFFIX_OF_LOCAL;
+import static org.digma.intellij.plugin.common.EnvironmentUtilKt.SUFFIX_OF_LOCAL_TESTS;
 import static org.digma.intellij.plugin.common.EnvironmentUtilKt.getSortedEnvironments;
 import static org.digma.intellij.plugin.jcef.common.JCefMessagesUtils.GLOBAL_SET_IS_JAEGER_ENABLED;
 import static org.digma.intellij.plugin.jcef.common.JCefMessagesUtils.RECENT_ACTIVITY_CLOSE_LIVE_VIEW;
@@ -90,8 +102,17 @@ public class RecentActivityService implements Disposable {
     private static final String RECENT_EXPIRATION_LIMIT_VARIABLE = "recentActivityExpirationLimit";
     private static final int FETCHING_LOOP_INTERVAL = 10 * 1000; // 10sec
     private static final Icon icon = AppIcons.TOOL_WINDOW_OBSERVABILITY;
-    private static final Logger logger = Logger.getInstance(RecentActivityService.class);
 
+    private static final String ENV_VARIABLE_IDE = "ide";
+    private static final String USER_EMAIL_VARIABLE = "userEmail";
+    private static final String IS_OBSERVABILITY_ENABLED_VARIABLE = "isObservabilityEnabled";
+    private static final String IS_DOCKER_INSTALLED = "isDockerInstalled";
+    private static final String IS_DOCKER_COMPOSE_INSTALLED = "isDockerComposeInstalled";
+    private static final String IS_DIGMA_ENGINE_INSTALLED = "isDigmaEngineInstalled";
+    private static final String IS_DIGMA_ENGINE_RUNNING = "isDigmaEngineRunning";
+    private static final String IS_JAEGER_ENABLED = "isJaegerEnabled";
+
+    private final Logger logger = Logger.getInstance(RecentActivityService.class);
     private final Icon iconWithGreenDot = ExecutionUtil.getLiveIndicator(icon);
     private final String localHostname;
     private final Project project;
@@ -109,10 +130,7 @@ public class RecentActivityService implements Disposable {
     private boolean webAppInitialized;
 
     public static RecentActivityService getInstance(Project project) {
-        Log.test(logger, "Getting instance of {}", RecentActivityService.class.getSimpleName());
-        RecentActivityService service = project.getService(RecentActivityService.class);
-        Log.test(logger, "Returning {}", RecentActivityService.class.getSimpleName());
-        return service;
+        return project.getService(RecentActivityService.class);
     }
 
     public RecentActivityService(Project project) {
@@ -122,7 +140,6 @@ public class RecentActivityService implements Disposable {
         this.analyticsService = project.getService(AnalyticsService.class);
         this.localHostname = CommonUtils.getLocalHostname();
         this.latestActivityResult = new RecentActivityResult(null, new ArrayList<>());
-        Log.log(logger::warn, "Finished {} initialization", RecentActivityService.class.getSimpleName());
     }
 
     public void startFetchingActivities() {
@@ -148,17 +165,40 @@ public class RecentActivityService implements Disposable {
         var contentFactory = ContentFactory.getInstance();
 
         jbCefBrowser = JBCefBrowserBuilderCreator.create()
-                .setUrl("https://"+RESOURCE_FOLDER_NAME+"/index.html")
+                .setUrl("https://" + RESOURCE_FOLDER_NAME + "/index.html")
                 .build();
 
-        var indexTemplateData = new HashMap<String,Object>();
-        indexTemplateData.put(RECENT_EXPIRATION_LIMIT_VARIABLE, RECENT_EXPIRATION_LIMIT_MILLIS);
-        CefApp.getInstance()
-                .registerSchemeHandlerFactory(
-                        "https",
-                        RESOURCE_FOLDER_NAME,
-                        new CustomSchemeHandlerFactory(RESOURCE_FOLDER_NAME,indexTemplateData)
-                );
+        var data = new HashMap<String, Object>();
+        JCefTemplateUtils.addCommonEnvVariables(data);
+        data.put(RECENT_EXPIRATION_LIMIT_VARIABLE, RECENT_EXPIRATION_LIMIT_MILLIS);
+
+        data.put(ENV_VARIABLE_IDE, ApplicationNamesInfo.getInstance().getProductName());
+        data.put(IS_JAEGER_ENABLED, JaegerUtilKt.isJaegerButtonEnabled());
+        var userEmail = PersistenceService.getInstance().getState().getUserEmail();
+        data.put(USER_EMAIL_VARIABLE, userEmail == null ? "" : userEmail);
+        data.put(IS_OBSERVABILITY_ENABLED_VARIABLE, PersistenceService.getInstance().getState().isAutoOtel());
+        data.put(IS_DIGMA_ENGINE_INSTALLED, ApplicationManager.getApplication().getService(DockerService.class).isEngineInstalled());
+        data.put(IS_DIGMA_ENGINE_RUNNING, ApplicationManager.getApplication().getService(DockerService.class).isEngineRunning(project));
+        data.put(IS_DOCKER_INSTALLED, ApplicationManager.getApplication().getService(DockerService.class).isDockerInstalled());
+        data.put(IS_DOCKER_COMPOSE_INSTALLED, ApplicationManager.getApplication().getService(DockerService.class).isDockerInstalled());
+
+
+        var lifeSpanHandler = new CefLifeSpanHandlerAdapter() {
+            @Override
+            public void onAfterCreated(CefBrowser browser) {
+                CefApp.getInstance()
+                        .registerSchemeHandlerFactory(
+                                "https",
+                                RESOURCE_FOLDER_NAME,
+                                new CustomSchemeHandlerFactory(RESOURCE_FOLDER_NAME, data)
+                        );
+            }
+        };
+
+        jbCefBrowser.getJBCefClient().addLifeSpanHandler(lifeSpanHandler, jbCefBrowser.getCefBrowser());
+
+        Disposer.register(this, () -> jbCefBrowser.getJBCefClient().removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.getCefBrowser()));
+
         jbCefBrowser.getCefBrowser().setFocus(true);
 
         JBCefClient jbCefClient = jbCefBrowser.getJBCefClient();
@@ -166,37 +206,51 @@ public class RecentActivityService implements Disposable {
         msgRouter = CefMessageRouter.create();
 
 
-        SettingsState.getInstance().addChangeListener(settingsState1 -> sendRequestToChangeTraceButtonDisplaying(jbCefBrowser),this);
+        SettingsState.getInstance().addChangeListener(settingsState1 -> sendRequestToChangeTraceButtonDisplaying(jbCefBrowser), this);
 
         msgRouter.addHandler(new CefMessageRouterHandlerAdapter() {
             @Override
             public boolean onQuery(CefBrowser browser, CefFrame frame, long queryId, String request, boolean persistent, CefQueryCallback callback) {
-                Log.log(logger::debug, "request: {}", request);
-                JcefMessageRequest reactMessageRequest = parseJsonToObject(request, JcefMessageRequest.class);
-                if (RECENT_ACTIVITY_INITIALIZE.equalsIgnoreCase(reactMessageRequest.getAction())) {
-                    processRecentActivityInitialized();
-                    RecentActivityService.getInstance(project).runInitTask();
-                }
-                if (RECENT_ACTIVITY_GO_TO_SPAN.equalsIgnoreCase(reactMessageRequest.getAction())) {
-                    RecentActivityGoToSpanRequest recentActivityGoToSpanRequest = parseJsonToObject(request, RecentActivityGoToSpanRequest.class);
-                    processRecentActivityGoToSpanRequest(recentActivityGoToSpanRequest.getPayload(), project);
-                }
-                if (RECENT_ACTIVITY_GO_TO_TRACE.equalsIgnoreCase(reactMessageRequest.getAction())) {
-                    ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.RecentActivity, traceButtonName);
-                    RecentActivityGoToTraceRequest recentActivityGoToTraceRequest = parseJsonToObject(request, RecentActivityGoToTraceRequest.class);
-                    processRecentActivityGoToTraceRequest(recentActivityGoToTraceRequest, project);
-                }
-                if (RECENT_ACTIVITY_CLOSE_LIVE_VIEW.equalsIgnoreCase(reactMessageRequest.getAction())) {
-                    try {
-                        CloseLiveViewMessage closeLiveViewMessage = JsonUtils.stringToJavaRecord(request, CloseLiveViewMessage.class);
-                        RecentActivityService.getInstance(project).liveViewClosed(closeLiveViewMessage);
-                    } catch (Exception e) {
-                        //we can't miss the close message because then the live view will stay open.
-                        // close the live view even if there is an error parsing the message.
-                        Log.debugWithException(logger, project, e, "Exception while parsing CloseLiveViewMessage {}", e.getMessage());
-                        RecentActivityService.getInstance(project).liveViewClosed(null);
+
+                Backgroundable.runInNewBackgroundThread(project, "recent activity request", () -> {
+                    Log.log(logger::trace, "request: {}", request);
+                    JcefMessageRequest reactMessageRequest = parseJsonToObject(request, JcefMessageRequest.class);
+                    if (RECENT_ACTIVITY_INITIALIZE.equalsIgnoreCase(reactMessageRequest.getAction())) {
+                        processRecentActivityInitialized();
+                        RecentActivityService.getInstance(project).runInitTask();
                     }
-                }
+                    if (RECENT_ACTIVITY_GO_TO_SPAN.equalsIgnoreCase(reactMessageRequest.getAction())) {
+                        RecentActivityGoToSpanRequest recentActivityGoToSpanRequest = parseJsonToObject(request, RecentActivityGoToSpanRequest.class);
+                        processRecentActivityGoToSpanRequest(recentActivityGoToSpanRequest.getPayload(), project);
+                    }
+                    if (RECENT_ACTIVITY_GO_TO_TRACE.equalsIgnoreCase(reactMessageRequest.getAction())) {
+                        ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.RecentActivity, traceButtonName);
+                        RecentActivityGoToTraceRequest recentActivityGoToTraceRequest = parseJsonToObject(request, RecentActivityGoToTraceRequest.class);
+                        processRecentActivityGoToTraceRequest(recentActivityGoToTraceRequest, project);
+                    }
+                    if (RECENT_ACTIVITY_CLOSE_LIVE_VIEW.equalsIgnoreCase(reactMessageRequest.getAction())) {
+                        try {
+                            CloseLiveViewMessage closeLiveViewMessage = JsonUtils.stringToJavaRecord(request, CloseLiveViewMessage.class);
+                            RecentActivityService.getInstance(project).liveViewClosed(closeLiveViewMessage);
+                        } catch (Exception e) {
+                            //we can't miss the close message because then the live view will stay open.
+                            // close the live view even if there is an error parsing the message.
+                            Log.debugWithException(logger, project, e, "Exception while parsing CloseLiveViewMessage {}", e.getMessage());
+                            RecentActivityService.getInstance(project).liveViewClosed(null);
+                        }
+                    }
+                    if (JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER.equalsIgnoreCase(reactMessageRequest.getAction())) {
+                        OpenInBrowserRequest openBrowserRequest = JCefMessagesUtils.parseJsonToObject(request, OpenInBrowserRequest.class);
+                        if (openBrowserRequest != null && openBrowserRequest.getPayload() != null) {
+                            BrowserUtil.browse(openBrowserRequest.getPayload().getUrl());
+                        }
+                    }
+                    if (JCefMessagesUtils.GLOBAL_OPEN_TROUBLESHOOTING_GUIDE.equalsIgnoreCase(reactMessageRequest.getAction())) {
+                        EDT.ensureEDT(() -> MainToolWindowCardsController.getInstance(project).showTroubleshooting());
+
+                    }
+                });
+
 
                 callback.success("");
                 return true;
@@ -216,25 +270,22 @@ public class RecentActivityService implements Disposable {
         jcefDigmaPanel.add(browserPanel, BorderLayout.CENTER);
 
 
-
-
         ApplicationUISettingsChangeNotifier.getInstance(project).addSettingsChangeListener(new SettingsChangeListener() {
             @Override
             public void systemFontChange(@NotNull String fontName) {
-                JCefBrowserUtil.sendRequestToChangeFont(fontName,jbCefBrowser);
+                JCefBrowserUtil.sendRequestToChangeFont(fontName, jbCefBrowser);
             }
 
             @Override
             public void systemThemeChange(@NotNull Theme theme) {
-                JCefBrowserUtil.sendRequestToChangeUiTheme(theme,jbCefBrowser);
+                JCefBrowserUtil.sendRequestToChangeUiTheme(theme, jbCefBrowser);
             }
 
             @Override
             public void editorFontChange(@NotNull String fontName) {
-                JCefBrowserUtil.sendRequestToChangeCodeFont(fontName,jbCefBrowser);
+                JCefBrowserUtil.sendRequestToChangeCodeFont(fontName, jbCefBrowser);
             }
         });
-
 
 
         return contentFactory.createContent(jcefDigmaPanel, null, false);
@@ -262,7 +313,6 @@ public class RecentActivityService implements Disposable {
 
                 var spanId = payload.getSpan().getSpanCodeObjectId();
                 var methodId = payload.getSpan().getMethodCodeObjectId();
-                ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.RecentActivity);
 
                 var canNavigate = project.getService(CodeNavigator.class).canNavigateToSpanOrMethod(spanId, methodId);
                 if (canNavigate) {
@@ -283,6 +333,8 @@ public class RecentActivityService implements Disposable {
                         project.getService(InsightsViewOrchestrator.class).showInsightsForCodelessSpan(payload.getSpan().getSpanCodeObjectId());
                     }));
                 }
+
+                ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.RecentActivity, canNavigate);
             });
         }
     }
@@ -310,6 +362,11 @@ public class RecentActivityService implements Disposable {
         }
 
         if (recentActivityData != null) {
+            if (!PersistenceService.getInstance().getState().getFirstTimeRecentActivityReceived() && !recentActivityData.getEntries().isEmpty()) {
+                ActivityMonitor.getInstance(project).registerFirstTimeRecentActivityReceived();
+                PersistenceService.getInstance().getState().setFirstTimeRecentActivityReceived(true);
+            }
+
             latestActivityResult = recentActivityData;
 
             // Tool window may not be opened yet
@@ -364,12 +421,22 @@ public class RecentActivityService implements Disposable {
     }
 
     private String getAdjustedEnvName(String environment) {
-        return environment.toUpperCase().endsWith(SUFFIX_OF_LOCAL) ? LOCAL_ENV : environment;
+        String envUcase = environment.toUpperCase();
+
+        if (envUcase.endsWith(SUFFIX_OF_LOCAL))
+            return LOCAL_ENV;
+        if (envUcase.endsWith(SUFFIX_OF_LOCAL_TESTS))
+            return LOCAL_TESTS_ENV;
+
+        return environment;
     }
 
     private String adjustBackEnvNameIfNeeded(String environment) {
         if (environment.equalsIgnoreCase(LOCAL_ENV)) {
             return (localHostname + SUFFIX_OF_LOCAL).toUpperCase();
+        }
+        if (environment.equalsIgnoreCase(LOCAL_TESTS_ENV)) {
+            return (localHostname + SUFFIX_OF_LOCAL_TESTS).toUpperCase();
         }
         return environment;
     }
@@ -412,7 +479,7 @@ public class RecentActivityService implements Disposable {
 
         if (jbCefBrowser == null) {
             Log.log(logger::debug, project, "jbCefBrowser is not initialized, calling showToolWindow");
-            RecentActivityToolWindowShower.getInstance(project).showToolWindow();
+
             //ugly hack for initialization when RECENT_ACTIVITY_INITIALIZE message is sent.
             // if the recent activity window was not yet initialized then we need to send the live data only after
             // RECENT_ACTIVITY_INITIALIZE message is sent.
@@ -422,6 +489,9 @@ public class RecentActivityService implements Disposable {
                     sendLiveDataImpl(durationLiveData);
                 }
             };
+
+            RecentActivityToolWindowShower.getInstance(project).showToolWindow();
+
         } else {
             RecentActivityToolWindowShower.getInstance(project).showToolWindow();
             sendLiveDataImpl(durationLiveData);
@@ -529,7 +599,6 @@ public class RecentActivityService implements Disposable {
         if (jbCefBrowser != null)
             jbCefBrowser.dispose();
     }
-
 
 
     private abstract static class MyInitTask implements Runnable {

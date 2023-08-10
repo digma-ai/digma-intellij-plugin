@@ -24,14 +24,14 @@ class AssetsSchemeHandlerFactory implements CefSchemeHandlerFactory {
         if (url != null) {
             var host = url.getHost();
             var file = url.getFile();
-            if (AssetsPanel.DOMAIN_NAME.equals(host) &&
-                    AssetsPanel.SCHEMA_NAME.equals(schemeName)) {
-                var resourceName = AssetsPanel.RESOURCE_FOLDER_NAME + file;
+            if (AssetsService.DOMAIN_NAME.equals(host) &&
+                    AssetsService.SCHEMA_NAME.equals(schemeName)) {
+                var resourceName = AssetsService.RESOURCE_FOLDER_NAME + file;
                 var resource = getClass().getResource(resourceName);
                 if (resource != null) {
                     return new AssetsResourceHandler(project, resourceName);
                 } else {
-                    return new AssetsResourceHandler(project, AssetsPanel.RESOURCE_FOLDER_NAME + "/index.html");
+                    return new AssetsResourceHandler(project, AssetsService.RESOURCE_FOLDER_NAME + "/index.html");
                 }
             }
         }

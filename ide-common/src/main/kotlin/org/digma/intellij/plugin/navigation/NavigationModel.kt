@@ -26,6 +26,10 @@ class NavigationModel(private val project: Project) {
                 showCodeNavigation.set(true)
             }
 
+            MethodFromBackNavigation -> {
+                showCodeNavigation.set(true)
+            }
+
             MethodFromSourceCode,
             SpanOrMethodWithNavigation,
             DummyMethod,

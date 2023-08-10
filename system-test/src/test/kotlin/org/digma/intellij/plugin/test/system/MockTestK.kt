@@ -7,7 +7,6 @@ import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.psi.JavaRecursiveElementVisitor
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
-import com.intellij.refactoring.suggested.startOffset
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase
 import junit.framework.TestCase
 import kotlinx.coroutines.delay

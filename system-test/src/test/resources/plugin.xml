@@ -44,7 +44,7 @@
         <projectService serviceImplementation="org.digma.intellij.plugin.service.EditorInteractionService"
                         serviceInterface="org.digma.intellij.plugin.ui.CaretContextService"/>
 
-<!--        <projectService serviceImplementation="org.digma.intellij.plugin.analytics.AnalyticsService"/>-->
+        <projectService serviceImplementation="org.digma.intellij.plugin.analytics.AnalyticsService"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.document.DocumentInfoService"/>
 
@@ -74,9 +74,9 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.common.DumbAwareNotifier"/>
 
-<!--        <projectService serviceImplementation="org.digma.intellij.plugin.analytics.BackendConnectionMonitor"/>-->
+        <projectService serviceImplementation="org.digma.intellij.plugin.analytics.BackendConnectionMonitor"/>
 
-<!--        <projectService serviceImplementation="org.digma.intellij.plugin.analytics.BackendConnectionUtil"/>-->
+        <projectService serviceImplementation="org.digma.intellij.plugin.analytics.BackendConnectionUtil"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.psi.LanguageServiceLocator"/>
 

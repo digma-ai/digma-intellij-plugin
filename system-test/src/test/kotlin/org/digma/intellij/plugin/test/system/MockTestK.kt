@@ -40,7 +40,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
 
     private val logger = Logger.getInstance(MockTestK::class.java)
     private lateinit var analyticsProviderProxyMock: AnalyticsProvider
-    private lateinit var analyticsProvider: RestAnalyticsProvider
+//    private lateinit var analyticsProvider: RestAnalyticsProvider
     private val analyticsService: AnalyticsService
         get() {
             return AnalyticsService.getInstance(project)
@@ -59,9 +59,8 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
         Log.test(logger, "Mocking AnalyticsProvider")
 
 
-        val mock = prepareMock()
-        analyticsProviderProxyMock = mock
-        analyticsProvider = mock
+        analyticsProviderProxyMock = prepareMock()
+//        analyticsProvider = mock
 
     }
 
@@ -82,11 +81,11 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
 
     private fun prepareMock(): RestAnalyticsProvider {
         val mock = mock(RestAnalyticsProvider::class.java)
-        val field = analyticsService.javaClass.getDeclaredField("analyticsProvider")
+//        val field = analyticsService.javaClass.getDeclaredField("analyticsProvider")
         val proxyField = analyticsService.javaClass.getDeclaredField("analyticsProviderProxy")
-        field.isAccessible = true
+//        field.isAccessible = true
         proxyField.isAccessible = true
-        field.set(analyticsService, mock)
+//        field.set(analyticsService, mock)
         proxyField.set(analyticsService, mock)
         mockGetEnvironments(mock)
         mockGetAbout(mock)

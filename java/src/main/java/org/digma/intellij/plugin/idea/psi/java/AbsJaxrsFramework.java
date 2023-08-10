@@ -8,10 +8,10 @@ import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.SearchScope;
-import com.intellij.psi.search.searches.AllClassesSearch;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.util.Query;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
@@ -110,10 +110,17 @@ public abstract class AbsJaxrsFramework implements IEndpointDiscovery {
         return jaxrsPathAnnotationClass != null;
     }
 
-    protected List<EndpointInfo> getEndpointsOfFile(@NotNull SearchScope searchScope) {
+    /**
+     * overriding, since AllClassesSearch.search doesn't work at version 2023.1.x
+     */
+    @Override
+    public List<EndpointInfo> lookForEndpoints(@NotNull PsiFile psiFile) {
         final List<EndpointInfo> retList = new ArrayList<>();
 
-        Query<PsiClass> allClassesInFile = AllClassesSearch.search(searchScope, project);
+        // Query<PsiClass> allClassesInFile = AllClassesSearch.search(searchScope, project); // bug at version 2023.1.x. at version 2023.2 it works
+        List<PsiClass> allClassesInFile = JavaPsiUtils.getClassesWithin(psiFile);
+        //System.out.println("allClassesInFile = " + allClassesInFile + ", psiFile=" + psiFile);
+
         for (PsiClass currClass : allClassesInFile) {
             final Set<String> appPaths = evaluateApplicationPaths(currClass);
             final PsiAnnotation controllerPathAnnotation = JavaPsiUtils.findNearestAnnotation(currClass, JAX_RS_PATH_ANNOTATION_STR());
@@ -145,7 +152,13 @@ public abstract class AbsJaxrsFramework implements IEndpointDiscovery {
         return retList;
     }
 
-    protected List<EndpointInfo> getEndpointsOfOtherScope(SearchScope searchScope) {
+    @Override
+    public List<EndpointInfo> lookForEndpoints(@NotNull SearchScope searchScope) {
+        lateInit();
+        if (!isJaxRsHttpRelevant()) {
+            return Collections.emptyList();
+        }
+
         List<EndpointInfo> retList = new ArrayList<>();
 
         Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(jaxrsPathAnnotationClass, searchScope);
@@ -209,20 +222,6 @@ public abstract class AbsJaxrsFramework implements IEndpointDiscovery {
         }
 
         return appPaths;
-    }
-
-    @Override
-    public List<EndpointInfo> lookForEndpoints(@NotNull SearchScope searchScope, boolean isFileScope) {
-        lateInit();
-        if (!isJaxRsHttpRelevant()) {
-            return Collections.emptyList();
-        }
-
-        if (isFileScope) {
-            return getEndpointsOfFile(searchScope);
-        } else {
-            return getEndpointsOfOtherScope(searchScope);
-        }
     }
 
     protected static String combinePaths(PsiAnnotation annotOfPrefix, PsiAnnotation annotOfSuffix) {

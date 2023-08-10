@@ -9,15 +9,19 @@ import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.util.RunnableCallable;
 import com.intellij.util.concurrency.NonUrgentExecutor;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
+import org.digma.intellij.plugin.psi.PsiFileNotFountException;
+import org.digma.intellij.plugin.psi.PsiUtils;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -68,7 +72,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
             buildLock.lock();
             try {
                 Log.log(LOGGER::info, "Building endpoint navigation");
-                buildEndpointAnnotations(GlobalSearchScope.projectScope(project), false);
+                buildEndpointAnnotations(GlobalSearchScope.projectScope(project));
 
                 //trigger a refresh after endpoint navigation is built. this is necessary because the insights and errors
                 //views may be populated before endpoint navigation is ready and endpoints links can not be built.
@@ -85,12 +89,39 @@ public class JavaEndpointNavigationProvider implements Disposable {
 
     }
 
-    private void buildEndpointAnnotations(@NotNull SearchScope searchScope, boolean isFileScope) {
+    private void buildEndpointAnnotations(@NotNull SearchScope searchScope) {
         var javaLanguageService = project.getService(JavaLanguageService.class);
         var endpointDiscoveries = javaLanguageService.getListOfEndpointDiscovery();
 
         endpointDiscoveries.forEach(endpointDiscovery -> {
-            var endpointInfos = endpointDiscovery.lookForEndpoints(searchScope, isFileScope);
+            var endpointInfos = endpointDiscovery.lookForEndpoints(searchScope);
+            endpointInfos.forEach(endpointInfo -> {
+                addToMethodsMap(endpointInfo);
+            });
+        });
+    }
+
+    @Nullable
+    protected PsiFile getPsiFile(@NotNull VirtualFile virtualFile) {
+        final PsiFile psiFile;
+        try {
+            psiFile = PsiUtils.uriToPsiFile(virtualFile.getUrl(), project);
+        } catch (PsiFileNotFountException e) {
+            // very unlikely
+            return null;
+        }
+        return psiFile;
+    }
+
+    private void buildEndpointAnnotations(@NotNull VirtualFile virtualFile) {
+        final PsiFile psiFile = getPsiFile(virtualFile);
+        if (psiFile == null) return;
+
+        var javaLanguageService = project.getService(JavaLanguageService.class);
+        var endpointDiscoveries = javaLanguageService.getListOfEndpointDiscovery();
+
+        endpointDiscoveries.forEach(endpointDiscovery -> {
+            var endpointInfos = endpointDiscovery.lookForEndpoints(psiFile);
             endpointInfos.forEach(endpointInfo -> {
                 addToMethodsMap(endpointInfo);
             });
@@ -140,7 +171,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
                     //if file moved then removeDocumentEndpoints will not remove anything but building endpoint locations will
                     // override the entries anyway
                     removeDocumentEndpoint(virtualFile);
-                    buildEndpointAnnotations(GlobalSearchScope.fileScope(project, virtualFile), true);
+                    buildEndpointAnnotations(virtualFile);
                 } finally {
                     buildLock.unlock();
                 }

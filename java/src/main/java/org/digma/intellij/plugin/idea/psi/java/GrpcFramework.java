@@ -50,7 +50,7 @@ public class GrpcFramework implements IEndpointDiscovery {
     }
 
     @Override
-    public List<EndpointInfo> lookForEndpoints(@NotNull SearchScope searchScope, boolean isFileScope) {
+    public List<EndpointInfo> lookForEndpoints(@NotNull SearchScope searchScope) {
         lateInit();
         if (!isGrpcServerRelevant()) {
             return Collections.emptyList();

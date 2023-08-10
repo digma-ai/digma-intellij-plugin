@@ -77,7 +77,7 @@ public class MicronautFramework implements IEndpointDiscovery {
     }
 
     @Override
-    public List<EndpointInfo> lookForEndpoints(@NotNull SearchScope searchScope, boolean isFileScope) {
+    public List<EndpointInfo> lookForEndpoints(@NotNull SearchScope searchScope) {
         lateInit();
         if (!isMicronautHttpRelevant()) {
             return Collections.emptyList();

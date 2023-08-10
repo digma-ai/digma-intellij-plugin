@@ -13,7 +13,12 @@ import java.util.Objects;
 
 public interface IEndpointDiscovery {
 
-    List<EndpointInfo> lookForEndpoints(@NotNull SearchScope searchScope, boolean isFileScope);
+    List<EndpointInfo> lookForEndpoints(@NotNull SearchScope searchScope);
+
+    // using this method, since JAX-RS going to override it since AllClassesSearch.search won't work in version 2023.1.x
+    default List<EndpointInfo> lookForEndpoints(@NotNull PsiFile psiFile) {
+        return lookForEndpoints(GlobalSearchScope.fileScope(psiFile));
+    }
 
     default void endpointDiscovery(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
         List<EndpointInfo> endpointInfos = lookForEndpoints(GlobalSearchScope.fileScope(psiFile), true);

@@ -112,6 +112,7 @@ public abstract class AbsJaxrsFramework implements IEndpointDiscovery {
 
     /**
      * overriding, since AllClassesSearch.search doesn't work at version 2023.1.x
+     * please follow issue https://youtrack.jetbrains.com/issue/IDEA-328048
      */
     @Override
     public List<EndpointInfo> lookForEndpoints(@NotNull PsiFile psiFile) {
@@ -122,7 +123,7 @@ public abstract class AbsJaxrsFramework implements IEndpointDiscovery {
 
         final List<EndpointInfo> retList = new ArrayList<>();
 
-        // Query<PsiClass> allClassesInFile = AllClassesSearch.search(searchScope, project); // bug at version 2023.1.x. at version 2023.2 it works
+//         Query<PsiClass> allClassesInFile = AllClassesSearch.search(searchScope, project); // bug at version 2023.1.x. at version 2023.2 it works
         List<PsiClass> allClassesInFile = JavaPsiUtils.getClassesWithin(psiFile);
         //System.out.println("allClassesInFile = " + allClassesInFile + ", psiFile=" + psiFile);
 

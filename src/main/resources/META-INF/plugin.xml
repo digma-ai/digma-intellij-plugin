@@ -85,8 +85,6 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.posthog.ActivityMonitor"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.posthog.PluginActivityMonitor"/>
-
         <projectService serviceImplementation="org.digma.intellij.plugin.updates.UpdatesService"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.recentactivity.RecentActivityService"/>

@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.posthog
 
 import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.project.Project
 import com.posthog.java.PostHog
@@ -19,11 +20,10 @@ import java.security.MessageDigest
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
-import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 
-class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
+class ActivityMonitor(project: Project) :Disposable {
 
     companion object {
         @JvmStatic
@@ -42,6 +42,8 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
     private var lastLensClick: LocalDateTime? = null
     private var lastInsightsViewed: HashSet<InsightType>? = null
     private var lastConnectionErrorTime: Instant = Instant.MIN
+
+    private val settingsChangeTracker = SettingsChangeTracker()
 
     init {
         val hostname = CommonUtils.getLocalHostname()
@@ -77,6 +79,14 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
 
         ConnectionActivityMonitor.loadInstance(project)
         PluginActivityMonitor.loadInstance(project)
+
+        settingsChangeTracker.start(this)
+
+    }
+
+
+    override fun dispose() {
+        //nothing to do, used as parent disposable
     }
 
 //    override fun run() {
@@ -357,6 +367,11 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
         return userId
     }
 
+    fun registerPluginDisabled(): String {
+        postHog?.capture(userId, "plugin disabled")
+        return userId
+    }
+
     fun registerServerInfo(serverInfo: AboutResult) {
         postHog?.set(
             userId,
@@ -444,6 +459,17 @@ class ActivityMonitor(project: Project) /*: Runnable, Disposable*/ {
             )
         )
     }
+
+
+
+    fun registerSettingsEvent(eventName: String, eventDetails: Map<String, Any>) {
+        postHog?.capture(
+            userId,
+            "Settings.".plus(eventName),
+            eventDetails
+        )
+    }
+
 
 //    override fun dispose() {
 //        try {

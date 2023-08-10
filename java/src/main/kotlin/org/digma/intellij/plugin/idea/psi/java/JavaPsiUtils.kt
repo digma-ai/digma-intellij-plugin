@@ -44,14 +44,6 @@ class JavaPsiUtils {
         }
 
         @JvmStatic
-        @NotNull
-        fun getClassesWithin(psiFile: PsiFile): List<PsiClass> {
-            //it must be a PsiJavaFile so casting should be ok
-            val psiJavaFile = psiFile as PsiJavaFile
-            return psiJavaFile.classes.asList()
-        }
-
-        @JvmStatic
         @Nullable
         fun findNearestAnnotation(psiMethod: PsiMethod, annotationFqn: String): PsiAnnotation? {
             val annotClass = psiMethod.getAnnotation(annotationFqn)

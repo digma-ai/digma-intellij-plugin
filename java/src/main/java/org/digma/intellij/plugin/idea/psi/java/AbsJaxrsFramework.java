@@ -13,11 +13,13 @@ import com.intellij.psi.PsiMethod;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Query;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -111,8 +113,8 @@ public abstract class AbsJaxrsFramework implements IEndpointDiscovery {
     }
 
     /**
-     * overriding, since AllClassesSearch.search doesn't work at version 2023.1.x
-     * please follow issue https://youtrack.jetbrains.com/issue/IDEA-328048
+     * Overriding since have different logic,
+     * in this impl searching for classes/methods in file and see if they inherit from super classes which declare on @PATH annotations.
      */
     @Override
     public List<EndpointInfo> lookForEndpoints(@NotNull PsiFile psiFile) {
@@ -123,9 +125,8 @@ public abstract class AbsJaxrsFramework implements IEndpointDiscovery {
 
         final List<EndpointInfo> retList = new ArrayList<>();
 
-//         Query<PsiClass> allClassesInFile = AllClassesSearch.search(searchScope, project); // bug at version 2023.1.x. at version 2023.2 it works
-        List<PsiClass> allClassesInFile = JavaPsiUtils.getClassesWithin(psiFile);
-        //System.out.println("allClassesInFile = " + allClassesInFile + ", psiFile=" + psiFile);
+        Collection<PsiClass> allClassesInFile = PsiTreeUtil.findChildrenOfType(psiFile, PsiClass.class);
+        System.out.println("PsiTreeUtil: allClassesInFile = " + allClassesInFile + ", psiFile=" + psiFile);
 
         for (PsiClass currClass : allClassesInFile) {
             final Set<String> appPaths = evaluateApplicationPaths(currClass);

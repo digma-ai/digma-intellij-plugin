@@ -367,6 +367,11 @@ class ActivityMonitor(project: Project) :Disposable {
         return userId
     }
 
+    fun registerPluginDisabled(): String {
+        postHog?.capture(userId, "plugin disabled")
+        return userId
+    }
+
     fun registerServerInfo(serverInfo: AboutResult) {
         postHog?.set(
             userId,

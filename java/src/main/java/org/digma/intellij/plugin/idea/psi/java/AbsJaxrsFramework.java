@@ -115,6 +115,11 @@ public abstract class AbsJaxrsFramework implements IEndpointDiscovery {
      */
     @Override
     public List<EndpointInfo> lookForEndpoints(@NotNull PsiFile psiFile) {
+        lateInit();
+        if (!isJaxRsHttpRelevant()) {
+            return Collections.emptyList();
+        }
+
         final List<EndpointInfo> retList = new ArrayList<>();
 
         // Query<PsiClass> allClassesInFile = AllClassesSearch.search(searchScope, project); // bug at version 2023.1.x. at version 2023.2 it works

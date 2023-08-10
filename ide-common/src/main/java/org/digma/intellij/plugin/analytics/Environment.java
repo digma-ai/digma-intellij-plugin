@@ -269,7 +269,7 @@ public class Environment implements EnvironmentsSupplier {
         Log.test(LOGGER, "Firing environmentChanged for {}", newEnv);
         //run in new background thread so locks can be freed because this method is called under lock
         Backgroundable.runInNewBackgroundThread(project, "environmentChanged", () -> {
-            Log.test(LOGGER, "environmentChanged for {}", newEnv);
+            Log.test(LOGGER, "!!!!!!!!!!!!!environmentChanged for {}", newEnv);
             EnvironmentChanged publisher = project.getMessageBus().syncPublisher(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC);
             publisher.environmentChanged(newEnv, refreshInsightsView);
         });

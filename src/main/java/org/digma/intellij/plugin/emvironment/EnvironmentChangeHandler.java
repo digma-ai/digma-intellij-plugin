@@ -28,7 +28,6 @@ public class EnvironmentChangeHandler implements EnvironmentChanged {
     //when fired by the Environment object it is on background
     @Override
     public void environmentChanged(String newEnv, boolean refreshInsightsView) {
-
         //for all languages and IDEs documentInfoService needs to refresh its data
         documentInfoService.environmentChanged(newEnv);
 

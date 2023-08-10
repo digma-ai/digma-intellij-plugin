@@ -188,8 +188,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     @Override
     public AboutResult getAbout() {
         Log.test(LOGGER, "getAbout");
-        return new AboutResult("0.0.0", BackendDeploymentType.Unknown);
-//        return execute(() -> client.analyticsProvider.getAbout());
+//        return new AboutResult("0.0.0", BackendDeploymentType.Unknown);
+        return execute(() -> client.analyticsProvider.getAbout());
     }
 
     protected static String readEntire(ResponseBody responseBody) {

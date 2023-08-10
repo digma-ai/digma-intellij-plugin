@@ -127,7 +127,6 @@ public final class AssetsService implements Disposable {
     }
 
     public static AssetsService getInstance(Project project) {
-        Log.log(logger::warn, "Getting instance of " + AssetsService.class.getSimpleName());
         return project.getService(AssetsService.class);
     }
 

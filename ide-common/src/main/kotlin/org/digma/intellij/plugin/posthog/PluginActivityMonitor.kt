@@ -11,7 +11,6 @@ import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.log.Log
 
 class PluginActivityMonitor(private val project: Project) : PluginStateListener, Disposable {
     companion object {
@@ -19,9 +18,9 @@ class PluginActivityMonitor(private val project: Project) : PluginStateListener,
 
         @JvmStatic
         fun loadInstance(project: Project) {
-            Log.test(logger,"Getting instance of ${PluginActivityMonitor::class.simpleName}")
+            Log.test(LOGGER,"Getting instance of ${PluginActivityMonitor::class.simpleName}")
             project.getService(PluginActivityMonitor::class.java)
-            Log.test(logger,"Returning ${PluginActivityMonitor::class.simpleName}")
+            Log.test(LOGGER,"Returning ${PluginActivityMonitor::class.simpleName}")
         }
     }
 

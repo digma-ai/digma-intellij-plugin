@@ -12,6 +12,7 @@ import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import org.digma.intellij.plugin.ui.needToShowDurationChange
 import java.util.Collections
 import kotlin.math.abs
+import kotlin.math.max
 import kotlin.math.min
 
 class SummaryPanelList(project: Project, listViewItems: List<ListViewItem<*>>) : PanelList(project, Model(listViewItems)) {
@@ -106,7 +107,7 @@ class SummaryPanelList(project: Project, listViewItems: List<ListViewItem<*>>) :
             var diff = 0L
             change.percentiles.forEach {
                 if (it.previousDuration != null){
-                    diff = abs(it.previousDuration!!.raw - it.currentDuration.raw)
+                    diff = max(abs(it.previousDuration!!.raw - it.currentDuration.raw),diff)
                 }
             }
             return diff

@@ -22,7 +22,7 @@ private const val OTEL_AGENT_JAR_NAME = "opentelemetry-javaagent.jar"
 private const val DIGMA_AGENT_EXTENSION_JAR_NAME = "digma-otel-agent-extension.jar"
 
 
-@Service(Service.Level.APP)
+//Do not change to light service with annotation because this service is only necessary for java in idea
 class OTELJarProvider {
 
     private val logger: Logger = Logger.getInstance(this::class.java)

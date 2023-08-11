@@ -3,6 +3,7 @@ import common.properties
 
 plugins {
     id("java")
+    id("de.undercouch.download")
 }
 
 

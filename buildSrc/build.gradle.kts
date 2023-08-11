@@ -15,6 +15,7 @@ dependencies {
     implementation("org.jetbrains.intellij.plugins:gradle-intellij-plugin:1.14.1")
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.22")
     implementation("com.glovoapp.gradle:versioning:1.1.10")
+    implementation("de.undercouch:gradle-download-task:5.4.0")
 }
 
 

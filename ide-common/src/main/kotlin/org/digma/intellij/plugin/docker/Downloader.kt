@@ -2,48 +2,157 @@ package org.digma.intellij.plugin.docker
 
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.util.SystemProperties
-import com.intellij.util.download.DownloadableFileService
-import com.intellij.util.download.FileDownloader
+import org.digma.intellij.plugin.common.Retries
 import org.digma.intellij.plugin.log.Log
 import java.io.File
-import java.nio.file.Path
-import kotlin.io.path.exists
+import java.io.FileOutputStream
+import java.net.URL
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+import kotlin.io.path.deleteIfExists
 
-const val COMPOSE_FILE_URL = "https://get.digma.ai/"
-const val COMPOSE_FILE_NAME = "docker-compose.yml"
+private const val COMPOSE_FILE_URL = "https://get.digma.ai/"
+private const val COMPOSE_FILE_NAME = "docker-compose.yml"
+private const val COMPOSE_FILE_DIR = "digma-docker"
+private const val RESOURCE_LOCATION = "docker-compose"
 
 class Downloader {
 
     private val logger = Logger.getInstance(this::class.java)
 
-    var composeFile: Path? = null
+    private val downloadDir: File = File(System.getProperty("java.io.tmpdir"), COMPOSE_FILE_DIR)
+    val composeFile: File = File(downloadDir, COMPOSE_FILE_NAME)
+
+    init {
+        //this will happen on IDE start,
+        // DockerService is an application service so Downloader will be created once per application
+        unpackAndTryDownloadLatest()
+    }
+
+    private fun unpackAndTryDownloadLatest() {
+        unpack()
+        tryDownloadLatest()
+    }
 
 
-    fun downloadComposeFile(forceDownloadIfExists: Boolean = false): Boolean {
+    private fun unpack() {
+        Log.log(logger::info, "unpacking docker-compose.yml")
 
-        createComposeFilePath()
+        try {
+            ensureDirectoryExist()
 
-        if (composeFile == null) {
-            Log.log(logger::warn, "Could not create compose file path")
-            return false
+            if (downloadDir.exists()) {
+                copyFileFromResource()
+                Log.log(logger::info, "docker-compose.yml unpacked to {}", downloadDir)
+            }
+        } catch (e: Exception) {
+            Log.warnWithException(logger, e, "could not unpack docker-compose.yml.")
+        }
+    }
+
+
+    private fun ensureDirectoryExist() {
+        if (!downloadDir.exists()) {
+            if (!downloadDir.mkdirs()) {
+                Log.log(logger::warn, "could not create directory for docker-compose.yml {}", downloadDir)
+            }
+        }
+    }
+
+
+    private fun copyFileFromResource() {
+        val inputStream = this::class.java.getResourceAsStream("/$RESOURCE_LOCATION/$COMPOSE_FILE_NAME")
+        if (inputStream == null) {
+            Log.log(logger::warn, "could not find file in resource for {}", COMPOSE_FILE_NAME)
+            return
         }
 
-        if (composeFile!!.exists() && !forceDownloadIfExists) {
-            //val deleted = composeFile!!.toFile().delete()
-            //Log.log(logger::warn, "Deleted old compose file {}", deleted)
+        val outputStream = FileOutputStream(composeFile)
+        Log.log(logger::info, "unpacking {} to {}", COMPOSE_FILE_NAME, composeFile)
+        com.intellij.openapi.util.io.StreamUtil.copy(inputStream, outputStream)
+    }
+
+
+    private fun tryDownloadLatest() {
+
+        val runnable = Runnable {
+
+            try {
+                downloadNow()
+            } catch (e: Exception) {
+                Log.warnWithException(logger, e, "could not download latest compose file")
+            }
+        }
+
+        Thread(runnable).start()
+    }
+
+
+    private fun downloadNow() {
+        ensureDirectoryExist()
+        Log.log(logger::info, "trying to download latest compose file")
+        downloadAndCopyFile(URL(COMPOSE_FILE_URL), composeFile)
+    }
+
+    private fun downloadAndCopyFile(url: URL, toFile: File) {
+
+        val tempFile = kotlin.io.path.createTempFile("tempComposeFile", ".yml")
+
+        try {
+
+            Retries.simpleRetry({
+
+                Log.log(logger::info, "downloading {}", url)
+
+                val connection = url.openConnection()
+                connection.connectTimeout = 5000
+                connection.readTimeout = 5000
+
+                connection.getInputStream().use {
+                    Files.copy(it, tempFile, StandardCopyOption.REPLACE_EXISTING)
+                }
+
+                Log.log(logger::info, "copying downloaded file {} to {}", tempFile, toFile)
+                try {
+                    Files.move(tempFile, toFile.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
+                } catch (e: Exception) {
+                    //ATOMIC_MOVE is not always supported so try again on exception
+                    Files.move(tempFile, toFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                }
+
+            }, Throwable::class.java, 5000, 3)
+
+        } catch (e: Exception) {
+            Log.log(logger::warn, "could not download file {}, {}", url, e)
+        } finally {
+            tempFile.deleteIfExists()
+        }
+    }
+
+
+    fun downloadComposeFile(forceDownloadNow: Boolean = false): Boolean {
+
+        if (composeFile.exists() && !forceDownloadNow) {
             Log.log(logger::warn, "compose file already exists {}", composeFile)
             return true
         }
 
-        val downloadDir = composeFile!!.toFile().parentFile
+        if (composeFile.exists() && forceDownloadNow) {
+            Log.log(logger::warn, "compose file already exists but forcing download latest {}", composeFile)
+            downloadNow()
+            return true
+        }
 
-        val fileDesc = DownloadableFileService.getInstance().createFileDescription(COMPOSE_FILE_URL, COMPOSE_FILE_NAME)
+        //compose file does not exist, but we want to force download latest now, may be on first install
+        //or on upgrade
+        if (forceDownloadNow) {
+            unpack()
+            downloadNow()
+        } else {
+            unpackAndTryDownloadLatest()
+        }
 
-        val downloader = DownloadableFileService.getInstance().createDownloader(listOf(fileDesc), "downloading digma engine config")
-
-        composeFile = downloadWithProgress(downloader, downloadDir)
-
-        return composeFile != null
+        return composeFile.exists()
 
     }
 
@@ -82,50 +191,10 @@ class Downloader {
     }
 
 
-    private fun createComposeFilePath() {
-        val tmpDir = System.getProperty("java.io.tmpdir", SystemProperties.getUserHome())
-        val downloadDir = File(tmpDir, "digma")
-        composeFile = File(downloadDir, COMPOSE_FILE_NAME).toPath()
-    }
-
-
-    private fun downloadWithProgress(downloader: FileDownloader, downloadDir: File): Path? {
-
-        repeat((1..3).count()) {
-            val file = try {
-
-                val files = downloader.downloadFilesWithProgress(downloadDir.absolutePath, null, null)
-
-                files?.let {
-                    if (it.isNotEmpty()) {
-                        it[0].toNioPath()
-                    } else {
-                        null
-                    }
-                }
-
-            } catch (e: Exception) {
-                Log.debugWithException(logger, e, "Could not download docker compose file")
-                null
-            }
-
-            if (file != null) {
-                return file
-            }
-        }
-
-
-        return null
-    }
-
     fun deleteFile() {
-        if (composeFile == null) {
-            createComposeFilePath()
-        }
-
-        if (composeFile != null && composeFile!!.toFile().exists()) {
-            composeFile!!.toFile().delete()
-        }
+        val dir = composeFile.parentFile
+        Files.deleteIfExists(composeFile.toPath())
+        Files.deleteIfExists(dir.toPath())
     }
 
 }

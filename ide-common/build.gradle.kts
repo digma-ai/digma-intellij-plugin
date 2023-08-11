@@ -2,6 +2,7 @@ import common.dynamicPlatformType
 import common.logBuildProfile
 import common.platformVersion
 import common.shouldDownloadSources
+import de.undercouch.gradle.tasks.download.Download
 
 plugins {
     id("plugin-library")
@@ -34,3 +35,21 @@ dependencies {
     implementation(project(":analytics-provider"))
 }
 
+tasks{
+
+    val downloadComposeFile = register("downloadComposeFile", Download::class.java){
+        src(
+            listOf(
+                "https://get.digma.ai/")
+        )
+
+        val dir = File(project.sourceSets.main.get().output.resourcesDir,"docker-compose")
+        dest(File(dir,"docker-compose.yml"))
+        overwrite(false)
+        onlyIfModified(true)
+    }
+
+    processResources{
+        dependsOn(downloadComposeFile)
+    }
+}

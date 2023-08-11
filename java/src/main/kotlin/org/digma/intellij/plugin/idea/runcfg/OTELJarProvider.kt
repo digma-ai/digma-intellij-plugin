@@ -97,7 +97,7 @@ class OTELJarProvider {
                 if (downloadDir.exists()) {
                     copyFileFromResource(OTEL_AGENT_JAR_NAME)
                     copyFileFromResource(DIGMA_AGENT_EXTENSION_JAR_NAME)
-                    Log.log(logger::info,"otel agent jars extracted to {}",downloadDir)
+                    Log.log(logger::info,"otel agent jars unpacked to {}",downloadDir)
                 }
             }catch (e: Exception){
                 Log.warnWithException(logger,e,"could not unpack otel jars, hopefully download will succeed.")
@@ -171,7 +171,7 @@ class OTELJarProvider {
             }, Throwable::class.java, 5000, 3)
 
         } catch (e: Exception) {
-            Log.warnWithException(logger, e, "could not download file {}", url)
+            Log.log(logger::warn, "could not download file {}, {}", url,e)
         } finally {
             tempFile.deleteIfExists()
         }

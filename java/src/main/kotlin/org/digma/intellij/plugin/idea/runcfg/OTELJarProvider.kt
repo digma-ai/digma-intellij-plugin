@@ -69,6 +69,8 @@ class OTELJarProvider {
             return
         }
 
+        Log.log(logger::info,"otel jars do not exists, unpacking..")
+
         unpackFilesAndDownloadLatest()
 
     }
@@ -82,6 +84,8 @@ class OTELJarProvider {
 
     private fun unpackFilesAndDownloadLatest() {
 
+        Log.log(logger::info,"unpacking otel agent jars")
+
         withLock {
             try {
                 if (!downloadDir.exists()) {
@@ -93,6 +97,7 @@ class OTELJarProvider {
                 if (downloadDir.exists()) {
                     copyFileFromResource(OTEL_AGENT_JAR_NAME)
                     copyFileFromResource(DIGMA_AGENT_EXTENSION_JAR_NAME)
+                    Log.log(logger::info,"otel agent jars extracted to {}",downloadDir)
                 }
             }catch (e: Exception){
                 Log.warnWithException(logger,e,"could not unpack otel jars, hopefully download will succeed.")
@@ -109,12 +114,17 @@ class OTELJarProvider {
             Log.log(logger::warn, "could not find file in resource folder {}", fileName)
             return
         }
-        val outputStream = FileOutputStream(File(downloadDir, fileName))
+
+        val file = File(downloadDir, fileName)
+        val outputStream = FileOutputStream(file)
+        Log.log(logger::info,"unpacking {} to {}",fileName,file)
         com.intellij.openapi.util.io.StreamUtil.copy(inputStream, outputStream)
     }
 
 
     private fun tryDownloadLatest() {
+
+        Log.log(logger::info,"trying to download latest otel jars")
 
         val runnable = Runnable {
 
@@ -138,6 +148,8 @@ class OTELJarProvider {
 
             Retries.simpleRetry({
 
+                Log.log(logger::info,"downloading {}",url)
+
                 val connection = url.openConnection()
                 connection.connectTimeout = 5000
                 connection.readTimeout = 5000
@@ -147,6 +159,7 @@ class OTELJarProvider {
                 }
 
                 withLock {
+                    Log.log(logger::info,"copying downloaded file {} to {}",tempFile,toFile)
                     try {
                         Files.move(tempFile, toFile.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
                     } catch (e: Exception) {

@@ -13,6 +13,7 @@ import com.intellij.psi.PsiMethod;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
+import com.intellij.psi.search.searches.OverridingMethodsSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Query;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
@@ -166,20 +167,34 @@ public abstract class AbsJaxrsFramework implements IEndpointDiscovery {
             return Collections.emptyList();
         }
 
-        List<EndpointInfo> retList = new ArrayList<>();
+        Set<PsiMethod> candidateMethods = new HashSet<>();
 
-        Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(jaxrsPathAnnotationClass, searchScope);
+        for (JavaAnnotation currExpectedAnnotation : httpMethodsAnnotations) {
+            Query<PsiMethod> methodsWithDirectHttpMethod = AnnotatedElementsSearch.searchPsiMethods(currExpectedAnnotation.getPsiClass(), searchScope);
 
-        for (final PsiMethod currPsiMethod : psiMethods) {
-            final Set<String> appPaths = evaluateApplicationPaths(currPsiMethod);
-            final PsiAnnotation methodPathAnnotation = currPsiMethod.getAnnotation(JAX_RS_PATH_ANNOTATION_STR());
+            for (final PsiMethod directMethodWithHttpMethod : methodsWithDirectHttpMethod) {
+                candidateMethods.add(directMethodWithHttpMethod);
+                Query<PsiMethod> overridingMethods = OverridingMethodsSearch.search(directMethodWithHttpMethod);
+                candidateMethods.addAll(overridingMethods.findAll());
+            }
+        }
+
+        return handleCandidateMethods(candidateMethods).stream().toList();
+    }
+
+    protected Set<EndpointInfo> handleCandidateMethods(Collection<PsiMethod> candidateMethods) {
+        Set<EndpointInfo> retSet = new HashSet<>();
+
+        for (final PsiMethod currPsiMethod : candidateMethods) {
+            final PsiAnnotation methodPathAnnotation = JavaPsiUtils.findNearestAnnotation(currPsiMethod, JAX_RS_PATH_ANNOTATION_STR());
 
             final PsiClass currClass = currPsiMethod.getContainingClass();
-            final PsiAnnotation controllerPathAnnotation = JavaPsiUtils.findNearestAnnotation(currClass, JAX_RS_PATH_ANNOTATION_STR());
+            final PsiAnnotation controllerPathAnnotation = currClass == null ? null : JavaPsiUtils.findNearestAnnotation(currClass, JAX_RS_PATH_ANNOTATION_STR());
 
             if (methodPathAnnotation == null && controllerPathAnnotation == null) {
                 continue; // skip since could not find annotation of @Path, in either class and or method
             }
+            final Set<String> appPaths = evaluateApplicationPaths(currPsiMethod);
 
             for (JavaAnnotation currExpectedAnnotation : httpMethodsAnnotations) {
                 PsiAnnotation httpMethodAnnotation = JavaPsiUtils.findNearestAnnotation(currPsiMethod, currExpectedAnnotation.getClassNameFqn());
@@ -193,12 +208,12 @@ public abstract class AbsJaxrsFramework implements IEndpointDiscovery {
                     String httpEndpointCodeObjectId = createHttpEndpointCodeObjectId(currExpectedAnnotation, endpointFullUri);
 
                     EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, JavaLanguageUtils.createJavaMethodCodeObjectId(currPsiMethod), JavaPsiUtils.toFileUri(currPsiMethod), currPsiMethod.getTextOffset());
-                    retList.add(endpointInfo);
+                    retSet.add(endpointInfo);
                 }
             }
         }
 
-        return retList;
+        return retSet;
     }
 
     protected Set<String> evaluateApplicationPaths(@NotNull PsiElement psiElement) {

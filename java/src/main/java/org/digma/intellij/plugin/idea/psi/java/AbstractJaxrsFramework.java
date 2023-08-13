@@ -27,9 +27,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public abstract class AbsJaxrsFramework implements EndpointDiscovery {
+public abstract class AbstractJaxrsFramework implements EndpointDiscovery {
 
-    private static final Logger LOGGER = Logger.getInstance(AbsJaxrsFramework.class);
+    private static final Logger LOGGER = Logger.getInstance(AbstractJaxrsFramework.class);
 
     abstract String getJaxRsPackageName();
 
@@ -42,7 +42,7 @@ public abstract class AbsJaxrsFramework implements EndpointDiscovery {
     private PsiClass jaxrsPathAnnotationClass;
     private List<JavaAnnotation> httpMethodsAnnotations;
 
-    public AbsJaxrsFramework(Project project) {
+    public AbstractJaxrsFramework(Project project) {
         this.project = project;
 
         this.HTTP_METHODS_ANNOTATION_STR_LIST = List.of(

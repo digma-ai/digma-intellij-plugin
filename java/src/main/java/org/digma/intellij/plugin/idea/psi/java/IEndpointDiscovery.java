@@ -15,7 +15,7 @@ public interface IEndpointDiscovery {
 
     List<EndpointInfo> lookForEndpoints(@NotNull SearchScope searchScope);
 
-    // using this method, since JAX-RS going to override it since AllClassesSearch.search won't work in version 2023.1.x
+    // default method uses fileScope. however, in some cases logic could be bit different
     default List<EndpointInfo> lookForEndpoints(@NotNull PsiFile psiFile) {
         return lookForEndpoints(GlobalSearchScope.fileScope(psiFile));
     }

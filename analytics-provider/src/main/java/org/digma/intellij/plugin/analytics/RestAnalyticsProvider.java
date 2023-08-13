@@ -63,6 +63,7 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.TimeZone;
@@ -83,7 +84,12 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
 
     public List<String> getEnvironments() {
-        return execute(client.analyticsProvider::getEnvironments);
+        var envs = execute(client.analyticsProvider::getEnvironments);
+        //make sure environments list is always a mutable list because we change it
+        if (envs != null){
+            envs = new ArrayList<>(envs);
+        }
+        return envs;
     }
 
 

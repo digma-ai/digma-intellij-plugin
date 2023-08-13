@@ -80,6 +80,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static org.digma.intellij.plugin.analytics.EnvironmentRefreshSchedulerKt.scheduleEnvironmentRefresh;
 import static org.digma.intellij.plugin.common.EnvironmentUtilKt.isEnvironmentLocal;
 import static org.digma.intellij.plugin.common.EnvironmentUtilKt.isEnvironmentLocalTests;
 import static org.digma.intellij.plugin.common.EnvironmentUtilKt.isLocalEnvironmentMine;
@@ -117,12 +118,13 @@ public class AnalyticsService implements Disposable {
         //initialize MainToolWindowCardsController when starting, so it is aware early on connection statuses
         MainToolWindowCardsController.getInstance(project);
         SettingsState settingsState = SettingsState.getInstance();
-        environment = new Environment(project, this, PersistenceService.getInstance().getState());
+        environment = new Environment(project, this);
         this.project = project;
         myApiUrl = settingsState.apiUrl;
         myApiToken = settingsState.apiToken;
         replaceClient(myApiUrl, myApiToken);
-        initializeEnvironmentsList();
+        scheduleEnvironmentRefresh(this, environment);
+
         settingsState.addChangeListener(state -> {
             if (!Objects.equals(state.apiUrl, myApiUrl)) {
                 myApiUrl = state.apiUrl;
@@ -158,38 +160,44 @@ public class AnalyticsService implements Disposable {
         }
         RestAnalyticsProvider analyticsProvider = new RestAnalyticsProvider(url, token);
         analyticsProviderProxy = newAnalyticsProviderProxy(analyticsProvider);
+
+        updateEnvironments(analyticsProvider);
     }
 
+    private void updateEnvironments(RestAnalyticsProvider analyticsProvider) {
+        try{
+            var envs = analyticsProvider.getEnvironments();
+            environment.getEnvironments().clear();
+            environment.getEnvironments().addAll(envs);
+            var current = PersistenceService.getInstance().getState().getCurrentEnv();
+            if (environment.getEnvironments().contains(current)){
+                environment.setCurrentInternal(current);
+            }else if (!environment.getEnvironments().isEmpty()){
+                environment.setCurrentInternal(environment.getEnvironments().get(0));
+            }
 
-    private void initializeEnvironmentsList() {
-
-        //when initializing AnalyticsService we must ensure that environments are loaded before the constructor completes.
-        // but there is a restriction to call backend from UI thread, so we need to make sure it is called on background.
-        //we try to initialize AnalyticsService on background thread as early as possible with AnalyticsServiceStarter.
-        // it should always succeed, but it is not guaranteed. AnalyticsService.getInstance is also called from the
-        // tool window factory that is executed on UI thread. there is no guarantee that AnalyticsServiceStarter will
-        // execute before the tool window factory.
-        //so this code is ready to be executed on background thread and also on UI thread. if executed on UI thread
-        // it will use runProcessWithProgressSynchronously which will run the task on background but waits for completion.
-
-        if(EDT.isEdt()){
-            ProgressManager.getInstance().runProcessWithProgressSynchronously(environment::refreshNow, "Loading environments",false,project);
-        }else{
-            environment.refreshNow();
+        }catch (Exception e){
+            Log.warnWithException(LOGGER,e,"error fetching environments");
+            environment.getEnvironments().clear();
+            environment.setCurrentInternal(null);
+            BackendConnectionMonitor.getInstance(project).connectionLost();
         }
     }
+
 
 
     private void replaceClientAndFireChange(String url, String token) {
 
         Backgroundable.ensureBackground(project, "Digma: Environments list changed", () -> {
+            var currentEnv = environment.getCurrent();
             replaceClient(url, token);
-            environment.refreshNowOnBackground();
+            environment.notifyChange(currentEnv);
         });
 
     }
 
 
+    @Nullable
     public List<String> getEnvironments() {
         try {
             var environments = analyticsProviderProxy.getEnvironments();

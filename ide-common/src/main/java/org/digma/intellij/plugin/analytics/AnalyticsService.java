@@ -118,9 +118,7 @@ public class AnalyticsService implements Disposable {
         //initialize MainToolWindowCardsController when starting, so it is aware early on connection statuses
         MainToolWindowCardsController.getInstance(project);
         SettingsState settingsState = SettingsState.getInstance();
-        Log.test(LOGGER, "Creating Environment object");
         environment = new Environment(project, this);
-        Log.test(LOGGER, "Environment object created");
         this.project = project;
         myApiUrl = settingsState.apiUrl;
         myApiToken = settingsState.apiToken;
@@ -138,14 +136,10 @@ public class AnalyticsService implements Disposable {
                 replaceClient(myApiUrl, myApiToken);
             }
         },this);
-        Log.test(LOGGER, "Initializing {}", AnalyticsService.class.getSimpleName());
     }
 
     public static AnalyticsService getInstance(@NotNull Project project) {
-        Log.test(LOGGER, "Getting instance of {}", AnalyticsService.class.getSimpleName());
-        AnalyticsService service = project.getService(AnalyticsService.class);
-        Log.test(LOGGER, "Returning {}", AnalyticsService.class.getSimpleName());
-        return service;
+        return project.getService(AnalyticsService.class);
     }
 
     public Environment getEnvironment() {
@@ -183,7 +177,8 @@ public class AnalyticsService implements Disposable {
             }
 
         }catch (Exception e){
-            Log.warnWithException(LOGGER,e,"error fetching environments");
+//            Log.warnWithException(LOGGER,e,"error fetching environments");
+            Log.test(LOGGER,"error fetching environments");
             environment.getEnvironments().clear();
             environment.setCurrentInternal(null);
             BackendConnectionMonitor.getInstance(project).connectionLost();
@@ -557,7 +552,8 @@ public class AnalyticsService implements Disposable {
                 // is known. these methods should not impact the connection status or mark connectionLost.
                 //so just throw an exception, code that calls these methods should be ready for AnalyticsServiceException.
                 if (methodsToIgnoreExceptions.contains(method.getName())){
-                    Log.warnWithException(LOGGER,e, "failed executing method {}",method);
+//                    Log.warnWithException(LOGGER,e, "failed executing method {}",method);
+                    Log.test(LOGGER,"failed executing method {}", method);
                     throw new AnalyticsServiceException(e);
                 }
 

@@ -27,9 +27,7 @@ class PluginActivityMonitor(private val project: Project) : PluginStateListener,
 
         @JvmStatic
         fun loadInstance(project: Project) {
-            Log.test(LOGGER,"Getting instance of ${PluginActivityMonitor::class.simpleName}")
             project.getService(PluginActivityMonitor::class.java)
-            Log.test(LOGGER,"Returning ${PluginActivityMonitor::class.simpleName}")
         }
     }
 

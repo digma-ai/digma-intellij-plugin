@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class MicronautFramework implements IEndpointDiscovery {
+public class MicronautFramework implements EndpointDiscovery {
 
     private static final Logger LOGGER = Logger.getInstance(MicronautFramework.class);
     private static final String CONTROLLER_ANNOTATION_STR = "io.micronaut.http.annotation.Controller";

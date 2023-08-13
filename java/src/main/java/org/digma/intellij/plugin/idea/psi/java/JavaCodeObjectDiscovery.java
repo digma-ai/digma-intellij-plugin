@@ -8,7 +8,6 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiJavaFile;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiReference;
-import com.intellij.psi.impl.source.PsiExtensibleClass;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.psi.search.searches.MethodReferencesSearch;
@@ -40,7 +39,7 @@ public class JavaCodeObjectDiscovery {
     private static final Logger LOGGER = Logger.getInstance(JavaCodeObjectDiscovery.class);
 
 
-    public static @NotNull DocumentInfo buildDocumentInfo(@NotNull Project project, @NotNull PsiJavaFile psiJavaFile, @NotNull List<IEndpointDiscovery> endpointDiscoveryList) {
+    public static @NotNull DocumentInfo buildDocumentInfo(@NotNull Project project, @NotNull PsiJavaFile psiJavaFile, @NotNull List<EndpointDiscovery> endpointDiscoveryList) {
         var stopWatch = StopWatch.createStarted();
 
         try {
@@ -93,17 +92,7 @@ public class JavaCodeObjectDiscovery {
                 continue;
             }
 
-            final List<PsiMethod> methods;
-            if (aClass instanceof PsiExtensibleClass extClass) {
-                // avoid cases when there are generated methods and/or constructors such as lombok creates,
-                // see issue https://github.com/digma-ai/digma-intellij-plugin/issues/833
-                // see issue https://youtrack.jetbrains.com/issue/IDEA-323198
-                methods = extClass.getOwnMethods();
-            } else {
-                // call to getMethods might cause issue https://github.com/digma-ai/digma-intellij-plugin/issues/833, so avoiding it if possible
-                PsiMethod[] methodsArr = aClass.getMethods(); // call to getMethods might cause issue 833
-                methods = List.of(methodsArr);
-            }
+            final List<PsiMethod> methods = JavaPsiUtils.getMethodsOf(aClass);
 
             for (PsiMethod method : methods) {
                 String id = createJavaMethodCodeObjectId(method);
@@ -126,7 +115,7 @@ public class JavaCodeObjectDiscovery {
     }
 
 
-    private static void enrichDocumentInfo(Project project, @NotNull DocumentInfo documentInfo, @NotNull PsiFile psiFile, @NotNull List<IEndpointDiscovery> endpointDiscoveryList) {
+    private static void enrichDocumentInfo(Project project, @NotNull DocumentInfo documentInfo, @NotNull PsiFile psiFile, @NotNull List<EndpointDiscovery> endpointDiscoveryList) {
         /*
         need to make sure that spans and endpoints are cleared here.
         why?
@@ -152,7 +141,7 @@ public class JavaCodeObjectDiscovery {
         micrometerTracingFramework.annotationSpanDiscovery(project, psiFile, documentInfo);
     }
 
-    private static void endpointDiscovery(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo, @NotNull List<IEndpointDiscovery> endpointDiscoveryList) {
+    private static void endpointDiscovery(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo, @NotNull List<EndpointDiscovery> endpointDiscoveryList) {
         Log.log(LOGGER::debug, "Building endpoints for file {}", psiFile);
         endpointDiscoveryList.forEach(it -> it.endpointDiscovery(psiFile, documentInfo));
     }

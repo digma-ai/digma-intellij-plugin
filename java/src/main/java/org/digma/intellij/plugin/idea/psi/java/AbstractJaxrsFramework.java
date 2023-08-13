@@ -7,21 +7,19 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
+import com.intellij.psi.search.searches.OverridingMethodsSearch;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Query;
-import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
-import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -29,9 +27,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public abstract class AbsJaxrsFramework implements IEndpointDiscovery {
+public abstract class AbstractJaxrsFramework implements EndpointDiscovery {
 
-    private static final Logger LOGGER = Logger.getInstance(AbsJaxrsFramework.class);
+    private static final Logger LOGGER = Logger.getInstance(AbstractJaxrsFramework.class);
 
     abstract String getJaxRsPackageName();
 
@@ -44,7 +42,7 @@ public abstract class AbsJaxrsFramework implements IEndpointDiscovery {
     private PsiClass jaxrsPathAnnotationClass;
     private List<JavaAnnotation> httpMethodsAnnotations;
 
-    public AbsJaxrsFramework(Project project) {
+    public AbstractJaxrsFramework(Project project) {
         this.project = project;
 
         this.HTTP_METHODS_ANNOTATION_STR_LIST = List.of(
@@ -114,59 +112,102 @@ public abstract class AbsJaxrsFramework implements IEndpointDiscovery {
         return jaxrsPathAnnotationClass != null;
     }
 
+    /**
+     * Overriding since have different logic,
+     * in this impl searching for classes/methods in file and see if they inherit from super classes which declare on @PATH annotations.
+     */
     @Override
-    public void endpointDiscovery(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
+    public List<EndpointInfo> lookForEndpoints(@NotNull PsiFile psiFile) {
         lateInit();
         if (!isJaxRsHttpRelevant()) {
-            return;
+            return Collections.emptyList();
         }
 
-        var psiFacade = JavaPsiFacade.getInstance(project);
-        final PsiClass appPathAnnotationClass = psiFacade.findClass(getApplicationPathAnnotationClassFqn(), GlobalSearchScope.allScope(project));
+        Collection<PsiClass> allClassesInFile = PsiTreeUtil.findChildrenOfType(psiFile, PsiClass.class);
 
-        List<PsiClass> allClassesInFile = JavaPsiUtils.getClassesWithin(psiFile);
-        for (PsiClass currClass : allClassesInFile) {
-            final PsiAnnotation controllerPathAnnotation = JavaPsiUtils.findNearestAnnotation(currClass, JAX_RS_PATH_ANNOTATION_STR());
-
-            List<PsiMethod> methodsInClass = Arrays.asList(currClass.getMethods());
-            for (PsiMethod currPsiMethod : methodsInClass) {
+        Set<PsiMethod> candidateMethods = new HashSet<>();
+        for (final PsiClass currClass : allClassesInFile) {
+            List<PsiMethod> methodsInClass = JavaPsiUtils.getMethodsOf(currClass);
+            for (final PsiMethod currPsiMethod : methodsInClass) {
                 final PsiAnnotation methodPathAnnotation = JavaPsiUtils.findNearestAnnotation(currPsiMethod, JAX_RS_PATH_ANNOTATION_STR());
-                if (methodPathAnnotation == null && controllerPathAnnotation == null) {
-                    continue; // skip since could not find annotation of @Path, in either class and or method
-                }
+                boolean hasPath = methodPathAnnotation != null;
+                boolean hasHttpMethod = httpMethodsAnnotations.stream()
+                        .anyMatch(it -> JavaPsiUtils.findNearestAnnotation(currPsiMethod, it.getClassNameFqn()) != null);
 
-                Set<String> appPaths = evaluateApplicationPaths(appPathAnnotationClass, currClass);
-
-                for (JavaAnnotation currExpectedAnnotation : httpMethodsAnnotations) {
-                    PsiAnnotation httpMethodAnnotation = JavaPsiUtils.findNearestAnnotation(currPsiMethod, currExpectedAnnotation.getClassNameFqn());
-                    if (httpMethodAnnotation == null) {
-                        continue; // skipping since could not find annotation of HTTP Method, such as @GET
-                    }
-                    String endpointSuffixUri = combinePaths(controllerPathAnnotation, methodPathAnnotation);
-
-                    for (String appPath : appPaths) {
-                        String endpointFullUri = JavaUtils.combineUri(appPath, endpointSuffixUri);
-                        String httpEndpointCodeObjectId = createHttpEndpointCodeObjectId(currExpectedAnnotation, endpointFullUri);
-
-                        EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, JavaLanguageUtils.createJavaMethodCodeObjectId(currPsiMethod), JavaPsiUtils.toFileUri(currPsiMethod), currPsiMethod.getTextOffset());
-                        Log.log(LOGGER::debug, "Found endpoint info '{}' for method '{}'", endpointInfo.getId(), endpointInfo.getContainingMethodId());
-
-                        MethodInfo methodInfo = documentInfo.getMethods().get(endpointInfo.getContainingMethodId());
-                        //this method must exist in the document info
-                        Objects.requireNonNull(methodInfo, "method info " + endpointInfo.getContainingMethodId() + " must exist in DocumentInfo for " + documentInfo.getFileUri());
-                        methodInfo.addEndpoint(endpointInfo);
-                    }
+                if (hasPath || hasHttpMethod) {
+                    candidateMethods.add(currPsiMethod);
                 }
             }
         }
+
+        return handleCandidateMethods(candidateMethods).stream().toList();
     }
 
-    protected Set<String> evaluateApplicationPaths(@Nullable PsiClass appPathAnnotationClass, @NotNull PsiClass checkedClass) {
+    @Override
+    public List<EndpointInfo> lookForEndpoints(@NotNull SearchScope searchScope) {
+        lateInit();
+        if (!isJaxRsHttpRelevant()) {
+            return Collections.emptyList();
+        }
+
+        Set<PsiMethod> candidateMethods = new HashSet<>();
+
+        for (JavaAnnotation currExpectedAnnotation : httpMethodsAnnotations) {
+            Query<PsiMethod> methodsWithDirectHttpMethod = AnnotatedElementsSearch.searchPsiMethods(currExpectedAnnotation.getPsiClass(), searchScope);
+
+            for (final PsiMethod directMethodWithHttpMethod : methodsWithDirectHttpMethod) {
+                candidateMethods.add(directMethodWithHttpMethod);
+                Query<PsiMethod> overridingMethods = OverridingMethodsSearch.search(directMethodWithHttpMethod);
+                candidateMethods.addAll(overridingMethods.findAll());
+            }
+        }
+
+        return handleCandidateMethods(candidateMethods).stream().toList();
+    }
+
+    protected Set<EndpointInfo> handleCandidateMethods(Collection<PsiMethod> candidateMethods) {
+        Set<EndpointInfo> retSet = new HashSet<>();
+
+        for (final PsiMethod currPsiMethod : candidateMethods) {
+            final PsiAnnotation methodPathAnnotation = JavaPsiUtils.findNearestAnnotation(currPsiMethod, JAX_RS_PATH_ANNOTATION_STR());
+
+            final PsiClass currClass = currPsiMethod.getContainingClass();
+            final PsiAnnotation controllerPathAnnotation = currClass == null ? null : JavaPsiUtils.findNearestAnnotation(currClass, JAX_RS_PATH_ANNOTATION_STR());
+
+            if (methodPathAnnotation == null && controllerPathAnnotation == null) {
+                continue; // skip since could not find annotation of @Path, in either class and or method
+            }
+            final Set<String> appPaths = evaluateApplicationPaths(currPsiMethod);
+
+            for (JavaAnnotation currExpectedAnnotation : httpMethodsAnnotations) {
+                PsiAnnotation httpMethodAnnotation = JavaPsiUtils.findNearestAnnotation(currPsiMethod, currExpectedAnnotation.getClassNameFqn());
+                if (httpMethodAnnotation == null) {
+                    continue; // skipping since could not find annotation of HTTP Method, such as @GET
+                }
+                String endpointSuffixUri = combinePaths(controllerPathAnnotation, methodPathAnnotation);
+
+                for (String appPath : appPaths) {
+                    String endpointFullUri = JavaUtils.combineUri(appPath, endpointSuffixUri);
+                    String httpEndpointCodeObjectId = createHttpEndpointCodeObjectId(currExpectedAnnotation, endpointFullUri);
+
+                    EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, JavaLanguageUtils.createJavaMethodCodeObjectId(currPsiMethod), JavaPsiUtils.toFileUri(currPsiMethod), currPsiMethod.getTextOffset());
+                    retSet.add(endpointInfo);
+                }
+            }
+        }
+
+        return retSet;
+    }
+
+    protected Set<String> evaluateApplicationPaths(@NotNull PsiElement psiElement) {
+        var psiFacade = JavaPsiFacade.getInstance(project);
+        final PsiClass appPathAnnotationClass = psiFacade.findClass(getApplicationPathAnnotationClassFqn(), GlobalSearchScope.allScope(project));
+
         Set<String> appPaths = new HashSet<>();
 
         // check for ApplicationPath in context of module
         if (appPathAnnotationClass != null) {
-            Module module = ModuleUtilCore.findModuleForPsiElement(checkedClass);
+            Module module = ModuleUtilCore.findModuleForPsiElement(psiElement);
             if (module != null) {
                 Query<PsiClass> appPathPsiClasses = AnnotatedElementsSearch.searchPsiClasses(appPathAnnotationClass, GlobalSearchScope.moduleScope(module));
                 for (PsiClass appPathClass : appPathPsiClasses) {
@@ -186,20 +227,6 @@ public abstract class AbsJaxrsFramework implements IEndpointDiscovery {
         }
 
         return appPaths;
-    }
-
-    @Override
-    public List<EndpointInfo> lookForEndpoints(@NotNull SearchScope searchScope) {
-        lateInit();
-        if (!isJaxRsHttpRelevant()) {
-            return Collections.emptyList();
-        }
-
-        List<EndpointInfo> retList = new ArrayList<>();
-
-        //TODO: impl and combine with method endpointDiscovery
-
-        return retList;
     }
 
     protected static String combinePaths(PsiAnnotation annotOfPrefix, PsiAnnotation annotOfSuffix) {

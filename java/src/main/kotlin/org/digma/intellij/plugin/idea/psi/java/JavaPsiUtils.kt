@@ -5,6 +5,7 @@ import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.impl.source.PsiExtensibleClass
 import com.intellij.psi.util.PsiTreeUtil
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.annotations.NotNull
@@ -40,14 +41,6 @@ class JavaPsiUtils {
             } else {
                 return prevCLass
             }
-        }
-
-        @JvmStatic
-        @NotNull
-        fun getClassesWithin(psiFile: PsiFile): List<PsiClass> {
-            //it must be a PsiJavaFile so casting should be ok
-            val psiJavaFile = psiFile as PsiJavaFile
-            return psiJavaFile.classes.asList()
         }
 
         @JvmStatic
@@ -92,6 +85,17 @@ class JavaPsiUtils {
             val containingFile: PsiFile? = PsiTreeUtil.getParentOfType(psiMethod, PsiFile::class.java)
             var containingFileUri = PsiUtils.psiFileToUri(containingFile!!)
             return containingFileUri
+        }
+
+        @JvmStatic
+        fun getMethodsOf(psiClass: PsiClass): List<PsiMethod> {
+            if (psiClass is PsiExtensibleClass) {
+                // avoid cases when there are generated methods and/or constructors such as lombok creates,
+                // see issue https://github.com/digma-ai/digma-intellij-plugin/issues/833
+                // see issue https://youtrack.jetbrains.com/issue/IDEA-323198
+                return psiClass.ownMethods
+            }
+            return psiClass.methods.asList()
         }
 
         @JvmStatic

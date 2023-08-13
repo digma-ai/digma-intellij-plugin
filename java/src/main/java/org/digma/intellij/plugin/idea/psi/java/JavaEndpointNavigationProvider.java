@@ -9,6 +9,8 @@ import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.util.RunnableCallable;
@@ -97,6 +99,21 @@ public class JavaEndpointNavigationProvider implements Disposable {
         });
     }
 
+    private void buildEndpointAnnotations(@NotNull VirtualFile virtualFile) {
+        final PsiFile psiFile = PsiManager.getInstance(project).findFile(virtualFile);
+        if (psiFile == null) return; // very unlikely
+
+        var javaLanguageService = project.getService(JavaLanguageService.class);
+        var endpointDiscoveries = javaLanguageService.getListOfEndpointDiscovery();
+
+        endpointDiscoveries.forEach(endpointDiscovery -> {
+            var endpointInfos = endpointDiscovery.lookForEndpoints(psiFile);
+            endpointInfos.forEach(endpointInfo -> {
+                addToMethodsMap(endpointInfo);
+            });
+        });
+    }
+
     private void addToMethodsMap(@NotNull EndpointInfo endpointInfo) {
         final Set<EndpointInfo> methods = mapEndpointToMethods.computeIfAbsent(endpointInfo.getId(), it -> new HashSet<>());
         methods.add(endpointInfo);
@@ -140,7 +157,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
                     //if file moved then removeDocumentEndpoints will not remove anything but building endpoint locations will
                     // override the entries anyway
                     removeDocumentEndpoint(virtualFile);
-                    buildEndpointAnnotations(GlobalSearchScope.fileScope(project, virtualFile));
+                    buildEndpointAnnotations(virtualFile);
                 } finally {
                     buildLock.unlock();
                 }

@@ -18,8 +18,8 @@ intellij {
 }
 
 dependencies {
-    testImplementation("org.mockito:mockito-core:5.4.0")
-    testImplementation("org.mockito:mockito-inline:5.2.0")
+    implementation("org.mockito:mockito-core:5.4.0")
+    implementation("org.mockito:mockito-inline:5.2.0")
     implementation(project(":ide-common"))
     implementation(project(":analytics-provider"))
     implementation(project(":java"))

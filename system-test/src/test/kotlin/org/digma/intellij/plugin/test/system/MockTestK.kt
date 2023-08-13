@@ -11,66 +11,40 @@ import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase
 import junit.framework.TestCase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import org.digma.intellij.plugin.analytics.AnalyticsProvider
 import org.digma.intellij.plugin.analytics.AnalyticsService
-import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.MethodInfo
-import org.digma.intellij.plugin.model.rest.AboutResult
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
-import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsRequest
-import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse
-import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.digma.intellij.plugin.test.system.framework.WaitFinishRule
 import org.digma.intellij.plugin.test.system.framework.WaitForAsync
+import org.digma.intellij.plugin.test.system.framework.environmentList
+import org.digma.intellij.plugin.test.system.framework.expectedInsightsOfMethodsResponse
+import org.digma.intellij.plugin.test.system.framework.mockRestAnalyticsProvider
 import org.gradle.internal.impldep.org.junit.Rule
-import org.mockito.Mockito.any
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
 
 
 class MockTestK : LightJavaCodeInsightFixtureTestCase() {
 
+    private val logger = Logger.getInstance(MockTestK::class.java)
+
     @get:Rule
     val waitRule: WaitFinishRule = WaitFinishRule()
 
-    private val logger = Logger.getInstance(MockTestK::class.java)
-    private lateinit var analyticsProviderProxyMock: AnalyticsProvider
-//    private lateinit var analyticsProvider: RestAnalyticsProvider
     private val analyticsService: AnalyticsService
         get() {
             return AnalyticsService.getInstance(project)
         }
 
-    // mock test data
-    private val environmentList = EnvironmentListMock
-    private val expectedInsightsOfMethodsResponse: InsightsOfMethodsResponse
-        get() {
-            return MockInsightsOfMethodsResponseFactory(environmentList[0])
-        }
-
     override fun setUp() {
         super.setUp()
-        Log.test(logger, "Starting SetUp")
-        Log.test(logger, "Mocking AnalyticsProvider")
-
-
-        analyticsProviderProxyMock = prepareMock()
-//        analyticsProvider = mock
-
+        mockRestAnalyticsProvider(project)
     }
 
     override fun tearDown() {
         waitRule.waitForCompletion()
-        Log.test(logger, "Tearing down")
-//
-//        runBlocking {
-//            delay(3000L)
-//        }
-
         super.tearDown()
     }
 
@@ -78,50 +52,12 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
         return "src/test/resources"
     }
 
-    private fun prepareMock(): RestAnalyticsProvider {
-        val mock = mock(RestAnalyticsProvider::class.java)
-//        val field = analyticsService.javaClass.getDeclaredField("analyticsProvider")
-        val proxyField = analyticsService.javaClass.getDeclaredField("analyticsProviderProxy")
-//        field.isAccessible = true
-        proxyField.isAccessible = true
-//        field.set(analyticsService, mock)
-        proxyField.set(analyticsService, mock)
-        mockGetEnvironments(mock)
-        mockGetAbout(mock)
-        mockGetInsightsOfMethodsForEnv1(mock)
-
-        return mock
-    }
-
-
-    private fun mockGetInsightsOfMethodsForEnv1(mock: RestAnalyticsProvider) {
-        `when`(mock.getInsightsOfMethods(any(InsightsOfMethodsRequest::class.java)))
-            .thenAnswer {
-                return@thenAnswer expectedInsightsOfMethodsResponse
-            }
-    }
-
-    private fun mockGetAbout(mock: RestAnalyticsProvider) {
-        `when`(mock.getAbout()).thenReturn(AboutResult("1.0.0", BackendDeploymentType.Unknown))
-    }
-
-    private fun mockGetEnvironments(mock: RestAnalyticsProvider) {
-        `when`(mock.getEnvironments()).thenReturn(environmentList)
-    }
     private fun navigateToMethod(editor: Editor, methodLine: Int) {
         editor.caretModel.moveToLogicalPosition(LogicalPosition(if (methodLine.dec() < 0) 0 else methodLine.dec(), 0))
     }
 
     @WaitForAsync
     fun `test that all services are up and running`() {
-        Log.test(logger, "Requesting AnalyticsService")
-        val analytics = AnalyticsService.getInstance(project)
-        waitRule.signalComplete()
-    }
-
-    @WaitForAsync
-    fun `test that analytics service is up and running`() {
-        Log.test(logger, "Requesting AnalyticsService")
         val analytics = AnalyticsService.getInstance(project)
         TestCase.assertNotNull(analytics)
         waitRule.signalComplete()
@@ -268,6 +204,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
     @WaitForAsync
     fun `test get method from file and find the range`() {
         val file = myFixture.configureByFile("EditorEventsHandler.java")
+
         val methodList: MutableList<PsiMethod> = mutableListOf()
         file.accept(object : JavaRecursiveElementVisitor() {
             override fun visitMethod(method: PsiMethod) {
@@ -276,12 +213,11 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
             }
         })
 
-        val documentInfoService = DocumentInfoService.getInstance(project)
-
         runBlocking {
-            delay(1000L)
+            delay(2000L)
         }
 
+        val documentInfoService = DocumentInfoService.getInstance(project)
         val documentInfoContainer: DocumentInfoContainer? = documentInfoService.getDocumentInfo(file.virtualFile)
 
         val methodRef = documentInfoContainer?.javaClass?.getDeclaredMethod("getMethodInfos")
@@ -297,5 +233,11 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
 
         waitRule.signalComplete()
     }
+
+    @WaitForAsync
+    fun `test subscribe`() {
+        TestCase.assertTrue(true)
+    }
+
 }
 

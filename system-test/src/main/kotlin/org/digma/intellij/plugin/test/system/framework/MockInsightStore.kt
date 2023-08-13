@@ -1,6 +1,5 @@
-package org.digma.intellij.plugin.test.system
+package org.digma.intellij.plugin.test.system.framework
 
-import org.digma.intellij.plugin.analytics.Environment
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectDecorator
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight

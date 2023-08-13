@@ -6,12 +6,14 @@ import org.junit.runner.Description
 import org.junit.runners.model.Statement
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import org.digma.intellij.plugin.log.Log
 
 class WaitFinishRule : TestRule {
 
-        val logger = Logger.getInstance(WaitFinishRule::class.java)
+    private val logger = Logger.getInstance(WaitFinishRule::class.java)
 
     private var latch: CountDownLatch = CountDownLatch(1)
+
     override fun apply(base: Statement, description: Description): Statement {
         return object : Statement() {
             override fun evaluate() {
@@ -20,7 +22,7 @@ class WaitFinishRule : TestRule {
                 try {
                     base.evaluate()
                 } finally {
-                   waitForCompletion()
+                    waitForCompletion()
                 }
             }
         }
@@ -33,8 +35,8 @@ class WaitFinishRule : TestRule {
     //using this method to wait for async operations to complete, e.g.: in tearDown()
     fun waitForCompletion() {
         if (latch.await(10, TimeUnit.SECONDS))
-            logger.info("WaitForAsync completed")
+            Log.test(logger, "WaitForAsync completed")
         else
-            logger.warn("WaitForAsync timeout")
+            Log.test(logger, "WaitForAsync timeout")
     }
 }

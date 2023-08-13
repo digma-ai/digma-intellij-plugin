@@ -52,7 +52,8 @@ class ConnectionActivityMonitor(private val project: Project) : AnalyticsService
                     ActivityMonitor.getInstance(project).registerServerInfo(about)
                 }
             } catch (e: Exception) {
-                Log.warnWithException(LOGGER, e, "Failed to get+register server version: {}", e.message)
+//                Log.warnWithException(LOGGER, e, "Failed to get+register server version: {}", e.message)
+                Log.test(LOGGER, "Failed to get+register server version: {}", e.message)
             }
         }
     }

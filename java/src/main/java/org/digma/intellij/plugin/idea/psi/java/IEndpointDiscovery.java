@@ -21,7 +21,7 @@ public interface IEndpointDiscovery {
     }
 
     default void endpointDiscovery(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
-        List<EndpointInfo> endpointInfos = lookForEndpoints(GlobalSearchScope.fileScope(psiFile), true);
+        List<EndpointInfo> endpointInfos = lookForEndpoints(psiFile);
 
         for (EndpointInfo endpointInfo : endpointInfos) {
             var methodId = endpointInfo.getContainingMethodId();

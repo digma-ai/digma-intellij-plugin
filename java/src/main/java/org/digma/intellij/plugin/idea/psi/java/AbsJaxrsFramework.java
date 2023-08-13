@@ -19,7 +19,6 @@ import com.intellij.util.Query;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -124,40 +123,24 @@ public abstract class AbsJaxrsFramework implements IEndpointDiscovery {
             return Collections.emptyList();
         }
 
-        final List<EndpointInfo> retList = new ArrayList<>();
-
         Collection<PsiClass> allClassesInFile = PsiTreeUtil.findChildrenOfType(psiFile, PsiClass.class);
-        System.out.println("PsiTreeUtil: allClassesInFile = " + allClassesInFile + ", psiFile=" + psiFile);
 
-        for (PsiClass currClass : allClassesInFile) {
-            final Set<String> appPaths = evaluateApplicationPaths(currClass);
-            final PsiAnnotation controllerPathAnnotation = JavaPsiUtils.findNearestAnnotation(currClass, JAX_RS_PATH_ANNOTATION_STR());
-
+        Set<PsiMethod> candidateMethods = new HashSet<>();
+        for (final PsiClass currClass : allClassesInFile) {
             List<PsiMethod> methodsInClass = JavaPsiUtils.getMethodsOf(currClass);
-            for (PsiMethod currPsiMethod : methodsInClass) {
+            for (final PsiMethod currPsiMethod : methodsInClass) {
                 final PsiAnnotation methodPathAnnotation = JavaPsiUtils.findNearestAnnotation(currPsiMethod, JAX_RS_PATH_ANNOTATION_STR());
-                if (methodPathAnnotation == null && controllerPathAnnotation == null) {
-                    continue; // skip since could not find annotation of @Path, in either class and or method
-                }
+                boolean hasPath = methodPathAnnotation != null;
+                boolean hasHttpMethod = httpMethodsAnnotations.stream()
+                        .anyMatch(it -> JavaPsiUtils.findNearestAnnotation(currPsiMethod, it.getClassNameFqn()) != null);
 
-                for (JavaAnnotation currExpectedAnnotation : httpMethodsAnnotations) {
-                    PsiAnnotation httpMethodAnnotation = JavaPsiUtils.findNearestAnnotation(currPsiMethod, currExpectedAnnotation.getClassNameFqn());
-                    if (httpMethodAnnotation == null) {
-                        continue; // skipping since could not find annotation of HTTP Method, such as @GET
-                    }
-                    String endpointSuffixUri = combinePaths(controllerPathAnnotation, methodPathAnnotation);
-
-                    for (String appPath : appPaths) {
-                        String endpointFullUri = JavaUtils.combineUri(appPath, endpointSuffixUri);
-                        String httpEndpointCodeObjectId = createHttpEndpointCodeObjectId(currExpectedAnnotation, endpointFullUri);
-
-                        EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, JavaLanguageUtils.createJavaMethodCodeObjectId(currPsiMethod), JavaPsiUtils.toFileUri(currPsiMethod), currPsiMethod.getTextOffset());
-                        retList.add(endpointInfo);
-                    }
+                if (hasPath || hasHttpMethod) {
+                    candidateMethods.add(currPsiMethod);
                 }
             }
         }
-        return retList;
+
+        return handleCandidateMethods(candidateMethods).stream().toList();
     }
 
     @Override

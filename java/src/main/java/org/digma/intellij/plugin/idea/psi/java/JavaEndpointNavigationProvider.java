@@ -10,18 +10,16 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.util.RunnableCallable;
 import com.intellij.util.concurrency.NonUrgentExecutor;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
-import org.digma.intellij.plugin.psi.PsiFileNotFountException;
-import org.digma.intellij.plugin.psi.PsiUtils;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -101,21 +99,9 @@ public class JavaEndpointNavigationProvider implements Disposable {
         });
     }
 
-    @Nullable
-    protected PsiFile getPsiFile(@NotNull VirtualFile virtualFile) {
-        final PsiFile psiFile;
-        try {
-            psiFile = PsiUtils.uriToPsiFile(virtualFile.getUrl(), project);
-        } catch (PsiFileNotFountException e) {
-            // very unlikely
-            return null;
-        }
-        return psiFile;
-    }
-
     private void buildEndpointAnnotations(@NotNull VirtualFile virtualFile) {
-        final PsiFile psiFile = getPsiFile(virtualFile);
-        if (psiFile == null) return;
+        final PsiFile psiFile = PsiManager.getInstance(project).findFile(virtualFile);
+        if (psiFile == null) return; // very unlikely
 
         var javaLanguageService = project.getService(JavaLanguageService.class);
         var endpointDiscoveries = javaLanguageService.getListOfEndpointDiscovery();

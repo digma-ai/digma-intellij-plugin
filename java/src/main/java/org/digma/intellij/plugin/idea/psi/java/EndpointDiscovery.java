@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 import java.util.Objects;
 
-public interface IEndpointDiscovery {
+public interface EndpointDiscovery {
 
     List<EndpointInfo> lookForEndpoints(@NotNull SearchScope searchScope);
 

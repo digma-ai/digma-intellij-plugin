@@ -39,7 +39,7 @@ public class JavaCodeObjectDiscovery {
     private static final Logger LOGGER = Logger.getInstance(JavaCodeObjectDiscovery.class);
 
 
-    public static @NotNull DocumentInfo buildDocumentInfo(@NotNull Project project, @NotNull PsiJavaFile psiJavaFile, @NotNull List<IEndpointDiscovery> endpointDiscoveryList) {
+    public static @NotNull DocumentInfo buildDocumentInfo(@NotNull Project project, @NotNull PsiJavaFile psiJavaFile, @NotNull List<EndpointDiscovery> endpointDiscoveryList) {
         var stopWatch = StopWatch.createStarted();
 
         try {
@@ -115,7 +115,7 @@ public class JavaCodeObjectDiscovery {
     }
 
 
-    private static void enrichDocumentInfo(Project project, @NotNull DocumentInfo documentInfo, @NotNull PsiFile psiFile, @NotNull List<IEndpointDiscovery> endpointDiscoveryList) {
+    private static void enrichDocumentInfo(Project project, @NotNull DocumentInfo documentInfo, @NotNull PsiFile psiFile, @NotNull List<EndpointDiscovery> endpointDiscoveryList) {
         /*
         need to make sure that spans and endpoints are cleared here.
         why?
@@ -141,7 +141,7 @@ public class JavaCodeObjectDiscovery {
         micrometerTracingFramework.annotationSpanDiscovery(project, psiFile, documentInfo);
     }
 
-    private static void endpointDiscovery(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo, @NotNull List<IEndpointDiscovery> endpointDiscoveryList) {
+    private static void endpointDiscovery(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo, @NotNull List<EndpointDiscovery> endpointDiscoveryList) {
         Log.log(LOGGER::debug, "Building endpoints for file {}", psiFile);
         endpointDiscoveryList.forEach(it -> it.endpointDiscovery(psiFile, documentInfo));
     }

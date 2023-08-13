@@ -19,7 +19,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-public class GrpcFramework implements IEndpointDiscovery {
+public class GrpcFramework implements EndpointDiscovery {
     private static final Logger LOGGER = Logger.getInstance(GrpcFramework.class);
 
     public static final String BINDABLE_SERVICE_ANNOTATION_STR = "io.grpc.BindableService";

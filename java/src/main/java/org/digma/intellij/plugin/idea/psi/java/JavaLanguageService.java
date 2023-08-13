@@ -69,7 +69,7 @@ public class JavaLanguageService implements LanguageService {
     private final MicronautFramework micronautFramework;
     private final GrpcFramework grpcFramework;
     private final SpringBootFramework springBootFramework;
-    private final List<IEndpointDiscovery> endpointDiscoveryList;
+    private final List<EndpointDiscovery> endpointDiscoveryList;
 
     private static final String OtelDependencyVersion = "1.26.0";
     private static final UnifiedCoordinates OtelCoordinates = new UnifiedCoordinates("io.opentelemetry.instrumentation", "opentelemetry-instrumentation-annotations", OtelDependencyVersion);
@@ -98,7 +98,7 @@ public class JavaLanguageService implements LanguageService {
         this.endpointDiscoveryList = List.of(micronautFramework, jaxrsJavaxFramework, jaxrsJakartaFramework, grpcFramework, springBootFramework);
     }
 
-    public List<IEndpointDiscovery> getListOfEndpointDiscovery() {
+    public List<EndpointDiscovery> getListOfEndpointDiscovery() {
         return endpointDiscoveryList;
     }
 

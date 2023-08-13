@@ -27,7 +27,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public abstract class AbsJaxrsFramework implements IEndpointDiscovery {
+public abstract class AbsJaxrsFramework implements EndpointDiscovery {
 
     private static final Logger LOGGER = Logger.getInstance(AbsJaxrsFramework.class);
 

@@ -23,13 +23,8 @@ class Downloader {
     private val downloadDir: File = File(System.getProperty("java.io.tmpdir"), COMPOSE_FILE_DIR)
     val composeFile: File = File(downloadDir, COMPOSE_FILE_NAME)
 
-    init {
-        //this will happen on IDE start,
-        // DockerService is an application service so Downloader will be created once per application
-        unpackAndTryDownloadLatest()
-    }
 
-    private fun unpackAndTryDownloadLatest() {
+    fun unpackAndTryDownloadLatest() {
         unpack()
         tryDownloadLatest()
     }

@@ -5,9 +5,9 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
-import java.nio.file.Path
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
@@ -21,13 +21,13 @@ internal class Engine {
     private val engineLock = ReentrantLock()
 
 
-    fun up(project: Project, composeFile: Path, dockerComposeCmd: List<String>): String {
+    fun up(project: Project, composeFile: File, dockerComposeCmd: List<String>): String {
 
         Log.log(logger::info, "starting docker compose up")
 
         val processBuilder = GeneralCommandLine(dockerComposeCmd)
-            .withParameters("-f", composeFile.toString(), "up", "-d")
-            .withWorkDirectory(composeFile.toFile().parentFile)
+            .withParameters("-f", composeFile.canonicalPath.toString(), "up", "-d")
+            .withWorkDirectory(composeFile.parentFile)
             .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
             .withRedirectErrorStream(true)
             .toProcessBuilder()
@@ -36,13 +36,13 @@ internal class Engine {
     }
 
 
-    fun down(project: Project, composeFile: Path, dockerComposeCmd: List<String>, reportToPosthog: Boolean = true): String {
+    fun down(project: Project, composeFile: File, dockerComposeCmd: List<String>, reportToPosthog: Boolean = true): String {
 
         Log.log(logger::info, "starting docker compose down")
 
         val processBuilder = GeneralCommandLine(dockerComposeCmd)
-            .withParameters("-f", composeFile.toString(), "down")
-            .withWorkDirectory(composeFile.toFile().parentFile)
+            .withParameters("-f", composeFile.canonicalPath.toString(), "down")
+            .withWorkDirectory(composeFile.parentFile)
             .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
             .withRedirectErrorStream(true)
             .toProcessBuilder()
@@ -52,13 +52,13 @@ internal class Engine {
     }
 
 
-    fun start(project: Project, composeFile: Path, dockerComposeCmd: List<String>): String {
+    fun start(project: Project, composeFile: File, dockerComposeCmd: List<String>): String {
 
         Log.log(logger::info, "starting docker compose start")
 
         val processBuilder = GeneralCommandLine(dockerComposeCmd)
-            .withParameters("-f", composeFile.toString(), "up", "-d")
-            .withWorkDirectory(composeFile.toFile().parentFile)
+            .withParameters("-f", composeFile.canonicalPath.toString(), "up", "-d")
+            .withWorkDirectory(composeFile.parentFile)
             .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
             .withRedirectErrorStream(true)
             .toProcessBuilder()
@@ -68,13 +68,13 @@ internal class Engine {
     }
 
 
-    fun stop(project: Project, composeFile: Path, dockerComposeCmd: List<String>): String {
+    fun stop(project: Project, composeFile: File, dockerComposeCmd: List<String>): String {
 
         Log.log(logger::info, "starting docker compose stop")
 
         val processBuilder = GeneralCommandLine(dockerComposeCmd)
-            .withParameters("-f", composeFile.toString(), "stop")
-            .withWorkDirectory(composeFile.toFile().parentFile)
+            .withParameters("-f", composeFile.canonicalPath.toString(), "stop")
+            .withWorkDirectory(composeFile.parentFile)
             .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
             .withRedirectErrorStream(true)
             .toProcessBuilder()
@@ -84,7 +84,7 @@ internal class Engine {
     }
 
 
-    fun remove(project: Project, composeFile: Path, dockerComposeCmd: List<String>): String {
+    fun remove(project: Project, composeFile: File, dockerComposeCmd: List<String>): String {
 
         Log.log(logger::info, "starting uninstall")
 
@@ -92,8 +92,8 @@ internal class Engine {
         //"-f", composeFile.toString(), "down", "--rmi", "all", "-v", "--remove-orphans"
 
         val processBuilder = GeneralCommandLine(dockerComposeCmd)
-            .withParameters("-f", composeFile.toString(), "down")
-            .withWorkDirectory(composeFile.toFile().parentFile)
+            .withParameters("-f", composeFile.canonicalPath.toString(), "down")
+            .withWorkDirectory(composeFile.parentFile)
             .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
             .withRedirectErrorStream(true)
             .toProcessBuilder()
@@ -106,7 +106,7 @@ internal class Engine {
     private fun executeCommand(
         project: Project,
         name: String,
-        composeFile: Path,
+        composeFile: File,
         processBuilder: ProcessBuilder,
         reportToPosthog: Boolean = true,
     ): String {

@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.common;
 import com.intellij.openapi.diagnostic.Logger;
 import org.digma.intellij.plugin.log.Log;
 
-@Deprecated(forRemoval = true)// we have no use for this class
 public class Retries {
 
     private Retries() {
@@ -18,10 +17,11 @@ public class Retries {
     private static void simpleRetry(Runnable runnable,Class<? extends Throwable> retryOn,int backOffMillis,int maxRetries,int retryCount){
 
         try{
+            Log.log(LOGGER::debug,"starting retry "+retryCount);
             runnable.run();
         }catch (Throwable e){
 
-            Log.log(LOGGER::warn,"get exception "+e+ " retry "+retryCount);
+            Log.log(LOGGER::warn,"got exception "+e+ " retry "+retryCount);
             Log.warnWithException(LOGGER,e,"exception in simpleRetry");
 
             if (retryCount == maxRetries){
@@ -32,7 +32,7 @@ public class Retries {
 
             if (retryOn.isAssignableFrom(e.getClass())){
                 try {
-                    Log.log(LOGGER::warn,"sleeping");
+                    Log.log(LOGGER::warn,"sleeping {} millis",backOffMillis);
                     Thread.sleep(backOffMillis);
                 } catch (InterruptedException ex) {/* ignore*/}
                 simpleRetry(runnable,retryOn,backOffMillis,maxRetries,retryCount+1);

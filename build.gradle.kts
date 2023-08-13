@@ -55,15 +55,19 @@ dependencies {
     implementation(libs.commons.lang3)
     implementation(project(":model"))
     implementation(project(":analytics-provider"))
+
     implementation(project(":ide-common"))
     implementation(project(":java"))
     implementation(project(":python"))
     implementation(project(":rider"))
-// todo: recommended by jetbrains but has a bug that openiong classes opens the class file instead of source file
+// todo: jetbrains recommend using the instrumented jar but there is a bug.
+// https://github.com/digma-ai/digma-intellij-plugin/issues/1017
 //    implementation(project(":ide-common", "instrumentedJar"))
 //    implementation(project(":java", "instrumentedJar"))
 //    implementation(project(":python", "instrumentedJar"))
 //    implementation(project(":rider", "instrumentedJar"))
+
+
     implementation(libs.freemarker)
 
     riderDotNetObjects(project(mapOf(

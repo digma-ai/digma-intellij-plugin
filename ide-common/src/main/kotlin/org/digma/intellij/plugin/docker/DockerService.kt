@@ -4,6 +4,7 @@ import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.MessageConstants
@@ -31,6 +32,11 @@ class DockerService {
         const val DOCKER_COMMAND = "docker"
         const val DOCKER_COMPOSE_COMMAND = "docker-compose"
         const val NO_DOCKER_COMPOSE_COMMAND = "no docker-compose command"
+
+        @JvmStatic
+        fun getInstance():DockerService{
+            return service<DockerService>()
+        }
     }
 
 

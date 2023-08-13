@@ -45,6 +45,7 @@ import org.digma.intellij.plugin.model.rest.jcef.common.OpenInBrowserRequest
 import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest
 import org.digma.intellij.plugin.model.rest.jcef.installationwizard.FinishRequest
 import org.digma.intellij.plugin.model.rest.jcef.installationwizard.SetObservabilityRequest
+import org.digma.intellij.plugin.notifications.showInstallationFinishedNotification
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.recentactivity.ConnectionCheckResult
@@ -233,7 +234,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
 
                         if (success) {
                             var i = 0
-                            while (!BackendConnectionMonitor.getInstance(project).isConnectionOk() && i < 8) {
+                            while (!BackendConnectionMonitor.getInstance(project).isConnectionOk() && i < 10) {
                                 Log.log(logger::warn, "waiting for connection")
                                 BackendConnectionUtil.getInstance(project).testConnectionToBackend()
                                 delay(5000)
@@ -260,7 +261,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                             )
                             sendIsDigmaEngineInstalled(true, jbCefBrowser)
                             sendIsDigmaEngineRunning(true, jbCefBrowser)
-                            considerNotifyingOnLocalEngineInstallationFinish(project)
+                            showInstallationFinishedNotification(project)
                         } else {
                             Log.log(logger::warn, "error installing engine, {}", exitValue)
 
@@ -345,7 +346,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
 
                         if (success) {
                             var i = 0
-                            while (!BackendConnectionMonitor.getInstance(project).isConnectionOk() && i < 8) {
+                            while (!BackendConnectionMonitor.getInstance(project).isConnectionOk() && i < 10) {
                                 Log.log(logger::warn, "waiting for connection")
                                 BackendConnectionUtil.getInstance(project).testConnectionToBackend()
                                 delay(5000)
@@ -466,24 +467,6 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
     return jcefDigmaPanel
 }
 
-private fun considerNotifyingOnLocalEngineInstallationFinish(project: Project){
-    val tw = ToolWindowManager.getInstance(project).getToolWindow(PluginId.TOOL_WINDOW_ID)
-    if (tw == null || tw.isVisible) {
-        return;
-    }
-
-    ApplicationManager.getApplication().invokeAndWait {
-        Messages.showMessageDialog(project, "Please follow the onboarding steps to run your application with Digma", "Digma successfully installed", null)
-    }
-
-    val ow = ToolWindowManager.getInstance(project).getToolWindow(PluginId.OBSERVABILITY_WINDOW_ID)
-    EDT.ensureEDT {
-        tw.show()
-        if (ow != null && !ow.isVisible) {
-            ow.show()
-        }
-    }
-}
 
 /**
  * Set global flag that this user has already passed the installation wizard

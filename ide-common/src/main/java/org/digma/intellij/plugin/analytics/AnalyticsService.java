@@ -5,7 +5,6 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.diagnostic.RuntimeExceptionWithAttachments;
-import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
 import com.intellij.util.Alarm;
@@ -85,6 +84,7 @@ import static org.digma.intellij.plugin.common.EnvironmentUtilKt.isEnvironmentLo
 import static org.digma.intellij.plugin.common.EnvironmentUtilKt.isEnvironmentLocalTests;
 import static org.digma.intellij.plugin.common.EnvironmentUtilKt.isLocalEnvironmentMine;
 import static org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult;
+import static org.digma.intellij.plugin.notifications.NotificationRemindersKt.startNoInsightsReminderNotificationTimer;
 
 
 public class AnalyticsService implements Disposable {
@@ -518,9 +518,12 @@ public class AnalyticsService implements Disposable {
                             "Result '{}'", method.getName(), argsToString(args), resultToString(result));
                 }
 
+
+                //todo: not thread safe so the block may be invoked more then once
                 if (!PersistenceService.getInstance().getState().getFirstTimeConnectionEstablished()) {
                     ActivityMonitor.getInstance(project).registerFirstConnectionEstablished();
                     PersistenceService.getInstance().getState().setFirstTimeConnectionEstablished(true);
+                    startNoInsightsReminderNotificationTimer(AnalyticsService.this,project);
                 }
 
                 //if we are here then the call to the underlying analytics api succeeded, we can reset the status

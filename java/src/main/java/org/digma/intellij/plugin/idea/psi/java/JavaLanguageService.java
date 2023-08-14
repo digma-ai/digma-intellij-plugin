@@ -34,6 +34,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import kotlin.Pair;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.ReadActions;
+import org.digma.intellij.plugin.common.Retries;
 import org.digma.intellij.plugin.editor.EditorUtils;
 import org.digma.intellij.plugin.idea.build.BuildSystemChecker;
 import org.digma.intellij.plugin.idea.build.JavaBuildSystem;
@@ -162,23 +163,27 @@ public class JavaLanguageService implements LanguageService {
     @Override
     @NotNull
     public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int caretOffset) {
-        String fileUri = PsiUtils.psiFileToUri(psiFile);
-        if (!isSupportedFile(project, psiFile)) {
-            return new MethodUnderCaret("", "", "", "", fileUri, false);
-        }
-        PsiJavaFile psiJavaFile = (PsiJavaFile) psiFile;
-        String packageName = psiJavaFile.getPackageName();
-        PsiElement underCaret = psiFile.findElementAt(caretOffset);
-        if (underCaret == null) {
-            return new MethodUnderCaret("", "", "", packageName, fileUri, true);
-        }
-        PsiMethod psiMethod = PsiTreeUtil.getParentOfType(underCaret, PsiMethod.class);
-        String className = safelyTryGetClassName(underCaret);
-        if (psiMethod != null) {
-            return new MethodUnderCaret(JavaLanguageUtils.createJavaMethodCodeObjectId(psiMethod), psiMethod.getName(), className, packageName, fileUri);
-        }
 
-        return new MethodUnderCaret("", "", className, packageName, fileUri);
+        return Retries.retryWithResult(() -> ReadAction.compute(() -> {
+            String fileUri = PsiUtils.psiFileToUri(psiFile);
+            if (!isSupportedFile(project, psiFile)) {
+                return new MethodUnderCaret("", "", "", "", fileUri, false);
+            }
+            PsiJavaFile psiJavaFile = (PsiJavaFile) psiFile;
+            String packageName = psiJavaFile.getPackageName();
+            PsiElement underCaret = psiFile.findElementAt(caretOffset);
+            if (underCaret == null) {
+                return new MethodUnderCaret("", "", "", packageName, fileUri, true);
+            }
+            PsiMethod psiMethod = PsiTreeUtil.getParentOfType(underCaret, PsiMethod.class);
+            String className = safelyTryGetClassName(underCaret);
+            if (psiMethod != null) {
+                return new MethodUnderCaret(JavaLanguageUtils.createJavaMethodCodeObjectId(psiMethod), psiMethod.getName(), className, packageName, fileUri);
+            }
+
+            return new MethodUnderCaret("", "", className, packageName, fileUri);
+        }),Throwable.class,50,5);
+
     }
 
     private String safelyTryGetClassName(PsiElement element) {
@@ -518,7 +523,9 @@ public class JavaLanguageService implements LanguageService {
         Log.log(LOGGER::debug, "got buildDocumentInfo request for {}", psiFile);
         //must be PsiJavaFile , this method should be called only for java files
         if (psiFile instanceof PsiJavaFile psiJavaFile) {
-            return JavaCodeObjectDiscovery.buildDocumentInfo(project, psiJavaFile, endpointDiscoveryList);
+
+            return Retries.retryWithResult(() -> ReadAction.compute(() -> JavaCodeObjectDiscovery.buildDocumentInfo(project, psiJavaFile, endpointDiscoveryList)),
+                    Throwable.class,50,5);
         } else {
             Log.log(LOGGER::debug, "psi file is noy java, returning empty DocumentInfo for {}", psiFile);
             return new DocumentInfo(PsiUtils.psiFileToUri(psiFile), new HashMap<>());

@@ -1,8 +1,6 @@
 package org.digma.intellij.plugin.editor;
 
 import com.intellij.openapi.Disposable;
-import com.intellij.openapi.application.ModalityState;
-import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
@@ -17,9 +15,8 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.util.Alarm;
+import com.intellij.util.Alarm.ThreadToUse;
 import com.intellij.util.AlarmFactory;
-import com.intellij.util.RunnableCallable;
-import com.intellij.util.concurrency.NonUrgentExecutor;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.log.Log;
@@ -83,7 +80,7 @@ class DocumentChangeListener {
 
         document.addDocumentListener(new DocumentListener() {
 
-            private final Alarm documentChangeAlarm = AlarmFactory.getInstance().create();
+            private final Alarm documentChangeAlarm = AlarmFactory.getInstance().create(ThreadToUse.POOLED_THREAD);
 
             @Override
             public void documentChanged(@NotNull DocumentEvent event) {
@@ -101,7 +98,8 @@ class DocumentChangeListener {
                 var fileEditor =  FileEditorManager.getInstance(project).getSelectedEditor(changedPsiFile.getVirtualFile());
 
                 documentChangeAlarm.cancelAllRequests();
-                documentChangeAlarm.addRequest(() -> ReadAction.nonBlocking(new RunnableCallable(() -> {
+                documentChangeAlarm.addRequest(() -> {
+
                     try {
                         Log.log(LOGGER::debug, "got documentChanged alarm for {}", event.getDocument());
                         //this code is always executed in smart mode because the document listener is installed only in smart mode
@@ -111,21 +109,21 @@ class DocumentChangeListener {
                     } catch (Exception e) {
                         Log.debugWithException(LOGGER, e, "exception while processing documentChanged event for file: {}, {}", event.getDocument(), e.getMessage());
                     }
-                })).inSmartMode(project).withDocumentsCommitted(project).finishOnUiThread(ModalityState.defaultModalityState(), unused -> {
 
-                    //caret event is not always fired while editing, but the document may change, and a caret
-                    // event will fire only when the caret moves but not while editing.
-                    // if the document changes and no caret event is fired the UI will not be updated.
-                    // so calling hare currentContextUpdater after document change will update the UI.
-                    var editor = EditorUtils.getSelectedTextEditorForFile(changedPsiFile.getVirtualFile(), FileEditorManager.getInstance(project));
-                    if (editor != null){
-                        int caretOffset = editor.logicalPositionToOffset(editor.getCaretModel().getLogicalPosition());
-                        var file = FileDocumentManager.getInstance().getFile(editor.getDocument());
-                        currentContextUpdater.clearLatestMethod();
-                        currentContextUpdater.addRequest(editor,caretOffset,file);
-                    }
-
-                }).submit(NonUrgentExecutor.getInstance()), 2000);
+                    EDT.ensureEDT(() -> {
+                        //caret event is not always fired while editing, but the document may change, and a caret
+                        // event will fire only when the caret moves but not while editing.
+                        // if the document changes and no caret event is fired the UI will not be updated.
+                        // so calling hare currentContextUpdater after document change will update the UI.
+                        var editor1 = EditorUtils.getSelectedTextEditorForFile(changedPsiFile.getVirtualFile(), FileEditorManager.getInstance(project));
+                        if (editor1 != null){
+                            int caretOffset = editor1.logicalPositionToOffset(editor1.getCaretModel().getLogicalPosition());
+                            var file = FileDocumentManager.getInstance().getFile(editor1.getDocument());
+                            currentContextUpdater.clearLatestMethod();
+                            currentContextUpdater.addRequest(editor1,caretOffset,file);
+                        }
+                    });
+                },2000);
 
             }
         }, parentDisposable);

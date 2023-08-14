@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.editor;
 
-import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
@@ -9,8 +8,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.util.Alarm;
 import com.intellij.util.AlarmFactory;
-import com.intellij.util.RunnableCallable;
-import com.intellij.util.concurrency.NonUrgentExecutor;
+import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.psi.LanguageService;
@@ -30,7 +28,7 @@ public class CurrentContextUpdater {
     private final CaretContextService caretContextService;
     private final LanguageServiceLocator languageServiceLocator;
 
-    private final Alarm caretEventAlarm;
+    private final Alarm caretEventAlarm = AlarmFactory.getInstance().create(Alarm.ThreadToUse.POOLED_THREAD);;
 
     /*
    keep the latest method under caret that was fired. it helps us to not call contextChange if the caret is on the same
@@ -40,9 +38,8 @@ public class CurrentContextUpdater {
 
     public CurrentContextUpdater(Project project) {
         this.project = project;
-        caretContextService = project.getService(CaretContextService.class);
-        languageServiceLocator = project.getService(LanguageServiceLocator.class);
-        caretEventAlarm = AlarmFactory.getInstance().create();
+        caretContextService = CaretContextService.getInstance(project);
+        languageServiceLocator = LanguageServiceLocator.getInstance(project);
     }
 
 
@@ -60,13 +57,15 @@ public class CurrentContextUpdater {
     void addRequest(Editor editor, int caretOffset, VirtualFile file) {
         //process the most recent event after a quite period of delayMillis
         caretEventAlarm.cancelAllRequests();
-        caretEventAlarm.addRequest(() -> ReadAction.nonBlocking(new RunnableCallable(() -> {
+        caretEventAlarm.addRequest(() -> {
             Log.log(LOGGER::debug, "caretPositionChanged for editor:{}", editor);
             updateCurrentContext(editor, caretOffset, file);
-        })).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance()), 300);
+        },300);
     }
 
     private void updateCurrentContext(@NotNull Editor editor, int caretOffset, VirtualFile file) {
+
+        EDT.assertNonDispatchThread();
 
         //there is no need to check if file is supported, we install caret listener only on editors of supported files.
         Log.log(LOGGER::debug, "updateCurrentContext for editor:{}, file: {}", editor, file);

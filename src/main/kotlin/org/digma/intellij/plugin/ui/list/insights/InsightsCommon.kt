@@ -368,9 +368,9 @@ private fun showHintMessage(
     val recalculateAction = ActionLink(RECALCULATE)
     recalculateAction.addActionListener {
 
-        Backgroundable.executeOnPooledThread(Runnable {
+        Backgroundable.executeOnPooledThread {
             analyticsService.setInsightCustomStartTime(codeObjectId, insightType)
-        });
+        };
 
         rebuildInsightPanel(insightPanel)
         ActivityMonitor.getInstance(project).registerButtonClicked("recalculate", insightType)

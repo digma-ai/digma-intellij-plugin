@@ -7,7 +7,6 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorManager
-import com.intellij.openapi.progress.runBlockingCancellable
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
@@ -20,6 +19,7 @@ import com.jetbrains.rdclient.util.idea.callSynchronously
 import com.jetbrains.rider.projectView.SolutionLifecycleHost
 import com.jetbrains.rider.projectView.SolutionStartupService
 import com.jetbrains.rider.projectView.solution
+import kotlinx.coroutines.runBlocking
 import org.apache.commons.collections4.map.LRUMap
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.document.DocumentInfoService
@@ -175,7 +175,7 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
         Log.log(logger::debug, "Sending request to getDocumentInfo with {}", psiId)
 
         val riderDocumentInfo: RiderDocumentInfo? =
-            runBlockingCancellable {
+            runBlocking {
                 model.getDocumentInfo.startSuspending((psiId))
             }
 
@@ -209,7 +209,7 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
             if (ApplicationManager.getApplication().isDispatchThread) {
                 model.detectMethodUnderCaret.callSynchronously(MethodUnderCaretRequest(psiId, caretOffset), getProtocol(model))
             } else {
-                runBlockingCancellable {
+                runBlocking {
                     model.detectMethodUnderCaret.startSuspending(MethodUnderCaretRequest(psiId, caretOffset))
                 }
             }
@@ -235,7 +235,7 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
             if (ApplicationManager.getApplication().isDispatchThread) {
                 model.getWorkspaceUrisForErrorStackTrace.callSynchronously(codeObjectIds, getProtocol(model))
             } else {
-                runBlockingCancellable {
+                runBlocking {
                     model.getWorkspaceUrisForErrorStackTrace.startSuspending(codeObjectIds)
                 }
             }
@@ -257,7 +257,7 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
             if (ApplicationManager.getApplication().isDispatchThread) {
                 model.getWorkspaceUrisForMethodCodeObjectIds.callSynchronously(methodCodeObjectIds, getProtocol(model))
             } else {
-                runBlockingCancellable {
+                runBlocking {
                     model.getWorkspaceUrisForMethodCodeObjectIds.startSuspending(methodCodeObjectIds)
                 }
             }
@@ -279,7 +279,7 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
             if (ApplicationManager.getApplication().isDispatchThread) {
                 model.getSpansWorkspaceUris.callSynchronously(spanIds, getProtocol(model))
             } else {
-                runBlockingCancellable {
+                runBlocking {
                     model.getSpansWorkspaceUris.startSuspending(spanIds)
                 }
             }
@@ -323,7 +323,7 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
             if (ApplicationManager.getApplication().isDispatchThread) {
                 model.isCsharpMethod.callSynchronously(methodCodeObjectId, getProtocol(model))
             } else {
-                runBlockingCancellable {
+                runBlocking {
                     model.isCsharpMethod.startSuspending(methodCodeObjectId)
                 }
             }

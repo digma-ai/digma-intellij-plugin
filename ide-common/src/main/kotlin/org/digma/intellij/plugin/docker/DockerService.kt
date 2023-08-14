@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.docker
 
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
-import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -16,13 +15,12 @@ import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.settings.SettingsState
 import java.util.function.Consumer
 import java.util.function.Supplier
 
 
 @Service(Service.Level.APP)
-class DockerService: Disposable {
+class DockerService {
 
     private val logger = Logger.getInstance(this::class.java)
 
@@ -60,9 +58,7 @@ class DockerService: Disposable {
         }
     }
 
-    override fun dispose() {
-        //nothing to do, used as parent disposable
-    }
+
 
     fun isInstallationInProgress(): Boolean{
         return installationInProgress

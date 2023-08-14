@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.common;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
@@ -47,4 +48,7 @@ public class Backgroundable {
 
     }
 
+    public static void executeOnPooledThread(@NotNull Runnable runnable) {
+        ApplicationManager.getApplication().executeOnPooledThread(runnable);
+    }
 }

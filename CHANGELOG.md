@@ -1,6 +1,16 @@
 # Changelog
 
-## [2.0.143] - 2023-08-10
+## [2.0.144] - 2023-08-14
+- settings change event by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1110
+- top changes in SummaryPanelList by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1112
+- Otel agent jars by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1113
+- Package compose file for offline by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1115
+- update comment for issue 1017 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1116
+- Bug fix/Navigation for JAX-RS even if backend does not have code object by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1106
+- no insights notification timer by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1120
+- Fix UI thread access set insight custom start time by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1124
+
+## 2.0.143 - 2023-08-10
 - make sure environments list is mutable by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1109
 
 ## 2.0.142 - 2023-08-09

@@ -527,7 +527,7 @@ public class JavaLanguageService implements LanguageService {
             return Retries.retryWithResult(() -> ReadAction.compute(() -> JavaCodeObjectDiscovery.buildDocumentInfo(project, psiJavaFile, endpointDiscoveryList)),
                     Throwable.class,50,5);
         } else {
-            Log.log(LOGGER::debug, "psi file is noy java, returning empty DocumentInfo for {}", psiFile);
+            Log.log(LOGGER::debug, "psi file is not java, returning empty DocumentInfo for {}", psiFile);
             return new DocumentInfo(PsiUtils.psiFileToUri(psiFile), new HashMap<>());
         }
     }

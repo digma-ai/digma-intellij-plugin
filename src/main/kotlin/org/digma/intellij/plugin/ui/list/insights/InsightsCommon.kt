@@ -9,6 +9,7 @@ import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.JBUI.Borders.empty
 import io.ktor.util.reflect.instanceOf
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.notifications.NotificationUtil
@@ -366,7 +367,11 @@ private fun showHintMessage(
     val analyticsService = AnalyticsService.getInstance(project)
     val recalculateAction = ActionLink(RECALCULATE)
     recalculateAction.addActionListener {
-        analyticsService.setInsightCustomStartTime(codeObjectId, insightType)
+
+        Backgroundable.executeOnPooledThread(Runnable {
+            analyticsService.setInsightCustomStartTime(codeObjectId, insightType)
+        });
+
         rebuildInsightPanel(insightPanel)
         ActivityMonitor.getInstance(project).registerButtonClicked("recalculate", insightType)
     }

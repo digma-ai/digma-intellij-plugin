@@ -32,7 +32,7 @@ import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 
 
-const val MY_NOTIFICATION_GROUP = "Digma Events Group"
+const val EVENTS_NOTIFICATION_GROUP = "Digma Events Group"
 
 @Service(Service.Level.PROJECT)
 class InsightsNotificationsService(val project: Project) : Disposable {
@@ -132,7 +132,7 @@ class InsightsNotificationsService(val project: Project) : Disposable {
     private fun showInsightNotification(project: Project, codeObjectId: String, methodId: String?, environment: String) {
 
 
-        val notification = NotificationGroupManager.getInstance().getNotificationGroup(MY_NOTIFICATION_GROUP)
+        val notification = NotificationGroupManager.getInstance().getNotificationGroup(EVENTS_NOTIFICATION_GROUP)
             .createNotification("First important insight!", "In analyzing your code Digma found the following insight:", NotificationType.INFORMATION)
 
         notification.addAction(GoToCodeObjectInsightsAction(project,notification, codeObjectId, methodId, environment))

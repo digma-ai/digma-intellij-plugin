@@ -100,6 +100,14 @@
                            displayType="STICKY_BALLOON"
                            toolWindowId="Digma"/>
 
+        <notificationGroup id="Digma sticky Reminders Group"
+                           displayType="STICKY_BALLOON"
+                           toolWindowId="Digma"/>
+
+        <notificationGroup id="Digma fading Reminders Group"
+                           displayType="BALLOON"
+                           toolWindowId="Digma"/>
+
 
         <applicationConfigurable
                 parentId="tools"

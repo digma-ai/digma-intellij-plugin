@@ -42,7 +42,7 @@ class DocumentChangeListener {
 
     DocumentChangeListener(Project project, CurrentContextUpdater currentContextUpdater) {
         this.project = project;
-        documentInfoService = project.getService(DocumentInfoService.class);
+        documentInfoService = DocumentInfoService.getInstance(project);
         this.currentContextUpdater = currentContextUpdater;
     }
 
@@ -80,7 +80,7 @@ class DocumentChangeListener {
 
         document.addDocumentListener(new DocumentListener() {
 
-            private final Alarm documentChangeAlarm = AlarmFactory.getInstance().create(ThreadToUse.POOLED_THREAD);
+            private final Alarm documentChangeAlarm = AlarmFactory.getInstance().create(ThreadToUse.POOLED_THREAD,parentDisposable);
 
             @Override
             public void documentChanged(@NotNull DocumentEvent event) {

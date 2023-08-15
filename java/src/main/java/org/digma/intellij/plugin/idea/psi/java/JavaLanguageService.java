@@ -69,7 +69,7 @@ public class JavaLanguageService implements LanguageService {
     private final MicronautFramework micronautFramework;
     private final GrpcFramework grpcFramework;
     private final SpringBootFramework springBootFramework;
-    private final List<IEndpointDiscovery> endpointDiscoveryList;
+    private final List<EndpointDiscovery> endpointDiscoveryList;
 
     private static final String OtelDependencyVersion = "1.26.0";
     private static final UnifiedCoordinates OtelCoordinates = new UnifiedCoordinates("io.opentelemetry.instrumentation", "opentelemetry-instrumentation-annotations", OtelDependencyVersion);
@@ -98,7 +98,7 @@ public class JavaLanguageService implements LanguageService {
         this.endpointDiscoveryList = List.of(micronautFramework, jaxrsJavaxFramework, jaxrsJakartaFramework, grpcFramework, springBootFramework);
     }
 
-    public List<IEndpointDiscovery> getListOfEndpointDiscovery() {
+    public List<EndpointDiscovery> getListOfEndpointDiscovery() {
         return endpointDiscoveryList;
     }
 
@@ -354,7 +354,7 @@ public class JavaLanguageService implements LanguageService {
                 //hopefully there is only one class by that name in the project
                 Optional<PsiClass> psiClassOptional = psiClasses.stream().findAny();
                 PsiClass psiClass = psiClassOptional.get();
-                for (PsiMethod method : psiClass.getMethods()) {
+                for (PsiMethod method : JavaPsiUtils.getMethodsOf(psiClass)) {
                     var id = JavaLanguageUtils.createJavaMethodCodeObjectId(method);
                     if (id.equals(methodId) && method.canNavigate()) {
                         Log.log(LOGGER::debug, "navigating to method {}", method);
@@ -467,7 +467,7 @@ public class JavaLanguageService implements LanguageService {
             //hopefully there is only one class by that name in the project
             PsiClass psiClass = psiClasses.stream().findAny().get();
             PsiFile psiFile = PsiTreeUtil.getParentOfType(psiClass, PsiFile.class);
-            for (PsiMethod method : psiClass.getMethods()) {
+            for (PsiMethod method : JavaPsiUtils.getMethodsOf(psiClass)) {
                 String javaMethodCodeObjectId = JavaLanguageUtils.createJavaMethodCodeObjectId(method);
                 if (javaMethodCodeObjectId.equals(methodId) && psiFile != null) {
                     return method;

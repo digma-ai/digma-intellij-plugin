@@ -33,6 +33,15 @@ public class ToolWindowShower {
 
 
 
+
+    public boolean isToolWindowVisible(){
+        if (toolWindow != null){
+            return toolWindow.isVisible();
+        }
+        return false;
+    }
+
+
     public void showToolWindow() {
 
         EDT.ensureEDT(() -> {

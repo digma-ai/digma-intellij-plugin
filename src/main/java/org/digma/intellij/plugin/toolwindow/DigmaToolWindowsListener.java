@@ -4,10 +4,12 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.openapi.wm.ex.ToolWindowManagerListener;
-import com.intellij.openapi.wm.impl.ToolWindowManagerImpl;
 import org.digma.intellij.plugin.PluginId;
+import org.digma.intellij.plugin.docker.DockerService;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.jetbrains.annotations.NotNull;
+
+import static org.digma.intellij.plugin.notifications.NotificationRemindersKt.showInstallationInProgressNotification;
 
 public class DigmaToolWindowsListener implements ToolWindowManagerListener {
 
@@ -27,28 +29,63 @@ public class DigmaToolWindowsListener implements ToolWindowManagerListener {
         }
     }
 
+
+    //this method will be invoked for version 2022.* , it is still available in 2023.*, but was replaced with
+    //the method bellow
+    //todo: remove this method when we stop support for 2022
     @Override
     public void stateChanged(@NotNull ToolWindowManager toolWindowManager, @NotNull ToolWindowManagerEventType changeType) {
-        if (toolWindowManager instanceof ToolWindowManagerImpl &&
-                changeType == ToolWindowManagerEventType.HideToolWindow) {
+
+        if (changeType == ToolWindowManagerEventType.HideToolWindow) {
 
             var toolWindowId = toolWindowManager.getActiveToolWindowId();
             if(toolWindowId == null)
                 return;
 
             if (toolWindowId.equals(PluginId.TOOL_WINDOW_ID)) {
-                ActivityMonitor.getInstance(project).registerSidePanelClosed();
-
-                /*if(ApplicationManager.getApplication().getService(DockerService.class).isInstallationInProgress()){
-                    ApplicationManager.getApplication().invokeAndWait(() -> {
-                        Messages.showMessageDialog(project, "Digma installation is still running", "Installing Digma engine", null);
-                    });
-                }*/
+                onMainToolWindowClose();
             }
 
             if (toolWindowId.equals(PluginId.OBSERVABILITY_WINDOW_ID)) {
-                ActivityMonitor.getInstance(project).registerObservabilityPanelClosed();
+                onObservabilityToolWindowClose();
             }
         }
     }
+
+
+    //this method will be invoked in version 2023.* and up, can't mark it as override because it will not compile for
+    //2022.*.
+    //it seems to work better than the old method.
+    //todo: add Override annotation when we stop support for 2022
+//    @Override
+    public void stateChanged(@NotNull ToolWindowManager toolWindowManager, @NotNull ToolWindow toolWindow, @NotNull ToolWindowManagerEventType changeType) {
+
+        if (changeType == ToolWindowManagerEventType.HideToolWindow) {
+
+            var toolWindowId = toolWindow.getId();
+
+            if (toolWindowId.equals(PluginId.TOOL_WINDOW_ID)) {
+                onMainToolWindowClose();
+            }
+
+            if (toolWindowId.equals(PluginId.OBSERVABILITY_WINDOW_ID)) {
+                onObservabilityToolWindowClose();
+            }
+        }
+    }
+
+
+    private void onMainToolWindowClose(){
+        ActivityMonitor.getInstance(project).registerSidePanelClosed();
+
+        if(DockerService.getInstance().isInstallationInProgress()){
+            showInstallationInProgressNotification();
+        }
+    }
+
+
+    private void onObservabilityToolWindowClose(){
+        ActivityMonitor.getInstance(project).registerObservabilityPanelClosed();
+    }
+
 }

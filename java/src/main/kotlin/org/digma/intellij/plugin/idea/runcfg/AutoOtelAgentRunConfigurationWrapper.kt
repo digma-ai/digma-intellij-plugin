@@ -7,6 +7,7 @@ import com.intellij.execution.configurations.ModuleRunConfiguration
 import com.intellij.execution.configurations.ParametersList
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunnerSettings
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
@@ -130,8 +131,8 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
         isTest: Boolean,
     ): String? {
 
-        val otelAgentPath = OTELJarProvider.getInstance().getOtelAgentJarPath(project)
-        val digmaExtensionPath = OTELJarProvider.getInstance().getDigmaAgentExtensionJarPath(project)
+        val otelAgentPath = service<OTELJarProvider>().getOtelAgentJarPath()
+        val digmaExtensionPath = service<OTELJarProvider>().getDigmaAgentExtensionJarPath()
         if (otelAgentPath == null || digmaExtensionPath == null) {
             Log.log(
                 logger::warn,

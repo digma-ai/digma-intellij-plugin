@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.144] - 2023-08-14
+## [2.0.145] - 2023-08-15
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1130
+- notification center by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1129
+
+## 2.0.144 - 2023-08-14
 - settings change event by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1110
 - top changes in SummaryPanelList by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1112
 - Otel agent jars by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1113

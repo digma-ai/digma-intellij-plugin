@@ -8,6 +8,7 @@ data class PersistenceData(
         var alreadyPassedTheInstallationWizardForRiderIDE: Boolean = false,
         var alreadyPassedTheInstallationWizardForPyCharmIDE: Boolean = false,
         var firstTimeConnectionEstablished: Boolean = false,
+        var firstTimeConnectionEstablishedTimestamp: String? = null,
         var firstWizardLaunch: Boolean = true,
         var firstTimeInsightReceived: Boolean = false,
         var firstTimeAssetsReceived: Boolean = false,
@@ -18,4 +19,10 @@ data class PersistenceData(
         var userId: String? = null,
         var firstTimePerformanceMetrics: Boolean = false,
         var lastInsightsEventTime: String? = null,
-)
+
+        var noInsightsYetNotificationPassed: Boolean = false
+
+) {
+
+
+}

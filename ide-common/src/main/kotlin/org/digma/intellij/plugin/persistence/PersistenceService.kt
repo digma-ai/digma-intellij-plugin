@@ -17,13 +17,9 @@ open class PersistenceService : PersistentStateComponent<PersistenceData> {
 
     // this is how we're going to call the component from different classes
     companion object {
-        private val logger = Logger.getInstance(PersistenceService::class.java)
         @JvmStatic
         fun getInstance() : PersistenceService {
-            Log.test(logger, "Getting instance of ${PersistenceService::class.simpleName}")
-            val service = ApplicationManager.getApplication().getService(PersistenceService::class.java)
-            Log.test(logger, "Returning ${PersistenceService::class.simpleName}")
-            return service
+            return ApplicationManager.getApplication().getService(PersistenceService::class.java)
         }
     }
 

@@ -150,7 +150,7 @@ public class AnalyticsService implements Disposable {
     //just replace the client and do not fire any events
     //this method should be synchronized, and it shouldn't be a problem that really doesn't happen too often.
     private synchronized void replaceClient(String url, String token) {
-        Log.test(LOGGER, "Asking to replace client");
+        Log.test(LOGGER::info, "Asking to replace client");
         if (analyticsProviderProxy != null) {
             try {
                 analyticsProviderProxy.close();
@@ -178,7 +178,7 @@ public class AnalyticsService implements Disposable {
 
         }catch (Exception e){
 //            Log.warnWithException(LOGGER,e,"error fetching environments");
-            Log.test(LOGGER,"error fetching environments");
+            Log.test(LOGGER::warn,"error fetching environments - {}", e.getMessage());
             environment.getEnvironments().clear();
             environment.setCurrentInternal(null);
             BackendConnectionMonitor.getInstance(project).connectionLost();
@@ -188,7 +188,7 @@ public class AnalyticsService implements Disposable {
 
 
     private void replaceClientAndFireChange(String url, String token) {
-        Log.test(LOGGER, "Firing Digma: Environments list changed");
+        Log.test(LOGGER::info, "Firing Digma: Environments list changed");
         Backgroundable.ensureBackground(project, "Digma: Environments list changed", () -> {
             var currentEnv = environment.getCurrent();
             replaceClient(url, token);
@@ -506,14 +506,14 @@ public class AnalyticsService implements Disposable {
 
                 Object result;
                 try {
-                    Log.test(LOGGER, "Invoking analyticsProvider.{} with args", method.getName(), argsToString(args));
+                    Log.test(LOGGER::info, "Invoking analyticsProvider.{} with args", method.getName(), argsToString(args));
                     result = method.invoke(analyticsProvider, args);
                 }catch (Exception e){
                     //this is a poor retry, we don't have a retry mechanism, but sometimes there is a momentary
                     // connection issue and the next call will succeed, instead of going through the exception handling
                     // and events , just try again once. the performance penalty is minor, we are in error state anyway.
-                    Log.test(LOGGER, "Invoking analyticsProvider.{} failed - e", method.getName(), e.getMessage());
-                    Log.test(LOGGER, "Retry invoking analyticsProvider.{} with args", method.getName(), argsToString(args));
+                    Log.test(LOGGER::warn, "Invoking analyticsProvider.{} failed - {}", method.getName(), e.getMessage());
+                    Log.test(LOGGER::info, "Retry invoking analyticsProvider.{} with args", method.getName(), argsToString(args));
                     result = method.invoke(analyticsProvider, args);
                 }
 
@@ -523,7 +523,7 @@ public class AnalyticsService implements Disposable {
                 }
 
                 if (!PersistenceService.getInstance().getState().getFirstTimeConnectionEstablished()) {
-                    Log.test(LOGGER, "Calling ActivityMonitor.getInstance(project).registerFirstConnectionEstablished()");
+                    Log.test(LOGGER::info, "Calling ActivityMonitor.getInstance(project).registerFirstConnectionEstablished()");
                     ActivityMonitor.getInstance(project).registerFirstConnectionEstablished();
                     PersistenceService.getInstance().getState().setFirstTimeConnectionEstablished(true);
                 }
@@ -553,7 +553,7 @@ public class AnalyticsService implements Disposable {
                 //so just throw an exception, code that calls these methods should be ready for AnalyticsServiceException.
                 if (methodsToIgnoreExceptions.contains(method.getName())){
 //                    Log.warnWithException(LOGGER,e, "failed executing method {}",method);
-                    Log.test(LOGGER,"failed executing method {}", method);
+                    Log.test(LOGGER::warn,"failed executing method {} - {}", method, e.getMessage());
                     throw new AnalyticsServiceException(e);
                 }
 

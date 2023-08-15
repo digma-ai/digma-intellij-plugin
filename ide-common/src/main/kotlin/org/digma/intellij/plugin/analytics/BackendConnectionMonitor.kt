@@ -17,10 +17,7 @@ class BackendConnectionMonitor(val project: Project) : Disposable, AnalyticsServ
         private val logger = Logger.getInstance(BackendConnectionMonitor::class.java)
         @JvmStatic
         fun getInstance(project: Project): BackendConnectionMonitor {
-            Log.test(logger,"Getting instance of ${BackendConnectionMonitor::class.simpleName}")
-            val service = project.getService(BackendConnectionMonitor::class.java)
-            Log.test(logger, "Returning ${BackendConnectionMonitor::class.simpleName}")
-            return service;
+            return project.getService(BackendConnectionMonitor::class.java)
         }
     }
 
@@ -29,28 +26,25 @@ class BackendConnectionMonitor(val project: Project) : Disposable, AnalyticsServ
     private val analyticsConnectionEventsConnection: MessageBusConnection = project.messageBus.connect()
 
     init {
-        Log.test(logger,"Initializing ${BackendConnectionMonitor::class.simpleName}")
         analyticsConnectionEventsConnection.subscribe(
             AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC,
             this
         )
-        Log.test(logger,"Finished ${BackendConnectionMonitor::class.simpleName} initialization")
     }
 
     override fun dispose() {
-        Log.test(logger,"Disposing")
+        Log.test(logger::info,"analyticsConnectionEventsConnection.dispose()")
         analyticsConnectionEventsConnection.dispose()
         hasConnectionError = false
-        Log.test(logger,"Finished disposing")
     }
 
     fun isConnectionError(): Boolean {
-        Log.test(logger,"isConnectionError")
+        Log.test(logger::warn,"isConnectionError")
         return false
     }
 
     fun isConnectionOk(): Boolean {
-        Log.test(logger,"isConnectionOk")
+        Log.test(logger::info,"isConnectionOk")
         return true
     }
 

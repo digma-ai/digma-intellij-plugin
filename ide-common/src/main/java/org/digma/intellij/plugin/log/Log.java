@@ -23,13 +23,13 @@ public class Log {
         consumer.accept(DIGMA + String.format(format.replace("{}", "%s"), args));
     }
 
-    public static void test(Logger logger, String format, Object... args) {
+    public static void test(Consumer<String> consumer, String format, Object... args) {
         StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
         String callingMethodName = stackTraceElements[2].getMethodName();
         String lineNumber = String.valueOf(stackTraceElements[2].getLineNumber());
         String threadName = Thread.currentThread().getName();
         String header = String.format("%s:%s - %s", callingMethodName, lineNumber, threadName);
-        logger.warn(header + " - " + String.format(format.replace("{}", "%s"), args));
+        consumer.accept(header + " - " + String.format(format.replace("{}", "%s"), args));
     }
 
     public static void debugWithException(Logger logger,Throwable e, String format, Object... args) {

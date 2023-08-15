@@ -88,10 +88,7 @@ public class MainToolWindowCardsController implements Disposable {
 
 
     public static MainToolWindowCardsController getInstance(@NotNull Project project) {
-        Log.test(LOGGER, "Getting instance of {}", MainToolWindowCardsController.class.getSimpleName());
-        MainToolWindowCardsController service = project.getService(MainToolWindowCardsController.class);
-        Log.test(LOGGER, "Returning {}", MainToolWindowCardsController.class.getSimpleName());
-        return service;
+        return project.getService(MainToolWindowCardsController.class);
     }
 
 

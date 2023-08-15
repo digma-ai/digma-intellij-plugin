@@ -30,13 +30,9 @@ import java.util.concurrent.TimeUnit
 class ActivityMonitor(project: Project) :Disposable {
 
     companion object {
-        private val logger = Logger.getInstance(ActivityMonitor::class.java)
         @JvmStatic
         fun getInstance(project: Project): ActivityMonitor {
-            Log.test(logger,"Getting instance of ${ActivityMonitor::class.simpleName}")
-            val service = project.getService(ActivityMonitor::class.java)
-            Log.test(logger,"Returning ${ActivityMonitor::class.simpleName}")
-            return service
+            return project.getService(ActivityMonitor::class.java)
         }
     }
 
@@ -54,7 +50,6 @@ class ActivityMonitor(project: Project) :Disposable {
     private val settingsChangeTracker = SettingsChangeTracker()
 
     init {
-        Log.test(logger, "Initializing ${ActivityMonitor::class.simpleName}")
         val hostname = CommonUtils.getLocalHostname()
         if (System.getenv("devenv") == "digma") {
             userId = hostname
@@ -86,9 +81,7 @@ class ActivityMonitor(project: Project) :Disposable {
         postHog = PostHog.Builder(token).build()
         registerSessionDetails()
 
-        Log.test(logger,"Requesting ConnectionActivityMonitor")
         ConnectionActivityMonitor.loadInstance(project)
-        Log.test(logger,"Requesting PluginActivityMonitor")
         PluginActivityMonitor.loadInstance(project)
 
         settingsChangeTracker.start(this)
@@ -98,7 +91,6 @@ class ActivityMonitor(project: Project) :Disposable {
 
     override fun dispose() {
         //nothing to do, used as parent disposable
-        Log.test(logger,"Finished ${ActivityMonitor::class.simpleName} initialization")
     }
 
 //    override fun run() {

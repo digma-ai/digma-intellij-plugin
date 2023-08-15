@@ -136,7 +136,6 @@ public class RecentActivityService implements Disposable {
     public RecentActivityService(Project project) {
         this.project = project;
         //initialize AnalyticsService early so the UI already can detect the connection status when created
-        Log.test(logger, "Initializing {}", RecentActivityService.class.getSimpleName());
         this.analyticsService = project.getService(AnalyticsService.class);
         this.localHostname = CommonUtils.getLocalHostname();
         this.latestActivityResult = new RecentActivityResult(null, new ArrayList<>());

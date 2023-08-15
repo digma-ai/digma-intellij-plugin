@@ -16,7 +16,6 @@ public class ToolWindowShower {
 
 
     public static ToolWindowShower getInstance(@NotNull Project project) {
-        Log.log(LOGGER::warn, "Getting instance of " + ToolWindowShower.class.getSimpleName());
         return project.getService(ToolWindowShower.class);
     }
 

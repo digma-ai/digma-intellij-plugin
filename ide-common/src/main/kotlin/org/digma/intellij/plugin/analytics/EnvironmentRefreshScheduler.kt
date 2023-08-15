@@ -14,11 +14,11 @@ import org.digma.intellij.plugin.settings.SettingsState
 @Suppress("UnstableApiUsage")
 fun scheduleEnvironmentRefresh(parentDisposable: Disposable, environemnt: Environment) {
     val logger = Logger.getInstance("scheduleEnvironmentRefresh");
-    Log.test(logger, "launched analyticsService.refreshNowOnBackground() loop")
+    Log.test(logger::info, "launched analyticsService.refreshNowOnBackground() loop")
     DisposingScope(parentDisposable).launch {
         while (this.isActive) {
             delay(service<SettingsState>().refreshDelay.toLong() * 1000)
-            Log.test(logger, "call analyticsService.refreshNowOnBackground() ")
+            Log.test(logger::info, "call analyticsService.refreshNowOnBackground() ")
             environemnt.refreshNowOnBackground()
         }
     }

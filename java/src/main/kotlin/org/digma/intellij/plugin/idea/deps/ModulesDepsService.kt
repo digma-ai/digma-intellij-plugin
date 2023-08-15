@@ -22,13 +22,9 @@ import java.util.concurrent.TimeUnit
 class ModulesDepsService(private val project: Project) : Disposable {
 
     companion object {
-        private val logger = Logger.getInstance(ModulesDepsService::class.java)
         @JvmStatic
         fun getInstance(project: Project): ModulesDepsService {
-            Log.test(logger,"Getting instance of ${ModulesDepsService::class.simpleName}")
-            val service = project.getService(ModulesDepsService::class.java)
-            Log.test(logger, "Returning ${ModulesDepsService::class.simpleName}")
-            return service
+            return project.getService(ModulesDepsService::class.java)
         }
 
         @JvmStatic
@@ -241,7 +237,6 @@ class ModulesDepsService(private val project: Project) : Disposable {
         timer.schedule(
             fetchTask, DelayMilliseconds, PeriodMilliseconds
         )
-        Log.test(logger, "Finished ${ModulesDepsService::class.simpleName} initialization")
     }
 
     override fun dispose() {

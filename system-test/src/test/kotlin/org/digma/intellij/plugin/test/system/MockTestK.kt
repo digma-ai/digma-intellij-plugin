@@ -18,6 +18,7 @@ import org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
+import org.digma.intellij.plugin.recentactivity.RecentActivityStartupActivity
 import org.digma.intellij.plugin.test.system.framework.WaitFinishRule
 import org.digma.intellij.plugin.test.system.framework.WaitForAsync
 import org.digma.intellij.plugin.test.system.framework.environmentList
@@ -41,6 +42,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
     override fun setUp() {
         super.setUp()
         mockRestAnalyticsProvider(project)
+//        RecentActivityStartupActivity().runActivity(project)
     }
 
     override fun tearDown() {
@@ -65,7 +67,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
 
     @WaitForAsync
     fun `test get private field of analytics service`() {
-        Log.test(logger, "Requesting AnalyticsService")
+        Log.test(logger::info, "Requesting AnalyticsService")
         val analytics = analyticsService
         TestCase.assertNotNull(analytics)
         val field = analytics.javaClass.getDeclaredField("analyticsProviderProxy")
@@ -90,7 +92,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
         val editor: Editor = myFixture.editor
 
         val caretPosition = editor.caretModel.currentCaret.offset
-        Log.test(logger, "Caret position: $caretPosition")
+        Log.test(logger::info, "Caret position: $caretPosition")
 
         val fileText = editor.document.text
 
@@ -104,7 +106,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
             editor.selectionModel.selectLineAtCaret()
 
             val selectedText = editor.selectionModel.selectedText
-            Log.test(logger, "Selected text: $selectedText")
+            Log.test(logger::info, "Selected text: $selectedText")
 
             TestCase.assertNotNull(selectedText)
             TestCase.assertEquals("public class EditorEventsHandler implements FileEditorManagerListener {\n", selectedText?.dropWhitespaces())
@@ -133,7 +135,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
         val startOffset = editor.caretModel.visualLineStart
         editor.selectionModel.setSelection(startOffset, endOffset)
         val selectedText = editor.selectionModel.selectedText
-        Log.test(logger, "Selected text: $selectedText")
+        Log.test(logger::info, "Selected text: $selectedText")
 
         TestCase.assertNotNull(selectedText)
         TestCase.assertEquals("public void selectionChanged(@NotNull FileEditorManagerEvent editorManagerEvent) {\n", selectedText?.dropWhitespaces())
@@ -170,6 +172,10 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
 
     @WaitForAsync
     fun `test that Insights are retrieved from analytics service`() {
+
+        val environments = analyticsService.environments
+        TestCase.assertEquals(environmentList, environments)
+
         val file = myFixture.configureByFile("EditorEventsHandler.java")
         val expectedMethodInsights = expectedInsightsOfMethodsResponse
         myFixture.openFileInEditor(file.virtualFile)
@@ -178,7 +184,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
         assertTrue(documentInfoService.focusedFile == file.virtualFile)
 
         runBlocking {
-            delay(1000L)
+            delay(3000L)
         }
 
         val documentInfoContainer = documentInfoService.getDocumentInfo(file.virtualFile)
@@ -186,6 +192,12 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
 
         val insights: MutableMap<String, MutableList<CodeObjectInsight>>? = documentInfoContainer?.allMethodWithInsightsMapForCurrentDocument
         TestCase.assertNotNull("Insights are null", insights)
+        try {
+            Log.test(logger::info, "Insights size = ${insights?.size}")
+            TestCase.assertTrue(insights?.size == 4)
+        } finally {
+            waitRule.signalComplete()
+        }
 
         insights?.toList()?.forEachIndexed { index, it ->
             TestCase.assertTrue(it.second.isNotEmpty())
@@ -203,7 +215,9 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
 
     @WaitForAsync
     fun `test get method from file and find the range`() {
+
         val file = myFixture.configureByFile("EditorEventsHandler.java")
+        myFixture.openFileInEditor(file.virtualFile)
 
         val methodList: MutableList<PsiMethod> = mutableListOf()
         file.accept(object : JavaRecursiveElementVisitor() {
@@ -225,7 +239,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
         @Suppress("UNCHECKED_CAST") val methodInfos: List<MethodInfo>? = methodRef?.invoke(documentInfoContainer) as List<MethodInfo>?
 
         methodInfos?.forEach { method: MethodInfo ->
-            Log.test(logger, "method: ${method.name}, methodOffsetInfile: ${method.offsetAtFileUri},")
+            Log.test(logger::info, "method: ${method.name}, methodOffsetInfile: ${method.offsetAtFileUri},")
         }
 
         TestCase.assertNotNull(methodInfos)

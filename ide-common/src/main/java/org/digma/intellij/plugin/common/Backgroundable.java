@@ -20,11 +20,11 @@ public class Backgroundable {
     public static void ensureBackground(Project project, String name, Runnable task) {
 
         Log.log(LOGGER::trace, "Request to call task '{}'", name);
-        Log.test(LOGGER, "Requesting to fire task '{}'", name);
+        Log.test(LOGGER::info, "Requesting to fire task '{}'", name);
 
         if (SwingUtilities.isEventDispatchThread()) {
             Log.log(LOGGER::trace, "Executing task '{}' in background thread", name);
-            Log.test(LOGGER, "Firing task '{}' in background thread", name);
+            Log.test(LOGGER::info, "Firing task '{}' in background thread", name);
             new Task.Backgroundable(project, name) {
                 @Override
                 public void run(@NotNull ProgressIndicator indicator) {
@@ -33,7 +33,7 @@ public class Backgroundable {
             }.queue();
         } else {
             Log.log(LOGGER::trace, "Executing task '{}' in current thread", name);
-            Log.test(LOGGER, "Executing task '{}' in current thread", name);
+            Log.test(LOGGER::info, "Executing task '{}' in current thread", name);
             task.run();
         }
     }

@@ -7,6 +7,8 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.progress.EmptyProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
@@ -313,8 +315,8 @@ public class PythonLanguageService implements LanguageService {
         Log.log(LOGGER::debug, "got buildDocumentInfo request for {}", psiFile);
         if (psiFile instanceof PyFile pyFile) {
 
-            return Retries.retryWithResult(() -> ReadAction.compute(() -> PythonCodeObjectsDiscovery.buildDocumentInfo(project, pyFile)),
-                    Throwable.class,50,5);
+            return ProgressManager.getInstance().runProcess(() -> Retries.retryWithResult(() -> ReadAction.compute(() -> PythonCodeObjectsDiscovery.buildDocumentInfo(project, pyFile)),
+                    Throwable.class,50,5),new EmptyProgressIndicator());
 
         } else {
             Log.log(LOGGER::debug, "psi file is noy python, returning empty DocumentInfo for {}", psiFile);

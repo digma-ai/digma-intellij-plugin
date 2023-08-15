@@ -9,6 +9,7 @@ import com.intellij.openapi.editor.event.DocumentListener;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -102,19 +103,17 @@ class DocumentChangeListener {
 
                     try {
                         Log.log(LOGGER::debug, "got documentChanged alarm for {}", event.getDocument());
-                        //this code is always executed in smart mode because the document listener is installed only in smart mode
-
                         Log.log(LOGGER::debug, "Processing documentChanged event for {}", changedPsiFile.getVirtualFile());
                         processDocumentChanged(changedPsiFile,fileEditor);
                     } catch (Exception e) {
-                        Log.debugWithException(LOGGER, e, "exception while processing documentChanged event for file: {}, {}", event.getDocument(), e.getMessage());
+                        Log.warnWithException(LOGGER, e, "exception while processing documentChanged event for file: {}, {}", event.getDocument(), e.getMessage());
                     }
 
                     EDT.ensureEDT(() -> {
                         //caret event is not always fired while editing, but the document may change, and a caret
                         // event will fire only when the caret moves but not while editing.
                         // if the document changes and no caret event is fired the UI will not be updated.
-                        // so calling hare currentContextUpdater after document change will update the UI.
+                        // so calling here currentContextUpdater after document change will update the UI.
                         var editor1 = EditorUtils.getSelectedTextEditorForFile(changedPsiFile.getVirtualFile(), FileEditorManager.getInstance(project));
                         if (editor1 != null){
                             int caretOffset = editor1.logicalPositionToOffset(editor1.getCaretModel().getLogicalPosition());
@@ -142,11 +141,18 @@ class DocumentChangeListener {
 
         //todo: try to improve.
         // see : https://github.com/digma-ai/digma-intellij-plugin/issues/343
-        DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFile,fileEditor);
-        Log.log(LOGGER::debug, "got DocumentInfo for {}", psiFile.getVirtualFile());
 
-        documentInfoService.addCodeObjects(psiFile, documentInfo);
-        Log.log(LOGGER::debug, "documentInfoService updated with DocumentInfo for {}", psiFile.getVirtualFile());
+        DumbService.getInstance(project).waitForSmartMode();
+
+        if (fileEditor.isValid()) {
+
+            DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFile, fileEditor);
+
+            Log.log(LOGGER::debug, "got DocumentInfo for {}", psiFile.getVirtualFile());
+
+            documentInfoService.addCodeObjects(psiFile, documentInfo);
+            Log.log(LOGGER::debug, "documentInfoService updated with DocumentInfo for {}", psiFile.getVirtualFile());
+        }
 
     }
 

@@ -66,7 +66,7 @@ public class EditorInteractionService implements CaretContextService, Disposable
         }
 
 
-        Backgroundable.ensureBackground(project, "Digma: Context change", () -> {
+        Backgroundable.ensurePooledThread(() -> {
             Log.log(logger::debug, "Executing contextChanged in background for {}", methodUnderCaret.getId());
             var stopWatch = StopWatch.createStarted();
             try {

@@ -15,6 +15,8 @@ import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
+import com.intellij.openapi.progress.EmptyProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
@@ -524,8 +526,9 @@ public class JavaLanguageService implements LanguageService {
         //must be PsiJavaFile , this method should be called only for java files
         if (psiFile instanceof PsiJavaFile psiJavaFile) {
 
-            return Retries.retryWithResult(() -> ReadAction.compute(() -> JavaCodeObjectDiscovery.buildDocumentInfo(project, psiJavaFile, endpointDiscoveryList)),
-                    Throwable.class,50,5);
+            return ProgressManager.getInstance().runProcess(() -> Retries.retryWithResult(() -> ReadAction.compute(() -> JavaCodeObjectDiscovery.buildDocumentInfo(project, psiJavaFile, endpointDiscoveryList)),
+                    Throwable.class,50,5),new EmptyProgressIndicator());
+
         } else {
             Log.log(LOGGER::debug, "psi file is not java, returning empty DocumentInfo for {}", psiFile);
             return new DocumentInfo(PsiUtils.psiFileToUri(psiFile), new HashMap<>());

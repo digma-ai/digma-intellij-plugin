@@ -18,7 +18,6 @@ import org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
-import org.digma.intellij.plugin.recentactivity.RecentActivityStartupActivity
 import org.digma.intellij.plugin.test.system.framework.WaitFinishRule
 import org.digma.intellij.plugin.test.system.framework.WaitForAsync
 import org.digma.intellij.plugin.test.system.framework.environmentList
@@ -32,7 +31,9 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
     private val logger = Logger.getInstance(MockTestK::class.java)
 
     @get:Rule
-    val waitRule: WaitFinishRule = WaitFinishRule()
+    val done: WaitFinishRule = WaitFinishRule()
+
+    lateinit var messageBusTestListeners: MessageBusTestListeners;
 
     private val analyticsService: AnalyticsService
         get() {
@@ -42,11 +43,12 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
     override fun setUp() {
         super.setUp()
         mockRestAnalyticsProvider(project)
+        messageBusTestListeners = MessageBusTestListeners(project, done)
 //        RecentActivityStartupActivity().runActivity(project)
     }
 
     override fun tearDown() {
-        waitRule.waitForCompletion()
+        done.waitForCompletion()
         super.tearDown()
     }
 
@@ -62,7 +64,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
     fun `test that all services are up and running`() {
         val analytics = AnalyticsService.getInstance(project)
         TestCase.assertNotNull(analytics)
-        waitRule.signalComplete()
+        done()
     }
 
     @WaitForAsync
@@ -74,7 +76,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
         field.isAccessible = true
         val analyticsImpl = field.get(analytics)
         TestCase.assertNotNull(analyticsImpl)
-        waitRule.signalComplete()
+        done()
     }
 
 
@@ -82,7 +84,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
     fun `test that analytics service returns mocked environment`() {
         val environments = analyticsService.environments
         TestCase.assertEquals(environmentList, environments)
-        waitRule.signalComplete()
+        done()
     }
 
     @WaitForAsync
@@ -116,7 +118,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
 
             TestCase.assertNotNull(codeLens)
         }
-        waitRule.signalComplete()
+        done()
     }
 
 
@@ -140,7 +142,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
         TestCase.assertNotNull(selectedText)
         TestCase.assertEquals("public void selectionChanged(@NotNull FileEditorManagerEvent editorManagerEvent) {\n", selectedText?.dropWhitespaces())
 
-        waitRule.signalComplete()
+        done()
     }
 
     @WaitForAsync
@@ -150,7 +152,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
         myFixture.openFileInEditor(file.virtualFile)
         assertTrue(DocumentInfoService.getInstance(project).focusedFile == file.virtualFile)
 
-        waitRule.signalComplete()
+        done()
     }
 
     @WaitForAsync
@@ -167,7 +169,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
         myFixture.openFileInEditor(file.virtualFile)
         assertTrue(documentInfoService.focusedFile == file.virtualFile)
 
-        waitRule.signalComplete()
+        done()
     }
 
     @WaitForAsync
@@ -196,7 +198,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
             Log.test(logger::info, "Insights size = ${insights?.size}")
             TestCase.assertTrue(insights?.size == 4)
         } finally {
-            waitRule.signalComplete()
+            done()
         }
 
         insights?.toList()?.forEachIndexed { index, it ->
@@ -209,7 +211,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
             }
         }
 
-        waitRule.signalComplete()
+        done()
     }
 
 
@@ -245,13 +247,26 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
         TestCase.assertNotNull(methodInfos)
         TestCase.assertEquals(methodList.size, methodInfos?.size)
 
-        waitRule.signalComplete()
+        done()
     }
 
     @WaitForAsync
     fun `test subscribe`() {
-        TestCase.assertTrue(true)
+        var testvar: Boolean = true
+        messageBusTestListeners.registerSubToDocumentInfoChangedEvent { 
+            Log.test(logger::info, "Test Subscriber - DocumentInfoChanged: documentInfoChanged")
+            testvar = false
+            TestCase.assertTrue("This is intended to be called, remove the line to properly test", testvar)
+        }
+        
+        val file = myFixture.configureByFile("EditorEventsHandler.java")
+//        runBlocking { delay(1000L) }
+        val file2 = myFixture.configureByFile("EditorEventsHandler2.java")
+        
+        
+//        done()
+        
     }
-
+    
 }
 

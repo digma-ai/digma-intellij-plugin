@@ -66,7 +66,6 @@ public class DocumentInfoService {
 
 
     public static DocumentInfoService getInstance(Project project) {
-        Log.log(LOGGER::warn, "Getting instance of " + DocumentInfoService.class.getSimpleName());
         return project.getService(DocumentInfoService.class);
     }
 

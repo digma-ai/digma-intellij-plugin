@@ -59,5 +59,9 @@ open class PersistenceService : PersistentStateComponent<PersistenceData> {
         state.isFirstTimePluginLoaded = true
     }
 
+    fun setNoInsightsYetNotificationPassed() {
+        state.noInsightsYetNotificationPassed = true
+    }
+
 
 }

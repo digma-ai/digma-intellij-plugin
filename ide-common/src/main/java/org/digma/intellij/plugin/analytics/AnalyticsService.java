@@ -11,6 +11,7 @@ import com.intellij.util.Alarm;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.CommonUtils;
+import org.digma.intellij.plugin.common.DatesUtils;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
@@ -84,7 +85,6 @@ import static org.digma.intellij.plugin.common.EnvironmentUtilKt.isEnvironmentLo
 import static org.digma.intellij.plugin.common.EnvironmentUtilKt.isEnvironmentLocalTests;
 import static org.digma.intellij.plugin.common.EnvironmentUtilKt.isLocalEnvironmentMine;
 import static org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult;
-import static org.digma.intellij.plugin.notifications.NotificationRemindersKt.startNoInsightsReminderNotificationTimer;
 
 
 public class AnalyticsService implements Disposable {
@@ -523,7 +523,7 @@ public class AnalyticsService implements Disposable {
                 if (!PersistenceService.getInstance().getState().getFirstTimeConnectionEstablished()) {
                     ActivityMonitor.getInstance(project).registerFirstConnectionEstablished();
                     PersistenceService.getInstance().getState().setFirstTimeConnectionEstablished(true);
-                    startNoInsightsReminderNotificationTimer(AnalyticsService.this,project);
+                    PersistenceService.getInstance().getState().setFirstTimeConnectionEstablishedTimestamp(DatesUtils.Instants.instantToString(Instant.now()));
                 }
 
                 //if we are here then the call to the underlying analytics api succeeded, we can reset the status

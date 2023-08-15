@@ -1,15 +1,15 @@
 package org.digma.intellij.plugin.toolwindow;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.openapi.wm.ex.ToolWindowManagerListener;
 import org.digma.intellij.plugin.PluginId;
 import org.digma.intellij.plugin.docker.DockerService;
+import org.digma.intellij.plugin.notifications.AppNotificationCenter;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.jetbrains.annotations.NotNull;
-
-import static org.digma.intellij.plugin.notifications.NotificationRemindersKt.showInstallationInProgressNotification;
 
 public class DigmaToolWindowsListener implements ToolWindowManagerListener {
 
@@ -79,7 +79,7 @@ public class DigmaToolWindowsListener implements ToolWindowManagerListener {
         ActivityMonitor.getInstance(project).registerSidePanelClosed();
 
         if(DockerService.getInstance().isInstallationInProgress()){
-            showInstallationInProgressNotification();
+            ApplicationManager.getApplication().getService(AppNotificationCenter.class).showInstallationInProgressNotification(project);
         }
     }
 

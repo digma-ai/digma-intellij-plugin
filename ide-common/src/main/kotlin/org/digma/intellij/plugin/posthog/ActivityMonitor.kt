@@ -470,6 +470,14 @@ class ActivityMonitor(project: Project) :Disposable {
         )
     }
 
+    fun registerNotificationCenterEvent(eventName: String, eventDetails: Map<String, Any>) {
+        postHog?.capture(
+            userId,
+            "Notifications.".plus(eventName),
+            eventDetails
+        )
+    }
+
 
 //    override fun dispose() {
 //        try {

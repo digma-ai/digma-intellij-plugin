@@ -33,7 +33,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
     @get:Rule
     val done: WaitFinishRule = WaitFinishRule()
 
-    lateinit var messageBusTestListeners: MessageBusTestListeners;
+    private lateinit var messageBusTestListeners: MessageBusTestListeners
 
     private val analyticsService: AnalyticsService
         get() {
@@ -43,7 +43,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
     override fun setUp() {
         super.setUp()
         mockRestAnalyticsProvider(project)
-        messageBusTestListeners = MessageBusTestListeners(project, done)
+        messageBusTestListeners = MessageBusTestListeners(project.messageBus)
 //        RecentActivityStartupActivity().runActivity(project)
     }
 
@@ -103,8 +103,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
             // move caret to line 37
             val newCaretPosition = editor.offsetToLogicalPosition(classKeywordIndex)
             editor.caretModel.moveToLogicalPosition(newCaretPosition)
-
-            val lineNumber = editor.document.getLineNumber(classKeywordIndex)
+            
             editor.selectionModel.selectLineAtCaret()
 
             val selectedText = editor.selectionModel.selectedText
@@ -131,7 +130,6 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
         //moving caret to line 79 (method selectionChanged) (line number is 79 but the logical line position is 78)
         val newLogicalPosition = LogicalPosition(78, 7)
         editor.caretModel.moveToLogicalPosition(newLogicalPosition)
-        val caretPosition = editor.caretModel.currentCaret.offset
 
         val endOffset = editor.caretModel.visualLineEnd
         val startOffset = editor.caretModel.visualLineStart
@@ -252,20 +250,18 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
 
     @WaitForAsync
     fun `test subscribe`() {
-        var testvar: Boolean = true
+        //prepare
         messageBusTestListeners.registerSubToDocumentInfoChangedEvent { 
             Log.test(logger::info, "Test Subscriber - DocumentInfoChanged: documentInfoChanged")
-            testvar = false
-            TestCase.assertTrue("This is intended to be called, remove the line to properly test", testvar)
+            assertTrue("This is intended to be called, remove the line to properly test", true)
+            done()
         }
         
-        val file = myFixture.configureByFile("EditorEventsHandler.java")
-//        runBlocking { delay(1000L) }
-        val file2 = myFixture.configureByFile("EditorEventsHandler2.java")
-        
-        
-//        done()
-        
+        //act
+        myFixture.configureByFile("EditorEventsHandler.java")
+
+        //done
+        done.waitForCompletion()
     }
     
 }

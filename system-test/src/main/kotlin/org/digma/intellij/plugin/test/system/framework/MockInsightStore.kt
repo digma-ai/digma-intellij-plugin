@@ -10,11 +10,6 @@ import org.digma.intellij.plugin.model.rest.insights.MethodWithInsights
 import org.digma.intellij.plugin.model.rest.insights.ShortDisplayInfo
 import java.util.Date
 
-val EnvironmentListMock = listOf(
-    "env1_mock",
-    "env2_mock",
-)
-
 
 val methodCodeObject1 =  MethodWithCodeObjects(
     codeObjectId = "org.digma.intellij.plugin.editor.EditorEventsHandler\$_\$isFileNotChangingContext",

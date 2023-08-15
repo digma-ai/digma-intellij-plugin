@@ -78,6 +78,10 @@ fun createNoDataYetEmptyStatePanel(project: Project): JPanel {
     componentsPanel.add(messagePanel, constraints)
 
     val link = ActionLink("Not Seeing Your Application Data?") {
+        ActivityMonitor.getInstance(project).registerCustomEvent("troubleshooting link clicked",
+            mapOf(
+                "origin" to "NoDataYetEmptyStatePane"
+            ))
         MainToolWindowCardsController.getInstance(project).showTroubleshooting()
     }
 

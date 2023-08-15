@@ -18,11 +18,12 @@ class ShowTroubleshootingAction(
     override fun actionPerformed(e: AnActionEvent) {
         Log.log(AppNotificationCenter.logger::info,"in ShowTroubleshootingAction, action clicked")
 
-        ActivityMonitor.getInstance(project).registerNotificationCenterEvent("ShowTroubleshootingAction.clicked",
+        ActivityMonitor.getInstance(project).registerCustomEvent("troubleshooting link clicked",
             mapOf(
-                "project" to project.name,
-                "notificationName" to notificationName
+                "origin" to notificationName
             ))
+
+        ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.clicked",mapOf())
 
         ToolWindowShower.getInstance(project).showToolWindow()
         MainToolWindowCardsController.getInstance(project).showTroubleshooting()
@@ -39,11 +40,7 @@ class ShowToolWindowAction(
     override fun actionPerformed(e: AnActionEvent) {
         Log.log(AppNotificationCenter.logger::info,"in ShowToolWindowAction, action clicked")
 
-        ActivityMonitor.getInstance(project).registerNotificationCenterEvent("ShowToolWindowAction.clicked",
-            mapOf(
-                "project" to project.name,
-                "notificationName" to notificationName
-            ))
+        ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.clicked",mapOf())
 
         ToolWindowShower.getInstance(project).showToolWindow()
         notification.expire()

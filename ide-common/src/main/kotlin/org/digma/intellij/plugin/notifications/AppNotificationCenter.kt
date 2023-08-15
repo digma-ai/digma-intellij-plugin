@@ -28,7 +28,7 @@ class AppNotificationCenter: Disposable {
     }
 
     init {
-        Log.log(logger::info,"Starting app notification center")
+        Log.log(logger::info,"Starting notification center")
         startNoInsightsYetNotificationTimer()
     }
 
@@ -67,10 +67,7 @@ class AppNotificationCenter: Disposable {
 
         Log.log(logger::info,"showing InstallationFinishedNotification")
 
-        ActivityMonitor.getInstance(project).registerNotificationCenterEvent("Show.InstallationFinishedNotification",
-            mapOf(
-                "project" to project.name
-            ))
+        ActivityMonitor.getInstance(project).registerNotificationCenterEvent("Show.InstallationFinishedNotification",mapOf())
 
         val notification = NotificationGroupManager.getInstance().getNotificationGroup(STICKY_REMINDERS_NOTIFICATION_GROUP)
             .createNotification( "Digma successfully installed","Please follow the onboarding steps to run your application with Digma", NotificationType.INFORMATION)

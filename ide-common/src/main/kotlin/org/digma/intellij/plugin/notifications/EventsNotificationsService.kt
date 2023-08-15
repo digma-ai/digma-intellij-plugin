@@ -113,12 +113,9 @@ class EventsNotificationsService(val project: Project) : Disposable {
             Log.log(logger::info, "showing Notification For FirstImportantInsight {}",importantInsight)
 
 
-            ActivityMonitor.getInstance(project).registerNotificationCenterEvent("Show.FirstImportantInsightNotification",
-                mapOf(
-                    "project" to project.name
-                ))
+            ActivityMonitor.getInstance(project).registerNotificationCenterEvent("Show.FirstImportantInsightNotification",mapOf())
 
-            showInsightNotification(
+            showFirstImportantInsightNotification(
                 project,
                 codeObjectId,
                 methodId,
@@ -149,7 +146,7 @@ class EventsNotificationsService(val project: Project) : Disposable {
 //    }
 
 
-    private fun showInsightNotification(project: Project, codeObjectId: String, methodId: String?, environment: String) {
+    private fun showFirstImportantInsightNotification(project: Project, codeObjectId: String, methodId: String?, environment: String) {
 
         val notification = NotificationGroupManager.getInstance().getNotificationGroup(EVENTS_NOTIFICATION_GROUP)
             .createNotification("First important insight!", "In analyzing your code Digma found the following insight:", NotificationType.INFORMATION)
@@ -188,11 +185,7 @@ class GoToCodeObjectInsightsAction(
 
         Log.log(EventsNotificationsService.logger::info, "GoToCodeObjectInsightsAction action clicked for {}",codeObjectId)
 
-        ActivityMonitor.getInstance(project).registerNotificationCenterEvent("GoToCodeObjectInsightsAction.clicked",
-            mapOf(
-                "project" to project.name,
-                "notificationName" to notificationName
-            ))
+        ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.clicked",mapOf())
 
         val canNavigate = project.service<CodeNavigator>().canNavigateToSpanOrMethod(codeObjectId, methodId)
 

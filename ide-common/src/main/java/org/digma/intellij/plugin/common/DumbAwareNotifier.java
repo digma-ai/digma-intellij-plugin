@@ -18,10 +18,7 @@ public class DumbAwareNotifier {
     }
 
     public static DumbAwareNotifier getInstance(Project project) {
-        Log.test(LOGGER, "Getting instance of {}", DumbAwareNotifier.class.getSimpleName());
-        DumbAwareNotifier service = project.getService(DumbAwareNotifier.class);
-        Log.test(LOGGER, "Returning {}", DumbAwareNotifier.class.getSimpleName());
-        return service;
+        return project.getService(DumbAwareNotifier.class);
     }
 
     public void whenSmart(@NotNull Runnable runnable) {

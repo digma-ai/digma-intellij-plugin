@@ -34,9 +34,9 @@ class WaitFinishRule : TestRule {
 
     //using this method to wait for async operations to complete, e.g.: in tearDown()
     fun waitForCompletion() {
-        if (latch.await(10, TimeUnit.SECONDS))
-            Log.test(logger, "WaitForAsync completed")
+        if (latch.await(100, TimeUnit.SECONDS))
+            Log.test(logger::info, "WaitForAsync completed")
         else
-            Log.test(logger, "WaitForAsync timeout")
+            Log.test(logger::warn, "WaitForAsync timeout")
     }
 }

@@ -11,7 +11,6 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.frameworks.QuarkusConfigureDepsPanel
 import org.digma.intellij.plugin.ui.frameworks.SpringBootMicrometerConfigureDepsPanel
 import java.awt.BorderLayout
-import java.awt.CardLayout
 import javax.swing.BorderFactory
 import javax.swing.BoxLayout
 import javax.swing.JLabel
@@ -21,10 +20,14 @@ fun createMainToolWindowPanel(project: Project, contentPanel: ContentPanel): JPa
 
     val navigationPanel = NavigationPanel(project)
 
-    //todo: creating a notification to update intellij. relevant only for users running 2023.1 and bellow.
-    // when we stop support for 2023.1 we can remove this wrapper panel and use original updatePanel
-    //val updatePanel = UpdateVersionPanel(project)
-    val updatePanel = createUpdateIntellijNotificationWrapper(UpdateVersionPanel(project),project)
+    val updatePanel = UpdateVersionPanel(project)
+
+    //todo: updateIDEPanel is a notification to update intellij. relevant only for users running 2023.1 and bellow.
+    // when we stop support for 2023.1 we can remove this panel.
+    // updatePanel and updateIDEPanel should not be visible at the same time,
+    // while updateIDEPanel is visible it prevents updatePanel from being visible. when update ide
+    // button is clicked it enables updatePanel again.
+    val updateIDEPanel: JPanel? = createUpdateIntellijNotificationWrapper(updatePanel,project)
 
     val quarkusConfigureDepsPanel: JPanel? =
         if (IDEUtilsService.getInstance(project).isJavaProject()) {
@@ -52,6 +55,11 @@ fun createMainToolWindowPanel(project: Project, contentPanel: ContentPanel): JPa
     topPanel.add(navigationPanel)
     topPanel.add(updatePanel)
 
+    updateIDEPanel?.let {
+        topPanel.add(it)
+    }
+
+
     quarkusConfigureDepsPanel?.let {
         topPanel.add(it)
     }
@@ -72,41 +80,26 @@ fun createMainToolWindowPanel(project: Project, contentPanel: ContentPanel): JPa
 //todo: remove when we stop support for 2023.1.
 // also remove the property UpdateVersionPanel.tempEnableReset
 
-private const val ORG_UPDATE_PANEL = "ORG_UPDATE_PANEL"
-private const val UPDATE_INTELLIJ_PANEL = "UPDATE_INTELLIJ_PANEL"
+private fun createUpdateIntellijNotificationWrapper(updatePanel: UpdateVersionPanel, project: Project): JPanel? {
 
-private fun createUpdateIntellijNotificationWrapper(updatePanel: UpdateVersionPanel, project: Project):JPanel{
-
-    if (!shouldAddUpdateIntellijNotification()){
+    if (!shouldAddUpdateIntellijNotification()) {
         updatePanel.tempEnableReset = true
         updatePanel.reset()
-        return updatePanel
+        return null
     }
 
-    ActivityMonitor.getInstance(project).registerCustomEvent("show update IDE notification",
+    ActivityMonitor.getInstance(project).registerCustomEvent(
+        "show update IDE notification",
         mapOf(
             "ideVersion" to ApplicationInfo.getInstance().fullVersion
-        ))
+        )
+    )
 
-
-    val cardLayout = CardLayout()
-    val wrapper = JPanel(cardLayout)
-
-    val updateIntellijPanel = createUpdateIntellijPanel(cardLayout,wrapper,updatePanel,project)
-
-
-    wrapper.border = JBUI.Borders.empty(4)
-    wrapper.add(updatePanel, ORG_UPDATE_PANEL)
-    wrapper.add(updateIntellijPanel, UPDATE_INTELLIJ_PANEL)
-    cardLayout.addLayoutComponent(updatePanel, ORG_UPDATE_PANEL)
-    cardLayout.addLayoutComponent(updateIntellijPanel, UPDATE_INTELLIJ_PANEL)
-    cardLayout.show(wrapper, UPDATE_INTELLIJ_PANEL)
-
-    return wrapper
+    return createUpdateIntellijPanel(updatePanel, project)
 
 }
 
-fun createUpdateIntellijPanel(cardLayout: CardLayout, wrapper: JPanel, updatePanel: UpdateVersionPanel, project: Project): JPanel {
+private fun createUpdateIntellijPanel(updatePanel: UpdateVersionPanel, project: Project): JPanel {
 
     val borderedPanel = JPanel()
     borderedPanel.layout = BoxLayout(borderedPanel, BoxLayout.Y_AXIS)
@@ -123,7 +116,7 @@ fun createUpdateIntellijPanel(cardLayout: CardLayout, wrapper: JPanel, updatePan
     val updateButton = UpdateActionButton()
     updateButton.addActionListener{
         BrowserUtil.browse("https://www.jetbrains.com/idea/download/")
-        cardLayout.show(wrapper, ORG_UPDATE_PANEL)
+        borderedPanel.isVisible = false
         updatePanel.tempEnableReset = true
         updatePanel.reset()
 
@@ -134,13 +127,12 @@ fun createUpdateIntellijPanel(cardLayout: CardLayout, wrapper: JPanel, updatePan
     }
 
     contentPanel.add(updateButton,BorderLayout.EAST)
-
     borderedPanel.add(contentPanel)
+
     return borderedPanel
 }
 
-fun shouldAddUpdateIntellijNotification(): Boolean {
-
+private fun shouldAddUpdateIntellijNotification(): Boolean {
     return (SystemInfo.isMac || SystemInfo.isLinux) &&
             VersionComparatorUtil.compare("2023.2",ApplicationInfo.getInstance().fullVersion) > 0
 }

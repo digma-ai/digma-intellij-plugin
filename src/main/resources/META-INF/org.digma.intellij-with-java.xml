@@ -25,6 +25,7 @@
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.runcfg.QuarkusRunConfigurationWrapper"/>
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.runcfg.OpenLibertyRunConfigurationWrapper"/>
         <runConfigurationExtension implementation="org.digma.intellij.plugin.idea.runcfg.OtelRunConfigurationExtension"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.idea.runcfg.RunConfigurationStartupActivity"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService"/>
     </extensions>

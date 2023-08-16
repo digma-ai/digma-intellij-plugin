@@ -5,6 +5,7 @@ import com.intellij.execution.application.ApplicationConfiguration
 import com.intellij.execution.configurations.JavaParameters
 import com.intellij.execution.configurations.ModuleRunConfiguration
 import com.intellij.execution.configurations.ParametersList
+import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.openapi.components.service
@@ -22,7 +23,7 @@ import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
 
 private const val ORG_GRADLE_JAVA_TOOL_OPTIONS = "ORG_GRADLE_JAVA_TOOL_OPTIONS"
 
-class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
+class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
 
     private val logger: Logger = Logger.getInstance(AutoOtelAgentRunConfigurationWrapper::class.java)
 
@@ -35,7 +36,7 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
         }
     }
 
-    override fun getRunConfigType(configuration: RunConfigurationBase<*>, module: Module?): RunConfigType {
+    override fun getRunConfigType(configuration: RunConfiguration, module: Module?): RunConfigType {
         return evalRunConfigType(configuration)
     }
 
@@ -227,7 +228,7 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
     }
 
     @NotNull
-    private fun evalRunConfigType(configuration: RunConfigurationBase<*>): RunConfigType {
+    private fun evalRunConfigType(configuration: RunConfiguration): RunConfigType {
         if (isJavaConfiguration(configuration)) return RunConfigType.JavaRun
         if (isJavaTestConfiguration(configuration)) return RunConfigType.JavaTest
         if (isGradleConfiguration(configuration)) return RunConfigType.GradleRun
@@ -237,7 +238,7 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
         return RunConfigType.Unknown
     }
 
-    private fun isJavaConfiguration(configuration: RunConfigurationBase<*>): Boolean {
+    private fun isJavaConfiguration(configuration: RunConfiguration): Boolean {
         /*
         this will catch the following run configuration types:
         ApplicationConfiguration,JUnitConfiguration,TestNGConfiguration,KotlinRunConfiguration,
@@ -246,7 +247,7 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
         return configuration is ApplicationConfiguration
     }
 
-    private fun isJavaTestConfiguration(configuration: RunConfigurationBase<*>): Boolean {
+    private fun isJavaTestConfiguration(configuration: RunConfiguration): Boolean {
         /*
         this will catch the following run configuration types:
         JavaTestConfigurationBase, TestNGConfiguration
@@ -254,7 +255,7 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
         return configuration is JavaTestConfigurationBase
     }
 
-    override fun isGradleConfiguration(configuration: RunConfigurationBase<*>): Boolean {
+    override fun isGradleConfiguration(configuration: RunConfiguration): Boolean {
         /*
         this will catch gradle running a main method or spring bootRun.
         all other gradle tasks are ignored.
@@ -293,7 +294,7 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
         return false
     }
 
-    private fun isGradleTestConfiguration(configuration: RunConfigurationBase<*>): Boolean {
+    private fun isGradleTestConfiguration(configuration: RunConfiguration): Boolean {
         /*
         this will catch gradle running a main method or a unit test or spring bootRun.
         all other gradle tasks are ignored.
@@ -308,7 +309,7 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
         return false
     }
 
-    private fun isMavenConfiguration(configuration: RunConfigurationBase<*>): Boolean {
+    private fun isMavenConfiguration(configuration: RunConfiguration): Boolean {
         //will catch maven exec plugin goals, bootRun
         if (configuration is MavenRunConfiguration) {
             val goalNames = configuration.runnerParameters.goals
@@ -325,7 +326,7 @@ class AutoOtelAgentRunConfigurationWrapper : IRunConfigurationWrapper {
         return false
     }
 
-    private fun isMavenTestConfiguration(configuration: RunConfigurationBase<*>): Boolean {
+    private fun isMavenTestConfiguration(configuration: RunConfiguration): Boolean {
         //will unit tests
         if (configuration is MavenRunConfiguration) {
             val goalNames = configuration.runnerParameters.goals

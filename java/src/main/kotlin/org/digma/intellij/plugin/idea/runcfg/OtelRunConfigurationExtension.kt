@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.idea.runcfg
 import com.intellij.execution.Executor
 import com.intellij.execution.RunConfigurationExtension
 import com.intellij.execution.configurations.JavaParameters
+import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.execution.process.ProcessEvent
@@ -55,6 +56,27 @@ class OtelRunConfigurationExtension : RunConfigurationExtension() {
             configuration.settings.env = newEnv
         }
 
+
+
+        fun isAutoOtelEnabled(): Boolean {
+            return PersistenceService.getInstance().state.isAutoOtel
+        }
+
+        fun getWrapperFor(configuration: RunConfiguration, module: Module?): RunConfigurationWrapper? {
+            return listOf(
+                QuarkusRunConfigurationWrapper.getInstance(configuration.project), // quarkus is first so could catch unit tests before the standard AutoOtelAgent
+                OpenLibertyRunConfigurationWrapper.getInstance(configuration.project),
+                AutoOtelAgentRunConfigurationWrapper.getInstance(configuration.project),
+            ).firstOrNull {
+                it.canWrap(configuration, module)
+            }
+        }
+
+        // not the ideal call but might manage without the JavaParameters
+        fun getWrapperFor(configuration: RunConfiguration): RunConfigurationWrapper? {
+            val module = RunCfgTools.tryResolveModule(configuration, null)
+            return getWrapperFor(configuration, module)
+        }
     }
 
     private fun isAutoOtelEnabled(): Boolean {
@@ -63,22 +85,6 @@ class OtelRunConfigurationExtension : RunConfigurationExtension() {
 
     private fun isConnectedToBackend(project: Project): Boolean {
         return BackendConnectionMonitor.getInstance(project).isConnectionOk()
-    }
-
-    private fun getWrapperFor(configuration: RunConfigurationBase<*>, module: Module?): IRunConfigurationWrapper? {
-        return listOf(
-            QuarkusRunConfigurationWrapper.getInstance(configuration.project), // quarkus is first so could catch unit tests before the standard AutoOtelAgent
-            OpenLibertyRunConfigurationWrapper.getInstance(configuration.project),
-            AutoOtelAgentRunConfigurationWrapper.getInstance(configuration.project),
-        ).firstOrNull {
-            it.canWrap(configuration, module)
-        }
-    }
-
-    // not the ideal call but might manage without the JavaParameters
-    private fun getWrapperFor(configuration: RunConfigurationBase<*>): IRunConfigurationWrapper? {
-        val module = RunCfgTools.tryResolveModule(configuration, null)
-        return getWrapperFor(configuration, module)
     }
 
     override fun isApplicableFor(configuration: RunConfigurationBase<*>): Boolean {
@@ -108,7 +114,7 @@ class OtelRunConfigurationExtension : RunConfigurationExtension() {
         )
 
         run {
-            val taskNames = extractTasks(configuration)
+            val taskNames = RunCfgTools.extractTasks(configuration)
             ActivityMonitor.getInstance(configuration.project)
                 .reportRunConfig(wrapper.getRunConfigType(configuration, resolvedModule).name, taskNames, isAutoOtelEnabled, isConnectedToBackend)
         }
@@ -178,19 +184,11 @@ class OtelRunConfigurationExtension : RunConfigurationExtension() {
 
         if (buildSystem != JavaBuildSystem.UNKNOWN) {
             val buildSystemName = buildSystem.name.lowercase()
-            val taskNames = extractTasks(configuration).toMutableSet()
+            val taskNames = RunCfgTools.extractTasks(configuration).toMutableSet()
             taskNames.removeAll(KNOWN_IRRELEVANT_TASKS)
 
             val activityMonitor = ActivityMonitor.getInstance(configuration.project)
             activityMonitor.reportUnknownTaskRunning(buildSystemName, taskNames, configuration.javaClass.name, configuration.type.displayName)
-        }
-    }
-
-    private fun extractTasks(configuration: RunConfigurationBase<*>): List<String> {
-        return when (configuration) {
-            is GradleRunConfiguration -> configuration.settings.taskNames
-            is MavenRunConfiguration -> configuration.runnerParameters.goals
-            else -> listOf()
         }
     }
 

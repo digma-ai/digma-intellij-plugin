@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.145] - 2023-08-15
+## [2.0.146] - 2023-08-16
+- quick fix index out of bounds by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1147
+
+## 2.0.145 - 2023-08-15
 - Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1130
 - notification center by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1129
 

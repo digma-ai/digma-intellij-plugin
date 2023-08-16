@@ -34,7 +34,11 @@ const val UPDATE_GUIDE_HELM_PATH = "/guides/upgrade_helm.md"
 const val UPDATE_GUIDE_HELM_NAME = "upgrade_helm.md"
 
 class UpdateVersionPanel(
-    val project: Project
+    val project: Project,
+    //todo: tempEnableReset is temporary to disable reset. if this panel resets it causes change card on
+    //UpdateIntellijNotificationWrapper , remove when we stop the support for UpdateIntellijNotificationWrapper.
+    // please see comment on UpdateIntellijNotificationWrapper
+    var tempEnableReset: Boolean = false
 ) : DigmaResettablePanel() {
 
     private var updateState = project.service<UpdatesService>().evalAndGetState()
@@ -57,8 +61,10 @@ class UpdateVersionPanel(
 
 
     override fun reset() {
-        updateState = project.service<UpdatesService>().evalAndGetState()
-        changeState()
+        if (tempEnableReset) {
+            updateState = project.service<UpdatesService>().evalAndGetState()
+            changeState()
+        }
     }
 
 
@@ -157,7 +163,7 @@ class UpdateVersionPanel(
 
 }
 
-private class UpdateActionButton : JButton() {
+class UpdateActionButton : JButton() {
 
     companion object {
         val bg = Laf.Colors.BUTTON_BACKGROUND

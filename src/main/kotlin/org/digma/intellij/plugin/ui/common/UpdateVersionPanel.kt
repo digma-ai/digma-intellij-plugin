@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.common
 import com.intellij.codeInsight.hint.HintManager
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.components.service
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.observable.properties.AtomicProperty
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
@@ -10,6 +11,7 @@ import com.intellij.ui.JBColor
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.docker.DockerService
+import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.digma.intellij.plugin.service.EditorService
 import org.digma.intellij.plugin.ui.common.Links.DIGMA_DOCKER_APP_URL
@@ -41,6 +43,8 @@ class UpdateVersionPanel(
     var tempEnableReset: Boolean = false
 ) : DigmaResettablePanel() {
 
+    private val logger: Logger = Logger.getInstance(this::class.java)
+
     private var updateState = project.service<UpdatesService>().evalAndGetState()
 
     private val updateTextProperty = AtomicProperty("")
@@ -57,12 +61,14 @@ class UpdateVersionPanel(
     private fun changeState() {
         updateTextProperty.set(buildText(updateState))
         isVisible = updateState.shouldUpdateAny()
+        Log.log(logger::debug,"state changed , isVisible={}, text={}",isVisible,updateTextProperty.get())
     }
 
 
     override fun reset() {
         if (tempEnableReset) {
             updateState = project.service<UpdatesService>().evalAndGetState()
+            Log.log(logger::debug,"resetting panel, update state {}",updateState)
             changeState()
         }
     }

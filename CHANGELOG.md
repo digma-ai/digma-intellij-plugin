@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.147] - 2023-08-16
+## [2.0.148] - 2023-08-16
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1148
+
+## 2.0.147 - 2023-08-16
 - Added supported run config event on startup by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1141
 - update intellij notification by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1140
 

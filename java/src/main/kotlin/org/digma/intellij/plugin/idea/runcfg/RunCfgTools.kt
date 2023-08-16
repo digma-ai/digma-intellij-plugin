@@ -3,7 +3,7 @@ package org.digma.intellij.plugin.idea.runcfg
 import com.intellij.execution.JavaRunConfigurationBase
 import com.intellij.execution.configurations.JavaParameters
 import com.intellij.execution.configurations.ModuleBasedConfiguration
-import com.intellij.execution.configurations.RunConfigurationBase
+import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
@@ -26,7 +26,7 @@ class RunCfgTools {
         private val logger: Logger = Logger.getInstance(RunCfgTools::class.java)
 
         @JvmStatic
-        fun <T : RunConfigurationBase<*>?> tryResolveModule(
+        fun <T : RunConfiguration?> tryResolveModule(
             configuration: T & Any, params: JavaParameters?,
         ): Module? {
 
@@ -45,18 +45,26 @@ class RunCfgTools {
 
         @VisibleForTesting
         @JvmStatic
-        private fun evalFlavor(runCfg: RunConfigurationBase<*>?): RunCfgFlavor<*>? {
+        private fun evalFlavor(runCfg: RunConfiguration?): RunCfgFlavor<*>? {
             if (runCfg is GradleRunConfiguration) return GradleCfgFlavor(runCfg)
             if (runCfg is MavenRunConfiguration) return MavenCfgFlavor(runCfg)
             if (runCfg is JavaRunConfigurationBase) return JavaAppCfgFlavor(runCfg)
             // no match, need to log warning
             return null
         }
+
+        fun extractTasks(configuration: RunConfiguration): List<String> {
+            return when (configuration) {
+                is GradleRunConfiguration -> configuration.settings.taskNames
+                is MavenRunConfiguration -> configuration.runnerParameters.goals
+                else -> listOf()
+            }
+        }
     }
 
 }
 
-private abstract class RunCfgFlavor<T : RunConfigurationBase<*>>(protected val runCfgBase: T) {
+private abstract class RunCfgFlavor<T : RunConfiguration>(protected val runCfgBase: T) {
 
     val project: Project
         get() = runCfgBase.project

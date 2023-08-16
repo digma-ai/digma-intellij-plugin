@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.idea.runcfg
 
 import com.intellij.execution.JavaTestConfigurationBase
 import com.intellij.execution.configurations.JavaParameters
+import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.openapi.diagnostic.Logger
@@ -18,7 +19,7 @@ import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
 // consider to combine them together with abstract class
 //
 // for quarkus, look at https://quarkus.io/guides/opentelemetry
-class QuarkusRunConfigurationWrapper : IRunConfigurationWrapper {
+class QuarkusRunConfigurationWrapper : RunConfigurationWrapper {
 
     companion object {
         val logger: Logger = Logger.getInstance(QuarkusRunConfigurationWrapper::class.java)
@@ -31,7 +32,7 @@ class QuarkusRunConfigurationWrapper : IRunConfigurationWrapper {
         }
     }
 
-    override fun getRunConfigType(configuration: RunConfigurationBase<*>, module: Module?): RunConfigType {
+    override fun getRunConfigType(configuration: RunConfiguration, module: Module?): RunConfigType {
         return evalRunConfigType(configuration, module)
     }
 
@@ -137,7 +138,7 @@ class QuarkusRunConfigurationWrapper : IRunConfigurationWrapper {
         return modulesDepsService.isQuarkusModule(module)
     }
 
-    private fun evalRunConfigType(configuration: RunConfigurationBase<*>, module: Module?): RunConfigType {
+    private fun evalRunConfigType(configuration: RunConfiguration, module: Module?): RunConfigType {
         if (isGradleConfiguration(configuration)) return RunConfigType.GradleRun
         if (isMavenConfiguration(configuration)) return RunConfigType.MavenRun
         if (isMavenTestConfiguration(configuration)) return RunConfigType.MavenTest
@@ -148,7 +149,7 @@ class QuarkusRunConfigurationWrapper : IRunConfigurationWrapper {
     /**
      * @see <a href="https://quarkus.io/guides/opentelemetry">Quarkus with opentelemetry</a>
      */
-    override fun isGradleConfiguration(configuration: RunConfigurationBase<*>): Boolean {
+    override fun isGradleConfiguration(configuration: RunConfiguration): Boolean {
         //TODO: support Quarkus with gradle
         return false
     }
@@ -157,7 +158,7 @@ class QuarkusRunConfigurationWrapper : IRunConfigurationWrapper {
      * @see <a href="https://quarkus.io/guides/quarkus-maven-plugin">Quarkus and maven tasks</a>
      * @see <a href="https://quarkus.io/guides/opentelemetry">Quarkus with opentelemetry</a>
      */
-    private fun isMavenConfiguration(configuration: RunConfigurationBase<*>): Boolean {
+    private fun isMavenConfiguration(configuration: RunConfiguration): Boolean {
         //will catch maven tasks of quarkus:dev and quarkus:run
         if (configuration is MavenRunConfiguration) {
             val goalNames = configuration.runnerParameters.goals
@@ -173,7 +174,7 @@ class QuarkusRunConfigurationWrapper : IRunConfigurationWrapper {
         return false
     }
 
-    private fun isMavenTestConfiguration(configuration: RunConfigurationBase<*>): Boolean {
+    private fun isMavenTestConfiguration(configuration: RunConfiguration): Boolean {
         //will catch maven tasks quarkus:test
         if (configuration is MavenRunConfiguration) {
             val goalNames = configuration.runnerParameters.goals
@@ -187,7 +188,7 @@ class QuarkusRunConfigurationWrapper : IRunConfigurationWrapper {
         return false
     }
 
-    private fun isJavaTest(configuration: RunConfigurationBase<*>, module: Module?): Boolean {
+    private fun isJavaTest(configuration: RunConfiguration, module: Module?): Boolean {
         if (configuration is JavaTestConfigurationBase) {
             if (isQuarkusModule(module)) {
                 return true

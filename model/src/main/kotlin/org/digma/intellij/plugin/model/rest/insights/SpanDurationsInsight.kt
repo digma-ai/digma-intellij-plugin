@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.model.rest.insights
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import org.digma.intellij.plugin.model.InsightType
 import java.beans.ConstructorProperties
 import java.util.Date
@@ -21,9 +22,6 @@ data class SpanDurationsInsight
     //  "isRecalculateEnabled",
     "shortDisplayInfo",
     "spanInfo",
-    "percentiles",
-    "lastSpanInstanceInfo",
-    "isAsync",
 )
 constructor(
     override val codeObjectId: String,
@@ -36,12 +34,18 @@ constructor(
     override val prefixedCodeObjectId: String?,
     override val shortDisplayInfo: ShortDisplayInfo?,
     override val spanInfo: SpanInfo,
-    val percentiles: List<SpanDurationsPercentile>,
-    val lastSpanInstanceInfo: SpanInstanceInfo?,
-    // isAsync means this span ends later than its parent (this.EndTime > parent.EndTime)
-    val isAsync: Boolean,
 ) : SpanInsight {
 
     override val type: InsightType = InsightType.SpanDurations
     override val isRecalculateEnabled: Boolean = true // should remove the setter = true later ...support backward compatibility
+
+    @JsonProperty("percentiles")
+    val percentiles: List<SpanDurationsPercentile> = emptyList()
+
+    @JsonProperty("lastSpanInstanceInfo")
+    val lastSpanInstanceInfo: SpanInstanceInfo? = null
+
+    // isAsync means this span ends later than its parent (this.EndTime > parent.EndTime)
+    @JsonProperty("isAsync")
+    val isAsync: Boolean = false
 }

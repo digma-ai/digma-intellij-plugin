@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.148] - 2023-08-16
+## [2.0.149] - 2023-08-17
+- Recent activity 'Troubleshooting' open sidepane by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1149
+
+## 2.0.148 - 2023-08-16
 - Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1148
 
 ## 2.0.147 - 2023-08-16

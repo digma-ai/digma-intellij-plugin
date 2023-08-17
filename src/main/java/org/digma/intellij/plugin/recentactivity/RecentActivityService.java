@@ -61,6 +61,7 @@ import org.digma.intellij.plugin.recentactivity.outgoing.LiveDataMessage;
 import org.digma.intellij.plugin.recentactivity.outgoing.LiveDataPayload;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
+import org.digma.intellij.plugin.ui.ToolWindowShower;
 import org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt;
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier;
@@ -72,6 +73,7 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -245,7 +247,11 @@ public class RecentActivityService implements Disposable {
                         }
                     }
                     if (JCefMessagesUtils.GLOBAL_OPEN_TROUBLESHOOTING_GUIDE.equalsIgnoreCase(reactMessageRequest.getAction())) {
-                        EDT.ensureEDT(() -> MainToolWindowCardsController.getInstance(project).showTroubleshooting());
+                        EDT.ensureEDT(() -> {
+                            ActivityMonitor.getInstance(project).registerCustomEvent("troubleshooting link clicked",Collections.singletonMap("origin","recent activity"));
+                            ToolWindowShower.getInstance(project).showToolWindow();
+                            MainToolWindowCardsController.getInstance(project).showTroubleshooting();
+                        });
 
                     }
                 });

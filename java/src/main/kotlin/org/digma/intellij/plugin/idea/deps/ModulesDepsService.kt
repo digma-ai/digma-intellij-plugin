@@ -31,17 +31,41 @@ class ModulesDepsService(private val project: Project) : Disposable {
         fun toUnifiedCoordinates(lib: LibraryOrderEntry): UnifiedCoordinates {
             // Gradle library name for example : "Gradle: org.aspectj:aspectjweaver:1.8.14"
             // Maven  library name for example : "Maven: com.google.guava:guava:32.0.1"
-            val splitSpaces = lib.libraryName!!.split(' ')
-            val netoLibName = splitSpaces.last().trim()
 
-            val splitNames = netoLibName.split(':')
-            val groupId = splitNames[0]
-            val artifactId = splitNames[1]
-            var version: String? = null
-            if (splitNames.size >= 3) {
-                version = splitNames[2]
-            }
-            return UnifiedCoordinates(groupId, artifactId, version)
+            return lib.libraryName?.let {
+                val splitSpaces = it.split(' ')
+                val netoLibName = splitSpaces.last().trim()
+
+                val splitNames = netoLibName.split(':')
+                val groupId = splitNames[0]
+                val artifactId: String? = if (splitNames.size > 1) {
+                    splitNames[1]
+                }else{
+                    null
+                }
+
+                val version: String? = if (splitNames.size > 2) {
+                    splitNames[2]
+                }else{
+                    null
+                }
+
+                UnifiedCoordinates(groupId, artifactId, version)
+
+            } ?: UnifiedCoordinates(null, null, null)
+
+
+//            val splitSpaces = lib.libraryName!!.split(' ')
+//            val netoLibName = splitSpaces.last().trim()
+//
+//            val splitNames = netoLibName.split(':')
+//            val groupId = splitNames[0]
+//            val artifactId = splitNames[1]
+//            var version: String? = null
+//            if (splitNames.size >= 3) {
+//                version = splitNames[2]
+//            }
+//            return UnifiedCoordinates(groupId, artifactId, version)
         }
 
         @JvmStatic

@@ -1,17 +1,18 @@
 package org.digma.intellij.plugin.idea.runcfg
 
 import com.intellij.execution.configurations.JavaParameters
+import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.openapi.module.Module
 
-interface IRunConfigurationWrapper {
+interface RunConfigurationWrapper {
 
-    fun canWrap(configuration: RunConfigurationBase<*>, module: Module?): Boolean {
+    fun canWrap(configuration: RunConfiguration, module: Module?): Boolean {
         return getRunConfigType(configuration, module) != RunConfigType.Unknown
     }
 
-    fun getRunConfigType(configuration: RunConfigurationBase<*>, module: Module?): RunConfigType
+    fun getRunConfigType(configuration: RunConfiguration, module: Module?): RunConfigType
 
     fun <T : RunConfigurationBase<*>?> updateJavaParameters(
         configuration: T & Any,
@@ -20,5 +21,5 @@ interface IRunConfigurationWrapper {
         resolvedModule: Module?,
     )
 
-    fun isGradleConfiguration(configuration: RunConfigurationBase<*>): Boolean
+    fun isGradleConfiguration(configuration: RunConfiguration): Boolean
 }

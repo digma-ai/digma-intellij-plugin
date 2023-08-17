@@ -6,9 +6,7 @@ import com.intellij.openapi.application.ApplicationNamesInfo
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.Disposer
-import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.ui.jcef.JBCefBrowser
 import kotlinx.coroutines.delay
@@ -20,7 +18,6 @@ import org.cef.browser.CefMessageRouter
 import org.cef.callback.CefQueryCallback
 import org.cef.handler.CefLifeSpanHandlerAdapter
 import org.cef.handler.CefMessageRouterHandlerAdapter
-import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.analytics.BackendConnectionUtil
 import org.digma.intellij.plugin.common.Backgroundable
@@ -45,7 +42,7 @@ import org.digma.intellij.plugin.model.rest.jcef.common.OpenInBrowserRequest
 import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest
 import org.digma.intellij.plugin.model.rest.jcef.installationwizard.FinishRequest
 import org.digma.intellij.plugin.model.rest.jcef.installationwizard.SetObservabilityRequest
-import org.digma.intellij.plugin.notifications.showInstallationFinishedNotification
+import org.digma.intellij.plugin.notifications.AppNotificationCenter
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.recentactivity.ConnectionCheckResult
@@ -261,7 +258,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                             )
                             sendIsDigmaEngineInstalled(true, jbCefBrowser)
                             sendIsDigmaEngineRunning(true, jbCefBrowser)
-                            showInstallationFinishedNotification(project)
+                            service<AppNotificationCenter>().showInstallationFinishedNotification(project)
                         } else {
                             Log.log(logger::warn, "error installing engine, {}", exitValue)
 

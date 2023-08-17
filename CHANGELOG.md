@@ -1,6 +1,20 @@
 # Changelog
 
-## [2.0.144] - 2023-08-14
+## [2.0.148] - 2023-08-16
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1148
+
+## 2.0.147 - 2023-08-16
+- Added supported run config event on startup by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1141
+- update intellij notification by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1140
+
+## 2.0.146 - 2023-08-16
+- quick fix index out of bounds by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1147
+
+## 2.0.145 - 2023-08-15
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1130
+- notification center by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1129
+
+## 2.0.144 - 2023-08-14
 - settings change event by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1110
 - top changes in SummaryPanelList by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1112
 - Otel agent jars by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1113

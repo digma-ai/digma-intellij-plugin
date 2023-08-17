@@ -84,6 +84,9 @@ class UpdatesService(private val project: Project) : Disposable {
     }
 
     fun checkForNewerVersions() {
+
+        Log.log(logger::debug,"checking for new versions")
+
         val backendConnectionMonitor = BackendConnectionMonitor.getInstance(project)
         if (backendConnectionMonitor.isConnectionError()) {
             return
@@ -94,6 +97,7 @@ class UpdatesService(private val project: Project) : Disposable {
         var versionsResp: VersionResponse? = null
         try {
             versionsResp = analyticsService.getVersions(buildVersionRequest())
+            Log.log(logger::debug,"got version response {}",versionsResp)
         } catch (ase: AnalyticsServiceException) {
             var logException = true
             if (ase.cause is AnalyticsProviderException) {
@@ -162,6 +166,7 @@ class UpdatesService(private val project: Project) : Disposable {
     }
 
     fun evalAndGetState(): UpdateState {
+        Log.log(logger::debug, "evalAndGetState called")
         return UpdateState(
             stateBackendVersion.deploymentType,
             shouldUpdateBackend(),

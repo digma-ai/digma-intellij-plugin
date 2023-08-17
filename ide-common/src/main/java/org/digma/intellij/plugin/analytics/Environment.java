@@ -147,7 +147,7 @@ public class Environment implements EnvironmentsSupplier {
                 Log.log(LOGGER::trace, "Got environments {}", newEnvironments);
                 Log.test(LOGGER::info, "Got environments {}", newEnvironments);
             } else {
-                Log.log(LOGGER::warn, "Error loading environments: {}", newEnvironments);
+                Log.log(LOGGER::warn, "Error loading environments or no environments added yet: {}", newEnvironments);
                 newEnvironments = new ArrayList<>();
             }
 

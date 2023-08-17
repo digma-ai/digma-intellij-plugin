@@ -252,6 +252,17 @@ class ActivityMonitor(project: Project) :Disposable {
         )
     }
 
+    fun reportSupportedRunConfigDetected(runConfigTypeName: String, taskNames: Collection<String>) {
+        postHog?.capture(
+            userId,
+            "supported-run-config detected",
+            mapOf(
+                "run.config.type" to runConfigTypeName,
+                "task.names" to taskNames
+            )
+        )
+    }
+
     fun reportUnknownTaskRunning(buildSystem: String, taskNames: Collection<String>, configurationClassName: String, configurationType: String) {
 
         // Purge tasks older than 1 minute
@@ -470,6 +481,14 @@ class ActivityMonitor(project: Project) :Disposable {
         postHog?.capture(
             userId,
             "Settings.".plus(eventName),
+            eventDetails
+        )
+    }
+
+    fun registerNotificationCenterEvent(eventName: String, eventDetails: Map<String, Any>) {
+        postHog?.capture(
+            userId,
+            "Notifications.".plus(eventName),
             eventDetails
         )
     }

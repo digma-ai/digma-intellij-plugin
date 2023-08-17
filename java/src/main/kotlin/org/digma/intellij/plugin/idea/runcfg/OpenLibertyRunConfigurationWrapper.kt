@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.idea.runcfg
 
 import com.intellij.execution.configurations.JavaParameters
+import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.openapi.diagnostic.Logger
@@ -15,7 +16,7 @@ import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
 // this class is derived from AutoOtelAgentRunConfigurationExtension.
 // consider to combine them together with abstract class
 //
-class OpenLibertyRunConfigurationWrapper : IRunConfigurationWrapper {
+class OpenLibertyRunConfigurationWrapper : RunConfigurationWrapper {
 
     companion object {
         val logger: Logger = Logger.getInstance(OpenLibertyRunConfigurationWrapper::class.java)
@@ -26,7 +27,7 @@ class OpenLibertyRunConfigurationWrapper : IRunConfigurationWrapper {
         }
     }
 
-    override fun getRunConfigType(configuration: RunConfigurationBase<*>, module: Module?): RunConfigType {
+    override fun getRunConfigType(configuration: RunConfiguration, module: Module?): RunConfigType {
         return evalRunConfigType(configuration, module)
     }
 
@@ -97,7 +98,7 @@ class OpenLibertyRunConfigurationWrapper : IRunConfigurationWrapper {
         return SettingsState.getInstance().runtimeObservabilityBackendUrl
     }
 
-    private fun evalRunConfigType(configuration: RunConfigurationBase<*>, module: Module?): RunConfigType {
+    private fun evalRunConfigType(configuration: RunConfiguration, module: Module?): RunConfigType {
         if (isMavenConfiguration(configuration)) return RunConfigType.MavenRun
         if (isMavenTestConfiguration(configuration)) return RunConfigType.MavenTest
         if (isGradleConfiguration(configuration)) return RunConfigType.GradleRun
@@ -108,7 +109,7 @@ class OpenLibertyRunConfigurationWrapper : IRunConfigurationWrapper {
     /**
      * @see <a href="https://github.com/OpenLiberty/ci.gradle/tree/main#tasks">Liberty Gradle Tasks</a>
      */
-    override fun isGradleConfiguration(configuration: RunConfigurationBase<*>): Boolean {
+    override fun isGradleConfiguration(configuration: RunConfiguration): Boolean {
         if (configuration is GradleRunConfiguration) {
             val taskNames = configuration.settings.taskNames
             val hasRelevantTask = taskNames.any {
@@ -122,7 +123,7 @@ class OpenLibertyRunConfigurationWrapper : IRunConfigurationWrapper {
         return false
     }
 
-    private fun isGradleTestConfiguration(configuration: RunConfigurationBase<*>): Boolean {
+    private fun isGradleTestConfiguration(configuration: RunConfiguration): Boolean {
         // currently no special task for liberty test
         return false
     }
@@ -130,7 +131,7 @@ class OpenLibertyRunConfigurationWrapper : IRunConfigurationWrapper {
     /**
      * @see <a href="https://github.com/OpenLiberty/ci.maven#goals">Liberty Maven Goals</a>
      */
-    private fun isMavenConfiguration(configuration: RunConfigurationBase<*>): Boolean {
+    private fun isMavenConfiguration(configuration: RunConfiguration): Boolean {
         //will catch maven tasks of liberty:dev and liberty:run, and liberty:start
         if (configuration is MavenRunConfiguration) {
             val goalNames = configuration.runnerParameters.goals
@@ -148,7 +149,7 @@ class OpenLibertyRunConfigurationWrapper : IRunConfigurationWrapper {
         return false
     }
 
-    private fun isMavenTestConfiguration(configuration: RunConfigurationBase<*>): Boolean {
+    private fun isMavenTestConfiguration(configuration: RunConfiguration): Boolean {
         //will catch maven tasks liberty:test-start
         if (configuration is MavenRunConfiguration) {
             val goalNames = configuration.runnerParameters.goals

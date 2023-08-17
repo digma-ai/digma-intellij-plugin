@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.common
 import com.intellij.codeInsight.hint.HintManager
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.components.service
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.observable.properties.AtomicProperty
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
@@ -10,6 +11,7 @@ import com.intellij.ui.JBColor
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.docker.DockerService
+import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.digma.intellij.plugin.service.EditorService
 import org.digma.intellij.plugin.ui.common.Links.DIGMA_DOCKER_APP_URL
@@ -34,8 +36,14 @@ const val UPDATE_GUIDE_HELM_PATH = "/guides/upgrade_helm.md"
 const val UPDATE_GUIDE_HELM_NAME = "upgrade_helm.md"
 
 class UpdateVersionPanel(
-    val project: Project
+    val project: Project,
+    //todo: tempEnableReset is temporary to disable reset. if this panel resets it causes change card on
+    //UpdateIntellijNotificationWrapper , remove when we stop the support for UpdateIntellijNotificationWrapper.
+    // please see comment on UpdateIntellijNotificationWrapper
+    var tempEnableReset: Boolean = false
 ) : DigmaResettablePanel() {
+
+    private val logger: Logger = Logger.getInstance(this::class.java)
 
     private var updateState = project.service<UpdatesService>().evalAndGetState()
 
@@ -53,12 +61,16 @@ class UpdateVersionPanel(
     private fun changeState() {
         updateTextProperty.set(buildText(updateState))
         isVisible = updateState.shouldUpdateAny()
+        Log.log(logger::debug,"state changed , isVisible={}, text={}",isVisible,updateTextProperty.get())
     }
 
 
     override fun reset() {
-        updateState = project.service<UpdatesService>().evalAndGetState()
-        changeState()
+        if (tempEnableReset) {
+            updateState = project.service<UpdatesService>().evalAndGetState()
+            Log.log(logger::debug,"resetting panel, update state {}",updateState)
+            changeState()
+        }
     }
 
 
@@ -157,7 +169,7 @@ class UpdateVersionPanel(
 
 }
 
-private class UpdateActionButton : JButton() {
+class UpdateActionButton : JButton() {
 
     companion object {
         val bg = Laf.Colors.BUTTON_BACKGROUND

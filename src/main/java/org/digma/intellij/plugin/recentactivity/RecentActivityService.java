@@ -73,6 +73,7 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -247,6 +248,7 @@ public class RecentActivityService implements Disposable {
                     }
                     if (JCefMessagesUtils.GLOBAL_OPEN_TROUBLESHOOTING_GUIDE.equalsIgnoreCase(reactMessageRequest.getAction())) {
                         EDT.ensureEDT(() -> {
+                            ActivityMonitor.getInstance(project).registerCustomEvent("troubleshooting link clicked",Collections.singletonMap("origin","recent activity"));
                             ToolWindowShower.getInstance(project).showToolWindow();
                             MainToolWindowCardsController.getInstance(project).showTroubleshooting();
                         });

@@ -1,8 +1,6 @@
 package org.digma.intellij.plugin.rider.protocol
 
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.ModalityState
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditor
@@ -10,17 +8,17 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
-import com.intellij.util.RunnableCallable
-import com.intellij.util.concurrency.NonUrgentExecutor
 import com.jetbrains.rd.framework.IProtocol
 import com.jetbrains.rd.util.reactive.whenTrue
 import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent
 import com.jetbrains.rdclient.util.idea.callSynchronously
+import com.jetbrains.rider.ideaInterop.fileTypes.csharp.CSharpLanguage
 import com.jetbrains.rider.projectView.SolutionLifecycleHost
 import com.jetbrains.rider.projectView.SolutionStartupService
 import com.jetbrains.rider.projectView.solution
 import kotlinx.coroutines.runBlocking
 import org.apache.commons.collections4.map.LRUMap
+import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.log.Log
@@ -33,7 +31,6 @@ import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.ui.CaretContextService
 import kotlin.random.Random
 
-@Suppress("UnstableApiUsage")
 class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project) {
 
     private val logger = Logger.getInstance(LanguageServiceHost::class.java)
@@ -87,47 +84,35 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
     private fun refreshCodeObjectsAndSelectedEditorOnSolutionLoaded(project: Project, warmStartup: Boolean) {
 
         Log.log(logger::debug, "refreshCodeObjectsAndSelectedEditorOnSolutionLoaded called")
-        ReadAction.nonBlocking(RunnableCallable {
 
-            //usually just a second or two is needed before all indexing is complete
-            if (!warmStartup) {
-                Thread.sleep(1000)
-            }
+        //usually just a second or two is needed before all indexing is complete
+        if (!warmStartup) {
+            Thread.sleep(1000)
+        }
 
-            val documentInfoService = project.getService(DocumentInfoService::class.java)
-            documentInfoService.clearAll()
+        Log.log(logger::debug, "in refreshCodeObjectsAndSelectedEditorOnSolutionLoaded , updating method context")
+        val selectedTextEditor = FileEditorManager.getInstance(project).selectedTextEditor
+        selectedTextEditor?.let {
             val selectedEditor = FileEditorManager.getInstance(project).selectedEditor
             selectedEditor?.let {
                 val virtualFile = selectedEditor.file
                 virtualFile?.let {
                     val psiFile = PsiManager.getInstance(project).findFile(virtualFile)
                     psiFile?.let {
-                        val languageService = LanguageServiceLocator.getInstance(project).locate(psiFile.language)
-                        if (languageService.isRelevant(psiFile)) {
-                            val documentInfo = languageService.buildDocumentInfo(psiFile, selectedEditor)
-                            documentInfo.let {
-                                documentInfoService.addCodeObjects(psiFile, documentInfo)
-                            }
-                        }
-                    }
-                }
-            }
-        }).inSmartMode(project).withDocumentsCommitted(project)
-            .finishOnUiThread(ModalityState.defaultModalityState()) {
 
-                Log.log(logger::debug, "in refreshCodeObjectsAndSelectedEditorOnSolutionLoaded , updating method context")
-                val selectedTextEditor = FileEditorManager.getInstance(project).selectedTextEditor
-                selectedTextEditor?.let {
-                    val selectedEditor = FileEditorManager.getInstance(project).selectedEditor
-                    selectedEditor?.let {
-                        val virtualFile = selectedEditor.file
-                        virtualFile?.let {
-                            val psiFile = PsiManager.getInstance(project).findFile(virtualFile)
-                            psiFile?.let {
-                                val languageService =
-                                    LanguageServiceLocator.getInstance(project).locate(psiFile.language)
-                                if (languageService.isRelevant(psiFile)) {
-                                    val offset = selectedTextEditor.logicalPositionToOffset(selectedTextEditor.caretModel.logicalPosition)
+                        if (CSharpLanguage == psiFile.language) {
+
+                            val languageService = LanguageServiceLocator.getInstance(project).locate(psiFile.language)
+
+                            if (languageService.isRelevant(psiFile)) {
+                                val offset = selectedTextEditor.logicalPositionToOffset(selectedTextEditor.caretModel.logicalPosition)
+
+                                Backgroundable.executeOnPooledThread {
+                                    val documentInfoService = DocumentInfoService.getInstance(project)
+                                    val documentInfo = languageService.buildDocumentInfo(psiFile, selectedEditor)
+                                    documentInfo.let {
+                                        documentInfoService.addCodeObjects(psiFile, documentInfo)
+                                    }
                                     val methodUnderCaret =
                                         detectMethodUnderCaret(psiFile, selectedTextEditor, offset)
                                     CaretContextService.getInstance(project).contextChanged(methodUnderCaret)
@@ -136,8 +121,9 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
                         }
                     }
                 }
+            }
+        }
 
-            }.submit(NonUrgentExecutor.getInstance())
     }
 
 

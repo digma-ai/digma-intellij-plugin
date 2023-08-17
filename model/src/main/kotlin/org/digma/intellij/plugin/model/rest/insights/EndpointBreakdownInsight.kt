@@ -23,7 +23,10 @@ data class EndpointBreakdownInsight
     "spanInfo",
     "route",
     "serviceName",
-    "components"
+    "hasAsyncSpans",
+    "components",
+    "p50Components",
+    "p95Components",
 )
 constructor(
     override val codeObjectId: String,
@@ -39,7 +42,14 @@ constructor(
     override val spanInfo: SpanInfo,
     override var route: String,
     override var serviceName: String,
-    val components: List<EndpointBreakdownComponent>,
+
+    // hasAsyncSpans. default is false.
+    //  when value false should refer to fraction (percents)
+    //  when value is true should refer to duration
+    val hasAsyncSpans: Boolean,
+    val components: List<EndpointBreakdownComponent>, // deprecated. instead, use p50Components
+    val p50Components: List<EndpointBreakdownComponent>,
+    val p95Components: List<EndpointBreakdownComponent>,
 ) : EndpointInsight {
     override val type: InsightType = InsightType.EndpointBreakdown
 }
@@ -51,4 +61,5 @@ data class EndpointBreakdownComponent
 constructor(
     val type: String,
     val fraction: Double,
+    val duration: Duration,
 )

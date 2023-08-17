@@ -57,7 +57,7 @@ constructor(
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class EndpointBreakdownComponent
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@ConstructorProperties("type", "fraction")
+@ConstructorProperties("type", "fraction", "duration")
 constructor(
     val type: String,
     val fraction: Double,

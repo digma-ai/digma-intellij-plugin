@@ -1,14 +1,12 @@
 package org.digma.intellij.plugin.ui.common
 
-import com.intellij.openapi.application.ModalityState
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.util.Alarm
 import com.intellij.util.AlarmFactory
-import com.intellij.util.RunnableCallable
-import com.intellij.util.concurrency.NonUrgentExecutor
+import org.digma.intellij.plugin.common.Backgroundable
+import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.time.Instant
 import javax.swing.JLabel
@@ -40,19 +38,16 @@ class OtelDependencyButton(text: String, val project: Project, val theModel: Met
                 theModel.addDependencyToOtelLibAndRefresh()
             }
 
-            ReadAction.nonBlocking(RunnableCallable {
+            Backgroundable.executeOnPooledThread {
                 waitForOtelDependencyToBeAvailable()
-            })
-                .inSmartMode(project)
-                .withDocumentsCommitted(project)
-                .finishOnUiThread(ModalityState.defaultModalityState(), {
+
+                EDT.ensureEDT {
                     this.isEnabled = true
                     labelOfWorking.isVisible = false
 
                     panelToReset?.reset()
-                })
-                .submit(NonUrgentExecutor.getInstance())
-
+                }
+            }
         }
 
         addActionListener {

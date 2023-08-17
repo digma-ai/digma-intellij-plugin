@@ -21,6 +21,10 @@ public class Retries {
         return simpleRetryWithResult(tSupplier,retryOnException,backOffMillis,maxRetries,1);
     }
 
+    public static <T> T retryWithResultAndDefault(Supplier<T> tSupplier, Class<? extends Throwable> retryOnException, int backOffMillis, int maxRetries, T defaultValue){
+        return simpleRetryWithResultAndDefault(tSupplier,retryOnException,backOffMillis,maxRetries,1,defaultValue);
+    }
+
     private static <T> T simpleRetryWithResult(Supplier<T> tSupplier, Class<? extends Throwable> retryOnException, int backOffMillis, int maxRetries, int retryCount) {
         try{
             Log.log(LOGGER::debug,"starting retry "+retryCount);
@@ -41,6 +45,30 @@ public class Retries {
                 return simpleRetryWithResult(tSupplier,retryOnException,backOffMillis,maxRetries,retryCount+1);
             }else{
                 throw e;
+            }
+        }
+    }
+
+    private static <T> T simpleRetryWithResultAndDefault(Supplier<T> tSupplier, Class<? extends Throwable> retryOnException, int backOffMillis, int maxRetries, int retryCount, T defaultValue) {
+        try{
+            Log.log(LOGGER::debug,"starting retry "+retryCount);
+            return tSupplier.get();
+        }catch (Throwable e){
+
+            Log.log(LOGGER::warn,"got exception {} retry {}",e,retryCount);
+
+            if (retryCount == maxRetries){
+                return defaultValue;
+            }
+
+            if (retryOnException.isAssignableFrom(e.getClass())){
+                try {
+                    Log.log(LOGGER::warn,"sleeping {} millis",backOffMillis);
+                    Thread.sleep(backOffMillis);
+                } catch (InterruptedException ex) {/* ignore*/}
+                return simpleRetryWithResultAndDefault(tSupplier,retryOnException,backOffMillis,maxRetries,retryCount+1,defaultValue);
+            }else{
+                return defaultValue;
             }
         }
     }

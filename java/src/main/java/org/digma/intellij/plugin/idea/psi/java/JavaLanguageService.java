@@ -16,6 +16,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.progress.EmptyProgressIndicator;
+import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
@@ -57,6 +58,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -209,51 +211,95 @@ public class JavaLanguageService implements LanguageService {
     @NotNull
     public CanInstrumentMethodResult canInstrumentMethod(@NotNull Project project, @Nullable String methodId) {
 
-        var psiMethod = findPsiMethodByMethodCodeObjectId(methodId);
-        if (psiMethod == null) {
-            Log.log(LOGGER::warn, "Failed to get PsiMethod from method id '{}'", methodId);
-            return CanInstrumentMethodResult.Failure();
-        }
+        class MyRunnable implements Runnable{
 
-        var psiFile = psiMethod.getContainingFile();
-        if (!(psiFile instanceof PsiJavaFile psiJavaFile)) {
-            Log.log(LOGGER::warn, "PsiMethod's file is not java file (methodId: {})", methodId);
-            return CanInstrumentMethodResult.Failure();
-        }
+            private final ProgressIndicator progressIndicator= new EmptyProgressIndicator();
 
-        var module = ModuleUtilCore.findModuleForPsiElement(psiMethod);
-        if (module == null) {
-            Log.log(LOGGER::warn, "Failed to get module from PsiMethod '{}'", methodId);
-            return CanInstrumentMethodResult.Failure();
-        }
+            CanInstrumentMethodResult result;
 
-        var annotationClassFqn = Constants.WITH_SPAN_FQN;
-        var dependencyCause = Constants.WITH_SPAN_DEPENDENCY_DESCRIPTION;
-        if (isSpringBootAndMicrometer(module)) {
-            annotationClassFqn = MicrometerTracingFramework.OBSERVED_FQN;
-            dependencyCause = MicrometerTracingFramework.OBSERVED_DEPENDENCY_DESCRIPTION;
+            @Override
+            public void run() {
 
-            var modulesDepsService = ModulesDepsService.getInstance(project);
-            var moduleExt = modulesDepsService.getModuleExt(module.getName());
-            if (moduleExt == null) {
-                Log.log(LOGGER::warn, "Failed to not lookup module ext by module name='{}'", module.getName());
-                return CanInstrumentMethodResult.Failure();
+                var psiMethod = findPsiMethodByMethodCodeObjectId(methodId);
+                if (psiMethod == null) {
+                    Log.log(LOGGER::warn, "Failed to get PsiMethod from method id '{}'", methodId);
+                    result = CanInstrumentMethodResult.Failure();
+                    return;
+                }
+
+                progressIndicator.checkCanceled();
+
+                var psiFile = psiMethod.getContainingFile();
+                if (!(psiFile instanceof PsiJavaFile psiJavaFile)) {
+                    Log.log(LOGGER::warn, "PsiMethod's file is not java file (methodId: {})", methodId);
+                    result = CanInstrumentMethodResult.Failure();
+                    return;
+                }
+
+                progressIndicator.checkCanceled();
+
+                var module = ModuleUtilCore.findModuleForPsiElement(psiMethod);
+                if (module == null) {
+                    Log.log(LOGGER::warn, "Failed to get module from PsiMethod '{}'", methodId);
+                    result = CanInstrumentMethodResult.Failure();
+                    return;
+                }
+
+                progressIndicator.checkCanceled();
+
+                var annotationClassFqn = Constants.WITH_SPAN_FQN;
+                var dependencyCause = Constants.WITH_SPAN_DEPENDENCY_DESCRIPTION;
+                if (isSpringBootAndMicrometer(module)) {
+
+                    progressIndicator.checkCanceled();
+
+                    annotationClassFqn = MicrometerTracingFramework.OBSERVED_FQN;
+                    dependencyCause = MicrometerTracingFramework.OBSERVED_DEPENDENCY_DESCRIPTION;
+
+                    var modulesDepsService = ModulesDepsService.getInstance(project);
+                    var moduleExt = modulesDepsService.getModuleExt(module.getName());
+                    if (moduleExt == null) {
+                        Log.log(LOGGER::warn, "Failed to not lookup module ext by module name='{}'", module.getName());
+                        result = CanInstrumentMethodResult.Failure();
+                        return;
+                    }
+                    boolean hasDeps = modulesDepsService.isModuleHasNeededDependenciesForSpringBootWithMicrometer(moduleExt.getMetadata());
+                    if (!hasDeps) {
+                        result = new CanInstrumentMethodResult(new CanInstrumentMethodResult.MissingDependencyCause(dependencyCause));
+                        return;
+                    }
+                }
+
+                progressIndicator.checkCanceled();
+
+                var annotationPsiClass = JavaPsiFacade.getInstance(project).findClass(annotationClassFqn,
+                        GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module, false));
+                if (annotationPsiClass == null) {
+                    Log.log(LOGGER::warn, "Cannot find WithSpan PsiClass (methodId: {}) (module:{})", methodId, module);
+                    result = new CanInstrumentMethodResult(new CanInstrumentMethodResult.MissingDependencyCause(dependencyCause));
+                    return;
+                }
+
+                result = new JavaCanInstrumentMethodResult(methodId, psiMethod, annotationPsiClass, psiJavaFile);
+                return;
             }
-            boolean hasDeps = modulesDepsService.isModuleHasNeededDependenciesForSpringBootWithMicrometer(moduleExt.getMetadata());
-            if (!hasDeps) {
-                return new CanInstrumentMethodResult(new CanInstrumentMethodResult.MissingDependencyCause(dependencyCause));
+        }
+
+
+
+        return Retries.retryWithResultAndDefault(() -> {
+
+            MyRunnable myRunnable = new MyRunnable();
+            boolean success = ProgressManager.getInstance().runInReadActionWithWriteActionPriority(myRunnable, myRunnable.progressIndicator);
+            if (!success){
+                throw new RuntimeException("canInstrumentMethod read action failed");
             }
-        }
+            return Objects.requireNonNullElseGet(myRunnable.result, CanInstrumentMethodResult::Failure);
 
-        var annotationPsiClass = JavaPsiFacade.getInstance(project).findClass(annotationClassFqn,
-                GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module, false));
-        if (annotationPsiClass == null) {
-            Log.log(LOGGER::warn, "Cannot find WithSpan PsiClass (methodId: {}) (module:{})", methodId, module);
-            return new CanInstrumentMethodResult(new CanInstrumentMethodResult.MissingDependencyCause(dependencyCause));
-        }
-
-        return new JavaCanInstrumentMethodResult(methodId, psiMethod, annotationPsiClass, psiJavaFile);
+        },Throwable.class,50,5,CanInstrumentMethodResult.Failure());
     }
+
+
 
     public boolean instrumentMethod(@NotNull CanInstrumentMethodResult result) {
 

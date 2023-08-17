@@ -174,6 +174,10 @@ class ActivityMonitor(project: Project) :Disposable {
         postHog?.capture(userId, "connection gained")
     }
 
+    fun registerConnectionLost() {
+        postHog?.capture(userId, "connection lost")
+    }
+
     fun registerFirstInsightReceived() {
         postHog?.capture(userId, "insight first-received")
     }

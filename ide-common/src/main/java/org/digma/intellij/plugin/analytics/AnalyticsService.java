@@ -692,6 +692,7 @@ public class AnalyticsService implements Disposable {
                     // that on startup it must be notified immediately before starting to create UI components
                     // it will also catch the connection lost event
                     BackendConnectionMonitor.getInstance(project).connectionLost();
+                    ActivityMonitor.getInstance(project).registerConnectionLost();
 
                     //wait half a second because maybe the connection lost is momentary, and it will be back
                     // very soon

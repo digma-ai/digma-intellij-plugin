@@ -23,6 +23,7 @@ data class SpanDurationsInsight
     "spanInfo",
     "percentiles",
     "lastSpanInstanceInfo",
+    "isAsync",
 )
 constructor(
     override val codeObjectId: String,
@@ -37,6 +38,8 @@ constructor(
     override val spanInfo: SpanInfo,
     val percentiles: List<SpanDurationsPercentile>,
     val lastSpanInstanceInfo: SpanInstanceInfo?,
+    // isAsync means this span ends later than its parent (this.EndTime > parent.EndTime)
+    val isAsync: Boolean,
 ) : SpanInsight {
 
     override val type: InsightType = InsightType.SpanDurations

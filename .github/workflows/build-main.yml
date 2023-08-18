@@ -26,3 +26,9 @@ jobs:
       ref-name: ${{ github.ref_name }}
       build-with-rider: true
     secrets: inherit
+
+  call-prepare-release-draft:
+    needs: [ call-build-workflow,call-build-workflow-with-rider ]
+    if: github.event_name != 'pull_request'
+    uses: ./.github/workflows/release-draft.yml
+    secrets: inherit

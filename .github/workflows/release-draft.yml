@@ -1,0 +1,42 @@
+
+
+name: Prepare release draft
+on:
+  workflow_call:
+
+jobs:
+  releaseDraft:
+    name: Prepare Release Draft
+    runs-on: ubuntu-22.04
+    steps:
+
+      - name: Fetch Sources
+        uses: actions/checkout@v3
+        with:
+          ref: 'main'
+          fetch-depth: 1
+
+      - name: Export Version
+        id: exportversion
+        shell: bash
+        run: |
+          VERSION=$(cat version.properties |grep "version="|cut -d= -f2)
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      # Remove old release drafts by using the curl request for the available releases with draft flag
+      - name: Remove Old Release Drafts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api repos/{owner}/{repo}/releases \
+            --jq '.[] | select(.draft == true) | .id' \
+            | xargs -I '{}' gh api -X DELETE repos/{owner}/{repo}/releases/{}
+
+      # Create new release draft - which is not publicly visible and requires manual acceptance
+      - name: Create Release Draft
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create v${{ steps.exportversion.outputs.version }} \
+            --draft \
+            --title "v${{ steps.exportversion.outputs.version }}"

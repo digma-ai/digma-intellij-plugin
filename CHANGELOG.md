@@ -1,6 +1,17 @@
 # Changelog
 
-## [2.0.149] - 2023-08-17
+## [2.0.150] - 2023-08-20
+- ignore no such volume in docker errors by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1150
+- Feature/align insights model for async by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1154
+- fix wrong release draft by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1156
+- release draft workflow by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1157
+- Performance and UI freeze by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1152
+- User engagement posthog event by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1160
+- Add 'Troubleshooting' menu item to Kebab menu by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1161
+- catch all exceptions in docker service and notify error by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1163
+- retry docker commands on failure by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1162
+
+## 2.0.149 - 2023-08-17
 - Recent activity 'Troubleshooting' open sidepane by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1149
 
 ## 2.0.148 - 2023-08-16

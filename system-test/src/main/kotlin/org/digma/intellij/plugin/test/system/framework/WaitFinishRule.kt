@@ -16,8 +16,10 @@ class WaitFinishRule : TestRule {
 
     private var latch: CountDownLatch = CountDownLatch(1)
 
+    var success: Boolean = false
+
     operator fun invoke() = signalComplete()
-    
+
     override fun apply(base: Statement, description: Description): Statement {
         return object : Statement() {
             override fun evaluate() {
@@ -33,14 +35,15 @@ class WaitFinishRule : TestRule {
     }
 
     fun signalComplete() {
+        success = true
         latch.countDown()
     }
 
     //using this method to wait for async operations to complete, e.g.: in tearDown()
     fun waitForCompletion() {
-        if (latch.await(timeoutSeconds, TimeUnit.SECONDS))
+        if (latch.await(timeoutSeconds, TimeUnit.SECONDS)) {
             Log.test(logger::info, "WaitForAsync completed")
-        else
+        } else
             Log.test(logger::warn, "WaitForAsync timeout")
     }
 }

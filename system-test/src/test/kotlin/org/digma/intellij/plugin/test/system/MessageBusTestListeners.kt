@@ -12,7 +12,7 @@ import org.digma.intellij.plugin.model.ModelChangeListener
 import org.digma.intellij.plugin.ui.model.PanelModel
 
 
-class MessageBusTestListeners(private val messageBus: MessageBus) {
+class MessageBusTestListeners(val messageBus: MessageBus) {
 
     private val logger = Logger.getInstance(MessageBusTestListeners::class.java)
 

@@ -9,7 +9,14 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.ReferencesSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Query;
-import com.jetbrains.python.psi.*;
+import com.jetbrains.python.psi.PyAssignmentStatement;
+import com.jetbrains.python.psi.PyCallExpression;
+import com.jetbrains.python.psi.PyExpression;
+import com.jetbrains.python.psi.PyFile;
+import com.jetbrains.python.psi.PyFunction;
+import com.jetbrains.python.psi.PyReferenceExpression;
+import com.jetbrains.python.psi.PyStringLiteralExpression;
+import com.jetbrains.python.psi.PyTargetExpression;
 import com.jetbrains.python.psi.stubs.PyFunctionNameIndex;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.log.Log;
@@ -20,7 +27,11 @@ import org.digma.intellij.plugin.psi.PsiUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class PythonCodeObjectsDiscovery {

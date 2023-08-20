@@ -4,7 +4,7 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.apache.commons.lang3.time.StopWatch;
-import org.digma.intellij.plugin.analytics.BackendConnectionUtil;
+import org.digma.intellij.plugin.analytics.BackendConnectionMonitor;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.document.DocumentInfoContainer;
 import org.digma.intellij.plugin.document.DocumentInfoService;
@@ -14,8 +14,6 @@ import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.ui.CaretContextService;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
-
-import java.util.ArrayList;
 
 /**
  * A service to implement the interactions between listeners and UI components.
@@ -61,14 +59,14 @@ public class EditorInteractionService implements CaretContextService, Disposable
         // or mark the connection as lost.
         //todo: one side effect here is that if connection lost and regained the context will still be the last one that
         // succeeded and that's what will be shown to user until another context change.
-        if (!BackendConnectionUtil.getInstance(project).testConnectionToBackend()) {
+        if (BackendConnectionMonitor.getInstance(project).isConnectionError()) {
             Log.log(logger::debug, "No connection to backend, not executing contextChanged for '{}'", methodUnderCaret.getId());
             MainToolWindowCardsController.getInstance(project).showMainPanel();
             return;
         }
 
 
-        Backgroundable.ensureBackground(project, "Digma: Context change", () -> {
+        Backgroundable.ensurePooledThread(() -> {
             Log.log(logger::debug, "Executing contextChanged in background for {}", methodUnderCaret.getId());
             var stopWatch = StopWatch.createStarted();
             try {

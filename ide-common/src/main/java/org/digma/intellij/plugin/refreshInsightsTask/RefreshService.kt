@@ -123,15 +123,14 @@ class RefreshService(private val project: Project) {
     private fun updateInsightsCacheForActiveDocumentAndRefreshViewIfNeeded(selectedTextEditor: Editor?, documentInfoContainer: DocumentInfoContainer?, scope: MethodScope) {
         val isDataChanged = updateInsightsCacheForActiveDocument(selectedTextEditor, documentInfoContainer)
 
-        // refresh the UI ONLY if newInsights list is different from oldInsights
+        //todo: this will always run because some classes are not data classes and don't implement equals,
+        // for example org.digma.intellij.plugin.model.rest.insights.SpanInfo
+        //refresh the UI ONLY if newInsights list is different from oldInsights
         if (isDataChanged) {
-            //needs a ReadAction because InsightsViewBuilder will call LanguageService.findWorkspaceUrisForSpanIds or
-            // findWorkspaceUrisForCodeObjectIdsForErrorStackTrace or findWorkspaceUrisForMethodCodeObjectIds
-            // and those require a ReadAction.
-            ReadAction.nonBlocking(RunnableCallable {
+            Backgroundable.executeOnPooledThread{
                 updateModels(scope.getMethodInfo())
                 documentInfoService.notifyDocumentInfoChanged(documentInfoContainer!!.psiFile)
-            }).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance())
+            }
         }
     }
 

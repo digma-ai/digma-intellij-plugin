@@ -10,7 +10,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.MessageConstants
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.SystemInfo
-import org.digma.intellij.plugin.analytics.BackendConnectionUtil
+import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
@@ -59,6 +59,7 @@ class DockerService {
     }
 
 
+
     fun isInstallationInProgress(): Boolean{
         return installationInProgress
     }
@@ -73,7 +74,7 @@ class DockerService {
     }
 
     fun isEngineRunning(project: Project): Boolean {
-        return isEngineInstalled() && BackendConnectionUtil.getInstance(project).testConnectionToBackend()
+        return isEngineInstalled() && BackendConnectionMonitor.getInstance(project).isConnectionOk()
     }
 
 

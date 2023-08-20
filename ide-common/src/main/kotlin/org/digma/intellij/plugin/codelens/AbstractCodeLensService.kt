@@ -4,7 +4,6 @@ import com.intellij.codeInsight.codeVision.CodeVisionEntry
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
@@ -18,8 +17,6 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.SmartPointerManager
-import com.intellij.util.RunnableCallable
-import com.intellij.util.concurrency.NonUrgentExecutor
 import com.intellij.util.messages.MessageBusConnection
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.document.CodeLensProvider
@@ -67,10 +64,8 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
             val psiUri = PsiUtils.psiFileToUri(psiFile)
             Log.log(logger::trace, "got documentInfoChanged, restarting DaemonCodeAnalyzer for {}", psiUri)
             codeLensCache.remove(PsiUtils.psiFileToUri(psiFile))
-            ReadAction.nonBlocking(RunnableCallable{
-//                restartFile(psiFile)
-                restartAll()
-            }).inSmartMode(project).submit(NonUrgentExecutor.getInstance())
+            //restartFile(psiFile)
+            restartAll()
         })
     }
 

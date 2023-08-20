@@ -128,10 +128,14 @@ private fun buildButtonToPercentilesGraph(project: Project, span: SpanInfo, insi
         ActivityMonitor.getInstance(project).registerButtonClicked("histogram", insightType)
 
        runBackgroundableTask("Open histogram",project,true){
-           val htmlContent =
-               analyticsService.getHtmlGraphForSpanPercentiles(span.instrumentationLibrary, span.name, Laf.Colors.PLUGIN_BACKGROUND.getHex())
-           EDT.ensureEDT {
-               DigmaHTMLEditorProvider.openEditor(project, "Percentiles Graph of Span ${span.name}", htmlContent)
+           try {
+               val htmlContent =
+                   analyticsService.getHtmlGraphForSpanPercentiles(span.instrumentationLibrary, span.name, Laf.Colors.PLUGIN_BACKGROUND.getHex())
+               EDT.ensureEDT {
+                   DigmaHTMLEditorProvider.openEditor(project, "Percentiles Graph of Span ${span.name}", htmlContent)
+               }
+           }catch (e: AnalyticsServiceException){
+               //do nothing, the exception is logged in AnalyticsService
            }
        }
     }

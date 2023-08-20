@@ -9,6 +9,7 @@ import com.intellij.util.ui.JBUI.Borders.emptyBottom
 import com.intellij.util.ui.JBUI.Borders.emptyTop
 import org.apache.commons.lang3.StringUtils
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.editor.getCurrentPageNumberForInsight
 import org.digma.intellij.plugin.editor.updateListOfEntriesToDisplay
@@ -234,10 +235,14 @@ private fun buildButtonToScalingGraph(project: Project, spanName: String, instLi
     button.addActionListener {
 
         runBackgroundableTask("Open histogram", project, true) {
-            val htmlContent = analyticsService.getHtmlGraphForSpanScaling(instLibrary, spanName, Laf.Colors.PLUGIN_BACKGROUND.getHex())
-            ActivityMonitor.getInstance(project).registerButtonClicked("histogram", insightType)
-            EDT.ensureEDT {
-                DigmaHTMLEditorProvider.openEditor(project, "Scaling Graph of Span $spanName", htmlContent)
+            try {
+                val htmlContent = analyticsService.getHtmlGraphForSpanScaling(instLibrary, spanName, Laf.Colors.PLUGIN_BACKGROUND.getHex())
+                ActivityMonitor.getInstance(project).registerButtonClicked("histogram", insightType)
+                EDT.ensureEDT {
+                    DigmaHTMLEditorProvider.openEditor(project, "Scaling Graph of Span $spanName", htmlContent)
+                }
+            }catch (e: AnalyticsServiceException){
+                //do nothing, the exception is logged in AnalyticsService
             }
         }
 

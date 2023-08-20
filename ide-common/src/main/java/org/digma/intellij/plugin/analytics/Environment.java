@@ -143,6 +143,7 @@ public class Environment implements EnvironmentsSupplier {
 
             Log.log(LOGGER::trace, "Refreshing Environments list");
             var newEnvironments = analyticsService.getEnvironments();
+            Log.test(LOGGER::info, "refreshEnvironments: from analyticsService.getEnvironments(): {}", newEnvironments);
             if (newEnvironments != null && !newEnvironments.isEmpty()) {
                 Log.log(LOGGER::trace, "Got environments {}", newEnvironments);
                 Log.test(LOGGER::info, "Got environments {}", newEnvironments);
@@ -156,6 +157,7 @@ public class Environment implements EnvironmentsSupplier {
             }
 
             this.environments = newEnvironments;
+            Log.test(LOGGER::info, "new env list set to env. notifying the list change");
             notifyEnvironmentsListChange();
 
         } finally {

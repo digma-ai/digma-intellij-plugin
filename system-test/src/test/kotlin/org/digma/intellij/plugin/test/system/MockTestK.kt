@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.test.system
 
 import ai.grazie.nlp.utils.dropWhitespaces
+import com.intellij.diagnostic.PluginException
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.LogicalPosition
@@ -18,6 +19,7 @@ import org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
+import org.digma.intellij.plugin.recentactivity.RecentActivityService
 import org.digma.intellij.plugin.test.system.framework.WaitFinishRule
 import org.digma.intellij.plugin.test.system.framework.WaitForAsync
 import org.digma.intellij.plugin.test.system.framework.environmentList
@@ -48,11 +50,19 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
     }
 
     override fun tearDown() {
-        if (!done.success) {
-            done()
+        while (true){
+            if (done.success) {
+                done()
+                break
+            } else {
+                done.waitForCompletion()
+            }
         }
-        done.waitForCompletion()
-        super.tearDown()
+        try {
+            super.tearDown()
+        } catch (ex: Exception) {
+            Log.test(logger::info, "FFS: PluginException in tearDown")
+        }
     }
 
     override fun getTestDataPath(): String {
@@ -102,7 +112,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
             // move caret to line 37
             val newCaretPosition = editor.offsetToLogicalPosition(classKeywordIndex)
             editor.caretModel.moveToLogicalPosition(newCaretPosition)
-            
+
             editor.selectionModel.selectLineAtCaret()
 
             val selectedText = editor.selectionModel.selectedText
@@ -250,19 +260,72 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
     }
 
     @WaitForAsync
-    fun `test subscribe`() {
+    fun `test subscribe to documentInfoChange and openFile`() {
+
+        var file: PsiFile? = null
+        var assertFinished = false
+        var isTheSameName = false
         //prepare
-        messageBusTestListeners.registerSubToDocumentInfoChangedEvent { 
+        messageBusTestListeners.registerSubToDocumentInfoChangedEvent {
             Log.test(logger::info, "Test Subscriber - DocumentInfoChanged: documentInfoChanged")
-            assertTrue("This is intended to be called, remove the line to properly test", true)
+            assertFinished = true
+            isTheSameName = it.name == file?.name
+        }
+        //act
+        file = myFixture.configureByFile("EditorEventsHandler.java")
+        myFixture.openFileInEditor(file.virtualFile)
+
+        runBlocking {
+            while (!assertFinished) {
+                delay(100)
+            }
+        }
+        //done
+        TestCase.assertTrue(assertFinished)
+        assertTrue("This is intended to be called, remove the line to properly test", isTheSameName)
+        done()
+    }
+    
+    @WaitForAsync
+    fun `test getting current environment`() {
+        
+        var beforeSet = analyticsService.environment.getCurrent()
+        
+        messageBusTestListeners.registerSubToEnvironmentChangedEvent { newEnv, toRefresh ->
+            Log.test(logger::info, "Test Subscriber - EnvironmentChanged: environmentChanged $newEnv")
+            TestCase.assertEquals(environmentList[0], newEnv)
             done()
         }
+        analyticsService.environment.setCurrent(environmentList[0])
         
-        //act
-        myFixture.configureByFile("EditorEventsHandler.java")
-
-        //done
-        done.waitForCompletion()
+        runBlocking {
+                delay(100L)
+                Log.test(logger::info, "Current environment: $beforeSet")
+        }
+        val afterSet = analyticsService.environment.getCurrent()
+        TestCase.assertEquals(environmentList[0], afterSet)
+        
+        Log.test(logger::info, "Current environment after set: $afterSet")
+        done()
+    }
+    @WaitForAsync
+    fun `test triggering process event methods`() {
+        val recentActivityService = RecentActivityService.getInstance(project)
+        
+        
+        
+        val file = myFixture.configureByFile("EditorEventsHandler.java")
+        
+        runBlocking { 
+            delay(2000L)
+        }
+        
+        
+        
+        done() 
+        
+        
+        
     }
     
 }

@@ -383,6 +383,7 @@ public class RecentActivityService implements Disposable {
 
     private void sendLatestActivities(java.util.List<String> allEnvironments) {
         java.util.List<String> sortedEnvironments = getSortedEnvironments(allEnvironments, localHostname);
+        Log.test(logger::info, "stored environments: {}", sortedEnvironments);
         String requestMessage = JCefBrowserUtil.resultToString(new JcefMessageRequest(
                 REQUEST_MESSAGE_TYPE,
                 RECENT_ACTIVITY_SET_DATA,

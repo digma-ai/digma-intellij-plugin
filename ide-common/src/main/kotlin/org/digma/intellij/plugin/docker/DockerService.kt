@@ -177,6 +177,7 @@ class DockerService {
                 }
 
             }catch (e:Exception){
+                ActivityMonitor.getInstance(project).registerDigmaEngineEventError("installEngine", "Failed in installEngine $e")
                 Log.warnWithException(logger,e, "Failed install docker engine {}",e)
                 notifyResult("Failed to install docker engine: $e", onCompleted)
             }finally {
@@ -209,6 +210,7 @@ class DockerService {
                     Log.log(logger::warn, "Failed to download compose file")
                 }
             }catch (e: Exception){
+                ActivityMonitor.getInstance(project).registerDigmaEngineEventError("upgradeEngine", "Failed in upgradeEngine $e")
                 Log.warnWithException(logger,e, "Failed install docker engine {}",e)
             }finally {
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd("upgradeEngine", mapOf())
@@ -246,6 +248,7 @@ class DockerService {
                     notifyResult("Failed to download compose file", resultTask)
                 }
             }catch (e:Exception){
+                ActivityMonitor.getInstance(project).registerDigmaEngineEventError("stopEngine", "Failed in stopEngine $e")
                 Log.warnWithException(logger,e, "Failed to stop docker engine {}",e)
                 notifyResult("Failed to stop docker engine: $e", resultTask)
             }finally {
@@ -298,6 +301,7 @@ class DockerService {
                     notifyResult("Failed to download compose file", resultTask)
                 }
             }catch (e:Exception){
+                ActivityMonitor.getInstance(project).registerDigmaEngineEventError("startEngine", "Failed in startEngine $e")
                 Log.warnWithException(logger,e, "Failed to start docker engine {}",e)
                 notifyResult("Failed to start docker engine: $e", resultTask)
             }finally {
@@ -341,6 +345,7 @@ class DockerService {
                     notifyResult("Failed to download compose file", resultTask)
                 }
             }catch (e:Exception){
+                ActivityMonitor.getInstance(project).registerDigmaEngineEventError("removeEngine", "failed in removeEngine $e")
                 Log.warnWithException(logger,e, "Failed to remove docker engine {}",e)
                 notifyResult("Failed to remove docker engine: $e", resultTask)
             }finally {

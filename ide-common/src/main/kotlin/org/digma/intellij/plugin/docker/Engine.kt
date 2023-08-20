@@ -116,9 +116,18 @@ internal class Engine {
         repeat(3){ count ->
             Log.log(logger::info,"executing command {}, attempt {}",name,count)
             val exitValue = executeCommand(project, name, composeFile, processBuilder,reportToPosthog,ignoreNonRealErrors)
-            if (exitValue == "0"){
-                Log.log(logger::info,"docker command {} success after retry {}",name,count)
+            if (shouldExit(exitValue)){
+                Log.log(logger::info,"docker command {} completed after retry {} with exit value {}",name,count,exitValue)
                 return exitValue
+            }
+
+            if (reportToPosthog) {
+                ActivityMonitor.getInstance(project).registerDigmaEngineEventRetry(
+                    name, mapOf(
+                        "exitValue" to exitValue,
+                        "retry" to count
+                    )
+                )
             }
             Log.log(logger::info,"docker command {} failed with exit value {}, retrying..",name,exitValue)
         }
@@ -128,8 +137,15 @@ internal class Engine {
         return executeCommand(project, "down", composeFile, processBuilder)
     }
 
+    private fun shouldExit(exitValue: String): Boolean {
+        return !shouldRetry(exitValue)
+    }
 
-
+    private fun shouldRetry(exitValue: String): Boolean {
+        //add here more evaluations in exit value that should trigger a retry
+        return exitValue != "0" &&
+                exitValue.contains("unexpected EOF")
+    }
 
 
     private fun executeCommand(

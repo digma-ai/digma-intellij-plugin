@@ -448,6 +448,14 @@ class ActivityMonitor(project: Project) :Disposable {
         )
     }
 
+    fun registerDigmaEngineEventRetry(eventName: String, eventDetails: Map<String, Any>) {
+        postHog?.capture(
+            userId,
+            "Engine.".plus(eventName).plus(".retry"),
+            eventDetails
+        )
+    }
+
     fun registerDigmaEngineEventError(eventName: String, errorMessage: String) {
         postHog?.capture(
             userId,

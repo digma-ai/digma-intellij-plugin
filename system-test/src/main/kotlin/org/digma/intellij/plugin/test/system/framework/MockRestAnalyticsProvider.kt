@@ -52,21 +52,21 @@ fun mockGetAbout() {
 
 private fun mockGetEnvironments() {
     `when`(mock?.getEnvironments()).thenAnswer {
-        Log.test(logger::info, "mock getEnvironments")
-        environmentList
+        Log.test(logger::info, "mock getEnvironments - $environmentList")
+        return@thenAnswer environmentList
     }
 }
 
 private fun mockGetRecentActivity() {
     `when`(mock?.getRecentActivity(RecentActivityRequest(environmentList))).thenAnswer {
         Log.test(logger::info, "mock getRecentActivity")
-        createRecentActivityResult()
+        return@thenAnswer createRecentActivityResult()
     }
 }
 
 private fun mockGetInsightsOfMethodsForEnv1() {
     `when`(mock?.getInsightsOfMethods(any(InsightsOfMethodsRequest::class.java))).thenAnswer {
-            Log.test(logger::info, "mock getInsightsOfMethods")
-            expectedInsightsOfMethodsResponse
+            Log.test(logger::info, "mock getInsightsOfMethods - ${expectedInsightsOfMethodsResponse.methodsWithInsights}}")
+            return@thenAnswer expectedInsightsOfMethodsResponse
     }
 }

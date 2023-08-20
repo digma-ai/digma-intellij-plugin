@@ -36,12 +36,12 @@ class MessageBusTestListeners(val messageBus: MessageBus) {
 
     }
 
-    fun registerSubToEnvironmentChangedEvent(onEnvHanged: (String?, Boolean) -> Unit) {
+    fun registerSubToEnvironmentChangedEvent(onEnvChanged: (String?, Boolean) -> Unit) {
         messageBus.connect().subscribe(
             EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC,
             object : EnvironmentChanged {
                 override fun environmentChanged(newEnv: String?, refreshInsightsView: Boolean) {
-                    onEnvHanged(newEnv, refreshInsightsView)
+                    onEnvChanged(newEnv, refreshInsightsView)
                 }
 
                 override fun environmentsListChanged(newEnvironments: MutableList<String>?) {

@@ -131,6 +131,7 @@ class ActivityMonitor(project: Project) :Disposable {
             "lens clicked",
             mapOf("lens" to lens)
         )
+        registerUserAction("Clicked on lens")
     }
 
     fun registerSidePanelOpened() {
@@ -144,6 +145,7 @@ class ActivityMonitor(project: Project) :Disposable {
             "side-panel opened",
             mapOf("reason" to reason)
         )
+        registerUserAction("Opened side panel")
     }
 
     fun registerSidePanelClosed() {
@@ -152,6 +154,7 @@ class ActivityMonitor(project: Project) :Disposable {
 
     fun registerObservabilityPanelOpened() {
         postHog?.capture(userId, "observability-panel opened")
+        registerUserAction("Opened observability panel")
     }
 
     fun registerObservabilityPanelClosed() {
@@ -192,10 +195,12 @@ class ActivityMonitor(project: Project) :Disposable {
 
     fun registerObservabilityOn() {
         postHog?.capture(userId, "observability is turned on")
+        registerUserAction("Turned on observability")
     }
 
     fun registerObservabilityOff() {
         postHog?.capture(userId, "observability is turned off")
+        registerUserAction("Turned off observability")
     }
 
     fun registerError(exception: Exception, message: String) {
@@ -312,6 +317,7 @@ class ActivityMonitor(project: Project) :Disposable {
                 "button" to button
             )
         )
+        registerUserAction("Clicked on $button")
     }
 
     fun registerNavigationButtonClicked(navigable: Boolean) {
@@ -324,6 +330,7 @@ class ActivityMonitor(project: Project) :Disposable {
                 "navigable" to navigable.toString()
             )
         )
+        registerUserAction("Clicked on navigation button")
     }
 
     fun registerSpanLinkClicked(insight: InsightType) {
@@ -335,6 +342,7 @@ class ActivityMonitor(project: Project) :Disposable {
                 "insight" to insight.name
             )
         )
+        registerUserAction("Clicked on span link from insights")
     }
 
     fun registerSpanLinkClicked(panel: MonitoredPanel) {
@@ -350,6 +358,7 @@ class ActivityMonitor(project: Project) :Disposable {
                 "navigable" to (navigable?.toString() ?: "unknown")
             )
         )
+        registerUserAction("Clicked on span link from ${panel.name}")
     }
 
     fun registerButtonClicked(button: String, insight: InsightType) {
@@ -361,6 +370,7 @@ class ActivityMonitor(project: Project) :Disposable {
                 "insight" to insight.name
             )
         )
+        registerUserAction("Clicked on button from insights")
     }
 
 
@@ -490,6 +500,14 @@ class ActivityMonitor(project: Project) :Disposable {
             userId,
             "Notifications.".plus(eventName),
             eventDetails
+        )
+    }
+
+    private fun registerUserAction(action: String) {
+        postHog?.capture(
+            userId,
+            "user-action",
+            mapOf("action" to action)
         )
     }
 

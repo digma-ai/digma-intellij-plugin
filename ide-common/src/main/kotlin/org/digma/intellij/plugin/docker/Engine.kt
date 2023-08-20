@@ -143,9 +143,17 @@ internal class Engine {
 
     private fun shouldRetry(exitValue: String): Boolean {
         //add here more evaluations in exit value that should trigger a retry
-        return exitValue != "0" &&
-                exitValue.contains("unexpected EOF")
+        return exitValue != "0" && isRetryTriggerExitValue(exitValue)
+
     }
+
+    private fun isRetryTriggerExitValue(exitValue: String):Boolean{
+
+        return exitValue.startsWith("process exited with timeout") ||
+                exitValue.contains("unexpected EOF")
+
+    }
+
 
 
     private fun executeCommand(

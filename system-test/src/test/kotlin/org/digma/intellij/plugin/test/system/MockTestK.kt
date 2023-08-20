@@ -42,22 +42,21 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
 
     override fun setUp() {
         super.setUp()
+        done.success = false
         mockRestAnalyticsProvider(project)
         messageBusTestListeners = MessageBusTestListeners(project.messageBus)
-//        RecentActivityStartupActivity().runActivity(project)
     }
 
     override fun tearDown() {
+        if (!done.success) {
+            done()
+        }
         done.waitForCompletion()
         super.tearDown()
     }
 
     override fun getTestDataPath(): String {
         return "src/test/resources"
-    }
-
-    private fun navigateToMethod(editor: Editor, methodLine: Int) {
-        editor.caretModel.moveToLogicalPosition(LogicalPosition(if (methodLine.dec() < 0) 0 else methodLine.dec(), 0))
     }
 
     @WaitForAsync
@@ -183,21 +182,23 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
         val documentInfoService = DocumentInfoService.getInstance(project)
         assertTrue(documentInfoService.focusedFile == file.virtualFile)
 
-        runBlocking {
-            delay(3000L)
+        var notified = false
+        messageBusTestListeners.registerSubToDocumentInfoChangedEvent {
+            Log.test(logger::info, "Got notification")
+            notified = true
         }
+
+        while (!notified)
+            runBlocking {
+                delay(100L)
+            }
 
         val documentInfoContainer = documentInfoService.getDocumentInfo(file.virtualFile)
         TestCase.assertNotNull(documentInfoContainer)
 
         val insights: MutableMap<String, MutableList<CodeObjectInsight>>? = documentInfoContainer?.allMethodWithInsightsMapForCurrentDocument
         TestCase.assertNotNull("Insights are null", insights)
-        try {
-            Log.test(logger::info, "Insights size = ${insights?.size}")
-            TestCase.assertTrue(insights?.size == 4)
-        } finally {
-            done()
-        }
+        TestCase.assertTrue(insights?.size == 4)
 
         insights?.toList()?.forEachIndexed { index, it ->
             TestCase.assertTrue(it.second.isNotEmpty())
@@ -228,7 +229,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
         })
 
         runBlocking {
-            delay(2000L)
+            delay(1000L)
         }
 
         val documentInfoService = DocumentInfoService.getInstance(project)

@@ -113,6 +113,7 @@ public class AnalyticsService implements Disposable {
     private AnalyticsProvider analyticsProviderProxy;
 
     public AnalyticsService(@NotNull Project project) {
+        Log.test(LOGGER:: info, "Initializing AnalyticsService");
         //initialize BackendConnectionMonitor when starting, so it is aware early on connection statuses
         BackendConnectionMonitor.getInstance(project);
         //initialize MainToolWindowCardsController when starting, so it is aware early on connection statuses

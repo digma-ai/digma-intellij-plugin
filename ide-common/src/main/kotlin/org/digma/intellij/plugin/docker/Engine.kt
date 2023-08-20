@@ -32,7 +32,7 @@ internal class Engine {
             .withRedirectErrorStream(true)
             .toProcessBuilder()
 
-        return executeCommand(project, "up", composeFile, processBuilder, reportToPosthog = true, ignoreNonRealErrors = true)
+        return executeCommandWithRetry(project, "up", composeFile, processBuilder, reportToPosthog = true, ignoreNonRealErrors = true)
     }
 
 
@@ -47,7 +47,7 @@ internal class Engine {
             .withRedirectErrorStream(true)
             .toProcessBuilder()
 
-        return executeCommand(project, "down", composeFile, processBuilder, reportToPosthog)
+        return executeCommandWithRetry(project, "down", composeFile, processBuilder, reportToPosthog)
 
     }
 
@@ -63,7 +63,7 @@ internal class Engine {
             .withRedirectErrorStream(true)
             .toProcessBuilder()
 
-        return executeCommand(project, "up", composeFile, processBuilder)
+        return executeCommandWithRetry(project, "up", composeFile, processBuilder)
 
     }
 
@@ -79,7 +79,7 @@ internal class Engine {
             .withRedirectErrorStream(true)
             .toProcessBuilder()
 
-        return executeCommand(project, "stop", composeFile, processBuilder)
+        return executeCommandWithRetry(project, "stop", composeFile, processBuilder)
 
     }
 
@@ -98,9 +98,38 @@ internal class Engine {
             .withRedirectErrorStream(true)
             .toProcessBuilder()
 
-        return executeCommand(project, "down", composeFile, processBuilder)
+        return executeCommandWithRetry(project, "down", composeFile, processBuilder)
 
     }
+
+
+    private fun executeCommandWithRetry(
+        project: Project,
+        name: String,
+        composeFile: File,
+        processBuilder: ProcessBuilder,
+        reportToPosthog: Boolean = true,
+        ignoreNonRealErrors: Boolean = false
+    ): String {
+
+        //try 3 times in case of failure
+        repeat(3){ count ->
+            Log.log(logger::info,"executing command {}, attempt {}",name,count)
+            val exitValue = executeCommand(project, name, composeFile, processBuilder,reportToPosthog,ignoreNonRealErrors)
+            if (exitValue == "0"){
+                Log.log(logger::info,"docker command {} success after retry {}",name,count)
+                return exitValue
+            }
+            Log.log(logger::info,"docker command {} failed with exit value {}, retrying..",name,exitValue)
+        }
+
+        //last chance
+        Log.log(logger::info,"executing command {}, last chance after 3 failures",name)
+        return executeCommand(project, "down", composeFile, processBuilder)
+    }
+
+
+
 
 
     private fun executeCommand(

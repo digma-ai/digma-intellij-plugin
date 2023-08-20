@@ -231,8 +231,9 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                         val success = exitValue == "0"
 
                         if (success) {
+                            //wait up to two minutes for connection, sometimes it takes more than a minute before connection is available
                             var i = 0
-                            while (!BackendConnectionMonitor.getInstance(project).isConnectionOk() && i < 10) {
+                            while (!BackendConnectionMonitor.getInstance(project).isConnectionOk() && i < 24) {
                                 Log.log(logger::warn, "waiting for connection")
                                 AnalyticsService.getInstance(project).environment.refreshNowOnBackground()
                                 delay(5000)
@@ -343,8 +344,9 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                         val success = exitValue == "0"
 
                         if (success) {
+                            //wait up to two minutes for connection, sometimes it takes more than a minute before connection is available
                             var i = 0
-                            while (!BackendConnectionMonitor.getInstance(project).isConnectionOk() && i < 10) {
+                            while (!BackendConnectionMonitor.getInstance(project).isConnectionOk() && i < 24) {
                                 Log.log(logger::warn, "waiting for connection")
                                 AnalyticsService.getInstance(project).environment.refreshNowOnBackground()
                                 delay(5000)

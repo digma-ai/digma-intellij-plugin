@@ -28,6 +28,7 @@ import org.digma.intellij.plugin.test.system.framework.mockRestAnalyticsProvider
 import org.gradle.internal.impldep.org.junit.Rule
 import java.awt.event.MouseEvent
 import java.lang.reflect.Field
+import kotlin.test.assertNotEquals
 
 
 class MockTestK : LightJavaCodeInsightFixtureTestCase() {
@@ -78,7 +79,6 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
         Log.test(logger::info, "Requesting analytics service")
         val analytics = AnalyticsService.getInstance(project)
         TestCase.assertNotNull(analytics)
-        TestCase.assertFalse(true)
         done()
     }
 
@@ -160,11 +160,10 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
             when (val codeVision = it.second) {
                 is ClickableTextCodeVisionEntry -> {
                     val augmentedOnClick: (MouseEvent?, Editor) -> Unit = { mouseEvent, editor ->
-                        Log.test(logger::info, "Clicked codeVision!!")
                         // maybe we should mock the entire clickHandler
                         codeVision.onClick(mouseEvent, editor)
                     }
-                    
+
                     val onClickField: Field = codeVision.javaClass.getDeclaredField("onClick")
                     onClickField.isAccessible = true
                     onClickField.set(codeVision, augmentedOnClick)
@@ -337,34 +336,44 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
     @WaitForAsync
     fun `test getting current environment and switching`() {
 
-        var beforeSet = analyticsService.environment.getCurrent()
-
+        var expected = environmentList[0]
+        val file = myFixture.configureByFile("EditorEventsHandler.java")
+        //register for environment change event
         messageBusTestListeners.registerSubToEnvironmentChangedEvent { newEnv, toRefresh ->
             Log.test(logger::info, "Test Subscriber - EnvironmentChanged: environmentChanged $newEnv")
-            TestCase.assertEquals(environmentList[0], newEnv)
+            TestCase.assertEquals(expected, newEnv)
             done()
         }
-        analyticsService.environment.setCurrent(environmentList[0])
-
-        runBlocking {
+        
+        analyticsService.environment.setCurrent(expected)
+        
+        
+        runBlocking { 
             delay(100L)
-            Log.test(logger::info, "Current environment: $beforeSet")
         }
-        val afterSet = analyticsService.environment.getCurrent()
-        TestCase.assertEquals(environmentList[0], afterSet)
+        //verify that env did change
+        var afterSet = analyticsService.environment.getCurrent()
+        TestCase.assertEquals(expected, afterSet)
 
         Log.test(logger::info, "Current environment after set: $afterSet")
+        
+        //should be the same as after set
+        var beforeSet = analyticsService.environment.getCurrent()
+        TestCase.assertEquals(expected, beforeSet)
+        TestCase.assertEquals(beforeSet, afterSet)
 
-        beforeSet = analyticsService.environment.getCurrent()
-        TestCase.assertEquals(environmentList[0], beforeSet)
-        analyticsService.environment.setCurrent(environmentList[1])
+
+        expected = environmentList[1]
+        analyticsService.environment.setCurrent(expected)
 
         runBlocking {
             delay(100L)
-            Log.test(logger::info, "Current environment: $beforeSet")
         }
-        val afterSet2 = analyticsService.environment.getCurrent()
-        TestCase.assertEquals(environmentList[1], afterSet2)
+        
+        afterSet = analyticsService.environment.getCurrent()
+        TestCase.assertEquals(expected, afterSet)
+        
+        assertNotEquals(beforeSet, afterSet)
 
         // see that insights are retrieved for the new environment
 

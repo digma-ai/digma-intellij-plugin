@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.150] - 2023-08-20
+## [2.0.151] - 2023-08-21
+- Feature/insights react app by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1172
+- observability-on-by-default by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1173
+
+## 2.0.150 - 2023-08-20
 - ignore no such volume in docker errors by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1150
 - Feature/align insights model for async by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1154
 - fix wrong release draft by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1156

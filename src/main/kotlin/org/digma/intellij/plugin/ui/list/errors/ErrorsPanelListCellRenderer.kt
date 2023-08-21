@@ -1,14 +1,20 @@
 package org.digma.intellij.plugin.ui.list.errors
 
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.common.CommonUtils.prettyTimeOf
+import org.digma.intellij.plugin.insights.ErrorsViewOrchestrator
 import org.digma.intellij.plugin.model.discovery.CodeObjectInfo.Companion.extractMethodName
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
-import org.digma.intellij.plugin.service.ErrorsActionsService
-import org.digma.intellij.plugin.ui.common.*
+import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
+import org.digma.intellij.plugin.ui.common.asHtml
+import org.digma.intellij.plugin.ui.common.buildLinkTextWithGrayedAndDefaultLabelColorPart
+import org.digma.intellij.plugin.ui.common.createScorePanelNoArrows
+import org.digma.intellij.plugin.ui.common.span
+import org.digma.intellij.plugin.ui.common.spanGrayed
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
 import org.digma.intellij.plugin.ui.list.commonListItemPanel
@@ -48,8 +54,7 @@ private fun createSingleErrorPanel(project: Project, model: CodeObjectError ): J
 
     val linkText = buildLinkTextWithGrayedAndDefaultLabelColorPart(model.name,"from",relativeFrom)
     val link = ActionLink(asHtml(linkText)){
-        val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
-        actionListener.showErrorDetails(model)
+        project.service<ErrorsViewOrchestrator>().showErrorDetails(model)
     }
 
     val firstAndLast = contentOfFirstAndLast(model.firstOccurenceTime, model.lastOccurenceTime)

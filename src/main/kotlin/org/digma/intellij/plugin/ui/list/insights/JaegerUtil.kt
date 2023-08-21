@@ -12,6 +12,7 @@ import org.digma.intellij.plugin.settings.LinkMode
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.list.ListItemActionButton
 import org.digma.intellij.plugin.ui.model.TraceSample
+import java.util.Collections
 import javax.swing.JButton
 
 const val traceButtonName: String = "show-in-jaeger"
@@ -118,16 +119,112 @@ fun openJaegerFromRecentActivity(
                 BrowserUtil.browse(jaegerUrl, project)
             }
         }
+
         LinkMode.Embedded -> {
-            JaegerUIService.getInstance(project).openEmbeddedJaeger(traceId,spanName)
+            JaegerUIService.getInstance(project).openEmbeddedJaeger(traceId, spanName)
         }
     }
 
 }
 
 
+fun openJaegerFromInsight(
+    project: Project,
+    traceId: String,
+    traceName: String,
+    insightType: InsightType,
+) {
 
-fun isJaegerButtonEnabled(): Boolean{
+    ActivityMonitor.getInstance(project).registerButtonClicked(traceButtonName, insightType)
+
+    val settingsState = SettingsState.getInstance()
+    val jaegerBaseUrl = settingsState.jaegerUrl?.trim()?.trimEnd('/')
+    val jaegerUrl: String
+    val embedPart = "&uiEmbed=v0"
+
+    val trace1 = traceId.lowercase()
+    jaegerUrl = "${jaegerBaseUrl}/trace/${trace1}?cohort=${trace1}${embedPart}"
+
+    when (settingsState.jaegerLinkMode) {
+
+        LinkMode.Internal -> {
+
+            val caption = "A sample ${traceName} trace"
+
+            val htmlContent = SpanPanels.JAEGER_EMBEDDED_HTML_TEMPLATE
+                .replace("__JAEGER_EMBEDDED_URL__", jaegerUrl)
+                .replace("__CAPTION__", caption)
+            val editorTitle = "Jaeger sample traces of Span $traceName"
+            EDT.ensureEDT {
+                DigmaHTMLEditorProvider.openEditor(project, editorTitle, htmlContent)
+            }
+        }
+
+        LinkMode.External -> {
+            EDT.ensureEDT {
+                BrowserUtil.browse(jaegerUrl, project)
+            }
+        }
+
+        LinkMode.Embedded -> {
+            val traceSample = TraceSample(traceName, traceId);
+            JaegerUIService.getInstance(project).openEmbeddedJaeger(Collections.singletonList(traceSample), traceName)
+        }
+    }
+}
+
+
+fun openJaegerComparisonFromInsight(
+    project: Project,
+    traceId1: String,
+    traceName1: String,
+    traceId2: String,
+    traceName2: String,
+    insightType: InsightType,
+) {
+
+    ActivityMonitor.getInstance(project).registerButtonClicked(traceButtonName, insightType)
+
+    val settingsState = SettingsState.getInstance()
+    val jaegerBaseUrl = settingsState.jaegerUrl?.trim()?.trimEnd('/')
+    val jaegerUrl: String
+    val embedPart = "&uiEmbed=v0"
+
+    jaegerUrl =
+        "${jaegerBaseUrl}/trace/${traceId1.lowercase()}...${traceId2.lowercase()}?cohort=${traceId1.lowercase()}&cohort=${traceId2.lowercase()}${embedPart}"
+
+    when (settingsState.jaegerLinkMode) {
+
+        LinkMode.Internal -> {
+
+            val caption = "Comparing: A sample ${traceName1} trace with a ${traceName2} trace"
+
+            val htmlContent = SpanPanels.JAEGER_EMBEDDED_HTML_TEMPLATE
+                .replace("__JAEGER_EMBEDDED_URL__", jaegerUrl)
+                .replace("__CAPTION__", caption)
+            val editorTitle = "Jaeger sample traces of Span $traceName1"
+            EDT.ensureEDT {
+                DigmaHTMLEditorProvider.openEditor(project, editorTitle, htmlContent)
+            }
+        }
+
+        LinkMode.External -> {
+            EDT.ensureEDT {
+                BrowserUtil.browse(jaegerUrl, project)
+            }
+        }
+
+        LinkMode.Embedded -> {
+            val traceSample1 = TraceSample(traceName1, traceId1);
+            val traceSample2 = TraceSample(traceName2, traceId2);
+            val traces = listOf(traceSample1, traceSample2)
+            JaegerUIService.getInstance(project).openEmbeddedJaeger(traces, traceName1)
+        }
+    }
+}
+
+
+fun isJaegerButtonEnabled(): Boolean {
     val settingsState = SettingsState.getInstance()
     return settingsState.jaegerLinkMode == LinkMode.Embedded ||
             (!settingsState.jaegerUrl.isNullOrBlank() && CommonUtils.isWelFormedUrl(settingsState.jaegerUrl))

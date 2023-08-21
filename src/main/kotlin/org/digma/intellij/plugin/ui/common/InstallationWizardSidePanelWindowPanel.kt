@@ -65,7 +65,6 @@ import javax.swing.JPanel
 
 private const val RESOURCE_FOLDER_NAME = "installationwizard"
 private const val ENV_VARIABLE_IDE: String = "ide"
-private const val WIZARD_SKIP_INSTALLATION_STEP_VARIABLE: String = "wizardSkipInstallationStep"
 private const val USER_EMAIL_VARIABLE: String = "userEmail"
 private const val IS_OBSERVABILITY_ENABLED_VARIABLE: String = "isObservabilityEnabled"
 private const val IS_DOCKER_INSTALLED: String = "isDockerInstalled"
@@ -87,15 +86,10 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
         return null
     }
 
-    //at this stage the AnalyticsService was initialized already and if there is no connection then
-    // BackendConnectionMonitor should already know that
-    val isServerConnectedAlready = BackendConnectionMonitor.getInstance(project).isConnectionOk()
-
     val jbCefBrowser = JBCefBrowserBuilderCreator.create()
         .setUrl("https://$RESOURCE_FOLDER_NAME/index.html")
         .build()
     val indexTemplateData = mutableMapOf<String, Any>(
-        WIZARD_SKIP_INSTALLATION_STEP_VARIABLE to isServerConnectedAlready,
         ENV_VARIABLE_IDE to ApplicationNamesInfo.getInstance().productName, //Available values: "IDEA", "Rider", "PyCharm"
         USER_EMAIL_VARIABLE to (PersistenceService.getInstance().state.userEmail ?: ""),
         IS_OBSERVABILITY_ENABLED_VARIABLE to PersistenceService.getInstance().state.isAutoOtel,

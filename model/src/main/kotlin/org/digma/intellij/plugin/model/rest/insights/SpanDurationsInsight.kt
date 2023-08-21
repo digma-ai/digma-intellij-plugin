@@ -37,6 +37,8 @@ constructor(
 ) : SpanInsight {
 
     override val type: InsightType = InsightType.SpanDurations
+
+    @JsonProperty(value = "isRecalculateEnabled")
     override val isRecalculateEnabled: Boolean = true // should remove the setter = true later ...support backward compatibility
 
     @JsonProperty("percentiles")

@@ -4,14 +4,13 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBTabbedPane
 import com.intellij.util.ui.JBUI.Borders.empty
+import org.digma.intellij.plugin.insights.ErrorsViewOrchestrator
+import org.digma.intellij.plugin.insights.InsightsReactPanel
 import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.errors.errorsPanel
-import org.digma.intellij.plugin.ui.insights.insightsPanel
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import org.digma.intellij.plugin.ui.service.ErrorsViewService
-import org.digma.intellij.plugin.ui.service.InsightsViewService
 import javax.swing.BoxLayout
 import javax.swing.JPanel
 
@@ -42,19 +41,16 @@ class InsightsPanel(private val project: Project) : JPanel() {
         tabbedPane.isOpaque = false
         tabbedPane.border = empty()
 
-        val insightsPanel = createInsightsPanel(project)
-        insightsPanel.border = empty()
-        tabbedPane.addTab(INSIGHTS_TAB_NAME, insightsPanel)
+        val insightsNewPanel = createInsightsNewPanel(project)
+        insightsNewPanel.border = empty()
+        tabbedPane.addTab(INSIGHTS_TAB_NAME, insightsNewPanel)
         project.service<InsightsAndErrorsTabsHelper>().setInsightsTabIndex(INSIGHTS_TAB_INDEX)
+
 
         val errorsPanel = createErrorsPanel(project)
         errorsPanel.border = empty()
         tabbedPane.addTab(ERRORS_TAB_NAME, errorsPanel)
         project.service<InsightsAndErrorsTabsHelper>().setErrorsTabIndex(ERRORS_TAB_INDEX)
-
-        tabbedPane.border = empty()
-
-        var currentTabIndex: Int
 
 
         tabbedPane.addChangeListener {
@@ -66,7 +62,7 @@ class InsightsPanel(private val project: Project) : JPanel() {
             //calling ErrorsActionsService.closeErrorDetails will in turn call
             //InsightsAndErrorsTabsHelper.errorDetailsOff which will change the tab title
             if (tabsHelper.isErrorDetailsOn() && tabbedPane.selectedIndex == INSIGHTS_TAB_INDEX) {
-                project.service<ErrorsActionsService>().closeErrorDetails()
+                project.service<ErrorsViewOrchestrator>().closeErrorDetailsInsightsTabClicked()
             }
 
             ActivityMonitor.getInstance(project).registerCustomEvent(
@@ -79,6 +75,10 @@ class InsightsPanel(private val project: Project) : JPanel() {
         return tabbedPane
     }
 
+    private fun createInsightsNewPanel(project: Project): JPanel {
+        return InsightsReactPanel(project)
+    }
+
 
     private fun createErrorsPanel(project: Project): DigmaTabPanel {
         val errorsPanel = errorsPanel(project)
@@ -87,10 +87,10 @@ class InsightsPanel(private val project: Project) : JPanel() {
         return errorsPanel
     }
 
-    private fun createInsightsPanel(project: Project): DigmaTabPanel {
-        val insightsPanel = insightsPanel(project)
-        val insightsViewService = project.getService(InsightsViewService::class.java)
-        insightsViewService.panel = insightsPanel
-        return insightsPanel
-    }
+//    private fun createInsightsPanel(project: Project): DigmaTabPanel {
+//        val insightsPanel = insightsPanel(project)
+//        val insightsViewService = project.getService(InsightsViewService::class.java)
+//        insightsViewService.panel = insightsPanel
+//        return insightsPanel
+//    }
 }

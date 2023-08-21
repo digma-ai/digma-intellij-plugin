@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.test.system
 
 import ai.grazie.nlp.utils.dropWhitespaces
-import com.intellij.diagnostic.PluginException
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.LogicalPosition
@@ -11,6 +10,7 @@ import com.intellij.psi.PsiMethod
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase
 import junit.framework.TestCase
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.newFixedThreadPoolContext
 import kotlinx.coroutines.runBlocking
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.document.DocumentInfoContainer
@@ -23,7 +23,7 @@ import org.digma.intellij.plugin.recentactivity.RecentActivityService
 import org.digma.intellij.plugin.test.system.framework.WaitFinishRule
 import org.digma.intellij.plugin.test.system.framework.WaitForAsync
 import org.digma.intellij.plugin.test.system.framework.environmentList
-import org.digma.intellij.plugin.test.system.framework.expectedInsightsOfMethodsResponse
+import org.digma.intellij.plugin.test.system.framework.expectedInsightsOfMethodsResponseEnv1
 import org.digma.intellij.plugin.test.system.framework.mockRestAnalyticsProvider
 import org.gradle.internal.impldep.org.junit.Rule
 
@@ -50,6 +50,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
     }
 
     override fun tearDown() {
+        Log.test(logger::info, "FFS: tearDown")
         while (true){
             if (done.success) {
                 done()
@@ -58,6 +59,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
                 done.waitForCompletion()
             }
         }
+        
         try {
             super.tearDown()
         } catch (ex: Exception) {
@@ -71,8 +73,10 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
 
     @WaitForAsync
     fun `test that all services are up and running`() {
+        Log.test(logger::info, "Requesting analytics service")
         val analytics = AnalyticsService.getInstance(project)
         TestCase.assertNotNull(analytics)
+        TestCase.assertFalse(true)
         done()
     }
 
@@ -186,7 +190,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
         TestCase.assertEquals(environmentList, environments)
 
         val file = myFixture.configureByFile("EditorEventsHandler.java")
-        val expectedMethodInsights = expectedInsightsOfMethodsResponse
+        val expectedMethodInsights = expectedInsightsOfMethodsResponseEnv1
         myFixture.openFileInEditor(file.virtualFile)
 
         val documentInfoService = DocumentInfoService.getInstance(project)
@@ -287,7 +291,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
     }
     
     @WaitForAsync
-    fun `test getting current environment`() {
+    fun `test getting current environment and switching`() {
         
         var beforeSet = analyticsService.environment.getCurrent()
         
@@ -306,27 +310,45 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
         TestCase.assertEquals(environmentList[0], afterSet)
         
         Log.test(logger::info, "Current environment after set: $afterSet")
-        done()
-    }
-    @WaitForAsync
-    fun `test triggering process event methods`() {
-        val recentActivityService = RecentActivityService.getInstance(project)
         
-        
-        
-        val file = myFixture.configureByFile("EditorEventsHandler.java")
+        beforeSet = analyticsService.environment.getCurrent()
+        TestCase.assertEquals(environmentList[0], beforeSet)
+        analyticsService.environment.setCurrent(environmentList[1])
         
         runBlocking { 
-            delay(2000L)
+            delay(100L)
+            Log.test(logger::info, "Current environment: $beforeSet")
         }
+        val afterSet2 = analyticsService.environment.getCurrent()
+        TestCase.assertEquals(environmentList[1], afterSet2)
+        
+        // see that insights are retrieved for the new environment
         
         
-        
-        done() 
-        
-        
-        
+        // receive code vision of method.
+        done()
     }
+    
+    
+//    @WaitForAsync
+//    fun `test triggering process event methods`() {
+//        val recentActivityService = RecentActivityService.getInstance(project)
+//        
+//        
+//        
+//        val file = myFixture.configureByFile("EditorEventsHandler.java")
+//        
+//        runBlocking { 
+//            delay(2000L)
+//        }
+//        
+//        
+//        
+//        done() 
+//        
+//        
+//        
+//    }
     
 }
 

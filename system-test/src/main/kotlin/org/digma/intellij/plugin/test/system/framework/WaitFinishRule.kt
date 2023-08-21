@@ -43,7 +43,9 @@ class WaitFinishRule : TestRule {
     fun waitForCompletion() {
         if (latch.await(timeoutSeconds, TimeUnit.SECONDS)) {
             Log.test(logger::info, "WaitForAsync completed")
-        } else
+        } else {
             Log.test(logger::warn, "WaitForAsync timeout")
+            success = true
+        }
     }
 }

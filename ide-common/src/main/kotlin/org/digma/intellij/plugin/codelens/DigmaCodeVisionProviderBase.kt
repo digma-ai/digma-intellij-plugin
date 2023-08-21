@@ -35,10 +35,10 @@ abstract class DigmaCodeVisionProviderBase: DaemonBoundCodeVisionProvider {
         val project: Project = editor.project ?: return emptyList()
 
         val languageService = LanguageServiceLocator.getInstance(project).locate(file.language)
-        Log.log(logger::trace, "found LanguageService for for {}, {}", file.virtualFile, languageService)
+        Log.test(logger::info, "found LanguageService for for {}, {}", file.virtualFile, languageService)
         //not all languages support DaemonBoundCodeVisionProvider, C# does it in resharper
         if (languageService.isCodeVisionSupported){
-            Log.log(logger::trace, "file is supported, computing code lens for {}", file.virtualFile)
+            Log.test(logger::info, "file is supported, computing code lens for {}", file.virtualFile)
             return computeLenses(editor, file,languageService)
         }
 

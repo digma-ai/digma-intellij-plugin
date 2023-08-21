@@ -30,6 +30,7 @@ import org.jetbrains.annotations.VisibleForTesting
 import java.util.Collections
 import java.util.concurrent.locks.ReentrantLock
 
+//todo: delete
 class InsightsViewService(project: Project) : AbstractViewService(project) {
 
     private val logger: Logger = Logger.getInstance(InsightsViewService::class.java)
@@ -370,6 +371,16 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
     fun notifyModelChangedAndUpdateUi() {
         notifyModelChanged()
         updateUi()
+    }
+
+
+    //the insights panel is not used anymore
+    override fun canUpdateUI(): Boolean {
+        return false
+    }
+
+    override fun updateUi() {
+        //do nothing, not used anymore
     }
 
 }

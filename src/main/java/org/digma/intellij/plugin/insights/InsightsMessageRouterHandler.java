@@ -27,7 +27,6 @@ import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.jcef.common.OpenInBrowserRequest;
 import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
-import org.digma.intellij.plugin.service.ErrorsActionsService;
 import org.digma.intellij.plugin.service.InsightsActionsService;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.digma.intellij.plugin.ui.service.InsightsService;
@@ -151,8 +150,7 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     private void goToError(JsonNode jsonNode) throws JsonProcessingException {
         ActivityMonitor.getInstance(project).registerCustomEvent("error-insight top-error-clicked", null);
         var errorUid = objectMapper.readTree(jsonNode.get("payload").toString()).get("errorId").asText();
-        var actionListener = project.getService(ErrorsActionsService.class);
-        actionListener.showErrorDetails(errorUid);
+        project.getService(ErrorsViewOrchestrator.class).showErrorDetails(errorUid);
     }
 
     private void goToMethod(JsonNode jsonNode) throws JsonProcessingException {

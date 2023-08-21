@@ -46,9 +46,11 @@ class InsightsAndErrorsTabsHelper(val project: Project) {
     }
 
 
-    fun errorDetailsClosed() {
-        tabIndexBeforeErrorDetails?.let {
-            insightsAndErrorsTabbedPane?.selectedIndex = it
+    fun errorDetailsClosed(switchToPreviousTab:Boolean = true) {
+        if (switchToPreviousTab) {
+            tabIndexBeforeErrorDetails?.let {
+                insightsAndErrorsTabbedPane?.selectedIndex = it
+            }
         }
         tabIndexBeforeErrorDetails = null
     }

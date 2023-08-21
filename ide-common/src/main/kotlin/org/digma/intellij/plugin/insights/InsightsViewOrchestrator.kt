@@ -17,7 +17,6 @@ import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
 import org.digma.intellij.plugin.navigation.NavigationModel
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.service.EditorService
-import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.service.ErrorsViewService
 import org.digma.intellij.plugin.ui.service.InsightsService
@@ -85,7 +84,7 @@ class InsightsViewOrchestrator(val project: Project) {
             //the new React app insights
             project.service<InsightsService>().updateInsights(CodeLessSpan(spanId))
 
-            project.service<ErrorsActionsService>().closeErrorDetailsBackButton()
+            project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
 
             //clear the latest method so that if user clicks on the editor again after watching code less insights the context will change
             project.service<CurrentContextUpdater>().clearLatestMethod()
@@ -119,7 +118,7 @@ class InsightsViewOrchestrator(val project: Project) {
                 //the new React app insights
                 project.service<InsightsService>().updateInsights(methodInfo)
 
-                project.service<ErrorsActionsService>().closeErrorDetailsBackButton()
+                project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
 
                 project.service<ToolWindowShower>().showToolWindow()
             }

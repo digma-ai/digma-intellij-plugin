@@ -33,6 +33,7 @@ import javax.swing.JPanel
 
 private val logger: Logger = Logger.getInstance("org.digma.intellij.plugin.ui.insights.InsightsTab")
 
+//todo: delete
 fun insightsPanel(project: Project): DigmaTabPanel {
 
     //errorsModel and insightsModel are not singletons but are single per open project.

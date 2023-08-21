@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.ui.errors
 
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.JBColor
@@ -13,6 +14,7 @@ import com.intellij.ui.dsl.gridLayout.VerticalAlign
 import com.intellij.util.ui.JBUI.Borders
 import com.intellij.util.ui.WrapLayout
 import org.digma.intellij.plugin.common.CommonUtils.prettyTimeOf
+import org.digma.intellij.plugin.insights.ErrorsViewOrchestrator
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.persistence.PersistenceService
@@ -423,8 +425,7 @@ private fun backButton(project: Project): JPanel {
     backButton.preferredSize = buttonsSize
     backButton.maximumSize = buttonsSize
     backButton.addActionListener {
-        val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
-        actionListener.closeErrorDetailsBackButton()
+        project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
     }
 
     val wrapper = JPanel()

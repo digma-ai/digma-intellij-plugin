@@ -10,6 +10,7 @@ import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsRequest
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
+import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse
 import org.mockito.Mockito.any
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
@@ -22,10 +23,15 @@ val environmentList = listOf(
     "env1_mock",
     "env2_mock",
 )
-val expectedInsightsOfMethodsResponse: InsightsOfMethodsResponse
+val expectedInsightsOfMethodsResponseEnv1: InsightsOfMethodsResponse
     get() {
         return MockInsightsOfMethodsResponseFactory(environmentList[0])
     }
+val expectedInsightsOfMethodsResponseEnv2: InsightsOfMethodsResponse
+    get() {
+        return MockInsightsOfMethodsResponseFactory(environmentList[1])
+    }
+
 
 var mock: RestAnalyticsProvider? = null
 
@@ -34,6 +40,9 @@ fun mockRestAnalyticsProvider(project: Project) {
     Log.test(logger::info, "Creating RestAnalyticsProvider mock")
     val analyticsService = AnalyticsService.getInstance(project)
     var proxyField = analyticsService.javaClass.getDeclaredField("analyticsProviderProxy")
+//    val proxySetter = analyticsService.javaClass.getMethod("setAnalyticsProviderProxy", RestAnalyticsProvider::class.java)
+//    proxySetter.isAccessible = true
+    
     proxyField.isAccessible = true
     proxyField.set(analyticsService, mock)
     mockGetAbout()
@@ -66,7 +75,29 @@ private fun mockGetRecentActivity() {
 
 private fun mockGetInsightsOfMethodsForEnv1() {
     `when`(mock?.getInsightsOfMethods(any(InsightsOfMethodsRequest::class.java))).thenAnswer {
-            Log.test(logger::info, "mock getInsightsOfMethods - ${expectedInsightsOfMethodsResponse.methodsWithInsights}}")
-            return@thenAnswer expectedInsightsOfMethodsResponse
+            Log.test(logger::info, "mock getInsightsOfMethods - ${expectedInsightsOfMethodsResponseEnv1.methodsWithInsights}")
+            return@thenAnswer expectedInsightsOfMethodsResponseEnv1
     }
+}
+
+private fun mockGetInsightsOfMethodsForEnv2() {
+    `when`(mock?.getInsightsOfMethods(any(InsightsOfMethodsRequest::class.java))).thenAnswer {
+        Log.test(logger::info, "mock getInsightsOfMethods - ${expectedInsightsOfMethodsResponseEnv2.methodsWithInsights}")
+        return@thenAnswer expectedInsightsOfMethodsResponseEnv2
+    }
+}
+
+private fun mockGetPerformanceMetrics() {
+    `when`(mock?.performanceMetrics).thenAnswer {
+        Log.test(logger::info, "mock getPerformanceMetrics")
+        return@thenAnswer createPerformanceMetricsResult()
+    }
+}
+
+fun createPerformanceMetricsResult(): PerformanceMetricsResponse {
+    return PerformanceMetricsResponse(
+        listOf(),
+        java.util.Date(),
+        java.util.Date()
+    )
 }

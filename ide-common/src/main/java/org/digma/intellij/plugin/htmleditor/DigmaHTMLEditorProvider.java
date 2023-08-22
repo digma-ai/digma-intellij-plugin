@@ -3,7 +3,7 @@ package org.digma.intellij.plugin.htmleditor;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileEditor.impl.HTMLEditorProvider;
 import com.intellij.openapi.project.Project;
-import org.digma.intellij.plugin.document.DocumentInfoService;
+import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.log.Log;
 import org.jetbrains.annotations.NotNull;
 
@@ -44,13 +44,13 @@ public class DigmaHTMLEditorProvider {
     }
 
     public static void openEditor(@NotNull Project project, @NotNull String title,@NotNull  String htmlContent){
-        getInstance(project).openEditor( title, htmlContent);
+        EDT.ensureEDT(() -> getInstance(project).openEditor(title, htmlContent));
     }
 
 
-    public void openEditor(@NotNull String title,@NotNull  String htmlContent){
-        ourTitles.put(title,title);
-        HTMLEditorProvider.openEditor(project,title,htmlContent);
+    private void openEditor(@NotNull String title, @NotNull String htmlContent) {
+        ourTitles.put(title, title);
+        HTMLEditorProvider.openEditor(project, title, htmlContent);
     }
 
 

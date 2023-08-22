@@ -75,10 +75,6 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.common.DumbAwareNotifier"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.analytics.BackendConnectionMonitor"/>
-
-        <projectService serviceImplementation="org.digma.intellij.plugin.analytics.BackendConnectionUtil"/>
-
         <projectService serviceImplementation="org.digma.intellij.plugin.psi.LanguageServiceLocator"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.common.IDEUtilsService"/>
@@ -90,6 +86,9 @@
         <projectService serviceImplementation="org.digma.intellij.plugin.recentactivity.RecentActivityService"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider"/>
+
+        <projectService serviceInterface="org.digma.intellij.plugin.ui.service.InsightsService"
+                        serviceImplementation="org.digma.intellij.plugin.insights.InsightsServiceImpl"/>
 
 
         <notificationGroup id="Digma Notification Group"

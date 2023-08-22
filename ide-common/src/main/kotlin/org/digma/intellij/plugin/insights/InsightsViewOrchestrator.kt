@@ -17,9 +17,9 @@ import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
 import org.digma.intellij.plugin.navigation.NavigationModel
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.service.EditorService
-import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.service.ErrorsViewService
+import org.digma.intellij.plugin.ui.service.InsightsService
 import org.digma.intellij.plugin.ui.service.InsightsViewService
 
 /**
@@ -81,7 +81,10 @@ class InsightsViewOrchestrator(val project: Project) {
                 CodeLessSpan(spanId)
             )
 
-            project.service<ErrorsActionsService>().closeErrorDetailsBackButton()
+            //the new React app insights
+            project.service<InsightsService>().updateInsights(CodeLessSpan(spanId))
+
+            project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
 
             //clear the latest method so that if user clicks on the editor again after watching code less insights the context will change
             project.service<CurrentContextUpdater>().clearLatestMethod()
@@ -112,7 +115,10 @@ class InsightsViewOrchestrator(val project: Project) {
                     methodInfo
                 )
 
-                project.service<ErrorsActionsService>().closeErrorDetailsBackButton()
+                //the new React app insights
+                project.service<InsightsService>().updateInsights(methodInfo)
+
+                project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
 
                 project.service<ToolWindowShower>().showToolWindow()
             }
@@ -232,6 +238,8 @@ class InsightsViewOrchestrator(val project: Project) {
             val methodHasNewInsights = documentInfo.loadInsightsForMethod(methodUnderCaret.id) // might be long call since going to the backend
             project.service<InsightsViewService>().updateInsightsModel(methodInfo)
             project.service<ErrorsViewService>().updateErrorsModel(methodInfo)
+            //the new React app insights
+            project.service<InsightsService>().updateInsights(methodInfo)
         }
     }
 
@@ -241,6 +249,7 @@ class InsightsViewOrchestrator(val project: Project) {
 
         project.service<InsightsViewService>().contextChangeNoMethodInfo(dummyMethodInfo)
         project.service<ErrorsViewService>().contextChangeNoMethodInfo(dummyMethodInfo)
+        //todo: update the new react app insights
     }
 
     fun updateWithDocumentPreviewList(documentInfoContainer: DocumentInfoContainer?, fileUri: String) {
@@ -249,6 +258,9 @@ class InsightsViewOrchestrator(val project: Project) {
 
         project.service<InsightsViewService>().showDocumentPreviewList(documentInfoContainer, fileUri)
         project.service<ErrorsViewService>().showDocumentPreviewList(documentInfoContainer, fileUri)
+
+        //the new React app insights
+        project.service<InsightsService>().showDocumentPreviewList(documentInfoContainer, fileUri)
     }
 
 }

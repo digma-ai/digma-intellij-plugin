@@ -84,3 +84,9 @@ jobs:
           git add CHANGELOG.md
           git commit -m "increment version after publish to ${VERSION} and update changelog [skip ci]"
           git push
+
+
+  call-prepare-release-draft:
+    needs: [ update-to-next-version ]
+    uses: ./.github/workflows/release-draft.yml
+    secrets: inherit

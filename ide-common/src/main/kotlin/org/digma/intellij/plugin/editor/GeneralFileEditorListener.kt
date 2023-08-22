@@ -9,6 +9,7 @@ import com.intellij.openapi.rd.util.launchBackground
 import com.intellij.openapi.vfs.VirtualFile
 import com.jetbrains.rd.util.lifetime.LifetimeDefinition
 import kotlinx.coroutines.delay
+import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshService
@@ -60,7 +61,9 @@ class GeneralFileEditorListener(val project: Project) : FileEditorManagerListene
             // next logic is the Coroutine's body
             while (true) {
                 delay(settingsState.refreshDelay.toLong() * 1000)// 10 seconds
-                refreshService.refreshAllForCurrentFile(newFile)
+                if (BackendConnectionMonitor.getInstance(project).isConnectionOk()) {
+                    refreshService.refreshAllForCurrentFile(newFile)
+                }
             }
         }
         lifetimeDefinitionMap[newFile] = newLifetimeDefinition

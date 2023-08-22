@@ -52,6 +52,10 @@ public class CodeLensProvider {
     private Set<CodeLens> buildCodeLens(@NotNull DocumentInfoContainer documentInfoContainer, boolean environmentPrefix) {
         Set<CodeLens> codeLensList = new LinkedHashSet<>();
 
+        if (documentInfoContainer.getDocumentInfo() == null) {
+            return Collections.emptySet();
+        }
+
         var methodsInfo = documentInfoContainer.getDocumentInfo().getMethods().values();
 
         for (MethodInfo methodInfo : methodsInfo) {

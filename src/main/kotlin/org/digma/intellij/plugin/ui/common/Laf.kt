@@ -51,14 +51,26 @@ object Laf {
         return JBUI.scale(size)
     }
 
+    //can be called from java code: Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND())
+    fun getColorHex(jbColor: JBColor): String {
+        return jbColor.getHex()
+    }
+
+
     class Colors {
         companion object {
-            @JvmStatic val DEFAULT_LABEL_FOREGROUND: Color = JBColor.foreground()
-            @JvmStatic val PLUGIN_BACKGROUND: JBColor = JBColor.namedColor("Plugins.background", JBColor.PanelBackground)
-            @JvmStatic val EDITOR_BACKGROUND: JBColor = JBColor.namedColor("Editor.background", GlobalEditorScheme.getDefaultBackground())
-            @JvmStatic val DROP_DOWN_HEADER_TEXT_COLOR: Color = Color(0x7C7C94)
-            @JvmStatic val LIST_ITEM_BACKGROUND: JBColor = JBColor(Color(0, 0, 50, 15), Color(200, 200, 255, 20))
-            @JvmStatic val TRANSPARENT: Color = Color(0, 0, 0, 0)
+            @JvmStatic
+            val DEFAULT_LABEL_FOREGROUND: Color = JBColor.foreground()
+            @JvmStatic
+            val PLUGIN_BACKGROUND: JBColor = JBColor.namedColor("Plugins.background", JBColor.PanelBackground)
+            @JvmStatic
+            val EDITOR_BACKGROUND: JBColor = JBColor.namedColor("Editor.background", GlobalEditorScheme.getDefaultBackground())
+            @JvmStatic
+            val DROP_DOWN_HEADER_TEXT_COLOR: Color = Color(0x7C7C94)
+            @JvmStatic
+            val LIST_ITEM_BACKGROUND: JBColor = JBColor(Color(0, 0, 50, 15), Color(200, 200, 255, 20))
+            @JvmStatic
+            val TRANSPARENT: Color = Color(0, 0, 0, 0)
             @JvmStatic val BLUE_LIGHT_SHADE: Color = Color(0x8f90ff)
             @JvmStatic val RED_OF_MISSING: JBColor = JBColor(0xE00036, 0xF93967)
             @JvmStatic val LINK_TEXT: JBColor = JBColor(0x426DDA, 0xB9C2EB)

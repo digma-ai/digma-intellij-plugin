@@ -22,6 +22,7 @@ import com.intellij.util.RunnableCallable;
 import com.intellij.util.concurrency.NonUrgentExecutor;
 import kotlin.Pair;
 import org.apache.commons.collections4.CollectionUtils;
+import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.digma.intellij.plugin.ui.ToolWindowShower;
@@ -228,7 +229,8 @@ public class JavaSpanNavigationProvider implements Disposable {
             return;
         }
 
-        ReadAction.nonBlocking(new RunnableCallable(() -> {
+
+        Backgroundable.ensurePooledThread(() -> {
             if (virtualFile != null) {
                 buildSpansLock.lock();
                 try {
@@ -237,7 +239,8 @@ public class JavaSpanNavigationProvider implements Disposable {
                     buildSpansLock.unlock();
                 }
             }
-        })).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance());
+        });
+
     }
 
     private void removeDocumentSpans(@NotNull VirtualFile virtualFile) {

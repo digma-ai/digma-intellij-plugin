@@ -60,12 +60,12 @@ abstract class AbstractViewService(val project: Project) : Disposable {
     //in the view until its closed. there may be exceptions, for example the summary view can reload while error details
     // is on but setVisible should not run.
     open fun canUpdateUI(): Boolean {
-        return !project.service<InsightsAndErrorsTabsHelper>().isErrorDetailsOn()
+        return true
     }
 
 
 
-    fun updateUi() {
+    open fun updateUi() {
 
         //don't update ui if error details is on,
         //when error details is closed the ui will be updated.

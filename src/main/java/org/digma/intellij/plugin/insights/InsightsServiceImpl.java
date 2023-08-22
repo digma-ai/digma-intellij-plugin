@@ -47,6 +47,7 @@ import org.digma.intellij.plugin.ui.model.CodeLessSpanScope;
 import org.digma.intellij.plugin.ui.model.DocumentScope;
 import org.digma.intellij.plugin.ui.model.EmptyScope;
 import org.digma.intellij.plugin.ui.model.MethodScope;
+import org.digma.intellij.plugin.ui.model.Scope;
 import org.digma.intellij.plugin.ui.model.UIInsightsStatus;
 import org.digma.intellij.plugin.ui.model.insights.InsightsModelReact;
 import org.digma.intellij.plugin.ui.service.InsightsService;
@@ -401,7 +402,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
     public void refreshInsights() {
 
         Backgroundable.ensurePooledThread(() -> withUpdateLock(() -> {
-            Log.log(logger::debug, project, "refreshInsights called, scope is {}", model.getScope().getScope());
+            Log.log(logger::debug, project, "refreshInsights called, scope is {}", getScopeObject(model.getScope()));
             var scope = model.getScope();
             if (scope instanceof MethodScope) {
                 updateInsights(((MethodScope) scope).getMethodInfo());
@@ -575,4 +576,20 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
     public void goToTraceComparison(@NotNull String traceId1, @NotNull String traceName1, @NotNull String traceId2, @NotNull String traceName2, @NotNull InsightType insightType) {
         JaegerUtilKt.openJaegerComparisonFromInsight(project, traceId1, traceName1, traceId2, traceName2, insightType);
     }
+
+
+
+    private Object getScopeObject(Scope scope) {
+        if (scope instanceof CodeLessSpanScope codeLessSpanScope){
+            return codeLessSpanScope.getSpan();
+        }
+        if (scope instanceof MethodScope methodScope){
+            return methodScope.getMethodInfo();
+        }
+        if (scope instanceof DocumentScope documentScope){
+            return documentScope.getDocumentInfo().getFileUri();
+        }
+        return scope;
+    }
+
 }

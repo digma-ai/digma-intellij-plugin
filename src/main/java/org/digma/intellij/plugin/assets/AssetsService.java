@@ -15,11 +15,11 @@ import org.cef.handler.CefLifeSpanHandlerAdapter;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.analytics.EnvironmentChanged;
+import org.digma.intellij.plugin.common.Backgroundable;
+import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator;
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.navigation.HomeSwitcherService;
-import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.posthog.MonitoredPanel;
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier;
@@ -97,11 +97,14 @@ public final class AssetsService implements Disposable {
             project.getMessageBus().connect(this).subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, new EnvironmentChanged() {
                 @Override
                 public void environmentChanged(String newEnv, boolean refreshInsightsView) {
-                    try {
-                        messageHandler.pushAssetsOnEnvironmentChange();
-                    } catch (JsonProcessingException e) {
-                        Log.debugWithException(logger, e, "Exception in pushAssets ");
-                    }
+
+                    Backgroundable.ensurePooledThread(() -> {
+                        try {
+                            messageHandler.pushAssetsOnEnvironmentChange();
+                        } catch (JsonProcessingException e) {
+                            Log.debugWithException(logger, e, "Exception in pushAssets ");
+                        }
+                    });
                 }
 
                 @Override
@@ -159,6 +162,9 @@ public final class AssetsService implements Disposable {
 
 
     public String getAssets() {
+
+        EDT.assertNonDispatchThread();
+
         try {
             Log.log(logger::trace, project, "got get assets request");
             String assets = AnalyticsService.getInstance(project).getAssets();
@@ -171,10 +177,11 @@ public final class AssetsService implements Disposable {
     }
 
     public void showAsset(String spanId) {
+
+        EDT.assertNonDispatchThread();
+
         Log.log(logger::trace, project, "showAsset called");
         ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Assets);
-        project.getService(HomeSwitcherService.class).switchToInsights();
         project.getService(InsightsViewOrchestrator.class).showInsightsForCodelessSpan(spanId);
-        project.getService(InsightsAndErrorsTabsHelper.class).switchToInsightsTab();
     }
 }

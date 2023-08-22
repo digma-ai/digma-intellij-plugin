@@ -120,9 +120,7 @@ private fun buildSpanDuration(value: SpanDurationChangeInsight.Change, panelsLay
     val title =
         ActionLink(asHtml(value.span.displayName)) {
             ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Summary)
-            project.service<HomeSwitcherService>().switchToInsights()
             project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanId)
-            project.service<InsightsAndErrorsTabsHelper>().switchToInsightsTab()
         }
 
     title.toolTipText = value.span.displayName

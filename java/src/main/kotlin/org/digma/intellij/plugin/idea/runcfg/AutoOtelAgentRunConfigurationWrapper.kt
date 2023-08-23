@@ -12,6 +12,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.common.StringUtils.Companion.evalBoolean
 import org.digma.intellij.plugin.common.buildEnvForLocalTests
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
 import org.digma.intellij.plugin.log.Log
@@ -273,11 +274,7 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
             }
 
             val digmaObservabilityEnvVarValue = configuration.settings.env.get(DIGMA_OBSERVABILITY_ENV_VAR_NAME)
-            if (digmaObservabilityEnvVarValue != null
-                && ("true".equals(digmaObservabilityEnvVarValue.trim(), true)
-                        || "yes".equals(digmaObservabilityEnvVarValue.trim(), true)
-                        )
-            ) {
+            if (digmaObservabilityEnvVarValue != null && evalBoolean(digmaObservabilityEnvVarValue)) {
                 return true
             }
 

@@ -2,12 +2,14 @@ package org.digma.intellij.plugin.test.system
 
 import ai.grazie.nlp.utils.dropWhitespaces
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.psi.JavaRecursiveElementVisitor
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
+import com.intellij.refactoring.suggested.startOffset
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase
 import junit.framework.TestCase
 import kotlinx.coroutines.delay
@@ -19,19 +21,18 @@ import org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
-import org.digma.intellij.plugin.navigation.HomeSwitcherService
 import org.digma.intellij.plugin.test.system.framework.WaitFinishRule
 import org.digma.intellij.plugin.test.system.framework.WaitForAsync
 import org.digma.intellij.plugin.test.system.framework.environmentList
 import org.digma.intellij.plugin.test.system.framework.expectedInsightsOfMethodsResponseEnv1
 import org.digma.intellij.plugin.test.system.framework.mockRestAnalyticsProvider
+import org.digma.intellij.plugin.ui.model.insights.InsightsModelReact
+import org.digma.intellij.plugin.ui.service.InsightsService
 import org.gradle.internal.impldep.org.junit.Rule
-import java.awt.event.MouseEvent
-import java.lang.reflect.Field
 import kotlin.test.assertNotEquals
 
 
-class MockTestK : LightJavaCodeInsightFixtureTestCase() {
+class MockTestK : LightJavaCodeInsightFixtureTestCase(), Disposable {
 
     private val logger = Logger.getInstance(MockTestK::class.java)
 
@@ -47,15 +48,15 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
 
     override fun setUp() {
         super.setUp()
-        done.success = false
+        done.complete = false
         mockRestAnalyticsProvider(project)
-        messageBusTestListeners = MessageBusTestListeners(project.messageBus)
+        messageBusTestListeners = MessageBusTestListeners(project.messageBus, this)
     }
 
     override fun tearDown() {
         Log.test(logger::info, "FFS: tearDown")
         while (true) {
-            if (done.success) {
+            if (done.complete) {
                 done()
                 break
             } else {
@@ -137,7 +138,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
     private fun waitForDocumentInfoToLoad(file: PsiFile) {
         runBlocking {
             while (DocumentInfoService.getInstance(project).getDocumentInfo(file.virtualFile) == null) {
-                delay(100L)
+                delay(500L)
             }
         }
     }
@@ -147,8 +148,13 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
         val file: PsiFile = myFixture.configureByFile("EditorEventsHandler.java")
         myFixture.openFileInEditor(file.virtualFile)
 
-        val switcherService: HomeSwitcherService = project.getService(HomeSwitcherService::class.java)
 
+        val insightService = InsightsService.getInstance(project)
+        val reactModel = insightService.javaClass.getDeclaredField("model")
+        reactModel.isAccessible = true
+        val model = reactModel.get(insightService) as InsightsModelReact
+        
+                
         waitForDocumentInfoToLoad(file)
 
         val javaCodeLens = JavaCodeLensService.getInstance(project)
@@ -156,23 +162,22 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
 
         val size = codeLens.size
         Log.test(logger::info, "CodeLens size: $size")
-        codeLens.first().also {
-            when (val codeVision = it.second) {
-                is ClickableTextCodeVisionEntry -> {
-                    val augmentedOnClick: (MouseEvent?, Editor) -> Unit = { mouseEvent, editor ->
-                        // maybe we should mock the entire clickHandler
-                        codeVision.onClick(mouseEvent, editor)
-                    }
+//        var isWindowVisible = toolWindowShower.isToolWindowVisible
+//        TestCase.assertFalse(isWindowVisible)
 
-                    val onClickField: Field = codeVision.javaClass.getDeclaredField("onClick")
-                    onClickField.isAccessible = true
-                    onClickField.set(codeVision, augmentedOnClick)
-                    codeVision.onClick(myFixture.editor)
-                }
-
-                else -> Log.test(logger::info, "CodeVision is not ClickableTextCodeVisionEntry")
+        val firstCodeLens = codeLens.first()
+        when (val codeVision = firstCodeLens.second) {
+            is ClickableTextCodeVisionEntry -> {
+                codeVision.onClick(myFixture.editor)
             }
+
+            else -> Log.test(logger::info, "CodeVision is not ClickableTextCodeVisionEntry")
         }
+
+        // validate that the switcher service was called
+//        isWindowVisible = toolWindowShower.isToolWindowVisible
+//        TestCase.assertTrue(isWindowVisible)
+
         done()
     }
 
@@ -344,11 +349,11 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
             TestCase.assertEquals(expected, newEnv)
             done()
         }
-        
+
         analyticsService.environment.setCurrent(expected)
-        
-        
-        runBlocking { 
+
+
+        runBlocking {
             delay(100L)
         }
         //verify that env did change
@@ -356,7 +361,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
         TestCase.assertEquals(expected, afterSet)
 
         Log.test(logger::info, "Current environment after set: $afterSet")
-        
+
         //should be the same as after set
         var beforeSet = analyticsService.environment.getCurrent()
         TestCase.assertEquals(expected, beforeSet)
@@ -369,10 +374,10 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
         runBlocking {
             delay(100L)
         }
-        
+
         afterSet = analyticsService.environment.getCurrent()
         TestCase.assertEquals(expected, afterSet)
-        
+
         assertNotEquals(beforeSet, afterSet)
 
         // see that insights are retrieved for the new environment
@@ -381,6 +386,8 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
         // receive code vision of method.
         done()
     }
+
+    override fun dispose() {}
 
 
 //    @WaitForAsync

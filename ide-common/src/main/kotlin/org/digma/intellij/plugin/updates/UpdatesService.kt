@@ -4,7 +4,6 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.intellij.util.ui.EdtInvocationManager
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -13,6 +12,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsProviderException
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
+import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.newerThan
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
@@ -135,7 +135,7 @@ class UpdatesService(private val project: Project) : Disposable {
         stateBackendVersion = versionsResp.backend
         statePluginVersion.latestVersion = versionsResp.plugin.latestVersion
 
-        EdtInvocationManager.getInstance().invokeLater {
+        EDT.ensureEDT {
             affectedPanel?.reset()
         }
     }

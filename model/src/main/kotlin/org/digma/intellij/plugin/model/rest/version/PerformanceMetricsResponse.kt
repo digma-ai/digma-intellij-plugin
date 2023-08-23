@@ -29,4 +29,4 @@ data class PerformanceCounterReport
     "value",
 )
 constructor(val metric: String,
-            val value: Any)
+            var value: Any)

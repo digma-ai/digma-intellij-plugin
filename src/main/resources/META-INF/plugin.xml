@@ -129,6 +129,7 @@
         <postStartupActivity implementation="org.digma.intellij.plugin.notifications.NotificationsStartupActivity"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.analytics.AnalyticsServiceStarter"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.posthog.FirstTimePerformanceMetricsMonitor"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.posthog.ContinuousPerformanceMetricsMonitorStartupActivity"/>
 
 
         <!-- Code lens providers are used only for some languages, for example java,python.

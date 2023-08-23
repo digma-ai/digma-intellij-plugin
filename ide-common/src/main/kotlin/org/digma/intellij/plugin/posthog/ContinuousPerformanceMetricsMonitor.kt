@@ -29,7 +29,7 @@ class ContinuousPerformanceMetricsMonitor: Disposable {
     }
 
     init {
-        Log.log(logger::info,"Starting notification center")
+        Log.log(logger::info,"Starting ContinuousPerformanceMetricsMonitor")
         startTimer()
     }
 

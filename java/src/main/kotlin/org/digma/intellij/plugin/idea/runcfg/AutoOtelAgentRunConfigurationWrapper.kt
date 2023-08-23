@@ -310,7 +310,7 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
         //will catch maven exec plugin goals, bootRun
         if (configuration is MavenRunConfiguration) {
             val goalNames = configuration.runnerParameters.goals
-            val hasRelevantTask = goalNames.any {
+            val hasRelevantGoal = goalNames.any {
                 false
                         || it.equals("exec:exec")
                         || it.equals("exec:java")
@@ -325,7 +325,15 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
                         || (it.contains(":tomcat7-maven-plugin:") && it.endsWith(":run"))
                         || (it.contains(":tomcat6-maven-plugin:") && it.endsWith(":run"))
             }
-            return hasRelevantTask
+            if (hasRelevantGoal) return true
+
+            // runnerSettings are not null when actually running the goal
+            if (configuration.runnerSettings != null) {
+                val envVarValue = configuration.runnerSettings!!.environmentProperties.get(DIGMA_OBSERVABILITY_ENV_VAR_NAME)
+                if (envVarValue != null && evalBoolean(envVarValue)) {
+                    return true
+                }
+            }
         }
         return false
     }

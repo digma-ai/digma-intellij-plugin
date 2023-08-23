@@ -318,8 +318,15 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
                         || it.equals("exec:exec")
                         || it.equals("exec:java")
                         || it.equals("-Dexec.executable=java")
+                        // spring boot
                         || it.equals("spring-boot:run")
                         || (it.contains(":spring-boot-maven-plugin:") && it.endsWith(":run"))
+                        // tomcat6 and tomcat7. support goal named "tomcat7:run"
+                        || (it.startsWith("tomcat") && it.endsWith(":run"))
+                        //  support org.apache.tomcat.maven:tomcat7-maven-plugin:2.2:run
+                        //   and    org.apache.tomcat.maven:tomcat6-maven-plugin:2.2:run
+                        || (it.contains(":tomcat7-maven-plugin:") && it.endsWith(":run"))
+                        || (it.contains(":tomcat6-maven-plugin:") && it.endsWith(":run"))
             }
             return hasRelevantTask
         }

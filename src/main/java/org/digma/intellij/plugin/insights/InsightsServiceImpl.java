@@ -2,16 +2,12 @@ package org.digma.intellij.plugin.insights;
 
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.application.ModalityState;
-import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.ui.jcef.JBCefApp;
 import com.intellij.ui.jcef.JBCefBrowser;
-import com.intellij.util.RunnableCallable;
-import com.intellij.util.concurrency.NonUrgentExecutor;
 import org.cef.CefApp;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefMessageRouter;
@@ -39,8 +35,6 @@ import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusRes
 import org.digma.intellij.plugin.model.rest.insights.InsightStatus;
 import org.digma.intellij.plugin.model.rest.insights.MethodWithInsightStatus;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
-import org.digma.intellij.plugin.navigation.HomeSwitcherService;
-import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.recentactivity.RecentActivityService;
@@ -53,6 +47,7 @@ import org.digma.intellij.plugin.ui.model.CodeLessSpanScope;
 import org.digma.intellij.plugin.ui.model.DocumentScope;
 import org.digma.intellij.plugin.ui.model.EmptyScope;
 import org.digma.intellij.plugin.ui.model.MethodScope;
+import org.digma.intellij.plugin.ui.model.Scope;
 import org.digma.intellij.plugin.ui.model.UIInsightsStatus;
 import org.digma.intellij.plugin.ui.model.insights.InsightsModelReact;
 import org.digma.intellij.plugin.ui.service.InsightsService;
@@ -150,7 +145,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
             project.getMessageBus().connect(this).subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, new EnvironmentChanged() {
                 @Override
                 public void environmentChanged(String newEnv, boolean refreshInsightsView) {
-                    pushInsightsOnEnvironmentChange();
+                    Backgroundable.ensurePooledThread(InsightsServiceImpl.this::pushInsightsOnEnvironmentChange);
                 }
 
                 @Override
@@ -159,7 +154,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
                 }
             });
 
-            ApplicationManager.getApplication().getService(SettingsState.class).addChangeListener(settingsState -> JCefBrowserUtil.sendRequestToChangeTraceButtonEnabled(jbCefBrowser), this);
+            SettingsState.getInstance().addChangeListener(settingsState -> JCefBrowserUtil.sendRequestToChangeTraceButtonEnabled(jbCefBrowser), this);
 
         }
     }
@@ -212,7 +207,8 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
     @Override
     public void updateInsights(@NotNull CodeLessSpan codeLessSpan) {
 
-        withUpdateLock(() -> {
+        Backgroundable.ensurePooledThread(() -> withUpdateLock(() -> {
+
             Log.log(logger::debug, "updateInsightsModel to {}. ", codeLessSpan);
 
             model.clearProperties();
@@ -238,7 +234,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
                 Log.warnWithException(logger, project, e, "Error in getInsightsForSingleSpan");
                 emptyInsights();
             }
-        });
+        }));
     }
 
 
@@ -248,17 +244,19 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
     }
 
     private void updateInsights(@NotNull MethodInfo methodInfo, @Nullable UIInsightsStatus predefinedStatus) {
-        withUpdateLock(() -> {
+
+        Backgroundable.ensurePooledThread(() -> withUpdateLock(() -> {
             //check we are still on the same method. while updating the status the scope may already change
             if (model.getScope() instanceof MethodScope methodScope && methodScope.getMethodInfo().getId().equals(methodInfo.getId())) {
                 updateInsightsImpl(methodInfo, predefinedStatus);
             }
-        });
+        }));
     }
 
     private void updateInsightsImpl(@NotNull MethodInfo methodInfo,@Nullable UIInsightsStatus predefinedStatus) {
 
-        withUpdateLock(() -> {
+        Backgroundable.ensurePooledThread(() -> withUpdateLock(() -> {
+
             Log.log(logger::debug, "updateInsightsModel to {}. ", methodInfo);
 
             model.clearProperties();
@@ -291,13 +289,13 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
             messageHandler.pushInsights(insights, spans, methodInfo.getId(), EMPTY_SERVICE_NAME,
                     AnalyticsService.getInstance(project).getEnvironment().getCurrent(), statusToUse,
                     ViewMode.INSIGHTS.name(), Collections.emptyList(), hasMissingDependency, canInstrumentMethod, needsObservabilityFix);
-        });
+        }));
     }
 
 
     private void updateStatusInBackground(@NotNull MethodInfo methodInfo) {
 
-        Backgroundable.runInNewBackgroundThread(project, "Fetching insights status", () -> {
+        Backgroundable.executeOnPooledThread(() -> {
 
             Log.log(logger::debug, "Loading backend status in background for method {}", methodInfo.getName());
             var insightStatus = getInsightStatus(methodInfo);
@@ -333,7 +331,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
 
     @Nullable
-    public InsightStatus getInsightStatus(@NotNull MethodInfo methodInfo) {
+    private InsightStatus getInsightStatus(@NotNull MethodInfo methodInfo) {
         try {
             CodeObjectInsightsStatusResponse response = AnalyticsService.getInstance(project).getCodeObjectInsightStatus(List.of(methodInfo));
             MethodWithInsightStatus methodResp = response.getCodeObjectsWithInsightsStatus().stream().findFirst().orElse(null);
@@ -403,8 +401,8 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
     @Override
     public void refreshInsights() {
 
-        withUpdateLock(() -> {
-            Log.log(logger::debug, project, "refreshInsights called, scope is {}", model.getScope().getScope());
+        Backgroundable.ensurePooledThread(() -> withUpdateLock(() -> {
+            Log.log(logger::debug, project, "refreshInsights called, scope is {}", getScopeObject(model.getScope()));
             var scope = model.getScope();
             if (scope instanceof MethodScope) {
                 updateInsights(((MethodScope) scope).getMethodInfo());
@@ -415,7 +413,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
             } else {
                 emptyInsights();
             }
-        });
+        }));
     }
 
 
@@ -466,10 +464,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
                 EDT.ensureEDT(() -> WriteAction.run(methodInstrumentationPresenter::addDependencyToOtelLibAndRefresh));
 
-                ReadAction.nonBlocking(new RunnableCallable(() -> waitForOtelDependencyToBeAvailable(methodInstrumentationPresenter)))
-                        .inSmartMode(project).withDocumentsCommitted(project)
-                        .finishOnUiThread(ModalityState.defaultModalityState(), unused -> refreshInsights())
-                        .submit(NonUrgentExecutor.getInstance());
+                Backgroundable.executeOnPooledThread(() -> waitForOtelDependencyToBeAvailable(methodInstrumentationPresenter));
             }
         }
     }
@@ -521,9 +516,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
     @Override
     public void showInsight(@NotNull String spanId) {
         Log.log(logger::debug, project, "showInsight called {}", spanId);
-        project.getService(HomeSwitcherService.class).switchToInsights();
         project.getService(InsightsViewOrchestrator.class).showInsightsForCodelessSpan(spanId);
-        project.getService(InsightsAndErrorsTabsHelper.class).switchToInsightsTab();
     }
 
 
@@ -569,7 +562,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
     @Override
     public void refresh(@NotNull InsightType insightType) {
         //TODO: do a real refresh, after refactoring the RefreshService, refresh the insights
-        project.getService(RefreshService.class).refreshAllInBackground();
+        RefreshService.getInstance(project).refreshAllInBackground();
         ActivityMonitor.getInstance(project).registerButtonClicked("refresh", insightType);
     }
 
@@ -583,4 +576,20 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
     public void goToTraceComparison(@NotNull String traceId1, @NotNull String traceName1, @NotNull String traceId2, @NotNull String traceName2, @NotNull InsightType insightType) {
         JaegerUtilKt.openJaegerComparisonFromInsight(project, traceId1, traceName1, traceId2, traceName2, insightType);
     }
+
+
+
+    private Object getScopeObject(Scope scope) {
+        if (scope instanceof CodeLessSpanScope codeLessSpanScope){
+            return codeLessSpanScope.getSpan();
+        }
+        if (scope instanceof MethodScope methodScope){
+            return methodScope.getMethodInfo();
+        }
+        if (scope instanceof DocumentScope documentScope){
+            return documentScope.getDocumentInfo().getFileUri();
+        }
+        return scope;
+    }
+
 }

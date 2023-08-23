@@ -28,6 +28,10 @@ public class EDT {
 
 
 
+    public static void assertIsDispatchThread(){
+        ApplicationManager.getApplication().assertIsDispatchThread();
+    }
+
     public static void assertNonDispatchThread(){
         //noinspection UnstableApiUsage
         ApplicationManager.getApplication().assertIsNonDispatchThread();

@@ -16,7 +16,7 @@ class WaitFinishRule : TestRule {
 
     private var latch: CountDownLatch = CountDownLatch(1)
 
-    var success: Boolean = false
+    var complete: Boolean = false
 
     operator fun invoke() = signalComplete()
 
@@ -35,7 +35,7 @@ class WaitFinishRule : TestRule {
     }
 
     fun signalComplete() {
-        success = true
+        complete = true
         latch.countDown()
     }
 
@@ -45,7 +45,7 @@ class WaitFinishRule : TestRule {
             Log.test(logger::info, "WaitForAsync completed")
         } else {
             Log.test(logger::warn, "WaitForAsync timeout")
-            success = true
+            complete = true
         }
     }
 }

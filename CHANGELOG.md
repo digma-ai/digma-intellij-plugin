@@ -1,6 +1,13 @@
 # Changelog
 
-## [2.0.153] - 2023-08-23
+## [2.0.154] - 2023-08-23
+- Improve goto assets performance issue 1176 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1180
+- remove  nonnull assertions effected panel by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1188
+- Feature/recognize tomcat maven plugin plus env var DIGMA_OBSERVABILITY by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1187
+- ContinuousPerformanceMetricsMonitor by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1191
+- No Insets by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1190
+
+## 2.0.153 - 2023-08-23
 - Update Installation Wizard UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1184
 
 ## 2.0.152 - 2023-08-22

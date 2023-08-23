@@ -47,6 +47,9 @@ constructor(
     @JsonProperty("lastSpanInstanceInfo")
     val lastSpanInstanceInfo: SpanInstanceInfo? = null
 
+    @JsonProperty("histogramPlot")
+    val histogramPlot: SpanDurationsPlot? = null
+
     // isAsync means this span ends later than its parent (this.EndTime > parent.EndTime)
     @JsonProperty("isAsync")
     val isAsync: Boolean = false

@@ -10,26 +10,26 @@ import java.util.Date
 fun createRecentActivityResultEntry(environment: String): RecentActivityResponseEntry {
 
     val defaultEntrySpan = EntrySpan(
-        displayText = "defaultDisplayText",
-        serviceName = "defaultServiceName",
-        scopeId = "defaultScopeId",
-        spanCodeObjectId = "defaultSpanCodeObjectId",
-        methodCodeObjectId = "defaultMethodCodeObjectId"
+        displayText = "defaultDisplayText_${environment}",
+        serviceName = "defaultServiceName_${environment}",
+        scopeId = "defaultScopeId_${environment}",
+        spanCodeObjectId = "defaultSpanCodeObjectId_${environment}",
+        methodCodeObjectId = "defaultMethodCodeObjectId_${environment}"
     )
 
     // Create default SlimAggregatedInsight
     val defaultSlimAggregatedInsight = SlimAggregatedInsight(
         type = "defaultType",
-        importance = 0,
+        importance = 3,
         codeObjectIds = listOf()
     )
 
     return RecentActivityResponseEntry(
         environment = environment,
-        traceFlowDisplayName = "defaultName",
+        traceFlowDisplayName = "defaultName_${environment}",
         firstEntrySpan = defaultEntrySpan,
         lastEntrySpan = null,
-        latestTraceId = "defaultTraceId",
+        latestTraceId = "defaultTraceId_${environment}",
         latestTraceTimestamp = Date(),
         latestTraceDuration = Duration(0.11, "ms", 11000),
         slimAggregatedInsights = listOf(defaultSlimAggregatedInsight)

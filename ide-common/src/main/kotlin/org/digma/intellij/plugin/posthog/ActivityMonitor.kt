@@ -210,7 +210,7 @@ class ActivityMonitor(project: Project) :Disposable {
         var hash = hash(message)
         if (errorCache!!.getIfPresent(hash) != null)
             return
-        errorCache!!.put(hash, hash)
+        errorCache!!.put(hash, hash )
 
         postHog?.capture(
             userId,
@@ -407,6 +407,12 @@ class ActivityMonitor(project: Project) :Disposable {
         )
     }
 
+    fun registerContinuousPerformanceMetrics(result: PerformanceMetricsResponse) {
+        val properties = mutableMapOf<String, Any>(
+            "data" to result
+        )
+        postHog?.capture(userId,"continuous-performance-metrics", properties)
+    }
 
     fun registerPerformanceMetrics(result: PerformanceMetricsResponse) {
         val properties = mutableMapOf<String, Any>(

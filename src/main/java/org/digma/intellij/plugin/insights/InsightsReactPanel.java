@@ -19,4 +19,8 @@ public class InsightsReactPanel extends JPanel {
         setBackground(listBackground());
     }
 
+    @Override
+    public Insets getInsets() {
+        return JBUI.emptyInsets();
+    }
 }

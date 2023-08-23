@@ -17,4 +17,9 @@ public class AssetsPanel extends JPanel {
         add(AssetsService.getInstance(project).getComponent());
         setBackground(listBackground());
     }
+
+    @Override
+    public Insets getInsets() {
+        return JBUI.emptyInsets();
+    }
 }

@@ -113,17 +113,6 @@ val methodWithSpanDurationInsight =
             methodCodeObjectId = methodCodeObject3.codeObjectId,
             kind = "my kind"
         ),
-        percentiles = listOf(
-            SpanDurationsPercentile(
-                percentile = 0.5f,
-                currentDuration = Duration(value = 15.0, unit = "ms", raw = 15),
-                previousDuration = Duration(value = 10.0, unit = "ms", raw = 10),
-                changeTime = null,
-                changeVerified = false,
-                traceIds = null
-            )
-        ),
-        lastSpanInstanceInfo = null
     )
 
 val slowEndpointInsight = SlowEndpointInsight(

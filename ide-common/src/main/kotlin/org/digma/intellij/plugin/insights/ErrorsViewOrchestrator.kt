@@ -67,7 +67,7 @@ class ErrorsViewOrchestrator(val project: Project) {
         }
 
         val finalReplaceScope = replaceScope
-        Backgroundable.ensureBackground(project, "Show error details") {
+        Backgroundable.ensurePooledThread {
             val errorsProvider = project.service<ErrorsProvider>()
             errorsViewService.showErrorDetails(uid, errorsProvider, finalReplaceScope)
             //this is necessary so the scope line will update with the error scope

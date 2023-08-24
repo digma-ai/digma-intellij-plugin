@@ -19,6 +19,9 @@ import org.digma.intellij.plugin.log.Log;
 import java.util.Collections;
 import java.util.Map;
 
+import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStart;
+import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStop;
+
 public class JaegerUIMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
     private static final Logger LOGGER = Logger.getInstance(JaegerUIMessageRouterHandler.class);
@@ -34,8 +37,11 @@ public class JaegerUIMessageRouterHandler extends CefMessageRouterHandlerAdapter
     @Override
     public boolean onQuery(CefBrowser browser, CefFrame frame, long queryId, String request, boolean persistent, CefQueryCallback callback) {
 
-        Backgroundable.runInNewBackgroundThread(project, "Processing JaegerUI message", () -> {
+        Backgroundable.executeOnPooledThread( () -> {
             try {
+
+                var stopWatch = stopWatchStart();
+
                 var objectMapper = new ObjectMapper();
                 var jsonNode = objectMapper.readTree(request);
                 String action = jsonNode.get("action").asText();
@@ -74,6 +80,8 @@ public class JaegerUIMessageRouterHandler extends CefMessageRouterHandlerAdapter
                     }
                     default -> throw new IllegalStateException("Unexpected value: " + action);
                 }
+
+                stopWatchStop(stopWatch, time -> Log.log(LOGGER::trace, "action {} took {}",action, time));
 
             } catch (JsonProcessingException e) {
                 Log.debugWithException(LOGGER,e,"Exception in onQuery "+request);

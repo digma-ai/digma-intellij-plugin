@@ -35,6 +35,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
+import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStart;
+import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStop;
+
 class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
     private static final Logger LOGGER = Logger.getInstance(InsightsMessageRouterHandler.class);
@@ -57,8 +60,10 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     @Override
     public boolean onQuery(CefBrowser browser, CefFrame frame, long queryId, String request, boolean persistent, CefQueryCallback callback) {
 
-        Backgroundable.runInNewBackgroundThread(project, "Processing Insights message", () -> {
+        Backgroundable.executeOnPooledThread( () -> {
             try {
+
+                var stopWatch = stopWatchStart();
 
                 var jsonNode = objectMapper.readTree(request);
                 String action = jsonNode.get("action").asText();
@@ -71,7 +76,7 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
                     case "INSIGHTS/OPEN_HISTOGRAM" -> openHistogram(jsonNode);
 
-                    case "INSIGHTS/GO_TO_ERRORS" -> goToErrors(jsonNode);
+                    case "INSIGHTS/GO_TO_ERRORS" -> goToErrors();
 
                     case "INSIGHTS/GO_TO_ERROR" -> goToError(jsonNode);
 
@@ -109,6 +114,8 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
                     default -> throw new IllegalStateException("Unexpected value: " + action);
                 }
 
+                stopWatchStop(stopWatch, time -> Log.log(LOGGER::trace, "action {} took {}",action, time));
+
             } catch (Exception e) {
                 Log.debugWithException(LOGGER, e, "Exception in onQuery " + request);
             }
@@ -142,7 +149,7 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
         InsightsService.getInstance(project).openLiveView(prefixedCodeObjectId);
     }
 
-    private void goToErrors(JsonNode jsonNode) throws JsonProcessingException {
+    private void goToErrors() {
         project.getService(InsightsActionsService.class).showErrorsTab();
         ActivityMonitor.getInstance(project).registerButtonClicked("expand-errors", InsightType.Errors);
     }

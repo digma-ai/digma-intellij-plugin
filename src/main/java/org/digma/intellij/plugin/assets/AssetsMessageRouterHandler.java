@@ -27,6 +27,9 @@ import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.digma.intellij.plugin.ui.settings.Theme;
 import org.jetbrains.annotations.NotNull;
 
+import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStart;
+import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStop;
+
 class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
     private static final Logger LOGGER = Logger.getInstance(AssetsMessageRouterHandler.class);
@@ -48,11 +51,16 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     @Override
     public boolean onQuery(CefBrowser browser, CefFrame frame, long queryId, String request, boolean persistent, CefQueryCallback callback) {
 
-        Backgroundable.runInNewBackgroundThread(project, "Processing Assets message", () -> {
+        Backgroundable.executeOnPooledThread(() -> {
+
             try {
+                var stopWatch = stopWatchStart();
 
                 var jsonNode = objectMapper.readTree(request);
                 String action = jsonNode.get("action").asText();
+
+                Log.log(LOGGER::trace, "executing action {}", action);
+
                 switch (action) {
                     case "ASSETS/GET_DATA" -> pushAssetsFromGetData(browser, objectMapper);
 
@@ -78,6 +86,8 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
                     default -> throw new IllegalStateException("Unexpected value: " + action);
                 }
 
+                stopWatchStop(stopWatch, time -> Log.log(LOGGER::trace, "action {} took {}",action, time));
+
             } catch (Exception e) {
                 Log.debugWithException(LOGGER, e, "Exception in onQuery " + request);
             }
@@ -88,7 +98,11 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
         return true;
     }
 
+
     private void goToAsset(JsonNode jsonNode) throws JsonProcessingException {
+
+        EDT.assertNonDispatchThread();
+
         Log.log(LOGGER::trace, project, "got ASSETS/GO_TO_ASSET message");
         var spanId = objectMapper.readTree(jsonNode.get("payload").toString()).get("entry").get("span").get("spanCodeObjectId").asText();
         Log.log(LOGGER::trace, project, "got span id {}", spanId);
@@ -97,6 +111,9 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
 
     private synchronized void pushAssets(CefBrowser browser, ObjectMapper objectMapper) throws JsonProcessingException {
+
+        EDT.assertNonDispatchThread();
+
         Log.log(LOGGER::trace, project, "pushAssets called");
         var payload = objectMapper.readTree(AssetsService.getInstance(project).getAssets());
         if (!payload.isMissingNode() && !PersistenceService.getInstance().getState().getFirstTimeAssetsReceived()) {

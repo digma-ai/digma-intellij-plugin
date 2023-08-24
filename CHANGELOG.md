@@ -1,6 +1,13 @@
 # Changelog
 
-## [2.0.151] - 2023-08-21
+## [2.0.153] - 2023-08-23
+- Update Installation Wizard UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1184
+
+## 2.0.152 - 2023-08-22
+- Register startup events earlier by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1174
+- init hostname only once on startup by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1181
+
+## 2.0.151 - 2023-08-21
 - Feature/insights react app by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1172
 - observability-on-by-default by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1173
 

@@ -48,8 +48,6 @@ import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityGoToSpa
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityGoToTraceRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResponseEntry;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
-import org.digma.intellij.plugin.navigation.HomeSwitcherService;
-import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper;
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.persistence.PersistenceService;
@@ -86,6 +84,8 @@ import static org.digma.intellij.plugin.common.EnvironmentUtilKt.LOCAL_TESTS_ENV
 import static org.digma.intellij.plugin.common.EnvironmentUtilKt.SUFFIX_OF_LOCAL;
 import static org.digma.intellij.plugin.common.EnvironmentUtilKt.SUFFIX_OF_LOCAL_TESTS;
 import static org.digma.intellij.plugin.common.EnvironmentUtilKt.getSortedEnvironments;
+import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStart;
+import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStop;
 import static org.digma.intellij.plugin.jcef.common.JCefMessagesUtils.GLOBAL_SET_IS_JAEGER_ENABLED;
 import static org.digma.intellij.plugin.jcef.common.JCefMessagesUtils.RECENT_ACTIVITY_CLOSE_LIVE_VIEW;
 import static org.digma.intellij.plugin.jcef.common.JCefMessagesUtils.RECENT_ACTIVITY_GO_TO_SPAN;
@@ -213,7 +213,10 @@ public class RecentActivityService implements Disposable {
             @Override
             public boolean onQuery(CefBrowser browser, CefFrame frame, long queryId, String request, boolean persistent, CefQueryCallback callback) {
 
-                Backgroundable.runInNewBackgroundThread(project, "recent activity request", () -> {
+                Backgroundable.executeOnPooledThread( () -> {
+
+                    var stopWatch = stopWatchStart();
+
                     Log.log(logger::trace, "request: {}", request);
                     JcefMessageRequest reactMessageRequest = parseJsonToObject(request, JcefMessageRequest.class);
                     if (RECENT_ACTIVITY_INITIALIZE.equalsIgnoreCase(reactMessageRequest.getAction())) {
@@ -254,6 +257,9 @@ public class RecentActivityService implements Disposable {
                         });
 
                     }
+
+                    stopWatchStop(stopWatch, time -> Log.log(logger::trace, "request {} took {}",request, time));
+
                 });
 
 
@@ -305,7 +311,7 @@ public class RecentActivityService implements Disposable {
     private void processRecentActivityGoToSpanRequest(RecentActivityEntrySpanPayload payload, Project project) {
         if (payload != null) {
 
-            ApplicationManager.getApplication().invokeLater(() -> {
+            EDT.ensureEDT(() -> {
 
                 //todo: we need to show the insights only after the environment changes. but environment change is done in the background
                 // and its not easy to sync the change environment and showing the insights.
@@ -324,8 +330,6 @@ public class RecentActivityService implements Disposable {
                     EnvironmentsSupplier environmentsSupplier = AnalyticsService.getInstance(project).getEnvironment();
                     String actualEnvName = adjustBackEnvNameIfNeeded(payload.getEnvironment());
                     environmentsSupplier.setCurrent(actualEnvName, false, () -> EDT.ensureEDT(() -> {
-                        project.getService(HomeSwitcherService.class).switchToInsights();
-                        project.getService(InsightsAndErrorsTabsHelper.class).switchToInsightsTab();
                         project.getService(InsightsViewOrchestrator.class).showInsightsForSpanOrMethodAndNavigateToCode(spanId, methodId);
                     }));
                 } else {
@@ -333,8 +337,6 @@ public class RecentActivityService implements Disposable {
                     EnvironmentsSupplier environmentsSupplier = AnalyticsService.getInstance(project).getEnvironment();
                     String actualEnvName = adjustBackEnvNameIfNeeded(payload.getEnvironment());
                     environmentsSupplier.setCurrent(actualEnvName, false, () -> EDT.ensureEDT(() -> {
-                        project.getService(HomeSwitcherService.class).switchToInsights();
-                        project.getService(InsightsAndErrorsTabsHelper.class).switchToInsightsTab();
                         project.getService(InsightsViewOrchestrator.class).showInsightsForCodelessSpan(payload.getSpan().getSpanCodeObjectId());
                     }));
                 }

@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.154] - 2023-08-23
+## [2.0.155] - 2023-08-25
+- added exception handling by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/1196
+
+## 2.0.154 - 2023-08-23
 - Improve goto assets performance issue 1176 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1180
 - remove  nonnull assertions effected panel by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1188
 - Feature/recognize tomcat maven plugin plus env var DIGMA_OBSERVABILITY by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1187

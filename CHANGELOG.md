@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.155] - 2023-08-25
+## [2.0.156] - 2023-08-27
+- support tomcat server run configuration by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1200
+
+## 2.0.155 - 2023-08-25
 - added exception handling by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/1196
 
 ## 2.0.154 - 2023-08-23

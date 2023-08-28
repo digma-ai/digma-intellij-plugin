@@ -1,6 +1,14 @@
 # Changelog
 
-## [2.0.156] - 2023-08-27
+## [2.0.157] - 2023-08-28
+- Fix histogram issue 1209 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1212
+- New duration chart by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1189
+- fix indexing error by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1215
+- error reporting by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1214
+- initial implementation of live data by @digma-vladyslav in https://github.com/digma-ai/digma-intellij-plugin/pull/1213
+- @digma-vladyslav made their first contribution in https://github.com/digma-ai/digma-intellij-plugin/pull/1213
+
+## 2.0.156 - 2023-08-27
 - support tomcat server run configuration by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1200
 
 ## 2.0.155 - 2023-08-25

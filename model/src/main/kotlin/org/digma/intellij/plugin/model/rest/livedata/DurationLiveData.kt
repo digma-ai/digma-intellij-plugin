@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.model.rest.livedata
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import org.digma.intellij.plugin.model.rest.insights.Duration
 import java.beans.ConstructorProperties
 
@@ -33,7 +34,11 @@ data class LiveDataRecord
 @ConstructorProperties(
     "duration", "dateTime", "isError"
 )
-constructor(val duration: Duration, val dateTime: String, val isError: Boolean)
+constructor(val duration: Duration,
+            val dateTime: String,
+            @get:JsonProperty("isError")
+            @param:JsonProperty("isError")
+            val isError: Boolean)
 
 
 data class DurationLiveData

@@ -50,6 +50,12 @@ constructor(
     @JsonProperty("histogramPlot")
     val histogramPlot: SpanDurationsPlot? = null
 
+    @JsonProperty("average")
+    val average: Duration? = null
+
+    @JsonProperty("standardDeviation")
+    val standardDeviation: Duration? = null
+
     // isAsync means this span ends later than its parent (this.EndTime > parent.EndTime)
     @JsonProperty("isAsync")
     val isAsync: Boolean = false

@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.index;
 
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.io.DataInputOutputUtilRt;
 import com.intellij.psi.PsiFile;
@@ -8,8 +9,10 @@ import com.intellij.util.indexing.SingleEntryFileBasedIndexExtension;
 import com.intellij.util.indexing.SingleEntryIndexer;
 import com.intellij.util.io.DataExternalizer;
 import com.intellij.util.io.IOUtil;
+import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
+import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -23,6 +26,7 @@ import java.util.Map;
  */
 public abstract class DocumentInfoIndex extends SingleEntryFileBasedIndexExtension<DocumentInfo> {
 
+    private static final Logger LOGGER = Logger.getInstance(DocumentInfoIndex.class);
 
     /**
      * a Project reference is needed to get ProjectFileIndex service for filtering files.
@@ -43,20 +47,28 @@ public abstract class DocumentInfoIndex extends SingleEntryFileBasedIndexExtensi
             @Override
             protected @Nullable DocumentInfo computeValue(@NotNull FileContent inputData) {
 
-                //There is no easy way to exclude java interfaces,enums and annotations because the file may
-                // contain several classes, and it must be queried with the relevant language service. only the language
-                // service can decide if the psi file is an interface or a class or several classes.
-                // so java language service will build an empty map for those types.
+                try {
 
-                PsiFile psiFile = inputData.getPsiFile();
-                Project theProject = inputData.getProject();
-                if (theProject.isDisposed()) {
+                    //There is no easy way to exclude java interfaces,enums and annotations because the file may
+                    // contain several classes, and it must be queried with the relevant language service. only the language
+                    // service can decide if the psi file is an interface or a class or several classes.
+                    // so java language service will build an empty map for those types.
+
+                    PsiFile psiFile = inputData.getPsiFile();
+                    Project theProject = inputData.getProject();
+                    if (theProject.isDisposed()) {
+                        return null;
+                    }
+
+                    //capture the project reference when this method is invoked first time
+                    DocumentInfoIndex.this.project = theProject;
+                    return buildDocumentInfo(theProject, psiFile);
+                } catch (Exception e) {
+                    Log.warnWithException(LOGGER, e, "error in indexing {}", inputData.getPsiFile().getVirtualFile());
+                    //todo: call ErrorReporter instead
+                    ActivityMonitor.getInstance(DocumentInfoIndex.this.project).registerError(e, "error in indexing");
                     return null;
                 }
-
-                //capture the project reference when this method is invoked first time
-                DocumentInfoIndex.this.project = theProject;
-                return buildDocumentInfo(theProject, psiFile);
             }
         };
     }

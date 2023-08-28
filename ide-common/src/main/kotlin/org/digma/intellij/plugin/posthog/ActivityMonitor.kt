@@ -203,7 +203,8 @@ class ActivityMonitor(project: Project) :Disposable {
         registerUserAction("Turned off observability")
     }
 
-    fun registerError(exception: Exception, message: String) {
+
+    fun registerError(exception: Throwable, message: String) {
         val stringWriter = StringWriter()
         exception.printStackTrace(PrintWriter(stringWriter))
 

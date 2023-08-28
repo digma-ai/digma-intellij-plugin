@@ -9,10 +9,10 @@ import com.intellij.util.indexing.SingleEntryFileBasedIndexExtension;
 import com.intellij.util.indexing.SingleEntryIndexer;
 import com.intellij.util.io.DataExternalizer;
 import com.intellij.util.io.IOUtil;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
-import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -65,8 +65,7 @@ public abstract class DocumentInfoIndex extends SingleEntryFileBasedIndexExtensi
                     return buildDocumentInfo(theProject, psiFile);
                 } catch (Exception e) {
                     Log.warnWithException(LOGGER, e, "error in indexing {}", inputData.getPsiFile().getVirtualFile());
-                    //todo: call ErrorReporter instead
-                    ActivityMonitor.getInstance(DocumentInfoIndex.this.project).registerError(e, "error in indexing");
+                    ErrorReporter.getInstance().reportError("error in indexing", e);
                     return null;
                 }
             }

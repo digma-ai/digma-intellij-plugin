@@ -6,6 +6,7 @@ import com.intellij.util.messages.MessageBusConnection
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
 import org.digma.intellij.plugin.common.Backgroundable
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.Models
 import org.digma.intellij.plugin.model.rest.insights.GlobalInsight
@@ -58,7 +59,12 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
             val reloadTask = object : TimerTask() {
                 override fun run() {
                     if (BackendConnectionMonitor.getInstance(project).isConnectionOk()) {
-                        reloadSummariesPanel()
+                        try {
+                            reloadSummariesPanel()
+                        } catch (e: Exception) {
+                            Log.warnWithException(logger, e, "Exception in reloadSummariesPanel")
+                            ErrorReporter.getInstance().reportError(project, "SummaryViewService.reloadSummariesPanel", e)
+                        }
                     }
                 }
             }

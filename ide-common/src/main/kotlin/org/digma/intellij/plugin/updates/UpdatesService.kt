@@ -14,6 +14,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.newerThan
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.digma.intellij.plugin.model.rest.version.BackendVersionResponse
@@ -68,7 +69,12 @@ class UpdatesService(private val project: Project) : Disposable {
 
         val fetchTask = object : TimerTask() {
             override fun run() {
-                checkForNewerVersions()
+                try {
+                    checkForNewerVersions()
+                } catch (e: Exception) {
+                    Log.warnWithException(logger, e, "Exception in checkForNewerVersions")
+                    ErrorReporter.getInstance().reportError(project, "UpdatesService.checkForNewerVersions", e)
+                }
             }
         }
 

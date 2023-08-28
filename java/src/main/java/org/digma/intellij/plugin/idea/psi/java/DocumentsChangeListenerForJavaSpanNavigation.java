@@ -18,6 +18,7 @@ import com.intellij.util.Alarm;
 import com.intellij.util.AlarmFactory;
 import com.intellij.util.RunnableCallable;
 import com.intellij.util.concurrency.NonUrgentExecutor;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.jetbrains.annotations.NotNull;
 
@@ -49,51 +50,70 @@ public class DocumentsChangeListenerForJavaSpanNavigation implements FileEditorM
     @Override
     public void fileOpened(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
 
-        if (project.isDisposed()) {
-            return;
-        }
+        try {
 
-        if (!javaLanguageService.isRelevant(file)) {
-            return;
-        }
-
-        if (disposables.containsKey(file)) {
-            return;
-        }
-
-        PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
-        if (psiFile != null) {
-            Document document = PsiDocumentManager.getInstance(project).getDocument(psiFile);
-            if (document != null) {
-                Disposable parentDisposable = Disposer.newDisposable();
-                disposables.put(file, parentDisposable);
-                Log.log(LOGGER::debug, "adding document listener for file:{}", file);
-                document.addDocumentListener(new DocumentListener() {
-
-                    private final Alarm documentChangeAlarm = AlarmFactory.getInstance().create();
-
-                    @Override
-                    public void documentChanged(@NotNull DocumentEvent event) {
-
-                        if (project.isDisposed()) {
-                            return;
-                        }
-
-                        var javaSpanNavigationProvider = project.getService(JavaSpanNavigationProvider.class);
-                        var javaEndpointNavigationProvider = project.getService(JavaEndpointNavigationProvider.class);
-                        documentChangeAlarm.cancelAllRequests();
-                        documentChangeAlarm.addRequest(() -> ReadAction.nonBlocking(
-                                        new RunnableCallable(() -> {
-                                            javaSpanNavigationProvider.documentChanged(event.getDocument());
-                                            javaEndpointNavigationProvider.documentChanged(event.getDocument());
-                                        })
-                                ).inSmartMode(project)
-                                .withDocumentsCommitted(project)
-                                .submit(NonUrgentExecutor.getInstance()), 5000);
-                    }
-                }, parentDisposable);
+            if (project.isDisposed()) {
+                return;
             }
 
+            if (!javaLanguageService.isRelevant(file)) {
+                return;
+            }
+
+            if (disposables.containsKey(file)) {
+                return;
+            }
+
+            PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
+            if (psiFile != null) {
+                Document document = PsiDocumentManager.getInstance(project).getDocument(psiFile);
+                if (document != null) {
+                    Disposable parentDisposable = Disposer.newDisposable();
+                    disposables.put(file, parentDisposable);
+                    Log.log(LOGGER::debug, "adding document listener for file:{}", file);
+                    document.addDocumentListener(new DocumentListener() {
+
+                        private final Alarm documentChangeAlarm = AlarmFactory.getInstance().create();
+
+                        @Override
+                        public void documentChanged(@NotNull DocumentEvent event) {
+
+                            try {
+
+                                if (project.isDisposed()) {
+                                    return;
+                                }
+
+                                var javaSpanNavigationProvider = project.getService(JavaSpanNavigationProvider.class);
+                                var javaEndpointNavigationProvider = project.getService(JavaEndpointNavigationProvider.class);
+                                documentChangeAlarm.cancelAllRequests();
+                                documentChangeAlarm.addRequest(() -> ReadAction.nonBlocking(
+                                                new RunnableCallable(() -> {
+                                                    try {
+                                                        javaSpanNavigationProvider.documentChanged(event.getDocument());
+                                                        javaEndpointNavigationProvider.documentChanged(event.getDocument());
+                                                    }catch (Exception e){
+                                                        Log.warnWithException(LOGGER,e,"Exception in documentChanged");
+                                                        ErrorReporter.getInstance().reportError(project,"DocumentsChangeListenerForJavaSpanNavigation.DocumentListener.documentChanged",e);
+                                                    }
+                                                })
+                                        ).inSmartMode(project)
+                                        .withDocumentsCommitted(project)
+                                        .submit(NonUrgentExecutor.getInstance()), 5000);
+
+                            }catch (Exception e){
+                                Log.warnWithException(LOGGER,e,"Exception in documentChanged");
+                                ErrorReporter.getInstance().reportError(project,"DocumentsChangeListenerForJavaSpanNavigation.DocumentListener.documentChanged",e);
+                            }
+                        }
+
+                    }, parentDisposable);
+                }
+
+            }
+        } catch (Exception e) {
+            Log.warnWithException(LOGGER, e, "Exception in fileOpened");
+            ErrorReporter.getInstance().reportError(project, "DocumentsChangeListenerForJavaSpanNavigation.fileOpened", e);
         }
 
     }

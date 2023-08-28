@@ -34,7 +34,7 @@ class ErrorReporter {
             return
         }
 
-        //todo: change ActivityMonitor to application service
+        //todo: change ActivityMonitor to application service so no need for project
 
         val projectToUse = project ?: ProjectUtil.getActiveProject()
 
@@ -45,11 +45,35 @@ class ErrorReporter {
     }
 
 
+    fun reportBackendError(message: String, action: String) {
+        reportBackendError(ProjectUtil.getActiveProject(), message, action)
+    }
+
+    fun reportBackendError(project: Project?, message: String, action: String) {
+        if (isTooFrequentBackendError(message, action)) {
+            return
+        }
+
+        val projectToUse = project ?: ProjectUtil.getActiveProject()
+
+        projectToUse?.let {
+            ActivityMonitor.getInstance(it).reportBackendError(message, action)
+        }
+    }
+
+
+    private fun isTooFrequentBackendError(message: String, action: String): Boolean {
+        val counter = MyCache.getOrCreate(message, action)
+        val occurrences = counter.incrementAndGet()
+        return occurrences > 1
+    }
+
+
     private fun isTooFrequentException(message: String, t: Throwable): Boolean {
         val hash = computeAccurateTraceHashCode(t)
         val counter = MyCache.getOrCreate(hash, t, message)
         val occurrences = counter.incrementAndGet()
-        return occurrences != 1
+        return occurrences > 1
     }
 
 
@@ -99,5 +123,9 @@ private object MyCache {
 
     fun getOrCreate(hash: Int, t: Throwable, message: String): AtomicInteger {
         return cache.get("$hash:$t:$message") { AtomicInteger() }
+    }
+
+    fun getOrCreate(message: String, action: String): AtomicInteger {
+        return cache.get("$message:$action") { AtomicInteger() }
     }
 }

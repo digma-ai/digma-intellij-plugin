@@ -124,13 +124,12 @@ class UpdatesService(private val project: Project) : Disposable {
             return
         }
 
-        if (!versionsResp.errors.isNullOrEmpty()) {
+        if (versionsResp.errors.isNotEmpty()) {
             val currErrors = versionsResp.errors.toList()
 
             if (currErrors != prevBackendErrorsList) {
-                val activityMonitor = ActivityMonitor.getInstance(project)
                 currErrors.forEach {
-                    activityMonitor.reportBackendError(it, "query-for-versions-and-propose-to-update")
+                    ErrorReporter.getInstance().reportBackendError(project, it, "query-for-versions-and-propose-to-update")
                 }
             }
 

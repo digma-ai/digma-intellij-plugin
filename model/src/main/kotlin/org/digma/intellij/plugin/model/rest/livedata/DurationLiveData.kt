@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.model.rest.livedata
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import org.digma.intellij.plugin.model.rest.insights.Duration
 import java.beans.ConstructorProperties
 
@@ -31,9 +32,13 @@ constructor(val percentiles: List<LiveDataDurationPercentile>,val codeObjectId: 
 data class LiveDataRecord
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties(
-    "duration", "dateTime"
+    "duration", "dateTime", "isError"
 )
-constructor(val duration: Duration, val dateTime: String)
+constructor(val duration: Duration,
+            val dateTime: String,
+            @get:JsonProperty("isError")
+            @param:JsonProperty("isError")
+            val isError: Boolean)
 
 
 data class DurationLiveData

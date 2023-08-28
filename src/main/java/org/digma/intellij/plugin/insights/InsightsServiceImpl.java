@@ -537,12 +537,12 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
 
     @Override
-    public void openLiveView(@NotNull String prefixedCodeObjectId) {
+    public void openLiveView(@NotNull String prefixedCodeObjectId, Boolean showErrors) {
         Log.log(logger::debug, project, "openLiveView called {}", prefixedCodeObjectId);
 
         try {
-            DurationLiveData durationLiveData = AnalyticsService.getInstance(project).getDurationLiveData(prefixedCodeObjectId);
-            RecentActivityService.getInstance(project).sendLiveData(durationLiveData, prefixedCodeObjectId);
+            DurationLiveData durationLiveData = AnalyticsService.getInstance(project).getDurationLiveData(prefixedCodeObjectId, showErrors);
+            RecentActivityService.getInstance(project).sendLiveData(durationLiveData, prefixedCodeObjectId, showErrors);
         } catch (AnalyticsServiceException e) {
             Log.warnWithException(logger, project, e, "Error loading live view {}", e.getMessage());
         }

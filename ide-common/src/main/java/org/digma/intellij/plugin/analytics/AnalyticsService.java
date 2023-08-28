@@ -353,10 +353,10 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getRecentActivity(new RecentActivityRequest(environments)));
     }
 
-    public DurationLiveData getDurationLiveData(String codeObjectId) throws AnalyticsServiceException {
+    public DurationLiveData getDurationLiveData(String codeObjectId, Boolean showErrors) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         return executeCatching(() ->
-                analyticsProviderProxy.getDurationLiveData(new DurationLiveDataRequest(env,codeObjectId)));
+                analyticsProviderProxy.getDurationLiveData(new DurationLiveDataRequest(env,codeObjectId,showErrors)));
     }
 
     public CodeObjectNavigation getCodeObjectNavigation(String spanCodeObjectId) throws AnalyticsServiceException {

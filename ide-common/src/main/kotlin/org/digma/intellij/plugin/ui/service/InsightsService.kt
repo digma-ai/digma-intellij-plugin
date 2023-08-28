@@ -15,7 +15,7 @@ interface InsightsService : Disposable {
     fun getComponent(): JComponent?
     fun showInsight(spanId: String)
     fun openHistogram(instrumentationLibrary: String, name: String, insightType: String)
-    fun openLiveView(prefixedCodeObjectId: String)
+    fun openLiveView(prefixedCodeObjectId: String, showErrors: Boolean)
     fun isIndexHtml(path: String): Boolean
     fun buildIndexFromTemplate(path: String): InputStream?
     fun updateInsights(codeLessSpan: CodeLessSpan)

@@ -145,8 +145,9 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     private void openLiveView(JsonNode jsonNode) throws JsonProcessingException {
         Log.log(LOGGER::debug, project, "got INSIGHTS/OPEN_LIVE_VIEW message");
         var prefixedCodeObjectId = objectMapper.readTree(jsonNode.get("payload").toString()).get("prefixedCodeObjectId").asText();
+        var showErrors = Boolean.parseBoolean(objectMapper.readTree(jsonNode.get("payload").toString()).get("showErrors").asText());
         Log.log(LOGGER::debug, project, "got prefixedCodeObjectId {}", prefixedCodeObjectId);
-        InsightsService.getInstance(project).openLiveView(prefixedCodeObjectId);
+        InsightsService.getInstance(project).openLiveView(prefixedCodeObjectId, showErrors);
     }
 
     private void goToErrors() {

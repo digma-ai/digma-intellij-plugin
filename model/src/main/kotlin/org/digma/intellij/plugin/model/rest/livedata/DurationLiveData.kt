@@ -31,9 +31,9 @@ constructor(val percentiles: List<LiveDataDurationPercentile>,val codeObjectId: 
 data class LiveDataRecord
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties(
-    "duration", "dateTime", "isError"
+    "duration", "dateTime"
 )
-constructor(val duration: Duration, val dateTime: String, val isError: Boolean)
+constructor(val duration: Duration, val dateTime: String)
 
 
 data class DurationLiveData

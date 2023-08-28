@@ -478,7 +478,7 @@ public class RecentActivityService implements Disposable {
         return ToolWindowManager.getInstance(project).getToolWindow(PluginId.OBSERVABILITY_WINDOW_ID);
     }
 
-    public void sendLiveData(@NotNull DurationLiveData durationLiveData, @NotNull String codeObjectId, Boolean showErrors) {
+    public void sendLiveData(@NotNull DurationLiveData durationLiveData, @NotNull String codeObjectId) {
 
         Log.log(logger::debug, project, "Got sendLiveData request for {}", codeObjectId);
 
@@ -490,7 +490,7 @@ public class RecentActivityService implements Disposable {
             //ugly hack for initialization when RECENT_ACTIVITY_INITIALIZE message is sent.
             // if the recent activity window was not yet initialized then we need to send the live data only after
             // RECENT_ACTIVITY_INITIALIZE message is sent.
-            initTask = new MyInitTask(codeObjectId, showErrors) {
+            initTask = new MyInitTask(codeObjectId) {
                 @Override
                 public void run() {
                     sendLiveDataImpl(durationLiveData);
@@ -502,7 +502,7 @@ public class RecentActivityService implements Disposable {
         } else {
             RecentActivityToolWindowShower.getInstance(project).showToolWindow();
             sendLiveDataImpl(durationLiveData);
-            startNewLiveDataTimerTask(codeObjectId, showErrors);
+            startNewLiveDataTimerTask(codeObjectId);
         }
     }
 
@@ -535,9 +535,9 @@ public class RecentActivityService implements Disposable {
         }
     }
 
-    private void startNewLiveDataTimerTask(@NotNull String codeObjectId, Boolean showErrors) {
+    private void startNewLiveDataTimerTask(@NotNull String codeObjectId) {
 
-        Log.log(logger::debug, project, "Starting new timer for {} {}", codeObjectId, showErrors);
+        Log.log(logger::debug, project, "Starting new timer for {}", codeObjectId);
 
         if (myLiveDataTimer != null) {
             myLiveDataTimer.cancel();
@@ -547,19 +547,19 @@ public class RecentActivityService implements Disposable {
             @Override
             public void run() {
                 try {
-                    DurationLiveData newDurationLiveData = AnalyticsService.getInstance(project).getDurationLiveData(codeObjectId, showErrors);
+                    DurationLiveData newDurationLiveData = AnalyticsService.getInstance(project).getDurationLiveData(codeObjectId);
                     if (newDurationLiveData.getDurationData() == null) {
-                        Log.log(logger::debug, project, "newDurationLiveData.getDurationData is null, stopping refresh timer for {} {}", codeObjectId, showErrors);
+                        Log.log(logger::debug, project, "newDurationLiveData.getDurationData is null, stopping refresh timer for {}", codeObjectId);
                         stopLiveDataTimerTask();
                         return;
                     }
                     sendLiveDataImpl(newDurationLiveData);
                 } catch (AnalyticsServiceException e) {
-                    Log.debugWithException(logger, project, e, "got Exception from getDurationLiveData. Stopping refresh timer for {} {} {}", codeObjectId, showErrors, e.getMessage());
+                    Log.debugWithException(logger, project, e, "got Exception from getDurationLiveData. Stopping refresh timer for {} {}", codeObjectId, e.getMessage());
                     stopLiveDataTimerTask();
                 } catch (Exception e) {
                     //catch any other exception and rethrow because it's a bug we should fix
-                    Log.debugWithException(logger, project, e, "Exception in myLiveDataTimer,Stopping refresh timer for {} {} {}", codeObjectId, showErrors, e.getMessage());
+                    Log.debugWithException(logger, project, e, "Exception in myLiveDataTimer,Stopping refresh timer for {} {}", codeObjectId, e.getMessage());
                     stopLiveDataTimerTask();
                     throw e;
                 }
@@ -571,7 +571,7 @@ public class RecentActivityService implements Disposable {
     public void runInitTask() {
         if (initTask != null) {
             initTask.run();
-            startNewLiveDataTimerTask(initTask.codeObjectId, initTask.showErrors);
+            startNewLiveDataTimerTask(initTask.codeObjectId);
             initTask = null;
         }
     }
@@ -611,11 +611,9 @@ public class RecentActivityService implements Disposable {
     private abstract static class MyInitTask implements Runnable {
 
         private final String codeObjectId;
-        private final Boolean showErrors;
 
-        public MyInitTask(@NotNull String codeObjectId, Boolean showErrors) {
+        public MyInitTask(@NotNull String codeObjectId) {
             this.codeObjectId = codeObjectId;
-            this.showErrors = showErrors;
         }
     }
 }

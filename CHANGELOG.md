@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.157] - 2023-08-28
+## [2.0.158] - 2023-08-28
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1217
+
+## 2.0.157 - 2023-08-28
 - Fix histogram issue 1209 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1212
 - New duration chart by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1189
 - fix indexing error by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1215

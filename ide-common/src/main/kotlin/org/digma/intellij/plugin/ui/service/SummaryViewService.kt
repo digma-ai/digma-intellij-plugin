@@ -61,7 +61,7 @@ class SummaryViewService(project: Project) : AbstractViewService(project) {
                     if (BackendConnectionMonitor.getInstance(project).isConnectionOk()) {
                         try {
                             reloadSummariesPanel()
-                        }catch (e: Exception){
+                        } catch (e: Exception) {
                             Log.warnWithException(logger, e, "Exception in reloadSummariesPanel")
                             ErrorReporter.getInstance().reportError(project, "SummaryViewService.reloadSummariesPanel", e)
                         }

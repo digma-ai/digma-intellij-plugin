@@ -101,10 +101,10 @@ public class JavaSpanNavigationProvider implements Disposable {
                 project.getService(InsightsViewService.class).refreshInsightsModel();
                 project.getService(ErrorsViewService.class).refreshErrorsModel();
 
-            }catch (Exception e){
+            } catch (Exception e) {
                 Log.warnWithException(LOGGER, e, "Exception in buildSpanNavigation");
                 ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.buildSpanNavigation", e);
-            }finally {
+            } finally {
                 buildSpansLock.unlock();
             }
         })).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance());
@@ -196,7 +196,7 @@ public class JavaSpanNavigationProvider implements Disposable {
 
             var virtualFile = FileDocumentManager.getInstance().getFile(document);
             fileChanged(virtualFile);
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.warnWithException(LOGGER, e, "Exception in documentChanged");
             ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.documentChanged", e);
         }
@@ -230,7 +230,7 @@ public class JavaSpanNavigationProvider implements Disposable {
                         buildSpansLock.unlock();
                     }
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
                 Log.warnWithException(LOGGER, e, "Exception in fileChanged");
                 ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.fileChanged", e);
             }

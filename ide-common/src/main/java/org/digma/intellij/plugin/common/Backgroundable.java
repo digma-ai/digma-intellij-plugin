@@ -69,7 +69,7 @@ public class Backgroundable {
         return ApplicationManager.getApplication().executeOnPooledThread(() -> {
             try {
                 return action.call();
-            }catch (Exception e){
+            } catch (Exception e) {
                 Log.warnWithException(LOGGER, e, "Exception in action");
                 ErrorReporter.getInstance().reportError(null, "executeOnPooledThread", e);
                 throw e;
@@ -88,9 +88,9 @@ public class Backgroundable {
     }
 
     private static void runWithErrorReporting(Runnable task) {
-        try{
+        try {
             task.run();
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.warnWithException(LOGGER, e, "Exception in action");
             ErrorReporter.getInstance().reportError(null, "Backgroundable.runWithErrorReporting", e);
         }

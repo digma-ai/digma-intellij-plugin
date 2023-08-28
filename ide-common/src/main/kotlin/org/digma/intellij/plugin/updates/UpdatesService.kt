@@ -71,7 +71,7 @@ class UpdatesService(private val project: Project) : Disposable {
             override fun run() {
                 try {
                     checkForNewerVersions()
-                }catch (e: Exception){
+                } catch (e: Exception) {
                     Log.warnWithException(logger, e, "Exception in checkForNewerVersions")
                     ErrorReporter.getInstance().reportError(project, "UpdatesService.checkForNewerVersions", e)
                 }

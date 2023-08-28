@@ -39,7 +39,7 @@ public class BulkFileChangeListenerForPythonSpanNavigation extends AbstractBulkF
                     }
                 }
             });
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.warnWithException(LOGGER, e, "Exception in processEvents");
             ErrorReporter.getInstance().reportError(project, "BulkFileChangeListenerForPythonSpanNavigation.processEvents", e);
         }

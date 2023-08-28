@@ -56,7 +56,7 @@ public class EnvironmentChangeHandler implements EnvironmentChanged {
                     //don't log, it will happen too many times
                 }
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.warnWithException(logger, e, "Exception in environmentChanged");
             ErrorReporter.getInstance().reportError(project, "EnvironmentChangeHandler.environmentChanged", e);
         }

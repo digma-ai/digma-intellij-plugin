@@ -121,10 +121,10 @@ public class Environment implements EnvironmentsSupplier {
                 //run both refreshEnvironments and updateCurrentEnv under same lock
                 refreshEnvironments();
                 updateCurrentEnv(PersistenceService.getInstance().getState().getCurrentEnv(), true);
-            }catch (Exception e){
+            } catch (Exception e) {
                 Log.warnWithException(LOGGER, e, "Exception in refreshNowOnBackground");
                 ErrorReporter.getInstance().reportError(project, "Environment.refreshNowOnBackground", e);
-            }finally {
+            } finally {
                 if (envChangeLock.isHeldByCurrentThread()) {
                     envChangeLock.unlock();
                 }

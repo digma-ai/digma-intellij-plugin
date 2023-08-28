@@ -152,7 +152,7 @@ public class RecentActivityService implements Disposable {
                 if (BackendConnectionMonitor.getInstance(project).isConnectionOk()) {
                     try {
                         fetchRecentActivities();
-                    }catch (Exception e){
+                    } catch (Exception e) {
                         Log.warnWithException(logger, e, "Exception in fetchRecentActivities");
                         ErrorReporter.getInstance().reportError(project, "RecentActivityService.fetchRecentActivities", e);
                     }

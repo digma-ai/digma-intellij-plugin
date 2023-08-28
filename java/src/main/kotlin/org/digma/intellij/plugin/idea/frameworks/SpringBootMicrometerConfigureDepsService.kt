@@ -115,7 +115,7 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
             override fun run() {
                 try {
                     periodicAction()
-                }catch (e: Exception){
+                } catch (e: Exception) {
                     Log.warnWithException(logger, e, "Exception in periodicAction")
                     ErrorReporter.getInstance().reportError(project, "SpringBootMicrometerConfigureDepsService.periodicAction", e)
                 }
@@ -218,7 +218,7 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
             delay(TimeUnit.SECONDS.toMillis(blackoutDurationSeconds) + 500)
             try {
                 periodicAction()
-            }catch (e: Exception){
+            } catch (e: Exception) {
                 Log.warnWithException(logger, e, "Exception in periodicAction")
                 ErrorReporter.getInstance().reportError(project, "SpringBootMicrometerConfigureDepsService.periodicAction", e)
             }

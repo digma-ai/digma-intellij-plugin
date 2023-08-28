@@ -76,7 +76,7 @@ class QuarkusConfigureDepsService(private val project: Project) : Disposable {
             override fun run() {
                 try {
                     periodicAction()
-                }catch (e: Exception){
+                } catch (e: Exception) {
                     Log.warnWithException(logger, e, "Exception in periodicAction")
                     ErrorReporter.getInstance().reportError(project, "QuarkusConfigureDepsService.periodicAction", e)
                 }

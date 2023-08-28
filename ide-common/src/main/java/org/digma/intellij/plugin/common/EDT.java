@@ -19,9 +19,9 @@ public class EDT {
     }
 
     private static void runWithErrorReporting(Runnable task) {
-        try{
+        try {
             task.run();
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.warnWithException(LOGGER, e, "Exception in EDT task");
             ErrorReporter.getInstance().reportError(null, "EDT.runWithErrorReporting", e);
         }

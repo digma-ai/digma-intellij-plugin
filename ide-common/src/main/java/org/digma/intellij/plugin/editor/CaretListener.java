@@ -94,7 +94,7 @@ class CaretListener {
                         var file = FileDocumentManager.getInstance().getFile(caretEvent.getEditor().getDocument());
                         currentContextUpdater.addRequest(caretEvent.getEditor(), caretOffset, file);
                     }
-                }catch (Exception e){
+                } catch (Exception e) {
                     Log.warnWithException(LOGGER, e, "Exception in caretPositionChanged");
                     ErrorReporter.getInstance().reportError(project, "CaretListener.caretPositionChanged", e);
                 }

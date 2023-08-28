@@ -44,7 +44,7 @@ public class RiderDocumentInfoConsumer implements DocumentInfoChanged {
                 Log.log(LOGGER::debug, "Got codeLens for {}: {}", psiFile.getVirtualFile(), codeLens);
                 CodeLensHost.getInstance(project).installCodeLens(psiFile, codeLens);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.warnWithException(LOGGER, e, "Exception in documentInfoChanged");
             ErrorReporter.getInstance().reportError(project, "RiderDocumentInfoConsumer.documentInfoChanged", e);
         }

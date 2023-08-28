@@ -111,9 +111,9 @@ public class DocumentsChangeListenerForJavaSpanNavigation implements FileEditorM
                 }
 
             }
-        }catch (Exception e){
-            Log.warnWithException(LOGGER,e,"Exception in fileOpened");
-            ErrorReporter.getInstance().reportError(project,"DocumentsChangeListenerForJavaSpanNavigation.fileOpened",e);
+        } catch (Exception e) {
+            Log.warnWithException(LOGGER, e, "Exception in fileOpened");
+            ErrorReporter.getInstance().reportError(project, "DocumentsChangeListenerForJavaSpanNavigation.fileOpened", e);
         }
 
     }

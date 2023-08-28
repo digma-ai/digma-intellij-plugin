@@ -79,7 +79,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
     public void selectionChanged(@NotNull FileEditorManagerEvent editorManagerEvent) {
         try {
             selectionChangedImpl(editorManagerEvent);
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.warnWithException(LOGGER, e, "Exception in selectionChanged");
             ErrorReporter.getInstance().reportError(project, "EditorEventsHandler.selectionChanged", e);
         }
@@ -237,7 +237,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
     public void fileClosed(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
         try {
             fileClosedImpl(source, file);
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.warnWithException(LOGGER, e, "Exception in fileClosed");
             ErrorReporter.getInstance().reportError(project, "EditorEventsHandler.fileClosed", e);
         }

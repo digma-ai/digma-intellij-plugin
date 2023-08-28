@@ -40,7 +40,7 @@ public class BulkFileChangeListenerForJavaSpanNavigation extends AbstractBulkFil
                     }
                 }
             });
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.warnWithException(LOGGER, e, "Exception in processEvents");
             ErrorReporter.getInstance().reportError(project, "BulkFileChangeListenerForJavaSpanNavigation.processEvents", e);
         }

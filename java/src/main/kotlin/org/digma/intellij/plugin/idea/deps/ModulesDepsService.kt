@@ -255,7 +255,7 @@ class ModulesDepsService(private val project: Project) : Disposable {
             override fun run() {
                 try {
                     periodicAction()
-                }catch (e: Exception){
+                } catch (e: Exception) {
                     ErrorReporter.getInstance().reportError(project, "ModulesDepsService.periodicAction", e)
                 }
             }

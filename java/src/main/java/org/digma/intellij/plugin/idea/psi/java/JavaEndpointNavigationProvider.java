@@ -81,10 +81,10 @@ public class JavaEndpointNavigationProvider implements Disposable {
                 project.getService(InsightsViewService.class).refreshInsightsModel();
                 project.getService(ErrorsViewService.class).refreshErrorsModel();
 
-            }catch (Exception e){
+            } catch (Exception e) {
                 Log.warnWithException(LOGGER, e, "Exception in buildEndpointNavigation");
                 ErrorReporter.getInstance().reportError(project, "JavaEndpointNavigationProvider.buildEndpointNavigation", e);
-            }finally {
+            } finally {
                 buildLock.unlock();
             }
         })).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance());
@@ -142,7 +142,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
 
             var virtualFile = FileDocumentManager.getInstance().getFile(document);
             fileChanged(virtualFile);
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.warnWithException(LOGGER, e, "Exception in documentChanged");
             ErrorReporter.getInstance().reportError(project, "JavaEndpointNavigationProvider.documentChanged", e);
         }
@@ -173,7 +173,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
                         buildLock.unlock();
                     }
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
                 Log.warnWithException(LOGGER, e, "Exception in fileChanged");
                 ErrorReporter.getInstance().reportError(project, "JavaEndpointNavigationProvider.fileChanged", e);
             }

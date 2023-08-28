@@ -529,20 +529,26 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
         try {
 
-            switch (InsightType.valueOf(insightType)){
-                case SpanDurations -> {
-                    String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanPercentiles(instrumentationLibrary, spanName, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
-                    DigmaHTMLEditorProvider.openEditor(project, "Percentiles Graph of Span " + spanName, htmlContent);
+            try {
+                switch (InsightType.valueOf(insightType)) {
+                    case SpanDurations -> {
+                        String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanPercentiles(instrumentationLibrary, spanName, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
+                        DigmaHTMLEditorProvider.openEditor(project, "Percentiles Graph of Span " + spanName, htmlContent);
+                    }
+                    case SpanScaling -> {
+                        String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanScaling(instrumentationLibrary, spanName, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
+                        DigmaHTMLEditorProvider.openEditor(project, "Scaling Graph of Span " + spanName, htmlContent);
+                    }
+                    default -> {
+                        //todo: a fallback when the type is unknown, we should add support for more types if necessary
+                        String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanScaling(instrumentationLibrary, spanName, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
+                        DigmaHTMLEditorProvider.openEditor(project, "Scaling Graph of Span " + spanName, htmlContent);
+                    }
                 }
-                case SpanScaling -> {
-                    String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanScaling(instrumentationLibrary, spanName, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
-                    DigmaHTMLEditorProvider.openEditor(project, "Scaling Graph of Span " + spanName, htmlContent);
-                }
-                default -> {
-                    //todo: a fallback when the type is unknown, we should add support for more types if necessary
-                    String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanScaling(instrumentationLibrary, spanName, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
-                    DigmaHTMLEditorProvider.openEditor(project, "Scaling Graph of Span " + spanName, htmlContent);
-                }
+            }catch ( IllegalArgumentException e){
+                //fallback for span type that is not in the enum
+                String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanScaling(instrumentationLibrary, spanName, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
+                DigmaHTMLEditorProvider.openEditor(project, "Scaling Graph of Span " + spanName, htmlContent);
             }
 
         } catch (AnalyticsServiceException e) {

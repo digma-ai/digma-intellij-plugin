@@ -71,7 +71,7 @@ public class Backgroundable {
                 return action.call();
             } catch (Exception e) {
                 Log.warnWithException(LOGGER, e, "Exception in action");
-                ErrorReporter.getInstance().reportError(null, "executeOnPooledThread", e);
+                ErrorReporter.getInstance().reportError("executeOnPooledThread", e);
                 throw e;
             }
         });
@@ -92,7 +92,7 @@ public class Backgroundable {
             task.run();
         } catch (Exception e) {
             Log.warnWithException(LOGGER, e, "Exception in action");
-            ErrorReporter.getInstance().reportError(null, "Backgroundable.runWithErrorReporting", e);
+            ErrorReporter.getInstance().reportError("Backgroundable.runWithErrorReporting", e);
         }
     }
 

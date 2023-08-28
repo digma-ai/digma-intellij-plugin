@@ -23,7 +23,7 @@ public class EDT {
             task.run();
         } catch (Exception e) {
             Log.warnWithException(LOGGER, e, "Exception in EDT task");
-            ErrorReporter.getInstance().reportError(null, "EDT.runWithErrorReporting", e);
+            ErrorReporter.getInstance().reportError("EDT.runWithErrorReporting", e);
         }
     }
 

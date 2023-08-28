@@ -24,6 +24,11 @@ class ErrorReporter {
     }
 
 
+    fun reportError(message: String, t: Throwable) {
+        reportError(ProjectUtil.getActiveProject(), message, t)
+    }
+
+
     fun reportError(project: Project?, message: String, t: Throwable) {
         if (isTooFrequentException(message, t)) {
             return

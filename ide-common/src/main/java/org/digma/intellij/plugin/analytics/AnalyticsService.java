@@ -13,6 +13,7 @@ import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.CommonUtils;
 import org.digma.intellij.plugin.common.DatesUtils;
 import org.digma.intellij.plugin.common.EDT;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
@@ -570,7 +571,7 @@ public class AnalyticsService implements Disposable {
                 errorReportingHelper.addIfNewError(e);
                 Log.log(LOGGER::warn, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getMessage());
                 LOGGER.error(e);
-                ActivityMonitor.getInstance(project).registerError(e, "Error invoking AnalyticsProvider");
+                ErrorReporter.getInstance().reportError(project, "AnalyticsInvocationHandler.invoke", e);
                 throw e;
             } finally {
                 stopWatch.stop();
@@ -616,7 +617,7 @@ public class AnalyticsService implements Disposable {
             if (isConnectionException) {
                 ActivityMonitor.getInstance(project).registerConnectionError(method.getName(), message);
             } else {
-                ActivityMonitor.getInstance(project).registerError(e, message);
+                ErrorReporter.getInstance().reportError(project, "AnalyticsInvocationHandler.invoke", e);
             }
 
             if (e.getCause() instanceof AnalyticsProviderException) {

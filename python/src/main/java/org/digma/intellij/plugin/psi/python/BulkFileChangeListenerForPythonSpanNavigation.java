@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.newvfs.events.VFileDeleteEvent;
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent;
 import org.digma.intellij.plugin.bulklistener.AbstractBulkFileChangeListener;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.jetbrains.annotations.NotNull;
 
@@ -21,21 +22,27 @@ public class BulkFileChangeListenerForPythonSpanNavigation extends AbstractBulkF
     @Override
     public void processEvents(@NotNull Project project, @NotNull List<? extends VFileEvent> events) {
 
-        events.forEach(vFileEvent -> {
+        try {
 
-            var file = vFileEvent.getFile();
-            if (file != null && isRelevantFile(project, file)) {
-                Log.log(LOGGER::debug, "got bulk change for file  {}", vFileEvent.getFile());
-                var javaLanguageService = project.getService(PythonLanguageService.class);
-                if (javaLanguageService.isRelevant(file)) {
-                    if (vFileEvent instanceof VFileDeleteEvent) {
-                        PythonSpanNavigationProvider.getInstance(project).fileDeleted(vFileEvent.getFile());
-                    } else {
-                        PythonSpanNavigationProvider.getInstance(project).fileChanged(vFileEvent.getFile());
+            events.forEach(vFileEvent -> {
+
+                var file = vFileEvent.getFile();
+                if (file != null && isRelevantFile(project, file)) {
+                    Log.log(LOGGER::debug, "got bulk change for file  {}", vFileEvent.getFile());
+                    var javaLanguageService = project.getService(PythonLanguageService.class);
+                    if (javaLanguageService.isRelevant(file)) {
+                        if (vFileEvent instanceof VFileDeleteEvent) {
+                            PythonSpanNavigationProvider.getInstance(project).fileDeleted(vFileEvent.getFile());
+                        } else {
+                            PythonSpanNavigationProvider.getInstance(project).fileChanged(vFileEvent.getFile());
+                        }
                     }
                 }
-            }
-        });
+            });
+        } catch (Exception e) {
+            Log.warnWithException(LOGGER, e, "Exception in processEvents");
+            ErrorReporter.getInstance().reportError(project, "BulkFileChangeListenerForPythonSpanNavigation.processEvents", e);
+        }
     }
 
 }

@@ -23,6 +23,7 @@ import com.intellij.util.concurrency.NonUrgentExecutor;
 import kotlin.Pair;
 import org.apache.commons.collections4.CollectionUtils;
 import org.digma.intellij.plugin.common.Backgroundable;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
@@ -100,6 +101,9 @@ public class JavaSpanNavigationProvider implements Disposable {
                 project.getService(InsightsViewService.class).refreshInsightsModel();
                 project.getService(ErrorsViewService.class).refreshErrorsModel();
 
+            } catch (Exception e) {
+                Log.warnWithException(LOGGER, e, "Exception in buildSpanNavigation");
+                ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.buildSpanNavigation", e);
             } finally {
                 buildSpansLock.unlock();
             }
@@ -178,18 +182,24 @@ public class JavaSpanNavigationProvider implements Disposable {
      */
     public void documentChanged(@NotNull Document document) {
 
-        if (project.isDisposed()) {
-            return;
-        }
+        try {
 
-        var psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
-        if (psiFile == null || !psiFile.isValid() ||
-                !JavaLanguage.INSTANCE.equals(psiFile.getLanguage())) {
-            return;
-        }
+            if (project.isDisposed()) {
+                return;
+            }
 
-        var virtualFile = FileDocumentManager.getInstance().getFile(document);
-        fileChanged(virtualFile);
+            var psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
+            if (psiFile == null || !psiFile.isValid() ||
+                    !JavaLanguage.INSTANCE.equals(psiFile.getLanguage())) {
+                return;
+            }
+
+            var virtualFile = FileDocumentManager.getInstance().getFile(document);
+            fileChanged(virtualFile);
+        } catch (Exception e) {
+            Log.warnWithException(LOGGER, e, "Exception in documentChanged");
+            ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.documentChanged", e);
+        }
     }
 
 
@@ -204,19 +214,25 @@ public class JavaSpanNavigationProvider implements Disposable {
         }
 
         ReadAction.nonBlocking(new RunnableCallable(() -> {
-            if (virtualFile != null && virtualFile.isValid()) {
-                buildSpansLock.lock();
-                try {
-                    //if file moved then removeDocumentSpans will not remove anything but building span locations will
-                    // override the entries anyway
-                    removeDocumentSpans(virtualFile);
-                    buildWithSpanAnnotation(GlobalSearchScope.fileScope(project, virtualFile));
-                    buildStartSpanMethodCall(GlobalSearchScope.fileScope(project, virtualFile));
 
-                    buildObservedAnnotation(GlobalSearchScope.fileScope(project, virtualFile));
-                } finally {
-                    buildSpansLock.unlock();
+            try {
+                if (virtualFile != null && virtualFile.isValid()) {
+                    buildSpansLock.lock();
+                    try {
+                        //if file moved then removeDocumentSpans will not remove anything but building span locations will
+                        // override the entries anyway
+                        removeDocumentSpans(virtualFile);
+                        buildWithSpanAnnotation(GlobalSearchScope.fileScope(project, virtualFile));
+                        buildStartSpanMethodCall(GlobalSearchScope.fileScope(project, virtualFile));
+
+                        buildObservedAnnotation(GlobalSearchScope.fileScope(project, virtualFile));
+                    } finally {
+                        buildSpansLock.unlock();
+                    }
                 }
+            } catch (Exception e) {
+                Log.warnWithException(LOGGER, e, "Exception in fileChanged");
+                ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.fileChanged", e);
             }
         })).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance());
     }

@@ -12,6 +12,7 @@ import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.SystemInfo
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.Backgroundable
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -422,7 +423,7 @@ class DockerService {
             Log.log(logger::info, "start docker command result: {}", output)
         } catch (ex: Exception) {
             ActivityMonitor.getInstance(project).registerCustomEvent("Engine.start-docker-daemon", mapOf("error" to ex.message.toString()))
-            ActivityMonitor.getInstance(project).registerError(ex, "failed trying to start docker daemon")
+            ErrorReporter.getInstance().reportError(project,"failed trying to start docker daemon", ex)
             Log.warnWithException(logger, ex, "Failed trying to start docker daemon '{}'", cmd.commandLineString)
         }
     }

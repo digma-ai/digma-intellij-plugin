@@ -15,6 +15,7 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.util.RunnableCallable;
 import com.intellij.util.concurrency.NonUrgentExecutor;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
@@ -80,6 +81,9 @@ public class JavaEndpointNavigationProvider implements Disposable {
                 project.getService(InsightsViewService.class).refreshInsightsModel();
                 project.getService(ErrorsViewService.class).refreshErrorsModel();
 
+            } catch (Exception e) {
+                Log.warnWithException(LOGGER, e, "Exception in buildEndpointNavigation");
+                ErrorReporter.getInstance().reportError(project, "JavaEndpointNavigationProvider.buildEndpointNavigation", e);
             } finally {
                 buildLock.unlock();
             }
@@ -125,18 +129,23 @@ public class JavaEndpointNavigationProvider implements Disposable {
      */
     public void documentChanged(@NotNull Document document) {
 
-        if (project.isDisposed()) {
-            return;
-        }
+        try {
+            if (project.isDisposed()) {
+                return;
+            }
 
-        var psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
-        if (psiFile == null || !psiFile.isValid() ||
-                !JavaLanguage.INSTANCE.equals(psiFile.getLanguage())) {
-            return;
-        }
+            var psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
+            if (psiFile == null || !psiFile.isValid() ||
+                    !JavaLanguage.INSTANCE.equals(psiFile.getLanguage())) {
+                return;
+            }
 
-        var virtualFile = FileDocumentManager.getInstance().getFile(document);
-        fileChanged(virtualFile);
+            var virtualFile = FileDocumentManager.getInstance().getFile(document);
+            fileChanged(virtualFile);
+        } catch (Exception e) {
+            Log.warnWithException(LOGGER, e, "Exception in documentChanged");
+            ErrorReporter.getInstance().reportError(project, "JavaEndpointNavigationProvider.documentChanged", e);
+        }
     }
 
 
@@ -151,16 +160,22 @@ public class JavaEndpointNavigationProvider implements Disposable {
         }
 
         ReadAction.nonBlocking(new RunnableCallable(() -> {
-            if (virtualFile != null && virtualFile.isValid()) {
-                buildLock.lock();
-                try {
-                    //if file moved then removeDocumentEndpoints will not remove anything but building endpoint locations will
-                    // override the entries anyway
-                    removeDocumentEndpoint(virtualFile);
-                    buildEndpointAnnotations(virtualFile);
-                } finally {
-                    buildLock.unlock();
+
+            try {
+                if (virtualFile != null && virtualFile.isValid()) {
+                    buildLock.lock();
+                    try {
+                        //if file moved then removeDocumentEndpoints will not remove anything but building endpoint locations will
+                        // override the entries anyway
+                        removeDocumentEndpoint(virtualFile);
+                        buildEndpointAnnotations(virtualFile);
+                    } finally {
+                        buildLock.unlock();
+                    }
                 }
+            } catch (Exception e) {
+                Log.warnWithException(LOGGER, e, "Exception in fileChanged");
+                ErrorReporter.getInstance().reportError(project, "JavaEndpointNavigationProvider.fileChanged", e);
             }
         })).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance());
     }

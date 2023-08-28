@@ -9,6 +9,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.jetbrains.annotations.NotNull;
 
@@ -87,10 +88,15 @@ class CaretListener {
             @Override
             public void caretPositionChanged(@NotNull CaretEvent caretEvent) {
 
-                if (caretEvent.getCaret() != null) {
-                    int caretOffset = caretEvent.getEditor().logicalPositionToOffset(caretEvent.getNewPosition());
-                    var file = FileDocumentManager.getInstance().getFile(caretEvent.getEditor().getDocument());
-                    currentContextUpdater.addRequest(caretEvent.getEditor(), caretOffset, file);
+                try {
+                    if (caretEvent.getCaret() != null) {
+                        int caretOffset = caretEvent.getEditor().logicalPositionToOffset(caretEvent.getNewPosition());
+                        var file = FileDocumentManager.getInstance().getFile(caretEvent.getEditor().getDocument());
+                        currentContextUpdater.addRequest(caretEvent.getEditor(), caretOffset, file);
+                    }
+                }catch (Exception e){
+                    Log.warnWithException(LOGGER, e, "Exception in caretPositionChanged");
+                    ErrorReporter.getInstance().reportError(project, "CaretListener.caretPositionChanged", e);
                 }
             }
         }, parentDisposable);

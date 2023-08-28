@@ -20,6 +20,7 @@ import com.intellij.util.Alarm.ThreadToUse;
 import com.intellij.util.AlarmFactory;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.document.DocumentInfoService;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.psi.LanguageService;
@@ -86,43 +87,50 @@ class DocumentChangeListener {
             @Override
             public void documentChanged(@NotNull DocumentEvent event) {
 
-                if (project.isDisposed()) {
-                    return;
-                }
+                try {
 
-                //must be executed on EDT
-                PsiFile changedPsiFile = PsiDocumentManager.getInstance(project).getPsiFile(event.getDocument());
-                if (changedPsiFile == null){
-                    Log.log(LOGGER::debug, "changedPsiFile is null for {}", event.getDocument());
-                    return;
-                }
-                var fileEditor =  FileEditorManager.getInstance(project).getSelectedEditor(changedPsiFile.getVirtualFile());
-
-                documentChangeAlarm.cancelAllRequests();
-                documentChangeAlarm.addRequest(() -> {
-
-                    try {
-                        Log.log(LOGGER::debug, "got documentChanged alarm for {}", event.getDocument());
-                        Log.log(LOGGER::debug, "Processing documentChanged event for {}", changedPsiFile.getVirtualFile());
-                        processDocumentChanged(changedPsiFile,fileEditor);
-                    } catch (Exception e) {
-                        Log.warnWithException(LOGGER, e, "exception while processing documentChanged event for file: {}, {}", event.getDocument(), e.getMessage());
+                    if (project.isDisposed()) {
+                        return;
                     }
 
-                    EDT.ensureEDT(() -> {
-                        //caret event is not always fired while editing, but the document may change, and a caret
-                        // event will fire only when the caret moves but not while editing.
-                        // if the document changes and no caret event is fired the UI will not be updated.
-                        // so calling here currentContextUpdater after document change will update the UI.
-                        var editor1 = EditorUtils.getSelectedTextEditorForFile(changedPsiFile.getVirtualFile(), FileEditorManager.getInstance(project));
-                        if (editor1 != null){
-                            int caretOffset = editor1.logicalPositionToOffset(editor1.getCaretModel().getLogicalPosition());
-                            var file = FileDocumentManager.getInstance().getFile(editor1.getDocument());
-                            currentContextUpdater.clearLatestMethod();
-                            currentContextUpdater.addRequest(editor1,caretOffset,file);
+                    //must be executed on EDT
+                    PsiFile changedPsiFile = PsiDocumentManager.getInstance(project).getPsiFile(event.getDocument());
+                    if (changedPsiFile == null) {
+                        Log.log(LOGGER::debug, "changedPsiFile is null for {}", event.getDocument());
+                        return;
+                    }
+                    var fileEditor = FileEditorManager.getInstance(project).getSelectedEditor(changedPsiFile.getVirtualFile());
+
+                    documentChangeAlarm.cancelAllRequests();
+                    documentChangeAlarm.addRequest(() -> {
+
+                        try {
+                            Log.log(LOGGER::debug, "got documentChanged alarm for {}", event.getDocument());
+                            Log.log(LOGGER::debug, "Processing documentChanged event for {}", changedPsiFile.getVirtualFile());
+                            processDocumentChanged(changedPsiFile, fileEditor);
+                        } catch (Exception e) {
+                            Log.warnWithException(LOGGER, e, "exception while processing documentChanged event for file: {}, {}", event.getDocument(), e.getMessage());
+                            ErrorReporter.getInstance().reportError(project, "DocumentChangeListener.documentChanged", e);
                         }
-                    });
-                },2000);
+
+                        EDT.ensureEDT(() -> {
+                            //caret event is not always fired while editing, but the document may change, and a caret
+                            // event will fire only when the caret moves but not while editing.
+                            // if the document changes and no caret event is fired the UI will not be updated.
+                            // so calling here currentContextUpdater after document change will update the UI.
+                            var editor1 = EditorUtils.getSelectedTextEditorForFile(changedPsiFile.getVirtualFile(), FileEditorManager.getInstance(project));
+                            if (editor1 != null) {
+                                int caretOffset = editor1.logicalPositionToOffset(editor1.getCaretModel().getLogicalPosition());
+                                var file = FileDocumentManager.getInstance().getFile(editor1.getDocument());
+                                currentContextUpdater.clearLatestMethod();
+                                currentContextUpdater.addRequest(editor1, caretOffset, file);
+                            }
+                        });
+                    }, 2000);
+                } catch (Exception e) {
+                    Log.warnWithException(LOGGER, e, "exception DocumentChangeListener.documentChanged");
+                    ErrorReporter.getInstance().reportError(project, "DocumentChangeListener.documentChanged", e);
+                }
 
             }
         }, parentDisposable);

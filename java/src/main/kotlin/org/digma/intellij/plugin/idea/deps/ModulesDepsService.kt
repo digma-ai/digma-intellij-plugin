@@ -8,6 +8,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.LibraryOrderEntry
 import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.startup.StartupActivity
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredFramework
 import org.jetbrains.annotations.NotNull
@@ -252,7 +253,11 @@ class ModulesDepsService(private val project: Project) : Disposable {
     init {
         val fetchTask = object : TimerTask() {
             override fun run() {
-                periodicAction()
+                try {
+                    periodicAction()
+                }catch (e: Exception){
+                    ErrorReporter.getInstance().reportError(project, "ModulesDepsService.periodicAction", e)
+                }
             }
         }
 

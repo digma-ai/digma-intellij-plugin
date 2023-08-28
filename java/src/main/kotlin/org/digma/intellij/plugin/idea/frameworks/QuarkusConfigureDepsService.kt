@@ -2,21 +2,23 @@ package org.digma.intellij.plugin.idea.frameworks
 
 import com.intellij.buildsystem.model.unified.UnifiedCoordinates
 import com.intellij.buildsystem.model.unified.UnifiedDependency
+import com.intellij.collaboration.async.DisposingScope
 import com.intellij.externalSystem.DependencyModifierService
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.autoimport.ProjectRefreshAction
 import com.intellij.openapi.project.Project
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.common.ReadActions
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.build.BuildSystemChecker.Companion.determineBuildSystem
 import org.digma.intellij.plugin.idea.build.JavaBuildSystem
 import org.digma.intellij.plugin.idea.deps.ModuleExt
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
+import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import org.jetbrains.annotations.VisibleForTesting
 import java.time.LocalDateTime
@@ -51,13 +53,13 @@ class QuarkusConfigureDepsService(private val project: Project) : Disposable {
     }
 
 
-    private val BlackoutDurationSeconds =
+    private val blackoutDurationSeconds =
         TimeUnit.MINUTES.toSeconds(1) // production value
 //        TimeUnit.SECONDS.toSeconds(12) // use short period (few seconds) when debugging
 
-    private val DelayMilliseconds = TimeUnit.SECONDS.toMillis(5)
+    private val delayMilliseconds = TimeUnit.SECONDS.toMillis(5)
 
-    private val PeriodMilliseconds =
+    private val periodMilliseconds =
         TimeUnit.MINUTES.toMillis(1) // production value is 5 minutes
 //        TimeUnit.SECONDS.toMillis(12) // use short period (few seconds) when debugging
 
@@ -67,17 +69,22 @@ class QuarkusConfigureDepsService(private val project: Project) : Disposable {
 
     private var blackoutStopTime: LocalDateTime = LocalDateTime.now().minusMonths(3)
 
-    var stateHasQuarkusModulesWithoutOpenTelemetry = AtomicBoolean(false)
+    private var stateHasQuarkusModulesWithoutOpenTelemetry = AtomicBoolean(false)
 
     init {
         val fetchTask = object : TimerTask() {
             override fun run() {
-                periodicAction()
+                try {
+                    periodicAction()
+                }catch (e: Exception){
+                    Log.warnWithException(logger, e, "Exception in periodicAction")
+                    ErrorReporter.getInstance().reportError(project, "QuarkusConfigureDepsService.periodicAction", e)
+                }
             }
         }
 
         timer.schedule(
-            fetchTask, DelayMilliseconds, PeriodMilliseconds
+            fetchTask, delayMilliseconds, periodMilliseconds
         )
     }
 
@@ -89,7 +96,7 @@ class QuarkusConfigureDepsService(private val project: Project) : Disposable {
         val modulesDepsService = ModulesDepsService.getInstance(project)
 
         val quarkusModulesWithoutOpenTelemetry = modulesDepsService.getQuarkusModulesWithoutOpenTelemetry()
-        if (!quarkusModulesWithoutOpenTelemetry.isNullOrEmpty()) {
+        if (quarkusModulesWithoutOpenTelemetry.isNotEmpty()) {
             stateHasQuarkusModulesWithoutOpenTelemetry.set(true)
         } else {
             stateHasQuarkusModulesWithoutOpenTelemetry.set(false)
@@ -100,7 +107,7 @@ class QuarkusConfigureDepsService(private val project: Project) : Disposable {
         }
     }
 
-    protected fun addDependenciesOfQuarkusOtelToRelevantModules() {
+    private fun addDependenciesOfQuarkusOtelToRelevantModules() {
         val modulesDepsService = ModulesDepsService.getInstance(project)
 
         val quarkusModulesWithoutOpenTelemetry = modulesDepsService.getQuarkusModulesWithoutOpenTelemetry()
@@ -110,19 +117,17 @@ class QuarkusConfigureDepsService(private val project: Project) : Disposable {
         }
     }
 
-    protected fun addDependenciesOfQuarkusOtelTo(moduleExt: ModuleExt) {
+    private fun addDependenciesOfQuarkusOtelTo(moduleExt: ModuleExt) {
         val module = moduleExt.module
         val moduleBuildSystem = determineBuildSystem(module)
         val dependencyLib = getQuarkusOtelDependency(moduleBuildSystem, moduleExt.metadata.quarkusVersion!!)
-
-//        println("adding dep to module '${module.name}' quarkusOtel ${dependencyLib}")
 
         val dependencyModifierService = DependencyModifierService.getInstance(project)
         dependencyModifierService.addDependency(module, dependencyLib)
     }
 
     @VisibleForTesting
-    protected fun isDuringBlackout(): Boolean {
+    private fun isDuringBlackout(): Boolean {
         val now = LocalDateTime.now()
         return now < blackoutStopTime
     }
@@ -135,17 +140,19 @@ class QuarkusConfigureDepsService(private val project: Project) : Disposable {
 
     fun buttonClicked() {
         // start blackout time that panel won't be display
-        blackoutStopTime = LocalDateTime.now().plusSeconds(BlackoutDurationSeconds)
+        blackoutStopTime = LocalDateTime.now().plusSeconds(blackoutDurationSeconds)
 
         // making the panel disappear
-        GlobalScope.launch {
+        @Suppress("UnstableApiUsage")
+        DisposingScope(this).launch {
             delay(500)
             affectedPanel?.reset()
         }
 
         // give some time for the user/system to make the desired update, and only then run the periodicAction
-        GlobalScope.launch {
-            delay(TimeUnit.SECONDS.toMillis(BlackoutDurationSeconds) + 500)
+        @Suppress("UnstableApiUsage")
+        DisposingScope(this).launch {
+            delay(TimeUnit.SECONDS.toMillis(blackoutDurationSeconds) + 500)
 
             periodicAction()
         }
@@ -154,7 +161,7 @@ class QuarkusConfigureDepsService(private val project: Project) : Disposable {
             addDependenciesOfQuarkusOtelToRelevantModules()
         }
 
-        ReadActions.ensureReadAction {
+        Backgroundable.executeOnPooledThread {
             ProjectRefreshAction.refreshProject(project)
         }
     }

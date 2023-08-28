@@ -18,6 +18,7 @@ import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.FileUtils;
 import org.digma.intellij.plugin.document.DocumentInfoService;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
@@ -76,6 +77,15 @@ public class EditorEventsHandler implements FileEditorManagerListener {
      */
     @Override
     public void selectionChanged(@NotNull FileEditorManagerEvent editorManagerEvent) {
+        try {
+            selectionChangedImpl(editorManagerEvent);
+        }catch (Exception e){
+            Log.warnWithException(LOGGER, e, "Exception in selectionChanged");
+            ErrorReporter.getInstance().reportError(project, "EditorEventsHandler.selectionChanged", e);
+        }
+    }
+
+    private void selectionChangedImpl(@NotNull FileEditorManagerEvent editorManagerEvent) {
 
         //this will make sure that all registered language services complete startup before they can be used.
         // usually there is nothing to do, but rider for example need to load the protocol models on EDT.
@@ -225,6 +235,16 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
     @Override
     public void fileClosed(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
+        try {
+            fileClosedImpl(source, file);
+        }catch (Exception e){
+            Log.warnWithException(LOGGER, e, "Exception in fileClosed");
+            ErrorReporter.getInstance().reportError(project, "EditorEventsHandler.fileClosed", e);
+        }
+    }
+
+
+    private void fileClosedImpl(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
 
         Log.log(LOGGER::trace, "fileClosed: file:{}", file);
 

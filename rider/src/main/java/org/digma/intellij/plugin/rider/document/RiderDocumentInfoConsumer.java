@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiFile;
 import org.digma.intellij.plugin.document.CodeLensProvider;
 import org.digma.intellij.plugin.document.DocumentInfoChanged;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.lens.CodeLens;
 import org.digma.intellij.plugin.rider.protocol.CodeLensHost;
@@ -36,11 +37,16 @@ public class RiderDocumentInfoConsumer implements DocumentInfoChanged {
 
     @Override
     public void documentInfoChanged(@NotNull PsiFile psiFile) {
-        if (cSharpLanguageService.isSupportedFile(project, psiFile)) {
-            Log.log(LOGGER::debug, "Got documentInfoChanged for {}", psiFile.getVirtualFile());
-            Set<CodeLens> codeLens = codeLensProvider.provideCodeLens(psiFile);
-            Log.log(LOGGER::debug, "Got codeLens for {}: {}", psiFile.getVirtualFile(), codeLens);
-            CodeLensHost.getInstance(project).installCodeLens(psiFile, codeLens);
+        try {
+            if (cSharpLanguageService.isSupportedFile(project, psiFile)) {
+                Log.log(LOGGER::debug, "Got documentInfoChanged for {}", psiFile.getVirtualFile());
+                Set<CodeLens> codeLens = codeLensProvider.provideCodeLens(psiFile);
+                Log.log(LOGGER::debug, "Got codeLens for {}: {}", psiFile.getVirtualFile(), codeLens);
+                CodeLensHost.getInstance(project).installCodeLens(psiFile, codeLens);
+            }
+        }catch (Exception e){
+            Log.warnWithException(LOGGER, e, "Exception in documentInfoChanged");
+            ErrorReporter.getInstance().reportError(project, "RiderDocumentInfoConsumer.documentInfoChanged", e);
         }
     }
 

@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.common;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 
 public class EDT {
@@ -11,9 +12,18 @@ public class EDT {
     public static void ensureEDT(Runnable task) {
 
         if (ApplicationManager.getApplication().isDispatchThread()) {
-            task.run();
+            runWithErrorReporting(task);
         } else {
-            ApplicationManager.getApplication().invokeLater(task);
+            ApplicationManager.getApplication().invokeLater(() -> runWithErrorReporting(task));
+        }
+    }
+
+    private static void runWithErrorReporting(Runnable task) {
+        try{
+            task.run();
+        }catch (Exception e){
+            Log.warnWithException(LOGGER, e, "Exception in EDT task");
+            ErrorReporter.getInstance().reportError(null, "EDT.runWithErrorReporting", e);
         }
     }
 

@@ -33,6 +33,7 @@ import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator;
 import org.digma.intellij.plugin.common.JsonUtils;
 import org.digma.intellij.plugin.docker.DockerService;
 import org.digma.intellij.plugin.document.CodeObjectsUtil;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.icons.AppIcons;
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator;
 import org.digma.intellij.plugin.jcef.common.CustomSchemeHandlerFactory;
@@ -149,7 +150,12 @@ public class RecentActivityService implements Disposable {
             @Override
             public void run() {
                 if (BackendConnectionMonitor.getInstance(project).isConnectionOk()) {
-                    fetchRecentActivities();
+                    try {
+                        fetchRecentActivities();
+                    }catch (Exception e){
+                        Log.warnWithException(logger, e, "Exception in fetchRecentActivities");
+                        ErrorReporter.getInstance().reportError(project, "RecentActivityService.fetchRecentActivities", e);
+                    }
                 }
             }
         };
@@ -557,10 +563,12 @@ public class RecentActivityService implements Disposable {
                 } catch (AnalyticsServiceException e) {
                     Log.debugWithException(logger, project, e, "got Exception from getDurationLiveData. Stopping refresh timer for {} {}", codeObjectId, e.getMessage());
                     stopLiveDataTimerTask();
+                    ErrorReporter.getInstance().reportError(project, "RecentActivityService.startNewLiveDataTimerTask", e);
                 } catch (Exception e) {
                     //catch any other exception and rethrow because it's a bug we should fix
                     Log.debugWithException(logger, project, e, "Exception in myLiveDataTimer,Stopping refresh timer for {} {}", codeObjectId, e.getMessage());
                     stopLiveDataTimerTask();
+                    ErrorReporter.getInstance().reportError(project, "RecentActivityService.startNewLiveDataTimerTask", e);
                     throw e;
                 }
             }

@@ -22,6 +22,7 @@ import com.jetbrains.python.psi.PyFunction;
 import com.jetbrains.python.psi.stubs.PyFunctionNameIndex;
 import kotlin.Pair;
 import org.digma.intellij.plugin.common.Backgroundable;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.digma.intellij.plugin.psi.PsiUtils;
@@ -94,7 +95,11 @@ public class PythonSpanNavigationProvider implements Disposable {
                 project.getService(InsightsViewService.class).refreshInsightsModel();
                 project.getService(ErrorsViewService.class).refreshErrorsModel();
 
-            } finally {
+            }catch (Exception e){
+                Log.warnWithException(LOGGER, e, "Exception in buildSpanNavigation");
+                ErrorReporter.getInstance().reportError(project, "PythonSpanNavigationProvider.buildSpanNavigation", e);
+            }
+            finally {
                 buildSpansLock.unlock();
             }
         })).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance());
@@ -143,18 +148,23 @@ public class PythonSpanNavigationProvider implements Disposable {
      */
     public void documentChanged(@NotNull Document document) {
 
-        if (project.isDisposed()) {
-            return;
-        }
+        try {
+            if (project.isDisposed()) {
+                return;
+            }
 
-        var psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
-        if (psiFile == null || !psiFile.isValid() ||
-                !PythonLanguage.INSTANCE.equals(psiFile.getLanguage())) {
-            return;
-        }
+            var psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
+            if (psiFile == null || !psiFile.isValid() ||
+                    !PythonLanguage.INSTANCE.equals(psiFile.getLanguage())) {
+                return;
+            }
 
-        var virtualFile = FileDocumentManager.getInstance().getFile(document);
-        fileChanged(virtualFile);
+            var virtualFile = FileDocumentManager.getInstance().getFile(document);
+            fileChanged(virtualFile);
+        }catch (Exception e){
+            Log.warnWithException(LOGGER, e, "Exception in documentChanged");
+            ErrorReporter.getInstance().reportError(project, "PythonSpanNavigationProvider.documentChanged", e);
+        }
     }
 
 
@@ -169,15 +179,20 @@ public class PythonSpanNavigationProvider implements Disposable {
         }
 
         ReadAction.nonBlocking(new RunnableCallable(() -> {
-            if (virtualFile != null && virtualFile.isValid()) {
-                buildSpansLock.lock();
-                try {
-                    removeDocumentSpans(virtualFile);
-                    buildSpanNavigation(project,Constants.OPENTELEMETRY_START_AS_CURRENT_SPAN_FUNC_NAME,GlobalSearchScope.fileScope(project,virtualFile));
-                    buildSpanNavigation(project,Constants.OPENTELEMETRY_START_SPAN_FUNC_NAME,GlobalSearchScope.fileScope(project,virtualFile));
-                } finally {
-                    buildSpansLock.unlock();
+            try {
+                if (virtualFile != null && virtualFile.isValid()) {
+                    buildSpansLock.lock();
+                    try {
+                        removeDocumentSpans(virtualFile);
+                        buildSpanNavigation(project, Constants.OPENTELEMETRY_START_AS_CURRENT_SPAN_FUNC_NAME, GlobalSearchScope.fileScope(project, virtualFile));
+                        buildSpanNavigation(project, Constants.OPENTELEMETRY_START_SPAN_FUNC_NAME, GlobalSearchScope.fileScope(project, virtualFile));
+                    } finally {
+                        buildSpansLock.unlock();
+                    }
                 }
+            }catch (Exception e){
+                Log.warnWithException(LOGGER, e, "Exception in fileChanged");
+                ErrorReporter.getInstance().reportError(project, "PythonSpanNavigationProvider.fileChanged", e);
             }
         })).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance());
     }

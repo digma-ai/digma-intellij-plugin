@@ -5,6 +5,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.jetbrains.annotations.NotNull;
 
@@ -28,14 +29,16 @@ public class Backgroundable {
             new Task.Backgroundable(project, name) {
                 @Override
                 public void run(@NotNull ProgressIndicator indicator) {
-                    task.run();
+                    runWithErrorReporting(project,name,task);
                 }
             }.queue();
         } else {
             Log.log(LOGGER::trace, "Executing task '{}' in current thread", name);
-            task.run();
+            runWithErrorReporting(project, name, task);
         }
     }
+
+
 
 
     public static void runInNewBackgroundThread(Project project, String name, Runnable task) {
@@ -43,7 +46,7 @@ public class Backgroundable {
         new Task.Backgroundable(project, name) {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
-                task.run();
+                runWithErrorReporting(project,name,task);
             }
         }.queue();
 
@@ -53,16 +56,45 @@ public class Backgroundable {
         if (EDT.isEdt()) {
             executeOnPooledThread(action);
         } else {
-            action.run();
+            runWithErrorReporting(action);
         }
     }
 
 
     public static Future<?> executeOnPooledThread(@NotNull Runnable action) {
-        return ApplicationManager.getApplication().executeOnPooledThread(action);
+        return ApplicationManager.getApplication().executeOnPooledThread(() -> runWithErrorReporting(action));
     }
 
     public static <T> Future<T> executeOnPooledThread(@NotNull Callable<T> action) {
-        return ApplicationManager.getApplication().executeOnPooledThread(action);
+        return ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            try {
+                return action.call();
+            }catch (Exception e){
+                Log.warnWithException(LOGGER, e, "Exception in action");
+                ErrorReporter.getInstance().reportError(null, "executeOnPooledThread", e);
+                throw e;
+            }
+        });
     }
+
+
+    private static void runWithErrorReporting(Project project, String name, Runnable task) {
+        try{
+            task.run();
+        }catch (Exception e){
+            Log.warnWithException(LOGGER, e, "Exception in task {}",name);
+            ErrorReporter.getInstance().reportError(project, "Exception in task "+name, e);
+        }
+    }
+
+    private static void runWithErrorReporting(Runnable task) {
+        try{
+            task.run();
+        }catch (Exception e){
+            Log.warnWithException(LOGGER, e, "Exception in action");
+            ErrorReporter.getInstance().reportError(null, "Backgroundable.runWithErrorReporting", e);
+        }
+    }
+
+
 }

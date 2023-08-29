@@ -15,6 +15,7 @@ import org.cef.handler.CefLifeSpanHandlerAdapter;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.analytics.EnvironmentChanged;
+import org.digma.intellij.plugin.analytics.NoSelectedEnvironmentException;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator;
@@ -170,8 +171,11 @@ public final class AssetsService implements Disposable {
             String assets = AnalyticsService.getInstance(project).getAssets();
             Log.log(logger::trace, project, "got assets [{}]", assets);
             return assets;
+        } catch (NoSelectedEnvironmentException e) {
+            Log.log(logger::debug, project, "no environment when calling getAssets {}", e.getMessage());
+            return "";
         } catch (AnalyticsServiceException e) {
-            Log.warnWithException(logger,project,e,"Error loading assets {}",e.getMessage());
+            Log.warnWithException(logger, project, e, "Error loading assets {}", e.getMessage());
             return "";
         }
     }

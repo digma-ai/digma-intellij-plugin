@@ -187,9 +187,11 @@ class Downloader {
 
 
     fun deleteFile() {
-        val dir = composeFile.parentFile
-        Files.deleteIfExists(composeFile.toPath())
-        Files.deleteIfExists(dir.toPath())
+        Retries.simpleRetry(Runnable {
+            val dir = composeFile.parentFile
+            Files.deleteIfExists(composeFile.toPath())
+            Files.deleteIfExists(dir.toPath())
+        }, Throwable::class.java, 100, 5)
     }
 
 }

@@ -20,6 +20,10 @@ internal class Engine {
 
     private val engineLock = ReentrantLock()
 
+    //this message is used to identify timeout of the process
+    private val timeoutMessage = "process exited with timeout"
+    private val timeoutExitCode: Int = -999
+
 
     fun up(project: Project, composeFile: File, dockerComposeCmd: List<String>): String {
 
@@ -109,15 +113,15 @@ internal class Engine {
         composeFile: File,
         processBuilder: ProcessBuilder,
         reportToPosthog: Boolean = true,
-        ignoreNonRealErrors: Boolean = false
+        ignoreNonRealErrors: Boolean = false,
     ): String {
 
         //try 3 times in case of failure
-        repeat(3){ count ->
-            Log.log(logger::info,"executing command {}, attempt {}",name,count)
-            val exitValue = executeCommand(project, name, composeFile, processBuilder,reportToPosthog,ignoreNonRealErrors)
-            if (shouldExit(exitValue)){
-                Log.log(logger::info,"docker command {} completed after retry {} with exit value {}",name,count,exitValue)
+        repeat(3) { count ->
+            Log.log(logger::info, "executing command {}, attempt {}", name, count)
+            val exitValue = executeCommand(project, name, composeFile, processBuilder, reportToPosthog, ignoreNonRealErrors)
+            if (shouldExit(exitValue)) {
+                Log.log(logger::info, "docker command {} completed after retry {} with exit value {}", name, count, exitValue)
                 return exitValue
             }
 
@@ -129,11 +133,11 @@ internal class Engine {
                     )
                 )
             }
-            Log.log(logger::info,"docker command {} failed with exit value {}, retrying..",name,exitValue)
+            Log.log(logger::info, "docker command {} failed with exit value {}, retrying..", name, exitValue)
         }
 
         //last chance
-        Log.log(logger::info,"executing command {}, last chance after 3 failures",name)
+        Log.log(logger::info, "executing command {}, last chance after 3 failures", name)
         return executeCommand(project, "down", composeFile, processBuilder)
     }
 
@@ -147,13 +151,13 @@ internal class Engine {
 
     }
 
-    private fun isRetryTriggerExitValue(exitValue: String):Boolean{
+    private fun isRetryTriggerExitValue(exitValue: String): Boolean {
 
-        return exitValue.startsWith("process exited with timeout") ||
+        //"process exited with timeout" is the message set in buildExitValue
+        return exitValue.startsWith(timeoutMessage) ||
                 exitValue.contains("unexpected EOF")
 
     }
-
 
 
     private fun executeCommand(
@@ -162,7 +166,7 @@ internal class Engine {
         composeFile: File,
         processBuilder: ProcessBuilder,
         reportToPosthog: Boolean = true,
-        ignoreNonRealErrors: Boolean = false
+        ignoreNonRealErrors: Boolean = false,
     ): String {
 
         try {
@@ -185,7 +189,7 @@ internal class Engine {
             Log.log(logger::info, "started process {}", process.info())
 
             streamExecutor.submit(StreamGobbler(process.inputStream) {
-                collectErrors(it, errorMessages,ignoreNonRealErrors)
+                collectErrors(it, errorMessages, ignoreNonRealErrors)
                 collectAll(it, allOutputLines)
                 Log.log(logger::info, "DigmaDocker: $it")
             })
@@ -197,17 +201,30 @@ internal class Engine {
 
 
             val timeout = 15L
-
-            var success = process.waitFor(timeout, TimeUnit.MINUTES)
+            var success = try {
+                process.waitFor(timeout, TimeUnit.MINUTES)
+            } catch (_: InterruptedException) {
+                false
+            }
 
             val exitCode = try {
                 process.exitValue()
             } catch (e: IllegalThreadStateException) {
                 Log.warnWithException(logger, e, "process has not exited after {} minutes", timeout)
-                process.destroy()
+                ActivityMonitor.getInstance(project).registerDigmaEngineEventError(name, "process did not exit after $timeout minutes")
+                process.destroyForcibly()
+
+                //wait one more minute for the process to terminate, if it doesn't terminate then we have a problem,
+                // and it will probably be a zombie
+                try {
+                    process.waitFor(1, TimeUnit.MINUTES)
+                } catch (_: InterruptedException) { /*ignore*/
+                }
+
                 success = false
-                -1
+                timeoutExitCode
             }
+
 
             if (success) {
                 Log.log(
@@ -258,9 +275,9 @@ internal class Engine {
     private fun buildExitValue(exitValue: Int, success: Boolean, errorMessages: List<String>, allOutputLines: MutableList<String>): String {
 
         if (!success || exitValue != 0) {
-            var exitMessage = if (!success) {
-                "process exited with timeout and exit code $exitValue"
-            }else{
+            var exitMessage = if (!success || exitValue == timeoutExitCode) {
+                "$timeoutMessage and exit code $exitValue"
+            } else {
                 "process failed with code $exitValue"
             }
             if (errorMessages.isNotEmpty()) {
@@ -308,7 +325,7 @@ internal class Engine {
         try {
             if (line.trim().startsWith("Error ") || line.trim().startsWith("Error: ")) {
 
-                if (ignoreNonRealErrors && isNonRealError(line)){
+                if (ignoreNonRealErrors && isNonRealError(line)) {
                     return
                 }
 

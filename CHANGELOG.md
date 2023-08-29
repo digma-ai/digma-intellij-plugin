@@ -1,6 +1,14 @@
 # Changelog
 
-## [2.0.158] - 2023-08-28
+## [2.0.159] - 2023-08-29
+- Update Recent Activity UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1223
+- report backend error with error reporter by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1216
+- fix possible exception in docker engine by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1222
+- update button posthog event by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1225
+- persist first data received by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1224
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1226
+
+## 2.0.158 - 2023-08-28
 - Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1217
 
 ## 2.0.157 - 2023-08-28

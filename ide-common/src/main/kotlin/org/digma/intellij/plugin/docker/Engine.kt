@@ -195,9 +195,19 @@ internal class Engine {
                 Log.log(logger::info, "DigmaDockerError: $it")
             })
 
-            val success = process.waitFor(15, TimeUnit.MINUTES)
 
-            val exitCode = process.exitValue()
+            val timeout = 15L
+
+            var success = process.waitFor(timeout, TimeUnit.MINUTES)
+
+            val exitCode = try {
+                process.exitValue()
+            } catch (e: IllegalThreadStateException) {
+                Log.warnWithException(logger, e, "process has not exited after {} minutes", timeout)
+                process.destroy()
+                success = false
+                -1
+            }
 
             if (success) {
                 Log.log(

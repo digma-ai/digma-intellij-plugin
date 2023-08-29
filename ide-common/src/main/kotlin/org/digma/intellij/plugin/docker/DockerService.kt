@@ -335,10 +335,13 @@ class DockerService {
                         notifyResult(NO_DOCKER_COMPOSE_COMMAND, resultTask)
                     }
 
-                    //always delete file here, it's an uninstallation
-                    downloader.deleteFile()
-
-                    PersistenceService.getInstance().setLocalEngineInstalled(false)
+                    try {
+                        //always delete file here, it's an uninstallation
+                        downloader.deleteFile()
+                    } catch (e: Exception) {
+                        Log.log(logger::warn, "Failed to delete compose file")
+                        ActivityMonitor.getInstance(project).registerDigmaEngineEventError("removeEngine", "failed to delete compose file: $e")
+                    }
 
                 } else {
                     ActivityMonitor.getInstance(project).registerDigmaEngineEventError("removeEngine", "Failed to download compose file")
@@ -351,6 +354,9 @@ class DockerService {
                 notifyResult("Failed to remove docker engine: $e", resultTask)
             }finally {
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd("removeEngine", mapOf())
+                //always mark local engine not installed even if the remove or docker down failed for some reason,
+                // from the plugin perspective local engine is not installed.
+                PersistenceService.getInstance().setLocalEngineInstalled(false)
             }
         }
     }

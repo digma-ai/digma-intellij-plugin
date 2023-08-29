@@ -241,7 +241,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                             Log.log(logger::warn, "no connection after engine installation")
                             if (success) {
                                 ActivityMonitor.getInstance(project)
-                                    .registerDigmaEngineEventError("installEngine", "No connection after successful engine install")
+                                    .registerDigmaEngineEventError("installEngine", "No connection 2 minutes after successful engine install")
                             }
                         }
                         val isEngineUp = connectionOk && success
@@ -268,11 +268,11 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                             sendIsDigmaEngineRunning(false, jbCefBrowser)
 
 
-                            //start remove if install failed. wait a second to let the installEngine finish and
-                            // report installEngine.end to posthog
-                            Backgroundable.runInNewBackgroundThread(project, "removing engine") {
+                            //start remove if install failed. wait a second to let the installEngine finish so it reports
+                            // the installEngine.end to posthog before removeEngine.start
+                            Backgroundable.executeOnPooledThread {
                                 try {
-                                    Thread.sleep(1000)
+                                    Thread.sleep(2000)
                                 } catch (e: Exception) {
                                     //ignore
                                 }

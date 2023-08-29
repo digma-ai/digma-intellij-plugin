@@ -1,7 +1,5 @@
 package org.digma.intellij.plugin.posthog
 
-import com.google.common.cache.Cache
-import com.google.common.cache.CacheBuilder
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.project.Project
@@ -20,7 +18,6 @@ import java.security.MessageDigest
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 
 
 class ActivityMonitor(project: Project) :Disposable {
@@ -35,7 +32,6 @@ class ActivityMonitor(project: Project) :Disposable {
     private val userId: String
     private val isDevUser: Boolean
     private val latestUnknownRunConfigTasks = mutableMapOf<String, Instant>()
-    private var errorCache: Cache<String, String>? = null
 
     //    private val tokenFetcherThread = Thread(this, "Token fetcher thread")
     private var postHog: PostHog? = null
@@ -67,11 +63,6 @@ class ActivityMonitor(project: Project) :Disposable {
 //                else null
 //
 //        tokenFetcherThread.start()
-
-        errorCache = CacheBuilder.newBuilder()
-            .maximumSize(10000)
-            .expireAfterWrite(5, TimeUnit.MINUTES)
-            .build()
 
         val token = "phc_5sy6Kuv1EYJ9GAdWPeGl7gx31RAw7BR7NHnOuLCUQZK"
         postHog = PostHog.Builder(token).build()
@@ -205,13 +196,11 @@ class ActivityMonitor(project: Project) :Disposable {
 
 
     fun registerError(exception: Throwable, message: String) {
+
+        //Don't call directly, use ErrorReporter.reportError
+
         val stringWriter = StringWriter()
         exception.printStackTrace(PrintWriter(stringWriter))
-
-        var hash = hash(message)
-        if (errorCache!!.getIfPresent(hash) != null)
-            return
-        errorCache!!.put(hash, hash )
 
         postHog?.capture(
             userId,
@@ -229,10 +218,7 @@ class ActivityMonitor(project: Project) :Disposable {
 
     fun reportBackendError(message: String, action: String) {
 
-        val hash = hash(message)
-        if (errorCache!!.getIfPresent(hash) != null)
-            return
-        errorCache!!.put(hash, hash)
+        //Don't call directly, use ErrorReporter.reportBackendError
 
         postHog?.capture(
             userId,

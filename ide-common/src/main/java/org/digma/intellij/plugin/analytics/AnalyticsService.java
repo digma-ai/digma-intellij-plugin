@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.analytics;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
@@ -388,8 +389,26 @@ public class AnalyticsService implements Disposable {
 
     public String getAssets() throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
-        return executeCatching(() ->
+        var assets = executeCatching(() ->
                 analyticsProviderProxy.getAssets(new AssetsRequest(env)));
+
+        try {
+            if (!PersistenceService.getInstance().getState().getFirstTimeAssetsReceived()) {
+                var objectMapper = new ObjectMapper();
+                var payload = objectMapper.readTree(assets);
+                if (!payload.isMissingNode() &&
+                        payload.get("serviceAssetsEntries") != null &&
+                        payload.get("serviceAssetsEntries") instanceof ArrayNode &&
+                        !((ArrayNode) payload.get("serviceAssetsEntries")).isEmpty()) {
+                    ActivityMonitor.getInstance(project).registerFirstAssetsReceived();
+                    PersistenceService.getInstance().getState().setFirstTimeAssetsReceived(true);
+                }
+            }
+        } catch (Exception e) {
+            Log.warnWithException(LOGGER, project, e, "error reporting FirstTimeAssetsReceived {}", e);
+        }
+
+        return assets;
     }
 
 

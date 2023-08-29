@@ -116,10 +116,6 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
         Log.log(LOGGER::trace, project, "pushAssets called");
         var payload = objectMapper.readTree(AssetsService.getInstance(project).getAssets());
-        if (!payload.isMissingNode() && !PersistenceService.getInstance().getState().getFirstTimeAssetsReceived()) {
-            ActivityMonitor.getInstance(project).registerFirstAssetsReceived();
-            PersistenceService.getInstance().getState().setFirstTimeAssetsReceived(true);
-        }
         var message = new SetAssetsDataMessage("digma", "ASSETS/SET_DATA", payload);
         Log.log(LOGGER::trace, project, "sending ASSETS/SET_DATA message");
         browser.executeJavaScript(

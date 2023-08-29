@@ -8,6 +8,7 @@ import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent;
+import org.digma.intellij.plugin.analytics.BackendConnectionMonitor;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.ui.panels.DisposablePanel;
@@ -127,7 +128,7 @@ public class MainToolWindowCardsController implements Disposable {
 
         //it may be that there was a connection lost event before the panels were ready.
         // in that case show connection lost panel
-        if (isConnectionLost.get()) {
+        if (isConnectionLost.get() || BackendConnectionMonitor.getInstance(project).isConnectionError()) {
             showNoConnection();
         }
     }

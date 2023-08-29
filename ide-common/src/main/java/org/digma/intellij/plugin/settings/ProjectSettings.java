@@ -94,6 +94,10 @@ public class ProjectSettings implements Configurable {
             throw new ConfigurationException("Api url is not a well formed url");
         }
 
+        if (!CommonUtils.isHttpsUrl(mySettingsComponent.getApiUrlText())) {
+            throw new ConfigurationException("Api url schema must be https");
+        }
+
         if (mySettingsComponent.getJaegerUrl() != null &&
                 !mySettingsComponent.getJaegerUrl().isBlank() &&
                 !CommonUtils.isWelFormedUrl(mySettingsComponent.getJaegerUrl())) {

@@ -1,10 +1,10 @@
 package org.digma.intellij.plugin.updates
 
+import com.intellij.collaboration.async.DisposingScope
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.apache.maven.artifact.versioning.ComparableVersion
@@ -21,7 +21,6 @@ import org.digma.intellij.plugin.model.rest.version.BackendVersionResponse
 import org.digma.intellij.plugin.model.rest.version.PluginVersionResponse
 import org.digma.intellij.plugin.model.rest.version.VersionRequest
 import org.digma.intellij.plugin.model.rest.version.VersionResponse
-import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.semanticversion.SemanticVersionUtil
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import org.jetbrains.annotations.NotNull
@@ -161,7 +160,8 @@ class UpdatesService(private val project: Project) : Disposable {
         blackoutStopTime = LocalDateTime.now().plusSeconds(BlackoutDurationSeconds)
 
         // give some time for the user/system to make the desired update, and only then recheck for newer version
-        GlobalScope.launch {
+        @Suppress("UnstableApiUsage")
+        DisposingScope(this).launch {
             delay(TimeUnit.SECONDS.toMillis(BlackoutDurationSeconds) + 500)
 
             checkForNewerVersions()

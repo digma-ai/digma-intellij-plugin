@@ -216,7 +216,7 @@ public class AnalyticsService implements Disposable {
     private String getCurrentEnvironment() throws AnalyticsServiceException {
         String currentEnv = environment.getCurrent();
         if (currentEnv == null || currentEnv.isEmpty()) {
-            throw new AnalyticsServiceException("No selected environment");
+            throw new NoSelectedEnvironmentException("No selected environment");
         }
         return currentEnv;
     }

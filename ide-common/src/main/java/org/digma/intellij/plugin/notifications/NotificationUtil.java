@@ -6,12 +6,13 @@ import com.intellij.openapi.project.Project;
 
 public class NotificationUtil {
 
-    public static final String NOTIFICATION_GROUP = "Digma Notification Group";
+    public static final String DIGMA_HIDDEN_NOTIFICATION_GROUP = "Digma Hidden Notification Group";
+    public static final String DIGMA_STICKY_BALLOON_NOTIFICATION_GROUP = "Digma Sticky Balloon Notification Group";
 
     public static void notifyError(Project project, String content) {
 
         NotificationGroupManager.getInstance()
-                .getNotificationGroup(NOTIFICATION_GROUP)
+                .getNotificationGroup(DIGMA_HIDDEN_NOTIFICATION_GROUP)
                 .createNotification(content, NotificationType.ERROR)
                 .notify(project);
     }
@@ -20,7 +21,7 @@ public class NotificationUtil {
 
         var content = "Digma: Changing environment " + oldEnv + " to " + newEnv;
         NotificationGroupManager.getInstance()
-                .getNotificationGroup(NOTIFICATION_GROUP)
+                .getNotificationGroup(DIGMA_HIDDEN_NOTIFICATION_GROUP)
                 .createNotification(content, NotificationType.INFORMATION)
                 .notify(project);
     }
@@ -30,8 +31,16 @@ public class NotificationUtil {
 
         content = content.startsWith("Digma:") ? content : "Digma: " + content;
         NotificationGroupManager.getInstance()
-                .getNotificationGroup(NOTIFICATION_GROUP)
+                .getNotificationGroup(DIGMA_HIDDEN_NOTIFICATION_GROUP)
                 .createNotification(content, NotificationType.INFORMATION)
+                .notify(project);
+    }
+
+
+    public static void showBalloonWarning(Project project, String content) {
+        NotificationGroupManager.getInstance()
+                .getNotificationGroup(DIGMA_STICKY_BALLOON_NOTIFICATION_GROUP)
+                .createNotification(content, NotificationType.WARNING)
                 .notify(project);
     }
 

@@ -10,7 +10,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.ui.JBColor;
 import com.intellij.util.Alarm;
 import org.apache.commons.lang3.time.StopWatch;
-import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.CommonUtils;
 import org.digma.intellij.plugin.common.DatesUtils;
 import org.digma.intellij.plugin.common.EDT;
@@ -60,6 +59,7 @@ import org.jetbrains.annotations.VisibleForTesting;
 
 import javax.net.ssl.SSLException;
 import java.io.Closeable;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.lang.reflect.InvocationHandler;
@@ -101,8 +101,8 @@ public class AnalyticsService implements Disposable {
 
     /**
      * myConnectionLostFlag must be a member of AnalyticsService and not of the AnalyticsInvocationHandler proxy.
-     * AnalyticsInvocationHandler may be replaced , AnalyticsService a singleton.
-     * the error that may happen is myConnectionLostFlag is a member of AnalyticsInvocationHandler is:
+     * AnalyticsInvocationHandler may be replaced , AnalyticsService is a singleton.
+     * the error that may happen if myConnectionLostFlag is a member of AnalyticsInvocationHandler is:
      * we got a connection error,myConnectionLostFlag is marked to true. user changes the url in settings,
      * AnalyticsInvocationHandler is replaced with a new instance and myConnectionLostFlag is false, the next successful
      * call will not reset the status, and we're locked in connection lost.
@@ -128,15 +128,23 @@ public class AnalyticsService implements Disposable {
         scheduleEnvironmentRefresh(this, environment);
 
         settingsState.addChangeListener(state -> {
+
+            boolean shouldReplaceClient = false;
+
             if (!Objects.equals(state.apiUrl, myApiUrl)) {
                 myApiUrl = state.apiUrl;
                 myApiToken = state.apiToken;
-                replaceClientAndFireChange(myApiUrl, myApiToken);
+                shouldReplaceClient = true;
             }
             if (!Objects.equals(state.apiToken, myApiToken)) {
                 myApiToken = state.apiToken;
+                shouldReplaceClient = true;
+            }
+
+            if (shouldReplaceClient) {
                 replaceClient(myApiUrl, myApiToken);
             }
+
         },this);
     }
 
@@ -151,7 +159,7 @@ public class AnalyticsService implements Disposable {
 
 
     //just replace the client and do not fire any events
-    //this method should be synchronized, and it shouldn't be a problem that really doesn't happen too often.
+    //this method should be synchronized, and it shouldn't be a problem, it doesn't happen too often.
     private synchronized void replaceClient(String url, String token) {
         if (analyticsProviderProxy != null) {
             try {
@@ -163,38 +171,7 @@ public class AnalyticsService implements Disposable {
         RestAnalyticsProvider analyticsProvider = new RestAnalyticsProvider(url, token);
         analyticsProviderProxy = newAnalyticsProviderProxy(analyticsProvider);
 
-        updateEnvironments(analyticsProvider);
-    }
-
-    private void updateEnvironments(RestAnalyticsProvider analyticsProvider) {
-        try{
-            var envs = analyticsProvider.getEnvironments();
-            environment.getEnvironments().clear();
-            environment.getEnvironments().addAll(envs);
-            var current = PersistenceService.getInstance().getState().getCurrentEnv();
-            if (environment.getEnvironments().contains(current)){
-                environment.setCurrentInternal(current);
-            }else if (!environment.getEnvironments().isEmpty()){
-                environment.setCurrentInternal(environment.getEnvironments().get(0));
-            }
-
-        }catch (Exception e){
-            Log.warnWithException(LOGGER,e,"error fetching environments");
-            environment.getEnvironments().clear();
-            environment.setCurrentInternal(null);
-            BackendConnectionMonitor.getInstance(project).connectionLost();
-        }
-    }
-
-
-
-    private void replaceClientAndFireChange(String url, String token) {
-
-        Backgroundable.ensureBackground(project, "Digma: Environments list changed", () -> {
-            var currentEnv = environment.getCurrent();
-            replaceClient(url, token);
-            environment.notifyChange(currentEnv);
-        });
+        environment.refreshNowOnBackground();
 
     }
 
@@ -604,10 +581,12 @@ public class AnalyticsService implements Disposable {
         private void handleInvocationTargetException(InvocationTargetException e, Method method, Object[] args) throws Throwable {
             boolean isConnectionException = isConnectionException(e) || isSslConnectionException(e);
             String message;
-            if (isConnectionException){
+            if (isConnectionException(e)) {
                 message = getConnectExceptionMessage(e);
-            }else{
+            } else if (isSslConnectionException(e)) {
                 message = getSslExceptionMessage(e);
+            } else {
+                message = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
             }
             if(isConnectionOK()){
                 //if more than one thread enter this section the worst that will happen is that we
@@ -621,10 +600,14 @@ public class AnalyticsService implements Disposable {
                             + message + ".<br> See logs for details.");
                 }
                 else{
-                    errorReportingHelper.addIfNewError(e);
                     Log.log(LOGGER::warn, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), e.getCause().getMessage());
-                    NotificationUtil.notifyError(project, "<html>Error with Digma backend api for method " + method.getName() + ".<br> "
-                            + message + ".<br> See logs for details.");
+                    if (errorReportingHelper.addIfNewError(e)) {
+                        NotificationUtil.notifyError(project, "<html>Error with Digma backend api for method " + method.getName() + ".<br> "
+                                + message + ".<br> See logs for details.");
+                        if (isEOFException(e)) {
+                            NotificationUtil.showBalloonWarning(project, "Digma API EOF error: " + message);
+                        }
+                    }
                 }
             }
             // status was not ok but it's a new error
@@ -788,6 +771,13 @@ public class AnalyticsService implements Disposable {
             return e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
         }
 
+        private boolean isEOFException(InvocationTargetException e) {
+            var ex = e.getCause();
+            while (ex != null && !(ex instanceof EOFException)) {
+                ex = ex.getCause();
+            }
+            return ex != null;
+        }
 
 
         private String resultToString(Object result) {

@@ -89,8 +89,12 @@
                         serviceImplementation="org.digma.intellij.plugin.insights.InsightsServiceImpl"/>
 
 
-        <notificationGroup id="Digma Notification Group"
+        <notificationGroup id="Digma Hidden Notification Group"
                            displayType="NONE"
+                           toolWindowId="Digma"/>
+
+        <notificationGroup id="Digma Sticky Balloon Notification Group"
+                           displayType="STICKY_BALLOON"
                            toolWindowId="Digma"/>
 
         <notificationGroup id="Digma Events Group"

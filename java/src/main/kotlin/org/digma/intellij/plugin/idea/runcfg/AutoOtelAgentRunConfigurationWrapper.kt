@@ -133,7 +133,7 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
         isTest: Boolean,
     ): String? {
 
-        val otelAgentPath = service<OTELJarProvider>().getOtelAgentJarPath()
+        val otelAgentPath = service<OTELJarProvider>().getOtelAgentJarPath(project)
         val digmaExtensionPath = service<OTELJarProvider>().getDigmaAgentExtensionJarPath()
         if (otelAgentPath == null || digmaExtensionPath == null) {
             Log.log(

@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.idea.runcfg
 
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.common.Retries
 import org.digma.intellij.plugin.log.Log
 import java.io.File
@@ -41,10 +42,18 @@ class OTELJarProvider {
     }
 
 
-    fun getOtelAgentJarPath(): String? {
+    fun getOtelAgentJarPath(project: Project): String? {
         ensureFilesExist()
         val otelJar = getOtelAgentJar()
-        return if (otelJar.exists()) otelJar.absolutePath else null
+         if (otelJar.exists()) {
+            if(project.basePath?.startsWith("//wsl$/") == true){
+                val driveLetter = otelJar.absolutePath[0].lowercase()
+                return "/mnt/" + driveLetter + otelJar.absolutePath.substring(2).replace("\\", "/")
+            }
+            return otelJar.absolutePath
+        }
+
+        return null
     }
 
     private fun getOtelAgentJar(): File {

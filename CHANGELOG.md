@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.159] - 2023-08-29
+## [2.0.160] - 2023-08-30
+- refresh connection status after changing url and force https in API url. by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1230
+- Modify agent path when using wsl run config by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1232
+- update build profiles by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1233
+
+## 2.0.159 - 2023-08-29
 - Update Recent Activity UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1223
 - report backend error with error reporter by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1216
 - fix possible exception in docker engine by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1222

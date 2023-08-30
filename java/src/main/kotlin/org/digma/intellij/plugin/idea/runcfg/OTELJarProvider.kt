@@ -48,7 +48,7 @@ class OTELJarProvider {
         val otelJar = getOtelAgentJar()
          if (otelJar.exists()) {
             if(SystemInfo.isWindows && project.basePath?.startsWith("//wsl$/") == true){
-                // Converting From: C:/Users/XXXXX/AppData/Local/Temp/digma-otel-jars/opentelemetry-javaagent.jar
+                // Converting From: C:\Users\asafc\AppData\Local\Temp\digma-otel-jars\opentelemetry-javaagent.jar
                 // To:              /mnt/c/Users/XXXXX/AppData/Local/Temp/digma-otel-jars/opentelemetry-javaagent.jar
                 val driveLetter = otelJar.absolutePath[0].lowercase()
                 return "/mnt/" + driveLetter + otelJar.absolutePath.substring(2).replace("\\", "/")

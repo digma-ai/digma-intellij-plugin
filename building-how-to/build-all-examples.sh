@@ -5,69 +5,69 @@
 set -e
 ###################   idea community
 
-# there is no need to send the lowest profile, its the default if not sent,its here just as example
+# there is no need to send the oldest profile, its the default if not sent,its here just as example
 
-./gradlew clean buildPlugin -PbuildProfile=lowest
-./gradlew clean buildPlugin -PbuildProfile=latest
-./gradlew clean buildPlugin -PbuildProfile=eap
+./gradlew clean buildPlugin -PbuildProfile=p223
+./gradlew clean buildPlugin -PbuildProfile=p231
+./gradlew clean buildPlugin -PbuildProfile=p232
 
 ## to run ide from command line
 ./gradlew clean buildPlugin runIde
-./gradlew clean buildPlugin runIde -PbuildProfile=latest
-./gradlew clean buildPlugin runIde -PbuildProfile=eap
+./gradlew clean buildPlugin runIde -PbuildProfile=p231
+./gradlew clean buildPlugin runIde -PbuildProfile=p232
 
 
 ## run idea community with python plugin installed , this is for testing that digma functions correctly
 ## when python plugin is installed.
 ## the python plugin version need to be updated when updating build profiles
-./gradlew clean runIde -PplatformPlugins=com.intellij.java,PythonCore:223.7571.182 -PbuildProfile=lowest
-./gradlew clean runIde -PplatformPlugins=com.intellij.java,PythonCore:231.8770.65 -PbuildProfile=latest
-./gradlew clean runIde -PplatformPlugins=com.intellij.java,PythonCore:232.8660.48 -PbuildProfile=eap
+./gradlew clean runIde -PplatformPlugins=com.intellij.java,PythonCore:223.7571.182 -PbuildProfile=p223
+./gradlew clean runIde -PplatformPlugins=com.intellij.java,PythonCore:231.8770.65 -PbuildProfile=p231
+./gradlew clean runIde -PplatformPlugins=com.intellij.java,PythonCore:232.8660.48 -PbuildProfile=p232
 
 
 ###################### idea ultimate
 
 ./gradlew clean buildPlugin -PbuildWIthUltimate=true
-./gradlew clean buildPlugin -PbuildWIthUltimate=true -PbuildProfile=latest
-./gradlew clean buildPlugin -PbuildWIthUltimate=true -PbuildProfile=eap
+./gradlew clean buildPlugin -PbuildWIthUltimate=true -PbuildProfile=p231
+./gradlew clean buildPlugin -PbuildWIthUltimate=true -PbuildProfile=p232
 
 ## to run ide from command line
 ./gradlew clean buildPlugin runIde -PbuildWIthUltimate=true
-./gradlew clean buildPlugin runIde -PbuildWIthUltimate=true -PbuildProfile=latest
-./gradlew clean buildPlugin runIde -PbuildWIthUltimate=true -PbuildProfile=eap
+./gradlew clean buildPlugin runIde -PbuildWIthUltimate=true -PbuildProfile=p231
+./gradlew clean buildPlugin runIde -PbuildWIthUltimate=true -PbuildProfile=p232
 
 
 
 
 #################  rider
 ./gradlew clean buildPlugin -PbuildWithRider=true
-./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=latest
-./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=eap
+./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=p231
+./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=p232
 
 ## to run ide from command line
 ./gradlew clean buildPlugin runIde -PbuildWithRider=true
-./gradlew clean buildPlugin runIde -PbuildWithRider=true -PbuildProfile=latest
-./gradlew clean buildPlugin runIde -PbuildWithRider=true -PbuildProfile=eap
+./gradlew clean buildPlugin runIde -PbuildWithRider=true -PbuildProfile=p231
+./gradlew clean buildPlugin runIde -PbuildWithRider=true -PbuildProfile=p232
 
 
 ######################  pycharm
 
 ./gradlew clean buildPlugin -PbuildWithPycharm=true
-./gradlew clean buildPlugin -PbuildWithPycharm=true -PbuildProfile=latest
-./gradlew clean buildPlugin -PbuildWithPycharm=true -PbuildProfile=eap
+./gradlew clean buildPlugin -PbuildWithPycharm=true -PbuildProfile=p231
+./gradlew clean buildPlugin -PbuildWithPycharm=true -PbuildProfile=p232
 
 ## to run ide from command line
 ./gradlew clean buildPlugin runIde -PbuildWithPycharm=true
-./gradlew clean buildPlugin runIde -PbuildWithPycharm=true -PbuildProfile=latest
-./gradlew clean buildPlugin runIde -PbuildWithPycharm=true -PbuildProfile=eap
+./gradlew clean buildPlugin runIde -PbuildWithPycharm=true -PbuildProfile=p231
+./gradlew clean buildPlugin runIde -PbuildWithPycharm=true -PbuildProfile=p232
 
 ######################  pycharm pro
 
 ./gradlew clean buildPlugin -PbuildWithPycharmPro=true
-./gradlew clean buildPlugin -PbuildWithPycharmPro=true -PbuildProfile=latest
-./gradlew clean buildPlugin -PbuildWithPycharmPro=true -PbuildProfile=eap
+./gradlew clean buildPlugin -PbuildWithPycharmPro=true -PbuildProfile=p231
+./gradlew clean buildPlugin -PbuildWithPycharmPro=true -PbuildProfile=p232
 
 ## to run ide from command line
 ./gradlew clean buildPlugin runIde -PbuildWithPycharmPro=true
-./gradlew clean buildPlugin runIde -PbuildWithPycharmPro=true -PbuildProfile=latest
-./gradlew clean buildPlugin runIde -PbuildWithPycharmPro=true -PbuildProfile=eap
+./gradlew clean buildPlugin runIde -PbuildWithPycharmPro=true -PbuildProfile=p231
+./gradlew clean buildPlugin runIde -PbuildWithPycharmPro=true -PbuildProfile=p232

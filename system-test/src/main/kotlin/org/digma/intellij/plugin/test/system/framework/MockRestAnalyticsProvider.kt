@@ -6,10 +6,14 @@ import com.thoughtworks.qdox.model.JavaClass
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.rest.AboutResult
+import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse
 import org.digma.intellij.plugin.model.rest.insights.Duration
+import org.digma.intellij.plugin.model.rest.insights.InsightStatus
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsRequest
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse
+import org.digma.intellij.plugin.model.rest.insights.MethodWithInsightStatus
 import org.digma.intellij.plugin.model.rest.livedata.DurationData
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveDataRequest
@@ -24,6 +28,7 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import java.sql.Timestamp
 import java.util.Date
+import java.util.List
 
 
 private val logger = Logger.getInstance(Throwable().stackTrace[1].fileName)
@@ -60,19 +65,20 @@ fun mockRestAnalyticsProvider(project: Project) {
     mockGetRecentActivity()
     mockGetInsightsOfMethods()
     mockGetPerformanceMetrics()
+    mockGetCodeObjectInsightsStatus()
     Log.test(logger::info, "RestAnalyticsProvider mock created")
 }
 
 fun mockGetAbout() {
     `when`(mock?.getAbout()).thenAnswer {
-        Log.test(logger::info, "mock getAbout")
+//        Log.test(logger::info, "mock getAbout")
         AboutResult("1.0.0", BackendDeploymentType.Unknown)
     }
 }
 
 private fun mockGetEnvironments() {
     `when`(mock?.getEnvironments()).thenAnswer {
-        Log.test(logger::info, "mock getEnvironments - $environmentList")
+//        Log.test(logger::info, "mock getEnvironments - $environmentList")
         return@thenAnswer environmentList
     }
 }
@@ -87,7 +93,7 @@ private fun mockGetRecentActivity() {
 private fun mockGetInsightsOfMethods() {
     `when`(mock?.getInsightsOfMethods(isA(InsightsOfMethodsRequest::class.java))).thenAnswer {
         val currEnv = (it.arguments[0] as InsightsOfMethodsRequest).environment
-        Log.test(logger::info, "mock getInsightsOfMethods - ${expectedInsightsOfMethodsResponseEnv1.methodsWithInsights}")
+//        Log.test(logger::info, "mock getInsightsOfMethods - ${expectedInsightsOfMethodsResponseEnv1.methodsWithInsights}")
         return@thenAnswer if (currEnv == environmentList[0]) expectedInsightsOfMethodsResponseEnv1 else expectedInsightsOfMethodsResponseEnv2
     }
 }
@@ -145,4 +151,28 @@ fun createPerformanceMetricsResult(): PerformanceMetricsResponse {
         serverStartTime = Date(),
         probeTime = Date()
     )
+}
+
+fun mockGetCodeObjectInsightsStatus() {
+    `when`(mock?.getCodeObjectInsightStatus(isA(InsightsOfMethodsRequest::class.java))).thenAnswer {
+        Log.test(logger::info, "mock getCodeObjectInsightsStatus")
+
+        return@thenAnswer CodeObjectInsightsStatusResponse(
+            environment = environmentList[0], 
+            codeObjectsWithInsightsStatus = listOf(
+                MethodWithInsightStatus(
+                    methodWithIds = methodCodeObject1,
+                    insightStatus = InsightStatus.InsightExist
+                ),
+                MethodWithInsightStatus(
+                    methodWithIds = methodCodeObject2,
+                    insightStatus = InsightStatus.InsightExist
+                ),
+                MethodWithInsightStatus(
+                    methodWithIds = methodCodeObject3,
+                    insightStatus = InsightStatus.InsightExist
+                ),
+            ))
+
+    }
 }

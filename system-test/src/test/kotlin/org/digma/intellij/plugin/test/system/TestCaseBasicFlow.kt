@@ -25,7 +25,7 @@ import org.digma.intellij.plugin.test.system.framework.expectedInsightsOfMethods
 import org.digma.intellij.plugin.test.system.framework.mockRestAnalyticsProvider
 import org.junit.Rule
 
-class TestCaseBasicFlow : LightJavaCodeInsightFixtureTestCase(), Disposable {
+class TestCaseBasicFlow : LightJavaCodeInsightFixtureTestCase() {
 
     private val document1Name: String = "EditorEventsHandler.java"
     private val document2Name: String = "EditorEventsHandler2.java"
@@ -48,7 +48,7 @@ class TestCaseBasicFlow : LightJavaCodeInsightFixtureTestCase(), Disposable {
         super.setUp()
         done.complete = false
         mockRestAnalyticsProvider(project)
-        messageBusTestListeners = MessageBusTestListeners(project.messageBus, this)
+        messageBusTestListeners = MessageBusTestListeners(project.messageBus)
     }
 
     override fun tearDown() {
@@ -69,11 +69,6 @@ class TestCaseBasicFlow : LightJavaCodeInsightFixtureTestCase(), Disposable {
         } catch (e: Exception) {
             Log.test(logger::error, "Exception in tearDown {}", e.message)
         }
-    }
-
-    override fun dispose() {
-        // do something then the class is disposed
-        messageBusTestListeners.disconnectAll()
     }
 
     override fun getTestDataPath(): String {

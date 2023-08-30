@@ -5,13 +5,13 @@
       <option name="executionName" />
       <option name="externalProjectPath" value="$PROJECT_DIR$" />
       <option name="externalSystemIdString" value="GRADLE" />
-      <option name="scriptParameters" value="-PbuildWithPycharmPro=true -PbuildProfile=eap"/>
+        <option name="scriptParameters" value="-PbuildWithPycharmPro=true -PbuildProfile=eap"/>
       <option name="taskDescriptions">
         <list />
       </option>
       <option name="taskNames">
         <list>
-          <option value="buildPlugin"/>
+            <option value="buildPlugin"/>
           <option value="runIde" />
         </list>
       </option>

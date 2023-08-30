@@ -9,7 +9,7 @@ jobs:
   call-publish-workflow:
     strategy:
       matrix:
-        profile: [ lowest, latest, eap ]
+        profile: [ p223, p231, p232 ]
     uses: ./.github/workflows/publish-workflow.yml
     with:
       build-profile: ${{ matrix.profile }}

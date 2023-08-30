@@ -1,11 +1,11 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Run Pycharm Pro - Lowest" type="GradleRunConfiguration" factoryName="Gradle">
-    <log_file alias="idea.log" path="$PROJECT_DIR$/build/idea-sandbox/system/log/idea_PY.log" />
+  <configuration default="false" name="Run Pycharm - 2022.3" type="GradleRunConfiguration" factoryName="Gradle">
+    <log_file alias="idea.log" path="$PROJECT_DIR$/build/idea-sandbox/system/log/idea_PC.log" />
     <ExternalSystemSettings>
       <option name="executionName" />
       <option name="externalProjectPath" value="$PROJECT_DIR$" />
       <option name="externalSystemIdString" value="GRADLE" />
-      <option name="scriptParameters" value="-PbuildWithPycharmPro=true -PbuildProfile=lowest"/>
+      <option name="scriptParameters" value="-PbuildWithPycharm=true -PbuildProfile=p223"/>
       <option name="taskDescriptions">
         <list />
       </option>

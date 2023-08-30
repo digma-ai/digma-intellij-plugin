@@ -1,18 +1,94 @@
 
 
-see build-all.sh for examples.
+see build-all-examples.sh and build-all-profiles.sh for examples.
+
+## Motivation
+###########################################################
+the motivation is to be able to build for different intellij releases without maintaining branches.
+
+Note:
+The build profiles require constant maintenance. when a new intellij patch is released we need to update
+the corresponding profile so that we use the latest patch when building and testing.
+EAP profile requires constant maintenance as new snapshots are released.
+Rider and rd-gen require updating as new rd-gen versions are released.
+etc.
+this is a work that never ends.
+
 
 
 ## Build
 ############################################################
 
-the project can build 3 profiles: lowest, latest and eap.
+the project can build few profiles, each profile correspond to an intellij release, for example: p223, p231, p232
 
-the motivation is to be able to build for different intellij releases without maintaining branches.
+the profile names are the first 3 digits of intellij build number with a 'p' prefix. intellij build numbers
+always start with 3 digits that correspond to the major release.
+for example:
+builds of release 2022.3 will start with 223.xxx.xxx, and also all patches like 2022.3.1,2022.3.2 etc.
+builds of release 2023.2 will start with 232.xxx.xxx
 
-lowest build with the lowest version supported, for example 2022.3.1
-latest builds for the latest intellij release, for example 2023.1.3
-eap build for the EAP version, for example 2023.2
+the profile for EAP will be the same format, for example if the next EAP is 2023.3 the profile name will be p233.
+
+
+## Adding Profiles
+#############################################################
+when a new intellij version start,usually with EAP builds, we should add a profile for the EAP. adding a profile
+for EAP is a bit more difficult, not all products have the same build numbers and snapshots, and sometimes it takes time
+to find all the relevant information. EAP requires constant maintenance every few days because new snapshots are released
+almost every day.
+the EAP profile is marked with isEAP = true.
+when EAP is releases the profile needs to be updated to the release versions and marked isEAP = false.
+Note that EAP build may fail often, so it needs constant care to make sure our github workflows don't fail.
+
+to add a profile:
+in buildSrc/src/main/kotlin/common/BuildProfile.kt:
+ add the new profile to the Profiles enum.
+ add the profile to the profiles map.
+in building-how-to/build-all-profiles.sh:
+ add build lines for the new profile.
+in .github/workflows
+ fine all root workflows that have a matrix strategy with the list of profiles and add the new profile.
+add new run configurations for the new profile.
+
+## Removing old profiles
+#############################################################
+as new releases come out, older versions become more difficult to maintain because of API changes or build system changes,
+sometimes new releases require changes in gradle build scripts that will not work with older versions.
+we try to keep support for as many releases as possible without too much work. if it becomes too difficult to support
+older releases we can remove the oldest profiles.
+we must support at least 2 versions plus the next EAP.
+
+to remove a profile do the revers of adding a profile.
+
+
+## Profile aliases
+############################################################
+There are convenient aliases for building the lowest, latest or eap profiles.
+./gradlew clean buildPlugin -PbuildProfile=lowest
+./gradlew clean buildPlugin -PbuildProfile=latest
+./gradlew clean buildPlugin -PbuildProfile=eap
+
+
+
+## Run configurations
+##############################################################
+There is a run configuration for each profile that can be used to test the plugin with the different intellij release.
+there are run configuration for all the products we support and every release we support.
+
+There is a special run configuration for EAP that uses profile alias.
+
+
+
+## Rider notes
+##############################################################
+rider uses the library rd-gen which should be different version for each IDE version.
+see in settings.gradle.kts
+need to map the profile name to a suitable rd-gen version and also support the correct profile alias lowest,latest,eap.
+
+
+
+## How to use
+##############################################################
 
 profiles are declared in buildSrc/src/main/kotlin/common/BuildProfile.kt
 a profile holds a few properties for the project, mainly platformVersion,riderVersion and more.
@@ -36,21 +112,22 @@ data class BuildProfile(
 a profile is activated by a gradle property: buildProfile=[PROFILE]
 
 for example:
-./gradlew clean buildPlugin -PbuildProfile=latest
+./gradlew clean buildPlugin -PbuildProfile=p223
 or
-./gradlew clean buildPlugin -PbuildProfile=eap
+./gradlew clean buildPlugin -PbuildProfile=p232
 
-when there is no profile the lowest profile is active.
+when there is no profile the oldest release profile is active.
 
 
 ## How to build
 ############################################################
 
-If you built the project with lowest profile, and now you want to build with latest its necessary to clean before mainly
+If you built the project with p223 profile, and now you want to build with p232 its necessary to clean before, mainly
 because of some leftovers from previous build.
 so a workflow could be something like:
 you start a branch for some feature, do a clean build. form now on you work as usual. if you now want to
-build and test with latest or eap, do a clean build again.
+build and test with p231 or p232, do a clean build again.
+
 
 
 
@@ -73,19 +150,19 @@ RD=rider
 
 the plugin version is in version.properties and is the base plugin version, for example 2.0.90.
 the final plugin zip will have a version that includes the intellij release code,
-for example: 2.0.90.231, this is the version in plugin.xml.
+for example: 2.0.90+231, this is the version in plugin.xml.
 this code is also used in sinceBuild=232 untilBuild=232.* in plugin.xml.
 
-so 2.0.90.223 can be installed on 2022.3.*
-and 2.0.90.231 can be installed on 2023.1.*
-and 2.0.90.232 can be installed on 2023.2.*
+so 2.0.90+223 can be installed on 2022.3.*
+and 2.0.90+231 can be installed on 2023.1.*
+and 2.0.90+232 can be installed on 2023.2.*
 
 
 
 ## Build with specific IDE:
 ############################################################
 
-besides the profile the build supports building with specific IDE.
+besides the profiles, the build supports building with specific IDE.
 usually a plugin can be built with the base platform , in our plugin, ide-common compiles
 with the base platform. rider module compiles with rider, python compiles with idea+python plugin.
 
@@ -97,13 +174,13 @@ buildWithPycharm
 buildWithPycharmPro
 if not supplied the default is IC
 
-when supplied then some modules will compile with the supplied IDE, ide-common and the main root module.
+when supplied, then some modules will compile with the supplied IDE, ide-common and the main root module.
 this can be used instead of running plugin verifier.
 
 for example:
-./gradlew clean buildPlugin -PbuildWIthUltimate=true -PbuildProfile=latest
+./gradlew clean buildPlugin -PbuildWIthUltimate=true -PbuildProfile=p232
 or
-./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=eap
+./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=p232
 
 
 
@@ -111,11 +188,11 @@ or
 ############################################################
 
 when buildProfile is activated it changes versions only for the build, your project in the IDE still compiles
-with the lowest profile.
-its possible to load a different platfor version in the IDE.
+with the oldest profile.
+it's possible to load a different platform version in the IDE.
 for example to load the latest version in Idea, add in gradle.properties
 
-buildProfile=latest/eap
+buildProfile=p232
 
 that will load the profile dependencies to idea, doing that you can develop with another intellij version.
 
@@ -149,7 +226,7 @@ using JetBrains.RdBackend.Common.Features;
 
 
 in kotlin/java it is probably possible to do things with reflection for different intellij versions.
-pr use different source base, or additional source bases.
+or use different source base, or additional source bases.
 currently there was no need, but solutions are there.
 
 
@@ -162,8 +239,8 @@ and it's also possible to launch an IDE from command line:
 see build-all.sh for examples.
 
 for example:
-./gradlew clean buildPlugin runIde -PbuildWithRider=true -PbuildProfile=eap
-./gradlew clean buildPlugin -PbuildWithPycharm=true -PbuildProfile=eap
+./gradlew clean buildPlugin runIde -PbuildWithRider=true -PbuildProfile=p232
+./gradlew clean buildPlugin -PbuildWithPycharm=true -PbuildProfile=p232
 
 if you run for example idea latest and now want to run rider eap a clean is necessary.
 
@@ -176,9 +253,8 @@ to download and install for specific IDE find the corresponding workflow and dow
 
 the publish workflow runs 3 times when releasing and publishes 3 versions to marketplace.
 for example:
-2.0.93.223
-2.0.93.231
-2.0.93.232
+2.0.93+223
+2.0.93+231
+2.0.93+232
 
-the base plugin version is bumped tp 2.0.93.
 

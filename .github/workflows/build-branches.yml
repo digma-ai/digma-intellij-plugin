@@ -10,7 +10,7 @@ jobs:
   call-build-workflow:
     strategy:
       matrix:
-        profile: [ lowest, latest, eap ]
+        profile: [ p223, p231, p232 ]
     uses: ./.github/workflows/build-workflow.yml
     with:
       build-profile: ${{ matrix.profile }}

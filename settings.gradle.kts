@@ -17,8 +17,9 @@ pluginManagement {
                 val rdGenVersion = if (settings.providers.gradleProperty("buildProfile").isPresent) {
                     val profile = settings.providers.gradleProperty("buildProfile").get()
                     when (profile) {
-                        "latest" -> "2023.2.0"
-                        "eap" -> "2023.2.2"
+                        "p231" -> "2023.2.0"
+                        "p232", "latest" -> "2023.2.2"
+                        "p233", "eap" -> "2023.2.2"
                         else -> "2023.2.0"
                     }
                 } else {

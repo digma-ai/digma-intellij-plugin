@@ -10,6 +10,7 @@ import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.jcef.JBCefBrowser;
+import kotlin.reflect.jvm.internal.ReflectProperties;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.callback.CefQueryCallback;
@@ -41,7 +42,7 @@ import java.util.List;
 import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStart;
 import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStop;
 
-class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
+public class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
     private static final Logger LOGGER = Logger.getInstance(InsightsMessageRouterHandler.class);
 
@@ -56,14 +57,14 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
         this.jbCefBrowser = jbCefBrowser;
         objectMapper = new ObjectMapper();
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        objectMapper.setDateFormat( new StdDateFormat());
+        objectMapper.setDateFormat(new StdDateFormat());
     }
 
 
     @Override
     public boolean onQuery(CefBrowser browser, CefFrame frame, long queryId, String request, boolean persistent, CefQueryCallback callback) {
 
-        Backgroundable.executeOnPooledThread( () -> {
+        Backgroundable.executeOnPooledThread(() -> {
             try {
 
                 var stopWatch = stopWatchStart();
@@ -123,7 +124,7 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
                     default -> throw new IllegalStateException("Unexpected value: " + action);
                 }
 
-                stopWatchStop(stopWatch, time -> Log.log(LOGGER::trace, "action {} took {}",action, time));
+                stopWatchStop(stopWatch, time -> Log.log(LOGGER::trace, "action {} took {}", action, time));
 
             } catch (Exception e) {
                 Log.debugWithException(LOGGER, e, "Exception in onQuery " + request);
@@ -255,17 +256,21 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
                       boolean hasMissingDependency,
                       boolean canInstrumentMethod,
                       boolean needsObservabilityFix) {
-
+        
+        Log.test(LOGGER::info, "pushing insights to webview");
 
         var payload = new InsightsPayload(insights, spans, assetId, serviceName, environment, uiInsightsStatus, viewMode, methods, hasMissingDependency, canInstrumentMethod, needsObservabilityFix);
 
 
         var message = new SetInsightsDataMessage("digma", "INSIGHTS/SET_DATA", payload);
         Log.log(LOGGER::debug, project, "sending INSIGHTS/SET_DATA message");
+        Log.test(LOGGER::info, "sending INSIGHTS/SET_DATA message");
         try {
-            jbCefBrowser.getCefBrowser().executeJavaScript(
+//            JCefBrowserUtil.postJSMessage(objectMapper.writeValueAsString(message), jbCefBrowser);
+            CefBrowser brow = jbCefBrowser.getCefBrowser();
+                    brow.executeJavaScript(
                     "window.postMessage(" + objectMapper.writeValueAsString(message) + ");",
-                    jbCefBrowser.getCefBrowser().getURL(),
+                    brow.getURL(),
                     0);
         } catch (JsonProcessingException e) {
             Log.warnWithException(LOGGER, project, e, "Error sending message to webview");
@@ -277,9 +282,11 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
         var message = new SetInsightsDataMessage("digma", "INSIGHTS/SET_DATA", InsightsPayload.EMPTY_INSIGHTS);
         try {
-            jbCefBrowser.getCefBrowser().executeJavaScript(
+            CefBrowser brow = jbCefBrowser.getCefBrowser();
+            String url = brow.getURL();
+            brow.executeJavaScript(
                     "window.postMessage(" + objectMapper.writeValueAsString(message) + ");",
-                    jbCefBrowser.getCefBrowser().getURL(),
+                    url,
                     0);
         } catch (JsonProcessingException e) {
             Log.warnWithException(LOGGER, project, e, "Error sending message to webview");

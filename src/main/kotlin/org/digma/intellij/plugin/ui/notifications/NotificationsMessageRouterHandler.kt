@@ -34,7 +34,7 @@ abstract class NotificationsMessageRouterHandler(project: Project) : BaseMessage
         when (action) {
 
             "NOTIFICATIONS/GET_DATA" -> {
-                Log.log(logger::trace, project, "got NOTIFICATIONS/GET_DATA message")
+                Log.log(logger::trace, project, "got NOTIFICATIONS/GET_DATA message {}", requestJsonNode)
 
                 Backgroundable.executeOnPooledThread {
 

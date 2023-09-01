@@ -11,16 +11,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.findActiveProject
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import java.util.concurrent.atomic.AtomicBoolean
 
 @Service(Service.Level.APP)
-class ContinuousPerformanceMetricsMonitor: Disposable {
+class ContinuousPerformanceMetricsMonitor : Disposable {
 
-    companion object{
-        val logger = Logger.getInstance(this::class.java)
-    }
-
+    private val logger = Logger.getInstance(this::class.java)
 
     private val timerStarted: AtomicBoolean = AtomicBoolean(false)
 
@@ -29,13 +27,13 @@ class ContinuousPerformanceMetricsMonitor: Disposable {
     }
 
     init {
-        Log.log(logger::info,"Starting ContinuousPerformanceMetricsMonitor")
+        Log.log(logger::info, "Starting ContinuousPerformanceMetricsMonitor")
         startTimer()
     }
 
     private fun startTimer() {
 
-        if (timerStarted.get()){
+        if (timerStarted.get()) {
             return
         }
 
@@ -43,16 +41,21 @@ class ContinuousPerformanceMetricsMonitor: Disposable {
         @Suppress("UnstableApiUsage")
         DisposingScope(this).launch {
             while (true) {
-                delay(12*60*60*1000) //every 12 Hr  12*60*60*1000
+                delay(12 * 60 * 60 * 1000) //every 12 Hr  12*60*60*1000
                 findActiveProject()?.let { project ->
-                    val result = AnalyticsService.getInstance(project).performanceMetrics
-                    if (result.metrics.isNotEmpty()) {
-                        for (metric in result.metrics) {
-                            if(metric.metric == "TraceRateTimeSeries" || metric.metric == "SpanRateTimeSeries"){
-                                metric.value = (metric.value as ArrayList<LinkedHashMap<String,Double>>).filter { it["value"] != 0.0 }.toList()
+                    try {
+                        val result = AnalyticsService.getInstance(project).performanceMetrics
+                        if (result.metrics.isNotEmpty()) {
+                            for (metric in result.metrics) {
+                                if (metric.metric == "TraceRateTimeSeries" || metric.metric == "SpanRateTimeSeries") {
+                                    metric.value = (metric.value as ArrayList<LinkedHashMap<String, Double>>).filter { it["value"] != 0.0 }.toList()
+                                }
                             }
+                            ActivityMonitor.getInstance(project).registerContinuousPerformanceMetrics(result)
                         }
-                        ActivityMonitor.getInstance(project).registerContinuousPerformanceMetrics(result)
+                    } catch (e: Exception) {
+                        Log.warnWithException(logger, e, "exception in getPerformanceMetrics")
+                        ErrorReporter.getInstance().reportError(project, "ContinuousPerformanceMetricsMonitor.loop", e)
                     }
                 }
             }
@@ -61,7 +64,7 @@ class ContinuousPerformanceMetricsMonitor: Disposable {
 }
 
 
-class ContinuousPerformanceMetricsMonitorStartupActivity: StartupActivity {
+class ContinuousPerformanceMetricsMonitorStartupActivity : StartupActivity {
     override fun runActivity(project: Project) {
         service<ContinuousPerformanceMetricsMonitor>()
     }

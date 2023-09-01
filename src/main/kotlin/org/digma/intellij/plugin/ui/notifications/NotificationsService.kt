@@ -25,8 +25,14 @@ class NotificationsService(val project: Project) : Disposable {
 
     private val logger = Logger.getInstance(this::class.java)
 
+    private var notificationsButton: NotificationsButton? = null
+
     override fun dispose() {
         //nothing to do ,used as parent disposable
+    }
+
+    fun setBell(notificationsButton: NotificationsButton) {
+        this.notificationsButton = notificationsButton
     }
 
 
@@ -60,6 +66,8 @@ class NotificationsService(val project: Project) : Disposable {
             Log.warnWithException(logger, project, e, "exception in setReadNotificationsTime")
             ErrorReporter.getInstance().reportError(project, "NotificationsService.setReadNotificationsTime", e)
         }
+
+        notificationsButton?.checkUnread()
     }
 
     fun goToSpan(spanCodeObjectId: String) {
@@ -96,6 +104,4 @@ class NotificationsService(val project: Project) : Disposable {
                 ZonedDateTime.now().minus(1, ChronoUnit.DAYS).withZoneSameInstant(ZoneOffset.UTC).toString()
         }
     }
-
-
 }

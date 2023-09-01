@@ -198,11 +198,6 @@ object Laf {
                 @JvmStatic val LiveIconLight = SvgIcon.asIs("/icons/live-icon-light.svg")
                 @JvmStatic val NavPrevDark = SvgIcon.asIs("/icons/nav-prev-dark.svg")
                 @JvmStatic val NavPrevLight = SvgIcon.asIs("/icons/nav-prev-light.svg")
-
-                //                @JvmStatic val NotificationsBellDark = SvgIcon.asIs("/icons/notification-bell-dark.svg")
-//                @JvmStatic val NotificationsBellLight = SvgIcon.asIs("/icons/notification-bell-light.svg")
-//                @JvmStatic val NotificationsBellDark = IconsUtil.loadAndScaleIconObjectByWidth("/icons/notification-bell-dark.svg",22)
-//                @JvmStatic val NotificationsBellLight = IconsUtil.loadAndScaleIconObjectByWidth("/icons/notification-bell-light.svg",22)
                 @JvmStatic
                 val NotificationsBellDark =
                     IconUtil.scale(SvgIcon.asIs("/icons/notification-bell-dark.svg"), ScaleContext.create(ScaleType.OBJ_SCALE.of(2.0)))

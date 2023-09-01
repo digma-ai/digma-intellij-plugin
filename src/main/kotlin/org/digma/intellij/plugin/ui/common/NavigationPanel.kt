@@ -71,12 +71,6 @@ class NavigationPanel(private val project: Project) : JPanel() {
         buttonsPanel.add(getNotificationsButton())
         buttonsPanel.add(getSettingsButton())
         return buttonsPanel
-//        val buttonsPanel = JPanel(BorderLayout())
-//        buttonsPanel.add(getNotificationsButton(), BorderLayout.WEST)
-//        buttonsPanel.add(getSettingsButton(), BorderLayout.EAST)
-//        buttonsPanel.border = JBUI.Borders.empty()
-//        buttonsPanel.background = Laf.Colors.EDITOR_BACKGROUND
-//        return buttonsPanel
     }
 
 
@@ -148,10 +142,5 @@ class NavigationPanel(private val project: Project) : JPanel() {
         notificationsButton.preferredSize = buttonsSize
         notificationsButton.maximumSize = buttonsSize
         return notificationsButton
-//        val wrapper = JPanel()
-//        wrapper.isOpaque = false
-//        wrapper.layout = FlowLayout(FlowLayout.CENTER, 10, 5)
-//        wrapper.add(notificationsButton)
-//        return wrapper
     }
 }

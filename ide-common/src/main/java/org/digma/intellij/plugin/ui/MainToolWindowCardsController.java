@@ -34,7 +34,6 @@ public class MainToolWindowCardsController implements Disposable {
 
     private static final Logger LOGGER = Logger.getInstance(MainToolWindowCardsController.class);
 
-
     public enum MainWindowCard {
         MAIN, NO_CONNECTION
     }
@@ -64,7 +63,7 @@ public class MainToolWindowCardsController implements Disposable {
     private TroubleshootingComponents troubleshooting = new TroubleshootingComponents();
     private Supplier<DisposablePanel> troubleshootingPanelBuilder;
 
-    private NotificationsComponents notifications = new NotificationsComponents();
+    private final NotificationsComponents notifications = new NotificationsComponents();
     private Supplier<DisposablePanel> allNotificationsPanelBuilder;
 
     private final AtomicBoolean isConnectionLost = new AtomicBoolean(false);
@@ -261,21 +260,32 @@ public class MainToolWindowCardsController implements Disposable {
     }
 
 
+    public void closeAllNotificationsIfShowing() {
+        if (notifications.isOn()) {
+            closeAllNotifications();
+        }
+    }
+
+
     public void closeAllNotifications() {
         Log.log(LOGGER::debug, "closeAllNotifications called");
 
-        if (notifications.isOn()) {
-            toolWindow.getContentManager().removeContent(notifications.notificationsContent, true);
-            toolWindow.getContentManager().addContent(mainContent);
-            //dispose the notifications panel which will dispose the jcef browser
-            notifications.notificationsPanel.dispose();
-            notifications.notificationsContent = null;
-            notifications.notificationsPanel = null;
+        EDT.ensureEDT(() -> {
+            if (notifications.isOn()) {
+                toolWindow.getContentManager().removeContent(notifications.notificationsContent, true);
+                toolWindow.getContentManager().addContent(mainContent);
+                //dispose the notifications panel which will dispose the jcef browser
+                notifications.notificationsPanel.dispose();
+                notifications.notificationsContent = null;
+                notifications.notificationsPanel = null;
 
-        } else {
-            Log.log(LOGGER::debug, project, "closeAllNotifications was called but notifications is not on.");
-        }
+            } else {
+                Log.log(LOGGER::debug, project, "closeAllNotifications was called but notifications is not on.");
+            }
+        });
+
     }
+
 
 
 

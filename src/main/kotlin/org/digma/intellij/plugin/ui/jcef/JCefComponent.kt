@@ -102,7 +102,6 @@ class JCefComponentBuilder(val project: Project) {
         Objects.requireNonNull(schemeHandlerFactory, "schemeHandlerFactory must not be null")
 
         CefApp.getInstance().registerSchemeHandlerFactory(
-//            "http", DOMAIN_NAME, AssetsSchemeHandlerFactory(project)
             schemeHandlerFactory!!.getSchema(), schemeHandlerFactory.getDomain(), schemeHandlerFactory
         )
     }

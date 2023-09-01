@@ -19,8 +19,6 @@ data class PersistenceData(
     var userId: String? = null,
     var firstTimePerformanceMetrics: Boolean = false,
     var lastInsightsEventTime: String? = null,
-
     var noInsightsYetNotificationPassed: Boolean = false,
-
     var notificationsStartDate: String? = null,
 )

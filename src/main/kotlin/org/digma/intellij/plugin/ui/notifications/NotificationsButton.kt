@@ -16,9 +16,12 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.common.Laf
+import org.digma.intellij.plugin.ui.scaled
 import java.awt.Cursor
+import java.awt.Dimension
 import javax.swing.Icon
 import javax.swing.JButton
 
@@ -62,6 +65,8 @@ class NotificationsButton(val project: Project) : JButton() {
 
         updateState()
 
+        project.service<NotificationsService>().setBell(this)
+
         addActionListener {
             doActionListener()
         }
@@ -70,22 +75,29 @@ class NotificationsButton(val project: Project) : JButton() {
         @Suppress("UnstableApiUsage")
         DisposingScope(project.service<NotificationsService>()).launch {
 
-            val notificationsService = project.service<NotificationsService>()
             while (isActive) {
-                try {
-                    delay(10000)
+                delay(10000)
 
-                    val hasUnread = notificationsService.hasUnreadNotifications()
-
-                    if (hasUnread != hasUnreadNotifications) {
-                        hasUnreadNotifications = hasUnread
-                        updateState()
-                    }
-                } catch (e: Exception) {
-                    Log.warnWithException(logger, project, e, "exception in NotificationsButton refresh loop")
-                    ErrorReporter.getInstance().reportError(project, "NotificationsButton.refreshLoop", e)
-                }
+                checkUnread()
             }
+        }
+    }
+
+
+    fun checkUnread() {
+        try {
+
+            val notificationsService = project.service<NotificationsService>()
+
+            val hasUnread = notificationsService.hasUnreadNotifications()
+
+            if (hasUnread != hasUnreadNotifications) {
+                hasUnreadNotifications = hasUnread
+                updateState()
+            }
+        } catch (e: Exception) {
+            Log.warnWithException(logger, project, e, "exception in NotificationsButton refresh loop")
+            ErrorReporter.getInstance().reportError(project, "NotificationsButton.refreshLoop", e)
         }
     }
 
@@ -94,7 +106,15 @@ class NotificationsButton(val project: Project) : JButton() {
 
         try {
 
+            ActivityMonitor.getInstance(project).registerNotificationCenterEvent("NotificationsBellClicked", mapOf())
+
             val topNotificationsPanel = TopNotificationsPanel(project)
+
+            ToolWindowShower.getInstance(project).toolWindow?.component?.let {
+                val w = minOf(maxOf(it.width, 400.scaled()), 400.scaled())
+                val h = minOf(maxOf(it.height, 500.scaled()), 500.scaled())
+                topNotificationsPanel.preferredSize = Dimension(w, h)
+            }
 
             val jbPopup = JBPopupFactory.getInstance().createComponentPopupBuilder(topNotificationsPanel, null)
                 .setProject(project)

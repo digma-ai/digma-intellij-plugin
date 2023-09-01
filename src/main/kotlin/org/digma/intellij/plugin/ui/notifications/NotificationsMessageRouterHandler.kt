@@ -9,6 +9,7 @@ import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.executeWindowPostMessageJavaScript
@@ -61,13 +62,15 @@ abstract class NotificationsMessageRouterHandler(project: Project) : BaseMessage
             }
 
             "NOTIFICATIONS/GO_TO_SPAN" -> {
+                ActivityMonitor.getInstance(project).registerNotificationCenterEvent("${javaClass.simpleName}SpanClicked", mapOf())
                 Log.log(logger::trace, project, "got NOTIFICATIONS/GO_TO_SPAN message")
+                doClose()
                 val spanCodeObjectId: String = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("spanCodeObjectId").asText()
                 project.service<NotificationsService>().goToSpan(spanCodeObjectId)
-                doClose()
             }
 
             "NOTIFICATIONS/CLOSE" -> {
+                ActivityMonitor.getInstance(project).registerNotificationCenterEvent("${javaClass.simpleName}Closed", mapOf())
                 Log.log(logger::trace, project, "got NOTIFICATIONS/CLOSE message")
                 //if there are no notifications upToDateTime will not exist in the payload
                 val upToDateTime = tryGetFieldFromPayload(objectMapper, requestJsonNode, "upToDateTime")
@@ -96,6 +99,7 @@ class TopNotificationsMessageRouterHandler(project: Project, private val topNoti
         when (action) {
 
             "NOTIFICATIONS/GO_TO_NOTIFICATIONS" -> {
+                ActivityMonitor.getInstance(project).registerNotificationCenterEvent("NotificationsViewAllClicked", mapOf())
                 Log.log(logger::trace, project, "got NOTIFICATIONS/GO_TO_NOTIFICATIONS message")
                 doClose()
                 EDT.ensureEDT {
@@ -125,13 +129,12 @@ class TopNotificationsMessageRouterHandler(project: Project, private val topNoti
 }
 
 
-class AllNotificationsMessageRouterHandler(project: Project, private val allNotificationsPanel: AllNotificationsPanel) :
+class AllNotificationsMessageRouterHandler(project: Project) :
     NotificationsMessageRouterHandler(project) {
 
     override fun doClose() {
         EDT.ensureEDT {
             MainToolWindowCardsController.getInstance(project).closeAllNotifications()
-            allNotificationsPanel.dispose()
         }
     }
 

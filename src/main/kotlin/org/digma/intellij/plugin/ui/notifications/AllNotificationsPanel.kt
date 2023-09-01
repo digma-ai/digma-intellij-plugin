@@ -33,7 +33,7 @@ class AllNotificationsPanel(private val project: Project) : DisposablePanel() {
 
             jCefComponent = JCefComponentBuilder(project)
                 .url(NOTIFICATIONS_URL)
-                .messageRouterHandler(AllNotificationsMessageRouterHandler(project, this))
+                .messageRouterHandler(AllNotificationsMessageRouterHandler(project))
                 .schemeHandlerFactory(NotificationsSchemeHandlerFactory(project, NotificationViewMode.full))
                 .build()
 
@@ -45,12 +45,7 @@ class AllNotificationsPanel(private val project: Project) : DisposablePanel() {
     }
 
 
-    //call when clicking the X button
-    fun close() {
-        dispose()
-    }
-
-
+    //called by MainToolWindowCardsController.closeAllNotifications when closing the panel
     override fun dispose() {
         jCefComponent.dispose()
     }

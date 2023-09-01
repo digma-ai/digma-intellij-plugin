@@ -89,13 +89,8 @@ public class NotificationsMock {
 
                 }
 
-                if (isRead) {
-                    notificationRoot.set("totalCount", new IntNode(assetEntries.size()));
-                    notificationRoot.set("unreadCount", new IntNode(assetEntries.size()));
-                } else {
-                    notificationRoot.set("totalCount", new IntNode(assetEntries.size() - seenNotifications));
-                    notificationRoot.set("unreadCount", new IntNode(assetEntries.size() - seenNotifications));
-                }
+                notificationRoot.set("totalCount", new IntNode(assetEntries.size()));
+                notificationRoot.set("unreadCount", new IntNode(assetEntries.size() - seenNotifications));
             }
         });
 

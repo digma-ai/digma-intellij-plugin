@@ -5,7 +5,6 @@ import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
 import com.posthog.java.PostHog
-import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.common.UserId
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.AboutResult

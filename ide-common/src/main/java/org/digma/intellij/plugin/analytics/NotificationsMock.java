@@ -40,14 +40,19 @@ public class NotificationsMock {
                 var assetEntries = (ArrayNode) jsonNode.get("assetEntries");
 
                 int startAt = 0;
+                if (!isRead) {
+                    startAt = seenNotifications;
+                }
 
-                startAt = (pageNumber - 1) * pageSize;
+
+                startAt = startAt + ((pageNumber - 1) * pageSize);
+                startAt = Math.min(startAt, assetEntries.size());
                 int endAt = Math.min(startAt + pageSize, assetEntries.size());
 
-                if (pageNumber == 1 && pageSize == 3) {
-                    startAt = 0;
-                    endAt = Math.min(3, assetEntries.size());
-                }
+//                if (pageNumber == 1 && pageSize == 3) {
+//                    startAt = 0;
+//                    endAt = Math.min(3, assetEntries.size());
+//                }
 
 
                 for (int index = startAt; index < endAt; index++) {
@@ -84,8 +89,13 @@ public class NotificationsMock {
 
                 }
 
-                notificationRoot.set("totalCount", new IntNode(assetEntries.size()));
-                notificationRoot.set("unreadCount", new IntNode(assetEntries.size()));
+                if (isRead) {
+                    notificationRoot.set("totalCount", new IntNode(assetEntries.size()));
+                    notificationRoot.set("unreadCount", new IntNode(assetEntries.size()));
+                } else {
+                    notificationRoot.set("totalCount", new IntNode(assetEntries.size() - seenNotifications));
+                    notificationRoot.set("unreadCount", new IntNode(assetEntries.size() - seenNotifications));
+                }
             }
         });
 
@@ -94,19 +104,30 @@ public class NotificationsMock {
 
     }
 
-    public long getUnreadCount() throws AnalyticsServiceException, JsonProcessingException {
+    public int getUnreadCount() throws AnalyticsServiceException, JsonProcessingException {
 
-        int unread = 0;
+        int assetsCount = countAssets();
+        if (assetsCount == 0) {
+            return 0;
+        }
+        return assetsCount - seenNotifications;
+    }
 
+    public void setAllRead() throws JsonProcessingException, AnalyticsServiceException {
+        seenNotifications = countAssets();
+    }
+
+
+    private int countAssets() throws AnalyticsServiceException, JsonProcessingException {
         var om = new ObjectMapper();
         var assets = om.readTree(analyticsService.getAssets());
         var serviceAssetsEntries = (ArrayNode) assets.get("serviceAssetsEntries");
         for (JsonNode jsonNode : serviceAssetsEntries) {
             if (Objects.equals(jsonNode.get("serviceName").asText(), "spring-petclinic")) {
                 var assetEntries = (ArrayNode) jsonNode.get("assetEntries");
-                unread = assetEntries.size() - seenNotifications;
+                return assetEntries.size();
             }
         }
-        return unread;
+        return 0;
     }
 }

@@ -426,6 +426,12 @@ public class AnalyticsService implements Disposable {
             analyticsProviderProxy.setReadNotificationsTime(new SetReadNotificationsRequest(env, userId, upToDateTime));
             return null;
         });
+
+        try {
+            notificationsMock.setAllRead();
+        } catch (JsonProcessingException e) {
+            //ignore
+        }
     }
 
     public UnreadNotificationsCountResponse getUnreadNotificationsCount(String notificationsStartDate, String userId) throws AnalyticsServiceException {

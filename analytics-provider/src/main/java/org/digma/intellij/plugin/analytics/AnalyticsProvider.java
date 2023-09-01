@@ -21,6 +21,10 @@ import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveDataRequest;
 import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation;
 import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigationRequest;
+import org.digma.intellij.plugin.model.rest.notifications.GetUnreadNotificationsCountRequest;
+import org.digma.intellij.plugin.model.rest.notifications.NotificationsRequest;
+import org.digma.intellij.plugin.model.rest.notifications.SetReadNotificationsRequest;
+import org.digma.intellij.plugin.model.rest.notifications.UnreadNotificationsCountResponse;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
@@ -69,6 +73,12 @@ public interface AnalyticsProvider extends Closeable {
     CodeObjectNavigation getCodeObjectNavigation(CodeObjectNavigationRequest codeObjectNavigationRequest);
 
     String getAssets(AssetsRequest assetsRequest);
+
+    String getNotifications(NotificationsRequest notificationsRequest);
+
+    void setReadNotificationsTime(SetReadNotificationsRequest setReadNotificationsRequest);
+
+    UnreadNotificationsCountResponse getUnreadNotificationsCount(GetUnreadNotificationsCountRequest getUnreadNotificationsCountRequest);
 
     VersionResponse getVersions(VersionRequest request);
 

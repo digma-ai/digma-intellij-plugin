@@ -6,6 +6,7 @@ import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
 import com.posthog.java.PostHog
 import org.digma.intellij.plugin.common.CommonUtils
+import org.digma.intellij.plugin.common.UserId
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.AboutResult
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
@@ -31,8 +32,8 @@ class ActivityMonitor(project: Project) : Disposable {
         }
     }
 
-    private val userId: String
-    private val isDevUser: Boolean
+    private val userId: String = UserId.userId
+    private val isDevUser: Boolean = UserId.isDevUser
     private val latestUnknownRunConfigTasks = mutableMapOf<String, Instant>()
 
     private var postHog: PostHog? = null
@@ -43,21 +44,6 @@ class ActivityMonitor(project: Project) : Disposable {
     private val settingsChangeTracker = SettingsChangeTracker()
 
     init {
-        val hostname = CommonUtils.getLocalHostname()
-        if (System.getenv("devenv") == "digma") {
-            userId = hostname
-            isDevUser = true
-        } else {
-            if (PersistenceService.getInstance().state.userId == null) {
-                // Phase #1
-                PersistenceService.getInstance().state.userId = Integer.toHexString(hostname.hashCode())
-                // Phase #2 (after 14/08/2023 uncomment this phase, and comment the phase #1)
-                // PersistenceService.getInstance().state.userId = UUID.randomUUID().toString()
-            }
-            userId = PersistenceService.getInstance().state.userId!!
-            isDevUser = false
-        }
-
 
         val token = "phc_5sy6Kuv1EYJ9GAdWPeGl7gx31RAw7BR7NHnOuLCUQZK"
         postHog = PostHog.Builder(token).build()

@@ -184,7 +184,7 @@ public final class AssetsService implements Disposable {
 
         EDT.assertNonDispatchThread();
 
-        Log.log(logger::trace, project, "showAsset called");
+        Log.log(logger::trace, project, "showAsset called for {}", spanId);
         ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Assets);
         project.getService(InsightsViewOrchestrator.class).showInsightsForCodelessSpan(spanId);
     }

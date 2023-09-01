@@ -3,6 +3,9 @@ package org.digma.intellij.plugin.ui.common
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.editor.colors.GlobalEditorScheme
 import com.intellij.ui.JBColor
+import com.intellij.ui.scale.ScaleContext
+import com.intellij.ui.scale.ScaleType
+import com.intellij.util.IconUtil
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.icons.IconsUtil
 import org.digma.intellij.plugin.ui.common.Laf.Sizes.Companion.BUTTON_SIZE_24
@@ -195,6 +198,23 @@ object Laf {
                 @JvmStatic val LiveIconLight = SvgIcon.asIs("/icons/live-icon-light.svg")
                 @JvmStatic val NavPrevDark = SvgIcon.asIs("/icons/nav-prev-dark.svg")
                 @JvmStatic val NavPrevLight = SvgIcon.asIs("/icons/nav-prev-light.svg")
+
+                //                @JvmStatic val NotificationsBellDark = SvgIcon.asIs("/icons/notification-bell-dark.svg")
+//                @JvmStatic val NotificationsBellLight = SvgIcon.asIs("/icons/notification-bell-light.svg")
+//                @JvmStatic val NotificationsBellDark = IconsUtil.loadAndScaleIconObjectByWidth("/icons/notification-bell-dark.svg",22)
+//                @JvmStatic val NotificationsBellLight = IconsUtil.loadAndScaleIconObjectByWidth("/icons/notification-bell-light.svg",22)
+                @JvmStatic
+                val NotificationsBellDark =
+                    IconUtil.scale(SvgIcon.asIs("/icons/notification-bell-dark.svg"), ScaleContext.create(ScaleType.OBJ_SCALE.of(2.0)))
+                @JvmStatic
+                val NotificationsBellDarkPressed =
+                    IconUtil.scale(SvgIcon.asIs("/icons/notification-bell-dark.svg"), ScaleContext.create(ScaleType.OBJ_SCALE.of(1.6)))
+                @JvmStatic
+                val NotificationsBellLight =
+                    IconUtil.scale(SvgIcon.asIs("/icons/notification-bell-light.svg"), ScaleContext.create(ScaleType.OBJ_SCALE.of(2.0)))
+                @JvmStatic
+                val NotificationsBellLightPressed =
+                    IconUtil.scale(SvgIcon.asIs("/icons/notification-bell-light.svg"), ScaleContext.create(ScaleType.OBJ_SCALE.of(1.6)))
             }
         }
 

@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.analytics;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.intellij.openapi.Disposable;
@@ -41,6 +42,10 @@ import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveDataRequest;
 import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation;
 import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigationRequest;
+import org.digma.intellij.plugin.model.rest.notifications.GetUnreadNotificationsCountRequest;
+import org.digma.intellij.plugin.model.rest.notifications.NotificationsRequest;
+import org.digma.intellij.plugin.model.rest.notifications.SetReadNotificationsRequest;
+import org.digma.intellij.plugin.model.rest.notifications.UnreadNotificationsCountResponse;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
@@ -69,6 +74,8 @@ import java.lang.reflect.UndeclaredThrowableException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.net.http.HttpTimeoutException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
@@ -387,6 +394,56 @@ public class AnalyticsService implements Disposable {
 
         return assets;
     }
+
+
+    private NotificationsMock notificationsMock = new NotificationsMock(this);
+
+    public String getNotifications(String notificationsStartDate, String userId, int pageNumber, int pageSize, boolean isRead) throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        String notificationsJson = executeCatching(() ->
+                analyticsProviderProxy.getNotifications(new NotificationsRequest(env, userId, notificationsStartDate, pageNumber, pageSize, isRead)));
+
+
+        //todo: temp mock
+        try {
+            var objectMapper = new ObjectMapper();
+            var node = objectMapper.readTree(notificationsJson);
+            var notifications = (ArrayNode) node.get("notifications");
+            if (notifications.isEmpty()) {
+                return notificationsMock.getNotifications(pageNumber, pageSize, isRead);
+            }
+
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+        return notificationsJson;
+    }
+
+    public void setReadNotificationsTime(String upToDateTime, String userId) throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        executeCatching(() -> {
+            analyticsProviderProxy.setReadNotificationsTime(new SetReadNotificationsRequest(env, userId, upToDateTime));
+            return null;
+        });
+    }
+
+    public UnreadNotificationsCountResponse getUnreadNotificationsCount(String notificationsStartDate, String userId) throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        var unreadResponse = executeCatching(() -> analyticsProviderProxy.getUnreadNotificationsCount(new GetUnreadNotificationsCountRequest(env, userId, notificationsStartDate)));
+
+        //temp mock
+        if (unreadResponse.getUnreadCount() == 0) {
+            try {
+                return new UnreadNotificationsCountResponse(notificationsMock.getUnreadCount());
+            } catch (JsonProcessingException e) {
+                return new UnreadNotificationsCountResponse(0);
+            }
+        }
+
+        return unreadResponse;
+    }
+
 
 
     public PerformanceMetricsResponse getPerformanceMetrics() throws AnalyticsServiceException {

@@ -10,6 +10,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 
@@ -43,6 +44,7 @@ class FirstTimePerformanceMetricsMonitor: StartupActivity.DumbAware {
                     }catch (e: AnalyticsServiceException){
                         Log.warnWithException(Logger.getInstance(FirstTimePerformanceMetricsMonitor::class.java),e,"failed in registerPerformanceMetrics")
                         maxFailures--
+                        ErrorReporter.getInstance().reportError(project, "FirstTimePerformanceMetricsMonitor.loop", e)
                     }
                 }
             }

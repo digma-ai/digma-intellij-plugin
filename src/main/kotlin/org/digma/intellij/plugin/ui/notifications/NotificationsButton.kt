@@ -10,6 +10,7 @@ import com.intellij.openapi.ui.popup.LightweightWindowEvent
 import com.intellij.ui.BadgeDotProvider
 import com.intellij.ui.BadgeIcon
 import com.intellij.ui.JBColor
+import com.intellij.ui.awt.RelativePoint
 import com.intellij.util.ui.JBUI
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -17,7 +18,6 @@ import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.scaled
 import java.awt.Cursor
@@ -124,15 +124,10 @@ class NotificationsButton(val project: Project) : JButton() {
                 .createPopup()
 
             //the panel needs to close the popup when clicking close or clicking a link
+            // so should set the popup before show
             topNotificationsPanel.setPopup(jbPopup)
 
-            //the tool window will always be non-null because the button is on the toolwindow,
-            // but must test because ToolWindowShower.getToolWindow is nullable
-            if (ToolWindowShower.getInstance(project).toolWindow != null) {
-                jbPopup.showInCenterOf(ToolWindowShower.getInstance(project).toolWindow!!.component)
-            } else {
-                jbPopup.showUnderneathOf(this)
-            }
+            jbPopup.show(RelativePoint.getSouthWestOf(this))
 
         } catch (e: Exception) {
             Log.warnWithException(logger, project, e, "Error in doActionListener")

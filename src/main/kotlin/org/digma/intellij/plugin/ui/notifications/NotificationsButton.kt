@@ -109,12 +109,7 @@ class NotificationsButton(val project: Project) : JButton() {
             ActivityMonitor.getInstance(project).registerNotificationCenterEvent("NotificationsBellClicked", mapOf())
 
             val topNotificationsPanel = TopNotificationsPanel(project)
-
-            ToolWindowShower.getInstance(project).toolWindow?.component?.let {
-                val w = minOf(maxOf(it.width, 400.scaled()), 400.scaled())
-                val h = minOf(maxOf(it.height, 500.scaled()), 500.scaled())
-                topNotificationsPanel.preferredSize = Dimension(w, h)
-            }
+            topNotificationsPanel.preferredSize = Dimension(400.scaled(), 500.scaled())
 
             val jbPopup = JBPopupFactory.getInstance().createComponentPopupBuilder(topNotificationsPanel, null)
                 .setProject(project)

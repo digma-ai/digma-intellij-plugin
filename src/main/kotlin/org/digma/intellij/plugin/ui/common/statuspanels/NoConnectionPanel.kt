@@ -74,12 +74,6 @@ fun createNoConnectionPanel(project: Project, parentDisposable: Disposable):JPan
     }
     buttonsPanel.add(refreshLink,BorderLayout.WEST)
 
-    val installLink = ActionLink("Install"){
-        ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.NoConnection, "install")
-        BrowserUtil.browse(DIGMA_DOCKER_APP_URL, project)
-    }
-    buttonsPanel.add(installLink,BorderLayout.EAST)
-
     val setupLink = ActionLink("Set-up Digma"){
         ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.NoConnection, "set-up")
         EDT.ensureEDT{
@@ -87,7 +81,7 @@ fun createNoConnectionPanel(project: Project, parentDisposable: Disposable):JPan
             ToolWindowShower.getInstance(project).showToolWindow()
         }
     }
-    buttonsPanel.add(setupLink,BorderLayout.CENTER)
+    buttonsPanel.add(setupLink, BorderLayout.EAST)
     mainPanel.add(buttonsPanel,constraints)
 
     return wrapWithScrollable(mainPanel)

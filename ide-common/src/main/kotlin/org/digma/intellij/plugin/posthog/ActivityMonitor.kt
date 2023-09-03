@@ -37,7 +37,7 @@ class ActivityMonitor(project: Project) : Disposable {
 
     private var postHog: PostHog? = null
     private var lastLensClick: LocalDateTime? = null
-    private var lastInsightsViewed: HashSet<InsightType>? = null
+    private val lastInsightsViewed = mutableSetOf<InsightType>()
     private var lastConnectionErrorTime: Instant = Instant.MIN
 
     private val settingsChangeTracker = SettingsChangeTracker()
@@ -280,15 +280,24 @@ class ActivityMonitor(project: Project) : Disposable {
 
 
     fun registerInsightsViewed(insightTypes: List<InsightType>) {
-        val newInsightsViewed = HashSet(insightTypes)
-        if (lastInsightsViewed != null && lastInsightsViewed == newInsightsViewed)
-            return
 
-        lastInsightsViewed = newInsightsViewed
+        val insightsTypesToRegister = mutableListOf<InsightType>()
+
+        insightTypes.forEach {
+            if (!lastInsightsViewed.contains(it)) {
+                insightsTypesToRegister.add(it)
+            }
+        }
+
+        lastInsightsViewed.addAll(insightTypes)
+
+        if (insightsTypesToRegister.isEmpty()) {
+            return
+        }
 
         capture(
             "insights viewed",
-            mapOf("insights" to insightTypes)
+            mapOf("insights" to insightsTypesToRegister)
         )
     }
 

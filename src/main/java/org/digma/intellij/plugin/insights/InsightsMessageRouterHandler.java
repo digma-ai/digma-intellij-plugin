@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.diagnostic.Logger;
@@ -15,6 +16,7 @@ import org.cef.callback.CefQueryCallback;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.EDT;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.insights.model.outgoing.InsightsPayload;
 import org.digma.intellij.plugin.insights.model.outgoing.Method;
 import org.digma.intellij.plugin.insights.model.outgoing.SetInsightsDataMessage;
@@ -33,6 +35,7 @@ import org.digma.intellij.plugin.ui.service.InsightsService;
 import org.digma.intellij.plugin.ui.settings.Theme;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStart;
@@ -94,6 +97,8 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
                     case "INSIGHTS/ADD_ANNOTATION" -> addAnnotation(jsonNode);
 
+                    case "INSIGHTS/MARK_INSIGHT_TYPES_AS_VIEWED" -> markInsightsViewed(jsonNode);
+
                     case JCefMessagesUtils.GLOBAL_OPEN_TROUBLESHOOTING_GUIDE ->
                             EDT.ensureEDT(() -> MainToolWindowCardsController.getInstance(project).showTroubleshooting());
 
@@ -118,12 +123,25 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
             } catch (Exception e) {
                 Log.debugWithException(LOGGER, e, "Exception in onQuery " + request);
+                ErrorReporter.getInstance().reportError(project, "InsightsMessageRouterHandler.onQuery", e);
             }
         });
 
         callback.success("");
 
         return true;
+    }
+
+
+    private void markInsightsViewed(JsonNode jsonNode) throws JsonProcessingException {
+        Log.log(LOGGER::trace, project, "got INSIGHTS/MARK_INSIGHT_TYPES_AS_VIEWED message");
+        var insightsTypesJasonArray = (ArrayNode) objectMapper.readTree(jsonNode.get("payload").toString()).get("insightTypes");
+        List<InsightType> insightTypeList = new ArrayList<>();
+        insightsTypesJasonArray.forEach(insightType -> {
+            insightTypeList.add(InsightType.valueOf(insightType.asText()));
+        });
+        Log.log(LOGGER::trace, project, "got insights types {}", insightTypeList);
+        ActivityMonitor.getInstance(project).registerInsightsViewed(insightTypeList);
     }
 
 

@@ -240,13 +240,10 @@ class ActivityMonitor(project: Project) : Disposable {
         )
     }
 
-    fun reportSupportedRunConfigDetected(runConfigTypeName: String, taskNames: Collection<String>) {
+    fun reportSupportedRunConfigDetected(details: Map<String, Any>) {
         capture(
-            "supported-run-config detected",
-            mapOf(
-                "run.config.type" to runConfigTypeName,
-                "task.names" to taskNames
-            )
+            "supported-run-configurations",
+            details
         )
     }
 

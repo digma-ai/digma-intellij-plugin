@@ -36,7 +36,7 @@ public class CurrentContextUpdater {
    keep the latest method under caret that was fired. it helps us to not call contextChange if the caret is on the same
    method as before.
     */
-    private MethodUnderCaret latestMethodUnderCaret;
+    public MethodUnderCaret latestMethodUnderCaret;
 
     public CurrentContextUpdater(Project project) {
         this.project = project;
@@ -52,6 +52,7 @@ public class CurrentContextUpdater {
     }
 
     public void clearLatestMethod() {
+        Log.test(LOGGER::info, "Clearing latest method");
         latestMethodUnderCaret = null;
     }
 
@@ -61,7 +62,7 @@ public class CurrentContextUpdater {
         //process the most recent event after a quite period of delayMillis
         caretEventAlarm.cancelAllRequests();
         caretEventAlarm.addRequest(() -> ReadAction.nonBlocking(new RunnableCallable(() -> {
-            Log.log(LOGGER::debug, "caretPositionChanged for editor:{}", editor);
+            Log.test(LOGGER::info, "caretPositionChanged for editor:{}", editor);
             updateCurrentContext(editor, caretOffset, file);
         })).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance()), 300);
     }
@@ -69,7 +70,7 @@ public class CurrentContextUpdater {
     private void updateCurrentContext(@NotNull Editor editor, int caretOffset, VirtualFile file) {
 
         //there is no need to check if file is supported, we install caret listener only on editors of supported files.
-        Log.log(LOGGER::debug, "updateCurrentContext for editor:{}, file: {}", editor, file);
+        Log.test(LOGGER::info, "updateCurrentContext for editor:{}, file: {}", editor, file);
         PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
         if (psiFile == null) {
             Log.log(LOGGER::debug, "psi file not found for file: {}", file);
@@ -80,16 +81,16 @@ public class CurrentContextUpdater {
 
     private void updateCurrentContext(@NotNull Editor editor, int caretOffset, PsiFile psiFile) {
         LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
-        Log.log(LOGGER::debug, "found language service {} for file: {}", languageService, psiFile.getVirtualFile());
+        Log.test(LOGGER::info, "found language service {} for file: {}", languageService, psiFile.getVirtualFile());
         MethodUnderCaret methodUnderCaret = languageService.detectMethodUnderCaret(project, psiFile, editor, caretOffset);
-        Log.log(LOGGER::debug, "found MethodUnderCaret for file: {},'{}", psiFile.getVirtualFile(), methodUnderCaret);
+        Log.test(LOGGER::info, "found MethodUnderCaret for file: {},'{}", psiFile.getVirtualFile(), methodUnderCaret);
         //don't call contextChange if the caret is still on the same method
         if (methodUnderCaret.equals(latestMethodUnderCaret)) {
-            Log.log(LOGGER::debug, "not updating MethodUnderCaret because it is the same as latest, for file: {},'{}", psiFile.getVirtualFile(), methodUnderCaret);
+            Log.test(LOGGER::info, "not updating MethodUnderCaret because it is the same as latest, for file: {},'{}", psiFile.getVirtualFile(), methodUnderCaret);
             return;
         }
         latestMethodUnderCaret = methodUnderCaret;
-        Log.log(LOGGER::debug, "contextChanged for file: {}, with method under caret '{}", psiFile.getVirtualFile(), methodUnderCaret);
+        Log.test(LOGGER::info, "contextChanged for file: {}, with method under caret '{}", psiFile.getVirtualFile(), methodUnderCaret);
         caretContextService.contextChanged(methodUnderCaret);
     }
 

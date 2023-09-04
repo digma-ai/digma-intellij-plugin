@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.test.system
+package org.digma.intellij.plugin.test.system.framework
 
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.psi.PsiFile

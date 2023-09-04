@@ -120,22 +120,26 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
         if (newFile != null && isRelevantFile(newFile)) {
 
-            Log.log(LOGGER::trace, "handling new open file:{}", newFile);
+            Log.test(LOGGER::info, "handling new open file:{}", newFile);
 
             //wait for smart mode before loading document info and installing caret and document change listeners.
             //if files are opened on startup before indexes are ready there is nothing we can do to build the document
             //info or to discover spans. and anyway our tool window will not be shown on dumb mode.
             ReadAction.nonBlocking(new RunnableCallable(() -> {
 
+                Log.test(LOGGER::info, "AAA");
+
                 if (editorManagerEvent.getNewEditor() == null || !editorManagerEvent.getNewEditor().isValid()){
                     return;
                 }
+                Log.test(LOGGER::info, "BBB");
 
                 PsiFile psiFile = PsiManager.getInstance(project).findFile(newFile);
                 if (psiFile == null){
                     Log.log(LOGGER::trace, "No psi file for :{}", newFile);
                     return;
                 }
+                Log.test(LOGGER::info, "CCC");
 
                 //if documentInfoService contains this file then the file was already opened before and now its only
                 //selectionChanged when changing tabs
@@ -145,16 +149,16 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                 }
 
                 LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
-                Log.log(LOGGER::trace, "Found language service {} for :{}", languageService, newFile);
+                Log.test(LOGGER::info, "Found language service {} for :{}", languageService, newFile);
 
                 //some language services need the selected editor , for example CSharpLanguageService need to take
                 // getProjectModelId from the selected editor. it may be null
                 var newEditor = editorManagerEvent.getNewEditor();
                 DocumentInfo documentInfo = languageService.buildDocumentInfo(psiFile,newEditor);
-                Log.log(LOGGER::trace, "got DocumentInfo for :{}", newFile);
+                Log.test(LOGGER::info, "got DocumentInfo for :{}", newFile);
 
                 documentInfoService.addCodeObjects(psiFile, documentInfo);
-                Log.log(LOGGER::trace, "documentInfoService updated with DocumentInfo for :{}", newFile);
+                Log.test(LOGGER::info, "documentInfoService updated with DocumentInfo for :{}", newFile);
 
             })).inSmartMode(project).withDocumentsCommitted(project).finishOnUiThread(ModalityState.defaultModalityState(), unused -> {
 
@@ -162,6 +166,8 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
                 //get the editor where the file is opened not just the selected editor
                 Editor selectedTextEditor = EditorUtils.getSelectedTextEditorForFile(newFile, fileEditorManager);
+
+                Log.test(LOGGER::info, "selectedTextEditor :{}", selectedTextEditor);
 
                 if (selectedTextEditor != null) {
                     Log.log(LOGGER::trace, "Found selected editor for :{}", newFile);
@@ -286,7 +292,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
 
 
 
-    private boolean isRelevantFile(VirtualFile file) {
+    public boolean isRelevantFile(VirtualFile file) {
 
         if (file.isDirectory() || !file.isValid()){
             return false;

@@ -18,7 +18,7 @@ import java.util.Map;
 /**
  * Listens to CaretEvents and updates view respectively.
  */
-class CaretListener {
+public class CaretListener {
 
     private static final Logger LOGGER = Logger.getInstance(CaretListener.class);
 
@@ -36,17 +36,19 @@ class CaretListener {
     private final Map<VirtualFile, Disposable> disposables = new HashMap<>();
 
 
-    CaretListener(Project project, CurrentContextUpdater currentContextUpdater) {
+    public CaretListener(Project project, CurrentContextUpdater currentContextUpdater) {
         this.project = project;
         this.currentContextUpdater = currentContextUpdater;
     }
 
 
     //don't install listeners on non-supported files, this method shouldn't be called for non-supported files.
-    void maybeAddCaretListener(@NotNull Editor editor) {
+    public void maybeAddCaretListener(@NotNull Editor editor) {
+
+        Log.test(LOGGER::info, "Maybe?");
 
         if (editor.isDisposed()) {
-            Log.log(LOGGER::debug, "not installing listener for {} because it is disposed", editor);
+            Log.test(LOGGER::info, "not installing listener for {} because it is disposed", editor);
             return;
         }
 
@@ -81,12 +83,12 @@ class CaretListener {
 
         Disposable parentDisposable = Disposer.newDisposable();
         disposables.put(file, parentDisposable);
-        Log.log(LOGGER::debug, "adding caret listener for file:{}", file);
+        Log.test(LOGGER::info, "adding caret listener for file:{}", file);
         editor.getCaretModel().addCaretListener(new com.intellij.openapi.editor.event.CaretListener() {
 
             @Override
             public void caretPositionChanged(@NotNull CaretEvent caretEvent) {
-
+                Log.test(LOGGER::info, "caret event:{}", caretEvent.getCaret());
                 if (caretEvent.getCaret() != null) {
                     int caretOffset = caretEvent.getEditor().logicalPositionToOffset(caretEvent.getNewPosition());
                     var file = FileDocumentManager.getInstance().getFile(caretEvent.getEditor().getDocument());
@@ -98,6 +100,7 @@ class CaretListener {
 
 
     void removeCaretListener(VirtualFile file) {
+        Log.test(LOGGER::info, "disposing disposable for file:{}", file);
         if (disposables.containsKey(file)) {
             Log.log(LOGGER::debug, "disposing disposable for file:{}", file);
             Disposer.dispose(disposables.remove(file));

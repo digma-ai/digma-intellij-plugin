@@ -494,10 +494,13 @@ public class JavaLanguageService implements LanguageService {
         if (refreshInsightsView) {
             EDT.ensureEDT(() -> {
                 var fileEditor = FileEditorManager.getInstance(project).getSelectedEditor();
+                Log.test(LOGGER::info, "fileEditor = {}", fileEditor);
                 if (fileEditor != null) {
+                    Log.test(LOGGER::info, "fileEditor is already selected");
                     var file = fileEditor.getFile();
                     var psiFile = PsiManager.getInstance(project).findFile(file);
                     if (psiFile != null && isRelevant(psiFile.getVirtualFile())) {
+                        Log.test(LOGGER::info, "file is relevant");
                         var selectedTextEditor = EditorUtils.getSelectedTextEditorForFile(file, FileEditorManager.getInstance(project));
                         if (selectedTextEditor != null) {
                             int offset = selectedTextEditor.getCaretModel().getOffset();
@@ -551,7 +554,7 @@ public class JavaLanguageService implements LanguageService {
     public boolean isRelevant(PsiFile psiFile) {
         return psiFile.isValid() &&
                 psiFile.isWritable() &&
-                projectFileIndex.isInSourceContent(psiFile.getVirtualFile()) &&
+//                projectFileIndex.isInSourceContent(psiFile.getVirtualFile()) &&
                 !projectFileIndex.isInLibrary(psiFile.getVirtualFile()) &&
                 !projectFileIndex.isExcluded(psiFile.getVirtualFile()) &&
                 isSupportedFile(project, psiFile) &&

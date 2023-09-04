@@ -22,6 +22,7 @@ import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper
 import org.digma.intellij.plugin.navigation.NavigationModel
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.service.EditorService
+import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.service.ErrorsViewService
 import org.digma.intellij.plugin.ui.service.InsightsService
@@ -86,6 +87,7 @@ class InsightsViewOrchestrator(val project: Project) {
             project.service<CurrentContextUpdater>().clearLatestMethod()
 
             EDT.ensureEDT {
+                project.service<MainToolWindowCardsController>().closeCoveringViewsIfNecessary()
                 project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
                 ToolWindowShower.getInstance(project).showToolWindow()
                 project.getService(HomeSwitcherService::class.java).switchToInsights()
@@ -160,6 +162,7 @@ class InsightsViewOrchestrator(val project: Project) {
         // this class should show insights regardless of caret event and navigate to code if possible.
         // we need to separate this two actions , showing insights and navigating to source code.
 
+        project.service<MainToolWindowCardsController>().closeCoveringViewsIfNecessary()
         project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
         ToolWindowShower.getInstance(project).showToolWindow()
         project.getService(HomeSwitcherService::class.java).switchToInsights()

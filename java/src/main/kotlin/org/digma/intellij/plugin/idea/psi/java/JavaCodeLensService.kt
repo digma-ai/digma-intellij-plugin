@@ -18,7 +18,6 @@ class JavaCodeLensService(project: Project): AbstractCodeLensService(project) {
         private val logger = Logger.getInstance(JavaCodeLensService::class.java)
         @JvmStatic
         fun getInstance(project: Project): JavaCodeLensService {
-            logger.warn("Getting instance of ${JavaCodeLensService::class.simpleName}")
             return project.getService(JavaCodeLensService::class.java)
         }
     }

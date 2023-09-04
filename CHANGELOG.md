@@ -1,6 +1,14 @@
 # Changelog
 
-## [2.0.160] - 2023-08-30
+## [2.0.161] - 2023-09-04
+- Update Insight UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1235
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1237
+- catch-exception-when-calling-getPerformanceMetrics by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1240
+- fix posthog event for insight types by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1247
+- Remove Install link from the No connection panel by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1245
+- supported run configurations event by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1248
+
+## 2.0.160 - 2023-08-30
 - refresh connection status after changing url and force https in API url. by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1230
 - Modify agent path when using wsl run config by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1232
 - update build profiles by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1233

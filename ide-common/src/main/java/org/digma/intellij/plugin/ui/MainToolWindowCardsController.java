@@ -20,6 +20,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static org.digma.intellij.plugin.persistence.PersistenceUtilsKt.updateInstallationWizardFlag;
+
 /**
  * Controls the current view in digma tool window.
  * there is a main content and wizard content, home view and insights view.
@@ -226,6 +228,24 @@ public class MainToolWindowCardsController implements Disposable {
         } else {
             Log.log(LOGGER::debug, project, "troubleshootingFinished was called but troubleshooting is not on.");
         }
+    }
+
+
+    /**
+     * it may happen that user clicks a span link while the troubleshooting or wizard are on.
+     * it can happen if user opens troubleshooting or the wizard and then clicks a link in recent activity,
+     * or in jaeger ui, or clicks a code lens. in all these cases we need to close the troubleshooting or wizard
+     * and show main panel.
+     */
+    public void closeCoveringViewsIfNecessary() {
+
+        //Note in case user finished new install but never clicked finish in the wizard, and clicks a link somewhere,
+        // then this method will close the wizard and update the wizard finished flags
+        if (wizard.isOn()) {
+            updateInstallationWizardFlag();
+        }
+        wizardFinished();
+        troubleshootingFinished();
     }
 
 

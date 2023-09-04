@@ -44,6 +44,7 @@ import org.digma.intellij.plugin.model.rest.jcef.installationwizard.FinishReques
 import org.digma.intellij.plugin.model.rest.jcef.installationwizard.SetObservabilityRequest
 import org.digma.intellij.plugin.notifications.AppNotificationCenter
 import org.digma.intellij.plugin.persistence.PersistenceService
+import org.digma.intellij.plugin.persistence.updateInstallationWizardFlag
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.recentactivity.ConnectionCheckResult
 import org.digma.intellij.plugin.recentactivity.JcefConnectionCheckMessagePayload
@@ -462,24 +463,6 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
 }
 
 
-/**
- * Set global flag that this user has already passed the installation wizard
- */
-private fun updateInstallationWizardFlag() {
-    if (IDEUtilsService.isIdeaIDE()) {
-        if (!PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForIdeaIDE) {
-            PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForIdeaIDE = true
-        }
-    } else if (IDEUtilsService.isRiderIDE()) {
-        if (!PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForRiderIDE) {
-            PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForRiderIDE = true
-        }
-    } else if (IDEUtilsService.isPyCharmIDE()) {
-        if (!PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForPyCharmIDE) {
-            PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForPyCharmIDE = true
-        }
-    }
-}
 
 
 private fun sendDockerResult(result: String, errorMsg: String, jbCefBrowser: JBCefBrowser, messageType: String) {

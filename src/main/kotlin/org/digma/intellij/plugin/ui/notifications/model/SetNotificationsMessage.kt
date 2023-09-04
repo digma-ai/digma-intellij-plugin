@@ -1,9 +1,7 @@
 package org.digma.intellij.plugin.ui.notifications.model
 
-import com.fasterxml.jackson.annotation.JsonCreator
-import com.fasterxml.jackson.databind.JsonNode
+import org.digma.intellij.plugin.ui.jcef.model.BasePayloadMessage
+import org.digma.intellij.plugin.ui.jcef.model.Payload
 
 
-class SetNotificationsMessage
-@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-constructor(val type: String, val action: String, val payload: JsonNode)
+class SetNotificationsMessage(type: String, action: String, payload: Payload) : BasePayloadMessage(type, action, payload)

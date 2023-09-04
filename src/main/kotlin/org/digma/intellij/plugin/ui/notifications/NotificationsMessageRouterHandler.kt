@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
-import org.digma.intellij.plugin.analytics.NoSelectedEnvironmentException
+import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -13,6 +13,8 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.executeWindowPostMessageJavaScript
+import org.digma.intellij.plugin.ui.jcef.model.ErrorPayload
+import org.digma.intellij.plugin.ui.jcef.model.Payload
 import org.digma.intellij.plugin.ui.jcef.tryGetFieldFromPayload
 import org.digma.intellij.plugin.ui.notifications.model.SetNotificationsMessage
 
@@ -42,21 +44,34 @@ abstract class NotificationsMessageRouterHandler(project: Project) : BaseMessage
 
                     try {
 
+                        //note that GET_DATA always expect SET_DATA in return even if there is an error , that a contract with the react app
+
                         val pageNumber: String = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("pageNumber").asText()
                         val pageSize: String = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("pageSize").asText()
                         val isRead: String = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("isRead").asText()
                         val notificationsJson = getNotifications(project, pageNumber.toInt(), pageSize.toInt(), isRead.toBoolean())
                         Log.log(logger::trace, project, "got notifications {}", notificationsJson)
                         val payload = objectMapper.readTree(notificationsJson)
-                        val message = SetNotificationsMessage("digma", "NOTIFICATIONS/SET_DATA", payload)
+                        val message = SetNotificationsMessage("digma", "NOTIFICATIONS/SET_DATA", Payload(payload))
                         Log.log(logger::trace, project, "sending NOTIFICATIONS/SET_DATA message")
                         executeWindowPostMessageJavaScript(browser, objectMapper.writeValueAsString(message))
 
-                    } catch (e: NoSelectedEnvironmentException) {
-                        Log.warnWithException(logger, e, "error setting notifications data, no selected environment")
+                    } catch (e: AnalyticsServiceException) {
+                        Log.warnWithException(logger, e, "error setting notifications data")
+                        val message =
+                            SetNotificationsMessage("digma", "NOTIFICATIONS/SET_DATA", Payload(null, ErrorPayload(e.getMeaningfulMessage())))
+                        Log.log(logger::trace, project, "sending NOTIFICATIONS/SET_DATA message with error")
+                        executeWindowPostMessageJavaScript(browser, objectMapper.writeValueAsString(message))
+                        ErrorReporter.getInstance().reportError(project, "NotificationsMessageRouterHandler.SET_DATA", e)
                     } catch (e: Exception) {
                         Log.warnWithException(logger, e, "error setting notifications data")
+                        val message = SetNotificationsMessage("digma", "NOTIFICATIONS/SET_DATA", Payload(null, ErrorPayload(e.toString())))
+                        Log.log(logger::trace, project, "sending NOTIFICATIONS/SET_DATA message with error")
+                        executeWindowPostMessageJavaScript(browser, objectMapper.writeValueAsString(message))
                         ErrorReporter.getInstance().reportError(project, "NotificationsMessageRouterHandler.SET_DATA", e)
+                        //let BaseMessageRouterHandler handle the exception too in case it does something meaningful, worst case it will just log
+                        // the error again
+                        throw e
                     }
                 }
             }

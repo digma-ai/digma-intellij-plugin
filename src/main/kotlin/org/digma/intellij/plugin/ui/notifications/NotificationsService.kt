@@ -10,6 +10,7 @@ import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.analytics.NoSelectedEnvironmentException
+import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.UserId
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -61,23 +62,30 @@ class NotificationsService(val project: Project) : Disposable {
 
 
     fun markAllRead() {
-        try {
 
-            latestNotificationTime?.let {
-                Log.log(logger::trace, project, "marking notifications read with date {}", it)
-                project.service<AnalyticsService>().setReadNotificationsTime(it.toString(), UserId.userId)
+        Backgroundable.executeOnPooledThread {
+
+            try {
+
+                latestNotificationTime?.let {
+                    Log.log(logger::trace, project, "marking notifications read with date {}", it)
+                    project.service<AnalyticsService>().setReadNotificationsTime(it.toString(), UserId.userId)
+                }
+
+            } catch (e: NoSelectedEnvironmentException) {
+                //just log, it may happen a lot
+                Log.debugWithException(logger, project, e, "No selected environment")
+            } catch (e: AnalyticsServiceException) {
+                Log.warnWithException(logger, project, e, "exception in setReadNotificationsTime")
+                ErrorReporter.getInstance().reportError(project, "NotificationsService.setReadNotificationsTime", e)
             }
 
-        } catch (e: NoSelectedEnvironmentException) {
-            //just log, it may happen a lot
-            Log.debugWithException(logger, project, e, "No selected environment")
-        } catch (e: AnalyticsServiceException) {
-            Log.warnWithException(logger, project, e, "exception in setReadNotificationsTime")
-            ErrorReporter.getInstance().reportError(project, "NotificationsService.setReadNotificationsTime", e)
-        }
+            EDT.ensureEDT {
+                //make sure the bell updates it state immediately
+                notificationsButton?.checkUnread()
+            }
 
-        //make sure the bell updates it state immediately
-        notificationsButton?.checkUnread()
+        }
     }
 
 

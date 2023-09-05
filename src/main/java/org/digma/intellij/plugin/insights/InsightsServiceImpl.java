@@ -20,7 +20,7 @@ import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.IDEUtilsService;
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator;
 import org.digma.intellij.plugin.document.DocumentInfoContainer;
-import org.digma.intellij.plugin.document.DocumentInfoService;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider;
 import org.digma.intellij.plugin.insights.model.outgoing.Method;
 import org.digma.intellij.plugin.insights.model.outgoing.Span;
@@ -33,6 +33,7 @@ import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
 import org.digma.intellij.plugin.model.rest.insights.InsightStatus;
+import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
 import org.digma.intellij.plugin.model.rest.insights.MethodWithInsightStatus;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
@@ -259,38 +260,62 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
             Log.log(logger::debug, "updateInsightsModel to {}. ", methodInfo);
 
-            model.clearProperties();
+            try {
 
-            model.setScope(new MethodScope(methodInfo));
+                model.clearProperties();
 
-            var methodInstrumentationPresenter = new MethodInstrumentationPresenter(project);
-            ApplicationManager.getApplication().runReadAction(() -> methodInstrumentationPresenter.update(methodInfo.getId()));
-            var hasMissingDependency = methodInstrumentationPresenter.getCannotBecauseMissingDependency();
-            var canInstrumentMethod = methodInstrumentationPresenter.getCanInstrumentMethod();
-            model.addProperty(MODEL_PROP_INSTRUMENTATION, methodInstrumentationPresenter);
+                model.setScope(new MethodScope(methodInfo));
 
-            var insights = DocumentInfoService.getInstance(project).getCachedMethodInsights(methodInfo);
+                var methodInstrumentationPresenter = new MethodInstrumentationPresenter(project);
+                ApplicationManager.getApplication().runReadAction(() -> methodInstrumentationPresenter.update(methodInfo.getId()));
+                var hasMissingDependency = methodInstrumentationPresenter.getCannotBecauseMissingDependency();
+                var canInstrumentMethod = methodInstrumentationPresenter.getCanInstrumentMethod();
+                model.addProperty(MODEL_PROP_INSTRUMENTATION, methodInstrumentationPresenter);
 
-            var spans = methodInfo.getSpans().stream().map(spanInfo -> new Span(spanInfo.getId(), spanInfo.getName())).toList();
+                var insights = getInsightsByMethodInfo(methodInfo);
 
-            var statusToUse = predefinedStatus != null ? predefinedStatus.name() : null;
-            if (predefinedStatus == null) {
-                statusToUse = UIInsightsStatus.Default.name();
-                if (insights.isEmpty()) {
-                    Log.log(logger::debug, "No insights for method {}, Starting background thread to update status.", methodInfo.getName());
-                    statusToUse = UIInsightsStatus.Loading.name();
-                    updateStatusInBackground(methodInfo);
+                var spans = methodInfo.getSpans().stream().map(spanInfo -> new Span(spanInfo.getId(), spanInfo.getName())).toList();
+
+                var statusToUse = predefinedStatus != null ? predefinedStatus.name() : null;
+                if (predefinedStatus == null) {
+                    statusToUse = UIInsightsStatus.Default.name();
+                    if (insights.isEmpty()) {
+                        Log.log(logger::debug, "No insights for method {}, Starting background thread to update status.", methodInfo.getName());
+                        statusToUse = UIInsightsStatus.Loading.name();
+                        updateStatusInBackground(methodInfo);
+                    }
                 }
+
+
+                boolean needsObservabilityFix = checkObservability(methodInfo, insights);
+
+                messageHandler.pushInsights(insights, spans, methodInfo.getId(), EMPTY_SERVICE_NAME,
+                        AnalyticsService.getInstance(project).getEnvironment().getCurrent(), statusToUse,
+                        ViewMode.INSIGHTS.name(), Collections.emptyList(), hasMissingDependency, canInstrumentMethod, needsObservabilityFix);
+
+            } catch (Exception e) {
+                Log.warnWithException(logger, project, e, "error in updateInsightsImpl for ", methodInfo.getId());
+                ErrorReporter.getInstance().reportError("InsightsServiceImpl.updateInsightsImpl", e);
             }
-
-
-            boolean needsObservabilityFix = checkObservability(methodInfo, insights);
-
-            messageHandler.pushInsights(insights, spans, methodInfo.getId(), EMPTY_SERVICE_NAME,
-                    AnalyticsService.getInstance(project).getEnvironment().getCurrent(), statusToUse,
-                    ViewMode.INSIGHTS.name(), Collections.emptyList(), hasMissingDependency, canInstrumentMethod, needsObservabilityFix);
         }));
     }
+
+
+    private List<CodeObjectInsight> getInsightsByMethodInfo(@NotNull MethodInfo methodInfo) throws AnalyticsServiceException {
+
+//        var insights = DocumentInfoService.getInstance(project).getCachedMethodInsights(methodInfo);
+        InsightsOfMethodsResponse insightsOfMethodsResponse = AnalyticsService.getInstance(project).getInsightsOfMethods(Collections.singletonList(methodInfo));
+
+        if (insightsOfMethodsResponse.getMethodsWithInsights().isEmpty()) {
+            Log.log(logger::debug, project, "could not find insights for {}", methodInfo);
+            return Collections.emptyList();
+        }
+
+        var methodsWithInsights = insightsOfMethodsResponse.getMethodsWithInsights().stream().findAny().orElse(null);
+        return methodsWithInsights == null ? Collections.emptyList() : methodsWithInsights.getInsights();
+    }
+
+
 
 
     private void updateStatusInBackground(@NotNull MethodInfo methodInfo) {

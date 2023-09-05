@@ -26,7 +26,7 @@ class NavigationModel(private val project: Project) {
                 showCodeNavigation.set(true)
             }
 
-            MethodFromBackNavigation -> {
+            MethodFromBackNavigation, MethodWithoutNavigation -> {
                 showCodeNavigation.set(true)
             }
 

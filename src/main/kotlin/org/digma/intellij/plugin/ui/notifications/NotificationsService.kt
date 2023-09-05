@@ -122,13 +122,20 @@ class NotificationsService(val project: Project) : Disposable {
     }
 
     private fun updateLatestNotificationTime(notifications: String?) {
+
+        //take the date from the first notification , it should be the latest timestamp because the notifications are sorted
         try {
             notifications?.let {
                 val objectMapper = ObjectMapper()
                 val notificationsArray: ArrayNode = objectMapper.readTree(it).get("notifications") as ArrayNode
                 if (notificationsArray.size() > 0) {
                     val timestamp = notificationsArray.get(0).get("timestamp").asText()
-                    latestNotificationTime = ZonedDateTime.parse(timestamp).withZoneSameInstant(ZoneOffset.UTC)
+                    val latest = ZonedDateTime.parse(timestamp).withZoneSameInstant(ZoneOffset.UTC)
+                    if (latestNotificationTime == null) {
+                        latestNotificationTime = latest
+                    } else if (latest.isAfter(latestNotificationTime)) {
+                        latestNotificationTime = latest
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -148,7 +155,7 @@ class NotificationsService(val project: Project) : Disposable {
         //this is a trick. when the popup is hidden we want to markAllRead. the way to catch when popup is hidden is
         // catching the event JBPopupListener.onClosed. but onClose is also called after closing the popup intentionally
         // when clicking view all or goToInsights, in these cases we don't want to markAllRead.
-        //so nullifying latestNotificationTime will do the trick, is latestNotificationTime is null mark read will not be called.
+        //so nullifying latestNotificationTime will do the trick because if latestNotificationTime is null setReadNotificationsTime will not be called.
         latestNotificationTime = null
     }
 }

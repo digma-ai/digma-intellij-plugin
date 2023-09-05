@@ -30,5 +30,7 @@ dependencies {
 
 tasks.test {
     systemProperty("intellij.progress.task.ignoreHeadless", true)
+//    systemProperty("idea.log.trace.categories", "#org.digma")
+//    systemProperty("idea.log.debug.categories", "#org.digma")
     useJUnit()
 }

@@ -26,7 +26,7 @@ class WaitFinishRule : TestRule {
                 if (description.getAnnotation(WaitForAsync::class.java) != null)
                     latch = CountDownLatch(1)
                 try {
-                    base.evaluate()
+                    base.evaluate() // try to execute the in thread pool
                 } finally {
                     waitForCompletion()
                 }

@@ -123,7 +123,6 @@ class NotificationsButton(val project: Project) : JButton() {
                 .addListener(object : JBPopupListener {
                     override fun onClosed(event: LightweightWindowEvent) {
                         topNotificationsPanel.dispose()
-                        project.service<NotificationsService>().markAllRead()
                     }
                 })
                 .createPopup()

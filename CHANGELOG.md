@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.161] - 2023-09-04
+## [2.0.162] - 2023-09-05
+- close wizard or troubleshooting when need to show insights by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1249
+- Notifications center by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1242
+
+## 2.0.161 - 2023-09-04
 - Update Insight UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1235
 - Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1237
 - catch-exception-when-calling-getPerformanceMetrics by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1240

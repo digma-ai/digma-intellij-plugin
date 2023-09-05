@@ -109,6 +109,31 @@ class InsightsViewOrchestrator(val project: Project) {
         }
     }
 
+
+    fun showInsightsForMethod(methodCodeObjectId: String) {
+
+        //todo: temp , will navigate to code.
+        EDT.ensureEDT {
+            showInsightsForSpanOrMethodAndNavigateToCode(null, methodCodeObjectId)
+        }
+
+
+        //todo: implement showInsightsForMethod without navigation, it requires new implementation for such
+        // scenario
+//        currentState.set(ViewState.MethodWithoutNavigation)
+
+//        Log.log(logger::debug, project, "Got showInsightsForMethod {}", methodCodeObjectId)
+
+//        Backgroundable.ensurePooledThread {
+//
+//            val languageService = LanguageService.findLanguageServiceByMethodCodeObjectId(project,methodCodeObjectId)
+//            languageService.
+//        }
+    }
+
+
+
+
     fun showInsightsForMethodFromBackNavigation(methodId: String) {
 
         currentState.set(ViewState.MethodFromBackNavigation)
@@ -296,5 +321,6 @@ class InsightsViewOrchestrator(val project: Project) {
             project.service<ErrorsViewService>().showDocumentPreviewList(documentInfoContainer, fileUri)
         }
     }
+
 
 }

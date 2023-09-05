@@ -95,7 +95,7 @@ class NotificationsService(val project: Project) : Disposable {
         spanCodeObjectId?.let {
             project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanCodeObjectId)
         } ?: methodCodeObjectId?.let {
-            //project.service<InsightsViewOrchestrator>().showInsightsForMethod(methodCodeObjectId)
+            project.service<InsightsViewOrchestrator>().showInsightsForMethod(methodCodeObjectId)
         }
 
     }

@@ -32,10 +32,6 @@ public class ToolWindowShower {
     }
 
 
-    @Nullable
-    public ToolWindow getToolWindow() {
-        return toolWindow;
-    }
 
 
     public boolean isToolWindowVisible(){

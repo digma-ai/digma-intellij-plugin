@@ -304,6 +304,7 @@ public class MainToolWindowCardsController implements Disposable {
         }
         wizardFinished();
         troubleshootingFinished();
+        closeAllNotificationsIfShowing();
     }
 
     public void showMainPanel() {

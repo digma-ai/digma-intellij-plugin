@@ -143,7 +143,12 @@ class NotificationsService(val project: Project) : Disposable {
         }
     }
 
+
     fun resetLatestNotificationTime() {
+        //this is a trick. when the popup is hidden we want to markAllRead. the way to catch when popup is hidden is
+        // catching the event JBPopupListener.onClosed. but onClose is also called after closing the popup intentionally
+        // when clicking view all or goToInsights, in these cases we don't want to markAllRead.
+        //so nullifying latestNotificationTime will do the trick, is latestNotificationTime is null mark read will not be called.
         latestNotificationTime = null
     }
 }

@@ -1,5 +1,7 @@
 package org.digma.intellij.plugin.ui.notifications
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ArrayNode
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -26,6 +28,8 @@ class NotificationsService(val project: Project) : Disposable {
     private val logger = Logger.getInstance(this::class.java)
 
     private var notificationsButton: NotificationsButton? = null
+
+    private var latestNotificationTime: ZonedDateTime? = null
 
     override fun dispose() {
         //nothing to do ,used as parent disposable
@@ -56,9 +60,14 @@ class NotificationsService(val project: Project) : Disposable {
     }
 
 
-    fun setReadNotificationsTime(upToDateTime: String) {
+    fun markAllRead() {
         try {
-            project.service<AnalyticsService>().setReadNotificationsTime(upToDateTime, UserId.userId)
+
+            latestNotificationTime?.let {
+                Log.log(logger::trace, project, "marking notifications read with date {}", it)
+                project.service<AnalyticsService>().setReadNotificationsTime(it.toString(), UserId.userId)
+            }
+
         } catch (e: NoSelectedEnvironmentException) {
             //just log, it may happen a lot
             Log.debugWithException(logger, project, e, "No selected environment")
@@ -67,16 +76,23 @@ class NotificationsService(val project: Project) : Disposable {
             ErrorReporter.getInstance().reportError(project, "NotificationsService.setReadNotificationsTime", e)
         }
 
+        //make sure the bell updates it state immediately
         notificationsButton?.checkUnread()
     }
 
-    fun goToSpan(spanCodeObjectId: String) {
+
+    fun goToInsight(spanCodeObjectId: String?, methodCodeObjectId: String?) {
 
         EDT.assertNonDispatchThread()
 
-        Log.log(logger::trace, project, "goToSpan called for {}", spanCodeObjectId)
+        Log.log(logger::trace, project, "goToInsight called for {}", spanCodeObjectId)
         project.service<ActivityMonitor>().registerSpanLinkClicked(MonitoredPanel.Notifications)
-        project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanCodeObjectId)
+        spanCodeObjectId?.let {
+            project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanCodeObjectId)
+        } ?: methodCodeObjectId?.let {
+            //project.service<InsightsViewOrchestrator>().showInsightsForMethod(methodCodeObjectId)
+        }
+
     }
 
     fun getNotifications(pageNumber: Int, pageSize: Int, isRead: Boolean): String {
@@ -85,8 +101,10 @@ class NotificationsService(val project: Project) : Disposable {
 
         //exceptions should be handled in place where calling this method, don't return empty string
         try {
-            return project.service<AnalyticsService>()
+            val notifications = project.service<AnalyticsService>()
                 .getNotifications(service<PersistenceService>().state.notificationsStartDate, UserId.userId, pageNumber, pageSize, isRead)
+            updateLatestNotificationTime(notifications)
+            return notifications
         } catch (e: NoSelectedEnvironmentException) {
             //just log, it may happen a lot
             Log.debugWithException(logger, project, e, "No selected environment")
@@ -95,6 +113,21 @@ class NotificationsService(val project: Project) : Disposable {
             Log.warnWithException(logger, project, e, "exception in getNotifications")
             ErrorReporter.getInstance().reportError(project, "NotificationsService.getNotifications", e)
             throw e
+        }
+    }
+
+    private fun updateLatestNotificationTime(notifications: String?) {
+        try {
+            notifications?.let {
+                val objectMapper = ObjectMapper()
+                val notificationsArray: ArrayNode = objectMapper.readTree(it).get("notifications") as ArrayNode
+                if (notificationsArray.size() > 0) {
+                    val timestamp = notificationsArray.get(0).get("timestamp").asText()
+                    latestNotificationTime = ZonedDateTime.parse(timestamp).withZoneSameInstant(ZoneOffset.UTC)
+                }
+            }
+        } catch (e: Exception) {
+            Log.warnWithException(logger, project, e, "exception in updateLatestNotificationTime")
         }
     }
 

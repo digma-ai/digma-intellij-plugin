@@ -15,6 +15,7 @@ import com.intellij.util.ui.JBUI
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -87,13 +88,15 @@ class NotificationsButton(val project: Project) : JButton() {
     fun checkUnread() {
         try {
 
-            val notificationsService = project.service<NotificationsService>()
+            if (BackendConnectionMonitor.getInstance(project).isConnectionOk()) {
+                val notificationsService = project.service<NotificationsService>()
 
-            val hasUnread = notificationsService.hasUnreadNotifications()
+                val hasUnread = notificationsService.hasUnreadNotifications()
 
-            if (hasUnread != hasUnreadNotifications) {
-                hasUnreadNotifications = hasUnread
-                updateState()
+                if (hasUnread != hasUnreadNotifications) {
+                    hasUnreadNotifications = hasUnread
+                    updateState()
+                }
             }
         } catch (e: Exception) {
             Log.warnWithException(logger, project, e, "exception in NotificationsButton refresh loop")
@@ -119,6 +122,7 @@ class NotificationsButton(val project: Project) : JButton() {
                 .addListener(object : JBPopupListener {
                     override fun onClosed(event: LightweightWindowEvent) {
                         topNotificationsPanel.dispose()
+                        project.service<NotificationsService>().markAllRead()
                     }
                 })
                 .createPopup()

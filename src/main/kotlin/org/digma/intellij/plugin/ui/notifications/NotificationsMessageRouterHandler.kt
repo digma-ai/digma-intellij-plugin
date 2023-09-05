@@ -15,7 +15,6 @@ import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.executeWindowPostMessageJavaScript
 import org.digma.intellij.plugin.ui.jcef.model.ErrorPayload
 import org.digma.intellij.plugin.ui.jcef.model.Payload
-import org.digma.intellij.plugin.ui.jcef.tryGetFieldFromPayload
 import org.digma.intellij.plugin.ui.notifications.model.SetNotificationsMessage
 
 
@@ -76,26 +75,30 @@ abstract class NotificationsMessageRouterHandler(project: Project) : BaseMessage
                 }
             }
 
-            "NOTIFICATIONS/GO_TO_SPAN" -> {
+            "NOTIFICATIONS/GO_TO_INSIGHTS" -> {
                 ActivityMonitor.getInstance(project).registerNotificationCenterEvent("${javaClass.simpleName}SpanClicked", mapOf())
-                Log.log(logger::trace, project, "got NOTIFICATIONS/GO_TO_SPAN message")
+                Log.log(logger::trace, project, "got NOTIFICATIONS/GO_TO_INSIGHTS message")
                 doClose()
-                val spanCodeObjectId: String = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("spanCodeObjectId").asText()
-                project.service<NotificationsService>().goToSpan(spanCodeObjectId)
+                val spanCodeObjectId: String? = try {
+                    objectMapper.readTree(requestJsonNode.get("payload").toString()).get("spanCodeObjectId").asText()
+                } catch (e: Exception) {
+                    null
+                }
+
+                val methodCodeObjectId: String? = try {
+                    objectMapper.readTree(requestJsonNode.get("payload").toString()).get("methodCodeObjectId").asText()
+                } catch (e: Exception) {
+                    null
+                }
+
+
+                project.service<NotificationsService>().goToInsight(spanCodeObjectId, methodCodeObjectId)
             }
 
             "NOTIFICATIONS/CLOSE" -> {
                 ActivityMonitor.getInstance(project).registerNotificationCenterEvent("${javaClass.simpleName}Closed", mapOf())
                 Log.log(logger::trace, project, "got NOTIFICATIONS/CLOSE message")
-                //if there are no notifications upToDateTime will not exist in the payload
-                val upToDateTime = tryGetFieldFromPayload(objectMapper, requestJsonNode, "upToDateTime")
-                if (upToDateTime == null) {
-                    Log.log(logger::warn, project, "could not get upToDateTime in NOTIFICATIONS/CLOSE , not marking notifications as read")
-                }
-                upToDateTime?.let {
-                    Log.log(logger::trace, project, "marking notifications read with {}", it)
-                    project.service<NotificationsService>().setReadNotificationsTime(it)
-                }
+                project.service<NotificationsService>().markAllRead()
                 doClose()
             }
         }

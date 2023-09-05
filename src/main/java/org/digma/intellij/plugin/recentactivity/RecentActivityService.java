@@ -308,7 +308,7 @@ public class RecentActivityService implements Disposable {
         sendLatestActivities(allEnvironments);
     }
 
-    public void processRecentActivityGoToSpanRequest(RecentActivityEntrySpanPayload payload, Project project) {
+    private void processRecentActivityGoToSpanRequest(RecentActivityEntrySpanPayload payload, Project project) {
         Log.test(logger::info, "processRecentActivityGoToSpanRequest payload: {}", payload);
         if (payload != null) {
 

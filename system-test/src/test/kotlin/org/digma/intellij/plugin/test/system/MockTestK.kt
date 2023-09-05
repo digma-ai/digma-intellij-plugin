@@ -1,7 +1,9 @@
 package org.digma.intellij.plugin.test.system
 
 import ai.grazie.nlp.utils.dropWhitespaces
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
@@ -11,20 +13,16 @@ import com.intellij.psi.JavaRecursiveElementVisitor
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase
-import com.intellij.ui.jcef.JBCefBrowser
-import io.mockk.mockkStatic
 import junit.framework.TestCase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService
 import org.digma.intellij.plugin.insights.InsightsMessageRouterHandler
-import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil
+import org.digma.intellij.plugin.insights.model.outgoing.InsightsPayload
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
@@ -41,23 +39,10 @@ import org.digma.intellij.plugin.ui.service.InsightsService
 import org.gradle.internal.impldep.org.junit.Rule
 import org.gradle.internal.impldep.org.junit.runner.RunWith
 import org.gradle.internal.impldep.org.junit.runners.JUnit4
-import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchers.anyInt
-import org.mockito.ArgumentMatchers.anyString
-import org.mockito.MockedStatic
-import org.mockito.Mockito
-import org.mockito.Mockito.atLeastOnce
-import org.mockito.Mockito.doAnswer
-import org.mockito.Mockito.mockStatic
-import org.mockito.Mockito.spy
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
-import java.lang.reflect.Field
+import java.util.concurrent.TimeUnit
 
 import kotlin.test.assertNotEquals
 
-
-val staticMock = MockTestK.mockUtilClass()
 
 @RunWith(JUnit4::class)
 class MockTestK : LightJavaCodeInsightFixtureTestCase() {
@@ -77,52 +62,34 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
         get() {
             return RecentActivityService.getInstance(project)
         }
-    private val logger = Logger.getInstance(MockTestK::class.java)
+    val logger = Logger.getInstance(MockTestK::class.java)
 
     companion object {
 
         private var mocked: Boolean = false
-        private lateinit var mockedStatic: MockedStatic<JCefBrowserUtil>
 
-        @JvmStatic
-        fun mockUtilClass(): MockedStatic<JCefBrowserUtil> {
-            mockkStatic(JCefBrowserUtil::class)
-            mockedStatic = mockStatic(JCefBrowserUtil::class.java)
-
-            mocked = true
-            return mockedStatic
-        }
 
     }
 
-
-    @WaitForAsync
-    fun testStaticMocking() {
-        val jbCefBrowser = JBCefBrowserBuilderCreator.create().setUrl("http://EdanUrl/index.html").build();
-        JCefBrowserUtil.postJSMessage("test", jbCefBrowser)
-
-        done()
-    }
 
     override fun setUp() {
         super.setUp()
         done.complete = false
         mockRestAnalyticsProvider(project)
         messageBusTestListeners = MessageBusTestListeners(project.messageBus)
-        mockUtilClass()
 
     }
 
     override fun tearDown() {
         Log.test(logger::info, "FFS: tearDown")
-        while (true) {
-            if (done.complete) {
-                done()
-                break
-            } else {
-                done.waitForCompletion()
-            }
-        }
+//        while (true) {
+//            if (done.complete) {
+//                done()
+//                break
+//            } else {
+//                done.waitForCompletion()
+//            }
+//        }
 
         try {
             super.tearDown()
@@ -457,130 +424,80 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
 //
 //
 //    }
+    
 
-
-    fun replaceInsightMessageRouterWithSpy() {
-        var cefBrowserField: Field?
-        val insightService = project.service<InsightsService>()
-        val routerField = insightService.javaClass.getDeclaredField("messageHandler")
-        routerField.isAccessible = true
-        val router: InsightsMessageRouterHandler = routerField.get(insightService) as InsightsMessageRouterHandler
-
-        val browserField = router.javaClass.getDeclaredField("jbCefBrowser")
-        browserField.isAccessible = true
-        val browser = browserField.get(router) as JBCefBrowser
-        val mockJBBrowser = spy(browser)
-        browserField.set(router, mockJBBrowser)
-
-
-        try {
-            cefBrowserField = browser.javaClass.getDeclaredField("myCefBrowser")
-        } catch (ex: NoSuchFieldException) {
-            Log.test(logger::info, "NoSuchFieldException: trying supper class")
-            val superClass = browser.javaClass.superclass
-            cefBrowserField = superClass.getDeclaredField("myCefBrowser")
-        }
-
-        if (cefBrowserField == null) {
-            throw NoSuchFieldException("myCefBrowser")
-        }
-
-
-        cefBrowserField.isAccessible = true
-
-        val cefBrowser: CefBrowser = cefBrowserField.get(browser) as CefBrowser
-        val mockedCefBrowser: CefBrowser = spy(cefBrowser)
-        cefBrowserField.set(browser, mockedCefBrowser)
-
-        doAnswer {
-            Log.test(logger::info, "excecuteJS - of mock before real call")
-        }.`when`(mockedCefBrowser).executeJavaScript(anyString(), anyString(), anyInt())
-
-        // mocking calls of JBCefBrowser
-        `when`(mockJBBrowser.getCefBrowser())
-            .thenAnswer {
-                Log.test(logger::info, "getCefBrowser - of mockJBBrowser before real call, returning Edan's spy")
-                return@thenAnswer mockedCefBrowser
-            }
-            .thenReturn(mockedCefBrowser)
-
-        // mocking calls of CefBrowser
-        `when`(mockedCefBrowser.getURL())
-            .thenAnswer {
-                Log.test(logger::info, "getURL - of mock before real call")
-                return@thenAnswer "http://EdanUrl/index.html"
-            }
-
-            
-        
-//        `when`(mockedCefBrowser.executeJavaScript(anyString(), anyString(), anyInt()))
-//            .thenAnswer {
-//                Log.test(logger::info, "executeJavaScript - of spy before real call")
-//            }
-//        doAnswer {
-//            Log.test(logger::info, "executeJavaScript - of spy before real call")
-//        }.
-//        verify(mockedCefBrowser, atLeastOnce()).executeJavaScript(anyString(), anyString(), anyInt())
-
-//        `when`(mockedCefBrowser.executeJavaScript(anyString(), anyString(), anyInt()))
-//            .thenAnswer {
-//                println("executeJavaScript - of spy before real call - then answer!!!!!!!!!!!!!")
-//                return@thenAnswer Unit
-//            }
-
-
-//        `when`(spy.onQuery(isA(CefBrowser::class.java), any(), anyLong(), anyString(), anyBoolean(), any())).thenAnswer {
-//            Log.test(logger::info, "onQuery - of spy before real call")
-//        }.thenCallRealMethod()
-
-        Log.test(logger::info, "Spy created")
-    }
 
 
     @WaitForAsync
     fun `test trigger processRecentActivityGoToSpanRequest`() {
-        replaceInsightMessageRouterWithSpy()
+        val (jbCaf, caf) = replaceCefBrowserWithSpy(
+            containingService = project.service<InsightsService>(),
+            messageHandlerFieldName = "messageHandler",
+            messageHandlerType = InsightsMessageRouterHandler::class.java,
+            jbBrowserFieldName = "jbCefBrowser")
+        prepareDefaultSpyCalls(jbCaf, caf)
+        
+        
+        replaceExecuteJSWithAssertionFunction(caf) { props ->
+            val objectMapper = ObjectMapper()
+            val message = objectMapper.readTree(props)
+            Log.test(logger::info, "executeJS - message: {}", message)
+            TestCase.assertEquals("digma",message.get("type").textValue())
+            TestCase.assertEquals("INSIGHTS/SET_DATA",message.get("action").textValue())
+//            TestCase.assertTrue(message.get("payload").get("environment").toString() == "env1_mock")
+            
+        }
+        
+        
+        
         val file = myFixture.configureByFile("EditorEventsHandler.java")
         myFixture.openFileInEditor(file.virtualFile)
-
-        myFixture.editor.caretModel.moveToLogicalPosition(LogicalPosition(50, 7))
-
-        val payload: RecentActivityEntrySpanPayload = RecentActivityEntrySpanPayload(
-            span = EntrySpan(
-                displayText = "displayText",
-                serviceName = "serviceName",
-                scopeId = "scopeId",
-                spanCodeObjectId = "spanCodeObjectId",
-                methodCodeObjectId = "org.digma.intellij.plugin.editor.EditorEventsHandler\$_\$isRelevantFile"
-            ), environment = "env1_mock"
-        )
-        val proj: Project = this.project
+//        myFixture.editor.caretModel.moveToLogicalPosition(LogicalPosition(50, 7))
+        val future = ApplicationManager.getApplication().executeOnPooledThread() {
 
 
+            val payload: RecentActivityEntrySpanPayload = RecentActivityEntrySpanPayload(
+                span = EntrySpan(
+                    displayText = "displayText",
+                    serviceName = "serviceName",
+                    scopeId = "scopeId",
+                    spanCodeObjectId = "spanCodeObjectId",
+                    methodCodeObjectId = "org.digma.intellij.plugin.editor.EditorEventsHandler\$_\$isRelevantFile"
+                ), environment = "env1_mock"
+            )
+            val proj: Project = this.project
 
 
-        runBlocking {
-            delay(1000L)
-        }
+//            runBlocking {
+//                delay(1000L)
+//            }
 
-        Log.test(logger::info, "is EDT: {}", EDT.isEdt())
+            Log.test(logger::info, "is EDT: {}", EDT.isEdt())
 
-        try {
-            Log.test(logger::info, "Invoke processRecentActivityGoToSpanRequest")
-            recentActivityService.processRecentActivityGoToSpanRequest(payload, proj)
-            runBlocking {
-                delay(5000L)
+            try {
+                Log.test(logger::info, "Invoke processRecentActivityGoToSpanRequest")
+                val processRecentActivityGoToSpanRequestMethodRef = getMethodReference(
+                    recentActivityService,
+                    "processRecentActivityGoToSpanRequest",
+                    RecentActivityEntrySpanPayload::class.java,
+                    Project::class.java
+                )
+                invokeMethod(recentActivityService, processRecentActivityGoToSpanRequestMethodRef, payload, proj)
+                runBlocking {
+                    delay(10000L)
+                }
+
+
+            } catch (ex: Exception) {
+                Log.test(logger::info, "Invoke Throws Exception: {}", ex.message)
             }
 
-
-        } catch (ex: Exception) {
-            Log.test(logger::info, "Invoke Throws Exception: {}", ex.message)
+            Log.test(logger::info, "after catch")
+//            runBlocking {
+//                delay(1000L)
+//            }
         }
-
-        Log.test(logger::info, "after catch")
-        runBlocking {
-            delay(1000L)
-        }
+        future.get(20, TimeUnit.SECONDS)
     }
 }
 

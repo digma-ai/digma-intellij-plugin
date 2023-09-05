@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.io.CharStreams;
+import okhttp3.Cache;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
@@ -28,6 +29,10 @@ import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveDataRequest;
 import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation;
 import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigationRequest;
+import org.digma.intellij.plugin.model.rest.notifications.GetUnreadNotificationsCountRequest;
+import org.digma.intellij.plugin.model.rest.notifications.NotificationsRequest;
+import org.digma.intellij.plugin.model.rest.notifications.SetReadNotificationsRequest;
+import org.digma.intellij.plugin.model.rest.notifications.UnreadNotificationsCountResponse;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
@@ -178,6 +183,21 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
+    public String getNotifications(NotificationsRequest notificationsRequest) {
+        return execute(() -> client.analyticsProvider.getNotifications(notificationsRequest));
+    }
+
+    @Override
+    public void setReadNotificationsTime(SetReadNotificationsRequest setReadNotificationsRequest) {
+        execute(() -> client.analyticsProvider.setReadNotificationsTime(setReadNotificationsRequest));
+    }
+
+    @Override
+    public UnreadNotificationsCountResponse getUnreadNotificationsCount(GetUnreadNotificationsCountRequest getUnreadNotificationsCountRequest) {
+        return execute(() -> client.analyticsProvider.getUnreadNotificationsCount(getUnreadNotificationsCountRequest));
+    }
+
+    @Override
     public VersionResponse getVersions(VersionRequest request) {
         return execute(() -> client.analyticsProvider.getVersions(request));
     }
@@ -214,8 +234,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
             return response.body();
         } else {
             String message;
-            try {
-                message = String.format("Error %d. %s", response.code(), response.errorBody() == null ? null : response.errorBody().string());
+            try (ResponseBody errorBody = response.errorBody()) {
+                message = String.format("Error %d. %s", response.code(), errorBody == null ? null : errorBody.string());
             } catch (IOException e) {
                 throw new AnalyticsProviderException(e.getMessage(), e);
             }
@@ -287,12 +307,12 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
             try {
                 sslContext = SSLContext.getInstance("SSL");
             } catch (NoSuchAlgorithmException e) {
-                throw new RuntimeException(e);
+                throw new AnalyticsProviderException(e);
             }
             try {
                 sslContext.init(null, new TrustManager[]{insecureTrustManager}, new SecureRandom());
             } catch (KeyManagementException e) {
-                throw new RuntimeException(e);
+                throw new AnalyticsProviderException(e);
             }
             SSLSocketFactory socketFactory = sslContext.getSocketFactory();
             builder.sslSocketFactory(socketFactory, insecureTrustManager);
@@ -314,8 +334,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         public void close() throws IOException {
             okHttpClient.dispatcher().executorService().shutdown();
             okHttpClient.connectionPool().evictAll();
-            if (null != okHttpClient.cache()) {
-                Objects.requireNonNull(okHttpClient.cache()).close();
+            //cache will be closed by try with resources
+            try (Cache cache = okHttpClient.cache()) {
+                if (cache != null) {
+                    cache.evictAll();
+                }
+            } catch (Exception e) {
+                //ignore here, is closing
             }
         }
     }
@@ -488,6 +513,27 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @POST("/CodeAnalytics/codeObjects/assets")
         Call<String> getAssets(@Body AssetsRequest assetsRequest);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/Notifications/get-all")
+        Call<String> getNotifications(@Body NotificationsRequest notificationsRequest);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/Notifications/read")
+        Call<ResponseBody> setReadNotificationsTime(@Body SetReadNotificationsRequest setReadNotificationsRequest);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/Notifications/counts")
+        Call<UnreadNotificationsCountResponse> getUnreadNotificationsCount(@Body GetUnreadNotificationsCountRequest getUnreadNotificationsCountRequest);
 
         @Headers({
                 "Accept: application/+json",

@@ -26,6 +26,7 @@ import org.digma.intellij.plugin.posthog.MonitoredPanel;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.psi.SupportedLanguages;
 import org.digma.intellij.plugin.settings.SettingsState;
+import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.digma.intellij.plugin.ui.model.TraceSample;
 import org.jetbrains.annotations.NotNull;
 
@@ -220,6 +221,7 @@ public class JaegerUIService {
         Log.log(logger::debug, project, "calling showInsightsForSpanOrMethodAndNavigateToCode from goToSpan for {}", span);
 
         EDT.ensureEDT(() -> {
+            MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing();
             project.getService(HomeSwitcherService.class).switchToInsights();
             project.getService(InsightsAndErrorsTabsHelper.class).switchToInsightsTab();
             ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Jaeger);
@@ -241,6 +243,7 @@ public class JaegerUIService {
         var span = goToSpanMessage.payload();
         //if we're here then code location was not found
         ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Jaeger);
+        MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing();
         project.getService(InsightsViewOrchestrator.class).showInsightsForCodelessSpan(span.spanCodeObjectId());
     }
 

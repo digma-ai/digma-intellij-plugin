@@ -29,6 +29,7 @@ import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
@@ -192,6 +193,7 @@ class GoToCodeObjectInsightsAction(
         val environmentsSupplier: EnvironmentsSupplier = project.service<AnalyticsService>().environment
 
         val runnable = Runnable {
+            MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing()
             project.service<HomeSwitcherService>().switchToInsights()
             project.service<InsightsAndErrorsTabsHelper>().switchToInsightsTab()
             if (canNavigate) {

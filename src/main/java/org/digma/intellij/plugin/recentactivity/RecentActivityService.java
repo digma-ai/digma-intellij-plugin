@@ -333,12 +333,14 @@ public class RecentActivityService implements Disposable {
 
                 var canNavigate = project.getService(CodeNavigator.class).canNavigateToSpanOrMethod(spanId, methodId);
                 if (canNavigate) {
+                    MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing();
                     EnvironmentsSupplier environmentsSupplier = AnalyticsService.getInstance(project).getEnvironment();
                     String actualEnvName = adjustBackEnvNameIfNeeded(payload.getEnvironment());
                     environmentsSupplier.setCurrent(actualEnvName, false, () -> EDT.ensureEDT(() -> {
                         project.getService(InsightsViewOrchestrator.class).showInsightsForSpanOrMethodAndNavigateToCode(spanId, methodId);
                     }));
                 } else {
+                    MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing();
                     NotificationUtil.showNotification(project, "code object could not be found in the workspace");
                     EnvironmentsSupplier environmentsSupplier = AnalyticsService.getInstance(project).getEnvironment();
                     String actualEnvName = adjustBackEnvNameIfNeeded(payload.getEnvironment());

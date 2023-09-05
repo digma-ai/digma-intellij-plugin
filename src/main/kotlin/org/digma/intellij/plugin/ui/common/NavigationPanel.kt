@@ -2,10 +2,13 @@ package org.digma.intellij.plugin.ui.common
 
 import com.intellij.openapi.project.Project
 import com.intellij.util.ui.JBUI
+import org.digma.intellij.plugin.ui.notifications.NotificationsButton
 import java.awt.BorderLayout
 import java.awt.CardLayout
 import java.awt.Dimension
 import java.awt.FlowLayout
+import java.awt.GridLayout
+import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.JPanel
 
@@ -54,10 +57,24 @@ class NavigationPanel(private val project: Project) : JPanel() {
     private fun getFirstRowPanel(): JPanel {
         val parentPanel = JPanel(BorderLayout())
         parentPanel.add(EnvironmentsCombo(project, this), BorderLayout.CENTER)
-        parentPanel.add(getSettingsButton(), BorderLayout.EAST)
+        parentPanel.add(getFirstRowButtons(), BorderLayout.EAST)
         parentPanel.background = Laf.Colors.EDITOR_BACKGROUND
         return parentPanel
     }
+
+
+    private fun getFirstRowButtons(): JPanel {
+
+        val buttonsPanel = JPanel(GridLayout(1, 2, 5, 0))
+        buttonsPanel.border = JBUI.Borders.empty()
+        buttonsPanel.background = Laf.Colors.EDITOR_BACKGROUND
+        buttonsPanel.add(getNotificationsButton())
+        buttonsPanel.add(getSettingsButton())
+        return buttonsPanel
+    }
+
+
+
 
     private fun getSecondRowPanel(): JPanel {
 
@@ -115,5 +132,15 @@ class NavigationPanel(private val project: Project) : JPanel() {
         wrapper.layout = FlowLayout(FlowLayout.CENTER, 10, 5)
         wrapper.add(quickSettingsButton)
         return wrapper
+    }
+
+    private fun getNotificationsButton(): JButton {
+
+        val size = Laf.scalePanels(Laf.Sizes.BUTTON_SIZE_24)
+        val buttonsSize = Dimension(size, size)
+        val notificationsButton = NotificationsButton(project)
+        notificationsButton.preferredSize = buttonsSize
+        notificationsButton.maximumSize = buttonsSize
+        return notificationsButton
     }
 }

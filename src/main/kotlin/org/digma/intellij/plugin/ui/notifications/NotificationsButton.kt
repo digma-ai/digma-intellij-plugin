@@ -16,6 +16,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
+import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -141,12 +142,14 @@ class NotificationsButton(val project: Project) : JButton() {
 
 
     private fun updateState() {
-        if (hasUnreadNotifications) {
-            icon = getBadgeIcon()
-            pressedIcon = getPressedBadgeIcon()
-        } else {
-            icon = getMyIcon()
-            pressedIcon = getMyPressedIcon()
+        EDT.ensureEDT {
+            if (hasUnreadNotifications) {
+                icon = getBadgeIcon()
+                pressedIcon = getPressedBadgeIcon()
+            } else {
+                icon = getMyIcon()
+                pressedIcon = getMyPressedIcon()
+            }
         }
     }
 

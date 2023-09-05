@@ -80,11 +80,8 @@ class NotificationsService(val project: Project) : Disposable {
                 ErrorReporter.getInstance().reportError(project, "NotificationsService.setReadNotificationsTime", e)
             }
 
-            EDT.ensureEDT {
-                //make sure the bell updates it state immediately
-                notificationsButton?.checkUnread()
-            }
-
+            //make sure the bell updates it state immediately
+            notificationsButton?.checkUnread()
         }
     }
 

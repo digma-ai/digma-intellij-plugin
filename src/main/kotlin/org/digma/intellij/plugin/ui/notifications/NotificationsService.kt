@@ -68,7 +68,7 @@ class NotificationsService(val project: Project) : Disposable {
             try {
 
                 latestNotificationTime?.let {
-                    Log.log(logger::trace, project, "marking notifications read with date {}", it)
+                    Log.log(logger::trace, project, "marking notifications read with latestNotificationTime {}", it)
                     project.service<AnalyticsService>().setReadNotificationsTime(it.toString(), UserId.userId)
                 }
 

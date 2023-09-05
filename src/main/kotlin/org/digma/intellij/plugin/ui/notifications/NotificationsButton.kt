@@ -122,6 +122,7 @@ class NotificationsButton(val project: Project) : JButton() {
                 .setResizable(true)
                 .addListener(object : JBPopupListener {
                     override fun onClosed(event: LightweightWindowEvent) {
+                        project.service<NotificationsService>().markAllRead()
                         topNotificationsPanel.dispose()
                     }
                 })

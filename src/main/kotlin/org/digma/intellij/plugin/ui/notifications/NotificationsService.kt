@@ -142,4 +142,8 @@ class NotificationsService(val project: Project) : Disposable {
                 ZonedDateTime.now().minus(1, ChronoUnit.DAYS).withZoneSameInstant(ZoneOffset.UTC).toString()
         }
     }
+
+    fun resetLatestNotificationTime() {
+        latestNotificationTime = null
+    }
 }

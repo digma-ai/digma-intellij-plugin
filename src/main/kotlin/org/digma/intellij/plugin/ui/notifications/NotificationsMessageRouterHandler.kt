@@ -1,10 +1,15 @@
 package org.digma.intellij.plugin.ui.notifications
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.IntNode
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
+import org.digma.intellij.plugin.analytics.NoSelectedEnvironmentException
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -55,6 +60,14 @@ abstract class NotificationsMessageRouterHandler(project: Project) : BaseMessage
                         Log.log(logger::trace, project, "sending NOTIFICATIONS/SET_DATA message")
                         executeWindowPostMessageJavaScript(browser, objectMapper.writeValueAsString(message))
 
+                    } catch (e: NoSelectedEnvironmentException) {
+                        Log.warnWithException(logger, e, "error setting notifications data")
+                        val jsonNode = createEmptyNotifications()
+                        val message =
+                            SetNotificationsMessage("digma", "NOTIFICATIONS/SET_DATA", Payload(jsonNode))
+                        Log.log(logger::trace, project, "sending NOTIFICATIONS/SET_DATA message with error")
+                        executeWindowPostMessageJavaScript(browser, objectMapper.writeValueAsString(message))
+                        ErrorReporter.getInstance().reportError(project, "NotificationsMessageRouterHandler.SET_DATA", e)
                     } catch (e: AnalyticsServiceException) {
                         Log.warnWithException(logger, e, "error setting notifications data")
                         val message =
@@ -77,8 +90,6 @@ abstract class NotificationsMessageRouterHandler(project: Project) : BaseMessage
 
             "NOTIFICATIONS/GO_TO_INSIGHTS" -> {
                 ActivityMonitor.getInstance(project).registerNotificationCenterEvent("${javaClass.simpleName}SpanClicked", mapOf())
-
-                project.service<NotificationsService>().resetLatestNotificationTime()
 
                 Log.log(logger::trace, project, "got NOTIFICATIONS/GO_TO_INSIGHTS message")
                 doClose()
@@ -104,6 +115,25 @@ abstract class NotificationsMessageRouterHandler(project: Project) : BaseMessage
                 project.service<NotificationsService>().markAllRead()
                 doClose()
             }
+        }
+
+    }
+
+    private fun createEmptyNotifications(): JsonNode? {
+
+        return try {
+            val objectMapper = ObjectMapper()
+            val notificationRoot: ObjectNode = objectMapper.createObjectNode()
+            val notificationsArray: ArrayNode = objectMapper.createArrayNode()
+            notificationRoot.set<ArrayNode>("notifications", notificationsArray)
+
+            notificationRoot.set<IntNode>("totalCount", IntNode(0))
+            notificationRoot.set<IntNode>("unreadCount", IntNode(0))
+
+            notificationRoot
+
+        } catch (e: Exception) {
+            null
         }
 
     }

@@ -91,6 +91,8 @@ abstract class NotificationsMessageRouterHandler(project: Project) : BaseMessage
             "NOTIFICATIONS/GO_TO_INSIGHTS" -> {
                 ActivityMonitor.getInstance(project).registerNotificationCenterEvent("${javaClass.simpleName}SpanClicked", mapOf())
 
+                project.service<NotificationsService>().markAllRead()
+
                 Log.log(logger::trace, project, "got NOTIFICATIONS/GO_TO_INSIGHTS message")
                 doClose()
                 val spanCodeObjectId: String? = try {

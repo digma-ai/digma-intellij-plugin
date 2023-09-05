@@ -77,6 +77,14 @@ abstract class NotificationsMessageRouterHandler(project: Project) : BaseMessage
 
             "NOTIFICATIONS/GO_TO_INSIGHTS" -> {
                 ActivityMonitor.getInstance(project).registerNotificationCenterEvent("${javaClass.simpleName}SpanClicked", mapOf())
+
+
+                //this is a trick. when the popup is hidden we want to markAllRead. the way to catch when popup is hidden is
+                // catching the event JBPopupListener.onClosed. but onClose is also called after closing the popup intentionally
+                // here by calling doClose, but when clicking view all we don't want to markAllRead.
+                //so nullifying latestNotificationTime will do the trick.
+                project.service<NotificationsService>().resetLatestNotificationTime()
+
                 Log.log(logger::trace, project, "got NOTIFICATIONS/GO_TO_INSIGHTS message")
                 doClose()
                 val spanCodeObjectId: String? = try {

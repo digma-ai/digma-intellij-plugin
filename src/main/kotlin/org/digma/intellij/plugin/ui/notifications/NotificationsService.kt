@@ -131,9 +131,8 @@ class NotificationsService(val project: Project) : Disposable {
                 if (notificationsArray.size() > 0) {
                     val timestamp = notificationsArray.get(0).get("timestamp").asText()
                     val latest = ZonedDateTime.parse(timestamp).withZoneSameInstant(ZoneOffset.UTC)
-                    if (latestNotificationTime == null) {
-                        latestNotificationTime = latest
-                    } else if (latest.isAfter(latestNotificationTime)) {
+                    if (latestNotificationTime == null || latest.isAfter(latestNotificationTime)) {
+                        Log.log(logger::trace, project, "updating latestNotificationTime tp {}", latest)
                         latestNotificationTime = latest
                     }
                 }

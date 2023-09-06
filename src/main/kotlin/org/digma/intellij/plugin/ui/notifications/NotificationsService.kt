@@ -91,7 +91,6 @@ class NotificationsService(val project: Project) : Disposable {
         EDT.assertNonDispatchThread()
 
         Log.log(logger::trace, project, "goToInsight called for {}", spanCodeObjectId)
-        project.service<ActivityMonitor>().registerSpanLinkClicked(MonitoredPanel.Notifications)
         spanCodeObjectId?.let {
             project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanCodeObjectId)
         } ?: methodCodeObjectId?.let {

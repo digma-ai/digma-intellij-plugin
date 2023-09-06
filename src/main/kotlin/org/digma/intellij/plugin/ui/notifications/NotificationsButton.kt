@@ -111,6 +111,7 @@ class NotificationsButton(val project: Project) : JButton() {
         try {
 
             ActivityMonitor.getInstance(project).registerNotificationCenterEvent("NotificationsBellClicked", mapOf())
+            ActivityMonitor.getInstance(project).registerUserAction("Notifications bell clicked")
 
             val topNotificationsPanel = TopNotificationsPanel(project)
             topNotificationsPanel.preferredSize = Dimension(400.scaled(), 500.scaled())

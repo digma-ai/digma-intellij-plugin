@@ -15,6 +15,7 @@ import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.executeWindowPostMessageJavaScript
@@ -89,7 +90,9 @@ abstract class NotificationsMessageRouterHandler(project: Project) : BaseMessage
             }
 
             "NOTIFICATIONS/GO_TO_INSIGHTS" -> {
+                project.service<ActivityMonitor>().registerSpanLinkClicked(MonitoredPanel.Notifications)
                 ActivityMonitor.getInstance(project).registerNotificationCenterEvent("${javaClass.simpleName}SpanClicked", mapOf())
+                ActivityMonitor.getInstance(project).registerUserAction("Notification link clicked")
 
                 project.service<NotificationsService>().markAllRead()
 
@@ -153,6 +156,7 @@ class TopNotificationsMessageRouterHandler(project: Project, private val topNoti
 
             "NOTIFICATIONS/GO_TO_NOTIFICATIONS" -> {
                 ActivityMonitor.getInstance(project).registerNotificationCenterEvent("NotificationsViewAllClicked", mapOf())
+                ActivityMonitor.getInstance(project).registerUserAction("Notification view-all clicked")
 
                 project.service<NotificationsService>().resetLatestNotificationTime()
 

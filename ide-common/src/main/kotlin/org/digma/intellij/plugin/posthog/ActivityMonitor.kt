@@ -1,14 +1,17 @@
 package org.digma.intellij.plugin.posthog
 
+import com.fasterxml.jackson.core.JsonProcessingException
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
 import com.posthog.java.PostHog
+import org.digma.intellij.plugin.common.JsonUtils
 import org.digma.intellij.plugin.common.UserId
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.AboutResult
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
+import org.digma.intellij.plugin.model.rest.version.PerformanceCounterReport
 import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.semanticversion.SemanticVersionUtil
@@ -377,25 +380,41 @@ class ActivityMonitor(project: Project) : Disposable {
         )
     }
 
-    fun registerContinuousPerformanceMetrics(result: PerformanceMetricsResponse) {
-        val properties = mutableMapOf<String, Any>(
-            "data" to result
-        )
-        capture("continuous-performance-metrics", properties)
-    }
 
-    fun registerPerformanceMetrics(result: PerformanceMetricsResponse) {
-        val properties = mutableMapOf<String, Any>(
-            "server.startTime" to result.serverStartTime,
-            //"server.aliveTime" to result.serverAliveTime,
-            "probeTime" to result.probeTime
-        )
-        for (metric in result.metrics) {
-            val uncapitalizedMetric = Character.toLowerCase(metric.metric[0]) + metric.metric.substring(1);
-            properties["server.metric.$uncapitalizedMetric"] = metric.value
+    fun registerPerformanceMetrics(performanceMetrics: PerformanceMetricsResponse, isFirstTime: Boolean) {
+
+        val jsonData = try {
+            JsonUtils.objectToJson(performanceMetrics)
+        } catch (e: JsonProcessingException) {
+            "could not write PerformanceMetricsResponse to json $e"
         }
 
-        capture("server received-data", properties)
+        val properties = mutableMapOf<String, Any>(
+            "data" to jsonData,
+            "server.startTime" to performanceMetrics.serverStartTime,
+            "probeTime" to performanceMetrics.probeTime
+        )
+
+        if (isFirstTime) {
+            properties["first time"] = true
+        }
+
+        performanceMetrics.metrics.forEach { metric: PerformanceCounterReport ->
+
+            when (metric.metric) {
+                "TotalUniqueSpans" -> {
+                    if (metric.value is List<*>) {
+                        val sum: Int = (metric.value as List<*>).sumOf { any: Any? -> any as Int }
+                        properties["TotalUniqueSpans"] = sum
+                    }
+                }
+
+                "MaxSpans" -> properties["MaxSpans"] = metric.value
+                "MaxTraces" -> properties["MaxTraces"] = metric.value
+            }
+        }
+
+        capture("performance-metrics", properties)
     }
 
 

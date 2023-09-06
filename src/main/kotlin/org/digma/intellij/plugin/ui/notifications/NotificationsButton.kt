@@ -78,9 +78,8 @@ class NotificationsButton(val project: Project) : JButton() {
         DisposingScope(project.service<NotificationsService>()).launch {
 
             while (isActive) {
-                delay(10000)
-
                 checkUnread()
+                delay(10000)
             }
         }
     }

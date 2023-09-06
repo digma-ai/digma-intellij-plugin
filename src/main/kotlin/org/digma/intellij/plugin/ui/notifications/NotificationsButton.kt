@@ -78,9 +78,8 @@ class NotificationsButton(val project: Project) : JButton() {
         DisposingScope(project.service<NotificationsService>()).launch {
 
             while (isActive) {
-                delay(10000)
-
                 checkUnread()
+                delay(10000)
             }
         }
     }
@@ -111,6 +110,7 @@ class NotificationsButton(val project: Project) : JButton() {
         try {
 
             ActivityMonitor.getInstance(project).registerNotificationCenterEvent("NotificationsBellClicked", mapOf())
+            ActivityMonitor.getInstance(project).registerUserAction("Notifications bell clicked")
 
             val topNotificationsPanel = TopNotificationsPanel(project)
             topNotificationsPanel.preferredSize = Dimension(400.scaled(), 500.scaled())

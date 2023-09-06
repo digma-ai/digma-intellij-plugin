@@ -17,8 +17,7 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
-import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.posthog.MonitoredPanel
+import org.digma.intellij.plugin.ui.toolwindow.ToolWindowIconChanger
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
@@ -82,6 +81,8 @@ class NotificationsService(val project: Project) : Disposable {
 
             //make sure the bell updates it state immediately
             notificationsButton?.checkUnread()
+
+            project.service<ToolWindowIconChanger>().changeToRegularIcon()
         }
     }
 
@@ -91,7 +92,6 @@ class NotificationsService(val project: Project) : Disposable {
         EDT.assertNonDispatchThread()
 
         Log.log(logger::trace, project, "goToInsight called for {}", spanCodeObjectId)
-        project.service<ActivityMonitor>().registerSpanLinkClicked(MonitoredPanel.Notifications)
         spanCodeObjectId?.let {
             project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanCodeObjectId)
         } ?: methodCodeObjectId?.let {

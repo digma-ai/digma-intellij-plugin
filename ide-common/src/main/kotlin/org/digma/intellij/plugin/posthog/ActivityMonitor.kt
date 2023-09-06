@@ -499,7 +499,7 @@ class ActivityMonitor(project: Project) : Disposable {
         )
     }
 
-    private fun registerUserAction(action: String) {
+    fun registerUserAction(action: String) {
         capture(
             "user-action",
             mapOf("action" to action)

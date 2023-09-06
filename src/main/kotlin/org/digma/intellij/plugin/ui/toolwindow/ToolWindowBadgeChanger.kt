@@ -122,10 +122,21 @@ class ToolWindowIconChanger(val project: Project) {
     }
 
     private fun createBadgeIcon(icon: Icon): Icon {
+
+        //will put the badge at the bottom of the icon
+        ////return ExecutionUtil.getIndicator(icon,icon.iconWidth,icon.iconHeight,JBUI.CurrentTheme.IconBadge.ERROR)
+
         @Suppress("UnstableApiUsage")
         return BadgeIcon(icon, JBUI.CurrentTheme.IconBadge.ERROR, object : BadgeDotProvider() {
             override fun getRadius(): Double {
                 return 1.5 / icon.iconWidth
+                //in new UI the badge is a buit small, can check if new UI and make the radius bigger
+//                return if (ExperimentalUI.isNewUI()){
+//                    2.0 / icon.iconWidth
+//                }else{
+//                    1.5 / icon.iconWidth
+//                }
+
             }
 
             override fun getX(): Double {

@@ -15,4 +15,8 @@ public class JsonUtils {
         return objectMapper.writeValueAsString(theRecord);
     }
 
+    public static String objectToJson(Object object) throws JsonProcessingException {
+        return objectMapper.writeValueAsString(object);
+    }
+
 }

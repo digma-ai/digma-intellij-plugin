@@ -1,7 +1,7 @@
 package org.digma.intellij.plugin.idea.runcfg
 
-import com.intellij.execution.application.ApplicationConfiguration
 import com.intellij.execution.configurations.RunConfigurationBase
+import com.intellij.execution.configurations.RunConfigurationOptions
 import com.intellij.execution.target.TargetEnvironmentsManager
 import com.intellij.execution.wsl.target.WslTargetEnvironmentConfiguration
 import com.intellij.openapi.diagnostic.Logger
@@ -50,10 +50,7 @@ class OTELJarProvider {
         val otelJar = getOtelAgentJar()
         if (otelJar.exists()) {
             if (isWsl(configuration)) {
-                // Converting From: C:\Users\asafc\AppData\Local\Temp\digma-otel-jars\opentelemetry-javaagent.jar
-                // To:              /mnt/c/Users/XXXXX/AppData/Local/Temp/digma-otel-jars/opentelemetry-javaagent.jar
-                val driveLetter = otelJar.absolutePath[0].lowercase()
-                return "/mnt/" + driveLetter + otelJar.absolutePath.substring(2).replace("\\", "/")
+                return convertWinToWslPath(otelJar.absolutePath)
             }
             return otelJar.absolutePath
         }
@@ -61,12 +58,19 @@ class OTELJarProvider {
         return null
     }
 
+    private fun convertWinToWslPath(path: String): String{
+        // Converting From: C:\Users\XXXXX\AppData\Local\Temp\digma-otel-jars\opentelemetry-javaagent.jar
+        // To:              /mnt/c/Users/XXXXX/AppData/Local/Temp/digma-otel-jars/opentelemetry-javaagent.jar
+        val driveLetter = path[0].lowercase()
+        return "/mnt/" + driveLetter + path.substring(2).replace("\\", "/")
+    }
+
     private fun isWsl(configuration: RunConfigurationBase<*>): Boolean {
         if (!SystemInfo.isWindows)
             return false
 
         val targets = TargetEnvironmentsManager.getInstance(configuration.project).targets.resolvedConfigs()
-        val targetName = (configuration as? ApplicationConfiguration)?.defaultTargetName
+        val targetName = (configuration.state as? RunConfigurationOptions)?.remoteTarget
         if (targetName == null)
             return false
 
@@ -85,10 +89,17 @@ class OTELJarProvider {
     }
 
 
-    fun getDigmaAgentExtensionJarPath(): String? {
+    fun getDigmaAgentExtensionJarPath(configuration: RunConfigurationBase<*>): String? {
         ensureFilesExist()
         val digmaJar = getDigmaAgentExtensionJar()
-        return if (digmaJar.exists()) digmaJar.absolutePath else null
+        if (digmaJar.exists()){
+            if (isWsl(configuration)) {
+                return convertWinToWslPath(digmaJar.absolutePath)
+            }
+            return digmaJar.absolutePath
+        }
+
+        return null
     }
 
     private fun getDigmaAgentExtensionJar(): File {

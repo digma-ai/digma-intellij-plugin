@@ -57,7 +57,7 @@ class TomcatRunConfigurationWrapperForIdeaUltimate: RunConfigurationWrapper {
     ): String? {
 
         val otelAgentPath = service<OTELJarProvider>().getOtelAgentJarPath(configuration)
-        val digmaExtensionPath = service<OTELJarProvider>().getDigmaAgentExtensionJarPath()
+        val digmaExtensionPath = service<OTELJarProvider>().getDigmaAgentExtensionJarPath(configuration)
         if (otelAgentPath == null || digmaExtensionPath == null) {
             Log.log(
                 logger::warn,

@@ -108,8 +108,6 @@ private fun buildLiveViewButton(project: Project, spanDurationsInsight: SpanDura
                 ActivityMonitor.getInstance(project).registerButtonClicked("live", spanDurationsInsight.type)
                 val idToUse = spanDurationsInsight.prefixedCodeObjectId
                 idToUse?.let {
-                    val durationLiveData = AnalyticsService.getInstance(project).getDurationLiveData(it)
-//                    RecentActivityService.getInstance(project).sendLiveData(durationLiveData, it)
                     project.getService(org.digma.intellij.plugin.ui.recentactivity.RecentActivityService::class.java).startLiveView(it)
                 }
             } catch (e: AnalyticsServiceException) {

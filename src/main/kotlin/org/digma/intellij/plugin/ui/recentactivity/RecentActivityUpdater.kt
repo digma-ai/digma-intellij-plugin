@@ -32,6 +32,8 @@ import java.util.Locale
 import java.util.Optional
 import javax.swing.Icon
 
+private const val RECENT_ACTIVITY_SET_DATA = "RECENT_ACTIVITY/SET_DATA"
+
 @Service(Service.Level.PROJECT)
 class RecentActivityUpdater(val project: Project) : Disposable {
 
@@ -98,7 +100,7 @@ class RecentActivityUpdater(val project: Project) : Disposable {
 
         val recentActivitiesMessage = RecentActivitiesMessageRequest(
             JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
-            JCefMessagesUtils.RECENT_ACTIVITY_SET_DATA,
+            RECENT_ACTIVITY_SET_DATA,
             RecentActivitiesMessagePayload(
                 sortedEnvironments,
                 getEntriesWithAdjustedLocalEnvs(latestActivityResult)

@@ -53,8 +53,16 @@ class RecentActivityUpdater(val project: Project) : Disposable {
     @Synchronized
     fun updateLatestActivities() {
         val environments = project.service<AnalyticsService>().environments
-        environments?.let {
-            updateLatestActivities(it)
+        environments?.let { envs ->
+
+            //remove from pending environments
+            envs.forEach {
+                if (project.service<AddEnvironmentsService>().getPendingEnvironments().contains(it)) {
+                    project.service<AddEnvironmentsService>().removeEnvironment(it)
+                }
+            }
+
+            updateLatestActivities(envs)
         }
 
     }

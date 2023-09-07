@@ -59,6 +59,7 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
             }
 
             "RECENT_ACTIVITY/ADD_ENVIRONMENT" -> {
+                project.service<ActivityMonitor>().registerCustomEvent("add environment", mapOf())
                 project.service<ActivityMonitor>().registerUserAction("add environment")
                 val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
                 environment?.let {
@@ -68,6 +69,7 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
             }
 
             "RECENT_ACTIVITY/DELETE_ENVIRONMENT" -> {
+                project.service<ActivityMonitor>().registerCustomEvent("delete environment", mapOf())
                 project.service<ActivityMonitor>().registerUserAction("delete environment")
                 val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
                 environment?.let {
@@ -77,12 +79,11 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
             }
 
             "RECENT_ACTIVITY/ADD_ENVIRONMENT_TO_RUN_CONFIG" -> {
+                project.service<ActivityMonitor>().registerCustomEvent("add environment to run config", mapOf())
                 project.service<ActivityMonitor>().registerUserAction("add environment to run config")
                 val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
                 environment?.let {
-                    if (project.service<AddEnvironmentsService>().addToCurrentRunConfig(it)) {
-//                        project.service<AddEnvironmentsService>().removeEnvironment(it)
-                    }
+                    project.service<AddEnvironmentsService>().addToCurrentRunConfig(it)
                     project.service<RecentActivityUpdater>().updateLatestActivities()
                 }
 

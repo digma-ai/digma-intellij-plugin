@@ -4,12 +4,17 @@ import com.intellij.execution.JavaRunConfigurationBase
 import com.intellij.execution.configurations.JavaParameters
 import com.intellij.execution.configurations.ModuleBasedConfiguration
 import com.intellij.execution.configurations.RunConfiguration
+import com.intellij.execution.configurations.RunConfigurationBase
+import com.intellij.execution.configurations.RunConfigurationOptions
+import com.intellij.execution.target.TargetEnvironmentsManager
+import com.intellij.execution.wsl.target.WslTargetEnvironmentConfiguration
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessModuleDir
+import com.intellij.openapi.util.SystemInfo
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
 import com.intellij.psi.search.GlobalSearchScope
@@ -59,6 +64,25 @@ class RunCfgTools {
                 is MavenRunConfiguration -> configuration.runnerParameters.goals
                 else -> listOf()
             }
+        }
+
+        fun isWsl(configuration: RunConfigurationBase<*>): Boolean {
+            if (!SystemInfo.isWindows)
+                return false
+
+            val targets = TargetEnvironmentsManager.getInstance(configuration.project).targets.resolvedConfigs()
+            val targetName = (configuration.state as? RunConfigurationOptions)?.remoteTarget
+            if (targetName == null)
+                return false
+
+            val target = targets.firstOrNull { it.displayName == targetName }
+            if (target == null)
+                return false
+
+            if (target !is WslTargetEnvironmentConfiguration)
+                return false
+
+            return true
         }
     }
 

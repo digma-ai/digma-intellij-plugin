@@ -10,6 +10,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.common.FileUtils
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.settings.SettingsState
 
@@ -56,14 +57,19 @@ class TomcatRunConfigurationWrapperForIdeaUltimate: RunConfigurationWrapper {
         serviceAlreadyDefined: Boolean,
     ): String? {
 
-        val otelAgentPath = service<OTELJarProvider>().getOtelAgentJarPath(configuration)
-        val digmaExtensionPath = service<OTELJarProvider>().getDigmaAgentExtensionJarPath(configuration)
+        var otelAgentPath = service<OTELJarProvider>().getOtelAgentJarPath()
+        var digmaExtensionPath = service<OTELJarProvider>().getDigmaAgentExtensionJarPath()
         if (otelAgentPath == null || digmaExtensionPath == null) {
             Log.log(
                 logger::warn,
                 "could not build $JAVA_TOOL_OPTIONS because otel agent or digma extension jar are not available. please check the logs"
             )
             return null
+        }
+
+        if(RunCfgTools.isWsl(configuration)){
+            otelAgentPath = FileUtils.convertWinToWslPath(otelAgentPath)
+            digmaExtensionPath = FileUtils.convertWinToWslPath(digmaExtensionPath)
         }
 
         var retVal = " "

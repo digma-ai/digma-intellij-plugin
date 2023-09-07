@@ -27,6 +27,7 @@ import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivitiesMessagePayload
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivitiesMessageRequest
+import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEnvironment
 import java.util.Date
 import java.util.Locale
 import java.util.Optional
@@ -95,6 +96,9 @@ class RecentActivityUpdater(val project: Project) : Disposable {
 
         val sortedEnvironments = getSortedEnvironments(allEnvironments, CommonUtils.getLocalHostname())
 
+        val pendingEnvironments = project.service<AddEnvironmentsService>().getPendingEnvironments()
+
+        val allEnvs = mergeWithPendingEnvironments(sortedEnvironments, pendingEnvironments)
 
         Log.log(logger::trace, "updating recent activities with result {}", latestActivityResult)
 
@@ -102,12 +106,23 @@ class RecentActivityUpdater(val project: Project) : Disposable {
             JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
             RECENT_ACTIVITY_SET_DATA,
             RecentActivitiesMessagePayload(
-                sortedEnvironments,
+                allEnvs,
                 getEntriesWithAdjustedLocalEnvs(latestActivityResult)
             )
         )
 
         serializeAndExecuteWindowPostMessageJavaScript(jCefComponent.jbCefBrowser.cefBrowser, recentActivitiesMessage)
+    }
+
+    private fun mergeWithPendingEnvironments(sortedEnvironments: List<String>, pendingEnvironments: List<String>): List<RecentActivityEnvironment> {
+
+        val allEnvs = mutableListOf<RecentActivityEnvironment>()
+
+        val permEnvs = sortedEnvironments.map { e: String -> RecentActivityEnvironment(e, false) }.toList()
+        allEnvs.addAll(permEnvs)
+        val pendingEnvs = pendingEnvironments.map { e: String -> RecentActivityEnvironment(e, true) }.toList()
+        allEnvs.addAll(pendingEnvs)
+        return allEnvs
     }
 
 

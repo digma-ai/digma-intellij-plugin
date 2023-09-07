@@ -58,6 +58,31 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                 }
             }
 
+            "RECENT_ACTIVITY/ADD_ENVIRONMENT" -> {
+                val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
+                environment?.let {
+                    project.service<AddEnvironmentsService>().addEnvironment(it)
+                    project.service<RecentActivityUpdater>().updateLatestActivities()
+                }
+            }
+
+            "RECENT_ACTIVITY/DELETE_ENVIRONMENT" -> {
+                val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
+                environment?.let {
+                    project.service<AddEnvironmentsService>().removeEnvironment(it)
+                    project.service<RecentActivityUpdater>().updateLatestActivities()
+                }
+            }
+
+            "RECENT_ACTIVITY/ADD_ENVIRONMENT_TO_RUN_CONFIG" -> {
+                val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
+                environment?.let {
+                    project.service<AddEnvironmentsService>().addToCurrentRunConfig(it)
+                    project.service<AddEnvironmentsService>().removeEnvironment(it)
+                    project.service<RecentActivityUpdater>().updateLatestActivities()
+                }
+
+            }
         }
     }
 

@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.162] - 2023-09-05
+## [2.0.163] - 2023-09-07
+- performance metrics posthog event by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1251
+- Notification feature additions Closes #1254 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1256
+- Fixed wsl detection by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1257
+
+## 2.0.162 - 2023-09-05
 - close wizard or troubleshooting when need to show insights by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1249
 - Notifications center by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1242
 

@@ -1,9 +1,6 @@
 package org.digma.intellij.plugin.idea.runcfg
 
-import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.SystemInfo
 import org.digma.intellij.plugin.common.Retries
 import org.digma.intellij.plugin.log.Log
 import java.io.File
@@ -43,19 +40,12 @@ class OTELJarProvider {
     }
 
 
-    fun getOtelAgentJarPath(project: Project): String? {
+    fun getOtelAgentJarPath(): String? {
         ensureFilesExist()
         val otelJar = getOtelAgentJar()
-         if (otelJar.exists()) {
-            if(SystemInfo.isWindows && project.basePath?.startsWith("//wsl$/") == true){
-                // Converting From: C:\Users\asafc\AppData\Local\Temp\digma-otel-jars\opentelemetry-javaagent.jar
-                // To:              /mnt/c/Users/XXXXX/AppData/Local/Temp/digma-otel-jars/opentelemetry-javaagent.jar
-                val driveLetter = otelJar.absolutePath[0].lowercase()
-                return "/mnt/" + driveLetter + otelJar.absolutePath.substring(2).replace("\\", "/")
-            }
+        if (otelJar.exists()) {
             return otelJar.absolutePath
         }
-
         return null
     }
 
@@ -63,11 +53,13 @@ class OTELJarProvider {
         return File(downloadDir, OTEL_AGENT_JAR_NAME)
     }
 
-
     fun getDigmaAgentExtensionJarPath(): String? {
         ensureFilesExist()
         val digmaJar = getDigmaAgentExtensionJar()
-        return if (digmaJar.exists()) digmaJar.absolutePath else null
+        if (digmaJar.exists()) {
+            return digmaJar.absolutePath
+        }
+        return null
     }
 
     private fun getDigmaAgentExtensionJar(): File {
@@ -81,7 +73,7 @@ class OTELJarProvider {
             return
         }
 
-        Log.log(logger::info,"otel jars do not exists, unpacking..")
+        Log.log(logger::info, "otel jars do not exists, unpacking..")
 
         unpackFilesAndDownloadLatest()
 
@@ -96,7 +88,7 @@ class OTELJarProvider {
 
     private fun unpackFilesAndDownloadLatest() {
 
-        Log.log(logger::info,"unpacking otel agent jars")
+        Log.log(logger::info, "unpacking otel agent jars")
 
         withLock {
             try {
@@ -109,10 +101,10 @@ class OTELJarProvider {
                 if (downloadDir.exists()) {
                     copyFileFromResource(OTEL_AGENT_JAR_NAME)
                     copyFileFromResource(DIGMA_AGENT_EXTENSION_JAR_NAME)
-                    Log.log(logger::info,"otel agent jars unpacked to {}",downloadDir)
+                    Log.log(logger::info, "otel agent jars unpacked to {}", downloadDir)
                 }
-            }catch (e: Exception){
-                Log.warnWithException(logger,e,"could not unpack otel jars, hopefully download will succeed.")
+            } catch (e: Exception) {
+                Log.warnWithException(logger, e, "could not unpack otel jars, hopefully download will succeed.")
             }
         }
 
@@ -129,14 +121,14 @@ class OTELJarProvider {
 
         val file = File(downloadDir, fileName)
         val outputStream = FileOutputStream(file)
-        Log.log(logger::info,"unpacking {} to {}",fileName,file)
+        Log.log(logger::info, "unpacking {} to {}", fileName, file)
         com.intellij.openapi.util.io.StreamUtil.copy(inputStream, outputStream)
     }
 
 
     private fun tryDownloadLatest() {
 
-        Log.log(logger::info,"trying to download latest otel jars")
+        Log.log(logger::info, "trying to download latest otel jars")
 
         val runnable = Runnable {
 
@@ -160,7 +152,7 @@ class OTELJarProvider {
 
             Retries.simpleRetry({
 
-                Log.log(logger::info,"downloading {}",url)
+                Log.log(logger::info, "downloading {}", url)
 
                 val connection = url.openConnection()
                 connection.connectTimeout = 5000
@@ -171,7 +163,7 @@ class OTELJarProvider {
                 }
 
                 withLock {
-                    Log.log(logger::info,"copying downloaded file {} to {}",tempFile,toFile)
+                    Log.log(logger::info, "copying downloaded file {} to {}", tempFile, toFile)
                     try {
                         Files.move(tempFile, toFile.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
                     } catch (e: Exception) {
@@ -183,7 +175,7 @@ class OTELJarProvider {
             }, Throwable::class.java, 5000, 3)
 
         } catch (e: Exception) {
-            Log.log(logger::warn, "could not download file {}, {}", url,e)
+            Log.log(logger::warn, "could not download file {}, {}", url, e)
         } finally {
             tempFile.deleteIfExists()
         }

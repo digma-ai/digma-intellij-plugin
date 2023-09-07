@@ -73,7 +73,7 @@ class AddEnvironmentsService(val project: Project) {
 
     }
 
-    fun addToCurrentRunConfig(environemnt: String) {
+    fun addToCurrentRunConfig(environemnt: String): Boolean {
         Log.log(logger::info, project, "adding environment {} to current run config", environemnt)
         val selectedConfiguration = RunManager.getInstance(project).selectedConfiguration
         selectedConfiguration?.let {
@@ -82,13 +82,17 @@ class AddEnvironmentsService(val project: Project) {
             if (config is CommonProgramRunConfigurationParameters) {
                 Log.log(logger::info, project, "adding environment to configuration {}", config.name)
                 config.envs.put("OTEL_RESOURCE_ATTRIBUTES", "digma.environment=$environemnt")
+                return true
             } else if (config is ExternalSystemRunConfiguration) {
                 config.settings.env.put("OTEL_RESOURCE_ATTRIBUTES", "digma.environment=$environemnt")
+                return true
             } else if (config is AbstractRunConfiguration) {
                 config.envs.put("OTEL_RESOURCE_ATTRIBUTES", "digma.environment=$environemnt")
+                return true
             } else {
                 Log.log(logger::info, project, "configuration {} is not supported, not adding environment", config.name)
+                return false
             }
-        }
+        } ?: return false
     }
 }

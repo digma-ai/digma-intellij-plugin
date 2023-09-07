@@ -77,8 +77,9 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
             "RECENT_ACTIVITY/ADD_ENVIRONMENT_TO_RUN_CONFIG" -> {
                 val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
                 environment?.let {
-                    project.service<AddEnvironmentsService>().addToCurrentRunConfig(it)
-                    project.service<AddEnvironmentsService>().removeEnvironment(it)
+                    if (project.service<AddEnvironmentsService>().addToCurrentRunConfig(it)) {
+//                        project.service<AddEnvironmentsService>().removeEnvironment(it)
+                    }
                     project.service<RecentActivityUpdater>().updateLatestActivities()
                 }
 

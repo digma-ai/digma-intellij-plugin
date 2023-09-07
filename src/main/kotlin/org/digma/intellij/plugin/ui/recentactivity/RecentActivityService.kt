@@ -42,7 +42,7 @@ class RecentActivityService(val project: Project) : Disposable {
     }
 
 
-    fun getRecentActivities(environments: List<String>): RecentActivityResult {
+    fun getRecentActivities(environments: List<String>): RecentActivityResult? {
 
 //        val allEnvironments = project.service<AnalyticsService>().environments ?: return emptyRecentActivitiesResult
 
@@ -58,7 +58,7 @@ class RecentActivityService(val project: Project) : Disposable {
 
         } catch (e: AnalyticsServiceException) {
             Log.log(logger::warn, "AnalyticsServiceException for getRecentActivity: {}", e.meaningfulMessage)
-            emptyRecentActivitiesResult
+            null
         }
     }
 
@@ -127,7 +127,7 @@ class RecentActivityService(val project: Project) : Disposable {
 
 
     fun startLiveView(codeObjectId: String) {
-        EDT.invokdeAndWait {
+        EDT.ensureEDT {
             project.service<RecentActivityToolWindowShower>().showToolWindow()
         }
 

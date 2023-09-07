@@ -4,6 +4,7 @@ import com.intellij.collaboration.async.DisposingScope
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.progress.JobCanceledException
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import kotlinx.coroutines.Job
@@ -19,6 +20,7 @@ import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 import org.digma.intellij.plugin.ui.recentactivity.model.LiveDataMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.LiveDataPayload
+import java.util.concurrent.atomic.AtomicBoolean
 
 
 private const val RECENT_ACTIVITY_SET_LIVE_DATA = "RECENT_ACTIVITY/SET_LIVE_DATA"
@@ -35,6 +37,8 @@ class LiveViewUpdater(val project: Project) : Disposable {
 
     private var myJob: Job? = null
 
+    private val jcefComponentIsNull: AtomicBoolean = AtomicBoolean(true)
+
     override fun dispose() {
         myDisposable?.dispose()
     }
@@ -42,6 +46,7 @@ class LiveViewUpdater(val project: Project) : Disposable {
 
     fun setJcefComponent(jCefComponent: JCefComponent) {
         this.jCefComponent = jCefComponent
+        jcefComponentIsNull.set(false)
     }
 
 
@@ -59,6 +64,13 @@ class LiveViewUpdater(val project: Project) : Disposable {
         @Suppress("UnstableApiUsage")
         myJob = DisposingScope(myDisposable!!).launch {
 
+            //jcefComponentIsNull when clicking live view when the tool window was not initialized yet,
+            // wait for it, it takes just milliseconds
+            while (jcefComponentIsNull.get() && isActive) {
+                delay(5)
+            }
+
+
             while (isActive) {
                 try {
                     val durationData = AnalyticsService.getInstance(project).getDurationLiveData(codeObjectId)
@@ -70,6 +82,8 @@ class LiveViewUpdater(val project: Project) : Disposable {
                         break
                     }
                     delay(5000)
+                } catch (e: JobCanceledException) {
+                    break
                 } catch (e: Exception) {
                     Log.warnWithException(logger, project, e, "exception in live data timer")
                     ErrorReporter.getInstance().reportError("LiveViewUpdater.timer", e)
@@ -81,6 +95,7 @@ class LiveViewUpdater(val project: Project) : Disposable {
     }
 
 
+
     private fun sendLiveData(durationLiveData: DurationLiveData) {
 
         jCefComponent?.let { jcefComp ->
@@ -90,16 +105,18 @@ class LiveViewUpdater(val project: Project) : Disposable {
                 Log.log(logger::debug, project, "durationLiveData.getDurationData is null, not sending live data for {}", durationLiveData)
                 return
             }
-            Log.log(logger::debug, project, "sending live data for {}", durationLiveData.durationData!!.codeObjectId)
+
+            Log.log(logger::debug, project, "sending live data if not null for {}", durationLiveData)
 
             durationLiveData.durationData?.let { durationData ->
 
-                val liveDataMessageMessage = LiveDataMessage(
+                Log.log(logger::debug, project, "sending live data for {}", durationData.codeObjectId)
+                val liveDataMessage = LiveDataMessage(
                     JCefMessagesUtils.REQUEST_MESSAGE_TYPE, RECENT_ACTIVITY_SET_LIVE_DATA,
                     LiveDataPayload(durationLiveData.liveDataRecords, durationData)
                 )
 
-                serializeAndExecuteWindowPostMessageJavaScript(jcefComp.jbCefBrowser.cefBrowser, liveDataMessageMessage)
+                serializeAndExecuteWindowPostMessageJavaScript(jcefComp.jbCefBrowser.cefBrowser, liveDataMessage)
             }
 
         }

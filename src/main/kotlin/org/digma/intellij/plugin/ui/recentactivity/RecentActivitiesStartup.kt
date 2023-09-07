@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.recentactivity
 import com.intellij.collaboration.async.DisposingScope
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.progress.JobCanceledException
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
 import kotlinx.coroutines.delay
@@ -29,6 +30,8 @@ class RecentActivitiesStartup : StartupActivity {
                     if (project.service<BackendConnectionMonitor>().isConnectionOk()) {
                         project.service<RecentActivityUpdater>().updateLatestActivities()
                     }
+                } catch (e: JobCanceledException) {
+                    break
                 } catch (e: Exception) {
                     Log.warnWithException(logger, e, "Exception updating RecentActivities");
                     service<ErrorReporter>().reportError(project, "RecentActivityService.updateRecentActivitiesTimer", e);

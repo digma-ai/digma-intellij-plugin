@@ -61,14 +61,17 @@ class RecentActivityUpdater(val project: Project) : Disposable {
 
         val latestActivityResult = project.service<RecentActivityService>().getRecentActivities(environments)
 
-        if (hasRecentActivity(latestActivityResult)) {
-            recentActivityToolWindowIconChanger.showBadge()
-        } else {
-            recentActivityToolWindowIconChanger.hideBadge()
-        }
+        latestActivityResult?.let {
 
-        jCefComponent?.let {
-            sendLatestActivities(it, latestActivityResult)
+            if (hasRecentActivity(latestActivityResult)) {
+                recentActivityToolWindowIconChanger.showBadge()
+            } else {
+                recentActivityToolWindowIconChanger.hideBadge()
+            }
+
+            jCefComponent?.let {
+                sendLatestActivities(it, latestActivityResult)
+            }
         }
     }
 

@@ -447,7 +447,7 @@ public class RecentActivityService implements Disposable {
 //        }
 //    }
 
-    private void startNewLiveDataTimerTask(@NotNull String codeObjectId) {
+//    private void startNewLiveDataTimerTask(@NotNull String codeObjectId) {
 
 //        Log.log(logger::debug, project, "Starting new timer for {}", codeObjectId);
 //
@@ -479,7 +479,7 @@ public class RecentActivityService implements Disposable {
 //                }
 //            }
 //        }, 5000, 5000);
-    }
+//    }
 
 
 //    public void runInitTask() {

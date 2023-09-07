@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.recentactivity
+package org.digma.intellij.plugin.jcef.common
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResponseEntry

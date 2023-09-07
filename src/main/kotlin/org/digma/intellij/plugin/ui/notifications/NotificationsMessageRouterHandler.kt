@@ -34,7 +34,7 @@ abstract class NotificationsMessageRouterHandler(project: Project) : BaseMessage
     /**
      * do the query action. this method is executed on a pooled thread
      */
-    override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, action: String) {
+    override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String) {
 
         //exceptions are handles in BaseMessageRouterHandler.onQuery
 
@@ -149,7 +149,7 @@ class TopNotificationsMessageRouterHandler(project: Project, private val topNoti
     NotificationsMessageRouterHandler(project) {
 
 
-    override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, action: String) {
+    override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String) {
 
 
         when (action) {
@@ -169,10 +169,14 @@ class TopNotificationsMessageRouterHandler(project: Project, private val topNoti
             }
 
             else -> {
-                super.doOnQuery(project, browser, requestJsonNode, action)
+                super.doOnQuery(project, browser, requestJsonNode, rawRequest, action)
             }
 
         }
+    }
+
+    override fun getOriginForTroubleshootingEvent(): String {
+        return "top notifications"
     }
 
     override fun doClose() {
@@ -191,6 +195,10 @@ class TopNotificationsMessageRouterHandler(project: Project, private val topNoti
 
 class AllNotificationsMessageRouterHandler(project: Project) :
     NotificationsMessageRouterHandler(project) {
+
+    override fun getOriginForTroubleshootingEvent(): String {
+        return "all notifications"
+    }
 
     override fun doClose() {
         EDT.ensureEDT {

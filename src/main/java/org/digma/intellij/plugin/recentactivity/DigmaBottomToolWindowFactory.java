@@ -25,19 +25,19 @@ public class DigmaBottomToolWindowFactory implements ToolWindowFactory {
      */
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
-        Log.log(LOGGER::debug, "createToolWindowContent for project  {}", project);
-
-        //initialize AnalyticsService early so the UI can detect the connection status when created
-        AnalyticsService.getInstance(project);
-
-        var recentActivityService = RecentActivityService.getInstance(project);
-
-        RecentActivityToolWindowShower.getInstance(project).setToolWindow(toolWindow);
-
-        var content = recentActivityService.createTabContent();
-        if (content == null)
-            return;
-
-        toolWindow.getContentManager().addContent(content);
+//        Log.log(LOGGER::debug, "createToolWindowContent for project  {}", project);
+//
+//        //initialize AnalyticsService early so the UI can detect the connection status when created
+//        AnalyticsService.getInstance(project);
+//
+//        var recentActivityService = RecentActivityService.getInstance(project);
+//
+//        RecentActivityToolWindowShower.getInstance(project).setToolWindow(toolWindow);
+//
+//        var content = recentActivityService.createTabContent();
+//        if (content == null)
+//            return;
+//
+//        toolWindow.getContentManager().addContent(content);
     }
 }

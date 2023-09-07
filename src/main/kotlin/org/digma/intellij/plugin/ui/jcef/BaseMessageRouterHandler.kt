@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.util.StdDateFormat
 import com.intellij.ide.BrowserUtil
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
@@ -22,6 +23,7 @@ import org.digma.intellij.plugin.model.rest.jcef.common.OpenInBrowserRequest
 import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
+import org.digma.intellij.plugin.ui.ToolWindowShower
 import java.util.function.Consumer
 
 abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouterHandlerAdapter() {
@@ -60,8 +62,11 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                 when (action) {
 
                     JCefMessagesUtils.GLOBAL_OPEN_TROUBLESHOOTING_GUIDE -> {
+                        project.service<ActivityMonitor>()
+                            .registerCustomEvent("troubleshooting link clicked", mapOf("origin" to getOriginForTroubleshootingEvent()));
                         EDT.ensureEDT {
-                            MainToolWindowCardsController.getInstance(project).showTroubleshooting()
+                            project.service<ToolWindowShower>().showToolWindow()
+                            project.service<MainToolWindowCardsController>().showTroubleshooting()
                         }
                     }
 
@@ -84,7 +89,7 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                     }
 
                     else -> {
-                        doOnQuery(project, browser, requestJsonNode, action)
+                        doOnQuery(project, browser, requestJsonNode, request, action)
                     }
 
                 }
@@ -106,10 +111,12 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
         return true
     }
 
+    abstract fun getOriginForTroubleshootingEvent(): String
+
     /**
      * each app router handler should implement this method for specific app messages
      */
-    abstract fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, action: String)
+    abstract fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String)
 
 
     override fun onQueryCanceled(browser: CefBrowser?, frame: CefFrame?, queryId: Long) {

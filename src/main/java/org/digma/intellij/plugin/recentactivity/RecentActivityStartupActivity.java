@@ -8,6 +8,6 @@ public class RecentActivityStartupActivity implements StartupActivity {
 
     @Override
     public void runActivity(@NotNull Project project) {
-        RecentActivityService.getInstance(project).startFetchingActivities();
+//        RecentActivityService.getInstance(project).startFetchingActivities();
     }
 }

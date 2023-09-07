@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.jcef.common
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import org.digma.intellij.plugin.recentactivity.JcefDockerResultPayload
 import java.beans.ConstructorProperties
 
 

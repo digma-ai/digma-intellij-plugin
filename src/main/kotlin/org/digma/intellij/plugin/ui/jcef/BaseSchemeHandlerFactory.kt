@@ -8,6 +8,10 @@ import org.cef.network.CefRequest
 import java.net.MalformedURLException
 import java.net.URL
 
+
+private const val COMMON_FILES_FOLDER: String = "webview/common"
+
+
 abstract class BaseSchemeHandlerFactory : CefSchemeHandlerFactory {
 
 
@@ -21,9 +25,15 @@ abstract class BaseSchemeHandlerFactory : CefSchemeHandlerFactory {
             val file = url.file
 
             if (getDomain() == host && getSchema() == schemeName) {
-                val resourceName = getResourceFolderName() + file
-                val resource = javaClass.getResource(resourceName)
-                return createResourceHandler(resourceName, resource != null)
+                var resourceName = getResourceFolderName() + file
+                var resource = javaClass.getResource(resourceName)
+
+                if (resource === null) {
+                    resourceName = "$COMMON_FILES_FOLDER$file"
+                    resource = javaClass.getResource(resourceName)
+                }
+
+                return createResourceHandler(resourceName, resource !== null)
             }
         }
         return null

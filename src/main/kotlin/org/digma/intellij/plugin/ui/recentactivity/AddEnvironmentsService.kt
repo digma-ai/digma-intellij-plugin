@@ -86,12 +86,17 @@ class AddEnvironmentsService(val project: Project) {
 
     private fun addToCurrentRunConfigImpl(environment: String): Boolean {
 
-        Log.log(logger::info, project, "adding environment {} to current run config", environment)
+        Log.log(logger::info, project, "addToCurrentRunConfig invoked for environment {}", environment)
         val selectedConfiguration = RunManager.getInstance(project).selectedConfiguration
-            ?: return false
+        if (selectedConfiguration == null) {
+            Log.log(logger::info, project, "could not find selected run config, not adding environment")
+            return false
+        }
 
         val config = selectedConfiguration.configuration
+
         Log.log(logger::info, project, "found selected configuration {} type {}", config.name, config.type)
+
         return when (config) {
             is CommonProgramRunConfigurationParameters -> {
                 Log.log(logger::info, project, "adding environment to configuration {}", config.name)
@@ -101,7 +106,7 @@ class AddEnvironmentsService(val project: Project) {
                     Log.log(logger::info, project, "failed adding environment to configuration {},{}, trying to replace map", config.name, e)
                     val map = mutableMapOf<String, String>()
                     map.putAll(config.envs)
-                    map["OTEL_RESOURCE_ATTRIBUTES"] = "digma.environment=$environment"
+                    addEnvToMap(map, environment)
                     config.envs = map
                 }
                 true
@@ -114,7 +119,7 @@ class AddEnvironmentsService(val project: Project) {
                     Log.log(logger::info, project, "failed adding environment to configuration {},{}, trying to replace map", config.name, e)
                     val map = mutableMapOf<String, String>()
                     map.putAll(config.settings.env)
-                    map["OTEL_RESOURCE_ATTRIBUTES"] = "digma.environment=$environment"
+                    addEnvToMap(map, environment)
                     config.settings.env = map
                 }
                 true
@@ -127,7 +132,7 @@ class AddEnvironmentsService(val project: Project) {
                     Log.log(logger::info, project, "failed adding environment to configuration {},{}, trying to replace map", config.name, e)
                     val map = mutableMapOf<String, String>()
                     map.putAll(config.envs)
-                    map["OTEL_RESOURCE_ATTRIBUTES"] = "digma.environment=$environment"
+                    addEnvToMap(map, environment)
                     config.envs = map
                 }
                 true
@@ -138,5 +143,9 @@ class AddEnvironmentsService(val project: Project) {
                 false
             }
         }
+    }
+
+    private fun addEnvToMap(map: MutableMap<String, String>, environment: String) {
+        map["OTEL_RESOURCE_ATTRIBUTES"] = "digma.environment=$environment"
     }
 }

@@ -61,8 +61,8 @@ class AddEnvironmentsService(val project: Project) {
             val asJson = service<PersistenceService>().state.pendingEnvironment
             asJson?.let {
                 val jsonObject: ArrayNode = objectMapper.readTree(it) as ArrayNode
-                jsonObject.forEach {
-                    pendingEnvironments.add(it.asText())
+                jsonObject.forEach { jsonNode ->
+                    pendingEnvironments.add(jsonNode.asText())
                 }
             }
 
@@ -73,26 +73,70 @@ class AddEnvironmentsService(val project: Project) {
 
     }
 
-    fun addToCurrentRunConfig(environemnt: String): Boolean {
-        Log.log(logger::info, project, "adding environment {} to current run config", environemnt)
+    fun addToCurrentRunConfig(environment: String): Boolean {
+        return try {
+            addToCurrentRunConfigImpl(environment)
+        } catch (e: Exception) {
+            Log.warnWithException(logger, project, e, "failed adding environment {} to current run config", environment)
+            service<ErrorReporter>().reportError("AddEnvironmentsService.addToCurrentRunConfig", e)
+            false
+        }
+    }
+
+
+    private fun addToCurrentRunConfigImpl(environment: String): Boolean {
+
+        Log.log(logger::info, project, "adding environment {} to current run config", environment)
         val selectedConfiguration = RunManager.getInstance(project).selectedConfiguration
-        selectedConfiguration?.let {
-            val config = it.configuration
-            Log.log(logger::info, project, "found selected configuration {} type {}", config.name, config.type)
-            if (config is CommonProgramRunConfigurationParameters) {
+            ?: return false
+
+        val config = selectedConfiguration.configuration
+        Log.log(logger::info, project, "found selected configuration {} type {}", config.name, config.type)
+        return when (config) {
+            is CommonProgramRunConfigurationParameters -> {
                 Log.log(logger::info, project, "adding environment to configuration {}", config.name)
-                config.envs.put("OTEL_RESOURCE_ATTRIBUTES", "digma.environment=$environemnt")
-                return true
-            } else if (config is ExternalSystemRunConfiguration) {
-                config.settings.env.put("OTEL_RESOURCE_ATTRIBUTES", "digma.environment=$environemnt")
-                return true
-            } else if (config is AbstractRunConfiguration) {
-                config.envs.put("OTEL_RESOURCE_ATTRIBUTES", "digma.environment=$environemnt")
-                return true
-            } else {
-                Log.log(logger::info, project, "configuration {} is not supported, not adding environment", config.name)
-                return false
+                try {
+                    config.envs["OTEL_RESOURCE_ATTRIBUTES"] = "digma.environment=$environment"
+                } catch (e: Exception) {
+                    Log.log(logger::info, project, "failed adding environment to configuration {},{}, trying to replace map", config.name, e)
+                    val map = mutableMapOf<String, String>()
+                    map.putAll(config.envs)
+                    map["OTEL_RESOURCE_ATTRIBUTES"] = "digma.environment=$environment"
+                    config.envs = map
+                }
+                true
             }
-        } ?: return false
+
+            is ExternalSystemRunConfiguration -> {
+                try {
+                    config.settings.env["OTEL_RESOURCE_ATTRIBUTES"] = "digma.environment=$environment"
+                } catch (e: Exception) {
+                    Log.log(logger::info, project, "failed adding environment to configuration {},{}, trying to replace map", config.name, e)
+                    val map = mutableMapOf<String, String>()
+                    map.putAll(config.settings.env)
+                    map["OTEL_RESOURCE_ATTRIBUTES"] = "digma.environment=$environment"
+                    config.settings.env = map
+                }
+                true
+            }
+
+            is AbstractRunConfiguration -> {
+                try {
+                    config.envs["OTEL_RESOURCE_ATTRIBUTES"] = "digma.environment=$environment"
+                } catch (e: Exception) {
+                    Log.log(logger::info, project, "failed adding environment to configuration {},{}, trying to replace map", config.name, e)
+                    val map = mutableMapOf<String, String>()
+                    map.putAll(config.envs)
+                    map["OTEL_RESOURCE_ATTRIBUTES"] = "digma.environment=$environment"
+                    config.envs = map
+                }
+                true
+            }
+
+            else -> {
+                Log.log(logger::info, project, "configuration {} is not supported, not adding environment", config.name)
+                false
+            }
+        }
     }
 }

@@ -3,8 +3,6 @@ package org.digma.intellij.plugin.ui.recentactivity
 import com.intellij.openapi.project.Project
 import org.cef.handler.CefResourceHandler
 import org.digma.intellij.plugin.ui.jcef.BaseSchemeHandlerFactory
-import org.digma.intellij.plugin.ui.notifications.NOTIFICATIONS_RESOURCE_FOLDER_NAME
-import org.digma.intellij.plugin.ui.notifications.NotificationsResourceHandler
 
 class RecentActivitySchemeHandlerFactory(val project: Project) : BaseSchemeHandlerFactory() {
     override fun createResourceHandler(resourceName: String, resourceExists: Boolean): CefResourceHandler {

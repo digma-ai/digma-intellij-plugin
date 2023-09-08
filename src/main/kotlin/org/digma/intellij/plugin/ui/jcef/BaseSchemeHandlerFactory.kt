@@ -9,7 +9,7 @@ import java.net.MalformedURLException
 import java.net.URL
 
 
-private const val COMMON_FILES_FOLDER: String = "webview/common"
+private const val COMMON_FILES_FOLDER: String = "/webview/common"
 
 
 abstract class BaseSchemeHandlerFactory : CefSchemeHandlerFactory {

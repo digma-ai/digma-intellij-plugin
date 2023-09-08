@@ -15,13 +15,16 @@ import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
+import org.digma.intellij.plugin.ui.recentactivity.model.AdditionToConfigResult
+import org.digma.intellij.plugin.ui.recentactivity.model.PendingEnvironment
 
-@Service(Service.Level.PROJECT)
-class AddEnvironmentsService(val project: Project) {
+//app level service so includes pending environments from all projects
+@Service(Service.Level.APP)
+class AddEnvironmentsService {
 
     private val logger = Logger.getInstance(this::class.java)
 
-    private val pendingEnvironments = mutableListOf<String>()
+    private val pendingEnvironments = mutableMapOf<String, PendingEnvironment>()
 
     private val objectMapper: ObjectMapper = ObjectMapper()
 
@@ -32,29 +35,29 @@ class AddEnvironmentsService(val project: Project) {
     }
 
 
-    fun getPendingEnvironments(): List<String> {
+    fun getPendingEnvironments(): Map<String, PendingEnvironment> {
         return pendingEnvironments
     }
 
     fun addEnvironment(environment: String) {
-        Log.log(logger::info, project, "adding environment {}", environment)
-        pendingEnvironments.add(environment)
+        Log.log(logger::info, "adding environment {}", environment)
+        pendingEnvironments[environment] = PendingEnvironment(environment)
         flush()
     }
 
     fun removeEnvironment(environment: String) {
-        Log.log(logger::info, project, "removing environment {}", environment)
+        Log.log(logger::info, "removing environment {}", environment)
         pendingEnvironments.remove(environment)
         flush()
     }
 
     private fun flush() {
         try {
-            Log.log(logger::info, project, "flushing environments {}", pendingEnvironments)
-            val asJson = objectMapper.writeValueAsString(pendingEnvironments)
+            Log.log(logger::info, "flushing environments {}", pendingEnvironments)
+            val asJson = objectMapper.writeValueAsString(pendingEnvironments.values)
             service<PersistenceService>().state.pendingEnvironment = asJson
         } catch (e: Exception) {
-            Log.warnWithException(logger, project, e, "Error flushing pending environments")
+            Log.warnWithException(logger, e, "Error flushing pending environments")
             service<ErrorReporter>().reportError("AddEnvironmentsService.flush", e)
         }
     }
@@ -65,49 +68,71 @@ class AddEnvironmentsService(val project: Project) {
             asJson?.let {
                 val jsonObject: ArrayNode = objectMapper.readTree(it) as ArrayNode
                 jsonObject.forEach { jsonNode ->
-                    pendingEnvironments.add(jsonNode.asText())
+                    val name = jsonNode.get("name").asText()
+                    val additionToConfigResult: AdditionToConfigResult? = try {
+                        AdditionToConfigResult.valueOf(jsonNode.get("additionToConfigResult").asText())
+                    } catch (e: Exception) {
+                        null
+                    }
+
+                    pendingEnvironments[name] = PendingEnvironment(name, additionToConfigResult)
                 }
-                Log.log(logger::info, project, "loaded environments {}", pendingEnvironments)
+                Log.log(logger::info, "loaded environments {}", pendingEnvironments)
             }
 
         } catch (e: Exception) {
-            Log.warnWithException(logger, project, e, "Error loading pending environments")
+            Log.warnWithException(logger, e, "Error loading pending environments")
             service<ErrorReporter>().reportError("AddEnvironmentsService.load", e)
         }
 
     }
 
-    fun addToCurrentRunConfig(environment: String): Boolean {
-        return try {
-            Log.log(logger::info, project, "addToCurrentRunConfig invoked for environment {}", environment)
-            addToCurrentRunConfigImpl(environment)
+    fun addToCurrentRunConfig(project: Project, environment: String): Boolean {
+        val result = try {
+            Log.log(logger::info, "addToCurrentRunConfig invoked for environment {}", environment)
+            addToCurrentRunConfigImpl(project, environment)
         } catch (e: Exception) {
-            Log.warnWithException(logger, project, e, "failed adding environment {} to current run config", environment)
+            Log.warnWithException(logger, e, "failed adding environment {} to current run config", environment)
             service<ErrorReporter>().reportError("AddEnvironmentsService.addToCurrentRunConfig", e)
             false
         }
+
+        //not sure necessary, just in case addToCurrentRunConfig is called for environment that is not
+        // in the map, it may happen if flush failed
+        val pendingEnv = if (pendingEnvironments[environment] == null) {
+            addEnvironment(environment)
+            pendingEnvironments[environment]
+        } else {
+            pendingEnvironments[environment]
+        }
+
+        pendingEnv?.let {
+            it.additionToConfigResult = if (result) AdditionToConfigResult.success else AdditionToConfigResult.failure
+        }
+        flush()
+        return result
     }
 
 
-    private fun addToCurrentRunConfigImpl(environment: String): Boolean {
+    private fun addToCurrentRunConfigImpl(project: Project, environment: String): Boolean {
 
         val selectedConfiguration = RunManager.getInstance(project).selectedConfiguration
         if (selectedConfiguration == null) {
-            Log.log(logger::info, project, "could not find selected run config, not adding environment")
+            Log.log(logger::info, "could not find selected run config, not adding environment")
             return false
         }
 
         val config = selectedConfiguration.configuration
 
-        Log.log(logger::info, project, "found selected configuration {} type {}", config.name, config.type)
+        Log.log(logger::info, "found selected configuration {} type {}", config.name, config.type)
 
         return when (config) {
             is CommonProgramRunConfigurationParameters -> {
-                Log.log(logger::info, project, "adding environment to configuration {}", config.name)
+                Log.log(logger::info, "adding environment to configuration {}", config.name)
                 try {
                     config.envs["OTEL_RESOURCE_ATTRIBUTES"] = "digma.environment=$environment"
                 } catch (e: Exception) {
-                    Log.log(logger::info, project, "failed adding environment to configuration {},{}, trying to replace map", config.name, e)
+                    Log.log(logger::info, "failed adding environment to configuration {},{}, trying to replace map", config.name, e)
                     val map = mutableMapOf<String, String>()
                     map.putAll(config.envs)
                     addEnvToMap(map, environment)
@@ -117,11 +142,11 @@ class AddEnvironmentsService(val project: Project) {
             }
 
             is ExternalSystemRunConfiguration -> {
-                Log.log(logger::info, project, "adding environment to configuration {}", config.name)
+                Log.log(logger::info, "adding environment to configuration {}", config.name)
                 try {
                     config.settings.env["OTEL_RESOURCE_ATTRIBUTES"] = "digma.environment=$environment"
                 } catch (e: Exception) {
-                    Log.log(logger::info, project, "failed adding environment to configuration {},{}, trying to replace map", config.name, e)
+                    Log.log(logger::info, "failed adding environment to configuration {},{}, trying to replace map", config.name, e)
                     val map = mutableMapOf<String, String>()
                     map.putAll(config.settings.env)
                     addEnvToMap(map, environment)
@@ -131,11 +156,11 @@ class AddEnvironmentsService(val project: Project) {
             }
 
             is AbstractRunConfiguration -> {
-                Log.log(logger::info, project, "adding environment to configuration {}", config.name)
+                Log.log(logger::info, "adding environment to configuration {}", config.name)
                 try {
                     config.envs["OTEL_RESOURCE_ATTRIBUTES"] = "digma.environment=$environment"
                 } catch (e: Exception) {
-                    Log.log(logger::info, project, "failed adding environment to configuration {},{}, trying to replace map", config.name, e)
+                    Log.log(logger::info, "failed adding environment to configuration {},{}, trying to replace map", config.name, e)
                     val map = mutableMapOf<String, String>()
                     map.putAll(config.envs)
                     addEnvToMap(map, environment)
@@ -145,7 +170,7 @@ class AddEnvironmentsService(val project: Project) {
             }
 
             else -> {
-                Log.log(logger::info, project, "configuration {} is not supported, not adding environment", config.name)
+                Log.log(logger::info, "configuration {} is not supported, not adding environment", config.name)
                 false
             }
         }

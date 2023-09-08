@@ -25,6 +25,7 @@ import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult
 import org.digma.intellij.plugin.recentactivity.RecentActivityLogic.Companion.isRecentTime
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
+import org.digma.intellij.plugin.ui.recentactivity.model.PendingEnvironment
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivitiesMessagePayload
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivitiesMessageRequest
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEnvironment
@@ -108,7 +109,7 @@ class RecentActivityUpdater(val project: Project) : Disposable {
 
         Log.log(logger::trace, "got sortedEnvironments {}", sortedEnvironments)
 
-        val pendingEnvironments = project.service<AddEnvironmentsService>().getPendingEnvironments()
+        val pendingEnvironments = service<AddEnvironmentsService>().getPendingEnvironments()
 
         Log.log(logger::trace, "got pendingEnvironments {}", pendingEnvironments)
 
@@ -131,13 +132,22 @@ class RecentActivityUpdater(val project: Project) : Disposable {
         serializeAndExecuteWindowPostMessageJavaScript(jCefComponent.jbCefBrowser.cefBrowser, recentActivitiesMessage)
     }
 
-    private fun mergeWithPendingEnvironments(sortedEnvironments: List<String>, pendingEnvironments: List<String>): List<RecentActivityEnvironment> {
+    private fun mergeWithPendingEnvironments(
+        sortedEnvironments: List<String>,
+        pendingEnvironments: Map<String, PendingEnvironment>,
+    ): List<RecentActivityEnvironment> {
 
         val allEnvs = mutableListOf<RecentActivityEnvironment>()
 
         val permEnvs = sortedEnvironments.map { e: String -> RecentActivityEnvironment(e, false) }.toList()
         allEnvs.addAll(permEnvs)
-        val pendingEnvs = pendingEnvironments.map { e: String -> RecentActivityEnvironment(e, true) }.toList()
+        val pendingEnvs = pendingEnvironments.map { entry: Map.Entry<String, PendingEnvironment> ->
+            RecentActivityEnvironment(
+                entry.value.name,
+                true,
+                entry.value.additionToConfigResult
+            )
+        }
         allEnvs.addAll(pendingEnvs)
         return allEnvs
     }
@@ -168,9 +178,9 @@ class RecentActivityUpdater(val project: Project) : Disposable {
 
     private fun removeFromPendingEnvironments(environments: List<String>) {
         environments.forEach {
-            if (project.service<AddEnvironmentsService>().getPendingEnvironments().contains(it)) {
+            if (service<AddEnvironmentsService>().getPendingEnvironments().containsKey(it)) {
                 Log.log(logger::info, "found environment {} from backend in pending environments, removing it from pending", it)
-                project.service<AddEnvironmentsService>().removeEnvironment(it)
+                service<AddEnvironmentsService>().removeEnvironment(it)
             }
         }
     }

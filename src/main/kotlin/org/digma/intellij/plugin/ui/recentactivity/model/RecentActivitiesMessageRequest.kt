@@ -32,4 +32,14 @@ constructor(
     @get:JsonProperty("isPending")
     @param:JsonProperty("isPending")
     val isPending: Boolean,
+    val additionToConfigResult: AdditionToConfigResult? = null,
 )
+
+
+data class PendingEnvironment
+@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
+@ConstructorProperties("name", "additionToConfigResult")
+constructor(val name: String, var additionToConfigResult: AdditionToConfigResult? = null)
+
+enum class AdditionToConfigResult { success, failure }
+

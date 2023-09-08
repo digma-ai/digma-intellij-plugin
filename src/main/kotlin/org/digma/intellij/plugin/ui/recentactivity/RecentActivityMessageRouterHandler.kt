@@ -64,7 +64,7 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                 project.service<ActivityMonitor>().registerUserAction("add environment")
                 val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
                 environment?.let {
-                    project.service<AddEnvironmentsService>().addEnvironment(it)
+                    service<AddEnvironmentsService>().addEnvironment(it)
                     project.service<RecentActivityUpdater>().updateLatestActivities()
                 }
             }
@@ -74,7 +74,7 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                 project.service<ActivityMonitor>().registerUserAction("delete environment")
                 val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
                 environment?.let {
-                    project.service<AddEnvironmentsService>().removeEnvironment(it)
+                    service<AddEnvironmentsService>().removeEnvironment(it)
                     project.service<RecentActivityUpdater>().updateLatestActivities()
                 }
             }
@@ -84,7 +84,7 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                 project.service<ActivityMonitor>().registerUserAction("add environment to run config")
                 val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
                 environment?.let {
-                    project.service<AddEnvironmentsService>().addToCurrentRunConfig(it)
+                    service<AddEnvironmentsService>().addToCurrentRunConfig(project, it)
                     project.service<RecentActivityUpdater>().updateLatestActivities()
                 }
             }

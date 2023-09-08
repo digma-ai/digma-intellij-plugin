@@ -4,9 +4,9 @@ import com.intellij.collaboration.async.DisposingScope
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.progress.JobCanceledException
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -53,7 +53,7 @@ class LiveViewUpdater(val project: Project) : Disposable {
     @Synchronized
     fun sendLiveData(codeObjectId: String) {
 
-        Log.log(logger::debug, project, "Got sendLiveData request for {}", codeObjectId)
+        Log.log(logger::trace, project, "Got sendLiveData request for {}", codeObjectId)
 
         myDisposable?.dispose()
 
@@ -64,16 +64,20 @@ class LiveViewUpdater(val project: Project) : Disposable {
         @Suppress("UnstableApiUsage")
         myJob = DisposingScope(myDisposable!!).launch {
 
+            Log.log(logger::trace, project, "live view timer started for {}", codeObjectId)
+
             //jcefComponentIsNull when clicking live view when the tool window was not initialized yet,
             // wait for it, it takes just milliseconds
             while (jcefComponentIsNull.get() && isActive) {
                 delay(5)
             }
 
+            Log.log(logger::trace, project, "live view timer running after jcefComponent is not null for {}", codeObjectId)
 
             while (isActive) {
                 try {
                     val durationData = AnalyticsService.getInstance(project).getDurationLiveData(codeObjectId)
+                    Log.log(logger::trace, project, "live view timer got live data for {},{}", codeObjectId, durationData)
                     if (!isActive) {
                         break
                     }
@@ -82,7 +86,8 @@ class LiveViewUpdater(val project: Project) : Disposable {
                         break
                     }
                     delay(5000)
-                } catch (e: JobCanceledException) {
+                } catch (e: CancellationException) {
+                    Log.log(logger::trace, project, "live view timer job canceled for {}", codeObjectId)
                     break
                 } catch (e: Exception) {
                     Log.warnWithException(logger, project, e, "exception in live data timer")
@@ -93,7 +98,6 @@ class LiveViewUpdater(val project: Project) : Disposable {
 
         }
     }
-
 
 
     private fun sendLiveData(durationLiveData: DurationLiveData) {
@@ -116,6 +120,7 @@ class LiveViewUpdater(val project: Project) : Disposable {
                     LiveDataPayload(durationLiveData.liveDataRecords, durationData)
                 )
 
+                Log.log(logger::debug, project, "sending LiveDataMessage for {},{}", durationData.codeObjectId, liveDataMessage)
                 serializeAndExecuteWindowPostMessageJavaScript(jcefComp.jbCefBrowser.cefBrowser, liveDataMessage)
             }
 

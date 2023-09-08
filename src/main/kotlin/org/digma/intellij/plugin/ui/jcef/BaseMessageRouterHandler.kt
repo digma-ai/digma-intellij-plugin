@@ -24,7 +24,6 @@ import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
-import java.util.function.Consumer
 
 abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouterHandlerAdapter() {
 
@@ -48,6 +47,8 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
         callback: CefQueryCallback,
     ): Boolean {
 
+        Log.log(logger::trace, "got onQuery event {}", request)
+
         Backgroundable.executeOnPooledThread {
 
             try {
@@ -63,7 +64,7 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
 
                     JCefMessagesUtils.GLOBAL_OPEN_TROUBLESHOOTING_GUIDE -> {
                         project.service<ActivityMonitor>()
-                            .registerCustomEvent("troubleshooting link clicked", mapOf("origin" to getOriginForTroubleshootingEvent()));
+                            .registerCustomEvent("troubleshooting link clicked", mapOf("origin" to getOriginForTroubleshootingEvent()))
                         EDT.ensureEDT {
                             project.service<ToolWindowShower>().showToolWindow()
                             project.service<MainToolWindowCardsController>().showTroubleshooting()
@@ -95,9 +96,9 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                 }
 
 
-                stopWatchStop(stopWatch, Consumer { time: Long ->
+                stopWatchStop(stopWatch) { time: Long ->
                     Log.log(logger::trace, "action {} took {}", action, time)
-                })
+                }
 
             } catch (e: Exception) {
                 Log.debugWithException(logger, e, "Exception in onQuery {}", request)
@@ -120,6 +121,6 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
 
 
     override fun onQueryCanceled(browser: CefBrowser?, frame: CefFrame?, queryId: Long) {
-        Log.log(logger::debug, "jcef query canceled")
+        Log.log(logger::trace, "jcef query canceled")
     }
 }

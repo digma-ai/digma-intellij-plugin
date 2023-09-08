@@ -37,17 +37,20 @@ class AddEnvironmentsService(val project: Project) {
     }
 
     fun addEnvironment(environment: String) {
+        Log.log(logger::info, project, "adding environment {}", environment)
         pendingEnvironments.add(environment)
         flush()
     }
 
     fun removeEnvironment(environment: String) {
+        Log.log(logger::info, project, "removing environment {}", environment)
         pendingEnvironments.remove(environment)
         flush()
     }
 
     private fun flush() {
         try {
+            Log.log(logger::info, project, "flushing environments {}", pendingEnvironments)
             val asJson = objectMapper.writeValueAsString(pendingEnvironments)
             service<PersistenceService>().state.pendingEnvironment = asJson
         } catch (e: Exception) {
@@ -64,6 +67,7 @@ class AddEnvironmentsService(val project: Project) {
                 jsonObject.forEach { jsonNode ->
                     pendingEnvironments.add(jsonNode.asText())
                 }
+                Log.log(logger::info, project, "loaded environments {}", pendingEnvironments)
             }
 
         } catch (e: Exception) {
@@ -75,6 +79,7 @@ class AddEnvironmentsService(val project: Project) {
 
     fun addToCurrentRunConfig(environment: String): Boolean {
         return try {
+            Log.log(logger::info, project, "addToCurrentRunConfig invoked for environment {}", environment)
             addToCurrentRunConfigImpl(environment)
         } catch (e: Exception) {
             Log.warnWithException(logger, project, e, "failed adding environment {} to current run config", environment)
@@ -86,7 +91,6 @@ class AddEnvironmentsService(val project: Project) {
 
     private fun addToCurrentRunConfigImpl(environment: String): Boolean {
 
-        Log.log(logger::info, project, "addToCurrentRunConfig invoked for environment {}", environment)
         val selectedConfiguration = RunManager.getInstance(project).selectedConfiguration
         if (selectedConfiguration == null) {
             Log.log(logger::info, project, "could not find selected run config, not adding environment")
@@ -113,6 +117,7 @@ class AddEnvironmentsService(val project: Project) {
             }
 
             is ExternalSystemRunConfiguration -> {
+                Log.log(logger::info, project, "adding environment to configuration {}", config.name)
                 try {
                     config.settings.env["OTEL_RESOURCE_ATTRIBUTES"] = "digma.environment=$environment"
                 } catch (e: Exception) {
@@ -126,6 +131,7 @@ class AddEnvironmentsService(val project: Project) {
             }
 
             is AbstractRunConfiguration -> {
+                Log.log(logger::info, project, "adding environment to configuration {}", config.name)
                 try {
                     config.envs["OTEL_RESOURCE_ATTRIBUTES"] = "digma.environment=$environment"
                 } catch (e: Exception) {

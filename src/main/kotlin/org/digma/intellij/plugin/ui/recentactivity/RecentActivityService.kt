@@ -34,8 +34,6 @@ class RecentActivityService(val project: Project) : Disposable {
 
     private val logger = Logger.getInstance(this::class.java)
 
-    private val emptyRecentActivitiesResult = RecentActivityResult(null, listOf())
-
 
     override fun dispose() {
         //nothing to do , used as parent disposable
@@ -43,8 +41,6 @@ class RecentActivityService(val project: Project) : Disposable {
 
 
     fun getRecentActivities(environments: List<String>): RecentActivityResult? {
-
-//        val allEnvironments = project.service<AnalyticsService>().environments ?: return emptyRecentActivitiesResult
 
         return try {
             val recentActivityData = project.service<AnalyticsService>().getRecentActivity(environments)

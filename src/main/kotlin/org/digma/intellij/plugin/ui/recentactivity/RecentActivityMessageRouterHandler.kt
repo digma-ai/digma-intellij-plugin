@@ -86,7 +86,6 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                     project.service<AddEnvironmentsService>().addToCurrentRunConfig(it)
                     project.service<RecentActivityUpdater>().updateLatestActivities()
                 }
-
             }
         }
     }

@@ -32,6 +32,7 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
 
             "RECENT_ACTIVITY/INITIALIZE" -> {
                 val environments = project.service<AnalyticsService>().environment.getEnvironments()
+                project.service<LiveViewUpdater>().appInitialized()
                 project.service<RecentActivityUpdater>().updateLatestActivities(environments)
             }
 

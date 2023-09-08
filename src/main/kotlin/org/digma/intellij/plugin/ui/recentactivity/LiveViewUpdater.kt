@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.recentactivity
 import com.intellij.collaboration.async.DisposingScope
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
@@ -37,7 +38,7 @@ class LiveViewUpdater(val project: Project) : Disposable {
 
     private var myJob: Job? = null
 
-    private val jcefComponentIsNull: AtomicBoolean = AtomicBoolean(true)
+    private val appInitialized: AtomicBoolean = AtomicBoolean(false)
 
     override fun dispose() {
         myDisposable?.dispose()
@@ -46,9 +47,12 @@ class LiveViewUpdater(val project: Project) : Disposable {
 
     fun setJcefComponent(jCefComponent: JCefComponent) {
         this.jCefComponent = jCefComponent
-        jcefComponentIsNull.set(false)
     }
 
+
+    fun appInitialized() {
+        appInitialized.set(true)
+    }
 
     @Synchronized
     fun sendLiveData(codeObjectId: String) {
@@ -66,9 +70,15 @@ class LiveViewUpdater(val project: Project) : Disposable {
 
             Log.log(logger::trace, project, "live view timer started for {}", codeObjectId)
 
-            //jcefComponentIsNull when clicking live view when the tool window was not initialized yet,
-            // wait for it, it takes just milliseconds
-            while (jcefComponentIsNull.get() && isActive) {
+            //if clicking live view before the app was initialized, this code needs to wait for it to initialize before
+            // sending live data.
+            // it happens when clicking live view before the recent activity tool window was first opened, in that case
+            // RecentActivityService.startLiveView first calls RecentActivityToolWindowShower.showToolWindow, and it takes some
+            // milliseconds until the app is fully initialized and ready to accept messages. if live data is sent before that
+            // the app will not accept the message and will open the live view only on the next refresh.
+            // waiting here to appInitialized makes sure the app will accept the first live data and show the live view.
+            // after the app was first initialized subsequent calls to sendLiveData will happen immediately.
+            while (!appInitialized.get() && isActive) {
                 delay(5)
             }
 
@@ -76,7 +86,7 @@ class LiveViewUpdater(val project: Project) : Disposable {
 
             while (isActive) {
                 try {
-                    val durationData = AnalyticsService.getInstance(project).getDurationLiveData(codeObjectId)
+                    val durationData = project.service<AnalyticsService>().getDurationLiveData(codeObjectId)
                     Log.log(logger::trace, project, "live view timer got live data for {},{}", codeObjectId, durationData)
                     if (!isActive) {
                         break

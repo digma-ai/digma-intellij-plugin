@@ -43,6 +43,7 @@ class RecentActivityPanel(val project: Project) : DisposablePanel() {
                 .url(RECENT_ACTIVITY_URL)
                 .messageRouterHandler(RecentActivityMessageRouterHandler(project))
                 .schemeHandlerFactory(RecentActivitySchemeHandlerFactory(project))
+                .withParentDisposable(project.service<RecentActivityService>())
                 .build()
 
             jCefComponent.getComponent()

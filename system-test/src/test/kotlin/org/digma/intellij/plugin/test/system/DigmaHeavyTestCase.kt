@@ -1,17 +1,15 @@
 package org.digma.intellij.plugin.test.system
 
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.editor.LogicalPosition
-import com.intellij.openapi.editor.VisualPosition
-import com.intellij.psi.PsiDocumentManager
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.testFramework.EditorTestUtil
 import com.intellij.testFramework.HeavyPlatformTestCase
+import com.intellij.testFramework.PlatformTestUtil
 import com.intellij.testFramework.fixtures.CodeInsightTestFixture
 import com.intellij.testFramework.fixtures.IdeaTestFixtureFactory
-import junit.framework.TestCase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.digma.intellij.plugin.analytics.AnalyticsService
@@ -21,7 +19,6 @@ import org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.test.system.framework.MessageBusTestListeners
 import org.digma.intellij.plugin.test.system.framework.mockRestAnalyticsProvider
-import java.util.concurrent.TimeUnit
 
 
 open class DigmaHeavyTestCase : HeavyPlatformTestCase() {
@@ -91,18 +88,21 @@ open class DigmaHeavyTestCase : HeavyPlatformTestCase() {
         val methods = PsiTreeUtil.findChildrenOfType(psiFile, PsiMethod::class.java)
         val targetMethod = methods.find { it.name == "method1" }
         targetMethod?.let {
-            Log.test(logger::info, "Inside ${it.name}, ${it.textOffset}")
-            val offset = it.textOffset
+            val offset = targetMethod.textOffset
             editor.caretModel.moveToOffset(offset)
-            editor.caretModel.moveToVisualPosition(VisualPosition(8, 7))
-            editor.caretModel.moveToLogicalPosition(LogicalPosition(8, 7))
-//            waitForEvent()
+
+            val manager = FileDocumentManager.getInstance()
+            val document = manager.getDocument(psiFile.virtualFile)
+            document?.let {
+                val caretAndSelectionState = EditorTestUtil.extractCaretAndSelectionMarkers(document)
+                EditorTestUtil.setCaretsAndSelection(editor, caretAndSelectionState)
+            }
         }
+
+        PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue()
+
         Log.test(logger::info, "selected method = ${project.getService(CurrentContextUpdater::class.java).latestMethodUnderCaret}")
 
-//        val future = ApplicationManager.getApplication().executeOnPooledThread {
-//        }
-//        future.get(10, TimeUnit.SECONDS)
     }
 
 }

@@ -13,6 +13,7 @@ import java.util.Objects;
 
 public interface EndpointDiscovery {
 
+    //must run with read access
     List<EndpointInfo> lookForEndpoints(@NotNull SearchScope searchScope);
 
     // default method uses fileScope. however, in some cases logic could be bit different

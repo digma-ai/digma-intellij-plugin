@@ -140,7 +140,7 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
 
     private fun restartAll() {
 
-        //todo: since CodeVisionPassFactory became internal its not possible
+        // todo: since CodeVisionPassFactory became internal its not possible
         // to call CodeVisionPassFactory.clearModificationStamp(it.editor) and just calling DaemonCodeAnalyzer.restart
         // does not trigger a call to computeForEditor and there is no refresh.
         // doing it the way bellow works, but seems a waste to clear and refresh all when we need to refresh only one file.

@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.psi.python;
 
 import com.intellij.openapi.Disposable;
-import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.event.DocumentEvent;
@@ -16,8 +15,6 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.util.Alarm;
 import com.intellij.util.AlarmFactory;
-import com.intellij.util.RunnableCallable;
-import com.intellij.util.concurrency.NonUrgentExecutor;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.jetbrains.annotations.NotNull;
@@ -84,18 +81,16 @@ public class DocumentsChangeListenerForPythonSpanNavigation implements FileEdito
                                     return;
                                 }
 
-                                PythonSpanNavigationProvider pythonSpanNavigationProvider = project.getService(PythonSpanNavigationProvider.class);
                                 documentChangeAlarm.cancelAllRequests();
-                                documentChangeAlarm.addRequest(() -> ReadAction.nonBlocking(new RunnableCallable(() -> {
-
+                                documentChangeAlarm.addRequest(() -> {
                                     try {
+                                        PythonSpanNavigationProvider pythonSpanNavigationProvider = PythonSpanNavigationProvider.getInstance(project);
                                         pythonSpanNavigationProvider.documentChanged(event.getDocument());
                                     }catch (Exception e){
                                         Log.warnWithException(LOGGER,e,"Exception in documentChanged");
                                         ErrorReporter.getInstance().reportError(project,"DocumentsChangeListenerForPythonSpanNavigation.DocumentListener.documentChanged",e);
                                     }
-
-                                })).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance()), 5000);
+                                }, 5000);
 
                             } catch (Exception e) {
                                 Log.warnWithException(LOGGER, e, "Exception in documentChanged");

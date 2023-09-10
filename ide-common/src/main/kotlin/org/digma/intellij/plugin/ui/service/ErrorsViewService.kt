@@ -42,6 +42,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
 
 
     companion object {
+        @JvmStatic
         fun getInstance(project: Project): ErrorsViewService {
             return project.getService(ErrorsViewService::class.java)
         }

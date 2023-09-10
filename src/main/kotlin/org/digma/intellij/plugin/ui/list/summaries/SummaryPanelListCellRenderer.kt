@@ -6,6 +6,7 @@ import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.JBUI.Borders.empty
+import org.digma.intellij.plugin.insights.ErrorsViewOrchestrator
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.discovery.CodeObjectInfo
@@ -16,7 +17,6 @@ import org.digma.intellij.plugin.navigation.HomeSwitcherService
 import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
-import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
@@ -74,8 +74,7 @@ private fun buildError(model: TopErrorFlowsInsight.Error, project: Project): JPa
     val linkText = buildLinkTextWithGrayedAndDefaultLabelColorPart(model.name, "from", relativeFrom)
     val link = ActionLink(asHtml(linkText)) {
         project.service<HomeSwitcherService>().switchToInsights()
-        val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
-        actionListener.showErrorDetailsFromDashboard(model.uid)
+        project.service<ErrorsViewOrchestrator>().showErrorDetailsFromDashboard(model.uid)
     }
     link.border = JBUI.Borders.emptyBottom(10)
 
@@ -121,9 +120,7 @@ private fun buildSpanDuration(value: SpanDurationChangeInsight.Change, panelsLay
     val title =
         ActionLink(asHtml(value.span.displayName)) {
             ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Summary)
-            project.service<HomeSwitcherService>().switchToInsights()
             project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanId)
-            project.service<InsightsAndErrorsTabsHelper>().switchToInsightsTab()
         }
 
     title.toolTipText = value.span.displayName

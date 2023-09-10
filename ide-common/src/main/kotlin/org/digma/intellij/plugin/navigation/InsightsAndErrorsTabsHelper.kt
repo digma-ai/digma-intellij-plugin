@@ -5,7 +5,7 @@ import com.intellij.openapi.project.Project
 import javax.swing.JTabbedPane
 
 /**
- * this is a helper for the insights and errors tab, its main job is to remember is error detains is
+ * this is a helper for the insights and errors tab, its main job is to remember if error details is
  * on so the view doesn't change when moving in the editor. and to switch between insights and errors tab.
  * it is initialized lazy when the [org.digma.intellij.plugin.ui.common.InsightsPanel] is initialized.
  */
@@ -46,9 +46,11 @@ class InsightsAndErrorsTabsHelper(val project: Project) {
     }
 
 
-    fun errorDetailsClosed() {
-        tabIndexBeforeErrorDetails?.let {
-            insightsAndErrorsTabbedPane?.selectedIndex = it
+    fun errorDetailsClosed(switchToPreviousTab:Boolean = true) {
+        if (switchToPreviousTab) {
+            tabIndexBeforeErrorDetails?.let {
+                insightsAndErrorsTabbedPane?.selectedIndex = it
+            }
         }
         tabIndexBeforeErrorDetails = null
     }

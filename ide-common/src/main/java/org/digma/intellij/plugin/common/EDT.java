@@ -26,6 +26,19 @@ public class EDT {
         Log.log(LOGGER::error,message);
     }
 
+
+
+    public static void assertIsDispatchThread(){
+        ApplicationManager.getApplication().assertIsDispatchThread();
+    }
+
+    public static void assertNonDispatchThread(){
+        //noinspection UnstableApiUsage
+        ApplicationManager.getApplication().assertIsNonDispatchThread();
+    }
+
+
+
     public static boolean isEdt() {
         return ApplicationManager.getApplication().isDispatchThread();
     }

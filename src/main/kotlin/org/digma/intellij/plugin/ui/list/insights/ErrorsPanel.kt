@@ -1,12 +1,13 @@
 package org.digma.intellij.plugin.ui.list.insights
 
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.ActionLink
 import com.intellij.util.ui.JBUI.Borders
+import org.digma.intellij.plugin.insights.ErrorsViewOrchestrator
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsight
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsightNamedError
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.service.InsightsActionsService
 import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.buildLinkTextWithGrayedAndDefaultLabelColorPart
@@ -32,8 +33,7 @@ fun errorsPanel(project: Project, modelObject: ErrorInsight): JPanel {
         val errorText = buildLinkTextWithGrayedAndDefaultLabelColorPart(error.errorType ,"From", from)
         val link = ActionLink(errorText) {
             ActivityMonitor.getInstance(project).registerCustomEvent("error-insight top-error-clicked", null)
-            val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
-            actionListener.showErrorDetails(error)
+            project.service<ErrorsViewOrchestrator>().showErrorDetails(error)
         }
         link.toolTipText = errorText
         errorsListPanel.add(link)
@@ -41,7 +41,7 @@ fun errorsPanel(project: Project, modelObject: ErrorInsight): JPanel {
 
     val expandButton = ListItemActionButton("Expand")
     expandButton.addActionListener {
-        project.getService(InsightsActionsService::class.java).showErrorsTab(modelObject)
+        project.getService(InsightsActionsService::class.java).showErrorsTab()
         ActivityMonitor.getInstance(project).registerButtonClicked("expand-errors", modelObject.type)
     }
 

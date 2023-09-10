@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.model.rest.insights
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import org.digma.intellij.plugin.model.InsightType
 import java.beans.ConstructorProperties
 import java.util.Date
@@ -40,7 +41,10 @@ constructor(
         val breakdownEntries: List<SpanDurationBreakdown>
 ) : SpanInsight {
 
-    override val type: InsightType = InsightType.SpanDurationBreakdown
-    override val isRecalculateEnabled: Boolean = true // should remove the setter = true later ...support backward compatibility
+        override val type: InsightType = InsightType.SpanDurationBreakdown
+
+        override val isRecalculateEnabled: Boolean // should remove the setter = true later ...support backward compatibility
+                @JsonProperty("isRecalculateEnabled")
+                get() = true
 
 }

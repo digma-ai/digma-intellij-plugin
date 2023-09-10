@@ -6,6 +6,9 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.observable.properties.AtomicProperty
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.common.Backgroundable
+import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.common.stopWatchStart
+import org.digma.intellij.plugin.common.stopWatchStop
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.document.DocumentInfoService
@@ -14,12 +17,14 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
+import org.digma.intellij.plugin.navigation.HomeSwitcherService
+import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper
 import org.digma.intellij.plugin.navigation.NavigationModel
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.service.EditorService
-import org.digma.intellij.plugin.service.ErrorsActionsService
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.service.ErrorsViewService
+import org.digma.intellij.plugin.ui.service.InsightsService
 import org.digma.intellij.plugin.ui.service.InsightsViewService
 
 /**
@@ -71,8 +76,24 @@ class InsightsViewOrchestrator(val project: Project) {
 
         Log.log(logger::debug, project, "Got showInsightsForSpan {}", spanId)
 
-        Backgroundable.ensureBackground(project, "show insights"){
+        Backgroundable.ensurePooledThread{
 
+            val stopWatch = stopWatchStart()
+
+            project.service<InsightsService>().updateInsights(CodeLessSpan(spanId))
+
+            //clear the latest method so that if user clicks on the editor again after watching code less insights the context will change
+            project.service<CurrentContextUpdater>().clearLatestMethod()
+
+            EDT.ensureEDT {
+                project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
+                ToolWindowShower.getInstance(project).showToolWindow()
+                project.getService(HomeSwitcherService::class.java).switchToInsights()
+                project.getService(InsightsAndErrorsTabsHelper::class.java).switchToInsightsTab()
+            }
+
+
+            //todo: this should be removed soon
             project.service<InsightsViewService>().updateInsightsModel(
                 CodeLessSpan(spanId)
             )
@@ -81,12 +102,8 @@ class InsightsViewOrchestrator(val project: Project) {
                 CodeLessSpan(spanId)
             )
 
-            project.service<ErrorsActionsService>().closeErrorDetailsBackButton()
+            stopWatchStop(stopWatch){ time -> Log.log(logger::trace, "showInsightsForCodelessSpan took {}",time)}
 
-            //clear the latest method so that if user clicks on the editor again after watching code less insights the context will change
-            project.service<CurrentContextUpdater>().clearLatestMethod()
-
-            ToolWindowShower.getInstance(project).showToolWindow()
         }
     }
 
@@ -96,7 +113,7 @@ class InsightsViewOrchestrator(val project: Project) {
 
         Log.log(logger::debug, project, "Got showInsightsForMethod {}", methodId)
 
-        Backgroundable.ensureBackground(project,"show insights") {
+        Backgroundable.ensurePooledThread {
 
             val documentInfoService = project.service<DocumentInfoService>()
             val methodInfo = documentInfoService.findMethodInfo(methodId)
@@ -104,6 +121,16 @@ class InsightsViewOrchestrator(val project: Project) {
                 Log.log(logger::warn, project, "showInsightsForMethod cannot show insights for method '{}' since not found", methodId)
             }else {
 
+                project.service<InsightsService>().updateInsights(methodInfo)
+
+                EDT.ensureEDT {
+                    project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
+                    ToolWindowShower.getInstance(project).showToolWindow()
+                    project.getService(HomeSwitcherService::class.java).switchToInsights()
+                    project.getService(InsightsAndErrorsTabsHelper::class.java).switchToInsightsTab()
+                }
+
+                //todo: this should be removed soon
                 project.service<InsightsViewService>().updateInsightsModel(
                     methodInfo
                 )
@@ -112,9 +139,6 @@ class InsightsViewOrchestrator(val project: Project) {
                     methodInfo
                 )
 
-                project.service<ErrorsActionsService>().closeErrorDetailsBackButton()
-
-                project.service<ToolWindowShower>().showToolWindow()
             }
         }
     }
@@ -126,14 +150,20 @@ class InsightsViewOrchestrator(val project: Project) {
      */
     fun showInsightsForSpanOrMethodAndNavigateToCode(spanCodeObjectId: String?, methodCodeObjectId: String?): Boolean {
 
+        //this method should run on EDT with read access
+        EDT.assertIsDispatchThread()
+
 
         currentState.set(ViewState.SpanOrMethodWithNavigation)
 
         //todo: this is WIP, currently relying on showing insights by navigating to code locations and relying on caret event.
         // this class should show insights regardless of caret event and navigate to code if possible.
         // we need to separate this two actions , showing insights and navigating to source code.
-
+        Log.test(logger::info, "Got showInsightsForSpanOrMethodAndNavigateToCode spanCodeObjectId: {}, methodCodeObjectId: {}", spanCodeObjectId, methodCodeObjectId)
+        project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
         ToolWindowShower.getInstance(project).showToolWindow()
+        project.getService(HomeSwitcherService::class.java).switchToInsights()
+        project.getService(InsightsAndErrorsTabsHelper::class.java).switchToInsightsTab()
 
         //we have a situation where the target button wants to navigate to a method or span and show its insights,
         // but the caret in the editor is already on the same offset, in that case a caret event will not be fired.
@@ -144,24 +174,30 @@ class InsightsViewOrchestrator(val project: Project) {
         val methodLocation: Pair<String, Int>? = methodCodeObjectId?.let { project.service<CodeNavigator>().getMethodLocation(methodCodeObjectId) }
         val spanLocation: Pair<String, Int>? = spanCodeObjectId?.let { project.service<CodeNavigator>().getSpanLocation(spanCodeObjectId) }
 
+        Log.test(logger::info, "currentCaretLocation: {}, methodLocation: {}, spanLocation: {}", currentCaretLocation, methodLocation, spanLocation)
         //if currentCaretLocation is null maybe there is no file opened
         if (currentCaretLocation == null) {
+            Log.test(logger::info, "currentCaretLocation is null")
             return project.service<CodeNavigator>().maybeNavigateToSpanOrMethod(spanCodeObjectId, methodCodeObjectId)
         }
 
         //we can navigate to span, it will cause a caret event and show the insights
         if (spanLocation != null && spanLocation != currentCaretLocation) {
+            Log.test(logger::info, "spanLocation is not null and not equals currentCaretLocation")
             return project.service<CodeNavigator>().maybeNavigateToSpan(spanCodeObjectId)
         }
 
         //navigate to method, it will cause a caret event and show the insights
         if (methodLocation != null && methodLocation != currentCaretLocation) {
+            Log.test(logger::info, "methodLocation is not null and not equals currentCaretLocation")
             return project.service<CodeNavigator>().maybeNavigateToMethod(methodCodeObjectId)
         }
+        
 
         //methodLocation equals currentCaretLocation, so we have to emulate a caret event to show the method insights
         if (methodLocation != null) {
-            Backgroundable.ensureBackground(project, "Navigate to method") {
+            Backgroundable.ensurePooledThread {
+                Log.test(logger::info, "about to emulate caret event for methodLocation: {}", methodLocation)
                 emulateCaretEvent(methodCodeObjectId, methodLocation.first)
             }
             return true
@@ -169,10 +205,12 @@ class InsightsViewOrchestrator(val project: Project) {
 
         //todo: not sure about that
         if (spanLocation != null) {
+            Log.test(logger::info, "calling showInsightsForCodelessSpan ")
             showInsightsForCodelessSpan(spanCodeObjectId)
             return true
         }
-
+        
+        Log.test(logger::info, "calling maybeNavigateToSpanOrMethod")
         return project.service<CodeNavigator>().maybeNavigateToSpanOrMethod(spanCodeObjectId, methodCodeObjectId)
 
     }
@@ -227,11 +265,19 @@ class InsightsViewOrchestrator(val project: Project) {
 
         currentState.set(ViewState.MethodFromSourceCode)
 
-        val documentInfo: DocumentInfoContainer? = project.service<DocumentInfoService>().getDocumentInfo(methodUnderCaret)
-        documentInfo?.let {
-            val methodHasNewInsights = documentInfo.loadInsightsForMethod(methodUnderCaret.id) // might be long call since going to the backend
-            project.service<InsightsViewService>().updateInsightsModel(methodInfo)
-            project.service<ErrorsViewService>().updateErrorsModel(methodInfo)
+        Backgroundable.ensurePooledThread{
+            val documentInfo: DocumentInfoContainer? = project.service<DocumentInfoService>().getDocumentInfo(methodUnderCaret)
+            documentInfo?.let {
+
+                project.service<InsightsService>().updateInsights(methodInfo)
+
+                val methodHasNewInsights = documentInfo.loadInsightsForMethod(methodUnderCaret.id) // might be long call since going to the backend
+
+                //todo: this should be removed soon
+                project.service<InsightsViewService>().updateInsightsModel(methodInfo)
+                project.service<ErrorsViewService>().updateErrorsModel(methodInfo)
+
+            }
         }
     }
 
@@ -241,14 +287,19 @@ class InsightsViewOrchestrator(val project: Project) {
 
         project.service<InsightsViewService>().contextChangeNoMethodInfo(dummyMethodInfo)
         project.service<ErrorsViewService>().contextChangeNoMethodInfo(dummyMethodInfo)
+        //todo: update the new react app insights
     }
 
     fun updateWithDocumentPreviewList(documentInfoContainer: DocumentInfoContainer?, fileUri: String) {
 
         currentState.set(ViewState.DocumentPreviewList)
 
-        project.service<InsightsViewService>().showDocumentPreviewList(documentInfoContainer, fileUri)
-        project.service<ErrorsViewService>().showDocumentPreviewList(documentInfoContainer, fileUri)
+        Backgroundable.ensurePooledThread{
+            project.service<InsightsService>().showDocumentPreviewList(documentInfoContainer, fileUri)
+
+            project.service<InsightsViewService>().showDocumentPreviewList(documentInfoContainer, fileUri)
+            project.service<ErrorsViewService>().showDocumentPreviewList(documentInfoContainer, fileUri)
+        }
     }
 
 }

@@ -21,7 +21,7 @@ import com.jetbrains.python.psi.PyCallExpression;
 import com.jetbrains.python.psi.PyFunction;
 import com.jetbrains.python.psi.stubs.PyFunctionNameIndex;
 import kotlin.Pair;
-import org.digma.intellij.plugin.common.DumbAwareNotifier;
+import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.digma.intellij.plugin.psi.PsiUtils;
@@ -35,7 +35,7 @@ import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
-import static org.digma.intellij.plugin.psi.python.PythonCodeObjectsDiscovery.*;
+import static org.digma.intellij.plugin.psi.python.PythonCodeObjectsDiscovery.discoverSpanFromStartSpanMethodCallExpression;
 
 public class PythonSpanNavigationProvider implements Disposable {
 
@@ -189,7 +189,7 @@ public class PythonSpanNavigationProvider implements Disposable {
             return;
         }
 
-        ReadAction.nonBlocking(new RunnableCallable(() -> {
+        Backgroundable.ensurePooledThread(() -> {
             if (virtualFile != null) {
                 buildSpansLock.lock();
                 try {
@@ -198,7 +198,7 @@ public class PythonSpanNavigationProvider implements Disposable {
                     buildSpansLock.unlock();
                 }
             }
-        })).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance());
+        });
     }
 
 

@@ -69,6 +69,7 @@ dependencies {
 
 
     implementation(libs.freemarker)
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:1.26.0")
 
     riderDotNetObjects(project(mapOf(
         "path" to ":rider",

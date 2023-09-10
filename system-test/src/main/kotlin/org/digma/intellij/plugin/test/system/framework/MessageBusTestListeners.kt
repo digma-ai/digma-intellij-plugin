@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.test.system.framework
 
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.psi.PsiFile
 import com.intellij.util.messages.MessageBus
@@ -12,7 +13,7 @@ import org.digma.intellij.plugin.model.ModelChangeListener
 import org.digma.intellij.plugin.ui.model.PanelModel
 
 
-class MessageBusTestListeners(val messageBus: MessageBus) {
+class MessageBusTestListeners(private val messageBus: MessageBus) {
 
     private val logger = Logger.getInstance(MessageBusTestListeners::class.java)
 
@@ -22,16 +23,8 @@ class MessageBusTestListeners(val messageBus: MessageBus) {
         messageBus.connect().subscribe(
             AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC,
             object : AnalyticsServiceConnectionEvent {
-                override fun connectionLost() {
-                    onConnectionGained()
-
-                }
-
-                override fun connectionGained() {
-                    onConnectionLost()
-
-                }
-
+                override fun connectionGained() = onConnectionGained()
+                override fun connectionLost() = onConnectionLost()
             })
 
     }
@@ -75,5 +68,8 @@ class MessageBusTestListeners(val messageBus: MessageBus) {
             ModelChangeListener {
                 onModelChanged(it)
             })
+    }
+    
+    fun disconnectAll() {
     }
 }

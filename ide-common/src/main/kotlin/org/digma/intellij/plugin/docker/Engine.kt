@@ -32,7 +32,7 @@ internal class Engine {
             .withRedirectErrorStream(true)
             .toProcessBuilder()
 
-        return executeCommand(project, "up", composeFile, processBuilder)
+        return executeCommandWithRetry(project, "up", composeFile, processBuilder, reportToPosthog = true, ignoreNonRealErrors = true)
     }
 
 
@@ -47,7 +47,7 @@ internal class Engine {
             .withRedirectErrorStream(true)
             .toProcessBuilder()
 
-        return executeCommand(project, "down", composeFile, processBuilder, reportToPosthog)
+        return executeCommandWithRetry(project, "down", composeFile, processBuilder, reportToPosthog)
 
     }
 
@@ -63,7 +63,7 @@ internal class Engine {
             .withRedirectErrorStream(true)
             .toProcessBuilder()
 
-        return executeCommand(project, "up", composeFile, processBuilder)
+        return executeCommandWithRetry(project, "up", composeFile, processBuilder)
 
     }
 
@@ -79,7 +79,7 @@ internal class Engine {
             .withRedirectErrorStream(true)
             .toProcessBuilder()
 
-        return executeCommand(project, "stop", composeFile, processBuilder)
+        return executeCommandWithRetry(project, "stop", composeFile, processBuilder)
 
     }
 
@@ -98,9 +98,62 @@ internal class Engine {
             .withRedirectErrorStream(true)
             .toProcessBuilder()
 
-        return executeCommand(project, "down", composeFile, processBuilder)
+        return executeCommandWithRetry(project, "down", composeFile, processBuilder)
 
     }
+
+
+    private fun executeCommandWithRetry(
+        project: Project,
+        name: String,
+        composeFile: File,
+        processBuilder: ProcessBuilder,
+        reportToPosthog: Boolean = true,
+        ignoreNonRealErrors: Boolean = false
+    ): String {
+
+        //try 3 times in case of failure
+        repeat(3){ count ->
+            Log.log(logger::info,"executing command {}, attempt {}",name,count)
+            val exitValue = executeCommand(project, name, composeFile, processBuilder,reportToPosthog,ignoreNonRealErrors)
+            if (shouldExit(exitValue)){
+                Log.log(logger::info,"docker command {} completed after retry {} with exit value {}",name,count,exitValue)
+                return exitValue
+            }
+
+            if (reportToPosthog) {
+                ActivityMonitor.getInstance(project).registerDigmaEngineEventRetry(
+                    name, mapOf(
+                        "exitValue" to exitValue,
+                        "retry" to count
+                    )
+                )
+            }
+            Log.log(logger::info,"docker command {} failed with exit value {}, retrying..",name,exitValue)
+        }
+
+        //last chance
+        Log.log(logger::info,"executing command {}, last chance after 3 failures",name)
+        return executeCommand(project, "down", composeFile, processBuilder)
+    }
+
+    private fun shouldExit(exitValue: String): Boolean {
+        return !shouldRetry(exitValue)
+    }
+
+    private fun shouldRetry(exitValue: String): Boolean {
+        //add here more evaluations in exit value that should trigger a retry
+        return exitValue != "0" && isRetryTriggerExitValue(exitValue)
+
+    }
+
+    private fun isRetryTriggerExitValue(exitValue: String):Boolean{
+
+        return exitValue.startsWith("process exited with timeout") ||
+                exitValue.contains("unexpected EOF")
+
+    }
+
 
 
     private fun executeCommand(
@@ -109,6 +162,7 @@ internal class Engine {
         composeFile: File,
         processBuilder: ProcessBuilder,
         reportToPosthog: Boolean = true,
+        ignoreNonRealErrors: Boolean = false
     ): String {
 
         try {
@@ -131,12 +185,12 @@ internal class Engine {
             Log.log(logger::info, "started process {}", process.info())
 
             streamExecutor.submit(StreamGobbler(process.inputStream) {
-                collectErrors(it, errorMessages)
+                collectErrors(it, errorMessages,ignoreNonRealErrors)
                 collectAll(it, allOutputLines)
                 Log.log(logger::info, "DigmaDocker: $it")
             })
             streamExecutor.submit(StreamGobbler(process.errorStream) {
-                collectErrors(it, errorMessages)
+                collectErrors(it, errorMessages, ignoreNonRealErrors)
                 collectAll(it, allOutputLines)
                 Log.log(logger::info, "DigmaDockerError: $it")
             })
@@ -194,7 +248,11 @@ internal class Engine {
     private fun buildExitValue(exitValue: Int, success: Boolean, errorMessages: List<String>, allOutputLines: MutableList<String>): String {
 
         if (!success || exitValue != 0) {
-            var exitMessage = "process failed with code $exitValue"
+            var exitMessage = if (!success) {
+                "process exited with timeout and exit code $exitValue"
+            }else{
+                "process failed with code $exitValue"
+            }
             if (errorMessages.isNotEmpty()) {
                 exitMessage = exitMessage.plus(":").plus(buildErrorMessages(errorMessages))
             }
@@ -235,15 +293,26 @@ internal class Engine {
 
 
     //best effort to collect error codes
-    private fun collectErrors(line: String, errorMessages: MutableList<String>) {
+    private fun collectErrors(line: String, errorMessages: MutableList<String>, ignoreNonRealErrors: Boolean) {
 
         try {
             if (line.trim().startsWith("Error ") || line.trim().startsWith("Error: ")) {
+
+                if (ignoreNonRealErrors && isNonRealError(line)){
+                    return
+                }
+
                 errorMessages.add(line)
             }
         } catch (e: Exception) {
             //ignore
         }
+    }
+
+    private fun isNonRealError(line: String): Boolean {
+        //some error messages that are not real errors.
+        //for example podman will print "no such volume" on new installation for every new volume
+        return line.lowercase().contains("no such volume")
     }
 
     private fun collectAll(line: String, allLines: MutableList<String>) {

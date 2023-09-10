@@ -32,6 +32,8 @@ constructor(
         override val actualStartTime: Date?,
         override val customStartTime: Date?,
         override val prefixedCodeObjectId: String?,
+        @get:JsonProperty("isRecalculateEnabled")
+        @param:JsonProperty("isRecalculateEnabled")
         override val isRecalculateEnabled: Boolean,
         override val shortDisplayInfo: ShortDisplayInfo?,
         @JsonProperty("type")

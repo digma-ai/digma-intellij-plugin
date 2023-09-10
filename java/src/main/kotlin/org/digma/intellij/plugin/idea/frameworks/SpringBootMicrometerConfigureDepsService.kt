@@ -8,10 +8,10 @@ import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.autoimport.ProjectRefreshAction
 import com.intellij.openapi.project.Project
-import com.intellij.util.ui.EdtInvocationManager
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.idea.build.BuildSystemChecker.Companion.determineBuildSystem
 import org.digma.intellij.plugin.idea.build.JavaBuildSystem
@@ -135,8 +135,8 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
             stateHasSpringBootModulesWithoutObservability.set(false)
         }
 
-        EdtInvocationManager.getInstance().invokeLater {
-            affectedPanel!!.reset()
+        EDT.ensureEDT {
+            affectedPanel?.reset()
         }
     }
 

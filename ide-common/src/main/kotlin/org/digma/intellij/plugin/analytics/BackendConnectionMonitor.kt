@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.analytics
 
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.util.messages.MessageBusConnection
@@ -11,6 +12,7 @@ import org.digma.intellij.plugin.log.Log;
  * no connection message in the plugin window.
  * see also class NoConnectionPanel
  */
+@Service(Service.Level.PROJECT)
 class BackendConnectionMonitor(val project: Project) : Disposable, AnalyticsServiceConnectionEvent {
 
     companion object {
@@ -41,11 +43,14 @@ class BackendConnectionMonitor(val project: Project) : Disposable, AnalyticsServ
     fun isConnectionError(): Boolean {
         Log.test(logger::warn,"isConnectionError")
         return false
+//        return hasConnectionError // this is the real implementation
+        
     }
 
     fun isConnectionOk(): Boolean {
         Log.test(logger::info,"isConnectionOk")
         return true
+//        return !hasConnectionError  // this is the real implementation
     }
 
     private fun connectionError() {

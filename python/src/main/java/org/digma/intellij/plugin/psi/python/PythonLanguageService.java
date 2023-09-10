@@ -7,6 +7,8 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.progress.EmptyProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
@@ -24,6 +26,7 @@ import com.jetbrains.python.psi.stubs.PyFunctionNameIndex;
 import kotlin.Pair;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.ReadActions;
+import org.digma.intellij.plugin.common.Retries;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.editor.EditorUtils;
 import org.digma.intellij.plugin.log.Log;
@@ -112,22 +115,24 @@ public class PythonLanguageService implements LanguageService {
     @Override
     @NotNull
     public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, Editor selectedEditor, int caretOffset) {
-        if (!isSupportedFile(project, psiFile)) {
-            return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), false);
-        }
-        PsiElement underCaret = psiFile.findElementAt(caretOffset);
-        if (underCaret == null) {
+        return Retries.retryWithResult(() -> ReadAction.compute(() -> {
+            if (!isSupportedFile(project, psiFile)) {
+                return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), false);
+            }
+            PsiElement underCaret = psiFile.findElementAt(caretOffset);
+            if (underCaret == null) {
+                return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), true);
+            }
+            PyFunction pyFunction = PsiTreeUtil.getParentOfType(underCaret, PyFunction.class);
+            if (pyFunction != null) {
+                var methodId = PythonLanguageUtils.createPythonMethodCodeObjectId(project, pyFunction);
+                var name = pyFunction.getName() == null ? "" : pyFunction.getName();
+                var containingClass = pyFunction.getContainingClass();
+                var className = containingClass == null ? "" : containingClass.getName() + ".";
+                return new MethodUnderCaret(methodId, name, className, "", PsiUtils.psiFileToUri(psiFile));
+            }
             return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), true);
-        }
-        PyFunction pyFunction = PsiTreeUtil.getParentOfType(underCaret, PyFunction.class);
-        if (pyFunction != null) {
-            var methodId = PythonLanguageUtils.createPythonMethodCodeObjectId(project, pyFunction);
-            var name = pyFunction.getName() == null ? "" : pyFunction.getName();
-            var containingClass = pyFunction.getContainingClass();
-            var className = containingClass == null ? "" : containingClass.getName() + ".";
-            return new MethodUnderCaret(methodId, name, className, "", PsiUtils.psiFileToUri(psiFile));
-        }
-        return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), true);
+        }), Throwable.class, 50, 5);
     }
 
 
@@ -309,7 +314,10 @@ public class PythonLanguageService implements LanguageService {
     public @NotNull DocumentInfo buildDocumentInfo(@NotNull PsiFile psiFile) {
         Log.log(LOGGER::debug, "got buildDocumentInfo request for {}", psiFile);
         if (psiFile instanceof PyFile pyFile) {
-            return PythonCodeObjectsDiscovery.buildDocumentInfo(project, pyFile);
+
+            return ProgressManager.getInstance().runProcess(() -> Retries.retryWithResult(() -> ReadAction.compute(() -> PythonCodeObjectsDiscovery.buildDocumentInfo(project, pyFile)),
+                    Throwable.class,50,5),new EmptyProgressIndicator());
+
         } else {
             Log.log(LOGGER::debug, "psi file is noy python, returning empty DocumentInfo for {}", psiFile);
             return new DocumentInfo(PsiUtils.psiFileToUri(psiFile), new HashMap<>());

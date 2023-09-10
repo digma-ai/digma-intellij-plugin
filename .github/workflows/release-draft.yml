@@ -1,47 +1,20 @@
 
-name: Build main and Prepare Release
+
+name: Prepare release draft
 on:
-  push:
-    branches: [ main ]
+  workflow_call:
 
 jobs:
-  call-build-workflow:
-    strategy:
-      matrix:
-        profile: [ lowest, latest, eap ]
-    uses: ./.github/workflows/build-workflow.yml
-    with:
-      build-profile: ${{ matrix.profile }}
-      ref-name: ${{ github.ref_name }}
-      build-with-rider: false
-    secrets: inherit
-  ## can do a double matrix for rider but then it's not clear in github which is the rider build.
-  call-build-workflow-with-rider:
-    strategy:
-      matrix:
-        profile: [ lowest, latest, eap ]
-    uses: ./.github/workflows/build-workflow.yml
-    with:
-      build-profile: ${{ matrix.profile }}
-      ref-name: ${{ github.ref_name }}
-      build-with-rider: true
-    secrets: inherit
-
-
-
-  # Prepare a draft release for GitHub Releases page for the manual verification
-  # If accepted and published, release workflow would be triggered
   releaseDraft:
-    needs: [ call-build-workflow,call-build-workflow-with-rider ]
     name: Prepare Release Draft
-    if: github.event_name != 'pull_request'
     runs-on: ubuntu-22.04
     steps:
 
       - name: Fetch Sources
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0
+          ref: 'main'
+          fetch-depth: 1
 
       - name: Export Version
         id: exportversion

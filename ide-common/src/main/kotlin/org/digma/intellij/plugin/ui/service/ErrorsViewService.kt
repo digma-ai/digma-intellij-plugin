@@ -222,6 +222,10 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
     }
 
 
+    override fun canUpdateUI(): Boolean {
+        return !project.service<InsightsAndErrorsTabsHelper>().isErrorDetailsOn()
+    }
+
     fun closeErrorDetails() {
 
         Log.log(logger::debug, "closeErrorDetails called")

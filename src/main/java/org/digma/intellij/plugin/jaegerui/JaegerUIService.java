@@ -242,12 +242,8 @@ public class JaegerUIService {
 
         var span = goToSpanMessage.payload();
         //if we're here then code location was not found
-        EDT.ensureEDT(() -> {
-            project.getService(HomeSwitcherService.class).switchToInsights();
-            project.getService(InsightsAndErrorsTabsHelper.class).switchToInsightsTab();
-            ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Jaeger);
-            project.getService(InsightsViewOrchestrator.class).showInsightsForCodelessSpan(span.spanCodeObjectId());
-        });
+        ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Jaeger);
+        project.getService(InsightsViewOrchestrator.class).showInsightsForCodelessSpan(span.spanCodeObjectId());
     }
 
     public Map<String, SpanData> getResolvedSpans(SpansMessage spansMessage) {

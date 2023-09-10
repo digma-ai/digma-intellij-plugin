@@ -75,7 +75,7 @@ fun prepareDefaultSpyCalls(jbCaf: JBCefBrowser, caf: CefBrowser) {
     // mocking calls of JBCefBrowser
     Mockito.`when`(jbCaf.cefBrowser)
         .thenAnswer {
-            Log.test(logger::info, "getCefBrowser - of mockJBBrowser before real call, returning spy of CefBrowser")
+//            Log.test(logger::info, "getCefBrowser - of mockJBBrowser before real call, returning spy of CefBrowser")
             return@thenAnswer caf
         }
 //        .thenReturn(caf)
@@ -83,7 +83,7 @@ fun prepareDefaultSpyCalls(jbCaf: JBCefBrowser, caf: CefBrowser) {
     // mocking calls of CefBrowser
     Mockito.`when`(caf.url)
         .thenAnswer {
-            Log.test(logger::info, "getURL - mock URL")
+//            Log.test(logger::info, "getURL - mock URL")
             return@thenAnswer "http://mockURL/index.html"
         }
 

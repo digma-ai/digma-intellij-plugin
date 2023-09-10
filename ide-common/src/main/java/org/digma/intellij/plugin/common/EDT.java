@@ -4,6 +4,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
+import org.jetbrains.annotations.NotNull;
 
 public class EDT {
 
@@ -51,5 +52,9 @@ public class EDT {
 
     public static boolean isEdt() {
         return ApplicationManager.getApplication().isDispatchThread();
+    }
+
+    public static void invokeAndWait(@NotNull Runnable task) {
+        ApplicationManager.getApplication().invokeAndWait(task);
     }
 }

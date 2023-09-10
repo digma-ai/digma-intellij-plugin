@@ -22,7 +22,6 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.jcef.common.CustomSchemeHandlerFactory
@@ -46,17 +45,17 @@ import org.digma.intellij.plugin.notifications.AppNotificationCenter
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.persistence.updateInstallationWizardFlag
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.recentactivity.ConnectionCheckResult
-import org.digma.intellij.plugin.recentactivity.JcefConnectionCheckMessagePayload
-import org.digma.intellij.plugin.recentactivity.JcefConnectionCheckMessageRequest
-import org.digma.intellij.plugin.recentactivity.JcefDockerResultPayload
-import org.digma.intellij.plugin.recentactivity.JcefMessageRequest
-import org.digma.intellij.plugin.recentactivity.RecentActivityToolWindowShower
+import org.digma.intellij.plugin.jcef.common.ConnectionCheckResult
+import org.digma.intellij.plugin.jcef.common.JcefConnectionCheckMessagePayload
+import org.digma.intellij.plugin.jcef.common.JcefConnectionCheckMessageRequest
+import org.digma.intellij.plugin.jcef.common.JcefDockerResultPayload
+import org.digma.intellij.plugin.jcef.common.JcefMessageRequest
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.common.ObservabilityUtil.Companion.updateObservabilityValue
 import org.digma.intellij.plugin.ui.list.insights.isJaegerButtonEnabled
 import org.digma.intellij.plugin.ui.panels.DisposablePanel
+import org.digma.intellij.plugin.ui.recentactivity.RecentActivityToolWindowShower
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
 import org.digma.intellij.plugin.ui.settings.SettingsChangeListener
 import org.digma.intellij.plugin.ui.settings.Theme
@@ -177,7 +176,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                     updateInstallationWizardFlag()
                     ToolWindowShower.getInstance(project).showToolWindow()
                     MainToolWindowCardsController.getInstance(project).wizardFinished()
-                    RecentActivityToolWindowShower.getInstance(project).showToolWindow()
+                    project.service<RecentActivityToolWindowShower>().showToolWindow()
                 }
             }
             if (JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER.equals(action, ignoreCase = true)) {

@@ -21,4 +21,6 @@ data class PersistenceData(
     var lastInsightsEventTime: String? = null,
     var noInsightsYetNotificationPassed: Boolean = false,
     var notificationsStartDate: String? = null,
+
+    var pendingEnvironment: String? = null,
 )

@@ -4,11 +4,14 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.JBCefBrowser
+import com.intellij.util.messages.MessageBusConnection
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefMessageRouter
 import org.cef.handler.CefLifeSpanHandlerAdapter
+import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
 import org.digma.intellij.plugin.ui.settings.SettingsChangeListener
@@ -26,8 +29,13 @@ class JCefComponent(
 ) : Disposable {
 
 
+    private val settingsChangeListener: SettingsChangeListener
+    private val analyticsServiceConnectionEventMessageBusConnection: MessageBusConnection
+
+
     init {
-        ApplicationUISettingsChangeNotifier.getInstance(project).addSettingsChangeListener(object : SettingsChangeListener {
+
+        settingsChangeListener = object : SettingsChangeListener {
             override fun systemFontChange(fontName: String) {
                 JCefBrowserUtil.sendRequestToChangeFont(fontName, jbCefBrowser)
             }
@@ -39,14 +47,35 @@ class JCefComponent(
             override fun editorFontChange(fontName: String) {
                 JCefBrowserUtil.sendRequestToChangeCodeFont(fontName, jbCefBrowser)
             }
-        })
+        }
+
+        ApplicationUISettingsChangeNotifier.getInstance(project).addSettingsChangeListener(settingsChangeListener)
+
+        analyticsServiceConnectionEventMessageBusConnection = project.messageBus.connect()
+        analyticsServiceConnectionEventMessageBusConnection.subscribe(
+            AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, object : AnalyticsServiceConnectionEvent {
+                override fun connectionLost() {
+                    sendConnectionStatus(jbCefBrowser.cefBrowser, false)
+                }
+
+                override fun connectionGained() {
+                    sendConnectionStatus(jbCefBrowser.cefBrowser, true)
+                }
+            })
     }
 
 
     override fun dispose() {
-        jbCefBrowser.dispose()
-        cefMessageRouter.dispose()
-        jbCefBrowser.jbCefClient.removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
+        try {
+            jbCefBrowser.dispose()
+            cefMessageRouter.dispose()
+            jbCefBrowser.jbCefClient.removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
+
+            ApplicationUISettingsChangeNotifier.getInstance(project).removeSettingsChangeListener(settingsChangeListener)
+            analyticsServiceConnectionEventMessageBusConnection.dispose()
+        } catch (e: Exception) {
+            ErrorReporter.getInstance().reportError("JCefComponent.dispose", e)
+        }
     }
 
     fun getComponent(): JComponent {
@@ -87,13 +116,17 @@ class JCefComponentBuilder(val project: Project) {
 
         jbCefBrowser.jbCefClient.addLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
 
+
+        val jCefComponent = JCefComponent(project, jbCefBrowser, cefMessageRouter, messageRouterHandler, schemeHandlerFactory, lifeSpanHandler)
+
         parentDisposable?.let {
             Disposer.register(it) {
                 jbCefBrowser.jbCefClient.removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
+                jCefComponent.dispose()
             }
         }
 
-        return JCefComponent(project, jbCefBrowser, cefMessageRouter, messageRouterHandler, schemeHandlerFactory, lifeSpanHandler)
+        return jCefComponent
     }
 
 

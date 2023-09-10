@@ -38,7 +38,6 @@ import org.digma.intellij.plugin.model.rest.insights.MethodWithInsightStatus;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
-import org.digma.intellij.plugin.recentactivity.RecentActivityService;
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshService;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.common.Laf;
@@ -51,6 +50,7 @@ import org.digma.intellij.plugin.ui.model.MethodScope;
 import org.digma.intellij.plugin.ui.model.Scope;
 import org.digma.intellij.plugin.ui.model.UIInsightsStatus;
 import org.digma.intellij.plugin.ui.model.insights.InsightsModelReact;
+import org.digma.intellij.plugin.ui.recentactivity.RecentActivityService;
 import org.digma.intellij.plugin.ui.service.InsightsService;
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier;
 import org.digma.intellij.plugin.ui.settings.SettingsChangeListener;
@@ -155,6 +155,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
                 }
             });
 
+            //todo: change to JaegerButtonStateListener().start(project, jCefComponent)
             SettingsState.getInstance().addChangeListener(settingsState -> JCefBrowserUtil.sendRequestToChangeTraceButtonEnabled(jbCefBrowser), this);
 
         }
@@ -586,12 +587,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
     public void openLiveView(@NotNull String prefixedCodeObjectId) {
         Log.log(logger::debug, project, "openLiveView called {}", prefixedCodeObjectId);
 
-        try {
-            DurationLiveData durationLiveData = AnalyticsService.getInstance(project).getDurationLiveData(prefixedCodeObjectId);
-            RecentActivityService.getInstance(project).sendLiveData(durationLiveData, prefixedCodeObjectId);
-        } catch (AnalyticsServiceException e) {
-            Log.warnWithException(logger, project, e, "Error loading live view {}", e.getMessage());
-        }
+        project.getService(RecentActivityService.class).startLiveView(prefixedCodeObjectId);
     }
 
 

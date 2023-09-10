@@ -4,6 +4,7 @@ import ai.grazie.nlp.utils.dropWhitespaces
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.components.ComponentManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
@@ -12,7 +13,10 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.JavaRecursiveElementVisitor
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
+import com.intellij.testFramework.PlatformTestUtil
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase
+import com.intellij.testFramework.registerComponentInstance
+import com.intellij.util.WaitFor
 import junit.framework.TestCase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -22,7 +26,6 @@ import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService
 import org.digma.intellij.plugin.insights.InsightsMessageRouterHandler
-import org.digma.intellij.plugin.insights.model.outgoing.InsightsPayload
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
@@ -40,6 +43,12 @@ import org.gradle.internal.impldep.org.junit.Rule
 import org.gradle.internal.impldep.org.junit.runner.RunWith
 import org.gradle.internal.impldep.org.junit.runners.JUnit4
 import java.util.concurrent.TimeUnit
+import com.intellij.testFramework.registerServiceInstance
+import com.intellij.testFramework.replaceService
+import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
+import org.mockito.Mockito.doAnswer
+import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.spy
 
 import kotlin.test.assertNotEquals
 
@@ -57,6 +66,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
         get() {
             return AnalyticsService.getInstance(project)
         }
+
 
     private val recentActivityService: RecentActivityService
         get() {
@@ -90,7 +100,10 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
 //                done.waitForCompletion()
 //            }
 //        }
-
+        Log.test(logger::info, "dispatching all leftover events that need to be popped from the queue")
+        PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue()
+        PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
+        Log.test(logger::info, "dispatching all leftover events that need to be popped from the queue - done")
         try {
             super.tearDown()
         } catch (ex: Exception) {
@@ -101,7 +114,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
     override fun getTestDataPath(): String {
         return "src/test/resources"
     }
-
+    
     @WaitForAsync
     fun `test that all services are up and running`() {
         Log.test(logger::info, "Requesting analytics service")
@@ -424,36 +437,34 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
 //
 //
 //    }
+
     
-
-
-
-    @WaitForAsync
     fun `test trigger processRecentActivityGoToSpanRequest`() {
         val (jbCaf, caf) = replaceCefBrowserWithSpy(
             containingService = project.service<InsightsService>(),
             messageHandlerFieldName = "messageHandler",
             messageHandlerType = InsightsMessageRouterHandler::class.java,
-            jbBrowserFieldName = "jbCefBrowser")
+            jbBrowserFieldName = "jbCefBrowser"
+        )
         prepareDefaultSpyCalls(jbCaf, caf)
-        
-        
+//        val assertionMap = mutableMapOf<String, Boolean>()
+
         replaceExecuteJSWithAssertionFunction(caf) { props ->
             val objectMapper = ObjectMapper()
             val message = objectMapper.readTree(props)
             Log.test(logger::info, "executeJS - message: {}", message)
-            TestCase.assertEquals("digma",message.get("type").textValue())
-            TestCase.assertEquals("INSIGHTS/SET_DATA",message.get("action").textValue())
+            assertEquals("digma", message.get("type").textValue())
+//            assertionMap["istypeDigma"] = message.get("type").textValue() == "digma"
+            TestCase.assertEquals("INSIGHTS/SET_DATA", message.get("action").textValue())
 //            TestCase.assertTrue(message.get("payload").get("environment").toString() == "env1_mock")
-            
+
         }
-        
-        
-        
+
+
         val file = myFixture.configureByFile("EditorEventsHandler.java")
         myFixture.openFileInEditor(file.virtualFile)
 //        myFixture.editor.caretModel.moveToLogicalPosition(LogicalPosition(50, 7))
-        val future = ApplicationManager.getApplication().executeOnPooledThread() {
+//        val future = ApplicationManager.getApplication().executeOnPooledThread() {
 
 
             val payload: RecentActivityEntrySpanPayload = RecentActivityEntrySpanPayload(
@@ -468,10 +479,16 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
             val proj: Project = this.project
 
 
-//            runBlocking {
-//                delay(1000L)
-//            }
+            val beginning = System.currentTimeMillis()
+            Log.test(logger::info, "before WaitFor")
+            val waitForCondition = object : WaitFor() {
+                override fun condition(): Boolean {
+                    return project.getService(DocumentInfoService::class.java).allKeys().size > 0
+                }
 
+            }
+            val end = System.currentTimeMillis()
+            Log.test(logger::info, "after WaitFor: {} ms", end - beginning)
             Log.test(logger::info, "is EDT: {}", EDT.isEdt())
 
             try {
@@ -483,10 +500,7 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
                     Project::class.java
                 )
                 invokeMethod(recentActivityService, processRecentActivityGoToSpanRequestMethodRef, payload, proj)
-                runBlocking {
-                    delay(10000L)
-                }
-
+                waitForCondition.assertCompleted("DocumentInfoService did not load the document info")
 
             } catch (ex: Exception) {
                 Log.test(logger::info, "Invoke Throws Exception: {}", ex.message)
@@ -496,8 +510,11 @@ class MockTestK : LightJavaCodeInsightFixtureTestCase() {
 //            runBlocking {
 //                delay(1000L)
 //            }
-        }
-        future.get(20, TimeUnit.SECONDS)
+//        }
+//        future.get(5, TimeUnit.SECONDS)
+        PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue()
+        
+        // check something
     }
 }
 

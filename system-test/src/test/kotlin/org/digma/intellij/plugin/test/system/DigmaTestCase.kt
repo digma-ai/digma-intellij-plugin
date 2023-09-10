@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.test.system
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.psi.PsiFile
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase
+import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase4
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.digma.intellij.plugin.analytics.AnalyticsService
@@ -13,9 +14,12 @@ import org.digma.intellij.plugin.test.system.framework.MessageBusTestListeners
 import org.digma.intellij.plugin.test.system.framework.mockRestAnalyticsProvider
 
 
+
 open class DigmaTestCase : LightJavaCodeInsightFixtureTestCase() {
 
     protected val logger = Logger.getInstance(DigmaTestCase::class.java)
+
+    val systemTestDataPath = "src/test/resources"
 
     protected lateinit var messageBusTestListeners: MessageBusTestListeners
 
@@ -24,9 +28,8 @@ open class DigmaTestCase : LightJavaCodeInsightFixtureTestCase() {
             return AnalyticsService.getInstance(project)
         }
 
-    val systemTestDataPath = "src/test/resources"
-
     override fun setUp() {
+
         super.setUp()
         mockRestAnalyticsProvider(project)
         messageBusTestListeners = MessageBusTestListeners(project.messageBus)

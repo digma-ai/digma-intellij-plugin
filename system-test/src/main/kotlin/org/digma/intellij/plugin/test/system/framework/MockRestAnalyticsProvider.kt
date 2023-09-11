@@ -19,8 +19,10 @@ import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveDataRequest
 import org.digma.intellij.plugin.model.rest.livedata.LiveDataRecord
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest
+import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse
+import org.gradle.internal.impldep.org.apache.ivy.core.resolve.ResolveEngine
 import org.mockito.Mockito.any
 import org.mockito.Mockito.anyString
 import org.mockito.Mockito.isA
@@ -62,9 +64,9 @@ fun mockRestAnalyticsProvider(project: Project): RestAnalyticsProvider {
     proxyField.isAccessible = true
     proxyField.set(analyticsService, mock)
     mockGetAbout(theMock)
-    mockGetEnvironments(theMock, environmentList)
-    mockGetRecentActivity(theMock)
-    mockGetInsightsOfMethods(theMock)
+//    mockGetEnvironments(theMock, environmentList)
+//    mockGetRecentActivity(theMock)
+//    mockGetInsightsOfMethods(theMock)
     mockGetPerformanceMetrics(theMock)
     mockGetCodeObjectInsightsStatus(theMock)
     Log.test(logger::info, "RestAnalyticsProvider mock created")
@@ -84,18 +86,17 @@ fun mockGetEnvironments(mock: RestAnalyticsProvider, envList: List<String> = env
     }
 }
 
-private fun mockGetRecentActivity(mock: RestAnalyticsProvider) {
+fun mockGetRecentActivity(mock: RestAnalyticsProvider, result: RecentActivityResult) {
     `when`(mock.getRecentActivity(isA(RecentActivityRequest::class.java))).thenAnswer {
         Log.test(logger::info, "mock getRecentActivity")
         return@thenAnswer createRecentActivityResult()
     }
 }
 
-private fun mockGetInsightsOfMethods(mock: RestAnalyticsProvider) {
+fun mockGetInsightsOfMethods(mock: RestAnalyticsProvider, mockResponse: InsightsOfMethodsResponse) {
     `when`(mock.getInsightsOfMethods(isA(InsightsOfMethodsRequest::class.java))).thenAnswer {
         val currEnv = (it.arguments[0] as InsightsOfMethodsRequest).environment
-//        Log.test(logger::info, "mock getInsightsOfMethods - ${expectedInsightsOfMethodsResponseEnv1.methodsWithInsights}")
-        return@thenAnswer if (currEnv == environmentList[0]) expectedInsightsOfMethodsResponseEnv1 else expectedInsightsOfMethodsResponseEnv2
+        return@thenAnswer mockResponse
     }
 }
 

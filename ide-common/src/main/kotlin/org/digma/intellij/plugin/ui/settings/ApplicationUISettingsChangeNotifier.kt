@@ -26,10 +26,8 @@ class ApplicationUISettingsChangeNotifier : Disposable{
     private val myEditorUIChangeAlarm = Alarm(this)
 
     companion object{
-        private val logger = Logger.getInstance(ApplicationUISettingsChangeNotifier::class.java)
         @JvmStatic
         fun getInstance(project: Project):ApplicationUISettingsChangeNotifier{
-            logger.warn("Getting instance of ${ApplicationUISettingsChangeNotifier::class.simpleName}")
             return project.service<ApplicationUISettingsChangeNotifier>()
         }
     }

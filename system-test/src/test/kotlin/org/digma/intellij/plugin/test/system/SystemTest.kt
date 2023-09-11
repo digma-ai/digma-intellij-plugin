@@ -1,9 +1,11 @@
 package org.digma.intellij.plugin.test.system
 
-import org.digma.intellij.plugin.editor.CaretListener
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.testFramework.EditorTestUtil
+import com.intellij.testFramework.PlatformTestUtil
 import junit.framework.TestCase
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.document.DocumentInfoService
@@ -62,11 +64,13 @@ class SystemTest : DigmaTestCase() {
     }
 
     fun `test that method is selected according to caret position`() {
-//        val currentContextUpdater = project.getService(CurrentContextUpdater::class.java)
-//        val caretListener = CaretListener(project, currentContextUpdater)
-
+        Log.test(logger::info, "opening file")
         val psiFile = myFixture.configureByFile("TestFile.java")
-        FileEditorManager.getInstance(project).openFile(psiFile.virtualFile, true)
+
+        waitFor(1000, "events after opening ${psiFile.name}")
+        PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
+        Log.test(logger::info, "finished dispatching events")
+
         val editor = myFixture.editor
 
         val methods = PsiTreeUtil.findChildrenOfType(psiFile, PsiMethod::class.java)
@@ -75,17 +79,16 @@ class SystemTest : DigmaTestCase() {
         targetMethod?.let {
             val offset = targetMethod.textOffset
             editor.caretModel.moveToOffset(offset)
-//            val endOffset = editor.caretModel.visualLineEnd
-//            val startOffset = editor.caretModel.visualLineStart
-//            editor.selectionModel.setSelection(startOffset, endOffset)
-//            val selectedText = editor.selectionModel.selectedText
-//            selectedText?.let {
-//                TestCase.assertTrue(selectedText.contains("method1"))
-//            }
+            val document = PsiDocumentManager.getInstance(project).getDocument(psiFile)
+            document?.let {
+                Log.test(logger::info, "setting caret position")
+                val caretAndSelectionState = EditorTestUtil.extractCaretAndSelectionMarkers(document)
+                EditorTestUtil.setCaretsAndSelection(editor, caretAndSelectionState)
+            }
         }
-//        caretListener.maybeAddCaretListener(editor)
-//        waitForEvent()
+        waitFor(1000, "caret event in ${psiFile.name}")
         Log.test(logger::info, "selected method = ${project.getService(CurrentContextUpdater::class.java).latestMethodUnderCaret}")
+
     }
 
 }

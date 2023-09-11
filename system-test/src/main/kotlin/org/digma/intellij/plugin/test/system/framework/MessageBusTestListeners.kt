@@ -13,14 +13,14 @@ import org.digma.intellij.plugin.model.ModelChangeListener
 import org.digma.intellij.plugin.ui.model.PanelModel
 
 
-class MessageBusTestListeners(private val messageBus: MessageBus, private val parent: Disposable) {
+class MessageBusTestListeners(private val messageBus: MessageBus) {
 
     private val logger = Logger.getInstance(MessageBusTestListeners::class.java)
 
    
 
     fun registerSubToAnalyticsServiceConnectionEvent(onConnectionGained: () -> Unit, onConnectionLost: () -> Unit) {
-        messageBus.connect(parent).subscribe(
+        messageBus.connect().subscribe(
             AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC,
             object : AnalyticsServiceConnectionEvent {
                 override fun connectionGained() = onConnectionGained()
@@ -30,7 +30,7 @@ class MessageBusTestListeners(private val messageBus: MessageBus, private val pa
     }
 
     fun registerSubToEnvironmentChangedEvent(onEnvChanged: (String?, Boolean) -> Unit) {
-        messageBus.connect(parent).subscribe(
+        messageBus.connect().subscribe(
             EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC,
             object : EnvironmentChanged {
                 override fun environmentChanged(newEnv: String?, refreshInsightsView: Boolean) {
@@ -46,7 +46,7 @@ class MessageBusTestListeners(private val messageBus: MessageBus, private val pa
     }
 
     fun registerSubToTabsChangedEvent(onTabsChanged: (Int) -> Unit) {
-        messageBus.connect(parent).subscribe(
+        messageBus.connect().subscribe(
             TabsChanged.TABS_CHANGED_TOPIC,
             TabsChanged {
                 onTabsChanged(it)
@@ -63,7 +63,7 @@ class MessageBusTestListeners(private val messageBus: MessageBus, private val pa
     }
 
     fun registerSubToModelChangedEvent(onModelChanged: (PanelModel) -> Unit) {
-        messageBus.connect(parent).subscribe(
+        messageBus.connect().subscribe(
             ModelChangeListener.MODEL_CHANGED_TOPIC,
             ModelChangeListener {
                 onModelChanged(it)

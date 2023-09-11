@@ -41,14 +41,12 @@ class BackendConnectionMonitor(val project: Project) : Disposable, AnalyticsServ
     }
 
     fun isConnectionError(): Boolean {
-        Log.test(logger::warn,"isConnectionError")
         return false
 //        return hasConnectionError // this is the real implementation
         
     }
 
     fun isConnectionOk(): Boolean {
-        Log.test(logger::info,"isConnectionOk")
         return true
 //        return !hasConnectionError  // this is the real implementation
     }

@@ -309,9 +309,11 @@ public class RecentActivityService implements Disposable {
     }
 
     private void processRecentActivityGoToSpanRequest(RecentActivityEntrySpanPayload payload, Project project) {
+        Log.test(logger::info, "processRecentActivityGoToSpanRequest payload: {}", payload);
         if (payload != null) {
 
             EDT.ensureEDT(() -> {
+                Log.test(logger::info, "processRecentActivityGoToSpanRequest in EDT");
 
                 //todo: we need to show the insights only after the environment changes. but environment change is done in the background
                 // and its not easy to sync the change environment and showing the insights.
@@ -326,6 +328,7 @@ public class RecentActivityService implements Disposable {
                 var methodId = payload.getSpan().getMethodCodeObjectId();
 
                 var canNavigate = project.getService(CodeNavigator.class).canNavigateToSpanOrMethod(spanId, methodId);
+                Log.test(logger::info, "canNavigate: {}", canNavigate);
                 if (canNavigate) {
                     EnvironmentsSupplier environmentsSupplier = AnalyticsService.getInstance(project).getEnvironment();
                     String actualEnvName = adjustBackEnvNameIfNeeded(payload.getEnvironment());

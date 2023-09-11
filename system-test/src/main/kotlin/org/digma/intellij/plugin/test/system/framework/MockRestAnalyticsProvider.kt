@@ -28,10 +28,9 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import java.sql.Timestamp
 import java.util.Date
-import java.util.List
 
 
-private val logger = Logger.getInstance(Throwable().stackTrace[1].fileName)
+internal val logger = Logger.getInstance(Throwable().stackTrace[1].fileName)
 
 
 val environmentList = listOf(
@@ -50,8 +49,10 @@ val expectedInsightsOfMethodsResponseEnv2: InsightsOfMethodsResponse
 
 var mock: RestAnalyticsProvider? = null
 
-fun mockRestAnalyticsProvider(project: Project) {
-    mock = mock(RestAnalyticsProvider::class.java)
+fun mockRestAnalyticsProvider(project: Project): RestAnalyticsProvider {
+
+    val theMock = mock(RestAnalyticsProvider::class.java)
+    mock = theMock
     Log.test(logger::info, "Creating RestAnalyticsProvider mock")
     val analyticsService = AnalyticsService.getInstance(project)
     var proxyField = analyticsService.javaClass.getDeclaredField("analyticsProviderProxy")
@@ -60,38 +61,38 @@ fun mockRestAnalyticsProvider(project: Project) {
 
     proxyField.isAccessible = true
     proxyField.set(analyticsService, mock)
-    mockGetAbout()
-    mockGetEnvironments()
-    mockGetRecentActivity()
-    mockGetInsightsOfMethods()
-    mockGetPerformanceMetrics()
-    mockGetCodeObjectInsightsStatus()
+    mockGetAbout(theMock)
+    mockGetEnvironments(theMock, environmentList)
+    mockGetRecentActivity(theMock)
+    mockGetInsightsOfMethods(theMock)
+    mockGetPerformanceMetrics(theMock)
+    mockGetCodeObjectInsightsStatus(theMock)
     Log.test(logger::info, "RestAnalyticsProvider mock created")
+    return theMock!!
 }
 
-fun mockGetAbout() {
-    `when`(mock?.getAbout()).thenAnswer {
+fun mockGetAbout(mock: RestAnalyticsProvider) {
+    `when`(mock.getAbout()).thenAnswer {
 //        Log.test(logger::info, "mock getAbout")
         AboutResult("1.0.0", BackendDeploymentType.Unknown)
     }
 }
 
-private fun mockGetEnvironments() {
-    `when`(mock?.getEnvironments()).thenAnswer {
-//        Log.test(logger::info, "mock getEnvironments - $environmentList")
-        return@thenAnswer environmentList
+fun mockGetEnvironments(mock: RestAnalyticsProvider, envList: List<String> = environmentList) {
+    `when`(mock.getEnvironments()).thenAnswer {
+        return@thenAnswer envList
     }
 }
 
-private fun mockGetRecentActivity() {
-    `when`(mock?.getRecentActivity(isA(RecentActivityRequest::class.java))).thenAnswer {
+private fun mockGetRecentActivity(mock: RestAnalyticsProvider) {
+    `when`(mock.getRecentActivity(isA(RecentActivityRequest::class.java))).thenAnswer {
         Log.test(logger::info, "mock getRecentActivity")
         return@thenAnswer createRecentActivityResult()
     }
 }
 
-private fun mockGetInsightsOfMethods() {
-    `when`(mock?.getInsightsOfMethods(isA(InsightsOfMethodsRequest::class.java))).thenAnswer {
+private fun mockGetInsightsOfMethods(mock: RestAnalyticsProvider) {
+    `when`(mock.getInsightsOfMethods(isA(InsightsOfMethodsRequest::class.java))).thenAnswer {
         val currEnv = (it.arguments[0] as InsightsOfMethodsRequest).environment
 //        Log.test(logger::info, "mock getInsightsOfMethods - ${expectedInsightsOfMethodsResponseEnv1.methodsWithInsights}")
         return@thenAnswer if (currEnv == environmentList[0]) expectedInsightsOfMethodsResponseEnv1 else expectedInsightsOfMethodsResponseEnv2
@@ -107,8 +108,8 @@ private fun mockGetDurationLiveData() {
 }
 
 
-private fun mockGetPerformanceMetrics() {
-    `when`(mock?.performanceMetrics).thenAnswer {
+private fun mockGetPerformanceMetrics(mock: RestAnalyticsProvider) {
+    `when`(mock.performanceMetrics).thenAnswer {
         Log.test(logger::info, "mock getPerformanceMetrics")
         return@thenAnswer createPerformanceMetricsResult()
     }
@@ -153,12 +154,12 @@ fun createPerformanceMetricsResult(): PerformanceMetricsResponse {
     )
 }
 
-fun mockGetCodeObjectInsightsStatus() {
-    `when`(mock?.getCodeObjectInsightStatus(isA(InsightsOfMethodsRequest::class.java))).thenAnswer {
+fun mockGetCodeObjectInsightsStatus(mock: RestAnalyticsProvider) {
+    `when`(mock.getCodeObjectInsightStatus(isA(InsightsOfMethodsRequest::class.java))).thenAnswer {
         Log.test(logger::info, "mock getCodeObjectInsightsStatus")
 
         return@thenAnswer CodeObjectInsightsStatusResponse(
-            environment = environmentList[0], 
+            environment = environmentList[0],
             codeObjectsWithInsightsStatus = listOf(
                 MethodWithInsightStatus(
                     methodWithIds = methodCodeObject1,
@@ -172,7 +173,8 @@ fun mockGetCodeObjectInsightsStatus() {
                     methodWithIds = methodCodeObject3,
                     insightStatus = InsightStatus.InsightExist
                 ),
-            ))
+            )
+        )
 
     }
 }

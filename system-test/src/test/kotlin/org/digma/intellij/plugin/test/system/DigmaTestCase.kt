@@ -7,6 +7,7 @@ import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.test.system.framework.MessageBusTestListeners
@@ -27,9 +28,10 @@ open class DigmaTestCase : LightJavaCodeInsightFixtureTestCase() {
             return AnalyticsService.getInstance(project)
         }
 
+    protected lateinit var mockAnalyticsProvider: RestAnalyticsProvider
     override fun setUp() {
         super.setUp()
-        mockRestAnalyticsProvider(project)
+        mockAnalyticsProvider = mockRestAnalyticsProvider(project)
         messageBusTestListeners = MessageBusTestListeners(project.messageBus)
     }
 

@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.test.system
+package org.digma.intellij.plugin.test.system.framework
 
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.ui.jcef.JBCefBrowser
@@ -8,7 +8,6 @@ import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
 import java.lang.reflect.Field
 
-val logger = Logger.getInstance(Throwable().stackTrace[1].fileName)
 
 @Suppress("UNCHECKED_CAST")
 fun <T, H> replaceCefBrowserWithSpy(

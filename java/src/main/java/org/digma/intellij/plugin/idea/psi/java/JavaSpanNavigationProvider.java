@@ -6,6 +6,9 @@ import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.progress.EmptyProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.JavaPsiFacade;
@@ -18,11 +21,12 @@ import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.psi.search.searches.MethodReferencesSearch;
 import com.intellij.util.Query;
-import com.intellij.util.RunnableCallable;
-import com.intellij.util.concurrency.NonUrgentExecutor;
 import kotlin.Pair;
 import org.apache.commons.collections4.CollectionUtils;
 import org.digma.intellij.plugin.common.Backgroundable;
+import org.digma.intellij.plugin.common.EDT;
+import org.digma.intellij.plugin.common.ReadActions;
+import org.digma.intellij.plugin.common.Retries;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
@@ -30,11 +34,13 @@ import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.digma.intellij.plugin.idea.psi.java.Constants.SPAN_BUILDER_FQN;
@@ -84,92 +90,220 @@ public class JavaSpanNavigationProvider implements Disposable {
 
 
     public void buildSpanNavigation() {
-        ReadAction.nonBlocking(new RunnableCallable(() -> {
+
+        EDT.assertNonDispatchThread();
+
+        Log.log(LOGGER::info, "Building span navigation");
+
+
+        try {
             buildSpansLock.lock();
-            try {
-                Log.log(LOGGER::info, "Building span navigation");
-                buildWithSpanAnnotation(GlobalSearchScope.projectScope(project));
-                buildStartSpanMethodCall(GlobalSearchScope.projectScope(project));
-
-                buildObservedAnnotation(GlobalSearchScope.projectScope(project));
-
-                //trigger a refresh after span navigation is built. this is necessary because the insights and errors
-                //views may be populated before span navigation is ready and spans links can not be built.
-                //for example is the IDE is closed when the cursor is on a method with Duration Breakdown that
-                // has span links, then start the IDE again, the insights view is populated already, without this refresh
-                // there will be no links.
-                project.getService(InsightsViewService.class).refreshInsightsModel();
-                project.getService(ErrorsViewService.class).refreshErrorsModel();
-
-            } catch (Exception e) {
-                Log.warnWithException(LOGGER, e, "Exception in buildSpanNavigation");
-                ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.buildSpanNavigation", e);
-            } finally {
+            Retries.simpleRetry(() -> {
+                Log.log(LOGGER::info, "Building buildWithSpanAnnotation");
+                buildWithSpanAnnotation(() -> GlobalSearchScope.projectScope(project));
+            }, Throwable.class, 100, 5);
+        } catch (Exception e) {
+            Log.warnWithException(LOGGER, e, "Exception in buildSpanNavigation buildWithSpanAnnotation");
+            ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.buildSpanNavigation.buildWithSpanAnnotation", e);
+        } finally {
+            if (buildSpansLock.isHeldByCurrentThread()) {
                 buildSpansLock.unlock();
             }
-        })).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance());
-
-    }
-
-
-    private void buildStartSpanMethodCall(@NotNull SearchScope searchScope) {
-        PsiClass tracerBuilderClass = JavaPsiFacade.getInstance(project).findClass(SPAN_BUILDER_FQN, GlobalSearchScope.allScope(project));
-        if (tracerBuilderClass != null) {
-            PsiMethod startSpanMethod =
-                    JavaLanguageUtils.findMethodInClass(tracerBuilderClass, "startSpan", psiMethod -> psiMethod.getParameters().length == 0);
-            Objects.requireNonNull(startSpanMethod, "startSpan method must be found in SpanBuilder class");
-
-            Query<PsiReference> startSpanReferences = MethodReferencesSearch.search(startSpanMethod, searchScope, true);
-            //filter classes that we don't support,which should not happen but just in case. we don't support Annotations,Enums and Records.
-            startSpanReferences = filterNonRelevantReferencesForSpanDiscovery(startSpanReferences);
-
-            startSpanReferences.forEach(psiReference -> {
-                SpanInfo spanInfo = JavaSpanDiscoveryUtils.getSpanInfoFromStartSpanMethodReference(project, psiReference);
-                if (spanInfo != null) {
-                    Log.log(LOGGER::debug, "Found span info {} in method {}", spanInfo.getId(), spanInfo.getContainingMethodId());
-                    int lineNumber = psiReference.getElement().getTextOffset();
-                    var location = new SpanLocation(spanInfo.getContainingFileUri(), lineNumber);
-                    spanLocations.put(spanInfo.getId(), location);
-                }
-            });
         }
+
+
+        try {
+            buildSpansLock.lock();
+            Retries.simpleRetry(() -> {
+                Log.log(LOGGER::info, "Building buildStartSpanMethodCall");
+                buildStartSpanMethodCall(() -> GlobalSearchScope.projectScope(project));
+            }, Throwable.class, 100, 5);
+        } catch (Exception e) {
+            Log.warnWithException(LOGGER, e, "Exception in buildSpanNavigation buildStartSpanMethodCall");
+            ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.buildSpanNavigation.buildStartSpanMethodCall", e);
+        } finally {
+            if (buildSpansLock.isHeldByCurrentThread()) {
+                buildSpansLock.unlock();
+            }
+        }
+
+
+        try {
+            buildSpansLock.lock();
+            Retries.simpleRetry(() -> {
+                Log.log(LOGGER::info, "Building buildObservedAnnotation");
+                buildObservedAnnotation(() -> GlobalSearchScope.projectScope(project));
+            }, Throwable.class, 100, 5);
+        } catch (Exception e) {
+            Log.warnWithException(LOGGER, e, "Exception in buildSpanNavigation buildObservedAnnotation");
+            ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.buildSpanNavigation.buildObservedAnnotation", e);
+        } finally {
+            if (buildSpansLock.isHeldByCurrentThread()) {
+                buildSpansLock.unlock();
+            }
+        }
+
+
+        //todo: is this necessary after the new react app ?
+        //trigger a refresh after span navigation is built. this is necessary because the insights and errors
+        //views may be populated before span navigation is ready and spans links can not be built.
+        //for example is the IDE is closed when the cursor is on a method with Duration Breakdown that
+        // has span links, then start the IDE again, the insights view is populated already, without this refresh
+        // there will be no links.
+        InsightsViewService.getInstance(project).refreshInsightsModel();
+        ErrorsViewService.getInstance(project).refreshErrorsModel();
+
     }
 
 
-    private void buildWithSpanAnnotation(@NotNull SearchScope searchScope) {
-        PsiClass withSpanClass = JavaPsiFacade.getInstance(project).findClass(Constants.WITH_SPAN_FQN, GlobalSearchScope.allScope(project));
+    //callers to this method should be ready for ProcessCanceledException.
+    //the search scope is lastly created. so it will be created inside a read action, file search scope must be created in side read access
+    private void buildWithSpanAnnotation(@NotNull Supplier<SearchScope> searchScope) {
+
+        DumbService dumbService = DumbService.getInstance(project);
+
+        PsiClass withSpanClass = Retries.retryWithResult(() -> dumbService.runReadActionInSmartMode(() ->
+                        JavaPsiFacade.getInstance(project).findClass(Constants.WITH_SPAN_FQN, GlobalSearchScope.allScope(project))),
+                Throwable.class, 50, 5);
+
+
         //maybe the annotation is not in the classpath
         if (withSpanClass != null) {
-            Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(withSpanClass, searchScope);
-            psiMethods = filterNonRelevantMethodsForSpanDiscovery(psiMethods);
+
+            //this section will query for relevant psi methods and return a Collection that can be iterated.
+            // iterating directly on Query object may throw a ProcessCanceledException so converting to Collection makes it safer to iterate
+            Collection<PsiMethod> psiMethods = ProgressManager.getInstance().runProcess(() -> Retries.retryWithResult(() -> dumbService.runReadActionInSmartMode(() -> {
+                Query<PsiMethod> psiMethodsQuery = AnnotatedElementsSearch.searchPsiMethods(withSpanClass, searchScope.get());
+                psiMethodsQuery = filterNonRelevantMethodsForSpanDiscovery(psiMethodsQuery);
+                return psiMethodsQuery.findAll();
+            }), Throwable.class, 50, 5), new EmptyProgressIndicator());
+
+
             psiMethods.forEach(psiMethod -> {
-                List<SpanInfo> spanInfos = JavaSpanDiscoveryUtils.getSpanInfoFromWithSpanAnnotatedMethod(psiMethod);
-                if (CollectionUtils.isNotEmpty(spanInfos)) {
-                    spanInfos.forEach(spanInfo -> {
-                        Log.log(LOGGER::debug, "Found span info {} for method {}", spanInfo.getId(), spanInfo.getContainingMethodId());
-                        int offset = psiMethod.getTextOffset();
-                        var location = new SpanLocation(spanInfo.getContainingFileUri(), offset);
-                        spanLocations.put(spanInfo.getId(), location);
-                    });
+
+                //on exception the current method is skipped
+                try {
+
+                    List<SpanInfo> spanInfos = Retries.retryWithResult(() ->
+                                    ProgressManager.getInstance().runProcess(() ->
+                                            dumbService.runReadActionInSmartMode(() ->
+                                                    JavaSpanDiscoveryUtils.getSpanInfoFromWithSpanAnnotatedMethod(psiMethod)), new EmptyProgressIndicator())
+                            , Throwable.class, 50, 5);
+
+                    if (CollectionUtils.isNotEmpty(spanInfos)) {
+                        spanInfos.forEach(spanInfo -> ReadActions.ensureReadAction(() -> {
+                            Log.log(LOGGER::debug, "Found span info {} for method {}", spanInfo.getId(), spanInfo.getContainingMethodId());
+                            int offset = psiMethod.getTextOffset();
+                            var location = new SpanLocation(spanInfo.getContainingFileUri(), offset);
+                            spanLocations.put(spanInfo.getId(), location);
+                        }));
+                    }
+                } catch (Exception e) {
+                    Log.warnWithException(LOGGER, project, e, "error building span info for method {}", psiMethod.getName());
+                    ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.buildSpanNavigation.buildWithSpanAnnotation", e);
                 }
             });
         }
     }
 
-    private void buildObservedAnnotation(@NotNull SearchScope searchScope) {
-        PsiClass observedClass = JavaPsiFacade.getInstance(project).findClass(MicrometerTracingFramework.OBSERVED_FQN, GlobalSearchScope.allScope(project));
+
+    //callers to this method should be ready for ProcessCanceledException.
+    //the search scope is lastly created. so it will be created inside a read action, file search scope must be created in side read access
+    private void buildStartSpanMethodCall(@NotNull Supplier<SearchScope> searchScope) {
+
+        DumbService dumbService = DumbService.getInstance(project);
+
+        PsiClass tracerBuilderClass = Retries.retryWithResult(() -> dumbService.runReadActionInSmartMode(() ->
+                        JavaPsiFacade.getInstance(project).findClass(SPAN_BUILDER_FQN, GlobalSearchScope.allScope(project))),
+                Throwable.class, 50, 5);
+
+        if (tracerBuilderClass != null) {
+
+            PsiMethod startSpanMethod = Retries.retryWithResult(() -> ReadAction.compute(() -> JavaLanguageUtils.findMethodInClass(tracerBuilderClass, "startSpan", psiMethod -> psiMethod.getParameters().length == 0)), Throwable.class, 50, 5);
+            //must not be null or we have a bug
+            Objects.requireNonNull(startSpanMethod, "startSpan method must be found in SpanBuilder class");
+
+            //this section will query for relevant psi references and return a Collection that can be iterated.
+            // iterating directly on Query object may throw a ProcessCanceledException so converting to Collection makes it safer to iterate
+            Collection<PsiReference> startSpanReferences = ProgressManager.getInstance().runProcess(() -> Retries.retryWithResult(() -> dumbService.runReadActionInSmartMode(() -> {
+                Query<PsiReference> references = MethodReferencesSearch.search(startSpanMethod, searchScope.get(), true);
+                //filter classes that we don't support,which should not happen but just in case. we don't support Annotations,Enums and Records.
+                references = filterNonRelevantReferencesForSpanDiscovery(references);
+                return references.findAll();
+            }), Throwable.class, 50, 5), new EmptyProgressIndicator());
+
+
+            startSpanReferences.forEach(psiReference -> {
+
+                //on exception the current psiReference is skipped
+                try {
+                    SpanInfo spanInfo = Retries.retryWithResult(() ->
+                                    ProgressManager.getInstance().runProcess(() ->
+                                            dumbService.runReadActionInSmartMode(() ->
+                                                    JavaSpanDiscoveryUtils.getSpanInfoFromStartSpanMethodReference(project, psiReference)), new EmptyProgressIndicator())
+                            , Throwable.class, 50, 5);
+
+                    if (spanInfo != null) {
+                        ReadActions.ensureReadAction(() -> {
+                            Log.log(LOGGER::debug, "Found span info {} in method {}", spanInfo.getId(), spanInfo.getContainingMethodId());
+                            int lineNumber = psiReference.getElement().getTextOffset();
+                            var location = new SpanLocation(spanInfo.getContainingFileUri(), lineNumber);
+                            spanLocations.put(spanInfo.getId(), location);
+                        });
+                    }
+                } catch (Exception e) {
+                    Log.warnWithException(LOGGER, project, e, "error building span info for psiReference");
+                    ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.buildSpanNavigation.buildStartSpanMethodCall", e);
+                }
+            });
+        }
+    }
+
+
+    //callers to this method should be ready for ProcessCanceledException.
+    //the search scope is lastly created. so it will be created inside a read action, file search scope must be created in side read access
+    private void buildObservedAnnotation(@NotNull Supplier<SearchScope> searchScope) {
+
+        DumbService dumbService = DumbService.getInstance(project);
+
+        PsiClass observedClass = Retries.retryWithResult(() -> dumbService.runReadActionInSmartMode(() ->
+                        JavaPsiFacade.getInstance(project).findClass(MicrometerTracingFramework.OBSERVED_FQN, GlobalSearchScope.allScope(project))),
+                Throwable.class, 50, 5);
+
         //maybe the annotation is not in the classpath
         if (observedClass != null) {
+
+            //this section will query for relevant psi methods and return a Collection that can be iterated.
+            // iterating directly on Query object may throw a ProcessCanceledException so converting to Collection makes it safer to iterate
+            Collection<PsiMethod> psiMethods = ProgressManager.getInstance().runProcess(() -> Retries.retryWithResult(() -> dumbService.runReadActionInSmartMode(() -> {
+                Query<PsiMethod> psiMethodsQuery = AnnotatedElementsSearch.searchPsiMethods(observedClass, searchScope.get());
+                psiMethodsQuery = filterNonRelevantMethodsForSpanDiscovery(psiMethodsQuery);
+                return psiMethodsQuery.findAll();
+            }), Throwable.class, 50, 5), new EmptyProgressIndicator());
+
             var micrometerTracingFramework = new MicrometerTracingFramework(project);
-            Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(observedClass, searchScope);
-            psiMethods = filterNonRelevantMethodsForSpanDiscovery(psiMethods);
             psiMethods.forEach(psiMethod -> {
-                var spanInfo = micrometerTracingFramework.getSpanInfoFromObservedAnnotatedMethod(psiMethod);
-                if (spanInfo != null) {
-                    Log.log(LOGGER::debug, "Found span info {} for method {}", spanInfo.getId(), spanInfo.getContainingMethodId());
-                    int offset = psiMethod.getTextOffset();
-                    var location = new SpanLocation(spanInfo.getContainingFileUri(), offset);
-                    spanLocations.put(spanInfo.getId(), location);
+
+                //on exception the current psiReference is skipped
+                try {
+
+                    var spanInfo = Retries.retryWithResult(() ->
+                                    ProgressManager.getInstance().runProcess(() ->
+                                            dumbService.runReadActionInSmartMode(() ->
+                                                    micrometerTracingFramework.getSpanInfoFromObservedAnnotatedMethod(psiMethod)), new EmptyProgressIndicator())
+                            , Throwable.class, 50, 5);
+
+                    if (spanInfo != null) {
+                        ReadActions.ensureReadAction(() -> {
+                            Log.log(LOGGER::debug, "Found span info {} for method {}", spanInfo.getId(), spanInfo.getContainingMethodId());
+                            int offset = psiMethod.getTextOffset();
+                            var location = new SpanLocation(spanInfo.getContainingFileUri(), offset);
+                            spanLocations.put(spanInfo.getId(), location);
+                        });
+                    }
+                } catch (Exception e) {
+                    Log.warnWithException(LOGGER, project, e, "error building span info for psiMethod {}", psiMethod.getName());
+                    ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.buildSpanNavigation.buildObservedAnnotation", e);
                 }
             });
         }
@@ -213,28 +347,26 @@ public class JavaSpanNavigationProvider implements Disposable {
             return;
         }
 
-        ReadAction.nonBlocking(new RunnableCallable(() -> {
-
+        Backgroundable.executeOnPooledThread(() -> {
             try {
+                buildSpansLock.lock();
                 if (virtualFile != null && virtualFile.isValid()) {
-                    buildSpansLock.lock();
-                    try {
-                        //if file moved then removeDocumentSpans will not remove anything but building span locations will
-                        // override the entries anyway
-                        removeDocumentSpans(virtualFile);
-                        buildWithSpanAnnotation(GlobalSearchScope.fileScope(project, virtualFile));
-                        buildStartSpanMethodCall(GlobalSearchScope.fileScope(project, virtualFile));
 
-                        buildObservedAnnotation(GlobalSearchScope.fileScope(project, virtualFile));
-                    } finally {
-                        buildSpansLock.unlock();
-                    }
+                    //if file moved then removeDocumentSpans will not remove anything but building span locations will
+                    // override the entries anyway
+                    removeDocumentSpans(virtualFile);
+                    buildWithSpanAnnotation(() -> GlobalSearchScope.fileScope(project, virtualFile));
+                    buildStartSpanMethodCall(() -> GlobalSearchScope.fileScope(project, virtualFile));
+                    buildObservedAnnotation(() -> GlobalSearchScope.fileScope(project, virtualFile));
                 }
             } catch (Exception e) {
                 Log.warnWithException(LOGGER, e, "Exception in fileChanged");
                 ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.fileChanged", e);
+            } finally {
+                buildSpansLock.unlock();
             }
-        })).inSmartMode(project).withDocumentsCommitted(project).submit(NonUrgentExecutor.getInstance());
+        });
+
     }
 
 
@@ -243,7 +375,6 @@ public class JavaSpanNavigationProvider implements Disposable {
         if (project.isDisposed()) {
             return;
         }
-
 
         Backgroundable.ensurePooledThread(() -> {
             if (virtualFile != null) {

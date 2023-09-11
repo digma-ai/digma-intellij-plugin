@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.idea.psi.java;
 
 import com.intellij.openapi.Disposable;
-import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.event.DocumentEvent;
@@ -16,8 +15,6 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.util.Alarm;
 import com.intellij.util.AlarmFactory;
-import com.intellij.util.RunnableCallable;
-import com.intellij.util.concurrency.NonUrgentExecutor;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.jetbrains.annotations.NotNull;
@@ -87,23 +84,20 @@ public class DocumentsChangeListenerForJavaSpanNavigation implements FileEditorM
                                 var javaSpanNavigationProvider = project.getService(JavaSpanNavigationProvider.class);
                                 var javaEndpointNavigationProvider = project.getService(JavaEndpointNavigationProvider.class);
                                 documentChangeAlarm.cancelAllRequests();
-                                documentChangeAlarm.addRequest(() -> ReadAction.nonBlocking(
-                                                new RunnableCallable(() -> {
-                                                    try {
-                                                        javaSpanNavigationProvider.documentChanged(event.getDocument());
-                                                        javaEndpointNavigationProvider.documentChanged(event.getDocument());
-                                                    }catch (Exception e){
-                                                        Log.warnWithException(LOGGER,e,"Exception in documentChanged");
-                                                        ErrorReporter.getInstance().reportError(project,"DocumentsChangeListenerForJavaSpanNavigation.DocumentListener.documentChanged",e);
-                                                    }
-                                                })
-                                        ).inSmartMode(project)
-                                        .withDocumentsCommitted(project)
-                                        .submit(NonUrgentExecutor.getInstance()), 5000);
+                                documentChangeAlarm.addRequest(() -> {
+                                    try {
+                                        javaSpanNavigationProvider.documentChanged(event.getDocument());
+                                        javaEndpointNavigationProvider.documentChanged(event.getDocument());
+                                    } catch (Exception e) {
+                                        Log.warnWithException(LOGGER, e, "Exception in documentChanged");
+                                        ErrorReporter.getInstance().reportError(project, "DocumentsChangeListenerForJavaSpanNavigation.DocumentListener.documentChanged", e);
+                                    }
+                                }, 5000);
 
-                            }catch (Exception e){
-                                Log.warnWithException(LOGGER,e,"Exception in documentChanged");
-                                ErrorReporter.getInstance().reportError(project,"DocumentsChangeListenerForJavaSpanNavigation.DocumentListener.documentChanged",e);
+
+                            } catch (Exception e) {
+                                Log.warnWithException(LOGGER, e, "Exception in documentChanged");
+                                ErrorReporter.getInstance().reportError(project, "DocumentsChangeListenerForJavaSpanNavigation.DocumentListener.documentChanged", e);
                             }
                         }
 

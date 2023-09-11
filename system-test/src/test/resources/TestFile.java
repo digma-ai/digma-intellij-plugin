@@ -11,4 +11,16 @@ public class TestFile {
     public void method2() {
     }
 
+    public void relatedSpan1() {
+    }
+
+    public void relatedSpan2() {
+    }
+
+    public void relatedEndpoint1() {
+    }
+
+    public void relatedEndpoint2() {
+    }
+
 }

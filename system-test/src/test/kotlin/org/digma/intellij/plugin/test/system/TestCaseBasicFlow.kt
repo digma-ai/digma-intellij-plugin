@@ -1,10 +1,16 @@
 package org.digma.intellij.plugin.test.system
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.psi.JavaRecursiveElementVisitor
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.testFramework.EditorTestUtil
+import com.intellij.testFramework.PlatformTestUtil
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase
 import junit.framework.TestCase
 import kotlinx.coroutines.delay
@@ -12,7 +18,9 @@ import kotlinx.coroutines.runBlocking
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.document.DocumentInfoService
+import org.digma.intellij.plugin.editor.CurrentContextUpdater
 import org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService
+import org.digma.intellij.plugin.insights.InsightsMessageRouterHandler
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
@@ -24,7 +32,13 @@ import org.digma.intellij.plugin.test.system.framework.WaitFinishRule
 import org.digma.intellij.plugin.test.system.framework.environmentList
 import org.digma.intellij.plugin.test.system.framework.expectedInsightsOfMethodsResponseEnv1
 import org.digma.intellij.plugin.test.system.framework.mockGetEnvironments
+import org.digma.intellij.plugin.test.system.framework.mockGetInsightsOfMethods
+import org.digma.intellij.plugin.test.system.framework.mockGetRecentActivity
 import org.digma.intellij.plugin.test.system.framework.mockRestAnalyticsProvider
+import org.digma.intellij.plugin.test.system.framework.prepareDefaultSpyCalls
+import org.digma.intellij.plugin.test.system.framework.replaceCefBrowserWithSpy
+import org.digma.intellij.plugin.test.system.framework.replaceExecuteJSWithAssertionFunction
+import org.digma.intellij.plugin.ui.service.InsightsService
 import org.junit.Rule
 import org.junit.jupiter.api.Test
 
@@ -44,10 +58,88 @@ class TestCaseBasicFlow : DigmaTestCase() {
 
 
     fun testSowFlow() {
-        // prepare single environment mock with insights and recent activities
-        val envList = listOf(environmentList[0])
-        mockGetEnvironments(mockAnalyticsProvider, envList)
+        
+        //prepare the browser for mocking
+        val (jbCaf, caf) = replaceCefBrowserWithSpy(
+            containingService = project.service<InsightsService>(),
+            messageHandlerFieldName = "messageHandler",
+            messageHandlerType = InsightsMessageRouterHandler::class.java,
+            jbBrowserFieldName = "jbCefBrowser"
+        )
+        prepareDefaultSpyCalls(jbCaf, caf)
+        replaceExecuteJSWithAssertionFunction(caf) { props ->
+            val objectMapper = ObjectMapper()
+            val message = objectMapper.readTree(props)
+            Log.test(logger::info, "executeJS - message: {}", message)
+            assertEquals("digma", message.get("type").textValue())
 
+            TestCase.assertEquals("INSIGHTS/SET_DATA", message.get("action").textValue())
+
+
+        }
+        // Bullet One
+        // prepare single environment mock with insights and recent activities
+        
+        mockGetEnvironments(mockAnalyticsProvider, BulletOneData.environmentList)
+        mockGetInsightsOfMethods(mockAnalyticsProvider, BulletOneData.expectedInsightsOfMethods)
+        mockGetRecentActivity(mockAnalyticsProvider, BulletOneData.expectedRecentActivityResult)
+        
+        var (expectedDocumentName, actualDocumentOpened) = BulletOneData.documentName to ""
+        // sub to documentInfoChange to assert that the document actually opened
+        messageBusTestListeners.registerSubToDocumentInfoChangedEvent { 
+            actualDocumentOpened = it.name
+        }
+        
+        // Open Document1
+        val psiFile = myFixture.configureByFile("TestFile.java")
+        waitFor(1000, "waiting for the file to open")
+        // making sure that the remaining tasks in the EDT Queue are executed
+        PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
+        
+        //assert that the correct Document opened
+        assertEquals(expectedDocumentName, actualDocumentOpened)
+        
+        //finding the target method for method1
+
+        val editor = myFixture.editor
+
+        val methods = PsiTreeUtil.findChildrenOfType(psiFile, PsiMethod::class.java)
+        val targetMethod = methods.find { it.name == "method1" }
+
+        // prepare assertion in the browser for the insights that will be pushed of the method under caret
+        
+        targetMethod?.let {
+            val offset = targetMethod.textOffset
+            editor.caretModel.moveToOffset(offset)
+            val document = PsiDocumentManager.getInstance(project).getDocument(psiFile)
+            document?.let {
+                Log.test(logger::info, "setting caret position")
+                val caretAndSelectionState = EditorTestUtil.extractCaretAndSelectionMarkers(document)
+                EditorTestUtil.setCaretsAndSelection(editor, caretAndSelectionState)
+            }
+        }
+        waitFor(1000, "waiting for caret event in file ${psiFile.name}")
+        
+        // test that latest method under caret is method 1
+        val methodUnderCaret = project.service<CurrentContextUpdater>().latestMethodUnderCaret
+        if (methodUnderCaret == null) {
+            fail("method under caret not updated for method 1")
+        }
+        val methodInfoOfMethodUnderCaret =  project.service<DocumentInfoService>().findMethodInfo(methodUnderCaret.id)
+        
+        if (methodInfoOfMethodUnderCaret == null) {
+            fail("Cannot retrieve method info for method under caret")
+        }
+        
+        //see that the insights of method1 are present
+        
+        
+        
+        // asserting all the current information about method one and the method under caret
+        assertEquals(targetMethod?.name, methodUnderCaret.name)
+        assertEquals(targetMethod?.containingClass?.name, methodUnderCaret.className)
+        assertEquals(BulletOneData.methodCodeObjectId, methodUnderCaret.id)
+        
 
     }
 

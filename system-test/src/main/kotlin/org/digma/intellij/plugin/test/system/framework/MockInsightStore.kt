@@ -113,7 +113,7 @@ val methodWithSpanDurationInsight =
             methodCodeObjectId = methodCodeObject3.codeObjectId,
             kind = "my kind"
         ),
-    )
+    ) 
 
 val slowEndpointInsight = SlowEndpointInsight(
     codeObjectId = methodCodeObject3.codeObjectId,

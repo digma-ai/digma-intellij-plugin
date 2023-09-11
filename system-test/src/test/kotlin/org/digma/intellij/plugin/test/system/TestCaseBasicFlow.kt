@@ -23,57 +23,32 @@ import org.digma.intellij.plugin.test.system.framework.MessageBusTestListeners
 import org.digma.intellij.plugin.test.system.framework.WaitFinishRule
 import org.digma.intellij.plugin.test.system.framework.environmentList
 import org.digma.intellij.plugin.test.system.framework.expectedInsightsOfMethodsResponseEnv1
+import org.digma.intellij.plugin.test.system.framework.mockGetEnvironments
 import org.digma.intellij.plugin.test.system.framework.mockRestAnalyticsProvider
 import org.junit.Rule
+import org.junit.jupiter.api.Test
 
-class TestCaseBasicFlow : LightJavaCodeInsightFixtureTestCase() {
+class TestCaseBasicFlow : DigmaTestCase() {
 
     private val document1Name: String = "EditorEventsHandler.java"
     private val document2Name: String = "EditorEventsHandler2.java"
 
 
-    private val logger = Logger.getInstance(TestCaseBasicFlow::class.java)
-
-    @get:Rule
-    val done = WaitFinishRule()
-
-    private lateinit var messageBusTestListeners: MessageBusTestListeners
-
-    private val analyticsService: AnalyticsService
-        get() = AnalyticsService.getInstance(project)
-
     private val documentInfoService: DocumentInfoService
         get() = DocumentInfoService.getInstance(project)
 
-    override fun setUp() {
-        super.setUp()
-        done.complete = false
-        mockRestAnalyticsProvider(project)
-        messageBusTestListeners = MessageBusTestListeners(project.messageBus)
-    }
-
-    override fun tearDown() {
-
-        //waiting for the test to complete
-        while (true) {
-            if (done.complete) {
-                done()
-                break
-            } else {
-                done.signalComplete()
-            }
-        }
-
-        // 
-        try {
-            super.tearDown()
-        } catch (e: Exception) {
-            Log.test(logger::error, "Exception in tearDown {}", e.message)
-        }
-    }
 
     override fun getTestDataPath(): String {
         return "src/test/resources"
+    }
+
+
+    fun testSowFlow() {
+        // prepare single environment mock with insights and recent activities
+        val envList = listOf(environmentList[0])
+        mockGetEnvironments(mockAnalyticsProvider, envList)
+
+
     }
 
     fun testInsightAndActivityFlow() {
@@ -156,14 +131,14 @@ class TestCaseBasicFlow : LightJavaCodeInsightFixtureTestCase() {
 
         // call processRecentActivityGoToSpan~~~~
         // check the spy --> should push some json to the browser - should see that env2 is in the json
-        
+
         // check that the environment is changed to env2
         // either use the environment changed event or do to analyticsService.environment.getCurrent()
 
         // test that the environment is changed to env2
 
         //wait for 500 ms
-        
+
         // bullet 4 -
         // When I click on span_2 link on insight1
         // Then I should see the scoped changed to span_2 and insights of span_2 are shown.
@@ -174,11 +149,11 @@ class TestCaseBasicFlow : LightJavaCodeInsightFixtureTestCase() {
         // bullet 5 - 
         // When I click target icon (go to code)
         // Then I should be navigated to document#2 and the cursor should be navigated to the span location.
-        
+
         // call processRecentActivityGoToSpanRequest
         // check that the document is changed to document2 in the editor
         // check that caret is on the span in document2
-        
+
 
     }
 

@@ -37,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.digma.intellij.plugin.psi.python.PythonCodeObjectsDiscovery.discoverSpanFromStartSpanMethodCallExpression;
@@ -86,7 +87,7 @@ public class PythonSpanNavigationProvider implements Disposable {
             buildSpansLock.lock();
             Retries.simpleRetry(() -> {
                 Log.log(LOGGER::info, "Building buildSpanNavigation");
-                buildSpanNavigation(project, Constants.OPENTELEMETRY_START_AS_CURRENT_SPAN_FUNC_NAME, GlobalSearchScope.projectScope(project));
+                buildSpanNavigation(project, Constants.OPENTELEMETRY_START_AS_CURRENT_SPAN_FUNC_NAME, () -> GlobalSearchScope.projectScope(project));
             }, Throwable.class, 100, 5);
         } catch (Exception e) {
             Log.warnWithException(LOGGER, e, "Exception in buildSpanNavigation");
@@ -101,7 +102,7 @@ public class PythonSpanNavigationProvider implements Disposable {
             buildSpansLock.lock();
             Retries.simpleRetry(() -> {
                 Log.log(LOGGER::info, "Building buildSpanNavigation");
-                buildSpanNavigation(project, Constants.OPENTELEMETRY_START_SPAN_FUNC_NAME, GlobalSearchScope.projectScope(project));
+                buildSpanNavigation(project, Constants.OPENTELEMETRY_START_SPAN_FUNC_NAME, () -> GlobalSearchScope.projectScope(project));
             }, Throwable.class, 100, 5);
         } catch (Exception e) {
             Log.warnWithException(LOGGER, e, "Exception in buildSpanNavigation");
@@ -125,7 +126,9 @@ public class PythonSpanNavigationProvider implements Disposable {
     }
 
 
-    private void buildSpanNavigation(@NotNull Project project, @NotNull String tracerMethodName, @NotNull SearchScope searchScope) {
+    //callers to this method should be ready for ProcessCanceledException.
+    //the search scope is lastly created. so it will be created inside a read action, file search scope must be created in side read access
+    private void buildSpanNavigation(@NotNull Project project, @NotNull String tracerMethodName, @NotNull Supplier<SearchScope> searchScope) {
 
         DumbService dumbService = DumbService.getInstance(project);
 
@@ -143,7 +146,7 @@ public class PythonSpanNavigationProvider implements Disposable {
         }
 
         Collection<PsiReference> references = ProgressManager.getInstance().runProcess(() -> Retries.retryWithResult(() -> dumbService.runReadActionInSmartMode(() -> {
-            Query<PsiReference> referencesQuery = ReferencesSearch.search(startSpanFunction, searchScope);
+            Query<PsiReference> referencesQuery = ReferencesSearch.search(startSpanFunction, searchScope.get());
             return referencesQuery.findAll();
         }), Throwable.class, 50, 5), new EmptyProgressIndicator());
 
@@ -225,8 +228,8 @@ public class PythonSpanNavigationProvider implements Disposable {
                 if (virtualFile != null && virtualFile.isValid()) {
 
                     removeDocumentSpans(virtualFile);
-                    buildSpanNavigation(project, Constants.OPENTELEMETRY_START_AS_CURRENT_SPAN_FUNC_NAME, GlobalSearchScope.fileScope(project, virtualFile));
-                    buildSpanNavigation(project, Constants.OPENTELEMETRY_START_SPAN_FUNC_NAME, GlobalSearchScope.fileScope(project, virtualFile));
+                    buildSpanNavigation(project, Constants.OPENTELEMETRY_START_AS_CURRENT_SPAN_FUNC_NAME, () -> GlobalSearchScope.fileScope(project, virtualFile));
+                    buildSpanNavigation(project, Constants.OPENTELEMETRY_START_SPAN_FUNC_NAME, () -> GlobalSearchScope.fileScope(project, virtualFile));
                 }
             } catch (Exception e) {
                 Log.warnWithException(LOGGER, e, "Exception in fileChanged");

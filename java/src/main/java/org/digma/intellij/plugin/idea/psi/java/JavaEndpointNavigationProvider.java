@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 //@SuppressWarnings("UnstableApiUsage")
 public class JavaEndpointNavigationProvider implements Disposable {
@@ -81,7 +82,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
             buildEndpointLock.lock();
             Retries.simpleRetry(() -> {
                 Log.log(LOGGER::info, "Building buildEndpointAnnotations");
-                buildEndpointAnnotations(GlobalSearchScope.projectScope(project));
+                buildEndpointAnnotations(() -> GlobalSearchScope.projectScope(project));
             }, Throwable.class, 100, 5);
         } catch (Exception e) {
             Log.warnWithException(LOGGER, e, "Exception in buildSpanNavigation buildWithSpanAnnotation");
@@ -104,7 +105,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
     }
 
 
-    private void buildEndpointAnnotations(@NotNull SearchScope searchScope) {
+    private void buildEndpointAnnotations(@NotNull Supplier<SearchScope> searchScope) {
 
         var javaLanguageService = project.getService(JavaLanguageService.class);
         var endpointDiscoveries = javaLanguageService.getListOfEndpointDiscovery();
@@ -114,7 +115,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
                 var endpointInfos = Retries.retryWithResult(() ->
                         ProgressManager.getInstance().runProcess(() ->
                                         DumbService.getInstance(project).runReadActionInSmartMode(() ->
-                                                endpointDiscovery.lookForEndpoints(searchScope)),
+                                                endpointDiscovery.lookForEndpoints(searchScope.get())),
                                 new EmptyProgressIndicator()), Throwable.class, 50, 5);
 
                 endpointInfos.forEach(this::addToMethodsMap);

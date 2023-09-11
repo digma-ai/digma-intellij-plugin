@@ -100,9 +100,8 @@ public class CaretListener {
 
 
     void removeCaretListener(VirtualFile file) {
-        Log.test(LOGGER::info, "disposing disposable for file:{}", file);
         if (disposables.containsKey(file)) {
-            Log.log(LOGGER::debug, "disposing disposable for file:{}", file);
+            Log.test(LOGGER::info, "disposing disposable for file:{}", file);
             Disposer.dispose(disposables.remove(file));
         }
     }

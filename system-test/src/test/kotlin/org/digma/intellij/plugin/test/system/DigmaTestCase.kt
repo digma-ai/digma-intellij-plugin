@@ -2,13 +2,12 @@ package org.digma.intellij.plugin.test.system
 
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.psi.PsiFile
+import com.intellij.testFramework.PlatformTestUtil
 import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase
-import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase4
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.document.DocumentInfoService
-import org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.test.system.framework.MessageBusTestListeners
 import org.digma.intellij.plugin.test.system.framework.mockRestAnalyticsProvider
@@ -29,7 +28,6 @@ open class DigmaTestCase : LightJavaCodeInsightFixtureTestCase() {
         }
 
     override fun setUp() {
-
         super.setUp()
         mockRestAnalyticsProvider(project)
         messageBusTestListeners = MessageBusTestListeners(project.messageBus)
@@ -37,11 +35,11 @@ open class DigmaTestCase : LightJavaCodeInsightFixtureTestCase() {
 
     override fun tearDown() {
         Log.test(logger::info, "tearDown started")
-        JavaCodeLensService.getInstance(project).dispose()
+        PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
         try {
             super.tearDown()
         } catch (ex: Exception) {
-            Log.test(logger::warn, "PluginException in tearDown")
+            Log.test(logger::warn, "Exception in tearDown")
         }
         Log.test(logger::info, "tearDown completed")
     }
@@ -58,9 +56,8 @@ open class DigmaTestCase : LightJavaCodeInsightFixtureTestCase() {
         }
     }
 
-    fun waitForEvent () {
-        val timeMillis: Long = 1000
-        Log.test(logger::info, "delay $timeMillis millis for file event")
+    fun waitFor (timeMillis: Long, reason: String) {
+        Log.test(logger::info, "wait $timeMillis millis for $reason")
         runBlocking {
             delay(timeMillis)
         }

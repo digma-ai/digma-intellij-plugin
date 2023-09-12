@@ -58,7 +58,7 @@ class JCefComponent(
             AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, object : AnalyticsServiceConnectionEvent {
                 override fun connectionLost() {
                     try {
-                        val status = project.service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionLost(project)
+                        val status = project.service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionLost()
                         updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
                     } catch (e: Exception) {
                         ErrorReporter.getInstance().reportError("JCefComponent.connectionLost", e)
@@ -67,7 +67,7 @@ class JCefComponent(
 
                 override fun connectionGained() {
                     try {
-                        val status = project.service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionGained(project)
+                        val status = project.service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionGained()
                         updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
                     } catch (e: Exception) {
                         ErrorReporter.getInstance().reportError("JCefComponent.connectionGained", e)

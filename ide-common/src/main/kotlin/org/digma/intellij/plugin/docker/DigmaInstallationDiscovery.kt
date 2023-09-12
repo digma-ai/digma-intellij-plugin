@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.docker
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.process.ProcessOutput
@@ -19,48 +20,57 @@ private enum class EngineState { Installed, InstalledAndRunning, NotInstalled }
 
 
 //this method should be called only if we know that local engine is not installed
-internal fun discoverInstallationStatus(project: Project): DigmaInstallationStatus {
+internal fun discoverActualRunningEngine(project: Project): DigmaInstallationStatus {
     val hasConnection = BackendConnectionMonitor.getInstance(project).isConnectionOk()
-    return discoverInstallationStatus(hasConnection)
+    return discoverActualRunningEngine(hasConnection)
 }
 
 //this method should be called only if we know that local engine is not installed
-internal fun discoverInstallationStatus(hasConnection: Boolean): DigmaInstallationStatus {
+internal fun discoverActualRunningEngine(hasConnection: Boolean): DigmaInstallationStatus {
 
+    //currently, if there is no connection always return status with null type because we don't try to detect sleeping
+    // containers. if there is no connection we probably will not find running containers.
+    if (!hasConnection) {
+        return DigmaInstallationStatus(false, null)
+    }
+
+    val isLocalEngineRunning = isLocalEngineRunning()
     val isAnyEngineRunning = isAnyEngineRunning()
     val isExtensionRunning = isExtensionRunning()
 
-    if (hasConnection) {
-        if (isAnyEngineRunning) {
-            return DigmaInstallationStatus(true, DigmaInstallationType.dockerCompose)
-        } else if (isExtensionRunning) {
-            return DigmaInstallationStatus(true, DigmaInstallationType.dockerDesktop)
+    if (isLocalEngineRunning) {
+        return DigmaInstallationStatus(true, DigmaInstallationType.localEngine)
+    } else if (isAnyEngineRunning) {
+        return DigmaInstallationStatus(true, DigmaInstallationType.dockerCompose)
+    } else if (isExtensionRunning) {
+        return DigmaInstallationStatus(true, DigmaInstallationType.dockerDesktop)
+    } else {
+        if (SettingsState.getInstance().state?.apiUrl != SettingsState.DEFAULT_API_URL) {
+            return DigmaInstallationStatus(true, DigmaInstallationType.remote)
         } else {
-            if (SettingsState.getInstance().state?.apiUrl != SettingsState.DEFAULT_API_URL) {
-                return DigmaInstallationStatus(true, DigmaInstallationType.remote)
-            } else {
-                return DigmaInstallationStatus(true, null)
-            }
+            return DigmaInstallationStatus(true, null)
         }
     }
 
-    if (!hasConnection) {
-        val anyEngineState = getAnyEngineState()
-        val extensionState = getExtensionState()
-        if (anyEngineState == EngineState.InstalledAndRunning || anyEngineState == EngineState.Installed) {
-            return DigmaInstallationStatus(false, DigmaInstallationType.dockerCompose)
-        } else if (extensionState == EngineState.InstalledAndRunning || extensionState == EngineState.Installed) {
-            return DigmaInstallationStatus(false, DigmaInstallationType.dockerDesktop)
-        } else {
-            if (SettingsState.getInstance().state?.apiUrl != SettingsState.DEFAULT_API_URL) {
-                return DigmaInstallationStatus(false, DigmaInstallationType.remote)
-            } else {
-                return DigmaInstallationStatus(false, null)
-            }
-        }
-    }
 
-    return DigmaInstallationStatus(false, null)
+//
+//    if (!hasConnection) {
+//        val anyEngineState = getAnyEngineState()
+//        val extensionState = getExtensionState()
+//        if (anyEngineState == EngineState.InstalledAndRunning || anyEngineState == EngineState.Installed) {
+//            return DigmaInstallationStatus(false, DigmaInstallationType.dockerCompose)
+//        } else if (extensionState == EngineState.InstalledAndRunning || extensionState == EngineState.Installed) {
+//            return DigmaInstallationStatus(false, DigmaInstallationType.dockerDesktop)
+//        } else {
+//            if (SettingsState.getInstance().state?.apiUrl != SettingsState.DEFAULT_API_URL) {
+//                return DigmaInstallationStatus(false, DigmaInstallationType.remote)
+//            } else {
+//                return DigmaInstallationStatus(false, null)
+//            }
+//        }
+//    }
+//
+//    return DigmaInstallationStatus(false, null)
 
 
 }
@@ -138,33 +148,66 @@ internal fun discoverInstallationStatus(hasConnection: Boolean): DigmaInstallati
 //}
 
 
-private fun isAnyEngineRunning(): Boolean {
-
-    if (!isInstalled(DOCKER_COMMAND)) {
-        return false
-    }
-
-    val dockerCmd = getDockerCommand()
-
-    val cmd = GeneralCommandLine(dockerCmd, "container", "ls", "--format", "json")
-        .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
+private fun isLocalEngineRunning(): Boolean {
 
     try {
+
+        if (!isInstalled(DOCKER_COMMAND)) {
+            return false
+        }
+
+        val projectName = COMPOSE_FILE_DIR
+
+        val dockerCmd = getDockerCommand()
+
+        val cmd = GeneralCommandLine(dockerCmd, "container", "ls", "--format", "json")
+            .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
+
         val processOutput: ProcessOutput = ExecUtil.execAndGetOutput(cmd, 5000)
 
         if (processOutput.exitCode == 0) {
             val output = processOutput.stdout
 
             val containers: ArrayNode = JsonUtils.readTree(output) as ArrayNode
-            //find digma-plugin-api that is not our local engine
-            val digmaApiNode = containers.find { jsonNode -> jsonNode.get("Image").asText().contains("digma", true) }
-            if (digmaApiNode != null) {
-                return digmaApiNode.get("State")?.asText()?.equals("running", true) ?: false
-            }
+            val digmaNodes: List<JsonNode> =
+                containers.filter { jsonNode -> (jsonNode.get("Names") as ArrayNode).any { jsonNode -> jsonNode.asText().contains(projectName) } }
+            return digmaNodes.isNotEmpty()
         }
 
     } catch (ex: Exception) {
-        Log.warnWithException(logger, ex, "Failed to run '{}'", cmd.commandLineString)
+        Log.warnWithException(logger, ex, "Failed detect isLocalEngineRunning")
+        ErrorReporter.getInstance().reportError("DigmaInstallationDiscovery.getAnyEngineState", ex)
+    }
+    return false
+
+}
+
+private fun isAnyEngineRunning(): Boolean {
+
+    try {
+
+        if (!isInstalled(DOCKER_COMMAND)) {
+            return false
+        }
+
+        val dockerCmd = getDockerCommand()
+
+        val cmd = GeneralCommandLine(dockerCmd, "container", "ls", "--format", "json")
+            .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
+
+        val processOutput: ProcessOutput = ExecUtil.execAndGetOutput(cmd, 5000)
+
+        if (processOutput.exitCode == 0) {
+            val output = processOutput.stdout
+
+            val containers: ArrayNode = JsonUtils.readTree(output) as ArrayNode
+            val digmaNodes: List<JsonNode> =
+                containers.filter { jsonNode -> (jsonNode.get("Names") as ArrayNode).any { jsonNode -> jsonNode.asText().contains("digma") } }
+            return digmaNodes.isNotEmpty()
+        }
+
+    } catch (ex: Exception) {
+        Log.warnWithException(logger, ex, "Failed to detect isAnyEngineRunning")
         ErrorReporter.getInstance().reportError("DigmaInstallationDiscovery.getAnyEngineState", ex)
     }
     return false
@@ -172,53 +215,54 @@ private fun isAnyEngineRunning(): Boolean {
 }
 
 
-private fun getAnyEngineState(): EngineState {
-
-    if (!isInstalled(DOCKER_COMMAND)) {
-        return EngineState.NotInstalled
-    }
-
-    val dockerCmd = getDockerCommand()
-
-    val cmd = GeneralCommandLine(dockerCmd, "container", "ls", "--all", "--format", "json")
-        .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
-
-    try {
-        val processOutput: ProcessOutput = ExecUtil.execAndGetOutput(cmd, 5000)
-
-        if (processOutput.exitCode == 0) {
-            val output = processOutput.stdout
-
-            val containers: ArrayNode = JsonUtils.readTree(output) as ArrayNode
-            //find digma-plugin-api that is not our local engine
-            val digmaApiNode = containers.find { jsonNode -> jsonNode.get("Image").asText().contains("digma", true) }
-            if (digmaApiNode != null) {
-                val isRunning = digmaApiNode.get("State")?.asText()?.equals("running", true) ?: false
-                return if (isRunning) EngineState.InstalledAndRunning else EngineState.Installed
-            }
-        }
-
-    } catch (ex: Exception) {
-        Log.warnWithException(logger, ex, "Failed to run '{}'", cmd.commandLineString)
-        ErrorReporter.getInstance().reportError("DigmaInstallationDiscovery.getAnyEngineState", ex)
-    }
-    return EngineState.NotInstalled
-
-}
+//private fun getAnyEngineState(): EngineState {
+//
+//    if (!isInstalled(DOCKER_COMMAND)) {
+//        return EngineState.NotInstalled
+//    }
+//
+//    val dockerCmd = getDockerCommand()
+//
+//    val cmd = GeneralCommandLine(dockerCmd, "container", "ls", "--all", "--format", "json")
+//        .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
+//
+//    try {
+//        val processOutput: ProcessOutput = ExecUtil.execAndGetOutput(cmd, 5000)
+//
+//        if (processOutput.exitCode == 0) {
+//            val output = processOutput.stdout
+//
+//            val containers: ArrayNode = JsonUtils.readTree(output) as ArrayNode
+//            //find digma-plugin-api that is not our local engine
+//            val digmaApiNode = containers.find { jsonNode -> jsonNode.get("Image").asText().contains("digma", true) }
+//            if (digmaApiNode != null) {
+//                val isRunning = digmaApiNode.get("State")?.asText()?.equals("running", true) ?: false
+//                return if (isRunning) EngineState.InstalledAndRunning else EngineState.Installed
+//            }
+//        }
+//
+//    } catch (ex: Exception) {
+//        Log.warnWithException(logger, ex, "Failed to run '{}'", cmd.commandLineString)
+//        ErrorReporter.getInstance().reportError("DigmaInstallationDiscovery.getAnyEngineState", ex)
+//    }
+//    return EngineState.NotInstalled
+//
+//}
 
 
 private fun isExtensionRunning(): Boolean {
 
-    if (!isInstalled(DOCKER_COMMAND)) {
-        return false
-    }
-
-    val dockerCmd = getDockerCommand()
-
-    val cmd = GeneralCommandLine(dockerCmd, "extension", "ls", "--format", "json")
-        .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
-
     try {
+
+        if (!isInstalled(DOCKER_COMMAND)) {
+            return false
+        }
+
+        val dockerCmd = getDockerCommand()
+
+        val cmd = GeneralCommandLine(dockerCmd, "extension", "ls", "--format", "json")
+            .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
+
         val processOutput: ProcessOutput = ExecUtil.execAndGetOutput(cmd, 5000)
 
         if (processOutput.exitCode == 0) {
@@ -232,42 +276,42 @@ private fun isExtensionRunning(): Boolean {
         }
 
     } catch (ex: Exception) {
-        Log.warnWithException(logger, ex, "Failed to run '{}'", cmd.commandLineString)
+        Log.warnWithException(logger, ex, "Failed to detect isExtensionRunning")
         ErrorReporter.getInstance().reportError("DigmaInstallationDiscovery.getExtensionState", ex)
     }
     return false
 
 }
 
-private fun getExtensionState(): EngineState {
-
-    if (!isInstalled(DOCKER_COMMAND)) {
-        return EngineState.NotInstalled
-    }
-
-    val dockerCmd = getDockerCommand()
-
-    val cmd = GeneralCommandLine(dockerCmd, "extension", "ls", "--format", "json")
-        .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
-
-    try {
-        val processOutput: ProcessOutput = ExecUtil.execAndGetOutput(cmd, 5000)
-
-        if (processOutput.exitCode == 0) {
-            val output = processOutput.stdout
-
-            val extensions: ArrayNode = JsonUtils.readTree(output) as ArrayNode
-            val digmaExtension = extensions.find { jsonNode -> jsonNode.get("image").asText().contains("/digma-docker-extension") }
-            if (digmaExtension != null) {
-                val isRunning = digmaExtension.get("status")?.asText()?.contains("Running", true) ?: false
-                return if (isRunning) EngineState.InstalledAndRunning else EngineState.Installed
-            }
-        }
-
-    } catch (ex: Exception) {
-        Log.warnWithException(logger, ex, "Failed to run '{}'", cmd.commandLineString)
-        ErrorReporter.getInstance().reportError("DigmaInstallationDiscovery.getExtensionState", ex)
-    }
-    return EngineState.NotInstalled
-
-}
+//private fun getExtensionState(): EngineState {
+//
+//    if (!isInstalled(DOCKER_COMMAND)) {
+//        return EngineState.NotInstalled
+//    }
+//
+//    val dockerCmd = getDockerCommand()
+//
+//    val cmd = GeneralCommandLine(dockerCmd, "extension", "ls", "--format", "json")
+//        .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
+//
+//    try {
+//        val processOutput: ProcessOutput = ExecUtil.execAndGetOutput(cmd, 5000)
+//
+//        if (processOutput.exitCode == 0) {
+//            val output = processOutput.stdout
+//
+//            val extensions: ArrayNode = JsonUtils.readTree(output) as ArrayNode
+//            val digmaExtension = extensions.find { jsonNode -> jsonNode.get("image").asText().contains("/digma-docker-extension") }
+//            if (digmaExtension != null) {
+//                val isRunning = digmaExtension.get("status")?.asText()?.contains("Running", true) ?: false
+//                return if (isRunning) EngineState.InstalledAndRunning else EngineState.Installed
+//            }
+//        }
+//
+//    } catch (ex: Exception) {
+//        Log.warnWithException(logger, ex, "Failed to run '{}'", cmd.commandLineString)
+//        ErrorReporter.getInstance().reportError("DigmaInstallationDiscovery.getExtensionState", ex)
+//    }
+//    return EngineState.NotInstalled
+//
+//}

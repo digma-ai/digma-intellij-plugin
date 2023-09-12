@@ -25,7 +25,7 @@ fun tryGetFieldFromPayload(objectMapper: ObjectMapper, requestJsonNode: JsonNode
 
 
 fun updateDigmaEngineStatus(project: Project, cefBrowser: CefBrowser) {
-    val status = service<DockerService>().getCurrentDigmaInstallationStatus(project)
+    val status = service<DockerService>().getActualRunningEngine(project)
     updateDigmaEngineStatus(cefBrowser, status)
 }
 

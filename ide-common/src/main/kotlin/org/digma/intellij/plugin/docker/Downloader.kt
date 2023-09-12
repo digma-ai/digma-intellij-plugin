@@ -13,7 +13,7 @@ import kotlin.io.path.deleteIfExists
 
 private const val COMPOSE_FILE_URL = "https://get.digma.ai/"
 private const val COMPOSE_FILE_NAME = "docker-compose.yml"
-private const val COMPOSE_FILE_DIR = "digma-docker"
+const val COMPOSE_FILE_DIR = "digma-docker"
 private const val RESOURCE_LOCATION = "docker-compose"
 
 class Downloader {

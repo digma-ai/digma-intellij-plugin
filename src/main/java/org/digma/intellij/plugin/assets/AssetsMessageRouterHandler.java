@@ -62,6 +62,9 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
                 Log.log(LOGGER::trace, "executing action {}", action);
 
                 switch (action) {
+                    case "ASSETS/INITIALIZE" -> {
+                    }
+
                     case "ASSETS/GET_DATA" -> pushAssetsFromGetData(browser, objectMapper);
 
                     case "ASSETS/GO_TO_ASSET" -> goToAsset(jsonNode);

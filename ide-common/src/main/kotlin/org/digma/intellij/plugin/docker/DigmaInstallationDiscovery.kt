@@ -160,18 +160,14 @@ private fun isLocalEngineRunning(): Boolean {
 
         val dockerCmd = getDockerCommand()
 
-        val cmd = GeneralCommandLine(dockerCmd, "container", "ls", "--format", "json")
+        val cmd = GeneralCommandLine(dockerCmd, "container", "ls", "--format", "{{json .Names}}")
             .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
 
         val processOutput: ProcessOutput = ExecUtil.execAndGetOutput(cmd, 5000)
 
         if (processOutput.exitCode == 0) {
             val output = processOutput.stdout
-
-            val containers: ArrayNode = JsonUtils.readTree(output) as ArrayNode
-            val digmaNodes: List<JsonNode> =
-                containers.filter { jsonNode -> isNamesContains(jsonNode.get("Names"), projectName) }
-            return digmaNodes.isNotEmpty()
+            return output.contains(projectName, true)
         }
 
     } catch (ex: Exception) {
@@ -192,18 +188,14 @@ private fun isAnyEngineRunning(): Boolean {
 
         val dockerCmd = getDockerCommand()
 
-        val cmd = GeneralCommandLine(dockerCmd, "container", "ls", "--format", "json")
+        val cmd = GeneralCommandLine(dockerCmd, "container", "ls", "--format", "{{json .Names}}")
             .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
 
         val processOutput: ProcessOutput = ExecUtil.execAndGetOutput(cmd, 5000)
 
         if (processOutput.exitCode == 0) {
             val output = processOutput.stdout
-
-            val containers: ArrayNode = JsonUtils.readTree(output) as ArrayNode
-            val digmaNodes: List<JsonNode> =
-                containers.filter { jsonNode -> isNamesContains(jsonNode.get("Names"), "digma") }
-            return digmaNodes.isNotEmpty()
+            return output.contains("digma", true)
         }
 
     } catch (ex: Exception) {

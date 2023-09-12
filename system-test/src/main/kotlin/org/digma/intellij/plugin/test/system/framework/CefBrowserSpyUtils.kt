@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.test.system.framework
 
-import com.intellij.openapi.diagnostic.Logger
 import com.intellij.ui.jcef.JBCefBrowser
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.log.Log
@@ -60,6 +59,24 @@ fun <T, H> replaceCefBrowserWithSpy(
     // return the spies
     return spiedJBCefBrowser to spiedCefBrowser // returning the spies to be able to mock the calls
 
+}
+
+@Suppress("UNCHECKED_CAST")
+fun <T> replaceJBCefWithExistingSpy(
+    containingService: T,
+    jbBrowserFieldName: String,
+    jbBrowserSpy: JBCefBrowser,
+){
+
+    // getting the browser field and setting it accessible to be able to get the browser
+    val jbBrowserField: Field = try {
+        containingService!!::class.java.getDeclaredField(jbBrowserFieldName)
+    } catch (ex: NoSuchFieldException) {
+        Log.test(logger::info, "No field of name: {} was found in class: {}", jbBrowserFieldName, containingService!!::class.java.name)
+        throw Exception("No field of name: $jbBrowserFieldName was found in class: ${containingService!!::class.java.name}")
+    }
+    jbBrowserField.isAccessible = true
+    jbBrowserField.set(containingService, jbBrowserSpy)
 }
 
 fun prepareDefaultSpyCalls(jbCaf: JBCefBrowser, caf: CefBrowser) {

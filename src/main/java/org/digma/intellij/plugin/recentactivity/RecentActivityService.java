@@ -103,7 +103,7 @@ public class RecentActivityService implements Disposable {
 
     private static final String RESOURCE_FOLDER_NAME = "recentactivity";
     private static final String RECENT_EXPIRATION_LIMIT_VARIABLE = "recentActivityExpirationLimit";
-    private static final int FETCHING_LOOP_INTERVAL = 10 * 1000; // 10sec
+    private static final int FETCHING_LOOP_INTERVAL = 1 * 1000; // 10sec - real implementation is 10*1000
     private static final Icon icon = AppIcons.TOOL_WINDOW_OBSERVABILITY;
 
     private static final String ENV_VARIABLE_IDE = "ide";

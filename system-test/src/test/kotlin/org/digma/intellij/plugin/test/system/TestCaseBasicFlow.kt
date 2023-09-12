@@ -208,10 +208,6 @@ class TestCaseBasicFlow : DigmaTestCase() {
     }
 
     private fun assertJsonBrowserForBulletTwo(json: String) {
-        if(!readyToAssert){
-            return
-        }
-        
         Log.test(logger::info, "responseToBrowser: {}", json)
         Log.test(logger::info, "second replacement of executeJS")
         val mapper = ObjectMapper()

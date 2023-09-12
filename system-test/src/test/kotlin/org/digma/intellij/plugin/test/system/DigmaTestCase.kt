@@ -14,7 +14,6 @@ import org.digma.intellij.plugin.test.system.framework.MessageBusTestListeners
 import org.digma.intellij.plugin.test.system.framework.mockRestAnalyticsProvider
 
 
-
 open class DigmaTestCase : LightJavaCodeInsightFixtureTestCase() {
 
     protected val logger = Logger.getInstance(DigmaTestCase::class.java)
@@ -29,10 +28,26 @@ open class DigmaTestCase : LightJavaCodeInsightFixtureTestCase() {
         }
 
     protected lateinit var mockAnalyticsProvider: RestAnalyticsProvider
+
+    @Volatile
+    protected var readyToAssert: Boolean = false
+        private set
+
+
+    protected fun readyToAssert() {
+        readyToAssert = true
+    }
+
+    protected fun notReadyToAssert() {
+        readyToAssert = false
+    }
+
+
     override fun setUp() {
         super.setUp()
         mockAnalyticsProvider = mockRestAnalyticsProvider(project)
         messageBusTestListeners = MessageBusTestListeners(project.messageBus)
+        readyToAssert = false
     }
 
     override fun tearDown() {
@@ -58,7 +73,7 @@ open class DigmaTestCase : LightJavaCodeInsightFixtureTestCase() {
         }
     }
 
-    fun waitFor (timeMillis: Long, reason: String) {
+    fun waitFor(timeMillis: Long, reason: String) {
         Log.test(logger::info, "wait $timeMillis millis for $reason")
         runBlocking {
             delay(timeMillis)

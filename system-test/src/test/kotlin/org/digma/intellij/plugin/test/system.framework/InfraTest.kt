@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.test.system.framework
 import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
 import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiFile
+import com.intellij.testFramework.PlatformTestUtil
 import junit.framework.TestCase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -11,6 +12,7 @@ import org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.navigation.HomeSwitcherService
+import org.digma.intellij.plugin.test.system.BulletOneData
 import org.digma.intellij.plugin.test.system.DigmaTestCase
 import java.awt.event.MouseEvent
 import java.lang.reflect.Field
@@ -29,25 +31,21 @@ class InfraTest : DigmaTestCase() {
 
     fun `test subscribe to documentInfoChange and openFile`() {
 
-        var file: PsiFile? = null
-        var assertFinished = false
-        var isTheSameName = false
-        //prepare
+        var (expectedDocumentName, actualDocumentOpened) =  BulletOneData.DOC_NAME to ""
+        // sub to documentInfoChange to assert that the document actually opened
         messageBusTestListeners.registerSubToDocumentInfoChangedEvent {
-            Log.test(logger::info, "Test Subscriber - DocumentInfoChanged: documentInfoChanged")
-            assertFinished = true
-            isTheSameName = it.name == file?.name
+            actualDocumentOpened = it.name
         }
-        //act
-        file = myFixture.configureByFile("EditorEventsHandler.java")
 
-        runBlocking {
-            while (!assertFinished) {
-                delay(100)
-            }
-        }
-        TestCase.assertTrue(assertFinished)
-        assertTrue("This is intended to be called, remove the line to properly test", isTheSameName)
+        // Open Document1
+        val psiFile = myFixture.configureByFile(BulletOneData.DOC_NAME)
+
+        waitFor(1000, "waiting for the file to open")
+        // making sure that the remaining tasks in the EDT Queue are executed
+        PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
+
+        //assert that the correct Document opened
+        assertEquals(expectedDocumentName, actualDocumentOpened)
     }
 
     fun `_test code vision loaded from insights and click code vision`() {

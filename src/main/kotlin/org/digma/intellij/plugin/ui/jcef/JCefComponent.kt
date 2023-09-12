@@ -12,7 +12,6 @@ import org.cef.browser.CefMessageRouter
 import org.cef.handler.CefLifeSpanHandlerAdapter
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator
-import org.digma.intellij.plugin.common.JsonUtils
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil
@@ -60,7 +59,7 @@ class JCefComponent(
                 override fun connectionLost() {
                     try {
                         val status = project.service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionLost(project)
-                        sendDigmaEngineStatus(jbCefBrowser.cefBrowser, JsonUtils.objectToJson(status))
+                        updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
                     } catch (e: Exception) {
                         ErrorReporter.getInstance().reportError("JCefComponent.connectionLost", e)
                     }
@@ -69,7 +68,7 @@ class JCefComponent(
                 override fun connectionGained() {
                     try {
                         val status = project.service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionGained(project)
-                        sendDigmaEngineStatus(jbCefBrowser.cefBrowser, JsonUtils.objectToJson(status))
+                        updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
                     } catch (e: Exception) {
                         ErrorReporter.getInstance().reportError("JCefComponent.connectionGained", e)
                     }

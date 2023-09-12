@@ -25,7 +25,6 @@
       window.isObservabilityEnabled = ${isObservabilityEnabled?string('true', 'false')};
       window.isDigmaEngineInstalled = ${isDigmaEngineInstalled?string('true', 'false')};
       window.isDigmaEngineRunning = ${isDigmaEngineRunning?string('true', 'false')};
-      window.digmaStatus = ${digmaStatus};
       window.isDockerInstalled = ${isDockerInstalled?string('true', 'false')};
       window.isDockerComposeInstalled = ${isDockerComposeInstalled?string('true', 'false')};
 

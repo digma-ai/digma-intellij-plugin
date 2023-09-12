@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 
 enum class DigmaInstallationType {
-    LocalEngine, DockerCompose, DockerDesktop, Remote, Unknown
+    localEngine, dockerCompose, dockerDesktop, remote, unknown
 }
 
 

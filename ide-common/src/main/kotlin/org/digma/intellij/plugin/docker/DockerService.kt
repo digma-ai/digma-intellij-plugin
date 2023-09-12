@@ -61,7 +61,7 @@ class DockerService {
 
     fun getCurrentDigmaInstallationStatus(project: Project): DigmaInstallationStatus {
         if (isEngineInstalled()) {
-            return DigmaInstallationStatus(isEngineRunning(project), DigmaInstallationType.LocalEngine)
+            return DigmaInstallationStatus(isEngineRunning(project), DigmaInstallationType.localEngine)
         }
         return discoverInstallationStatus(project)
     }
@@ -69,14 +69,15 @@ class DockerService {
 
     fun getCurrentDigmaInstallationStatusOnConnectionLost(project: Project): DigmaInstallationStatus {
         if (isEngineInstalled()) {
-            return DigmaInstallationStatus(false, DigmaInstallationType.LocalEngine)
+            return DigmaInstallationStatus(false, DigmaInstallationType.localEngine)
         }
         return discoverInstallationStatus(false)
     }
 
+
     fun getCurrentDigmaInstallationStatusOnConnectionGained(project: Project): DigmaInstallationStatus {
         if (isEngineInstalled()) {
-            return DigmaInstallationStatus(true, DigmaInstallationType.LocalEngine)
+            return DigmaInstallationStatus(true, DigmaInstallationType.localEngine)
         }
         return discoverInstallationStatus(true)
     }

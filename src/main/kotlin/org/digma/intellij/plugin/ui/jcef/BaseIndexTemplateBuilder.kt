@@ -7,7 +7,6 @@ import com.intellij.openapi.project.Project
 import freemarker.template.Configuration
 import freemarker.template.Template
 import freemarker.template.TemplateExceptionHandler
-import org.digma.intellij.plugin.common.JsonUtils
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.jcef.common.JCefTemplateUtils
@@ -28,7 +27,6 @@ private const val IS_DOCKER_COMPOSE_INSTALLED = "isDockerComposeInstalled"
 private const val IS_DIGMA_ENGINE_INSTALLED = "isDigmaEngineInstalled"
 private const val IS_DIGMA_ENGINE_RUNNING = "isDigmaEngineRunning"
 private const val IS_JAEGER_ENABLED = "isJaegerEnabled"
-private const val DIGMA_DOCKER_STATUS = "digmaStatus"
 
 
 abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val indexTemplateName: String) {
@@ -60,10 +58,8 @@ abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val 
             data[IS_DIGMA_ENGINE_RUNNING] = service<DockerService>().isEngineRunning(project)
             data[IS_DOCKER_INSTALLED] = service<DockerService>().isDockerInstalled()
             data[IS_DOCKER_COMPOSE_INSTALLED] = service<DockerService>().isDockerInstalled()
-            data[DIGMA_DOCKER_STATUS] = JsonUtils.objectToJson(project.service<DockerService>().getCurrentDigmaInstallationStatus(project))
 
             addAppSpecificEnvVariable(project, data)
-
 
             val template: Template = freemarkerConfiguration.getTemplate(indexTemplateName)
             val stringWriter = StringWriter()

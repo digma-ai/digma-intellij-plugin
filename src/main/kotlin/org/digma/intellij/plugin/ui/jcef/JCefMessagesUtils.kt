@@ -4,8 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
-import org.digma.intellij.plugin.ui.jcef.model.ConnectionStatusMessage
-import org.digma.intellij.plugin.ui.jcef.model.IsDigmaRunningPayload
+import org.digma.intellij.plugin.ui.jcef.model.DigmaEngineStatusMessage
 
 
 /**
@@ -13,18 +12,19 @@ import org.digma.intellij.plugin.ui.jcef.model.IsDigmaRunningPayload
  * requestJsonNode is the full request as json node
  */
 fun tryGetFieldFromPayload(objectMapper: ObjectMapper, requestJsonNode: JsonNode, fieldName: String): String? {
-    try {
-        return objectMapper.readTree(requestJsonNode.get("payload").toString()).get(fieldName).asText()
+    return try {
+        objectMapper.readTree(requestJsonNode.get("payload").toString()).get(fieldName).asText()
     } catch (e: NullPointerException) {
-        return null
+        null
     }
 }
 
 
-fun sendConnectionStatus(cefBrowser: CefBrowser, status: Boolean) {
-    val connectionStatusMessage = ConnectionStatusMessage(
+fun sendDigmaEngineStatus(cefBrowser: CefBrowser, status: String) {
+
+    val connectionStatusMessage = DigmaEngineStatusMessage(
         JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
-        "GLOBAL/SET_IS_DIGMA_RUNNING", IsDigmaRunningPayload(status)
+        "GLOBAL/SET_DIGMA_STATUS", status
     )
     serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, connectionStatusMessage)
 }

@@ -14,8 +14,8 @@ fun scheduleEnvironmentRefresh(parentDisposable: Disposable, environemnt: Enviro
 
     DisposingScope(parentDisposable).launch {
         while (this.isActive) {
-            delay(service<SettingsState>().refreshDelay.toLong() * 1000)
             environemnt.refreshNowOnBackground()
+            delay(service<SettingsState>().refreshDelay.toLong() * 1000)
         }
     }
 }

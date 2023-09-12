@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.jcef
 
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.JBCefBrowser
@@ -11,6 +12,8 @@ import org.cef.browser.CefMessageRouter
 import org.cef.handler.CefLifeSpanHandlerAdapter
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator
+import org.digma.intellij.plugin.common.JsonUtils
+import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
@@ -55,11 +58,21 @@ class JCefComponent(
         analyticsServiceConnectionEventMessageBusConnection.subscribe(
             AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, object : AnalyticsServiceConnectionEvent {
                 override fun connectionLost() {
-                    sendConnectionStatus(jbCefBrowser.cefBrowser, false)
+                    try {
+                        val status = project.service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionLost(project)
+                        sendDigmaEngineStatus(jbCefBrowser.cefBrowser, JsonUtils.objectToJson(status))
+                    } catch (e: Exception) {
+                        ErrorReporter.getInstance().reportError("JCefComponent.connectionLost", e)
+                    }
                 }
 
                 override fun connectionGained() {
-                    sendConnectionStatus(jbCefBrowser.cefBrowser, true)
+                    try {
+                        val status = project.service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionGained(project)
+                        sendDigmaEngineStatus(jbCefBrowser.cefBrowser, JsonUtils.objectToJson(status))
+                    } catch (e: Exception) {
+                        ErrorReporter.getInstance().reportError("JCefComponent.connectionGained", e)
+                    }
                 }
             })
     }

@@ -19,11 +19,14 @@ import org.cef.callback.CefQueryCallback
 import org.cef.handler.CefLifeSpanHandlerAdapter
 import org.cef.handler.CefMessageRouterHandlerAdapter
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator
+import org.digma.intellij.plugin.common.JsonUtils
 import org.digma.intellij.plugin.docker.DockerService
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.jcef.common.CustomSchemeHandlerFactory
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
@@ -53,6 +56,7 @@ import org.digma.intellij.plugin.jcef.common.JcefMessageRequest
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.common.ObservabilityUtil.Companion.updateObservabilityValue
+import org.digma.intellij.plugin.ui.jcef.sendDigmaEngineStatus
 import org.digma.intellij.plugin.ui.list.insights.isJaegerButtonEnabled
 import org.digma.intellij.plugin.ui.panels.DisposablePanel
 import org.digma.intellij.plugin.ui.recentactivity.RecentActivityToolWindowShower
@@ -74,6 +78,7 @@ private const val IS_DIGMA_ENGINE_RUNNING: String = "isDigmaEngineRunning"
 private const val IS_WIZARD_FIRST_LAUNCH: String = "wizardFirstLaunch"
 private const val IS_JAEGER_ENABLED: String = "isJaegerEnabled"
 private const val IS_WIZARD_SKIP_INSTALLATION_STEP: String = "wizardSkipInstallationStep"
+private const val DIGMA_DOCKER_STATUS: String = "digmaStatus"
 
 private val logger: Logger =
     Logger.getInstance("org.digma.intellij.plugin.ui.common.InstallationWizard")
@@ -100,6 +105,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
         IS_WIZARD_FIRST_LAUNCH to PersistenceService.getInstance().isFirstWizardLaunch(),
         IS_JAEGER_ENABLED to isJaegerButtonEnabled(),
         IS_WIZARD_SKIP_INSTALLATION_STEP to wizardSkipInstallationStep,
+        DIGMA_DOCKER_STATUS to JsonUtils.objectToJson(project.service<DockerService>().getCurrentDigmaInstallationStatus(project))
     )
 
     PersistenceService.getInstance().firstWizardLaunchDone()
@@ -254,6 +260,10 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                             )
                             sendIsDigmaEngineInstalled(true, jbCefBrowser)
                             sendIsDigmaEngineRunning(true, jbCefBrowser)
+
+                            val status = project.service<DockerService>().getCurrentDigmaInstallationStatus(project)
+                            sendDigmaEngineStatus(jbCefBrowser.cefBrowser, JsonUtils.objectToJson(status))
+
                             service<AppNotificationCenter>().showInstallationFinishedNotification(project)
                         } else {
                             Log.log(logger::warn, "error installing engine, {}", exitValue)
@@ -267,7 +277,6 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                             sendIsDigmaEngineInstalled(false, jbCefBrowser)
                             sendIsDigmaEngineRunning(false, jbCefBrowser)
 
-
                             //start remove if install failed. wait a second to let the installEngine finish so it reports
                             // the installEngine.end to posthog before removeEngine.start
                             Backgroundable.executeOnPooledThread {
@@ -278,6 +287,10 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                                 }
                                 Log.log(logger::warn, "removing engine after installation failed")
                                 service<DockerService>().removeEngine(project) { exitValue ->
+
+                                    val status = project.service<DockerService>().getCurrentDigmaInstallationStatus(project)
+                                    sendDigmaEngineStatus(jbCefBrowser.cefBrowser, JsonUtils.objectToJson(status))
+
                                     if (exitValue != "0") {
                                         Log.log(logger::warn, "error removing engine after failure {}", exitValue)
                                     }
@@ -455,6 +468,28 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
             JCefBrowserUtil.sendRequestToChangeCodeFont(fontName, jbCefBrowser)
         }
     })
+
+
+    project.messageBus.connect()
+        .subscribe(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, object : AnalyticsServiceConnectionEvent {
+            override fun connectionLost() {
+                try {
+                    val status = project.service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionLost(project)
+                    sendDigmaEngineStatus(jbCefBrowser.cefBrowser, JsonUtils.objectToJson(status))
+                } catch (e: Exception) {
+                    ErrorReporter.getInstance().reportError("createInstallationWizardSidePanelWindowPanel.connectionLost", e)
+                }
+            }
+
+            override fun connectionGained() {
+                try {
+                    val status = project.service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionGained(project)
+                    sendDigmaEngineStatus(jbCefBrowser.cefBrowser, JsonUtils.objectToJson(status))
+                } catch (e: Exception) {
+                    ErrorReporter.getInstance().reportError("createInstallationWizardSidePanelWindowPanel.connectionGained", e)
+                }
+            }
+        })
 
 
 

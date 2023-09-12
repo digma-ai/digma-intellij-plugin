@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
-import org.digma.intellij.plugin.common.JsonUtils
 import org.digma.intellij.plugin.docker.DigmaInstallationStatus
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
@@ -31,11 +30,11 @@ fun updateDigmaEngineStatus(project: Project, cefBrowser: CefBrowser) {
 }
 
 fun updateDigmaEngineStatus(cefBrowser: CefBrowser, status: DigmaInstallationStatus) {
-    sendDigmaEngineStatus(cefBrowser, JsonUtils.objectToJson(status))
+    sendDigmaEngineStatus(cefBrowser, status)
 }
 
 
-fun sendDigmaEngineStatus(cefBrowser: CefBrowser, status: String) {
+private fun sendDigmaEngineStatus(cefBrowser: CefBrowser, status: DigmaInstallationStatus) {
 
     val connectionStatusMessage = DigmaEngineStatusMessage(
         JCefMessagesUtils.REQUEST_MESSAGE_TYPE,

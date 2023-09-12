@@ -187,3 +187,105 @@ object BulletOneData {
             )
         }
 }
+
+object BulletTwoData {
+    const val DOC_NAME: String = "TestFile.java"
+    val environmentList = listOf("env1", "env2")
+
+    val className: String = "org.digma.intellij.plugin.test.system.TestFile"
+    val methodName = "method1"
+    val methodCodeObjectId: String = createDigmaCodeObjectId(className, methodName)
+    val relatedSpansToMethod: List<String> = listOf(
+        createDigmaCodeObjectId(className, "relatedSpan1"),
+        createDigmaCodeObjectId(className, "relatedSpan2")
+    )
+    val relatedEndPointToMethod: List<String> = listOf(
+        createDigmaCodeObjectId(className, "relatedEndpoint1"),
+        createDigmaCodeObjectId(className, "relatedEndpoint2")
+    )
+
+    val expectedRecentActivityResult: RecentActivityResult
+        get() {
+
+            val slimAggregatedInsight1 = SlimAggregatedInsight(
+                type = "slim Insight 1 type",
+                importance = 2,
+                codeObjectIds = listOf(
+                    this.methodCodeObjectId,
+                    *this.relatedEndPointToMethod.toTypedArray()
+                )
+            )
+
+            val slimAggregatedInsight2 = SlimAggregatedInsight(
+                type = "slim Insight 2 type",
+                importance = 2,
+                codeObjectIds = listOf(
+                    methodCodeObjectId,
+                    *relatedSpansToMethod.toTypedArray(),
+                )
+            )
+
+            val slimAggregatedInsight1Env2 = SlimAggregatedInsight(
+                type = "slim Insight 1 type",
+                importance = 2,
+                codeObjectIds = listOf(
+                    this.methodCodeObjectId,
+                    *this.relatedEndPointToMethod.toTypedArray()
+                )
+            )
+
+            val slimAggregatedInsight2Env2 = SlimAggregatedInsight(
+                type = "slim Insight 2 type",
+                importance = 2,
+                codeObjectIds = listOf(
+                    methodCodeObjectId,
+                    *relatedSpansToMethod.toTypedArray(),
+                )
+            )
+
+            val expectedRecentActivityResponseEntries = listOf(
+                RecentActivityResponseEntry(
+                    environment = environmentList[0],
+                    traceFlowDisplayName = " Trace Flow DisplayName for entry 1",
+                    firstEntrySpan = EntrySpan(
+                        displayText = "First Span Entry",
+                        serviceName = "test serviceName",
+                        scopeId = "method1 span ID", // todo: check what should be there
+                        spanCodeObjectId = relatedSpansToMethod[0],
+                        methodCodeObjectId = methodCodeObjectId
+                    ),
+                    lastEntrySpan = null,
+                    latestTraceId = "traceId_method1",
+                    latestTraceTimestamp = Date(),
+                    latestTraceDuration = Duration(1.1, "ms", 1100),
+                    slimAggregatedInsights = listOf(
+                        slimAggregatedInsight1,
+                        slimAggregatedInsight2
+                    ),
+                ),
+                RecentActivityResponseEntry(
+                    environment = environmentList[1],
+                    traceFlowDisplayName = " Trace Flow DisplayName for entry 2 -- env2",
+                    firstEntrySpan = EntrySpan(
+                        displayText = "First Span Entry -- env2",
+                        serviceName = "test serviceName",
+                        scopeId = "method1 span ID", // todo: check what should be there
+                        spanCodeObjectId = relatedSpansToMethod[0],
+                        methodCodeObjectId = methodCodeObjectId
+                    ),
+                    lastEntrySpan = null,
+                    latestTraceId = "traceId_method1_env2",
+                    latestTraceTimestamp = Date(),
+                    latestTraceDuration = Duration(1.1, "ms", 1100),
+                    slimAggregatedInsights = listOf(
+                        slimAggregatedInsight1Env2,
+                        slimAggregatedInsight2Env2
+                    ),
+                ))
+
+            return RecentActivityResult(
+                accountId = "testAccount@test.com",
+                entries = expectedRecentActivityResponseEntries
+            )
+        }
+}

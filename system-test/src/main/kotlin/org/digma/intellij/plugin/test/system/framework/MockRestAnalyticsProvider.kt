@@ -89,7 +89,7 @@ fun mockGetEnvironments(mock: RestAnalyticsProvider, envList: List<String> = env
 fun mockGetRecentActivity(mock: RestAnalyticsProvider, result: RecentActivityResult) {
     `when`(mock.getRecentActivity(isA(RecentActivityRequest::class.java))).thenAnswer {
         Log.test(logger::info, "mock getRecentActivity")
-        return@thenAnswer createRecentActivityResult()
+        return@thenAnswer result
     }
 }
 

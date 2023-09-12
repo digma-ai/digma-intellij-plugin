@@ -168,7 +168,7 @@ private fun isLocalEngineRunning(): Boolean {
         if (processOutput.exitCode == 0) {
             val output = processOutput.stdout
             val firstLine = output.split(System.lineSeparator()).firstOrNull()
-            return firstLine?.startsWith(projectName, true) ?: false
+            return firstLine?.replace("\"", "")?.startsWith(projectName, true) ?: false
         }
 
     } catch (ex: Exception) {

@@ -170,7 +170,7 @@ private fun isLocalEngineRunning(): Boolean {
 
             val containers: ArrayNode = JsonUtils.readTree(output) as ArrayNode
             val digmaNodes: List<JsonNode> =
-                containers.filter { jsonNode -> (jsonNode.get("Names") as ArrayNode).any { jsonNode -> jsonNode.asText().contains(projectName) } }
+                containers.filter { jsonNode -> isNamesContains(jsonNode.get("Names"), projectName) }
             return digmaNodes.isNotEmpty()
         }
 
@@ -202,7 +202,7 @@ private fun isAnyEngineRunning(): Boolean {
 
             val containers: ArrayNode = JsonUtils.readTree(output) as ArrayNode
             val digmaNodes: List<JsonNode> =
-                containers.filter { jsonNode -> (jsonNode.get("Names") as ArrayNode).any { jsonNode -> jsonNode.asText().contains("digma") } }
+                containers.filter { jsonNode -> isNamesContains(jsonNode.get("Names"), "digma") }
             return digmaNodes.isNotEmpty()
         }
 
@@ -213,6 +213,20 @@ private fun isAnyEngineRunning(): Boolean {
     return false
 
 }
+
+
+private fun isNamesContains(node: JsonNode, valueToFind: String): Boolean {
+
+    if (node is ArrayNode) {
+        return node.any { jsonNode ->
+            jsonNode.asText().contains(valueToFind, true)
+        }
+    }
+
+    return node.asText().contains(valueToFind, true)
+
+}
+
 
 
 //private fun getAnyEngineState(): EngineState {

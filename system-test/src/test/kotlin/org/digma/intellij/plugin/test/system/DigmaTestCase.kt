@@ -10,6 +10,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.recentactivity.RecentActivityService
 import org.digma.intellij.plugin.test.system.framework.MessageBusTestListeners
 import org.digma.intellij.plugin.test.system.framework.mockRestAnalyticsProvider
 
@@ -25,6 +26,11 @@ open class DigmaTestCase : LightJavaCodeInsightFixtureTestCase() {
     protected val analyticsService: AnalyticsService
         get() {
             return AnalyticsService.getInstance(project)
+        }
+    
+    protected val recentActivityService: RecentActivityService
+        get() {
+            return RecentActivityService.getInstance(project)
         }
 
     protected lateinit var mockAnalyticsProvider: RestAnalyticsProvider

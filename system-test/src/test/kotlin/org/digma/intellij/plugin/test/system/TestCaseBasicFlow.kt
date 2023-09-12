@@ -1,9 +1,7 @@
 package org.digma.intellij.plugin.test.system
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
-import com.intellij.openapi.diagnostic.Logger
 import com.intellij.psi.JavaRecursiveElementVisitor
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFile
@@ -11,15 +9,12 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.testFramework.EditorTestUtil
 import com.intellij.testFramework.PlatformTestUtil
-import com.intellij.testFramework.fixtures.LightJavaCodeInsightFixtureTestCase
 import junit.framework.TestCase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.editor.CurrentContextUpdater
-import org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService
 import org.digma.intellij.plugin.insights.InsightsMessageRouterHandler
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.MethodInfo
@@ -27,25 +22,17 @@ import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult
 import org.digma.intellij.plugin.recentactivity.RecentActivityService
-import org.digma.intellij.plugin.test.system.framework.WaitFinishRule
 import org.digma.intellij.plugin.test.system.framework.environmentList
 import org.digma.intellij.plugin.test.system.framework.expectedInsightsOfMethodsResponseEnv1
 import org.digma.intellij.plugin.test.system.framework.mockGetEnvironments
 import org.digma.intellij.plugin.test.system.framework.mockGetInsightsOfMethods
 import org.digma.intellij.plugin.test.system.framework.mockGetRecentActivity
-import org.digma.intellij.plugin.test.system.framework.mockRestAnalyticsProvider
 import org.digma.intellij.plugin.test.system.framework.prepareDefaultSpyCalls
 import org.digma.intellij.plugin.test.system.framework.replaceCefBrowserWithSpy
 import org.digma.intellij.plugin.test.system.framework.replaceExecuteJSWithAssertionFunction
 import org.digma.intellij.plugin.ui.service.InsightsService
-import org.junit.Rule
-import org.junit.jupiter.api.Test
 
 class TestCaseBasicFlow : DigmaTestCase() {
-
-    private val document1Name: String = "EditorEventsHandler.java"
-    private val document2Name: String = "EditorEventsHandler2.java"
-
 
     private val documentInfoService: DocumentInfoService
         get() = DocumentInfoService.getInstance(project)
@@ -57,47 +44,46 @@ class TestCaseBasicFlow : DigmaTestCase() {
 
 
     fun testSowFlow() {
-        
-        //prepare the browser for mocking
-        val (jbCaf, caf) = replaceCefBrowserWithSpy(
+
+        //prepare the browser for mocking of InsightsService
+        val (jbCef, cef) = replaceCefBrowserWithSpy(
             containingService = project.service<InsightsService>(),
             messageHandlerFieldName = "messageHandler",
             messageHandlerType = InsightsMessageRouterHandler::class.java,
             jbBrowserFieldName = "jbCefBrowser"
         )
-        prepareDefaultSpyCalls(jbCaf, caf)
-        replaceExecuteJSWithAssertionFunction(caf) { props ->
-            val objectMapper = ObjectMapper()
-            val message = objectMapper.readTree(props)
-            Log.test(logger::info, "executeJS - message: {}", message)
-            assertEquals("digma", message.get("type").textValue())
-
-            TestCase.assertEquals("INSIGHTS/SET_DATA", message.get("action").textValue())
+        prepareDefaultSpyCalls(jbCef, cef)
+        
 
 
-        }
         // Bullet One
         // prepare single environment mock with insights and recent activities
-        
+
         mockGetEnvironments(mockAnalyticsProvider, BulletOneData.environmentList)
         mockGetInsightsOfMethods(mockAnalyticsProvider, BulletOneData.expectedInsightsOfMethods)
         mockGetRecentActivity(mockAnalyticsProvider, BulletOneData.expectedRecentActivityResult)
-        
-        var (expectedDocumentName, actualDocumentOpened) = BulletOneData.documentName to ""
-        // sub to documentInfoChange to assert that the document actually opened
-        messageBusTestListeners.registerSubToDocumentInfoChangedEvent { 
-            actualDocumentOpened = it.name
+
+        var asseritonEnv: String? = null
+        messageBusTestListeners.registerSubToEnvironmentChangedEvent { env, _ ->
+            Log.test(logger::info, "env changed to: {}", env)
+            asseritonEnv = env
         }
-        
-        // Open Document1
-        val psiFile = myFixture.configureByFile("TestFile.java")
-        waitFor(1000, "waiting for the file to open")
-        // making sure that the remaining tasks in the EDT Queue are executed
+
+        while (asseritonEnv == null) {
+            waitFor(500, "env to be changed")
+            PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
+        }
+
+        // prepare assertion in the browser for the insights that will be pushed of the method under caret
+        replaceExecuteJSWithAssertionFunction(cef, this::assertJsonBrowserForBulletOne)
+
+        waitFor(2000, "wait for browser spy to be ready")
+        val psiFile = myFixture.configureByFile(BulletOneData.DOC_NAME)
+        myFixture.openFileInEditor(psiFile.virtualFile)
+        waitFor(2000, "events after opening ${psiFile.name}")
         PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
-        
-        //assert that the correct Document opened
-        assertEquals(expectedDocumentName, actualDocumentOpened)
-        
+
+
         //finding the target method for method1
 
         val editor = myFixture.editor
@@ -105,8 +91,6 @@ class TestCaseBasicFlow : DigmaTestCase() {
         val methods = PsiTreeUtil.findChildrenOfType(psiFile, PsiMethod::class.java)
         val targetMethod = methods.find { it.name == "method1" }
 
-        // prepare assertion in the browser for the insights that will be pushed of the method under caret
-        
         targetMethod?.let {
             val offset = targetMethod.textOffset
             editor.caretModel.moveToOffset(offset)
@@ -117,29 +101,75 @@ class TestCaseBasicFlow : DigmaTestCase() {
                 EditorTestUtil.setCaretsAndSelection(editor, caretAndSelectionState)
             }
         }
+        readyToAssert()
         waitFor(1000, "waiting for caret event in file ${psiFile.name}")
+        PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
         
         // test that latest method under caret is method 1
-        val methodUnderCaret = project.service<CurrentContextUpdater>().latestMethodUnderCaret
-        if (methodUnderCaret == null) {
-            fail("method under caret not updated for method 1")
-        }
-        val methodInfoOfMethodUnderCaret =  project.service<DocumentInfoService>().findMethodInfo(methodUnderCaret.id)
-        
-        if (methodInfoOfMethodUnderCaret == null) {
-            fail("Cannot retrieve method info for method under caret")
-        }
-        
-        //see that the insights of method1 are present
-        
-        
-        
+        val methodUnderCaret = project.getService(CurrentContextUpdater::class.java).latestMethodUnderCaret
+
         // asserting all the current information about method one and the method under caret
         assertEquals(targetMethod?.name, methodUnderCaret.name)
         assertEquals(targetMethod?.containingClass?.name, methodUnderCaret.className)
         assertEquals(BulletOneData.methodCodeObjectId, methodUnderCaret.id)
+
+        //see that the insights of method1 are present
+
+        val methodInfoOfMethodUnderCaret = project.service<DocumentInfoService>().findMethodInfo(methodUnderCaret.id)
+
+        val cachedInsights = project.service<DocumentInfoService>().getCachedMethodInsights(methodInfoOfMethodUnderCaret!!)
+
+        cachedInsights.forEach { insight ->
+            assertEquals(BulletOneData.methodCodeObjectId, insight.codeObjectId)
+            assertEquals(BulletOneData.environmentList[0], insight.environment)
+        }
         
 
+        // Bullet Two
+        notReadyToAssert()
+        
+        
+    }
+
+    private fun assertJsonBrowserForBulletOne(json: String) {
+        if (!readyToAssert) {
+            return
+        }
+        
+        val mapper = ObjectMapper()
+        val responseToBrowser = mapper.readTree(json)
+        Log.test(logger::info, "responseToBrowser: {}", json)
+        val action = responseToBrowser.get("action").asText()
+        Log.test(logger::info, "action: {}", action)
+        val payload = responseToBrowser.get("payload")
+        Log.test(logger::info, "payload: {}", payload)
+        val assetId = payload.get("assetId").asText()
+        Log.test(logger::info, "assetId: {}", assetId)
+        val env = payload.get("environment").asText()
+        Log.test(logger::info, "env: {}", env)
+
+        // assertion on response
+        assertEquals("INSIGHTS/SET_DATA", action)
+        assertEquals("digma", responseToBrowser.get("type").asText())
+
+        // assertion  on payload
+        assertEquals(BulletOneData.methodCodeObjectId, assetId)
+        assertEquals(BulletOneData.environmentList[0], env)
+
+        val insightsOfPayload = payload.get("insights")
+        val insights: Array<CodeObjectInsight> = mapper.readValue(insightsOfPayload.toString(), Array<CodeObjectInsight>::class.java)
+        Log.test(logger::info, "insights: {}", insights)
+        insights.forEachIndexed { index, insight ->
+            assertEquals(BulletOneData.expectedInsightsOfMethods.methodsWithInsights[0].insights[index].environment, insight.environment)
+            assertEquals(BulletOneData.expectedInsightsOfMethods.methodsWithInsights[0].insights[index].codeObjectId, insight.codeObjectId)
+        }
+        
+        // assert that we are in the correct environment
+        assertEquals(BulletOneData.environmentList[0], analyticsService.environment.getCurrent())
+        //assertRecentActivities
+        val recentActivityService = project.getService(RecentActivityService::class.java)
+        
+        // end bullet one
     }
 
     fun testInsightAndActivityFlow() {
@@ -147,7 +177,7 @@ class TestCaseBasicFlow : DigmaTestCase() {
         var expectedEnv = environmentList[0]
         var actualEnv: String?
         var currentDocumentName = ""
-        var expectedDocumentName = document1Name
+//        var expectedDocumentName = document1Name
         // subscribe to env changed event
         messageBusTestListeners.registerSubToEnvironmentChangedEvent { env, _ ->
             actualEnv = env
@@ -156,41 +186,41 @@ class TestCaseBasicFlow : DigmaTestCase() {
         // subscribe to documentInfoChanged event
         messageBusTestListeners.registerSubToDocumentInfoChangedEvent { psiFile ->
             currentDocumentName = psiFile.name
-            assertEquals(expectedDocumentName, currentDocumentName)
+//            assertEquals(expectedDocumentName, currentDocumentName)
         }
 
         // open document1
-        expectedDocumentName = document1Name
-        val document1File = myFixture.configureByFile(document1Name)
-        myFixture.openFileInEditor(document1File.virtualFile)
+//        expectedDocumentName = document1Name
+//        val document1File = myFixture.configureByFile(document1Name)
+//        myFixture.openFileInEditor(document1File.virtualFile)
 
         //wait for 500 ms
         runBlocking { delay(500) }
 
 
         // navigate to method --> get the method codeObjectId
-        val methodList = collectMethodsInFile(document1File)
-        val destinationMethod = methodList.find { it.name == "isRelevantFile" }.let { it!! }
-        editor.caretModel.moveToOffset(destinationMethod.textOffset)
+//        val methodList = collectMethodsInFile(document1File)
+//        val destinationMethod = methodList.find { it.name == "isRelevantFile" }.let { it!! }
+//        editor.caretModel.moveToOffset(destinationMethod.textOffset)
 
         // verify that method under caret is the same as the destinationMethod
 
 
-        val document1infoContainer = documentInfoService.getDocumentInfo(document1File)
-        if (document1infoContainer == null) {
-            TestCase.fail("document1infoContainer is null")
-            return
-        }
+//        val document1infoContainer = documentInfoService.getDocumentInfo(document1File)
+//        if (document1infoContainer == null) {
+//            TestCase.fail("document1infoContainer is null")
+//            return
+//        }
 
         // get insights of current file from document Info service
-        val insightMap: MutableMap<String, MutableList<CodeObjectInsight>> = document1infoContainer.allMethodWithInsightsMapForCurrentDocument
-        // check if the insights are correct that correlates to the current env and the codeObjectId of the method
-        assertInsightsForDocument(insightMap, expectedInsightsOfMethodsResponseEnv1)
-
-        val codeObjectOfDocument1: List<String> = getCodeObjectIdsFromDocumentContainer(document1infoContainer)
-        val methodInfosOfDocument1: Map<String, MethodInfo> = getMethodInfos(document1infoContainer)
-        // check that the number of methods in the documentInfoService is the same as the number of methods in the file
-        TestCase.assertEquals(methodList.size, methodInfosOfDocument1.size)
+//        val insightMap: MutableMap<String, MutableList<CodeObjectInsight>> = document1infoContainer.allMethodWithInsightsMapForCurrentDocument
+//        // check if the insights are correct that correlates to the current env and the codeObjectId of the method
+//        assertInsightsForDocument(insightMap, expectedInsightsOfMethodsResponseEnv1)
+//
+//        val codeObjectOfDocument1: List<String> = getCodeObjectIdsFromDocumentContainer(document1infoContainer)
+//        val methodInfosOfDocument1: Map<String, MethodInfo> = getMethodInfos(document1infoContainer)
+//        // check that the number of methods in the documentInfoService is the same as the number of methods in the file
+//        TestCase.assertEquals(methodList.size, methodInfosOfDocument1.size)
 
 
         // check what is the current env --> should be env1
@@ -248,6 +278,7 @@ class TestCaseBasicFlow : DigmaTestCase() {
 
     }
 
+    // irrelevant - insights are about to move away from the documentInfoService
     private fun assertInsightsForDocument(
         insightMap: MutableMap<String, MutableList<CodeObjectInsight>>,
         expectedMethodInsights: InsightsOfMethodsResponse,

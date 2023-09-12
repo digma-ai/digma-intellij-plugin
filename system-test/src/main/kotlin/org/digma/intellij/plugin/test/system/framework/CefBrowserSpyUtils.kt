@@ -16,14 +16,7 @@ fun <T, H> replaceCefBrowserWithSpy(
     messageHandlerType: Class<H>,
     jbBrowserFieldName: String,
 ): Pair<JBCefBrowser, CefBrowser> {
-
-    // geding the service that has the handler
-//        val containingService: T = try {
-//            project.getService(containingClass)
-//        } catch (ex: Exception) {
-//            Log.test(logger::info, "No Service of type: {} was found", containingClass.name)
-//            throw Exception("No Service of type: ${containingClass.name} was found") // throwing exceptions to fail the test and give validation the the rest of the setup function
-//        }
+    
 
 
     //getting the handler field and setting it accessible to be able to get the handler

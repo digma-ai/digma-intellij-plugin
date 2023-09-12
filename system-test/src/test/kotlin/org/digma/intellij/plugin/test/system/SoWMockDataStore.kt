@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.test.system
 
 import com.intellij.openapi.diagnostic.Logger
-import org.apache.xmlbeans.impl.xb.xsdschema.Public
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectDecorator
 import org.digma.intellij.plugin.model.rest.insights.Duration
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse
@@ -15,9 +14,7 @@ import org.digma.intellij.plugin.model.rest.recentactivity.EntrySpan
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResponseEntry
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult
 import org.digma.intellij.plugin.model.rest.recentactivity.SlimAggregatedInsight
-import org.digma.intellij.plugin.test.system.framework.MockInsightsOfMethodsResponseFactory
 import org.digma.intellij.plugin.test.system.framework.methodCodeObject3
-import java.util.Calendar
 import java.util.Date
 
 
@@ -30,10 +27,10 @@ fun createDigmaCodeObjectId(className: String, methodName: String): String {
 
 object BulletOneData {
 
-    const val documentName = "TestFile"
+    const val DOC_NAME: String = "TestFile.java"
     val environmentList = listOf("env1")
 
-    val className: String = "org.digma.intellij.plugin.test.system.$documentName"
+    val className: String = "org.digma.intellij.plugin.test.system.TestFile"
     val methodName = "method1"
     val methodCodeObjectId: String = createDigmaCodeObjectId(className, methodName)
     val relatedSpansToMethod: List<String> = listOf(
@@ -93,7 +90,8 @@ object BulletOneData {
                 endpointsP75 = Duration(value = 25.0, unit = "ms", raw = 25),
                 median = Duration(value = 15.0, unit = "ms", raw = 15)
             )
-
+            
+            // Span Duration Insight
             val spanDurationsInsight = SpanDurationsInsight(
                 codeObjectId = methodWithCodeObjects.codeObjectId,
                 environment = environmentList[0],
@@ -117,9 +115,9 @@ object BulletOneData {
                 spanInfo = SpanInfo(
                     instrumentationLibrary = "instrumentationLibrary",
                     name = "mySpanName methodInsight3",
-                    spanCodeObjectId = "",
+                    spanCodeObjectId = methodWithCodeObjects.relatedSpansCodeObjectIds[0],
                     displayName = "methodInsight3",
-                    methodCodeObjectId = methodCodeObject3.codeObjectId,
+                    methodCodeObjectId = methodWithCodeObjects.codeObjectId,
                     kind = "my kind"
                 )
             )

@@ -125,6 +125,7 @@ public class DocumentInfoService {
 
     public void removeDocumentInfo(@NotNull PsiFile psiFile) {
         Log.log(LOGGER::debug, "Removing document for PsiFile {}", psiFile.getVirtualFile());
+        Log.test(LOGGER::info, "Removing document for PsiFile {}", psiFile.getVirtualFile());
         documents.remove(PsiUtils.psiFileToUri(psiFile));
     }
 

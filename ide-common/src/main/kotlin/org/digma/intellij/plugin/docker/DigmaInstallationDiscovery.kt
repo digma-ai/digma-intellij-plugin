@@ -167,7 +167,8 @@ private fun isLocalEngineRunning(): Boolean {
 
         if (processOutput.exitCode == 0) {
             val output = processOutput.stdout
-            return output.startsWith(projectName, true)
+            val firstLine = output.split(System.lineSeparator()).firstOrNull()
+            return firstLine?.startsWith(projectName, true) ?: false
         }
 
     } catch (ex: Exception) {
@@ -203,19 +204,6 @@ private fun isAnyEngineRunning(): Boolean {
         ErrorReporter.getInstance().reportError("DigmaInstallationDiscovery.getAnyEngineState", ex)
     }
     return false
-
-}
-
-
-private fun isNamesContains(node: JsonNode, valueToFind: String): Boolean {
-
-    if (node is ArrayNode) {
-        return node.any { jsonNode ->
-            jsonNode.asText().contains(valueToFind, true)
-        }
-    }
-
-    return node.asText().contains(valueToFind, true)
 
 }
 

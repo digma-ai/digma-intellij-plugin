@@ -40,10 +40,10 @@ internal fun discoverActualRunningEngine(hasConnection: Boolean): DigmaInstallat
 
     if (isLocalEngineRunning) {
         return DigmaInstallationStatus(true, DigmaInstallationType.localEngine)
-    } else if (isAnyEngineRunning) {
-        return DigmaInstallationStatus(true, DigmaInstallationType.dockerCompose)
     } else if (isExtensionRunning) {
         return DigmaInstallationStatus(true, DigmaInstallationType.dockerDesktop)
+    } else if (isAnyEngineRunning) {
+        return DigmaInstallationStatus(true, DigmaInstallationType.dockerCompose)
     } else {
         if (SettingsState.getInstance().state?.apiUrl != SettingsState.DEFAULT_API_URL) {
             return DigmaInstallationStatus(true, DigmaInstallationType.remote)
@@ -167,7 +167,7 @@ private fun isLocalEngineRunning(): Boolean {
 
         if (processOutput.exitCode == 0) {
             val output = processOutput.stdout
-            return output.contains(projectName, true)
+            return output.startsWith(projectName, true)
         }
 
     } catch (ex: Exception) {
@@ -277,7 +277,7 @@ private fun isExtensionRunning(): Boolean {
             val extensions: ArrayNode = JsonUtils.readTree(output) as ArrayNode
             val digmaExtension = extensions.find { jsonNode -> jsonNode.get("image").asText().contains("/digma-docker-extension") }
             if (digmaExtension != null) {
-                return digmaExtension.get("status")?.asText()?.contains("Running", true) ?: false
+                return digmaExtension.get("vm")?.get("status")?.asText()?.contains("Running", true) ?: false
             }
         }
 

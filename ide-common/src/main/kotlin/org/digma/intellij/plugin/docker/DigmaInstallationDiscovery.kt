@@ -39,7 +39,7 @@ internal fun discoverInstallationStatus(hasConnection: Boolean): DigmaInstallati
             if (SettingsState.getInstance().state?.apiUrl != SettingsState.DEFAULT_API_URL) {
                 return DigmaInstallationStatus(true, DigmaInstallationType.remote)
             } else {
-                return DigmaInstallationStatus(true, DigmaInstallationType.unknown)
+                return DigmaInstallationStatus(true, null)
             }
         }
     }
@@ -55,12 +55,12 @@ internal fun discoverInstallationStatus(hasConnection: Boolean): DigmaInstallati
             if (SettingsState.getInstance().state?.apiUrl != SettingsState.DEFAULT_API_URL) {
                 return DigmaInstallationStatus(false, DigmaInstallationType.remote)
             } else {
-                return DigmaInstallationStatus(false, DigmaInstallationType.unknown)
+                return DigmaInstallationStatus(false, null)
             }
         }
     }
 
-    return DigmaInstallationStatus(false, DigmaInstallationType.unknown)
+    return DigmaInstallationStatus(false, null)
 
 
 }

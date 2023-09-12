@@ -112,6 +112,8 @@ class DockerService {
     fun installEngine(project: Project, resultTask: Consumer<String>) {
         installationInProgress = true
 
+        PersistenceService.getInstance().setLocalEngineInstalled(true)
+
         val onCompleted = Consumer { _: String ->
             installationInProgress = false
         }.andThen(resultTask)
@@ -135,10 +137,6 @@ class DockerService {
                                     engine.up(project, downloader.composeFile, dockerComposeCmd)
                                 }
                             }
-                        }
-
-                        if (exitValue == "0") {
-                            PersistenceService.getInstance().setLocalEngineInstalled(true)
                         }
 
                         notifyResult(exitValue, onCompleted)

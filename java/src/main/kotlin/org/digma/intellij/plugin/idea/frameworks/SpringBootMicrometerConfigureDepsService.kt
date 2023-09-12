@@ -42,7 +42,6 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
 
         @JvmStatic
         fun getInstance(project: Project): SpringBootMicrometerConfigureDepsService {
-            logger.warn("Getting instance of ${SpringBootMicrometerConfigureDepsService::class.simpleName}")
             return project.getService(SpringBootMicrometerConfigureDepsService::class.java)
         }
 

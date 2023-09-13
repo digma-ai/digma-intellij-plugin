@@ -46,7 +46,6 @@ class QuarkusConfigureDepsPanel(
     }
 
     override fun reset() {
-        if (project.isDisposed) return
         checkStateAndUpdateUi()
     }
 

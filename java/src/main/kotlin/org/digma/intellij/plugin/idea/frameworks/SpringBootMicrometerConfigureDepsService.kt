@@ -10,7 +10,6 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.autoimport.ProjectRefreshAction
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
@@ -25,6 +24,8 @@ import org.digma.intellij.plugin.settings.SpringBootObservabilityMode
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import org.jetbrains.annotations.VisibleForTesting
 import java.time.LocalDateTime
+import java.util.Timer
+import java.util.TimerTask
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -93,6 +94,15 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
 
     private val blackoutDurationSeconds =
         TimeUnit.MINUTES.toSeconds(1) // production value
+//        TimeUnit.SECONDS.toSeconds(12) // use short period (few seconds) when debugging
+
+    private val delayMilliseconds = TimeUnit.SECONDS.toMillis(5)
+
+    private val periodMilliseconds =
+        TimeUnit.MINUTES.toMillis(1) // production value is 5 minutes
+//        TimeUnit.SECONDS.toMillis(12) // use short period (few seconds) when debugging
+
+    private val timer = Timer()
 
     var affectedPanel: DigmaResettablePanel? = null // late init
 
@@ -101,32 +111,27 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
     private var stateHasSpringBootModulesWithoutObservability = AtomicBoolean(false)
 
     init {
-        @Suppress("UnstableApiUsage")
-        DisposingScope(this).launch {
-            while (isActive) {
+        val fetchTask = object : TimerTask() {
+            override fun run() {
                 try {
-
-                    delay(TimeUnit.MINUTES.toMillis(1))
-                    if (isActive) {
-                        periodicAction()
-                    }
-
+                    periodicAction()
                 } catch (e: Exception) {
                     Log.warnWithException(logger, e, "Exception in periodicAction")
                     ErrorReporter.getInstance().reportError(project, "SpringBootMicrometerConfigureDepsService.periodicAction", e)
                 }
             }
         }
+
+        timer.schedule(
+            fetchTask, delayMilliseconds, periodMilliseconds
+        )
     }
 
     override fun dispose() {
-        //nothing to do , used as disposable parent
+        timer.cancel()
     }
 
-    private fun periodicAction() {
-
-        if (project.isDisposed) return
-
+    fun periodicAction() {
         val modulesDepsService = ModulesDepsService.getInstance(project)
 
         val springBootModulesWithoutObservability = modulesDepsService.getSpringBootModulesWithoutObservabilityDeps()

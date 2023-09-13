@@ -46,7 +46,6 @@ class SpringBootMicrometerConfigureDepsPanel(
     }
 
     override fun reset() {
-        if (project.isDisposed) return
         checkStateAndUpdateUi()
     }
 

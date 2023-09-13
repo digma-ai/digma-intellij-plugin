@@ -72,8 +72,7 @@ private fun isLocalEngineRunning(): Boolean {
 
         if (processOutput.exitCode == 0) {
             val output = processOutput.stdout
-            val firstLine = output.split(System.lineSeparator()).firstOrNull()
-            return firstLine?.replace("\"", "")?.startsWith(projectName, true) ?: false
+            return output.split(System.lineSeparator()).map { s: String -> s.replace("\"", "") }.any { s: String -> s.startsWith(projectName, true) }
         }
 
     } catch (ex: Exception) {
@@ -101,7 +100,7 @@ private fun isAnyEngineRunning(): Boolean {
 
         if (processOutput.exitCode == 0) {
             val output = processOutput.stdout
-            return output.contains("digma", true)
+            return output.split(System.lineSeparator()).map { s: String -> s.replace("\"", "") }.any { s: String -> s.contains("digma-", true) }
         }
 
     } catch (ex: Exception) {

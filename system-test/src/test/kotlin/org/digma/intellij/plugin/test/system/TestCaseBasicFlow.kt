@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.test.system
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.intellij.openapi.components.service
+import com.intellij.openapi.project.Project
 import com.intellij.psi.JavaRecursiveElementVisitor
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFile
@@ -20,9 +21,12 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse
+import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityEntrySpanPayload
+import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityGoToSpanRequest
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResponseEntry
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult
 import org.digma.intellij.plugin.recentactivity.RecentActivityService
+import org.digma.intellij.plugin.test.system.framework.DigmaAssertion
 import org.digma.intellij.plugin.test.system.framework.environmentList
 import org.digma.intellij.plugin.test.system.framework.getMethodReference
 import org.digma.intellij.plugin.test.system.framework.invokeMethod
@@ -34,6 +38,7 @@ import org.digma.intellij.plugin.test.system.framework.replaceCefBrowserWithSpy
 import org.digma.intellij.plugin.test.system.framework.replaceExecuteJSWithAssertionFunction
 import org.digma.intellij.plugin.test.system.framework.replaceJBCefWithExistingSpy
 import org.digma.intellij.plugin.ui.service.InsightsService
+import kotlin.test.assertNotEquals
 
 class TestCaseBasicFlow : DigmaTestCase() {
 
@@ -101,7 +106,7 @@ class TestCaseBasicFlow : DigmaTestCase() {
         val targetMethod = methods.find { it.name == "method1" }
 
         targetMethod?.let {
-            val offset = targetMethod.textOffset
+            val offset = it.textOffset
             editor.caretModel.moveToOffset(offset)
             val document = PsiDocumentManager.getInstance(project).getDocument(psiFile)
             document?.let {
@@ -110,17 +115,19 @@ class TestCaseBasicFlow : DigmaTestCase() {
                 EditorTestUtil.setCaretsAndSelection(editor, caretAndSelectionState)
             }
         }
-        readyToAssert()
+        readyToTest()
         waitFor(1000, "caret event in file ${psiFile.name}")
         PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
 
+
+        DigmaAssertion.assertFlag()
         // test that latest method under caret is method 1
-        val methodUnderCaret = project.getService(CurrentContextUpdater::class.java).latestMethodUnderCaret
+        var methodUnderCaret = project.getService(CurrentContextUpdater::class.java).latestMethodUnderCaret
 
         // asserting all the current information about method one and the method under caret
-        assertEquals(targetMethod?.name, methodUnderCaret.name)
-        assertEquals(targetMethod?.containingClass?.name, methodUnderCaret.className)
-        assertEquals(BulletOneData.methodCodeObjectId, methodUnderCaret.id)
+        DigmaAssertion.assertEquals(targetMethod?.name, methodUnderCaret.name)
+        DigmaAssertion.assertEquals(targetMethod?.containingClass?.name, methodUnderCaret.className)
+        DigmaAssertion.assertEquals(BulletOneData.methodCodeObjectId, methodUnderCaret.id)
 
         //see that the insights of method1 are present
 
@@ -129,23 +136,23 @@ class TestCaseBasicFlow : DigmaTestCase() {
         val cachedInsights = project.service<DocumentInfoService>().getCachedMethodInsights(methodInfoOfMethodUnderCaret!!)
 
         cachedInsights.forEach { insight ->
-            assertEquals(BulletOneData.methodCodeObjectId, insight.codeObjectId)
-            assertEquals(BulletOneData.environmentList[0], insight.environment)
+            DigmaAssertion.assertEquals(BulletOneData.methodCodeObjectId, insight.codeObjectId)
+            DigmaAssertion.assertEquals(BulletOneData.environmentList[0], insight.environment)
         }
 
 
         // see that recentActivities are present from env1
         val latestActivityResult = getRecentActivityResult(recentActivityService)
         latestActivityResult.entries.forEach {
-            assertEquals(BulletOneData.environmentList[0], it.environment)
+            DigmaAssertion.assertEquals(BulletOneData.environmentList[0], it.environment)
             it.slimAggregatedInsights.forEach { insight ->
-                TestCase.assertTrue(insight.codeObjectIds.contains(BulletOneData.methodCodeObjectId))
+                DigmaAssertion.assertTrue(insight.codeObjectIds.contains(BulletOneData.methodCodeObjectId))
             }
             Log.test(logger::info, "recentActivityEntry: {}", it)
         }
 
         // Bullet Two
-        notReadyToAssert()
+        notReadyToTest()
 
         // bullet 2 - Given new trace from new environment (Env2) arrived.
         // mock new recentActivities from env 2 in analyticsProvider
@@ -158,42 +165,68 @@ class TestCaseBasicFlow : DigmaTestCase() {
         waitFor(1000, "new environments to be fetched")
         // wait for time event ??
         // call recentActivityService.fetchRecentActivities()
-        readyToAssert()
+        readyToTest()
         // force fetching of recent activities
         val fetchRecentActivitiesMethodRef = getMethodReference(recentActivityService, "fetchRecentActivities")
         invokeMethod(recentActivityService, fetchRecentActivitiesMethodRef)
 
         waitFor(1000, "recent activities to be fetched")
         PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
+
+        DigmaAssertion.assertFlag()
+
         // Then I should see new activities from Env2 in the recent activity view.
         val recentActivityResultFromEnv2 = getRecentActivityResult(recentActivityService)
         // assert that the new recentActivities are from env2
-        assertTrue(recentActivityResultFromEnv2.entries.any { it.environment == BulletTwoData.environmentList[1] })
-
-
+        DigmaAssertion.assertTrue(recentActivityResultFromEnv2.entries.any { it.environment == BulletTwoData.environmentList[1] })
+        DigmaAssertion.assertFlag()
 
         // bullet 3 -
-
         // When I click on the link (span_endpoint1) in the recent activity
         // Then the selected environment in the main panel should be changed from Env1 to Env2
         // and I should see that the scope has been changed to span_endpoint1 and 
         // span_endpoint1 insights (all insights**) are visible
+        notReadyToTest()
 
-        // call processRecentActivityGoToSpan~~~~
+        mockGetEnvironments(mockAnalyticsProvider, BulletThreeData.environmentList)
+        mockGetInsightsOfMethods(mockAnalyticsProvider, BulletThreeData.expectedInsightsOfMethods) // those insights are for env2
+        mockGetRecentActivity(mockAnalyticsProvider, BulletThreeData.expectedRecentActivityResult)
+        
+        
         // check the spy --> should push some json to the browser - should see that env2 is in the json
-
+        replaceExecuteJSWithAssertionFunction(cef, this::assertJsonForBulletThree)
+        
+        readyToTest()        
+        // call processRecentActivityGoToSpan -- this is actually the trigger to open the recent activity insights in the side panel. also do the navigation in the code to the span
+        val goToSpanMethodRef = getMethodReference(recentActivityService, "processRecentActivityGoToSpanRequest", RecentActivityEntrySpanPayload::class.java, Project::class.java)
+        invokeMethod(recentActivityService, goToSpanMethodRef, BulletThreeData.goToSpanRequestPayload, project)
+        
+        waitFor(2000, "go to span to be processed")
+        PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
+        
+        DigmaAssertion.assertFlag()
+        
+        
+        
         // check that the environment is changed to env2
         // either use the environment changed event or do to analyticsService.environment.getCurrent()
+        TestCase.assertEquals(BulletThreeData.environmentList[1], analyticsService.environment.getCurrent())
+        // assert that the caret moved to the span in the code
 
-        // test that the environment is changed to env2
+        methodUnderCaret = project.getService(CurrentContextUpdater::class.java).latestMethodUnderCaret
+        TestCase.assertEquals(methodUnderCaret.id, BulletThreeData.goToSpanRequestPayload.span.methodCodeObjectId)
+        TestCase.assertEquals(targetMethod?.name, methodUnderCaret.name)
 
         //wait for 500 ms
 
+        notReadyToTest()
         // bullet 4 -
         // When I click on span_2 link on insight1
         // Then I should see the scoped changed to span_2 and insights of span_2 are shown.
+        
+        
 
-        // call processInsightGoToSpan~~~~ --> to go the  span that is related to the insight1
+        // call processInsightGoToSpan~~~~ --> to go the  span that is related to the insight1 - goToInsight
         // check the spy --> should push some json to the browser - should see that span_2 is in the json
 
         // bullet 5 - 
@@ -207,45 +240,11 @@ class TestCaseBasicFlow : DigmaTestCase() {
 
     }
 
-    private fun assertJsonBrowserForBulletTwo(json: String) {
-        Log.test(logger::info, "responseToBrowser: {}", json)
-        Log.test(logger::info, "second replacement of executeJS")
-        val mapper = ObjectMapper()
-        val responseToBrowser = mapper.readTree(json)
-        val action = responseToBrowser.get("action").asText()
-        Log.test(logger::info, "action: {}", action)
-        val payload = responseToBrowser.get("payload")
-        Log.test(logger::info, "payload: {}", payload)
-
-        // assertion on response
-        assertEquals("RECENT_ACTIVITY/SET_DATA", action)
-        assertEquals("digma", responseToBrowser.get("type").asText())
-
-        // assertion  on payload
-        val envs = payload.get("environments").asIterable()
-        envs.map { it.asText() }.forEachIndexed { index, env ->
-            assertEquals(BulletTwoData.environmentList[index], env)
-        }
-        
-        val entries = mapper.readValue(payload.get("entries").toString(), Array<RecentActivityResponseEntry>::class.java)
-        entries.forEachIndexed { index, recentActivityResponseEntry -> 
-            TestCase.assertEquals(BulletTwoData.expectedRecentActivityResult.entries[index].environment, recentActivityResponseEntry.environment)
-            TestCase.assertEquals(BulletTwoData.expectedRecentActivityResult.entries[index].firstEntrySpan.methodCodeObjectId, recentActivityResponseEntry.firstEntrySpan.methodCodeObjectId)
-            TestCase.assertEquals(BulletTwoData.expectedRecentActivityResult.entries[index].firstEntrySpan.scopeId, recentActivityResponseEntry.firstEntrySpan.scopeId)
-        }
-    }
-
-    private fun getRecentActivityResult(recentActivityService: RecentActivityService): RecentActivityResult {
-        val latestActivityProperty = recentActivityService.javaClass.getDeclaredField("latestActivityResult")
-        latestActivityProperty.isAccessible = true
-        return latestActivityProperty.get(recentActivityService) as RecentActivityResult
-    }
-
     private fun assertJsonBrowserForBulletOne(json: String) {
         if (!readyToAssert) {
             return
         }
-
+        Log.test(logger::info, "assertion for bullet 1")
         val mapper = ObjectMapper()
         val responseToBrowser = mapper.readTree(json)
         Log.test(logger::info, "responseToBrowser: {}", json)
@@ -259,27 +258,85 @@ class TestCaseBasicFlow : DigmaTestCase() {
         Log.test(logger::info, "env: {}", env)
 
         // assertion on response
-        assertEquals("INSIGHTS/SET_DATA", action)
-        assertEquals("digma", responseToBrowser.get("type").asText())
+        DigmaAssertion.assertEquals("INSIGHTS/SET_DATA", action)
+        DigmaAssertion.assertEquals("digma", responseToBrowser.get("type").asText())
 
         // assertion  on payload
-        assertEquals(BulletOneData.methodCodeObjectId, assetId)
-        assertEquals(BulletOneData.environmentList[0], env)
+        DigmaAssertion.assertEquals(BulletOneData.methodCodeObjectId, assetId)
+        DigmaAssertion.assertEquals(BulletOneData.environmentList[0], env)
 
         val insightsOfPayload = payload.get("insights")
         val insights: Array<CodeObjectInsight> = mapper.readValue(insightsOfPayload.toString(), Array<CodeObjectInsight>::class.java)
         Log.test(logger::info, "insights: {}", insights)
         insights.forEachIndexed { index, insight ->
-            assertEquals(BulletOneData.expectedInsightsOfMethods.methodsWithInsights[0].insights[index].environment, insight.environment)
-            assertEquals(BulletOneData.expectedInsightsOfMethods.methodsWithInsights[0].insights[index].codeObjectId, insight.codeObjectId)
+            DigmaAssertion.assertEquals(
+                BulletOneData.expectedInsightsOfMethods.methodsWithInsights[0].insights[index].environment,
+                insight.environment
+            )
+            DigmaAssertion.assertEquals(
+                BulletOneData.expectedInsightsOfMethods.methodsWithInsights[0].insights[index].codeObjectId,
+                insight.codeObjectId
+            )
         }
 
         // assert that we are in the correct environment
-        assertEquals(BulletOneData.environmentList[0], analyticsService.environment.getCurrent())
-        //assertRecentActivities
-        val recentActivityService = project.getService(RecentActivityService::class.java)
+        DigmaAssertion.assertEquals(BulletOneData.environmentList[0], analyticsService.environment.getCurrent())
+    }
 
-        // end bullet one
+    private fun assertJsonBrowserForBulletTwo(json: String) {
+        if (!readyToAssert) {
+            return
+        }
+        Log.test(logger::info, "assertion for bullet 2")
+        val mapper = ObjectMapper()
+        val responseToBrowser = mapper.readTree(json)
+        val action = responseToBrowser.get("action").asText()
+        val payload = responseToBrowser.get("payload")
+
+        // assertion on response
+        DigmaAssertion.assertEquals("RECENT_ACTIVITY/SET_DATA", action)
+        DigmaAssertion.assertEquals("digma", responseToBrowser.get("type").asText())
+
+        // assertion  on payload
+        val envs = payload.get("environments").asIterable()
+        envs.map { it.asText() }.forEachIndexed { index, env ->
+            DigmaAssertion.assertEquals(BulletTwoData.environmentList[index], env)
+        }
+
+        val entries = mapper.readValue(payload.get("entries").toString(), Array<RecentActivityResponseEntry>::class.java)
+        entries.forEachIndexed { index, recentActivityResponseEntry ->
+            DigmaAssertion.assertEquals(
+                BulletTwoData.expectedRecentActivityResult.entries[index].environment,
+                recentActivityResponseEntry.environment
+            )
+            DigmaAssertion.assertEquals(
+                BulletTwoData.expectedRecentActivityResult.entries[index].firstEntrySpan.methodCodeObjectId,
+                recentActivityResponseEntry.firstEntrySpan.methodCodeObjectId
+            )
+            DigmaAssertion.assertEquals(
+                BulletTwoData.expectedRecentActivityResult.entries[index].firstEntrySpan.scopeId,
+                recentActivityResponseEntry.firstEntrySpan.scopeId
+            )
+        }
+    }
+
+    private fun assertJsonForBulletThree(json: String) {
+        if (!readyToAssert) {
+            return
+        }
+        val mapper = ObjectMapper()
+        val responseToBrowser = mapper.readTree(json)
+        Log.test(logger::info, "assertion for bullet 3")
+        Log.test(logger::info, "Request Data: {}", responseToBrowser.toString())
+        Log.test(logger::info, "payload: {}", responseToBrowser.get("payload"))
+        
+        // assert that the scope has changed to the new scope
+    }
+
+    private fun getRecentActivityResult(recentActivityService: RecentActivityService): RecentActivityResult {
+        val latestActivityProperty = recentActivityService.javaClass.getDeclaredField("latestActivityResult")
+        latestActivityProperty.isAccessible = true
+        return latestActivityProperty.get(recentActivityService) as RecentActivityResult
     }
 
     fun testInsightAndActivityFlow() {

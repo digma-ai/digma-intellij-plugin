@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.166] - 2023-09-11
+## [2.0.167] - 2023-09-13
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1268
+- Update Assets UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1269
+- more details in error events by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1278
+
+## 2.0.166 - 2023-09-11
 - Add local environment Closes #1253 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1263
 - Minimize long running read access Closes #1153 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1266
 

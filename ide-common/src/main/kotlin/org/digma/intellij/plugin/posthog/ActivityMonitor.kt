@@ -184,10 +184,26 @@ class ActivityMonitor(project: Project) : Disposable {
 
     fun registerError(exception: Throwable, message: String) {
 
+        val osType = System.getProperty("os.name")
+        val ideInfo = ApplicationInfo.getInstance()
+        val ideName = ideInfo.versionName
+        val ideVersion = ideInfo.fullVersion
+        val ideBuildNumber = ideInfo.build.asString()
+        val pluginVersion = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
+
         //Don't call directly, use ErrorReporter.reportError
 
         val stringWriter = StringWriter()
         exception.printStackTrace(PrintWriter(stringWriter))
+
+        var exc: Throwable? = exception
+        var exceptionMessage = exc?.message
+        while (exceptionMessage.isNullOrEmpty() && exc != null) {
+            exc = exc.cause
+            exc?.let {
+                exceptionMessage = it.message
+            }
+        }
 
         capture(
             "error",
@@ -196,8 +212,14 @@ class ActivityMonitor(project: Project) : Disposable {
                 "action" to "unknown",
                 "message" to message,
                 "exception.type" to exception.javaClass.name,
-                "exception.message" to exception.message.toString(),
-                "exception.stack-trace" to stringWriter.toString()
+                "exception.message" to exceptionMessage.toString(),
+                "exception.stack-trace" to stringWriter.toString(),
+                "os.type" to osType,
+                "ide.name" to ideName,
+                "ide.version" to ideVersion,
+                "ide.build" to ideBuildNumber,
+                "plugin.version" to pluginVersion,
+                "user.type" to if (isDevUser) "internal" else "external"
             )
         )
     }

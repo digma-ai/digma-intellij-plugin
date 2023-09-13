@@ -118,7 +118,7 @@ class ErrorReporter {
 private object MyCache {
     private val cache = Caffeine.newBuilder()
         .maximumSize(1000)
-        .expireAfterAccess(10, TimeUnit.MINUTES)
+        .expireAfterAccess(100, TimeUnit.MINUTES)
         .build<String, AtomicInteger>()
 
     fun getOrCreate(hash: Int, t: Throwable, message: String): AtomicInteger {

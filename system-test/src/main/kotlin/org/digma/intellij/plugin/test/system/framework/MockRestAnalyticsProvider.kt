@@ -13,6 +13,8 @@ import org.digma.intellij.plugin.model.rest.insights.Duration
 import org.digma.intellij.plugin.model.rest.insights.InsightStatus
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsRequest
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse
+import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanRequest
+import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanResponse
 import org.digma.intellij.plugin.model.rest.insights.MethodWithInsightStatus
 import org.digma.intellij.plugin.model.rest.livedata.DurationData
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData
@@ -97,6 +99,14 @@ fun mockGetInsightsOfMethods(mock: RestAnalyticsProvider, mockResponse: Insights
     `when`(mock.getInsightsOfMethods(isA(InsightsOfMethodsRequest::class.java))).thenAnswer {
         val currEnv = (it.arguments[0] as InsightsOfMethodsRequest).environment
         return@thenAnswer mockResponse
+    }
+}
+
+fun mockGetInsightOfSingeSpan(mock: RestAnalyticsProvider, response: InsightsOfSingleSpanResponse) {
+    `when`(mock.getInsightsForSingleSpan(isA(InsightsOfSingleSpanRequest::class.java))).thenAnswer {
+//        Log.test(logger::info, "mock getInsightOfSingeSpan")
+        val currEnv = (it.arguments[0] as InsightsOfSingleSpanRequest).environment
+        return@thenAnswer response
     }
 }
 

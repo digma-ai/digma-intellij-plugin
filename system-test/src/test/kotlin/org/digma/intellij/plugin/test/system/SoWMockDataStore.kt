@@ -4,6 +4,7 @@ import com.intellij.openapi.diagnostic.Logger
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectDecorator
 import org.digma.intellij.plugin.model.rest.insights.Duration
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse
+import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanResponse
 import org.digma.intellij.plugin.model.rest.insights.MethodWithCodeObjects
 import org.digma.intellij.plugin.model.rest.insights.MethodWithInsights
 import org.digma.intellij.plugin.model.rest.insights.ShortDisplayInfo
@@ -450,4 +451,49 @@ object BulletFourData {
     val methodCodeObjectId: String = BulletTwoData.methodCodeObjectId
     val relatedSpansToMethod: List<String> = BulletTwoData.relatedSpansToMethod
     val relatedEndPointToMethod: List<String> = BulletTwoData.relatedEndPointToMethod
+
+
+    val expectedInsightOfSingleSpan: InsightsOfSingleSpanResponse
+        get() {
+            val methodName = "relatedSpan1"
+            val codeObjectId = relatedSpansToMethod[0]
+            val spanInfo = SpanInfo(
+                instrumentationLibrary = "instrumentationLibrary",
+                name = "Span1 - related",
+                spanCodeObjectId = relatedSpansToMethod[0],
+                displayName = "Span 1",
+                methodCodeObjectId = relatedSpansToMethod[0],
+                kind = "my kind"
+            )
+            val durationInsight = SpanDurationsInsight(
+                codeObjectId = codeObjectId,
+                environment = BulletThreeData.environmentList[0],
+                scope = "scope2",
+                importance = 1,
+                actualStartTime = null,
+                customStartTime = null,
+                prefixedCodeObjectId = null,
+                shortDisplayInfo = ShortDisplayInfo(
+                    title = "Span duration title for $methodName",
+                    targetDisplayName = "target $methodName",
+                    subtitle = "subtitle for $methodName",
+                    description = "description for $methodName"
+                ),
+                decorators = listOf(
+                    CodeObjectDecorator(
+                        title = "Decorator - Span Duration of $methodName",
+                        description = "Decorator 1 Span Duration of  $methodName"
+                    ),
+                ),
+                spanInfo = spanInfo
+            )
+
+
+
+            return InsightsOfSingleSpanResponse(
+                spanCodeObjectId = relatedSpansToMethod[0],
+                spanInfo = spanInfo,
+                insights = listOf(durationInsight)
+            )
+        }
 }

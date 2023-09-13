@@ -13,6 +13,7 @@ import com.intellij.testFramework.PlatformTestUtil
 import junit.framework.TestCase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.editor.CurrentContextUpdater
@@ -22,7 +23,6 @@ import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityEntrySpanPayload
-import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityGoToSpanRequest
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResponseEntry
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult
 import org.digma.intellij.plugin.recentactivity.RecentActivityService
@@ -31,6 +31,7 @@ import org.digma.intellij.plugin.test.system.framework.environmentList
 import org.digma.intellij.plugin.test.system.framework.getMethodReference
 import org.digma.intellij.plugin.test.system.framework.invokeMethod
 import org.digma.intellij.plugin.test.system.framework.mockGetEnvironments
+import org.digma.intellij.plugin.test.system.framework.mockGetInsightOfSingeSpan
 import org.digma.intellij.plugin.test.system.framework.mockGetInsightsOfMethods
 import org.digma.intellij.plugin.test.system.framework.mockGetRecentActivity
 import org.digma.intellij.plugin.test.system.framework.prepareDefaultSpyCalls
@@ -38,7 +39,6 @@ import org.digma.intellij.plugin.test.system.framework.replaceCefBrowserWithSpy
 import org.digma.intellij.plugin.test.system.framework.replaceExecuteJSWithAssertionFunction
 import org.digma.intellij.plugin.test.system.framework.replaceJBCefWithExistingSpy
 import org.digma.intellij.plugin.ui.service.InsightsService
-import kotlin.test.assertNotEquals
 
 class TestCaseBasicFlow : DigmaTestCase() {
 
@@ -54,13 +54,13 @@ class TestCaseBasicFlow : DigmaTestCase() {
     fun testSowFlow() {
 
         //prepare the browser for mocking of InsightsService
-        val (jbCef, cef) = replaceCefBrowserWithSpy(
+        val (jbCef, insightCef) = replaceCefBrowserWithSpy(
             containingService = project.service<InsightsService>(),
             messageHandlerFieldName = "messageHandler",
             messageHandlerType = InsightsMessageRouterHandler::class.java,
             jbBrowserFieldName = "jbCefBrowser"
         )
-        prepareDefaultSpyCalls(jbCef, cef)
+        prepareDefaultSpyCalls(jbCef, insightCef)
 
         // prepare the browser for mocking of RecentActivityService
         replaceJBCefWithExistingSpy(recentActivityService, "jbCefBrowser", jbCef)
@@ -89,7 +89,7 @@ class TestCaseBasicFlow : DigmaTestCase() {
         invokeMethod(recentActivityService, processRecentActivityInitMethodRef)
 
         // prepare assertion in the browser for the insights that will be pushed of the method under caret
-        replaceExecuteJSWithAssertionFunction(cef, this::assertJsonBrowserForBulletOne)
+        replaceExecuteJSWithAssertionFunction(insightCef, this::assertJsonBrowserForBulletOne)
 
         waitFor(2000, "browser spy to be ready")
         val psiFile = myFixture.configureByFile(BulletOneData.DOC_NAME)
@@ -160,7 +160,7 @@ class TestCaseBasicFlow : DigmaTestCase() {
         mockGetRecentActivity(mockAnalyticsProvider, BulletTwoData.expectedRecentActivityResult)
 
         // use browser spy to verify recent activities from env2 - I don't think that there is a browser push for recent activities
-        replaceExecuteJSWithAssertionFunction(cef, this::assertJsonBrowserForBulletTwo)
+        replaceExecuteJSWithAssertionFunction(insightCef, this::assertJsonBrowserForBulletTwo)
 
         waitFor(1000, "new environments to be fetched")
         // wait for time event ??
@@ -191,23 +191,27 @@ class TestCaseBasicFlow : DigmaTestCase() {
         mockGetEnvironments(mockAnalyticsProvider, BulletThreeData.environmentList)
         mockGetInsightsOfMethods(mockAnalyticsProvider, BulletThreeData.expectedInsightsOfMethods) // those insights are for env2
         mockGetRecentActivity(mockAnalyticsProvider, BulletThreeData.expectedRecentActivityResult)
-        
-        
+
+
         // check the spy --> should push some json to the browser - should see that env2 is in the json
-        replaceExecuteJSWithAssertionFunction(cef, this::assertJsonForBulletThree)
-        
-        readyToTest()        
+        replaceExecuteJSWithAssertionFunction(insightCef, this::assertJsonForBulletThree)
+
+        readyToTest()
         // call processRecentActivityGoToSpan -- this is actually the trigger to open the recent activity insights in the side panel. also do the navigation in the code to the span
-        val goToSpanMethodRef = getMethodReference(recentActivityService, "processRecentActivityGoToSpanRequest", RecentActivityEntrySpanPayload::class.java, Project::class.java)
+        val goToSpanMethodRef = getMethodReference(
+            recentActivityService,
+            "processRecentActivityGoToSpanRequest",
+            RecentActivityEntrySpanPayload::class.java,
+            Project::class.java
+        )
         invokeMethod(recentActivityService, goToSpanMethodRef, BulletThreeData.goToSpanRequestPayload, project)
-        
+
         waitFor(2000, "go to span to be processed")
         PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
-        
+
         DigmaAssertion.assertFlag()
-        
-        
-        
+
+
         // check that the environment is changed to env2
         // either use the environment changed event or do to analyticsService.environment.getCurrent()
         TestCase.assertEquals(BulletThreeData.environmentList[1], analyticsService.environment.getCurrent())
@@ -223,15 +227,24 @@ class TestCaseBasicFlow : DigmaTestCase() {
         // bullet 4 -
         // When I click on span_2 link on insight1
         // Then I should see the scoped changed to span_2 and insights of span_2 are shown.
-        
-        
+        mockGetInsightOfSingeSpan(mockAnalyticsProvider, BulletFourData.expectedInsightOfSingleSpan) // those insights are for both envs
 
-        // call processInsightGoToSpan~~~~ --> to go the  span that is related to the insight1 - goToInsight
+
         // check the spy --> should push some json to the browser - should see that span_2 is in the json
+        replaceExecuteJSWithAssertionFunction(insightCef, this::assertJsonForBulletFour)
 
+        readyToTest()
+        // call processInsightGoToSpan~~~~ --> to go the  span that is related to the insight1 - goToInsight
+        project.getService(InsightsService::class.java).showInsight(BulletFourData.relatedSpansToMethod[0]) // another span to show insights for
+
+        waitFor(1000, "insights to be shown")
+        PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
+        DigmaAssertion.assertFlag()
+
+        notReadyToTest()
         // bullet 5 - 
         // When I click target icon (go to code)
-        // Then I should be navigated to document#2 and the cursor should be navigated to the span location.
+        // Then I should be navigated to document#2 and the caret should be navigated to the span location.
 
         // call processRecentActivityGoToSpanRequest
         // check that the document is changed to document2 in the editor
@@ -240,6 +253,13 @@ class TestCaseBasicFlow : DigmaTestCase() {
 
     }
 
+
+    /*
+    todo: both insight handler and recent activity service use the same mock of cef browser because the 
+     Cef browser is not always initialized in the recent activity service.
+     maybe we should just create the Cef browser ourself and 
+     set it in the recent activity service instead of using the same mock Cef
+     */
     private fun assertJsonBrowserForBulletOne(json: String) {
         if (!readyToAssert) {
             return
@@ -329,8 +349,41 @@ class TestCaseBasicFlow : DigmaTestCase() {
         Log.test(logger::info, "assertion for bullet 3")
         Log.test(logger::info, "Request Data: {}", responseToBrowser.toString())
         Log.test(logger::info, "payload: {}", responseToBrowser.get("payload"))
-        
+
         // assert that the scope has changed to the new scope
+
+
+        Log.test(logger::info, "Finished assertion for bullet 4 in the browser")
+    }
+
+    private fun assertJsonForBulletFour(json: String) {
+        if (!readyToAssert) {
+            return
+        }
+        Log.test(logger::info, "assertion for bullet 4")
+        Log.test(logger::info, "Request Data: {}", json)
+        val mapper = ObjectMapper()
+        val responseToBrowser = mapper.readTree(json)
+
+        val payload = responseToBrowser.get("payload")
+
+        // assertion on response
+        DigmaAssertion.assertEquals("INSIGHTS/SET_DATA", responseToBrowser.get("action").asText())
+        DigmaAssertion.assertEquals("digma", responseToBrowser.get("type").asText())
+
+        // assertion  on payload
+        val insights = mapper.readValue(payload.get("insights").toString(), Array<CodeObjectInsight>::class.java)
+        insights.forEachIndexed { index, insight ->
+            DigmaAssertion.assertEquals(
+                BulletFourData.expectedInsightOfSingleSpan.insights[index].environment,
+                insight.environment
+            )
+            DigmaAssertion.assertEquals(
+                BulletFourData.expectedInsightOfSingleSpan.insights[index].codeObjectId,
+                insight.codeObjectId
+            )
+        }
+        Log.test(logger::info, "Finished assertion for bullet 4 in the browser")
     }
 
     private fun getRecentActivityResult(recentActivityService: RecentActivityService): RecentActivityResult {

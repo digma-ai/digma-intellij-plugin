@@ -15,7 +15,6 @@ fun <T, H> replaceCefBrowserWithSpy(
     messageHandlerType: Class<H>,
     jbBrowserFieldName: String,
 ): Pair<JBCefBrowser, CefBrowser> {
-    
 
 
     //getting the handler field and setting it accessible to be able to get the handler
@@ -61,12 +60,17 @@ fun <T, H> replaceCefBrowserWithSpy(
 
 }
 
-@Suppress("UNCHECKED_CAST")
+
+/*
+todo: 
+    Refactor this to create a new browser and insert it into the service.
+    maybe we don't need to take the exising browser from the service and spy on it, just insert the Cef instead 
+ */
 fun <T> replaceJBCefWithExistingSpy(
     containingService: T,
     jbBrowserFieldName: String,
     jbBrowserSpy: JBCefBrowser,
-){
+) {
 
     // getting the browser field and setting it accessible to be able to get the browser
     val jbBrowserField: Field = try {
@@ -78,6 +82,7 @@ fun <T> replaceJBCefWithExistingSpy(
     jbBrowserField.isAccessible = true
     jbBrowserField.set(containingService, jbBrowserSpy)
 }
+
 
 fun prepareDefaultSpyCalls(jbCaf: JBCefBrowser, caf: CefBrowser) {
 

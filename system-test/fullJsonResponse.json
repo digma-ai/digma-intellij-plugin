@@ -1,4 +1,4 @@
-{
+[{
   "type": "digma",
   "action": "INSIGHTS/SET_DATA",
   "payload": {
@@ -110,4 +110,113 @@
     "canInstrumentMethod": false,
     "needsObservabilityFix": false
   }
-}
+},
+
+
+{
+  "insights": [
+    {
+      "type": "SlowEndpoint",
+      "codeObjectId": "org.digma.intellij.plugin.test.system.TestFile$_$method1",
+      "environment": "env1",
+      "scope": "scope1",
+      "importance": 1,
+      "decorators": [
+        {
+          "title": "decorator title of method method1",
+          "description": "decorator description of method method1"
+        }
+      ],
+      "actualStartTime": null,
+      "customStartTime": null,
+      "prefixedCodeObjectId": null,
+      "isRecalculateEnabled": false,
+      "shortDisplayInfo": {
+        "title": "Slow endpoint title for method1",
+        "targetDisplayName": "target method1",
+        "subtitle": "subtitle for method1",
+        "description": "desctioption for method1"
+      },
+      "spanInfo": {
+        "instrumentationLibrary": "instrumentationLibrary",
+        "name": "span of Method method1",
+        "spanCodeObjectId": "org.digma.intellij.plugin.test.system.TestFile$_$relatedSpan1",
+        "displayName": "span display name of method method1",
+        "methodCodeObjectId": "org.digma.intellij.plugin.test.system.TestFile$_$method1",
+        "kind": "Slow Endpoint Kind"
+      },
+      "route": "route/subRoute/endpoint/id",
+      "serviceName": "test ServiceName",
+      "endpointsMedian": {
+        "value": 15.0,
+        "unit": "ms",
+        "raw": 15
+      },
+      "endpointsMedianOfMedians": {
+        "value": 20.0,
+        "unit": "ms",
+        "raw": 20
+      },
+      "endpointsP75": {
+        "value": 25.0,
+        "unit": "ms",
+        "raw": 25
+      },
+      "median": {
+        "value": 15.0,
+        "unit": "ms",
+        "raw": 15
+      },
+      "spanDisplayName": "span display name of method method1",
+      "typeMapped": true
+    },
+    {
+      "type": "SpanDurations",
+      "codeObjectId": "org.digma.intellij.plugin.test.system.TestFile$_$method1",
+      "environment": "env1",
+      "scope": "scope1",
+      "importance": 1,
+      "decorators": [
+        {
+          "title": "Decorator - Span Duration of method1",
+          "description": "Decorator 1 Span Duration of  method1"
+        }
+      ],
+      "actualStartTime": null,
+      "customStartTime": null,
+      "prefixedCodeObjectId": null,
+      "shortDisplayInfo": {
+        "title": "Span duration title for method1",
+        "targetDisplayName": "target method1",
+        "subtitle": "subtitle for method1",
+        "description": "desctioption for method1"
+      },
+      "spanInfo": {
+        "instrumentationLibrary": "instrumentationLibrary",
+        "name": "mySpanName methodInsight3",
+        "spanCodeObjectId": "org.digma.intellij.plugin.test.system.TestFile$_$relatedSpan1",
+        "displayName": "methodInsight3",
+        "methodCodeObjectId": "org.digma.intellij.plugin.test.system.TestFile$_$method1",
+        "kind": "my kind"
+      },
+      "spanDisplayName": "methodInsight3",
+      "recalculateEnabled": true,
+      "typeMapped": true,
+      "async": false,
+      "isRecalculateEnabled": true,
+      "percentiles": [],
+      "lastSpanInstanceInfo": null,
+      "isAsync": false
+    }
+  ],
+  "spans": [],
+  "assetId": "org.digma.intellij.plugin.test.system.TestFile$_$method1",
+  "serviceName": "",
+  "environment": "env2",
+  "insightsStatus": "Default",
+  "viewMode": "INSIGHTS",
+  "methods": [],
+  "hasMissingDependency": true,
+  "canInstrumentMethod": false,
+  "needsObservabilityFix": false
+}]

@@ -40,11 +40,11 @@ open class DigmaTestCase : LightJavaCodeInsightFixtureTestCase() {
         private set
 
 
-    protected fun readyToAssert() {
+    protected fun readyToTest() {
         readyToAssert = true
     }
 
-    protected fun notReadyToAssert() {
+    protected fun notReadyToTest() {
         readyToAssert = false
     }
 

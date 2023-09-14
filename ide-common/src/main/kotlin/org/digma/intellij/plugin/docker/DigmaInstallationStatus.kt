@@ -1,16 +1,16 @@
 package org.digma.intellij.plugin.docker
 
-import com.fasterxml.jackson.annotation.JsonProperty
-
 
 enum class DigmaInstallationType {
-    localEngine, dockerCompose, dockerDesktop, remote
+    localEngine, dockerCompose, dockerDesktop
 }
 
 
 data class DigmaInstallationStatus(
-    @get:JsonProperty("isRunning")
-    @param:JsonProperty("isRunning")
-    val isRunning: Boolean,
-    val type: DigmaInstallationType?,
+    val connection: ConnectionStatus,
+    val runningDigmaInstances: List<DigmaInstallationType>,
 )
+
+enum class ConnectionType { local, remote }
+
+data class ConnectionStatus(val type: ConnectionType?, val status: Boolean)

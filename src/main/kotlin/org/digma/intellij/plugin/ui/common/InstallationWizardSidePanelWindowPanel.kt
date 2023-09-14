@@ -64,6 +64,7 @@ import org.digma.intellij.plugin.ui.settings.SettingsChangeListener
 import org.digma.intellij.plugin.ui.settings.Theme
 import org.digma.intellij.plugin.wizard.InstallationWizardService
 import java.awt.BorderLayout
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.swing.JPanel
 
 private const val RESOURCE_FOLDER_NAME = "installationwizard"
@@ -83,6 +84,9 @@ private val logger: Logger =
 
 
 fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipInstallationStep: Boolean): DisposablePanel? {
+
+
+    val localEngineOperationRunning = AtomicBoolean(false)
 
     if (!JBCefApp.isSupported()) {
         // Fallback to an alternative browser-less solution
@@ -218,6 +222,9 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                 JCefBrowserUtil.postJSMessage(requestMessage, jbCefBrowser)
             }
             if (JCefMessagesUtils.INSTALLATION_WIZARD_INSTALL_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
+
+                localEngineOperationRunning.set(true)
+
                 service<DockerService>().installEngine(project) { exitValue ->
 
                     if (exitValue == DockerService.NO_DOCKER_COMPOSE_COMMAND){
@@ -262,7 +269,6 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                             )
                             sendIsDigmaEngineInstalled(true, jbCefBrowser)
                             sendIsDigmaEngineRunning(true, jbCefBrowser)
-                            updateDigmaEngineStatus(project, jbCefBrowser.cefBrowser)
 
                             service<AppNotificationCenter>().showInstallationFinishedNotification(project)
                         } else {
@@ -296,9 +302,14 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
 
                         }
                     }
+
+                    updateDigmaEngineStatus(project, jbCefBrowser.cefBrowser)
+                    localEngineOperationRunning.set(false)
+
                 }
             }
             if (JCefMessagesUtils.INSTALLATION_WIZARD_UNINSTALL_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
+                localEngineOperationRunning.set(true)
                 service<DockerService>().removeEngine(project) { exitValue ->
 
                     if (exitValue == DockerService.NO_DOCKER_COMPOSE_COMMAND){
@@ -320,6 +331,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                             )
                             sendIsDigmaEngineRunning(false, jbCefBrowser)
                             sendIsDigmaEngineInstalled(false, jbCefBrowser)
+
                         } else {
                             Log.log(logger::warn, "error uninstalling engine {}", exitValue)
                             sendDockerResult(
@@ -330,10 +342,13 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                             )
                         }
                     }
+
                     updateDigmaEngineStatus(project, jbCefBrowser.cefBrowser)
+                    localEngineOperationRunning.set(false)
                 }
             }
             if (JCefMessagesUtils.INSTALLATION_WIZARD_START_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
+                localEngineOperationRunning.set(true)
                 service<DockerService>().startEngine(project) { exitValue ->
 
                     if (exitValue == DockerService.NO_DOCKER_COMPOSE_COMMAND){
@@ -394,10 +409,12 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                     }
 
                     updateDigmaEngineStatus(project, jbCefBrowser.cefBrowser)
+                    localEngineOperationRunning.set(false)
 
                 }
             }
             if (JCefMessagesUtils.INSTALLATION_WIZARD_STOP_DIGMA_ENGINE.equals(action, ignoreCase = true)) {
+                localEngineOperationRunning.set(true)
                 service<DockerService>().stopEngine(project) { exitValue ->
 
                     if (exitValue == DockerService.NO_DOCKER_COMPOSE_COMMAND){
@@ -428,7 +445,9 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                             )
                         }
                     }
+
                     updateDigmaEngineStatus(project, jbCefBrowser.cefBrowser)
+                    localEngineOperationRunning.set(false)
                 }
             }
             callback.success("")
@@ -474,6 +493,10 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
     project.messageBus.connect()
         .subscribe(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, object : AnalyticsServiceConnectionEvent {
             override fun connectionLost() {
+                if (localEngineOperationRunning.get()) {
+                    return
+                }
+
                 try {
                     val status = project.service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionLost()
                     updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
@@ -483,6 +506,9 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
             }
 
             override fun connectionGained() {
+                if (localEngineOperationRunning.get()) {
+                    return
+                }
                 try {
                     val status = project.service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionGained()
                     updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)

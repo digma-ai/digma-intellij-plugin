@@ -10,10 +10,9 @@ import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.JsonUtils
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.settings.SettingsState
+import org.digma.intellij.plugin.settings.SettingsUtils
 
 private val logger = Logger.getInstance("org.digma.intellij.plugin.docker.DigmaInstallationDiscovery")
-
 
 
 //this method should be called only if we know that local engine is not installed
@@ -25,32 +24,35 @@ internal fun discoverActualRunningEngine(project: Project): DigmaInstallationSta
 //this method should be called only if we know that local engine is not installed
 internal fun discoverActualRunningEngine(hasConnection: Boolean): DigmaInstallationStatus {
 
-    //currently, if there is no connection always return status with null type because we don't try to detect sleeping
-    // containers. if there is no connection we probably will not find running containers.
-    if (!hasConnection) {
-        return DigmaInstallationStatus(false, null)
-    }
-
     val isLocalEngineRunning = isLocalEngineRunning()
     val isAnyEngineRunning = isAnyEngineRunning()
     val isExtensionRunning = isExtensionRunning()
 
-    if (isLocalEngineRunning) {
-        return DigmaInstallationStatus(true, DigmaInstallationType.localEngine)
-    } else if (isExtensionRunning) {
-        return DigmaInstallationStatus(true, DigmaInstallationType.dockerDesktop)
-    } else if (isAnyEngineRunning) {
-        return DigmaInstallationStatus(true, DigmaInstallationType.dockerCompose)
-    } else {
-        if (SettingsState.getInstance().state?.apiUrl != SettingsState.DEFAULT_API_URL) {
-            return DigmaInstallationStatus(true, DigmaInstallationType.remote)
+    val connectionType: ConnectionType? = if (hasConnection) {
+        if (SettingsUtils.isSettingsPointsToRemoteIp()) {
+            ConnectionType.remote
         } else {
-            return DigmaInstallationStatus(true, null)
+            ConnectionType.local
         }
+    } else {
+        null
     }
 
-}
+    val connectionStatus = ConnectionStatus(connectionType, hasConnection)
 
+    val runningDigmaInstances = mutableListOf<DigmaInstallationType>()
+
+    if (isLocalEngineRunning) {
+        runningDigmaInstances.add(DigmaInstallationType.localEngine)
+    } else if (isAnyEngineRunning) {
+        runningDigmaInstances.add(DigmaInstallationType.dockerCompose)
+    } else if (isExtensionRunning) {
+        runningDigmaInstances.add(DigmaInstallationType.dockerDesktop)
+    }
+
+
+    return DigmaInstallationStatus(connectionStatus, runningDigmaInstances)
+}
 
 
 private fun isLocalEngineRunning(): Boolean {
@@ -91,6 +93,8 @@ private fun isAnyEngineRunning(): Boolean {
             return false
         }
 
+        val projectName = COMPOSE_FILE_DIR
+
         val dockerCmd = getDockerCommand()
 
         val cmd = GeneralCommandLine(dockerCmd, "container", "ls", "--format", "{{json .Names}}")
@@ -100,7 +104,10 @@ private fun isAnyEngineRunning(): Boolean {
 
         if (processOutput.exitCode == 0) {
             val output = processOutput.stdout
-            return output.split(System.lineSeparator()).map { s: String -> s.replace("\"", "") }.any { s: String -> s.contains("digma-", true) }
+            return output.split(System.lineSeparator())
+                .map { s: String -> s.replace("\"", "") }
+                .filter { s: String -> !s.startsWith(projectName, true) } //filter out local engine containers
+                .any { s: String -> s.contains("digma-", true) }
         }
 
     } catch (ex: Exception) {
@@ -110,7 +117,6 @@ private fun isAnyEngineRunning(): Boolean {
     return false
 
 }
-
 
 
 private fun isExtensionRunning(): Boolean {

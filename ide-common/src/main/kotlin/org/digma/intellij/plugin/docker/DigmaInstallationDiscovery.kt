@@ -44,9 +44,11 @@ internal fun discoverActualRunningEngine(hasConnection: Boolean): DigmaInstallat
 
     if (isLocalEngineRunning) {
         runningDigmaInstances.add(DigmaInstallationType.localEngine)
-    } else if (isAnyEngineRunning) {
+    }
+    if (isAnyEngineRunning) {
         runningDigmaInstances.add(DigmaInstallationType.dockerCompose)
-    } else if (isExtensionRunning) {
+    }
+    if (isExtensionRunning) {
         runningDigmaInstances.add(DigmaInstallationType.dockerDesktop)
     }
 

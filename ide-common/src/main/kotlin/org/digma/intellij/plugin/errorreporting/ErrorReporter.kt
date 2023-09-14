@@ -3,11 +3,13 @@ package org.digma.intellij.plugin.errorreporting
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.diagnostic.UntraceableException
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.NoSelectedEnvironmentException
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.findActiveProject
+import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import java.lang.reflect.Field
 import java.util.concurrent.TimeUnit
@@ -15,6 +17,8 @@ import java.util.concurrent.atomic.AtomicInteger
 
 @Service(Service.Level.APP)
 class ErrorReporter {
+
+    private val logger: Logger = Logger.getInstance(this::class.java)
 
 
     companion object {
@@ -27,7 +31,7 @@ class ErrorReporter {
 
 
     /*
-        try to always send the project reference if available.
+        try not to use this method and always send the project reference if available.
      */
     fun reportError(message: String, t: Throwable) {
         reportError(findActiveProject(), message, t)
@@ -40,23 +44,28 @@ class ErrorReporter {
      */
     fun reportError(project: Project?, message: String, throwable: Throwable) {
 
-        //many times the exception is no-connection exception, and that may happen too many times.
-        // when there is no connection all timers will get an AnalyticsService exception every 10 seconds, it's useless
-        //to report that. AnalyticsService exceptions are reported separately and will include no-connection exceptions.
-        if (ExceptionUtils.isConnectionException(throwable) || throwable is NoSelectedEnvironmentException) {
-            return
-        }
+        try {
+            //many times the exception is no-connection exception, and that may happen too many times.
+            // when there is no connection all timers will get an AnalyticsService exception every 10 seconds, it's useless
+            //to report that. AnalyticsService exceptions are reported separately and will include no-connection exceptions.
+            if (ExceptionUtils.isConnectionException(throwable) || throwable is NoSelectedEnvironmentException) {
+                return
+            }
 
-        if (isTooFrequentException(message, throwable)) {
-            return
-        }
+            if (isTooFrequentException(message, throwable)) {
+                return
+            }
 
-        //todo: change ActivityMonitor to application service so no need for project
+            //todo: change ActivityMonitor to application service so no need for project
 
-        val projectToUse = project ?: findActiveProject()
+            val projectToUse = project ?: findActiveProject()
 
-        projectToUse?.let {
-            ActivityMonitor.getInstance(it).registerError(throwable, message)
+            projectToUse?.let {
+                if (it.isDisposed) return
+                ActivityMonitor.getInstance(it).registerError(throwable, message)
+            }
+        } catch (e: Exception) {
+            Log.warnWithException(logger, e, "error in error reporter")
         }
     }
 
@@ -68,19 +77,23 @@ class ErrorReporter {
      */
     fun reportAnalyticsServiceError(project: Project?, message: String, methodName: String, exception: Exception, isConnectionException: Boolean) {
 
-        if (isTooFrequentException(message, exception)) {
-            return
-        }
+        try {
+            if (isTooFrequentException(message, exception)) {
+                return
+            }
 
-        //todo: change ActivityMonitor to application service so no need for project
+            //todo: change ActivityMonitor to application service so no need for project
 
-        val projectToUse = project ?: findActiveProject()
+            val projectToUse = project ?: findActiveProject()
 
-        projectToUse?.let {
-            ActivityMonitor.getInstance(it).registerAnalyticsServiceError(exception, message, methodName, isConnectionException)
+            projectToUse?.let {
+                if (it.isDisposed) return
+                ActivityMonitor.getInstance(it).registerAnalyticsServiceError(exception, message, methodName, isConnectionException)
+            }
+        } catch (e: Exception) {
+            Log.warnWithException(logger, e, "error in error reporter")
         }
     }
-
 
 
     fun reportBackendError(message: String, action: String) {

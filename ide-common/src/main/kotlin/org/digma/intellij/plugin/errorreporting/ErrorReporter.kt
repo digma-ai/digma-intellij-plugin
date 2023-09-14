@@ -157,9 +157,9 @@ private object MyCache {
         .maximumSize(1000)
         //expireAfterAccess means we don't send the error as long as it keeps occurring until it is quite for this time,
         //if it reappears send it again
-        .expireAfterAccess(10, TimeUnit.MINUTES)
+//        .expireAfterAccess(10, TimeUnit.MINUTES)
         //expireAfterWrite mean the error will be sent in fixed intervals.
-        //.expireAfterWrite(100, TimeUnit.MINUTES)
+        .expireAfterWrite(24, TimeUnit.HOURS)
         .build<String, AtomicInteger>()
 
     fun getOrCreate(hash: Int, t: Throwable, message: String): AtomicInteger {

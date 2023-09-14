@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.167] - 2023-09-13
+## [2.0.169] - 2023-09-14
+- Bug fix/downloading OTEL agent version 1.29.0 instead of latest by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1285
+- bump 2.0.169 by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1286
+
+## 2.0.167 - 2023-09-13
 - Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1268
 - Update Assets UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1269
 - more details in error events by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1278

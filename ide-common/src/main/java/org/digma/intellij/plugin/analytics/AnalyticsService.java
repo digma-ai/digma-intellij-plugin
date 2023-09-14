@@ -22,6 +22,8 @@ import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.digma.intellij.plugin.model.rest.AboutResult;
 import org.digma.intellij.plugin.model.rest.assets.AssetsRequest;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
+import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentRequest;
+import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentResponse;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsRequest;
@@ -417,6 +419,10 @@ public class AnalyticsService implements Disposable {
 
     public AboutResult getAbout() throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getAbout());
+    }
+
+    public DeleteEnvironmentResponse deleteEnvironment(@NotNull String environmentName) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.deleteEnvironment(new DeleteEnvironmentRequest(environmentName)));
     }
 
 

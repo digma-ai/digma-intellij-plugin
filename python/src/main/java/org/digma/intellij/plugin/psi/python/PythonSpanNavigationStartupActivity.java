@@ -17,7 +17,7 @@ public class PythonSpanNavigationStartupActivity implements StartupActivity {
                 PythonSpanNavigationProvider pythonSpanNavigationProvider = PythonSpanNavigationProvider.getInstance(project);
                 pythonSpanNavigationProvider.buildSpanNavigation();
             } catch (Exception e) {
-                ErrorReporter.getInstance().reportError("PythonSpanNavigationStartupActivity.runActivity", e);
+                ErrorReporter.getInstance().reportError(project, "PythonSpanNavigationStartupActivity.runActivity", e);
             }
         });
 

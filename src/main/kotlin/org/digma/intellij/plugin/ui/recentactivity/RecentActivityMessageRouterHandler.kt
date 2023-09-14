@@ -5,6 +5,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -65,7 +66,9 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                 val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
                 environment?.let {
                     service<AddEnvironmentsService>().addEnvironment(it)
-                    project.service<RecentActivityUpdater>().updateLatestActivities()
+                    Backgroundable.executeOnPooledThread {
+                        project.service<RecentActivityUpdater>().updateLatestActivities()
+                    }
                 }
             }
 
@@ -74,8 +77,14 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                 project.service<ActivityMonitor>().registerUserAction("delete environment")
                 val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
                 environment?.let {
-                    service<AddEnvironmentsService>().removeEnvironment(it)
-                    project.service<RecentActivityUpdater>().updateLatestActivities()
+                    Backgroundable.executeOnPooledThread {
+                        if (service<AddEnvironmentsService>().isPendingEnv(environment)) {
+                            service<AddEnvironmentsService>().removeEnvironment(it)
+                        } else {
+                            project.service<RecentActivityService>().deleteEnvironment(environment)
+                        }
+                        project.service<RecentActivityUpdater>().updateLatestActivities()
+                    }
                 }
             }
 

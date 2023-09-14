@@ -3,6 +3,8 @@ package org.digma.intellij.plugin.analytics;
 import org.digma.intellij.plugin.model.rest.AboutResult;
 import org.digma.intellij.plugin.model.rest.assets.AssetsRequest;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
+import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentRequest;
+import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentResponse;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsRequest;
@@ -85,4 +87,6 @@ public interface AnalyticsProvider extends Closeable {
     AboutResult getAbout();
 
     PerformanceMetricsResponse getPerformanceMetrics();
+
+    DeleteEnvironmentResponse deleteEnvironment(DeleteEnvironmentRequest deleteEnvironmentRequest);
 }

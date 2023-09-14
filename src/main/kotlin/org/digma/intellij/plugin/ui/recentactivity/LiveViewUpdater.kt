@@ -101,7 +101,7 @@ class LiveViewUpdater(val project: Project) : Disposable {
                     break
                 } catch (e: Exception) {
                     Log.warnWithException(logger, project, e, "exception in live data timer")
-                    ErrorReporter.getInstance().reportError("LiveViewUpdater.timer", e)
+                    ErrorReporter.getInstance().reportError(project, "LiveViewUpdater.timer", e)
                     delay(5000)
                 }
             }

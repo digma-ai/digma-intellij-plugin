@@ -51,6 +51,10 @@ class AddEnvironmentsService {
         flush()
     }
 
+    fun isPendingEnv(environment: String): Boolean {
+        return pendingEnvironments.containsKey(environment)
+    }
+
     private fun flush() {
         try {
             Log.log(logger::info, "flushing environments {}", pendingEnvironments)
@@ -93,7 +97,7 @@ class AddEnvironmentsService {
             addToCurrentRunConfigImpl(project, environment)
         } catch (e: Exception) {
             Log.warnWithException(logger, e, "failed adding environment {} to current run config", environment)
-            service<ErrorReporter>().reportError("AddEnvironmentsService.addToCurrentRunConfig", e)
+            service<ErrorReporter>().reportError(project, "AddEnvironmentsService.addToCurrentRunConfig", e)
             false
         }
 

@@ -233,7 +233,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
             } catch (AnalyticsServiceException e) {
                 Log.warnWithException(logger, project, e, "Error in getInsightsForSingleSpan");
-                ErrorReporter.getInstance().reportError("InsightsServiceImpl.updateInsights", e);
+                ErrorReporter.getInstance().reportError(project, "InsightsServiceImpl.updateInsights", e);
                 emptyInsights();
             }
         }));
@@ -296,7 +296,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
             } catch (Exception e) {
                 Log.warnWithException(logger, project, e, "error in updateInsightsImpl for ", methodInfo.getId());
-                ErrorReporter.getInstance().reportError("InsightsServiceImpl.updateInsightsImpl", e);
+                ErrorReporter.getInstance().reportError(project, "InsightsServiceImpl.updateInsightsImpl", e);
             }
         }));
     }
@@ -364,7 +364,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
             return methodResp == null ? null : methodResp.getInsightStatus();
         } catch (AnalyticsServiceException e) {
             Log.log(logger::debug, "AnalyticsServiceException for getCodeObjectInsightStatus for {}: {}", methodInfo.getId(), e.getMessage());
-            ErrorReporter.getInstance().reportError("InsightsServiceImpl.getInsightStatus", e);
+            ErrorReporter.getInstance().reportError(project, "InsightsServiceImpl.getInsightStatus", e);
             return null;
         }
     }
@@ -580,7 +580,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
         } catch (AnalyticsServiceException e) {
             Log.warnWithException(logger, project, e, "Error in openHistogram for {},{} {}", instrumentationLibrary, spanName, e.getMessage());
-            ErrorReporter.getInstance().reportError("InsightsServiceImpl.openHistogram", e);
+            ErrorReporter.getInstance().reportError(project, "InsightsServiceImpl.openHistogram", e);
         }
     }
 

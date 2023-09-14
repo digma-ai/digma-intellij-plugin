@@ -74,7 +74,7 @@ class JCefComponent(
             ApplicationUISettingsChangeNotifier.getInstance(project).removeSettingsChangeListener(settingsChangeListener)
             analyticsServiceConnectionEventMessageBusConnection.dispose()
         } catch (e: Exception) {
-            ErrorReporter.getInstance().reportError("JCefComponent.dispose", e)
+            ErrorReporter.getInstance().reportError(project, "JCefComponent.dispose", e)
         }
     }
 

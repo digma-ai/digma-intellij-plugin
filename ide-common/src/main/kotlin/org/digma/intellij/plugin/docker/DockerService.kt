@@ -396,7 +396,7 @@ class DockerService {
             Log.log(logger::info, "start docker command result: {}", output)
         } catch (ex: Exception) {
             ActivityMonitor.getInstance(project).registerCustomEvent("Engine.start-docker-daemon", mapOf("error" to ex.message.toString()))
-            ErrorReporter.getInstance().reportError(project, "failed trying to start docker daemon", ex)
+            ErrorReporter.getInstance().reportError(project, "DockerService.tryStartDockerDaemon", ex)
             Log.warnWithException(logger, ex, "Failed trying to start docker daemon '{}'", cmd.commandLineString)
         }
     }

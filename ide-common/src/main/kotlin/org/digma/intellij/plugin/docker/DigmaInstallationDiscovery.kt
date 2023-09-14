@@ -106,7 +106,12 @@ private fun isAnyEngineRunning(): Boolean {
             val output = processOutput.stdout
             return output.split(System.lineSeparator())
                 .map { s: String -> s.replace("\"", "") }
-                .filter { s: String -> !s.startsWith(projectName, true) } //filter out local engine containers
+                .filter { s: String ->
+                    (!s.startsWith(projectName, true) && !s.contains(
+                        "digma-docker-extension",
+                        true
+                    ))
+                } //filter out local engine containers
                 .any { s: String -> s.contains("digma-", true) }
         }
 

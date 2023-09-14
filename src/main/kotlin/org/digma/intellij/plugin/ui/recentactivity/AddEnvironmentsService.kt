@@ -51,6 +51,10 @@ class AddEnvironmentsService {
         flush()
     }
 
+    fun isPendingEnv(environment: String): Boolean {
+        return pendingEnvironments.containsKey(environment)
+    }
+
     private fun flush() {
         try {
             Log.log(logger::info, "flushing environments {}", pendingEnvironments)

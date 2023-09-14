@@ -11,6 +11,8 @@ import okhttp3.ResponseBody;
 import org.digma.intellij.plugin.model.rest.AboutResult;
 import org.digma.intellij.plugin.model.rest.assets.AssetsRequest;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
+import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentRequest;
+import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentResponse;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsRequest;
@@ -210,6 +212,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     @Override
     public PerformanceMetricsResponse getPerformanceMetrics()  {
         return execute(client.analyticsProvider::getPerformanceMetrics);
+    }
+
+    @Override
+    public DeleteEnvironmentResponse deleteEnvironment(DeleteEnvironmentRequest deleteEnvironmentRequest) {
+        return execute(() -> client.analyticsProvider.deleteEnvironment(deleteEnvironmentRequest));
     }
 
     protected static String readEntire(ResponseBody responseBody) {
@@ -555,6 +562,14 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @GET("/performanceMetrics")
         Call<PerformanceMetricsResponse> getPerformanceMetrics();
+
+
+        @Headers({
+                "Accept: text/plain",
+                "Content-Type:application/json"
+        })
+        @POST("/CodeAnalytics/delete_environment")
+        Call<DeleteEnvironmentResponse> deleteEnvironment(@Body DeleteEnvironmentRequest deleteEnvironmentRequest);
     }
 
 }

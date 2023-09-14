@@ -83,7 +83,7 @@ public class Backgroundable {
             task.run();
         }catch (Exception e){
             Log.warnWithException(LOGGER, e, "Exception in task {}",name);
-            ErrorReporter.getInstance().reportError(project, "Exception in task "+name, e);
+            ErrorReporter.getInstance().reportError(project, "Backgroundable.runWithErrorReporting." + name, e);
         }
     }
 

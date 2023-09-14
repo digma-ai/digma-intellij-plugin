@@ -34,7 +34,11 @@ public class AnalyticsServiceException extends Exception {
         AnalyticsProviderException analyticsProviderException = ExceptionUtils.findCause(AnalyticsProviderException.class, this);
 
         if (analyticsProviderException != null) {
-            return analyticsProviderException.getMessage();
+            if (analyticsProviderException.getCause() != null && analyticsProviderException.getCause().getMessage() != null) {
+                return analyticsProviderException.getCause().getMessage();
+            } else {
+                return analyticsProviderException.getMessage();
+            }
         }
 
         InvocationTargetException invocationTargetException = ExceptionUtils.findCause(InvocationTargetException.class, this);

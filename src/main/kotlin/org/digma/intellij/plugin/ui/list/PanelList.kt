@@ -111,7 +111,7 @@ abstract class PanelList(val project: Project, private var model: PanelListModel
                 catch (ex: Exception) {
                     // If we don't handle case with broken data we do not show any insights at all
                     // In this case we just hide it from the user
-                    ErrorReporter.getInstance().reportError(project, "Error during the insight panel creation", ex)
+                    ErrorReporter.getInstance().reportError(project, "PanelList.rebuild", ex)
                 }
             }
         }

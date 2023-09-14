@@ -35,7 +35,6 @@ import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusRes
 import org.digma.intellij.plugin.model.rest.insights.InsightStatus;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
 import org.digma.intellij.plugin.model.rest.insights.MethodWithInsightStatus;
-import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshService;
@@ -234,6 +233,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
             } catch (AnalyticsServiceException e) {
                 Log.warnWithException(logger, project, e, "Error in getInsightsForSingleSpan");
+                ErrorReporter.getInstance().reportError("InsightsServiceImpl.updateInsights", e);
                 emptyInsights();
             }
         }));
@@ -364,6 +364,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
             return methodResp == null ? null : methodResp.getInsightStatus();
         } catch (AnalyticsServiceException e) {
             Log.log(logger::debug, "AnalyticsServiceException for getCodeObjectInsightStatus for {}: {}", methodInfo.getId(), e.getMessage());
+            ErrorReporter.getInstance().reportError("InsightsServiceImpl.getInsightStatus", e);
             return null;
         }
     }
@@ -579,6 +580,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
         } catch (AnalyticsServiceException e) {
             Log.warnWithException(logger, project, e, "Error in openHistogram for {},{} {}", instrumentationLibrary, spanName, e.getMessage());
+            ErrorReporter.getInstance().reportError("InsightsServiceImpl.openHistogram", e);
         }
     }
 
@@ -586,8 +588,8 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
     @Override
     public void openLiveView(@NotNull String prefixedCodeObjectId) {
         Log.log(logger::debug, project, "openLiveView called {}", prefixedCodeObjectId);
-
         project.getService(RecentActivityService.class).startLiveView(prefixedCodeObjectId);
+        ActivityMonitor.getInstance(project).registerCustomEvent("live view clicked", Collections.emptyMap());
     }
 
 

@@ -42,7 +42,7 @@ class ContainerEngineStartupActivity : StartupActivity {
             return result
         } catch (ex: Exception) {
             Log.warnWithException(logger, ex, "Failed to run '{}'", cmdString)
-            ErrorReporter.getInstance().reportError(project,"Failed to run '${cmdString}'", ex)
+            ErrorReporter.getInstance().reportError(project, "ContainerEngineStartupActivity.getExecPath", ex)
         }
         return null
     }

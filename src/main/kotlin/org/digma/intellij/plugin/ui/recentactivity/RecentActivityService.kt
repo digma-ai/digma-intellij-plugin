@@ -126,12 +126,12 @@ class RecentActivityService(val project: Project) : Disposable {
         EDT.ensureEDT {
             project.service<RecentActivityToolWindowShower>().showToolWindow()
         }
-
         project.service<LiveViewUpdater>().sendLiveData(codeObjectId)
     }
 
     fun liveViewClosed(closeLiveViewMessage: CloseLiveViewMessage?) {
         project.service<LiveViewUpdater>().stopLiveView(closeLiveViewMessage?.payload?.codeObjectId)
+        project.service<ActivityMonitor>().registerCustomEvent("live view closed", emptyMap())
     }
 
 }

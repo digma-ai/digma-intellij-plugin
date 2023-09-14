@@ -6,6 +6,7 @@ import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
 import com.posthog.java.PostHog
+import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.JsonUtils
 import org.digma.intellij.plugin.common.UserId
 import org.digma.intellij.plugin.model.InsightType
@@ -15,7 +16,6 @@ import org.digma.intellij.plugin.model.rest.version.PerformanceCounterReport
 import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.semanticversion.SemanticVersionUtil
-import org.threeten.extra.Hours
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.security.MessageDigest
@@ -41,7 +41,6 @@ class ActivityMonitor(project: Project) : Disposable {
     private var postHog: PostHog? = null
     private var lastLensClick: LocalDateTime? = null
     private val lastInsightsViewed = mutableSetOf<InsightType>()
-    private var lastConnectionErrorTime: Instant = Instant.MIN
 
     private val settingsChangeTracker = SettingsChangeTracker()
 
@@ -143,13 +142,6 @@ class ActivityMonitor(project: Project) : Disposable {
         capture("connection first-established")
     }
 
-    fun registerConnectionError(action: String, message: String) {
-        val oneHourAgo = Instant.now().minus(Hours.of(1))
-        if (lastConnectionErrorTime.isBefore(oneHourAgo)) {
-            capture("connection error", mapOf("reason" to message, "action" to action))
-            lastConnectionErrorTime = Instant.now()
-        }
-    }
 
     fun registerConnectionGained() {
         capture("connection gained")
@@ -184,45 +176,94 @@ class ActivityMonitor(project: Project) : Disposable {
 
     fun registerError(exception: Throwable, message: String) {
 
-        val osType = System.getProperty("os.name")
-        val ideInfo = ApplicationInfo.getInstance()
-        val ideName = ideInfo.versionName
-        val ideVersion = ideInfo.fullVersion
-        val ideBuildNumber = ideInfo.build.asString()
-        val pluginVersion = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
+        try {
+            val osType = System.getProperty("os.name")
+            val ideInfo = ApplicationInfo.getInstance()
+            val ideName = ideInfo.versionName
+            val ideVersion = ideInfo.fullVersion
+            val ideBuildNumber = ideInfo.build.asString()
+            val pluginVersion = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
 
-        //Don't call directly, use ErrorReporter.reportError
+            //Don't call directly, use ErrorReporter.reportError
 
-        val stringWriter = StringWriter()
-        exception.printStackTrace(PrintWriter(stringWriter))
+            val stringWriter = StringWriter()
+            exception.printStackTrace(PrintWriter(stringWriter))
 
-        var exc: Throwable? = exception
-        var exceptionMessage = exc?.message
-        while (exceptionMessage.isNullOrEmpty() && exc != null) {
-            exc = exc.cause
-            exc?.let {
-                exceptionMessage = it.message
-            }
-        }
+            val exceptionMessage: String? = ExceptionUtils.getNonEmptyMessage(exception)
 
-        capture(
-            "error",
-            mapOf(
-                "error.source" to "plugin",
-                "action" to "unknown",
-                "message" to message,
-                "exception.type" to exception.javaClass.name,
-                "exception.message" to exceptionMessage.toString(),
-                "exception.stack-trace" to stringWriter.toString(),
-                "os.type" to osType,
-                "ide.name" to ideName,
-                "ide.version" to ideVersion,
-                "ide.build" to ideBuildNumber,
-                "plugin.version" to pluginVersion,
-                "user.type" to if (isDevUser) "internal" else "external"
+            capture(
+                "error",
+                mapOf(
+                    "error.source" to "plugin",
+                    "action" to "unknown",
+                    "message" to message,
+                    "exception.type" to exception.javaClass.name,
+                    "cause.exception.type" to ExceptionUtils.getFirstRealExceptionCauseTypeName(exception),
+                    "exception.message" to exceptionMessage.toString(),
+                    "exception.stack-trace" to stringWriter.toString(),
+                    "os.type" to osType,
+                    "ide.name" to ideName,
+                    "ide.version" to ideVersion,
+                    "ide.build" to ideBuildNumber,
+                    "plugin.version" to pluginVersion,
+                    "user.type" to if (isDevUser) "internal" else "external"
+                )
             )
-        )
+        } catch (e: Exception) {
+            registerCustomEvent(
+                "error in registerError", mapOf(
+                    "message" to e.message.toString()
+                )
+            )
+        }
     }
+
+
+    fun registerAnalyticsServiceError(exception: Throwable, message: String, methodName: String, isConnectionException: Boolean) {
+
+        try {
+
+            val osType = System.getProperty("os.name")
+            val ideInfo = ApplicationInfo.getInstance()
+            val ideName = ideInfo.versionName
+            val ideVersion = ideInfo.fullVersion
+            val ideBuildNumber = ideInfo.build.asString()
+            val pluginVersion = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
+
+            val stringWriter = StringWriter()
+            exception.printStackTrace(PrintWriter(stringWriter))
+
+            val exceptionMessage: String? = ExceptionUtils.getNonEmptyMessage(exception)
+
+            val eventName = if (isConnectionException) "connection error" else "analytics api error"
+
+            capture(
+                eventName,
+                mapOf(
+                    "error.source" to "plugin",
+                    "apiMethodName" to methodName,
+                    "message" to message,
+                    "exception.type" to exception.javaClass.name,
+                    "cause.exception.type" to ExceptionUtils.getFirstRealExceptionCauseTypeName(exception),
+                    "exception.message" to exceptionMessage.toString(),
+                    "exception.stack-trace" to stringWriter.toString(),
+                    "os.type" to osType,
+                    "ide.name" to ideName,
+                    "ide.version" to ideVersion,
+                    "ide.build" to ideBuildNumber,
+                    "plugin.version" to pluginVersion,
+                    "user.type" to if (isDevUser) "internal" else "external"
+                )
+            )
+        } catch (e: Exception) {
+            registerCustomEvent(
+                "error in registerAnalyticsServiceError", mapOf(
+                    "message" to e.message.toString()
+                )
+            )
+        }
+    }
+
 
     fun reportBackendError(message: String, action: String) {
 

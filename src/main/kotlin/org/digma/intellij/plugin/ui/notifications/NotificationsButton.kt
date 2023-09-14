@@ -136,7 +136,7 @@ class NotificationsButton(val project: Project) : JButton() {
 
         } catch (e: Exception) {
             Log.warnWithException(logger, project, e, "Error in doActionListener")
-            ErrorReporter.getInstance().reportError(project, "Error in notification button action", e)
+            ErrorReporter.getInstance().reportError(project, "NotificationsButton.doActionListener", e)
         }
     }
 

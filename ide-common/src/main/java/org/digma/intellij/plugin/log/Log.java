@@ -51,7 +51,7 @@ public class Log {
     public static void error(Logger logger,Project project, Exception exception, String format, Object... args) {
         var msg = String.format(format.replace("{}", "%s"), args);
         error(logger, exception, DIGMA_PROJECT + project.getName() + ": " + msg);
-        ErrorReporter.getInstance().reportError(project,msg, exception);
+        ErrorReporter.getInstance().reportError(project, "Log.error", exception);
     }
     public static void error(Logger logger, Exception exception, String format, Object... args) {
         error(logger, exception, DIGMA + String.format(format.replace("{}", "%s"), args));

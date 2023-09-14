@@ -34,7 +34,7 @@ abstract class AbstractPanelListCellRenderer: PanelListCellRenderer {
             wrap(panel)
 
         } catch (e: Exception) {
-            ErrorReporter.getInstance().reportError(project, "error creating list panel for ${value.modelObject}", e)
+            ErrorReporter.getInstance().reportError(project, "AbstractPanelListCellRenderer.getListCellRendererComponent", e)
             Log.warnWithException(Logger.getInstance(this::class.java), e, "Error creating panel for {}", value.modelObject)
             val p = JPanel()
             p.isVisible = false

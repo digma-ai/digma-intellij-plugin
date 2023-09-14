@@ -81,7 +81,7 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                         if (service<AddEnvironmentsService>().isPendingEnv(environment)) {
                             service<AddEnvironmentsService>().removeEnvironment(it)
                         } else {
-                            service<RecentActivityService>().deleteEnvironment(environment)
+                            project.service<RecentActivityService>().deleteEnvironment(environment)
                         }
                         project.service<RecentActivityUpdater>().updateLatestActivities()
                     }

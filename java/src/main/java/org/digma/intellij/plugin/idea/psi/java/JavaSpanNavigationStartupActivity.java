@@ -20,7 +20,7 @@ public class JavaSpanNavigationStartupActivity implements StartupActivity {
                 var javaEndpointNavigationProvider = JavaEndpointNavigationProvider.getInstance(project);
                 javaEndpointNavigationProvider.buildEndpointNavigation();
             } catch (Exception e) {
-                ErrorReporter.getInstance().reportError("JavaSpanNavigationStartupActivity.runActivity", e);
+                ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationStartupActivity.runActivity", e);
             }
         });
     }

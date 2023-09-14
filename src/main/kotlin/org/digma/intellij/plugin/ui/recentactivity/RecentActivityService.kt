@@ -60,7 +60,7 @@ class RecentActivityService(val project: Project) : Disposable {
 
         } catch (e: AnalyticsServiceException) {
             Log.warnWithException(logger, project, e, "AnalyticsServiceException for getRecentActivity: {}", e.meaningfulMessage)
-            ErrorReporter.getInstance().reportError("RecentActivityService.getRecentActivities", e)
+            ErrorReporter.getInstance().reportError(project, "RecentActivityService.getRecentActivities", e)
             null
         }
     }
@@ -109,7 +109,7 @@ class RecentActivityService(val project: Project) : Disposable {
                     project.service<ActivityMonitor>().registerSpanLinkClicked(MonitoredPanel.RecentActivity, canNavigate)
                 } catch (e: Exception) {
                     Log.warnWithException(logger, project, e, "error in processRecentActivityGoToSpanRequest")
-                    ErrorReporter.getInstance().reportError("RecentActivityService.processRecentActivityGoToSpanRequest", e)
+                    ErrorReporter.getInstance().reportError(project, "RecentActivityService.processRecentActivityGoToSpanRequest", e)
                 }
             }
         }
@@ -141,7 +141,7 @@ class RecentActivityService(val project: Project) : Disposable {
             }
         } catch (e: Exception) {
             Log.warnWithException(logger, project, e, "error in processRecentActivityGoToTraceRequest")
-            ErrorReporter.getInstance().reportError("RecentActivityService.processRecentActivityGoToTraceRequest", e)
+            ErrorReporter.getInstance().reportError(project, "RecentActivityService.processRecentActivityGoToTraceRequest", e)
         }
     }
 
@@ -170,10 +170,11 @@ class RecentActivityService(val project: Project) : Disposable {
             } else {
                 Log.log(logger::trace, project, "deleteEnvironment {} faled", environment)
             }
+            project.service<AnalyticsService>().environment.refreshNowOnBackground()
 
         } catch (e: Exception) {
             Log.warnWithException(logger, project, e, "error deleting environment")
-            ErrorReporter.getInstance().reportError("RecentActivityService.deleteEnvironment", e)
+            ErrorReporter.getInstance().reportError(project, "RecentActivityService.deleteEnvironment", e)
         }
     }
 

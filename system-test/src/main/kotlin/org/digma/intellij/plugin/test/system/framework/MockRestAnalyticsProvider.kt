@@ -20,6 +20,8 @@ import org.digma.intellij.plugin.model.rest.livedata.DurationData
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveDataRequest
 import org.digma.intellij.plugin.model.rest.livedata.LiveDataRecord
+import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation
+import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigationRequest
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
@@ -106,6 +108,14 @@ fun mockGetInsightOfSingeSpan(mock: RestAnalyticsProvider, response: InsightsOfS
     `when`(mock.getInsightsForSingleSpan(isA(InsightsOfSingleSpanRequest::class.java))).thenAnswer {
 //        Log.test(logger::info, "mock getInsightOfSingeSpan")
         val currEnv = (it.arguments[0] as InsightsOfSingleSpanRequest).environment
+        return@thenAnswer response
+    }
+}
+
+fun mockGetCodeObjectNavigation(mock: RestAnalyticsProvider, response: CodeObjectNavigation) {
+    `when`(mock.getCodeObjectNavigation(isA(CodeObjectNavigationRequest::class.java))).thenAnswer {
+        Log.test(logger::info, "mock getCodeObjectNavigation")
+        val currEnv = (it.arguments[0] as CodeObjectNavigationRequest).environment
         return@thenAnswer response
     }
 }

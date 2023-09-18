@@ -11,6 +11,10 @@ import org.digma.intellij.plugin.model.rest.insights.ShortDisplayInfo
 import org.digma.intellij.plugin.model.rest.insights.SlowEndpointInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanDurationsInsight
 import org.digma.intellij.plugin.model.rest.insights.SpanInfo
+import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation
+import org.digma.intellij.plugin.model.rest.navigation.NavItemType
+import org.digma.intellij.plugin.model.rest.navigation.NavigationEntry
+import org.digma.intellij.plugin.model.rest.navigation.SpanNavigationItem
 import org.digma.intellij.plugin.model.rest.recentactivity.EntrySpan
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityEntrySpanPayload
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResponseEntry
@@ -36,8 +40,8 @@ object BulletOneData {
     val methodName = "method1"
     val methodCodeObjectId: String = createDigmaCodeObjectId(className, methodName)
     val relatedSpansToMethod: List<String> = listOf(
-        createDigmaCodeObjectId(className, "relatedSpan1"),
-        createDigmaCodeObjectId(className, "relatedSpan2")
+        createDigmaCodeObjectId(className + "2", "relatedSpan1"),
+        createDigmaCodeObjectId(className + "2", "relatedSpan2")
     )
     val relatedEndPointToMethod: List<String> = listOf(
         createDigmaCodeObjectId(className, "relatedEndpoint1"),
@@ -198,14 +202,8 @@ object BulletTwoData {
     val className: String = "org.digma.intellij.plugin.test.system.TestFile"
     val methodName = "method1"
     val methodCodeObjectId: String = createDigmaCodeObjectId(className, methodName)
-    val relatedSpansToMethod: List<String> = listOf(
-        createDigmaCodeObjectId(className, "relatedSpan1"),
-        createDigmaCodeObjectId(className, "relatedSpan2")
-    )
-    val relatedEndPointToMethod: List<String> = listOf(
-        createDigmaCodeObjectId(className, "relatedEndpoint1"),
-        createDigmaCodeObjectId(className, "relatedEndpoint2")
-    )
+    val relatedSpansToMethod: List<String> = BulletOneData.relatedSpansToMethod
+    val relatedEndPointToMethod: List<String> = BulletOneData.relatedEndPointToMethod
 
     val expectedRecentActivityResult: RecentActivityResult
         get() {
@@ -315,49 +313,48 @@ object BulletThreeData {
             // insights of method - method1
 
             //slowEndpoint Insight
-
-            val slowEndpointInsight = SlowEndpointInsight(
-                codeObjectId = methodWithCodeObjects.codeObjectId,
-                environment = environmentList[0],
-                scope = "scope1",
-                importance = 1,
-                actualStartTime = null,
-                customStartTime = null,
-                prefixedCodeObjectId = null,
-                shortDisplayInfo = ShortDisplayInfo(
-                    title = "Slow endpoint title for ${methodName}",
-                    targetDisplayName = "target ${methodName}",
-                    subtitle = "subtitle for ${methodName}",
-                    description = "desctioption for ${methodName}"
-                ),
-                decorators = listOf(
-                    CodeObjectDecorator(
-                        title = "decorator title of method ${methodName}",
-                        description = "decorator description of method ${methodName}"
-                    ),
-
-                    ),
-                spanInfo = SpanInfo(
-                    instrumentationLibrary = "instrumentationLibrary",
-                    name = "span of Method ${methodName}",
-                    spanCodeObjectId = relatedSpansToMethod[0],
-                    displayName = "span display name of method ${methodName}",
-                    methodCodeObjectId = methodWithCodeObjects.codeObjectId,
-                    kind = "Slow Endpoint Kind"
-                ),
-                route = "route/subRoute/endpoint/id",
-                isRecalculateEnabled = false,
-                serviceName = "test ServiceName",
-                endpointsMedian = Duration(value = 15.0, unit = "ms", raw = 15),
-                endpointsMedianOfMedians = Duration(value = 20.0, unit = "ms", raw = 20),
-                endpointsP75 = Duration(value = 25.0, unit = "ms", raw = 25),
-                median = Duration(value = 15.0, unit = "ms", raw = 15)
-            )
+//            val slowEndpointInsight = SlowEndpointInsight(
+//                codeObjectId = methodWithCodeObjects.codeObjectId,
+//                environment = environmentList[0],
+//                scope = "scope1",
+//                importance = 1,
+//                actualStartTime = null,
+//                customStartTime = null,
+//                prefixedCodeObjectId = null,
+//                shortDisplayInfo = ShortDisplayInfo(
+//                    title = "Slow endpoint title for ${methodName}",
+//                    targetDisplayName = "target ${methodName}",
+//                    subtitle = "subtitle for ${methodName}",
+//                    description = "desctioption for ${methodName}"
+//                ),
+//                decorators = listOf(
+//                    CodeObjectDecorator(
+//                        title = "decorator title of method ${methodName}",
+//                        description = "decorator description of method ${methodName}"
+//                    ),
+//
+//                    ),
+//                spanInfo = SpanInfo(
+//                    instrumentationLibrary = "instrumentationLibrary",
+//                    name = "span of Method ${methodName}",
+//                    spanCodeObjectId = relatedSpansToMethod[0],
+//                    displayName = "span display name of method ${methodName}",
+//                    methodCodeObjectId = methodWithCodeObjects.codeObjectId,
+//                    kind = "Slow Endpoint Kind"
+//                ),
+//                route = "route/subRoute/endpoint/id",
+//                isRecalculateEnabled = false,
+//                serviceName = "test ServiceName",
+//                endpointsMedian = Duration(value = 15.0, unit = "ms", raw = 15),
+//                endpointsMedianOfMedians = Duration(value = 20.0, unit = "ms", raw = 20),
+//                endpointsP75 = Duration(value = 25.0, unit = "ms", raw = 25),
+//                median = Duration(value = 15.0, unit = "ms", raw = 15)
+//            )
 
             val slowEndpointInsightEnv2 = SlowEndpointInsight(
                 codeObjectId = methodWithCodeObjects.codeObjectId,
                 environment = environmentList[1],
-                scope = "scope1",
+                scope = "span_endpoint1",
                 importance = 1,
                 actualStartTime = null,
                 customStartTime = null,
@@ -393,35 +390,35 @@ object BulletThreeData {
             )
 
             // Span Duration Insight
-            val spanDurationsInsight = SpanDurationsInsight(
-                codeObjectId = methodWithCodeObjects.codeObjectId,
-                environment = environmentList[0],
-                scope = "scope1",
-                importance = 1,
-                actualStartTime = null,
-                customStartTime = null,
-                prefixedCodeObjectId = null,
-                shortDisplayInfo = ShortDisplayInfo(
-                    title = "Span duration title for ${methodName}",
-                    targetDisplayName = "target ${methodName}",
-                    subtitle = "subtitle for ${methodName}",
-                    description = "desctioption for ${methodName}"
-                ),
-                decorators = listOf(
-                    CodeObjectDecorator(
-                        title = "Decorator - Span Duration of ${methodName}",
-                        description = "Decorator 1 Span Duration of  ${methodName}"
-                    ),
-                ),
-                spanInfo = SpanInfo(
-                    instrumentationLibrary = "instrumentationLibrary",
-                    name = "mySpanName methodInsight3",
-                    spanCodeObjectId = methodWithCodeObjects.relatedSpansCodeObjectIds[0],
-                    displayName = "methodInsight3",
-                    methodCodeObjectId = methodWithCodeObjects.codeObjectId,
-                    kind = "my kind"
-                )
-            )
+//            val spanDurationsInsight = SpanDurationsInsight(
+//                codeObjectId = methodWithCodeObjects.codeObjectId,
+//                environment = environmentList[0],
+//                scope = "scope1",
+//                importance = 1,
+//                actualStartTime = null,
+//                customStartTime = null,
+//                prefixedCodeObjectId = null,
+//                shortDisplayInfo = ShortDisplayInfo(
+//                    title = "Span duration title for ${methodName}",
+//                    targetDisplayName = "target ${methodName}",
+//                    subtitle = "subtitle for ${methodName}",
+//                    description = "desctioption for ${methodName}"
+//                ),
+//                decorators = listOf(
+//                    CodeObjectDecorator(
+//                        title = "Decorator - Span Duration of ${methodName}",
+//                        description = "Decorator 1 Span Duration of  ${methodName}"
+//                    ),
+//                ),
+//                spanInfo = SpanInfo(
+//                    instrumentationLibrary = "instrumentationLibrary",
+//                    name = "mySpanName methodInsight3",
+//                    spanCodeObjectId = methodWithCodeObjects.relatedSpansCodeObjectIds[0],
+//                    displayName = "methodInsight3",
+//                    methodCodeObjectId = methodWithCodeObjects.codeObjectId,
+//                    kind = "my kind"
+//                )
+//            )
 
 
             val methodWithSlowEndPointInsight = MethodWithInsights(
@@ -447,8 +444,7 @@ object BulletThreeData {
 }
 
 object BulletFourData {
-    val methodName = "method1"
-    val methodCodeObjectId: String = BulletTwoData.methodCodeObjectId
+    val methodName = "relatedSpan1"
     val relatedSpansToMethod: List<String> = BulletTwoData.relatedSpansToMethod
     val relatedEndPointToMethod: List<String> = BulletTwoData.relatedEndPointToMethod
 
@@ -467,8 +463,8 @@ object BulletFourData {
             )
             val durationInsight = SpanDurationsInsight(
                 codeObjectId = codeObjectId,
-                environment = BulletThreeData.environmentList[0],
-                scope = "scope2",
+                environment = BulletThreeData.environmentList[1],
+                scope = "scope3",
                 importance = 1,
                 actualStartTime = null,
                 customStartTime = null,
@@ -491,9 +487,54 @@ object BulletFourData {
 
 
             return InsightsOfSingleSpanResponse(
-                spanCodeObjectId = relatedSpansToMethod[0],
+                spanCodeObjectId = codeObjectId,
                 spanInfo = spanInfo,
                 insights = listOf(durationInsight)
             )
         }
+}
+
+object BulletFiveData {
+    val DOC_NAME: String = "TestFile2.java"
+    val relatedSpanFromDocument2 = BulletTwoData.relatedSpansToMethod[0]
+    val Document2ClassName = "org.digma.intellij.plugin.test.system.TestFile2"
+    val expectedMethodUnderCaretAfterNavigationId: String = relatedSpanFromDocument2
+    val expectedMethodUnderCaretAfterNavigationName: String = "relatedSpan1"
+    val targetMethodOffSet = 204
+    
+    
+    val codeObjectNavigation: CodeObjectNavigation
+        get() {
+            
+            
+            val spanInfo = SpanInfo(
+                instrumentationLibrary = "instrumentationLibrary",
+                name = "Span1 - related",
+                spanCodeObjectId = relatedSpanFromDocument2,
+                displayName = "Span 1",
+                methodCodeObjectId = relatedSpanFromDocument2,
+                kind = "my kind"
+            )
+            return CodeObjectNavigation(
+                spanCodeObjectId = relatedSpanFromDocument2,
+                navigationEntry = NavigationEntry(
+                    navEndpointEntry = null,
+                    spanInfo = spanInfo,
+                    closestParentSpans = listOf(
+                        SpanNavigationItem(
+                            name = spanInfo.name,
+                            displayName = spanInfo.displayName,
+                            instrumentationLibrary = spanInfo.instrumentationLibrary,
+                            spanCodeObjectId = spanInfo.spanCodeObjectId,
+                            methodCodeObjectId = spanInfo.methodCodeObjectId,
+                            kind = spanInfo.kind!!,
+                            navItemType = NavItemType.ClosestParentWithMethodCodeObjectId,
+                            distance = 0
+                        )
+                    ),
+                )
+                
+            )
+        }
+    
 }

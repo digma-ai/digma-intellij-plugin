@@ -143,10 +143,10 @@ public class Environment implements EnvironmentsSupplier {
 
             Log.log(LOGGER::trace, "Refreshing Environments list");
             var newEnvironments = analyticsService.getEnvironments();
-            Log.test(LOGGER::info, "refreshEnvironments: from analyticsService.getEnvironments(): {}", newEnvironments);
+//            Log.test(LOGGER::info, "refreshEnvironments: from analyticsService.getEnvironments(): {}", newEnvironments);
             if (newEnvironments != null && !newEnvironments.isEmpty()) {
                 Log.log(LOGGER::trace, "Got environments {}", newEnvironments);
-                Log.test(LOGGER::info, "Got environments {}", newEnvironments);
+//                Log.test(LOGGER::info, "Got environments {}", newEnvironments);
             } else {
                 Log.log(LOGGER::warn, "Error loading environments or no environments added yet: {}", newEnvironments);
                 newEnvironments = new ArrayList<>();
@@ -162,7 +162,7 @@ public class Environment implements EnvironmentsSupplier {
             }
 
             this.environments = newEnvironments;
-            Log.test(LOGGER::info, "new env list set to env. notifying the list change");
+//            Log.test(LOGGER::info, "new env list set to env. notifying the list change");
             notifyEnvironmentsListChange();
 
         } finally {
@@ -172,7 +172,7 @@ public class Environment implements EnvironmentsSupplier {
 
             stopWatch.stop();
             Log.log(LOGGER::trace, "Refresh environments took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS));
-            Log.test(LOGGER::info, "Refresh environments took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS));
+//            Log.test(LOGGER::info, "Refresh environments took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS));
         }
     }
 

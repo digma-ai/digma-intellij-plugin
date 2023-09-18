@@ -1,6 +1,8 @@
 package org.digma.intellij.plugin.ui.common
 
+import com.intellij.collaboration.async.DisposingScope
 import com.intellij.ide.BrowserUtil
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ApplicationNamesInfo
 import com.intellij.openapi.components.service
@@ -10,6 +12,8 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.ui.jcef.JBCefBrowser
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
@@ -24,6 +28,7 @@ import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator
+import org.digma.intellij.plugin.docker.DigmaInstallationStatus
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.jcef.common.ConnectionCheckResult
@@ -65,6 +70,7 @@ import org.digma.intellij.plugin.ui.settings.Theme
 import org.digma.intellij.plugin.wizard.InstallationWizardService
 import java.awt.BorderLayout
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 import javax.swing.JPanel
 
 private const val RESOURCE_FOLDER_NAME = "installationwizard"
@@ -84,6 +90,8 @@ private val logger: Logger =
 
 
 fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipInstallationStep: Boolean): DisposablePanel? {
+
+    val digmaStatusUpdater = DigmaStatusUpdater()
 
 
     val localEngineOperationRunning = AtomicBoolean(false)
@@ -137,6 +145,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
 
 
     msgRouter.addHandler(object : CefMessageRouterHandlerAdapter() {
+
         override fun onQuery(
             browser: CefBrowser,
             frame: CefFrame,
@@ -152,8 +161,12 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                 JcefMessageRequest::class.java
             )
             if ("INSTALLATION_WIZARD/INITIALIZE".equals(action, ignoreCase = true)) {
-                Backgroundable.executeOnPooledThread {
-                    updateDigmaEngineStatus(project, jbCefBrowser.cefBrowser)
+                digmaStatusUpdater.start(project, jbCefBrowser.cefBrowser)
+            }
+            if ("INSTALLATION_WIZARD/CLOSE".equals(action, ignoreCase = true)) {
+                EDT.ensureEDT {
+                    digmaStatusUpdater.stop(project)
+                    MainToolWindowCardsController.getInstance(project).wizardFinished()
                 }
             }
             if (JCefMessagesUtils.GLOBAL_SEND_TRACKING_EVENT.equals(action, ignoreCase = true)) {
@@ -175,6 +188,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                 }
             }
             if (JCefMessagesUtils.INSTALLATION_WIZARD_FINISH.equals(action, ignoreCase = true)) {
+                digmaStatusUpdater.stop(project)
                 val (_, payload) = JCefMessagesUtils.parseJsonToObject(
                     request,
                     FinishRequest::class.java
@@ -465,6 +479,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
 
     val jcefDigmaPanel = object: DisposablePanel(){
         override fun dispose() {
+            digmaStatusUpdater.stop(project)
             jbCefBrowser.dispose()
             jbCefClient.dispose()
             msgRouter.dispose()
@@ -594,3 +609,56 @@ fun sendIsDockerComposeInstalled(result: Boolean, jbCefBrowser: JBCefBrowser) {
     JCefBrowserUtil.postJSMessage(isDockerComposeInstalledRequestMessage, jbCefBrowser)
 }
 
+
+class DigmaStatusUpdater {
+
+    private val logger: Logger = Logger.getInstance(this::class.java)
+
+    private var myDisposable: Disposable? = null
+
+    private var digmaInstallationStatus = AtomicReference<DigmaInstallationStatus?>(null)
+
+    fun start(project: Project, cefBrowser: CefBrowser) {
+
+        Log.log(logger::trace, project, "starting DigmaStatusUpdater")
+
+        myDisposable = Disposer.newDisposable()
+        digmaInstallationStatus.set(null)
+
+        myDisposable?.let {
+            @Suppress("UnstableApiUsage")
+            DisposingScope(it).launch {
+                try {
+                    while (isActive) {
+
+                        val currentStatus = project.service<DockerService>().getActualRunningEngine(project)
+
+                        if (!isActive) break
+
+                        //DigmaInstallationStatus is data class so we can rely on equals
+                        if (digmaInstallationStatus.get() == null || currentStatus != digmaInstallationStatus.get()) {
+                            Log.log(logger::trace, project, "status changed current:{}, previous:{}", currentStatus, digmaInstallationStatus)
+                            digmaInstallationStatus.set(currentStatus)
+                            Log.log(logger::trace, project, "updating wizard with digmaInstallationStatus {}", digmaInstallationStatus)
+                            digmaInstallationStatus.get()?.let { status ->
+                                updateDigmaEngineStatus(cefBrowser, status)
+                            }
+
+                        }
+
+                        delay(2000)
+                    }
+
+                } catch (e: Exception) {
+                    ErrorReporter.getInstance().reportError(project, "DigmaStatusUpdater.loop", e)
+                }
+            }
+        }
+    }
+
+    fun stop(project: Project) {
+        myDisposable?.dispose()
+    }
+
+
+}

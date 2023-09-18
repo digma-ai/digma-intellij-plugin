@@ -657,7 +657,9 @@ class DigmaStatusUpdater {
     }
 
     fun stop(project: Project) {
-        myDisposable?.dispose()
+        myDisposable?.let {
+            Disposer.dispose(it)
+        }
     }
 
 

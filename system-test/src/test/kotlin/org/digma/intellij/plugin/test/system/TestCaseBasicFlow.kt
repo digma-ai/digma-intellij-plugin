@@ -204,7 +204,7 @@ class TestCaseBasicFlow : DigmaTestCase() {
 
 
         // check the spy --> should push some json to the browser - should see that env2 is in the json
-        waitFor(500, "spy to take effect")
+        waitFor(1000, "spy to take effect")
         PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
 
         replaceExecuteJSWithAssertionFunction(insightCefBrowser, this::assertJsonForBulletThree)
@@ -221,7 +221,7 @@ class TestCaseBasicFlow : DigmaTestCase() {
 
         waitFor(1000, "go to span to be processed")
         PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
-
+        
         DigmaAssertion.assertFlag()
 
 
@@ -272,16 +272,10 @@ class TestCaseBasicFlow : DigmaTestCase() {
         targetButton.doClick()
         waitFor(1000, "go to code to be processed and switch to document2")
         PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
-//        
-//        
-//        // Then I should be navigated to document#2 and the caret should be navigated to the span location.
+
+        // Then I should be navigated to document#2 and the caret should be navigated to the span location.
         val currentDocument = FileEditorManager.getInstance(project).selectedEditor?.file
         Log.test(logger::info, "currentDocument: {}", currentDocument?.name)
-//        
-//        val openFiles = FileEditorManager.getInstance(project).openFiles
-//        // check that the document is changed to document2 in the editor
-//        Log.test(logger::info, "openFiles: {}", openFiles.map { it.name })
-//        
         //check in document Info service that the document is changed to document2
         val currentDocumentByDigma = documentInfoService.focusedFile
         Log.test(logger::info, "currentDocumentByDigma: {}", currentDocumentByDigma?.name)
@@ -411,7 +405,7 @@ class TestCaseBasicFlow : DigmaTestCase() {
         val actualScopes = insights.map { it.scope }.toSet()
         val expectedScope =
             BulletThreeData.expectedInsightsOfMethods.methodsWithInsights.map { it.insights.map { it2 -> it2.scope } }.flatten().toSet()
-//        DigmaAssertion.assertEquals(expectedScope, actualScopes) // todo: uncomment it when bullet5 is established
+        DigmaAssertion.assertEquals(expectedScope, actualScopes)
         Log.test(logger::info, "Finished assertion for bullet 3 in the browser")
     }
 

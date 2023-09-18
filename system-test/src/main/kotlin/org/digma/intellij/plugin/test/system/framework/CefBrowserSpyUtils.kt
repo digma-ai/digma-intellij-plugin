@@ -2,44 +2,19 @@ package org.digma.intellij.plugin.test.system.framework
 
 import com.intellij.ui.jcef.JBCefBrowser
 import org.cef.browser.CefBrowser
+import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator
 import org.digma.intellij.plugin.log.Log
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
 import java.lang.reflect.Field
 
 
-@Suppress("UNCHECKED_CAST")
-fun <T, H> replaceCefBrowserWithSpy(
-    containingService: T,
-    messageHandlerFieldName: String,
-    messageHandlerType: Class<H>,
-    jbBrowserFieldName: String,
-): Pair<JBCefBrowser, CefBrowser> {
 
-
-    //getting the handler field and setting it accessible to be able to get the handler
-    val handlerField: Field = try {
-        containingService!!::class.java.getDeclaredField(messageHandlerFieldName)
-    } catch (ex: NoSuchFieldException) {
-        Log.test(logger::info, "No field of name: {} was found in class: {}", messageHandlerFieldName, containingService!!::class.java.name)
-        throw Exception("No field of name: $messageHandlerFieldName was found in class: ${containingService!!::class.java.name}")
-    }
-    handlerField.isAccessible = true
-    val routerHandler: H = handlerField.get(containingService) as H
-
-    // getting the browser field and setting it accessible to be able to get the browser
-    val jbBrowserField: Field = try {
-        routerHandler!!::class.java.getDeclaredField(jbBrowserFieldName)
-    } catch (ex: NoSuchFieldException) {
-        Log.test(logger::info, "No field of name: {} was found in class: {}", jbBrowserFieldName, messageHandlerType.name)
-        throw Exception("No field of name: $jbBrowserFieldName was found in class: ${messageHandlerType.name}")
-    }
-    jbBrowserField.isAccessible = true
-
-
-    val browser: JBCefBrowser = jbBrowserField.get(routerHandler) as JBCefBrowser
-    val spiedJBCefBrowser: JBCefBrowser = Mockito.spy(browser)
-    jbBrowserField.set(routerHandler, spiedJBCefBrowser)
+fun createSpyBrowsers(): Pair<JBCefBrowser, CefBrowser> {
+    val browserBuilder = JBCefBrowserBuilderCreator.create()
+    val browser = browserBuilder
+        .setUrl("http://mockURL/index.html")
+        .build()
 
     val cefBrowserField = try {
         browser.javaClass.getDeclaredField("myCefBrowser")
@@ -49,40 +24,33 @@ fun <T, H> replaceCefBrowserWithSpy(
         superClass.getDeclaredField("myCefBrowser")
     }
     cefBrowserField.isAccessible = true
-
-
+    
     val cefBrowser: CefBrowser = cefBrowserField.get(browser) as CefBrowser
+    val jbBrowserSpy = Mockito.spy(browser)
     val spiedCefBrowser: CefBrowser = Mockito.spy(cefBrowser)
     cefBrowserField.set(browser, spiedCefBrowser)
-
-    // return the spies
-    return spiedJBCefBrowser to spiedCefBrowser // returning the spies to be able to mock the calls
-
+    
+    prepareDefaultSpyCalls(jbBrowserSpy, spiedCefBrowser)
+    
+    return jbBrowserSpy to spiedCefBrowser
 }
 
-
-/*
-todo: 
-    Refactor this to create a new browser and insert it into the service.
-    maybe we don't need to take the exising browser from the service and spy on it, just insert the Cef instead 
- */
-fun <T> replaceJBCefWithExistingSpy(
-    containingService: T,
+fun <T> injectSpyBrowser(
+    containingInstance: T,
     jbBrowserFieldName: String,
     jbBrowserSpy: JBCefBrowser,
 ) {
 
     // getting the browser field and setting it accessible to be able to get the browser
     val jbBrowserField: Field = try {
-        containingService!!::class.java.getDeclaredField(jbBrowserFieldName)
+        containingInstance!!::class.java.getDeclaredField(jbBrowserFieldName)
     } catch (ex: NoSuchFieldException) {
-        Log.test(logger::info, "No field of name: {} was found in class: {}", jbBrowserFieldName, containingService!!::class.java.name)
-        throw Exception("No field of name: $jbBrowserFieldName was found in class: ${containingService!!::class.java.name}")
+        Log.test(logger::info, "No field of name: {} was found in class: {}", jbBrowserFieldName, containingInstance!!::class.java.name)
+        throw Exception("No field of name: $jbBrowserFieldName was found in class: ${containingInstance!!::class.java.name}")
     }
     jbBrowserField.isAccessible = true
-    jbBrowserField.set(containingService, jbBrowserSpy)
+    jbBrowserField.set(containingInstance, jbBrowserSpy)
 }
-
 
 fun prepareDefaultSpyCalls(jbCaf: JBCefBrowser, caf: CefBrowser) {
 
@@ -113,5 +81,11 @@ fun replaceExecuteJSWithAssertionFunction(spiedCaf: CefBrowser, assertion: (Stri
                 assertion(stripedPayload)
             }
     }.`when`(spiedCaf).executeJavaScript(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())
+}
+
+fun clearSpyAssertion(spiadCaf: CefBrowser) {
+    Mockito.doAnswer { invocationOnMock ->
+        invocationOnMock.callRealMethod()
+    }.`when`(spiadCaf).executeJavaScript(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())
 }
     

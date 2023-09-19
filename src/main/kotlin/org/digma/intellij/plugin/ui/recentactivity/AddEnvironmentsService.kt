@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.recentactivity
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.util.StdDateFormat
 import com.intellij.execution.CommonProgramRunConfigurationParameters
 import com.intellij.execution.RunManager
@@ -114,8 +115,10 @@ class AddEnvironmentsService {
                         null
                     }
 
-                    val serverApiUrl = jsonNode.get("serverApiUrl")?.asText()
-                    val token = jsonNode.get("token")?.asText()
+                    val serverApiUrl =
+                        if (jsonNode.get("serverApiUrl") === null || jsonNode.get("serverApiUrl") is NullNode) null else jsonNode.get("serverApiUrl")
+                            .asText()
+                    val token = if (jsonNode.get("token") === null || jsonNode.get("token") is NullNode) null else jsonNode.get("token").asText()
 
                     pendingEnvironments.add(PendingEnvironment(name, environmentType, additionToConfigResult, serverApiUrl, token))
                 }

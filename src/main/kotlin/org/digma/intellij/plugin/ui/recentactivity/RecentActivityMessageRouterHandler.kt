@@ -5,7 +5,10 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.analytics.ConnectionTestResult
 import org.digma.intellij.plugin.common.Backgroundable
+import org.digma.intellij.plugin.common.ExceptionUtils
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
@@ -88,15 +91,20 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
             }
 
             "RECENT_ACTIVITY/CHECK_REMOTE_ENVIRONMENT_CONNECTION" -> {
-                val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
-                val serverUrl = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("serverAddress").asText()
-                val token = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("token").asText()
-                if (environment != null && serverUrl != null) {
-                    service<AddEnvironmentsService>().setEnvironmentServerUrl(project, environment, serverUrl, token)
-                    Backgroundable.executeOnPooledThread {
-                        val connectionTestResult = project.service<AnalyticsService>().testRemoteConnection(serverUrl, token)
-                        sendRemoteConnectionCheckResult(browser, connectionTestResult)
+                try {
+                    val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
+                    val serverUrl = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("serverAddress").asText()
+                    val token = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("token").asText()
+                    if (environment != null && serverUrl != null) {
+                        service<AddEnvironmentsService>().setEnvironmentServerUrl(project, environment, serverUrl, token)
+                        Backgroundable.executeOnPooledThread {
+                            val connectionTestResult = project.service<AnalyticsService>().testRemoteConnection(serverUrl, token)
+                            sendRemoteConnectionCheckResult(browser, connectionTestResult)
+                        }
                     }
+                } catch (e: Exception) {
+                    ErrorReporter.getInstance().reportError(project, "RecentActivityMessageRouterHandler.CHECK_REMOTE_ENVIRONMENT_CONNECTION", e)
+                    sendRemoteConnectionCheckResult(browser, ConnectionTestResult.failure(ExceptionUtils.getNonEmptyMessage(e)))
                 }
             }
 

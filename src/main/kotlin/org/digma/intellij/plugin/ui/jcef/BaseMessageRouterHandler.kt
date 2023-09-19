@@ -89,7 +89,23 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                                 project,
                                 openInInternalBrowserRequest.payload.title,
                                 openInInternalBrowserRequest.payload.url,
-                                null
+                                "<!DOCTYPE html>\n" +
+                                        "<html lang=\"en\">\n" +
+                                        "  <head>\n" +
+                                        "    <meta charset=\"UTF-8\" />\n" +
+                                        "    <style>\n" +
+                                        "      body {\n" +
+                                        "        display: flex;\n" +
+                                        "        justify-content: center;\n" +
+                                        "        padding-top: 100px;\n" +
+                                        "        text-align: center;\n" +
+                                        "      }\n" +
+                                        "    </style>\n" +
+                                        "  </head>\n" +
+                                        "  <body>\n" +
+                                        "    <h1>Timeout loading page<h1>\n" +
+                                        "  </body>\n" +
+                                        "</html>"
                             )
                         }
                     }

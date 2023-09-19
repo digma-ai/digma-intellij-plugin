@@ -84,7 +84,13 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
 
                     JCefMessagesUtils.GLOBAL_OPEN_URL_IN_EDITOR_TAB -> {
                         val openInInternalBrowserRequest = jsonToObject(request, OpenInInternalBrowserRequest::class.java)
-                        HTMLEditorProvider.openEditor(project, openInInternalBrowserRequest.payload.title, openInInternalBrowserRequest.payload.url)
+                        EDT.ensureEDT {
+                            HTMLEditorProvider.openEditor(
+                                project,
+                                openInInternalBrowserRequest.payload.title,
+                                openInInternalBrowserRequest.payload.url
+                            )
+                        }
                     }
 
                     JCefMessagesUtils.GLOBAL_SEND_TRACKING_EVENT -> {

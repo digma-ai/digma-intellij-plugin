@@ -74,7 +74,7 @@ fun prepareDefaultSpyCalls(jbCaf: JBCefBrowser, caf: CefBrowser) {
 
 fun replaceExecuteJSWithAssertionFunction(spiedCaf: CefBrowser, assertion: (String) -> Unit) {
     Mockito.doAnswer { invocationOnMock ->
-        Log.test(logger::info, "executeJS - of mock before real call ", Thread.currentThread().stackTrace)
+        Log.test(logger::info, "executeJS - of mock before assertion call {}", Thread.currentThread().stackTrace[1])
         invocationOnMock.getArgument(0, String::class.java)
             .also { props ->
                 val stripedPayload = props.substringAfter("window.postMessage(").substringBeforeLast(");")
@@ -83,9 +83,9 @@ fun replaceExecuteJSWithAssertionFunction(spiedCaf: CefBrowser, assertion: (Stri
     }.`when`(spiedCaf).executeJavaScript(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())
 }
 
-fun clearSpyAssertion(spiadCaf: CefBrowser) {
+fun clearSpyAssertion(spiedCaf: CefBrowser) {
     Mockito.doAnswer { invocationOnMock ->
         invocationOnMock.callRealMethod()
-    }.`when`(spiadCaf).executeJavaScript(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())
+    }.`when`(spiedCaf).executeJavaScript(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())
 }
     

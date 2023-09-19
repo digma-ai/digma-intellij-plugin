@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.test.system
 
+import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.psi.PsiFile
 import com.intellij.testFramework.PlatformTestUtil
@@ -10,9 +11,9 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.recentactivity.RecentActivityService
 import org.digma.intellij.plugin.test.system.framework.MessageBusTestListeners
 import org.digma.intellij.plugin.test.system.framework.mockRestAnalyticsProvider
+import org.digma.intellij.plugin.ui.recentactivity.RecentActivityService
 
 
 open class DigmaTestCase : LightJavaCodeInsightFixtureTestCase() {
@@ -30,7 +31,7 @@ open class DigmaTestCase : LightJavaCodeInsightFixtureTestCase() {
     
     protected val recentActivityService: RecentActivityService
         get() {
-            return RecentActivityService.getInstance(project)
+            return project.service<RecentActivityService>()
         }
 
     protected lateinit var mockAnalyticsProvider: RestAnalyticsProvider

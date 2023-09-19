@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
+import org.digma.intellij.plugin.ui.jcef.updateDigmaEngineStatus
 import org.digma.intellij.plugin.ui.list.insights.traceButtonName
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityGoToSpanRequest
@@ -32,6 +33,7 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
         when (action) {
 
             "RECENT_ACTIVITY/INITIALIZE" -> {
+                updateDigmaEngineStatus(project, browser)
                 val environments = project.service<AnalyticsService>().environment.getEnvironments()
                 project.service<LiveViewUpdater>().appInitialized()
                 project.service<RecentActivityUpdater>().updateLatestActivities(environments)

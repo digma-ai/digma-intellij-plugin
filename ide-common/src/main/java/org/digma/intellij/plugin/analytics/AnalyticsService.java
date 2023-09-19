@@ -199,11 +199,6 @@ public class AnalyticsService implements Disposable {
     }
 
 
-//    public HealthCheckStatus healthCheck(){
-//        return executeCatching(() -> analyticsProviderProxy.healthCheck());
-//    }
-
-
     @Nullable
     public List<String> getEnvironments() {
         try {

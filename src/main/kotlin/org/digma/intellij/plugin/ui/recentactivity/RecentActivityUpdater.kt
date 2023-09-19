@@ -121,8 +121,6 @@ class RecentActivityUpdater(val project: Project) : Disposable {
 
         removeFromPendingEnvironments(environments)
 
-//        val sortedEnvironments = getSortedEnvironments(environments, CommonUtils.getLocalHostname())
-
         Log.log(logger::trace, "got environments {}", environments)
 
         val pendingEnvironments = service<AddEnvironmentsService>().getPendingEnvironments()
@@ -213,12 +211,6 @@ class RecentActivityUpdater(val project: Project) : Disposable {
                 )
             }.toList()
     }
-
-//    private fun getAdjustedEnvName(environment: String): String {
-//        val envUppercase = environment.uppercase(Locale.getDefault())
-//        if (envUppercase.endsWith(SUFFIX_OF_LOCAL)) return LOCAL_ENV
-//        return if (envUppercase.endsWith(SUFFIX_OF_LOCAL_TESTS)) LOCAL_TESTS_ENV else environment
-//    }
 
 
     private fun removeFromPendingEnvironments(environments: List<String>) {

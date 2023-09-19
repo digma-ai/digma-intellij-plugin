@@ -8,10 +8,8 @@ import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.docker.DigmaInstallationStatus
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
-import org.digma.intellij.plugin.ui.jcef.model.DigmaEngineStatusMessage
 import org.digma.intellij.plugin.ui.jcef.model.ApiUrlPayload
-import org.digma.intellij.plugin.ui.jcef.model.ConnectionStatusMessage
-import org.digma.intellij.plugin.ui.jcef.model.IsDigmaRunningPayload
+import org.digma.intellij.plugin.ui.jcef.model.DigmaEngineStatusMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetApiUrlMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetUserEmailMessage
 import org.digma.intellij.plugin.ui.jcef.model.UserEmailPayload

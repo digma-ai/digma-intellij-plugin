@@ -101,12 +101,12 @@ class JCefComponent(
     override fun dispose() {
         try {
             Disposer.dispose(connectionEventAlarmParentDisposable)
+            Disposer.dispose(analyticsServiceConnectionEventMessageBusConnection)
+            Disposer.dispose(settingsListenerParentDisposable)
             jbCefBrowser.dispose()
             cefMessageRouter.dispose()
             jbCefBrowser.jbCefClient.removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
             ApplicationUISettingsChangeNotifier.getInstance(project).removeSettingsChangeListener(settingsChangeListener)
-            Disposer.dispose(analyticsServiceConnectionEventMessageBusConnection)
-            Disposer.dispose(settingsListenerParentDisposable)
         } catch (e: Exception) {
             ErrorReporter.getInstance().reportError(project, "JCefComponent.dispose", e)
         }

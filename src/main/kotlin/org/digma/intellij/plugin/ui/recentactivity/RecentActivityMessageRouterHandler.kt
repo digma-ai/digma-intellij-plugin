@@ -12,12 +12,10 @@ import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
-import org.digma.intellij.plugin.ui.jcef.updateDigmaEngineStatus
 import org.digma.intellij.plugin.ui.jcef.sendUserEmail
-import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
+import org.digma.intellij.plugin.ui.jcef.updateDigmaEngineStatus
 import org.digma.intellij.plugin.ui.list.insights.traceButtonName
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
-import org.digma.intellij.plugin.ui.recentactivity.model.ConnectionTestResultMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityGoToSpanRequest
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityGoToTraceRequest
 

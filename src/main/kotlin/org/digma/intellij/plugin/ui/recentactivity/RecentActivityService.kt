@@ -7,12 +7,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
-import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.common.LOCAL_ENV
-import org.digma.intellij.plugin.common.LOCAL_TESTS_ENV
-import org.digma.intellij.plugin.common.SUFFIX_OF_LOCAL
-import org.digma.intellij.plugin.common.SUFFIX_OF_LOCAL_TESTS
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.log.Log
@@ -28,7 +23,6 @@ import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEntrySpanForTracePayload
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEntrySpanPayload
-import java.util.Locale
 
 @Service(Service.Level.PROJECT)
 class RecentActivityService(val project: Project) : Disposable {

@@ -16,9 +16,6 @@ import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.LOCAL_ENV
 import org.digma.intellij.plugin.common.LOCAL_TESTS_ENV
-import org.digma.intellij.plugin.common.SUFFIX_OF_LOCAL
-import org.digma.intellij.plugin.common.SUFFIX_OF_LOCAL_TESTS
-import org.digma.intellij.plugin.common.getSortedEnvironments
 import org.digma.intellij.plugin.common.isEnvironmentLocal
 import org.digma.intellij.plugin.common.isEnvironmentLocalTests
 import org.digma.intellij.plugin.common.isLocalEnvironmentMine
@@ -36,7 +33,6 @@ import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivitiesMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivitiesMessageRequest
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEnvironment
 import java.util.Date
-import java.util.Locale
 import java.util.Optional
 import javax.swing.Icon
 

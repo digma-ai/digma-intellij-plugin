@@ -19,6 +19,9 @@ import org.digma.intellij.plugin.common.LOCAL_TESTS_ENV
 import org.digma.intellij.plugin.common.SUFFIX_OF_LOCAL
 import org.digma.intellij.plugin.common.SUFFIX_OF_LOCAL_TESTS
 import org.digma.intellij.plugin.common.getSortedEnvironments
+import org.digma.intellij.plugin.common.isEnvironmentLocal
+import org.digma.intellij.plugin.common.isEnvironmentLocalTests
+import org.digma.intellij.plugin.common.isLocalEnvironmentMine
 import org.digma.intellij.plugin.icons.AppIcons
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.log.Log
@@ -27,6 +30,7 @@ import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult
 import org.digma.intellij.plugin.recentactivity.RecentActivityLogic.Companion.isRecentTime
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
+import org.digma.intellij.plugin.ui.recentactivity.model.EnvironmentType
 import org.digma.intellij.plugin.ui.recentactivity.model.PendingEnvironment
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivitiesMessagePayload
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivitiesMessageRequest
@@ -121,15 +125,15 @@ class RecentActivityUpdater(val project: Project) : Disposable {
 
         removeFromPendingEnvironments(environments)
 
-        val sortedEnvironments = getSortedEnvironments(environments, CommonUtils.getLocalHostname())
+//        val sortedEnvironments = getSortedEnvironments(environments, CommonUtils.getLocalHostname())
 
-        Log.log(logger::trace, "got sortedEnvironments {}", sortedEnvironments)
+        Log.log(logger::trace, "got environments {}", environments)
 
         val pendingEnvironments = service<AddEnvironmentsService>().getPendingEnvironments()
 
         Log.log(logger::trace, "got pendingEnvironments {}", pendingEnvironments)
 
-        val allEnvs = mergeWithPendingEnvironments(sortedEnvironments, pendingEnvironments)
+        val allEnvs = mergeWithPendingEnvironments(environments, pendingEnvironments)
 
         Log.log(logger::trace, "got allEnvs {}", allEnvs)
 
@@ -149,23 +153,52 @@ class RecentActivityUpdater(val project: Project) : Disposable {
     }
 
     private fun mergeWithPendingEnvironments(
-        sortedEnvironments: List<String>,
-        pendingEnvironments: Map<String, PendingEnvironment>,
+        environments: List<String>,
+        pendingEnvironments: List<PendingEnvironment>,
     ): List<RecentActivityEnvironment> {
 
         val allEnvs = mutableListOf<RecentActivityEnvironment>()
 
-        val permEnvs = sortedEnvironments.map { e: String -> RecentActivityEnvironment(e, false) }.toList()
-        allEnvs.addAll(permEnvs)
-        val pendingEnvs = pendingEnvironments.map { entry: Map.Entry<String, PendingEnvironment> ->
+        val recentActivityEnvs = buildRecentActivityEnvs(environments)
+        allEnvs.addAll(recentActivityEnvs)
+
+        val pendingEnvs = pendingEnvironments.map { p: PendingEnvironment ->
             RecentActivityEnvironment(
-                entry.value.name,
+                p.name,
+                p.name,
                 true,
-                entry.value.additionToConfigResult
+                p.additionToConfigResult,
+                p.type
             )
         }
         allEnvs.addAll(pendingEnvs)
+
+        allEnvs.sortBy { recentActivityEnvironment: RecentActivityEnvironment -> recentActivityEnvironment.name }
+
         return allEnvs
+    }
+
+    private fun buildRecentActivityEnvs(environments: List<String>): List<RecentActivityEnvironment> {
+
+        val hostname = CommonUtils.getLocalHostname()
+
+        val transformEnvToRecentActivityEnvironment: (String) -> RecentActivityEnvironment = { env ->
+
+            val displayName = if (isEnvironmentLocal(env) && isLocalEnvironmentMine(env, hostname)) {
+                LOCAL_ENV
+            } else if (isEnvironmentLocalTests(env) && isLocalEnvironmentMine(env, hostname)) {
+                LOCAL_TESTS_ENV
+            } else {
+                env
+            }
+
+            val type: EnvironmentType =
+                if (displayName == LOCAL_ENV || displayName == LOCAL_TESTS_ENV) EnvironmentType.local else EnvironmentType.shared
+
+            RecentActivityEnvironment(displayName, env, false, null, type, null, null)
+        }
+
+        return environments.map(transformEnvToRecentActivityEnvironment)
     }
 
 
@@ -173,7 +206,7 @@ class RecentActivityUpdater(val project: Project) : Disposable {
         return recentActivityData.entries.stream()
             .map { (environment, traceFlowDisplayName, firstEntrySpan, lastEntrySpan, latestTraceId, latestTraceTimestamp, latestTraceDuration, slimAggregatedInsights): RecentActivityResponseEntry ->
                 RecentActivityResponseEntry(
-                    getAdjustedEnvName(environment),
+                    environment,
                     traceFlowDisplayName,
                     firstEntrySpan,
                     lastEntrySpan,
@@ -185,18 +218,18 @@ class RecentActivityUpdater(val project: Project) : Disposable {
             }.toList()
     }
 
-    private fun getAdjustedEnvName(environment: String): String {
-        val envUppercase = environment.uppercase(Locale.getDefault())
-        if (envUppercase.endsWith(SUFFIX_OF_LOCAL)) return LOCAL_ENV
-        return if (envUppercase.endsWith(SUFFIX_OF_LOCAL_TESTS)) LOCAL_TESTS_ENV else environment
-    }
+//    private fun getAdjustedEnvName(environment: String): String {
+//        val envUppercase = environment.uppercase(Locale.getDefault())
+//        if (envUppercase.endsWith(SUFFIX_OF_LOCAL)) return LOCAL_ENV
+//        return if (envUppercase.endsWith(SUFFIX_OF_LOCAL_TESTS)) LOCAL_TESTS_ENV else environment
+//    }
 
 
     private fun removeFromPendingEnvironments(environments: List<String>) {
-        environments.forEach {
-            if (service<AddEnvironmentsService>().getPendingEnvironments().containsKey(it)) {
-                Log.log(logger::info, "found environment {} from backend in pending environments, removing it from pending", it)
-                service<AddEnvironmentsService>().removeEnvironment(it)
+        environments.forEach { env ->
+            if (service<AddEnvironmentsService>().isPendingEnv(env)) {
+                Log.log(logger::info, "found environment {} from backend in pending environments, removing it from pending", env)
+                service<AddEnvironmentsService>().removeEnvironment(env)
             }
         }
     }

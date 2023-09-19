@@ -27,7 +27,6 @@
         window.isDigmaEngineRunning = ${isDigmaEngineRunning?string('true', 'false')};
         window.isDockerInstalled = ${isDockerInstalled?string('true', 'false')};
         window.isDockerComposeInstalled = ${isDockerComposeInstalled?string('true', 'false')};
-        window.digmaApiUrl = "${digmaApiUrl}";
 
         window.documentationPage = "${documentationPage}"
 

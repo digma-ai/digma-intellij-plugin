@@ -13,6 +13,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.CommonUtils;
 import org.digma.intellij.plugin.common.DatesUtils;
 import org.digma.intellij.plugin.common.EDT;
+import org.digma.intellij.plugin.common.ExceptionUtils;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
@@ -181,11 +182,34 @@ public class AnalyticsService implements Disposable {
     }
 
 
+    @NotNull
+    public ConnectionTestResult testRemoteConnection(@NotNull String serverUrl, @Nullable String token) {
+        try (RestAnalyticsProvider analyticsProvider = new RestAnalyticsProvider(serverUrl, token)) {
+            //analyticsProvider.healthCheck();
+            var envs = analyticsProvider.getEnvironments();
+            if (envs != null) {
+                return ConnectionTestResult.success();
+            }
+            return ConnectionTestResult.failure("unknown");
+        } catch (Exception e) {
+            ErrorReporter.getInstance().reportError(project, "AnalyticsService.testRemoteConnection", e);
+            return ConnectionTestResult.failure(ExceptionUtils.getNonEmptyMessage(e));
+        }
+
+    }
+
+
+//    public HealthCheckStatus healthCheck(){
+//        return executeCatching(() -> analyticsProviderProxy.healthCheck());
+//    }
+
+
     @Nullable
     public List<String> getEnvironments() {
         try {
             var environments = analyticsProviderProxy.getEnvironments();
             var hostName = CommonUtils.getLocalHostname();
+            //filter out other LOCAL environments, keep only mine LOCAL
             return environments.stream()
                     .filter(env -> (!isEnvironmentLocal(env) && !isEnvironmentLocalTests(env)) || isLocalEnvironmentMine(env, hostName))
                     .toList();

@@ -89,7 +89,7 @@ class RecentActivityService(val project: Project) : Disposable {
                     if (canNavigate) {
                         project.service<MainToolWindowCardsController>().closeAllNotificationsIfShowing()
                         val environmentsSupplier: EnvironmentsSupplier = project.service<AnalyticsService>().environment
-                        val actualEnvName: String = adjustBackEnvNameIfNeeded(payload.environment)
+                        val actualEnvName: String = payload.environment
                         environmentsSupplier.setCurrent(actualEnvName, false) {
                             EDT.ensureEDT {
                                 project.service<InsightsViewOrchestrator>().showInsightsForSpanOrMethodAndNavigateToCode(spanId, methodId)
@@ -99,7 +99,7 @@ class RecentActivityService(val project: Project) : Disposable {
                         project.service<MainToolWindowCardsController>().closeAllNotificationsIfShowing()
                         NotificationUtil.showNotification(project, "code object could not be found in the workspace")
                         val environmentsSupplier: EnvironmentsSupplier = project.service<AnalyticsService>().environment
-                        val actualEnvName: String = adjustBackEnvNameIfNeeded(payload.environment)
+                        val actualEnvName: String = payload.environment
                         environmentsSupplier.setCurrent(actualEnvName, false) {
                             EDT.ensureEDT {
                                 project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(payload.span.spanCodeObjectId)
@@ -116,17 +116,17 @@ class RecentActivityService(val project: Project) : Disposable {
     }
 
 
-    private fun adjustBackEnvNameIfNeeded(environment: String): String {
-
-        val localHostname = CommonUtils.getLocalHostname()
-
-        if (environment.equals(LOCAL_ENV, ignoreCase = true)) {
-            return (localHostname + SUFFIX_OF_LOCAL).uppercase(Locale.getDefault())
-        }
-        return if (environment.equals(LOCAL_TESTS_ENV, ignoreCase = true)) {
-            (localHostname + SUFFIX_OF_LOCAL_TESTS).uppercase(Locale.getDefault())
-        } else environment
-    }
+//    private fun adjustBackEnvNameIfNeeded(environment: String): String {
+//
+//        val localHostname = CommonUtils.getLocalHostname()
+//
+//        if (environment.equals(LOCAL_ENV, ignoreCase = true)) {
+//            return (localHostname + SUFFIX_OF_LOCAL).uppercase(Locale.getDefault())
+//        }
+//        return if (environment.equals(LOCAL_TESTS_ENV, ignoreCase = true)) {
+//            (localHostname + SUFFIX_OF_LOCAL_TESTS).uppercase(Locale.getDefault())
+//        } else environment
+//    }
 
 
     fun processRecentActivityGoToTraceRequest(payload: RecentActivityEntrySpanForTracePayload?) {
@@ -163,7 +163,7 @@ class RecentActivityService(val project: Project) : Disposable {
 
             Log.log(logger::trace, project, "deleteEnvironment called with {}", environment)
 
-            val realEnvName = adjustBackEnvNameIfNeeded(environment)
+            val realEnvName = environment
             val response = project.service<AnalyticsService>().deleteEnvironment(realEnvName)
             if (response.success) {
                 Log.log(logger::trace, project, "deleteEnvironment {} finished successfully", environment)

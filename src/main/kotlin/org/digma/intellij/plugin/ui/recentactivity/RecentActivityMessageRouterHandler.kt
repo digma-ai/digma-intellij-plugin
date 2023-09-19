@@ -14,8 +14,10 @@ import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.updateDigmaEngineStatus
 import org.digma.intellij.plugin.ui.jcef.sendUserEmail
+import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 import org.digma.intellij.plugin.ui.list.insights.traceButtonName
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
+import org.digma.intellij.plugin.ui.recentactivity.model.ConnectionTestResultMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityGoToSpanRequest
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityGoToTraceRequest
 
@@ -72,6 +74,30 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                     service<AddEnvironmentsService>().addEnvironment(it)
                     Backgroundable.executeOnPooledThread {
                         project.service<RecentActivityUpdater>().updateLatestActivities()
+                    }
+                }
+            }
+
+            "RECENT_ACTIVITY/SET_ENVIRONMENT_TYPE" -> {
+                val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
+                val type = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("type").asText()
+                if (environment != null && type != null) {
+                    service<AddEnvironmentsService>().setEnvironmentType(project, environment, type)
+                    Backgroundable.executeOnPooledThread {
+                        project.service<RecentActivityUpdater>().updateLatestActivities()
+                    }
+                }
+            }
+
+            "RECENT_ACTIVITY/CHECK_REMOTE_ENVIRONMENT_CONNECTION" -> {
+                val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
+                val serverUrl = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("serverAddress").asText()
+                val token = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("token").asText()
+                if (environment != null && serverUrl != null) {
+                    service<AddEnvironmentsService>().setEnvironmentServerUrl(project, environment, serverUrl, token)
+                    Backgroundable.executeOnPooledThread {
+                        val connectionTestResult = project.service<AnalyticsService>().testRemoteConnection(serverUrl, token)
+                        sendRemoteConnectionCheckResult(browser, connectionTestResult)
                     }
                 }
             }

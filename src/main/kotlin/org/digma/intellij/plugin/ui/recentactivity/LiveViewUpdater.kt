@@ -41,7 +41,9 @@ class LiveViewUpdater(val project: Project) : Disposable {
     private val appInitialized: AtomicBoolean = AtomicBoolean(false)
 
     override fun dispose() {
-        myDisposable?.dispose()
+        myDisposable?.let {
+            Disposer.dispose(it)
+        }
     }
 
 
@@ -59,7 +61,9 @@ class LiveViewUpdater(val project: Project) : Disposable {
 
         Log.log(logger::trace, project, "Got sendLiveData request for {}", codeObjectId)
 
-        myDisposable?.dispose()
+        myDisposable?.let {
+            Disposer.dispose(it)
+        }
 
         myDisposable = Disposer.newDisposable()
 
@@ -141,7 +145,9 @@ class LiveViewUpdater(val project: Project) : Disposable {
     @Synchronized
     fun stopLiveView(codeObjectId: String?) {
         //in the future we may have multiple live views, in that case we will recognize them by codeObjectId
-        myDisposable?.dispose()
+        myDisposable?.let {
+            Disposer.dispose(it)
+        }
         myJob?.cancel()
     }
 

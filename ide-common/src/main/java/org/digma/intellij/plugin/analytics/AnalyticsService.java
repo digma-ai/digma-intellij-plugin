@@ -185,7 +185,7 @@ public class AnalyticsService implements Disposable {
     @NotNull
     public ConnectionTestResult testRemoteConnection(@NotNull String serverUrl, @Nullable String token) {
         try (RestAnalyticsProvider analyticsProvider = new RestAnalyticsProvider(serverUrl, token)) {
-            //analyticsProvider.healthCheck();
+            //todo: use health check to test connection
             var envs = analyticsProvider.getEnvironments();
             if (envs != null) {
                 return ConnectionTestResult.success();

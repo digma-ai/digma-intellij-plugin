@@ -13,6 +13,8 @@ import org.digma.intellij.plugin.ui.jcef.model.ApiUrlPayload
 import org.digma.intellij.plugin.ui.jcef.model.ConnectionStatusMessage
 import org.digma.intellij.plugin.ui.jcef.model.IsDigmaRunningPayload
 import org.digma.intellij.plugin.ui.jcef.model.SetApiUrlMessage
+import org.digma.intellij.plugin.ui.jcef.model.SetUserEmailMessage
+import org.digma.intellij.plugin.ui.jcef.model.UserEmailPayload
 
 
 /**
@@ -54,4 +56,12 @@ fun sendApiUrl(cefBrowser: CefBrowser, url: String) {
         "GLOBAL/SET_DIGMA_API_URL", ApiUrlPayload(url)
     )
     serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, setDigmaApiUrlMessage)
+}
+
+fun sendUserEmail(cefBrowser: CefBrowser, email: String) {
+    val setUserEmailMessage = SetUserEmailMessage(
+        JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
+        "GLOBAL/SET_USER_EMAIL", UserEmailPayload(email)
+    )
+    serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, setUserEmailMessage)
 }

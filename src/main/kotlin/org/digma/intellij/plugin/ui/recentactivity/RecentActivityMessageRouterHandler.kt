@@ -8,10 +8,12 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.updateDigmaEngineStatus
+import org.digma.intellij.plugin.ui.jcef.sendUserEmail
 import org.digma.intellij.plugin.ui.list.insights.traceButtonName
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityGoToSpanRequest
@@ -98,6 +100,12 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                     service<AddEnvironmentsService>().addToCurrentRunConfig(project, it)
                     project.service<RecentActivityUpdater>().updateLatestActivities()
                 }
+            }
+
+            "RECENT_ACTIVITY/REGISTER" -> {
+                val email = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("email").asText()
+                PersistenceService.getInstance().state.userEmail = email
+                sendUserEmail(browser, email)
             }
         }
     }

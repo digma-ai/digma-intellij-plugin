@@ -4,10 +4,6 @@ on:
   push:
     branches: [ main ]
 
-concurrency:
-  group: main-branch
-  cancel-in-progress: false
-
 jobs:
   call-build-workflow:
     strategy:

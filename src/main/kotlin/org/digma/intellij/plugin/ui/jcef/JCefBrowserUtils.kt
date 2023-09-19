@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.cef.browser.CefBrowser
 
 
-object CommonObjectMapper {
+private object CommonObjectMapper {
     var objectMapper = ObjectMapper()
 
     init {
@@ -26,4 +26,9 @@ fun executeWindowPostMessageJavaScript(browser: CefBrowser, message: String) {
         browser.url,
         0
     )
+}
+
+
+fun <T> jsonToObject(jsonStr: String, type: Class<T>): T {
+    return CommonObjectMapper.objectMapper.readValue(jsonStr, type)
 }

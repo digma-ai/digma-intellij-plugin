@@ -11,6 +11,7 @@ import com.intellij.psi.PsiManager;
 import com.intellij.util.Alarm;
 import com.intellij.util.AlarmFactory;
 import org.digma.intellij.plugin.common.EDT;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.psi.LanguageService;
@@ -71,6 +72,7 @@ public class CurrentContextUpdater implements Disposable {
                 updateCurrentContext(editor, caretOffset, file);
             }catch (Exception e){
                 Log.warnWithException(LOGGER, e, "exception while processing updateCurrentContext event for file: {}", file);
+                ErrorReporter.getInstance().reportError(project, "CurrentContextUpdater.addRequest", e);
             }
         },300);
     }

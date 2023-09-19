@@ -9,6 +9,7 @@ import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.IDEUtilsService;
 import org.digma.intellij.plugin.log.Log;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ToolWindowShower {
 

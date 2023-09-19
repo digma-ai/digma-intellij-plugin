@@ -11,6 +11,15 @@ class StringUtils {
             return str.substring(0, maxLen)
         }
 
+        fun evalBoolean(str: String): Boolean {
+            val cleanVal = str.trim().lowercase()
+
+            return when (cleanVal) {
+                "true" -> true
+                "yes" -> true
+                else -> false
+            }
+        }
     }
 
 }

@@ -10,6 +10,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.Date;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public final class CommonUtils {
@@ -72,6 +73,17 @@ public final class CommonUtils {
         try {
             new URL(url);
             return true;
+        } catch (MalformedURLException e) {
+            return false;
+        }
+    }
+
+    public static boolean isHttpsUrl(String url) {
+        if (url == null || url.isBlank()) {
+            return false;
+        }
+        try {
+            return Objects.equals(new URL(url).getProtocol(), "https");
         } catch (MalformedURLException e) {
             return false;
         }

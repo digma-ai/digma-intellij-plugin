@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.Backgroundable;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
@@ -122,6 +123,9 @@ public class Environment implements EnvironmentsSupplier {
                 //run both refreshEnvironments and updateCurrentEnv under same lock
                 refreshEnvironments();
                 updateCurrentEnv(PersistenceService.getInstance().getState().getCurrentEnv(), true);
+            } catch (Exception e) {
+                Log.warnWithException(LOGGER, e, "Exception in refreshNowOnBackground");
+                ErrorReporter.getInstance().reportError(project, "Environment.refreshNowOnBackground", e);
             } finally {
                 if (envChangeLock.isHeldByCurrentThread()) {
                     envChangeLock.unlock();

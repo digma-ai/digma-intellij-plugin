@@ -22,6 +22,7 @@ import org.digma.intellij.plugin.psi.PsiUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,7 +75,7 @@ public class JavaCodeObjectDiscovery {
 
         String packageName = psiJavaFile.getPackageName();
 
-        PsiClass[] classes = psiJavaFile.getClasses();
+        List<PsiClass> classes = Arrays.asList(psiJavaFile.getClasses());
 
         collectMethods(fileUri, classes, packageName, methodInfoMap);
 
@@ -82,7 +83,7 @@ public class JavaCodeObjectDiscovery {
     }
 
 
-    private static void collectMethods(@NotNull String fileUri, @NotNull PsiClass[] classes, @NotNull String packageName, @NotNull Map<String, MethodInfo> methodInfoMap) {
+    private static void collectMethods(@NotNull String fileUri, @NotNull List<PsiClass> classes, @NotNull String packageName, @NotNull Map<String, MethodInfo> methodInfoMap) {
 
         for (PsiClass aClass : classes) {
 
@@ -110,7 +111,7 @@ public class JavaCodeObjectDiscovery {
                 methodInfoMap.put(id, methodInfo);
             }
 
-            collectMethods(fileUri, aClass.getInnerClasses(), packageName, methodInfoMap);
+            collectMethods(fileUri, JavaPsiUtils.getInnerClassesOf(aClass), packageName, methodInfoMap);
         }
     }
 

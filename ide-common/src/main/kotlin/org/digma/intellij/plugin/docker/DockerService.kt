@@ -12,6 +12,7 @@ import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.SystemInfo
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.Backgroundable
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -334,10 +335,13 @@ class DockerService {
                         notifyResult(NO_DOCKER_COMPOSE_COMMAND, resultTask)
                     }
 
-                    //always delete file here, it's an uninstallation
-                    downloader.deleteFile()
-
-                    PersistenceService.getInstance().setLocalEngineInstalled(false)
+                    try {
+                        //always delete file here, it's an uninstallation
+                        downloader.deleteFile()
+                    } catch (e: Exception) {
+                        Log.log(logger::warn, "Failed to delete compose file")
+                        ActivityMonitor.getInstance(project).registerDigmaEngineEventError("removeEngine", "failed to delete compose file: $e")
+                    }
 
                 } else {
                     ActivityMonitor.getInstance(project).registerDigmaEngineEventError("removeEngine", "Failed to download compose file")
@@ -350,6 +354,9 @@ class DockerService {
                 notifyResult("Failed to remove docker engine: $e", resultTask)
             }finally {
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd("removeEngine", mapOf())
+                //always mark local engine not installed even if the remove or docker down failed for some reason,
+                // from the plugin perspective local engine is not installed.
+                PersistenceService.getInstance().setLocalEngineInstalled(false)
             }
         }
     }
@@ -422,7 +429,7 @@ class DockerService {
             Log.log(logger::info, "start docker command result: {}", output)
         } catch (ex: Exception) {
             ActivityMonitor.getInstance(project).registerCustomEvent("Engine.start-docker-daemon", mapOf("error" to ex.message.toString()))
-            ActivityMonitor.getInstance(project).registerError(ex, "failed trying to start docker daemon")
+            ErrorReporter.getInstance().reportError(project, "DockerService.tryStartDockerDaemon", ex)
             Log.warnWithException(logger, ex, "Failed trying to start docker daemon '{}'", cmd.commandLineString)
         }
     }

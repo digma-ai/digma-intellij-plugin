@@ -1,6 +1,79 @@
 # Changelog
 
-## [2.0.153] - 2023-08-23
+## [2.0.169] - 2023-09-14
+- Bug fix/downloading OTEL agent version 1.29.0 instead of latest by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1285
+- bump 2.0.169 by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1286
+
+## 2.0.167 - 2023-09-13
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1268
+- Update Assets UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1269
+- more details in error events by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1278
+
+## 2.0.166 - 2023-09-11
+- Add local environment Closes #1253 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1263
+- Minimize long running read access Closes #1153 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1266
+
+## 2.0.165 - 2023-09-07
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1260
+
+## 2.0.164 - 2023-09-07
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1258
+
+## 2.0.163 - 2023-09-07
+- performance metrics posthog event by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1251
+- Notification feature additions Closes #1254 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1256
+- Fixed wsl detection by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1257
+
+## 2.0.162 - 2023-09-05
+- close wizard or troubleshooting when need to show insights by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1249
+- Notifications center by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1242
+
+## 2.0.161 - 2023-09-04
+- Update Insight UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1235
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1237
+- catch-exception-when-calling-getPerformanceMetrics by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1240
+- fix posthog event for insight types by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1247
+- Remove Install link from the No connection panel by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1245
+- supported run configurations event by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1248
+
+## 2.0.160 - 2023-08-30
+- refresh connection status after changing url and force https in API url. by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1230
+- Modify agent path when using wsl run config by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1232
+- update build profiles by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1233
+
+## 2.0.159 - 2023-08-29
+- Update Recent Activity UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1223
+- report backend error with error reporter by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1216
+- fix possible exception in docker engine by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1222
+- update button posthog event by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1225
+- persist first data received by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1224
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1226
+
+## 2.0.158 - 2023-08-28
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1217
+
+## 2.0.157 - 2023-08-28
+- Fix histogram issue 1209 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1212
+- New duration chart by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1189
+- fix indexing error by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1215
+- error reporting by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1214
+- initial implementation of live data by @digma-vladyslav in https://github.com/digma-ai/digma-intellij-plugin/pull/1213
+- @digma-vladyslav made their first contribution in https://github.com/digma-ai/digma-intellij-plugin/pull/1213
+
+## 2.0.156 - 2023-08-27
+- support tomcat server run configuration by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1200
+
+## 2.0.155 - 2023-08-25
+- added exception handling by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/1196
+
+## 2.0.154 - 2023-08-23
+- Improve goto assets performance issue 1176 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1180
+- remove  nonnull assertions effected panel by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1188
+- Feature/recognize tomcat maven plugin plus env var DIGMA_OBSERVABILITY by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1187
+- ContinuousPerformanceMetricsMonitor by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1191
+- No Insets by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1190
+
+## 2.0.153 - 2023-08-23
 - Update Installation Wizard UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1184
 
 ## 2.0.152 - 2023-08-22

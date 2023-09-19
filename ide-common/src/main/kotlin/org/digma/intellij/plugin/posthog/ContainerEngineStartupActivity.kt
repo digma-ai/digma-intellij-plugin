@@ -5,6 +5,7 @@ import com.intellij.execution.util.ExecUtil
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 
 class ContainerEngineStartupActivity : StartupActivity {
@@ -41,7 +42,7 @@ class ContainerEngineStartupActivity : StartupActivity {
             return result
         } catch (ex: Exception) {
             Log.warnWithException(logger, ex, "Failed to run '{}'", cmdString)
-            ActivityMonitor.getInstance(project).registerError(ex, "Failed to run '${cmdString}'")
+            ErrorReporter.getInstance().reportError(project, "ContainerEngineStartupActivity.getExecPath", ex)
         }
         return null
     }

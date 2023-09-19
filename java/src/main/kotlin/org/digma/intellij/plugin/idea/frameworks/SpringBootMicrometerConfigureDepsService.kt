@@ -2,28 +2,29 @@ package org.digma.intellij.plugin.idea.frameworks
 
 import com.intellij.buildsystem.model.unified.UnifiedCoordinates
 import com.intellij.buildsystem.model.unified.UnifiedDependency
+import com.intellij.collaboration.async.DisposingScope
 import com.intellij.externalSystem.DependencyModifierService
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.autoimport.ProjectRefreshAction
 import com.intellij.openapi.project.Project
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.common.ReadActions
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.build.BuildSystemChecker.Companion.determineBuildSystem
 import org.digma.intellij.plugin.idea.build.JavaBuildSystem
 import org.digma.intellij.plugin.idea.deps.ModuleExt
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
+import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.settings.SpringBootObservabilityMode
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import org.jetbrains.annotations.VisibleForTesting
 import java.time.LocalDateTime
-import java.util.Timer
-import java.util.TimerTask
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -83,52 +84,53 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
             return dep
         }
 
-        fun coordsWithoutVersion(orig: UnifiedCoordinates): UnifiedCoordinates {
+        private fun coordsWithoutVersion(orig: UnifiedCoordinates): UnifiedCoordinates {
             // version as empty string works well, while null value throws exception (both for maven and gradle)
             return UnifiedCoordinates(orig.groupId, orig.artifactId, "")
         }
     }
 
 
-    private val BlackoutDurationSeconds =
+    private val blackoutDurationSeconds =
         TimeUnit.MINUTES.toSeconds(1) // production value
-//        TimeUnit.SECONDS.toSeconds(12) // use short period (few seconds) when debugging
-
-    private val DelayMilliseconds = TimeUnit.SECONDS.toMillis(5)
-
-    private val PeriodMilliseconds =
-        TimeUnit.MINUTES.toMillis(1) // production value is 5 minutes
-//        TimeUnit.SECONDS.toMillis(12) // use short period (few seconds) when debugging
-
-    private val timer = Timer()
 
     var affectedPanel: DigmaResettablePanel? = null // late init
 
     private var blackoutStopTime: LocalDateTime = LocalDateTime.now().minusMonths(3)
 
-    var stateHasSpringBootModulesWithoutObservability = AtomicBoolean(false)
+    private var stateHasSpringBootModulesWithoutObservability = AtomicBoolean(false)
 
     init {
-        val fetchTask = object : TimerTask() {
-            override fun run() {
-                periodicAction()
+        @Suppress("UnstableApiUsage")
+        DisposingScope(this).launch {
+            while (isActive) {
+                try {
+
+                    delay(TimeUnit.MINUTES.toMillis(1))
+                    if (isActive) {
+                        periodicAction()
+                    }
+
+                } catch (e: Exception) {
+                    Log.warnWithException(logger, e, "Exception in periodicAction")
+                    ErrorReporter.getInstance().reportError(project, "SpringBootMicrometerConfigureDepsService.periodicAction", e)
+                }
             }
         }
-
-        timer.schedule(
-            fetchTask, DelayMilliseconds, PeriodMilliseconds
-        )
     }
 
     override fun dispose() {
-        timer.cancel()
+        //nothing to do , used as disposable parent
     }
 
-    fun periodicAction() {
+    private fun periodicAction() {
+
+        if (project.isDisposed) return
+
         val modulesDepsService = ModulesDepsService.getInstance(project)
 
         val springBootModulesWithoutObservability = modulesDepsService.getSpringBootModulesWithoutObservabilityDeps()
-        if (!springBootModulesWithoutObservability.isNullOrEmpty()) {
+        if (springBootModulesWithoutObservability.isNotEmpty()) {
             stateHasSpringBootModulesWithoutObservability.set(true)
         } else {
             stateHasSpringBootModulesWithoutObservability.set(false)
@@ -139,7 +141,7 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
         }
     }
 
-    protected fun addMissingDependenciesToRelevantModules() {
+    private fun addMissingDependenciesToRelevantModules() {
         val modulesDepsService = ModulesDepsService.getInstance(project)
 
         val springBootModules = modulesDepsService.getSpringBootModulesWithoutObservabilityDeps()
@@ -170,7 +172,6 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
             uniDeps.add(buildUnifiedDependency(DigmaSpringBootMicrometerAutoconfCoordinates, moduleBuildSystem, false))
         }
 
-//        println("adding spring boot deps to module '${module.name}' deps: ${uniDeps}")
 
         val dependencyModifierService = DependencyModifierService.getInstance(project)
 
@@ -180,7 +181,7 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
     }
 
     @VisibleForTesting
-    protected fun isDuringBlackout(): Boolean {
+    private fun isDuringBlackout(): Boolean {
         val now = LocalDateTime.now()
         return now < blackoutStopTime
     }
@@ -197,26 +198,32 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
 
     fun buttonClicked() {
         // start blackout time that panel won't be display
-        blackoutStopTime = LocalDateTime.now().plusSeconds(BlackoutDurationSeconds)
+        blackoutStopTime = LocalDateTime.now().plusSeconds(blackoutDurationSeconds)
 
         // making the panel disappear
-        GlobalScope.launch {
+        @Suppress("UnstableApiUsage")
+        DisposingScope(this).launch {
             delay(500)
             affectedPanel?.reset()
         }
 
         // give some time for the user/system to make the desired update, and only then run the periodicAction
-        GlobalScope.launch {
-            delay(TimeUnit.SECONDS.toMillis(BlackoutDurationSeconds) + 500)
-
-            periodicAction()
+        @Suppress("UnstableApiUsage")
+        DisposingScope(this).launch {
+            delay(TimeUnit.SECONDS.toMillis(blackoutDurationSeconds) + 500)
+            try {
+                periodicAction()
+            } catch (e: Exception) {
+                Log.warnWithException(logger, e, "Exception in periodicAction")
+                ErrorReporter.getInstance().reportError(project, "SpringBootMicrometerConfigureDepsService.periodicAction", e)
+            }
         }
 
         WriteAction.run<Exception> {
             addMissingDependenciesToRelevantModules()
         }
 
-        ReadActions.ensureReadAction {
+        Backgroundable.executeOnPooledThread {
             ProjectRefreshAction.refreshProject(project)
         }
     }

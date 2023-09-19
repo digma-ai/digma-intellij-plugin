@@ -22,7 +22,6 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
-import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.jcef.common.CustomSchemeHandlerFactory
@@ -44,18 +43,19 @@ import org.digma.intellij.plugin.model.rest.jcef.installationwizard.FinishReques
 import org.digma.intellij.plugin.model.rest.jcef.installationwizard.SetObservabilityRequest
 import org.digma.intellij.plugin.notifications.AppNotificationCenter
 import org.digma.intellij.plugin.persistence.PersistenceService
+import org.digma.intellij.plugin.persistence.updateInstallationWizardFlag
 import org.digma.intellij.plugin.posthog.ActivityMonitor
-import org.digma.intellij.plugin.recentactivity.ConnectionCheckResult
-import org.digma.intellij.plugin.recentactivity.JcefConnectionCheckMessagePayload
-import org.digma.intellij.plugin.recentactivity.JcefConnectionCheckMessageRequest
-import org.digma.intellij.plugin.recentactivity.JcefDockerResultPayload
-import org.digma.intellij.plugin.recentactivity.JcefMessageRequest
-import org.digma.intellij.plugin.recentactivity.RecentActivityToolWindowShower
+import org.digma.intellij.plugin.jcef.common.ConnectionCheckResult
+import org.digma.intellij.plugin.jcef.common.JcefConnectionCheckMessagePayload
+import org.digma.intellij.plugin.jcef.common.JcefConnectionCheckMessageRequest
+import org.digma.intellij.plugin.jcef.common.JcefDockerResultPayload
+import org.digma.intellij.plugin.jcef.common.JcefMessageRequest
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.common.ObservabilityUtil.Companion.updateObservabilityValue
 import org.digma.intellij.plugin.ui.list.insights.isJaegerButtonEnabled
 import org.digma.intellij.plugin.ui.panels.DisposablePanel
+import org.digma.intellij.plugin.ui.recentactivity.RecentActivityToolWindowShower
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
 import org.digma.intellij.plugin.ui.settings.SettingsChangeListener
 import org.digma.intellij.plugin.ui.settings.Theme
@@ -176,7 +176,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                     updateInstallationWizardFlag()
                     ToolWindowShower.getInstance(project).showToolWindow()
                     MainToolWindowCardsController.getInstance(project).wizardFinished()
-                    RecentActivityToolWindowShower.getInstance(project).showToolWindow()
+                    project.service<RecentActivityToolWindowShower>().showToolWindow()
                 }
             }
             if (JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER.equals(action, ignoreCase = true)) {
@@ -241,7 +241,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                             Log.log(logger::warn, "no connection after engine installation")
                             if (success) {
                                 ActivityMonitor.getInstance(project)
-                                    .registerDigmaEngineEventError("installEngine", "No connection after successful engine install")
+                                    .registerDigmaEngineEventError("installEngine", "No connection 2 minutes after successful engine install")
                             }
                         }
                         val isEngineUp = connectionOk && success
@@ -268,11 +268,11 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                             sendIsDigmaEngineRunning(false, jbCefBrowser)
 
 
-                            //start remove if install failed. wait a second to let the installEngine finish and
-                            // report installEngine.end to posthog
-                            Backgroundable.runInNewBackgroundThread(project, "removing engine") {
+                            //start remove if install failed. wait a second to let the installEngine finish so it reports
+                            // the installEngine.end to posthog before removeEngine.start
+                            Backgroundable.executeOnPooledThread {
                                 try {
-                                    Thread.sleep(1000)
+                                    Thread.sleep(2000)
                                 } catch (e: Exception) {
                                     //ignore
                                 }
@@ -462,24 +462,6 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
 }
 
 
-/**
- * Set global flag that this user has already passed the installation wizard
- */
-private fun updateInstallationWizardFlag() {
-    if (IDEUtilsService.isIdeaIDE()) {
-        if (!PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForIdeaIDE) {
-            PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForIdeaIDE = true
-        }
-    } else if (IDEUtilsService.isRiderIDE()) {
-        if (!PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForRiderIDE) {
-            PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForRiderIDE = true
-        }
-    } else if (IDEUtilsService.isPyCharmIDE()) {
-        if (!PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForPyCharmIDE) {
-            PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForPyCharmIDE = true
-        }
-    }
-}
 
 
 private fun sendDockerResult(result: String, errorMsg: String, jbCefBrowser: JBCefBrowser, messageType: String) {

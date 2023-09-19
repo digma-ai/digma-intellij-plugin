@@ -9,6 +9,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.jetbrains.annotations.NotNull;
 
@@ -18,7 +19,7 @@ import java.util.Map;
 /**
  * Listens to CaretEvents and updates view respectively.
  */
-public class CaretListener {
+class CaretListener {
 
     private static final Logger LOGGER = Logger.getInstance(CaretListener.class);
 
@@ -36,19 +37,17 @@ public class CaretListener {
     private final Map<VirtualFile, Disposable> disposables = new HashMap<>();
 
 
-    public CaretListener(Project project, CurrentContextUpdater currentContextUpdater) {
+    CaretListener(Project project, CurrentContextUpdater currentContextUpdater) {
         this.project = project;
         this.currentContextUpdater = currentContextUpdater;
     }
 
 
     //don't install listeners on non-supported files, this method shouldn't be called for non-supported files.
-    public void maybeAddCaretListener(@NotNull Editor editor) {
-
-        Log.test(LOGGER::info, "Maybe?");
+    void maybeAddCaretListener(@NotNull Editor editor) {
 
         if (editor.isDisposed()) {
-            Log.test(LOGGER::info, "not installing listener for {} because it is disposed", editor);
+            Log.log(LOGGER::debug, "not installing listener for {} because it is disposed", editor);
             return;
         }
 
@@ -83,16 +82,21 @@ public class CaretListener {
 
         Disposable parentDisposable = Disposer.newDisposable();
         disposables.put(file, parentDisposable);
-        Log.test(LOGGER::info, "adding caret listener for file:{}", file);
+        Log.log(LOGGER::debug, "adding caret listener for file:{}", file);
         editor.getCaretModel().addCaretListener(new com.intellij.openapi.editor.event.CaretListener() {
 
             @Override
             public void caretPositionChanged(@NotNull CaretEvent caretEvent) {
-                Log.test(LOGGER::info, "caret event:{}", caretEvent.getCaret());
-                if (caretEvent.getCaret() != null) {
-                    int caretOffset = caretEvent.getEditor().logicalPositionToOffset(caretEvent.getNewPosition());
-                    var file = FileDocumentManager.getInstance().getFile(caretEvent.getEditor().getDocument());
-                    currentContextUpdater.addRequest(caretEvent.getEditor(), caretOffset, file);
+
+                try {
+                    if (caretEvent.getCaret() != null) {
+                        int caretOffset = caretEvent.getEditor().logicalPositionToOffset(caretEvent.getNewPosition());
+                        var file = FileDocumentManager.getInstance().getFile(caretEvent.getEditor().getDocument());
+                        currentContextUpdater.addRequest(caretEvent.getEditor(), caretOffset, file);
+                    }
+                } catch (Exception e) {
+                    Log.warnWithException(LOGGER, e, "Exception in caretPositionChanged");
+                    ErrorReporter.getInstance().reportError(project, "CaretListener.caretPositionChanged", e);
                 }
             }
         }, parentDisposable);
@@ -101,7 +105,7 @@ public class CaretListener {
 
     void removeCaretListener(VirtualFile file) {
         if (disposables.containsKey(file)) {
-            Log.test(LOGGER::info, "disposing disposable for file:{}", file);
+            Log.log(LOGGER::debug, "disposing disposable for file:{}", file);
             Disposer.dispose(disposables.remove(file));
         }
     }

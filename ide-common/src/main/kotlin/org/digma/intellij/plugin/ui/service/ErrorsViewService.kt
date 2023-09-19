@@ -17,7 +17,6 @@ import org.digma.intellij.plugin.model.discovery.CodeLessSpan
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper
 import org.digma.intellij.plugin.persistence.PersistenceService
-import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
 import org.digma.intellij.plugin.ui.model.DocumentScope
@@ -43,9 +42,8 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
 
 
     companion object {
-        private val logger = Logger.getInstance(ErrorsViewService::class.java)
+        @JvmStatic
         fun getInstance(project: Project): ErrorsViewService {
-            logger.warn("Getting instance of ${ErrorsViewService::class.simpleName}")
             return project.getService(ErrorsViewService::class.java)
         }
     }

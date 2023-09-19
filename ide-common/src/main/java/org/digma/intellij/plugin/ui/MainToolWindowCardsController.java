@@ -8,6 +8,7 @@ import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent;
+import org.digma.intellij.plugin.analytics.BackendConnectionMonitor;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.ui.panels.DisposablePanel;
@@ -18,6 +19,8 @@ import java.awt.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import static org.digma.intellij.plugin.persistence.PersistenceUtilsKt.updateInstallationWizardFlag;
 
 /**
  * Controls the current view in digma tool window.
@@ -59,6 +62,9 @@ public class MainToolWindowCardsController implements Disposable {
 
     private TroubleshootingComponents troubleshooting = new TroubleshootingComponents();
     private Supplier<DisposablePanel> troubleshootingPanelBuilder;
+
+    private final NotificationsComponents notifications = new NotificationsComponents();
+    private Supplier<DisposablePanel> allNotificationsPanelBuilder;
 
     private final AtomicBoolean isConnectionLost = new AtomicBoolean(false);
 
@@ -106,7 +112,8 @@ public class MainToolWindowCardsController implements Disposable {
                                @NotNull JPanel mainCardsPanel,
                                @NotNull JPanel contentPanel,
                                @NotNull Function<Boolean, DisposablePanel> wizardPanelBuilder,
-                               Supplier<DisposablePanel> troubleshootingPanelBuilder) {
+                               Supplier<DisposablePanel> troubleshootingPanelBuilder,
+                               Supplier<DisposablePanel> allNotificationsPanelBuilder) {
 
         Log.log(LOGGER::debug, "initComponents called");
 
@@ -125,9 +132,11 @@ public class MainToolWindowCardsController implements Disposable {
 
         this.troubleshootingPanelBuilder = troubleshootingPanelBuilder;
 
+        this.allNotificationsPanelBuilder = allNotificationsPanelBuilder;
+
         //it may be that there was a connection lost event before the panels were ready.
         // in that case show connection lost panel
-        if (isConnectionLost.get()) {
+        if (isConnectionLost.get() || BackendConnectionMonitor.getInstance(project).isConnectionError()) {
             showNoConnection();
         }
     }
@@ -228,6 +237,75 @@ public class MainToolWindowCardsController implements Disposable {
     }
 
 
+    public void showAllNotifications() {
+        Log.log(LOGGER::debug, "showAllNotifications called");
+
+        //in case showAllNotifications is called while notifications is already on
+        if (notifications.isOn()) {
+            Log.log(LOGGER::debug, project, "showAllNotifications was called but notifications on. nothing to do.");
+            return;
+        }
+
+        //build the notifications panel every time its necessary and dispose it when the notifications closed.
+        var notificationsPanel = allNotificationsPanelBuilder.get();
+        if (notificationsPanel != null) {
+            Content notificationsContent = ContentFactory.getInstance().createContent(notificationsPanel, null, false);
+            toolWindow.getContentManager().removeContent(mainContent, false);
+            toolWindow.getContentManager().addContent(notificationsContent);
+            notifications.notificationsContent = notificationsContent;
+            notifications.notificationsPanel = notificationsPanel;
+        } else {
+            Log.log(LOGGER::debug, project, "showAllNotifications was called but notificationsPanel is null. it may happen if the runtime JVM does not support JCEF");
+        }
+    }
+
+
+    public void closeAllNotificationsIfShowing() {
+        if (notifications.isOn()) {
+            closeAllNotifications();
+        }
+    }
+
+
+    public void closeAllNotifications() {
+        Log.log(LOGGER::debug, "closeAllNotifications called");
+
+        EDT.ensureEDT(() -> {
+            if (notifications.isOn()) {
+                toolWindow.getContentManager().removeContent(notifications.notificationsContent, true);
+                toolWindow.getContentManager().addContent(mainContent);
+                //dispose the notifications panel which will dispose the jcef browser
+                notifications.notificationsPanel.dispose();
+                notifications.notificationsContent = null;
+                notifications.notificationsPanel = null;
+
+            } else {
+                Log.log(LOGGER::debug, project, "closeAllNotifications was called but notifications is not on.");
+            }
+        });
+
+    }
+
+
+
+
+    /**
+     * it may happen that user clicks a span link while the troubleshooting or wizard are on.
+     * it can happen if user opens troubleshooting or the wizard and then clicks a link in recent activity,
+     * or in jaeger ui, or clicks a code lens. in all these cases we need to close the troubleshooting or wizard
+     * and show main panel.
+     */
+    public void closeCoveringViewsIfNecessary() {
+
+        //Note in case user finished new install but never clicked finish in the wizard, and clicks a link somewhere,
+        // then this method will close the wizard and update the wizard finished flags
+        if (wizard.isOn()) {
+            updateInstallationWizardFlag();
+        }
+        wizardFinished();
+        troubleshootingFinished();
+        closeAllNotificationsIfShowing();
+    }
 
     public void showMainPanel() {
 
@@ -303,6 +381,15 @@ public class MainToolWindowCardsController implements Disposable {
 
         public boolean isOn() {
             return troubleshootingContent != null && troubleshootingPanel != null;
+        }
+    }
+
+    private static class NotificationsComponents {
+        Content notificationsContent;
+        DisposablePanel notificationsPanel;
+
+        public boolean isOn() {
+            return notificationsContent != null && notificationsPanel != null;
         }
     }
 

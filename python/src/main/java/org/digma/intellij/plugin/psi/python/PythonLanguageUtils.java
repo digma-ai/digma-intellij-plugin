@@ -90,11 +90,17 @@ public class PythonLanguageUtils {
             return false;
         }
 
-        var spliterator = virtualFile.toNioPath().spliterator();
-        List<String> pathElements = StreamSupport.stream(spliterator, false).map(Path::toString).toList();
+        try {
+            var spliterator = virtualFile.toNioPath().spliterator();
+            List<String> pathElements = StreamSupport.stream(spliterator, false).map(Path::toString).toList();
 
-        return !pathElements.contains(Constants.SITE_PACKAGES_DIR_NAME) &&
-                pathElements.contains(project.getName());
+            return !pathElements.contains(Constants.SITE_PACKAGES_DIR_NAME) &&
+                    pathElements.contains(project.getName());
+        }
+        catch (UnsupportedOperationException e){
+            return false;
+        }
+
     }
 
     public static boolean isProjectFile(@NotNull Project project, @NotNull PsiFile psiFile) {

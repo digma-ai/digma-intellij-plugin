@@ -59,38 +59,6 @@ constructor(
         val codeObjectIds: List<String>
 )
 
-data class RecentActivityGoToSpanRequest
-@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@JsonIgnoreProperties(ignoreUnknown = true)
-@ConstructorProperties("action", "payload")
-constructor(
-        val action: String,
-        val payload: RecentActivityEntrySpanPayload?
-)
 
-data class RecentActivityEntrySpanPayload
-@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@JsonIgnoreProperties(ignoreUnknown = true)
-@ConstructorProperties("span")
-constructor(
-        val span: EntrySpan,
-        val environment: String,
-)
 
-data class RecentActivityEntrySpanForTracePayload
-@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@JsonIgnoreProperties(ignoreUnknown = true)
-@ConstructorProperties("traceId", "span")
-constructor(
-        val traceId: String,
-        val span: EntrySpan
-)
 
-data class RecentActivityGoToTraceRequest
-@JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@JsonIgnoreProperties(ignoreUnknown = true)
-@ConstructorProperties("action", "payload")
-constructor(
-        val action: String,
-        val payload: RecentActivityEntrySpanForTracePayload?
-)

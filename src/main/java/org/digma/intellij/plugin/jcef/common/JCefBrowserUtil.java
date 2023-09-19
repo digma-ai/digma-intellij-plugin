@@ -3,11 +3,9 @@ package org.digma.intellij.plugin.jcef.common;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.ui.jcef.JBCefBrowser;
-import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.recentactivity.outgoing.JaegerUrlChangedPayload;
-import org.digma.intellij.plugin.recentactivity.outgoing.JaegerUrlChangedRequest;
+import org.digma.intellij.plugin.ui.jcef.model.JaegerUrlChangedPayload;
+import org.digma.intellij.plugin.ui.jcef.model.JaegerUrlChangedRequest;
 import org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt;
 import org.digma.intellij.plugin.ui.settings.Theme;
 import org.jetbrains.annotations.NotNull;
@@ -19,7 +17,7 @@ import static org.digma.intellij.plugin.jcef.common.JCefMessagesUtils.GLOBAL_SET
 import static org.digma.intellij.plugin.jcef.common.JCefMessagesUtils.REQUEST_MESSAGE_TYPE;
 
 public class JCefBrowserUtil {
-    private static Logger logger = Logger.getInstance(JCefBrowserUtil.class);
+
 
     private JCefBrowserUtil() {}
 
@@ -68,7 +66,6 @@ public class JCefBrowserUtil {
 
 
     public static void postJSMessage(String jsonMessage, JBCefBrowser jbCefBrowser) {
-        Log.test(logger::info, "real postJSMessage callede");
         jbCefBrowser.getCefBrowser().executeJavaScript(
                 "window.postMessage(" + jsonMessage + ");",
                 jbCefBrowser.getCefBrowser().getURL(),

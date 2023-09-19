@@ -4,8 +4,8 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI.Borders
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.common.Laf.scaleBorders
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.Color
@@ -109,9 +109,9 @@ abstract class PanelList(val project: Project, private var model: PanelListModel
                     }
                 }
                 catch (ex: Exception) {
-                    // If we dont handle case with broken data we do not show any insights at all
+                    // If we don't handle case with broken data we do not show any insights at all
                     // In this case we just hide it from the user
-                    ActivityMonitor.getInstance(project).registerError(ex, "Error during the insight panel creation")
+                    ErrorReporter.getInstance().reportError(project, "PanelList.rebuild", ex)
                 }
             }
         }
@@ -122,10 +122,12 @@ abstract class PanelList(val project: Project, private var model: PanelListModel
 
 
     class DefaultPanelListCellRenderer : AbstractPanelListCellRenderer() {
-        override fun createPanel(project: Project,
-                                 value: ListViewItem<*>,
-                                 index: Int,
-                                 panelsLayoutHelper: PanelsLayoutHelper): JPanel {
+        override fun createPanel(
+            project: Project,
+            value: ListViewItem<*>,
+            index: Int,
+            panelsLayoutHelper: PanelsLayoutHelper,
+        ): JPanel {
             return JPanel()
         }
     }

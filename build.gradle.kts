@@ -225,6 +225,9 @@ tasks {
         systemProperties(
             "idea.log.trace.categories" to "#org.digma",
             "idea.log.debug.categories" to "#org.digma",
+            //make large idea.log because the default rotates every 10M and makes it difficult to follow messages with tail
+            "idea.log.limit" to "999999999",
+            "org.digma.plugin.enableEnvManagement" to "true"
         )
     }
 
@@ -247,7 +250,7 @@ tasks {
 
         //rider EAP doesn't work here, plugin verifier can't find it
         withCurrentProfile { profile ->
-            if (profile.profile == BuildProfiles.Profiles.eap && platformType == IdeFlavor.RD.name) {
+            if (profile.isEAP && platformType == IdeFlavor.RD.name) {
                 enabled = false
             } else {
                 ideVersions.set(listOf("${platformType}-${profile.versionToRunPluginVerifier}"))

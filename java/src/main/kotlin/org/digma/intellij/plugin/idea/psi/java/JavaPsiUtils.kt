@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.idea.psi.java
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiFile
-import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.source.PsiExtensibleClass
 import com.intellij.psi.util.PsiTreeUtil
@@ -97,6 +96,17 @@ class JavaPsiUtils {
             }
             return psiClass.methods.asList()
         }
+
+        @JvmStatic
+        fun getInnerClassesOf(psiClass: PsiClass): List<PsiClass> {
+            if (psiClass is PsiExtensibleClass) {
+                return psiClass.ownInnerClasses
+            }
+            return psiClass.innerClasses.asList()
+        }
+
+
+
 
         @JvmStatic
         fun hasOneOfAnnotations(psiClass: PsiClass, vararg annotationsFqn: String): Boolean {

@@ -13,6 +13,7 @@ import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.service.EditorService
 import org.digma.intellij.plugin.ui.common.Links.DIGMA_DOCKER_APP_URL
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
@@ -104,6 +105,16 @@ class UpdateVersionPanel(
         contentPanel.add(Box.createHorizontalStrut(5))
 
         updateButton.addActionListener {
+
+            ActivityMonitor.getInstance(project).registerCustomEvent(
+                "update button clicked",
+                mapOf(
+                    "shouldUpdateBackend" to updateState.shouldUpdateBackend,
+                    "shouldUpdatePlugin" to updateState.shouldUpdatePlugin,
+                    "backendDeploymentType" to updateState.backendDeploymentType
+                )
+            )
+
             // the update action itself
             if (updateState.shouldUpdateBackend) {
                 when (updateState.backendDeploymentType) {

@@ -12,6 +12,8 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.common.FileUtils
+import org.digma.intellij.plugin.common.StringUtils.Companion.evalBoolean
 import org.digma.intellij.plugin.common.buildEnvForLocalTests
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
 import org.digma.intellij.plugin.log.Log
@@ -131,15 +133,19 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
         serviceAlreadyDefined: Boolean,
         isTest: Boolean,
     ): String? {
-
-        val otelAgentPath = service<OTELJarProvider>().getOtelAgentJarPath()
-        val digmaExtensionPath = service<OTELJarProvider>().getDigmaAgentExtensionJarPath()
+        var otelAgentPath = service<OTELJarProvider>().getOtelAgentJarPath()
+        var digmaExtensionPath = service<OTELJarProvider>().getDigmaAgentExtensionJarPath()
         if (otelAgentPath == null || digmaExtensionPath == null) {
             Log.log(
                 logger::warn,
                 "could not build $JAVA_TOOL_OPTIONS because otel agent or digma extension jar are not available. please check the logs"
             )
             return null
+        }
+
+        if(RunCfgTools.isWsl(configuration)){
+            otelAgentPath = FileUtils.convertWinToWslPath(otelAgentPath)
+            digmaExtensionPath = FileUtils.convertWinToWslPath(digmaExtensionPath)
         }
 
         var retVal = " "
@@ -273,11 +279,7 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
             }
 
             val digmaObservabilityEnvVarValue = configuration.settings.env.get(DIGMA_OBSERVABILITY_ENV_VAR_NAME)
-            if (digmaObservabilityEnvVarValue != null
-                && ("true".equals(digmaObservabilityEnvVarValue.trim(), true)
-                        || "yes".equals(digmaObservabilityEnvVarValue.trim(), true)
-                        )
-            ) {
+            if (digmaObservabilityEnvVarValue != null && evalBoolean(digmaObservabilityEnvVarValue)) {
                 return true
             }
 
@@ -313,15 +315,30 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
         //will catch maven exec plugin goals, bootRun
         if (configuration is MavenRunConfiguration) {
             val goalNames = configuration.runnerParameters.goals
-            val hasRelevantTask = goalNames.any {
+            val hasRelevantGoal = goalNames.any {
                 false
                         || it.equals("exec:exec")
                         || it.equals("exec:java")
                         || it.equals("-Dexec.executable=java")
+                        // spring boot
                         || it.equals("spring-boot:run")
                         || (it.contains(":spring-boot-maven-plugin:") && it.endsWith(":run"))
+                        // tomcat6 and tomcat7. support goal named "tomcat7:run"
+                        || (it.startsWith("tomcat") && it.endsWith(":run"))
+                        //  support org.apache.tomcat.maven:tomcat7-maven-plugin:2.2:run
+                        //   and    org.apache.tomcat.maven:tomcat6-maven-plugin:2.2:run
+                        || (it.contains(":tomcat7-maven-plugin:") && it.endsWith(":run"))
+                        || (it.contains(":tomcat6-maven-plugin:") && it.endsWith(":run"))
             }
-            return hasRelevantTask
+            if (hasRelevantGoal) return true
+
+            // runnerSettings are not null when actually running the goal
+            if (configuration.runnerSettings != null) {
+                val envVarValue = configuration.runnerSettings!!.environmentProperties.get(DIGMA_OBSERVABILITY_ENV_VAR_NAME)
+                if (envVarValue != null && evalBoolean(envVarValue)) {
+                    return true
+                }
+            }
         }
         return false
     }

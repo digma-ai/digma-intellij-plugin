@@ -20,7 +20,7 @@ import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.IDEUtilsService;
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator;
 import org.digma.intellij.plugin.document.DocumentInfoContainer;
-import org.digma.intellij.plugin.document.DocumentInfoService;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider;
 import org.digma.intellij.plugin.insights.model.outgoing.Method;
 import org.digma.intellij.plugin.insights.model.outgoing.Span;
@@ -33,11 +33,10 @@ import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
 import org.digma.intellij.plugin.model.rest.insights.InsightStatus;
+import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
 import org.digma.intellij.plugin.model.rest.insights.MethodWithInsightStatus;
-import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
-import org.digma.intellij.plugin.recentactivity.RecentActivityService;
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshService;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.common.Laf;
@@ -50,6 +49,7 @@ import org.digma.intellij.plugin.ui.model.MethodScope;
 import org.digma.intellij.plugin.ui.model.Scope;
 import org.digma.intellij.plugin.ui.model.UIInsightsStatus;
 import org.digma.intellij.plugin.ui.model.insights.InsightsModelReact;
+import org.digma.intellij.plugin.ui.recentactivity.RecentActivityService;
 import org.digma.intellij.plugin.ui.service.InsightsService;
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier;
 import org.digma.intellij.plugin.ui.settings.SettingsChangeListener;
@@ -154,6 +154,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
                 }
             });
 
+            //todo: change to JaegerButtonStateListener().start(project, jCefComponent)
             SettingsState.getInstance().addChangeListener(settingsState -> JCefBrowserUtil.sendRequestToChangeTraceButtonEnabled(jbCefBrowser), this);
 
         }
@@ -233,6 +234,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
             } catch (AnalyticsServiceException e) {
                 Log.warnWithException(logger, project, e, "Error in getInsightsForSingleSpan");
+                ErrorReporter.getInstance().reportError(project, "InsightsServiceImpl.updateInsights", e);
                 emptyInsights();
             }
         }));
@@ -260,38 +262,62 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
             Log.log(logger::debug, "updateInsightsModel to {}. ", methodInfo);
 
-            model.clearProperties();
+            try {
 
-            model.setScope(new MethodScope(methodInfo));
+                model.clearProperties();
 
-            var methodInstrumentationPresenter = new MethodInstrumentationPresenter(project);
-            ApplicationManager.getApplication().runReadAction(() -> methodInstrumentationPresenter.update(methodInfo.getId()));
-            var hasMissingDependency = methodInstrumentationPresenter.getCannotBecauseMissingDependency();
-            var canInstrumentMethod = methodInstrumentationPresenter.getCanInstrumentMethod();
-            model.addProperty(MODEL_PROP_INSTRUMENTATION, methodInstrumentationPresenter);
+                model.setScope(new MethodScope(methodInfo));
 
-            var insights = DocumentInfoService.getInstance(project).getCachedMethodInsights(methodInfo);
+                var methodInstrumentationPresenter = new MethodInstrumentationPresenter(project);
+                ApplicationManager.getApplication().runReadAction(() -> methodInstrumentationPresenter.update(methodInfo.getId()));
+                var hasMissingDependency = methodInstrumentationPresenter.getCannotBecauseMissingDependency();
+                var canInstrumentMethod = methodInstrumentationPresenter.getCanInstrumentMethod();
+                model.addProperty(MODEL_PROP_INSTRUMENTATION, methodInstrumentationPresenter);
 
-            var spans = methodInfo.getSpans().stream().map(spanInfo -> new Span(spanInfo.getId(), spanInfo.getName())).toList();
+                var insights = getInsightsByMethodInfo(methodInfo);
 
-            var statusToUse = predefinedStatus != null ? predefinedStatus.name() : null;
-            if (predefinedStatus == null) {
-                statusToUse = UIInsightsStatus.Default.name();
-                if (insights.isEmpty()) {
-                    Log.log(logger::debug, "No insights for method {}, Starting background thread to update status.", methodInfo.getName());
-                    statusToUse = UIInsightsStatus.Loading.name();
-                    updateStatusInBackground(methodInfo);
+                var spans = methodInfo.getSpans().stream().map(spanInfo -> new Span(spanInfo.getId(), spanInfo.getName())).toList();
+
+                var statusToUse = predefinedStatus != null ? predefinedStatus.name() : null;
+                if (predefinedStatus == null) {
+                    statusToUse = UIInsightsStatus.Default.name();
+                    if (insights.isEmpty()) {
+                        Log.log(logger::debug, "No insights for method {}, Starting background thread to update status.", methodInfo.getName());
+                        statusToUse = UIInsightsStatus.Loading.name();
+                        updateStatusInBackground(methodInfo);
+                    }
                 }
+
+
+                boolean needsObservabilityFix = checkObservability(methodInfo, insights);
+
+                messageHandler.pushInsights(insights, spans, methodInfo.getId(), EMPTY_SERVICE_NAME,
+                        AnalyticsService.getInstance(project).getEnvironment().getCurrent(), statusToUse,
+                        ViewMode.INSIGHTS.name(), Collections.emptyList(), hasMissingDependency, canInstrumentMethod, needsObservabilityFix);
+
+            } catch (Exception e) {
+                Log.warnWithException(logger, project, e, "error in updateInsightsImpl for ", methodInfo.getId());
+                ErrorReporter.getInstance().reportError(project, "InsightsServiceImpl.updateInsightsImpl", e);
             }
-
-
-            boolean needsObservabilityFix = checkObservability(methodInfo, insights);
-
-            messageHandler.pushInsights(insights, spans, methodInfo.getId(), EMPTY_SERVICE_NAME,
-                    AnalyticsService.getInstance(project).getEnvironment().getCurrent(), statusToUse,
-                    ViewMode.INSIGHTS.name(), Collections.emptyList(), hasMissingDependency, canInstrumentMethod, needsObservabilityFix);
         }));
     }
+
+
+    private List<CodeObjectInsight> getInsightsByMethodInfo(@NotNull MethodInfo methodInfo) throws AnalyticsServiceException {
+
+//        var insights = DocumentInfoService.getInstance(project).getCachedMethodInsights(methodInfo);
+        InsightsOfMethodsResponse insightsOfMethodsResponse = AnalyticsService.getInstance(project).getInsightsOfMethods(Collections.singletonList(methodInfo));
+
+        if (insightsOfMethodsResponse.getMethodsWithInsights().isEmpty()) {
+            Log.log(logger::debug, project, "could not find insights for {}", methodInfo);
+            return Collections.emptyList();
+        }
+
+        var methodsWithInsights = insightsOfMethodsResponse.getMethodsWithInsights().stream().findAny().orElse(null);
+        return methodsWithInsights == null ? Collections.emptyList() : methodsWithInsights.getInsights();
+    }
+
+
 
 
     private void updateStatusInBackground(@NotNull MethodInfo methodInfo) {
@@ -339,6 +365,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
             return methodResp == null ? null : methodResp.getInsightStatus();
         } catch (AnalyticsServiceException e) {
             Log.log(logger::debug, "AnalyticsServiceException for getCodeObjectInsightStatus for {}: {}", methodInfo.getId(), e.getMessage());
+            ErrorReporter.getInstance().reportError(project, "InsightsServiceImpl.getInsightStatus", e);
             return null;
         }
     }
@@ -530,10 +557,32 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
         ActivityMonitor.getInstance(project).registerButtonClicked("histogram", InsightType.valueOf(insightType));
 
         try {
-            String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanPercentiles(instrumentationLibrary, spanName, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
-            DigmaHTMLEditorProvider.openEditor(project, "Percentiles Graph of Span " + spanName, htmlContent);
+
+            try {
+                switch (InsightType.valueOf(insightType)) {
+                    case SpanDurations -> {
+                        String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanPercentiles(instrumentationLibrary, spanName, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
+                        DigmaHTMLEditorProvider.openEditor(project, "Percentiles Graph of Span " + spanName, htmlContent);
+                    }
+                    case SpanScaling -> {
+                        String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanScaling(instrumentationLibrary, spanName, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
+                        DigmaHTMLEditorProvider.openEditor(project, "Scaling Graph of Span " + spanName, htmlContent);
+                    }
+                    default -> {
+                        //todo: a fallback when the type is unknown, we should add support for more types if necessary
+                        String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanScaling(instrumentationLibrary, spanName, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
+                        DigmaHTMLEditorProvider.openEditor(project, "Scaling Graph of Span " + spanName, htmlContent);
+                    }
+                }
+            }catch ( IllegalArgumentException e){
+                //fallback for span type that is not in the enum
+                String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanScaling(instrumentationLibrary, spanName, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
+                DigmaHTMLEditorProvider.openEditor(project, "Scaling Graph of Span " + spanName, htmlContent);
+            }
+
         } catch (AnalyticsServiceException e) {
             Log.warnWithException(logger, project, e, "Error in openHistogram for {},{} {}", instrumentationLibrary, spanName, e.getMessage());
+            ErrorReporter.getInstance().reportError(project, "InsightsServiceImpl.openHistogram", e);
         }
     }
 
@@ -541,13 +590,8 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
     @Override
     public void openLiveView(@NotNull String prefixedCodeObjectId) {
         Log.log(logger::debug, project, "openLiveView called {}", prefixedCodeObjectId);
-
-        try {
-            DurationLiveData durationLiveData = AnalyticsService.getInstance(project).getDurationLiveData(prefixedCodeObjectId);
-            RecentActivityService.getInstance(project).sendLiveData(durationLiveData, prefixedCodeObjectId);
-        } catch (AnalyticsServiceException e) {
-            Log.warnWithException(logger, project, e, "Error loading live view {}", e.getMessage());
-        }
+        project.getService(RecentActivityService.class).startLiveView(prefixedCodeObjectId);
+        ActivityMonitor.getInstance(project).registerCustomEvent("live view clicked", Collections.emptyMap());
     }
 
 

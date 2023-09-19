@@ -1,11 +1,10 @@
 package org.digma.intellij.plugin.updates
 
+import com.intellij.collaboration.async.DisposingScope
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.intellij.util.ui.EdtInvocationManager
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.apache.maven.artifact.versioning.ComparableVersion
@@ -13,14 +12,15 @@ import org.digma.intellij.plugin.analytics.AnalyticsProviderException
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
+import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.newerThan
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.digma.intellij.plugin.model.rest.version.BackendVersionResponse
 import org.digma.intellij.plugin.model.rest.version.PluginVersionResponse
 import org.digma.intellij.plugin.model.rest.version.VersionRequest
 import org.digma.intellij.plugin.model.rest.version.VersionResponse
-import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.semanticversion.SemanticVersionUtil
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
@@ -70,7 +70,12 @@ class UpdatesService(private val project: Project) : Disposable {
 
         val fetchTask = object : TimerTask() {
             override fun run() {
-                checkForNewerVersions()
+                try {
+                    checkForNewerVersions()
+                } catch (e: Exception) {
+                    Log.warnWithException(logger, e, "Exception in checkForNewerVersions")
+                    ErrorReporter.getInstance().reportError(project, "UpdatesService.checkForNewerVersions", e)
+                }
             }
         }
 
@@ -120,13 +125,12 @@ class UpdatesService(private val project: Project) : Disposable {
             return
         }
 
-        if (!versionsResp.errors.isNullOrEmpty()) {
+        if (versionsResp.errors.isNotEmpty()) {
             val currErrors = versionsResp.errors.toList()
 
             if (currErrors != prevBackendErrorsList) {
-                val activityMonitor = ActivityMonitor.getInstance(project)
                 currErrors.forEach {
-                    activityMonitor.reportBackendError(it, "query-for-versions-and-propose-to-update")
+                    ErrorReporter.getInstance().reportBackendError(project, it, "query-for-versions-and-propose-to-update")
                 }
             }
 
@@ -137,7 +141,7 @@ class UpdatesService(private val project: Project) : Disposable {
         stateBackendVersion = versionsResp.backend
         statePluginVersion.latestVersion = versionsResp.plugin.latestVersion
 
-        EdtInvocationManager.getInstance().invokeLater {
+        EDT.ensureEDT {
             affectedPanel?.reset()
         }
     }
@@ -158,7 +162,8 @@ class UpdatesService(private val project: Project) : Disposable {
         blackoutStopTime = LocalDateTime.now().plusSeconds(BlackoutDurationSeconds)
 
         // give some time for the user/system to make the desired update, and only then recheck for newer version
-        GlobalScope.launch {
+        @Suppress("UnstableApiUsage")
+        DisposingScope(this).launch {
             delay(TimeUnit.SECONDS.toMillis(BlackoutDurationSeconds) + 500)
 
             checkForNewerVersions()

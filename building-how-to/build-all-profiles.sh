@@ -6,36 +6,48 @@
 set -e
 ###################   idea community
 
-# there is no need to send the lowest profile, its the default if not sent,its here just as example
+# there is no need to send the oldest profile, its the default if not sent,its here just as example
 
+## check that profile aliases work
 ./gradlew clean buildPlugin runPluginVerifier -PbuildProfile=lowest
 ./gradlew clean buildPlugin runPluginVerifier -PbuildProfile=latest
 ./gradlew clean buildPlugin runPluginVerifier -PbuildProfile=eap
 
 
+
+./gradlew clean buildPlugin runPluginVerifier -PbuildProfile=p223
+./gradlew clean buildPlugin runPluginVerifier -PbuildProfile=p231
+./gradlew clean buildPlugin runPluginVerifier -PbuildProfile=p232
+./gradlew clean buildPlugin runPluginVerifier -PbuildProfile=p233
+
+
 ###################### idea ultimate
 
 ./gradlew clean buildPlugin runPluginVerifier -PbuildWIthUltimate=true
-./gradlew clean buildPlugin runPluginVerifier -PbuildWIthUltimate=true -PbuildProfile=latest
-./gradlew clean buildPlugin runPluginVerifier -PbuildWIthUltimate=true -PbuildProfile=eap
+./gradlew clean buildPlugin runPluginVerifier -PbuildWIthUltimate=true -PbuildProfile=p231
+./gradlew clean buildPlugin runPluginVerifier -PbuildWIthUltimate=true -PbuildProfile=p232
+./gradlew clean buildPlugin runPluginVerifier -PbuildWIthUltimate=true -PbuildProfile=p233
 
 
 
 #################  rider
 ./gradlew clean buildPlugin -PbuildWithRider=true
-./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=latest
-./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=eap
+./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=p231
+./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=p232
+./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=p233
 
 ######################  pycharm
 
 ./gradlew clean buildPlugin -PbuildWithPycharm=true
-./gradlew clean buildPlugin -PbuildWithPycharm=true -PbuildProfile=latest
-./gradlew clean buildPlugin -PbuildWithPycharm=true -PbuildProfile=eap
+./gradlew clean buildPlugin -PbuildWithPycharm=true -PbuildProfile=p231
+./gradlew clean buildPlugin -PbuildWithPycharm=true -PbuildProfile=p232
+./gradlew clean buildPlugin -PbuildWithPycharm=true -PbuildProfile=p233
 
 
 ######################  pycharm pro
 
 ./gradlew clean buildPlugin -PbuildWithPycharmPro=true
-./gradlew clean buildPlugin -PbuildWithPycharmPro=true -PbuildProfile=latest
-./gradlew clean buildPlugin -PbuildWithPycharmPro=true -PbuildProfile=eap
+./gradlew clean buildPlugin -PbuildWithPycharmPro=true -PbuildProfile=p231
+./gradlew clean buildPlugin -PbuildWithPycharmPro=true -PbuildProfile=p232
+./gradlew clean buildPlugin -PbuildWithPycharmPro=true -PbuildProfile=p233
 

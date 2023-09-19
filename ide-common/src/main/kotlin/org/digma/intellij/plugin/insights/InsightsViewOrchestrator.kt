@@ -21,7 +21,10 @@ import org.digma.intellij.plugin.navigation.HomeSwitcherService
 import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper
 import org.digma.intellij.plugin.navigation.NavigationModel
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
+import org.digma.intellij.plugin.psi.LanguageService
+import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.service.EditorService
+import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.service.ErrorsViewService
 import org.digma.intellij.plugin.ui.service.InsightsService
@@ -54,6 +57,7 @@ class InsightsViewOrchestrator(val project: Project) {
         NonSupportedFile,
         NoFile,
         MethodFromSourceCode,
+        MethodWithoutNavigation,
         MethodFromBackNavigation,
         DummyMethod,
         DocumentPreviewList
@@ -86,6 +90,7 @@ class InsightsViewOrchestrator(val project: Project) {
             project.service<CurrentContextUpdater>().clearLatestMethod()
 
             EDT.ensureEDT {
+                project.service<MainToolWindowCardsController>().closeCoveringViewsIfNecessary()
                 project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
                 ToolWindowShower.getInstance(project).showToolWindow()
                 project.getService(HomeSwitcherService::class.java).switchToInsights()
@@ -106,6 +111,61 @@ class InsightsViewOrchestrator(val project: Project) {
 
         }
     }
+
+
+    fun showInsightsForMethod(methodCodeObjectId: String) {
+
+        //todo: refactor. we need a better way to show insights for methodCodeObjectId without navigation to code
+        // see issue: https://github.com/digma-ai/digma-intellij-plugin/issues/1250
+
+        currentState.set(ViewState.MethodWithoutNavigation)
+
+        Log.log(logger::debug, project, "Got showInsightsForMethod {}", methodCodeObjectId)
+
+        Backgroundable.ensurePooledThread {
+
+            val methodInfo: MethodInfo = tryFindMethodInfo(CodeObjectsUtil.stripMethodPrefix(methodCodeObjectId))
+
+            project.service<InsightsService>().updateInsights(methodInfo)
+
+            EDT.ensureEDT {
+                project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
+                ToolWindowShower.getInstance(project).showToolWindow()
+                project.getService(HomeSwitcherService::class.java).switchToInsights()
+                project.getService(InsightsAndErrorsTabsHelper::class.java).switchToInsightsTab()
+            }
+
+            project.service<InsightsViewService>().updateInsightsModel(
+                methodInfo
+            )
+
+            project.service<ErrorsViewService>().updateErrorsModel(
+                methodInfo
+            )
+        }
+    }
+
+    //todo: best effort to find MethodInfo. not the best way to do it.
+    // need to implement language service methods to do method discovery from methodCodeObjectId
+    private fun tryFindMethodInfo(methodCodeObjectId: String): MethodInfo {
+        return try {
+            val languageService = LanguageService.findLanguageServiceByMethodCodeObjectId(project, methodCodeObjectId)
+            val workspaceUris = languageService.findWorkspaceUrisForMethodCodeObjectIds(listOf(methodCodeObjectId))
+            if (workspaceUris.isNotEmpty()) {
+                val fileUri = workspaceUris[methodCodeObjectId]?.first
+                val psiFile = PsiUtils.uriToPsiFile(fileUri!!, project)
+                val documentInfo = languageService.buildDocumentInfo(psiFile)
+                documentInfo.methods[methodCodeObjectId]!!
+            } else {
+                val methodClassAndName: Pair<String, String> = CodeObjectsUtil.getMethodClassAndName(methodCodeObjectId)
+                MethodInfo(methodCodeObjectId, methodClassAndName.first, methodClassAndName.second, "", "", 0)
+            }
+        } catch (e: Exception) {
+            val methodClassAndName: Pair<String, String> = CodeObjectsUtil.getMethodClassAndName(methodCodeObjectId)
+            MethodInfo(methodCodeObjectId, methodClassAndName.first, methodClassAndName.second, "", "", 0)
+        }
+    }
+
 
     fun showInsightsForMethodFromBackNavigation(methodId: String) {
 
@@ -159,7 +219,9 @@ class InsightsViewOrchestrator(val project: Project) {
         //todo: this is WIP, currently relying on showing insights by navigating to code locations and relying on caret event.
         // this class should show insights regardless of caret event and navigate to code if possible.
         // we need to separate this two actions , showing insights and navigating to source code.
+
         Log.test(logger::info, "Got showInsightsForSpanOrMethodAndNavigateToCode spanCodeObjectId: {}, methodCodeObjectId: {}", spanCodeObjectId, methodCodeObjectId)
+        project.service<MainToolWindowCardsController>().closeCoveringViewsIfNecessary()
         project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
         ToolWindowShower.getInstance(project).showToolWindow()
         project.getService(HomeSwitcherService::class.java).switchToInsights()
@@ -301,5 +363,6 @@ class InsightsViewOrchestrator(val project: Project) {
             project.service<ErrorsViewService>().showDocumentPreviewList(documentInfoContainer, fileUri)
         }
     }
+
 
 }

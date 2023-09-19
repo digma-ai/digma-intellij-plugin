@@ -1,33 +1,31 @@
 package org.digma.intellij.plugin.posthog
 
-import com.google.common.cache.Cache
-import com.google.common.cache.CacheBuilder
+import com.fasterxml.jackson.core.JsonProcessingException
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
-import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
 import com.posthog.java.PostHog
-
-import org.digma.intellij.plugin.common.CommonUtils
-
-import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.common.ExceptionUtils
+import org.digma.intellij.plugin.common.JsonUtils
+import org.digma.intellij.plugin.common.UserId
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.AboutResult
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
+import org.digma.intellij.plugin.model.rest.version.PerformanceCounterReport
 import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.semanticversion.SemanticVersionUtil
-import org.threeten.extra.Hours
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.security.MessageDigest
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 
 
-class ActivityMonitor(project: Project) :Disposable {
+@Service(Service.Level.PROJECT)
+class ActivityMonitor(project: Project) : Disposable {
 
     companion object {
         @JvmStatic
@@ -36,46 +34,17 @@ class ActivityMonitor(project: Project) :Disposable {
         }
     }
 
-    private val userId: String
-    private val isDevUser: Boolean
+    private val userId: String = UserId.userId
+    private val isDevUser: Boolean = UserId.isDevUser
     private val latestUnknownRunConfigTasks = mutableMapOf<String, Instant>()
-    private var errorCache: Cache<String, String>? = null
 
-    //    private val tokenFetcherThread = Thread(this, "Token fetcher thread")
     private var postHog: PostHog? = null
     private var lastLensClick: LocalDateTime? = null
-    private var lastInsightsViewed: HashSet<InsightType>? = null
-    private var lastConnectionErrorTime: Instant = Instant.MIN
+    private val lastInsightsViewed = mutableSetOf<InsightType>()
 
     private val settingsChangeTracker = SettingsChangeTracker()
 
     init {
-        val hostname = CommonUtils.getLocalHostname()
-        if (System.getenv("devenv") == "digma") {
-            userId = hostname
-            isDevUser = true
-        } else {
-            if (PersistenceService.getInstance().state.userId == null) {
-                // Phase #1
-                PersistenceService.getInstance().state.userId = Integer.toHexString(hostname.hashCode())
-                // Phase #2 (after 14/08/2023 uncomment this phase, and comment the phase #1)
-                // PersistenceService.getInstance().state.userId = UUID.randomUUID().toString()
-            }
-            userId = PersistenceService.getInstance().state.userId!!
-            isDevUser = false
-        }
-
-//        val cachedToken = getCachedToken()
-//        postHog =
-//                if (cachedToken != null) PostHog.Builder(cachedToken).build()
-//                else null
-//
-//        tokenFetcherThread.start()
-
-        errorCache = CacheBuilder.newBuilder()
-            .maximumSize(10000)
-            .expireAfterWrite(5, TimeUnit.MINUTES)
-            .build()
 
         val token = "phc_5sy6Kuv1EYJ9GAdWPeGl7gx31RAw7BR7NHnOuLCUQZK"
         postHog = PostHog.Builder(token).build()
@@ -93,24 +62,30 @@ class ActivityMonitor(project: Project) :Disposable {
         //nothing to do, used as parent disposable
     }
 
-//    override fun run() {
-//        val cachedToken = getCachedToken()
-//        val latestToken = getLatestToken()
-//        if (latestToken != null && latestToken != cachedToken) {
-//            postHog = PostHog.Builder(latestToken).build()
-//            setCachedToken(latestToken)
-//        }
-//        if (postHog != null) {
-//            Log.log(LOGGER::info, "Posthog was configured successfully with " +
-//                    (if (latestToken != null) "latest token" else "cached token"))
-//        } else {
-//            Log.log(LOGGER::info, "Posthog failed to be configured")
-//        }
-//        registerSessionDetails()
-//    }
+
+    private fun capture(eventName: String) {
+        capture(eventName, mapOf())
+    }
+
+    private fun capture(eventName: String, details: Map<String, Any>) {
+
+        val mutableDetails: MutableMap<String, Any> = mutableMapOf()
+        mutableDetails.putAll(details)
+
+        mutableDetails["firstTimeInsightReceived"] = PersistenceService.getInstance().state.firstTimeInsightReceived
+        mutableDetails["firstTimeAssetsReceived"] = PersistenceService.getInstance().state.firstTimeAssetsReceived
+        mutableDetails["firstTimeRecentActivityReceived"] = PersistenceService.getInstance().state.firstTimeRecentActivityReceived
+
+        postHog?.capture(
+            userId,
+            eventName,
+            mutableDetails
+        )
+    }
+
 
     fun registerFramework(framework: MonitoredFramework) {
-        postHog?.capture(userId, "framework detected", mapOf("framework.name" to framework.name))
+        capture("framework detected", mapOf("framework.name" to framework.name))
         postHog?.set(
             userId, mapOf(
                 "framework.last" to framework.name,
@@ -125,13 +100,12 @@ class ActivityMonitor(project: Project) :Disposable {
     }
 
     fun registerCustomEvent(eventName: String, tags: Map<String, Any>?) {
-        postHog?.capture(userId, eventName, tags)
+        capture(eventName, tags ?: mapOf())
     }
 
     fun registerLensClicked(lens: String) {
         lastLensClick = LocalDateTime.now()
-        postHog?.capture(
-            userId,
+        capture(
             "lens clicked",
             mapOf("lens" to lens)
         )
@@ -144,8 +118,7 @@ class ActivityMonitor(project: Project) :Disposable {
         else
             "unknown"
 
-        postHog?.capture(
-            userId,
+        capture(
             "side-panel opened",
             mapOf("reason" to reason)
         )
@@ -153,92 +126,150 @@ class ActivityMonitor(project: Project) :Disposable {
     }
 
     fun registerSidePanelClosed() {
-        postHog?.capture(userId, "side-panel closed")
+        capture("side-panel closed")
     }
 
     fun registerObservabilityPanelOpened() {
-        postHog?.capture(userId, "observability-panel opened")
+        capture("observability-panel opened")
         registerUserAction("Opened observability panel")
     }
 
     fun registerObservabilityPanelClosed() {
-        postHog?.capture(userId, "observability-panel closed")
+        capture("observability-panel closed")
     }
 
     fun registerFirstConnectionEstablished() {
-        postHog?.capture(userId, "connection first-established")
+        capture("connection first-established")
     }
 
-    fun registerConnectionError(action: String, message: String) {
-        val oneHourAgo = Instant.now().minus(Hours.of(1))
-        if (lastConnectionErrorTime.isBefore(oneHourAgo)) {
-            postHog?.capture(userId, "connection error", mapOf("reason" to message, "action" to action))
-            lastConnectionErrorTime = Instant.now()
-        }
-    }
 
     fun registerConnectionGained() {
-        postHog?.capture(userId, "connection gained")
+        capture("connection gained")
     }
 
     fun registerConnectionLost() {
-        postHog?.capture(userId, "connection lost")
+        capture("connection lost")
     }
 
     fun registerFirstInsightReceived() {
-        postHog?.capture(userId, "insight first-received")
+        capture("insight first-received")
     }
 
     fun registerFirstAssetsReceived() {
-        postHog?.capture(userId, "plugin first-assets")
+        capture("plugin first-assets")
     }
 
     fun registerFirstTimeRecentActivityReceived() {
-        postHog?.capture(userId, "plugin first-activity")
+        capture("plugin first-activity")
     }
 
     fun registerObservabilityOn() {
-        postHog?.capture(userId, "observability is turned on")
+        capture("observability is turned on")
         registerUserAction("Turned on observability")
     }
 
     fun registerObservabilityOff() {
-        postHog?.capture(userId, "observability is turned off")
+        capture("observability is turned off")
         registerUserAction("Turned off observability")
     }
 
-    fun registerError(exception: Exception, message: String) {
-        val stringWriter = StringWriter()
-        exception.printStackTrace(PrintWriter(stringWriter))
 
-        var hash = hash(message)
-        if (errorCache!!.getIfPresent(hash) != null)
-            return
-        errorCache!!.put(hash, hash)
+    fun registerError(exception: Throwable, message: String) {
 
-        postHog?.capture(
-            userId,
-            "error",
-            mapOf(
-                "error.source" to "plugin",
-                "action" to "unknown",
-                "message" to message,
-                "exception.type" to exception.javaClass.name,
-                "exception.message" to exception.message,
-                "exception.stack-trace" to stringWriter.toString()
+        try {
+            val osType = System.getProperty("os.name")
+            val ideInfo = ApplicationInfo.getInstance()
+            val ideName = ideInfo.versionName
+            val ideVersion = ideInfo.fullVersion
+            val ideBuildNumber = ideInfo.build.asString()
+            val pluginVersion = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
+
+            //Don't call directly, use ErrorReporter.reportError
+
+            val stringWriter = StringWriter()
+            exception.printStackTrace(PrintWriter(stringWriter))
+
+            val exceptionMessage: String? = ExceptionUtils.getNonEmptyMessage(exception)
+
+            capture(
+                "error",
+                mapOf(
+                    "error.source" to "plugin",
+                    "action" to "unknown",
+                    "message" to message,
+                    "exception.type" to exception.javaClass.name,
+                    "cause.exception.type" to ExceptionUtils.getFirstRealExceptionCauseTypeName(exception),
+                    "exception.message" to exceptionMessage.toString(),
+                    "exception.stack-trace" to stringWriter.toString(),
+                    "os.type" to osType,
+                    "ide.name" to ideName,
+                    "ide.version" to ideVersion,
+                    "ide.build" to ideBuildNumber,
+                    "plugin.version" to pluginVersion,
+                    "user.type" to if (isDevUser) "internal" else "external"
+                )
             )
-        )
+        } catch (e: Exception) {
+            registerCustomEvent(
+                "error in registerError", mapOf(
+                    "message" to e.message.toString()
+                )
+            )
+        }
     }
+
+
+    fun registerAnalyticsServiceError(exception: Throwable, message: String, methodName: String, isConnectionException: Boolean) {
+
+        try {
+
+            val osType = System.getProperty("os.name")
+            val ideInfo = ApplicationInfo.getInstance()
+            val ideName = ideInfo.versionName
+            val ideVersion = ideInfo.fullVersion
+            val ideBuildNumber = ideInfo.build.asString()
+            val pluginVersion = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
+
+            val stringWriter = StringWriter()
+            exception.printStackTrace(PrintWriter(stringWriter))
+
+            val exceptionMessage: String? = ExceptionUtils.getNonEmptyMessage(exception)
+
+            val eventName = if (isConnectionException) "connection error" else "analytics api error"
+
+            capture(
+                eventName,
+                mapOf(
+                    "error.source" to "plugin",
+                    "apiMethodName" to methodName,
+                    "message" to message,
+                    "exception.type" to exception.javaClass.name,
+                    "cause.exception.type" to ExceptionUtils.getFirstRealExceptionCauseTypeName(exception),
+                    "exception.message" to exceptionMessage.toString(),
+                    "exception.stack-trace" to stringWriter.toString(),
+                    "os.type" to osType,
+                    "ide.name" to ideName,
+                    "ide.version" to ideVersion,
+                    "ide.build" to ideBuildNumber,
+                    "plugin.version" to pluginVersion,
+                    "user.type" to if (isDevUser) "internal" else "external"
+                )
+            )
+        } catch (e: Exception) {
+            registerCustomEvent(
+                "error in registerAnalyticsServiceError", mapOf(
+                    "message" to e.message.toString()
+                )
+            )
+        }
+    }
+
 
     fun reportBackendError(message: String, action: String) {
 
-        val hash = hash(message)
-        if (errorCache!!.getIfPresent(hash) != null)
-            return
-        errorCache!!.put(hash, hash)
+        //Don't call directly, use ErrorReporter.reportBackendError
 
-        postHog?.capture(
-            userId,
+        capture(
             "error",
             mapOf(
                 "error.source" to "backend",
@@ -249,8 +280,7 @@ class ActivityMonitor(project: Project) :Disposable {
     }
 
     fun reportRunConfig(runConfigTypeName: String, taskNames: Collection<String>, observabilityEnabled: Boolean, connectedToBackend: Boolean) {
-        postHog?.capture(
-            userId,
+        capture(
             "run config",
             mapOf(
                 "run.config.type" to runConfigTypeName,
@@ -261,14 +291,10 @@ class ActivityMonitor(project: Project) :Disposable {
         )
     }
 
-    fun reportSupportedRunConfigDetected(runConfigTypeName: String, taskNames: Collection<String>) {
-        postHog?.capture(
-            userId,
-            "supported-run-config detected",
-            mapOf(
-                "run.config.type" to runConfigTypeName,
-                "task.names" to taskNames
-            )
+    fun reportSupportedRunConfigDetected(details: Map<String, Any>) {
+        capture(
+            "supported-run-configurations",
+            details
         )
     }
 
@@ -289,8 +315,9 @@ class ActivityMonitor(project: Project) :Disposable {
         if (taskNamesToReport.isEmpty())
             return
 
-        postHog?.capture(
-            userId, "unknown-config ran", mapOf(
+        capture(
+            "unknown-config ran",
+            mapOf(
                 "config.build-system" to buildSystem,
                 "config.tasks" to taskNamesToReport,
                 "config.class-name" to configurationClassName,
@@ -299,22 +326,31 @@ class ActivityMonitor(project: Project) :Disposable {
         )
     }
 
-    fun registerInsightsViewed(insightTypes: List<out InsightType>) {
-        val newInsightsViewed = HashSet(insightTypes)
-        if (lastInsightsViewed != null && lastInsightsViewed == newInsightsViewed)
-            return
 
-        lastInsightsViewed = newInsightsViewed
-        postHog?.capture(
-            userId,
+    fun registerInsightsViewed(insightTypes: List<InsightType>) {
+
+        val insightsTypesToRegister = mutableListOf<InsightType>()
+
+        insightTypes.forEach {
+            if (!lastInsightsViewed.contains(it)) {
+                insightsTypesToRegister.add(it)
+            }
+        }
+
+        lastInsightsViewed.addAll(insightTypes)
+
+        if (insightsTypesToRegister.isEmpty()) {
+            return
+        }
+
+        capture(
             "insights viewed",
-            mapOf("insights" to insightTypes)
+            mapOf("insights" to insightsTypesToRegister)
         )
     }
 
     fun registerButtonClicked(panel: MonitoredPanel, button: String) {
-        postHog?.capture(
-            userId,
+        capture(
             "button-clicked",
             mapOf(
                 "panel" to panel.name,
@@ -325,8 +361,7 @@ class ActivityMonitor(project: Project) :Disposable {
     }
 
     fun registerNavigationButtonClicked(navigable: Boolean) {
-        postHog?.capture(
-            userId,
+        capture(
             "button-clicked",
             mapOf(
                 "panel" to MonitoredPanel.Scope.name,
@@ -338,8 +373,7 @@ class ActivityMonitor(project: Project) :Disposable {
     }
 
     fun registerSpanLinkClicked(insight: InsightType) {
-        postHog?.capture(
-            userId,
+        capture(
             "span-link clicked",
             mapOf(
                 "panel" to MonitoredPanel.Insights.name,
@@ -354,8 +388,7 @@ class ActivityMonitor(project: Project) :Disposable {
     }
 
     fun registerSpanLinkClicked(panel: MonitoredPanel, navigable: Boolean?) {
-        postHog?.capture(
-            userId,
+        capture(
             "span-link clicked",
             mapOf(
                 "panel" to panel.name,
@@ -366,8 +399,7 @@ class ActivityMonitor(project: Project) :Disposable {
     }
 
     fun registerButtonClicked(button: String, insight: InsightType) {
-        postHog?.capture(
-            userId,
+        capture(
             "insights button-clicked",
             mapOf(
                 "button" to button,
@@ -412,18 +444,40 @@ class ActivityMonitor(project: Project) :Disposable {
     }
 
 
-    fun registerPerformanceMetrics(result: PerformanceMetricsResponse) {
-        val properties = mutableMapOf<String, Any>(
-            "server.startTime" to result.serverStartTime,
-            //"server.aliveTime" to result.serverAliveTime,
-            "probeTime" to result.probeTime
-        )
-        for (metric in result.metrics){
-            val uncapitalizedMetric = Character.toLowerCase(metric.metric[0]) + metric.metric.substring(1);
-            properties["server.metric.$uncapitalizedMetric"] = metric.value
+    fun registerPerformanceMetrics(performanceMetrics: PerformanceMetricsResponse, isFirstTime: Boolean) {
+
+        val jsonData = try {
+            JsonUtils.objectToJson(performanceMetrics)
+        } catch (e: JsonProcessingException) {
+            "could not write PerformanceMetricsResponse to json $e"
         }
 
-        postHog?.capture(userId,"server received-data", properties)
+        val properties = mutableMapOf<String, Any>(
+            "data" to jsonData,
+            "server.startTime" to performanceMetrics.serverStartTime,
+            "probeTime" to performanceMetrics.probeTime
+        )
+
+        if (isFirstTime) {
+            properties["first time"] = true
+        }
+
+        performanceMetrics.metrics.forEach { metric: PerformanceCounterReport ->
+
+            when (metric.metric) {
+                "TotalUniqueSpans" -> {
+                    if (metric.value is List<*>) {
+                        val sum: Int = (metric.value as List<*>).sumOf { any: Any? -> any as Int }
+                        properties["TotalUniqueSpans"] = sum
+                    }
+                }
+
+                "MaxSpans" -> properties["MaxSpans"] = metric.value
+                "MaxTraces" -> properties["MaxTraces"] = metric.value
+            }
+        }
+
+        capture("performance-metrics", properties)
     }
 
 
@@ -436,8 +490,7 @@ class ActivityMonitor(project: Project) :Disposable {
 
 
     fun registerDigmaEngineEventStart(eventName: String, eventDetails: Map<String, Any>) {
-        postHog?.capture(
-            userId,
+        capture(
             "Engine.".plus(eventName).plus(".start"),
             eventDetails
         )
@@ -445,24 +498,21 @@ class ActivityMonitor(project: Project) :Disposable {
 
 
     fun registerDigmaEngineEventEnd(eventName: String, eventDetails: Map<String, Any>) {
-        postHog?.capture(
-            userId,
+        capture(
             "Engine.".plus(eventName).plus(".end"),
             eventDetails
         )
     }
 
     fun registerDigmaEngineEventRetry(eventName: String, eventDetails: Map<String, Any>) {
-        postHog?.capture(
-            userId,
+        capture(
             "Engine.".plus(eventName).plus(".retry"),
             eventDetails
         )
     }
 
     fun registerDigmaEngineEventError(eventName: String, errorMessage: String) {
-        postHog?.capture(
-            userId,
+        capture(
             "Engine.".plus(eventName).plus(".error"),
             mapOf("errorMessage" to errorMessage)
         )
@@ -498,37 +548,26 @@ class ActivityMonitor(project: Project) :Disposable {
     }
 
 
-
     fun registerSettingsEvent(eventName: String, eventDetails: Map<String, Any>) {
-        postHog?.capture(
-            userId,
+        capture(
             "Settings.".plus(eventName),
             eventDetails
         )
     }
 
     fun registerNotificationCenterEvent(eventName: String, eventDetails: Map<String, Any>) {
-        postHog?.capture(
-            userId,
+        capture(
             "Notifications.".plus(eventName),
             eventDetails
         )
     }
 
-    private fun registerUserAction(action: String) {
-        postHog?.capture(
-            userId,
+    fun registerUserAction(action: String) {
+        capture(
             "user-action",
             mapOf("action" to action)
         )
     }
 
 
-//    override fun dispose() {
-//        try {
-//            tokenFetcherThread.join()
-//        } catch (e: InterruptedException) {
-//            Log.debugWithException(LOGGER, e, "Failed waiting for tokenFetcherThread")
-//        }
-//    }
 }

@@ -3,6 +3,8 @@ package org.digma.intellij.plugin.analytics;
 import org.digma.intellij.plugin.model.rest.AboutResult;
 import org.digma.intellij.plugin.model.rest.assets.AssetsRequest;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
+import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentRequest;
+import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentResponse;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsRequest;
@@ -21,6 +23,10 @@ import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveDataRequest;
 import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation;
 import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigationRequest;
+import org.digma.intellij.plugin.model.rest.notifications.GetUnreadNotificationsCountRequest;
+import org.digma.intellij.plugin.model.rest.notifications.NotificationsRequest;
+import org.digma.intellij.plugin.model.rest.notifications.SetReadNotificationsRequest;
+import org.digma.intellij.plugin.model.rest.notifications.UnreadNotificationsCountResponse;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
@@ -70,9 +76,17 @@ public interface AnalyticsProvider extends Closeable {
 
     String getAssets(AssetsRequest assetsRequest);
 
+    String getNotifications(NotificationsRequest notificationsRequest);
+
+    void setReadNotificationsTime(SetReadNotificationsRequest setReadNotificationsRequest);
+
+    UnreadNotificationsCountResponse getUnreadNotificationsCount(GetUnreadNotificationsCountRequest getUnreadNotificationsCountRequest);
+
     VersionResponse getVersions(VersionRequest request);
 
     AboutResult getAbout();
 
     PerformanceMetricsResponse getPerformanceMetrics();
+
+    DeleteEnvironmentResponse deleteEnvironment(DeleteEnvironmentRequest deleteEnvironmentRequest);
 }

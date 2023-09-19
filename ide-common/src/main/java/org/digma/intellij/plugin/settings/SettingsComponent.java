@@ -42,7 +42,11 @@ public class SettingsComponent {
             @Override
             public boolean verify(JComponent input) {
                 try {
-                    new URL(myApiUrlText.getText().trim());
+                    var url = new URL(myApiUrlText.getText().trim());
+                    if (Objects.equals(url.getProtocol(), "http")) {
+                        myUrlLabel.setForeground(JBColor.RED);
+                        return false;
+                    }
                     myUrlLabel.setForeground(defaultLabelForeground);
                     return true;
                 } catch (MalformedURLException e) {

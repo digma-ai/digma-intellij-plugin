@@ -25,6 +25,7 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.navigation.HomeSwitcherService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.psi.PsiUtils
+import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import java.awt.event.MouseEvent
 import java.util.concurrent.ConcurrentHashMap
@@ -139,7 +140,7 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
 
     private fun restartAll() {
 
-        //todo: since CodeVisionPassFactory became internal its not possible
+        // todo: since CodeVisionPassFactory became internal its not possible
         // to call CodeVisionPassFactory.clearModificationStamp(it.editor) and just calling DaemonCodeAnalyzer.restart
         // does not trigger a call to computeForEditor and there is no refresh.
         // doing it the way bellow works, but seems a waste to clear and refresh all when we need to refresh only one file.
@@ -191,6 +192,7 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
     ) : (MouseEvent?, Editor) -> Unit {
         private val elementPointer = SmartPointerManager.createPointer(element)
         override fun invoke(event: MouseEvent?, editor: Editor) {
+            project.service<MainToolWindowCardsController>().closeCoveringViewsIfNecessary()
             ActivityMonitor.getInstance(project).registerLensClicked(lensTitle)
             project.service<HomeSwitcherService>().switchToInsights()
             ToolWindowShower.getInstance(project).showToolWindow()

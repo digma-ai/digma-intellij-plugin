@@ -31,7 +31,7 @@
                     secondary="false"
                     icon="org.digma.intellij.plugin.icons.AppIcons.TOOL_WINDOW_OBSERVABILITY"
                     anchor="bottom"
-                    factoryClass="org.digma.intellij.plugin.recentactivity.DigmaBottomToolWindowFactory"/>
+                    factoryClass="org.digma.intellij.plugin.ui.recentactivity.RecentActivityToolWindowFactory"/>
 
 
         <projectService serviceImplementation="org.digma.intellij.plugin.jaegerui.JaegerUIService"/>
@@ -39,7 +39,6 @@
         <fileEditorProvider implementation="org.digma.intellij.plugin.documentation.DocumentationFileEditorProvider"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.ToolWindowShower"/>
-        <projectService serviceImplementation="org.digma.intellij.plugin.recentactivity.RecentActivityToolWindowShower"/>
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.MainToolWindowCardsController"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.service.EditorInteractionService"
@@ -79,11 +78,7 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.common.IDEUtilsService"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.posthog.ActivityMonitor"/>
-
         <projectService serviceImplementation="org.digma.intellij.plugin.updates.UpdatesService"/>
-
-        <projectService serviceImplementation="org.digma.intellij.plugin.recentactivity.RecentActivityService"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider"/>
 
@@ -91,8 +86,12 @@
                         serviceImplementation="org.digma.intellij.plugin.insights.InsightsServiceImpl"/>
 
 
-        <notificationGroup id="Digma Notification Group"
+        <notificationGroup id="Digma Hidden Notification Group"
                            displayType="NONE"
+                           toolWindowId="Digma"/>
+
+        <notificationGroup id="Digma Sticky Balloon Notification Group"
+                           displayType="STICKY_BALLOON"
                            toolWindowId="Digma"/>
 
         <notificationGroup id="Digma Events Group"
@@ -124,11 +123,13 @@
 
         <postStartupActivity implementation="org.digma.intellij.plugin.common.DumbAwareStartupActivity"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.common.StartupStartupActivity"/>
-        <postStartupActivity implementation="org.digma.intellij.plugin.recentactivity.RecentActivityStartupActivity"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.ui.recentactivity.RecentActivitiesStartup"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.posthog.ContainerEngineStartupActivity"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.notifications.NotificationsStartupActivity"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.analytics.AnalyticsServiceStarter"/>
-        <postStartupActivity implementation="org.digma.intellij.plugin.posthog.FirstTimePerformanceMetricsMonitor"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.ui.toolwindow.ToolWindowBadgeChanger"/>
+        <postStartupActivity
+                implementation="org.digma.intellij.plugin.posthog.PerformanceMetricsPosthogEventStartupActivity"/>
 
 
         <!-- Code lens providers are used only for some languages, for example java,python.

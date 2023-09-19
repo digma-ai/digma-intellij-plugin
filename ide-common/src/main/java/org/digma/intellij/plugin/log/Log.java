@@ -2,7 +2,7 @@ package org.digma.intellij.plugin.log;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import org.digma.intellij.plugin.posthog.ActivityMonitor;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 
 import java.util.function.Consumer;
 
@@ -60,7 +60,7 @@ public class Log {
     public static void error(Logger logger,Project project, Exception exception, String format, Object... args) {
         var msg = String.format(format.replace("{}", "%s"), args);
         error(logger, exception, DIGMA_PROJECT + project.getName() + ": " + msg);
-        ActivityMonitor.getInstance(project).registerError(exception, msg);
+        ErrorReporter.getInstance().reportError(project, "Log.error", exception);
     }
     public static void error(Logger logger, Exception exception, String format, Object... args) {
         error(logger, exception, DIGMA + String.format(format.replace("{}", "%s"), args));

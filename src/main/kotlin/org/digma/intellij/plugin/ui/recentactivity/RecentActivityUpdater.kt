@@ -71,11 +71,12 @@ class RecentActivityUpdater(val project: Project) : Disposable {
     fun updateLatestActivities() {
         Log.log(logger::trace, "updateLatestActivities called")
         val environments = project.service<AnalyticsService>().environments
-        environments?.let { envs ->
-
-            Log.log(logger::trace, "got environments from backend {}", envs)
-
-            updateLatestActivities(envs)
+        if (environments != null) {
+            Log.log(logger::trace, "got environments from backend {}", environments)
+            updateLatestActivities(environments)
+        } else {
+            recentActivityToolWindowIconChanger.hideBadge()
+            sendEmptyData()
         }
 
     }
@@ -89,9 +90,9 @@ class RecentActivityUpdater(val project: Project) : Disposable {
 
         Log.log(logger::trace, "got latestActivitiesResult {}", latestActivitiesResult)
 
-        latestActivitiesResult?.let { recentActivities ->
+        if (latestActivitiesResult != null) {
 
-            if (hasRecentActivity(recentActivities)) {
+            if (hasRecentActivity(latestActivitiesResult)) {
                 Log.log(logger::trace, "hasRecentActivity recentActivities,changing tool window to badged icon")
                 recentActivityToolWindowIconChanger.showBadge()
             } else {
@@ -100,10 +101,14 @@ class RecentActivityUpdater(val project: Project) : Disposable {
             }
 
             jCefComponent?.let {
-                sendLatestActivities(it, recentActivities, environments)
+                sendLatestActivities(it, latestActivitiesResult, environments)
             }
+        } else {
+            recentActivityToolWindowIconChanger.hideBadge()
+            sendEmptyData()
         }
     }
+
 
 
     private fun hasRecentActivity(latestActivityResult: RecentActivityResult): Boolean {
@@ -156,7 +161,16 @@ class RecentActivityUpdater(val project: Project) : Disposable {
         val recentActivityEnvs = buildRecentActivityEnvs(environments)
         allEnvs.addAll(recentActivityEnvs)
 
-        val pendingEnvs = pendingEnvironments.map { p: PendingEnvironment ->
+        val pendingEnvs = buildPendingEnvs(pendingEnvironments)
+        allEnvs.addAll(pendingEnvs)
+
+        allEnvs.sortBy { recentActivityEnvironment: RecentActivityEnvironment -> recentActivityEnvironment.name }
+
+        return allEnvs
+    }
+
+    private fun buildPendingEnvs(pendingEnvironments: List<PendingEnvironment>): List<RecentActivityEnvironment> {
+        return pendingEnvironments.map { p: PendingEnvironment ->
             RecentActivityEnvironment(
                 p.name,
                 p.name,
@@ -165,11 +179,6 @@ class RecentActivityUpdater(val project: Project) : Disposable {
                 p.type
             )
         }
-        allEnvs.addAll(pendingEnvs)
-
-        allEnvs.sortBy { recentActivityEnvironment: RecentActivityEnvironment -> recentActivityEnvironment.name }
-
-        return allEnvs
     }
 
     private fun buildRecentActivityEnvs(environments: List<String>): List<RecentActivityEnvironment> {
@@ -221,6 +230,28 @@ class RecentActivityUpdater(val project: Project) : Disposable {
             }
         }
     }
+
+
+    private fun sendEmptyData() {
+
+        jCefComponent?.let { jcef ->
+            val pendingEnvironments = service<AddEnvironmentsService>().getPendingEnvironments()
+            val pendingEnvs = buildPendingEnvs(pendingEnvironments)
+
+            val recentActivitiesMessage = RecentActivitiesMessageRequest(
+                JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
+                RECENT_ACTIVITY_SET_DATA,
+                RecentActivitiesMessagePayload(
+                    pendingEnvs,
+                    listOf()
+                )
+            )
+
+            Log.log(logger::trace, "sending empty recentActivitiesMessage to app {}", recentActivitiesMessage)
+            serializeAndExecuteWindowPostMessageJavaScript(jcef.jbCefBrowser.cefBrowser, recentActivitiesMessage)
+        }
+    }
+
 
 
     override fun dispose() {

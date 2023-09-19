@@ -88,7 +88,8 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                             HTMLEditorProvider.openEditor(
                                 project,
                                 openInInternalBrowserRequest.payload.title,
-                                openInInternalBrowserRequest.payload.url
+                                openInInternalBrowserRequest.payload.url,
+                                null
                             )
                         }
                     }

@@ -9,6 +9,10 @@ import org.digma.intellij.plugin.docker.DigmaInstallationStatus
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.ui.jcef.model.DigmaEngineStatusMessage
+import org.digma.intellij.plugin.ui.jcef.model.ApiUrlPayload
+import org.digma.intellij.plugin.ui.jcef.model.ConnectionStatusMessage
+import org.digma.intellij.plugin.ui.jcef.model.IsDigmaRunningPayload
+import org.digma.intellij.plugin.ui.jcef.model.SetApiUrlMessage
 
 
 /**
@@ -41,4 +45,13 @@ private fun sendDigmaEngineStatus(cefBrowser: CefBrowser, status: DigmaInstallat
         "GLOBAL/SET_DIGMA_STATUS", status
     )
     serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, connectionStatusMessage)
+}
+
+
+fun sendApiUrl(cefBrowser: CefBrowser, url: String) {
+    val setDigmaApiUrlMessage = SetApiUrlMessage(
+        JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
+        "GLOBAL/SET_DIGMA_API_URL", ApiUrlPayload(url)
+    )
+    serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, setDigmaApiUrlMessage)
 }

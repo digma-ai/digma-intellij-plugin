@@ -17,6 +17,7 @@ import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil
+import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
 import org.digma.intellij.plugin.ui.settings.SettingsChangeListener
 import org.digma.intellij.plugin.ui.settings.Theme
@@ -35,7 +36,9 @@ class JCefComponent(
 
     private val settingsChangeListener: SettingsChangeListener
     private val analyticsServiceConnectionEventMessageBusConnection: MessageBusConnection
+    private val settingsListenerParentDisposable = Disposer.newDisposable()
     private val connectionEventAlarmParentDisposable = Disposer.newDisposable()
+
 
     init {
         val connectionEventAlarm = AlarmFactory.getInstance().create(Alarm.ThreadToUse.POOLED_THREAD, connectionEventAlarmParentDisposable)
@@ -86,6 +89,12 @@ class JCefComponent(
                     }, 5000)
                 }
             })
+
+
+        SettingsState.getInstance().addChangeListener({ settings ->
+            val apiUrl = settings.apiUrl
+            sendApiUrl(jbCefBrowser.cefBrowser, apiUrl)
+        }, settingsListenerParentDisposable)
     }
 
 
@@ -95,9 +104,9 @@ class JCefComponent(
             jbCefBrowser.dispose()
             cefMessageRouter.dispose()
             jbCefBrowser.jbCefClient.removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
-
             ApplicationUISettingsChangeNotifier.getInstance(project).removeSettingsChangeListener(settingsChangeListener)
-            analyticsServiceConnectionEventMessageBusConnection.dispose()
+            Disposer.dispose(analyticsServiceConnectionEventMessageBusConnection)
+            Disposer.dispose(settingsListenerParentDisposable)
         } catch (e: Exception) {
             ErrorReporter.getInstance().reportError(project, "JCefComponent.dispose", e)
         }

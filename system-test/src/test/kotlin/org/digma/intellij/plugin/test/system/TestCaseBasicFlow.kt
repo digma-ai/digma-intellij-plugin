@@ -25,10 +25,8 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse
-import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityEntrySpanPayload
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResponseEntry
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult
-import org.digma.intellij.plugin.recentactivity.RecentActivityService
 import org.digma.intellij.plugin.test.system.framework.DigmaAssertion
 import org.digma.intellij.plugin.test.system.framework.clearSpyAssertion
 import org.digma.intellij.plugin.test.system.framework.createSpyBrowsers
@@ -43,6 +41,8 @@ import org.digma.intellij.plugin.test.system.framework.mockGetInsightsOfMethods
 import org.digma.intellij.plugin.test.system.framework.mockGetRecentActivity
 import org.digma.intellij.plugin.test.system.framework.replaceExecuteJSWithAssertionFunction
 import org.digma.intellij.plugin.ui.common.CodeNavigationButton
+import org.digma.intellij.plugin.ui.recentactivity.RecentActivityService
+import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEntrySpanPayload
 import org.digma.intellij.plugin.ui.service.InsightsService
 import org.jetbrains.plugins.notebooks.visualization.EDITOR_SCROLLING_POSITION_KEEPER_KEY
 import java.lang.reflect.Field
@@ -296,12 +296,11 @@ class TestCaseBasicFlow : DigmaTestCase() {
             }
         }
         readyToTest()
-        waitFor(2000, "caret event in file ${secondFile?.name}")
+        waitFor(1000, "caret event in file ${secondFile?.name}")
         PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
 
 
         DigmaAssertion.assertFlag()
-        // test that latest method under caret is method 1
         methodUnderCaret = project.getService(CurrentContextUpdater::class.java).latestMethodUnderCaret
         
         // asserting all the current information about method one and the method under caret

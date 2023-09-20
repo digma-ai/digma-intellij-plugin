@@ -27,6 +27,7 @@ jobs:
         with:
           remove-android: true
           remove-haskell: true
+          remove-dotnet: true
       #      - name: Maximize build space
       #        uses: easimon/maximize-build-space@master
       #        with:
@@ -37,9 +38,6 @@ jobs:
       #          remove-haskell: true
       #          remove-codeql: true
       #          remove-docker-images: true
-
-      - name: Debug
-        run: echo "Building ref ${{ inputs.ref-name }} with profile ${{ inputs.build-profile }}"
 
       - name: Fetch Sources
         uses: actions/checkout@v3
@@ -52,14 +50,14 @@ jobs:
           java-version: '17'
           distribution: 'corretto'
 
-      #      - name: Setup dotnet
-      #        uses: actions/setup-dotnet@v2
-      #        with:
-      #          dotnet-version: |
-      #            6.0.411
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: |
+            6.0.411
 
-      - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@v1.1.0
+      #      - name: Validate Gradle wrapper
+      #        uses: gradle/wrapper-validation-action@v1
 
 
       #      - name: Build Plugin

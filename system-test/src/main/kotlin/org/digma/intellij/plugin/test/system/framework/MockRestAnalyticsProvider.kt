@@ -2,11 +2,9 @@ package org.digma.intellij.plugin.test.system.framework
 
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.thoughtworks.qdox.model.JavaClass
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.rest.AboutResult
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse
 import org.digma.intellij.plugin.model.rest.insights.Duration
@@ -26,9 +24,6 @@ import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse
-import org.gradle.internal.impldep.org.apache.ivy.core.resolve.ResolveEngine
-import org.mockito.Mockito.any
-import org.mockito.Mockito.anyString
 import org.mockito.Mockito.isA
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
@@ -99,6 +94,7 @@ fun mockGetRecentActivity(mock: RestAnalyticsProvider, result: RecentActivityRes
 
 fun mockGetInsightsOfMethods(mock: RestAnalyticsProvider, mockResponse: InsightsOfMethodsResponse) {
     `when`(mock.getInsightsOfMethods(isA(InsightsOfMethodsRequest::class.java))).thenAnswer {
+        Log.test(logger::info, "mock getInsightsOfMethods")
         val currEnv = (it.arguments[0] as InsightsOfMethodsRequest).environment
         return@thenAnswer mockResponse
     }
@@ -144,7 +140,8 @@ fun createDurationLiveData(env: String): DurationLiveData {
                 unit = "ms",
                 raw = 2500
             ),
-            dateTime = Timestamp(Date().time).toString()
+            dateTime = Timestamp(Date().time).toString(),
+            false
         ),
 
         LiveDataRecord(
@@ -153,7 +150,8 @@ fun createDurationLiveData(env: String): DurationLiveData {
                 unit = "ms",
                 raw = 3000
             ),
-            dateTime = Timestamp(Date().time).toString()
+            dateTime = Timestamp(Date().time).toString(),
+            false
         )
     )
     val defaultDurationData = DurationData(

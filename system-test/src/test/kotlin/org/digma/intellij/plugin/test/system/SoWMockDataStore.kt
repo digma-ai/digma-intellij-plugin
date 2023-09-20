@@ -16,11 +16,11 @@ import org.digma.intellij.plugin.model.rest.navigation.NavItemType
 import org.digma.intellij.plugin.model.rest.navigation.NavigationEntry
 import org.digma.intellij.plugin.model.rest.navigation.SpanNavigationItem
 import org.digma.intellij.plugin.model.rest.recentactivity.EntrySpan
-import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityEntrySpanPayload
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResponseEntry
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult
 import org.digma.intellij.plugin.model.rest.recentactivity.SlimAggregatedInsight
 import org.digma.intellij.plugin.test.system.framework.methodCodeObject3
+import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEntrySpanPayload
 import java.util.Date
 
 
@@ -36,16 +36,17 @@ object BulletOneData {
     const val DOC_NAME: String = "TestFile.java"
     val environmentList = listOf("env1")
 
-    val className: String = "org.digma.intellij.plugin.test.system.TestFile"
-    val methodName = "method1"
+    const val className: String = "org.digma.intellij.plugin.test.system.TestFile"
+    private const val relatedClassName: String = "org.digma.intellij.plugin.test.system.TestFile2"
+    private const val methodName = "method1"
     val methodCodeObjectId: String = createDigmaCodeObjectId(className, methodName)
     val relatedSpansToMethod: List<String> = listOf(
-        createDigmaCodeObjectId(className + "2", "relatedSpan1"),
-        createDigmaCodeObjectId(className + "2", "relatedSpan2")
+        createDigmaCodeObjectId(relatedClassName, "relatedSpan1"),
+        createDigmaCodeObjectId(relatedClassName, "relatedSpan2")
     )
     val relatedEndPointToMethod: List<String> = listOf(
-        createDigmaCodeObjectId(className, "relatedEndpoint1"),
-        createDigmaCodeObjectId(className, "relatedEndpoint2")
+        createDigmaCodeObjectId(relatedClassName, "relatedEndpoint1"),
+        createDigmaCodeObjectId(relatedClassName, "relatedEndpoint2")
     )
     val expectedInsightsOfMethods: InsightsOfMethodsResponse
         get() {

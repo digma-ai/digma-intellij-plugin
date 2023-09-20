@@ -35,7 +35,7 @@ fun createSpyBrowsers(): Pair<JBCefBrowser, CefBrowser> {
     return jbBrowserSpy to spiedCefBrowser
 }
 
-fun <T> injectSpyBrowser(
+fun <T>  injectSpyBrowser(
     containingInstance: T,
     jbBrowserFieldName: String,
     jbBrowserSpy: JBCefBrowser,
@@ -74,7 +74,7 @@ fun prepareDefaultSpyCalls(jbCaf: JBCefBrowser, caf: CefBrowser) {
 
 fun replaceExecuteJSWithAssertionFunction(spiedCaf: CefBrowser, assertion: (String) -> Unit) {
     Mockito.doAnswer { invocationOnMock ->
-        Log.test(logger::info, "executeJS - of mock before assertion call {}", Thread.currentThread().stackTrace[1])
+//        Log.test(logger::info, "executeJS - of mock before assertion call {}", Thread.currentThread().stackTrace[1])
         invocationOnMock.getArgument(0, String::class.java)
             .also { props ->
                 val stripedPayload = props.substringAfter("window.postMessage(").substringBeforeLast(");")

@@ -15,6 +15,7 @@ import org.cef.handler.CefLifeSpanHandlerAdapter;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.analytics.EnvironmentChanged;
+import org.digma.intellij.plugin.analytics.NoSelectedEnvironmentException;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.IDEUtilsService;
@@ -144,7 +145,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
             project.getMessageBus().connect(this).subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, new EnvironmentChanged() {
                 @Override
-                public void environmentChanged(String newEnv, boolean refreshInsightsView) {
+                public void environmentChanged(@Nullable String newEnv, boolean refreshInsightsView) {
                     Backgroundable.ensurePooledThread(InsightsServiceImpl.this::pushInsightsOnEnvironmentChange);
                 }
 
@@ -304,16 +305,21 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
     private List<CodeObjectInsight> getInsightsByMethodInfo(@NotNull MethodInfo methodInfo) throws AnalyticsServiceException {
 
+        try {
 //        var insights = DocumentInfoService.getInstance(project).getCachedMethodInsights(methodInfo);
-        InsightsOfMethodsResponse insightsOfMethodsResponse = AnalyticsService.getInstance(project).getInsightsOfMethods(Collections.singletonList(methodInfo));
+            InsightsOfMethodsResponse insightsOfMethodsResponse = AnalyticsService.getInstance(project).getInsightsOfMethods(Collections.singletonList(methodInfo));
 
-        if (insightsOfMethodsResponse.getMethodsWithInsights().isEmpty()) {
-            Log.log(logger::debug, project, "could not find insights for {}", methodInfo);
+            if (insightsOfMethodsResponse.getMethodsWithInsights().isEmpty()) {
+                Log.log(logger::debug, project, "could not find insights for {}", methodInfo);
+                return Collections.emptyList();
+            }
+
+            var methodsWithInsights = insightsOfMethodsResponse.getMethodsWithInsights().stream().findAny().orElse(null);
+            return methodsWithInsights == null ? Collections.emptyList() : methodsWithInsights.getInsights();
+        } catch (NoSelectedEnvironmentException e) {
+            //this may happen a lot when there is no connection or no environments
             return Collections.emptyList();
         }
-
-        var methodsWithInsights = insightsOfMethodsResponse.getMethodsWithInsights().stream().findAny().orElse(null);
-        return methodsWithInsights == null ? Collections.emptyList() : methodsWithInsights.getInsights();
     }
 
 

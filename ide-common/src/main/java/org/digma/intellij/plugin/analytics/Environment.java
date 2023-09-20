@@ -156,11 +156,6 @@ public class Environment implements EnvironmentsSupplier {
                 return;
             }
 
-            //don't fire event if the new environments is empty, usually It's when connection lost
-            if (newEnvironments.isEmpty()){
-                return;
-            }
-
             this.environments = newEnvironments;
             notifyEnvironmentsListChange();
 
@@ -190,11 +185,6 @@ public class Environment implements EnvironmentsSupplier {
             //don't update the persistent data with null,null will happen on connection lost,
             //so when connection is back the current env can be restored to the last one.
             PersistenceService.getInstance().getState().setCurrentEnv(current);
-        }
-
-        //don't fire the event if current environment is null, usually it's when connection lost
-        if (current == null){
-            return;
         }
 
         if (!Objects.equals(oldEnv, current)) {

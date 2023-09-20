@@ -27,6 +27,7 @@ import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
 import org.digma.intellij.plugin.ui.settings.SettingsChangeListener;
 import org.digma.intellij.plugin.ui.settings.Theme;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.io.InputStream;
@@ -97,7 +98,7 @@ public final class AssetsService implements Disposable {
 
             project.getMessageBus().connect(this).subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, new EnvironmentChanged() {
                 @Override
-                public void environmentChanged(String newEnv, boolean refreshInsightsView) {
+                public void environmentChanged(@Nullable String newEnv, boolean refreshInsightsView) {
 
                     Backgroundable.ensurePooledThread(() -> {
                         try {

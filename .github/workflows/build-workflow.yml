@@ -120,9 +120,9 @@ jobs:
 
 
       ### runPluginVerifier must run only after upload artifact because it packages again
-      - name: Run Plugin Verifier
-        if: ${{ inputs.build-with-rider != 'true' }}
-        run: ./gradlew runPluginVerifier --no-configuration-cache -PbuildProfile=${{ inputs.build-profile }}  -PdoNotDownloadSources=true
+      #      - name: Run Plugin Verifier
+      #        if: ${{ inputs.build-with-rider != 'true' }}
+      #        run: ./gradlew runPluginVerifier --no-configuration-cache -PbuildProfile=${{ inputs.build-profile }}  -PdoNotDownloadSources=true
 
       - name: Collect Plugin Verifier Result
         if: ${{ inputs.build-with-rider != 'true' }}

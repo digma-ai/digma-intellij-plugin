@@ -39,8 +39,10 @@ jobs:
           dotnet-version: |
             6.0.411
 
-      - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@v1
+      ## wrapper-validation-action fails too often with this error https://github.com/gradle/wrapper-validation-action/issues/40
+      ## we don't need it because we usually don't have contributors replacing it
+      #      - name: Validate Gradle wrapper
+      #        uses: gradle/wrapper-validation-action@v1
 
       - name: Export Changelog
         id: exportchangelog

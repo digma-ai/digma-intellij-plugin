@@ -45,9 +45,6 @@ jobs:
           dotnet-version: |
             6.0.411
 
-      - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@v1
-
       - name: Export Changelog
         id: exportchangelog
         shell: bash

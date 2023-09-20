@@ -23,15 +23,23 @@ jobs:
 
     steps:
       - name: Maximize build space
-        uses: easimon/maximize-build-space@master
+        uses: AdityaGarg8/remove-unwanted-software@v1
         with:
-          root-reserve-mb: 10000
-          temp-reserve-mb: 5000
-          swap-size-mb: 1024
           remove-android: true
           remove-haskell: true
           remove-codeql: true
+          remove-dotnet: true
           remove-docker-images: true
+      #      - name: Maximize build space
+      #        uses: easimon/maximize-build-space@master
+      #        with:
+      #          root-reserve-mb: 10000
+      #          temp-reserve-mb: 5000
+      #          swap-size-mb: 1024
+      #          remove-android: true
+      #          remove-haskell: true
+      #          remove-codeql: true
+      #          remove-docker-images: true
 
       - name: Debug
         run: echo "Building ref ${{ inputs.ref-name }} with profile ${{ inputs.build-profile }}"
@@ -122,8 +130,12 @@ jobs:
       ### runPluginVerifier must run only after upload artifact because it packages again
       - name: Run Plugin Verifier
         if: ${{ inputs.build-with-rider != 'true' }}
-        run: ./gradlew runPluginVerifier  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache --no-configuration-cache -PbuildProfile=${{ inputs.build-profile }}  -PdoNotDownloadSources=true
+        run: ./gradlew runPluginVerifier --no-configuration-cache -PbuildProfile=${{ inputs.build-profile }}  -PdoNotDownloadSources=true
 
+      #      - name: Run Plugin Verifier
+      #        if: ${{ inputs.build-with-rider != 'true' }}
+      #        run: ./gradlew runPluginVerifier  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache --no-configuration-cache -PbuildProfile=${{ inputs.build-profile }}  -PdoNotDownloadSources=true
+      #
       - name: Collect Plugin Verifier Result
         if: ${{ inputs.build-with-rider != 'true' }}
         uses: actions/upload-artifact@v3

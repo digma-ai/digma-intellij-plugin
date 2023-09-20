@@ -1,7 +1,13 @@
-## All gradle command are changing gradle user home and project home to use the project directory. that is because
-## maximize-build-space increases the working directory so that home directory has no space for gradle.
+## This workflow runs plugin verifier. plugin verifier requires a bit more disk space than regular build.
+## So the workflow uses a modified maximize-build-space,AdityaGarg8/remove-unwanted-software, action that only removed
+##  some software.
+##  the original easimon/maximize-build-space action causes builds to fails for some reason and also requires executing
+##  gralde  with modified cache locations like '--gradle-user-home=./.localhome --project-cache-dir=./.projectcache'.
+##  AdityaGarg8/remove-unwanted-software frees around 12G of disk space.
+## No need to run gradle/wrapper-validation-action because this workflow does not produce artifacts.
+##  and gradle/wrapper-validation-action tends to fail a lot.
 
-name: Build all branches (!main)
+name: Run plugin verifier
 
 on:
   workflow_call:
@@ -10,9 +16,6 @@ on:
         required: true
         type: string
       ref-name:
-        required: true
-        type: string
-      build-with-rider:
         required: true
         type: string
 
@@ -27,17 +30,6 @@ jobs:
         with:
           remove-android: true
           remove-haskell: true
-          remove-dotnet: true
-      #      - name: Maximize build space
-      #        uses: easimon/maximize-build-space@master
-      #        with:
-      #          root-reserve-mb: 10000
-      #          temp-reserve-mb: 5000
-      #          swap-size-mb: 1024
-      #          remove-android: true
-      #          remove-haskell: true
-      #          remove-codeql: true
-      #          remove-docker-images: true
 
       - name: Fetch Sources
         uses: actions/checkout@v3
@@ -56,81 +48,9 @@ jobs:
           dotnet-version: |
             6.0.411
 
-      #      - name: Validate Gradle wrapper
-      #        uses: gradle/wrapper-validation-action@v1
-
-
-      #      - name: Build Plugin
-      #        if: ${{ inputs.build-with-rider != 'true' }}
-      #        env:
-      #          POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL }}
-      #        run: ./gradlew clean test buildPlugin --no-configuration-cache -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true
-      #
-      #      - name: Build Plugin with Rider
-      #        if: ${{ inputs.build-with-rider == 'true' }}
-      #        env:
-      #          POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL }}
-      #        run: ./gradlew clean test buildPlugin --no-configuration-cache -PbuildWithRider=true -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true
-
-      #      - name: Find posthog url
-      #        id: posthog
-      #        shell: bash
-      #        run: |
-      #          cd ${{ github.workspace }}/build/libs
-      #          FILENAME=`ls instrumented-digma-intellij-plugin*.jar`
-      #          unzip -q "$FILENAME" -d content
-      #          URL=$(cat ./content/posthog-token-url.txt)
-      #          echo "url=${URL}" >> "$GITHUB_OUTPUT"
-      #
-      #      - name: Debug posthog url
-      #        if: ${{ steps.posthog.outputs.url == '' }}
-      #        run: echo "posthog url is empty,failing build"
-
-      #      - name: Verify posthog url exists
-      #        if: ${{ steps.posthog.outputs.url == '' }}
-      #        uses: actions/github-script@v3
-      #        with:
-      #          script: |
-      #            core.setFailed('posthog url is empty')
-
-      #      - name: Prepare Plugin Artifact
-      #        if: ${{ inputs.build-with-rider != 'true' }}
-      #        id: artifact
-      #        shell: bash
-      #        run: |
-      #          cd ${{ github.workspace }}/build/distributions
-      #          FILENAME=`ls *.zip`
-      #          unzip "$FILENAME" -d content
-      #          echo "filename=${FILENAME:0:-4}" >> "$GITHUB_OUTPUT"
-
-      #      - name: Upload Artifact
-      #        if: ${{ inputs.build-with-rider != 'true' }}
-      #        uses: actions/upload-artifact@v3
-      #        with:
-      #          name: ${{ steps.artifact.outputs.filename }}
-      #          path: ./build/distributions/content/*/*
-      #          retention-days: 5
-
-      # Collect Tests Result of failed tests
-      ##todo: add other modules test reports
-      #      - name: Collect Tests Result
-      #        if: ${{ inputs.build-with-rider != 'true' || failure() }}
-      #        uses: actions/upload-artifact@v3
-      #        with:
-      #          name: tests-result-${{ inputs.build-profile }}
-      #          path: ${{ github.workspace }}/ide-common/build/reports/tests
-      #          retention-days: 5
-
-
-      ### runPluginVerifier must run only after upload artifact because it packages again
       - name: Run Plugin Verifier
-        if: ${{ inputs.build-with-rider != 'true' }}
         run: ./gradlew runPluginVerifier --no-configuration-cache -PbuildProfile=${{ inputs.build-profile }}  -PdoNotDownloadSources=true
 
-      #      - name: Run Plugin Verifier
-      #        if: ${{ inputs.build-with-rider != 'true' }}
-      #        run: ./gradlew runPluginVerifier  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache --no-configuration-cache -PbuildProfile=${{ inputs.build-profile }}  -PdoNotDownloadSources=true
-      #
       - name: Collect Plugin Verifier Result
         if: ${{ inputs.build-with-rider != 'true' }}
         uses: actions/upload-artifact@v3

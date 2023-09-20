@@ -1,5 +1,4 @@
-
-name: Build main and Prepare Release
+name: Build main and Prepare Release draft
 on:
   push:
     branches: [ main ]
@@ -35,7 +34,6 @@ jobs:
     with:
       build-profile: ${{ matrix.profile }}
       ref-name: ${{ github.ref_name }}
-      build-with-rider: false
     secrets: inherit
 
   prepare-release-draft:

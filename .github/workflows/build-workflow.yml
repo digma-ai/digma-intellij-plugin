@@ -1,7 +1,4 @@
-## All gradle command are changing gradle user home and project home to use the project directory. that is because
-## maximize-build-space increases the working directory so that home directory has no space for gradle.
-
-name: Build all branches (!main)
+name: Build workflow
 
 on:
   workflow_call:
@@ -22,16 +19,6 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      #      - name: Maximize build space
-      #        uses: easimon/maximize-build-space@master
-      #        with:
-      #          root-reserve-mb: 10000
-      #          temp-reserve-mb: 512
-      #          swap-size-mb: 1024
-      #          remove-android: true
-      #          remove-haskell: true
-      #          remove-codeql: true
-      #          remove-docker-images: true
 
       - name: Debug
         run: echo "Building ref ${{ inputs.ref-name }} with profile ${{ inputs.build-profile }}"
@@ -117,18 +104,3 @@ jobs:
           name: tests-result-${{ inputs.build-profile }}
           path: ${{ github.workspace }}/ide-common/build/reports/tests
           retention-days: 5
-
-
-      ### runPluginVerifier must run only after upload artifact because it packages again
-      #      - name: Run Plugin Verifier
-      #        if: ${{ inputs.build-with-rider != 'true' }}
-      #        run: ./gradlew runPluginVerifier --no-configuration-cache -PbuildProfile=${{ inputs.build-profile }}  -PdoNotDownloadSources=true
-
-      - name: Collect Plugin Verifier Result
-        if: ${{ inputs.build-with-rider != 'true' }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: pluginVerifier-result-${{ inputs.build-profile }}
-          path: ${{ github.workspace }}/build/reports/pluginVerifier
-          retention-days: 5
-

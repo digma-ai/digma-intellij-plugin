@@ -1,5 +1,4 @@
 
-
 name: Publish to jetbrains marketplace
 on:
   workflow_call:
@@ -19,17 +18,6 @@ jobs:
     name: Publish Plugin
     runs-on: ubuntu-22.04
     steps:
-
-      #      - name: Maximize build space
-      #        uses: easimon/maximize-build-space@master
-      #        with:
-      #          root-reserve-mb: 10000
-      #          temp-reserve-mb: 512
-      #          swap-size-mb: 1024
-      #          remove-android: true
-      #          remove-haskell: true
-      #          remove-codeql: true
-      #          remove-docker-images: true
 
       - name: Debug
         run: echo "Publishing ref ${{ inputs.tag-name }} with profile ${{ inputs.build-profile }} with changelog ${{ inputs.changelog }}"

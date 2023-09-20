@@ -27,8 +27,19 @@ jobs:
       build-with-rider: true
     secrets: inherit
 
+  call-plugin-verifier-workflow:
+    strategy:
+      matrix:
+        profile: [ p223, p231, p232 ]
+    uses: ./.github/workflows/plugin-verifier-workflow.yml
+    with:
+      build-profile: ${{ matrix.profile }}
+      ref-name: ${{ github.ref_name }}
+      build-with-rider: false
+    secrets: inherit
+
   call-prepare-release-draft:
-    needs: [ call-build-workflow,call-build-workflow-with-rider ]
+    needs: [ call-build-workflow,call-build-workflow-with-rider,call-plugin-verifier-workflow ]
     if: github.event_name != 'pull_request'
     uses: ./.github/workflows/release-draft.yml
     secrets: inherit

@@ -99,7 +99,7 @@ jobs:
           DIGMA_JB_CERTIFICATE_CHAIN_FILE: ${{ secrets.DIGMA_JB_CERTIFICATE_CHAIN_FILE }}
           DIGMA_JB_PRIVATE_KEY_FILE: ${{ secrets.DIGMA_JB_PRIVATE_KEY_FILE }}
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL }}
-        run: ./gradlew publishPlugin --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true
+        run: ./gradlew publishPlugin --no-configuration-cache -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true
 
 
       # todo: delete the release if workflow fails, but what about rerun ? maybe disable rerun for publish workflow

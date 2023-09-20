@@ -235,13 +235,12 @@ class RecentActivityUpdater(val project: Project) : Disposable {
         jCefComponent?.let { jcef ->
             val pendingEnvironments = service<AddEnvironmentsService>().getPendingEnvironments()
             val pendingEnvs = buildPendingEnvs(pendingEnvironments)
-            pendingEnvs.sortedBy { recentActivityEnvironment: RecentActivityEnvironment -> recentActivityEnvironment.name }
 
             val recentActivitiesMessage = RecentActivitiesMessageRequest(
                 JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
                 RECENT_ACTIVITY_SET_DATA,
                 RecentActivitiesMessagePayload(
-                    pendingEnvs,
+                    pendingEnvs.sortedBy { recentActivityEnvironment: RecentActivityEnvironment -> recentActivityEnvironment.name },
                     listOf()
                 )
             )

@@ -70,6 +70,11 @@ class RunCfgTools {
             if (!SystemInfo.isWindows)
                 return false
 
+            return isProjectUnderWsl(configuration) ||
+                    isConfigurationTargetWsl(configuration)
+        }
+
+        private fun isConfigurationTargetWsl(configuration: RunConfigurationBase<*>): Boolean {
             val targets = TargetEnvironmentsManager.getInstance(configuration.project).targets.resolvedConfigs()
             val targetName = (configuration.state as? RunConfigurationOptions)?.remoteTarget
             if (targetName == null)
@@ -83,6 +88,10 @@ class RunCfgTools {
                 return false
 
             return true
+        }
+
+        private fun isProjectUnderWsl(configuration: RunConfiguration): Boolean {
+            return configuration.project.basePath?.startsWith("//wsl$/") == true
         }
     }
 

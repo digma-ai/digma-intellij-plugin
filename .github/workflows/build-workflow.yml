@@ -22,16 +22,16 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Maximize build space
-        uses: easimon/maximize-build-space@master
-        with:
-          root-reserve-mb: 10000
-          temp-reserve-mb: 512
-          swap-size-mb: 1024
-          remove-android: true
-          remove-haskell: true
-          remove-codeql: true
-          remove-docker-images: true
+      #      - name: Maximize build space
+      #        uses: easimon/maximize-build-space@master
+      #        with:
+      #          root-reserve-mb: 10000
+      #          temp-reserve-mb: 512
+      #          swap-size-mb: 1024
+      #          remove-android: true
+      #          remove-haskell: true
+      #          remove-codeql: true
+      #          remove-docker-images: true
 
       - name: Debug
         run: echo "Building ref ${{ inputs.ref-name }} with profile ${{ inputs.build-profile }}"
@@ -61,13 +61,13 @@ jobs:
         if: ${{ inputs.build-with-rider != 'true' }}
         env:
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL }}
-        run: ./gradlew clean test buildPlugin --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true
+        run: ./gradlew clean test buildPlugin --no-configuration-cache -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true
 
       - name: Build Plugin with Rider
         if: ${{ inputs.build-with-rider == 'true' }}
         env:
           POSTHOG_TOKEN_URL: ${{ secrets.POSTHOG_TOKEN_URL }}
-        run: ./gradlew clean test buildPlugin --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PbuildWithRider=true -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true
+        run: ./gradlew clean test buildPlugin --no-configuration-cache -PbuildWithRider=true -PbuildProfile=${{ inputs.build-profile }} -PdoNotDownloadSources=true
 
       - name: Find posthog url
         id: posthog
@@ -122,7 +122,7 @@ jobs:
       ### runPluginVerifier must run only after upload artifact because it packages again
       - name: Run Plugin Verifier
         if: ${{ inputs.build-with-rider != 'true' }}
-        run: ./gradlew runPluginVerifier --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PbuildProfile=${{ inputs.build-profile }}  -PdoNotDownloadSources=true
+        run: ./gradlew runPluginVerifier --no-configuration-cache -PbuildProfile=${{ inputs.build-profile }}  -PdoNotDownloadSources=true
 
       - name: Collect Plugin Verifier Result
         if: ${{ inputs.build-with-rider != 'true' }}

@@ -144,7 +144,7 @@ object BuildProfiles {
             platformVersionCode = "232",
             pluginSinceBuild = "232",
             pluginUntilBuild = "232.*",
-            versionToRunPluginVerifier = "2023.2.1",
+            versionToRunPluginVerifier = "2023.2.2",
             kotlinTarget = KotlinVersion.KOTLIN_1_8.version,
             javaVersion = JavaVersion.VERSION_17.majorVersion
         ),

@@ -144,7 +144,7 @@ class RecentActivityUpdater(val project: Project) : Disposable {
             RECENT_ACTIVITY_SET_DATA,
             RecentActivitiesMessagePayload(
                 allEnvs,
-                getEntriesWithAdjustedLocalEnvs(latestActivitiesResult)
+                latestActivitiesResult.entries
             )
         )
 
@@ -209,21 +209,6 @@ class RecentActivityUpdater(val project: Project) : Disposable {
     }
 
 
-    private fun getEntriesWithAdjustedLocalEnvs(recentActivityData: RecentActivityResult): List<RecentActivityResponseEntry> {
-        return recentActivityData.entries.stream()
-            .map { (environment, traceFlowDisplayName, firstEntrySpan, lastEntrySpan, latestTraceId, latestTraceTimestamp, latestTraceDuration, slimAggregatedInsights): RecentActivityResponseEntry ->
-                RecentActivityResponseEntry(
-                    environment,
-                    traceFlowDisplayName,
-                    firstEntrySpan,
-                    lastEntrySpan,
-                    latestTraceId,
-                    latestTraceTimestamp,
-                    latestTraceDuration,
-                    slimAggregatedInsights
-                )
-            }.toList()
-    }
 
 
     private fun removeFromPendingEnvironments(environments: List<String>) {

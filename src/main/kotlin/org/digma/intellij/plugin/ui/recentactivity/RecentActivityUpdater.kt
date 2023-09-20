@@ -24,6 +24,7 @@ import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResponseEntry
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.recentactivity.RecentActivityLogic.Companion.isRecentTime
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
@@ -176,7 +177,10 @@ class RecentActivityUpdater(val project: Project) : Disposable {
                 p.name,
                 true,
                 p.additionToConfigResult,
-                p.type
+                p.type,
+                p.serverApiUrl,
+                p.token,
+                p.isOrgDigmaSetupFinished
             )
         }
     }
@@ -198,7 +202,7 @@ class RecentActivityUpdater(val project: Project) : Disposable {
             val type: EnvironmentType =
                 if (displayName == LOCAL_ENV || displayName == LOCAL_TESTS_ENV) EnvironmentType.local else EnvironmentType.shared
 
-            RecentActivityEnvironment(displayName, env, false, null, type, null, null)
+            RecentActivityEnvironment(displayName, env, false, null, type, null, null, false)
         }
 
         return environments.map(transformEnvToRecentActivityEnvironment)
@@ -226,7 +230,16 @@ class RecentActivityUpdater(val project: Project) : Disposable {
         environments.forEach { env ->
             if (service<AddEnvironmentsService>().isPendingEnv(env)) {
                 Log.log(logger::info, "found environment {} from backend in pending environments, removing it from pending", env)
+                val pendingEnvironment = service<AddEnvironmentsService>().getPendingEnvironment(env)
                 service<AddEnvironmentsService>().removeEnvironment(env)
+                val type = pendingEnvironment?.type?.name ?: "unknown"
+                project.service<ActivityMonitor>().registerCustomEvent(
+                    "first time data received for user created environment",
+                    mapOf(
+                        "environment" to env,
+                        "type" to type
+                    )
+                )
             }
         }
     }

@@ -47,6 +47,14 @@ class AddEnvironmentsService {
         flush()
     }
 
+    fun getPendingEnvironment(environment: String): PendingEnvironment? {
+        return pendingEnvironments.find { pendingEnvironment -> pendingEnvironment.name == environment }
+    }
+
+    fun isPendingEnv(environment: String): Boolean {
+        return pendingEnvironments.any { pendingEnvironment -> pendingEnvironment.name == environment }
+    }
+
     fun removeEnvironment(environment: String) {
         Log.log(logger::info, "removing environment {}", environment)
         pendingEnvironments.removeIf { p: PendingEnvironment -> p.name == environment }
@@ -79,11 +87,19 @@ class AddEnvironmentsService {
         flush()
     }
 
-
-
-    fun isPendingEnv(environment: String): Boolean {
-        return pendingEnvironments.any { pendingEnvironment -> pendingEnvironment.name == environment }
+    fun setEnvironmentSetupFinished(project: Project, environment: String) {
+        val pendingEnvironment: PendingEnvironment? = pendingEnvironments.find { pendingEnvironment -> pendingEnvironment.name == environment }
+        pendingEnvironment?.let {
+            try {
+                it.isOrgDigmaSetupFinished = true
+            } catch (e: Exception) {
+                ErrorReporter.getInstance().reportError(project, "AddEnvironmentsService.setEnvironmentSetupFinished", e)
+            }
+        }
+        flush()
     }
+
+
 
     private fun flush() {
         try {
@@ -98,32 +114,19 @@ class AddEnvironmentsService {
 
     private fun load() {
         try {
+
+            Log.log(logger::info, "loading environments from persistence")
+
             val asJson = service<PersistenceService>().state.pendingEnvironment
             asJson?.let {
                 val jsonObject: ArrayNode = objectMapper.readTree(it) as ArrayNode
                 jsonObject.forEach { jsonNode ->
-                    val name = jsonNode.get("name").asText()
-                    val environmentType: EnvironmentType? = try {
-                        EnvironmentType.valueOf(jsonNode.get("type").asText())
-                    } catch (e: Exception) {
-                        null
-                    }
-
-                    val additionToConfigResult: AdditionToConfigResult? = try {
-                        AdditionToConfigResult.valueOf(jsonNode.get("additionToConfigResult").asText())
-                    } catch (e: Exception) {
-                        null
-                    }
-
-                    val serverApiUrl =
-                        if (jsonNode.get("serverApiUrl") === null || jsonNode.get("serverApiUrl") is NullNode) null else jsonNode.get("serverApiUrl")
-                            .asText()
-                    val token = if (jsonNode.get("token") === null || jsonNode.get("token") is NullNode) null else jsonNode.get("token").asText()
-
-                    pendingEnvironments.add(PendingEnvironment(name, environmentType, additionToConfigResult, serverApiUrl, token))
+                    val pendingEnv = objectMapper.readValue(jsonNode.toString(), PendingEnvironment::class.java)
+                    pendingEnvironments.add(pendingEnv)
                 }
-                Log.log(logger::info, "loaded environments {}", pendingEnvironments)
             }
+
+            Log.log(logger::info, "loaded environments {}", pendingEnvironments)
 
         } catch (e: Exception) {
             Log.warnWithException(logger, e, "Error loading pending environments")

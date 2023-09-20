@@ -562,6 +562,14 @@ class ActivityMonitor(project: Project) : Disposable {
         )
     }
 
+    fun registerUserActionEvent(event: String, eventDetails: Map<String, Any>) {
+        capture(
+            event,
+            eventDetails
+        )
+        registerUserAction(event)
+    }
+
     fun registerUserAction(action: String) {
         capture(
             "user-action",

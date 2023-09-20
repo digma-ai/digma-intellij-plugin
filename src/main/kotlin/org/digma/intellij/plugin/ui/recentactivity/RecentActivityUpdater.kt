@@ -10,6 +10,8 @@ import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowManager
 import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.analytics.EnvironmentChanged
+import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.LOCAL_ENV
@@ -44,6 +46,20 @@ class RecentActivityUpdater(val project: Project) : Disposable {
     private var jCefComponent: JCefComponent? = null
 
     private val recentActivityToolWindowIconChanger = RecentActivityToolWindowIconChanger(project)
+
+
+    init {
+        project.messageBus.connect(this).subscribe<EnvironmentChanged>(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, object : EnvironmentChanged {
+            override fun environmentChanged(newEnv: String?, refreshInsightsView: Boolean) {
+                Backgroundable.ensurePooledThread { updateLatestActivities() }
+            }
+
+            override fun environmentsListChanged(newEnvironments: List<String>) {
+                //nothing to do
+            }
+        })
+
+    }
 
 
     fun setJcefComponent(jCefComponent: JCefComponent) {

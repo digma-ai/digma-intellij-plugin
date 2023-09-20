@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  call-publish-workflow:
+  publish-workflow:
     strategy:
       matrix:
         profile: [ p223, p231, p232 ]
@@ -90,7 +90,7 @@ jobs:
           git push
 
 
-  call-prepare-release-draft:
+  prepare-release-draft:
     needs: [ update-to-next-version ]
     uses: ./.github/workflows/release-draft.yml
     secrets: inherit

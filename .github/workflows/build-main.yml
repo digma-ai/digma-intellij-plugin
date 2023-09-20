@@ -5,7 +5,7 @@ on:
     branches: [ main ]
 
 jobs:
-  call-build-workflow:
+  build-workflow:
     strategy:
       matrix:
         profile: [ p223, p231, p232 ]
@@ -16,7 +16,7 @@ jobs:
       build-with-rider: false
     secrets: inherit
   ## can do a double matrix for rider but then it's not clear in github which is the rider build.
-  call-build-workflow-with-rider:
+  build-workflow-with-rider:
     strategy:
       matrix:
         profile: [ p223, p231, p232 ]
@@ -27,7 +27,7 @@ jobs:
       build-with-rider: true
     secrets: inherit
 
-  call-plugin-verifier-workflow:
+  plugin-verifier-workflow:
     strategy:
       matrix:
         profile: [ p223, p231, p232 ]
@@ -38,8 +38,8 @@ jobs:
       build-with-rider: false
     secrets: inherit
 
-  call-prepare-release-draft:
-    needs: [ call-build-workflow,call-build-workflow-with-rider,call-plugin-verifier-workflow ]
+  prepare-release-draft:
+    needs: [ build-workflow,build-workflow-with-rider,plugin-verifier-workflow ]
     if: github.event_name != 'pull_request'
     uses: ./.github/workflows/release-draft.yml
     secrets: inherit

@@ -23,7 +23,7 @@ jobs:
 
 
   update-to-next-version:
-    needs: [ call-publish-workflow ]
+    needs: [ publish-workflow ]
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout main branch

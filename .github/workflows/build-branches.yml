@@ -17,12 +17,12 @@ jobs:
       build-with-rider: false
     secrets: inherit
     ##todo: maybe we want to run plugin verifier on every commit to branch ?
-  plugin-verifier-workflow:
-    strategy:
-      matrix:
-        profile: [ p223, p231, p232 ]
-    uses: ./.github/workflows/plugin-verifier-workflow.yml
-    with:
-      build-profile: ${{ matrix.profile }}
-      ref-name: ${{ github.ref_name }}
-    secrets: inherit
+#  plugin-verifier-workflow:
+#    strategy:
+#      matrix:
+#        profile: [ p223, p231, p232 ]
+#    uses: ./.github/workflows/plugin-verifier-workflow.yml
+#    with:
+#      build-profile: ${{ matrix.profile }}
+#      ref-name: ${{ github.ref_name }}
+#    secrets: inherit

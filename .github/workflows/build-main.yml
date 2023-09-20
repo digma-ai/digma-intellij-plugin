@@ -27,6 +27,7 @@ jobs:
     secrets: inherit
 
   plugin-verifier-workflow:
+    needs: [ build-workflow,build-workflow-with-rider ]
     strategy:
       matrix:
         profile: [ p223, p231, p232 ]

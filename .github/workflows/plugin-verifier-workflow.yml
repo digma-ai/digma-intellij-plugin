@@ -1,0 +1,61 @@
+## This workflow runs plugin verifier. plugin verifier requires a bit more disk space than regular build.
+## So the workflow uses a modified maximize-build-space,AdityaGarg8/remove-unwanted-software, action that only removed
+##  some software.
+##  the original easimon/maximize-build-space action causes builds to fails for some reason and also requires executing
+##  gralde  with modified cache locations like '--gradle-user-home=./.localhome --project-cache-dir=./.projectcache'.
+##  AdityaGarg8/remove-unwanted-software frees around 12G of disk space.
+## No need to run gradle/wrapper-validation-action because this workflow does not produce artifacts.
+##  and gradle/wrapper-validation-action tends to fail a lot.
+
+name: Run plugin verifier
+
+on:
+  workflow_call:
+    inputs:
+      build-profile:
+        required: true
+        type: string
+      ref-name:
+        required: true
+        type: string
+
+jobs:
+  build:
+
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Maximize build space
+        uses: AdityaGarg8/remove-unwanted-software@v1
+        with:
+          remove-android: true
+          remove-haskell: true
+
+      - name: Fetch Sources
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.ref-name }}
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: |
+            6.0.411
+
+      - name: Run Plugin Verifier
+        run: ./gradlew runPluginVerifier --no-configuration-cache -PbuildProfile=${{ inputs.build-profile }}  -PdoNotDownloadSources=true
+
+      - name: Collect Plugin Verifier Result
+        if: ${{ inputs.build-with-rider != 'true' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: pluginVerifier-result-${{ inputs.build-profile }}
+          path: ${{ github.workspace }}/build/reports/pluginVerifier
+          retention-days: 5
+

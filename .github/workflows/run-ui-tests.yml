@@ -27,7 +27,7 @@ jobs:
           - os: windows-latest
             runIde: start gradlew.bat runIdeForUiTests
           - os: macos-latest
-            runIde: ./gradlew -PdoNotDownloadSources=true --gradle-user-home=./localhome runIdeForUiTests &
+            runIde: ./gradlew -PdoNotDownloadSources=true runIdeForUiTests &
 
     steps:
 
@@ -57,4 +57,4 @@ jobs:
 
       # Run tests
       - name: Tests
-        run: ./gradlew -PdoNotDownloadSources=true --gradle-user-home=./localhome test
+        run: ./gradlew -PdoNotDownloadSources=true test

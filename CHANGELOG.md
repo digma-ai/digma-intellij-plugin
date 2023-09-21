@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.169] - 2023-09-14
+## [2.0.170] - 2023-09-21
+- fix refresh when changing url or connection lost Closes #1304 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1306
+- Wsl fix by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1303
+- change notification bell icon by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1307
+
+## 2.0.169 - 2023-09-14
 - Bug fix/downloading OTEL agent version 1.29.0 instead of latest by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1285
 - bump 2.0.169 by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1286
 

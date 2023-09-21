@@ -1,9 +1,12 @@
 package org.digma.intellij.plugin.ui.jcef
 
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.JBCefBrowser
+import com.intellij.util.Alarm
+import com.intellij.util.AlarmFactory
 import com.intellij.util.messages.MessageBusConnection
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
@@ -11,6 +14,7 @@ import org.cef.browser.CefMessageRouter
 import org.cef.handler.CefLifeSpanHandlerAdapter
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator
+import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
@@ -31,9 +35,10 @@ class JCefComponent(
 
     private val settingsChangeListener: SettingsChangeListener
     private val analyticsServiceConnectionEventMessageBusConnection: MessageBusConnection
-
+    private val connectionEventAlarmParentDisposable = Disposer.newDisposable()
 
     init {
+        val connectionEventAlarm = AlarmFactory.getInstance().create(Alarm.ThreadToUse.POOLED_THREAD, connectionEventAlarmParentDisposable)
 
         settingsChangeListener = object : SettingsChangeListener {
             override fun systemFontChange(fontName: String) {
@@ -54,12 +59,31 @@ class JCefComponent(
         analyticsServiceConnectionEventMessageBusConnection = project.messageBus.connect()
         analyticsServiceConnectionEventMessageBusConnection.subscribe(
             AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC, object : AnalyticsServiceConnectionEvent {
+
                 override fun connectionLost() {
-                    sendConnectionStatus(jbCefBrowser.cefBrowser, false)
+                    //delay before reporting digma status to let all containers go down
+                    connectionEventAlarm.cancelAllRequests()
+                    connectionEventAlarm.addRequest({
+                        try {
+                            val status = project.service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionLost()
+                            updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
+                        } catch (e: Exception) {
+                            ErrorReporter.getInstance().reportError("JCefComponent.connectionLost", e)
+                        }
+                    }, 5000)
                 }
 
                 override fun connectionGained() {
-                    sendConnectionStatus(jbCefBrowser.cefBrowser, true)
+                    //delay before reporting digma status to let all containers go up
+                    connectionEventAlarm.cancelAllRequests()
+                    connectionEventAlarm.addRequest({
+                        try {
+                            val status = project.service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionGained()
+                            updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
+                        } catch (e: Exception) {
+                            ErrorReporter.getInstance().reportError("JCefComponent.connectionGained", e)
+                        }
+                    }, 5000)
                 }
             })
     }
@@ -67,6 +91,7 @@ class JCefComponent(
 
     override fun dispose() {
         try {
+            Disposer.dispose(connectionEventAlarmParentDisposable)
             jbCefBrowser.dispose()
             cefMessageRouter.dispose()
             jbCefBrowser.jbCefClient.removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)

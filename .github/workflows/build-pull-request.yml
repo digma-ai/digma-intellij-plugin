@@ -5,7 +5,7 @@ on:
     branches: [ main ]
 
 jobs:
-  call-build-workflow:
+  build-workflow:
     strategy:
       matrix:
         profile: [ p223, p231, p232 ]

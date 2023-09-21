@@ -199,17 +199,13 @@ object Laf {
                 @JvmStatic val NavPrevDark = SvgIcon.asIs("/icons/nav-prev-dark.svg")
                 @JvmStatic val NavPrevLight = SvgIcon.asIs("/icons/nav-prev-light.svg")
                 @JvmStatic
-                val NotificationsBellDark =
-                    IconUtil.scale(SvgIcon.asIs("/icons/notification-bell-dark.svg"), ScaleContext.create(ScaleType.OBJ_SCALE.of(2.0)))
+                val NotificationsBellDark = SvgIcon.asIs("/icons/notification-bell-dark.svg")
                 @JvmStatic
-                val NotificationsBellDarkPressed =
-                    IconUtil.scale(SvgIcon.asIs("/icons/notification-bell-dark.svg"), ScaleContext.create(ScaleType.OBJ_SCALE.of(1.6)))
+                val NotificationsBellDarkPressed = SvgIcon.asIs("/icons/notification-bell-dark-pressed.svg")
                 @JvmStatic
-                val NotificationsBellLight =
-                    IconUtil.scale(SvgIcon.asIs("/icons/notification-bell-light.svg"), ScaleContext.create(ScaleType.OBJ_SCALE.of(2.0)))
+                val NotificationsBellLight = SvgIcon.asIs("/icons/notification-bell-light.svg")
                 @JvmStatic
-                val NotificationsBellLightPressed =
-                    IconUtil.scale(SvgIcon.asIs("/icons/notification-bell-light.svg"), ScaleContext.create(ScaleType.OBJ_SCALE.of(1.6)))
+                val NotificationsBellLightPressed = SvgIcon.asIs("/icons/notification-bell-light-pressed.svg")
             }
         }
 

@@ -72,6 +72,10 @@ public class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter
                 var jsonNode = objectMapper.readTree(request);
                 String action = jsonNode.get("action").asText();
                 switch (action) {
+
+                    case "INSIGHTS/INITIALIZE" -> {
+                    }
+
                     case "INSIGHTS/GET_DATA" -> pushInsightsFromGetData();
 
                     case "INSIGHTS/GO_TO_ASSET" -> goToInsight(jsonNode);

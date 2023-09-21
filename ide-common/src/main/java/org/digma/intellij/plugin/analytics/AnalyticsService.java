@@ -679,10 +679,12 @@ public class AnalyticsService implements Disposable {
                     errorReportingHelper.reset();
                     myConnectionStatusNotifyAlarm.cancelAllRequests();
 
+                    BackendConnectionMonitor.getInstance(project).connectionGained();
+                    ActivityMonitor.getInstance(project).registerConnectionGained();
+
                     myConnectionStatusNotifyAlarm.addRequest(() -> {
                         Log.log(LOGGER::warn, "notifying connectionGained");
                         project.getMessageBus().syncPublisher(AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC).connectionGained();
-                        ActivityMonitor.getInstance(project).registerConnectionGained();
                     }, 500);
 
 

@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.common;
 import com.intellij.openapi.diagnostic.Logger;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.log.Log;
+import org.jetbrains.annotations.Nullable;
 import org.ocpsoft.prettytime.PrettyTime;
 
 import java.net.InetAddress;
@@ -17,9 +18,15 @@ public final class CommonUtils {
 
     private static final Logger LOGGER = Logger.getInstance(CommonUtils.class);
 
+    private static InetAddress localhost;
     private static final String hostname;
 
     static {
+        try {
+            localhost = InetAddress.getLocalHost();
+        } catch (UnknownHostException e) {
+            //ignore
+        }
         hostname = initHostname();
     }
 
@@ -29,8 +36,12 @@ public final class CommonUtils {
 
         String hostname;
         try {
-            InetAddress localInetAddress = InetAddress.getLocalHost();
-            hostname = localInetAddress.getHostName();
+            if (localhost != null) {
+                hostname = localhost.getHostName();
+            } else {
+                InetAddress localInetAddress = InetAddress.getLocalHost();
+                hostname = localInetAddress.getHostName();
+            }
         } catch (UnknownHostException e) {
             hostname = hostnameByEnvVar();
         }
@@ -53,6 +64,11 @@ public final class CommonUtils {
 
 
     private CommonUtils() {
+    }
+
+    @Nullable
+    public static InetAddress getLocalhost() {
+        return localhost;
     }
 
 

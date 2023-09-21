@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  call-publish-workflow:
+  publish-workflow:
     strategy:
       matrix:
         profile: [ p223, p231, p232 ]
@@ -23,7 +23,7 @@ jobs:
 
 
   update-to-next-version:
-    needs: [ call-publish-workflow ]
+    needs: [ publish-workflow ]
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout main branch
@@ -45,9 +45,6 @@ jobs:
           dotnet-version: |
             6.0.411
 
-      - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@v1.0.4
-
       - name: Export Changelog
         id: exportchangelog
         shell: bash
@@ -68,13 +65,13 @@ jobs:
         env:
           CHANGELOG: ${{ steps.exportchangelog.outputs.changelog }}
         run: |
-          ./gradlew --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PdoNotDownloadSources=true patchChangelog --release-note="$CHANGELOG"
+          ./gradlew --no-configuration-cache -PdoNotDownloadSources=true patchChangelog --release-note="$CHANGELOG"
 
 
       - name: Increment version
         run: |
-          ./gradlew --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PdoNotDownloadSources=true  incrementSemanticVersionPatch 
-          ./gradlew --no-configuration-cache  --gradle-user-home=./.localhome --project-cache-dir=./.projectcache -PdoNotDownloadSources=true  printSemanticVersion -q
+          ./gradlew --no-configuration-cache -PdoNotDownloadSources=true  incrementSemanticVersionPatch 
+          ./gradlew --no-configuration-cache -PdoNotDownloadSources=true  printSemanticVersion -q
 
       - name: Commit next version to main
         run: |
@@ -90,7 +87,7 @@ jobs:
           git push
 
 
-  call-prepare-release-draft:
+  prepare-release-draft:
     needs: [ update-to-next-version ]
     uses: ./.github/workflows/release-draft.yml
     secrets: inherit

@@ -28,14 +28,13 @@ class DockerService {
     private val engine = Engine()
     private val downloader = Downloader()
     private var installationInProgress: Boolean = false
+
     companion object {
-        val WHICH_COMMAND = if (SystemInfo.isWindows) "where" else "which"
-        const val DOCKER_COMMAND = "docker"
-        const val DOCKER_COMPOSE_COMMAND = "docker-compose"
+
         const val NO_DOCKER_COMPOSE_COMMAND = "no docker-compose command"
 
         @JvmStatic
-        fun getInstance():DockerService{
+        fun getInstance(): DockerService {
             return service<DockerService>()
         }
     }
@@ -44,15 +43,15 @@ class DockerService {
     init {
 
         //todo: fix to delete old compose file, remove after few releases
-        if (downloader.findOldComposeFile() && PersistenceService.getInstance().isLocalEngineInstalled() == null){
+        if (downloader.findOldComposeFile() && PersistenceService.getInstance().isLocalEngineInstalled() == null) {
             PersistenceService.getInstance().setLocalEngineInstalled(true)
-        }else if (PersistenceService.getInstance().isLocalEngineInstalled() == null){
+        } else if (PersistenceService.getInstance().isLocalEngineInstalled() == null) {
             PersistenceService.getInstance().setLocalEngineInstalled(false)
         }
 
         downloader.deleteOldFileIfExists()
 
-        if (isEngineInstalled()){
+        if (isEngineInstalled()) {
             //this will happen on IDE start,
             // DockerService is an application service so Downloader will be created once per application
             downloader.unpackAndTryDownloadLatest()
@@ -60,8 +59,22 @@ class DockerService {
     }
 
 
+    fun getActualRunningEngine(project: Project): DigmaInstallationStatus {
+        return discoverActualRunningEngine(project)
+    }
 
-    fun isInstallationInProgress(): Boolean{
+
+    fun getCurrentDigmaInstallationStatusOnConnectionLost(): DigmaInstallationStatus {
+        return discoverActualRunningEngine(false)
+    }
+
+
+    fun getCurrentDigmaInstallationStatusOnConnectionGained(): DigmaInstallationStatus {
+        return discoverActualRunningEngine(true)
+    }
+
+
+    fun isInstallationInProgress(): Boolean {
         return installationInProgress
     }
 
@@ -71,60 +84,13 @@ class DockerService {
 
 
     fun isEngineInstalled(): Boolean {
-        return PersistenceService.getInstance().isLocalEngineInstalled()!!
+        return PersistenceService.getInstance().isLocalEngineInstalled() != null &&
+                PersistenceService.getInstance().isLocalEngineInstalled() == true
     }
+
 
     fun isEngineRunning(project: Project): Boolean {
         return isEngineInstalled() && BackendConnectionMonitor.getInstance(project).isConnectionOk()
-    }
-
-
-    private fun isInstalled(program: String): Boolean {
-        val cmd = GeneralCommandLine(WHICH_COMMAND, program)
-            .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
-
-        try {
-            val result = ExecUtil.execAndReadLine(cmd)
-            Log.log(logger::info, "getExecPath: {} result with: {}", cmd.commandLineString, result)
-            return result != null
-        } catch (ex: Exception) {
-            Log.warnWithException(logger, ex, "Failed to run '{}'", cmd.commandLineString)
-        }
-        return false
-    }
-
-    private fun getCommand(program: String): String? {
-        val cmd = GeneralCommandLine(WHICH_COMMAND, program)
-            .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
-
-        try {
-            val result = ExecUtil.execAndReadLine(cmd)
-            Log.log(logger::info, "getExecPath: {} result with: {}", cmd.commandLineString, result)
-            return result
-        } catch (ex: Exception) {
-            Log.warnWithException(logger, ex, "Failed to run '{}'", cmd.commandLineString)
-        }
-        return null
-    }
-
-
-    private fun getDockerComposeCommand(): List<String>? {
-        var dockerComposeCmd = getCommand(DOCKER_COMPOSE_COMMAND)
-        if (dockerComposeCmd != null) {
-            if (SystemInfo.isWindows && !dockerComposeCmd.endsWith("exe", true)) {
-                dockerComposeCmd = dockerComposeCmd.plus(".exe")
-            }
-            return listOf(dockerComposeCmd)
-        }
-
-        var dockerCmd = getCommand(DOCKER_COMMAND)
-        if (dockerCmd != null) {
-            if (SystemInfo.isWindows && !dockerCmd.endsWith("exe", true)) {
-                dockerCmd = dockerCmd.plus(".exe")
-            }
-            return listOf(dockerCmd, "compose")
-        }
-        return null
     }
 
 
@@ -133,8 +99,11 @@ class DockerService {
                 exitValue.contains("docker daemon is not running", true)//win
     }
 
+
     fun installEngine(project: Project, resultTask: Consumer<String>) {
         installationInProgress = true
+
+        PersistenceService.getInstance().setLocalEngineInstalled(true)
 
         val onCompleted = Consumer { _: String ->
             installationInProgress = false
@@ -161,10 +130,6 @@ class DockerService {
                             }
                         }
 
-                        if (exitValue == "0") {
-                            PersistenceService.getInstance().setLocalEngineInstalled(true)
-                        }
-
                         notifyResult(exitValue, onCompleted)
                     } else {
                         ActivityMonitor.getInstance(project).registerDigmaEngineEventError("installEngine", "could not find docker compose command")
@@ -177,15 +142,16 @@ class DockerService {
                     notifyResult("Failed to download compose file", onCompleted)
                 }
 
-            }catch (e:Exception){
+            } catch (e: Exception) {
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventError("installEngine", "Failed in installEngine $e")
-                Log.warnWithException(logger,e, "Failed install docker engine {}",e)
+                Log.warnWithException(logger, e, "Failed install docker engine {}", e)
                 notifyResult("Failed to install docker engine: $e", onCompleted)
-            }finally {
+            } finally {
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd("installEngine", mapOf())
             }
         }
     }
+
 
     fun upgradeEngine(project: Project) {
 
@@ -210,10 +176,10 @@ class DockerService {
                     ActivityMonitor.getInstance(project).registerDigmaEngineEventError("upgradeEngine", "Failed to download compose file")
                     Log.log(logger::warn, "Failed to download compose file")
                 }
-            }catch (e: Exception){
+            } catch (e: Exception) {
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventError("upgradeEngine", "Failed in upgradeEngine $e")
-                Log.warnWithException(logger,e, "Failed install docker engine {}",e)
-            }finally {
+                Log.warnWithException(logger, e, "Failed install docker engine {}", e)
+            } finally {
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd("upgradeEngine", mapOf())
             }
         }
@@ -248,11 +214,11 @@ class DockerService {
                     Log.log(logger::warn, "Failed to download compose file")
                     notifyResult("Failed to download compose file", resultTask)
                 }
-            }catch (e:Exception){
+            } catch (e: Exception) {
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventError("stopEngine", "Failed in stopEngine $e")
-                Log.warnWithException(logger,e, "Failed to stop docker engine {}",e)
+                Log.warnWithException(logger, e, "Failed to stop docker engine {}", e)
                 notifyResult("Failed to stop docker engine: $e", resultTask)
-            }finally {
+            } finally {
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd("stopEngine", mapOf())
             }
         }
@@ -301,11 +267,11 @@ class DockerService {
                     Log.log(logger::warn, "Failed to download compose file")
                     notifyResult("Failed to download compose file", resultTask)
                 }
-            }catch (e:Exception){
+            } catch (e: Exception) {
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventError("startEngine", "Failed in startEngine $e")
-                Log.warnWithException(logger,e, "Failed to start docker engine {}",e)
+                Log.warnWithException(logger, e, "Failed to start docker engine {}", e)
                 notifyResult("Failed to start docker engine: $e", resultTask)
-            }finally {
+            } finally {
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd("startEngine", mapOf())
             }
         }
@@ -316,6 +282,10 @@ class DockerService {
     fun removeEngine(project: Project, resultTask: Consumer<String>) {
 
         ActivityMonitor.getInstance(project).registerDigmaEngineEventStart("removeEngine", mapOf())
+
+        //always mark local engine not installed even if the remove or docker down will fail for some reason,
+        // from the plugin perspective local engine is not installed.
+        PersistenceService.getInstance().setLocalEngineInstalled(false)
 
         Backgroundable.runInNewBackgroundThread(project, "uninstalling digma engine") {
 
@@ -348,15 +318,12 @@ class DockerService {
                     Log.log(logger::warn, "Failed to download compose file")
                     notifyResult("Failed to download compose file", resultTask)
                 }
-            }catch (e:Exception){
+            } catch (e: Exception) {
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventError("removeEngine", "failed in removeEngine $e")
-                Log.warnWithException(logger,e, "Failed to remove docker engine {}",e)
+                Log.warnWithException(logger, e, "Failed to remove docker engine {}", e)
                 notifyResult("Failed to remove docker engine: $e", resultTask)
-            }finally {
+            } finally {
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventEnd("removeEngine", mapOf())
-                //always mark local engine not installed even if the remove or docker down failed for some reason,
-                // from the plugin perspective local engine is not installed.
-                PersistenceService.getInstance().setLocalEngineInstalled(false)
             }
         }
     }

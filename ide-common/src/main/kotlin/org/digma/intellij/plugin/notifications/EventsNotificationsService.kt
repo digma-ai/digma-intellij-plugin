@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.event.CodeObjectEvent
@@ -78,6 +79,7 @@ class EventsNotificationsService(val project: Project) : Disposable {
 
                 } catch (e: Exception) {
                     Log.log(logger::warn, "could not get latest events {}", e.message)
+                    ErrorReporter.getInstance().reportError(project, "EventsNotificationsService.waitForEvents", e)
                 }
             }
         }

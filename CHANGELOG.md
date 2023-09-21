@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.173] - 2023-09-21
+## [2.0.174] - 2023-09-21
+- add error report in events timer by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1314
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1315
+
+## 2.0.173 - 2023-09-21
 - Add ci environment by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1308
 
 ## 2.0.172 - 2023-09-21

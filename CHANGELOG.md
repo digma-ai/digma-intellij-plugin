@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.170] - 2023-09-21
+## [2.0.172] - 2023-09-21
+- GitHub actions without maximize space by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1309
+
+## 2.0.170 - 2023-09-21
 - fix refresh when changing url or connection lost Closes #1304 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1306
 - Wsl fix by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1303
 - change notification bell icon by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1307

@@ -24,7 +24,7 @@ class Downloader {
     val composeFile: File = File(downloadDir, COMPOSE_FILE_NAME)
 
 
-    fun unpackAndTryDownloadLatest() {
+    private fun unpackAndTryDownloadLatest() {
         unpack()
         tryDownloadLatest()
     }

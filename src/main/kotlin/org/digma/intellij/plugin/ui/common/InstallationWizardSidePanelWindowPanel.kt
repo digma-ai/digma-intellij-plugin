@@ -49,7 +49,7 @@ import org.digma.intellij.plugin.jcef.common.JcefDockerResultPayload
 import org.digma.intellij.plugin.jcef.common.JcefDockerResultRequest
 import org.digma.intellij.plugin.jcef.common.JcefMessageRequest
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.model.rest.jcef.common.OpenInBrowserRequest
+import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest
 import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest
 import org.digma.intellij.plugin.model.rest.jcef.installationwizard.FinishRequest
 import org.digma.intellij.plugin.model.rest.jcef.installationwizard.SetObservabilityRequest
@@ -208,7 +208,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
             if (JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER.equals(action, ignoreCase = true)) {
                 val (_, payload) = JCefMessagesUtils.parseJsonToObject(
                     request,
-                    OpenInBrowserRequest::class.java
+                    OpenInDefaultBrowserRequest::class.java
                 )
                 if (payload != null) {
                     ApplicationManager.getApplication().invokeLater {

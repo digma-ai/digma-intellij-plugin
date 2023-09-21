@@ -5,12 +5,18 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.AnalyticsService
+import org.digma.intellij.plugin.analytics.ConnectionTestResult
 import org.digma.intellij.plugin.common.Backgroundable
+import org.digma.intellij.plugin.common.ExceptionUtils
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
+import org.digma.intellij.plugin.ui.jcef.sendUserEmail
+import org.digma.intellij.plugin.ui.jcef.tryGetFieldFromPayload
 import org.digma.intellij.plugin.ui.jcef.updateDigmaEngineStatus
 import org.digma.intellij.plugin.ui.list.insights.traceButtonName
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
@@ -63,9 +69,8 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
             }
 
             "RECENT_ACTIVITY/ADD_ENVIRONMENT" -> {
-                project.service<ActivityMonitor>().registerCustomEvent("add environment", mapOf())
-                project.service<ActivityMonitor>().registerUserAction("add environment")
                 val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
+                project.service<ActivityMonitor>().registerUserActionEvent("add environment", mapOf("environment" to environment))
                 environment?.let {
                     service<AddEnvironmentsService>().addEnvironment(it)
                     Backgroundable.executeOnPooledThread {
@@ -74,10 +79,53 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                 }
             }
 
-            "RECENT_ACTIVITY/DELETE_ENVIRONMENT" -> {
-                project.service<ActivityMonitor>().registerCustomEvent("delete environment", mapOf())
-                project.service<ActivityMonitor>().registerUserAction("delete environment")
+            "RECENT_ACTIVITY/SET_ENVIRONMENT_TYPE" -> {
                 val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
+                val type: String? = tryGetFieldFromPayload(objectMapper, requestJsonNode, "type")
+                project.service<ActivityMonitor>()
+                    .registerUserActionEvent("set environment type", mapOf("environment" to environment, "type" to type.toString()))
+                if (environment != null) {
+                    service<AddEnvironmentsService>().setEnvironmentType(project, environment, type)
+                    Backgroundable.executeOnPooledThread {
+                        project.service<RecentActivityUpdater>().updateLatestActivities()
+                    }
+                }
+            }
+
+            "RECENT_ACTIVITY/FINISH_ORG_DIGMA_SETUP" -> {
+                val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
+                project.service<ActivityMonitor>().registerUserActionEvent("finish environment setup", mapOf("environment" to environment))
+                if (environment != null) {
+                    service<AddEnvironmentsService>().setEnvironmentSetupFinished(project, environment)
+                    Backgroundable.executeOnPooledThread {
+                        project.service<RecentActivityUpdater>().updateLatestActivities()
+                    }
+                }
+            }
+
+            "RECENT_ACTIVITY/CHECK_REMOTE_ENVIRONMENT_CONNECTION" -> {
+                try {
+                    val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
+                    val serverUrl = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("serverAddress").asText()
+                    val token = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("token").asText()
+                    project.service<ActivityMonitor>()
+                        .registerUserActionEvent("check connection", mapOf("environment" to environment, "serverUrl" to serverUrl))
+                    if (environment != null && serverUrl != null) {
+                        service<AddEnvironmentsService>().setEnvironmentServerUrl(project, environment, serverUrl, token)
+                        Backgroundable.executeOnPooledThread {
+                            val connectionTestResult = project.service<AnalyticsService>().testRemoteConnection(serverUrl, token)
+                            sendRemoteConnectionCheckResult(browser, connectionTestResult)
+                        }
+                    }
+                } catch (e: Exception) {
+                    ErrorReporter.getInstance().reportError(project, "RecentActivityMessageRouterHandler.CHECK_REMOTE_ENVIRONMENT_CONNECTION", e)
+                    sendRemoteConnectionCheckResult(browser, ConnectionTestResult.failure(ExceptionUtils.getNonEmptyMessage(e)))
+                }
+            }
+
+            "RECENT_ACTIVITY/DELETE_ENVIRONMENT" -> {
+                val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
+                project.service<ActivityMonitor>().registerUserActionEvent("delete environment", mapOf("environment" to environment))
                 environment?.let {
                     Backgroundable.executeOnPooledThread {
                         if (service<AddEnvironmentsService>().isPendingEnv(environment)) {
@@ -91,13 +139,19 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
             }
 
             "RECENT_ACTIVITY/ADD_ENVIRONMENT_TO_RUN_CONFIG" -> {
-                project.service<ActivityMonitor>().registerCustomEvent("add environment to run config", mapOf())
-                project.service<ActivityMonitor>().registerUserAction("add environment to run config")
                 val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
+                project.service<ActivityMonitor>().registerUserActionEvent("add environment to run config", mapOf("environment" to environment))
                 environment?.let {
                     service<AddEnvironmentsService>().addToCurrentRunConfig(project, it)
                     project.service<RecentActivityUpdater>().updateLatestActivities()
                 }
+            }
+
+            "RECENT_ACTIVITY/REGISTER" -> {
+                val email = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("email").asText()
+                project.service<ActivityMonitor>().registerUserActionEvent("register user email in add environment flow", mapOf("email" to email))
+                PersistenceService.getInstance().state.userEmail = email
+                sendUserEmail(browser, email)
             }
         }
     }

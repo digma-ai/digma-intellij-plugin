@@ -26,7 +26,7 @@ import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
-import org.digma.intellij.plugin.model.rest.jcef.common.OpenInBrowserRequest;
+import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest;
 import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.service.InsightsActionsService;
@@ -107,7 +107,7 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
                             EDT.ensureEDT(() -> MainToolWindowCardsController.getInstance(project).showTroubleshooting());
 
                     case JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
-                        OpenInBrowserRequest openBrowserRequest = JCefMessagesUtils.parseJsonToObject(request, OpenInBrowserRequest.class);
+                        OpenInDefaultBrowserRequest openBrowserRequest = JCefMessagesUtils.parseJsonToObject(request, OpenInDefaultBrowserRequest.class);
                         if (openBrowserRequest != null && openBrowserRequest.getPayload() != null) {
                             BrowserUtil.browse(openBrowserRequest.getPayload().getUrl());
                         }

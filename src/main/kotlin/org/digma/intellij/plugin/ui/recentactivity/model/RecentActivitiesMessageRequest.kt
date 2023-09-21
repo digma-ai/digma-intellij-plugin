@@ -26,20 +26,37 @@ constructor(val environments: List<RecentActivityEnvironment>, val entries: List
 
 data class RecentActivityEnvironment
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@ConstructorProperties("name", "isPending")
+@ConstructorProperties("name", "originalName", "isPending", "additionToConfigResult", "type", "serverApiUrl", "token", "isOrgDigmaSetupFinished")
 constructor(
     val name: String,
+    val originalName: String,
     @get:JsonProperty("isPending")
     @param:JsonProperty("isPending")
     val isPending: Boolean,
     val additionToConfigResult: AdditionToConfigResult? = null,
+    var type: EnvironmentType? = null,
+    val serverApiUrl: String? = null,
+    val token: String? = null,
+    @get:JsonProperty("isOrgDigmaSetupFinished")
+    @param:JsonProperty("isOrgDigmaSetupFinished")
+    var isOrgDigmaSetupFinished: Boolean = false,
 )
 
 
 data class PendingEnvironment
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@ConstructorProperties("name", "additionToConfigResult")
-constructor(val name: String, var additionToConfigResult: AdditionToConfigResult? = null)
+@ConstructorProperties("name", "type", "additionToConfigResult", "serverApiUrl", "token", "isOrgDigmaSetupFinished")
+constructor(
+    val name: String,
+    var type: EnvironmentType? = null,
+    var additionToConfigResult: AdditionToConfigResult? = null,
+    var serverApiUrl: String? = null,
+    var token: String? = null,
+    @get:JsonProperty("isOrgDigmaSetupFinished")
+    @param:JsonProperty("isOrgDigmaSetupFinished")
+    var isOrgDigmaSetupFinished: Boolean = false,
+)
 
 enum class AdditionToConfigResult { success, failure }
+enum class EnvironmentType { local, shared }
 

@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+//todo: move all to src/main/kotlin/org/digma/intellij/plugin/ui/jcef/JCEFGlobalConstants.kt
 public class JCefMessagesUtils {
 
     private JCefMessagesUtils() {}
@@ -14,6 +15,7 @@ public class JCefMessagesUtils {
     public static final String GLOBAL_SET_UI_CODE_FONT = "GLOBAL/SET_CODE_FONT";
     public static final String GLOBAL_SET_IS_JAEGER_ENABLED = "GLOBAL/SET_IS_JAEGER_ENABLED";
     public static final String GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER = "GLOBAL/OPEN_URL_IN_DEFAULT_BROWSER";
+    public static final String GLOBAL_OPEN_URL_IN_EDITOR_TAB = "GLOBAL/OPEN_URL_IN_EDITOR_TAB";
     public static final String GLOBAL_SEND_TRACKING_EVENT = "GLOBAL/SEND_TRACKING_EVENT";
     public static final String GLOBAL_OPEN_TROUBLESHOOTING_GUIDE = "GLOBAL/OPEN_TROUBLESHOOTING_GUIDE";
     public static final String GLOBAL_OPEN_DOCUMENTATION = "GLOBAL/OPEN_DOCUMENTATION";
@@ -37,8 +39,7 @@ public class JCefMessagesUtils {
     public static final String INSTALLATION_WIZARD_SET_CURRENT_STEP = "INSTALLATION_WIZARD/SET_CURRENT_STEP";
 
 
-
-
+    //todo: replace with org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.jsonToObject
     public static <T> T parseJsonToObject(String jsonString, Class<T> jcefMessageRequestClass) {
         JsonObject object = JsonParser.parseString(jsonString).getAsJsonObject();
         return new Gson().fromJson(object, jcefMessageRequestClass);

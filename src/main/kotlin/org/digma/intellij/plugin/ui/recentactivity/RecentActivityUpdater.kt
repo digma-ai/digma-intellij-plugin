@@ -16,23 +16,24 @@ import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.LOCAL_ENV
 import org.digma.intellij.plugin.common.LOCAL_TESTS_ENV
-import org.digma.intellij.plugin.common.SUFFIX_OF_LOCAL
-import org.digma.intellij.plugin.common.SUFFIX_OF_LOCAL_TESTS
-import org.digma.intellij.plugin.common.getSortedEnvironments
+import org.digma.intellij.plugin.common.isEnvironmentLocal
+import org.digma.intellij.plugin.common.isEnvironmentLocalTests
+import org.digma.intellij.plugin.common.isLocalEnvironmentMine
 import org.digma.intellij.plugin.icons.AppIcons
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResponseEntry
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.recentactivity.RecentActivityLogic.Companion.isRecentTime
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
+import org.digma.intellij.plugin.ui.recentactivity.model.EnvironmentType
 import org.digma.intellij.plugin.ui.recentactivity.model.PendingEnvironment
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivitiesMessagePayload
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivitiesMessageRequest
 import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEnvironment
 import java.util.Date
-import java.util.Locale
 import java.util.Optional
 import javax.swing.Icon
 
@@ -71,11 +72,12 @@ class RecentActivityUpdater(val project: Project) : Disposable {
     fun updateLatestActivities() {
         Log.log(logger::trace, "updateLatestActivities called")
         val environments = project.service<AnalyticsService>().environments
-        environments?.let { envs ->
-
-            Log.log(logger::trace, "got environments from backend {}", envs)
-
-            updateLatestActivities(envs)
+        if (environments != null) {
+            Log.log(logger::trace, "got environments from backend {}", environments)
+            updateLatestActivities(environments)
+        } else {
+            recentActivityToolWindowIconChanger.hideBadge()
+            sendEmptyData()
         }
 
     }
@@ -89,9 +91,9 @@ class RecentActivityUpdater(val project: Project) : Disposable {
 
         Log.log(logger::trace, "got latestActivitiesResult {}", latestActivitiesResult)
 
-        latestActivitiesResult?.let { recentActivities ->
+        if (latestActivitiesResult != null) {
 
-            if (hasRecentActivity(recentActivities)) {
+            if (hasRecentActivity(latestActivitiesResult)) {
                 Log.log(logger::trace, "hasRecentActivity recentActivities,changing tool window to badged icon")
                 recentActivityToolWindowIconChanger.showBadge()
             } else {
@@ -100,10 +102,14 @@ class RecentActivityUpdater(val project: Project) : Disposable {
             }
 
             jCefComponent?.let {
-                sendLatestActivities(it, recentActivities, environments)
+                sendLatestActivities(it, latestActivitiesResult, environments)
             }
+        } else {
+            recentActivityToolWindowIconChanger.hideBadge()
+            sendEmptyData()
         }
     }
+
 
 
     private fun hasRecentActivity(latestActivityResult: RecentActivityResult): Boolean {
@@ -121,15 +127,13 @@ class RecentActivityUpdater(val project: Project) : Disposable {
 
         removeFromPendingEnvironments(environments)
 
-        val sortedEnvironments = getSortedEnvironments(environments, CommonUtils.getLocalHostname())
-
-        Log.log(logger::trace, "got sortedEnvironments {}", sortedEnvironments)
+        Log.log(logger::trace, "got environments {}", environments)
 
         val pendingEnvironments = service<AddEnvironmentsService>().getPendingEnvironments()
 
         Log.log(logger::trace, "got pendingEnvironments {}", pendingEnvironments)
 
-        val allEnvs = mergeWithPendingEnvironments(sortedEnvironments, pendingEnvironments)
+        val allEnvs = mergeWithPendingEnvironments(environments, pendingEnvironments)
 
         Log.log(logger::trace, "got allEnvs {}", allEnvs)
 
@@ -140,7 +144,7 @@ class RecentActivityUpdater(val project: Project) : Disposable {
             RECENT_ACTIVITY_SET_DATA,
             RecentActivitiesMessagePayload(
                 allEnvs,
-                getEntriesWithAdjustedLocalEnvs(latestActivitiesResult)
+                latestActivitiesResult.entries
             )
         )
 
@@ -149,57 +153,103 @@ class RecentActivityUpdater(val project: Project) : Disposable {
     }
 
     private fun mergeWithPendingEnvironments(
-        sortedEnvironments: List<String>,
-        pendingEnvironments: Map<String, PendingEnvironment>,
+        environments: List<String>,
+        pendingEnvironments: List<PendingEnvironment>,
     ): List<RecentActivityEnvironment> {
 
         val allEnvs = mutableListOf<RecentActivityEnvironment>()
 
-        val permEnvs = sortedEnvironments.map { e: String -> RecentActivityEnvironment(e, false) }.toList()
-        allEnvs.addAll(permEnvs)
-        val pendingEnvs = pendingEnvironments.map { entry: Map.Entry<String, PendingEnvironment> ->
-            RecentActivityEnvironment(
-                entry.value.name,
-                true,
-                entry.value.additionToConfigResult
-            )
-        }
+        val recentActivityEnvs = buildRecentActivityEnvs(environments)
+        allEnvs.addAll(recentActivityEnvs)
+
+        val pendingEnvs = buildPendingEnvs(pendingEnvironments)
         allEnvs.addAll(pendingEnvs)
+
+        allEnvs.sortBy { recentActivityEnvironment: RecentActivityEnvironment -> recentActivityEnvironment.name }
+
         return allEnvs
     }
 
-
-    private fun getEntriesWithAdjustedLocalEnvs(recentActivityData: RecentActivityResult): List<RecentActivityResponseEntry> {
-        return recentActivityData.entries.stream()
-            .map { (environment, traceFlowDisplayName, firstEntrySpan, lastEntrySpan, latestTraceId, latestTraceTimestamp, latestTraceDuration, slimAggregatedInsights): RecentActivityResponseEntry ->
-                RecentActivityResponseEntry(
-                    getAdjustedEnvName(environment),
-                    traceFlowDisplayName,
-                    firstEntrySpan,
-                    lastEntrySpan,
-                    latestTraceId,
-                    latestTraceTimestamp,
-                    latestTraceDuration,
-                    slimAggregatedInsights
-                )
-            }.toList()
+    private fun buildPendingEnvs(pendingEnvironments: List<PendingEnvironment>): List<RecentActivityEnvironment> {
+        return pendingEnvironments.map { p: PendingEnvironment ->
+            RecentActivityEnvironment(
+                p.name,
+                p.name,
+                true,
+                p.additionToConfigResult,
+                p.type,
+                p.serverApiUrl,
+                p.token,
+                p.isOrgDigmaSetupFinished
+            )
+        }
     }
 
-    private fun getAdjustedEnvName(environment: String): String {
-        val envUppercase = environment.uppercase(Locale.getDefault())
-        if (envUppercase.endsWith(SUFFIX_OF_LOCAL)) return LOCAL_ENV
-        return if (envUppercase.endsWith(SUFFIX_OF_LOCAL_TESTS)) LOCAL_TESTS_ENV else environment
+    private fun buildRecentActivityEnvs(environments: List<String>): List<RecentActivityEnvironment> {
+
+        val hostname = CommonUtils.getLocalHostname()
+
+        val transformEnvToRecentActivityEnvironment: (String) -> RecentActivityEnvironment = { env ->
+
+            val displayName = if (isEnvironmentLocal(env) && isLocalEnvironmentMine(env, hostname)) {
+                LOCAL_ENV
+            } else if (isEnvironmentLocalTests(env) && isLocalEnvironmentMine(env, hostname)) {
+                LOCAL_TESTS_ENV
+            } else {
+                env
+            }
+
+            val type: EnvironmentType =
+                if (displayName == LOCAL_ENV || displayName == LOCAL_TESTS_ENV) EnvironmentType.local else EnvironmentType.shared
+
+            RecentActivityEnvironment(displayName, env, false, null, type, null, null, false)
+        }
+
+        return environments.map(transformEnvToRecentActivityEnvironment)
     }
+
+
 
 
     private fun removeFromPendingEnvironments(environments: List<String>) {
-        environments.forEach {
-            if (service<AddEnvironmentsService>().getPendingEnvironments().containsKey(it)) {
-                Log.log(logger::info, "found environment {} from backend in pending environments, removing it from pending", it)
-                service<AddEnvironmentsService>().removeEnvironment(it)
+        environments.forEach { env ->
+            if (service<AddEnvironmentsService>().isPendingEnv(env)) {
+                Log.log(logger::info, "found environment {} from backend in pending environments, removing it from pending", env)
+                val pendingEnvironment = service<AddEnvironmentsService>().getPendingEnvironment(env)
+                service<AddEnvironmentsService>().removeEnvironment(env)
+                val type = pendingEnvironment?.type?.name ?: "unknown"
+                project.service<ActivityMonitor>().registerCustomEvent(
+                    "first time data received for user created environment",
+                    mapOf(
+                        "environment" to env,
+                        "type" to type
+                    )
+                )
             }
         }
     }
+
+
+    private fun sendEmptyData() {
+
+        jCefComponent?.let { jcef ->
+            val pendingEnvironments = service<AddEnvironmentsService>().getPendingEnvironments()
+            val pendingEnvs = buildPendingEnvs(pendingEnvironments)
+
+            val recentActivitiesMessage = RecentActivitiesMessageRequest(
+                JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
+                RECENT_ACTIVITY_SET_DATA,
+                RecentActivitiesMessagePayload(
+                    pendingEnvs.sortedBy { recentActivityEnvironment: RecentActivityEnvironment -> recentActivityEnvironment.name },
+                    listOf()
+                )
+            )
+
+            Log.log(logger::trace, "sending empty recentActivitiesMessage to app {}", recentActivitiesMessage)
+            serializeAndExecuteWindowPostMessageJavaScript(jcef.jbCefBrowser.cefBrowser, recentActivitiesMessage)
+        }
+    }
+
 
 
     override fun dispose() {

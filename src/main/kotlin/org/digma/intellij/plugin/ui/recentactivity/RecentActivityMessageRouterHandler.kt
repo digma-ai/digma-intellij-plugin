@@ -16,6 +16,7 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.sendUserEmail
+import org.digma.intellij.plugin.ui.jcef.tryGetFieldFromPayload
 import org.digma.intellij.plugin.ui.jcef.updateDigmaEngineStatus
 import org.digma.intellij.plugin.ui.list.insights.traceButtonName
 import org.digma.intellij.plugin.ui.recentactivity.model.CloseLiveViewMessage
@@ -80,10 +81,10 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
 
             "RECENT_ACTIVITY/SET_ENVIRONMENT_TYPE" -> {
                 val environment = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("environment").asText()
-                val type = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("type").asText()
+                val type: String? = tryGetFieldFromPayload(objectMapper, requestJsonNode, "type")
                 project.service<ActivityMonitor>()
-                    .registerUserActionEvent("set environment type", mapOf("environment" to environment, "type" to type))
-                if (environment != null && type != null) {
+                    .registerUserActionEvent("set environment type", mapOf("environment" to environment, "type" to type.toString()))
+                if (environment != null) {
                     service<AddEnvironmentsService>().setEnvironmentType(project, environment, type)
                     Backgroundable.executeOnPooledThread {
                         project.service<RecentActivityUpdater>().updateLatestActivities()

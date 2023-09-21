@@ -61,13 +61,19 @@ class AddEnvironmentsService {
         flush()
     }
 
-    fun setEnvironmentType(project: Project, environment: String, type: String) {
+    fun setEnvironmentType(project: Project, environment: String, type: String?) {
         val pendingEnvironment: PendingEnvironment? = pendingEnvironments.find { pendingEnvironment -> pendingEnvironment.name == environment }
         pendingEnvironment?.let {
-            try {
-                it.type = EnvironmentType.valueOf(type)
-            } catch (e: Exception) {
-                ErrorReporter.getInstance().reportError(project, "AddEnvironmentsService.setEnvironmentType", e)
+
+            if (type == null) {
+                it.type = null
+            } else {
+                it.type = try {
+                    EnvironmentType.valueOf(type)
+                } catch (e: Exception) {
+                    ErrorReporter.getInstance().reportError(project, "AddEnvironmentsService.setEnvironmentType", e)
+                    null
+                }
             }
         }
         flush()

@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.172] - 2023-09-21
+## [2.0.173] - 2023-09-21
+- Add ci environment by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1308
+
+## 2.0.172 - 2023-09-21
 - GitHub actions without maximize space by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1309
 
 ## 2.0.170 - 2023-09-21

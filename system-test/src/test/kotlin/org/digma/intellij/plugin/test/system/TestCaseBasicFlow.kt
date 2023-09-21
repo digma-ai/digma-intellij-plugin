@@ -65,7 +65,7 @@ class TestCaseBasicFlow : DigmaTestCase() {
 
         // prepare assertion in the browser for the insights that will be pushed of the method under caret
         setupExecuteJSOf(insightCefBrowser)
-        // use browser spy to verify recent activities from env2
+        // use browser spy to verify recent activities
         setupExecuteJSOf(recentActivityCefBrowser)
     }
 
@@ -231,7 +231,7 @@ class TestCaseBasicFlow : DigmaTestCase() {
         // bullet 5 -
 
         waitForDocumentInfoToLoad(secondFile)
-
+        // todo: check if we can get the target button
         val targetButton = CodeNavigationButton(project)
 
         // When I click target icon (go to code)
@@ -284,7 +284,7 @@ class TestCaseBasicFlow : DigmaTestCase() {
         }
         jCafComponentField.isAccessible = true
         val jCafComponent = jCafComponentField.get(recentActivityUpdater) as JCefComponent?
-
+        // sometimes the component is null and won't let to spy on the browser, so we create a new one as in the production code
         if (jCafComponent != null) {
             injectSpyBrowser(jCafComponent, "jbCefBrowser", recentActivityJBBrowser)
             return

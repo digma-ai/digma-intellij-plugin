@@ -146,9 +146,9 @@ open class DigmaTestCase : LightJavaCodeInsightFixtureTestCase() {
                             break
                         } catch (e: Throwable) {
                             Log.test(logger::info, "assertQueueOfActionWithinTimeout failed for action $action\n", e)
-                            delay(500L)
                         }
                     }
+                    delay(500L)
                 }
             } ?: fail("timeout waiting for $action to pass assertion")
 

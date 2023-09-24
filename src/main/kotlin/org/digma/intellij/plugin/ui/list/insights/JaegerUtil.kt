@@ -142,8 +142,13 @@ fun openJaegerFromInsight(
     val jaegerUrl: String
     val embedPart = "&uiEmbed=v0"
 
-    val trace1 = traceId.lowercase()
-    jaegerUrl = "${jaegerBaseUrl}/trace/${trace1}?cohort=${trace1}${embedPart}"
+    val trace1 = traceId.lowercase();
+    if (jaegerBaseUrl!=null && jaegerBaseUrl.contains("\${TRACE_ID}")){
+        jaegerUrl=jaegerBaseUrl.replace("\${TRACE_ID}",trace1)
+    }
+    else{
+        jaegerUrl = "${jaegerBaseUrl}/trace/${trace1}?cohort=${trace1}${embedPart}"
+    }
 
     when (settingsState.jaegerLinkMode) {
 

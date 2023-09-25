@@ -112,8 +112,10 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
 
     // this one is used AFTER of settings.observability enabled
     private fun evalSpringBootMicrometerTracing(module: Module?): Boolean {
-        if (module == null) return false
         val useAgentForSpringBoot = getConfigUseAgentForSpringBoot()
+
+        if (module == null)
+            return !useAgentForSpringBoot
 
         val modulesDepsService = ModulesDepsService.getInstance(module.project)
         val moduleExt = modulesDepsService.getModuleExt(module.name)

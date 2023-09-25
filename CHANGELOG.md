@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.175] - 2023-09-25
+## [2.0.176] - 2023-09-25
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1321
+
+## 2.0.175 - 2023-09-25
 - Update Documentation and Recent Activity UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1318
 - updated jaeger by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/1320
 - Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1319

@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.177] - 2023-09-26
+## [2.0.178] - 2023-09-26
+- Support 2023.3 Closes #1324 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1325
+- dont-download-latest-compose-on-ide-start by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1316
+
+## 2.0.177 - 2023-09-26
 - added ph link by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/1322
 
 ## 2.0.176 - 2023-09-25

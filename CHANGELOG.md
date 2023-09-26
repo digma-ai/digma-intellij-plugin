@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.176] - 2023-09-25
+## [2.0.177] - 2023-09-26
+- added ph link by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/1322
+
+## 2.0.176 - 2023-09-25
 - Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1321
 
 ## 2.0.175 - 2023-09-25

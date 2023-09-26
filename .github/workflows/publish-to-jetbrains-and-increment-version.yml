@@ -13,7 +13,7 @@ jobs:
   publish-workflow:
     strategy:
       matrix:
-        profile: [ p223, p231, p232 ]
+        profile: [ p223, p231, p232, p233 ]
     uses: ./.github/workflows/publish-workflow.yml
     with:
       build-profile: ${{ matrix.profile }}

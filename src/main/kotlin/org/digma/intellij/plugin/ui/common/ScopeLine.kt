@@ -2,59 +2,85 @@
 
 package org.digma.intellij.plugin.ui.common
 
-import com.intellij.openapi.actionSystem.ActionManager
-import com.intellij.openapi.ui.DialogPanel
-import com.intellij.ui.components.JBLabel
-import com.intellij.ui.dsl.builder.MutableProperty
-import com.intellij.ui.dsl.builder.RowLayout
-import com.intellij.ui.dsl.builder.panel
+import com.intellij.openapi.components.service
+import com.intellij.openapi.project.Project
 import com.intellij.util.Producer
-import org.digma.intellij.plugin.ui.common.actions.SpanNavBackAction
+import com.intellij.util.ui.JBUI
+import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
+import org.digma.intellij.plugin.model.nav.ScopeType
+import org.digma.intellij.plugin.navigation.HistoryScopeNavigation
+import org.digma.intellij.plugin.navigation.HomeSwitcherService
+import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
+import java.awt.BorderLayout
+import java.awt.Dimension
 import javax.swing.Icon
 import javax.swing.JLabel
+import javax.swing.JPanel
 
 
 fun scopeLine(
+    project: Project,
     scopeNameProducer: Producer<String>,
     scopeTooltipProducer: Producer<String>,
     scopeIconProducer: Producer<Icon>,
-): DialogPanel {
+): DigmaResettablePanel {
 
-    val navBack = ActionManager.getInstance().getAction(SpanNavBackAction.ID)
 
-    return panel {
-        row {
-            actionButton(navBack)
+    val navButton = BackNavButton()
+    val size = Laf.scaleSize(Laf.Sizes.BUTTON_SIZE_24)
+    val buttonsSize = Dimension(size, size)
+    navButton.preferredSize = buttonsSize
+    navButton.maximumSize = buttonsSize
+    navButton.addActionListener {
 
-            //todo: CopyableLabel does work wrap, that's not good here.
-            // JBLabel can be copyable but then  there is no tooltip.
-            // JLabel is not copyable but there is tooltip.
+        val insightViewOrch = project.service<InsightsViewOrchestrator>()
+        val historyScopeNavigation = project.service<HistoryScopeNavigation>()
 
-            icon(scopeIconProducer.produce()).bind(
-                JLabel::getIcon, JLabel::setIcon, MutableProperty(
-                    getter = { scopeIconProducer.produce() },
-                    setter = {})
-            )
-            cell(JBLabel("")).bind(
-                JLabel::getText, JLabel::setText, MutableProperty(
-                    getter = { scopeNameProducer.produce() },
-                    setter = {})
-            ).bind(
-                JLabel::getToolTipText, JLabel::setToolTipText, MutableProperty(
-                    getter = { scopeTooltipProducer.produce() },
-                    setter = {})
-            )
-//            cell(CopyableLabel("")).bind(
-//                CopyableLabel::getText, CopyableLabel::setText, MutableProperty(
-//                    getter = { scopeNameProducer.produce() },
-//                    setter = {})
-//            ).bind(
-//                CopyableLabel::getToolTipText, CopyableLabel::setToolTipText, MutableProperty(
-//                    getter = { scopeTooltipProducer.produce() },
-//                    setter = {})).horizontalAlign(HorizontalAlign.FILL)
-        } // end row
-            .layout(RowLayout.LABEL_ALIGNED)
+        val miniScope = historyScopeNavigation.getPreviousScopeToGoBackTo()
+        miniScope?.let {
+            when (it.type) {
+                ScopeType.Span -> {
+                    insightViewOrch.showInsightsForCodelessSpan(it.id)
+                }
 
-    } // end panel
-        .andTransparent()
+                ScopeType.Method -> {
+                    insightViewOrch.showInsightsForMethodFromBackNavigation(it.id)
+                }
+
+                else -> Unit
+            }
+        }
+
+        if (miniScope == null) {
+            project.service<HomeSwitcherService>().switchToHome()
+        }
+    }
+
+
+    val scopeIcon = JLabel(scopeIconProducer.produce())
+    val scopeLabel = JLabel(scopeNameProducer.produce())
+    scopeLabel.toolTipText = scopeTooltipProducer.produce()
+
+
+    val mainPanel = object : DigmaResettablePanel() {
+        override fun reset() {
+            scopeIcon.icon = scopeIconProducer.produce()
+            scopeLabel.text = scopeNameProducer.produce()
+            scopeLabel.toolTipText = scopeTooltipProducer.produce()
+        }
+    }
+
+
+    mainPanel.layout = BorderLayout(5, 0)
+    mainPanel.isOpaque = false
+    mainPanel.add(navButton, BorderLayout.WEST)
+    val centerPnel = JPanel(BorderLayout(5, 0))
+    centerPnel.isOpaque = false
+    centerPnel.border = JBUI.Borders.empty()
+    centerPnel.add(scopeIcon, BorderLayout.WEST)
+    centerPnel.add(scopeLabel, BorderLayout.CENTER)
+    mainPanel.add(centerPnel, BorderLayout.CENTER)
+
+    return mainPanel
+
 }

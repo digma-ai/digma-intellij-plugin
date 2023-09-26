@@ -96,6 +96,13 @@ object BuildProfiles {
     )
 
 
+    //jetbrains repositories:
+    //https://www.jetbrains.com/intellij-repository/snapshots
+    //https://www.jetbrains.com/intellij-repository/releases
+    //https://plugins.jetbrains.com/plugin/7322-python-community-edition/versions/stable
+    //./gradlew clean buildPlugin -PbuildProfile=p233
+
+
     private val profiles = mapOf(
 
         Profiles.p223 to BuildProfile(
@@ -150,23 +157,21 @@ object BuildProfiles {
         ),
 
 
-        //todo: the next EAP profile. still not active and not built in github, versions are of p232 until EAP is started.
-        // update when 2023.3 starts and add to github workflows
         Profiles.p233 to BuildProfile(
 
             profile = Profiles.p233,
             isEAP = true,
             // platformVersion is Intellij IDEA Community and Ultimate
-            platformVersion = "2023.2.1",
-            riderVersion = "2023.2.1",
-            pycharmVersion = "2023.2.1",
-            riderResharperVersion = "2023.2.0",
+            platformVersion = "233-EAP-SNAPSHOT",
+            riderVersion = "2023.3-EAP1-SNAPSHOT",
+            pycharmVersion = "2023.2.1", //todo: pycharm 233 eap
+            riderResharperVersion = "2023.3.0-eap01",
             riderResharperVersionConstant = "PROFILE_2023_2",
-            pythonPluginVersion = "232.9559.62",
-            platformVersionCode = "232",
-            pluginSinceBuild = "232",
-            pluginUntilBuild = "232.*",
-            versionToRunPluginVerifier = "2023.2",
+            pythonPluginVersion = "233.6745.305",
+            platformVersionCode = "233",
+            pluginSinceBuild = "233",
+            pluginUntilBuild = "233.*",
+            versionToRunPluginVerifier = "2023.3",
             kotlinTarget = KotlinVersion.KOTLIN_1_8.version,
             javaVersion = JavaVersion.VERSION_17.majorVersion
         )

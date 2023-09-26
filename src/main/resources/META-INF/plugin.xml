@@ -156,10 +156,6 @@
     </extensions>
 
 
-    <actions>
-        <action id="DigmaSpanNavBackAction" class="org.digma.intellij.plugin.ui.common.actions.SpanNavBackAction"/>
-    </actions>
-
 
     <projectListeners>
         <listener

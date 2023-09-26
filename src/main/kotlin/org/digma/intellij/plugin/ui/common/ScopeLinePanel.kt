@@ -24,7 +24,8 @@ class ScopeLinePanel(project: Project) : JPanel(BorderLayout()) {
         border = JBUI.Borders.empty()
 
         val insightsModel = project.service<InsightsViewService>().model
-        val scopeLine = scopeLine({ insightsModel.getScopeString() }, { insightsModel.getScopeTooltip() }, ScopeLineIconProducer(insightsModel))
+        val scopeLine =
+            scopeLine(project, { insightsModel.getScopeString() }, { insightsModel.getScopeTooltip() }, ScopeLineIconProducer(insightsModel))
 
         val buttonsPanel = JPanel(GridLayout(1, 2, 5, 0))
         buttonsPanel.isOpaque = false

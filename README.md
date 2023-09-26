@@ -3,6 +3,8 @@
 <!-- https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax -->
 <!-- Plugin description -->
 
+#### [Digma is launching on ProductHunt!](https://www.producthunt.com/posts/digma-ai)
+
 Digma is an IDE plugin for [analyzing code runtime data](https://digma.ai/blog/introducing-the-digma-jetbrains-plugin/).
 It enables rapid development in complex
 projects by linting and detecting issues as they appear, highlighting possible risks in code and providing code change analysis and context

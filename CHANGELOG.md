@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.178] - 2023-09-26
+## [2.0.179] - 2023-09-27
+- Update Assets UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1327
+
+## 2.0.178 - 2023-09-26
 - Support 2023.3 Closes #1324 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1325
 - dont-download-latest-compose-on-ide-start by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1316
 

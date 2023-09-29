@@ -195,7 +195,6 @@ class ActivityMonitor(project: Project) : Disposable {
                 "error",
                 mapOf(
                     "error.source" to "plugin",
-                    "action" to "unknown",
                     "message" to message,
                     "exception.type" to exception.javaClass.name,
                     "cause.exception.type" to ExceptionUtils.getFirstRealExceptionCauseTypeName(exception),

@@ -41,7 +41,8 @@ public class JavaDocumentInfoIndex extends DocumentInfoIndex {
 
 
     @Override
-    public FileBasedIndex.@NotNull InputFilter getInputFilter() {
+    @NotNull
+    public FileBasedIndex.InputFilter getInputFilter() {
 
         //currently supported file types are java , python is not indexed yet
         return new DefaultFileTypeSpecificInputFilter(JavaFileType.INSTANCE) {

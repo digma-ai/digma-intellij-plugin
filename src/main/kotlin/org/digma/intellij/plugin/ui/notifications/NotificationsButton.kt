@@ -46,11 +46,7 @@ class NotificationsButton(val project: Project) : JButton() {
 
         @Suppress("UnstableApiUsage")
         private fun createBadgeIcon(icon: Icon): Icon {
-            return BadgeIcon(icon, JBUI.CurrentTheme.IconBadge.ERROR, object : BadgeDotProvider() {
-                override fun getX(): Double = 0.7
-                override fun getY(): Double = 0.2
-                override fun getRadius(): Double = 3.0 / icon.iconWidth
-            })
+            return BadgeIcon(icon, JBUI.CurrentTheme.IconBadge.ERROR, BadgeDotProvider(0.7, 0.2, 3.0 / icon.iconWidth))
         }
     }
 

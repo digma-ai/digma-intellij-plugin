@@ -11,6 +11,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.ui.jcef.JBCefBrowser
+//import kotlinx.coroutines
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -649,8 +650,15 @@ class DigmaStatusUpdater {
                         delay(2000)
                     }
 
-                } catch (e: Exception) {
-                    ErrorReporter.getInstance().reportError(project, "DigmaStatusUpdater.loop", e)
+                }
+               // catch (e: JobCancellationException)
+               // {
+
+               // }
+                catch (e: Exception) {
+                    if(e.message != "Job was cancelled"){  //todo shalom should catch JobCancellationException for better handling this type of exc
+                        ErrorReporter.getInstance().reportError(project, "DigmaStatusUpdater.loop", e)
+                    }
                 }
             }
         }

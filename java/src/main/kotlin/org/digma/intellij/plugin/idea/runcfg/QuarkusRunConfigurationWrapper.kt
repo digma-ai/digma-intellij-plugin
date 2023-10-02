@@ -122,6 +122,15 @@ class QuarkusRunConfigurationWrapper : RunConfigurationWrapper {
             retVal = retVal
                 .plus("-Dquarkus.otel.resource.attributes=\"$envPart\"")
                 .plus(" ")
+
+            // handle batching - try to remove them, so spans would manage to be sent out
+            retVal = retVal
+                .plus("-Dquarkus.otel.bsp.schedule.delay=1") // set delay to 1 milliseconds
+                .plus(" ")
+                .plus("-Dquarkus.otel.bsp.export.timeout=1") // set timeout to 1 milliseconds
+                .plus(" ")
+                .plus("-Dquarkus.otel.bsp.max.export.batch.size=1") // by setting size of 1 it kind of disable
+                .plus(" ")
         }
 
         return retVal

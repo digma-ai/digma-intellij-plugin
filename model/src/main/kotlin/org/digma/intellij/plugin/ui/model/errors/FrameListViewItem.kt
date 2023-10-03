@@ -3,22 +3,25 @@ package org.digma.intellij.plugin.ui.model.errors
 import org.digma.intellij.plugin.model.rest.errordetails.Frame
 import org.digma.intellij.plugin.model.rest.errordetails.FrameStack
 
-interface FrameListViewItem{}
+interface FrameListViewItem {
+}
 
-class FrameStackTitle(val frameStack: FrameStack): FrameListViewItem{
+class FrameStackTitle(val frameStack: FrameStack) : FrameListViewItem {
 
 }
 
-class SpanTitle(val spanName: String): FrameListViewItem{
+class SpanTitle(val spanName: String) : FrameListViewItem {
 
 }
 
 
-class FrameItem(val frameStack: FrameStack,
-                val frame: Frame,
-                val first: Boolean,
-                private val workspaceUri: String?,
-                val lastInstanceCommitId: String?) : FrameListViewItem {
+class FrameItem(
+    val frameStack: FrameStack,
+    val frame: Frame,
+    val first: Boolean,
+    private val workspaceUri: String?,
+    val lastInstanceCommitId: String?,
+) : FrameListViewItem {
 
     fun isInWorkspace(): Boolean {
         if (workspaceUri == null) {

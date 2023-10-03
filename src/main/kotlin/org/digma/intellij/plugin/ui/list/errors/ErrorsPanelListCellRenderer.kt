@@ -2,15 +2,19 @@ package org.digma.intellij.plugin.ui.list.errors
 
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
+import com.intellij.ui.JBColor
 import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBPanel
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.common.CommonUtils.prettyTimeOf
 import org.digma.intellij.plugin.insights.ErrorsViewOrchestrator
+import org.digma.intellij.plugin.jaegerui.JaegerUIService
 import org.digma.intellij.plugin.model.discovery.CodeObjectInfo.Companion.extractMethodName
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
+import org.digma.intellij.plugin.ui.common.Laf
 import org.digma.intellij.plugin.ui.common.asHtml
+import org.digma.intellij.plugin.ui.common.boldFonts
 import org.digma.intellij.plugin.ui.common.buildLinkTextWithGrayedAndDefaultLabelColorPart
 import org.digma.intellij.plugin.ui.common.createScorePanelNoArrows
 import org.digma.intellij.plugin.ui.common.span
@@ -22,8 +26,12 @@ import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.BorderLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import java.sql.Timestamp
+import javax.swing.JButton
 import javax.swing.JPanel
+import javax.swing.SwingConstants
 
 
 class ErrorsPanelListCellRenderer : AbstractPanelListCellRenderer() {
@@ -83,11 +91,20 @@ private fun createSingleErrorPanel(project: Project, model: CodeObjectError): JP
     leftPanel.add(link, BorderLayout.NORTH)
     leftPanel.add(content, BorderLayout.CENTER)
 
+    val traceLink = GotoTraceButton(project, model.latestTraceId)
+
+    val buttonsPanel = JBPanel<JBPanel<*>>()
+    buttonsPanel.layout = BorderLayout(0, 3)
+    buttonsPanel.isOpaque = false
+    buttonsPanel.border = JBUI.Borders.emptyRight(5)
+    buttonsPanel.add(traceLink, BorderLayout.EAST)
+
     val result = JPanel()
-    result.layout = BorderLayout()
+    result.layout = BorderLayout(0, 3)
     result.isOpaque = false
     result.add(leftPanel, BorderLayout.CENTER)
     result.add(scorePanelWrapper, BorderLayout.EAST)
+    result.add(buttonsPanel, BorderLayout.SOUTH)
     return result
 }
 
@@ -96,4 +113,45 @@ fun contentOfFirstAndLast(firstOccurenceTime: Timestamp, lastOccurenceTime: Time
             "  ${spanGrayed("Last:")} ${span(prettyTimeOf(lastOccurenceTime))}"
 }
 
+class GotoTraceButton(val project: Project, val latestTraceId: String?) : JButton() {
+
+    companion object {
+        val bg = Laf.Colors.BUTTON_BACKGROUND
+    }
+
+    init {
+        text = "Trace"
+        boldFonts(this)
+        isContentAreaFilled = false
+        horizontalAlignment = SwingConstants.CENTER
+        background = bg
+        isOpaque = true
+        border = JBUI.Borders.empty(2)
+        margin = JBUI.emptyInsets()
+
+        addMouseListener(object : MouseAdapter() {
+            override fun mouseEntered(e: MouseEvent?) {
+                border = JBUI.Borders.customLine(JBColor.GRAY, 2)
+            }
+
+            override fun mouseExited(e: MouseEvent?) {
+                border = JBUI.Borders.empty(2)
+            }
+
+            override fun mousePressed(e: MouseEvent?) {
+                background = JBColor.BLUE
+            }
+
+            override fun mouseReleased(e: MouseEvent?) {
+                background = bg
+            }
+        })
+
+        latestTraceId?.let {
+            addActionListener {
+                project.service<JaegerUIService>().openEmbeddedJaeger(latestTraceId, "some name")
+            }
+        }
+    }
+}
 

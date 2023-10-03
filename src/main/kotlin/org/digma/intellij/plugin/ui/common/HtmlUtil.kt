@@ -82,14 +82,14 @@ fun buildTitleItalicGrayedComment(title: String,comment: String): String{
     return buildTitleItalicGrayedComment(title, comment,false)
 }
 
-fun buildTitleItalicGrayedComment(title: String,comment: String,bold: Boolean): String{
-    val titlePart = if (bold){
+fun buildTitleItalicGrayedComment(title: String, comment: String, bold: Boolean): String {
+    val titlePart = if (bold) {
         spanBold(title)
-    }else{
+    } else {
         span(title)
     }
 
-    val commentPart = spanItalicGrayed(italic(comment))
+    val commentPart = spanItalicGrayed(comment)
 
     return asHtml("$titlePart<br>$commentPart")
 }

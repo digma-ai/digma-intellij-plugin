@@ -5,9 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.beans.ConstructorProperties
 
-// a.k.a ErrorFlowInfo
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class DetailedErrorInfo
+data class ErrorFlowInfo
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties("frameStacks","stackTrace","lastInstanceCommitId")
 constructor(

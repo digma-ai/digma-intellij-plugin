@@ -29,7 +29,7 @@ constructor(
     val scoreInfo: ScoreInfo,
     val dayAvg: Int,
     val originServices: List<OriginService>,
-    val errors: List<DetailedErrorInfo>
+    val errors: List<ErrorFlowInfo>
 ) {
 
     @JsonProperty("latestTraceId")

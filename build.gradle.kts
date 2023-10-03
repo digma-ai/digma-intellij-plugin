@@ -249,7 +249,7 @@ tasks {
 
         //rider EAP doesn't work here, plugin verifier can't find it
         withCurrentProfile { profile ->
-            if (profile.isEAP && platformType == IdeFlavor.RD.name) {
+            if (profile.isEAP) {
                 enabled = false
             } else {
                 ideVersions.set(listOf("${platformType}-${profile.versionToRunPluginVerifier}"))

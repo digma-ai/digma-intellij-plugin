@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.180] - 2023-10-02
+## [2.0.181] - 2023-10-03
+- Update Assets UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1342
+- dont run plugin verifier for eap by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1336
+
+## 2.0.180 - 2023-10-02
 - fixed build number in platformVersion for eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1334
 - Feature/QuarkusTests - configure tests to reduce batching impact by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1341
 

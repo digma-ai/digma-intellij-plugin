@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.ui.list.errordetails
 
 import com.intellij.openapi.project.Project
+import com.intellij.ui.components.JBPanel
 import com.intellij.ui.dsl.builder.BottomGap
 import com.intellij.ui.dsl.builder.RightGap
 import com.intellij.ui.dsl.builder.TopGap
@@ -12,6 +13,7 @@ import org.digma.intellij.plugin.ui.common.CopyableLabel
 import org.digma.intellij.plugin.ui.common.CopyableLabelHtml
 import org.digma.intellij.plugin.ui.common.Hover
 import org.digma.intellij.plugin.ui.common.Laf
+import org.digma.intellij.plugin.ui.common.TraceButton
 import org.digma.intellij.plugin.ui.common.buildTitleItalicGrayedComment
 import org.digma.intellij.plugin.ui.list.AbstractPanelListCellRenderer
 import org.digma.intellij.plugin.ui.list.PanelsLayoutHelper
@@ -45,7 +47,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
 
         val panel =
             when (val modelObject = value.modelObject) {
-                is FrameStackTitle -> frameStackTitlePanel(modelObject)
+                is FrameStackTitle -> frameStackTitlePanel(project, modelObject)
                 is SpanTitle -> spanTitlePanel(modelObject)
                 is FrameItem -> framePanel(project, modelObject)
                 else -> throw RuntimeException("Unknown modelObject $modelObject")
@@ -149,7 +151,7 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
         return itemPanel(result)
     }
 
-    private fun frameStackTitlePanel(modelObject: FrameStackTitle): JPanel {
+    private fun innerFrameStackTitlePanel(modelObject: FrameStackTitle): JPanel {
         val panel = JPanel()
         panel.layout = GridLayout(1, 1)
         val text = buildTitleItalicGrayedComment(modelObject.frameStack.exceptionType, modelObject.frameStack.exceptionMessage)
@@ -159,6 +161,32 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
         panel.border = Borders.empty(3, 3, 5, 3)
         panel.isOpaque = false
         return panel
+    }
+
+    private fun frameStackTitlePanel(project: Project, modelObject: FrameStackTitle): JPanel {
+        val leftPanel = innerFrameStackTitlePanel(modelObject)
+
+        var traceButton: TraceButton? = null
+        if (modelObject.traceId != null && "NA" != modelObject.traceId) {
+            val title = "Sample trace for error ${modelObject.frameStack.exceptionType}"
+            traceButton = TraceButton()
+            traceButton.defineAction(project, modelObject.traceId!!, title)
+        }
+
+        val buttonsPanel = JBPanel<JBPanel<*>>()
+        buttonsPanel.layout = BorderLayout(0, 3)
+        buttonsPanel.isOpaque = false
+        buttonsPanel.border = Borders.emptyRight(5)
+        if (traceButton != null) {
+            buttonsPanel.add(traceButton, BorderLayout.EAST)
+        }
+
+        val result = JPanel()
+        result.layout = BorderLayout(0, 3)
+        result.isOpaque = false
+        result.add(leftPanel, BorderLayout.CENTER)
+        result.add(buttonsPanel, BorderLayout.EAST)
+        return result
     }
 
     private fun itemPanel(panel: JPanel): JPanel {

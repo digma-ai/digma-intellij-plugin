@@ -91,13 +91,18 @@ private fun createSingleErrorPanel(project: Project, model: CodeObjectError): JP
     leftPanel.add(link, BorderLayout.NORTH)
     leftPanel.add(content, BorderLayout.CENTER)
 
-    val traceLink = GotoTraceButton(project, model.latestTraceId)
+    var traceLink: JButton? = null;
+    if (model.latestTraceId != null && "NA" != model.latestTraceId) {
+        traceLink = GotoTraceButton(project, model.latestTraceId!!)
+    }
 
     val buttonsPanel = JBPanel<JBPanel<*>>()
     buttonsPanel.layout = BorderLayout(0, 3)
     buttonsPanel.isOpaque = false
     buttonsPanel.border = JBUI.Borders.emptyRight(5)
-    buttonsPanel.add(traceLink, BorderLayout.EAST)
+    if (traceLink != null) {
+        buttonsPanel.add(traceLink, BorderLayout.EAST)
+    }
 
     val result = JPanel()
     result.layout = BorderLayout(0, 3)
@@ -113,7 +118,7 @@ fun contentOfFirstAndLast(firstOccurenceTime: Timestamp, lastOccurenceTime: Time
             "  ${spanGrayed("Last:")} ${span(prettyTimeOf(lastOccurenceTime))}"
 }
 
-class GotoTraceButton(val project: Project, val latestTraceId: String?) : JButton() {
+class GotoTraceButton(private val project: Project, private val traceId: String) : JButton() {
 
     companion object {
         val bg = Laf.Colors.BUTTON_BACKGROUND
@@ -147,10 +152,8 @@ class GotoTraceButton(val project: Project, val latestTraceId: String?) : JButto
             }
         })
 
-        latestTraceId?.let {
-            addActionListener {
-                project.service<JaegerUIService>().openEmbeddedJaeger(latestTraceId, "some name")
-            }
+        addActionListener {
+            project.service<JaegerUIService>().openEmbeddedJaeger(traceId, "some name")
         }
     }
 }

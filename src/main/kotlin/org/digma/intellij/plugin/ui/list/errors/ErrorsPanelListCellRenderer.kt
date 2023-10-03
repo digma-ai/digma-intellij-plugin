@@ -93,7 +93,7 @@ private fun createSingleErrorPanel(project: Project, model: CodeObjectError): JP
 
     var traceLink: JButton? = null;
     if (model.latestTraceId != null && "NA" != model.latestTraceId) {
-        traceLink = GotoTraceButton(project, model.latestTraceId!!)
+        traceLink = GotoTraceButton(project, model.name, model.latestTraceId!!)
     }
 
     val buttonsPanel = JBPanel<JBPanel<*>>()
@@ -118,7 +118,7 @@ fun contentOfFirstAndLast(firstOccurenceTime: Timestamp, lastOccurenceTime: Time
             "  ${spanGrayed("Last:")} ${span(prettyTimeOf(lastOccurenceTime))}"
 }
 
-class GotoTraceButton(private val project: Project, private val traceId: String) : JButton() {
+class GotoTraceButton(private val project: Project, private val errorName: String, private val traceId: String) : JButton() {
 
     companion object {
         val bg = Laf.Colors.BUTTON_BACKGROUND
@@ -153,8 +153,8 @@ class GotoTraceButton(private val project: Project, private val traceId: String)
         })
 
         addActionListener {
-            project.service<JaegerUIService>().openEmbeddedJaeger(traceId, "some name")
+            val title = "Sample trace for error $errorName"
+            project.service<JaegerUIService>().openEmbeddedJaeger(traceId, title)
         }
     }
 }
-

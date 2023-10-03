@@ -2,9 +2,11 @@ package org.digma.intellij.plugin.model.rest.errors
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 import java.beans.ConstructorProperties
 import java.sql.Timestamp
 
+// a.k.a CodeObjectErrorResponse
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class CodeObjectError
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
@@ -32,4 +34,8 @@ constructor(
     val firstOccurenceTime: Timestamp,
     val lastOccurenceTime: Timestamp,
 ) {
+
+    @JsonProperty("latestTraceId")
+    val latestTraceId: String? = null
+
 }

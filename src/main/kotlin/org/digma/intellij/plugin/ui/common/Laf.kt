@@ -80,7 +80,7 @@ object Laf {
             @JvmStatic val ERROR_RED: Color = Color(0xf95959)      // same as in VS Code plugin
             @JvmStatic val ERROR_ORANGE: Color = Color(0xfdb44b)   // same as in VS Code plugin
             @JvmStatic val ERROR_GREEN: Color = Color(0x7dd87d)    // same as in VS Code plugin
-            @JvmStatic val BUTTON_BACKGROUND: Color = Color(0x3538CD) // suppose to be dark purple
+            @JvmStatic val BUTTON_BACKGROUND: Color = Color(0x5154EC) // previous values: 0x4245D0, 0x3538CD
             //@JvmStatic val SIMPLE_ICON_COLOR: JBColor = JBColor(0x222222, 0xDDDDDD)
             @JvmStatic val GRAY: Color = Color(0x8A8A8A)
             //the LIVE_BUTTON_BORDER colors should match the colors of the rect in LiveButtonFullIconDark and LiveButtonFullIconLight

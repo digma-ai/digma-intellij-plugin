@@ -30,21 +30,23 @@ class ErrorsPanelListCellRenderer : AbstractPanelListCellRenderer() {
 
 
     @Suppress("UNCHECKED_CAST")
-    override fun createPanel(project: Project,
-                             value: ListViewItem<*>,
-                             index: Int,
-                             panelsLayoutHelper: PanelsLayoutHelper): JPanel {
-        return getOrCreatePanel(project,value as ListViewItem<CodeObjectError>)
+    override fun createPanel(
+        project: Project,
+        value: ListViewItem<*>,
+        index: Int,
+        panelsLayoutHelper: PanelsLayoutHelper,
+    ): JPanel {
+        return getOrCreatePanel(project, value as ListViewItem<CodeObjectError>)
     }
 
-    private fun getOrCreatePanel(project: Project,value: ListViewItem<CodeObjectError>): JPanel {
+    private fun getOrCreatePanel(project: Project, value: ListViewItem<CodeObjectError>): JPanel {
         val model = value.modelObject
-        return commonListItemPanel(createSingleErrorPanel(project,model))
+        return commonListItemPanel(createSingleErrorPanel(project, model))
     }
 
 }
 
-private fun createSingleErrorPanel(project: Project, model: CodeObjectError ): JPanel {
+private fun createSingleErrorPanel(project: Project, model: CodeObjectError): JPanel {
 
     val relativeFrom = if (model.startsHere) {
         "me"
@@ -52,14 +54,14 @@ private fun createSingleErrorPanel(project: Project, model: CodeObjectError ): J
         extractMethodName(model.sourceCodeObjectId)
     }
 
-    val linkText = buildLinkTextWithGrayedAndDefaultLabelColorPart(model.name,"from",relativeFrom)
-    val link = ActionLink(asHtml(linkText)){
+    val linkText = buildLinkTextWithGrayedAndDefaultLabelColorPart(model.name, "from", relativeFrom)
+    val link = ActionLink(asHtml(linkText)) {
         project.service<ErrorsViewOrchestrator>().showErrorDetails(model)
     }
 
     val firstAndLast = contentOfFirstAndLast(model.firstOccurenceTime, model.lastOccurenceTime)
 
-    link.toolTipText = asHtml("${linkText}<br>${firstAndLast}" )
+    link.toolTipText = asHtml("${linkText}<br>${firstAndLast}")
 
     val contentText = "${span(model.characteristic)}<br> $firstAndLast"
     val content = CopyableLabelHtml(asHtml(contentText))
@@ -75,23 +77,23 @@ private fun createSingleErrorPanel(project: Project, model: CodeObjectError ): J
     scorePanelWrapper.add(scorePanel)
 
     val leftPanel = JBPanel<JBPanel<*>>()
-    leftPanel.layout = BorderLayout(0,3)
+    leftPanel.layout = BorderLayout(0, 3)
     leftPanel.isOpaque = false
     leftPanel.border = JBUI.Borders.emptyRight(10)
-    leftPanel.add(link,BorderLayout.NORTH)
-    leftPanel.add(content,BorderLayout.CENTER)
+    leftPanel.add(link, BorderLayout.NORTH)
+    leftPanel.add(content, BorderLayout.CENTER)
 
     val result = JPanel()
     result.layout = BorderLayout()
     result.isOpaque = false
-    result.add(leftPanel,BorderLayout.CENTER)
-    result.add(scorePanelWrapper,BorderLayout.EAST)
+    result.add(leftPanel, BorderLayout.CENTER)
+    result.add(scorePanelWrapper, BorderLayout.EAST)
     return result
 }
 
-fun contentOfFirstAndLast(firstOccurenceTime: Timestamp, lastOccurenceTime: Timestamp,): String {
+fun contentOfFirstAndLast(firstOccurenceTime: Timestamp, lastOccurenceTime: Timestamp): String {
     return "${spanGrayed("Started:")} ${span(prettyTimeOf(firstOccurenceTime))}" +
-                "  ${spanGrayed("Last:")} ${span(prettyTimeOf(lastOccurenceTime))}"
+            "  ${spanGrayed("Last:")} ${span(prettyTimeOf(lastOccurenceTime))}"
 }
 
 

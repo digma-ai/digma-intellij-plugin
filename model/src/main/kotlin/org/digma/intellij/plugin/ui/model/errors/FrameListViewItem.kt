@@ -6,7 +6,7 @@ import org.digma.intellij.plugin.model.rest.errordetails.FrameStack
 interface FrameListViewItem {
 }
 
-class FrameStackTitle(val frameStack: FrameStack) : FrameListViewItem {
+class FrameStackTitle(val frameStack: FrameStack, val traceId: String?) : FrameListViewItem {
 
 }
 
@@ -21,7 +21,6 @@ class FrameItem(
     val first: Boolean,
     private val workspaceUri: String?,
     val lastInstanceCommitId: String?,
-    val latestTraceId: String?,
 ) : FrameListViewItem {
 
     fun isInWorkspace(): Boolean {

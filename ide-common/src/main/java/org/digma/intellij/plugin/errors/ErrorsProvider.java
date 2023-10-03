@@ -121,7 +121,7 @@ public class ErrorsProvider {
         var index = 0;
         for (FrameStack frameStack : errorFlowInfo.getFrameStacks()) {
 
-            var frameStackTitle = new FrameStackTitle(frameStack);
+            var frameStackTitle = new FrameStackTitle(frameStack, errorFlowInfo.getLatestTraceId());
             var frameStackViewItem = new ListViewItem<FrameListViewItem>(frameStackTitle, index++);
             viewItems.add(frameStackViewItem);
 
@@ -137,7 +137,7 @@ public class ErrorsProvider {
                 }
 
                 var workspaceUri = workspaceUris.getOrDefault(frame.getCodeObjectId(), null);
-                var frameItem = new FrameItem(frameStack, frame, first, workspaceUri, errorFlowInfo.getLastInstanceCommitId(), errorFlowInfo.getLatestTraceId());
+                var frameItem = new FrameItem(frameStack, frame, first, workspaceUri, errorFlowInfo.getLastInstanceCommitId());
                 first = false;
 
                 var frameViewItem = new ListViewItem<FrameListViewItem>(frameItem, index++);

@@ -137,7 +137,7 @@ public class ErrorsProvider {
                 }
 
                 var workspaceUri = workspaceUris.getOrDefault(frame.getCodeObjectId(), null);
-                var frameItem = new FrameItem(frameStack, frame, first, workspaceUri, errorFlowInfo.getLastInstanceCommitId());
+                var frameItem = new FrameItem(frameStack, frame, first, workspaceUri, errorFlowInfo.getLastInstanceCommitId(), errorFlowInfo.getLatestTraceId());
                 first = false;
 
                 var frameViewItem = new ListViewItem<FrameListViewItem>(frameItem, index++);

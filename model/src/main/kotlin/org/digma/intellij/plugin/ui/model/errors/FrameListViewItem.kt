@@ -21,6 +21,7 @@ class FrameItem(
     val first: Boolean,
     private val workspaceUri: String?,
     val lastInstanceCommitId: String?,
+    val latestTraceId: String?,
 ) : FrameListViewItem {
 
     fun isInWorkspace(): Boolean {

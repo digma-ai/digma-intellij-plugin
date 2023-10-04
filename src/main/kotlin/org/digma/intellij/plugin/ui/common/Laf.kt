@@ -208,6 +208,9 @@ object Laf {
                 val NotificationsBellLightPressed = SvgIcon.asIs("/icons/notification-bell-light-pressed.svg")
 
                 @JvmStatic
+                val Dashboard = SvgIcon.asIs("/icons/dashboard.svg")
+
+                @JvmStatic
                 val NavPrevDark =
                     IconUtil.scale(SvgIcon.asIs("/icons/nav-prev-dark.svg"), ScaleContext.create(ScaleType.OBJ_SCALE.of(2.0)))
 

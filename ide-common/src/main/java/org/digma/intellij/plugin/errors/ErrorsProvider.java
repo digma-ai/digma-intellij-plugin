@@ -9,13 +9,18 @@ import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.rest.errordetails.CodeObjectErrorDetails;
-import org.digma.intellij.plugin.model.rest.errordetails.DetailedErrorInfo;
+import org.digma.intellij.plugin.model.rest.errordetails.ErrorFlowInfo;
 import org.digma.intellij.plugin.model.rest.errordetails.Frame;
 import org.digma.intellij.plugin.model.rest.errordetails.FrameStack;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
 import org.digma.intellij.plugin.psi.LanguageService;
-import org.digma.intellij.plugin.ui.model.errors.*;
+import org.digma.intellij.plugin.ui.model.errors.ErrorDetailsModel;
+import org.digma.intellij.plugin.ui.model.errors.FlowStacks;
+import org.digma.intellij.plugin.ui.model.errors.FrameItem;
+import org.digma.intellij.plugin.ui.model.errors.FrameListViewItem;
+import org.digma.intellij.plugin.ui.model.errors.FrameStackTitle;
+import org.digma.intellij.plugin.ui.model.errors.SpanTitle;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
 import org.jetbrains.annotations.NotNull;
 
@@ -58,7 +63,7 @@ public class ErrorsProvider {
             Log.log(LOGGER::debug, "UsageStatus for {}: {}", methodInfo.getId(), usageStatus);
 
             return new ErrorsListContainer(errorsListViewItems, usageStatus);
-        } catch (AnalyticsServiceException e){
+        } catch (AnalyticsServiceException e) {
             //if analyticsService.getErrorsOfCodeObject throws exception it means errors could not be loaded, usually when
             //the backend is not available. return an empty ErrorsListContainer to keep everything running and don't
             //crash the plugin. don't log the exception, it was logged in AnalyticsService, keep the log quite because
@@ -70,7 +75,6 @@ public class ErrorsProvider {
             Log.log(LOGGER::debug, "getErrors time took {} milliseconds", stopWatch.getTime(java.util.concurrent.TimeUnit.MILLISECONDS));
         }
     }
-
 
 
     @NotNull
@@ -102,22 +106,22 @@ public class ErrorsProvider {
     private FlowStacks buildFlowStacks(CodeObjectErrorDetails errorDetails, LanguageService languageService) {
 
         FlowStacks flowStacks = new FlowStacks();
-        errorDetails.getErrors().forEach(detailedErrorInfo ->
-                flowStacks.getStacks().add(buildFlowStack(detailedErrorInfo, languageService)));
+        errorDetails.getErrors().forEach(errorFlowInfo ->
+                flowStacks.getStacks().add(buildFlowStack(errorFlowInfo, languageService)));
 
         flowStacks.setCurrent(0);
         return flowStacks;
     }
 
-    private List<ListViewItem<FrameListViewItem>> buildFlowStack(DetailedErrorInfo detailedErrorInfo, LanguageService languageService) {
+    private List<ListViewItem<FrameListViewItem>> buildFlowStack(ErrorFlowInfo errorFlowInfo, LanguageService languageService) {
 
-        Map<String, String> workspaceUris = findWorkspaceUriForFrames(detailedErrorInfo, languageService);
+        Map<String, String> workspaceUris = findWorkspaceUriForFrames(errorFlowInfo, languageService);
 
         var viewItems = new ArrayList<ListViewItem<FrameListViewItem>>();
         var index = 0;
-        for (FrameStack frameStack : detailedErrorInfo.getFrameStacks()) {
+        for (FrameStack frameStack : errorFlowInfo.getFrameStacks()) {
 
-            var frameStackTitle = new FrameStackTitle(frameStack);
+            var frameStackTitle = new FrameStackTitle(frameStack, errorFlowInfo.getLatestTraceId());
             var frameStackViewItem = new ListViewItem<FrameListViewItem>(frameStackTitle, index++);
             viewItems.add(frameStackViewItem);
 
@@ -125,18 +129,18 @@ public class ErrorsProvider {
             String currentSpan = null;
             for (Frame frame : frameStack.getFrames()) {
 
-                if (currentSpan == null || !currentSpan.equals(frame.getSpanName())){
+                if (currentSpan == null || !currentSpan.equals(frame.getSpanName())) {
                     currentSpan = frame.getSpanName();
                     var spanTitle = new SpanTitle(currentSpan);
-                    var spanTitleViewItem = new ListViewItem<FrameListViewItem>(spanTitle,index++);
+                    var spanTitleViewItem = new ListViewItem<FrameListViewItem>(spanTitle, index++);
                     viewItems.add(spanTitleViewItem);
                 }
 
-                var workspaceUri = workspaceUris.getOrDefault(frame.getCodeObjectId(),null);
-                var frameItem = new FrameItem(frameStack,frame,first,workspaceUri,detailedErrorInfo.getLastInstanceCommitId());
+                var workspaceUri = workspaceUris.getOrDefault(frame.getCodeObjectId(), null);
+                var frameItem = new FrameItem(frameStack, frame, first, workspaceUri, errorFlowInfo.getLastInstanceCommitId());
                 first = false;
 
-                var frameViewItem = new ListViewItem<FrameListViewItem>(frameItem,index++);
+                var frameViewItem = new ListViewItem<FrameListViewItem>(frameItem, index++);
                 viewItems.add(frameViewItem);
 
             }
@@ -146,9 +150,9 @@ public class ErrorsProvider {
     }
 
 
-    private Map<String, String> findWorkspaceUriForFrames(DetailedErrorInfo detailedErrorInfo, LanguageService languageService) {
+    private Map<String, String> findWorkspaceUriForFrames(ErrorFlowInfo errorFlowInfo, LanguageService languageService) {
 
-        List<String> codeObjectIds = detailedErrorInfo.getFrameStacks().stream().
+        List<String> codeObjectIds = errorFlowInfo.getFrameStacks().stream().
                 flatMap((Function<FrameStack, Stream<String>>) frameStack -> frameStack.getFrames().stream().
                         map(Frame::getCodeObjectId)).collect(Collectors.toList());
 

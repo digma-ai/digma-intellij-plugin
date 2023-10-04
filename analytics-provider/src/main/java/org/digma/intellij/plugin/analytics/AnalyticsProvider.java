@@ -37,6 +37,7 @@ import org.digma.intellij.plugin.model.rest.version.VersionResponse;
 
 import java.io.Closeable;
 import java.util.List;
+import java.util.Map;
 
 public interface AnalyticsProvider extends Closeable {
 
@@ -89,4 +90,6 @@ public interface AnalyticsProvider extends Closeable {
     PerformanceMetricsResponse getPerformanceMetrics();
 
     DeleteEnvironmentResponse deleteEnvironment(DeleteEnvironmentRequest deleteEnvironmentRequest);
+
+    String getDashboard(Map<String,String> fields);
 }

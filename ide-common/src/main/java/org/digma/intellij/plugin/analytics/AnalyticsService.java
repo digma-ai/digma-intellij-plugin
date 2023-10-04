@@ -75,6 +75,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -444,6 +445,9 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.deleteEnvironment(new DeleteEnvironmentRequest(environmentName)));
     }
 
+    public String getDashboard(@NotNull Map<String,String> fields) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getDashboard(fields));
+    }
 
     @Override
     public void dispose() {

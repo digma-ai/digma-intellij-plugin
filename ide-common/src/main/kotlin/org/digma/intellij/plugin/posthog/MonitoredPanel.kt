@@ -10,5 +10,6 @@ enum class MonitoredPanel{
     ErrorDetails,
     NoConnection,
     NoObservability,
-    Scope
+    Scope,
+    Dashboard
 }

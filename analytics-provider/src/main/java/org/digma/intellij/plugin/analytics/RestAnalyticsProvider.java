@@ -48,12 +48,14 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
 import retrofit2.http.Body;
+import retrofit2.http.FieldMap;
 import retrofit2.http.GET;
 import retrofit2.http.Headers;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
+import retrofit2.http.QueryMap;
 import retrofit2.http.Streaming;
 
 import javax.net.ssl.HostnameVerifier;
@@ -72,6 +74,7 @@ import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
@@ -217,6 +220,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     @Override
     public DeleteEnvironmentResponse deleteEnvironment(DeleteEnvironmentRequest deleteEnvironmentRequest) {
         return execute(() -> client.analyticsProvider.deleteEnvironment(deleteEnvironmentRequest));
+    }
+
+    @Override
+    public String getDashboard(Map<String,String> fields) {
+        return execute(() -> client.analyticsProvider.getDashboard(fields));
     }
 
     protected static String readEntire(ResponseBody responseBody) {
@@ -570,6 +578,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @POST("/CodeAnalytics/delete_environment")
         Call<DeleteEnvironmentResponse> deleteEnvironment(@Body DeleteEnvironmentRequest deleteEnvironmentRequest);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("/dashboard/getDashboard")
+        Call<String> getDashboard(@QueryMap Map<String,String> fields);
     }
 
 }

@@ -73,7 +73,11 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
                         if (modelObject.isInWorkspace()) {
                             link(frameText) {
                                 val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
-                                actionListener.openErrorFrameWorkspaceFile(modelObject.getWorkspaceUrl(), modelObject.lastInstanceCommitId, modelObject.frame.lineNumber)
+                                actionListener.openErrorFrameWorkspaceFile(
+                                    modelObject.getWorkspaceUrl(),
+                                    modelObject.lastInstanceCommitId,
+                                    modelObject.frame.lineNumber
+                                )
                             }.gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL).applyToComponent {
                                 toolTipText = "$frameText line ${modelObject.frame.lineNumber}"
                             }
@@ -105,7 +109,11 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
                         if (modelObject.isInWorkspace()) {
                             link(modelObject.frame.executedCode) {
                                 val actionListener: ErrorsActionsService = project.getService(ErrorsActionsService::class.java)
-                                actionListener.openErrorFrameWorkspaceFile(modelObject.getWorkspaceUrl(), modelObject.lastInstanceCommitId, modelObject.frame.lineNumber)
+                                actionListener.openErrorFrameWorkspaceFile(
+                                    modelObject.getWorkspaceUrl(),
+                                    modelObject.lastInstanceCommitId,
+                                    modelObject.frame.lineNumber
+                                )
                             }.gap(RightGap.COLUMNS).horizontalAlign(HorizontalAlign.FILL)
                         } else {
                             cell(CopyableLabel(modelObject.frame.executedCode))
@@ -168,21 +176,18 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
     private fun frameStackTitlePanel(project: Project, modelObject: FrameStackTitle): JPanel {
         val leftPanel = innerFrameStackTitlePanel(modelObject)
 
-        var traceButton: TraceButton? = null
-        if (modelObject.traceId != null && "NA" != modelObject.traceId) {
-            val title = "Sample trace for error ${modelObject.frameStack.exceptionType}"
-            traceButton = TraceButton()
-            traceButton.defineAction(project, modelObject.traceId!!, title)
-        }
-
         val buttonsPanel = JBPanel<JBPanel<*>>()
         buttonsPanel.layout = BoxLayout(buttonsPanel, BoxLayout.Y_AXIS)
         buttonsPanel.isOpaque = false
         buttonsPanel.border = Borders.emptyRight(5)
-        if (traceButton != null) {
+
+        if (modelObject.traceId != null && "NA" != modelObject.traceId) {
+            val title = "Sample trace for error ${modelObject.frameStack.exceptionType}"
+            val traceButton = TraceButton()
+            traceButton.defineAction(project, modelObject.traceId!!, title)
             buttonsPanel.add(traceButton)
+            buttonsPanel.add(Box.createVerticalStrut(10))
         }
-        buttonsPanel.add(Box.createVerticalStrut(10))
 
         val result = JPanel()
         result.layout = BorderLayout(0, 3)

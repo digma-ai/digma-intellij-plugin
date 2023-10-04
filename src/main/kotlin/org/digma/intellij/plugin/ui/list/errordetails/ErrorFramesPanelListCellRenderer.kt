@@ -25,6 +25,8 @@ import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 import java.awt.BorderLayout
 import java.awt.GridBagLayout
 import java.awt.GridLayout
+import javax.swing.Box
+import javax.swing.BoxLayout
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.SwingConstants
@@ -174,12 +176,13 @@ class ErrorFramesPanelListCellRenderer : AbstractPanelListCellRenderer() {
         }
 
         val buttonsPanel = JBPanel<JBPanel<*>>()
-        buttonsPanel.layout = BorderLayout(0, 3)
+        buttonsPanel.layout = BoxLayout(buttonsPanel, BoxLayout.Y_AXIS)
         buttonsPanel.isOpaque = false
         buttonsPanel.border = Borders.emptyRight(5)
         if (traceButton != null) {
-            buttonsPanel.add(traceButton, BorderLayout.EAST)
+            buttonsPanel.add(traceButton)
         }
+        buttonsPanel.add(Box.createVerticalStrut(10))
 
         val result = JPanel()
         result.layout = BorderLayout(0, 3)

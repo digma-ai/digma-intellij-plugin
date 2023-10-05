@@ -25,9 +25,7 @@ import org.digma.intellij.plugin.settings.SettingsState
  * |------------------------+--------------------|
  * | cfg.type.id            | Application Server |
  * |------------------------+--------------------|
- * | JBossConfiguration     | JBoss              |
- * | JBossConfiguration     | WildFly            |
- * | TomcatConfiguration    | Tomcat             |
+ * | JBossConfiguration     | WildFly , JBoss    |
  * | TomeeConfiguration     | TomEE              |
  * | GlassfishConfiguration | GlassFish          |
  * |------------------------+--------------------|
@@ -41,7 +39,6 @@ class EeAppServerAtIdeaUltimateRunConfigurationWrapper : RunConfigurationWrapper
     val SupportedEeAppServerTypeIds: Set<String> = setOf(
         "JBossConfiguration", // also WildFly
         "GlassfishConfiguration",
-        "TomcatConfiguration",
         "TomeeConfiguration",
     )
 

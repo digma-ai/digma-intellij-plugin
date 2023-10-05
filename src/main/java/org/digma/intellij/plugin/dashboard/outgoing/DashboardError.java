@@ -15,7 +15,7 @@ import org.digma.intellij.plugin.ui.jcef.model.ErrorPayload;
 @JsonSerialize
 public record DashboardError(@JsonProperty(value = "data",required = true) JsonNode data,
                              @JsonProperty(value = "error",required = true) ErrorPayload error,
-                             @JsonProperty(value = "type ",required = true) String type ) {
+                             @JsonProperty(value = "type",required = true) String type ) {
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     public DashboardError {

@@ -223,8 +223,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public String getDashboard(Map<String,String> fields) {
-        return execute(() -> client.analyticsProvider.getDashboard(fields));
+    public String getDashboard(Map<String,String> queryParams) {
+        return execute(() -> client.analyticsProvider.getDashboard(queryParams));
     }
 
     protected static String readEntire(ResponseBody responseBody) {

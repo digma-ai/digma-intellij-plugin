@@ -91,5 +91,6 @@ public interface AnalyticsProvider extends Closeable {
 
     DeleteEnvironmentResponse deleteEnvironment(DeleteEnvironmentRequest deleteEnvironmentRequest);
 
-    String getDashboard(Map<String,String> fields);
+    // queryParams: (limit, 5), (pageSize, 5) etc
+    String getDashboard(Map<String,String> queryParams);
 }

@@ -79,13 +79,8 @@ public final class DashboardService {
     }
 
     @NotNull
-    public String getDashboard(@NotNull Map<String,String> queryParams) {
-        try {
-           return AnalyticsService.getInstance(project).getDashboard(queryParams);
-        } catch (AnalyticsServiceException e) {
-            Log.debugWithException(logger, e, "Exception in getInsights {}", e.getMessage());
-            return "";
-        }
+    public String getDashboard(@NotNull Map<String,String> queryParams) throws AnalyticsServiceException {
+        return AnalyticsService.getInstance(project).getDashboard(queryParams);
     }
 
     public void goToSpanAndNavigateToCode(GoToSpan goToSpan) {

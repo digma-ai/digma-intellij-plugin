@@ -33,7 +33,7 @@ import org.digma.intellij.plugin.settings.SettingsState
  * |------------------------+--------------------|
  */
 @Service(Service.Level.PROJECT)
-class UltimateEeAppServerRunConfigurationWrapper : RunConfigurationWrapper {
+class EeAppServerAtIdeaUltimateRunConfigurationWrapper : RunConfigurationWrapper {
 
 
     private val logger: Logger = Logger.getInstance(this::class.java)
@@ -47,15 +47,15 @@ class UltimateEeAppServerRunConfigurationWrapper : RunConfigurationWrapper {
 
     companion object {
         @JvmStatic
-        fun getInstance(project: Project): UltimateEeAppServerRunConfigurationWrapper {
-            return project.service<UltimateEeAppServerRunConfigurationWrapper>()
+        fun getInstance(project: Project): EeAppServerAtIdeaUltimateRunConfigurationWrapper {
+            return project.service<EeAppServerAtIdeaUltimateRunConfigurationWrapper>()
         }
     }
 
 
     override fun getRunConfigType(configuration: RunConfiguration, module: Module?): RunConfigType {
         if (SupportedEeAppServerTypeIds.contains(configuration.type.id)) {
-            return RunConfigType.EeAppSeverForIdeaUltimate
+            return RunConfigType.EeAppSeverAtIdeaUltimate
         }
         return RunConfigType.Unknown
     }

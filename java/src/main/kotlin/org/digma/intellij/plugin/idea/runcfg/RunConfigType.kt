@@ -8,7 +8,7 @@ enum class RunConfigType(val isTest: Boolean) {
     MavenTest(true),
     GradleTest(true),
     TomcatForIdeaUltimate(false),
-    EeAppSeverForIdeaUltimate(false),
+    EeAppSeverAtIdeaUltimate(false),
     Unknown(false),
     ;
 }

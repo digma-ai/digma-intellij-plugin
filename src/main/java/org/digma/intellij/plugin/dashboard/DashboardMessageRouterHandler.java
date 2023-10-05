@@ -14,6 +14,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.dashboard.incoming.GoToSpan;
 import org.digma.intellij.plugin.dashboard.outgoing.DashboardData;
+import org.digma.intellij.plugin.dashboard.outgoing.DashboardError;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
@@ -63,19 +64,34 @@ public class DashboardMessageRouterHandler extends CefMessageRouterHandlerAdapte
                         Map<String,String> backendQueryParams = new HashMap<>();
                         // main parameters
                         backendQueryParams.put("environment", payload.get("environment").toString());
-                        backendQueryParams.put("type", payload.get("type").toString());
+                        var dashboardType = payload.get("type").toString();
+                        backendQueryParams.put("type", dashboardType);
                         // query parameters
                         Map<String, Object> payloadQueryParams = (Map<String, Object>) payload.get("query");
                         payloadQueryParams.forEach((paramKey, paramValue) -> {
                             backendQueryParams.put(paramKey, paramValue.toString());
                         });
 
-                        var dashboardJson = DashboardService.getInstance(project).getDashboard(backendQueryParams);
-                        Log.log(logger::trace, project, "got notifications {}", dashboardJson);
-                        var backendPayload = objectMapper.readTree(dashboardJson);
-                        var message = new DashboardData("digma", "DASHBOARD/SET_DATA", backendPayload);
-                        Log.log(logger::debug, project, "sending DASHBOARD/SET_DATA message");
-                        executeWindowPostMessageJavaScript(browser, objectMapper.writeValueAsString(message));
+                        try {
+                            var dashboardJson = DashboardService.getInstance(project).getDashboard(backendQueryParams);
+                            Log.log(logger::trace, project, "got notifications {}", dashboardJson);
+                            var backendPayload = objectMapper.readTree(dashboardJson);
+                            var message = new DashboardData("digma", "DASHBOARD/SET_DATA", backendPayload);
+                            Log.log(logger::debug, project, "sending DASHBOARD/SET_DATA message");
+                            executeWindowPostMessageJavaScript(browser, objectMapper.writeValueAsString(message));
+                        } catch (AnalyticsServiceException e) {
+                            Log.warnWithException(logger, e, "error setting dashboard data");
+                            var dashboardError = new DashboardError(null, new ErrorPayload(e.getMeaningfulMessage()), dashboardType);
+                            var errorJsonNode = objectMapper.convertValue(dashboardError, JsonNode.class);
+                            var message = new DashboardData("digma", "DASHBOARD/SET_DATA", errorJsonNode);
+                            Log.log(logger::trace, project, "sending DASHBOARD/SET_DATA message with error");
+                            ErrorReporter.getInstance().reportError(project, "DashboardMessageRouterHandler.SET_DATA", e);
+                            try {
+                                executeWindowPostMessageJavaScript(browser, objectMapper.writeValueAsString(message));
+                            } catch (JsonProcessingException ex) {
+                                throw new RuntimeException(ex);
+                            }
+                        }
                     }
                     case "DASHBOARD/GO_TO_SPAN" -> {
                         GoToSpan goToSpan = objectMapper.treeToValue(jsonNode, GoToSpan.class);
@@ -87,18 +103,7 @@ public class DashboardMessageRouterHandler extends CefMessageRouterHandlerAdapte
                 stopWatchStop(stopWatch, time -> Log.log(logger::trace, "action {} took {}",action, time));
 
             }
-            catch (AnalyticsServiceException e) {
-                Log.warnWithException(logger, e, "error setting dashboard data");
-                var jsonNode = objectMapper.convertValue(new Payload(null, new ErrorPayload(e.getMeaningfulMessage())), JsonNode.class);
-                var message = new DashboardData("digma", "DASHBOARD/SET_DATA", jsonNode);
-                Log.log(logger::trace, project, "sending DASHBOARD/SET_DATA message with error");
-                ErrorReporter.getInstance().reportError(project, "DashboardMessageRouterHandler.SET_DATA", e);
-                try {
-                    executeWindowPostMessageJavaScript(browser, objectMapper.writeValueAsString(message));
-                } catch (JsonProcessingException ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
+
             catch (Exception e) {
                 Log.warnWithException(logger, e, "error setting dashboard data");
                 var jsonNode = objectMapper.convertValue(new Payload(null, new ErrorPayload(e.toString())), JsonNode.class);

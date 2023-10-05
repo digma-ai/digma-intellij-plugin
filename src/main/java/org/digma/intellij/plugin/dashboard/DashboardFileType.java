@@ -17,7 +17,7 @@ public class DashboardFileType  extends FakeFileType {
 
     @Override
     public boolean isMyFileType(@NotNull VirtualFile file) {
-        return DashboardVirtualFile.isDocumentationVirtualFile(file);
+        return DashboardVirtualFile.isDashboardVirtualFile(file);
     }
 
     @Override

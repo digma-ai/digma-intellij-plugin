@@ -445,8 +445,8 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.deleteEnvironment(new DeleteEnvironmentRequest(environmentName)));
     }
 
-    public String getDashboard(@NotNull Map<String,String> fields) throws AnalyticsServiceException {
-        return executeCatching(() -> analyticsProviderProxy.getDashboard(fields));
+    public String getDashboard(@NotNull Map<String,String> queryParams) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getDashboard(queryParams));
     }
 
     @Override

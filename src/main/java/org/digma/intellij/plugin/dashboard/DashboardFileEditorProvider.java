@@ -16,7 +16,7 @@ public class DashboardFileEditorProvider implements FileEditorProvider {
 
     @Override
     public boolean accept(@NotNull Project project, @NotNull VirtualFile file) {
-        return JBCefApp.isSupported() && DashboardVirtualFile.isDocumentationVirtualFile(file);
+        return JBCefApp.isSupported() && DashboardVirtualFile.isDashboardVirtualFile(file);
     }
 
     @Override

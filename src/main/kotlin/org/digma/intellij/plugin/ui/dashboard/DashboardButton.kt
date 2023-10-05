@@ -6,6 +6,7 @@ import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.dashboard.DashboardService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.persistence.PersistenceService.Companion.getInstance
 import org.digma.intellij.plugin.ui.common.Laf
 import java.awt.Cursor
 import javax.swing.Icon
@@ -44,7 +45,7 @@ class DashboardButton(val project: Project) : JButton() {
 
         try {
 
-            DashboardService.getInstance(project).openDashboard("Digma Dashboard Panel");
+            DashboardService.getInstance(project).openDashboard("Dashboard Panel - " + getInstance().state.currentEnv);
 
         } catch (e: Exception) {
             Log.warnWithException(logger, project, e, "Error in doActionListener")

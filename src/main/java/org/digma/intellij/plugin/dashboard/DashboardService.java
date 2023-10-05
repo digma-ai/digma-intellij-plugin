@@ -9,6 +9,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.dashboard.incoming.GoToSpan;
+import org.digma.intellij.plugin.documentation.DocumentationVirtualFile;
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.navigation.HomeSwitcherService;
@@ -20,6 +21,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;
 import java.util.Map;
+import java.util.Objects;
 
 @Service(Service.Level.PROJECT)
 public final class DashboardService {
@@ -49,35 +51,37 @@ public final class DashboardService {
     }
 
 
-    public void openDashboard(@NotNull String title) {
+    public void openDashboard(@NotNull String dashboardName) {
 
-        if (showExisting()) {
+        if (showExisting(dashboardName)) {
             return;
         }
 
         EDT.ensureEDT(() -> {
-            var file = DashboardVirtualFile.createVirtualFile(title);
+            var file = DashboardVirtualFile.createVirtualFile(dashboardName);
             FileEditorManager.getInstance(project).openFile(file, true, true);
         });
 
     }
 
-    private boolean showExisting() {
+    private boolean showExisting(@NotNull String dashboardName) {
         for (var editor : FileEditorManager.getInstance(project).getAllEditors()) {
             var file = editor.getFile();
-            if (file != null && DashboardVirtualFile.isDocumentationVirtualFile(file)) {
+            if (file != null && DashboardVirtualFile.isDashboardVirtualFile(file)) {
                 DashboardVirtualFile openFile = (DashboardVirtualFile) file;
+                if (Objects.equals(openFile.getDashboardEnvId(), dashboardName)) {
                     EDT.ensureEDT(() -> FileEditorManager.getInstance(project).openFile(file, true, true));
                     return true;
+                }
             }
         }
         return false;
     }
 
     @NotNull
-    public String getDashboard(@NotNull Map<String,String> fields) {
+    public String getDashboard(@NotNull Map<String,String> queryParams) {
         try {
-           return AnalyticsService.getInstance(project).getDashboard(fields);
+           return AnalyticsService.getInstance(project).getDashboard(queryParams);
         } catch (AnalyticsServiceException e) {
             Log.debugWithException(logger, e, "Exception in getInsights {}", e.getMessage());
             return "";

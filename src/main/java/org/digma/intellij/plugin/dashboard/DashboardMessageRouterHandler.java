@@ -1,5 +1,7 @@
 package org.digma.intellij.plugin.dashboard;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
@@ -8,12 +10,15 @@ import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.callback.CefQueryCallback;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
+import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.dashboard.incoming.GoToSpan;
 import org.digma.intellij.plugin.dashboard.outgoing.DashboardData;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
+import org.digma.intellij.plugin.ui.jcef.model.ErrorPayload;
+import org.digma.intellij.plugin.ui.jcef.model.Payload;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,12 +41,13 @@ public class DashboardMessageRouterHandler extends CefMessageRouterHandlerAdapte
     @Override
     public boolean onQuery(CefBrowser browser, CefFrame frame, long queryId, String request, boolean persistent, CefQueryCallback callback) {
 
+        var objectMapper = new ObjectMapper();
         Backgroundable.executeOnPooledThread( () -> {
             try {
 
                 var stopWatch = stopWatchStart();
 
-                var objectMapper = new ObjectMapper();
+
                 var jsonNode = objectMapper.readTree(request);
                 String action = jsonNode.get("action").asText();
 
@@ -81,8 +87,17 @@ public class DashboardMessageRouterHandler extends CefMessageRouterHandlerAdapte
                 stopWatchStop(stopWatch, time -> Log.log(logger::trace, "action {} took {}",action, time));
 
             } catch (Exception e) {
-                Log.debugWithException(logger, e, "Exception in onQuery " + request);
-                ErrorReporter.getInstance().reportError(project, "DashboardMessageRouterHandler.onQuery", e);
+                Log.warnWithException(logger, e, "error setting dashboard data");
+                var jsonNode = objectMapper.convertValue(new Payload(null, new ErrorPayload(e.toString())), JsonNode.class);
+                var message = new DashboardData("digma", "DASHBOARD/SET_DATA", jsonNode);
+                Log.log(logger::trace, project, "sending DASHBOARD/SET_DATA message with error");
+                ErrorReporter.getInstance().reportError(project, "DashboardMessageRouterHandler.SET_DATA", e);
+                try {
+                    executeWindowPostMessageJavaScript(browser, objectMapper.writeValueAsString(message));
+                } catch (JsonProcessingException ex) {
+                    throw new RuntimeException(ex);
+                }
+
             }
         });
 

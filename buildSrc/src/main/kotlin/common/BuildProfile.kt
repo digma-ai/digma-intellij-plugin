@@ -125,7 +125,7 @@ object BuildProfiles {
         Profiles.p231 to BuildProfile(
             profile = Profiles.p231,
             // platformVersion is Intellij IDEA Community and Ultimate
-            platformVersion = "2023.1.5",
+            platformVersion = "2023.1.4",
             riderVersion = "2023.1.4",
             pycharmVersion = "2023.1.4",
             riderResharperVersion = "2023.1.4",

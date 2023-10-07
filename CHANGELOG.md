@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.181] - 2023-10-03
+## [2.0.184] - 2023-10-07
+- downgrade 231 profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1351
+- increment to 184 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1352
+- Fix GitHub workflows by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1353
+
+## 2.0.181 - 2023-10-03
 - Update Assets UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1342
 - dont run plugin verifier for eap by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1336
 

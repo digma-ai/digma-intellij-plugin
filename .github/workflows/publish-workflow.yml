@@ -27,7 +27,6 @@ jobs:
         with:
           remove-android: true
           remove-haskell: true
-          remove-dotnet: true
 
       - name: Fetch Sources
         uses: actions/checkout@v3

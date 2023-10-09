@@ -349,6 +349,13 @@ class ActivityMonitor(project: Project) : Disposable {
         )
     }
 
+    fun registerSubDashboardViewed(dashboardType: String) {
+        capture(
+            "Dashboard subchart is viewed",
+            mapOf("dashboardType" to dashboardType)
+        )
+    }
+
     fun registerButtonClicked(panel: MonitoredPanel, button: String) {
         capture(
             "button-clicked",
@@ -407,6 +414,16 @@ class ActivityMonitor(project: Project) : Disposable {
             )
         )
         registerUserAction("Clicked on button from insights")
+    }
+
+    fun openDashboardButtonClicked(button: String) {
+        capture(
+            "open dashboard button-clicked",
+            mapOf(
+                "button" to button
+            )
+        )
+        registerUserAction("Clicked on view dashboard")
     }
 
 

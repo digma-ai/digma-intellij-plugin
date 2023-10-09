@@ -74,7 +74,7 @@ public class DashboardMessageRouterHandler extends CefMessageRouterHandlerAdapte
 
                         try {
                             var dashboardJson = DashboardService.getInstance(project).getDashboard(backendQueryParams);
-                            Log.log(logger::trace, project, "got notifications {}", dashboardJson);
+                            Log.log(logger::trace, project, "got dashboard data {}", dashboardJson);
                             var backendPayload = objectMapper.readTree(dashboardJson);
                             var message = new DashboardData("digma", "DASHBOARD/SET_DATA", backendPayload);
                             Log.log(logger::debug, project, "sending DASHBOARD/SET_DATA message");

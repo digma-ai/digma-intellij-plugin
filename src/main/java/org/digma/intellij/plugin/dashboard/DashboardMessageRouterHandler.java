@@ -78,7 +78,9 @@ public class DashboardMessageRouterHandler extends CefMessageRouterHandlerAdapte
                             var backendPayload = objectMapper.readTree(dashboardJson);
                             var message = new DashboardData("digma", "DASHBOARD/SET_DATA", backendPayload);
                             Log.log(logger::debug, project, "sending DASHBOARD/SET_DATA message");
+
                             executeWindowPostMessageJavaScript(browser, objectMapper.writeValueAsString(message));
+                            ActivityMonitor.getInstance(project).registerSubDashboardViewed(dashboardType);
                         } catch (AnalyticsServiceException e) {
                             Log.warnWithException(logger, e, "error setting dashboard data");
                             var dashboardError = new DashboardError(null, new ErrorPayload(e.getMeaningfulMessage()), dashboardType);

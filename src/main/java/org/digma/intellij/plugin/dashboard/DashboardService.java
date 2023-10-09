@@ -9,7 +9,6 @@ import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.dashboard.incoming.GoToSpan;
-import org.digma.intellij.plugin.documentation.DocumentationVirtualFile;
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.navigation.HomeSwitcherService;
@@ -52,6 +51,8 @@ public final class DashboardService {
 
 
     public void openDashboard(@NotNull String dashboardName) {
+
+        ActivityMonitor.getInstance(project).openDashboardButtonClicked("DashboardButton");
 
         if (showExisting(dashboardName)) {
             return;

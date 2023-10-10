@@ -85,7 +85,7 @@ public class DashboardMessageRouterHandler extends CefMessageRouterHandlerAdapte
                             var errorCode = e.getErrorCode();
                             var errorMessage = e.getMeaningfulMessage();
                             if (errorCode == 404) {
-                                errorMessage = "Digma analysis backend version is obsolete. Please update.";
+                                errorMessage = "Digma analysis backend version is outdated. Please update.";
                             }
                             Log.warnWithException(logger, e, "error setting dashboard data");
                             var dashboardError = new DashboardError(null, new ErrorPayload(errorMessage), dashboardType);

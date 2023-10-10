@@ -82,8 +82,13 @@ public class DashboardMessageRouterHandler extends CefMessageRouterHandlerAdapte
                             executeWindowPostMessageJavaScript(browser, objectMapper.writeValueAsString(message));
                             ActivityMonitor.getInstance(project).registerSubDashboardViewed(dashboardType);
                         } catch (AnalyticsServiceException e) {
+                            var errorCode = e.getErrorCode();
+                            var errorMessage = e.getMeaningfulMessage();
+                            if (errorCode == 404) {
+                                errorMessage = "Digma analysis backend version is obsolete. Please update.";
+                            }
                             Log.warnWithException(logger, e, "error setting dashboard data");
-                            var dashboardError = new DashboardError(null, new ErrorPayload(e.getMeaningfulMessage()), dashboardType);
+                            var dashboardError = new DashboardError(null, new ErrorPayload(errorMessage), dashboardType);
                             var errorJsonNode = objectMapper.convertValue(dashboardError, JsonNode.class);
                             var message = new DashboardData("digma", "DASHBOARD/SET_DATA", errorJsonNode);
                             Log.log(logger::trace, project, "sending DASHBOARD/SET_DATA message with error");

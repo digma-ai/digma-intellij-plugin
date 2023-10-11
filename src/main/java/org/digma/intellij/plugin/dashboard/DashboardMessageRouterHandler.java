@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.dashboard;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.jcef.JBCefBrowser;
@@ -16,9 +17,11 @@ import org.digma.intellij.plugin.dashboard.incoming.GoToSpan;
 import org.digma.intellij.plugin.dashboard.outgoing.DashboardData;
 import org.digma.intellij.plugin.dashboard.outgoing.DashboardError;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
+import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.ui.jcef.model.ErrorPayload;
+import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest;
 import org.digma.intellij.plugin.ui.jcef.model.Payload;
 
 import java.util.HashMap;
@@ -55,6 +58,12 @@ public class DashboardMessageRouterHandler extends CefMessageRouterHandlerAdapte
                 switch (action) {
                     case "DASHBOARD/INITIALIZE" -> {
 
+                    }
+                    case JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
+                        OpenInDefaultBrowserRequest openBrowserRequest = JCefMessagesUtils.parseJsonToObject(request, OpenInDefaultBrowserRequest.class);
+                        if (openBrowserRequest != null && openBrowserRequest.getPayload() != null) {
+                            BrowserUtil.browse(openBrowserRequest.getPayload().getUrl());
+                        }
                     }
                     case "DASHBOARD/GET_DATA" -> {
 

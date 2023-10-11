@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.docker.DockerService;
 import org.digma.intellij.plugin.jcef.common.JCefTemplateUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.persistence.PersistenceService;
+import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt;
 
 import java.io.ByteArrayInputStream;
@@ -33,6 +34,7 @@ public class DashboardIndexTemplateBuilder {
     private static final String IS_JAEGER_ENABLED = "isJaegerEnabled";
     private static final String DASHBOARD_REFRESH_INTERVAL = "dashboardRefreshInterval";
     private static final String DASHBOARD_ENVIRONMENT = "dashboardEnvironment";
+    private static final String DIGMA_API_URL = "digmaApiUrl";
 
     private final Configuration freemarketConfiguration = new Configuration(Configuration.VERSION_2_3_30);
 
@@ -59,6 +61,7 @@ public class DashboardIndexTemplateBuilder {
             data.put(IS_DIGMA_ENGINE_RUNNING, ApplicationManager.getApplication().getService(DockerService.class).isEngineRunning(project));
             data.put(IS_DOCKER_INSTALLED, ApplicationManager.getApplication().getService(DockerService.class).isDockerInstalled());
             data.put(IS_DOCKER_COMPOSE_INSTALLED, ApplicationManager.getApplication().getService(DockerService.class).isDockerInstalled());
+            data.put(DIGMA_API_URL, SettingsState.getInstance().apiUrl);
 
             data.put(DASHBOARD_REFRESH_INTERVAL, 10*1000);
             data.put(DASHBOARD_ENVIRONMENT, PersistenceService.getInstance().getState().getCurrentEnv());

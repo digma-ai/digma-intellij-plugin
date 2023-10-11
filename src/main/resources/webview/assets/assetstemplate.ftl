@@ -28,6 +28,7 @@
       window.isDockerInstalled = ${isDockerInstalled?string('true', 'false')};
       window.isDockerComposeInstalled = ${isDockerComposeInstalled?string('true', 'false')};
 
+      window.environment = "${environment}";
       window.assetsSearch = ${assetsSearch};
       window.assetsRefreshInterval;
 

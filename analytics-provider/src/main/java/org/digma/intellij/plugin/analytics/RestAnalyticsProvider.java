@@ -48,7 +48,6 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
 import retrofit2.http.Body;
-import retrofit2.http.FieldMap;
 import retrofit2.http.GET;
 import retrofit2.http.Headers;
 import retrofit2.http.POST;
@@ -75,7 +74,6 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -183,8 +181,18 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public String getAssets(AssetsRequest assetsRequest) {
-        return execute(() -> client.analyticsProvider.getAssets(assetsRequest));
+    public String getAssetCategories(String environment){
+        return execute(() -> client.analyticsProvider.getAssetCategories(environment));
+    }
+
+    @Override
+    public String insightExists(String environment){
+        return execute(() -> client.analyticsProvider.insightExists(environment));
+    }
+
+    @Override
+    public String getAssets(Map<String,String> queryParams) {
+        return execute(() -> client.analyticsProvider.getAssets(queryParams));
     }
 
     @Override
@@ -526,8 +534,23 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/CodeAnalytics/codeObjects/assets")
-        Call<String> getAssets(@Body AssetsRequest assetsRequest);
+        @GET("/CodeAnalytics/codeObjects/asset_categories")
+        Call<String> getAssetCategories(@Query("environment") String environment);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("/CodeAnalytics/codeObjects/insight_exists")
+        Call<String> insightExists(@Query("environment") String environment);
+
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("/CodeAnalytics/codeObjects/getAssets")
+        Call<String> getAssets(@QueryMap Map<String,String> fields);
 
         @Headers({
                 "Accept: application/+json",

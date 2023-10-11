@@ -386,20 +386,22 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getHtmlGraphForSpanScaling(spanHistogramQuery));
     }
 
-
-    public String getAssets() throws AnalyticsServiceException {
+    public String getAssetCategories() throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
-        var assets = executeCatching(() ->
-                analyticsProviderProxy.getAssets(new AssetsRequest(env)));
+        return executeCatching(() ->
+                analyticsProviderProxy.getAssetCategories(env));
+    }
+    public void checkInsightExists() throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        var response = executeCatching(() ->
+                analyticsProviderProxy.insightExists(env));
 
         try {
             if (!PersistenceService.getInstance().getState().getFirstTimeAssetsReceived()) {
                 var objectMapper = new ObjectMapper();
-                var payload = objectMapper.readTree(assets);
+                var payload = objectMapper.readTree(response);
                 if (!payload.isMissingNode() &&
-                        payload.get("serviceAssetsEntries") != null &&
-                        payload.get("serviceAssetsEntries") instanceof ArrayNode &&
-                        !((ArrayNode) payload.get("serviceAssetsEntries")).isEmpty()) {
+                        payload.get("insightExists").asBoolean()) {
                     ActivityMonitor.getInstance(project).registerFirstAssetsReceived();
                     PersistenceService.getInstance().getState().setFirstTimeAssetsReceived(true);
                 }
@@ -407,8 +409,11 @@ public class AnalyticsService implements Disposable {
         } catch (Exception e) {
             Log.warnWithException(LOGGER, project, e, "error reporting FirstTimeAssetsReceived {}", e);
         }
+    }
 
-        return assets;
+    public String getAssets(@NotNull Map<String,String> queryParams) throws AnalyticsServiceException {
+        return executeCatching(() ->
+                analyticsProviderProxy.getAssets(queryParams));
     }
 
 

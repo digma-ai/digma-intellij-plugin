@@ -1,6 +1,12 @@
 # Changelog
 
-## [2.0.184] - 2023-10-07
+## [2.0.185] - 2023-10-15
+- Feature/dashboards panel by @borisermakof in https://github.com/digma-ai/digma-intellij-plugin/pull/1348
+- Add digma url dashboard by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1354
+- Update Assets UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1356
+- fix EAP compilation and badge icon by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1357
+
+## 2.0.184 - 2023-10-07
 - downgrade 231 profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1351
 - increment to 184 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1352
 - Fix GitHub workflows by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1353

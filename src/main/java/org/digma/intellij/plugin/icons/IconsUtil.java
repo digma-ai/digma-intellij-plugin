@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.icons;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.IconLoader;
+import com.intellij.ui.JBColor;
 import com.intellij.ui.scale.ScaleContext;
 import com.intellij.util.IconUtil;
 
@@ -45,4 +46,11 @@ public class IconsUtil {
             throw new RuntimeException(e);
         }
     }
+
+
+    public static Icon createRedDotBadgeIcon(Icon icon, int emptySize) {
+        return com.intellij.execution.runners.ExecutionUtil.getIndicator(icon, emptySize, emptySize, JBColor.RED);
+    }
+
+
 }

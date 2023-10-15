@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.icons.IconsUtil
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.common.Laf
@@ -39,19 +40,19 @@ class NotificationsButton(val project: Project) : JButton() {
         val iconLight: Icon = Laf.Icons.Common.NotificationsBellLight
         val pressedIconDark: Icon = Laf.Icons.Common.NotificationsBellDarkPressed
         val pressedIconLight: Icon = Laf.Icons.Common.NotificationsBellLightPressed
-        val badgeIconDark: Icon = createBadgeIcon(Laf.Icons.Common.NotificationsBellDark)
-        val badgeIconLight: Icon = createBadgeIcon(Laf.Icons.Common.NotificationsBellLight)
-        val pressedBadgeIconDark: Icon = createBadgeIcon(Laf.Icons.Common.NotificationsBellDarkPressed)
-        val pressedBadgeIconLight: Icon = createBadgeIcon(Laf.Icons.Common.NotificationsBellLightPressed)
+        val badgeIconDark: Icon = IconsUtil.createRedDotBadgeIcon(Laf.Icons.Common.NotificationsBellDark, 24)
+        val badgeIconLight: Icon = IconsUtil.createRedDotBadgeIcon(Laf.Icons.Common.NotificationsBellLight, 24)
+        val pressedBadgeIconDark: Icon = IconsUtil.createRedDotBadgeIcon(Laf.Icons.Common.NotificationsBellDarkPressed, 20)
+        val pressedBadgeIconLight: Icon = IconsUtil.createRedDotBadgeIcon(Laf.Icons.Common.NotificationsBellLightPressed, 20)
 
-        @Suppress("UnstableApiUsage")
-        private fun createBadgeIcon(icon: Icon): Icon {
-            return BadgeIcon(icon, JBUI.CurrentTheme.IconBadge.ERROR, object : BadgeDotProvider() {
-                override fun getX(): Double = 0.7
-                override fun getY(): Double = 0.2
-                override fun getRadius(): Double = 3.0 / icon.iconWidth
-            })
-        }
+//        @Suppress("UnstableApiUsage")
+//        private fun createBadgeIcon(icon: Icon): Icon {
+//            return BadgeIcon(icon, JBUI.CurrentTheme.IconBadge.ERROR, object : BadgeDotProvider() {
+//                override fun getX(): Double = 0.7
+//                override fun getY(): Double = 0.2
+//                override fun getRadius(): Double = 3.0 / icon.iconWidth
+//            })
+//        }
     }
 
     init {

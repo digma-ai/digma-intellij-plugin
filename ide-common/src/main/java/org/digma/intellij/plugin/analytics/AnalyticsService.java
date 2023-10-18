@@ -643,11 +643,11 @@ public class AnalyticsService implements Disposable {
                 if (isConnectionException) {
                     markConnectionLostAndNotify();
                     errorReportingHelper.addIfNewError(invocationTargetException);
-                    Log.log(LOGGER::warn, "Connection exception: error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
+                    Log.warnWithException(LOGGER, project, invocationTargetException, "Connection exception: error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
                     NotificationUtil.notifyError(project, "<html>Connection error with Digma backend api for method " + method.getName() + ".<br> "
                             + message + ".<br> See logs for details.");
                 } else {
-                    Log.log(LOGGER::warn, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), invocationTargetException.getCause().getMessage());
+                    Log.warnWithException(LOGGER, project, invocationTargetException, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), invocationTargetException.getCause().getMessage());
                     if (errorReportingHelper.addIfNewError(invocationTargetException)) {
                         NotificationUtil.notifyError(project, "<html>Error with Digma backend api for method " + method.getName() + ".<br> "
                                 + message + ".<br> See logs for details.");
@@ -659,8 +659,7 @@ public class AnalyticsService implements Disposable {
             }
             // status was not ok but it's a new error
             else if (errorReportingHelper.addIfNewError(invocationTargetException)) {
-                Log.log(LOGGER::warn, "New Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
-                LOGGER.warn(invocationTargetException);
+                Log.warnWithException(LOGGER, project, invocationTargetException, "New Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
             }
 
             ErrorReporter.getInstance().reportAnalyticsServiceError(project, "AnalyticsInvocationHandler.invoke." + method.getName(), method.getName(), invocationTargetException, isConnectionException);

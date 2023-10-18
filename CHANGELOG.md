@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.186] - 2023-10-18
+## [2.0.187] - 2023-10-18
+- Update Notifications UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1362
+
+## 2.0.186 - 2023-10-18
 - Update Assets UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1358
 - Update Recent Activity UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1359
 - Update Assets UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1361

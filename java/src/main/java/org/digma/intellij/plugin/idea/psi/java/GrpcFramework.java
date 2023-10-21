@@ -10,6 +10,7 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.ClassInheritorsSearch;
 import com.intellij.util.Query;
+import org.digma.intellij.plugin.common.Retries;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.jetbrains.annotations.NotNull;
@@ -18,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
 public class GrpcFramework implements EndpointDiscovery {
     private static final Logger LOGGER = Logger.getInstance(GrpcFramework.class);
@@ -36,13 +38,12 @@ public class GrpcFramework implements EndpointDiscovery {
     }
 
     private void lateInit() {
-        if (lateInitAlready) return;
 
-        JavaPsiFacade psiFacade = JavaPsiFacade.getInstance(project);
-        bindableServiceAnnotationClass = psiFacade.findClass(BINDABLE_SERVICE_ANNOTATION_STR, GlobalSearchScope.allScope(project));
-        Log.log(LOGGER::info, "GRPC init. isGrpcServerRelevant='{}'", isGrpcServerRelevant());
-
-        lateInitAlready = true;
+        Retries.simpleRetry(() -> runInReadAccess(project, () -> {
+            JavaPsiFacade psiFacade = JavaPsiFacade.getInstance(project);
+            bindableServiceAnnotationClass = psiFacade.findClass(BINDABLE_SERVICE_ANNOTATION_STR, GlobalSearchScope.allScope(project));
+            Log.log(LOGGER::info, "GRPC init. isGrpcServerRelevant='{}'", isGrpcServerRelevant());
+        }), Throwable.class, 50, 5);
     }
 
     private boolean isGrpcServerRelevant() {
@@ -50,7 +51,7 @@ public class GrpcFramework implements EndpointDiscovery {
     }
 
     @Override
-    public List<EndpointInfo> lookForEndpoints(@NotNull SearchScope searchScope) {
+    public List<EndpointInfo> lookForEndpoints(@NotNull Supplier<SearchScope> searchScopeSupplier) {
         lateInit();
         if (!isGrpcServerRelevant()) {
             return Collections.emptyList();
@@ -58,17 +59,23 @@ public class GrpcFramework implements EndpointDiscovery {
 
         List<EndpointInfo> retList = new ArrayList<>();
 
-        Query<PsiClass> grpcServerClassesInFile = ClassInheritorsSearch.search(bindableServiceAnnotationClass, searchScope, true);
+        Collection<PsiClass> grpcServerClassesInFile = Retries.retryWithResult(() -> runInReadAccessWithResult(project, () -> {
+            Query<PsiClass> psiClasses = ClassInheritorsSearch.search(bindableServiceAnnotationClass, searchScopeSupplier.get(), true);
+            return psiClasses.findAll();
+        }), Throwable.class, 50, 5);
 
         for (PsiClass currGrpcServerClass : grpcServerClassesInFile) {
-            if (JavaPsiUtils.isBaseClass(currGrpcServerClass)) {
-                // if has no super class then it is the generated GRPC server class, we do not want it
-                Log.log(LOGGER::debug, "endpointDiscovery, skip bindableService GrpcServerClass fqn='{}' since it is the generated GRPC base service", currGrpcServerClass.getQualifiedName());
-                continue;
-            }
-            Log.log(LOGGER::debug, "endpointDiscovery, bingo - its a GRPC server class, its fqn='{}'", currGrpcServerClass.getQualifiedName());
-            List<EndpointInfo> endpointsAtClass = addEndpointMethods(currGrpcServerClass);
-            retList.addAll(endpointsAtClass);
+
+            Retries.simpleRetry(() -> runInReadAccess(project, () -> {
+                if (JavaPsiUtils.isBaseClass(currGrpcServerClass)) {
+                    // if has no super class then it is the generated GRPC server class, we do not want it
+                    Log.log(LOGGER::debug, "endpointDiscovery, skip bindableService GrpcServerClass fqn='{}' since it is the generated GRPC base service", currGrpcServerClass.getQualifiedName());
+                    return;
+                }
+                Log.log(LOGGER::debug, "endpointDiscovery, bingo - its a GRPC server class, its fqn='{}'", currGrpcServerClass.getQualifiedName());
+                List<EndpointInfo> endpointsAtClass = addEndpointMethods(currGrpcServerClass);
+                retList.addAll(endpointsAtClass);
+            }), Throwable.class, 50, 5);
         }
         return retList;
     }

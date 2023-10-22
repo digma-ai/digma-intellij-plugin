@@ -16,15 +16,18 @@ import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.psi.search.searches.OverridingMethodsSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Query;
+import org.digma.intellij.plugin.common.Retries;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public abstract class AbstractJaxrsFramework implements EndpointDiscovery {
@@ -38,7 +41,6 @@ public abstract class AbstractJaxrsFramework implements EndpointDiscovery {
     private final Project project;
 
     // late init
-    private boolean lateInitAlready = false;
     private PsiClass jaxrsPathAnnotationClass;
     private List<JavaAnnotation> httpMethodsAnnotations;
 
@@ -87,14 +89,14 @@ public abstract class AbstractJaxrsFramework implements EndpointDiscovery {
         return getJaxRsPackageName() + ".ApplicationPath";
     }
 
+    //todo:maybe synchronize because may be called from multiple threads
     private void lateInit() {
-        if (lateInitAlready) return;
 
-        JavaPsiFacade psiFacade = JavaPsiFacade.getInstance(project);
-        jaxrsPathAnnotationClass = psiFacade.findClass(JAX_RS_PATH_ANNOTATION_STR(), GlobalSearchScope.allScope(project));
-        initHttpMethodAnnotations(psiFacade);
-
-        lateInitAlready = true;
+        Retries.simpleRetry(() -> runInReadAccess(project, () -> {
+            JavaPsiFacade psiFacade = JavaPsiFacade.getInstance(project);
+            jaxrsPathAnnotationClass = psiFacade.findClass(JAX_RS_PATH_ANNOTATION_STR(), GlobalSearchScope.allScope(project));
+            initHttpMethodAnnotations(psiFacade);
+        }), Throwable.class, 50, 5);
     }
 
     private void initHttpMethodAnnotations(JavaPsiFacade psiFacade) {
@@ -123,46 +125,71 @@ public abstract class AbstractJaxrsFramework implements EndpointDiscovery {
             return Collections.emptyList();
         }
 
-        Collection<PsiClass> allClassesInFile = PsiTreeUtil.findChildrenOfType(psiFile, PsiClass.class);
+        List<EndpointInfo> endpointInfos = new ArrayList<>();
 
-        Set<PsiMethod> candidateMethods = new HashSet<>();
+        Collection<PsiClass> allClassesInFile =
+                Retries.retryWithResult(() -> runInReadAccessWithResult(project, () ->
+                        PsiTreeUtil.findChildrenOfType(psiFile, PsiClass.class)), Throwable.class, 50, 5);
+
+
         for (final PsiClass currClass : allClassesInFile) {
-            List<PsiMethod> methodsInClass = JavaPsiUtils.getMethodsOf(currClass);
-            for (final PsiMethod currPsiMethod : methodsInClass) {
-                final PsiAnnotation methodPathAnnotation = JavaPsiUtils.findNearestAnnotation(currPsiMethod, JAX_RS_PATH_ANNOTATION_STR());
-                boolean hasPath = methodPathAnnotation != null;
-                boolean hasHttpMethod = httpMethodsAnnotations.stream()
-                        .anyMatch(it -> JavaPsiUtils.findNearestAnnotation(currPsiMethod, it.getClassNameFqn()) != null);
 
-                if (hasPath || hasHttpMethod) {
-                    candidateMethods.add(currPsiMethod);
-                }
+            List<PsiMethod> methodsInClass = JavaPsiUtils.getMethodsOf(currClass);
+
+            for (final PsiMethod currPsiMethod : methodsInClass) {
+
+
+                Retries.simpleRetry(() -> runInReadAccess(project, () -> {
+                    Set<PsiMethod> candidateMethods = new HashSet<>();
+                    final PsiAnnotation methodPathAnnotation = JavaPsiUtils.findNearestAnnotation(currPsiMethod, JAX_RS_PATH_ANNOTATION_STR());
+                    boolean hasPath = methodPathAnnotation != null;
+                    boolean hasHttpMethod = httpMethodsAnnotations.stream()
+                            .anyMatch(it -> JavaPsiUtils.findNearestAnnotation(currPsiMethod, it.getClassNameFqn()) != null);
+
+                    if (hasPath || hasHttpMethod) {
+                        candidateMethods.add(currPsiMethod);
+                    }
+                    endpointInfos.addAll(handleCandidateMethods(candidateMethods).stream().toList());
+                }), Throwable.class, 50, 5);
             }
         }
 
-        return handleCandidateMethods(candidateMethods).stream().toList();
+        return endpointInfos;
     }
 
     @Override
-    public List<EndpointInfo> lookForEndpoints(@NotNull SearchScope searchScope) {
+    public List<EndpointInfo> lookForEndpoints(@NotNull Supplier<SearchScope> searchScopeSupplier) {
         lateInit();
         if (!isJaxRsHttpRelevant()) {
             return Collections.emptyList();
         }
 
-        Set<PsiMethod> candidateMethods = new HashSet<>();
+        List<EndpointInfo> endpointInfos = new ArrayList<>();
+
+
 
         for (JavaAnnotation currExpectedAnnotation : httpMethodsAnnotations) {
-            Query<PsiMethod> methodsWithDirectHttpMethod = AnnotatedElementsSearch.searchPsiMethods(currExpectedAnnotation.getPsiClass(), searchScope);
+
+            Collection<PsiMethod> methodsWithDirectHttpMethod = Retries.retryWithResult(() -> runInReadAccessWithResult(project, () -> {
+                Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(currExpectedAnnotation.getPsiClass(), searchScopeSupplier.get());
+                return psiMethods.findAll();
+            }), Throwable.class, 50, 5);
+
 
             for (final PsiMethod directMethodWithHttpMethod : methodsWithDirectHttpMethod) {
-                candidateMethods.add(directMethodWithHttpMethod);
-                Query<PsiMethod> overridingMethods = OverridingMethodsSearch.search(directMethodWithHttpMethod);
-                candidateMethods.addAll(overridingMethods.findAll());
+
+                Retries.simpleRetry(() -> runInReadAccess(project, () -> {
+                    Set<PsiMethod> candidateMethods = new HashSet<>();
+                    candidateMethods.add(directMethodWithHttpMethod);
+                    Query<PsiMethod> overridingMethods = OverridingMethodsSearch.search(directMethodWithHttpMethod);
+                    candidateMethods.addAll(overridingMethods.findAll());
+                    endpointInfos.addAll(handleCandidateMethods(candidateMethods).stream().toList());
+                }), Throwable.class, 50, 5);
+
             }
         }
 
-        return handleCandidateMethods(candidateMethods).stream().toList();
+        return endpointInfos;
     }
 
     protected Set<EndpointInfo> handleCandidateMethods(Collection<PsiMethod> candidateMethods) {

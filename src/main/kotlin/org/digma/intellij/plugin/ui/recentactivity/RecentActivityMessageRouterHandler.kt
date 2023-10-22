@@ -14,6 +14,7 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
+import org.digma.intellij.plugin.ui.common.ObservabilityUtil
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.sendUserEmail
 import org.digma.intellij.plugin.ui.jcef.tryGetFieldFromPayload
@@ -153,6 +154,15 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                 PersistenceService.getInstance().state.userEmail = email
                 sendUserEmail(browser, email)
             }
+
+            JCefMessagesUtils.GLOBAL_SET_OBSERVABILITY -> {
+                val isEnabledObservability = objectMapper.readTree(requestJsonNode.get("payload").toString()).get("isObservabilityEnabled").asBoolean()
+                Log.log(logger::trace, "updateSetObservability(Boolean) called")
+                ObservabilityUtil.updateObservabilityValue(project, isEnabledObservability)
+
+                project.service<RecentActivityUpdater>().updateSetObservability(isEnabledObservability)
+            }
+
         }
     }
 

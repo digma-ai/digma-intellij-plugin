@@ -20,6 +20,8 @@ import org.digma.intellij.plugin.common.isEnvironmentLocal
 import org.digma.intellij.plugin.common.isEnvironmentLocalTests
 import org.digma.intellij.plugin.common.isLocalEnvironmentMine
 import org.digma.intellij.plugin.icons.AppIcons
+import org.digma.intellij.plugin.jcef.common.IsObservabilityEnabledMessageRequest
+import org.digma.intellij.plugin.jcef.common.IsObservabilityEnabledPayload
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResponseEntry
@@ -36,6 +38,7 @@ import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEnvironme
 import java.util.Date
 import java.util.Optional
 import javax.swing.Icon
+
 
 private const val RECENT_ACTIVITY_SET_DATA = "RECENT_ACTIVITY/SET_DATA"
 
@@ -110,7 +113,17 @@ class RecentActivityUpdater(val project: Project) : Disposable {
         }
     }
 
-
+    @Synchronized
+    fun updateSetObservability(isEnabled: Boolean) {
+        jCefComponent?.let { jcef ->
+            val isObservabilityEnabledMessageRequest = IsObservabilityEnabledMessageRequest(
+                JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
+                JCefMessagesUtils.GLOBAL_SET_IS_OBSERVABILITY_ENABLED,
+                IsObservabilityEnabledPayload(isEnabled)
+            )
+            serializeAndExecuteWindowPostMessageJavaScript(jcef.jbCefBrowser.cefBrowser, isObservabilityEnabledMessageRequest)
+        }
+    }
 
     private fun hasRecentActivity(latestActivityResult: RecentActivityResult): Boolean {
         val latestActivity: Optional<Date> = latestActivityResult.entries.stream()
@@ -208,9 +221,6 @@ class RecentActivityUpdater(val project: Project) : Disposable {
         return environments.map(transformEnvToRecentActivityEnvironment)
     }
 
-
-
-
     private fun removeFromPendingEnvironments(environments: List<String>) {
         environments.forEach { env ->
             if (service<AddEnvironmentsService>().isPendingEnv(env)) {
@@ -228,7 +238,6 @@ class RecentActivityUpdater(val project: Project) : Disposable {
             }
         }
     }
-
 
     private fun sendEmptyData() {
 
@@ -249,8 +258,6 @@ class RecentActivityUpdater(val project: Project) : Disposable {
             serializeAndExecuteWindowPostMessageJavaScript(jcef.jbCefBrowser.cefBrowser, recentActivitiesMessage)
         }
     }
-
-
 
     override fun dispose() {
         //nothing to do , used as parent disposable

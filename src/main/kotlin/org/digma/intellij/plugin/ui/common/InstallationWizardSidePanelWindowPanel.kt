@@ -64,6 +64,7 @@ import org.digma.intellij.plugin.ui.jcef.updateDigmaEngineStatus
 import org.digma.intellij.plugin.ui.list.insights.isJaegerButtonEnabled
 import org.digma.intellij.plugin.ui.panels.DisposablePanel
 import org.digma.intellij.plugin.ui.recentactivity.RecentActivityToolWindowShower
+import org.digma.intellij.plugin.ui.recentactivity.RecentActivityUpdater
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
 import org.digma.intellij.plugin.ui.settings.SettingsChangeListener
 import org.digma.intellij.plugin.ui.settings.Theme
@@ -185,6 +186,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                 )
                 if (payload != null) {
                     updateObservabilityValue(project, payload.isObservabilityEnabled)
+                    project.service<RecentActivityUpdater>().updateSetObservability(payload.isObservabilityEnabled)
                 }
             }
             if (JCefMessagesUtils.INSTALLATION_WIZARD_FINISH.equals(action, ignoreCase = true)) {

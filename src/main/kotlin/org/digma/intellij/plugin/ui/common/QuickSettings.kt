@@ -17,6 +17,7 @@ import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
+import org.digma.intellij.plugin.ui.recentactivity.RecentActivityUpdater
 import java.awt.Cursor
 import java.awt.FlowLayout
 import java.awt.GridLayout
@@ -217,6 +218,7 @@ class SettingsHintPanel(project: Project) : JPanel() {
             toggle.addEventSelected(object : SwitchButton.EventSwitchSelected {
                 override fun onSelected(selected: Boolean) {
                     ObservabilityUtil.updateObservabilityValue(project, selected)
+                    project.service<RecentActivityUpdater>().updateSetObservability(selected)
                 }
             })
             togglePanel.add(toggle)

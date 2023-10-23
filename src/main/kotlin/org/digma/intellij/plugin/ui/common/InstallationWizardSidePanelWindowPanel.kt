@@ -513,7 +513,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                 }
 
                 try {
-                    val status = project.service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionLost()
+                    val status = service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionLost()
                     updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
                 } catch (e: Exception) {
                     ErrorReporter.getInstance().reportError("createInstallationWizardSidePanelWindowPanel.connectionLost", e)
@@ -525,7 +525,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                     return
                 }
                 try {
-                    val status = project.service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionGained()
+                    val status = service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionGained()
                     updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
                 } catch (e: Exception) {
                     ErrorReporter.getInstance().reportError("createInstallationWizardSidePanelWindowPanel.connectionGained", e)
@@ -631,7 +631,7 @@ class DigmaStatusUpdater {
                 try {
                     while (isActive) {
 
-                        val currentStatus = project.service<DockerService>().getActualRunningEngine(project)
+                        val currentStatus = service<DockerService>().getActualRunningEngine(project)
 
                         if (!isActive) break
 

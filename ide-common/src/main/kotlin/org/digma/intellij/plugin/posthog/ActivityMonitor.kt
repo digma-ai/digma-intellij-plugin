@@ -136,6 +136,7 @@ class ActivityMonitor(project: Project) : Disposable {
 
     fun registerObservabilityPanelClosed() {
         capture("observability-panel closed")
+        registerUserAction("Closed observability panel")
     }
 
     fun registerFirstConnectionEstablished() {
@@ -157,6 +158,11 @@ class ActivityMonitor(project: Project) : Disposable {
 
     fun registerFirstAssetsReceived() {
         capture("plugin first-assets")
+        postHog?.set(
+            userId, mapOf(
+                "first-assets-timestamp" to Instant.now().toString()
+            )
+        )
     }
 
     fun registerFirstTimeRecentActivityReceived() {
@@ -591,6 +597,12 @@ class ActivityMonitor(project: Project) : Disposable {
         capture(
             "user-action",
             mapOf("action" to action)
+        )
+        postHog?.set(
+            userId, mapOf(
+                "last-user-action" to action,
+                "last-user-action-timestamp" to Instant.now().toString()
+            )
         )
     }
 

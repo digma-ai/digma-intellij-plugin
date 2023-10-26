@@ -1,6 +1,17 @@
 # Changelog
 
-## [2.0.187] - 2023-10-18
+## [2.0.188] - 2023-10-26
+- always print stacktrace in connection exception by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1363
+- minimize read access in -endpoint discovery Closes #1265 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1367
+- add retentonn analytics  Closes #1366 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1370
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1373
+- Integrate RecentActivity Observability switch by @borisermakof in https://github.com/digma-ai/digma-intellij-plugin/pull/1369
+- fix dashboard icon and disable when no env yet by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1375
+- remove-new-line-from-scope-line-string Closes #1368 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1376
+- update eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1377
+- Retry in java indexing by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1335
+
+## 2.0.187 - 2023-10-18
 - Update Notifications UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1362
 
 ## 2.0.186 - 2023-10-18

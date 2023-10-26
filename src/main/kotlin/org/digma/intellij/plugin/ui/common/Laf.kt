@@ -207,8 +207,22 @@ object Laf {
                 @JvmStatic
                 val NotificationsBellLightPressed = SvgIcon.asIs("/icons/notification-bell-light-pressed.svg")
 
+                //todo: replace with larger icons when supplied
                 @JvmStatic
-                val Dashboard = SvgIcon.asIs("/icons/dashboard.svg")
+//                val DashboardDark = SvgIcon.asIs("/icons/dashboard.svg")
+                val DashboardDark = IconUtil.scale(SvgIcon.asIs("/icons/dashboard.svg"), ScaleContext.create(ScaleType.OBJ_SCALE.of(2.0)))
+
+                @JvmStatic
+//                val DashboardDarkPressed = SvgIcon.asIs("/icons/dashboard.svg")
+                val DashboardDarkPressed = IconUtil.scale(SvgIcon.asIs("/icons/dashboard.svg"), ScaleContext.create(ScaleType.OBJ_SCALE.of(1.6)))
+
+                @JvmStatic
+//                val DashboardLight = SvgIcon.asIs("/icons/dashboard.svg")
+                val DashboardLight = IconUtil.scale(SvgIcon.asIs("/icons/dashboard.svg"), ScaleContext.create(ScaleType.OBJ_SCALE.of(2.0)))
+
+                @JvmStatic
+//                val DashboardLightPressed = SvgIcon.asIs("/icons/dashboard.svg")
+                val DashboardLightPressed = IconUtil.scale(SvgIcon.asIs("/icons/dashboard.svg"), ScaleContext.create(ScaleType.OBJ_SCALE.of(1.6)))
 
                 @JvmStatic
                 val NavPrevDark =

@@ -92,7 +92,7 @@ public abstract class AbstractJaxrsFramework implements EndpointDiscovery {
     //todo:maybe synchronize because may be called from multiple threads
     private void lateInit() {
 
-        Retries.simpleRetry(() -> runInReadAccess(project, () -> {
+        Retries.simpleRetry(() -> JavaPsiUtils.runInReadAccess(project, () -> {
             JavaPsiFacade psiFacade = JavaPsiFacade.getInstance(project);
             jaxrsPathAnnotationClass = psiFacade.findClass(JAX_RS_PATH_ANNOTATION_STR(), GlobalSearchScope.allScope(project));
             initHttpMethodAnnotations(psiFacade);
@@ -128,18 +128,18 @@ public abstract class AbstractJaxrsFramework implements EndpointDiscovery {
         List<EndpointInfo> endpointInfos = new ArrayList<>();
 
         Collection<PsiClass> allClassesInFile =
-                Retries.retryWithResult(() -> runInReadAccessWithResult(project, () ->
+                Retries.retryWithResult(() -> JavaPsiUtils.runInReadAccessWithResult(project, () ->
                         PsiTreeUtil.findChildrenOfType(psiFile, PsiClass.class)), Throwable.class, 50, 5);
 
 
         for (final PsiClass currClass : allClassesInFile) {
 
-            List<PsiMethod> methodsInClass = JavaPsiUtils.getMethodsOf(currClass);
+            List<PsiMethod> methodsInClass = JavaPsiUtils.getMethodsOf(project, currClass);
 
             for (final PsiMethod currPsiMethod : methodsInClass) {
 
 
-                Retries.simpleRetry(() -> runInReadAccess(project, () -> {
+                Retries.simpleRetry(() -> JavaPsiUtils.runInReadAccess(project, () -> {
                     Set<PsiMethod> candidateMethods = new HashSet<>();
                     final PsiAnnotation methodPathAnnotation = JavaPsiUtils.findNearestAnnotation(currPsiMethod, JAX_RS_PATH_ANNOTATION_STR());
                     boolean hasPath = methodPathAnnotation != null;
@@ -170,7 +170,7 @@ public abstract class AbstractJaxrsFramework implements EndpointDiscovery {
 
         for (JavaAnnotation currExpectedAnnotation : httpMethodsAnnotations) {
 
-            Collection<PsiMethod> methodsWithDirectHttpMethod = Retries.retryWithResult(() -> runInReadAccessWithResult(project, () -> {
+            Collection<PsiMethod> methodsWithDirectHttpMethod = Retries.retryWithResult(() -> JavaPsiUtils.runInReadAccessWithResult(project, () -> {
                 Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(currExpectedAnnotation.getPsiClass(), searchScopeSupplier.get());
                 return psiMethods.findAll();
             }), Throwable.class, 50, 5);
@@ -178,7 +178,7 @@ public abstract class AbstractJaxrsFramework implements EndpointDiscovery {
 
             for (final PsiMethod directMethodWithHttpMethod : methodsWithDirectHttpMethod) {
 
-                Retries.simpleRetry(() -> runInReadAccess(project, () -> {
+                Retries.simpleRetry(() -> JavaPsiUtils.runInReadAccess(project, () -> {
                     Set<PsiMethod> candidateMethods = new HashSet<>();
                     candidateMethods.add(directMethodWithHttpMethod);
                     Query<PsiMethod> overridingMethods = OverridingMethodsSearch.search(directMethodWithHttpMethod);

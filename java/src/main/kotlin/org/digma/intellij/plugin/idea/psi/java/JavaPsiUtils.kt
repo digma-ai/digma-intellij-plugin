@@ -1,5 +1,11 @@
 package org.digma.intellij.plugin.idea.psi.java
 
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.progress.EmptyProgressIndicator
+import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.project.DumbService
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Computable
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiFile
@@ -16,6 +22,23 @@ class JavaPsiUtils {
     companion object {
         private const val OBJECT_CLASS_FQN = "java.lang.Object"
 
+
+        @JvmStatic
+        fun runInReadAccess(project: Project, runnable: Runnable) {
+            ProgressManager.getInstance().runProcess({
+                DumbService.getInstance(project).runReadActionInSmartMode(runnable)
+            }, EmptyProgressIndicator())
+        }
+
+        @JvmStatic
+        fun <T> runInReadAccessWithResult(project: Project, computable: Computable<T>): T {
+            return ProgressManager.getInstance().runProcess<T>({
+                DumbService.getInstance(project).runReadActionInSmartMode(computable)
+            }, EmptyProgressIndicator())
+        }
+
+
+        //must be called with read access
         @JvmStatic
         fun isBaseClass(psiClass: PsiClass): Boolean {
             val superClass = psiClass.superClass
@@ -25,6 +48,7 @@ class JavaPsiUtils {
         /**
          * Climbs up from this class to its super classes and searches for the first class that is after the java.lang.Object.
          */
+        //must be called with read access
         @JvmStatic
         @NotNull
         fun climbUpToBaseClass(psiClass: PsiClass): PsiClass {
@@ -42,6 +66,7 @@ class JavaPsiUtils {
             }
         }
 
+        //must be called with read access
         @JvmStatic
         @Nullable
         fun findNearestAnnotation(psiMethod: PsiMethod, annotationFqn: String): PsiAnnotation? {
@@ -86,13 +111,21 @@ class JavaPsiUtils {
             return containingFileUri
         }
 
+
         @JvmStatic
-        fun getMethodsOf(psiClass: PsiClass): List<PsiMethod> {
+        fun getMethodsOf(project: Project, psiClass: PsiClass): List<PsiMethod> {
             if (psiClass is PsiExtensibleClass) {
+
                 // avoid cases when there are generated methods and/or constructors such as lombok creates,
                 // see issue https://github.com/digma-ai/digma-intellij-plugin/issues/833
                 // see issue https://youtrack.jetbrains.com/issue/IDEA-323198
-                return psiClass.ownMethods
+
+                return if (ApplicationManager.getApplication().isReadAccessAllowed) {
+                    psiClass.ownMethods
+                } else {
+                    runInReadAccessWithResult(project) { psiClass.ownMethods }
+                }
+
             }
             return psiClass.methods.asList()
         }

@@ -77,13 +77,13 @@ public class JavaCodeObjectDiscovery {
 
         List<PsiClass> classes = Arrays.asList(psiJavaFile.getClasses());
 
-        collectMethods(fileUri, classes, packageName, methodInfoMap);
+        collectMethods(project, fileUri, classes, packageName, methodInfoMap);
 
         return new DocumentInfo(fileUri, methodInfoMap);
     }
 
 
-    private static void collectMethods(@NotNull String fileUri, @NotNull List<PsiClass> classes, @NotNull String packageName, @NotNull Map<String, MethodInfo> methodInfoMap) {
+    private static void collectMethods(@NotNull Project project, @NotNull String fileUri, @NotNull List<PsiClass> classes, @NotNull String packageName, @NotNull Map<String, MethodInfo> methodInfoMap) {
 
         for (PsiClass aClass : classes) {
 
@@ -93,7 +93,7 @@ public class JavaCodeObjectDiscovery {
                 continue;
             }
 
-            final List<PsiMethod> methods = JavaPsiUtils.getMethodsOf(aClass);
+            final List<PsiMethod> methods = JavaPsiUtils.getMethodsOf(project, aClass);
 
             for (PsiMethod method : methods) {
                 String id = createJavaMethodCodeObjectId(method);
@@ -111,7 +111,7 @@ public class JavaCodeObjectDiscovery {
                 methodInfoMap.put(id, methodInfo);
             }
 
-            collectMethods(fileUri, JavaPsiUtils.getInnerClassesOf(aClass), packageName, methodInfoMap);
+            collectMethods(project, fileUri, JavaPsiUtils.getInnerClassesOf(aClass), packageName, methodInfoMap);
         }
     }
 

@@ -39,7 +39,7 @@ public class GrpcFramework implements EndpointDiscovery {
 
     private void lateInit() {
 
-        Retries.simpleRetry(() -> runInReadAccess(project, () -> {
+        Retries.simpleRetry(() -> JavaPsiUtils.runInReadAccess(project, () -> {
             JavaPsiFacade psiFacade = JavaPsiFacade.getInstance(project);
             bindableServiceAnnotationClass = psiFacade.findClass(BINDABLE_SERVICE_ANNOTATION_STR, GlobalSearchScope.allScope(project));
             Log.log(LOGGER::info, "GRPC init. isGrpcServerRelevant='{}'", isGrpcServerRelevant());
@@ -59,14 +59,14 @@ public class GrpcFramework implements EndpointDiscovery {
 
         List<EndpointInfo> retList = new ArrayList<>();
 
-        Collection<PsiClass> grpcServerClassesInFile = Retries.retryWithResult(() -> runInReadAccessWithResult(project, () -> {
+        Collection<PsiClass> grpcServerClassesInFile = Retries.retryWithResult(() -> JavaPsiUtils.runInReadAccessWithResult(project, () -> {
             Query<PsiClass> psiClasses = ClassInheritorsSearch.search(bindableServiceAnnotationClass, searchScopeSupplier.get(), true);
             return psiClasses.findAll();
         }), Throwable.class, 50, 5);
 
         for (PsiClass currGrpcServerClass : grpcServerClassesInFile) {
 
-            Retries.simpleRetry(() -> runInReadAccess(project, () -> {
+            Retries.simpleRetry(() -> JavaPsiUtils.runInReadAccess(project, () -> {
                 if (JavaPsiUtils.isBaseClass(currGrpcServerClass)) {
                     // if has no super class then it is the generated GRPC server class, we do not want it
                     Log.log(LOGGER::debug, "endpointDiscovery, skip bindableService GrpcServerClass fqn='{}' since it is the generated GRPC base service", currGrpcServerClass.getQualifiedName());
@@ -85,7 +85,7 @@ public class GrpcFramework implements EndpointDiscovery {
         Log.log(LOGGER::debug, "addEndpointMethods for grpcServerClass fqn='{}' with evaluated serviceName='{}'", grpcServerClass.getQualifiedName(), grpcServiceName);
 
         List<EndpointInfo> retList = new ArrayList<>(16);
-        Collection<PsiMethod> psiMethods = JavaPsiUtils.getMethodsOf(grpcServerClass);
+        Collection<PsiMethod> psiMethods = JavaPsiUtils.getMethodsOf(project, grpcServerClass);
         for (PsiMethod currPsiMethod : psiMethods) {
             String methodCodeObjectId = JavaLanguageUtils.createJavaMethodCodeObjectId(currPsiMethod);
 

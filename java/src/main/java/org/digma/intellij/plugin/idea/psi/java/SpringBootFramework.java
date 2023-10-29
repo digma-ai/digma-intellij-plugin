@@ -67,7 +67,7 @@ public class SpringBootFramework implements EndpointDiscovery {
     private void lateInit() {
 
 
-        Retries.simpleRetry(() -> runInReadAccess(project, () -> {
+        Retries.simpleRetry(() -> JavaPsiUtils.runInReadAccess(project, () -> {
             JavaPsiFacade psiFacade = JavaPsiFacade.getInstance(project);
             controllerAnnotationClass = psiFacade.findClass(CONTROLLER_ANNOTATION_STR, GlobalSearchScope.allScope(project));
             initHttpMethodAnnotations(psiFacade);
@@ -100,7 +100,7 @@ public class SpringBootFramework implements EndpointDiscovery {
 
         httpMethodsAnnotations.forEach(currAnnotation -> {
 
-            Collection<PsiMethod> psiMethodsInFile = Retries.retryWithResult(() -> runInReadAccessWithResult(project, () -> {
+            Collection<PsiMethod> psiMethodsInFile = Retries.retryWithResult(() -> JavaPsiUtils.runInReadAccessWithResult(project, () -> {
                 Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(currAnnotation.getPsiClass(), searchScopeSupplier.get());
                 return psiMethods.findAll();
             }), Throwable.class, 50, 5);
@@ -109,7 +109,7 @@ public class SpringBootFramework implements EndpointDiscovery {
             for (PsiMethod currPsiMethod : psiMethodsInFile) {
 
 
-                Retries.simpleRetry(() -> runInReadAccess(project, () -> {
+                Retries.simpleRetry(() -> JavaPsiUtils.runInReadAccess(project, () -> {
                     final String methodId = JavaLanguageUtils.createJavaMethodCodeObjectId(currPsiMethod);
                     final PsiAnnotation mappingPsiAnnotationOnMethod = currPsiMethod.getAnnotation(currAnnotation.getClassNameFqn());
                     if (mappingPsiAnnotationOnMethod == null) {

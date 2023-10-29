@@ -42,12 +42,6 @@ public interface EndpointDiscovery {
     }
 
 
-    default void runInReadAccess(Project project, Runnable runnable) {
-        ProgressManager.getInstance().runProcess(() -> DumbService.getInstance(project).runReadActionInSmartMode(runnable), new EmptyProgressIndicator());
-    }
 
-    default <T> T runInReadAccessWithResult(Project project, Computable<T> computable) {
-        return ProgressManager.getInstance().runProcess(() -> DumbService.getInstance(project).runReadActionInSmartMode(computable), new EmptyProgressIndicator());
-    }
 
 }

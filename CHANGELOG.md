@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.188] - 2023-10-26
+## [2.0.189] - 2023-10-29
+- Update Recent Activity UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1378
+- fix-read-access-in-getMethodsOf by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1379
+
+## 2.0.188 - 2023-10-26
 - always print stacktrace in connection exception by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1363
 - minimize read access in -endpoint discovery Closes #1265 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1367
 - add retentonn analytics  Closes #1366 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1370

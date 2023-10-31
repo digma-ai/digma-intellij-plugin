@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    </style>
       @font-face {
         font-family: "JetBrains Mono";
         src: url("/fonts/JetBrainsMono-Medium.ttf") format("truetype");

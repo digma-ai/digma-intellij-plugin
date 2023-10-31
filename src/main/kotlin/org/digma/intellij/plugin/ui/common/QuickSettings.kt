@@ -178,7 +178,7 @@ class SettingsHintPanel(project: Project) : JPanel() {
         panel.add(JLabel(Laf.Icons.Common.Mascot16))
         panel.add(Box.createHorizontalStrut(15))
 
-        val linkLabel = JLabel("Overview")
+        val linkLabel = JLabel("Insights Overview")
         linkLabel.cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
         linkLabel.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent?) {

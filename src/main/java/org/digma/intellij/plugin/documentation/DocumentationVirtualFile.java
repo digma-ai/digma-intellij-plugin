@@ -7,13 +7,28 @@ import com.intellij.testFramework.LightVirtualFile;
 import org.digma.intellij.plugin.common.DigmaVirtualFileMarker;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Map;
+
 public class DocumentationVirtualFile extends LightVirtualFile implements DigmaVirtualFileMarker {
 
     public static final Key<String> DOCUMENTATION_EDITOR_KEY = Key.create("Digma.DOCUMENTATION_EDITOR_KEY");
+    private static final Map<String, String> titles = Map.of(
+            "run-digma-with-terminal", "Running Digma in the Terminal",
+            "run-digma-with-docker", "Running Digma with Docker",
+            "run-digma-with-gradle-tasks", "Running Digma using gradle",
+            "environment-types", "Environment Overview"
+    );
     private String documentationPage;
 
-    public DocumentationVirtualFile(String myTitle) {
-        super(myTitle);
+    private static String getTitle(String documentationPage)
+    {
+        if(titles.containsKey(documentationPage)){
+            return titles.get(documentationPage);
+        }
+        return documentationPage;
+    }
+    public DocumentationVirtualFile(String documentationPage) {
+        super(getTitle(documentationPage));
         setFileType(DocumentationFileType.INSTANCE);
         setWritable(false);
         putUserData(FileEditorManagerImpl.FORBID_PREVIEW_TAB, true);

@@ -12,6 +12,7 @@ import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.IDEUtilsService
 import org.digma.intellij.plugin.docker.DockerService
+import org.digma.intellij.plugin.documentation.DocumentationService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -92,7 +93,7 @@ class SettingsHintPanel(project: Project) : JPanel() {
         addObservability(project)
         addOnboarding(project)
         addTroubleshooting(project)
-
+        addOverview(project)
         addFeedback(project)
     }
 
@@ -169,6 +170,31 @@ class SettingsHintPanel(project: Project) : JPanel() {
         add(digmaChannelPanel)
     }
 
+    private fun addOverview(project: Project) {
+        val panel = Box.createHorizontalBox()
+        panel.background = Laf.Colors.EDITOR_BACKGROUND
+        panel.isOpaque = true
+        panel.add(Box.createHorizontalStrut(5))
+        panel.add(JLabel(Laf.Icons.Common.Mascot16))
+        panel.add(Box.createHorizontalStrut(15))
+
+        val linkLabel = JLabel("Insights Overview")
+        linkLabel.cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        linkLabel.addMouseListener(object : MouseAdapter() {
+            override fun mouseClicked(e: MouseEvent?) {
+                try {
+                    DocumentationService.getInstance(project).openDocumentation("environment-types")
+                } catch (ex: Exception) {
+                    Log.log(logger::debug, "exception opening 'Overview' message: {}. ", ex.message)
+                }
+            }
+        })
+
+        panel.add(linkLabel)
+        panel.add(Box.createHorizontalStrut(5))
+        panel.border = BorderFactory.createMatteBorder(0, 0, 1, 0, Laf.Colors.PLUGIN_BACKGROUND)
+        add(panel)
+    }
 
     private fun addOnboarding(project: Project) {
         val onboardingPanel = Box.createHorizontalBox()

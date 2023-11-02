@@ -1,6 +1,12 @@
 # Changelog
 
-## [2.0.189] - 2023-10-29
+## [2.0.190] - 2023-11-02
+- Update eap profile 11361.10 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1383
+- Feature: Rework assets filter by @borisermakof in https://github.com/digma-ai/digma-intellij-plugin/pull/1374
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1387
+- Insights overview doc by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1385
+
+## 2.0.189 - 2023-10-29
 - Update Recent Activity UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1378
 - fix-read-access-in-getMethodsOf by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1379
 

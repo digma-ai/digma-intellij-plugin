@@ -13,10 +13,10 @@ public class DocumentationVirtualFile extends LightVirtualFile implements DigmaV
 
     public static final Key<String> DOCUMENTATION_EDITOR_KEY = Key.create("Digma.DOCUMENTATION_EDITOR_KEY");
     private static final Map<String, String> titles = Map.of(
-            "run-digma-with-terminal", "Running Digma in the Terminal",
-            "run-digma-with-docker", "Running Digma with Docker",
-            "run-digma-with-gradle-tasks", "Running Digma using gradle",
-            "environment-types", "Environment Overview"
+            "run-digma-with-terminal", "Digma in the Terminal",
+            "run-digma-with-docker", "Digma with Docker",
+            "run-digma-with-gradle-tasks", "Digma using gradle",
+            "environment-types", "Insights Overview"
     );
     private String documentationPage;
 

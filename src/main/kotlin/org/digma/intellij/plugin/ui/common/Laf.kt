@@ -3,9 +3,6 @@ package org.digma.intellij.plugin.ui.common
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.editor.colors.GlobalEditorScheme
 import com.intellij.ui.JBColor
-import com.intellij.ui.scale.ScaleContext
-import com.intellij.ui.scale.ScaleType
-import com.intellij.util.IconUtil
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.icons.IconsUtil
 import org.digma.intellij.plugin.ui.common.Laf.Sizes.Companion.BUTTON_SIZE_24
@@ -207,36 +204,23 @@ object Laf {
                 @JvmStatic
                 val NotificationsBellLightPressed = SvgIcon.asIs("/icons/notification-bell-light-pressed.svg")
 
-                //todo: replace with larger icons when supplied
                 @JvmStatic
-//                val DashboardDark = SvgIcon.asIs("/icons/dashboard.svg")
-                val DashboardDark = IconUtil.scale(SvgIcon.asIs("/icons/dashboard.svg"), ScaleContext.create(ScaleType.OBJ_SCALE.of(2.0)))
+                val DashboardDark: Icon = IconsUtil.loadAndScaleIconObjectByFactor("/icons/dashboard.svg", 2.0)
+                @JvmStatic
+                val DashboardDarkPressed: Icon = IconsUtil.loadAndScaleIconObjectByFactor("/icons/dashboard.svg", 1.6)
+                @JvmStatic
+                val DashboardLight: Icon = IconsUtil.loadAndScaleIconObjectByFactor("/icons/dashboard.svg", 2.0)
+                @JvmStatic
+                val DashboardLightPressed: Icon = IconsUtil.loadAndScaleIconObjectByFactor("/icons/dashboard.svg", 1.6)
 
                 @JvmStatic
-//                val DashboardDarkPressed = SvgIcon.asIs("/icons/dashboard.svg")
-                val DashboardDarkPressed = IconUtil.scale(SvgIcon.asIs("/icons/dashboard.svg"), ScaleContext.create(ScaleType.OBJ_SCALE.of(1.6)))
-
+                val NavPrevDark: Icon = IconsUtil.loadAndScaleIconObjectByFactor("/icons/nav-prev-dark.svg", 2.0)
                 @JvmStatic
-//                val DashboardLight = SvgIcon.asIs("/icons/dashboard.svg")
-                val DashboardLight = IconUtil.scale(SvgIcon.asIs("/icons/dashboard.svg"), ScaleContext.create(ScaleType.OBJ_SCALE.of(2.0)))
-
+                val NavPrevDarkPressed: Icon = IconsUtil.loadAndScaleIconObjectByFactor("/icons/nav-prev-dark.svg", 1.6)
                 @JvmStatic
-//                val DashboardLightPressed = SvgIcon.asIs("/icons/dashboard.svg")
-                val DashboardLightPressed = IconUtil.scale(SvgIcon.asIs("/icons/dashboard.svg"), ScaleContext.create(ScaleType.OBJ_SCALE.of(1.6)))
-
+                val NavPrevLight: Icon = IconsUtil.loadAndScaleIconObjectByFactor("/icons/nav-prev-light.svg", 2.0)
                 @JvmStatic
-                val NavPrevDark =
-                    IconUtil.scale(SvgIcon.asIs("/icons/nav-prev-dark.svg"), ScaleContext.create(ScaleType.OBJ_SCALE.of(2.0)))
-
-                @JvmStatic
-                val NavPrevDarkPressed = IconUtil.scale(SvgIcon.asIs("/icons/nav-prev-dark.svg"), ScaleContext.create(ScaleType.OBJ_SCALE.of(1.6)))
-
-                @JvmStatic
-                val NavPrevLight =
-                    IconUtil.scale(SvgIcon.asIs("/icons/nav-prev-light.svg"), ScaleContext.create(ScaleType.OBJ_SCALE.of(2.0)))
-
-                @JvmStatic
-                val NavPrevLightPressed = IconUtil.scale(SvgIcon.asIs("/icons/nav-prev-light.svg"), ScaleContext.create(ScaleType.OBJ_SCALE.of(1.6)))
+                val NavPrevLightPressed: Icon = IconsUtil.loadAndScaleIconObjectByFactor("/icons/nav-prev-light.svg", 1.6)
             }
         }
 

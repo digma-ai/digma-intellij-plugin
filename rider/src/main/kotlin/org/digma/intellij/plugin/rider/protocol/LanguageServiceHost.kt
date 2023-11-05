@@ -12,7 +12,7 @@ import com.jetbrains.rd.framework.IProtocol
 import com.jetbrains.rd.util.reactive.whenTrue
 import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent
 import com.jetbrains.rdclient.util.idea.callSynchronously
-import com.jetbrains.rider.ideaInterop.fileTypes.csharp.CSharpLanguage
+import com.jetbrains.rider.languages.fileTypes.csharp.CSharpLanguage
 import com.jetbrains.rider.projectView.SolutionLifecycleHost
 import com.jetbrains.rider.projectView.SolutionStartupService
 import com.jetbrains.rider.projectView.solution

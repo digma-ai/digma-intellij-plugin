@@ -161,14 +161,14 @@ object BuildProfiles {
 
             profile = Profiles.p233,
             isEAP = true,
-            // platformVersion is Intellij IDEA Community and Ultimate
+            // platformVersion is for Intellij IDEA Community and Ultimate
 //            platformVersion = "233-EAP-SNAPSHOT",
-            platformVersion = "233.11361.10-EAP-SNAPSHOT",
-            riderVersion = "2023.3-EAP4-SNAPSHOT",
-            pycharmVersion = "233-EAP-SNAPSHOT", //todo: pycharm 233 eap
-            riderResharperVersion = "2023.3.0-eap04",
+            platformVersion = "233.11555.11-EAP-SNAPSHOT",
+            riderVersion = "2023.3-EAP5-SNAPSHOT",
+            pycharmVersion = "233-EAP-SNAPSHOT",
+            riderResharperVersion = "2023.3.0-eap05",
             riderResharperVersionConstant = "PROFILE_2023_2",
-            pythonPluginVersion = "233.11361.10",
+            pythonPluginVersion = "233.11555.11",
             platformVersionCode = "233",
             pluginSinceBuild = "233",
             pluginUntilBuild = "233.*",

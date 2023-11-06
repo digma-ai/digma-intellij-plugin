@@ -12,7 +12,6 @@ import com.jetbrains.rd.framework.IProtocol
 import com.jetbrains.rd.util.reactive.whenTrue
 import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent
 import com.jetbrains.rdclient.util.idea.callSynchronously
-import com.jetbrains.rider.ideaInterop.fileTypes.csharp.CSharpLanguage
 import com.jetbrains.rider.projectView.SolutionLifecycleHost
 import com.jetbrains.rider.projectView.SolutionStartupService
 import com.jetbrains.rider.projectView.solution
@@ -28,6 +27,7 @@ import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
 import org.digma.intellij.plugin.model.discovery.SpanInfo
 import org.digma.intellij.plugin.psi.LanguageServiceLocator
 import org.digma.intellij.plugin.psi.PsiUtils
+import org.digma.intellij.plugin.rider.psi.csharp.CSharpLanguageUtil
 import org.digma.intellij.plugin.ui.CaretContextService
 import kotlin.random.Random
 
@@ -100,7 +100,7 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
                     val psiFile = PsiManager.getInstance(project).findFile(virtualFile)
                     psiFile?.let {
 
-                        if (CSharpLanguage == psiFile.language) {
+                        if (CSharpLanguageUtil.isCSharpLanguage(psiFile.language)) {
 
                             val languageService = LanguageServiceLocator.getInstance(project).locate(psiFile.language)
 

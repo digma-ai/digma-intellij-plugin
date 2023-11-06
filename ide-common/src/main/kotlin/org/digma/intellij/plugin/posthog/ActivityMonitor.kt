@@ -180,7 +180,7 @@ class ActivityMonitor(project: Project) : Disposable {
     }
 
 
-    fun registerError(exception: Throwable, message: String) {
+    fun registerError(exception: Throwable, message: String, extraDetails: Map<String, String>? = mapOf()) {
 
         try {
             val osType = System.getProperty("os.name")
@@ -197,23 +197,30 @@ class ActivityMonitor(project: Project) : Disposable {
 
             val exceptionMessage: String? = ExceptionUtils.getNonEmptyMessage(exception)
 
+            val details = mutableMapOf(
+                "error.source" to "plugin",
+                "action" to "unknown",
+                "message" to message,
+                "exception.type" to exception.javaClass.name,
+                "cause.exception.type" to ExceptionUtils.getFirstRealExceptionCauseTypeName(exception),
+                "exception.message" to exceptionMessage.toString(),
+                "exception.stack-trace" to stringWriter.toString(),
+                "os.type" to osType,
+                "ide.name" to ideName,
+                "ide.version" to ideVersion,
+                "ide.build" to ideBuildNumber,
+                "plugin.version" to pluginVersion,
+                "user.type" to if (isDevUser) "internal" else "external"
+            )
+
+            extraDetails?.let {
+                details.putAll(it)
+            }
+
+
             capture(
                 "error",
-                mapOf(
-                    "error.source" to "plugin",
-                    "action" to "unknown",
-                    "message" to message,
-                    "exception.type" to exception.javaClass.name,
-                    "cause.exception.type" to ExceptionUtils.getFirstRealExceptionCauseTypeName(exception),
-                    "exception.message" to exceptionMessage.toString(),
-                    "exception.stack-trace" to stringWriter.toString(),
-                    "os.type" to osType,
-                    "ide.name" to ideName,
-                    "ide.version" to ideVersion,
-                    "ide.build" to ideBuildNumber,
-                    "plugin.version" to pluginVersion,
-                    "user.type" to if (isDevUser) "internal" else "external"
-                )
+                details
             )
         } catch (e: Exception) {
             registerCustomEvent(

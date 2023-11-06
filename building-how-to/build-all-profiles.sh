@@ -24,6 +24,7 @@ set -e
 ###################### idea ultimate
 
 ./gradlew clean buildPlugin runPluginVerifier -PbuildWIthUltimate=true
+./gradlew clean buildPlugin runPluginVerifier -PbuildWIthUltimate=true -PbuildProfile=p223
 ./gradlew clean buildPlugin runPluginVerifier -PbuildWIthUltimate=true -PbuildProfile=p231
 ./gradlew clean buildPlugin runPluginVerifier -PbuildWIthUltimate=true -PbuildProfile=p232
 ./gradlew clean buildPlugin runPluginVerifier -PbuildWIthUltimate=true -PbuildProfile=p233
@@ -32,6 +33,7 @@ set -e
 
 #################  rider
 ./gradlew clean buildPlugin -PbuildWithRider=true
+./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=p223
 ./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=p231
 ./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=p232
 ./gradlew clean buildPlugin -PbuildWithRider=true -PbuildProfile=p233
@@ -39,6 +41,7 @@ set -e
 ######################  pycharm
 
 ./gradlew clean buildPlugin -PbuildWithPycharm=true
+./gradlew clean buildPlugin -PbuildWithPycharm=true -PbuildProfile=p223
 ./gradlew clean buildPlugin -PbuildWithPycharm=true -PbuildProfile=p231
 ./gradlew clean buildPlugin -PbuildWithPycharm=true -PbuildProfile=p232
 ./gradlew clean buildPlugin -PbuildWithPycharm=true -PbuildProfile=p233
@@ -47,6 +50,7 @@ set -e
 ######################  pycharm pro
 
 ./gradlew clean buildPlugin -PbuildWithPycharmPro=true
+./gradlew clean buildPlugin -PbuildWithPycharmPro=true -PbuildProfile=p223
 ./gradlew clean buildPlugin -PbuildWithPycharmPro=true -PbuildProfile=p231
 ./gradlew clean buildPlugin -PbuildWithPycharmPro=true -PbuildProfile=p232
 ./gradlew clean buildPlugin -PbuildWithPycharmPro=true -PbuildProfile=p233

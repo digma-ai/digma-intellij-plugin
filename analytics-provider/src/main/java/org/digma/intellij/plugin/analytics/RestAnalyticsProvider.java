@@ -9,7 +9,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
 import org.digma.intellij.plugin.model.rest.AboutResult;
-import org.digma.intellij.plugin.model.rest.assets.AssetsRequest;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentRequest;
 import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentResponse;
@@ -39,6 +38,8 @@ import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
+import org.digma.intellij.plugin.model.rest.user.UserUsageStatsRequest;
+import org.digma.intellij.plugin.model.rest.user.UserUsageStatsResponse;
 import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse;
 import org.digma.intellij.plugin.model.rest.version.VersionRequest;
 import org.digma.intellij.plugin.model.rest.version.VersionResponse;
@@ -94,7 +95,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     public List<String> getEnvironments() {
         var envs = execute(client.analyticsProvider::getEnvironments);
         //make sure environments list is always a mutable list because we change it
-        if (envs != null){
+        if (envs != null) {
             envs = new ArrayList<>(envs);
         }
         return envs;
@@ -115,7 +116,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         return execute(() -> client.analyticsProvider.getInsightsOfMethods(insightsOfMethodsRequest));
     }
 
-    public InsightsOfSingleSpanResponse getInsightsForSingleSpan(InsightsOfSingleSpanRequest insightsOfSingleSpanRequest){
+    public InsightsOfSingleSpanResponse getInsightsForSingleSpan(InsightsOfSingleSpanRequest insightsOfSingleSpanRequest) {
         return execute(() -> client.analyticsProvider.getInsightsForSingleSpan(insightsOfSingleSpanRequest));
     }
 
@@ -123,6 +124,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     public List<GlobalInsight> getGlobalInsights(InsightsRequest insightsRequest) {
         return execute(() -> client.analyticsProvider.getGlobalInsights(insightsRequest));
     }
+
     @Override
     public LatestCodeObjectEventsResponse getLatestEvents(LatestCodeObjectEventsRequest latestCodeObjectEventsRequest) {
         return execute(() -> client.analyticsProvider.getLatestEvents(latestCodeObjectEventsRequest));
@@ -181,17 +183,17 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public String getAssetCategories(String environment){
+    public String getAssetCategories(String environment) {
         return execute(() -> client.analyticsProvider.getAssetCategories(environment));
     }
 
     @Override
-    public String insightExists(String environment){
+    public String insightExists(String environment) {
         return execute(() -> client.analyticsProvider.insightExists(environment));
     }
 
     @Override
-    public String getAssets(Map<String,String> queryParams) {
+    public String getAssets(Map<String, String> queryParams) {
         return execute(() -> client.analyticsProvider.getAssets(queryParams));
     }
 
@@ -221,7 +223,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public PerformanceMetricsResponse getPerformanceMetrics()  {
+    public PerformanceMetricsResponse getPerformanceMetrics() {
         return execute(client.analyticsProvider::getPerformanceMetrics);
     }
 
@@ -231,7 +233,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public String getDashboard(Map<String,String> queryParams) {
+    public String getDashboard(Map<String, String> queryParams) {
         return execute(() -> client.analyticsProvider.getDashboard(queryParams));
     }
 
@@ -550,7 +552,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Content-Type:application/json"
         })
         @GET("/CodeAnalytics/codeObjects/getAssets")
-        Call<String> getAssets(@QueryMap Map<String,String> fields);
+        Call<String> getAssets(@QueryMap Map<String, String> fields);
 
         @Headers({
                 "Accept: application/+json",
@@ -607,7 +609,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Content-Type:application/json"
         })
         @GET("/dashboard/getDashboard")
-        Call<String> getDashboard(@QueryMap Map<String,String> fields);
+        Call<String> getDashboard(@QueryMap Map<String, String> fields);
     }
 
 }

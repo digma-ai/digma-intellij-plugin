@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.analytics;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
@@ -21,7 +20,6 @@ import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.digma.intellij.plugin.model.rest.AboutResult;
-import org.digma.intellij.plugin.model.rest.assets.AssetsRequest;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentRequest;
 import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentResponse;
@@ -52,6 +50,8 @@ import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
+import org.digma.intellij.plugin.model.rest.user.UserUsageStatsRequest;
+import org.digma.intellij.plugin.model.rest.user.UserUsageStatsResponse;
 import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse;
 import org.digma.intellij.plugin.model.rest.version.VersionRequest;
 import org.digma.intellij.plugin.model.rest.version.VersionResponse;
@@ -356,6 +356,10 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getRecentActivity(new RecentActivityRequest(environments)));
     }
 
+    public UserUsageStatsResponse getUserUsageStats(UserUsageStatsRequest request) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getUserUsageStats(new UserUsageStatsRequest()));
+    }
+
     public DurationLiveData getDurationLiveData(String codeObjectId) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         return executeCatching(() ->
@@ -391,6 +395,7 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() ->
                 analyticsProviderProxy.getAssetCategories(env));
     }
+
     public void checkInsightExists() throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         var response = executeCatching(() ->
@@ -411,7 +416,7 @@ public class AnalyticsService implements Disposable {
         }
     }
 
-    public String getAssets(@NotNull Map<String,String> queryParams) throws AnalyticsServiceException {
+    public String getAssets(@NotNull Map<String, String> queryParams) throws AnalyticsServiceException {
         return executeCatching(() ->
                 analyticsProviderProxy.getAssets(queryParams));
     }
@@ -450,7 +455,7 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.deleteEnvironment(new DeleteEnvironmentRequest(environmentName)));
     }
 
-    public String getDashboard(@NotNull Map<String,String> queryParams) throws AnalyticsServiceException {
+    public String getDashboard(@NotNull Map<String, String> queryParams) throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getDashboard(queryParams));
     }
 

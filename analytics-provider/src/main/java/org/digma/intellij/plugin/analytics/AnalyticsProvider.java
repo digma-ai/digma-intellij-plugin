@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.analytics;
 
 import org.digma.intellij.plugin.model.rest.AboutResult;
-import org.digma.intellij.plugin.model.rest.assets.AssetsRequest;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentRequest;
 import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentResponse;
@@ -31,6 +30,8 @@ import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
 import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
+import org.digma.intellij.plugin.model.rest.user.UserUsageStatsRequest;
+import org.digma.intellij.plugin.model.rest.user.UserUsageStatsResponse;
 import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse;
 import org.digma.intellij.plugin.model.rest.version.VersionRequest;
 import org.digma.intellij.plugin.model.rest.version.VersionResponse;
@@ -71,6 +72,8 @@ public interface AnalyticsProvider extends Closeable {
 
     RecentActivityResult getRecentActivity(RecentActivityRequest recentActivityRequest);
 
+    UserUsageStatsResponse getUserUsageStats(UserUsageStatsRequest request);
+
     DurationLiveData getDurationLiveData(DurationLiveDataRequest durationLiveDataRequest);
 
     CodeObjectNavigation getCodeObjectNavigation(CodeObjectNavigationRequest codeObjectNavigationRequest);
@@ -79,7 +82,7 @@ public interface AnalyticsProvider extends Closeable {
 
     String insightExists(String environment);
 
-    String getAssets(Map<String,String> queryParams);
+    String getAssets(Map<String, String> queryParams);
 
     String getNotifications(NotificationsRequest notificationsRequest);
 
@@ -96,5 +99,5 @@ public interface AnalyticsProvider extends Closeable {
     DeleteEnvironmentResponse deleteEnvironment(DeleteEnvironmentRequest deleteEnvironmentRequest);
 
     // queryParams: (limit, 5), (pageSize, 5) etc
-    String getDashboard(Map<String,String> queryParams);
+    String getDashboard(Map<String, String> queryParams);
 }

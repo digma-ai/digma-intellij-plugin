@@ -173,6 +173,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
+    public UserUsageStatsResponse getUserUsageStats(UserUsageStatsRequest request) {
+        return execute(() -> client.analyticsProvider.getUserUsageStats(request));
+    }
+
+    @Override
     public DurationLiveData getDurationLiveData(DurationLiveDataRequest durationLiveDataRequest) {
         return execute(() -> client.analyticsProvider.getDurationLiveData(durationLiveDataRequest));
     }
@@ -517,6 +522,12 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         @POST("/CodeAnalytics/codeObjects/recent_activity")
         Call<RecentActivityResult> getRecentActivity(@Body RecentActivityRequest recentActivityRequest);
 
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/user/usage_stats")
+        Call<UserUsageStatsResponse> getUserUsageStats(@Body UserUsageStatsRequest request);
 
         @Headers({
                 "Accept: application/+json",

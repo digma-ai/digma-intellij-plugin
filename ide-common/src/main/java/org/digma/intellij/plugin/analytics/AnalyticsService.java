@@ -356,7 +356,7 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getRecentActivity(new RecentActivityRequest(environments)));
     }
 
-    public UserUsageStatsResponse getUserUsageStats(UserUsageStatsRequest request) throws AnalyticsServiceException {
+    public UserUsageStatsResponse getUserUsageStats() throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getUserUsageStats(new UserUsageStatsRequest()));
     }
 

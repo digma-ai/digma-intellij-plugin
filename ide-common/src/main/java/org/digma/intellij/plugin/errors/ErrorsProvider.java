@@ -87,8 +87,6 @@ public class ErrorsProvider {
             //getErrorDetails may be called from few places.
             //when clicked in errors insight then the document is probably opened and DocumentInfoService has the MethodInfo
             //and the language.
-            //when clicked in summary view the document may or may not be opened in the editor
-            // and DocumentInfoService will not have the MethodInfo.
             var languageService = LanguageService.findLanguageServiceByMethodCodeObjectId(project, methodCodeObjectId);
 
             var methodInfo = documentInfoService.findMethodInfo(methodCodeObjectId);

@@ -21,9 +21,7 @@ import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
 import org.digma.intellij.plugin.ui.model.DocumentScope
 import org.digma.intellij.plugin.ui.model.EmptyScope
-import org.digma.intellij.plugin.ui.model.ErrorDetailsScope
 import org.digma.intellij.plugin.ui.model.MethodScope
-import org.digma.intellij.plugin.ui.model.UIInsightsStatus
 import org.digma.intellij.plugin.ui.model.errors.ErrorDetailsModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsPreviewListItem
@@ -201,7 +199,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         project.service<InsightsAndErrorsTabsHelper>().switchToErrorsTab()
     }
 
-    fun showErrorDetails(uid: String, errorsProvider: ErrorsProvider,replaceScope: Boolean) {
+    fun showErrorDetails(uid: String, errorsProvider: ErrorsProvider) {
 
         Log.log(logger::debug, "showDocumentPreviewList for {}. ", uid)
 
@@ -209,11 +207,6 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         errorDetails.flowStacks.isWorkspaceOnly = PersistenceService.getInstance().state.isWorkspaceOnly
         model.errorDetails = errorDetails
         model.card = ErrorsTabCard.ERROR_DETAILS
-
-        if (replaceScope) {
-            project.service<InsightsViewService>().model.scope = ErrorDetailsScope(errorDetails.getName())
-            project.service<InsightsViewService>().model.status = UIInsightsStatus.Default
-        }
 
         updateUi()
 

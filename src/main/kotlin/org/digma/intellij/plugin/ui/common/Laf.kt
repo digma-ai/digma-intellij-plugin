@@ -171,8 +171,6 @@ object Laf {
                 @JvmStatic val NoObservabilityDark = SvgIcon.asIs("/icons/no_observability-dark.svg")
                 @JvmStatic val NoInsightsLight = SvgIcon.asIs("/icons/no_insights_light.svg")
                 @JvmStatic val NoInsightsDark = SvgIcon.asIs("/icons/no_insights_dark.svg")
-                @JvmStatic val SummaryEmptyLight = SvgIcon.asIs("/icons/summary_empty_light.svg")
-                @JvmStatic val SummaryEmptyDark = SvgIcon.asIs("/icons/summary_empty_dark.svg")
                 @JvmStatic val UpdateProductDark = SvgIcon.asIs("/icons/update-product-dark.svg")
                 @JvmStatic val UpdateProductLight = SvgIcon.asIs("/icons/update-product-light.svg")
                 @JvmStatic val Mascot64 = loadAndScaleIconByWidth("/icons/digma.png", 64)

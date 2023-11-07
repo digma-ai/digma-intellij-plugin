@@ -1,6 +1,14 @@
 # Changelog
 
-## [2.0.190] - 2023-11-02
+## [2.0.191] - 2023-11-07
+- updated document titles by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/1388
+- fix svg icons scaling by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1391
+- update eap profile 11555 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1393
+- add duration to error in indexing by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1395
+- remove summary panel and services Closes #1390 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1398
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1399
+
+## 2.0.190 - 2023-11-02
 - Update eap profile 11361.10 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1383
 - Feature: Rework assets filter by @borisermakof in https://github.com/digma-ai/digma-intellij-plugin/pull/1374
 - Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1387

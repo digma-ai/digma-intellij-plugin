@@ -6,7 +6,7 @@ import com.intellij.openapi.project.Project
 import javax.swing.JToggleButton
 
 /**
- * switches between home (assets/dashboard) and insights (insights/errors)
+ * switches between home (assets) and insights (insights/errors)
  * doing that by changing state of the [org.digma.intellij.plugin.ui.common.HomeButton] which will react and change
  * card
  */

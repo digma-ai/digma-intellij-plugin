@@ -2,16 +2,6 @@
 
 package org.digma.intellij.plugin.model
 
-enum class CodeObjectSummaryType {
-    MethodSummary,
-    SpanSummary,
-    EndpointSummary,
-    Unmapped
-}
-
-enum class CodeObjectType {
-    Method, Span, Endpoint
-}
 
 enum class ElementUnderCaretType {
     Method

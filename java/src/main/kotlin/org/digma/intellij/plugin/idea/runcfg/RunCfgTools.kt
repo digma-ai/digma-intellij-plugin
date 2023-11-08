@@ -15,9 +15,11 @@ import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessModuleDir
 import com.intellij.openapi.util.SystemInfo
+import com.intellij.openapi.util.ThrowableComputable
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.util.SlowOperations
 import com.intellij.util.keyFMap.KeyFMap
 import org.digma.intellij.plugin.log.Log
 import org.jetbrains.annotations.VisibleForTesting
@@ -139,17 +141,33 @@ private abstract class RunCfgFlavor<T : RunConfiguration>(protected val runCfgBa
         val mainClassFqn = evalMainClass(params)
 
         if (!mainClassFqn.isNullOrBlank()) {
-            var psiClass: PsiClass? = psiFacade.findClass(mainClassFqn, searchScope)
-            if (psiClass == null) {
-                // try shorter name, since maybe the last part is method name
-                val shorterName = mainClassFqn.substringBeforeLast('.')
-                psiClass = psiFacade.findClass(shorterName, searchScope)
+
+
+            //todo: see javadoc of SlowOperations
+            //it is not easy to change this code to run on background. so currently allowSlowOperations.
+            //if that doesn't work well then this code can be executed on background thread
+            //with Backgroundable.executeOnPooledThread(java.util.concurrent.Callable<T>)
+
+            val module: Module? = SlowOperations.allowSlowOperations(ThrowableComputable {
+                var psiClass: PsiClass? = psiFacade.findClass(mainClassFqn, searchScope)
+                if (psiClass == null) {
+                    // try shorter name, since maybe the last part is method name
+                    val shorterName = mainClassFqn.substringBeforeLast('.')
+                    psiClass = psiFacade.findClass(shorterName, searchScope)
+                }
+
+                if (psiClass != null) {
+                    val theModule = ModuleUtilCore.findModuleForPsiElement(psiClass)
+                    theModule
+                } else {
+                    null
+                }
+            })
+
+            if (module != null) {
+                return module
             }
 
-            if (psiClass != null) {
-                val theModule = ModuleUtilCore.findModuleForPsiElement(psiClass)
-                return theModule
-            }
         }
 
         // forth strategy, by working folder

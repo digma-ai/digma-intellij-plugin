@@ -7,7 +7,6 @@
   gap: 4px;
   font-size: 14px;
   color: ${({theme:e})=>{switch(e.mode){case"light":return"#828797";case"dark":case"dark-jetbrains":return"#9b9b9b"}}};
-  background: ${({theme:e})=>{switch(e.mode){case"light":return"#fff";case"dark":case"dark-jetbrains":return"#393b40"}}};
 `,t.Title=a.default.div`
   display: flex;
   gap: 8px;
@@ -45,8 +44,12 @@
   gap: 4px;
   font-size: 14px;
   font-weight: 500;
+  border-radius: 2px;
+  border: 1px solid #434343;
+  box-shadow: 0 4px 8px 0 rgba(0 0 0 / 12%);
   color: ${({theme:e})=>{switch(e.mode){case"light":return"#788ca9";case"dark":case"dark-jetbrains":return"#9b9b9b"}}};
-  ${({$isDisabled:e})=>e?"opacity: 0.4;":""}
+  background: ${({theme:e})=>{switch(e.mode){case"light":return"#e9eef4";case"dark":case"dark-jetbrains":return"#23282f"}}};
+  ${({$isDisabled:e})=>e?"opacity: 0.6;":""}
 `,t.Header=a.default.div`
   font-size: 14px;
   font-weight: 600;
@@ -82,24 +85,61 @@
   font-size: 14px;
 `,t.Link=(0,a.default)(o.Link)`
   color: inherit;
-`},39204:(e,t)=>{"use strict";var n;Object.defineProperty(t,"__esModule",{value:!0}),t.InsightCardType=void 0,(n=t.InsightCardType||(t.InsightCardType={}))[n.TRACING_DATA=0]="TRACING_DATA",n[n.QUERY_ISSUES=1]="QUERY_ISSUES",n[n.BOTTLENECKS=2]="BOTTLENECKS",n[n.ERRORS=3]="ERRORS",n[n.SCALING_ISSUES_CI=4]="SCALING_ISSUES_CI",n[n.SCALING_ISSUES_PRODUCTION=5]="SCALING_ISSUES_PRODUCTION",n[n.SLOWDOWN_PERF_IMPROVEMENTS=6]="SLOWDOWN_PERF_IMPROVEMENTS",n[n.SLOWDOWN_ROOT_CAUSE_DETECTION=7]="SLOWDOWN_ROOT_CAUSE_DETECTION",n[n.PERFORMANCE_IMPACT=8]="PERFORMANCE_IMPACT",n[n.USAGE_ANALYSIS=9]="USAGE_ANALYSIS",n[n.ERROR_HOTSPOTS=10]="ERROR_HOTSPOTS",n[n.CONCURRENCY_AND_COST_OPTIMIZATION=11]="CONCURRENCY_AND_COST_OPTIMIZATION",n[n.CHATTY_MICROSERVICES=12]="CHATTY_MICROSERVICES"},92763:(e,t,n)=>{"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.environmentTypesData=void 0;const r=n(51134),a=n(66149),o=n(89690),i=n(39204);t.environmentTypesData=[{id:"dev",icon:a.CodeDisplayIcon,name:"Local Environments / Any",description:"Local environment uses observability collected from your local machine. This information can be automatically collected when your run or debug your code in the IDE or run tests.",status:"active",insights:[{type:i.InsightCardType.TRACING_DATA},{type:i.InsightCardType.QUERY_ISSUES},{type:i.InsightCardType.BOTTLENECKS},{type:i.InsightCardType.ERRORS}]},{id:"ci-testing",icon:o.InfiniteLoopIcon,name:"CI/Testing Environment",description:"Collect information from your CI build to monitor releases over time.",status:"active",insights:[{type:i.InsightCardType.SCALING_ISSUES_CI},{type:i.InsightCardType.SLOWDOWN_PERF_IMPROVEMENTS},{type:i.InsightCardType.SLOWDOWN_ROOT_CAUSE_DETECTION},{type:i.InsightCardType.USAGE_ANALYSIS}]},{id:"production",icon:r.CloudDownloadIcon,name:"Production Environment",description:"Digma can ingest data from your production to provide real world data about your code and issues currently in the wild.",status:"active",insights:[{type:i.InsightCardType.PERFORMANCE_IMPACT},{type:i.InsightCardType.ERROR_HOTSPOTS},{type:i.InsightCardType.CONCURRENCY_AND_COST_OPTIMIZATION},{type:i.InsightCardType.SCALING_ISSUES_PRODUCTION},{type:i.InsightCardType.USAGE_ANALYSIS},{type:i.InsightCardType.CHATTY_MICROSERVICES}]}]},15503:function(e,t,n){"use strict";var r=this&&this.__createBinding||(Object.create?function(e,t,n,r){void 0===r&&(r=n);var a=Object.getOwnPropertyDescriptor(t,n);a&&!("get"in a?!t.__esModule:a.writable||a.configurable)||(a={enumerable:!0,get:function(){return t[n]}}),Object.defineProperty(e,r,a)}:function(e,t,n,r){void 0===r&&(r=n),e[r]=t[n]}),a=this&&this.__setModuleDefault||(Object.create?function(e,t){Object.defineProperty(e,"default",{enumerable:!0,value:t})}:function(e,t){e.default=t}),o=this&&this.__importStar||function(e){if(e&&e.__esModule)return e;var t={};if(null!=e)for(var n in e)"default"!==n&&Object.prototype.hasOwnProperty.call(e,n)&&r(t,e,n);return a(t,e),t};Object.defineProperty(t,"__esModule",{value:!0}),t.EnvironmentTypes=void 0;const i=n(85893),s=n(53325),l=n(13812),c=n(77137),d=n(92763),u=o(n(64105)),p=()=>{const e=Math.max(...d.environmentTypesData.map((e=>e.insights.length))),t=new Array(e).fill(0);return(0,i.jsxs)(u.Table,{children:[(0,i.jsx)(u.TableRow,{children:d.environmentTypesData.map((e=>(0,i.jsx)(u.TableCell,{children:(0,i.jsx)(l.EnvironmentTypeCard,{name:e.name,icon:e.icon,description:e.description,insights:e.insights,status:e.status})},e.id)))}),t.map(((e,t)=>(0,i.jsx)(u.TableRow,{children:d.environmentTypesData.map((e=>{const n=e.insights[t];return(0,i.jsx)(u.TableCell,{children:n&&(0,i.jsx)(c.InsightCard,{type:n.type,count:n.count,isDisabled:!e.status})},`${e.id}_${t}`)}))},t)))]})};t.EnvironmentTypes=()=>{const e=d.environmentTypesData.length;return(0,i.jsxs)(u.Container,{$columnCount:e,children:[(0,i.jsxs)(u.Header,{$columnCount:e,children:[(0,i.jsxs)(u.Title,{children:[(0,i.jsx)(s.DigmaLogoIcon,{size:16}),(0,i.jsx)("span",{children:"Digma Insight Overview"})]}),(0,i.jsx)("span",{children:"The following lists describes some Digma's capabilities in analyzing observability for multiple environment types, from local dev and test through CI to real world production environment."})]}),(0,i.jsx)(u.EnvironmentsContainer,{children:p()})]})}},64105:function(e,t,n){"use strict";var r=this&&this.__importDefault||function(e){return e&&e.__esModule?e:{default:e}};Object.defineProperty(t,"__esModule",{value:!0}),t.TableCell=t.TableRow=t.Table=t.EnvironmentsContainer=t.Title=t.Header=t.Container=void 0;const a=r(n(70394)),o=e=>280*e+8*(e+1);t.Container=a.default.div`
-  min-height: 100vh;
-  min-width: ${({$columnCount:e})=>o(e)}px;
-  background: ${({theme:e})=>{switch(e.mode){case"light":return"#ebecf0";case"dark":case"dark-jetbrains":return"#191919"}}};
-`,t.Header=a.default.div`
+`},39204:(e,t)=>{"use strict";var n;Object.defineProperty(t,"__esModule",{value:!0}),t.InsightCardType=void 0,(n=t.InsightCardType||(t.InsightCardType={}))[n.TRACING_DATA=0]="TRACING_DATA",n[n.QUERY_ISSUES=1]="QUERY_ISSUES",n[n.BOTTLENECKS=2]="BOTTLENECKS",n[n.ERRORS=3]="ERRORS",n[n.SCALING_ISSUES_CI=4]="SCALING_ISSUES_CI",n[n.SCALING_ISSUES_PRODUCTION=5]="SCALING_ISSUES_PRODUCTION",n[n.SLOWDOWN_PERF_IMPROVEMENTS=6]="SLOWDOWN_PERF_IMPROVEMENTS",n[n.SLOWDOWN_ROOT_CAUSE_DETECTION=7]="SLOWDOWN_ROOT_CAUSE_DETECTION",n[n.PERFORMANCE_IMPACT=8]="PERFORMANCE_IMPACT",n[n.USAGE_ANALYSIS=9]="USAGE_ANALYSIS",n[n.ERROR_HOTSPOTS=10]="ERROR_HOTSPOTS",n[n.CONCURRENCY_AND_COST_OPTIMIZATION=11]="CONCURRENCY_AND_COST_OPTIMIZATION",n[n.CHATTY_MICROSERVICES=12]="CHATTY_MICROSERVICES"},92763:(e,t,n)=>{"use strict";Object.defineProperty(t,"__esModule",{value:!0}),t.environmentTypesData=void 0;const r=n(51134),a=n(66149),o=n(89690),i=n(39204);t.environmentTypesData=[{id:"dev",icon:a.CodeDisplayIcon,name:"Local Environments / Any",description:"Local environment uses observability collected from your local machine. This information can be automatically collected when your run or debug your code in the IDE or run tests.",status:"active",insights:[{type:i.InsightCardType.TRACING_DATA},{type:i.InsightCardType.QUERY_ISSUES},{type:i.InsightCardType.BOTTLENECKS},{type:i.InsightCardType.ERRORS}]},{id:"ci-testing",icon:o.InfiniteLoopIcon,name:"CI/Testing Environment",description:"Collect information from your CI build to monitor releases over time.",status:"active",insights:[{type:i.InsightCardType.SCALING_ISSUES_CI},{type:i.InsightCardType.SLOWDOWN_PERF_IMPROVEMENTS},{type:i.InsightCardType.SLOWDOWN_ROOT_CAUSE_DETECTION},{type:i.InsightCardType.USAGE_ANALYSIS}]},{id:"production",icon:r.CloudDownloadIcon,name:"Production Environment",description:"Digma can ingest data from your production to provide real world data about your code and issues currently in the wild.",status:"active",insights:[{type:i.InsightCardType.PERFORMANCE_IMPACT},{type:i.InsightCardType.ERROR_HOTSPOTS},{type:i.InsightCardType.CONCURRENCY_AND_COST_OPTIMIZATION},{type:i.InsightCardType.SCALING_ISSUES_PRODUCTION},{type:i.InsightCardType.USAGE_ANALYSIS},{type:i.InsightCardType.CHATTY_MICROSERVICES}]}]},15503:function(e,t,n){"use strict";var r=this&&this.__createBinding||(Object.create?function(e,t,n,r){void 0===r&&(r=n);var a=Object.getOwnPropertyDescriptor(t,n);a&&!("get"in a?!t.__esModule:a.writable||a.configurable)||(a={enumerable:!0,get:function(){return t[n]}}),Object.defineProperty(e,r,a)}:function(e,t,n,r){void 0===r&&(r=n),e[r]=t[n]}),a=this&&this.__setModuleDefault||(Object.create?function(e,t){Object.defineProperty(e,"default",{enumerable:!0,value:t})}:function(e,t){e.default=t}),o=this&&this.__importStar||function(e){if(e&&e.__esModule)return e;var t={};if(null!=e)for(var n in e)"default"!==n&&Object.prototype.hasOwnProperty.call(e,n)&&r(t,e,n);return a(t,e),t};Object.defineProperty(t,"__esModule",{value:!0}),t.EnvironmentTypes=void 0;const i=n(85893),s=n(53325),l=n(13812),c=n(77137),d=n(92763),u=o(n(64105)),p=()=>{const e=Math.max(...d.environmentTypesData.map((e=>e.insights.length))),t=new Array(e).fill(0);return(0,i.jsx)(u.Table,{children:t.map(((e,t)=>(0,i.jsx)(u.TableRow,{children:d.environmentTypesData.map((e=>{const n=e.insights[t];return(0,i.jsx)(u.TableCell,{children:n&&(0,i.jsx)(c.InsightCard,{type:n.type,count:n.count,isDisabled:!e.status})},`${e.id}_${t}`)}))},t)))})};t.EnvironmentTypes=()=>{const e=d.environmentTypesData.length;return(0,i.jsxs)(u.Container,{$columnCount:e,children:[(0,i.jsx)(u.TopGradientBackground,{}),(0,i.jsx)(u.BottomGradientBackground,{}),(0,i.jsxs)(u.ContentContainer,{children:[(0,i.jsxs)(u.Header,{$columnCount:e,children:[(0,i.jsxs)(u.HeaderTextContainer,{children:[(0,i.jsxs)(u.Title,{children:[(0,i.jsx)(s.DigmaLogoIcon,{size:16}),(0,i.jsx)("span",{children:"Digma Insight Overview"})]}),(0,i.jsx)("span",{children:"The following lists describes some Digma's capabilities in analyzing observability for multiple environment types, from local dev and test through CI to real world production environment."})]}),(0,i.jsx)(u.Table,{children:(0,i.jsx)(u.TableRow,{children:d.environmentTypesData.map((e=>(0,i.jsx)(u.TableCell,{children:(0,i.jsx)(l.EnvironmentTypeCard,{name:e.name,icon:e.icon,description:e.description,insights:e.insights,status:e.status})},e.id)))})})]}),(0,i.jsx)(u.EnvironmentsContainer,{children:p()})]})]})}},64105:function(e,t,n){"use strict";var r=this&&this.__importDefault||function(e){return e&&e.__esModule?e:{default:e}};Object.defineProperty(t,"__esModule",{value:!0}),t.TableCell=t.TableRow=t.Table=t.EnvironmentsContainer=t.Title=t.HeaderTextContainer=t.Header=t.ContentContainer=t.BottomGradientBackground=t.TopGradientBackground=t.Container=void 0;const a=r(n(70394));t.Container=a.default.div`
+  height: 100%;
+  min-width: ${({$columnCount:e})=>{return 280*(t=e)+8*(t+1);var t}}px;
+  background: ${({theme:e})=>{switch(e.mode){case"light":return"rgba(235 236 240 / 59%)";case"dark":case"dark-jetbrains":return"rgba(66 65 65 / 59%)"}}};
+  backdrop-filter: blur(12px);
+  overflow: hidden;
+`,t.TopGradientBackground=a.default.div`
   position: absolute;
-  min-width: ${({$columnCount:e})=>o(e)}px;
-  box-sizing: border-box;
-  left: 0;
-  right: 0;
+  top: 0;
+  left: -2.7%;
+  right: -5%;
+  height: 56%;
+  border-radius: 107.7vw;
+  opacity: 0.2;
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    #4f5da3 0%,
+    rgba(79 93 163 / 0%) 100%
+  );
+  filter: blur(5px);
+  z-index: -1;
+`,t.BottomGradientBackground=a.default.div`
+  position: absolute;
+  top: 47%;
+  left: -3.9%;
+  right: -3.9%;
+  height: 156%;
+  border-radius: 156vh;
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    #4f5da3 0%,
+    rgba(79 93 163 / 0%) 100%
+  );
+  filter: blur(5px);
+  z-index: -1;
+`,t.ContentContainer=a.default.div`
   display: flex;
-  height: 151px;
-  padding: 12px 12px ${93}px;
+  flex-direction: column;
+  height: 100%;
+  overflow: auto;
+`,t.Header=a.default.div`
+  position: sticky;
+  top: 0;
+  display: flex;
+  padding: 16px 16px 1px;
+  flex-direction: column;
+  gap: 7px;
+  border-bottom: 1px solid #484848;
+  background: ${({theme:e})=>{switch(e.mode){case"light":return"#e9eef4";case"dark":case"dark-jetbrains":return"#2b2d30"}}};
+`,t.HeaderTextContainer=a.default.div`
+  display: flex;
   flex-direction: column;
   gap: 10px;
   font-size: 14px;
   color: ${({theme:e})=>{switch(e.mode){case"light":return"#828797";case"dark":case"dark-jetbrains":return"#b4b8bf"}}};
-  background: ${({theme:e})=>{switch(e.mode){case"light":return"#e9eef4";case"dark":case"dark-jetbrains":return"#2b2d30"}}};
 `,t.Title=a.default.div`
   display: flex;
   gap: 8px;
@@ -109,8 +149,7 @@
   text-transform: capitalize;
   color: ${({theme:e})=>{switch(e.mode){case"light":return"#4d668a";case"dark":case"dark-jetbrains":return"#fff"}}};
 `,t.EnvironmentsContainer=a.default.div`
-  position: relative;
-  padding: ${93}px ${8}px ${8}px;
+  padding: 15px 16px ${8}px;
 `,t.Table=a.default.div`
   display: flex;
   flex-direction: column;
@@ -123,7 +162,6 @@
   display: flex;
   flex: 1 1 0;
   padding-bottom: 12px;
-  background: ${({theme:e})=>{switch(e.mode){case"light":return"#f7f8fa";case"dark":case"dark-jetbrains":return"#1e1f22"}}};
 `},83537:function(e,t,n){"use strict";var r=this&&this.__createBinding||(Object.create?function(e,t,n,r){void 0===r&&(r=n);var a=Object.getOwnPropertyDescriptor(t,n);a&&!("get"in a?!t.__esModule:a.writable||a.configurable)||(a={enumerable:!0,get:function(){return t[n]}}),Object.defineProperty(e,r,a)}:function(e,t,n,r){void 0===r&&(r=n),e[r]=t[n]}),a=this&&this.__setModuleDefault||(Object.create?function(e,t){Object.defineProperty(e,"default",{enumerable:!0,value:t})}:function(e,t){e.default=t}),o=this&&this.__importStar||function(e){if(e&&e.__esModule)return e;var t={};if(null!=e)for(var n in e)"default"!==n&&Object.prototype.hasOwnProperty.call(e,n)&&r(t,e,n);return a(t,e),t};Object.defineProperty(t,"__esModule",{value:!0}),t.Page=void 0;const i=n(85893),s=o(n(13411));t.Page=e=>(0,i.jsxs)(s.Container,{children:[(0,i.jsxs)(s.Header,{children:[(0,i.jsx)(s.Title,{children:e.title}),e.description]}),e.sections&&e.sections.map(((e,t)=>(0,i.jsxs)(s.Section,{children:[(0,i.jsxs)(s.SectionHeader,{children:[Number.isInteger(e.number)&&(0,i.jsx)(s.SectionNumber,{children:e.number}),(0,i.jsxs)(s.SectionTitleContainer,{children:[(0,i.jsx)(s.SectionTitle,{children:e.title}),e.description]})]}),e.content]},t)))]})},13411:function(e,t,n){"use strict";var r=this&&this.__importDefault||function(e){return e&&e.__esModule?e:{default:e}};Object.defineProperty(t,"__esModule",{value:!0}),t.SectionTitle=t.SectionTitleContainer=t.SectionNumber=t.SectionHeader=t.Section=t.ContentContainer=t.Title=t.Header=t.Container=void 0;const a=r(n(70394));t.Container=a.default.div`
   min-height: 100vh;
   display: flex;

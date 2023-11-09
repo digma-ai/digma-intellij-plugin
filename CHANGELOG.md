@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.191] - 2023-11-07
+## [2.0.192] - 2023-11-09
+- allow slow operations Closes #1355 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1402
+- Update Documentation UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1405
+
+## 2.0.191 - 2023-11-07
 - updated document titles by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/1388
 - fix svg icons scaling by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1391
 - update eap profile 11555 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1393

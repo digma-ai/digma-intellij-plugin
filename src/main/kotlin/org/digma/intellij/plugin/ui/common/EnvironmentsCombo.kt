@@ -16,11 +16,7 @@ import org.digma.intellij.plugin.common.LOCAL_TESTS_ENV
 import org.digma.intellij.plugin.common.isEnvironmentLocal
 import org.digma.intellij.plugin.common.isEnvironmentLocalTests
 import org.digma.intellij.plugin.common.isLocalEnvironmentMine
-import org.digma.intellij.plugin.model.ModelChangeListener
-import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
-import org.digma.intellij.plugin.ui.service.ErrorsViewService
-import org.digma.intellij.plugin.ui.service.InsightsViewService
 import java.awt.Cursor
 import java.awt.event.ItemListener
 import javax.swing.JList
@@ -94,13 +90,6 @@ class EnvironmentsCombo(val project: Project, navigationPanel: NavigationPanel) 
             }
         })
 
-
-        project.messageBus.connect(myParentDisposable).subscribe(
-            ModelChangeListener.MODEL_CHANGED_TOPIC, ModelChangeListener {
-                if (isPopupVisible) return@ModelChangeListener
-                buildAndUpdateModel()
-            })
-
     }
 
 
@@ -121,15 +110,10 @@ class EnvironmentsCombo(val project: Project, navigationPanel: NavigationPanel) 
             return listOf()
         }
 
-        val usageStatusesOfInsights = project.service<InsightsViewService>().model.usageStatusResult
-        val usageStatusesOfErrors = project.service<ErrorsViewService>().model.usageStatusResult
-
-        val envsThatHaveUsageSet = getEnvsWithUsages(usageStatusesOfInsights, usageStatusesOfErrors)
-
-        return buildRelevantSortedEnvironments(environmentsSupplier) { env: String -> envsThatHaveUsageSet.contains(env) }
+        return buildRelevantSortedEnvironments(environmentsSupplier)
     }
 
-    private fun buildRelevantSortedEnvironments(environmentsSupplier: EnvironmentsSupplier, hasUsageFunction: (String) -> Boolean): List<EnvItem> {
+    private fun buildRelevantSortedEnvironments(environmentsSupplier: EnvironmentsSupplier): List<EnvItem> {
 
         val localHostName = CommonUtils.getLocalHostname()
 
@@ -148,19 +132,11 @@ class EnvironmentsCombo(val project: Project, navigationPanel: NavigationPanel) 
             val isLocalTestsEnvMine = isLocalTestsEnv && isMine
 
             if ((!isLocalEnv && !isLocalTestsEnv) || isLocalEnvMine || isLocalTestsEnvMine) {
-                envs.add(EnvItem(env, isSelected, hasUsageFunction(env), isLocalEnvMine, isLocalTestsEnvMine))
+                envs.add(EnvItem(env, isSelected, environmentsSupplier.hasUsages(env), isLocalEnvMine, isLocalTestsEnvMine))
             }
         }
 
         return envs.sortedWith(EnvItemComparator())
-    }
-
-
-    private fun getEnvsWithUsages(usageStatusesOfInsights: UsageStatusResult, usageStatusesOfErrors: UsageStatusResult): Set<String> {
-        val envsWithUsages = mutableSetOf<String>()
-        usageStatusesOfInsights.codeObjectStatuses.forEach { codeObjectUsageStatus -> envsWithUsages.add(codeObjectUsageStatus.environment) }
-        usageStatusesOfErrors.codeObjectStatuses.forEach { codeObjectUsageStatus -> envsWithUsages.add(codeObjectUsageStatus.environment) }
-        return envsWithUsages
     }
 
 

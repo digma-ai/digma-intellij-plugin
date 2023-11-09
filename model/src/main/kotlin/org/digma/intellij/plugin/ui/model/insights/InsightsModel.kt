@@ -1,7 +1,5 @@
 package org.digma.intellij.plugin.ui.model.insights
 
-import org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult
-import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
 import org.digma.intellij.plugin.ui.model.DocumentScope
 import org.digma.intellij.plugin.ui.model.EmptyScope
@@ -23,7 +21,6 @@ class InsightsModel : PanelModel {
     var insightsCount: Int = 0
     var listViewItems: List<ListViewItem<*>> = Collections.emptyList()
     var previewListViewItems: List<InsightsPreviewListItem> = Collections.emptyList()
-    var usageStatusResult: UsageStatusResult = EmptyUsageStatusResult
     var card: InsightsTabCard = InsightsTabCard.INSIGHTS
     var status: UIInsightsStatus = UIInsightsStatus.Startup
     var scope: Scope = EmptyScope("Nothing here")
@@ -74,9 +71,6 @@ class InsightsModel : PanelModel {
         return scope.getScopeTooltip()
     }
 
-    override fun getUsageStatus(): UsageStatusResult {
-        return usageStatusResult
-    }
 
 
 }

@@ -16,4 +16,6 @@ interface EnvironmentsSupplier {
     fun getCurrent(): String?
 
     fun refreshNowOnBackground()
+
+    fun hasUsages(env: String): Boolean
 }

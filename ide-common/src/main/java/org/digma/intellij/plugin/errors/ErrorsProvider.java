@@ -13,7 +13,6 @@ import org.digma.intellij.plugin.model.rest.errordetails.ErrorFlowInfo;
 import org.digma.intellij.plugin.model.rest.errordetails.Frame;
 import org.digma.intellij.plugin.model.rest.errordetails.FrameStack;
 import org.digma.intellij.plugin.model.rest.errors.CodeObjectError;
-import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.ui.model.errors.ErrorDetailsModel;
 import org.digma.intellij.plugin.ui.model.errors.FlowStacks;
@@ -59,10 +58,7 @@ public class ErrorsProvider {
 
             Log.log(LOGGER::debug, "ListViewItems for {}: {}", methodInfo.getId(), errorsListViewItems);
 
-            final UsageStatusResult usageStatus = analyticsService.getUsageStatusOfErrors(methodInfo.allIdsWithType());
-            Log.log(LOGGER::debug, "UsageStatus for {}: {}", methodInfo.getId(), usageStatus);
-
-            return new ErrorsListContainer(errorsListViewItems, usageStatus);
+            return new ErrorsListContainer(errorsListViewItems);
         } catch (AnalyticsServiceException e) {
             //if analyticsService.getErrorsOfCodeObject throws exception it means errors could not be loaded, usually when
             //the backend is not available. return an empty ErrorsListContainer to keep everything running and don't

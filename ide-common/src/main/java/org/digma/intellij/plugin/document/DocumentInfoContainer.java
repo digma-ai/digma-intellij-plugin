@@ -15,7 +15,6 @@ import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
 import org.digma.intellij.plugin.model.rest.insights.MethodWithInsights;
-import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,11 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult;
 
 /**
  * A container for one document info, it holds the discovery info and the info from the analytics service.
@@ -48,9 +43,6 @@ public class DocumentInfoContainer {
     // map between methodId to its insights
     @NotNull
     private ConcurrentMap<String, List<CodeObjectInsight>> insightsMap = new ConcurrentHashMap<>();
-
-    private UsageStatusResult usageStatus = EmptyUsageStatusResult;
-    private UsageStatusResult usageStatusOfErrors = EmptyUsageStatusResult;
 
     public DocumentInfoContainer(@NotNull PsiFile psiFile, @NotNull AnalyticsService analyticsService) {
         this.psiFile = psiFile;
@@ -84,7 +76,6 @@ public class DocumentInfoContainer {
     }
 
     private void loadAllInsightsForCurrentDocument() {
-        List<String> objectIds = getObjectIdsForCurrentDocument();
         List<MethodInfo> methodInfos = getMethodInfos();
         try {
             Log.log(LOGGER::trace, "Requesting insights by methodInfos {}", methodInfos);
@@ -98,20 +89,6 @@ public class DocumentInfoContainer {
             //don't log the exception, it was logged in AnalyticsService, keep the log quite because it can happen many times.
             insightsMap = new ConcurrentHashMap<>();
             Log.log(LOGGER::warn, "Cannot get insights by methodInfos: {}. Because: {}", methodInfos, e.getMessage());
-        }
-
-        try {
-            Log.log(LOGGER::trace, "Requesting usage status for {}: with ids {}", psiFile.getVirtualFile(), objectIds);
-            usageStatus = analyticsService.getUsageStatus(objectIds);
-            Log.log(LOGGER::trace, "Got usage status for {}: {}", psiFile.getVirtualFile(), usageStatus);
-
-            Log.log(LOGGER::trace, "Requesting usage status of errors for {}: with ids {}", psiFile.getVirtualFile(), objectIds);
-            usageStatusOfErrors = analyticsService.getUsageStatusOfErrors(objectIds);
-            Log.log(LOGGER::trace, "Got usage status of errors for {}: {}", psiFile.getVirtualFile(), usageStatusOfErrors);
-        } catch (AnalyticsServiceException e) {
-            usageStatus = EmptyUsageStatusResult;
-            usageStatusOfErrors = EmptyUsageStatusResult;
-            Log.log(LOGGER::warn, "Cannot get usage status with ids: {}. Because: {}", objectIds, e.getMessage());
         }
     }
 
@@ -180,16 +157,7 @@ public class DocumentInfoContainer {
         }
 
         var methodId = MethodInfo.removeType(methodWithInsights.getMethodWithIds().getCodeObjectId()); // without type
-        return new Pair(methodId, insights);
-    }
-
-    private List<String> getObjectIdsForCurrentDocument() {
-        return this.documentInfo.getMethods().values().stream().flatMap((Function<MethodInfo, Stream<String>>) methodInfo -> {
-            var ids = new ArrayList<String>();
-            ids.addAll(methodInfo.allIdsWithType());
-            ids.addAll(methodInfo.getRelatedCodeObjectIdsWithType());
-            return ids.stream();
-        }).collect(Collectors.toList());
+        return new Pair<>(methodId, insights);
     }
 
     private List<MethodInfo> getMethodInfos() {
@@ -222,8 +190,7 @@ public class DocumentInfoContainer {
 
     @NotNull
     public List<CodeObjectInsight> getInsightsForMethod(String methodId) {
-        var retVal = insightsMap.getOrDefault(methodId, Collections.emptyList());
-        return retVal;
+        return insightsMap.getOrDefault(methodId, Collections.emptyList());
     }
 
     public Map<String, List<CodeObjectInsight>> getAllMethodWithInsightsMapForCurrentDocument() {
@@ -237,14 +204,6 @@ public class DocumentInfoContainer {
     public boolean hasErrors(String methodId) {
         return insightsMap.containsKey(methodId) &&
                 insightsMap.get(methodId).stream().anyMatch(ErrorInsight.class::isInstance);
-    }
-
-    public UsageStatusResult getUsageStatus() {
-        return usageStatus;
-    }
-
-    public UsageStatusResult getUsageStatusOfErrors() {
-        return usageStatusOfErrors;
     }
 
     @Nullable

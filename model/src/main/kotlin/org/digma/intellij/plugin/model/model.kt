@@ -1,4 +1,3 @@
-@file:JvmName("Models")
 
 package org.digma.intellij.plugin.model
 

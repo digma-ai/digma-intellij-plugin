@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.192] - 2023-11-09
+## [2.0.193] - 2023-11-10
+- Update Documentation UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1406
+
+## 2.0.192 - 2023-11-09
 - allow slow operations Closes #1355 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1402
 - Update Documentation UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1405
 

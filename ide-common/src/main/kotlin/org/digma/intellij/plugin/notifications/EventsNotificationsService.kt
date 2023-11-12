@@ -1,6 +1,6 @@
 package org.digma.intellij.plugin.notifications
 
-import com.intellij.collaboration.async.DisposingScope
+import com.intellij.collaboration.async.disposingScope
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
@@ -51,7 +51,7 @@ class EventsNotificationsService(val project: Project) : Disposable {
         Log.log(logger::info, "starting insights notification service")
 
         @Suppress("UnstableApiUsage")
-        DisposingScope(this).launch {
+        disposingScope().launch {
 
             while (true) {
 

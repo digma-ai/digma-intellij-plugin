@@ -1,6 +1,6 @@
 package org.digma.intellij.plugin.notifications
 
-import com.intellij.collaboration.async.DisposingScope
+import com.intellij.collaboration.async.disposingScope
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.Disposable
@@ -27,7 +27,7 @@ fun startNoInsightsYetNotificationTimer(parentDisposable: Disposable) {
 
 
     @Suppress("UnstableApiUsage")
-    DisposingScope(parentDisposable).launch {
+    parentDisposable.disposingScope().launch {
 
         Log.log(AppNotificationCenter.logger::info, "Starting tNoInsightsYetNotificationTimer")
 

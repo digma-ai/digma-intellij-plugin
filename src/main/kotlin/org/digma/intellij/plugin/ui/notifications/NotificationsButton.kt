@@ -1,14 +1,12 @@
 package org.digma.intellij.plugin.ui.notifications
 
-import com.intellij.collaboration.async.DisposingScope
+import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.ui.popup.JBPopupListener
 import com.intellij.openapi.ui.popup.LightweightWindowEvent
-import com.intellij.ui.BadgeDotProvider
-import com.intellij.ui.BadgeIcon
 import com.intellij.ui.JBColor
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.util.ui.JBUI
@@ -76,7 +74,7 @@ class NotificationsButton(val project: Project) : JButton() {
 
 
         @Suppress("UnstableApiUsage")
-        DisposingScope(project.service<NotificationsService>()).launch {
+        project.service<NotificationsService>().disposingScope().launch {
 
             while (isActive) {
                 checkUnread()

@@ -1,6 +1,6 @@
 package org.digma.intellij.plugin.ui.common
 
-import com.intellij.collaboration.async.DisposingScope
+import com.intellij.collaboration.async.disposingScope
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
@@ -49,7 +49,6 @@ import org.digma.intellij.plugin.jcef.common.JcefDockerResultPayload
 import org.digma.intellij.plugin.jcef.common.JcefDockerResultRequest
 import org.digma.intellij.plugin.jcef.common.JcefMessageRequest
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest
 import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest
 import org.digma.intellij.plugin.model.rest.jcef.installationwizard.FinishRequest
 import org.digma.intellij.plugin.model.rest.jcef.installationwizard.SetObservabilityRequest
@@ -60,6 +59,7 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.common.ObservabilityUtil.Companion.updateObservabilityValue
+import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest
 import org.digma.intellij.plugin.ui.jcef.updateDigmaEngineStatus
 import org.digma.intellij.plugin.ui.list.insights.isJaegerButtonEnabled
 import org.digma.intellij.plugin.ui.panels.DisposablePanel
@@ -629,7 +629,7 @@ class DigmaStatusUpdater {
 
         myDisposable?.let {
             @Suppress("UnstableApiUsage")
-            DisposingScope(it).launch {
+            it.disposingScope().launch {
                 try {
                     while (isActive) {
 

@@ -1,6 +1,6 @@
 package org.digma.intellij.plugin.posthog
 
-import com.intellij.collaboration.async.DisposingScope
+import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -51,7 +51,7 @@ class ContinuousPerformanceMetricsReporter : Disposable {
         Log.log(logger::info, "ContinuousPerformanceMetricsReporter starting")
 
         @Suppress("UnstableApiUsage")
-        DisposingScope(this).launch {
+        disposingScope().launch {
 
             waitForFirstTime(this)
 
@@ -98,7 +98,7 @@ class ContinuousPerformanceMetricsReporter : Disposable {
     private fun launchContinuousReport() {
 
         @Suppress("UnstableApiUsage")
-        DisposingScope(this).launch {
+        disposingScope().launch {
 
             while (isActive) {
                 try {

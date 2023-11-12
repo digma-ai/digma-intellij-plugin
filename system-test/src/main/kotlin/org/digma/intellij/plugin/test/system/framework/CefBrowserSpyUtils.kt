@@ -9,10 +9,15 @@ import org.mockito.Mockito
 import java.lang.reflect.Field
 
 
-
+/**
+ * creates a spy of JBCefBrowser and CefBrowser, sets the default behavior of the spy and returns the pair.
+ * this function will inject the spy CefBrowser into the spy JBCefBrowser.
+ *
+ * @return Pair of JBCefBrowser and CefBrowser
+ */
 fun createSpyBrowsers(): Pair<JBCefBrowser, CefBrowser> {
     val browserBuilder = JBCefBrowserBuilderCreator.create()
-    val browser = browserBuilder
+    val browser: JBCefBrowser = browserBuilder
         .setUrl("http://mockURL/index.html")
         .build()
 
@@ -24,18 +29,27 @@ fun createSpyBrowsers(): Pair<JBCefBrowser, CefBrowser> {
         superClass.getDeclaredField("myCefBrowser")
     }
     cefBrowserField.isAccessible = true
-    
+
     val cefBrowser: CefBrowser = cefBrowserField.get(browser) as CefBrowser
     val jbBrowserSpy = Mockito.spy(browser)
     val spiedCefBrowser: CefBrowser = Mockito.spy(cefBrowser)
     cefBrowserField.set(browser, spiedCefBrowser)
-    
+
     prepareDefaultSpyCalls(jbBrowserSpy, spiedCefBrowser)
-    
+
     return jbBrowserSpy to spiedCefBrowser
 }
 
-fun <T>  injectSpyBrowser(
+
+/**
+ * injects the spy JBCefBrowser into the containingInstance.
+ * @param containingInstance - the instance that contains the JBCefBrowser field.
+ * @param jbBrowserFieldName - the name of the JBCefBrowser field.
+ * @param jbBrowserSpy - the spy JBCefBrowser to be injected.
+ *
+ * @throws Exception if the field was not found in the containingInstance.
+ */
+fun <T> injectSpyBrowser(
     containingInstance: T,
     jbBrowserFieldName: String,
     jbBrowserSpy: JBCefBrowser,
@@ -52,40 +66,24 @@ fun <T>  injectSpyBrowser(
     jbBrowserField.set(containingInstance, jbBrowserSpy)
 }
 
+/**
+ * sets the default behavior of the spy JBCefBrowser and CefBrowser.
+ * @param jbCaf - spy JBCefBrowser
+ * @param caf - spy CefBrowser that is the embedded browser in the JBCefBrowser.
+ */
 fun prepareDefaultSpyCalls(jbCaf: JBCefBrowser, caf: CefBrowser) {
-
     // mocking calls of JBCefBrowser
     Mockito.`when`(jbCaf.cefBrowser)
         .thenAnswer {
-//            Log.test(logger::info, "getCefBrowser - of mockJBBrowser before real call, returning spy of CefBrowser")
             return@thenAnswer caf
         }
-//        .thenReturn(caf)
 
     // mocking calls of CefBrowser
     Mockito.`when`(caf.url)
         .thenAnswer {
-//            Log.test(logger::info, "getURL - mock URL")
             return@thenAnswer "http://mockURL/index.html"
         }
 
     Log.test(logger::info, "Spy default behavior set")
-}
-
-fun replaceExecuteJSWithAssertionFunction(spiedCaf: CefBrowser, assertion: (String) -> Unit) {
-    Mockito.doAnswer { invocationOnMock ->
-//        Log.test(logger::info, "executeJS - of mock before assertion call {}", Thread.currentThread().stackTrace[1])
-        invocationOnMock.getArgument(0, String::class.java)
-            .also { props ->
-                val stripedPayload = props.substringAfter("window.postMessage(").substringBeforeLast(");")
-                assertion(stripedPayload)
-            }
-    }.`when`(spiedCaf).executeJavaScript(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())
-}
-
-fun clearSpyAssertion(spiedCaf: CefBrowser) {
-    Mockito.doAnswer { invocationOnMock ->
-        invocationOnMock.callRealMethod()
-    }.`when`(spiedCaf).executeJavaScript(ArgumentMatchers.anyString(), ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())
 }
     

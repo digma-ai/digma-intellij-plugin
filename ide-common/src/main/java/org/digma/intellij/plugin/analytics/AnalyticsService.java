@@ -47,8 +47,8 @@ import org.digma.intellij.plugin.model.rest.notifications.SetReadNotificationsRe
 import org.digma.intellij.plugin.model.rest.notifications.UnreadNotificationsCountResponse;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
-import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
-import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
+import org.digma.intellij.plugin.model.rest.usage.EnvsUsageStatusRequest;
+import org.digma.intellij.plugin.model.rest.usage.EnvUsageStatusResult;
 import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse;
 import org.digma.intellij.plugin.model.rest.version.VersionRequest;
 import org.digma.intellij.plugin.model.rest.version.VersionResponse;
@@ -90,7 +90,6 @@ import static org.digma.intellij.plugin.common.ExceptionUtils.getSslExceptionMes
 import static org.digma.intellij.plugin.common.ExceptionUtils.isConnectionException;
 import static org.digma.intellij.plugin.common.ExceptionUtils.isEOFException;
 import static org.digma.intellij.plugin.common.ExceptionUtils.isSslConnectionException;
-import static org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult;
 
 
 public class AnalyticsService implements Disposable {
@@ -328,10 +327,10 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getCodeObjectErrorDetails(errorUid));
     }
 
-    public UsageStatusResult getUsageStatus(List<String> objectIds) throws AnalyticsServiceException {
+    public EnvUsageStatusResult getEnvironmentsUsageStatus() throws AnalyticsServiceException {
         return executeCatching(() -> {
-            UsageStatusResult usageStatus = analyticsProviderProxy.getUsageStatus(new UsageStatusRequest(objectIds));
-            return usageStatus == null ? EmptyUsageStatusResult : usageStatus;
+            EnvUsageStatusResult usageStatus = analyticsProviderProxy.getEnvironmentsUsageStatus(new EnvsUsageStatusRequest());
+            return usageStatus == null ? new EnvUsageStatusResult(Collections.emptyList(), Collections.emptyList()) : usageStatus;
         });
     }
 
@@ -356,12 +355,6 @@ public class AnalyticsService implements Disposable {
     }
 
 
-    public UsageStatusResult getUsageStatusOfErrors(List<String> objectIds) throws AnalyticsServiceException {
-        return executeCatching(() -> {
-            UsageStatusResult usageStatus = analyticsProviderProxy.getUsageStatus(new UsageStatusRequest(objectIds, List.of("Error")));
-            return usageStatus == null ? EmptyUsageStatusResult : usageStatus;
-        });
-    }
 
     public String getHtmlGraphForSpanPercentiles(String instrumentationLibrary, String spanName, String backgroundColor) throws AnalyticsServiceException {
         final SpanHistogramQuery spanHistogramQuery = new SpanHistogramQuery(getCurrentEnvironment(), spanName, instrumentationLibrary, JBColor.isBright() ? "light" : "dark", backgroundColor);

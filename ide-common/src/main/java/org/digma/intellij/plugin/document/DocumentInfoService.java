@@ -12,7 +12,6 @@ import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
-import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
 import org.digma.intellij.plugin.psi.PsiUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -127,16 +126,6 @@ public class DocumentInfoService {
         documents.remove(PsiUtils.psiFileToUri(psiFile));
     }
 
-    public UsageStatusResult getCachedUsageStatus(@NotNull MethodInfo methodInfo, List<String> objectIds) {
-        Log.log(LOGGER::trace, "Requesting cached usage status for MethodInfo {} and for objectIds {} ", methodInfo.getId(), objectIds);
-
-        DocumentInfoContainer documentInfoContainer = documents.get(methodInfo.getContainingFileUri());
-        if (documentInfoContainer == null) {
-            Log.log(LOGGER::trace, "DocumentInfoContainer is null ");
-            return new UsageStatusResult(Collections.emptyList(), Collections.emptyList());
-        }
-        return documentInfoContainer.getUsageStatus();
-    }
 
     public List<CodeObjectInsight> getCachedMethodInsights(@NotNull MethodInfo methodInfo) {
         Log.log(LOGGER::trace, "Requesting cached insights for MethodInfo {}", methodInfo.getId());

@@ -15,7 +15,6 @@ import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
 import org.digma.intellij.plugin.model.rest.insights.InsightStatus;
 import org.digma.intellij.plugin.model.rest.insights.MethodWithInsightStatus;
-import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -54,11 +53,10 @@ public class InsightsProvider {
             List<? extends CodeObjectInsight> codeObjectInsights = insightsList;
             codeObjectInsights = filterUnmapped(codeObjectInsights);
             Log.log(LOGGER::debug, "CodeObjectInsights for {}: {}", methodInfo.getId(), codeObjectInsights);
-            final UsageStatusResult usageStatus = documentInfoService.getCachedUsageStatus(methodInfo, objectIds);
             InsightsViewBuilder insightsViewBuilder = new InsightsViewBuilder(buildersHolder);
             List<ListViewItem<?>> listViewItems = insightsViewBuilder.build(project, methodInfo, codeObjectInsights);
             Log.log(LOGGER::trace, "ListViewItems for {}: {}", methodInfo.getId(), listViewItems);
-            return new InsightsListContainer(listViewItems, codeObjectInsights.size(), usageStatus);
+            return new InsightsListContainer(listViewItems, codeObjectInsights.size());
         } finally {
             stopWatch.stop();
             Log.log(LOGGER::debug, "getUsageStatus time took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS));

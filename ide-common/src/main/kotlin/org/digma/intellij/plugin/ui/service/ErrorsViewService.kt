@@ -12,7 +12,6 @@ import org.digma.intellij.plugin.insights.CodeLessSpanInsightsProvider
 import org.digma.intellij.plugin.insights.CodelessSpanErrorsContainer
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.InsightType
-import org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper
@@ -113,7 +112,6 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
 
         model.listViewItems = errorsListContainer?.listViewItems ?: listOf()
         model.previewListViewItems = ArrayList()
-        model.usageStatusResult = errorsListContainer?.usageStatus ?: EmptyUsageStatusResult
         model.scope = CodeLessSpanScope(codeLessSpan, codelessSpanErrorsContainer?.insightsResponse?.spanInfo)
         model.card = ErrorsTabCard.ERRORS_LIST
         model.errorsCount = errorsListContainer?.count ?: 0
@@ -166,7 +164,6 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
 
             model.listViewItems = errorsListContainer.listViewItems ?: listOf()
             model.previewListViewItems = ArrayList()
-            model.usageStatusResult = errorsListContainer.usageStatus ?: EmptyUsageStatusResult
             model.scope = MethodScope(methodInfo)
             model.card = ErrorsTabCard.ERRORS_LIST
             model.errorsCount = errorsListContainer.count
@@ -187,7 +184,6 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
 
         model.listViewItems = ArrayList()
         model.previewListViewItems = ArrayList()
-        model.usageStatusResult = EmptyUsageStatusResult
         model.scope = MethodScope(dummy)
         model.card = ErrorsTabCard.ERRORS_LIST
         model.errorsCount = 0
@@ -278,14 +274,12 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
             model.scope = EmptyScope(fileUri.substringAfterLast('/'))
             model.listViewItems = ArrayList()
             model.errorsCount = 0
-            model.usageStatusResult = EmptyUsageStatusResult
             model.previewListViewItems = ArrayList()
             model.card = ErrorsTabCard.PREVIEW_LIST
         } else {
             model.scope = DocumentScope(documentInfoContainer.documentInfo)
             model.listViewItems = ArrayList()
             model.errorsCount = computeErrorsPreviewCount(documentInfoContainer)
-            model.usageStatusResult = documentInfoContainer.usageStatusOfErrors
             model.previewListViewItems = getDocumentPreviewItems(documentInfoContainer)
             model.card = ErrorsTabCard.PREVIEW_LIST
         }

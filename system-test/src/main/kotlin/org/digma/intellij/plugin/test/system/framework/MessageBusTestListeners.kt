@@ -17,8 +17,12 @@ class MessageBusTestListeners(private val messageBus: MessageBus) {
 
     private val logger = Logger.getInstance(MessageBusTestListeners::class.java)
 
-   
 
+    /**
+     * registers a subscriber to the AnalyticsServiceConnectionEvent
+     * @param onConnectionGained - callback for when the connection is gained
+     * @param onConnectionLost - callback for when the connection is lost
+     */
     fun registerSubToAnalyticsServiceConnectionEvent(onConnectionGained: () -> Unit, onConnectionLost: () -> Unit) {
         messageBus.connect().subscribe(
             AnalyticsServiceConnectionEvent.ANALYTICS_SERVICE_CONNECTION_EVENT_TOPIC,
@@ -29,6 +33,11 @@ class MessageBusTestListeners(private val messageBus: MessageBus) {
 
     }
 
+
+    /**
+     * registers a subscriber to the EnvironmentChanged event
+     * @param onEnvChanged - callback for when the environment is changed
+     */
     fun registerSubToEnvironmentChangedEvent(onEnvChanged: (String?, Boolean) -> Unit) {
         messageBus.connect().subscribe(
             EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC,
@@ -45,15 +54,11 @@ class MessageBusTestListeners(private val messageBus: MessageBus) {
             })
     }
 
-    fun registerSubToTabsChangedEvent(onTabsChanged: (Int) -> Unit) {
-        messageBus.connect().subscribe(
-            TabsChanged.TABS_CHANGED_TOPIC,
-            TabsChanged {
-                onTabsChanged(it)
-               
-            })
-    }
 
+    /**
+     * registers a callback to DocumentInfoChanged event
+     * @param onDocInfoChanged - callback for when the document info is changed
+     */
     fun registerSubToDocumentInfoChangedEvent(onDocInfoChanged: (PsiFile) -> Unit) {
         messageBus.connect().subscribe(
             DocumentInfoChanged.DOCUMENT_INFO_CHANGED_TOPIC,
@@ -61,15 +66,5 @@ class MessageBusTestListeners(private val messageBus: MessageBus) {
                 onDocInfoChanged(it)
             })
     }
-
-    fun registerSubToModelChangedEvent(onModelChanged: (PanelModel) -> Unit) {
-        messageBus.connect().subscribe(
-            ModelChangeListener.MODEL_CHANGED_TOPIC,
-            ModelChangeListener {
-                onModelChanged(it)
-            })
-    }
     
-    fun disconnectAll() {
-    }
 }

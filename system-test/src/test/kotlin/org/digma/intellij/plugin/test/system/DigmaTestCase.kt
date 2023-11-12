@@ -25,7 +25,7 @@ import org.digma.intellij.plugin.ui.recentactivity.RecentActivityUpdater
 import org.mockito.Mockito
 
 
-open class DigmaTestCase : LightJavaCodeInsightFixtureTestCase() {
+abstract class DigmaTestCase : LightJavaCodeInsightFixtureTestCase() {
 
     protected val logger = Logger.getInstance(DigmaTestCase::class.java)
 
@@ -33,38 +33,38 @@ open class DigmaTestCase : LightJavaCodeInsightFixtureTestCase() {
 
     protected lateinit var messageBusTestListeners: MessageBusTestListeners
 
-    protected lateinit var jsonCollector: BrowserPushEventCollector
+    private lateinit var jsonCollector: BrowserPushEventCollector
 
     val objectMapper: ObjectMapper = JCefBrowserUtil.getObjectMapper()
 
+    /**
+     * retrieves the AnalyticsService from the project
+     * @return Analytics service
+     */
     protected val analyticsService: AnalyticsService
         get() {
             return AnalyticsService.getInstance(project)
         }
 
+    /**
+     * retrieves the DocumentInfoService from the project
+     * @return RecentActivity service
+     */
     protected val recentActivityService: RecentActivityService
         get() {
             return project.service<RecentActivityService>()
         }
 
+    /**
+     * cached field for the mock analytics provider to re mock methods.
+     */
     protected lateinit var mockAnalyticsProvider: RestAnalyticsProvider
 
-    @Volatile
-    protected var readyToAssert: Boolean = false
-        private set
+
     protected val recentActivityUpdater: RecentActivityUpdater
         get() {
             return project.getService(RecentActivityUpdater::class.java)
         }
-
-
-    protected fun readyToTest() {
-        readyToAssert = true
-    }
-
-    protected fun notReadyToTest() {
-        readyToAssert = false
-    }
 
 
     override fun setUp() {
@@ -72,7 +72,6 @@ open class DigmaTestCase : LightJavaCodeInsightFixtureTestCase() {
         mockAnalyticsProvider = mockRestAnalyticsProvider(project)
         messageBusTestListeners = MessageBusTestListeners(project.messageBus)
         jsonCollector = BrowserPushEventCollector()
-        readyToAssert = false
     }
 
     override fun tearDown() {
@@ -90,20 +89,35 @@ open class DigmaTestCase : LightJavaCodeInsightFixtureTestCase() {
         return systemTestDataPath
     }
 
-    fun setupExecuteJSOf(spiedCefBrowser: CefBrowser) {
+    abstract fun getTestProjectFileNames(): Array<String>;
+
+    fun createDigmaCodeObjectId(className: String, methodName: String): String {
+        return "$className\$_\$$methodName"
+    }
+
+    /**
+     * Given a spied CefBrowser, Replace the original behavior to executeJavaScript method on the Spied CefBrowser to collect the json payload sent to
+     * the browser based on the action that was sent to the browser.
+     */
+    fun replaceExecuteJavaScriptOf(spiedCefBrowser: CefBrowser) {
         Mockito.doAnswer {
             it.getArgument(0, String::class.java)
                 .also { payload ->
                     val stripedPayload = payload.substringAfter("window.postMessage(").substringBeforeLast(");")
-                    val jsonpayload = objectMapper.readTree(stripedPayload)
-                    val action = jsonpayload.get("action").asText()
-                    val browserJson: JsonNode = jsonpayload.get("payload")
+                    val jsonPayload = objectMapper.readTree(stripedPayload)
+                    val action = jsonPayload.get("action").asText()
+                    val browserJson: JsonNode = jsonPayload.get("payload")
                     jsonCollector.addEvent(action, browserJson)
                 }
         }.`when`(spiedCefBrowser).executeJavaScript(Mockito.anyString(), Mockito.anyString(), Mockito.anyInt())
     }
 
 
+    /**
+     * Helper method to wait for the DocumentInfoService to load the document info for the given file.
+     *
+     * @param file - the PsiFile to wait for to load into the DocumentInfoService.
+     */
     fun waitForDocumentInfoToLoad(file: PsiFile) {
         runBlocking {
             while (DocumentInfoService.getInstance(project).getDocumentInfo(file.virtualFile) == null) {
@@ -121,6 +135,13 @@ open class DigmaTestCase : LightJavaCodeInsightFixtureTestCase() {
         PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
     }
 
+    /**
+     * Helper method to wait for the given time in millis.
+     * Note that it will block the EDT thread. The purpose of this method is to wait for the background tasks to complete.
+     *
+     * @param timeMillis - time to wait in millis
+     * @param reason - reason for waiting
+     */
     fun waitFor(timeMillis: Long, reason: String) {
         Log.test(logger::info, "wait $timeMillis millis for $reason")
         runBlocking {
@@ -128,12 +149,28 @@ open class DigmaTestCase : LightJavaCodeInsightFixtureTestCase() {
         }
     }
 
+    /**
+     * Helper method to wait for the given time in millis and dispatch all events in the EDT queue.
+     * After waitFor is completed, this method will dispatch all events in the EDT queue.
+     *
+     * @param timeMillis - time to wait in millis
+     * @param reason - reason for waiting
+     */
     fun waitForAndDispatch(timeMillis: Long, reason: String) {
         waitFor(timeMillis, reason)
         PlatformTestUtil.dispatchAllEventsInIdeEventQueue()
     }
 
 
+    /**
+     * method to assert that a given action and json payload was sent to the browser, 
+     * and that the payload passes the given assertion function within the given timeout.
+     * Note: this method blocks the test execution until the assertion passes or the timeout is reached.
+     * Note: the assertion will fail only if no payload with the action has passed the assertion within the timeout.
+     * @param action - action name
+     * @param timeout - timeout in millis
+     * @param assertionFunction - function to assert the json payload
+     */
     fun assertQueueOfActionWithinTimeout(action: String, timeout: Long, assertionFunction: (JsonNode) -> Unit) {
         runBlocking {
             withTimeoutOrNull(timeout) {

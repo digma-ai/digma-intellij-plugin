@@ -92,10 +92,10 @@ public class SettingsState implements PersistentStateComponent<SettingsState>, D
     }
 
 
-    public void addChangeListener(SettingsChangeListener listener, Disposable pareDisposable) {
+    public void addChangeListener(SettingsChangeListener listener, Disposable parentDisposable) {
         listeners.add(listener);
 
-        Disposer.register(pareDisposable, () -> removeChangeListener(listener));
+        Disposer.register(parentDisposable, () -> removeChangeListener(listener));
     }
 
     public void removeChangeListener(SettingsChangeListener listener) {

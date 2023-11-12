@@ -22,6 +22,12 @@ jobs:
       - name: Debug
         run: echo "Publishing ref ${{ inputs.tag-name }} with profile ${{ inputs.build-profile }} with changelog ${{ inputs.changelog }}"
 
+      - name: Maximize build space
+        uses: AdityaGarg8/remove-unwanted-software@v1
+        with:
+          remove-android: true
+          remove-haskell: true
+
       - name: Fetch Sources
         uses: actions/checkout@v3
         with:

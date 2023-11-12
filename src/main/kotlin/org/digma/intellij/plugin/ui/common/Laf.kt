@@ -3,9 +3,6 @@ package org.digma.intellij.plugin.ui.common
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.editor.colors.GlobalEditorScheme
 import com.intellij.ui.JBColor
-import com.intellij.ui.scale.ScaleContext
-import com.intellij.ui.scale.ScaleType
-import com.intellij.util.IconUtil
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.icons.IconsUtil
 import org.digma.intellij.plugin.ui.common.Laf.Sizes.Companion.BUTTON_SIZE_24
@@ -80,7 +77,8 @@ object Laf {
             @JvmStatic val ERROR_RED: Color = Color(0xf95959)      // same as in VS Code plugin
             @JvmStatic val ERROR_ORANGE: Color = Color(0xfdb44b)   // same as in VS Code plugin
             @JvmStatic val ERROR_GREEN: Color = Color(0x7dd87d)    // same as in VS Code plugin
-            @JvmStatic val BUTTON_BACKGROUND: Color = Color(0x3538CD) // suppose to be dark purple
+            @JvmStatic val BUTTON_BACKGROUND: Color = Color(0x5154EC) // previous values: 0x4245D0, 0x3538CD
+            @JvmStatic val BUTTON_FONT: Color = Color(0xE2E7FF)
             //@JvmStatic val SIMPLE_ICON_COLOR: JBColor = JBColor(0x222222, 0xDDDDDD)
             @JvmStatic val GRAY: Color = Color(0x8A8A8A)
             //the LIVE_BUTTON_BORDER colors should match the colors of the rect in LiveButtonFullIconDark and LiveButtonFullIconLight
@@ -108,6 +106,7 @@ object Laf {
                 @JvmStatic val POINTER: Icon = SvgIcon.asIs("/icons/pointer.svg")
                 @JvmStatic val SLACK: Icon = SvgIcon.asIs("/icons/slack.svg")
                 @JvmStatic val TARGET: Icon = SvgIcon.asIs("/icons/target.svg")
+                @JvmStatic val TARGET10: Icon = SvgIcon.asIs("/icons/target10.svg")
                 @JvmStatic val TARGET_PRESSED: Icon = SvgIcon.asIs("/icons/target-pressed.svg")
                 @JvmStatic val CODE_LOCATION_LINK: Icon = SvgIcon.asIs("/icons/code-location-link.svg")
                 @JvmStatic
@@ -172,8 +171,6 @@ object Laf {
                 @JvmStatic val NoObservabilityDark = SvgIcon.asIs("/icons/no_observability-dark.svg")
                 @JvmStatic val NoInsightsLight = SvgIcon.asIs("/icons/no_insights_light.svg")
                 @JvmStatic val NoInsightsDark = SvgIcon.asIs("/icons/no_insights_dark.svg")
-                @JvmStatic val SummaryEmptyLight = SvgIcon.asIs("/icons/summary_empty_light.svg")
-                @JvmStatic val SummaryEmptyDark = SvgIcon.asIs("/icons/summary_empty_dark.svg")
                 @JvmStatic val UpdateProductDark = SvgIcon.asIs("/icons/update-product-dark.svg")
                 @JvmStatic val UpdateProductLight = SvgIcon.asIs("/icons/update-product-light.svg")
                 @JvmStatic val Mascot64 = loadAndScaleIconByWidth("/icons/digma.png", 64)
@@ -196,8 +193,6 @@ object Laf {
                 @JvmStatic val LiveButtonFullIconLight = SvgIcon.asIs("/icons/live-view-button-full-icon-light.svg")
                 @JvmStatic val LiveIconDark = SvgIcon.asIs("/icons/live-icon-dark.svg")
                 @JvmStatic val LiveIconLight = SvgIcon.asIs("/icons/live-icon-light.svg")
-                @JvmStatic val NavPrevDark = SvgIcon.asIs("/icons/nav-prev-dark.svg")
-                @JvmStatic val NavPrevLight = SvgIcon.asIs("/icons/nav-prev-light.svg")
                 @JvmStatic
                 val NotificationsBellDark = SvgIcon.asIs("/icons/notification-bell-dark.svg")
                 @JvmStatic
@@ -206,6 +201,24 @@ object Laf {
                 val NotificationsBellLight = SvgIcon.asIs("/icons/notification-bell-light.svg")
                 @JvmStatic
                 val NotificationsBellLightPressed = SvgIcon.asIs("/icons/notification-bell-light-pressed.svg")
+
+                @JvmStatic
+                val DashboardDark: Icon = IconsUtil.loadAndScaleIconObjectByFactor("/icons/dashboard.svg", 2.0)
+                @JvmStatic
+                val DashboardDarkPressed: Icon = IconsUtil.loadAndScaleIconObjectByFactor("/icons/dashboard.svg", 1.6)
+                @JvmStatic
+                val DashboardLight: Icon = IconsUtil.loadAndScaleIconObjectByFactor("/icons/dashboard.svg", 2.0)
+                @JvmStatic
+                val DashboardLightPressed: Icon = IconsUtil.loadAndScaleIconObjectByFactor("/icons/dashboard.svg", 1.6)
+
+                @JvmStatic
+                val NavPrevDark: Icon = IconsUtil.loadAndScaleIconObjectByFactor("/icons/nav-prev-dark.svg", 2.0)
+                @JvmStatic
+                val NavPrevDarkPressed: Icon = IconsUtil.loadAndScaleIconObjectByFactor("/icons/nav-prev-dark.svg", 1.6)
+                @JvmStatic
+                val NavPrevLight: Icon = IconsUtil.loadAndScaleIconObjectByFactor("/icons/nav-prev-light.svg", 2.0)
+                @JvmStatic
+                val NavPrevLightPressed: Icon = IconsUtil.loadAndScaleIconObjectByFactor("/icons/nav-prev-light.svg", 1.6)
             }
         }
 

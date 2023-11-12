@@ -6,9 +6,9 @@ enum class MonitoredPanel{
     Notifications,
     RecentActivity,
     Jaeger,
-    Summary,
     ErrorDetails,
     NoConnection,
     NoObservability,
-    Scope
+    Scope,
+    Dashboard
 }

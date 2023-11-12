@@ -12,6 +12,7 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.jcef.common.JCefTemplateUtils
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
+import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.list.insights.isJaegerButtonEnabled
 import java.io.ByteArrayInputStream
 import java.io.InputStream
@@ -27,6 +28,7 @@ private const val IS_DOCKER_COMPOSE_INSTALLED = "isDockerComposeInstalled"
 private const val IS_DIGMA_ENGINE_INSTALLED = "isDigmaEngineInstalled"
 private const val IS_DIGMA_ENGINE_RUNNING = "isDigmaEngineRunning"
 private const val IS_JAEGER_ENABLED = "isJaegerEnabled"
+private const val DIGMA_API_URL = "digmaApiUrl"
 
 
 abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val indexTemplateName: String) {
@@ -58,6 +60,7 @@ abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val 
             data[IS_DIGMA_ENGINE_RUNNING] = service<DockerService>().isEngineRunning(project)
             data[IS_DOCKER_INSTALLED] = service<DockerService>().isDockerInstalled()
             data[IS_DOCKER_COMPOSE_INSTALLED] = service<DockerService>().isDockerInstalled()
+            data[DIGMA_API_URL] = SettingsState.getInstance().apiUrl
 
             addAppSpecificEnvVariable(project, data)
 

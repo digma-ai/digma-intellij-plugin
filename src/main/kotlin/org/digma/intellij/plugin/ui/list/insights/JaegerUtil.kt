@@ -99,8 +99,15 @@ fun openJaegerFromRecentActivity(
     val settingsState = SettingsState.getInstance()
 
     val jaegerUrlEmbedPart = "&uiEmbed=v0"
+    val jaegerUrl: String
     val jaegerBaseUrl = settingsState.jaegerUrl?.trim()?.trimEnd('/')
-    val jaegerUrl = "${jaegerBaseUrl}/trace/${traceId.lowercase()}?cohort=${traceId.lowercase()}${jaegerUrlEmbedPart}"
+    if (settingsState.jaegerLinkMode==LinkMode.External && jaegerBaseUrl!=null && jaegerBaseUrl.contains("\${TRACE_ID}")){
+        jaegerUrl=jaegerBaseUrl.replace("\${TRACE_ID}",traceId.lowercase())
+    }
+    else{
+        jaegerUrl = "${jaegerBaseUrl}/trace/${traceId.lowercase()}?cohort=${traceId.lowercase()}${jaegerUrlEmbedPart}"
+
+    }
 
     when(settingsState.jaegerLinkMode){
 
@@ -142,8 +149,13 @@ fun openJaegerFromInsight(
     val jaegerUrl: String
     val embedPart = "&uiEmbed=v0"
 
-    val trace1 = traceId.lowercase()
-    jaegerUrl = "${jaegerBaseUrl}/trace/${trace1}?cohort=${trace1}${embedPart}"
+    val trace1 = traceId.lowercase();
+    if (settingsState.jaegerLinkMode==LinkMode.External && jaegerBaseUrl!=null && jaegerBaseUrl.contains("\${TRACE_ID}")){
+        jaegerUrl=jaegerBaseUrl.replace("\${TRACE_ID}",trace1)
+    }
+    else{
+        jaegerUrl = "${jaegerBaseUrl}/trace/${trace1}?cohort=${trace1}${embedPart}"
+    }
 
     when (settingsState.jaegerLinkMode) {
 

@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.analytics;
 
 import org.digma.intellij.plugin.model.rest.AboutResult;
-import org.digma.intellij.plugin.model.rest.assets.AssetsRequest;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentRequest;
 import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentResponse;
@@ -12,7 +11,6 @@ import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsResponse
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
 import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightRequest;
-import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsRequest;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanRequest;
@@ -37,6 +35,7 @@ import org.digma.intellij.plugin.model.rest.version.VersionResponse;
 
 import java.io.Closeable;
 import java.util.List;
+import java.util.Map;
 
 public interface AnalyticsProvider extends Closeable {
 
@@ -49,8 +48,6 @@ public interface AnalyticsProvider extends Closeable {
     InsightsOfMethodsResponse getInsightsOfMethods(InsightsOfMethodsRequest insightsOfMethodsRequest);
 
     InsightsOfSingleSpanResponse getInsightsForSingleSpan(InsightsOfSingleSpanRequest insightsOfSingleSpanRequest);
-
-    List<GlobalInsight> getGlobalInsights(InsightsRequest insightsRequest);
 
     LatestCodeObjectEventsResponse getLatestEvents(LatestCodeObjectEventsRequest latestCodeObjectEventsRequest);
 
@@ -74,7 +71,11 @@ public interface AnalyticsProvider extends Closeable {
 
     CodeObjectNavigation getCodeObjectNavigation(CodeObjectNavigationRequest codeObjectNavigationRequest);
 
-    String getAssets(AssetsRequest assetsRequest);
+    String getAssetCategories(String environment);
+
+    String insightExists(String environment);
+
+    String getAssets(Map<String,String> queryParams);
 
     String getNotifications(NotificationsRequest notificationsRequest);
 
@@ -89,4 +90,7 @@ public interface AnalyticsProvider extends Closeable {
     PerformanceMetricsResponse getPerformanceMetrics();
 
     DeleteEnvironmentResponse deleteEnvironment(DeleteEnvironmentRequest deleteEnvironmentRequest);
+
+    // queryParams: (limit, 5), (pageSize, 5) etc
+    String getDashboard(Map<String,String> queryParams);
 }

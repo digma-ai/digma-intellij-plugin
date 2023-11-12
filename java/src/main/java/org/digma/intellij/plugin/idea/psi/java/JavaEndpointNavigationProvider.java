@@ -105,19 +105,15 @@ public class JavaEndpointNavigationProvider implements Disposable {
     }
 
 
-    private void buildEndpointAnnotations(@NotNull Supplier<SearchScope> searchScope) {
+    private void buildEndpointAnnotations(@NotNull Supplier<SearchScope> searchScopeSupplier) {
 
         var javaLanguageService = project.getService(JavaLanguageService.class);
         var endpointDiscoveries = javaLanguageService.getListOfEndpointDiscovery();
 
         endpointDiscoveries.forEach(endpointDiscovery -> {
             try {
-                var endpointInfos = Retries.retryWithResult(() ->
-                        ProgressManager.getInstance().runProcess(() ->
-                                        DumbService.getInstance(project).runReadActionInSmartMode(() ->
-                                                endpointDiscovery.lookForEndpoints(searchScope.get())),
-                                new EmptyProgressIndicator()), Throwable.class, 50, 5);
 
+                var endpointInfos = endpointDiscovery.lookForEndpoints(searchScopeSupplier);
                 endpointInfos.forEach(this::addToMethodsMap);
 
             } catch (Exception e) {
@@ -139,13 +135,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
         endpointDiscoveries.forEach(endpointDiscovery -> {
 
             try {
-                var endpointInfos = Retries.retryWithResult(() ->
-                        ProgressManager.getInstance().runProcess(() ->
-                                        DumbService.getInstance(project).runReadActionInSmartMode(() ->
-                                                endpointDiscovery.lookForEndpoints(psiFile)),
-                                new EmptyProgressIndicator()), Throwable.class, 50, 5);
-
-
+                var endpointInfos = endpointDiscovery.lookForEndpoints(psiFile);
                 endpointInfos.forEach(this::addToMethodsMap);
 
             } catch (Exception e) {

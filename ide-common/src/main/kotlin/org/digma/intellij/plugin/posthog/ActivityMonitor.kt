@@ -136,6 +136,7 @@ class ActivityMonitor(project: Project) : Disposable {
 
     fun registerObservabilityPanelClosed() {
         capture("observability-panel closed")
+        registerUserAction("Closed observability panel")
     }
 
     fun registerFirstConnectionEstablished() {
@@ -157,6 +158,11 @@ class ActivityMonitor(project: Project) : Disposable {
 
     fun registerFirstAssetsReceived() {
         capture("plugin first-assets")
+        postHog?.set(
+            userId, mapOf(
+                "first-assets-timestamp" to Instant.now().toString()
+            )
+        )
     }
 
     fun registerFirstTimeRecentActivityReceived() {
@@ -174,7 +180,7 @@ class ActivityMonitor(project: Project) : Disposable {
     }
 
 
-    fun registerError(exception: Throwable, message: String) {
+    fun registerError(exception: Throwable, message: String, extraDetails: Map<String, String>? = mapOf()) {
 
         try {
             val osType = System.getProperty("os.name")
@@ -191,23 +197,30 @@ class ActivityMonitor(project: Project) : Disposable {
 
             val exceptionMessage: String? = ExceptionUtils.getNonEmptyMessage(exception)
 
+            val details = mutableMapOf(
+                "error.source" to "plugin",
+                "action" to "unknown",
+                "message" to message,
+                "exception.type" to exception.javaClass.name,
+                "cause.exception.type" to ExceptionUtils.getFirstRealExceptionCauseTypeName(exception),
+                "exception.message" to exceptionMessage.toString(),
+                "exception.stack-trace" to stringWriter.toString(),
+                "os.type" to osType,
+                "ide.name" to ideName,
+                "ide.version" to ideVersion,
+                "ide.build" to ideBuildNumber,
+                "plugin.version" to pluginVersion,
+                "user.type" to if (isDevUser) "internal" else "external"
+            )
+
+            extraDetails?.let {
+                details.putAll(it)
+            }
+
+
             capture(
                 "error",
-                mapOf(
-                    "error.source" to "plugin",
-                    "action" to "unknown",
-                    "message" to message,
-                    "exception.type" to exception.javaClass.name,
-                    "cause.exception.type" to ExceptionUtils.getFirstRealExceptionCauseTypeName(exception),
-                    "exception.message" to exceptionMessage.toString(),
-                    "exception.stack-trace" to stringWriter.toString(),
-                    "os.type" to osType,
-                    "ide.name" to ideName,
-                    "ide.version" to ideVersion,
-                    "ide.build" to ideBuildNumber,
-                    "plugin.version" to pluginVersion,
-                    "user.type" to if (isDevUser) "internal" else "external"
-                )
+                details
             )
         } catch (e: Exception) {
             registerCustomEvent(
@@ -349,6 +362,13 @@ class ActivityMonitor(project: Project) : Disposable {
         )
     }
 
+    fun registerSubDashboardViewed(dashboardType: String) {
+        capture(
+            "Dashboard subchart is viewed",
+            mapOf("dashboardType" to dashboardType)
+        )
+    }
+
     fun registerButtonClicked(panel: MonitoredPanel, button: String) {
         capture(
             "button-clicked",
@@ -407,6 +427,16 @@ class ActivityMonitor(project: Project) : Disposable {
             )
         )
         registerUserAction("Clicked on button from insights")
+    }
+
+    fun openDashboardButtonClicked(button: String) {
+        capture(
+            "open dashboard button-clicked",
+            mapOf(
+                "button" to button
+            )
+        )
+        registerUserAction("Clicked on view dashboard")
     }
 
 
@@ -562,10 +592,24 @@ class ActivityMonitor(project: Project) : Disposable {
         )
     }
 
+    fun registerUserActionEvent(event: String, eventDetails: Map<String, Any>) {
+        capture(
+            event,
+            eventDetails
+        )
+        registerUserAction(event)
+    }
+
     fun registerUserAction(action: String) {
         capture(
             "user-action",
             mapOf("action" to action)
+        )
+        postHog?.set(
+            userId, mapOf(
+                "last-user-action" to action,
+                "last-user-action-timestamp" to Instant.now().toString()
+            )
         )
     }
 

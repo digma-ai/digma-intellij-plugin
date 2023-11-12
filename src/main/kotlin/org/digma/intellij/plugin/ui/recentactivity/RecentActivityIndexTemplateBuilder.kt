@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.ui.recentactivity
 
 import com.intellij.openapi.project.Project
-import com.intellij.util.SystemProperties
 import org.digma.intellij.plugin.recentactivity.RecentActivityLogic
 import org.digma.intellij.plugin.ui.jcef.BaseIndexTemplateBuilder
 
@@ -21,7 +20,9 @@ class RecentActivityIndexTemplateBuilder :
 
 
     private fun isEnvironmentsManagementEnabled(): Boolean {
-        return SystemProperties.getBooleanProperty(RECENT_ACTIVITY_ENABLE_ENVIRONMENT_MANAGEMENT_SYSTEM_PROP_NAME, false)
+        //todo: remove feature flag completely
+//        return SystemProperties.getBooleanProperty(RECENT_ACTIVITY_ENABLE_ENVIRONMENT_MANAGEMENT_SYSTEM_PROP_NAME, false)
+        return true
     }
 
 }

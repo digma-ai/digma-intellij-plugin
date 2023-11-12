@@ -10,15 +10,18 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.util.Query;
+import org.digma.intellij.plugin.common.Retries;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class SpringBootFramework implements EndpointDiscovery {
@@ -62,13 +65,13 @@ public class SpringBootFramework implements EndpointDiscovery {
     }
 
     private void lateInit() {
-        if (lateInitAlready) return;
 
-        JavaPsiFacade psiFacade = JavaPsiFacade.getInstance(project);
-        controllerAnnotationClass = psiFacade.findClass(CONTROLLER_ANNOTATION_STR, GlobalSearchScope.allScope(project));
-        initHttpMethodAnnotations(psiFacade);
 
-        lateInitAlready = true;
+        Retries.simpleRetry(() -> JavaPsiUtils.runInReadAccess(project, () -> {
+            JavaPsiFacade psiFacade = JavaPsiFacade.getInstance(project);
+            controllerAnnotationClass = psiFacade.findClass(CONTROLLER_ANNOTATION_STR, GlobalSearchScope.allScope(project));
+            initHttpMethodAnnotations(psiFacade);
+        }), Throwable.class, 50, 5);
     }
 
     private void initHttpMethodAnnotations(JavaPsiFacade psiFacade) {
@@ -87,7 +90,7 @@ public class SpringBootFramework implements EndpointDiscovery {
     }
 
     @Override
-    public List<EndpointInfo> lookForEndpoints(@NotNull SearchScope searchScope) {
+    public List<EndpointInfo> lookForEndpoints(@NotNull Supplier<SearchScope> searchScopeSupplier) {
         lateInit();
         if (!isSpringBootWebRelevant()) {
             return Collections.emptyList();
@@ -96,42 +99,51 @@ public class SpringBootFramework implements EndpointDiscovery {
         List<EndpointInfo> retList = new ArrayList<>();
 
         httpMethodsAnnotations.forEach(currAnnotation -> {
-            Query<PsiMethod> psiMethodsInFile = AnnotatedElementsSearch.searchPsiMethods(currAnnotation.getPsiClass(), searchScope);
+
+            Collection<PsiMethod> psiMethodsInFile = Retries.retryWithResult(() -> JavaPsiUtils.runInReadAccessWithResult(project, () -> {
+                Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(currAnnotation.getPsiClass(), searchScopeSupplier.get());
+                return psiMethods.findAll();
+            }), Throwable.class, 50, 5);
+
 
             for (PsiMethod currPsiMethod : psiMethodsInFile) {
-                final String methodId = JavaLanguageUtils.createJavaMethodCodeObjectId(currPsiMethod);
-                final PsiAnnotation mappingPsiAnnotationOnMethod = currPsiMethod.getAnnotation(currAnnotation.getClassNameFqn());
-                if (mappingPsiAnnotationOnMethod == null) {
-                    continue; // very unlikely
-                }
 
-                final PsiClass controllerClass = currPsiMethod.getContainingClass();
-                if (controllerClass == null) {
-                    continue; // very unlikely
-                }
 
-                if (!JavaPsiUtils.hasOneOfAnnotations(controllerClass, CONTROLLER_ANNOTATION_STR, REST_CONTROLLER_ANNOTATION_STR)) {
-                    continue; // skip this method, since its class is not a controller (or rest controller)
-                }
+                Retries.simpleRetry(() -> JavaPsiUtils.runInReadAccess(project, () -> {
+                    final String methodId = JavaLanguageUtils.createJavaMethodCodeObjectId(currPsiMethod);
+                    final PsiAnnotation mappingPsiAnnotationOnMethod = currPsiMethod.getAnnotation(currAnnotation.getClassNameFqn());
+                    if (mappingPsiAnnotationOnMethod == null) {
+                        return; // very unlikely
+                    }
 
-                final PsiAnnotation controllerReqMappingAnnotation = controllerClass.getAnnotation(HTTP_REQUEST_MAPPING_ANNOTATION_STR);
-                String endpointUriPrefix = "";
-                if (controllerReqMappingAnnotation != null) {
-                    endpointUriPrefix = JavaLanguageUtils.getValueOfFirstMatchingAnnotationAttribute(controllerReqMappingAnnotation, ATTRIBUTES_OF_PATH, "");
-                }
+                    final PsiClass controllerClass = currPsiMethod.getContainingClass();
+                    if (controllerClass == null) {
+                        return; // very unlikely
+                    }
 
-                final String httpMethodName = evalHttpMethod(mappingPsiAnnotationOnMethod, controllerReqMappingAnnotation);
-                if (httpMethodName == null) {
-                    continue; // not likely
-                }
+                    if (!JavaPsiUtils.hasOneOfAnnotations(controllerClass, CONTROLLER_ANNOTATION_STR, REST_CONTROLLER_ANNOTATION_STR)) {
+                        return; // skip this method, since its class is not a controller (or rest controller)
+                    }
 
-                final List<String> endpointUriSuffixes = JavaLanguageUtils.getValuesOfFirstMatchingAnnotationAttribute(mappingPsiAnnotationOnMethod, ATTRIBUTES_OF_PATH);
+                    final PsiAnnotation controllerReqMappingAnnotation = controllerClass.getAnnotation(HTTP_REQUEST_MAPPING_ANNOTATION_STR);
+                    String endpointUriPrefix = "";
+                    if (controllerReqMappingAnnotation != null) {
+                        endpointUriPrefix = JavaLanguageUtils.getValueOfFirstMatchingAnnotationAttribute(controllerReqMappingAnnotation, ATTRIBUTES_OF_PATH, "");
+                    }
 
-                for (String currSuffix : endpointUriSuffixes) {
-                    String httpEndpointCodeObjectId = createHttpEndpointCodeObjectId(httpMethodName, endpointUriPrefix, currSuffix);
-                    EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, methodId, JavaPsiUtils.toFileUri(currPsiMethod), currPsiMethod.getTextOffset());
-                    retList.add(endpointInfo);
-                }
+                    final String httpMethodName = evalHttpMethod(mappingPsiAnnotationOnMethod, controllerReqMappingAnnotation);
+                    if (httpMethodName == null) {
+                        return; // not likely
+                    }
+
+                    final List<String> endpointUriSuffixes = JavaLanguageUtils.getValuesOfFirstMatchingAnnotationAttribute(mappingPsiAnnotationOnMethod, ATTRIBUTES_OF_PATH);
+
+                    for (String currSuffix : endpointUriSuffixes) {
+                        String httpEndpointCodeObjectId = createHttpEndpointCodeObjectId(httpMethodName, endpointUriPrefix, currSuffix);
+                        EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, methodId, JavaPsiUtils.toFileUri(currPsiMethod), currPsiMethod.getTextOffset());
+                        retList.add(endpointInfo);
+                    }
+                }), Throwable.class, 50, 5);
             }
         });
         return retList;

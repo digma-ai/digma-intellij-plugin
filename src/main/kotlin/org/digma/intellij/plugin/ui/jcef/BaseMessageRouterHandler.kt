@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.util.StdDateFormat
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.fileEditor.impl.HTMLEditorProvider
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
@@ -19,11 +20,12 @@ import org.digma.intellij.plugin.common.stopWatchStop
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.model.rest.jcef.common.OpenInBrowserRequest
+import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest
 import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
+import org.digma.intellij.plugin.ui.jcef.model.OpenInInternalBrowserRequest
 
 abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouterHandlerAdapter() {
 
@@ -72,11 +74,39 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                     }
 
                     JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
-                        val openBrowserRequest = JCefMessagesUtils.parseJsonToObject(request, OpenInBrowserRequest::class.java)
+                        val openBrowserRequest = JCefMessagesUtils.parseJsonToObject(request, OpenInDefaultBrowserRequest::class.java)
                         openBrowserRequest?.let {
-                            it.payload?.url?.let { url ->
+                            it.payload.url.let { url ->
                                 BrowserUtil.browse(url)
                             }
+                        }
+                    }
+
+                    JCefMessagesUtils.GLOBAL_OPEN_URL_IN_EDITOR_TAB -> {
+                        val openInInternalBrowserRequest = jsonToObject(request, OpenInInternalBrowserRequest::class.java)
+                        EDT.ensureEDT {
+                            HTMLEditorProvider.openEditor(
+                                project,
+                                openInInternalBrowserRequest.payload.title,
+                                openInInternalBrowserRequest.payload.url,
+                                "<!DOCTYPE html>\n" +
+                                        "<html lang=\"en\">\n" +
+                                        "  <head>\n" +
+                                        "    <meta charset=\"UTF-8\" />\n" +
+                                        "    <style>\n" +
+                                        "      body {\n" +
+                                        "        display: flex;\n" +
+                                        "        justify-content: center;\n" +
+                                        "        padding-top: 100px;\n" +
+                                        "        text-align: center;\n" +
+                                        "      }\n" +
+                                        "    </style>\n" +
+                                        "  </head>\n" +
+                                        "  <body>\n" +
+                                        "    <h1>Timeout loading page<h1>\n" +
+                                        "  </body>\n" +
+                                        "</html>"
+                            )
                         }
                     }
 

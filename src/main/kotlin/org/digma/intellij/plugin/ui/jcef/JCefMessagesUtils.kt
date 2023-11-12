@@ -8,7 +8,11 @@ import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.docker.DigmaInstallationStatus
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
+import org.digma.intellij.plugin.ui.jcef.model.ApiUrlPayload
 import org.digma.intellij.plugin.ui.jcef.model.DigmaEngineStatusMessage
+import org.digma.intellij.plugin.ui.jcef.model.SetApiUrlMessage
+import org.digma.intellij.plugin.ui.jcef.model.SetUserEmailMessage
+import org.digma.intellij.plugin.ui.jcef.model.UserEmailPayload
 
 
 /**
@@ -41,4 +45,21 @@ private fun sendDigmaEngineStatus(cefBrowser: CefBrowser, status: DigmaInstallat
         "GLOBAL/SET_DIGMA_STATUS", status
     )
     serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, connectionStatusMessage)
+}
+
+
+fun sendApiUrl(cefBrowser: CefBrowser, url: String) {
+    val setDigmaApiUrlMessage = SetApiUrlMessage(
+        JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
+        "GLOBAL/SET_DIGMA_API_URL", ApiUrlPayload(url)
+    )
+    serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, setDigmaApiUrlMessage)
+}
+
+fun sendUserEmail(cefBrowser: CefBrowser, email: String) {
+    val setUserEmailMessage = SetUserEmailMessage(
+        JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
+        "GLOBAL/SET_USER_EMAIL", UserEmailPayload(email)
+    )
+    serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, setUserEmailMessage)
 }

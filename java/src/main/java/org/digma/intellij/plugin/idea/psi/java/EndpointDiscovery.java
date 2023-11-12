@@ -1,5 +1,10 @@
 package org.digma.intellij.plugin.idea.psi.java;
 
+import com.intellij.openapi.progress.EmptyProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.project.DumbService;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Computable;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.SearchScope;
@@ -10,15 +15,17 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 public interface EndpointDiscovery {
 
     //must run with read access
-    List<EndpointInfo> lookForEndpoints(@NotNull SearchScope searchScope);
+    //using searchScope supplier because building SearchScope needs read access
+    List<EndpointInfo> lookForEndpoints(@NotNull Supplier<SearchScope> searchScopeSupplier);
 
     // default method uses fileScope. however, in some cases logic could be bit different
     default List<EndpointInfo> lookForEndpoints(@NotNull PsiFile psiFile) {
-        return lookForEndpoints(GlobalSearchScope.fileScope(psiFile));
+        return lookForEndpoints(() -> GlobalSearchScope.fileScope(psiFile));
     }
 
     default void endpointDiscovery(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
@@ -33,5 +40,8 @@ public interface EndpointDiscovery {
             methodInfo.addEndpoint(endpointInfo);
         }
     }
+
+
+
 
 }

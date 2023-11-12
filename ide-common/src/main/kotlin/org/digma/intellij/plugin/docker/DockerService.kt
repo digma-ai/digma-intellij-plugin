@@ -54,7 +54,7 @@ class DockerService {
         if (isEngineInstalled()) {
             //this will happen on IDE start,
             // DockerService is an application service so Downloader will be created once per application
-            downloader.unpackAndTryDownloadLatest()
+            downloader.downloadComposeFile()
         }
     }
 

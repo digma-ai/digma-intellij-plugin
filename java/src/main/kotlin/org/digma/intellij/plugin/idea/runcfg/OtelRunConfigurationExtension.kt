@@ -67,6 +67,7 @@ class OtelRunConfigurationExtension : RunConfigurationExtension() {
                 QuarkusRunConfigurationWrapper.getInstance(configuration.project), // quarkus is first so could catch unit tests before the standard AutoOtelAgent
                 OpenLibertyRunConfigurationWrapper.getInstance(configuration.project),
                 AutoOtelAgentRunConfigurationWrapper.getInstance(configuration.project),
+                EeAppServerAtIdeaUltimateRunConfigurationWrapper.getInstance(configuration.project),
                 TomcatRunConfigurationWrapperForIdeaUltimate.getInstance(configuration.project),
             ).firstOrNull {
                 it.canWrap(configuration, module)

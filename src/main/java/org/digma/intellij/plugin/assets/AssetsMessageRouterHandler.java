@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.diagnostic.Logger;
@@ -14,21 +16,27 @@ import org.cef.browser.CefFrame;
 import org.cef.callback.CefQueryCallback;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
 import org.digma.intellij.plugin.assets.model.outgoing.SetAssetsDataMessage;
+import org.digma.intellij.plugin.assets.model.outgoing.SetCategoriesDataMessage;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.EDT;
+import org.digma.intellij.plugin.emvironment.model.outgoing.EnvironmentChangedMessage;
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil;
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.model.rest.jcef.common.OpenInBrowserRequest;
-import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest;
 import org.digma.intellij.plugin.persistence.PersistenceService;
+import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest;
+import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.digma.intellij.plugin.ui.settings.Theme;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStart;
 import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStop;
+import static org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.serializeAndExecuteWindowPostMessageJavaScript;
 
 class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
@@ -64,8 +72,9 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
                 switch (action) {
                     case "ASSETS/INITIALIZE" -> {
                     }
+                    case "ASSETS/GET_CATEGORIES_DATA" -> pushAssetCategories(browser, objectMapper);
 
-                    case "ASSETS/GET_DATA" -> pushAssetsFromGetData(browser, objectMapper);
+                    case "ASSETS/GET_DATA" -> pushAssetsFromGetData(browser, jsonNode);
 
                     case "ASSETS/GO_TO_ASSET" -> goToAsset(jsonNode);
 
@@ -73,7 +82,7 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
                             EDT.ensureEDT(() -> MainToolWindowCardsController.getInstance(project).showTroubleshooting());
 
                     case JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
-                        OpenInBrowserRequest openBrowserRequest = JCefMessagesUtils.parseJsonToObject(request, OpenInBrowserRequest.class);
+                        OpenInDefaultBrowserRequest openBrowserRequest = JCefMessagesUtils.parseJsonToObject(request, OpenInDefaultBrowserRequest.class);
                         if (openBrowserRequest != null && openBrowserRequest.getPayload() != null) {
                             BrowserUtil.browse(openBrowserRequest.getPayload().getUrl());
                         }
@@ -107,18 +116,43 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
         EDT.assertNonDispatchThread();
 
         Log.log(LOGGER::trace, project, "got ASSETS/GO_TO_ASSET message");
-        var spanId = objectMapper.readTree(jsonNode.get("payload").toString()).get("entry").get("span").get("spanCodeObjectId").asText();
+        var spanId = objectMapper.readTree(jsonNode.get("payload").toString()).get("spanCodeObjectId").asText();
         Log.log(LOGGER::trace, project, "got span id {}", spanId);
         AssetsService.getInstance(project).showAsset(spanId);
     }
 
-
-    private synchronized void pushAssets(CefBrowser browser, ObjectMapper objectMapper) throws JsonProcessingException {
+    private synchronized void pushAssetCategories(CefBrowser browser, ObjectMapper objectMapper) throws JsonProcessingException {
 
         EDT.assertNonDispatchThread();
 
+        Log.log(LOGGER::trace, project, "pushCategories called");
+        var payload = objectMapper.readTree(AssetsService.getInstance(project).getAssetCategories());
+        var message = new SetCategoriesDataMessage("digma", "ASSETS/SET_CATEGORIES_DATA", payload);
+        Log.log(LOGGER::trace, project, "sending ASSETS/SET_CATEGORIES_DATA message");
+        browser.executeJavaScript(
+                "window.postMessage(" + objectMapper.writeValueAsString(message) + ");",
+                jbCefBrowser.getCefBrowser().getURL(),
+                0);
+    }
+
+    private synchronized void pushAssets(CefBrowser browser, JsonNode jsonNode) throws JsonProcessingException {
+
+        EDT.assertNonDispatchThread();
+
+        Map<String, Object> mapRequest = objectMapper.convertValue(jsonNode, Map.class);
+        Map<String, Object> requestPayload = (Map<String, Object>) mapRequest.get("payload");
+
+        Map<String,String> backendQueryParams = new HashMap<>();
+        // query parameters
+        Map<String, Object> payloadQueryParams = (Map<String, Object>) requestPayload.get("query");
+        payloadQueryParams.forEach((paramKey, paramValue) -> {
+            backendQueryParams.put(paramKey, paramValue.toString());
+        });
+
+        backendQueryParams.put("environment",PersistenceService.getInstance().getState().getCurrentEnv());
+
         Log.log(LOGGER::trace, project, "pushAssets called");
-        var payload = objectMapper.readTree(AssetsService.getInstance(project).getAssets());
+        var payload = objectMapper.readTree(AssetsService.getInstance(project).getAssets(backendQueryParams));
         var message = new SetAssetsDataMessage("digma", "ASSETS/SET_DATA", payload);
         Log.log(LOGGER::trace, project, "sending ASSETS/SET_DATA message");
         browser.executeJavaScript(
@@ -127,17 +161,28 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
                 0);
     }
 
-
-    private void pushAssetsFromGetData(CefBrowser browser, ObjectMapper objectMapper) throws JsonProcessingException {
+    private void pushAssetsFromGetData(CefBrowser browser, JsonNode jsonNode) throws JsonProcessingException {
         Log.log(LOGGER::trace, project, "got ASSETS/GET_DATA message");
-        pushAssets(browser, objectMapper);
+
+        if (jsonNode.isMissingNode() || jsonNode.get("payload") == null)
+            return;
+
+        pushAssets(browser, jsonNode);
     }
 
-    void pushAssetsOnEnvironmentChange() throws JsonProcessingException {
-        Log.log(LOGGER::trace, project, "pushAssetsOnEnvironmentChange called");
-        pushAssets(jbCefBrowser.getCefBrowser(), objectMapper);
-    }
+    void pushGlobalEnvironmentChange() throws JsonProcessingException {
+        EDT.assertNonDispatchThread();
 
+        var curEnv = PersistenceService.getInstance().getState().getCurrentEnv();
+        JsonNode jsonNode = JsonNodeFactory.instance.objectNode();
+        ((ObjectNode) jsonNode).put("environment", curEnv);
+        var message = new EnvironmentChangedMessage(
+                JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
+                JCefMessagesUtils.GLOBAL_SET_ENVIRONMENT,
+                jsonNode);
+
+        serializeAndExecuteWindowPostMessageJavaScript(jbCefBrowser.getCefBrowser(), message);
+    }
 
     void sendRequestToChangeUiTheme(@NotNull Theme theme) {
         JCefBrowserUtil.sendRequestToChangeUiTheme(theme, jbCefBrowser);
@@ -150,7 +195,6 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     void sendRequestToChangeCodeFont(String fontName) {
         JCefBrowserUtil.sendRequestToChangeCodeFont(fontName, jbCefBrowser);
     }
-
 
     @Override
     public void onQueryCanceled(CefBrowser browser, CefFrame frame, long queryId) {

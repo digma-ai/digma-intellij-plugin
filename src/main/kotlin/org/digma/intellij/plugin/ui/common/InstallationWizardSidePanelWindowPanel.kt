@@ -49,7 +49,7 @@ import org.digma.intellij.plugin.jcef.common.JcefDockerResultPayload
 import org.digma.intellij.plugin.jcef.common.JcefDockerResultRequest
 import org.digma.intellij.plugin.jcef.common.JcefMessageRequest
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.model.rest.jcef.common.OpenInBrowserRequest
+import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest
 import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest
 import org.digma.intellij.plugin.model.rest.jcef.installationwizard.FinishRequest
 import org.digma.intellij.plugin.model.rest.jcef.installationwizard.SetObservabilityRequest
@@ -64,6 +64,7 @@ import org.digma.intellij.plugin.ui.jcef.updateDigmaEngineStatus
 import org.digma.intellij.plugin.ui.list.insights.isJaegerButtonEnabled
 import org.digma.intellij.plugin.ui.panels.DisposablePanel
 import org.digma.intellij.plugin.ui.recentactivity.RecentActivityToolWindowShower
+import org.digma.intellij.plugin.ui.recentactivity.RecentActivityUpdater
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
 import org.digma.intellij.plugin.ui.settings.SettingsChangeListener
 import org.digma.intellij.plugin.ui.settings.Theme
@@ -185,6 +186,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                 )
                 if (payload != null) {
                     updateObservabilityValue(project, payload.isObservabilityEnabled)
+                    project.service<RecentActivityUpdater>().updateSetObservability(payload.isObservabilityEnabled)
                 }
             }
             if (JCefMessagesUtils.INSTALLATION_WIZARD_FINISH.equals(action, ignoreCase = true)) {
@@ -208,7 +210,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
             if (JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER.equals(action, ignoreCase = true)) {
                 val (_, payload) = JCefMessagesUtils.parseJsonToObject(
                     request,
-                    OpenInBrowserRequest::class.java
+                    OpenInDefaultBrowserRequest::class.java
                 )
                 if (payload != null) {
                     ApplicationManager.getApplication().invokeLater {
@@ -513,7 +515,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                 }
 
                 try {
-                    val status = project.service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionLost()
+                    val status = service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionLost()
                     updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
                 } catch (e: Exception) {
                     ErrorReporter.getInstance().reportError("createInstallationWizardSidePanelWindowPanel.connectionLost", e)
@@ -525,7 +527,7 @@ fun createInstallationWizardSidePanelWindowPanel(project: Project, wizardSkipIns
                     return
                 }
                 try {
-                    val status = project.service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionGained()
+                    val status = service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionGained()
                     updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
                 } catch (e: Exception) {
                     ErrorReporter.getInstance().reportError("createInstallationWizardSidePanelWindowPanel.connectionGained", e)
@@ -631,7 +633,7 @@ class DigmaStatusUpdater {
                 try {
                     while (isActive) {
 
-                        val currentStatus = project.service<DockerService>().getActualRunningEngine(project)
+                        val currentStatus = service<DockerService>().getActualRunningEngine(project)
 
                         if (!isActive) break
 

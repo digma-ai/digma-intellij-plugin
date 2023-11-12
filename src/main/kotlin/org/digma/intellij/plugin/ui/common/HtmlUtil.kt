@@ -9,7 +9,7 @@ import java.awt.Color
 //for different color use extra methods.
 
 
-fun asHtmlNoBoby(value: String): String{
+fun asHtmlNoBoby(value: String): String {
     return "<html>$value</html>"
 }
 
@@ -19,8 +19,7 @@ fun asHtml(content: String?): String {
 }
 
 
-
-fun buildBoldGrayRegularText(boldPart: String,grayedPart: String,regularPart: String): String{
+fun buildBoldGrayRegularText(boldPart: String, grayedPart: String, regularPart: String): String {
 
     val firstPart = spanBold(boldPart)
 
@@ -33,20 +32,20 @@ fun buildBoldGrayRegularText(boldPart: String,grayedPart: String,regularPart: St
 }
 
 //for link labels where we never change the color
-fun buildLinkTextWithGrayedAndDefaultLabelColorPart(linkPart: String,grayedPart: String,regularPart: String): String{
+fun buildLinkTextWithGrayedAndDefaultLabelColorPart(linkPart: String, grayedPart: String, regularPart: String): String {
 
     val firstPart = spanNoColor(linkPart)
 
     val secondPart = spanGrayed(grayedPart)
 
-    val thirdPart = span(Laf.Colors.DEFAULT_LABEL_FOREGROUND,regularPart)
+    val thirdPart = span(Laf.Colors.DEFAULT_LABEL_FOREGROUND, regularPart)
 
     return asHtml("$firstPart $secondPart $thirdPart")
 
 }
 
 
-fun buildLinkTextWithTitleAndGrayedComment(title: String,comment: String): String{
+fun buildLinkTextWithTitleAndGrayedComment(title: String, comment: String): String {
 
     val titlePart = spanNoColor(title)
 
@@ -59,14 +58,14 @@ fun buildLinkTextWithUnderLine(title: String): String {
     return spanUnderline(Laf.Colors.LINK_TEXT, title)
 }
 
-fun buildBoldTitleGrayedComment(title: String,comment: String): String{
-    return buildTitleGrayedComment(title, comment,true)
+fun buildBoldTitleGrayedComment(title: String, comment: String): String {
+    return buildTitleGrayedComment(title, comment, true)
 }
 
-fun buildTitleGrayedComment(title: String,comment: String,bold: Boolean): String{
-    val titlePart = if (bold){
+fun buildTitleGrayedComment(title: String, comment: String, bold: Boolean): String {
+    val titlePart = if (bold) {
         spanBold(title)
-    }else{
+    } else {
         span(title)
     }
 
@@ -76,20 +75,18 @@ fun buildTitleGrayedComment(title: String,comment: String,bold: Boolean): String
 }
 
 
-
-
-fun buildTitleItalicGrayedComment(title: String,comment: String): String{
-    return buildTitleItalicGrayedComment(title, comment,false)
+fun buildTitleItalicGrayedComment(title: String, comment: String): String {
+    return buildTitleItalicGrayedComment(title, comment, false)
 }
 
-fun buildTitleItalicGrayedComment(title: String,comment: String,bold: Boolean): String{
-    val titlePart = if (bold){
+fun buildTitleItalicGrayedComment(title: String, comment: String, bold: Boolean): String {
+    val titlePart = if (bold) {
         spanBold(title)
-    }else{
+    } else {
         span(title)
     }
 
-    val commentPart = spanItalicGrayed(italic(comment))
+    val commentPart = spanItalicGrayed(comment)
 
     return asHtml("$titlePart<br>$commentPart")
 }

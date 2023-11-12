@@ -14,8 +14,6 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent;
-import com.jetbrains.rider.ideaInterop.fileTypes.csharp.CSharpLanguage;
-import com.jetbrains.rider.ideaInterop.fileTypes.csharp.psi.CSharpFile;
 import com.jetbrains.rider.projectView.SolutionLifecycleHost;
 import kotlin.Pair;
 import org.apache.commons.lang3.time.StopWatch;
@@ -90,7 +88,7 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
         }
 
         if (LanguageServiceHost.getInstance(project).isCSharpMethod(methodId)) {
-            return CSharpLanguage.INSTANCE;
+            return CSharpLanguageUtil.getCSharpLanguageInstanceWithReflection();
         }
         return null;
     }
@@ -101,12 +99,12 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
         if (psiFile == null) {
             return false;
         }
-        return CSharpLanguage.INSTANCE.equals(psiFile.getLanguage());
+        return CSharpLanguageUtil.isCSharpLanguage(psiFile.getLanguage());
     }
 
     @Override
     public boolean isSupportedFile(Project project, PsiFile psiFile) {
-        return CSharpLanguage.INSTANCE.equals(psiFile.getLanguage());
+        return CSharpLanguageUtil.isCSharpLanguage(psiFile.getLanguage());
     }
 
 
@@ -132,7 +130,7 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
 
     @Override
     public boolean isServiceFor(@NotNull Language language) {
-        return language.getClass().equals(CSharpLanguage.class);
+        return CSharpLanguageUtil.isCSharpLanguage(language);
     }
 
 
@@ -202,8 +200,8 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
 
         Log.log(LOGGER::debug, "got buildDocumentInfo request for {}", psiFile);
         //must be PsiJavaFile , this method should be called only for java files
-        if (psiFile instanceof CSharpFile cSharpFile) {
-            DocumentInfo documentInfo = LanguageServiceHost.getInstance(project).getDocumentInfo(cSharpFile, newEditor);
+        if (CSharpLanguageUtil.isCSharpFile(psiFile)) {
+            DocumentInfo documentInfo = LanguageServiceHost.getInstance(project).getDocumentInfo(psiFile, newEditor);
             if (documentInfo == null) {
                 Log.log(LOGGER::warn, "DocumentInfo not found for {}, returning empty DocumentInfo", psiFile);
                 documentInfo = new DocumentInfo(PsiUtils.psiFileToUri(psiFile), new HashMap<>());

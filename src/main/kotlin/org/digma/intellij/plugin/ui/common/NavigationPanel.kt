@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.ui.common
 
 import com.intellij.openapi.project.Project
 import com.intellij.util.ui.JBUI
+import org.digma.intellij.plugin.ui.dashboard.DashboardButton
 import org.digma.intellij.plugin.ui.notifications.NotificationsButton
 import java.awt.BorderLayout
 import java.awt.CardLayout
@@ -65,9 +66,10 @@ class NavigationPanel(private val project: Project) : JPanel() {
 
     private fun getFirstRowButtons(): JPanel {
 
-        val buttonsPanel = JPanel(GridLayout(1, 2, 5, 0))
+        val buttonsPanel = JPanel(GridLayout(1, 3, 5, 0))
         buttonsPanel.border = JBUI.Borders.empty()
         buttonsPanel.background = Laf.Colors.EDITOR_BACKGROUND
+        buttonsPanel.add(getDashboardButton())
         buttonsPanel.add(getNotificationsButton())
         buttonsPanel.add(getSettingsButton())
         return buttonsPanel
@@ -142,5 +144,15 @@ class NavigationPanel(private val project: Project) : JPanel() {
         notificationsButton.preferredSize = buttonsSize
         notificationsButton.maximumSize = buttonsSize
         return notificationsButton
+    }
+
+    private fun getDashboardButton(): JButton {
+
+        val size = Laf.scalePanels(Laf.Sizes.BUTTON_SIZE_24)
+        val buttonsSize = Dimension(size, size)
+        val dashboardButton = DashboardButton(project)
+        dashboardButton.preferredSize = buttonsSize
+        dashboardButton.maximumSize = buttonsSize
+        return dashboardButton
     }
 }

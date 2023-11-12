@@ -27,12 +27,8 @@ class RecentActivitiesStartup : StartupActivity {
             while (isActive) {
                 delay(10000)
                 try {
-                    if (project.service<BackendConnectionMonitor>().isConnectionOk()) {
-                        Log.log(logger::trace, "calling updateLatestActivities")
-                        project.service<RecentActivityUpdater>().updateLatestActivities()
-                    } else {
-                        Log.log(logger::trace, "no connection, not calling updateLatestActivities")
-                    }
+                    Log.log(logger::trace, "calling updateLatestActivities")
+                    project.service<RecentActivityUpdater>().updateLatestActivities()
                 } catch (e: CancellationException) {
                     Log.log(logger::trace, project, "recent activity timer job canceled")
                     break

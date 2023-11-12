@@ -38,6 +38,8 @@
         <fileEditorProvider implementation="org.digma.intellij.plugin.jaegerui.JaegerUIFileEditorProvider"/>
         <fileEditorProvider implementation="org.digma.intellij.plugin.documentation.DocumentationFileEditorProvider"/>
 
+        <fileEditorProvider implementation="org.digma.intellij.plugin.dashboard.DashboardFileEditorProvider"/>
+
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.ToolWindowShower"/>
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.MainToolWindowCardsController"/>
 
@@ -48,6 +50,7 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.document.DocumentInfoService"/>
 
+
         <projectService serviceImplementation="org.digma.intellij.plugin.document.CodeLensProvider"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.service.InsightsViewService"/>
@@ -56,13 +59,9 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.ui.service.ErrorsViewService"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.ui.service.SummaryViewService"/>
-
         <projectService serviceImplementation="org.digma.intellij.plugin.insights.InsightsProvider"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.errors.ErrorsProvider"/>
-
-        <projectService serviceImplementation="org.digma.intellij.plugin.summary.SummariesProvider"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.service.InsightsActionsService"/>
 
@@ -155,10 +154,6 @@
 
     </extensions>
 
-
-    <actions>
-        <action id="DigmaSpanNavBackAction" class="org.digma.intellij.plugin.ui.common.actions.SpanNavBackAction"/>
-    </actions>
 
 
     <projectListeners>

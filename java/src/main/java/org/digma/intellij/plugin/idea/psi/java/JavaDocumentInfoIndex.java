@@ -11,6 +11,7 @@ import com.intellij.psi.impl.source.JavaFileElementType;
 import com.intellij.util.indexing.DefaultFileTypeSpecificInputFilter;
 import com.intellij.util.indexing.FileBasedIndex;
 import com.intellij.util.indexing.ID;
+import org.digma.intellij.plugin.common.Retries;
 import org.digma.intellij.plugin.index.DocumentInfoIndex;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.jetbrains.annotations.NotNull;
@@ -37,10 +38,9 @@ public class JavaDocumentInfoIndex extends DocumentInfoIndex {
         return JAVA_DOCUMENT_INFO_INDEX_ID;
     }
 
-
-
+    @NotNull
     @Override
-    public FileBasedIndex.@NotNull InputFilter getInputFilter() {
+    public FileBasedIndex.InputFilter getInputFilter() {
 
         //currently supported file types are java , python is not indexed yet
         return new DefaultFileTypeSpecificInputFilter(JavaFileType.INSTANCE) {
@@ -87,7 +87,7 @@ public class JavaDocumentInfoIndex extends DocumentInfoIndex {
     @Override
     protected DocumentInfo buildDocumentInfo(Project theProject, PsiFile psiFile) {
         if (psiFile instanceof PsiJavaFile psiJavaFile) {
-            return JavaCodeObjectDiscovery.buildDocumentInfoImpl(project, psiJavaFile);
+            Retries.retryWithResult(() -> JavaCodeObjectDiscovery.buildDocumentInfoImpl(project, psiJavaFile), Throwable.class, 50, 5);
         }
         return null;
     }

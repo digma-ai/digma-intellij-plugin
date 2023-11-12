@@ -34,7 +34,14 @@ class ErrorReporter {
         try not to use this method and always send the project reference if available.
      */
     fun reportError(message: String, t: Throwable) {
-        reportError(findActiveProject(), message, t)
+        reportError(message, t, mapOf())
+    }
+
+    /*
+        try not to use this method and always send the project reference if available.
+     */
+    fun reportError(message: String, t: Throwable, extraDetails: Map<String, String>) {
+        reportError(findActiveProject(), message, t, extraDetails)
     }
 
     /*
@@ -43,6 +50,10 @@ class ErrorReporter {
         the event will contain the stack trace and exception message.
      */
     fun reportError(project: Project?, message: String, throwable: Throwable) {
+        reportError(project, message, throwable, mapOf())
+    }
+
+    fun reportError(project: Project?, message: String, throwable: Throwable, extraDetails: Map<String, String>) {
 
         try {
             //many times the exception is no-connection exception, and that may happen too many times.
@@ -62,7 +73,7 @@ class ErrorReporter {
 
             projectToUse?.let {
                 if (it.isDisposed) return
-                ActivityMonitor.getInstance(it).registerError(throwable, message)
+                ActivityMonitor.getInstance(it).registerError(throwable, message, extraDetails)
             }
         } catch (e: Exception) {
             Log.warnWithException(logger, e, "error in error reporter")

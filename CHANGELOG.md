@@ -1,6 +1,97 @@
 # Changelog
 
-## [2.0.170] - 2023-09-21
+## [2.0.193] - 2023-11-10
+- Update Documentation UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1406
+
+## 2.0.192 - 2023-11-09
+- allow slow operations Closes #1355 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1402
+- Update Documentation UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1405
+
+## 2.0.191 - 2023-11-07
+- updated document titles by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/1388
+- fix svg icons scaling by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1391
+- update eap profile 11555 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1393
+- add duration to error in indexing by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1395
+- remove summary panel and services Closes #1390 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1398
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1399
+
+## 2.0.190 - 2023-11-02
+- Update eap profile 11361.10 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1383
+- Feature: Rework assets filter by @borisermakof in https://github.com/digma-ai/digma-intellij-plugin/pull/1374
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1387
+- Insights overview doc by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1385
+
+## 2.0.189 - 2023-10-29
+- Update Recent Activity UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1378
+- fix-read-access-in-getMethodsOf by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1379
+
+## 2.0.188 - 2023-10-26
+- always print stacktrace in connection exception by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1363
+- minimize read access in -endpoint discovery Closes #1265 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1367
+- add retentonn analytics  Closes #1366 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1370
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1373
+- Integrate RecentActivity Observability switch by @borisermakof in https://github.com/digma-ai/digma-intellij-plugin/pull/1369
+- fix dashboard icon and disable when no env yet by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1375
+- remove-new-line-from-scope-line-string Closes #1368 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1376
+- update eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1377
+- Retry in java indexing by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1335
+
+## 2.0.187 - 2023-10-18
+- Update Notifications UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1362
+
+## 2.0.186 - 2023-10-18
+- Update Assets UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1358
+- Update Recent Activity UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1359
+- Update Assets UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1361
+
+## 2.0.185 - 2023-10-15
+- Feature/dashboards panel by @borisermakof in https://github.com/digma-ai/digma-intellij-plugin/pull/1348
+- Add digma url dashboard by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1354
+- Update Assets UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1356
+- fix EAP compilation and badge icon by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1357
+
+## 2.0.184 - 2023-10-07
+- downgrade 231 profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1351
+- increment to 184 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1352
+- Fix GitHub workflows by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1353
+
+## 2.0.181 - 2023-10-03
+- Update Assets UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1342
+- dont run plugin verifier for eap by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1336
+
+## 2.0.180 - 2023-10-02
+- fixed build number in platformVersion for eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1334
+- Feature/QuarkusTests - configure tests to reduce batching impact by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1341
+
+## 2.0.179 - 2023-09-27
+- Update Assets UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1327
+
+## 2.0.178 - 2023-09-26
+- Support 2023.3 Closes #1324 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1325
+- dont-download-latest-compose-on-ide-start by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1316
+
+## 2.0.177 - 2023-09-26
+- added ph link by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/1322
+
+## 2.0.176 - 2023-09-25
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1321
+
+## 2.0.175 - 2023-09-25
+- Update Documentation and Recent Activity UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1318
+- updated jaeger by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/1320
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1319
+
+## 2.0.174 - 2023-09-21
+- add error report in events timer by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1314
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1315
+
+## 2.0.173 - 2023-09-21
+- Add ci environment by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1308
+
+## 2.0.172 - 2023-09-21
+- GitHub actions without maximize space by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1309
+
+## 2.0.170 - 2023-09-21
 - fix refresh when changing url or connection lost Closes #1304 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1306
 - Wsl fix by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1303
 - change notification bell icon by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1307

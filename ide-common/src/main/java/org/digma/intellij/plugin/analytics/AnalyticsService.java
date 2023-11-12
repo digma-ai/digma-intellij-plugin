@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.analytics;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
@@ -13,6 +12,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.CommonUtils;
 import org.digma.intellij.plugin.common.DatesUtils;
 import org.digma.intellij.plugin.common.EDT;
+import org.digma.intellij.plugin.common.ExceptionUtils;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
@@ -20,7 +20,6 @@ import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.digma.intellij.plugin.model.rest.AboutResult;
-import org.digma.intellij.plugin.model.rest.assets.AssetsRequest;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentRequest;
 import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentResponse;
@@ -31,7 +30,6 @@ import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsResponse
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
 import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightRequest;
-import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsRequest;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanRequest;
@@ -74,6 +72,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -181,11 +180,29 @@ public class AnalyticsService implements Disposable {
     }
 
 
+    @NotNull
+    public ConnectionTestResult testRemoteConnection(@NotNull String serverUrl, @Nullable String token) {
+        try (RestAnalyticsProvider analyticsProvider = new RestAnalyticsProvider(serverUrl, token)) {
+            //todo: use health check to test connection
+            var envs = analyticsProvider.getEnvironments();
+            if (envs != null) {
+                return ConnectionTestResult.success();
+            }
+            return ConnectionTestResult.failure("unknown");
+        } catch (Exception e) {
+            ErrorReporter.getInstance().reportError(project, "AnalyticsService.testRemoteConnection", e);
+            return ConnectionTestResult.failure(ExceptionUtils.getNonEmptyMessage(e));
+        }
+
+    }
+
+
     @Nullable
     public List<String> getEnvironments() {
         try {
             var environments = analyticsProviderProxy.getEnvironments();
             var hostName = CommonUtils.getLocalHostname();
+            //filter out other LOCAL environments, keep only mine LOCAL
             return environments.stream()
                     .filter(env -> (!isEnvironmentLocal(env) && !isEnvironmentLocalTests(env)) || isLocalEnvironmentMine(env, hostName))
                     .toList();
@@ -212,16 +229,6 @@ public class AnalyticsService implements Disposable {
         });
     }
 
-    public List<GlobalInsight> getGlobalInsights() throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
-        Log.log(LOGGER::trace, "Requesting Global Insights for next environment {}", env);
-        var insights = executeCatching(() -> analyticsProviderProxy.getGlobalInsights(new InsightsRequest(env, Collections.emptyList())));
-        if (insights == null) {
-            insights = Collections.emptyList();
-        }
-        onInsightReceived(insights);
-        return insights;
-    }
 
 
     public LatestCodeObjectEventsResponse getLatestEvents(@NotNull String lastReceivedTime) throws AnalyticsServiceException {
@@ -366,20 +373,22 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getHtmlGraphForSpanScaling(spanHistogramQuery));
     }
 
-
-    public String getAssets() throws AnalyticsServiceException {
+    public String getAssetCategories() throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
-        var assets = executeCatching(() ->
-                analyticsProviderProxy.getAssets(new AssetsRequest(env)));
+        return executeCatching(() ->
+                analyticsProviderProxy.getAssetCategories(env));
+    }
+    public void checkInsightExists() throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        var response = executeCatching(() ->
+                analyticsProviderProxy.insightExists(env));
 
         try {
             if (!PersistenceService.getInstance().getState().getFirstTimeAssetsReceived()) {
                 var objectMapper = new ObjectMapper();
-                var payload = objectMapper.readTree(assets);
+                var payload = objectMapper.readTree(response);
                 if (!payload.isMissingNode() &&
-                        payload.get("serviceAssetsEntries") != null &&
-                        payload.get("serviceAssetsEntries") instanceof ArrayNode &&
-                        !((ArrayNode) payload.get("serviceAssetsEntries")).isEmpty()) {
+                        payload.get("insightExists").asBoolean()) {
                     ActivityMonitor.getInstance(project).registerFirstAssetsReceived();
                     PersistenceService.getInstance().getState().setFirstTimeAssetsReceived(true);
                 }
@@ -387,8 +396,11 @@ public class AnalyticsService implements Disposable {
         } catch (Exception e) {
             Log.warnWithException(LOGGER, project, e, "error reporting FirstTimeAssetsReceived {}", e);
         }
+    }
 
-        return assets;
+    public String getAssets(@NotNull Map<String,String> queryParams) throws AnalyticsServiceException {
+        return executeCatching(() ->
+                analyticsProviderProxy.getAssets(queryParams));
     }
 
 
@@ -425,6 +437,9 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.deleteEnvironment(new DeleteEnvironmentRequest(environmentName)));
     }
 
+    public String getDashboard(@NotNull Map<String,String> queryParams) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getDashboard(queryParams));
+    }
 
     @Override
     public void dispose() {
@@ -620,11 +635,11 @@ public class AnalyticsService implements Disposable {
                 if (isConnectionException) {
                     markConnectionLostAndNotify();
                     errorReportingHelper.addIfNewError(invocationTargetException);
-                    Log.log(LOGGER::warn, "Connection exception: error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
+                    Log.warnWithException(LOGGER, project, invocationTargetException, "Connection exception: error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
                     NotificationUtil.notifyError(project, "<html>Connection error with Digma backend api for method " + method.getName() + ".<br> "
                             + message + ".<br> See logs for details.");
                 } else {
-                    Log.log(LOGGER::warn, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), invocationTargetException.getCause().getMessage());
+                    Log.warnWithException(LOGGER, project, invocationTargetException, "Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), invocationTargetException.getCause().getMessage());
                     if (errorReportingHelper.addIfNewError(invocationTargetException)) {
                         NotificationUtil.notifyError(project, "<html>Error with Digma backend api for method " + method.getName() + ".<br> "
                                 + message + ".<br> See logs for details.");
@@ -636,8 +651,7 @@ public class AnalyticsService implements Disposable {
             }
             // status was not ok but it's a new error
             else if (errorReportingHelper.addIfNewError(invocationTargetException)) {
-                Log.log(LOGGER::warn, "New Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
-                LOGGER.warn(invocationTargetException);
+                Log.warnWithException(LOGGER, project, invocationTargetException, "New Error invoking AnalyticsProvider.{}({}), exception {}", method.getName(), argsToString(args), message);
             }
 
             ErrorReporter.getInstance().reportAnalyticsServiceError(project, "AnalyticsInvocationHandler.invoke." + method.getName(), method.getName(), invocationTargetException, isConnectionException);

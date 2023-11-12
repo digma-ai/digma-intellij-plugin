@@ -8,10 +8,32 @@ jobs:
   build-workflow:
     strategy:
       matrix:
-        profile: [ p223, p231, p232 ]
+        profile: [ p223, p231, p232, p233 ]
     uses: ./.github/workflows/build-workflow.yml
     with:
       build-profile: ${{ matrix.profile }}
       ref-name: ${{ github.event.pull_request.head.sha }}
       build-with-rider: false
+    secrets: inherit
+
+  build-workflow-with-rider:
+    strategy:
+      matrix:
+        profile: [ p223, p231, p232, p233 ]
+    uses: ./.github/workflows/build-workflow.yml
+    with:
+      build-profile: ${{ matrix.profile }}
+      ref-name: ${{ github.event.pull_request.head.sha }}
+      build-with-rider: true
+    secrets: inherit
+
+  plugin-verifier-workflow:
+    needs: [ build-workflow,build-workflow-with-rider ]
+    strategy:
+      matrix:
+        profile: [ p223, p231, p232, p233 ]
+    uses: ./.github/workflows/plugin-verifier-workflow.yml
+    with:
+      build-profile: ${{ matrix.profile }}
+      ref-name: ${{ github.event.pull_request.head.sha }}
     secrets: inherit

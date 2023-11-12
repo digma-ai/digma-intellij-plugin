@@ -37,6 +37,7 @@ class AssetsIndexTemplateBuilder {
     private static final String IS_DIGMA_ENGINE_INSTALLED = "isDigmaEngineInstalled";
     private static final String IS_DIGMA_ENGINE_RUNNING = "isDigmaEngineRunning";
     private static final String IS_JAEGER_ENABLED = "isJaegerEnabled";
+    private static final String ENVIRONMENT = "environment";
 
     private final Configuration freemarketConfiguration = new Configuration(Configuration.VERSION_2_3_30);
 
@@ -53,6 +54,7 @@ class AssetsIndexTemplateBuilder {
             var data = new HashMap<String, Object>();
             JCefTemplateUtils.addCommonEnvVariables(data);
 
+            var curEnv = PersistenceService.getInstance().getState().getCurrentEnv();
             var assetSearchEnabledForLinux = VersionComparatorUtil.compare(ApplicationInfo.getInstance().getMajorVersion(),"2023") >= 0;
             data.put(ASSET_SEARCH_ENV_NAME, SystemInfo.isLinux ? String.valueOf(assetSearchEnabledForLinux) : "true");
 
@@ -65,7 +67,7 @@ class AssetsIndexTemplateBuilder {
             data.put(IS_DIGMA_ENGINE_RUNNING, ApplicationManager.getApplication().getService(DockerService.class).isEngineRunning(project));
             data.put(IS_DOCKER_INSTALLED, ApplicationManager.getApplication().getService(DockerService.class).isDockerInstalled());
             data.put(IS_DOCKER_COMPOSE_INSTALLED, ApplicationManager.getApplication().getService(DockerService.class).isDockerInstalled());
-
+            data.put(ENVIRONMENT, curEnv == null ? "" : curEnv);
 
             Template template = freemarketConfiguration.getTemplate(INDEX_TEMPLATE_NAME);
             StringWriter stringWriter = new StringWriter();

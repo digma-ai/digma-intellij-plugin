@@ -9,7 +9,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
 import org.digma.intellij.plugin.model.rest.AboutResult;
-import org.digma.intellij.plugin.model.rest.assets.AssetsRequest;
 import org.digma.intellij.plugin.model.rest.debugger.DebuggerEventRequest;
 import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentRequest;
 import org.digma.intellij.plugin.model.rest.env.DeleteEnvironmentResponse;
@@ -20,7 +19,6 @@ import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsResponse
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
 import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightRequest;
-import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsRequest;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanRequest;
@@ -54,6 +52,7 @@ import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
+import retrofit2.http.QueryMap;
 import retrofit2.http.Streaming;
 
 import javax.net.ssl.HostnameVerifier;
@@ -72,14 +71,12 @@ import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-import java.util.logging.Logger;
-public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
-    private final static Logger LOGGER = Logger.getLogger(RestAnalyticsProvider.class.getName());
+public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
     private final Client client;
 
@@ -93,7 +90,6 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
 
     public List<String> getEnvironments() {
-        Log.test(LOGGER::info, "getEnvironments");
         var envs = execute(client.analyticsProvider::getEnvironments);
         //make sure environments list is always a mutable list because we change it
         if (envs != null){
@@ -102,33 +98,25 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         return envs;
     }
 
+
     public void sendDebuggerEvent(DebuggerEventRequest debuggerEventRequest) {
-        Log.test(LOGGER::info, "sendDebuggerEvent");
         execute(() -> client.analyticsProvider.sendDebuggerEvent(debuggerEventRequest));
     }
 
     @Override
     public List<CodeObjectInsight> getInsights(InsightsRequest insightsRequest) {
-        Log.test(LOGGER::info, "getInsights");
         return execute(() -> client.analyticsProvider.getInsights(insightsRequest));
     }
 
     @Override
     public InsightsOfMethodsResponse getInsightsOfMethods(InsightsOfMethodsRequest insightsOfMethodsRequest) {
-        Log.test(LOGGER::info, "getInsightsOfMethods");
         return execute(() -> client.analyticsProvider.getInsightsOfMethods(insightsOfMethodsRequest));
     }
 
     public InsightsOfSingleSpanResponse getInsightsForSingleSpan(InsightsOfSingleSpanRequest insightsOfSingleSpanRequest){
-        Log.test(LOGGER::info, "getInsightsForSingleSpan");
         return execute(() -> client.analyticsProvider.getInsightsForSingleSpan(insightsOfSingleSpanRequest));
     }
 
-    @Override
-    public List<GlobalInsight> getGlobalInsights(InsightsRequest insightsRequest) {
-        Log.test(LOGGER::info, "getGlobalInsights");
-        return execute(() -> client.analyticsProvider.getGlobalInsights(insightsRequest));
-    }
     @Override
     public LatestCodeObjectEventsResponse getLatestEvents(LatestCodeObjectEventsRequest latestCodeObjectEventsRequest) {
         return execute(() -> client.analyticsProvider.getLatestEvents(latestCodeObjectEventsRequest));
@@ -136,57 +124,48 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
     @Override
     public List<CodeObjectError> getErrorsOfCodeObject(String environment, List<String> codeObjectIds) {
-        Log.test(LOGGER::info, "getErrorsOfCodeObject");
         return execute(() -> client.analyticsProvider.getErrorsOfCodeObject(environment, codeObjectIds));
     }
 
     @Override
     public CodeObjectInsightsStatusResponse getCodeObjectInsightStatus(InsightsOfMethodsRequest request) {
-        Log.test(LOGGER::info, "getCodeObjectInsightStatus");
         return execute(() -> client.analyticsProvider.getCodeObjectInsightStatus(request));
     }
 
     @Override
     public void setInsightCustomStartTime(CustomStartTimeInsightRequest customStartTimeInsightRequest) {
-        Log.test(LOGGER::info, "setInsightCustomStartTime");
         execute(() -> client.analyticsProvider.setInsightCustomStartTime(customStartTimeInsightRequest));
     }
 
     @Override
     public CodeObjectErrorDetails getCodeObjectErrorDetails(String errorSourceId) {
-        Log.test(LOGGER::info, "getCodeObjectErrorDetails");
         return execute(() -> client.analyticsProvider.getCodeObjectErrorDetails(errorSourceId));
     }
 
     @Override
     public UsageStatusResult getUsageStatus(UsageStatusRequest usageStatusRequest) {
-        Log.test(LOGGER::info, "getUsageStatus");
         return execute(() -> client.analyticsProvider.getUsageStatus(usageStatusRequest));
     }
 
     @Override
     public String getHtmlGraphForSpanPercentiles(SpanHistogramQuery request) {
-        Log.test(LOGGER::info, "getHtmlGraphForSpanPercentiles");
         final ResponseBody responseBody = execute(() -> client.analyticsProvider.getHtmlGraphForSpanPercentiles(request));
         return readEntire(responseBody);
     }
 
     @Override
     public String getHtmlGraphForSpanScaling(SpanHistogramQuery request) {
-        Log.test(LOGGER::info, "getHtmlGraphForSpanScaling");
         final ResponseBody responseBody = execute(() -> client.analyticsProvider.getHtmlGraphForSpanScaling(request));
         return readEntire(responseBody);
     }
 
     @Override
     public RecentActivityResult getRecentActivity(RecentActivityRequest recentActivityRequest) {
-        Log.test(LOGGER::info, "getRecentActivity");
         return execute(() -> client.analyticsProvider.getRecentActivity(recentActivityRequest));
     }
 
     @Override
     public DurationLiveData getDurationLiveData(DurationLiveDataRequest durationLiveDataRequest) {
-        Log.test(LOGGER::info, "getDurationLiveData");
         return execute(() -> client.analyticsProvider.getDurationLiveData(durationLiveDataRequest));
     }
 
@@ -196,9 +175,18 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public String getAssets(AssetsRequest assetsRequest) {
-        Log.test(LOGGER::info, "getAssets");
-        return execute(() -> client.analyticsProvider.getAssets(assetsRequest));
+    public String getAssetCategories(String environment){
+        return execute(() -> client.analyticsProvider.getAssetCategories(environment));
+    }
+
+    @Override
+    public String insightExists(String environment){
+        return execute(() -> client.analyticsProvider.insightExists(environment));
+    }
+
+    @Override
+    public String getAssets(Map<String,String> queryParams) {
+        return execute(() -> client.analyticsProvider.getAssets(queryParams));
     }
 
     @Override
@@ -218,14 +206,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
     @Override
     public VersionResponse getVersions(VersionRequest request) {
-        Log.test(LOGGER::info, "getVersions");
         return execute(() -> client.analyticsProvider.getVersions(request));
     }
 
     @Override
     public AboutResult getAbout() {
-        Log.test(LOGGER::info, "getAbout");
-//        return new AboutResult("0.0.0", BackendDeploymentType.Unknown);
         return execute(() -> client.analyticsProvider.getAbout());
     }
 
@@ -239,6 +224,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         return execute(() -> client.analyticsProvider.deleteEnvironment(deleteEnvironmentRequest));
     }
 
+    @Override
+    public String getDashboard(Map<String,String> queryParams) {
+        return execute(() -> client.analyticsProvider.getDashboard(queryParams));
+    }
+
     protected static String readEntire(ResponseBody responseBody) {
         try (Reader reader = responseBody.charStream()) {
             return CharStreams.toString(reader);
@@ -248,8 +238,6 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     public <T> T execute(Supplier<Call<T>> supplier) {
-
-        Log.test(LOGGER::info, "Executing {}", supplier.toString());
 
         Response<T> response;
         try {
@@ -443,12 +431,6 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         @POST("/CodeAnalytics/codeObjects/insights_of_single")
         Call<InsightsOfSingleSpanResponse> getInsightsForSingleSpan(@Body InsightsOfSingleSpanRequest insightsOfSingleSpanRequest);
 
-        @Headers({
-                "Accept: application/+json",
-                "Content-Type:application/json"
-        })
-        @POST("/CodeAnalytics/insights")
-        Call<List<GlobalInsight>> getGlobalInsights(@Body InsightsRequest insightsRequest);
 
         @Headers({
                 "Accept: application/+json",
@@ -540,8 +522,23 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/CodeAnalytics/codeObjects/assets")
-        Call<String> getAssets(@Body AssetsRequest assetsRequest);
+        @GET("/CodeAnalytics/codeObjects/asset_categories")
+        Call<String> getAssetCategories(@Query("environment") String environment);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("/CodeAnalytics/codeObjects/insight_exists")
+        Call<String> insightExists(@Query("environment") String environment);
+
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("/CodeAnalytics/codeObjects/getAssets")
+        Call<String> getAssets(@QueryMap Map<String,String> fields);
 
         @Headers({
                 "Accept: application/+json",
@@ -592,6 +589,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @POST("/CodeAnalytics/delete_environment")
         Call<DeleteEnvironmentResponse> deleteEnvironment(@Body DeleteEnvironmentRequest deleteEnvironmentRequest);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("/dashboard/getDashboard")
+        Call<String> getDashboard(@QueryMap Map<String,String> fields);
     }
 
 }

@@ -28,6 +28,16 @@ public class AnalyticsServiceException extends Exception {
     }
 
     @NotNull
+    public int getErrorCode(){
+        AnalyticsProviderException analyticsProviderException = ExceptionUtils.findCause(AnalyticsProviderException.class, this);
+        if (analyticsProviderException != null) {
+            return analyticsProviderException.getResponseCode();
+        }
+
+        return -1;
+    }
+
+    @NotNull
     public String getMeaningfulMessage() {
 
 

@@ -86,10 +86,6 @@ public interface LanguageService extends Disposable {
      * but there could be two , for example if python plugin is installed on Rider there will be C# and
      * python language services, or if python plugin is installed on idea, so the task will run twice.
      * callers must take that into account.
-     * This is made specifically for the initialization of SummaryViewService that needs language services
-     * to be fully functioning on startup, in C# it means that the solution is fully loaded. actually supporting
-     * C# on Rider is the main reason for this method because only the C# language service has access to the solution
-     * and can test if it's fully loaded.
      */
     static void runWhenSmartForAll(@NotNull Project project, @NotNull Runnable task) {
         Log.log(LOGGER::debug, "runWhenSmartForAll invoked");
@@ -142,9 +138,6 @@ public interface LanguageService extends Disposable {
     /**
      * This method is used to find the LanguageService to use in situations where we don't have a context like
      * MethodInfo or a file.
-     * for example: ErrorsProvider.getErrorDetails may be clicked from the summary view, in that case there was no
-     * code object discovery and the file is probably not opened. in that case we have only methodCodeObjectId.
-     * This method must be executed in ReadAction or EDT.
      */
     @NotNull
     static LanguageService findLanguageServiceByMethodCodeObjectId(@NotNull Project project, @Nullable String methodCodeObjectId) {
@@ -168,8 +161,7 @@ public interface LanguageService extends Disposable {
             }
 
             //last resort. dominant language will be available if at least one document was already opened.
-            //dominant language will be null if no document was opened yet. it may happen if no document was opened and
-            //user opens an error from the summary view.
+            //dominant language will be null if no document was opened yet.
             if (language == null) {
                 language = DocumentInfoService.getInstance(project).getDominantLanguage();
             }

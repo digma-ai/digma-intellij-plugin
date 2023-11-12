@@ -255,7 +255,7 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
         AnalyticsProvider analyticsProvider = new RestAnalyticsProvider(baseUrl);
         List<CodeObjectInsight> codeObjectInsights = analyticsProvider.getInsights(new InsightsRequest("myenv", Collections.singletonList("method:aaaa")));
 
-        assertEquals(0, codeObjectInsights.size(), "unexpected summaries size");
+        assertEquals(0, codeObjectInsights.size(), "unexpected codeObjectInsights size");
     }
 
     @Test
@@ -417,7 +417,7 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
     }
 
     @Test
-    void getSummariesNullResultTest() {
+    void getInsightsNullResultTest() {
 
         mockBackEnd.enqueue(new MockResponse()
                 .addHeader("Content-Type", "application/json"));
@@ -431,7 +431,7 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
     }
 
     @Test
-    void getSummariesErrorResultTest() {
+    void getInsightsErrorResultTest() {
 
         mockBackEnd.enqueue(new MockResponse()
                 .setResponseCode(500)
@@ -447,7 +447,7 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
 
 
     @Test
-    void getSummariesWrongResultTest() throws JsonProcessingException {
+    void getInsightsWrongResultTest() throws JsonProcessingException {
 
         mockBackEnd.enqueue(new MockResponse()
                 .setBody(objectMapper.writeValueAsString("mystring"))

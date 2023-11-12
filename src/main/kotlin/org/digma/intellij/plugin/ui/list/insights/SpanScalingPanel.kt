@@ -195,7 +195,7 @@ fun getRootCauseSpanPanel(project: Project, rootCauseSpan: RootCauseSpan): JPane
     val spanId = rootCauseSpan.spanCodeObjectId
     val link =
         ActionLink(normalizedDisplayName) {
-            ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Summary)
+            ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Insights)
             project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanId)
         }
     link.toolTipText = asHtml(normalizedDisplayName)

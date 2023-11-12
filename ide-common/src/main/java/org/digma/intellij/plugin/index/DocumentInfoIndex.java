@@ -9,6 +9,7 @@ import com.intellij.util.indexing.SingleEntryFileBasedIndexExtension;
 import com.intellij.util.indexing.SingleEntryIndexer;
 import com.intellij.util.io.DataExternalizer;
 import com.intellij.util.io.IOUtil;
+import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
@@ -19,7 +20,9 @@ import org.jetbrains.annotations.Nullable;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Base class for languages that want to index DocumentInfo.
@@ -47,6 +50,8 @@ public abstract class DocumentInfoIndex extends SingleEntryFileBasedIndexExtensi
             @Override
             protected @Nullable DocumentInfo computeValue(@NotNull FileContent inputData) {
 
+                var stopWatch = StopWatch.createStarted();
+
                 try {
 
                     //There is no easy way to exclude java interfaces,enums and annotations because the file may
@@ -64,9 +69,22 @@ public abstract class DocumentInfoIndex extends SingleEntryFileBasedIndexExtensi
                     DocumentInfoIndex.this.project = theProject;
                     return buildDocumentInfo(theProject, psiFile);
                 } catch (Exception e) {
-                    Log.warnWithException(LOGGER, e, "error in indexing {}", inputData.getPsiFile().getVirtualFile());
-                    ErrorReporter.getInstance().reportError("error in indexing", e);
+
+                    //add duration to help us understand why this code throws exception many times. it throws ProcessCanceledException
+                    // for read access.
+                    //this duration includes all the retries in buildDocumentInfo so consider it.
+                    //todo: if we fix it we can remove the duration
+                    if (!stopWatch.isStopped()) {
+                        stopWatch.stop();
+                    }
+
+                    Log.warnWithException(LOGGER, e, "error in indexing {}, took {}", inputData.getPsiFile().getVirtualFile(), stopWatch.getTime(TimeUnit.MILLISECONDS));
+                    ErrorReporter.getInstance().reportError("error in indexing", e, Collections.singletonMap("duration", String.valueOf(stopWatch.getTime(TimeUnit.MILLISECONDS))));
                     return null;
+                } finally {
+                    if (!stopWatch.isStopped()) {
+                        stopWatch.stop();
+                    }
                 }
             }
         };

@@ -5,7 +5,6 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
-import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.colors.EditorColorsListener
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.editor.colors.impl.AppEditorFontOptions
@@ -13,8 +12,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import com.intellij.util.Alarm
 import com.intellij.util.ui.UIUtil
-import org.digma.intellij.plugin.ui.service.InsightsViewService
-import org.digma.intellij.plugin.ui.service.SummaryViewService
 
 
 @Service(Service.Level.PROJECT)

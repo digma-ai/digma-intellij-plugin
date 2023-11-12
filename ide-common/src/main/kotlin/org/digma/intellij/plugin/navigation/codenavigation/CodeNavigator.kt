@@ -41,7 +41,7 @@ class CodeNavigator(val project: Project) {
         val spanIdWithoutType = CodeObjectsUtil.stripSpanPrefix(spanId)
 
         SupportedLanguages.values().forEach { language ->
-            // when the language is CSHARP the call LanguageService.findLanguageServiceByName always fails and crashes the system.
+            //todo: when the language is CSHARP the call LanguageService.findLanguageServiceByName always fails and crashes the system.
             if (language == SupportedLanguages.CSHARP) {
                 return@forEach
             }
@@ -78,7 +78,7 @@ class CodeNavigator(val project: Project) {
         val methodIdWithoutType = CodeObjectsUtil.stripMethodPrefix(methodId)
 
         SupportedLanguages.values().forEach { language ->
-            // when the language is CSHARP the call LanguageService.findLanguageServiceByName always fails and crashes the system.
+            //todo: when the language is CSHARP the call LanguageService.findLanguageServiceByName always fails and crashes the system.
             if (language == SupportedLanguages.CSHARP) {
                 return@forEach
             }
@@ -119,7 +119,7 @@ class CodeNavigator(val project: Project) {
 
 
         SupportedLanguages.values().forEach { language ->
-            // when the language is CSHARP the call LanguageService.findLanguageServiceByName always fails and crashes the system.
+            //todo: when the language is CSHARP the call LanguageService.findLanguageServiceByName always fails and crashes the system.
             if (language == SupportedLanguages.CSHARP) {
                 return@forEach
             }
@@ -145,7 +145,7 @@ class CodeNavigator(val project: Project) {
         val spanIdWithoutType = CodeObjectsUtil.stripSpanPrefix(spanCodeObjectId)
 
         SupportedLanguages.values().forEach { language ->
-            // when the language is CSHARP the call LanguageService.findLanguageServiceByName always fails and crashes the system.
+            //todo: when the language is CSHARP the call LanguageService.findLanguageServiceByName always fails and crashes the system.
             if (language == SupportedLanguages.CSHARP) {
                 return@forEach
             }
@@ -170,7 +170,7 @@ class CodeNavigator(val project: Project) {
         val methodIdWithoutType = CodeObjectsUtil.stripMethodPrefix(methodId)
 
         SupportedLanguages.values().forEach { language ->
-            // when the language is CSHARP the call LanguageService.findLanguageServiceByName always fails and crashes the system.
+            //todo: when the language is CSHARP the call LanguageService.findLanguageServiceByName always fails and crashes the system.
             if (language == SupportedLanguages.CSHARP) {
                 return@forEach
             }
@@ -194,7 +194,7 @@ class CodeNavigator(val project: Project) {
         val spanIdWithoutType = CodeObjectsUtil.stripSpanPrefix(spanId)
 
         SupportedLanguages.values().forEach { language ->
-            // when the language is CSHARP the call LanguageService.findLanguageServiceByName always fails and crashes the system.
+            //todo: when the language is CSHARP the call LanguageService.findLanguageServiceByName always fails and crashes the system.
             if (language == SupportedLanguages.CSHARP) {
                 return@forEach
             }
@@ -225,7 +225,7 @@ class CodeNavigator(val project: Project) {
             val endpointId = CodeObjectsUtil.stripEndpointPrefix(it)
 
             SupportedLanguages.values().forEach { language ->
-                // when the language is CSHARP the call LanguageService.findLanguageServiceByName always fails and crashes the system.
+                //todo: when the language is CSHARP the call LanguageService.findLanguageServiceByName always fails and crashes the system.
                 if (language == SupportedLanguages.CSHARP) {
                     return@forEach
                 }

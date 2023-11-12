@@ -1,15 +1,12 @@
 package org.digma.intellij.plugin.ui.toolwindow
 
-import com.intellij.collaboration.async.DisposingScope
+import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowManager
-import com.intellij.ui.BadgeDotProvider
-import com.intellij.ui.BadgeIcon
-import com.intellij.util.ui.JBUI
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -31,7 +28,7 @@ class ToolWindowBadgeChanger : StartupActivity {
         val notificationsService = project.service<NotificationsService>()
 
         @Suppress("UnstableApiUsage")
-        DisposingScope(notificationsService).launch {
+        notificationsService.disposingScope().launch {
 
             while (isActive) {
                 checkUnreadNotifications(project)

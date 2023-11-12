@@ -51,6 +51,13 @@ class TestSOWFlow : DigmaTestCase() {
     override fun setUp() {
         super.setUp()
         prepareBrowsers()
+        
+        mockGetEnvironments(mockAnalyticsProvider, SingleEnvironmentData.environmentList)
+        mockGetInsightsOfMethods(mockAnalyticsProvider, SingleEnvironmentData.expectedInsightsOfMethods)
+        mockGetRecentActivity(mockAnalyticsProvider, SingleEnvironmentData.expectedRecentActivityResult)
+        mockGetInsightOfSingeSpan(mockAnalyticsProvider, TwoEnvironmentsFirstFileRelatedSingleSpanData.expectedInsightOfSingleSpan) // those insights are for both envs
+        mockGetCodeObjectNavigation(mockAnalyticsProvider, TwoEnvironmentSecondFileNavigateToCodeData.codeObjectNavigation)
+        
     }
 
     private fun prepareBrowsers() {
@@ -66,17 +73,11 @@ class TestSOWFlow : DigmaTestCase() {
         replaceExecuteJavaScriptOf(insightCefBrowser)
         // use browser spy to verify recent activities
         replaceExecuteJavaScriptOf(recentActivityCefBrowser)
+
+       
     }
 
     fun testFlow() {
-
-
-        mockGetEnvironments(mockAnalyticsProvider, SingleEnvironmentData.environmentList)
-        mockGetInsightsOfMethods(mockAnalyticsProvider, SingleEnvironmentData.expectedInsightsOfMethods)
-        mockGetRecentActivity(mockAnalyticsProvider, SingleEnvironmentData.expectedRecentActivityResult)
-        mockGetInsightOfSingeSpan(mockAnalyticsProvider, TwoEnvironmentsFirstFileRelatedSingleSpanData.expectedInsightOfSingleSpan) // those insights are for both envs
-        mockGetCodeObjectNavigation(mockAnalyticsProvider, TwoEnvironmentSecondFileNavigateToCodeData.codeObjectNavigation)
-
 
         // Bullet One
         // prepare single environment mock with insights and recent activities
@@ -134,7 +135,7 @@ class TestSOWFlow : DigmaTestCase() {
         assertEquals(SingleEnvironmentData.environmentList[0], analyticsService.environment.getCurrent())
 
         //  assert from browser spy that the insights were pushed to the browser
-        assertQueueOfActionWithinTimeout("INSIGHTS/SET_DATA", 5000, this::assertJsonBrowserForBulletOne)
+        assertQueueOfActionWithinTimeout("INSIGHTS/SET_DATA", 5000, this::assertJsonForSingleEnvironmentData)
 
         //  assert from browser spy that the recent activities were pushed to the browser
         assertQueueOfActionWithinTimeout("RECENT_ACTIVITY/SET_DATA", 5000) {
@@ -192,7 +193,7 @@ class TestSOWFlow : DigmaTestCase() {
         assertEquals(methodUnderCaret.id, GoToSpanData.goToSpanRequestPayload.span.methodCodeObjectId)
         assertEquals(targetMethod?.name, methodUnderCaret.name) //todo: not sure about that
 
-        assertQueueOfActionWithinTimeout("INSIGHTS/SET_DATA", 5000, this::assertJsonForBulletThree)
+        assertQueueOfActionWithinTimeout("INSIGHTS/SET_DATA", 5000, this::assertJsonForTwoEnvironmentNewInsightsData)
 
 
         // bullet 4 -
@@ -206,7 +207,7 @@ class TestSOWFlow : DigmaTestCase() {
 
         waitForAndDispatch(1000, "insights to be shown")
 
-        assertQueueOfActionWithinTimeout("INSIGHTS/SET_DATA", 5000, this::assertJsonForBulletFour)
+        assertQueueOfActionWithinTimeout("INSIGHTS/SET_DATA", 5000, this::assertJsonForInsightsOfRelatedSpans)
 
         // bullet 5 -
 
@@ -249,6 +250,10 @@ class TestSOWFlow : DigmaTestCase() {
 //        TestCase.assertEquals(BulletFiveData.targetMethodOffSet, editor.caretModel.offset)
     }
 
+    /**
+     * replaces the JBCefBrowser in the RecentActivityUpdater with the given browser
+     * @param recentActivityJBBrowser the browser to replace the original browser with
+     */
     private fun prepareRecentActivityBrowser(recentActivityJBBrowser: JBCefBrowser) {
         val recentActivityUpdater = recentActivityUpdater
 
@@ -280,6 +285,10 @@ class TestSOWFlow : DigmaTestCase() {
 
     }
 
+    /**
+     * replaces the JBCefBrowser in the InsightsService with the given browser
+     * @param insightJBBrowser the browser to replace the original browser with
+     */
     private fun prepareInsightBrowser(insightJBBrowser: JBCefBrowser) {
         val insightsService = project.getService(InsightsService::class.java)
         val messageRouterHandler: Field = try {
@@ -314,7 +323,7 @@ class TestSOWFlow : DigmaTestCase() {
     }
 
 
-    private fun assertJsonBrowserForBulletOne(payload: JsonNode) {
+    private fun assertJsonForSingleEnvironmentData(payload: JsonNode) {
         Log.test(logger::info, "assertion for bullet 1")
         
         val assetId = payload.get("assetId").asText()
@@ -338,9 +347,6 @@ class TestSOWFlow : DigmaTestCase() {
                 insight.codeObjectId
             )
         }
-
-
-
         Log.test(logger::info, "Finished assertion for bullet 1 in the browser")
     }
 
@@ -377,7 +383,7 @@ class TestSOWFlow : DigmaTestCase() {
         Log.test(logger::info, "Finished assertion for recent activity in the browser")
     }
 
-    private fun assertJsonForBulletThree(payload: JsonNode) {
+    private fun assertJsonForTwoEnvironmentNewInsightsData(payload: JsonNode) {
         Log.test(logger::info, "assertion for bullet 3")
         val insights = objectMapper.readValue(payload.get("insights").toString(), Array<CodeObjectInsight>::class.java)
 
@@ -395,8 +401,7 @@ class TestSOWFlow : DigmaTestCase() {
         Log.test(logger::info, "Finished assertion for bullet 3 in the browser")
     }
 
-    private fun assertJsonForBulletFour(payload: JsonNode) {
-        // assertion  on payload
+    private fun assertJsonForInsightsOfRelatedSpans(payload: JsonNode) {
         val insights = objectMapper.readValue(payload.get("insights").toString(), Array<CodeObjectInsight>::class.java)
         Log.test(logger::info, "insights: {}", insights.map { it.codeObjectId })
         insights.forEachIndexed { index, insight ->

@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.193] - 2023-11-10
+## [2.0.194] - 2023-11-13
+- replace usage status with env status and fix combo icons Closes #1401 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1404
+- update eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1407
+
+## 2.0.193 - 2023-11-10
 - Update Documentation UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1406
 
 ## 2.0.192 - 2023-11-09

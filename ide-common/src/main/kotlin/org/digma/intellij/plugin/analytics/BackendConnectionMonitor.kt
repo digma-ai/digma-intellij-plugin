@@ -47,7 +47,7 @@ class BackendConnectionMonitor(val project: Project) : Disposable, AnalyticsServ
         return if (ApplicationManager.getApplication().isUnitTestMode) true else !hasConnectionError
 //        return !hasConnectionError  // this is the real implementation
     }
-
+ 
     private fun connectionError() {
         hasConnectionError = true
     }

@@ -33,7 +33,7 @@ abstract class DigmaTestCase : LightJavaCodeInsightFixtureTestCase() {
 
     protected lateinit var messageBusTestListeners: MessageBusTestListeners
 
-    private lateinit var jsonCollector: BrowserPushEventCollector
+    private var jsonCollector: BrowserPushEventCollector = BrowserPushEventCollector()
 
     val objectMapper: ObjectMapper = JCefBrowserUtil.getObjectMapper()
 
@@ -71,7 +71,6 @@ abstract class DigmaTestCase : LightJavaCodeInsightFixtureTestCase() {
         super.setUp()
         mockAnalyticsProvider = mockRestAnalyticsProvider(project)
         messageBusTestListeners = MessageBusTestListeners(project.messageBus)
-        jsonCollector = BrowserPushEventCollector()
     }
 
     override fun tearDown() {

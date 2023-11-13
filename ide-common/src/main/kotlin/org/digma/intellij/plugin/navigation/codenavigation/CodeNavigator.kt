@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.navigation.codenavigation
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
@@ -41,8 +42,8 @@ class CodeNavigator(val project: Project) {
         val spanIdWithoutType = CodeObjectsUtil.stripSpanPrefix(spanId)
 
         SupportedLanguages.values().forEach { language ->
-            //todo: when the language is CSHARP the call LanguageService.findLanguageServiceByName always fails and crashes the system.
-            if (language == SupportedLanguages.CSHARP) {
+            //todo: Ask Shalom
+            if (ApplicationManager.getApplication().isUnitTestMode && language == SupportedLanguages.CSHARP) {
                 return@forEach
             }
             val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
@@ -78,8 +79,8 @@ class CodeNavigator(val project: Project) {
         val methodIdWithoutType = CodeObjectsUtil.stripMethodPrefix(methodId)
 
         SupportedLanguages.values().forEach { language ->
-            //todo: when the language is CSHARP the call LanguageService.findLanguageServiceByName always fails and crashes the system.
-            if (language == SupportedLanguages.CSHARP) {
+
+            if (ApplicationManager.getApplication().isUnitTestMode && language == SupportedLanguages.CSHARP) {
                 return@forEach
             }
             val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
@@ -119,8 +120,8 @@ class CodeNavigator(val project: Project) {
 
 
         SupportedLanguages.values().forEach { language ->
-            //todo: when the language is CSHARP the call LanguageService.findLanguageServiceByName always fails and crashes the system.
-            if (language == SupportedLanguages.CSHARP) {
+
+            if (ApplicationManager.getApplication().isUnitTestMode && language == SupportedLanguages.CSHARP) {
                 return@forEach
             }
             val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
@@ -145,8 +146,8 @@ class CodeNavigator(val project: Project) {
         val spanIdWithoutType = CodeObjectsUtil.stripSpanPrefix(spanCodeObjectId)
 
         SupportedLanguages.values().forEach { language ->
-            //todo: when the language is CSHARP the call LanguageService.findLanguageServiceByName always fails and crashes the system.
-            if (language == SupportedLanguages.CSHARP) {
+
+            if (ApplicationManager.getApplication().isUnitTestMode && language == SupportedLanguages.CSHARP) {
                 return@forEach
             }
             val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
@@ -170,8 +171,8 @@ class CodeNavigator(val project: Project) {
         val methodIdWithoutType = CodeObjectsUtil.stripMethodPrefix(methodId)
 
         SupportedLanguages.values().forEach { language ->
-            //todo: when the language is CSHARP the call LanguageService.findLanguageServiceByName always fails and crashes the system.
-            if (language == SupportedLanguages.CSHARP) {
+
+            if (ApplicationManager.getApplication().isUnitTestMode && language == SupportedLanguages.CSHARP) {
                 return@forEach
             }
             val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
@@ -194,8 +195,7 @@ class CodeNavigator(val project: Project) {
         val spanIdWithoutType = CodeObjectsUtil.stripSpanPrefix(spanId)
 
         SupportedLanguages.values().forEach { language ->
-            //todo: when the language is CSHARP the call LanguageService.findLanguageServiceByName always fails and crashes the system.
-            if (language == SupportedLanguages.CSHARP) {
+            if (ApplicationManager.getApplication().isUnitTestMode && language == SupportedLanguages.CSHARP) {
                 return@forEach
             }
             val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
@@ -225,8 +225,8 @@ class CodeNavigator(val project: Project) {
             val endpointId = CodeObjectsUtil.stripEndpointPrefix(it)
 
             SupportedLanguages.values().forEach { language ->
-                //todo: when the language is CSHARP the call LanguageService.findLanguageServiceByName always fails and crashes the system.
-                if (language == SupportedLanguages.CSHARP) {
+
+                if (ApplicationManager.getApplication().isUnitTestMode && language == SupportedLanguages.CSHARP) {
                     return@forEach
                 }
                 val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)

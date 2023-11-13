@@ -38,14 +38,7 @@ val environmentList = listOf(
     "env1_mock",
     "env2_mock",
 )
-val expectedInsightsOfMethodsResponseEnv1: InsightsOfMethodsResponse
-    get() {
-        return MockInsightsOfMethodsResponseFactory(environmentList[0])
-    }
-val expectedInsightsOfMethodsResponseEnv2: InsightsOfMethodsResponse
-    get() {
-        return MockInsightsOfMethodsResponseFactory(environmentList[1])
-    }
+
 
 
 var mock: RestAnalyticsProvider? = null

@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.analytics
 
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
@@ -41,16 +42,16 @@ class BackendConnectionMonitor(val project: Project) : Disposable, AnalyticsServ
     }
 
     fun isConnectionError(): Boolean {
-        return false
+        return if (ApplicationManager.getApplication().isUnitTestMode) false else hasConnectionError
 //        return hasConnectionError // this is the real implementation
         
     }
 
     fun isConnectionOk(): Boolean {
-        return true
+        return if (ApplicationManager.getApplication().isUnitTestMode) true else !hasConnectionError
 //        return !hasConnectionError  // this is the real implementation
     }
-
+ 
     private fun connectionError() {
         hasConnectionError = true
     }

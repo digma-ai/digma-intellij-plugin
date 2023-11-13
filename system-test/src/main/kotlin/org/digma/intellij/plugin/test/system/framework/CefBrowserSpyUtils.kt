@@ -4,7 +4,6 @@ import com.intellij.ui.jcef.JBCefBrowser
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator
 import org.digma.intellij.plugin.log.Log
-import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
 import java.lang.reflect.Field
 
@@ -68,18 +67,18 @@ fun <T> injectSpyBrowser(
 
 /**
  * sets the default behavior of the spy JBCefBrowser and CefBrowser.
- * @param jbCaf - spy JBCefBrowser
- * @param caf - spy CefBrowser that is the embedded browser in the JBCefBrowser.
+ * @param jbCef - spy JBCefBrowser
+ * @param cef - spy CefBrowser that is the embedded browser in the JBCefBrowser.
  */
-fun prepareDefaultSpyCalls(jbCaf: JBCefBrowser, caf: CefBrowser) {
+fun prepareDefaultSpyCalls(jbCef: JBCefBrowser, cef: CefBrowser) {
     // mocking calls of JBCefBrowser
-    Mockito.`when`(jbCaf.cefBrowser)
+    Mockito.`when`(jbCef.cefBrowser)
         .thenAnswer {
-            return@thenAnswer caf
+            return@thenAnswer cef
         }
 
     // mocking calls of CefBrowser
-    Mockito.`when`(caf.url)
+    Mockito.`when`(cef.url)
         .thenAnswer {
             return@thenAnswer "http://mockURL/index.html"
         }

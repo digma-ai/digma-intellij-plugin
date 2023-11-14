@@ -34,6 +34,7 @@ import com.intellij.psi.PsiMethod;
 import com.intellij.psi.impl.java.stubs.index.JavaFullClassNameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.util.SlowOperations;
 import kotlin.Pair;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.ReadActions;
@@ -590,28 +591,31 @@ public class JavaLanguageService implements LanguageService {
     @Override
     public boolean isRelevant(VirtualFile file) {
 
-        if (file.isDirectory() || !file.isValid()) {
-            return false;
-        }
+        return SlowOperations.allowSlowOperations(() -> {
+            if (file.isDirectory() || !file.isValid()) {
+                return false;
+            }
 
-        PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
-        if (psiFile == null) {
-            return false;
-        }
+            PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
+            if (psiFile == null) {
+                return false;
+            }
 
-        return isRelevant(psiFile);
+            return isRelevant(psiFile);
+        });
     }
 
 
     @Override
     public boolean isRelevant(PsiFile psiFile) {
-        return psiFile.isValid() &&
+
+        return SlowOperations.allowSlowOperations(() -> psiFile.isValid() &&
                 psiFile.isWritable() &&
                 projectFileIndex.isInSourceContent(psiFile.getVirtualFile()) &&
                 !projectFileIndex.isInLibrary(psiFile.getVirtualFile()) &&
                 !projectFileIndex.isExcluded(psiFile.getVirtualFile()) &&
                 isSupportedFile(project, psiFile) &&
-                !JavaDocumentInfoIndex.namesToExclude.contains(psiFile.getVirtualFile().getName());
+                !JavaDocumentInfoIndex.namesToExclude.contains(psiFile.getVirtualFile().getName()));
     }
 
     @Override

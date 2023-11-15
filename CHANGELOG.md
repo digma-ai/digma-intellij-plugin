@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.194] - 2023-11-13
+## [2.0.195] - 2023-11-15
+- update eap profile rider eap 7 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1410
+
+## 2.0.194 - 2023-11-13
 - replace usage status with env status and fix combo icons Closes #1401 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1404
 - update eap profile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1407
 

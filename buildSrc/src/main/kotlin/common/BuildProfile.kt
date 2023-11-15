@@ -164,9 +164,9 @@ object BuildProfiles {
             // platformVersion is for Intellij IDEA Community and Ultimate
 //            platformVersion = "233-EAP-SNAPSHOT",
             platformVersion = "233.11799.6-EAP-SNAPSHOT",
-            riderVersion = "2023.3-EAP6-SNAPSHOT",
+            riderVersion = "2023.3-EAP7-SNAPSHOT",
             pycharmVersion = "233-EAP-SNAPSHOT",
-            riderResharperVersion = "2023.3.0-eap06",
+            riderResharperVersion = "2023.3.0-eap07",
             riderResharperVersionConstant = "PROFILE_2023_2",
             pythonPluginVersion = "233.11799.6",
             platformVersionCode = "233",

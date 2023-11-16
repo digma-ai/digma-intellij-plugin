@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.196] - 2023-11-16
+## [2.0.197] - 2023-11-16
+**Full Changelog**: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.196...v2.0.197
+
+## 2.0.196 - 2023-11-16
 - fix docker upgrade Closes #1411 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1413
 - Update Installation Wizard UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1414
 

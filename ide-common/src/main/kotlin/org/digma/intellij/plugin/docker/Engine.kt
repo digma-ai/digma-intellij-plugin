@@ -30,7 +30,7 @@ internal class Engine {
         Log.log(logger::info, "starting docker compose up")
 
         val processBuilder = GeneralCommandLine(dockerComposeCmd)
-            .withParameters("-f", composeFile.canonicalPath.toString(), "up", "-d")
+            .withParameters("-f", composeFile.canonicalPath.toString(), "up", "-d", "--remove-orphans")
             .withWorkDirectory(composeFile.parentFile)
             .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
             .withRedirectErrorStream(true)

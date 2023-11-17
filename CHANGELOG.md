@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.197] - 2023-11-16
+## [2.0.198] - 2023-11-17
+- add --remove-orphans by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1415
+
+## 2.0.197 - 2023-11-16
 **Full Changelog**: https://github.com/digma-ai/digma-intellij-plugin/compare/v2.0.196...v2.0.197
 
 ## 2.0.196 - 2023-11-16

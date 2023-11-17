@@ -172,10 +172,10 @@ public final class AssetsService implements Disposable {
             return categories;
         } catch (NoSelectedEnvironmentException e) {
             Log.log(logger::debug, project, "no environment when calling getCategories {}", e.getMessage());
-            return "";
+            return "{ \"assetCategories\": [] }";
         } catch (AnalyticsServiceException e) {
             Log.warnWithException(logger, project, e, "Error loading categories {}", e.getMessage());
-            return "";
+            return "{ \"assetCategories\": [] }";
         }
     }
 

@@ -14,7 +14,6 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.util.Alarm;
 import com.intellij.util.AlarmFactory;
-import com.intellij.util.SlowOperations;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.FileUtils;
@@ -332,11 +331,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
         }
         LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
 
-        //todo: languageService.isRelevant may produce a "Slow operations are prohibited on EDT"
-        // see SlowOperations javadoc
-        return SlowOperations.allowSlowOperations(() ->
-                !FileUtils.isLightVirtualFileBase(file) && languageService.isRelevant(file));
-
+        return !FileUtils.isLightVirtualFileBase(file) && languageService.isRelevant(file);
 
     }
 

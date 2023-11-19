@@ -15,12 +15,11 @@ import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessModuleDir
 import com.intellij.openapi.util.SystemInfo
-import com.intellij.openapi.util.ThrowableComputable
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
 import com.intellij.psi.search.GlobalSearchScope
-import com.intellij.util.SlowOperations
 import com.intellij.util.keyFMap.KeyFMap
+import org.digma.intellij.plugin.common.allowSlowOperation
 import org.digma.intellij.plugin.log.Log
 import org.jetbrains.annotations.VisibleForTesting
 import org.jetbrains.idea.maven.execution.MavenRunConfiguration
@@ -142,13 +141,7 @@ private abstract class RunCfgFlavor<T : RunConfiguration>(protected val runCfgBa
 
         if (!mainClassFqn.isNullOrBlank()) {
 
-
-            //todo: see javadoc of SlowOperations
-            //it is not easy to change this code to run on background. so currently allowSlowOperations.
-            //if that doesn't work well then this code can be executed on background thread
-            //with Backgroundable.executeOnPooledThread(java.util.concurrent.Callable<T>)
-
-            val module: Module? = SlowOperations.allowSlowOperations(ThrowableComputable {
+            val module: Module? = allowSlowOperation {
                 var psiClass: PsiClass? = psiFacade.findClass(mainClassFqn, searchScope)
                 if (psiClass == null) {
                     // try shorter name, since maybe the last part is method name
@@ -162,7 +155,7 @@ private abstract class RunCfgFlavor<T : RunConfiguration>(protected val runCfgBa
                 } else {
                     null
                 }
-            })
+            }
 
             if (module != null) {
                 return module

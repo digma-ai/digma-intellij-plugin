@@ -1,6 +1,13 @@
 # Changelog
 
-## [2.0.198] - 2023-11-17
+## [2.0.200] - 2023-11-19
+- update-eap-profile-11799.30 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1418
+- support slow operations by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1419
+
+## 2.0.199 - 2023-11-17
+- Return empty assets array when no envs by @borisermakof in https://github.com/digma-ai/digma-intellij-plugin/pull/1416
+
+## 2.0.198 - 2023-11-17
 - add --remove-orphans by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1415
 
 ## 2.0.197 - 2023-11-16

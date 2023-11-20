@@ -27,6 +27,7 @@ import kotlin.Pair;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.ReadActions;
 import org.digma.intellij.plugin.common.Retries;
+import org.digma.intellij.plugin.common.SlowOperationsUtilsKt;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.editor.EditorUtils;
 import org.digma.intellij.plugin.log.Log;
@@ -348,12 +349,13 @@ public class PythonLanguageService implements LanguageService {
 
     @Override
     public boolean isRelevant(PsiFile psiFile) {
-        return psiFile.isValid() &&
+
+        return SlowOperationsUtilsKt.allowSlowOperation(() -> psiFile.isValid() &&
                 psiFile.isWritable() &&
                 PythonLanguageUtils.isProjectFile(project, psiFile) &&
                 !projectFileIndex.isInLibrary(psiFile.getVirtualFile()) &&
                 !projectFileIndex.isExcluded(psiFile.getVirtualFile()) &&
-                isSupportedFile(project, psiFile);
+                isSupportedFile(project, psiFile));
     }
 
     @Override

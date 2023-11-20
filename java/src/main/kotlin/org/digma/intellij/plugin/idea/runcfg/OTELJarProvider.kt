@@ -15,7 +15,7 @@ private const val JARS_DIR_PREFIX = "digma-otel-jars"
 private const val RESOURCE_LOCATION = "otelJars"
 private const val OTEL_AGENT_JAR_URL =
 //  "https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar"
-    "https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v1.31.0/opentelemetry-javaagent.jar"
+    "https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v1.32.0/opentelemetry-javaagent.jar"
 private const val DIGMA_AGENT_EXTENSION_JAR_URL =
     "https://github.com/digma-ai/otel-java-instrumentation/releases/latest/download/digma-otel-agent-extension.jar"
 private const val OTEL_AGENT_JAR_NAME = "opentelemetry-javaagent.jar"

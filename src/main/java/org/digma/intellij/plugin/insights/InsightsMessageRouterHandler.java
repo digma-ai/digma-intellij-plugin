@@ -26,11 +26,11 @@ import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
-import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest;
 import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.service.InsightsActionsService;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
+import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest;
 import org.digma.intellij.plugin.ui.service.InsightsService;
 import org.digma.intellij.plugin.ui.settings.Theme;
 import org.jetbrains.annotations.NotNull;
@@ -203,7 +203,8 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
         var traceId = objectMapper.readTree(jsonNode.get("payload").toString()).get("trace").get("id").asText();
         var traceName = objectMapper.readTree(jsonNode.get("payload").toString()).get("trace").get("name").asText();
         var insightType = objectMapper.readTree(jsonNode.get("payload").toString()).get("insightType").asText();
-        InsightsService.getInstance(project).goToTrace(traceId, traceName, InsightType.valueOf(insightType));
+        var spanCodeObjectId = objectMapper.readTree(jsonNode.get("payload").toString()).get("spanCodeObjectId").asText();
+        InsightsService.getInstance(project).goToTrace(traceId, traceName, InsightType.valueOf(insightType), spanCodeObjectId);
     }
 
     private void goToTraceComparison(JsonNode jsonNode) throws JsonProcessingException {

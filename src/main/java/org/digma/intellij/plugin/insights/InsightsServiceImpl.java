@@ -618,8 +618,8 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
 
     @Override
-    public void goToTrace(@NotNull String traceId, @NotNull String traceName, @NotNull InsightType insightType) {
-        JaegerUtilKt.openJaegerFromInsight(project, traceId, traceName, insightType);
+    public void goToTrace(@NotNull String traceId, @NotNull String traceName, @NotNull InsightType insightType, @Nullable String spanCodeObjectId) {
+        JaegerUtilKt.openJaegerFromInsight(project, traceId, traceName, insightType, spanCodeObjectId);
     }
 
     @Override

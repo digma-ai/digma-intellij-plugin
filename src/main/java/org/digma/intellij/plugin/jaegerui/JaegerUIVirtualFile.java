@@ -7,6 +7,7 @@ import com.intellij.testFramework.LightVirtualFile;
 import org.digma.intellij.plugin.common.DigmaVirtualFileMarker;
 import org.digma.intellij.plugin.ui.model.TraceSample;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -17,6 +18,7 @@ public class JaegerUIVirtualFile extends LightVirtualFile implements DigmaVirtua
     private String traceId;
     private List<TraceSample> traceSamples;
     private String spanName;
+    private String spanCodeObjectId;
 
     public JaegerUIVirtualFile(String myTitle) {
         super(myTitle);
@@ -30,20 +32,23 @@ public class JaegerUIVirtualFile extends LightVirtualFile implements DigmaVirtua
     }
 
     @NotNull
-    public static VirtualFile createVirtualFile(@NotNull String jaegerBaseUrl, @NotNull String traceId, String spanName) {
+    public static VirtualFile createVirtualFile(@NotNull String jaegerBaseUrl, @NotNull String traceId, String spanName, @Nullable String spanCodeObjectId) {
         var file = new JaegerUIVirtualFile(spanName);
         file.setJaegerBaseUrl(jaegerBaseUrl);
         file.setTraceId(traceId);
         file.setSpanName(spanName);
+        file.setSpanCodeObjectId(spanCodeObjectId);
         JAEGER_UI_EDITOR_KEY.set(file, JaegerUIFileEditorProvider.JAEGER_UI_EDITOR_TYPE);
         return file;
     }
 
-    public static VirtualFile createVirtualFile(String jaegerBaseUrl, @NotNull List<TraceSample> traceSamples, @NotNull String spanName) {
+
+    public static VirtualFile createVirtualFile(String jaegerBaseUrl, @NotNull List<TraceSample> traceSamples, @NotNull String spanName, @Nullable String spanCodeObjectId) {
         var file = new JaegerUIVirtualFile(spanName);
         file.setJaegerBaseUrl(jaegerBaseUrl);
         file.setTraceSamples(traceSamples);
         file.setSpanName(spanName);
+        file.setSpanCodeObjectId(spanCodeObjectId);
         JAEGER_UI_EDITOR_KEY.set(file, JaegerUIFileEditorProvider.JAEGER_UI_EDITOR_TYPE);
         return file;
     }
@@ -78,5 +83,14 @@ public class JaegerUIVirtualFile extends LightVirtualFile implements DigmaVirtua
 
     public String getSpanName() {
         return spanName;
+    }
+
+    @Nullable
+    public String getSpanCodeObjectId() {
+        return spanCodeObjectId;
+    }
+
+    public void setSpanCodeObjectId(@Nullable String spanCodeObjectId) {
+        this.spanCodeObjectId = spanCodeObjectId;
     }
 }

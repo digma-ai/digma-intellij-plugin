@@ -24,7 +24,7 @@ interface InsightsService : Disposable {
     fun showDocumentPreviewList(documentInfoContainer: DocumentInfoContainer?, fileUri: String)
     fun recalculate(prefixedCodeObjectId: String, insightType: String)
     fun refresh(insightType: InsightType)
-    fun goToTrace(traceId: String, traceName: String, insightType: InsightType)
+    fun goToTrace(traceId: String, traceName: String, insightType: InsightType, spanCodeObjectId: String)
     fun goToTraceComparison(traceId1: String, traceName1: String, traceId2: String, traceName2: String, insightType: InsightType)
     fun addAnnotation(methodId: String)
     fun fixMissingDependencies(methodId: String)

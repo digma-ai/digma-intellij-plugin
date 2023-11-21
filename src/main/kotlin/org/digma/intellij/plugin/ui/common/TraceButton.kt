@@ -7,7 +7,6 @@ import org.digma.intellij.plugin.jaegerui.JaegerUIService
 import java.awt.Cursor
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import java.awt.event.MouseListener
 import javax.swing.JButton
 import javax.swing.SwingConstants
 
@@ -36,7 +35,7 @@ open class TraceButton : JButton("Trace", Laf.Icons.General.TARGET10) {
 
     fun defineAction(project: Project, traceId: String, title: String) {
         addActionListener {
-            project.service<JaegerUIService>().openEmbeddedJaeger(traceId, title)
+            project.service<JaegerUIService>().openEmbeddedJaeger(traceId, title, null)
         }
     }
 }

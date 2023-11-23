@@ -13,12 +13,8 @@ fun <T> allowSlowOperation(task: Supplier<T>): T {
 
         val accessToken: AccessToken = startSectionMethod.invoke(null, SlowOperations.ACTION_PERFORM) as AccessToken
 
-        try {
-
+        accessToken.use {
             return task.get()
-
-        } finally {
-            accessToken.close()
         }
 
 
@@ -29,6 +25,29 @@ fun <T> allowSlowOperation(task: Supplier<T>): T {
         })
 
     }
+}
+
+fun allowSlowOperation(task: Runnable) {
+
+    try {
+        val startSectionMethod = SlowOperations::class.java.getMethod("startSection", String::class.java)
+
+        val accessToken: AccessToken = startSectionMethod.invoke(null, SlowOperations.ACTION_PERFORM) as AccessToken
+
+        try {
+
+            task.run()
+
+        } finally {
+            accessToken.close()
+        }
 
 
+    } catch (e: ReflectiveOperationException) {
+
+        SlowOperations.allowSlowOperations(ThrowableComputable {
+            task.run()
+        })
+
+    }
 }

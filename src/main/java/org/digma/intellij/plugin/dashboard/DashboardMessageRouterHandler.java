@@ -11,14 +11,17 @@ import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.callback.CefQueryCallback;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
+import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.dashboard.incoming.GoToSpan;
+import org.digma.intellij.plugin.dashboard.outgoing.BackendInfoMessage;
 import org.digma.intellij.plugin.dashboard.outgoing.DashboardData;
 import org.digma.intellij.plugin.dashboard.outgoing.DashboardError;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.rest.AboutResult;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.ui.jcef.model.ErrorPayload;
 import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest;
@@ -30,6 +33,7 @@ import java.util.Map;
 import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStart;
 import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStop;
 import static org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.executeWindowPostMessageJavaScript;
+import static org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.serializeAndExecuteWindowPostMessageJavaScript;
 
 public class DashboardMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
@@ -56,9 +60,7 @@ public class DashboardMessageRouterHandler extends CefMessageRouterHandlerAdapte
                 String action = jsonNode.get("action").asText();
 
                 switch (action) {
-                    case "DASHBOARD/INITIALIZE" -> {
-
-                    }
+                    case "DASHBOARD/INITIALIZE" -> onInitialize(browser);
                     case JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
                         OpenInDefaultBrowserRequest openBrowserRequest = JCefMessagesUtils.parseJsonToObject(request, OpenInDefaultBrowserRequest.class);
                         if (openBrowserRequest != null && openBrowserRequest.getPayload() != null) {
@@ -138,6 +140,20 @@ public class DashboardMessageRouterHandler extends CefMessageRouterHandlerAdapte
         callback.success("");
 
         return true;
+    }
+
+    private void onInitialize(CefBrowser browser) {
+        try {
+            AboutResult about = AnalyticsService.getInstance(project).getAbout();
+            var message = new BackendInfoMessage(
+                    JCefMessagesUtils.REQUEST_MESSAGE_TYPE, JCefMessagesUtils.GLOBAL_SET_BACKEND_INFO,
+                    about);
+
+            Log.log(logger::trace, project, "sending {} message",JCefMessagesUtils.GLOBAL_SET_BACKEND_INFO);
+            serializeAndExecuteWindowPostMessageJavaScript(browser, message);
+        } catch (AnalyticsServiceException e) {
+            Log.warnWithException(logger, e, "error getting backend info");
+        }
     }
 
     @Override

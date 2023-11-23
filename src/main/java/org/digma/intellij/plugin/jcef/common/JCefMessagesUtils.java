@@ -39,6 +39,7 @@ public class JCefMessagesUtils {
     public static final String INSTALLATION_WIZARD_SET_CURRENT_STEP = "INSTALLATION_WIZARD/SET_CURRENT_STEP";
     public static final String GLOBAL_SET_OBSERVABILITY = "GLOBAL/SET_OBSERVABILITY";
     public static final String GLOBAL_SET_IS_OBSERVABILITY_ENABLED = "GLOBAL/SET_IS_OBSERVABILITY_ENABLED";
+    public static final String GLOBAL_SET_BACKEND_INFO = "GLOBAL/SET_BACKEND_INFO";
 
 
     //todo: replace with org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.jsonToObject

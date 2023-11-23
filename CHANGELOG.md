@@ -1,6 +1,16 @@
 # Changelog
 
-## [2.0.200] - 2023-11-19
+## [2.0.201] - 2023-11-23
+- Update Installation Wizard UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1423
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1424
+- add spanCodeObjectId to trace search Closes #1425 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1426
+- upgraded java agent version by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/1417
+- stop reporting error in indexing Closes #1427 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1433
+- open digma disable webpage Closes #1430 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1434
+- dashboard view - oninitialize send backend info by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1435
+- @ohrebeniuk made their first contribution in https://github.com/digma-ai/digma-intellij-plugin/pull/1417
+
+## 2.0.200 - 2023-11-19
 - update-eap-profile-11799.30 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1418
 - support slow operations by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1419
 

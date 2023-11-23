@@ -204,9 +204,8 @@ public class JavaLanguageService implements LanguageService {
         var modulesDepsService = ModulesDepsService.getInstance(project);
         var springBootMicrometerConfigureDepsService = SpringBootMicrometerConfigureDepsService.getInstance(project);
 
-        var retVal = (modulesDepsService.isSpringBootModule(module)
+        return (modulesDepsService.isSpringBootModule(module)
                 && springBootMicrometerConfigureDepsService.isSpringBootWithMicrometer());
-        return retVal;
     }
 
     @NotNull
@@ -282,7 +281,6 @@ public class JavaLanguageService implements LanguageService {
                 }
 
                 result = new JavaCanInstrumentMethodResult(methodId, psiMethod, annotationPsiClass, psiJavaFile);
-                return;
             }
         }
 
@@ -324,7 +322,9 @@ public class JavaLanguageService implements LanguageService {
             var psiFactory = PsiElementFactory.getInstance(project);
 
             var shortClassNameAnnotation = withSpanClass.getName();
-            psiMethod.getModifierList().addAnnotation(shortClassNameAnnotation);
+            if (shortClassNameAnnotation != null) {
+                psiMethod.getModifierList().addAnnotation(shortClassNameAnnotation);
+            }
 
             var existing = importList.findSingleClassImportStatement(withSpanClass.getQualifiedName());
             if (existing == null) {
@@ -352,6 +352,7 @@ public class JavaLanguageService implements LanguageService {
         return module;
     }
 
+    @SuppressWarnings("UnstableApiUsage")
     @Override
     public void addDependencyToOtelLib(@NotNull Project project, @NotNull String methodId) {
         Module module = getModuleOfMethodId(methodId);
@@ -365,7 +366,9 @@ public class JavaLanguageService implements LanguageService {
 
             var dependencyModifierService = DependencyModifierService.getInstance(project);
 
-            dependencyModifierService.addDependency(module, dependencyLib);
+            if (dependencyLib != null) {
+                dependencyModifierService.addDependency(module, dependencyLib);
+            }
             return;
         }
         // handling spring boot with micrometer tracing
@@ -482,13 +485,13 @@ public class JavaLanguageService implements LanguageService {
 
         Map<String, Pair<String, Integer>> workspaceUrls = new HashMap<>();
 
-        methodCodeObjectIds.forEach(methodId -> ReadActions.ensureReadAction(() -> {
+        methodCodeObjectIds.forEach(methodId -> ReadActions.ensureReadAction(() -> SlowOperationsUtilsKt.allowSlowOperation(() -> {
             var psiMethod = findPsiMethodByMethodCodeObjectId(methodId);
             if (psiMethod != null) {
                 String url = PsiUtils.psiFileToUri(psiMethod.getContainingFile());
                 workspaceUrls.put(methodId, new Pair<>(url, psiMethod.getTextOffset()));
             }
-        }));
+        })));
 
         return workspaceUrls;
     }
@@ -511,24 +514,25 @@ public class JavaLanguageService implements LanguageService {
             return null;
         }
 
-        var className = methodId.substring(0, methodId.indexOf("$_$"));
         //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
-        className = className.replace('$', '.');
+        var className = methodId.substring(0, methodId.indexOf("$_$")).replace('$', '.');
 
-        //searching in project scope will find only project classes
-        Collection<PsiClass> psiClasses = JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.projectScope(project));
-        if (!psiClasses.isEmpty()) {
-            //hopefully there is only one class by that name in the project
-            PsiClass psiClass = psiClasses.stream().findAny().get();
-            PsiFile psiFile = PsiTreeUtil.getParentOfType(psiClass, PsiFile.class);
-            for (PsiMethod method : JavaPsiUtils.getMethodsOf(project, psiClass)) {
-                String javaMethodCodeObjectId = JavaLanguageUtils.createJavaMethodCodeObjectId(method);
-                if (javaMethodCodeObjectId.equals(methodId) && psiFile != null) {
-                    return method;
+        return SlowOperationsUtilsKt.allowSlowOperation(() -> {
+            //searching in project scope will find only project classes
+            Collection<PsiClass> psiClasses = JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.projectScope(project));
+            if (!psiClasses.isEmpty()) {
+                //hopefully there is only one class by that name in the project
+                PsiClass psiClass = psiClasses.stream().findAny().get();
+                PsiFile psiFile = PsiTreeUtil.getParentOfType(psiClass, PsiFile.class);
+                for (PsiMethod method : JavaPsiUtils.getMethodsOf(project, psiClass)) {
+                    String javaMethodCodeObjectId = JavaLanguageUtils.createJavaMethodCodeObjectId(method);
+                    if (javaMethodCodeObjectId.equals(methodId) && psiFile != null) {
+                        return method;
+                    }
                 }
             }
-        }
-        return null;
+            return null;
+        });
     }
 
     @NotNull

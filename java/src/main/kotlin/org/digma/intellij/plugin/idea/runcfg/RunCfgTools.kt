@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.idea.runcfg
 
+import com.google.common.base.Supplier
 import com.intellij.execution.JavaRunConfigurationBase
 import com.intellij.execution.configurations.JavaParameters
 import com.intellij.execution.configurations.ModuleBasedConfiguration
@@ -141,7 +142,7 @@ private abstract class RunCfgFlavor<T : RunConfiguration>(protected val runCfgBa
 
         if (!mainClassFqn.isNullOrBlank()) {
 
-            val module: Module? = allowSlowOperation {
+            val module: Module? = allowSlowOperation(Supplier {
                 var psiClass: PsiClass? = psiFacade.findClass(mainClassFqn, searchScope)
                 if (psiClass == null) {
                     // try shorter name, since maybe the last part is method name
@@ -155,7 +156,7 @@ private abstract class RunCfgFlavor<T : RunConfiguration>(protected val runCfgBa
                 } else {
                     null
                 }
-            }
+            })
 
             if (module != null) {
                 return module

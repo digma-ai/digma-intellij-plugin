@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.201] - 2023-11-23
+## [2.0.202] - 2023-11-23
+- update-eap-profile-11799.67 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1436
+- fix dashboard nav by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1438
+
+## 2.0.201 - 2023-11-23
 - Update Installation Wizard UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1423
 - Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1424
 - add spanCodeObjectId to trace search Closes #1425 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1426

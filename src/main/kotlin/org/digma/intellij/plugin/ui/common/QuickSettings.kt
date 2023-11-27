@@ -104,7 +104,7 @@ class SettingsHintPanel(project: Project) : JPanel() {
         troubleshootingPanel.background = Laf.Colors.EDITOR_BACKGROUND
         troubleshootingPanel.isOpaque = true
         troubleshootingPanel.add(Box.createHorizontalStrut(5))
-        troubleshootingPanel.add(JLabel(Laf.Icons.Common.Mascot16))
+        troubleshootingPanel.add(JLabel(Laf.Icons.Common.DigmaLogo))
         troubleshootingPanel.add(Box.createHorizontalStrut(15))
 
         val troubleshootingLinkLabel = JLabel("Troubleshooting")
@@ -175,7 +175,7 @@ class SettingsHintPanel(project: Project) : JPanel() {
         panel.background = Laf.Colors.EDITOR_BACKGROUND
         panel.isOpaque = true
         panel.add(Box.createHorizontalStrut(5))
-        panel.add(JLabel(Laf.Icons.Common.Mascot16))
+        panel.add(JLabel(Laf.Icons.Common.DigmaLogo))
         panel.add(Box.createHorizontalStrut(15))
 
         val linkLabel = JLabel("Insights Overview")
@@ -201,7 +201,7 @@ class SettingsHintPanel(project: Project) : JPanel() {
         onboardingPanel.background = Laf.Colors.EDITOR_BACKGROUND
         onboardingPanel.isOpaque = true
         onboardingPanel.add(Box.createHorizontalStrut(5))
-        onboardingPanel.add(JLabel(Laf.Icons.Common.Mascot16))
+        onboardingPanel.add(JLabel(Laf.Icons.Common.DigmaLogo))
         onboardingPanel.add(Box.createHorizontalStrut(15))
 
         val onboardingLinkLabel = JLabel("Onboarding Digma")

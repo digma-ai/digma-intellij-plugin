@@ -79,7 +79,7 @@ public abstract class DocumentInfoIndex extends SingleEntryFileBasedIndexExtensi
                     }
 
                     Log.warnWithException(LOGGER, e, "error in indexing {}, took {}", inputData.getPsiFile().getVirtualFile(), stopWatch.getTime(TimeUnit.MILLISECONDS));
-                    ErrorReporter.getInstance().reportError("error in indexing", e, Collections.singletonMap("duration", String.valueOf(stopWatch.getTime(TimeUnit.MILLISECONDS))));
+                    //ErrorReporter.getInstance().reportError("error in indexing", e, Collections.singletonMap("duration", String.valueOf(stopWatch.getTime(TimeUnit.MILLISECONDS))));
                     return null;
                 } finally {
                     if (!stopWatch.isStopped()) {

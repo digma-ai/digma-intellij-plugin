@@ -97,9 +97,7 @@ public final class DashboardService {
             project.getService(HomeSwitcherService.class).switchToInsights();
             project.getService(InsightsAndErrorsTabsHelper.class).switchToInsightsTab();
             ActivityMonitor.getInstance(project).registerSpanLinkClicked(MonitoredPanel.Dashboard);
-            // for SlowQuery we navigate to the data query itself
-            if (span.type().equals("SlowQuery"))
-                project.getService(InsightsViewOrchestrator.class).showInsightsForCodelessSpan(span.spanCodeObjectId());
+            project.getService(InsightsViewOrchestrator.class).showInsightsForCodelessSpan(span.spanCodeObjectId());
         });
     }
 }

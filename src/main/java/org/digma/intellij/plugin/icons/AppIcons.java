@@ -1,9 +1,8 @@
 package org.digma.intellij.plugin.icons;
 
-import javax.swing.*;
+import com.intellij.openapi.util.IconLoader;
 
-import static org.digma.intellij.plugin.icons.IconsUtil.loadAndScaleIconObjectByFactor;
-import static org.digma.intellij.plugin.icons.IconsUtil.loadAndScaleIconObjectByWidth;
+import javax.swing.*;
 
 /**
  * put here icons that usually load before our tool window and UI is built
@@ -13,8 +12,8 @@ public final class AppIcons {
     private AppIcons() {
     }
 
-    public static final Icon TOOL_WINDOW = loadAndScaleIconObjectByWidth("/icons/digma.png", 13);
-    public static final Icon TOOL_WINDOW_OBSERVABILITY = loadAndScaleIconObjectByFactor("/icons/active-env.svg", 1);
+    public static final Icon TOOL_WINDOW = IconLoader.getIcon("/icons/digma.svg", AppIcons.class.getClassLoader());
+    public static final Icon TOOL_WINDOW_OBSERVABILITY = IconLoader.getIcon("/icons/active-env.svg", AppIcons.class.getClassLoader());
 
 
 }

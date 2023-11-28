@@ -37,7 +37,8 @@ class PluginActivityMonitor(private val project: Project) : PluginStateListener,
 
         val disabledListener = Runnable {
             if (DisabledPluginsState.getDisabledIds().contains(myPluginId)){
-                ActivityMonitor.getInstance(project).registerPluginDisabled()
+                val userId = ActivityMonitor.getInstance(project).registerPluginDisabled()
+                BrowserUtil.browse("https://digma.ai/disabled?u=$userId", project)
             }
         }
 

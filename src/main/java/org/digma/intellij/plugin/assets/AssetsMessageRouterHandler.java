@@ -17,6 +17,7 @@ import org.cef.callback.CefQueryCallback;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
 import org.digma.intellij.plugin.assets.model.outgoing.SetAssetsDataMessage;
 import org.digma.intellij.plugin.assets.model.outgoing.SetCategoriesDataMessage;
+import org.digma.intellij.plugin.assets.model.outgoing.SetServicesDataMessage;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.emvironment.model.outgoing.EnvironmentChangedMessage;
@@ -30,9 +31,11 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.digma.intellij.plugin.ui.settings.Theme;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStart;
 import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStop;
@@ -72,11 +75,13 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
                 switch (action) {
                     case "ASSETS/INITIALIZE" -> {
                     }
-                    case "ASSETS/GET_CATEGORIES_DATA" -> pushAssetCategories(browser, objectMapper);
+                    case "ASSETS/GET_CATEGORIES_DATA" -> pushAssetCategories(browser, objectMapper, jsonNode);
 
                     case "ASSETS/GET_DATA" -> pushAssetsFromGetData(browser, jsonNode);
 
                     case "ASSETS/GO_TO_ASSET" -> goToAsset(jsonNode);
+
+                    case "ASSETS/GET_SERVICES" -> pushServices(browser);
 
                     case JCefMessagesUtils.GLOBAL_OPEN_TROUBLESHOOTING_GUIDE ->
                             EDT.ensureEDT(() -> MainToolWindowCardsController.getInstance(project).showTroubleshooting());
@@ -121,18 +126,41 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
         AssetsService.getInstance(project).showAsset(spanId);
     }
 
-    private synchronized void pushAssetCategories(CefBrowser browser, ObjectMapper objectMapper) throws JsonProcessingException {
+    private synchronized void pushAssetCategories(CefBrowser browser, ObjectMapper objectMapper, JsonNode jsonNode) throws JsonProcessingException {
 
         EDT.assertNonDispatchThread();
 
         Log.log(LOGGER::trace, project, "pushCategories called");
-        var payload = objectMapper.readTree(AssetsService.getInstance(project).getAssetCategories());
+
+        String[] services = GetServices(objectMapper, jsonNode);
+
+        var payload = objectMapper.readTree(AssetsService.getInstance(project).getAssetCategories(services));
         var message = new SetCategoriesDataMessage("digma", "ASSETS/SET_CATEGORIES_DATA", payload);
         Log.log(LOGGER::trace, project, "sending ASSETS/SET_CATEGORIES_DATA message");
         browser.executeJavaScript(
                 "window.postMessage(" + objectMapper.writeValueAsString(message) + ");",
                 jbCefBrowser.getCefBrowser().getURL(),
                 0);
+    }
+
+    @Nullable
+    private static String[] GetServices(ObjectMapper objectMapper, JsonNode jsonNode) {
+        String[] services = null;
+        JsonNode payloadNode = jsonNode.get("payload");
+
+        if (payloadNode != null) {
+            var node = payloadNode.get("services");
+
+            if (node == null) {
+                node = payloadNode.get("query").get("services");
+            }
+
+            if (node.isArray() && node.elements().hasNext()) {
+                services = objectMapper.convertValue(node, String[].class);
+            }
+        }
+
+        return services;
     }
 
     private synchronized void pushAssets(CefBrowser browser, JsonNode jsonNode) throws JsonProcessingException {
@@ -146,13 +174,16 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
         // query parameters
         Map<String, Object> payloadQueryParams = (Map<String, Object>) requestPayload.get("query");
         payloadQueryParams.forEach((paramKey, paramValue) -> {
-            backendQueryParams.put(paramKey, paramValue.toString());
+            if(!Objects.equals(paramKey, "services")) {
+                backendQueryParams.put(paramKey, paramValue.toString());
+            }
         });
 
         backendQueryParams.put("environment",PersistenceService.getInstance().getState().getCurrentEnv());
+        var services = GetServices(objectMapper, jsonNode);
 
         Log.log(LOGGER::trace, project, "pushAssets called");
-        var payload = objectMapper.readTree(AssetsService.getInstance(project).getAssets(backendQueryParams));
+        var payload = objectMapper.readTree(AssetsService.getInstance(project).getAssets(backendQueryParams, services));
         var message = new SetAssetsDataMessage("digma", "ASSETS/SET_DATA", payload);
         Log.log(LOGGER::trace, project, "sending ASSETS/SET_DATA message");
         browser.executeJavaScript(
@@ -168,6 +199,18 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
             return;
 
         pushAssets(browser, jsonNode);
+    }
+
+    private void pushServices(CefBrowser browser) throws JsonProcessingException {
+        var services = objectMapper.readTree(AssetsService.getInstance(project).getServices());
+        ObjectNode jNode = objectMapper.createObjectNode();
+        jNode.set("services", services);
+        var message = new SetServicesDataMessage("digma", "ASSETS/SET_SERVICES", jNode);
+        Log.log(LOGGER::trace, project, "sending ASSETS/SET_SERVICES message");
+        browser.executeJavaScript(
+                "window.postMessage(" + objectMapper.writeValueAsString(message) + ");",
+                jbCefBrowser.getCefBrowser().getURL(),
+                0);
     }
 
     void pushGlobalEnvironmentChange() throws JsonProcessingException {

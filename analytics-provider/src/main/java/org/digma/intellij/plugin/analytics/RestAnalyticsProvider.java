@@ -175,8 +175,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public String getAssetCategories(String environment){
-        return execute(() -> client.analyticsProvider.getAssetCategories(environment));
+    public String getAssetCategories(String environment, String[] services){
+        return execute(() -> client.analyticsProvider.getAssetCategories(environment, services));
     }
 
     @Override
@@ -185,8 +185,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public String getAssets(Map<String,String> queryParams) {
-        return execute(() -> client.analyticsProvider.getAssets(queryParams));
+    public String getAssets(Map<String,String> queryParams, String[] services) {
+        return execute(() -> client.analyticsProvider.getAssets(queryParams, services));
+    }
+
+    @Override
+    public String getServices(String environment) {
+        return execute(() -> client.analyticsProvider.getServices(environment));
     }
 
     @Override
@@ -524,7 +529,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Content-Type:application/json"
         })
         @GET("/CodeAnalytics/codeObjects/asset_categories")
-        Call<String> getAssetCategories(@Query("environment") String environment);
+        Call<String> getAssetCategories(@Query("environment") String environment, @Query("services") String[] services);
 
         @Headers({
                 "Accept: application/+json",
@@ -539,7 +544,10 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Content-Type:application/json"
         })
         @GET("/CodeAnalytics/codeObjects/getAssets")
-        Call<String> getAssets(@QueryMap Map<String,String> fields);
+        Call<String> getAssets(@QueryMap Map<String,String> fields, @Query("services") String[] services);
+
+        @GET("/services/getServices")
+        Call<String> getServices(@Query("environment") String environment);
 
         @Headers({
                 "Accept: application/+json",

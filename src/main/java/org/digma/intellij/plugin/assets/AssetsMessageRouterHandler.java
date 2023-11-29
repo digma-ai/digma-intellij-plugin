@@ -136,7 +136,7 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
         Log.log(LOGGER::trace, project, "pushCategories called");
 
-        String[] services = GetServices(objectMapper, jsonNode);
+        String[] services = getServices(objectMapper, jsonNode);
 
         var payload = objectMapper.readTree(AssetsService.getInstance(project).getAssetCategories(services));
         var message = new SetCategoriesDataMessage("digma", "ASSETS/SET_CATEGORIES_DATA", payload);
@@ -148,7 +148,7 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     }
 
     @Nullable
-    private static String[] GetServices(ObjectMapper objectMapper, JsonNode jsonNode) {
+    private static String[] getServices(ObjectMapper objectMapper, JsonNode jsonNode) {
         String[] services = null;
         JsonNode payloadNode = jsonNode.get("payload");
 
@@ -184,7 +184,7 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
         });
 
         backendQueryParams.put("environment",PersistenceService.getInstance().getState().getCurrentEnv());
-        var services = GetServices(objectMapper, jsonNode);
+        var services = getServices(objectMapper, jsonNode);
 
         Log.log(LOGGER::trace, project, "pushAssets called");
         var payload = objectMapper.readTree(AssetsService.getInstance(project).getAssets(backendQueryParams, services));

@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.203] - 2023-11-27
+## [2.0.204] - 2023-11-29
+- remove assets tab Closes #1428 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1432
+- added services filter
+
+## 2.0.203 - 2023-11-27
 - Small digma icon Closes #1439 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1442
 
 ## 2.0.202 - 2023-11-23

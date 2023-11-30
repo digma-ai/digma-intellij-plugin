@@ -51,8 +51,15 @@ open class PersistenceService : PersistentStateComponent<PersistenceData> {
         state.isLocalEngineInstalled = isInstalled
     }
 
-    fun setSelectedServices(services: Array<String>) {
-        state.selectedServices = services
+    fun setSelectedServices(projectName: String, services: Array<String>?) {
+        if (services == null) {
+            if (state.selectedServices.containsKey(projectName))
+            {
+                state.selectedServices.remove(projectName)
+            }
+        } else {
+            state.selectedServices[projectName] = services
+        }
     }
 
     fun isFirstTimePluginLoaded(): Boolean {

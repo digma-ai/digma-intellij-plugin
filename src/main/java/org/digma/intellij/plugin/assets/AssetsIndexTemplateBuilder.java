@@ -69,7 +69,7 @@ class AssetsIndexTemplateBuilder {
             data.put(IS_DOCKER_COMPOSE_INSTALLED, ApplicationManager.getApplication().getService(DockerService.class).isDockerInstalled());
             data.put(ENVIRONMENT, curEnv == null ? "" : curEnv);
 
-            var selectedServices = PersistenceService.getInstance().getState().getSelectedServices();
+            var selectedServices = PersistenceService.getInstance().getState().getSelectedServices().get(project.getName());
             if(selectedServices != null && selectedServices.length > 0) {
                 data.put(SELECTED_SERVICES_VARIABLE, "['" + String.join("','", selectedServices) + "']");
             }

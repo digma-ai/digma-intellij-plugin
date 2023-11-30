@@ -31,7 +31,7 @@
       <#if assetsSelectedServices??>
       window.assetsSelectedServices = ${assetsSelectedServices?json_string};
       <#else>
-      window.assetsSelectedServices = null;
+      window.assetsSelectedServices = [];
       </#if>
 
       window.environment = "${environment}";

@@ -89,7 +89,7 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
                     case "ASSETS/SET_SELECTED_SERVICES" -> {
                         var services = getServices(objectMapper, jsonNode);
-                        PersistenceService.getInstance().setSelectedServices(services);
+                        PersistenceService.getInstance().setSelectedServices(project.getName(), services);
                     }
 
                     case JCefMessagesUtils.GLOBAL_OPEN_TROUBLESHOOTING_GUIDE ->
@@ -211,7 +211,13 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     }
 
     private void pushServices(CefBrowser browser) throws JsonProcessingException {
-        var services = objectMapper.readTree(AssetsService.getInstance(project).getServices());
+        var servicesJsonString = AssetsService.getInstance(project).getServices();
+        JsonNode services = null;
+
+        if (servicesJsonString != null) {
+            services = objectMapper.readTree(servicesJsonString);
+        }
+
         ObjectNode jNode = objectMapper.createObjectNode();
         jNode.set("services", services);
         var message = new SetServicesDataMessage("digma", "ASSETS/SET_SERVICES", jNode);

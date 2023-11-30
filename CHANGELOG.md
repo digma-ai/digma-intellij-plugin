@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.204] - 2023-11-29
+## [2.0.205] - 2023-11-30
+- add fullName to posthog if exists by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1444
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1448
+
+## 2.0.204 - 2023-11-29
 - remove assets tab Closes #1428 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1432
 - added services filter
 

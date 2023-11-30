@@ -87,6 +87,11 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
                     case "ASSETS/GET_SERVICES" -> pushServices(browser);
 
+                    case "ASSETS/SET_SELECTED_SERVICES" -> {
+                        var services = getServices(objectMapper, jsonNode);
+                        PersistenceService.getInstance().setSelectedServices(services);
+                    }
+
                     case JCefMessagesUtils.GLOBAL_OPEN_TROUBLESHOOTING_GUIDE ->
                             EDT.ensureEDT(() -> MainToolWindowCardsController.getInstance(project).showTroubleshooting());
 

@@ -23,4 +23,5 @@ data class PersistenceData(
     var notificationsStartDate: String? = null,
 
     var pendingEnvironment: String? = null,
+    var selectedServices: Array<String>? = null,
 )

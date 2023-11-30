@@ -28,7 +28,7 @@ class AssetsIndexTemplateBuilder {
 
     private static final String INDEX_TEMPLATE_NAME = "assetstemplate.ftl";
     private static final String ASSET_SEARCH_ENV_NAME = "assetsSearch";
-
+    private static final String SELECTED_SERVICES_VARIABLE = "assetsSelectedServices";
     private static final String ENV_VARIABLE_IDE = "ide";
     private static final String USER_EMAIL_VARIABLE = "userEmail";
     private static final String IS_OBSERVABILITY_ENABLED_VARIABLE = "isObservabilityEnabled";
@@ -68,6 +68,11 @@ class AssetsIndexTemplateBuilder {
             data.put(IS_DOCKER_INSTALLED, ApplicationManager.getApplication().getService(DockerService.class).isDockerInstalled());
             data.put(IS_DOCKER_COMPOSE_INSTALLED, ApplicationManager.getApplication().getService(DockerService.class).isDockerInstalled());
             data.put(ENVIRONMENT, curEnv == null ? "" : curEnv);
+
+            var selectedServices = PersistenceService.getInstance().getState().getSelectedServices();
+            if(selectedServices != null && selectedServices.length > 0) {
+                data.put(SELECTED_SERVICES_VARIABLE, "['" + String.join("','", selectedServices) + "']");
+            }
 
             Template template = freemarketConfiguration.getTemplate(INDEX_TEMPLATE_NAME);
             StringWriter stringWriter = new StringWriter();

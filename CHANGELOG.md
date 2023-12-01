@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.205] - 2023-11-30
+## [2.0.206] - 2023-12-01
+- Persist selected services per project by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1447
+
+## 2.0.205 - 2023-11-30
 - add fullName to posthog if exists by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1444
 - Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1448
 

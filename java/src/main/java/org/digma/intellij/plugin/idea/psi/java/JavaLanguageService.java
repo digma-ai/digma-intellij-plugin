@@ -169,7 +169,7 @@ public class JavaLanguageService implements LanguageService {
     @NotNull
     public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int caretOffset) {
 
-        return Retries.retryWithResult(() -> ReadAction.compute(() -> {
+        return Retries.retryWithResult(() -> ReadAction.compute(() -> SlowOperationsUtilsKt.allowSlowOperation(() -> {
             String fileUri = PsiUtils.psiFileToUri(psiFile);
             if (!isSupportedFile(project, psiFile)) {
                 return new MethodUnderCaret("", "", "", "", fileUri, false);
@@ -187,7 +187,7 @@ public class JavaLanguageService implements LanguageService {
             }
 
             return new MethodUnderCaret("", "", className, packageName, fileUri);
-        }),Throwable.class,50,5);
+        })), Throwable.class, 50, 5);
 
     }
 
@@ -401,25 +401,27 @@ public class JavaLanguageService implements LanguageService {
 
         ReadActions.ensureReadAction(() -> {
 
-            var className = methodId.substring(0, methodId.indexOf("$_$"));
-            //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
-            className = className.replace('$', '.');
-            //searching in project scope will find only project classes
-            Collection<PsiClass> psiClasses =
-                    JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.allScope(project));
-            if (!psiClasses.isEmpty()) {
-                //hopefully there is only one class by that name in the project
-                Optional<PsiClass> psiClassOptional = psiClasses.stream().findAny();
-                PsiClass psiClass = psiClassOptional.get();
-                for (PsiMethod method : JavaPsiUtils.getMethodsOf(project, psiClass)) {
-                    var id = JavaLanguageUtils.createJavaMethodCodeObjectId(method);
-                    if (id.equals(methodId) && method.canNavigate()) {
-                        Log.log(LOGGER::debug, "navigating to method {}", method);
-                        method.navigate(true);
-                        return;
+            SlowOperationsUtilsKt.allowSlowOperation(() -> {
+                var className = methodId.substring(0, methodId.indexOf("$_$"));
+                //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
+                className = className.replace('$', '.');
+                //searching in project scope will find only project classes
+                Collection<PsiClass> psiClasses =
+                        JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.allScope(project));
+                if (!psiClasses.isEmpty()) {
+                    //hopefully there is only one class by that name in the project
+                    Optional<PsiClass> psiClassOptional = psiClasses.stream().findAny();
+                    PsiClass psiClass = psiClassOptional.get();
+                    for (PsiMethod method : JavaPsiUtils.getMethodsOf(project, psiClass)) {
+                        var id = JavaLanguageUtils.createJavaMethodCodeObjectId(method);
+                        if (id.equals(methodId) && method.canNavigate()) {
+                            Log.log(LOGGER::debug, "navigating to method {}", method);
+                            method.navigate(true);
+                            return;
+                        }
                     }
                 }
-            }
+            });
         });
 
     }

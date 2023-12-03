@@ -36,7 +36,7 @@ fun Project.platformPlugins(): String {
     return when (properties("platformType", this)) {
         IdeFlavor.RD.name -> "rider-plugins-appender"
         IdeFlavor.PC.name, IdeFlavor.PY.name -> ""
-        IdeFlavor.IC.name, IdeFlavor.IU.name -> "com.intellij.java"
+        IdeFlavor.IC.name, IdeFlavor.IU.name -> "com.intellij.java,org.jetbrains.kotlin" //not really required because both are built in plugins
 
         else -> ""
     }

@@ -57,13 +57,16 @@ dependencies {
     implementation(project(":analytics-provider"))
 
     implementation(project(":ide-common"))
+    implementation(project(":jvm-common")) //maybe not required here because its transitive?
     implementation(project(":java"))
+    implementation(project(":kotlin"))
     implementation(project(":python"))
     implementation(project(":rider"))
 // todo: jetbrains recommend using the instrumented jar but there is a bug.
 // https://github.com/digma-ai/digma-intellij-plugin/issues/1017
 //    implementation(project(":ide-common", "instrumentedJar"))
 //    implementation(project(":java", "instrumentedJar"))
+//    implementation(project(":kotlin", "instrumentedJar"))
 //    implementation(project(":python", "instrumentedJar"))
 //    implementation(project(":rider", "instrumentedJar"))
 
@@ -77,10 +80,19 @@ dependencies {
 
 
 intellij {
+
+    val platformType = properties("platformType")
+    val platformPlugins = project.platformPlugins().split(',').map(String::trim).filter(String::isNotEmpty)
+    val platformVersion = project.platformVersion()
+
+    println("Running with PlatformType: $platformType")
+    println("Running with PlatformPlugins: $platformPlugins")
+    println("Running with PlatformVersion: $platformVersion")
+
     pluginName.set(properties("pluginName"))
-    version.set(project.platformVersion())
-    type.set(properties("platformType"))
-    plugins.set(project.platformPlugins().split(',').map(String::trim).filter(String::isNotEmpty))
+    version.set(platformVersion)
+    type.set(platformType)
+    plugins.set(platformPlugins)
     downloadSources.set(project.shouldDownloadSources())
 
     pluginsRepositories {

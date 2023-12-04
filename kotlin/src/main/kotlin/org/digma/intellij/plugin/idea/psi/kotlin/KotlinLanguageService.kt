@@ -15,11 +15,10 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.util.ThrowableComputable
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.pom.Navigatable
-import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
-import com.intellij.psi.impl.java.stubs.index.JavaFullClassNameIndex
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.util.PsiTreeUtil
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.Retries
@@ -32,15 +31,11 @@ import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.kotlin.idea.KotlinLanguage
-import org.jetbrains.kotlin.idea.gradleTooling.get
 import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
-import org.jetbrains.kotlin.idea.stubindex.KotlinFunctionShortNameIndex
-import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.toUElementOfType
-import kotlin.math.log
 
 class KotlinLanguageService(private val project: Project) : LanguageService {
 
@@ -167,8 +162,35 @@ class KotlinLanguageService(private val project: Project) : LanguageService {
         return KotlinLanguage::class.java == language.javaClass
     }
 
-    override fun findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(methodCodeObjectIds: MutableList<String>?): MutableMap<String, String> {
-        return mutableMapOf()
+    override fun findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(methodCodeObjectIds: List<String>): MutableMap<String, String> {
+
+
+        val workspaceUrls: MutableMap<String, String> = HashMap()
+
+        methodCodeObjectIds.filter { s: String -> s.contains("\$_$") }.forEach { methodId ->
+
+            var className = methodId.substring(0, methodId.indexOf("\$_$"))
+            //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
+            className = className.replace('$', '.')
+
+            ReadActions.ensureReadAction {
+
+                val psiClasses: Collection<KtClassOrObject> = KotlinFullClassNameIndex.get(className, project, GlobalSearchScope.allScope(project))
+
+                if (!psiClasses.isEmpty()) {
+                    val psiClass = psiClasses.stream().findAny()
+                    if (psiClass.isPresent) {
+                        val psiFile = PsiTreeUtil.getParentOfType(psiClass.get(), PsiFile::class.java)
+                        psiFile?.let {
+                            val url = PsiUtils.psiFileToUri(psiFile)
+                            workspaceUrls.put(methodId, url)
+                        }
+                    }
+                }
+            }
+        }
+
+        return workspaceUrls
     }
 
     override fun findWorkspaceUrisForMethodCodeObjectIds(methodCodeObjectIds: MutableList<String>?): MutableMap<String, Pair<String, Int>> {

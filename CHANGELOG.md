@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.207] - 2023-12-02
+## [2.0.208] - 2023-12-04
+- fix-assets-get-services-first-time Closes #1453 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1454
+
+## 2.0.207 - 2023-12-02
 - update-eap-profile-11799-196 Closes #1446 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1451
 
 ## 2.0.206 - 2023-12-01

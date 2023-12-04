@@ -212,10 +212,12 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
     private void pushServices(CefBrowser browser) throws JsonProcessingException {
         var servicesJsonString = AssetsService.getInstance(project).getServices();
-        JsonNode services = null;
+        JsonNode services;
 
         if (servicesJsonString != null) {
             services = objectMapper.readTree(servicesJsonString);
+        } else {
+            services = objectMapper.createArrayNode();
         }
 
         ObjectNode jNode = objectMapper.createObjectNode();

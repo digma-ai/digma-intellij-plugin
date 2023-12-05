@@ -1,6 +1,6 @@
 package org.digma.intellij.plugin.ui.recentactivity
 
-import com.intellij.collaboration.async.DisposingScope
+import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -70,7 +70,7 @@ class LiveViewUpdater(val project: Project) : Disposable {
         myJob?.cancel()
 
         @Suppress("UnstableApiUsage")
-        myJob = DisposingScope(myDisposable!!).launch {
+        myJob = myDisposable!!.disposingScope().launch {
 
             Log.log(logger::trace, project, "live view timer started for {}", codeObjectId)
 

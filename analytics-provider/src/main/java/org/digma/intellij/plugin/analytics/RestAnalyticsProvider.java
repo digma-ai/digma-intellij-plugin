@@ -19,7 +19,6 @@ import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsResponse
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
 import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightRequest;
-import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsRequest;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanRequest;
@@ -36,8 +35,8 @@ import org.digma.intellij.plugin.model.rest.notifications.SetReadNotificationsRe
 import org.digma.intellij.plugin.model.rest.notifications.UnreadNotificationsCountResponse;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
-import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
-import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
+import org.digma.intellij.plugin.model.rest.usage.EnvsUsageStatusRequest;
+import org.digma.intellij.plugin.model.rest.usage.EnvUsageStatusResult;
 import org.digma.intellij.plugin.model.rest.user.UserUsageStatsRequest;
 import org.digma.intellij.plugin.model.rest.user.UserUsageStatsResponse;
 import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse;
@@ -121,11 +120,6 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public List<GlobalInsight> getGlobalInsights(InsightsRequest insightsRequest) {
-        return execute(() -> client.analyticsProvider.getGlobalInsights(insightsRequest));
-    }
-
-    @Override
     public LatestCodeObjectEventsResponse getLatestEvents(LatestCodeObjectEventsRequest latestCodeObjectEventsRequest) {
         return execute(() -> client.analyticsProvider.getLatestEvents(latestCodeObjectEventsRequest));
     }
@@ -151,8 +145,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public UsageStatusResult getUsageStatus(UsageStatusRequest usageStatusRequest) {
-        return execute(() -> client.analyticsProvider.getUsageStatus(usageStatusRequest));
+    public EnvUsageStatusResult getEnvironmentsUsageStatus(EnvsUsageStatusRequest envsUsageStatusRequest) {
+        return execute(() -> client.analyticsProvider.getEnvironmentsUsageStatus(envsUsageStatusRequest));
     }
 
     @Override
@@ -188,8 +182,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public String getAssetCategories(String environment) {
-        return execute(() -> client.analyticsProvider.getAssetCategories(environment));
+    public String getAssetCategories(String environment, String[] services) {
+        return execute(() -> client.analyticsProvider.getAssetCategories(environment, services));
     }
 
     @Override
@@ -198,8 +192,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public String getAssets(Map<String, String> queryParams) {
-        return execute(() -> client.analyticsProvider.getAssets(queryParams));
+    public String getAssets(Map<String, String> queryParams, String[] services) {
+        return execute(() -> client.analyticsProvider.getAssets(queryParams, services));
+    }
+
+    @Override
+    public String getServices(String environment) {
+        return execute(() -> client.analyticsProvider.getServices(environment));
     }
 
     @Override
@@ -444,12 +443,6 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         @POST("/CodeAnalytics/codeObjects/insights_of_single")
         Call<InsightsOfSingleSpanResponse> getInsightsForSingleSpan(@Body InsightsOfSingleSpanRequest insightsOfSingleSpanRequest);
 
-        @Headers({
-                "Accept: application/+json",
-                "Content-Type:application/json"
-        })
-        @POST("/CodeAnalytics/insights")
-        Call<List<GlobalInsight>> getGlobalInsights(@Body InsightsRequest insightsRequest);
 
         @Headers({
                 "Accept: application/+json",
@@ -483,7 +476,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Content-Type:application/json"
         })
         @POST("/CodeAnalytics/codeobjects/status")
-        Call<UsageStatusResult> getUsageStatus(@Body UsageStatusRequest usageStatusRequest);
+            //todo: still uses old api with empty request. replace to new API. maybe the request object is not necessary anymore
+        Call<EnvUsageStatusResult> getEnvironmentsUsageStatus(@Body EnvsUsageStatusRequest envsUsageStatusRequest);
 
 
         @Headers({
@@ -548,7 +542,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Content-Type:application/json"
         })
         @GET("/CodeAnalytics/codeObjects/asset_categories")
-        Call<String> getAssetCategories(@Query("environment") String environment);
+        Call<String> getAssetCategories(@Query("environment") String environment, @Query("services") String[] services);
 
         @Headers({
                 "Accept: application/+json",
@@ -563,7 +557,10 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Content-Type:application/json"
         })
         @GET("/CodeAnalytics/codeObjects/getAssets")
-        Call<String> getAssets(@QueryMap Map<String, String> fields);
+        Call<String> getAssets(@QueryMap Map<String, String> fields, @Query("services") String[] services);
+
+        @GET("/services/getServices")
+        Call<String> getServices(@Query("environment") String environment);
 
         @Headers({
                 "Accept: application/+json",

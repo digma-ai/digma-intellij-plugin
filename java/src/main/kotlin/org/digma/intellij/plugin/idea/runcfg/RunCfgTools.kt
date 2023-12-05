@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.idea.runcfg
 
+import com.google.common.base.Supplier
 import com.intellij.execution.JavaRunConfigurationBase
 import com.intellij.execution.configurations.JavaParameters
 import com.intellij.execution.configurations.ModuleBasedConfiguration
@@ -19,6 +20,7 @@ import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.util.keyFMap.KeyFMap
+import org.digma.intellij.plugin.common.allowSlowOperation
 import org.digma.intellij.plugin.log.Log
 import org.jetbrains.annotations.VisibleForTesting
 import org.jetbrains.idea.maven.execution.MavenRunConfiguration
@@ -139,17 +141,27 @@ private abstract class RunCfgFlavor<T : RunConfiguration>(protected val runCfgBa
         val mainClassFqn = evalMainClass(params)
 
         if (!mainClassFqn.isNullOrBlank()) {
-            var psiClass: PsiClass? = psiFacade.findClass(mainClassFqn, searchScope)
-            if (psiClass == null) {
-                // try shorter name, since maybe the last part is method name
-                val shorterName = mainClassFqn.substringBeforeLast('.')
-                psiClass = psiFacade.findClass(shorterName, searchScope)
+
+            val module: Module? = allowSlowOperation(Supplier {
+                var psiClass: PsiClass? = psiFacade.findClass(mainClassFqn, searchScope)
+                if (psiClass == null) {
+                    // try shorter name, since maybe the last part is method name
+                    val shorterName = mainClassFqn.substringBeforeLast('.')
+                    psiClass = psiFacade.findClass(shorterName, searchScope)
+                }
+
+                if (psiClass != null) {
+                    val theModule = ModuleUtilCore.findModuleForPsiElement(psiClass)
+                    theModule
+                } else {
+                    null
+                }
+            })
+
+            if (module != null) {
+                return module
             }
 
-            if (psiClass != null) {
-                val theModule = ModuleUtilCore.findModuleForPsiElement(psiClass)
-                return theModule
-            }
         }
 
         // forth strategy, by working folder

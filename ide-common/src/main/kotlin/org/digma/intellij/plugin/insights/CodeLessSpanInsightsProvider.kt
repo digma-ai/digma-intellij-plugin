@@ -15,7 +15,6 @@ import org.digma.intellij.plugin.model.rest.errors.CodeObjectError
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsight
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanResponse
-import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult
 import org.digma.intellij.plugin.ui.model.listview.ListViewItem
 
 class CodeLessSpanInsightsProvider(private val codeLessSpan: CodeLessSpan, private val project: Project) {
@@ -44,11 +43,7 @@ class CodeLessSpanInsightsProvider(private val codeLessSpan: CodeLessSpan, priva
             val insightsResponse: InsightsOfSingleSpanResponse = analyticsService.getInsightsForSingleSpan(objectId)
             Log.log(logger::debug, project, "Got insights for {} [{}]", getObject(), insightsResponse)
 
-            Log.log(logger::debug, project, "requesting usageStatus for {}", getObject())
-            val usageStatus: UsageStatusResult = analyticsService.getUsageStatus(listOf(objectId))
-            Log.log(logger::debug, project, "Got usageStatus for {} [{}]", getObject(), usageStatus)
-
-            val insightsContainer = getInsightsListContainer(filterUnmapped(insightsResponse.insights), usageStatus)
+            val insightsContainer = getInsightsListContainer(filterUnmapped(insightsResponse.insights))
             return CodelessSpanInsightsContainer(insightsContainer, insightsResponse)
 
         } catch (e: AnalyticsServiceException) {
@@ -59,12 +54,11 @@ class CodeLessSpanInsightsProvider(private val codeLessSpan: CodeLessSpan, priva
 
     private fun getInsightsListContainer(
         insightsList: List<CodeObjectInsight>,
-        usageStatus: UsageStatusResult,
     ): InsightsListContainer {
         val insightsViewBuilder = InsightsViewBuilder(BuildersHolder())
         val listViewItems = insightsViewBuilder.build(project, insightsList)
         Log.log(logger::debug, "ListViewItems for {}: {}", getObject(), listViewItems)
-        return InsightsListContainer(listViewItems, insightsList.size, usageStatus)
+        return InsightsListContainer(listViewItems, insightsList.size)
     }
 
 
@@ -90,10 +84,7 @@ class CodeLessSpanInsightsProvider(private val codeLessSpan: CodeLessSpan, priva
                 analyticsService.getErrorsOfCodeObject(CodeObjectsUtil.addMethodTypeToIds(codeObjectIdsForErrors))
             Log.log(logger::debug, project, "Got errors for {} [{}]", getObject(), codeObjectErrors)
 
-            val usageStatus = analyticsService.getUsageStatusOfErrors(listOf(objectId))
-            Log.log(logger::debug, "UsageStatus for {}: {}", getObject(), usageStatus)
-
-            val errorsListContainer = getErrorsListContainer(codeObjectErrors, usageStatus)
+            val errorsListContainer = getErrorsListContainer(codeObjectErrors)
 
             return CodelessSpanErrorsContainer(errorsListContainer, insightsResponse)
         } catch (e: AnalyticsServiceException) {
@@ -102,20 +93,14 @@ class CodeLessSpanInsightsProvider(private val codeLessSpan: CodeLessSpan, priva
         }
     }
 
-    private fun getErrorsListContainer(codeObjectErrors: List<CodeObjectError>, usageStatus: UsageStatusResult): ErrorsListContainer {
+    private fun getErrorsListContainer(codeObjectErrors: List<CodeObjectError>): ErrorsListContainer {
 
         val errorsListViewItems = codeObjectErrors.map { ListViewItem(it, 1) }
         Log.log(logger::debug, "errors ListViewItems for {}: {}", getObject(), errorsListViewItems)
 
-        return ErrorsListContainer(errorsListViewItems, usageStatus)
+        return ErrorsListContainer(errorsListViewItems)
     }
 
 
-    @Throws(AnalyticsServiceException::class)
-    fun getRawInsights():List<CodeObjectInsight>{
-        val analyticsService = AnalyticsService.getInstance(project)
-        val objectId = getObjectIdWithType()
-        return analyticsService.getInsightsForSingleSpan(objectId).insights
-    }
 
 }

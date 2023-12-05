@@ -30,7 +30,6 @@ import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsResponse
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
 import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightRequest;
-import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsRequest;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanRequest;
@@ -48,8 +47,8 @@ import org.digma.intellij.plugin.model.rest.notifications.SetReadNotificationsRe
 import org.digma.intellij.plugin.model.rest.notifications.UnreadNotificationsCountResponse;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
-import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
-import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
+import org.digma.intellij.plugin.model.rest.usage.EnvsUsageStatusRequest;
+import org.digma.intellij.plugin.model.rest.usage.EnvUsageStatusResult;
 import org.digma.intellij.plugin.model.rest.user.UserUsageStatsRequest;
 import org.digma.intellij.plugin.model.rest.user.UserUsageStatsResponse;
 import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse;
@@ -93,7 +92,6 @@ import static org.digma.intellij.plugin.common.ExceptionUtils.getSslExceptionMes
 import static org.digma.intellij.plugin.common.ExceptionUtils.isConnectionException;
 import static org.digma.intellij.plugin.common.ExceptionUtils.isEOFException;
 import static org.digma.intellij.plugin.common.ExceptionUtils.isSslConnectionException;
-import static org.digma.intellij.plugin.model.Models.Empties.EmptyUsageStatusResult;
 
 
 public class AnalyticsService implements Disposable {
@@ -232,16 +230,6 @@ public class AnalyticsService implements Disposable {
         });
     }
 
-    public List<GlobalInsight> getGlobalInsights() throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
-        Log.log(LOGGER::trace, "Requesting Global Insights for next environment {}", env);
-        var insights = executeCatching(() -> analyticsProviderProxy.getGlobalInsights(new InsightsRequest(env, Collections.emptyList())));
-        if (insights == null) {
-            insights = Collections.emptyList();
-        }
-        onInsightReceived(insights);
-        return insights;
-    }
 
 
     public LatestCodeObjectEventsResponse getLatestEvents(@NotNull String lastReceivedTime) throws AnalyticsServiceException {
@@ -341,10 +329,10 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getCodeObjectErrorDetails(errorUid));
     }
 
-    public UsageStatusResult getUsageStatus(List<String> objectIds) throws AnalyticsServiceException {
+    public EnvUsageStatusResult getEnvironmentsUsageStatus() throws AnalyticsServiceException {
         return executeCatching(() -> {
-            UsageStatusResult usageStatus = analyticsProviderProxy.getUsageStatus(new UsageStatusRequest(objectIds));
-            return usageStatus == null ? EmptyUsageStatusResult : usageStatus;
+            EnvUsageStatusResult usageStatus = analyticsProviderProxy.getEnvironmentsUsageStatus(new EnvsUsageStatusRequest());
+            return usageStatus == null ? new EnvUsageStatusResult(Collections.emptyList(), Collections.emptyList()) : usageStatus;
         });
     }
 
@@ -373,12 +361,6 @@ public class AnalyticsService implements Disposable {
     }
 
 
-    public UsageStatusResult getUsageStatusOfErrors(List<String> objectIds) throws AnalyticsServiceException {
-        return executeCatching(() -> {
-            UsageStatusResult usageStatus = analyticsProviderProxy.getUsageStatus(new UsageStatusRequest(objectIds, List.of("Error")));
-            return usageStatus == null ? EmptyUsageStatusResult : usageStatus;
-        });
-    }
 
     public String getHtmlGraphForSpanPercentiles(String instrumentationLibrary, String spanName, String backgroundColor) throws AnalyticsServiceException {
         final SpanHistogramQuery spanHistogramQuery = new SpanHistogramQuery(getCurrentEnvironment(), spanName, instrumentationLibrary, JBColor.isBright() ? "light" : "dark", backgroundColor);
@@ -390,10 +372,10 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getHtmlGraphForSpanScaling(spanHistogramQuery));
     }
 
-    public String getAssetCategories() throws AnalyticsServiceException {
+    public String getAssetCategories(String[] services) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         return executeCatching(() ->
-                analyticsProviderProxy.getAssetCategories(env));
+                analyticsProviderProxy.getAssetCategories(env, services));
     }
 
     public void checkInsightExists() throws AnalyticsServiceException {
@@ -416,9 +398,16 @@ public class AnalyticsService implements Disposable {
         }
     }
 
-    public String getAssets(@NotNull Map<String, String> queryParams) throws AnalyticsServiceException {
+    public String getAssets(@NotNull Map<String, String> queryParams, String[] services) throws AnalyticsServiceException {
         return executeCatching(() ->
-                analyticsProviderProxy.getAssets(queryParams));
+                analyticsProviderProxy.getAssets(queryParams, services));
+    }
+
+    public String getServices() throws AnalyticsServiceException {
+
+        var env = getCurrentEnvironment();
+        return executeCatching(() ->
+                analyticsProviderProxy.getServices(env));
     }
 
 

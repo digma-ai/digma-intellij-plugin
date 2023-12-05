@@ -161,31 +161,47 @@ public final class AssetsService implements Disposable {
         return new AssetsIndexTemplateBuilder().build(project);
     }
 
-    public String getAssetCategories() {
+    public String getAssetCategories(String[] services) {
         EDT.assertNonDispatchThread();
 
         try {
             Log.log(logger::trace, project, "got get categories request");
-            String categories = AnalyticsService.getInstance(project).getAssetCategories();
+            String categories = AnalyticsService.getInstance(project).getAssetCategories(services);
             AnalyticsService.getInstance(project).checkInsightExists();
             Log.log(logger::trace, project, "got categories [{}]", categories);
             return categories;
         } catch (NoSelectedEnvironmentException e) {
             Log.log(logger::debug, project, "no environment when calling getCategories {}", e.getMessage());
-            return "";
+            return "{ \"assetCategories\": [] }";
         } catch (AnalyticsServiceException e) {
             Log.warnWithException(logger, project, e, "Error loading categories {}", e.getMessage());
-            return "";
+            return "{ \"assetCategories\": [] }";
         }
     }
 
-    public String getAssets(@NotNull Map<String,String> queryParams) {
+    public String getServices() {
+        try {
+            Log.log(logger::trace, project, "got get assets request");
+            String services = AnalyticsService.getInstance(project).getServices();
+            Log.log(logger::trace, project, "got services");
+            return services;
+        } catch (NoSelectedEnvironmentException e) {
+            Log.log(logger::debug, project, "no environment when calling getAssets {}", e.getMessage());
+            return null;
+        } catch (AnalyticsServiceException e) {
+            Log.warnWithException(logger, project, e, "Error getting services {}", e.getMessage());
+            return null;
+        }
+
+    }
+
+    public String getAssets(@NotNull Map<String,String> queryParams, String[] services) {
 
         EDT.assertNonDispatchThread();
 
         try {
             Log.log(logger::trace, project, "got get assets request");
-            String assets = AnalyticsService.getInstance(project).getAssets(queryParams);
+            String assets = AnalyticsService.getInstance(project).getAssets(queryParams, services);
             Log.log(logger::trace, project, "got assets [{}]", assets);
             return assets;
         } catch (NoSelectedEnvironmentException e) {

@@ -10,7 +10,7 @@ curl -L https://get.digma.ai/ --output docker-compose.yml
 
 Then Run 
 ```shell
-docker compose up -d
+docker compose up -d --remove-orphans
 ```
 
 ### Windows (PowerShell)
@@ -23,5 +23,5 @@ iwr https://get.digma.ai/ -outfile docker-compose.yml
 
 Then Run 
 ```shell
-docker compose up -d
+docker compose up -d --remove-orphans
 ```

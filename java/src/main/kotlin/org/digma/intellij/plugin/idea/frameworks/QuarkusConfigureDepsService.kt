@@ -2,7 +2,7 @@ package org.digma.intellij.plugin.idea.frameworks
 
 import com.intellij.buildsystem.model.unified.UnifiedCoordinates
 import com.intellij.buildsystem.model.unified.UnifiedDependency
-import com.intellij.collaboration.async.DisposingScope
+import com.intellij.collaboration.async.disposingScope
 import com.intellij.externalSystem.DependencyModifierService
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.WriteAction
@@ -64,7 +64,7 @@ class QuarkusConfigureDepsService(private val project: Project) : Disposable {
     init {
 
         @Suppress("UnstableApiUsage")
-        DisposingScope(this).launch {
+        disposingScope().launch {
             while (isActive) {
                 try {
 
@@ -141,14 +141,14 @@ class QuarkusConfigureDepsService(private val project: Project) : Disposable {
 
         // making the panel disappear
         @Suppress("UnstableApiUsage")
-        DisposingScope(this).launch {
+        disposingScope().launch {
             delay(500)
             affectedPanel?.reset()
         }
 
         // give some time for the user/system to make the desired update, and only then run the periodicAction
         @Suppress("UnstableApiUsage")
-        DisposingScope(this).launch {
+        disposingScope().launch {
             delay(TimeUnit.SECONDS.toMillis(blackoutDurationSeconds) + 500)
 
             periodicAction()

@@ -29,10 +29,12 @@ import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.digma.intellij.plugin.ui.model.TraceSample;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -95,7 +97,7 @@ public class JaegerUIService {
 
 
             if (jaegerUIVirtualFile.getTraceId() != null) {
-                var initialRoutePath = buildInitialRoutePath(jaegerUIVirtualFile.getTraceId());
+                var initialRoutePath = buildInitialRoutePath(jaegerUIVirtualFile.getTraceId(), jaegerUIVirtualFile.getSpanCodeObjectId());
                 data.put(INITIAL_ROUTE_PARAM_NAME, initialRoutePath);
             } else if (jaegerUIVirtualFile.getTraceSamples() != null && !jaegerUIVirtualFile.getTraceSamples().isEmpty()) {
 
@@ -103,7 +105,7 @@ public class JaegerUIService {
                         jaegerUIVirtualFile.getTraceSamples().get(0).getTraceId() != null &&
                         !Objects.requireNonNull(jaegerUIVirtualFile.getTraceSamples().get(0).getTraceId()).isBlank()) {
 
-                    var initialRoutePath = buildInitialRoutePath(Objects.requireNonNull(jaegerUIVirtualFile.getTraceSamples().get(0).getTraceId()));
+                    var initialRoutePath = buildInitialRoutePath(Objects.requireNonNull(jaegerUIVirtualFile.getTraceSamples().get(0).getTraceId()), jaegerUIVirtualFile.getSpanCodeObjectId());
                     data.put(INITIAL_ROUTE_PARAM_NAME, initialRoutePath);
 
                 } else if (jaegerUIVirtualFile.getTraceSamples().size() == 2 &&
@@ -115,6 +117,9 @@ public class JaegerUIService {
                     var trace1 = Objects.requireNonNull(jaegerUIVirtualFile.getTraceSamples().get(0).getTraceId()).toLowerCase();
                     var trace2 = Objects.requireNonNull(jaegerUIVirtualFile.getTraceSamples().get(1).getTraceId()).toLowerCase();
                     var initialRoutePath = "/trace/" + trace1 + "..." + trace2 + "?cohort=" + trace1 + "&cohort=" + trace2;
+                    if (jaegerUIVirtualFile.getSpanCodeObjectId() != null) {
+                        initialRoutePath = initialRoutePath + "&uiFind=" + URLEncoder.encode(jaegerUIVirtualFile.getSpanCodeObjectId(), StandardCharsets.UTF_8);
+                    }
                     data.put(INITIAL_ROUTE_PARAM_NAME, initialRoutePath);
                 }
             } else {
@@ -133,13 +138,17 @@ public class JaegerUIService {
         }
     }
 
-    private String buildInitialRoutePath(String traceId) {
+    private String buildInitialRoutePath(String traceId, @Nullable String spanCodeObjectId) {
         var traceLowerCase = traceId.toLowerCase();
-        return "/trace/" + traceLowerCase + "?cohort=" + traceLowerCase;
+        var url = "/trace/" + traceLowerCase + "?cohort=" + traceLowerCase;
+        if (spanCodeObjectId != null) {
+            url = url + "&uiFind=" + URLEncoder.encode(spanCodeObjectId, StandardCharsets.UTF_8);
+        }
+        return url;
     }
 
 
-    public void openEmbeddedJaeger(@NotNull String traceId, @NotNull String spanName) {
+    public void openEmbeddedJaeger(@NotNull String traceId, @NotNull String spanName, @Nullable String spanCodeObjectId) {
 
         if (showExisting(traceId, spanName)) {
             return;
@@ -151,14 +160,14 @@ public class JaegerUIService {
         }
 
         EDT.ensureEDT(() -> {
-            var file = JaegerUIVirtualFile.createVirtualFile(jaegerQueryUrl, traceId, spanName);
+            var file = JaegerUIVirtualFile.createVirtualFile(jaegerQueryUrl, traceId, spanName, spanCodeObjectId);
             FileEditorManager.getInstance(project).openFile(file, true, true);
         });
 
     }
 
 
-    public void openEmbeddedJaeger(@NotNull List<TraceSample> traceSamples, @NotNull String spanName) {
+    public void openEmbeddedJaeger(@NotNull List<TraceSample> traceSamples, @NotNull String spanName, @Nullable String spanCodeObjectId) {
 
         if (showExisting(traceSamples, spanName)) {
             return;
@@ -174,7 +183,7 @@ public class JaegerUIService {
         }
 
         EDT.ensureEDT(() -> {
-            var file = JaegerUIVirtualFile.createVirtualFile(jaegerQueryUrl, traceSamples, spanName);
+            var file = JaegerUIVirtualFile.createVirtualFile(jaegerQueryUrl, traceSamples, spanName, spanCodeObjectId);
             FileEditorManager.getInstance(project).openFile(file, true, true);
         });
 

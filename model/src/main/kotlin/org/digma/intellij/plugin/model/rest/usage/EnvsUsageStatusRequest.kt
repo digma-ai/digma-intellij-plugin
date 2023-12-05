@@ -2,11 +2,11 @@ package org.digma.intellij.plugin.model.rest.usage
 
 import com.fasterxml.jackson.annotation.JsonCreator
 
-data class UsageStatusRequest
+data class EnvsUsageStatusRequest
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 constructor(
-    val codeObjectIds: List<String>,
-    val filterByInsightProviders: List<String>,
+    val codeObjectIds: List<String> = emptyList(),
+    val filterByInsightProviders: List<String> = emptyList(),
 ) {
 
     constructor(

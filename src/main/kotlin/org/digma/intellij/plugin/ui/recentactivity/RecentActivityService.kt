@@ -115,7 +115,7 @@ class RecentActivityService(val project: Project) : Disposable {
             Log.log(logger::trace, project, "processRecentActivityGoToTraceRequest called with {}", payload)
 
             if (payload != null) {
-                openJaegerFromRecentActivity(project, payload.traceId, payload.span.scopeId)
+                openJaegerFromRecentActivity(project, payload.traceId, payload.span.scopeId, payload.span.spanCodeObjectId)
             } else {
                 Log.log({ message: String? -> logger.debug(message) }, "processRecentActivityGoToTraceRequest payload is empty")
             }

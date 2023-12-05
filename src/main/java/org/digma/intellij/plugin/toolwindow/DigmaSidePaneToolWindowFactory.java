@@ -23,7 +23,6 @@ import org.digma.intellij.plugin.ui.notifications.AllNotificationsPanel;
 import org.digma.intellij.plugin.ui.panels.DisposablePanel;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
 import org.digma.intellij.plugin.ui.service.InsightsViewService;
-import org.digma.intellij.plugin.ui.service.SummaryViewService;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -146,9 +145,6 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         //sometimes the views models are updated before the tool window is initialized.
         //it happens when files are re-opened early before the tool window, and CaretContextService.contextChanged
         //is invoked and updates the models.
-        //SummaryViewService is also initialized before the tool window is opened, it will get the event when
-        // the environment is loaded and will update its model but will not update the ui because the panel is
-        // not initialized yet.
         //only at this stage the panels are constructed already. just calling updateUi() for all view services
         // will actually update the UI.
         //todo: probably not necessary, EditorEventsHandler.selectionChanged loads DocumentInfo and
@@ -158,6 +154,5 @@ public class DigmaSidePaneToolWindowFactory implements ToolWindowFactory {
         // models will be populated with data but updateUi was not invoked
         project.getService(InsightsViewService.class).updateUi();
         project.getService(ErrorsViewService.class).updateUi();
-        project.getService(SummaryViewService.class).updateUi();
     }
 }

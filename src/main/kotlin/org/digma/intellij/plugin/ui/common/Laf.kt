@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.ui.common
 
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.editor.colors.GlobalEditorScheme
+import com.intellij.openapi.util.IconLoader
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.icons.IconsUtil
@@ -171,12 +172,13 @@ object Laf {
                 @JvmStatic val NoObservabilityDark = SvgIcon.asIs("/icons/no_observability-dark.svg")
                 @JvmStatic val NoInsightsLight = SvgIcon.asIs("/icons/no_insights_light.svg")
                 @JvmStatic val NoInsightsDark = SvgIcon.asIs("/icons/no_insights_dark.svg")
-                @JvmStatic val SummaryEmptyLight = SvgIcon.asIs("/icons/summary_empty_light.svg")
-                @JvmStatic val SummaryEmptyDark = SvgIcon.asIs("/icons/summary_empty_dark.svg")
                 @JvmStatic val UpdateProductDark = SvgIcon.asIs("/icons/update-product-dark.svg")
                 @JvmStatic val UpdateProductLight = SvgIcon.asIs("/icons/update-product-light.svg")
-                @JvmStatic val Mascot64 = loadAndScaleIconByWidth("/icons/digma.png", 64)
-                @JvmStatic val Mascot16 = loadAndScaleIconByWidth("/icons/digma.png", 16)
+
+                //                @JvmStatic val DigmaLogo64 = loadAndScaleIconByWidth("/icons/digma.png", 64)
+//                @JvmStatic val DigmaLogo16 = loadAndScaleIconByWidth("/icons/digma.png", 16)
+                @JvmStatic
+                val DigmaLogo = IconLoader.getIcon("/icons/digma.svg", Laf::class.java.classLoader);
                 @JvmStatic val FileDark = SvgIcon.asIs("/icons/file-dark.svg")
                 @JvmStatic val FileLight = SvgIcon.asIs("/icons/file-light.svg")
                 @JvmStatic val LoadingDark = SvgIcon.asIs("/icons/loader-anim-dark.svg")

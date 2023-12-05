@@ -11,7 +11,6 @@ import org.digma.intellij.plugin.model.rest.event.LatestCodeObjectEventsResponse
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
 import org.digma.intellij.plugin.model.rest.insights.CustomStartTimeInsightRequest;
-import org.digma.intellij.plugin.model.rest.insights.GlobalInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsRequest;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanRequest;
@@ -28,8 +27,8 @@ import org.digma.intellij.plugin.model.rest.notifications.SetReadNotificationsRe
 import org.digma.intellij.plugin.model.rest.notifications.UnreadNotificationsCountResponse;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
-import org.digma.intellij.plugin.model.rest.usage.UsageStatusRequest;
-import org.digma.intellij.plugin.model.rest.usage.UsageStatusResult;
+import org.digma.intellij.plugin.model.rest.usage.EnvsUsageStatusRequest;
+import org.digma.intellij.plugin.model.rest.usage.EnvUsageStatusResult;
 import org.digma.intellij.plugin.model.rest.user.UserUsageStatsRequest;
 import org.digma.intellij.plugin.model.rest.user.UserUsageStatsResponse;
 import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse;
@@ -52,8 +51,6 @@ public interface AnalyticsProvider extends Closeable {
 
     InsightsOfSingleSpanResponse getInsightsForSingleSpan(InsightsOfSingleSpanRequest insightsOfSingleSpanRequest);
 
-    List<GlobalInsight> getGlobalInsights(InsightsRequest insightsRequest);
-
     LatestCodeObjectEventsResponse getLatestEvents(LatestCodeObjectEventsRequest latestCodeObjectEventsRequest);
 
     List<CodeObjectError> getErrorsOfCodeObject(String environment, List<String> codeObjectIds);
@@ -64,7 +61,7 @@ public interface AnalyticsProvider extends Closeable {
 
     CodeObjectErrorDetails getCodeObjectErrorDetails(String errorSourceId);
 
-    UsageStatusResult getUsageStatus(UsageStatusRequest usageStatusRequest);
+    EnvUsageStatusResult getEnvironmentsUsageStatus(EnvsUsageStatusRequest envsUsageStatusRequest);
 
     String getHtmlGraphForSpanPercentiles(SpanHistogramQuery request);
 
@@ -78,11 +75,13 @@ public interface AnalyticsProvider extends Closeable {
 
     CodeObjectNavigation getCodeObjectNavigation(CodeObjectNavigationRequest codeObjectNavigationRequest);
 
-    String getAssetCategories(String environment);
+    String getAssetCategories(String environment, String[] services);
 
     String insightExists(String environment);
 
-    String getAssets(Map<String, String> queryParams);
+    String getAssets(Map<String, String> queryParams, String[] services);
+
+    String getServices(String environment);
 
     String getNotifications(NotificationsRequest notificationsRequest);
 

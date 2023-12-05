@@ -38,6 +38,7 @@ import kotlin.Pair;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.ReadActions;
 import org.digma.intellij.plugin.common.Retries;
+import org.digma.intellij.plugin.common.SlowOperationsUtilsKt;
 import org.digma.intellij.plugin.editor.EditorUtils;
 import org.digma.intellij.plugin.idea.build.BuildSystemChecker;
 import org.digma.intellij.plugin.idea.build.JavaBuildSystem;
@@ -168,7 +169,7 @@ public class JavaLanguageService implements LanguageService {
     @NotNull
     public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int caretOffset) {
 
-        return Retries.retryWithResult(() -> ReadAction.compute(() -> {
+        return Retries.retryWithResult(() -> ReadAction.compute(() -> SlowOperationsUtilsKt.allowSlowOperation(() -> {
             String fileUri = PsiUtils.psiFileToUri(psiFile);
             if (!isSupportedFile(project, psiFile)) {
                 return new MethodUnderCaret("", "", "", "", fileUri, false);
@@ -186,7 +187,7 @@ public class JavaLanguageService implements LanguageService {
             }
 
             return new MethodUnderCaret("", "", className, packageName, fileUri);
-        }),Throwable.class,50,5);
+        })), Throwable.class, 50, 5);
 
     }
 
@@ -203,9 +204,8 @@ public class JavaLanguageService implements LanguageService {
         var modulesDepsService = ModulesDepsService.getInstance(project);
         var springBootMicrometerConfigureDepsService = SpringBootMicrometerConfigureDepsService.getInstance(project);
 
-        var retVal = (modulesDepsService.isSpringBootModule(module)
+        return (modulesDepsService.isSpringBootModule(module)
                 && springBootMicrometerConfigureDepsService.isSpringBootWithMicrometer());
-        return retVal;
     }
 
     @NotNull
@@ -281,7 +281,6 @@ public class JavaLanguageService implements LanguageService {
                 }
 
                 result = new JavaCanInstrumentMethodResult(methodId, psiMethod, annotationPsiClass, psiJavaFile);
-                return;
             }
         }
 
@@ -323,7 +322,9 @@ public class JavaLanguageService implements LanguageService {
             var psiFactory = PsiElementFactory.getInstance(project);
 
             var shortClassNameAnnotation = withSpanClass.getName();
-            psiMethod.getModifierList().addAnnotation(shortClassNameAnnotation);
+            if (shortClassNameAnnotation != null) {
+                psiMethod.getModifierList().addAnnotation(shortClassNameAnnotation);
+            }
 
             var existing = importList.findSingleClassImportStatement(withSpanClass.getQualifiedName());
             if (existing == null) {
@@ -351,6 +352,7 @@ public class JavaLanguageService implements LanguageService {
         return module;
     }
 
+    @SuppressWarnings("UnstableApiUsage")
     @Override
     public void addDependencyToOtelLib(@NotNull Project project, @NotNull String methodId) {
         Module module = getModuleOfMethodId(methodId);
@@ -364,7 +366,9 @@ public class JavaLanguageService implements LanguageService {
 
             var dependencyModifierService = DependencyModifierService.getInstance(project);
 
-            dependencyModifierService.addDependency(module, dependencyLib);
+            if (dependencyLib != null) {
+                dependencyModifierService.addDependency(module, dependencyLib);
+            }
             return;
         }
         // handling spring boot with micrometer tracing
@@ -397,25 +401,27 @@ public class JavaLanguageService implements LanguageService {
 
         ReadActions.ensureReadAction(() -> {
 
-            var className = methodId.substring(0, methodId.indexOf("$_$"));
-            //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
-            className = className.replace('$', '.');
-            //searching in project scope will find only project classes
-            Collection<PsiClass> psiClasses =
-                    JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.allScope(project));
-            if (!psiClasses.isEmpty()) {
-                //hopefully there is only one class by that name in the project
-                Optional<PsiClass> psiClassOptional = psiClasses.stream().findAny();
-                PsiClass psiClass = psiClassOptional.get();
-                for (PsiMethod method : JavaPsiUtils.getMethodsOf(project, psiClass)) {
-                    var id = JavaLanguageUtils.createJavaMethodCodeObjectId(method);
-                    if (id.equals(methodId) && method.canNavigate()) {
-                        Log.log(LOGGER::debug, "navigating to method {}", method);
-                        method.navigate(true);
-                        return;
+            SlowOperationsUtilsKt.allowSlowOperation(() -> {
+                var className = methodId.substring(0, methodId.indexOf("$_$"));
+                //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
+                className = className.replace('$', '.');
+                //searching in project scope will find only project classes
+                Collection<PsiClass> psiClasses =
+                        JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.allScope(project));
+                if (!psiClasses.isEmpty()) {
+                    //hopefully there is only one class by that name in the project
+                    Optional<PsiClass> psiClassOptional = psiClasses.stream().findAny();
+                    PsiClass psiClass = psiClassOptional.get();
+                    for (PsiMethod method : JavaPsiUtils.getMethodsOf(project, psiClass)) {
+                        var id = JavaLanguageUtils.createJavaMethodCodeObjectId(method);
+                        if (id.equals(methodId) && method.canNavigate()) {
+                            Log.log(LOGGER::debug, "navigating to method {}", method);
+                            method.navigate(true);
+                            return;
+                        }
                     }
                 }
-            }
+            });
         });
 
     }
@@ -481,13 +487,13 @@ public class JavaLanguageService implements LanguageService {
 
         Map<String, Pair<String, Integer>> workspaceUrls = new HashMap<>();
 
-        methodCodeObjectIds.forEach(methodId -> ReadActions.ensureReadAction(() -> {
+        methodCodeObjectIds.forEach(methodId -> ReadActions.ensureReadAction(() -> SlowOperationsUtilsKt.allowSlowOperation(() -> {
             var psiMethod = findPsiMethodByMethodCodeObjectId(methodId);
             if (psiMethod != null) {
                 String url = PsiUtils.psiFileToUri(psiMethod.getContainingFile());
                 workspaceUrls.put(methodId, new Pair<>(url, psiMethod.getTextOffset()));
             }
-        }));
+        })));
 
         return workspaceUrls;
     }
@@ -510,24 +516,25 @@ public class JavaLanguageService implements LanguageService {
             return null;
         }
 
-        var className = methodId.substring(0, methodId.indexOf("$_$"));
         //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
-        className = className.replace('$', '.');
+        var className = methodId.substring(0, methodId.indexOf("$_$")).replace('$', '.');
 
-        //searching in project scope will find only project classes
-        Collection<PsiClass> psiClasses = JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.projectScope(project));
-        if (!psiClasses.isEmpty()) {
-            //hopefully there is only one class by that name in the project
-            PsiClass psiClass = psiClasses.stream().findAny().get();
-            PsiFile psiFile = PsiTreeUtil.getParentOfType(psiClass, PsiFile.class);
-            for (PsiMethod method : JavaPsiUtils.getMethodsOf(project, psiClass)) {
-                String javaMethodCodeObjectId = JavaLanguageUtils.createJavaMethodCodeObjectId(method);
-                if (javaMethodCodeObjectId.equals(methodId) && psiFile != null) {
-                    return method;
+        return SlowOperationsUtilsKt.allowSlowOperation(() -> {
+            //searching in project scope will find only project classes
+            Collection<PsiClass> psiClasses = JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.projectScope(project));
+            if (!psiClasses.isEmpty()) {
+                //hopefully there is only one class by that name in the project
+                PsiClass psiClass = psiClasses.stream().findAny().get();
+                PsiFile psiFile = PsiTreeUtil.getParentOfType(psiClass, PsiFile.class);
+                for (PsiMethod method : JavaPsiUtils.getMethodsOf(project, psiClass)) {
+                    String javaMethodCodeObjectId = JavaLanguageUtils.createJavaMethodCodeObjectId(method);
+                    if (javaMethodCodeObjectId.equals(methodId) && psiFile != null) {
+                        return method;
+                    }
                 }
             }
-        }
-        return null;
+            return null;
+        });
     }
 
     @NotNull
@@ -590,28 +597,33 @@ public class JavaLanguageService implements LanguageService {
     @Override
     public boolean isRelevant(VirtualFile file) {
 
-        if (file.isDirectory() || !file.isValid()) {
-            return false;
-        }
+        return SlowOperationsUtilsKt.allowSlowOperation(() -> {
+            if (file.isDirectory() || !file.isValid()) {
+                return false;
+            }
 
-        PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
-        if (psiFile == null) {
-            return false;
-        }
+            PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
+            if (psiFile == null) {
+                return false;
+            }
 
-        return isRelevant(psiFile);
+            return isRelevant(psiFile);
+        });
+
     }
 
 
     @Override
     public boolean isRelevant(PsiFile psiFile) {
-        return psiFile.isValid() &&
-                psiFile.isWritable() &&
+
+
+        return SlowOperationsUtilsKt.allowSlowOperation(() -> psiFile.isWritable() &&
                 projectFileIndex.isInSourceContent(psiFile.getVirtualFile()) &&
                 !projectFileIndex.isInLibrary(psiFile.getVirtualFile()) &&
                 !projectFileIndex.isExcluded(psiFile.getVirtualFile()) &&
                 isSupportedFile(project, psiFile) &&
-                !JavaDocumentInfoIndex.namesToExclude.contains(psiFile.getVirtualFile().getName());
+                !JavaDocumentInfoIndex.namesToExclude.contains(psiFile.getVirtualFile().getName()));
+
     }
 
     @Override

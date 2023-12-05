@@ -7,17 +7,22 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.rest.usage.CodeObjectUsageStatus;
 import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 public class Environment implements EnvironmentsSupplier {
 
@@ -29,6 +34,11 @@ public class Environment implements EnvironmentsSupplier {
     @NotNull
     private List<String> environments = new ArrayList<>();
 
+    @NotNull
+    private Set<String> environmentsWithUsages = new HashSet<>();
+
+
+
     private final Project project;
     private final AnalyticsService analyticsService;
 
@@ -38,15 +48,6 @@ public class Environment implements EnvironmentsSupplier {
         this.project = project;
         this.analyticsService = analyticsService;
     }
-
-
-
-    //this method is for internal use during initialization of AnalyticsService,
-    // its package protected and should never be used elsewhere
-    void setCurrentInternal(String current) {
-        this.current = current;
-    }
-
 
 
     @Override
@@ -110,6 +111,10 @@ public class Environment implements EnvironmentsSupplier {
         return environments;
     }
 
+    @Override
+    public boolean hasUsages(@NotNull String env) {
+        return environmentsWithUsages.contains(env);
+    }
 
     @Override
     public void refreshNowOnBackground() {
@@ -145,6 +150,7 @@ public class Environment implements EnvironmentsSupplier {
 
             Log.log(LOGGER::trace, "Refreshing Environments list");
             var newEnvironments = analyticsService.getEnvironments();
+            var newEnvsWithUsages = getEnvsWithUsages();
             if (newEnvironments != null && !newEnvironments.isEmpty()) {
                 Log.log(LOGGER::trace, "Got environments {}", newEnvironments);
             } else {
@@ -152,11 +158,12 @@ public class Environment implements EnvironmentsSupplier {
                 newEnvironments = new ArrayList<>();
             }
 
-            if (environmentsListEquals(newEnvironments, environments)) {
+            if (collectionsEquals(newEnvironments, environments) && collectionsEquals(newEnvsWithUsages, environmentsWithUsages)) {
                 return;
             }
 
             this.environments = newEnvironments;
+            this.environmentsWithUsages = newEnvsWithUsages;
             notifyEnvironmentsListChange();
 
         } finally {
@@ -167,6 +174,17 @@ public class Environment implements EnvironmentsSupplier {
 
             stopWatch.stop();
             Log.log(LOGGER::trace, "Refresh environments took {} milliseconds", stopWatch.getTime(TimeUnit.MILLISECONDS));
+        }
+    }
+
+    private Set<String> getEnvsWithUsages() {
+
+        try {
+            var usageStatusResult = analyticsService.getEnvironmentsUsageStatus();
+            return usageStatusResult.getCodeObjectStatuses().stream().map(CodeObjectUsageStatus::getEnvironment).collect(Collectors.toSet());
+        } catch (AnalyticsServiceException e) {
+            ErrorReporter.getInstance().reportError(project, "Environment.getEnvsWithUsages", e);
+            return Collections.emptySet();
         }
     }
 
@@ -193,7 +211,7 @@ public class Environment implements EnvironmentsSupplier {
     }
 
 
-    private boolean environmentsListEquals(List<String> envs1, List<String> envs2) {
+    private boolean collectionsEquals(Collection<String> envs1, Collection<String> envs2) {
         if (envs1 == null && envs2 == null) {
             return true;
         }

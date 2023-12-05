@@ -1,6 +1,6 @@
 package org.digma.intellij.plugin.updates
 
-import com.intellij.collaboration.async.DisposingScope
+import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.diagnostic.Logger
@@ -161,7 +161,7 @@ class UpdatesService(private val project: Project) : Disposable {
 
         // give some time for the user/system to make the desired update, and only then recheck for newer version
         @Suppress("UnstableApiUsage")
-        DisposingScope(this).launch {
+        disposingScope().launch {
             delay(TimeUnit.SECONDS.toMillis(BlackoutDurationSeconds) + 500)
 
             checkForNewerVersions()

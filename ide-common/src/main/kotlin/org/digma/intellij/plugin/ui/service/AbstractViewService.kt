@@ -57,8 +57,7 @@ abstract class AbstractViewService(val project: Project) : Disposable {
     abstract fun getViewDisplayName(): String
 
     //in some situation the UI should not be updated, for example if the error details is On then nothing changes
-    //in the view until its closed. there may be exceptions, for example the summary view can reload while error details
-    // is on but setVisible should not run.
+    //in the view until its closed.
     open fun canUpdateUI(): Boolean {
         return true
     }

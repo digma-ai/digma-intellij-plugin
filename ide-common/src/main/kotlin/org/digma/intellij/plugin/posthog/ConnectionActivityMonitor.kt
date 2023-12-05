@@ -1,6 +1,6 @@
 package org.digma.intellij.plugin.posthog
 
-import com.intellij.collaboration.async.DisposingScope
+import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
@@ -44,7 +44,7 @@ class ConnectionActivityMonitor(private val project: Project) : AnalyticsService
         Log.log(LOGGER::trace, "Fetching server about info")
 
         @Suppress("UnstableApiUsage")
-        DisposingScope(this).launch {
+        disposingScope().launch {
             try {
                 val about = AnalyticsService.getInstance(project).about
                 if (appVersion != about.applicationVersion) {

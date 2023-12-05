@@ -12,6 +12,8 @@ import org.digma.intellij.plugin.settings.LinkMode
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.list.ListItemActionButton
 import org.digma.intellij.plugin.ui.model.TraceSample
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.util.Collections
 import javax.swing.JButton
 
@@ -19,8 +21,10 @@ const val traceButtonName: String = "show-in-jaeger"
 
 // if cannot create the button then would return null
 fun buildButtonToJaeger(
-        project: Project, linkCaption: String, spanName: String, traceSamples: List<TraceSample?>, insightType: InsightType
+    project: Project, linkCaption: String, spanName: String, traceSamples: List<TraceSample?>, insightType: InsightType,
 ): JButton? {
+
+    //todo: delete , not in use, was used with swing UI
 
     val filteredTraces = traceSamples.filter { traceSample -> traceSample != null && traceSample.hasTraceId() }
 
@@ -72,7 +76,7 @@ fun buildButtonToJaeger(
                 }
             }
             LinkMode.Embedded -> {
-                JaegerUIService.getInstance(project).openEmbeddedJaeger(filteredTraces,spanName)
+                JaegerUIService.getInstance(project).openEmbeddedJaeger(filteredTraces, spanName, null)
             }
         }
     }
@@ -87,9 +91,10 @@ fun buildButtonToJaeger(
 
 
 fun openJaegerFromRecentActivity(
-        project: Project,
-        traceId: String,
-        spanName: String
+    project: Project,
+    traceId: String,
+    spanName: String,
+    spanCodeObjectId: String?,
 ) {
 
     if (!isJaegerButtonEnabled() || traceId.isBlank()){
@@ -99,15 +104,18 @@ fun openJaegerFromRecentActivity(
     val settingsState = SettingsState.getInstance()
 
     val jaegerUrlEmbedPart = "&uiEmbed=v0"
-    val jaegerUrl: String
+    var jaegerUrl: String
     val jaegerBaseUrl = settingsState.jaegerUrl?.trim()?.trimEnd('/')
     if (settingsState.jaegerLinkMode==LinkMode.External && jaegerBaseUrl!=null && jaegerBaseUrl.contains("\${TRACE_ID}")){
         jaegerUrl=jaegerBaseUrl.replace("\${TRACE_ID}",traceId.lowercase())
     }
     else{
         jaegerUrl = "${jaegerBaseUrl}/trace/${traceId.lowercase()}?cohort=${traceId.lowercase()}${jaegerUrlEmbedPart}"
-
+        spanCodeObjectId?.let {
+            jaegerUrl = jaegerUrl.plus("&uiFind=").plus(URLEncoder.encode(spanCodeObjectId, StandardCharsets.UTF_8))
+        }
     }
+
 
     when(settingsState.jaegerLinkMode){
 
@@ -128,7 +136,7 @@ fun openJaegerFromRecentActivity(
         }
 
         LinkMode.Embedded -> {
-            JaegerUIService.getInstance(project).openEmbeddedJaeger(traceId, spanName)
+            JaegerUIService.getInstance(project).openEmbeddedJaeger(traceId, spanName, spanCodeObjectId)
         }
     }
 
@@ -140,22 +148,27 @@ fun openJaegerFromInsight(
     traceId: String,
     traceName: String,
     insightType: InsightType,
+    spanCodeObjectId: String?,
 ) {
 
     ActivityMonitor.getInstance(project).registerButtonClicked(traceButtonName, insightType)
 
     val settingsState = SettingsState.getInstance()
     val jaegerBaseUrl = settingsState.jaegerUrl?.trim()?.trimEnd('/')
-    val jaegerUrl: String
+    var jaegerUrl: String
     val embedPart = "&uiEmbed=v0"
 
     val trace1 = traceId.lowercase();
     if (settingsState.jaegerLinkMode==LinkMode.External && jaegerBaseUrl!=null && jaegerBaseUrl.contains("\${TRACE_ID}")){
-        jaegerUrl=jaegerBaseUrl.replace("\${TRACE_ID}",trace1)
+        jaegerUrl = jaegerBaseUrl.replace("\${TRACE_ID}", trace1)
     }
     else{
         jaegerUrl = "${jaegerBaseUrl}/trace/${trace1}?cohort=${trace1}${embedPart}"
+        spanCodeObjectId?.let {
+            jaegerUrl = jaegerUrl.plus("&uiFind=").plus(URLEncoder.encode(spanCodeObjectId, StandardCharsets.UTF_8))
+        }
     }
+
 
     when (settingsState.jaegerLinkMode) {
 
@@ -180,7 +193,7 @@ fun openJaegerFromInsight(
 
         LinkMode.Embedded -> {
             val traceSample = TraceSample(traceName, traceId);
-            JaegerUIService.getInstance(project).openEmbeddedJaeger(Collections.singletonList(traceSample), traceName)
+            JaegerUIService.getInstance(project).openEmbeddedJaeger(Collections.singletonList(traceSample), traceName, spanCodeObjectId)
         }
     }
 }
@@ -230,7 +243,7 @@ fun openJaegerComparisonFromInsight(
             val traceSample1 = TraceSample(traceName1, traceId1);
             val traceSample2 = TraceSample(traceName2, traceId2);
             val traces = listOf(traceSample1, traceSample2)
-            JaegerUIService.getInstance(project).openEmbeddedJaeger(traces, traceName1)
+            JaegerUIService.getInstance(project).openEmbeddedJaeger(traces, traceName1, null)
         }
     }
 }

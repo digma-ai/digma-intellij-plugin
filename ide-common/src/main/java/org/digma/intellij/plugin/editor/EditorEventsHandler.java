@@ -330,8 +330,8 @@ public class EditorEventsHandler implements FileEditorManagerListener {
             return false;
         }
         LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
-        return !FileUtils.isLightVirtualFileBase(file) &&
-                languageService.isRelevant(file);
+
+        return !FileUtils.isLightVirtualFileBase(file) && languageService.isRelevant(file);
 
     }
 

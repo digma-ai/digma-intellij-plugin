@@ -520,7 +520,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Accept: application/+json",
                 "Content-Type:application/json"
         })
-        @POST("/user/usage_stats")
+        @POST("/CodeAnalytics/user/usage_stats")
         Call<UserUsageStatsResponse> getUserUsageStats(@Body UserUsageStatsRequest request);
 
         @Headers({

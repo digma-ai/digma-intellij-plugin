@@ -26,7 +26,9 @@
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.runcfg.OpenLibertyRunConfigurationWrapper"/>
         <runConfigurationExtension implementation="org.digma.intellij.plugin.idea.runcfg.OtelRunConfigurationExtension"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.idea.runcfg.RunConfigurationStartupActivity"/>
+        <runConfigurationExtension implementation="org.digma.intellij.plugin.idea.runcfg.RunCfqLogger"/>
 
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.userstats.UserStatsService"/>
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService"/>
     </extensions>
 

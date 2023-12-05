@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.208] - 2023-12-04
+## [2.0.209] - 2023-12-05
+- Update Recent Activity UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1455
+
+## 2.0.208 - 2023-12-04
 - fix-assets-get-services-first-time Closes #1453 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1454
 
 ## 2.0.207 - 2023-12-02

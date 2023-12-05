@@ -357,6 +357,7 @@ class ModulesDepsService(private val project: Project) : Disposable {
                 && metadata.hasSpringBootStarterActuator
                 && metadata.hasSpringBootStarterAop
                 && metadata.hasMicrometerTracingBridgeOtel
+                && metadata.hasDatasourceMicrometerSpringBoot
                 && metadata.hasOtelExporterOtlp
                 && metadata.hasDigmaSpringBootMicrometerAutoconf
                 )

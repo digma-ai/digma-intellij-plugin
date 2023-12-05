@@ -33,4 +33,6 @@ constructor(
 
     @JsonProperty("hasDistributedCalls")
     val hasDistributedCalls: Boolean = false
+
+    fun hasDbSpans() = uniqueDatabaseSpansCount > 0
 }

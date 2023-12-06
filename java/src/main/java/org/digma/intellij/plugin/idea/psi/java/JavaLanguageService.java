@@ -608,7 +608,9 @@ public class JavaLanguageService implements LanguageService {
         //must be PsiJavaFile , this method should be called only for java files
         if (psiFile instanceof PsiJavaFile psiJavaFile) {
 
-            return ProgressManager.getInstance().runProcess(() -> Retries.retryWithResult(() -> ReadAction.compute(() -> JavaCodeObjectDiscovery.buildDocumentInfo(project, psiJavaFile, endpointDiscoveryList)),
+            return ProgressManager.getInstance().runProcess(() ->
+                    Retries.retryWithResult(() -> ReadAction.compute(() ->
+                                    JavaCodeObjectDiscovery.buildDocumentInfo(project, psiJavaFile, endpointDiscoveryList)),
                     Throwable.class,50,5),new EmptyProgressIndicator());
 
         } else {

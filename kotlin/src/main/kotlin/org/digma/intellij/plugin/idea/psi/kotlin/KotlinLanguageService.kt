@@ -6,6 +6,7 @@ import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditor
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.DumbService
@@ -23,6 +24,7 @@ import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.Retries
 import org.digma.intellij.plugin.common.allowSlowOperation
+import org.digma.intellij.plugin.editor.EditorUtils
 import org.digma.intellij.plugin.idea.psi.createMethodCodeObjectId
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
@@ -30,11 +32,13 @@ import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.PsiUtils
+import org.digma.intellij.plugin.ui.CaretContextService
 import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
 import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.uast.UClass
+import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.toUElementOfType
 
 class KotlinLanguageService(private val project: Project) : LanguageService {
@@ -193,9 +197,44 @@ class KotlinLanguageService(private val project: Project) : LanguageService {
         return workspaceUrls
     }
 
-    override fun findWorkspaceUrisForMethodCodeObjectIds(methodCodeObjectIds: MutableList<String>?): MutableMap<String, Pair<String, Int>> {
-        return mutableMapOf()
+    override fun findWorkspaceUrisForMethodCodeObjectIds(methodCodeObjectIds: List<String>): Map<String, Pair<String, Int>> {
+
+        val workspaceUrls = mutableMapOf<String, Pair<String, Int>>()
+
+        methodCodeObjectIds.forEach { methodId ->
+            ReadActions.ensureReadAction {
+                allowSlowOperation {
+                    var className = methodId.substring(0, methodId.indexOf("\$_$"))
+                    //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
+                    className = className.replace('$', '.')
+                    //searching in project scope will find only project classes
+                    val psiClasses: Collection<KtClassOrObject> =
+                        KotlinFullClassNameIndex.get(className, project, GlobalSearchScope.projectScope(project))
+                    if (!psiClasses.isEmpty()) {
+                        //hopefully there is only one class by that name in the project
+                        val psiClassOptional = psiClasses.stream().findAny()
+                        val psiClass: KtClassOrObject = psiClassOptional.get()
+
+                        val uClass = psiClass.toUElementOfType<UClass>()
+
+                        uClass?.let { cls ->
+                            val method = cls.methods.firstOrNull { methodId == createMethodCodeObjectId(it) }
+                            method?.let { uMethod ->
+                                val uFile = cls.getContainingUFile()
+                                uFile?.let {
+                                    val url = PsiUtils.psiFileToUri(it.sourcePsi)
+                                    val offset = uMethod.sourcePsi?.textOffset ?: 0
+                                    workspaceUrls.put(methodId, Pair(url, offset))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return workspaceUrls
     }
+
 
     override fun findWorkspaceUrisForSpanIds(spanIds: MutableList<String>?): MutableMap<String, Pair<String, Int>> {
         return mutableMapOf()
@@ -206,7 +245,27 @@ class KotlinLanguageService(private val project: Project) : LanguageService {
     }
 
     override fun environmentChanged(newEnv: String?, refreshInsightsView: Boolean) {
-        //todo
+        if (refreshInsightsView) {
+            EDT.ensureEDT {
+                val fileEditor = FileEditorManager.getInstance(project).selectedEditor
+                if (fileEditor != null) {
+                    val file = fileEditor.file
+                    val psiFile = PsiManager.getInstance(project).findFile(file)
+                    if (psiFile != null && isRelevant(psiFile.virtualFile)) {
+                        val selectedTextEditor =
+                            EditorUtils.getSelectedTextEditorForFile(file, FileEditorManager.getInstance(project))
+                        if (selectedTextEditor != null) {
+                            val offset = selectedTextEditor.caretModel.offset
+                            val methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset)
+                            CaretContextService.getInstance(project).contextChanged(methodUnderCaret)
+                        }
+                    }
+                }
+            }
+        }
+
+        //todo: kotlin
+//        JavaCodeLensService.getInstance(project).environmentChanged(newEnv)
     }
 
     override fun buildDocumentInfo(psiFile: PsiFile): DocumentInfo {

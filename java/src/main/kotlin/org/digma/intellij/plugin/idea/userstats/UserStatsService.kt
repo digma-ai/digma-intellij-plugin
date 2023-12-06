@@ -30,20 +30,20 @@ class UserStatsService(private val project: Project) : Disposable {
     init {
 
         // DBG
-        println("DBG: UserStatsService init")
+//        println("DBG: UserStatsService init")
 
         @Suppress("UnstableApiUsage")
         disposingScope().launch {
             while (isActive) {
                 try {
                     // DBG
-                    println("DBG:UserStatsService pre delay")
+//                    println("DBG:UserStatsService pre delay")
                     doDelay()
                     if (isActive) {
                         periodicAction()
                     }
                 } catch (e: Exception) {
-                    Log.warnWithException(UserStatsService.logger, e, "Exception in periodicAction")
+                    Log.warnWithException(logger, e, "Exception in periodicAction")
                     ErrorReporter.getInstance().reportError(project, "UserStatsService.periodicAction", e)
                 }
             }
@@ -56,7 +56,7 @@ class UserStatsService(private val project: Project) : Disposable {
             delay(TimeUnit.MINUTES.toMillis(1))
         } else {
             delay(TimeUnit.HOURS.toMillis(2)) // prod
-//          delay(TimeUnit.MINUTES.toMillis(1)) // debug
+//          delay(TimeUnit.MINUTES.toMillis(1))       // debug
         }
     }
 
@@ -64,7 +64,7 @@ class UserStatsService(private val project: Project) : Disposable {
         if (project.isDisposed) return
 
         val userUsageStats = AnalyticsService.getInstance(project).userUsageStats
-        ActivityMonitor.getInstance(project).reportUserUsageStats(userUsageStats);
+        ActivityMonitor.getInstance(project).reportUserUsageStats(userUsageStats)
     }
 
     override fun dispose() {

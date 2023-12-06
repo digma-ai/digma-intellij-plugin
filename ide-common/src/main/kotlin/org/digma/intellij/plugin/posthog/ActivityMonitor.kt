@@ -11,6 +11,7 @@ import org.digma.intellij.plugin.common.JsonUtils
 import org.digma.intellij.plugin.common.UserId
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.rest.AboutResult
+import org.digma.intellij.plugin.model.rest.user.UserUsageStatsResponse
 import org.digma.intellij.plugin.model.rest.version.BackendDeploymentType
 import org.digma.intellij.plugin.model.rest.version.PerformanceCounterReport
 import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse
@@ -288,6 +289,21 @@ class ActivityMonitor(project: Project) : Disposable {
                 "error.source" to "backend",
                 "action" to action,
                 "message" to message,
+            )
+        )
+    }
+
+    fun reportUserUsageStats(uss: UserUsageStatsResponse) {
+        capture(
+            "user-usage-stats",
+            mapOf(
+                "has.db.spans" to uss.hasDbSpans(),
+                "services.count" to uss.servicesCount,
+                "has.distributed.calls" to uss.hasDistributedCalls,
+                "trace.depth.max" to uss.traceDepthMax,
+                "trace.depth.avg" to uss.traceDepthAvg,
+                "unique.spans.count" to uss.uniqueSpansCount,
+                "environments.count" to uss.environmentsCount,
             )
         )
     }

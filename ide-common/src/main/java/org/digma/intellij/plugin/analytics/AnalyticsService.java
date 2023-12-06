@@ -49,6 +49,8 @@ import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.model.rest.usage.EnvsUsageStatusRequest;
 import org.digma.intellij.plugin.model.rest.usage.EnvUsageStatusResult;
+import org.digma.intellij.plugin.model.rest.user.UserUsageStatsRequest;
+import org.digma.intellij.plugin.model.rest.user.UserUsageStatsResponse;
 import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse;
 import org.digma.intellij.plugin.model.rest.version.VersionRequest;
 import org.digma.intellij.plugin.model.rest.version.VersionResponse;
@@ -342,6 +344,10 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getRecentActivity(new RecentActivityRequest(environments)));
     }
 
+    public UserUsageStatsResponse getUserUsageStats() throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getUserUsageStats(new UserUsageStatsRequest()));
+    }
+
     public DurationLiveData getDurationLiveData(String codeObjectId) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         return executeCatching(() ->
@@ -371,6 +377,7 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() ->
                 analyticsProviderProxy.getAssetCategories(env, services));
     }
+
     public void checkInsightExists() throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         var response = executeCatching(() ->
@@ -391,7 +398,7 @@ public class AnalyticsService implements Disposable {
         }
     }
 
-    public String getAssets(@NotNull Map<String,String> queryParams, String[] services) throws AnalyticsServiceException {
+    public String getAssets(@NotNull Map<String, String> queryParams, String[] services) throws AnalyticsServiceException {
         return executeCatching(() ->
                 analyticsProviderProxy.getAssets(queryParams, services));
     }
@@ -437,7 +444,7 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.deleteEnvironment(new DeleteEnvironmentRequest(environmentName)));
     }
 
-    public String getDashboard(@NotNull Map<String,String> queryParams) throws AnalyticsServiceException {
+    public String getDashboard(@NotNull Map<String, String> queryParams) throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getDashboard(queryParams));
     }
 

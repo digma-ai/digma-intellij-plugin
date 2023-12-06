@@ -37,6 +37,8 @@ import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.model.rest.usage.EnvsUsageStatusRequest;
 import org.digma.intellij.plugin.model.rest.usage.EnvUsageStatusResult;
+import org.digma.intellij.plugin.model.rest.user.UserUsageStatsRequest;
+import org.digma.intellij.plugin.model.rest.user.UserUsageStatsResponse;
 import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse;
 import org.digma.intellij.plugin.model.rest.version.VersionRequest;
 import org.digma.intellij.plugin.model.rest.version.VersionResponse;
@@ -92,7 +94,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     public List<String> getEnvironments() {
         var envs = execute(client.analyticsProvider::getEnvironments);
         //make sure environments list is always a mutable list because we change it
-        if (envs != null){
+        if (envs != null) {
             envs = new ArrayList<>(envs);
         }
         return envs;
@@ -113,7 +115,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         return execute(() -> client.analyticsProvider.getInsightsOfMethods(insightsOfMethodsRequest));
     }
 
-    public InsightsOfSingleSpanResponse getInsightsForSingleSpan(InsightsOfSingleSpanRequest insightsOfSingleSpanRequest){
+    public InsightsOfSingleSpanResponse getInsightsForSingleSpan(InsightsOfSingleSpanRequest insightsOfSingleSpanRequest) {
         return execute(() -> client.analyticsProvider.getInsightsForSingleSpan(insightsOfSingleSpanRequest));
     }
 
@@ -165,6 +167,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
+    public UserUsageStatsResponse getUserUsageStats(UserUsageStatsRequest request) {
+        return execute(() -> client.analyticsProvider.getUserUsageStats(request));
+    }
+
+    @Override
     public DurationLiveData getDurationLiveData(DurationLiveDataRequest durationLiveDataRequest) {
         return execute(() -> client.analyticsProvider.getDurationLiveData(durationLiveDataRequest));
     }
@@ -175,17 +182,17 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public String getAssetCategories(String environment, String[] services){
+    public String getAssetCategories(String environment, String[] services) {
         return execute(() -> client.analyticsProvider.getAssetCategories(environment, services));
     }
 
     @Override
-    public String insightExists(String environment){
+    public String insightExists(String environment) {
         return execute(() -> client.analyticsProvider.insightExists(environment));
     }
 
     @Override
-    public String getAssets(Map<String,String> queryParams, String[] services) {
+    public String getAssets(Map<String, String> queryParams, String[] services) {
         return execute(() -> client.analyticsProvider.getAssets(queryParams, services));
     }
 
@@ -220,7 +227,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public PerformanceMetricsResponse getPerformanceMetrics()  {
+    public PerformanceMetricsResponse getPerformanceMetrics() {
         return execute(client.analyticsProvider::getPerformanceMetrics);
     }
 
@@ -230,7 +237,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
-    public String getDashboard(Map<String,String> queryParams) {
+    public String getDashboard(Map<String, String> queryParams) {
         return execute(() -> client.analyticsProvider.getDashboard(queryParams));
     }
 
@@ -509,6 +516,12 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         @POST("/CodeAnalytics/codeObjects/recent_activity")
         Call<RecentActivityResult> getRecentActivity(@Body RecentActivityRequest recentActivityRequest);
 
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/CodeAnalytics/user/usage_stats")
+        Call<UserUsageStatsResponse> getUserUsageStats(@Body UserUsageStatsRequest request);
 
         @Headers({
                 "Accept: application/+json",
@@ -544,7 +557,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Content-Type:application/json"
         })
         @GET("/CodeAnalytics/codeObjects/getAssets")
-        Call<String> getAssets(@QueryMap Map<String,String> fields, @Query("services") String[] services);
+        Call<String> getAssets(@QueryMap Map<String, String> fields, @Query("services") String[] services);
 
         @GET("/services/getServices")
         Call<String> getServices(@Query("environment") String environment);
@@ -604,7 +617,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
                 "Content-Type:application/json"
         })
         @GET("/dashboard/getDashboard")
-        Call<String> getDashboard(@QueryMap Map<String,String> fields);
+        Call<String> getDashboard(@QueryMap Map<String, String> fields);
     }
 
 }

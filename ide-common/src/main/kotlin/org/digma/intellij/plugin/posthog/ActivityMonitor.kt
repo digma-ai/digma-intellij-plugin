@@ -295,7 +295,7 @@ class ActivityMonitor(project: Project) : Disposable {
 
     fun reportUserUsageStats(uss: UserUsageStatsResponse) {
         capture(
-            "user-usage-status",
+            "user-usage-stats",
             mapOf(
                 "has.db.spans" to uss.hasDbSpans(),
                 "services.count" to uss.servicesCount,

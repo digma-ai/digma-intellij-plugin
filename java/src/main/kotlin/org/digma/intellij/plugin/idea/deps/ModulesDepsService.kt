@@ -39,13 +39,13 @@ class ModulesDepsService(private val project: Project) : Disposable {
                 val groupId = splitNames[0]
                 val artifactId: String? = if (splitNames.size > 1) {
                     splitNames[1]
-                }else{
+                } else {
                     null
                 }
 
                 val version: String? = if (splitNames.size > 2) {
                     splitNames[2]
-                }else{
+                } else {
                     null
                 }
 
@@ -90,6 +90,7 @@ class ModulesDepsService(private val project: Project) : Disposable {
             var hasSpringBootStarterActuator = false
             var hasSpringBootStarterAop = false
             var hasMicrometerTracingBridgeOtel = false
+            var hasDatasourceMicrometerSpringBoot = false
             var hasOtelExporterOtlp = false
             var hasDigmaSpringBootMicrometerAutoconf = false
             var springBootVersion: String? = null
@@ -130,6 +131,9 @@ class ModulesDepsService(private val project: Project) : Disposable {
                 if (!hasMicrometerTracingBridgeOtel) {
                     hasMicrometerTracingBridgeOtel = checkMicrometerTracingBridgeOtel(libCoord)
                 }
+                if (!hasDatasourceMicrometerSpringBoot) {
+                    hasDatasourceMicrometerSpringBoot = checkDatasourceMicrometerSpringBoot(libCoord)
+                }
                 if (!hasOtelExporterOtlp) {
                     hasOtelExporterOtlp = checkOtelExporterOtlp(libCoord)
                 }
@@ -166,7 +170,7 @@ class ModulesDepsService(private val project: Project) : Disposable {
             return ModuleMetadata(
                 hasOpenTelemetryAnnotations, quarkusVersion, hasQuarkusOpenTelemetry,
                 springBootVersion, hasSpringBootStarterActuator, hasSpringBootStarterAop,
-                hasMicrometerTracingBridgeOtel, hasOtelExporterOtlp,
+                hasMicrometerTracingBridgeOtel, hasDatasourceMicrometerSpringBoot, hasOtelExporterOtlp,
                 hasDigmaSpringBootMicrometerAutoconf, micronautVersion, dropwizardVersion, springVersion
             )
         }
@@ -222,6 +226,12 @@ class ModulesDepsService(private val project: Project) : Disposable {
         fun checkMicrometerTracingBridgeOtel(libCoord: UnifiedCoordinates): Boolean {
             return libCoord.groupId == "io.micrometer" &&
                     libCoord.artifactId == "micrometer-tracing-bridge-otel"
+        }
+
+        @JvmStatic
+        fun checkDatasourceMicrometerSpringBoot(libCoord: UnifiedCoordinates): Boolean {
+            return libCoord.groupId == "net.ttddyy.observation" &&
+                    libCoord.artifactId == "datasource-micrometer-spring-boot"
         }
 
         @JvmStatic
@@ -347,6 +357,7 @@ class ModulesDepsService(private val project: Project) : Disposable {
                 && metadata.hasSpringBootStarterActuator
                 && metadata.hasSpringBootStarterAop
                 && metadata.hasMicrometerTracingBridgeOtel
+                && metadata.hasDatasourceMicrometerSpringBoot
                 && metadata.hasOtelExporterOtlp
                 && metadata.hasDigmaSpringBootMicrometerAutoconf
                 )
@@ -392,6 +403,7 @@ data class ModuleMetadata(
     val hasSpringBootStarterActuator: Boolean,
     val hasSpringBootStarterAop: Boolean,
     val hasMicrometerTracingBridgeOtel: Boolean,
+    val hasDatasourceMicrometerSpringBoot: Boolean,
     val hasOtelExporterOtlp: Boolean,
     val hasDigmaSpringBootMicrometerAutoconf: Boolean,
     // other

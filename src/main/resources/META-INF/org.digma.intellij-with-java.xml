@@ -21,14 +21,15 @@
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.deps.ModulesDepsService"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.idea.deps.ModuleDepsStarter"/>
 
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.userstats.UserStatsService"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.idea.userstats.UserStatsServiceStarter"/>
+
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.frameworks.QuarkusConfigureDepsService"/>
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.runcfg.QuarkusRunConfigurationWrapper"/>
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.runcfg.OpenLibertyRunConfigurationWrapper"/>
         <runConfigurationExtension implementation="org.digma.intellij.plugin.idea.runcfg.OtelRunConfigurationExtension"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.idea.runcfg.RunConfigurationStartupActivity"/>
-        <runConfigurationExtension implementation="org.digma.intellij.plugin.idea.runcfg.RunCfqLogger"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.idea.userstats.UserStatsService"/>
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService"/>
     </extensions>
 

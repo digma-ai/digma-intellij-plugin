@@ -4,6 +4,7 @@ import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.startup.StartupActivity
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -17,16 +18,26 @@ class UserStatsService(private val project: Project) : Disposable {
 
     companion object {
         private val logger = Logger.getInstance(UserStatsService::class.java)
+
+        @JvmStatic
+        fun getInstance(project: Project): UserStatsService {
+            return project.getService(UserStatsService::class.java)
+        }
     }
 
     private var firstDelay: Boolean = true
 
     init {
 
+        // DBG
+        println("DBG: UserStatsService init")
+
         @Suppress("UnstableApiUsage")
         disposingScope().launch {
             while (isActive) {
                 try {
+                    // DBG
+                    println("DBG:UserStatsService pre delay")
                     doDelay()
                     if (isActive) {
                         periodicAction()
@@ -44,8 +55,8 @@ class UserStatsService(private val project: Project) : Disposable {
             firstDelay = false
             delay(TimeUnit.MINUTES.toMillis(1))
         } else {
-//            delay(TimeUnit.HOURS.toMillis(2)) // prod
-            delay(TimeUnit.MINUTES.toMillis(2)) // debug
+            delay(TimeUnit.HOURS.toMillis(2)) // prod
+//          delay(TimeUnit.MINUTES.toMillis(1)) // debug
         }
     }
 
@@ -60,4 +71,11 @@ class UserStatsService(private val project: Project) : Disposable {
         //nothing to do , used as disposable parent
     }
 
+}
+
+class UserStatsServiceStarter : StartupActivity {
+    override fun runActivity(project: Project) {
+        // its enough just to have reference to the service, and it will get initialized
+        val service = UserStatsService.getInstance(project)
+    }
 }

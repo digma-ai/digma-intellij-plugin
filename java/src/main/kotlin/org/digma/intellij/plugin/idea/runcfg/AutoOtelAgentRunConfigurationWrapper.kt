@@ -172,6 +172,14 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
             retVal = retVal
                 .plus("-Dotel.resource.attributes=\"$envPart\"")
                 .plus(" ")
+
+            var hasMockito = true //TODO: really check for mockito in the module
+            if (hasMockito) { // mockito
+                // based on git issue https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/8862#issuecomment-1619722050 it seems to help
+                retVal = retVal
+                    .plus("-Dotel.javaagent.experimental.field-injection.enabled=false")
+                    .plus(" ")
+            }
         }
 
         retVal = retVal

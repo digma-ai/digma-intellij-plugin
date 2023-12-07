@@ -1,6 +1,15 @@
 # Changelog
 
-## [2.0.209] - 2023-12-05
+## [2.0.211] - 2023-12-06
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1461
+- Update Assets UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1462
+
+## 2.0.210 - 2023-12-06
+- Feature/spring boot micrometer - add dependency to DatasourceMicrometer by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1458
+- Feature/user usage stats to posthog by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1396
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1459
+
+## 2.0.209 - 2023-12-05
 - Update Recent Activity UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1455
 
 ## 2.0.208 - 2023-12-04

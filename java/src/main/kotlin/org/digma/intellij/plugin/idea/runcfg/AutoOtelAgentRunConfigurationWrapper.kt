@@ -145,7 +145,7 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
             return null
         }
 
-        if(RunCfgTools.isWsl(configuration)){
+        if (RunCfgTools.isWsl(configuration)) {
             otelAgentPath = FileUtils.convertWinToWslPath(otelAgentPath)
             digmaExtensionPath = FileUtils.convertWinToWslPath(digmaExtensionPath)
         }
@@ -173,8 +173,8 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
                 .plus("-Dotel.resource.attributes=\"$envPart\"")
                 .plus(" ")
 
-            var hasMockito = true //TODO: really check for mockito in the module
-            if (hasMockito) { // mockito
+            var hasMockito = true //currently do not check for mockito since flag is minor and won't affect other cases
+            if (hasMockito) {
                 // based on git issue https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/8862#issuecomment-1619722050 it seems to help
                 retVal = retVal
                     .plus("-Dotel.javaagent.experimental.field-injection.enabled=false")

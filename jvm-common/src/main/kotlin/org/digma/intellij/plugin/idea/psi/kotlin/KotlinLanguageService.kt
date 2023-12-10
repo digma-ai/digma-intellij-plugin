@@ -26,6 +26,8 @@ import org.digma.intellij.plugin.common.Retries
 import org.digma.intellij.plugin.common.allowSlowOperation
 import org.digma.intellij.plugin.editor.EditorUtils
 import org.digma.intellij.plugin.idea.psi.createMethodCodeObjectId
+import org.digma.intellij.plugin.idea.psi.java.JavaEndpointNavigationProvider
+import org.digma.intellij.plugin.idea.psi.java.JavaSpanNavigationProvider
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
@@ -236,12 +238,12 @@ class KotlinLanguageService(private val project: Project) : LanguageService {
     }
 
 
-    override fun findWorkspaceUrisForSpanIds(spanIds: MutableList<String>?): MutableMap<String, Pair<String, Int>> {
-        return mutableMapOf()
+    override fun findWorkspaceUrisForSpanIds(spanIds: List<String>): Map<String, Pair<String, Int>> {
+        return JavaSpanNavigationProvider.getInstance(project).getUrisForSpanIds(spanIds)
     }
 
-    override fun lookForDiscoveredEndpoints(endpointId: String?): MutableSet<EndpointInfo> {
-        return mutableSetOf()
+    override fun lookForDiscoveredEndpoints(endpointId: String?): Set<EndpointInfo> {
+        return JavaEndpointNavigationProvider.getInstance(project).getEndpointInfos(endpointId)
     }
 
     override fun environmentChanged(newEnv: String?, refreshInsightsView: Boolean) {

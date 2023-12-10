@@ -53,11 +53,10 @@ dependencies {
     implementation(libs.commons.lang3)
     implementation(project(":model"))
     implementation(project(":analytics-provider"))
-
     implementation(project(":ide-common"))
     implementation(project(":jvm-common"))
-    implementation(project(":java"))
-    implementation(project(":kotlin"))
+//    implementation(project(":java"))
+//    implementation(project(":kotlin"))
     implementation(project(":python"))
     implementation(project(":rider"))
 // todo: jetbrains recommend using the instrumented jar but there is a bug.
@@ -129,7 +128,7 @@ project.afterEvaluate{
     //it can be written with task fqn like buildPlugin.dependsOn(":rider:buildPlugin")
     //but this syntax is not favorite by the gradle developers because it will cause eager initialization of the task.
     val buildPlugin = tasks.named("buildPlugin").get()
-    project(":java").afterEvaluate { buildPlugin.dependsOn(tasks.getByName("buildPlugin")) }
+    project(":jvm-common").afterEvaluate { buildPlugin.dependsOn(tasks.getByName("buildPlugin")) }
     project(":python").afterEvaluate { buildPlugin.dependsOn(tasks.getByName("buildPlugin")) }
     project(":rider").afterEvaluate { buildPlugin.dependsOn(tasks.getByName("buildPlugin")) }
 }

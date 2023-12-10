@@ -1,9 +1,12 @@
-package org.digma.intellij.plugin.idea.psi
+package org.digma.intellij.plugin.idea.psi.discovery
 
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
+import org.digma.intellij.plugin.idea.psi.createMethodCodeObjectId
+import org.digma.intellij.plugin.idea.psi.discovery.span.AbstractSpanDiscovery
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
+import org.digma.intellij.plugin.model.discovery.SpanInfo
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile
@@ -13,7 +16,8 @@ import org.jetbrains.uast.toUElementOfType
 /**
  * code object discovery for jvm languages
  */
-abstract class AbstractCodeObjectDiscovery {
+abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSpanDiscovery) {
+
 
 
     fun buildDocumentInfo(project: Project, psiFile: PsiFile): DocumentInfo {
@@ -28,18 +32,23 @@ abstract class AbstractCodeObjectDiscovery {
 
         val methodInfoMap = mutableMapOf<String, MethodInfo>()
 
-        collectMethods(project, fileUri, classes, packageName, methodInfoMap)
+        //all spans in file
+        val spans: Collection<SpanInfo> = spanDiscovery.discoverSpans(project, psiFile)
+
+        collectMethods(project, fileUri, classes, packageName, methodInfoMap, spans)
 
         return DocumentInfo(fileUri, methodInfoMap)
 
     }
 
+    //todo: fix inner classes
     private fun collectMethods(
         project: Project,
         fileUri: String,
         classes: List<UClass>,
         packageName: String,
         methodInfoMap: MutableMap<String, MethodInfo>,
+        spans: Collection<SpanInfo>,
     ) {
 
         classes.forEach { uClass ->
@@ -55,12 +64,15 @@ abstract class AbstractCodeObjectDiscovery {
                     val containingFileUri: String = fileUri
                     val offsetAtFileUri: Int = uMethod.sourcePsi?.textOffset ?: 0
                     val methodInfo = MethodInfo(id, name, containingClassName, containingNamespace, containingFileUri, offsetAtFileUri)
-                    //todo: span discovery
-                    methodInfo.addSpans(ArrayList())
+
+                    val methodSpans = spans.filter { spanInfo: SpanInfo -> spanInfo.containingMethodId == id }
+
+                    methodInfo.addSpans(methodSpans)
+
                     methodInfoMap[id] = methodInfo
                 }
 
-                collectMethods(project, fileUri, uClass.innerClasses.asList(), packageName, methodInfoMap)
+                collectMethods(project, fileUri, uClass.innerClasses.asList(), packageName, methodInfoMap, spans)
 
             }
         }

@@ -15,7 +15,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
-import org.digma.intellij.plugin.idea.build.JavaBuildSystem
+import org.digma.intellij.plugin.idea.buildsystem.JavaBuildSystem
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor

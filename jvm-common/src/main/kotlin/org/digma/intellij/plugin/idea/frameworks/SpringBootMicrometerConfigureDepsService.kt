@@ -15,8 +15,8 @@ import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
-import org.digma.intellij.plugin.idea.build.BuildSystemChecker.Companion.determineBuildSystem
-import org.digma.intellij.plugin.idea.build.JavaBuildSystem
+import org.digma.intellij.plugin.idea.buildsystem.BuildSystemChecker.Companion.determineBuildSystem
+import org.digma.intellij.plugin.idea.buildsystem.JavaBuildSystem
 import org.digma.intellij.plugin.idea.deps.ModuleExt
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
 import org.digma.intellij.plugin.log.Log

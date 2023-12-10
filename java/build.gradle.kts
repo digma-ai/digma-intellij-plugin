@@ -12,6 +12,7 @@ plugins {
 dependencies {
     compileOnly(project(":ide-common"))
     compileOnly(project(":model"))
+    compileOnly(project(":jvm-common"))
 }
 
 //java module should always build with IC

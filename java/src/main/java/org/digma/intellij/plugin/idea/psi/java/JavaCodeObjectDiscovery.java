@@ -14,6 +14,8 @@ import com.intellij.psi.search.searches.MethodReferencesSearch;
 import com.intellij.util.Query;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.digma.intellij.plugin.idea.psi.discovery.MicrometerTracingFramework;
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscoveryService;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
@@ -40,7 +42,7 @@ public class JavaCodeObjectDiscovery {
     private static final Logger LOGGER = Logger.getInstance(JavaCodeObjectDiscovery.class);
 
 
-    public static @NotNull DocumentInfo buildDocumentInfo(@NotNull Project project, @NotNull PsiJavaFile psiJavaFile, @NotNull List<EndpointDiscovery> endpointDiscoveryList) {
+    public static @NotNull DocumentInfo buildDocumentInfo(@NotNull Project project, @NotNull PsiJavaFile psiJavaFile) {
         var stopWatch = StopWatch.createStarted();
 
         try {
@@ -58,7 +60,7 @@ public class JavaCodeObjectDiscovery {
             buildDocumentInfo is always called in smart mode and so span discovery and endpoint discovery should work.
 
              */
-            enrichDocumentInfo(project, documentInfo, psiJavaFile, endpointDiscoveryList);
+            enrichDocumentInfo(project, documentInfo, psiJavaFile);
             return documentInfo;
 
         } finally {
@@ -116,7 +118,7 @@ public class JavaCodeObjectDiscovery {
     }
 
 
-    private static void enrichDocumentInfo(Project project, @NotNull DocumentInfo documentInfo, @NotNull PsiFile psiFile, @NotNull List<EndpointDiscovery> endpointDiscoveryList) {
+    private static void enrichDocumentInfo(Project project, @NotNull DocumentInfo documentInfo, @NotNull PsiFile psiFile) {
         /*
         need to make sure that spans and endpoints are cleared here.
         why?
@@ -130,7 +132,7 @@ public class JavaCodeObjectDiscovery {
         });
 
         spanDiscovery(project, psiFile, documentInfo);
-        endpointDiscovery(psiFile, documentInfo, endpointDiscoveryList);
+        endpointDiscovery(project, psiFile, documentInfo);
     }
 
     private static void spanDiscovery(@NotNull Project project, @NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
@@ -142,9 +144,11 @@ public class JavaCodeObjectDiscovery {
         micrometerTracingFramework.annotationSpanDiscovery(project, psiFile, documentInfo);
     }
 
-    private static void endpointDiscovery(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo, @NotNull List<EndpointDiscovery> endpointDiscoveryList) {
+    private static void endpointDiscovery(@NotNull Project project, @NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
         Log.log(LOGGER::debug, "Building endpoints for file {}", psiFile);
-        endpointDiscoveryList.forEach(it -> it.endpointDiscovery(psiFile, documentInfo));
+
+        EndpointDiscoveryService.getInstance(project)
+                .getEndpointDiscoveryList().forEach(it -> it.endpointDiscovery(psiFile, documentInfo));
     }
 
 

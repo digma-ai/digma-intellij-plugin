@@ -44,6 +44,7 @@ import org.digma.intellij.plugin.idea.build.BuildSystemChecker;
 import org.digma.intellij.plugin.idea.build.JavaBuildSystem;
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService;
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService;
+import org.digma.intellij.plugin.idea.psi.discovery.MicrometerTracingFramework;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
@@ -74,11 +75,6 @@ public class JavaLanguageService implements LanguageService {
 
     private final ProjectFileIndex projectFileIndex;
 
-    private final MicronautFramework micronautFramework;
-    private final GrpcFramework grpcFramework;
-    private final SpringBootFramework springBootFramework;
-    private final List<EndpointDiscovery> endpointDiscoveryList;
-
     private static final String OtelDependencyVersion = "1.26.0";
     private static final UnifiedCoordinates OtelCoordinates = new UnifiedCoordinates("io.opentelemetry.instrumentation", "opentelemetry-instrumentation-annotations", OtelDependencyVersion);
     private static final ImmutableMap<JavaBuildSystem, UnifiedDependency> MapBuildSystem2Dependency;
@@ -98,17 +94,9 @@ public class JavaLanguageService implements LanguageService {
     public JavaLanguageService(Project project) {
         this.project = project;
         this.projectFileIndex = project.getService(ProjectFileIndex.class);
-        this.micronautFramework = new MicronautFramework(project);
-        var jaxrsJavaxFramework = new JaxrsJavaxFramework(project);
-        var jaxrsJakartaFramework = new JaxrsJakartaFramework(project);
-        this.grpcFramework = new GrpcFramework(project);
-        this.springBootFramework = new SpringBootFramework(project);
-        this.endpointDiscoveryList = List.of(micronautFramework, jaxrsJavaxFramework, jaxrsJakartaFramework, grpcFramework, springBootFramework);
+
     }
 
-    public List<EndpointDiscovery> getListOfEndpointDiscovery() {
-        return endpointDiscoveryList;
-    }
 
     @Override
     public void ensureStartupOnEDT(@NotNull Project project) {
@@ -610,7 +598,7 @@ public class JavaLanguageService implements LanguageService {
 
             return ProgressManager.getInstance().runProcess(() ->
                     Retries.retryWithResult(() -> ReadAction.compute(() ->
-                                    JavaCodeObjectDiscovery.buildDocumentInfo(project, psiJavaFile, endpointDiscoveryList)),
+                                    JavaCodeObjectDiscovery.buildDocumentInfo(project, psiJavaFile)),
                     Throwable.class,50,5),new EmptyProgressIndicator());
 
         } else {

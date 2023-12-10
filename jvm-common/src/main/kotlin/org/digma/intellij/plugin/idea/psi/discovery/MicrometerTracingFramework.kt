@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.idea.psi.java
+package org.digma.intellij.plugin.idea.psi.discovery
 
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
@@ -9,6 +9,7 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.searches.AnnotatedElementsSearch
 import com.intellij.psi.util.PsiTreeUtil
 import org.digma.intellij.plugin.common.StringUtils
+import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.SpanInfo
@@ -87,7 +88,7 @@ class MicrometerTracingFramework(val project: Project) {
         //maybe the annotation is not in the classpath
         if (newSpanClass != null) {
             var psiMethods = AnnotatedElementsSearch.searchPsiMethods(newSpanClass, GlobalSearchScope.fileScope(psiFile))
-            psiMethods = JavaSpanDiscoveryUtils.filterNonRelevantMethodsForSpanDiscovery(psiMethods)
+//            psiMethods = JavaSpanDiscoveryUtils.filterNonRelevantMethodsForSpanDiscovery(psiMethods)
             for (it in psiMethods) {
                 val spanInfo = getSpanInfoFromNewSpanAnnotatedMethod(it)
                 if (spanInfo != null) {
@@ -106,7 +107,7 @@ class MicrometerTracingFramework(val project: Project) {
             // TODO: search for classes/interfaces that are annotated with OBSERVED_FQN and even child classes
 
             var psiMethods = AnnotatedElementsSearch.searchPsiMethods(observedAnnotationClass, GlobalSearchScope.fileScope(psiFile))
-            psiMethods = JavaSpanDiscoveryUtils.filterNonRelevantMethodsForSpanDiscovery(psiMethods)
+//            psiMethods = JavaSpanDiscoveryUtils.filterNonRelevantMethodsForSpanDiscovery(psiMethods)
             for (it in psiMethods) {
                 val spanInfo = getSpanInfoFromObservedAnnotatedMethod(it)
                 if (spanInfo != null) {

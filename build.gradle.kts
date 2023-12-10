@@ -1,5 +1,3 @@
-import common.BuildProfiles
-import common.IdeFlavor
 import common.buildVersion
 import common.dynamicPlatformType
 import common.logBuildProfile
@@ -57,7 +55,7 @@ dependencies {
     implementation(project(":analytics-provider"))
 
     implementation(project(":ide-common"))
-    implementation(project(":jvm-common")) //maybe not required here because its transitive?
+    implementation(project(":jvm-common"))
     implementation(project(":java"))
     implementation(project(":kotlin"))
     implementation(project(":python"))

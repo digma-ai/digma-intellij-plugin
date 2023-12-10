@@ -3,7 +3,9 @@ package org.digma.intellij.plugin.idea.psi.discovery
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import org.digma.intellij.plugin.idea.psi.createMethodCodeObjectId
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscoveryService
 import org.digma.intellij.plugin.idea.psi.discovery.span.AbstractSpanDiscovery
+import org.digma.intellij.plugin.idea.psi.java.EndpointDiscovery
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.SpanInfo
@@ -12,6 +14,7 @@ import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.toUElementOfType
+import java.util.function.Consumer
 
 /**
  * code object discovery for jvm languages
@@ -37,8 +40,24 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
 
         collectMethods(project, fileUri, classes, packageName, methodInfoMap, spans)
 
-        return DocumentInfo(fileUri, methodInfoMap)
+        val documentInfo = DocumentInfo(fileUri, methodInfoMap)
 
+
+        EndpointDiscoveryService.getInstance(project)
+            .endpointDiscoveryList.forEach(Consumer { it: EndpointDiscovery ->
+                it.endpointDiscovery(
+                    psiFile,
+                    documentInfo
+                )
+            })
+
+        val micrometerTracingFramework = MicrometerTracingFramework(project)
+        micrometerTracingFramework.annotationSpanDiscovery(project, psiFile, documentInfo)
+
+
+
+
+        return documentInfo
     }
 
     //todo: fix inner classes

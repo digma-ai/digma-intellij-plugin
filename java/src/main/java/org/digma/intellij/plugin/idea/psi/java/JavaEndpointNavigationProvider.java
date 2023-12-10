@@ -6,9 +6,6 @@ import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
-import com.intellij.openapi.progress.EmptyProgressIndicator;
-import com.intellij.openapi.progress.ProgressManager;
-import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
@@ -20,6 +17,7 @@ import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.Retries;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscoveryService;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;
@@ -107,8 +105,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
 
     private void buildEndpointAnnotations(@NotNull Supplier<SearchScope> searchScopeSupplier) {
 
-        var javaLanguageService = project.getService(JavaLanguageService.class);
-        var endpointDiscoveries = javaLanguageService.getListOfEndpointDiscovery();
+        var endpointDiscoveries = EndpointDiscoveryService.getInstance(project).getEndpointDiscoveryList();
 
         endpointDiscoveries.forEach(endpointDiscovery -> {
             try {
@@ -129,8 +126,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
         final PsiFile psiFile = ReadAction.compute(() -> PsiManager.getInstance(project).findFile(virtualFile));
         if (psiFile == null) return; // very unlikely
 
-        var javaLanguageService = project.getService(JavaLanguageService.class);
-        var endpointDiscoveries = javaLanguageService.getListOfEndpointDiscovery();
+        var endpointDiscoveries = EndpointDiscoveryService.getInstance(project).getEndpointDiscoveryList();
 
         endpointDiscoveries.forEach(endpointDiscovery -> {
 

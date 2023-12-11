@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.212] - 2023-12-07
+## [2.0.213] - 2023-12-11
+- Update Recent Activity UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1466
+
+## 2.0.212 - 2023-12-07
 - Feature/support mockito and OTEL by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1464
 
 ## 2.0.211 - 2023-12-06

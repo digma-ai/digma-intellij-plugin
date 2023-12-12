@@ -1,6 +1,12 @@
 # Changelog
 
-## [2.0.213] - 2023-12-11
+## [2.0.214] - 2023-12-12
+- Feature/spring boot micrometer tracing - support add env by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1470
+- add environmentType to RECENT_ACTIVITY/REGISTER by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1477
+- search query in quotes and don't send from recent activity Closes #1445 Closes #1443 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1469
+- Update Recent Activity UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1478
+
+## 2.0.213 - 2023-12-11
 - Update Recent Activity UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1466
 
 ## 2.0.212 - 2023-12-07

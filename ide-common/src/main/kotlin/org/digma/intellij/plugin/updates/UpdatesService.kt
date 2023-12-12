@@ -38,6 +38,7 @@ class UpdatesService(private val project: Project) : Disposable {
 
         @JvmStatic
         fun getInstance(project: Project): UpdatesService {
+            logger.warn("Getting instance of ${UpdatesService::class.simpleName}")
             return project.getService(UpdatesService::class.java)
         }
     }

@@ -17,7 +17,7 @@ public class LanguageServiceLocator {
 
     private final Project project;
 
-    private final Cache cache = new Cache();
+    public final Cache cache = new Cache();
 
     public LanguageServiceLocator(Project project) {
         this.project = project;

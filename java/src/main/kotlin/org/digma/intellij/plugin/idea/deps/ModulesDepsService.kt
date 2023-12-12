@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.idea.deps
 
 import com.intellij.buildsystem.model.unified.UnifiedCoordinates
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.Project
@@ -11,6 +12,7 @@ import com.intellij.openapi.startup.StartupActivity
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredFramework
+import org.digma.intellij.plugin.log.Log
 import org.jetbrains.annotations.NotNull
 import java.util.Timer
 import java.util.TimerTask

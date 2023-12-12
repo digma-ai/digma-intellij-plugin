@@ -1,8 +1,11 @@
 package org.digma.intellij.plugin.ui;
 
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
+import org.digma.intellij.plugin.service.EditorService;
 
 /**
  * CaretContextService is an orchestration service that handles a context change. context change is when the cursor is

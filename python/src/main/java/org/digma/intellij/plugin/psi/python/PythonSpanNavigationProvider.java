@@ -59,6 +59,7 @@ public class PythonSpanNavigationProvider implements Disposable {
 
 
     public static PythonSpanNavigationProvider getInstance(Project project) {
+        Log.log(LOGGER::warn, "Getting instance of " + PythonSpanNavigationProvider.class.getSimpleName());
         return project.getService(PythonSpanNavigationProvider.class);
     }
 

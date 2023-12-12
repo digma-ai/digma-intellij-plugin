@@ -212,6 +212,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
         Backgroundable.ensurePooledThread(() -> withUpdateLock(() -> {
 
             Log.log(logger::debug, "updateInsightsModel to {}. ", codeLessSpan);
+            Log.test(logger::info, "updateInsightsModel to {}. ", codeLessSpan);
 
             model.clearProperties();
 
@@ -549,6 +550,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
     @Override
     public void showInsight(@NotNull String spanId) {
         Log.log(logger::debug, project, "showInsight called {}", spanId);
+        Log.test(logger::info, "showInsight called {}", spanId);
         project.getService(InsightsViewOrchestrator.class).showInsightsForCodelessSpan(spanId);
     }
 

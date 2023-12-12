@@ -38,12 +38,16 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
         val DatasourceMicrometerSpringBoot = UnifiedCoordinates("net.ttddyy.observation", "datasource-micrometer-spring-boot", "1.0.2")
         val OtelExporterOtlpCoordinates = UnifiedCoordinates("io.opentelemetry", "opentelemetry-exporter-otlp", "1.26.0")
         val DigmaSpringBootMicrometerAutoconfCoordinates =
-            UnifiedCoordinates("io.github.digma-ai", "digma-spring-boot-micrometer-tracing-autoconf", "0.7.4")
+            UnifiedCoordinates("io.github.digma-ai", "digma-spring-boot-micrometer-tracing-autoconf", "0.7.7")
 
         @JvmStatic
         fun getInstance(project: Project): SpringBootMicrometerConfigureDepsService {
             return project.getService(SpringBootMicrometerConfigureDepsService::class.java)
         }
+
+        @JvmStatic
+        fun isSpringBootWithMicrometer(): Boolean =
+            SettingsState.getInstance().springBootObservabilityMode == SpringBootObservabilityMode.Micrometer
 
         fun getSpringBootStarterActuatorDependency(javaBuildSystem: JavaBuildSystem, springBootVersion: String): UnifiedDependency {
             val libCoordinates = UnifiedCoordinates("org.springframework.boot", "spring-boot-starter-actuator", springBootVersion)
@@ -196,9 +200,6 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
 
         return stateHasSpringBootModulesWithoutObservability.get()
     }
-
-    fun isSpringBootWithMicrometer(): Boolean =
-        SettingsState.getInstance().springBootObservabilityMode == SpringBootObservabilityMode.Micrometer
 
     fun buttonClicked() {
         // start blackout time that panel won't be display

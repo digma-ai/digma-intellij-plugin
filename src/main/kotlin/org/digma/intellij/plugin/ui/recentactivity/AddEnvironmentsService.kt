@@ -3,17 +3,21 @@ package org.digma.intellij.plugin.ui.recentactivity
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.util.StdDateFormat
 import com.intellij.execution.CommonProgramRunConfigurationParameters
 import com.intellij.execution.RunManager
 import com.intellij.execution.configuration.AbstractRunConfiguration
+import com.intellij.execution.configurations.ModuleBasedConfiguration
+import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunConfiguration
 import com.intellij.openapi.project.Project
+import kotlinx.collections.immutable.toImmutableMap
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.idea.deps.ModulesDepsService
+import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.ui.recentactivity.model.AdditionToConfigResult
@@ -106,7 +110,6 @@ class AddEnvironmentsService {
     }
 
 
-
     private fun flush() {
         try {
             Log.log(logger::info, "flushing environments {}", pendingEnvironments)
@@ -166,6 +169,19 @@ class AddEnvironmentsService {
         return result
     }
 
+    private fun isSpringBootWithMicroMeter(project: Project, selectedRunConfig: RunConfiguration): Boolean {
+        if (SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer()) {
+            if (selectedRunConfig is ModuleBasedConfiguration<*, *>) {
+                var isSpringBootModule = false
+                selectedRunConfig.configurationModule.module?.let { module ->
+                    val modulesDepsService = ModulesDepsService.getInstance(project)
+                    isSpringBootModule = modulesDepsService.isSpringBootModule(module)
+                }
+                return isSpringBootModule
+            }
+        }
+        return false
+    }
 
     private fun addToCurrentRunConfigImpl(project: Project, environment: String): Boolean {
 
@@ -179,46 +195,36 @@ class AddEnvironmentsService {
 
         Log.log(logger::info, "found selected configuration {} type {}", config.name, config.type)
 
+        var envVarKey = "OTEL_RESOURCE_ATTRIBUTES"
+        var envVarValue = "digma.environment=$environment"
+        if (isSpringBootWithMicroMeter(project, config)) {
+            // note: digma_environment contains underscore on purpose - spring will transform it to digma.environment (underscore becomes dot)
+            envVarKey = "MANAGEMENT_OPENTELEMETRY_RESOURCE-ATTRIBUTES_digma_environment"
+            envVarValue = environment
+        }
+
         return when (config) {
             is CommonProgramRunConfigurationParameters -> {
                 Log.log(logger::info, "adding environment to configuration {}", config.name)
-                try {
-                    config.envs["OTEL_RESOURCE_ATTRIBUTES"] = "digma.environment=$environment"
-                } catch (e: Exception) {
-                    Log.log(logger::info, "failed adding environment to configuration {},{}, trying to replace map", config.name, e)
-                    val map = mutableMapOf<String, String>()
-                    map.putAll(config.envs)
-                    addEnvToMap(map, environment)
-                    config.envs = map
-                }
+                config.envs = config.envs.toImmutableMap()
+                config.envs[envVarKey] = envVarValue
+
                 true
             }
 
             is ExternalSystemRunConfiguration -> {
                 Log.log(logger::info, "adding environment to configuration {}", config.name)
-                try {
-                    config.settings.env["OTEL_RESOURCE_ATTRIBUTES"] = "digma.environment=$environment"
-                } catch (e: Exception) {
-                    Log.log(logger::info, "failed adding environment to configuration {},{}, trying to replace map", config.name, e)
-                    val map = mutableMapOf<String, String>()
-                    map.putAll(config.settings.env)
-                    addEnvToMap(map, environment)
-                    config.settings.env = map
-                }
+                config.settings.env = config.settings.env.toImmutableMap()
+                config.settings.env[envVarKey] = envVarValue
+
                 true
             }
 
             is AbstractRunConfiguration -> {
                 Log.log(logger::info, "adding environment to configuration {}", config.name)
-                try {
-                    config.envs["OTEL_RESOURCE_ATTRIBUTES"] = "digma.environment=$environment"
-                } catch (e: Exception) {
-                    Log.log(logger::info, "failed adding environment to configuration {},{}, trying to replace map", config.name, e)
-                    val map = mutableMapOf<String, String>()
-                    map.putAll(config.envs)
-                    addEnvToMap(map, environment)
-                    config.envs = map
-                }
+                config.envs = config.envs.toImmutableMap()
+                config.envs[envVarKey] = envVarValue
+
                 true
             }
 
@@ -232,6 +238,5 @@ class AddEnvironmentsService {
     private fun addEnvToMap(map: MutableMap<String, String>, environment: String) {
         map["OTEL_RESOURCE_ATTRIBUTES"] = "digma.environment=$environment"
     }
-
 
 }

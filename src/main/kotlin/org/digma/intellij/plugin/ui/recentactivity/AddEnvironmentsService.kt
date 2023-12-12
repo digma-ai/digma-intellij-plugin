@@ -13,6 +13,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunConfiguration
 import com.intellij.openapi.project.Project
+import kotlinx.collections.immutable.toImmutableMap
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
@@ -200,43 +201,25 @@ class AddEnvironmentsService {
         return when (config) {
             is CommonProgramRunConfigurationParameters -> {
                 Log.log(logger::info, "adding environment to configuration {}", config.name)
-                try {
-                    config.envs["OTEL_RESOURCE_ATTRIBUTES"] = "digma.environment=$environment"
-                } catch (e: Exception) {
-                    Log.log(logger::info, "failed adding environment to configuration {},{}, trying to replace map", config.name, e)
-                    val map = mutableMapOf<String, String>()
-                    map.putAll(config.envs)
-                    addEnvToMap(map, environment)
-                    config.envs = map
-                }
+                config.envs = config.envs.toImmutableMap()
+                config.envs[envVarKey] = envVarValue
+
                 true
             }
 
             is ExternalSystemRunConfiguration -> {
                 Log.log(logger::info, "adding environment to configuration {}", config.name)
-                try {
-                    config.settings.env["OTEL_RESOURCE_ATTRIBUTES"] = "digma.environment=$environment"
-                } catch (e: Exception) {
-                    Log.log(logger::info, "failed adding environment to configuration {},{}, trying to replace map", config.name, e)
-                    val map = mutableMapOf<String, String>()
-                    map.putAll(config.settings.env)
-                    addEnvToMap(map, environment)
-                    config.settings.env = map
-                }
+                config.settings.env = config.settings.env.toImmutableMap()
+                config.settings.env[envVarKey] = envVarValue
+
                 true
             }
 
             is AbstractRunConfiguration -> {
                 Log.log(logger::info, "adding environment to configuration {}", config.name)
-                try {
-                    config.envs["OTEL_RESOURCE_ATTRIBUTES"] = "digma.environment=$environment"
-                } catch (e: Exception) {
-                    Log.log(logger::info, "failed adding environment to configuration {},{}, trying to replace map", config.name, e)
-                    val map = mutableMapOf<String, String>()
-                    map.putAll(config.envs)
-                    addEnvToMap(map, environment)
-                    config.envs = map
-                }
+                config.envs = config.envs.toImmutableMap()
+                config.envs[envVarKey] = envVarValue
+
                 true
             }
 

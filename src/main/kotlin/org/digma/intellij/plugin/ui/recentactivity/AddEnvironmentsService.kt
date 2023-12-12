@@ -8,6 +8,7 @@ import com.intellij.execution.CommonProgramRunConfigurationParameters
 import com.intellij.execution.RunManager
 import com.intellij.execution.configuration.AbstractRunConfiguration
 import com.intellij.execution.configurations.ModuleBasedConfiguration
+import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
@@ -168,6 +169,19 @@ class AddEnvironmentsService {
         return result
     }
 
+    private fun isSpringBootWithMicroMeter(project: Project, selectedRunConfig: RunConfiguration): Boolean {
+        if (SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer()) {
+            if (selectedRunConfig is ModuleBasedConfiguration<*, *>) {
+                var isSpringBootModule = false
+                selectedRunConfig.configurationModule.module?.let { module ->
+                    val modulesDepsService = ModulesDepsService.getInstance(project)
+                    isSpringBootModule = modulesDepsService.isSpringBootModule(module)
+                }
+                return isSpringBootModule
+            }
+        }
+        return false
+    }
 
     private fun addToCurrentRunConfigImpl(project: Project, environment: String): Boolean {
 
@@ -183,19 +197,10 @@ class AddEnvironmentsService {
 
         var envVarKey = "OTEL_RESOURCE_ATTRIBUTES"
         var envVarValue = "digma.environment=$environment"
-        if (config is ModuleBasedConfiguration<*, *>) {
-            println("DBG: config is ModuleBasedConfiguration, module name: ${config.configurationModule.moduleName}")
-            if (SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer()) {
-                var isSpringBootModule = false
-                config.configurationModule.module?.let { module ->
-                    val modulesDepsService = ModulesDepsService.getInstance(project)
-                    isSpringBootModule = modulesDepsService.isSpringBootModule(module)
-                }
-                if (isSpringBootModule) {
-                    envVarKey = "MANAGEMENT_OPENTELEMETRY_RESOURCE-ATTRIBUTES_digma_environment"
-                    envVarValue = environment
-                }
-            }
+        if (isSpringBootWithMicroMeter(project, config)) {
+            // note: digma_environment contains underscore on purpose - spring will transform it to digma.environment (underscore becomes dot)
+            envVarKey = "MANAGEMENT_OPENTELEMETRY_RESOURCE-ATTRIBUTES_digma_environment"
+            envVarValue = environment
         }
 
         return when (config) {

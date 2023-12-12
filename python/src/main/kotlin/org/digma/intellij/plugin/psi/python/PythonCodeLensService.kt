@@ -15,10 +15,8 @@ import org.digma.intellij.plugin.ui.service.InsightsViewService
 class PythonCodeLensService(project: Project): AbstractCodeLensService(project) {
 
      companion object {
-         private val logger = Logger.getInstance(PythonCodeLensService::class.java)
          @JvmStatic
         fun getInstance(project: Project): PythonCodeLensService {
-            logger.warn("Getting instance of ${PythonCodeLensService::class.simpleName}")
             return project.getService(PythonCodeLensService::class.java)
         }
     }

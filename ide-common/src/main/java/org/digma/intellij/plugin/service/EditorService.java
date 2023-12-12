@@ -36,7 +36,7 @@ public class EditorService implements Disposable {
     public static final String STACKTRACE_PREFIX = "digma-stacktrace";
     public static final String VCS_PREFIX = "digma-vcs";
 
-    private static final Logger LOGGER = Logger.getInstance(EditorService.class);
+    private final Logger LOGGER = Logger.getInstance(EditorService.class);
 
     private final Project project;
 
@@ -49,7 +49,6 @@ public class EditorService implements Disposable {
     }
 
     public static EditorService getInstance(Project project) {
-        Log.log(LOGGER::warn, "Getting instance of " + EditorService.class.getSimpleName());
         return project.getService(EditorService.class);
     }
 

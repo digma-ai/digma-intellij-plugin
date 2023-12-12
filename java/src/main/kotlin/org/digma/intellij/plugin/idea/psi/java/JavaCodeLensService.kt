@@ -2,20 +2,18 @@ package org.digma.intellij.plugin.idea.psi.java
 
 import com.intellij.codeInsight.hints.InlayHintsUtils
 import com.intellij.openapi.application.ReadAction
-import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
-import com.intellij.psi.*
-import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiMethod
+import com.intellij.psi.SyntaxTraverser
 import org.digma.intellij.plugin.codelens.AbstractCodeLensService
-import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
-import org.digma.intellij.plugin.posthog.ActivityMonitor
 
 
 class JavaCodeLensService(project: Project): AbstractCodeLensService(project) {
 
     companion object {
-        private val logger = Logger.getInstance(JavaCodeLensService::class.java)
         @JvmStatic
         fun getInstance(project: Project): JavaCodeLensService {
             return project.getService(JavaCodeLensService::class.java)

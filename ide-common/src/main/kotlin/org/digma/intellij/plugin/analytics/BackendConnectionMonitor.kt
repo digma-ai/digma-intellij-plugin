@@ -38,14 +38,15 @@ class BackendConnectionMonitor(val project: Project) : Disposable, AnalyticsServ
     }
 
     fun isConnectionError(): Boolean {
+        // In the unit test mode, there is no real connection to the backend, and we cannot mock it either because it's a light service.
+        // So in order for the unit test to successfully run we need to return that there is no connection error.
         return if (ApplicationManager.getApplication().isUnitTestMode) false else hasConnectionError
-//        return hasConnectionError // this is the real implementation
-        
     }
 
     fun isConnectionOk(): Boolean {
+        // In the unit test mode, there is no real connection to the backend, and we cannot mock it either because it's a light service.
+        // So in order for the unit test to successfully run we need to return that the connection is ok.
         return if (ApplicationManager.getApplication().isUnitTestMode) true else !hasConnectionError
-//        return !hasConnectionError  // this is the real implementation
     }
  
     private fun connectionError() {

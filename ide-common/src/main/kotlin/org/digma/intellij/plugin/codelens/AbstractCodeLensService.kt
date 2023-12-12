@@ -57,13 +57,13 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
     init {
 
         DumbService.getInstance(project).runWhenSmart {
-            Log.test(logger::info,"runWhenSmart invoked, restarting DaemonCodeAnalyzer")
+            Log.log(logger::debug,"runWhenSmart invoked, restarting DaemonCodeAnalyzer")
             restartAll()
         }
 
         documentInfoChangedConnection.subscribe(DocumentInfoChanged.DOCUMENT_INFO_CHANGED_TOPIC,DocumentInfoChanged { psiFile: PsiFile ->
             val psiUri = PsiUtils.psiFileToUri(psiFile)
-            Log.test(logger::info, "got documentInfoChanged, restarting DaemonCodeAnalyzer for {}", psiUri)
+            Log.log(logger::debug, "got documentInfoChanged, restarting DaemonCodeAnalyzer for {}", psiUri)
             codeLensCache.remove(PsiUtils.psiFileToUri(psiFile))
             //restartFile(psiFile)
             restartAll()
@@ -132,7 +132,6 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
 
     @Suppress("UNUSED_PARAMETER")
     fun environmentChanged(newEnv: String) {
-        Log.test(logger::info,"got environmentChanged, restarting DaemonCodeAnalyzer")
         restartAll()
     }
 
@@ -147,7 +146,6 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
         // try to find a replacement for CodeVisionPassFactory.clearModificationStamp and refresh only one by one.
 
         if(project.isDisposed){
-            Log.test(logger::info, "Project already disposed")
             return
         }
 

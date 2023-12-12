@@ -30,7 +30,7 @@ import static com.intellij.util.net.NetUtils.isLocalhost;
 public class SettingsState implements PersistentStateComponent<SettingsState>, Disposable {
 
     public static final String DEFAULT_API_URL = "https://localhost:5051";
-    public static final int DEFAULT_REFRESH_DELAY = 1; // 10; // is the real implementation
+    public static final int DEFAULT_REFRESH_DELAY = ApplicationManager.getApplication().isUnitTestMode() ? 1 : 10; // when the delay is 10 seconds it, the test will get a timeout on the start of the system test.
     public static final String DEFAULT_JAEGER_URL = "http://localhost:16686";
     public static final String DEFAULT_JAEGER_QUERY_URL = "http://localhost:17686";
     public static final LinkMode DEFAULT_JAEGER_LINK_MODE = LinkMode.Embedded;

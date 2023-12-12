@@ -257,20 +257,16 @@ public class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter
                       boolean canInstrumentMethod,
                       boolean needsObservabilityFix) {
         
-        Log.test(LOGGER::info, "pushing insights to webview");
 
         var payload = new InsightsPayload(insights, spans, assetId, serviceName, environment, uiInsightsStatus, viewMode, methods, hasMissingDependency, canInstrumentMethod, needsObservabilityFix);
 
 
         var message = new SetInsightsDataMessage("digma", "INSIGHTS/SET_DATA", payload);
         Log.log(LOGGER::debug, project, "sending INSIGHTS/SET_DATA message");
-        Log.test(LOGGER::info, "sending INSIGHTS/SET_DATA message");
         try {
-//            JCefBrowserUtil.postJSMessage(objectMapper.writeValueAsString(message), jbCefBrowser);
-            CefBrowser brow = jbCefBrowser.getCefBrowser();
-                    brow.executeJavaScript(
+            jbCefBrowser.getCefBrowser().executeJavaScript(
                     "window.postMessage(" + objectMapper.writeValueAsString(message) + ");",
-                    brow.getURL(),
+                    jbCefBrowser.getCefBrowser().getURL(),
                     0);
         } catch (JsonProcessingException e) {
             Log.warnWithException(LOGGER, project, e, "Error sending message to webview");
@@ -282,11 +278,9 @@ public class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter
 
         var message = new SetInsightsDataMessage("digma", "INSIGHTS/SET_DATA", InsightsPayload.EMPTY_INSIGHTS);
         try {
-            CefBrowser brow = jbCefBrowser.getCefBrowser();
-            String url = brow.getURL();
-            brow.executeJavaScript(
+            jbCefBrowser.getCefBrowser().executeJavaScript(
                     "window.postMessage(" + objectMapper.writeValueAsString(message) + ");",
-                    url,
+                    jbCefBrowser.getCefBrowser().getURL(),
                     0);
         } catch (JsonProcessingException e) {
             Log.warnWithException(LOGGER, project, e, "Error sending message to webview");

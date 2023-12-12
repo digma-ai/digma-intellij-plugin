@@ -19,6 +19,7 @@ public class JaegerUIVirtualFile extends LightVirtualFile implements DigmaVirtua
     private List<TraceSample> traceSamples;
     private String spanName;
     private String spanCodeObjectId;
+    private boolean sendSearchQuery = true;
 
     public JaegerUIVirtualFile(String myTitle) {
         super(myTitle);
@@ -32,23 +33,25 @@ public class JaegerUIVirtualFile extends LightVirtualFile implements DigmaVirtua
     }
 
     @NotNull
-    public static VirtualFile createVirtualFile(@NotNull String jaegerBaseUrl, @NotNull String traceId, String spanName, @Nullable String spanCodeObjectId) {
+    public static VirtualFile createVirtualFile(@NotNull String jaegerBaseUrl, @NotNull String traceId, String spanName, @Nullable String spanCodeObjectId, boolean sendSearchQuery) {
         var file = new JaegerUIVirtualFile(spanName);
         file.setJaegerBaseUrl(jaegerBaseUrl);
         file.setTraceId(traceId);
         file.setSpanName(spanName);
         file.setSpanCodeObjectId(spanCodeObjectId);
+        file.setSendSearchQuery(sendSearchQuery);
         JAEGER_UI_EDITOR_KEY.set(file, JaegerUIFileEditorProvider.JAEGER_UI_EDITOR_TYPE);
         return file;
     }
 
 
-    public static VirtualFile createVirtualFile(String jaegerBaseUrl, @NotNull List<TraceSample> traceSamples, @NotNull String spanName, @Nullable String spanCodeObjectId) {
+    public static VirtualFile createVirtualFile(String jaegerBaseUrl, @NotNull List<TraceSample> traceSamples, @NotNull String spanName, @Nullable String spanCodeObjectId, boolean sendSearchQuery) {
         var file = new JaegerUIVirtualFile(spanName);
         file.setJaegerBaseUrl(jaegerBaseUrl);
         file.setTraceSamples(traceSamples);
         file.setSpanName(spanName);
         file.setSpanCodeObjectId(spanCodeObjectId);
+        file.setSendSearchQuery(sendSearchQuery);
         JAEGER_UI_EDITOR_KEY.set(file, JaegerUIFileEditorProvider.JAEGER_UI_EDITOR_TYPE);
         return file;
     }
@@ -92,5 +95,13 @@ public class JaegerUIVirtualFile extends LightVirtualFile implements DigmaVirtua
 
     public void setSpanCodeObjectId(@Nullable String spanCodeObjectId) {
         this.spanCodeObjectId = spanCodeObjectId;
+    }
+
+    public boolean isSendSearchQuery() {
+        return sendSearchQuery;
+    }
+
+    public void setSendSearchQuery(boolean sendSearchQuery) {
+        this.sendSearchQuery = sendSearchQuery;
     }
 }

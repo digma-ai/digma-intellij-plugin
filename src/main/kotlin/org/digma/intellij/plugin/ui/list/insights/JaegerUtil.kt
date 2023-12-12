@@ -76,7 +76,7 @@ fun buildButtonToJaeger(
                 }
             }
             LinkMode.Embedded -> {
-                JaegerUIService.getInstance(project).openEmbeddedJaeger(filteredTraces, spanName, null)
+                JaegerUIService.getInstance(project).openEmbeddedJaeger(filteredTraces, spanName, null, true)
             }
         }
     }
@@ -136,7 +136,7 @@ fun openJaegerFromRecentActivity(
         }
 
         LinkMode.Embedded -> {
-            JaegerUIService.getInstance(project).openEmbeddedJaeger(traceId, spanName, spanCodeObjectId)
+            JaegerUIService.getInstance(project).openEmbeddedJaeger(traceId, spanName, spanCodeObjectId, false)
         }
     }
 
@@ -193,7 +193,7 @@ fun openJaegerFromInsight(
 
         LinkMode.Embedded -> {
             val traceSample = TraceSample(traceName, traceId);
-            JaegerUIService.getInstance(project).openEmbeddedJaeger(Collections.singletonList(traceSample), traceName, spanCodeObjectId)
+            JaegerUIService.getInstance(project).openEmbeddedJaeger(Collections.singletonList(traceSample), traceName, spanCodeObjectId, true)
         }
     }
 }
@@ -243,7 +243,7 @@ fun openJaegerComparisonFromInsight(
             val traceSample1 = TraceSample(traceName1, traceId1);
             val traceSample2 = TraceSample(traceName2, traceId2);
             val traces = listOf(traceSample1, traceSample2)
-            JaegerUIService.getInstance(project).openEmbeddedJaeger(traces, traceName1, null)
+            JaegerUIService.getInstance(project).openEmbeddedJaeger(traces, traceName1, null, true)
         }
     }
 }

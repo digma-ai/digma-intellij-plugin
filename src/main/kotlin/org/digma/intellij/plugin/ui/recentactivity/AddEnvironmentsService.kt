@@ -3,17 +3,19 @@ package org.digma.intellij.plugin.ui.recentactivity
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.util.StdDateFormat
 import com.intellij.execution.CommonProgramRunConfigurationParameters
 import com.intellij.execution.RunManager
 import com.intellij.execution.configuration.AbstractRunConfiguration
+import com.intellij.execution.configurations.ModuleBasedConfiguration
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunConfiguration
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.idea.deps.ModulesDepsService
+import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.ui.recentactivity.model.AdditionToConfigResult
@@ -106,7 +108,6 @@ class AddEnvironmentsService {
     }
 
 
-
     private fun flush() {
         try {
             Log.log(logger::info, "flushing environments {}", pendingEnvironments)
@@ -179,6 +180,23 @@ class AddEnvironmentsService {
 
         Log.log(logger::info, "found selected configuration {} type {}", config.name, config.type)
 
+        var envVarKey = "OTEL_RESOURCE_ATTRIBUTES"
+        var envVarValue = "digma.environment=$environment"
+        if (config is ModuleBasedConfiguration<*, *>) {
+            println("DBG: config is ModuleBasedConfiguration, module name: ${config.configurationModule.moduleName}")
+            if (SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer()) {
+                var isSpringBootModule = false
+                config.configurationModule.module?.let { module ->
+                    val modulesDepsService = ModulesDepsService.getInstance(project)
+                    isSpringBootModule = modulesDepsService.isSpringBootModule(module)
+                }
+                if (isSpringBootModule) {
+                    envVarKey = "MANAGEMENT_OPENTELEMETRY_RESOURCE-ATTRIBUTES_digma_environment"
+                    envVarValue = environment
+                }
+            }
+        }
+
         return when (config) {
             is CommonProgramRunConfigurationParameters -> {
                 Log.log(logger::info, "adding environment to configuration {}", config.name)
@@ -232,6 +250,5 @@ class AddEnvironmentsService {
     private fun addEnvToMap(map: MutableMap<String, String>, environment: String) {
         map["OTEL_RESOURCE_ATTRIBUTES"] = "digma.environment=$environment"
     }
-
 
 }

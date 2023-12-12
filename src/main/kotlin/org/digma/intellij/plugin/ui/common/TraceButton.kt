@@ -35,7 +35,7 @@ open class TraceButton : JButton("Trace", Laf.Icons.General.TARGET10) {
 
     fun defineAction(project: Project, traceId: String, title: String) {
         addActionListener {
-            project.service<JaegerUIService>().openEmbeddedJaeger(traceId, title, null)
+            project.service<JaegerUIService>().openEmbeddedJaeger(traceId, title, null, true)
         }
     }
 }

@@ -22,7 +22,7 @@ import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
  */
 public class EditorInteractionService implements CaretContextService, Disposable {
 
-    private static final Logger logger = Logger.getInstance(EditorInteractionService.class);
+    private final Logger logger = Logger.getInstance(EditorInteractionService.class);
 
     private final Project project;
 
@@ -42,7 +42,6 @@ public class EditorInteractionService implements CaretContextService, Disposable
     }
 
     public static CaretContextService getInstance(Project project) {
-        Log.log(logger::warn, "Getting instance of " + CaretContextService.class.getSimpleName());
         return project.getService(CaretContextService.class);
     }
 

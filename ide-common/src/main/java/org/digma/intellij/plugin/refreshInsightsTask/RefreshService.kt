@@ -35,7 +35,6 @@ class RefreshService(private val project: Project) {
     private val isGeneralRefreshButtonEnabled = AtomicBoolean(true)
 
     companion object {
-        private val logger = Logger.getInstance(RefreshService::class.java)
         @JvmStatic
         fun getInstance(project: Project): RefreshService {
             return project.getService(RefreshService::class.java)

@@ -7,7 +7,7 @@ plugins {
 
 intellij {
     pluginName.set("system-test-plugin")
-    version.set(platformVersion(project))
+    version.set(platformVersion())
     type.set("IC")
     plugins.set(listOf("com.intellij.java", "org.jetbrains.idea.maven", "org.jetbrains.plugins.gradle"))
 
@@ -23,13 +23,12 @@ dependencies {
     implementation(project(":ide-common"))
     implementation(project(":analytics-provider"))
     implementation(project(":java"))
+    implementation(project(":rider"))
     implementation(project(":model"))
     implementation(project(":"))
 }
 
 tasks.test {
     systemProperty("intellij.progress.task.ignoreHeadless", true)
-//    systemProperty("idea.log.trace.categories", "#org.digma")
-//    systemProperty("idea.log.debug.categories", "#org.digma")
     useJUnit()
 }

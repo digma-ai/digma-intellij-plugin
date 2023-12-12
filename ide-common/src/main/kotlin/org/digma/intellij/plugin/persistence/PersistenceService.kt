@@ -4,8 +4,6 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
-import com.intellij.openapi.diagnostic.Logger
-import org.digma.intellij.plugin.log.Log
 
 
 // the @State annotation helps IntelliJ automatically serialize and save our state

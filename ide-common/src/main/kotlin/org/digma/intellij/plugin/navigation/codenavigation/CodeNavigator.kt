@@ -42,7 +42,7 @@ class CodeNavigator(val project: Project) {
         val spanIdWithoutType = CodeObjectsUtil.stripSpanPrefix(spanId)
 
         SupportedLanguages.values().forEach { language ->
-            //todo: Ask Shalom
+            // in unit test mode, the call to LanguageService.findLanguageServiceByName with language CSHARP, crashes the plugin.
             if (ApplicationManager.getApplication().isUnitTestMode && language == SupportedLanguages.CSHARP) {
                 return@forEach
             }
@@ -79,7 +79,7 @@ class CodeNavigator(val project: Project) {
         val methodIdWithoutType = CodeObjectsUtil.stripMethodPrefix(methodId)
 
         SupportedLanguages.values().forEach { language ->
-
+            // in unit test mode, the call to LanguageService.findLanguageServiceByName with language CSHARP, crashes the plugin.
             if (ApplicationManager.getApplication().isUnitTestMode && language == SupportedLanguages.CSHARP) {
                 return@forEach
             }
@@ -120,7 +120,7 @@ class CodeNavigator(val project: Project) {
 
 
         SupportedLanguages.values().forEach { language ->
-
+            // in unit test mode, the call to LanguageService.findLanguageServiceByName with language CSHARP, crashes the plugin.
             if (ApplicationManager.getApplication().isUnitTestMode && language == SupportedLanguages.CSHARP) {
                 return@forEach
             }
@@ -146,7 +146,7 @@ class CodeNavigator(val project: Project) {
         val spanIdWithoutType = CodeObjectsUtil.stripSpanPrefix(spanCodeObjectId)
 
         SupportedLanguages.values().forEach { language ->
-
+            // in unit test mode, the call to LanguageService.findLanguageServiceByName with language CSHARP, crashes the plugin.
             if (ApplicationManager.getApplication().isUnitTestMode && language == SupportedLanguages.CSHARP) {
                 return@forEach
             }
@@ -171,7 +171,7 @@ class CodeNavigator(val project: Project) {
         val methodIdWithoutType = CodeObjectsUtil.stripMethodPrefix(methodId)
 
         SupportedLanguages.values().forEach { language ->
-
+            // in unit test mode, the call to LanguageService.findLanguageServiceByName with language CSHARP, crashes the plugin.
             if (ApplicationManager.getApplication().isUnitTestMode && language == SupportedLanguages.CSHARP) {
                 return@forEach
             }
@@ -195,6 +195,7 @@ class CodeNavigator(val project: Project) {
         val spanIdWithoutType = CodeObjectsUtil.stripSpanPrefix(spanId)
 
         SupportedLanguages.values().forEach { language ->
+            // in unit test mode, the call to LanguageService.findLanguageServiceByName with language CSHARP, crashes the plugin.
             if (ApplicationManager.getApplication().isUnitTestMode && language == SupportedLanguages.CSHARP) {
                 return@forEach
             }
@@ -225,7 +226,7 @@ class CodeNavigator(val project: Project) {
             val endpointId = CodeObjectsUtil.stripEndpointPrefix(it)
 
             SupportedLanguages.values().forEach { language ->
-
+                // in unit test mode, the call to LanguageService.findLanguageServiceByName with language CSHARP, crashes the plugin.
                 if (ApplicationManager.getApplication().isUnitTestMode && language == SupportedLanguages.CSHARP) {
                     return@forEach
                 }

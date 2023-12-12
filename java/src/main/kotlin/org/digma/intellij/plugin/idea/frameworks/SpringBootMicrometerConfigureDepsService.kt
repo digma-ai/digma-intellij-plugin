@@ -45,6 +45,10 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
             return project.getService(SpringBootMicrometerConfigureDepsService::class.java)
         }
 
+        @JvmStatic
+        fun isSpringBootWithMicrometer(): Boolean =
+            SettingsState.getInstance().springBootObservabilityMode == SpringBootObservabilityMode.Micrometer
+
         fun getSpringBootStarterActuatorDependency(javaBuildSystem: JavaBuildSystem, springBootVersion: String): UnifiedDependency {
             val libCoordinates = UnifiedCoordinates("org.springframework.boot", "spring-boot-starter-actuator", springBootVersion)
 
@@ -196,9 +200,6 @@ class SpringBootMicrometerConfigureDepsService(private val project: Project) : D
 
         return stateHasSpringBootModulesWithoutObservability.get()
     }
-
-    fun isSpringBootWithMicrometer(): Boolean =
-        SettingsState.getInstance().springBootObservabilityMode == SpringBootObservabilityMode.Micrometer
 
     fun buttonClicked() {
         // start blackout time that panel won't be display

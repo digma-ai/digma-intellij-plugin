@@ -54,7 +54,9 @@ interface CodeObjectInsight {
     val prefixedCodeObjectId: String?
     val isRecalculateEnabled: Boolean
     val shortDisplayInfo: ShortDisplayInfo?
-
+    val severity: Double
+    val impact: Double
+    val criticality: Double
     fun hasDecorators(): Boolean {
         return !decorators.isNullOrEmpty()
     }

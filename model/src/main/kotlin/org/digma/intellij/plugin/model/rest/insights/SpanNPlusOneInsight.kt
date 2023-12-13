@@ -27,7 +27,10 @@ class SpanNPlusOneInsight
         "clientSpanCodeObjectId",
         "occurrences",
         "duration",
-        "endpoints"
+        "endpoints",
+        "severity",
+        "impact",
+        "criticality"
 )
 constructor(
         override val codeObjectId: String,
@@ -49,6 +52,9 @@ constructor(
         val occurrences: Number,
         val duration: Duration,
         val endpoints: List<SpanNPlusEndpoints>,
+        override val severity: Double,
+        override val impact: Double,
+        override val criticality: Double
 ) : SpanInsight {
     override val type: InsightType = InsightType.SpaNPlusOne
 }

@@ -23,7 +23,10 @@ data class SpanSlowEndpointsInsight
         "isRecalculateEnabled",
         "shortDisplayInfo",
         "spanInfo",
-        "slowEndpoints"
+        "slowEndpoints",
+        "severity",
+        "impact",
+        "criticality"
 )
 constructor(
         override val codeObjectId: String,
@@ -40,6 +43,9 @@ constructor(
         override val shortDisplayInfo: ShortDisplayInfo?,
         override val spanInfo: SpanInfo,
         val slowEndpoints: List<SlowEndpointInfo>,
+        override val severity: Double,
+        override val impact: Double,
+        override val criticality: Double
 ) : SpanInsight {
     override val type: InsightType = InsightType.SpanEndpointBottleneck
 }

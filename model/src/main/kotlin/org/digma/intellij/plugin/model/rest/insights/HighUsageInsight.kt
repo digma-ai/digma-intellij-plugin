@@ -24,7 +24,10 @@ data class HighUsageInsight
         "spanInfo",
         "route",
         "serviceName",
-        "maxCallsIn1Min")
+        "maxCallsIn1Min",
+        "severity",
+        "impact",
+        "criticality")
 constructor(
         override val codeObjectId: String,
         override val environment: String,
@@ -42,6 +45,9 @@ constructor(
         override var route: String,
         override var serviceName: String,
         val maxCallsIn1Min: Int,
+        override val severity: Double,
+        override val impact: Double,
+        override val criticality: Double
 ) : EndpointInsight {
     override val type: InsightType = InsightType.HighUsage
 }

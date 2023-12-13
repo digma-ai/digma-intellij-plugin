@@ -23,7 +23,10 @@ data class SpanDurationBreakdownInsight
         "shortDisplayInfo",
         "spanInfo",
         "spanName",
-        "breakdownEntries"
+        "breakdownEntries",
+        "severity",
+        "impact",
+        "criticality"
 )
 constructor(
         override val codeObjectId: String,
@@ -38,7 +41,10 @@ constructor(
         override val shortDisplayInfo: ShortDisplayInfo?,
         override val spanInfo: SpanInfo,
         val spanName: String,
-        val breakdownEntries: List<SpanDurationBreakdown>
+        val breakdownEntries: List<SpanDurationBreakdown>,
+        override val severity: Double,
+        override val impact: Double,
+        override val criticality: Double
 ) : SpanInsight {
 
         override val type: InsightType = InsightType.SpanDurationBreakdown

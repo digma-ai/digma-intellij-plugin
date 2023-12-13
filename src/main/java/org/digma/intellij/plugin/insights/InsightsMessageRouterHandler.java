@@ -14,6 +14,8 @@ import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.callback.CefQueryCallback;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
+import org.digma.intellij.plugin.analytics.AnalyticsService;
+import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
@@ -27,6 +29,8 @@ import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest;
+import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation;
+import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.service.InsightsActionsService;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
@@ -119,6 +123,7 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
                             ActivityMonitor.getInstance(project).registerCustomEvent(trackingRequest.getPayload().getEventName(), trackingRequest.getPayload().getData());
                         }
                     }
+                    case "INSIGHTS/GET_CODE_LOCATIONS" -> getCodeLocations(jsonNode);
 
                     default -> throw new IllegalStateException("Unexpected value: " + action);
                 }
@@ -147,7 +152,27 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
         Log.log(LOGGER::trace, project, "got insights types {}", insightTypeList);
         ActivityMonitor.getInstance(project).registerInsightsViewed(insightTypeList);
     }
+    private void getCodeLocations(JsonNode jsonNode) throws JsonProcessingException, AnalyticsServiceException {
+        Log.log(LOGGER::trace, project, "got INSIGHTS/GET_CODE_LOCATIONS message");
+        var spanCodeObjectId = objectMapper.readTree(jsonNode.get("payload").toString()).get("spanCodeObjectId").asText();
 
+        CodeObjectNavigation codeObjectNavigation = AnalyticsService.getInstance(project).getCodeObjectNavigation(spanCodeObjectId);
+
+
+        var nav = CodeNavigator.getInstance(project);/*
+        codeObjectNavigation.getNavigationEntry()
+        List<String> methodIds = nav.buildPotentialMethodIds(codeObjectNavigation);
+        if (methodIds.size() == 1) {
+            String methodId = methodIds.get(0);
+            if (nav.canNavigateToMethod(methodId)) {
+
+            }
+        }
+        else{
+
+        }*/
+
+    }
 
     private void goToInsight(JsonNode jsonNode) throws JsonProcessingException {
         Log.log(LOGGER::debug, project, "got INSIGHTS/GO_TO_ASSET message");

@@ -147,6 +147,18 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                     project.service<RecentActivityUpdater>().updateLatestActivities()
                 }
             }
+            "GLOBAL/REGISTER" -> {
+                var payload = objectMapper.readTree(requestJsonNode.get("payload").toString())
+                /*
+                 {
+                    "payload": {
+                        "key1":"value",
+                        "key2":"value",
+                    }
+                 }
+                *
+                * */
+            }
 
             "RECENT_ACTIVITY/REGISTER" -> {
                 var payload = objectMapper.readTree(requestJsonNode.get("payload").toString())
@@ -158,7 +170,7 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                 val environmentTypeNode = payload.get("selectedEnvironmentType")
                 var environmentType = if(environmentTypeNode == null) "" else environmentTypeNode.asText()
 
-                
+
                 project.service<ActivityMonitor>().registerUserActionEvent("register user email in add environment flow",
                     mapOf("email" to email, "fullName" to fullName, "environmentType" to environmentType))
                 PersistenceService.getInstance().state.userEmail = email

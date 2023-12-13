@@ -21,7 +21,10 @@ data class UnmappedInsight
         "prefixedCodeObjectId",
         "isRecalculateEnabled",
         "shortDisplayInfo",
-        "type"
+        "type",
+        "severity",
+        "impact",
+        "criticality"
 )
 constructor(
         override val codeObjectId: String,
@@ -38,6 +41,9 @@ constructor(
         override val shortDisplayInfo: ShortDisplayInfo?,
         @JsonProperty("type")
         val theType: String,
+        override val severity: Double,
+        override val impact: Double,
+        override val criticality: Double
 ) : CodeObjectInsight {
 
     override val type: InsightType = InsightType.Unmapped

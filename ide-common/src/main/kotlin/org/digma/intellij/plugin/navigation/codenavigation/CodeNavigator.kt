@@ -15,6 +15,8 @@ import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.SupportedLanguages
 import org.digma.intellij.plugin.service.EditorService
 import org.digma.intellij.plugin.ui.ToolWindowShower
+import org.digma.intellij.plugin.ui.service.ErrorsViewService
+import org.digma.intellij.plugin.ui.service.InsightsService
 
 @Service(Service.Level.PROJECT)
 class CodeNavigator(val project: Project) {
@@ -230,6 +232,11 @@ class CodeNavigator(val project: Project) {
             project.service<EditorService>().openWorkspaceFileInEditor(fileUri, 1)
         }
     }
-
+    companion object {
+        @JvmStatic
+        fun getInstance(project: Project): CodeNavigator {
+            return project.service<CodeNavigator>()
+        }
+    }
 
 }

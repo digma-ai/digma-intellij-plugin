@@ -23,7 +23,10 @@ data class SpanUsagesInsight
         "shortDisplayInfo",
         "spanInfo",
         "span",
-        "flows"
+        "flows",
+        "severity",
+        "impact",
+        "criticality"
 )
 constructor(
         override val codeObjectId: String,
@@ -41,6 +44,9 @@ constructor(
         override val spanInfo: SpanInfo,
         val span: String,
         val flows: List<SpanFlow>,
+        override val severity: Double,
+        override val impact: Double,
+        override val criticality: Double
 ) : SpanInsight {
 
     override val type: InsightType = InsightType.SpanUsages

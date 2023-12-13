@@ -149,6 +149,18 @@ class CodeNavigator(val project: Project) {
 
         return false
     }
+    fun findMethodCodeObjectId(spanCodeObjectId: String): String? {
+        SupportedLanguages.values().forEach { language ->
+            val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
+            if (languageService != null) {
+                val methodCodeObjectId = ReadActions.ensureReadAction<String> {
+                    languageService.detectMethodBySpan(project, spanCodeObjectId)
+                }
+                return methodCodeObjectId;
+            }
+        }
+        return null;
+    }
 
     fun getMethodLocation(methodId: String): Pair<String, Int>? {
 

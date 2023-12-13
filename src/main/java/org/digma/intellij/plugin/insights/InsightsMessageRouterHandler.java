@@ -176,9 +176,8 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
 
         var nav = CodeNavigator.getInstance(project);
-        if(nav.canNavigateToSpan(spanCodeObjectId)){
+        String methodCodeObjectId = nav.findMethodCodeObjectId(spanCodeObjectId);
 
-        }
 
         /*
 

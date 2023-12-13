@@ -339,6 +339,11 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
                         //   and    org.apache.tomcat.maven:tomcat6-maven-plugin:2.2:run
                         || (it.contains(":tomcat7-maven-plugin:") && it.endsWith(":run"))
                         || (it.contains(":tomcat6-maven-plugin:") && it.endsWith(":run"))
+                        // support jetty, goal named "jetty:run"
+                        || (it.startsWith("jetty") && it.endsWith(":run"))
+                        // support jetty run via maven plugin ("org.eclipse.jetty:jetty-maven-plugin:10.0.18:run")
+                        //  and     ("org.mortbay.jetty:jetty-maven-plugin:8.1.16.v20140903:run")
+                        || (it.contains(":jetty-maven-plugin:") && it.endsWith(":run"))
             }
             if (hasRelevantGoal) return true
 

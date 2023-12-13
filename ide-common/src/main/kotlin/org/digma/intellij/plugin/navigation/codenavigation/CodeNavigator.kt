@@ -154,7 +154,7 @@ class CodeNavigator(val project: Project) {
             val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
             if (languageService != null) {
                 val methodCodeObjectId = ReadActions.ensureReadAction<String> {
-                    languageService.detectMethodBySpan(project, spanCodeObjectId)
+                    languageService.detectMethodBySpan(project, CodeObjectsUtil.stripSpanPrefix(spanCodeObjectId))
                 }
                 return methodCodeObjectId;
             }

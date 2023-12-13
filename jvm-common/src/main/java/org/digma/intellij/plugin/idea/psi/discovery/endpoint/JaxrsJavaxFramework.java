@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.idea.psi.java;
+package org.digma.intellij.plugin.idea.psi.discovery.endpoint;
 
 import com.intellij.openapi.project.Project;
 

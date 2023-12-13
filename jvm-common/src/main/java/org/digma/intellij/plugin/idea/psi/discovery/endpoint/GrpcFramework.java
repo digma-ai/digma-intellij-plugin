@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.idea.psi.java;
+package org.digma.intellij.plugin.idea.psi.discovery.endpoint;
 
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
@@ -11,9 +11,12 @@ import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.ClassInheritorsSearch;
 import com.intellij.util.Query;
 import org.digma.intellij.plugin.common.Retries;
+import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils;
+import org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,7 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
-public class GrpcFramework implements EndpointDiscovery {
+public class GrpcFramework extends EndpointDiscovery {
     private static final Logger LOGGER = Logger.getInstance(GrpcFramework.class);
 
     public static final String BINDABLE_SERVICE_ANNOTATION_STR = "io.grpc.BindableService";
@@ -51,6 +54,7 @@ public class GrpcFramework implements EndpointDiscovery {
     }
 
     @Override
+    @Nullable
     public List<EndpointInfo> lookForEndpoints(@NotNull Supplier<SearchScope> searchScopeSupplier) {
         lateInit();
         if (!isGrpcServerRelevant()) {

@@ -3,12 +3,6 @@ package org.digma.intellij.plugin.idea.psi.discovery.endpoint
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
-import org.digma.intellij.plugin.idea.psi.java.EndpointDiscovery
-import org.digma.intellij.plugin.idea.psi.java.GrpcFramework
-import org.digma.intellij.plugin.idea.psi.java.JaxrsJakartaFramework
-import org.digma.intellij.plugin.idea.psi.java.JaxrsJavaxFramework
-import org.digma.intellij.plugin.idea.psi.java.MicronautFramework
-import org.digma.intellij.plugin.idea.psi.java.SpringBootFramework
 
 @Service(Service.Level.PROJECT)
 class EndpointDiscoveryService(project: Project) {

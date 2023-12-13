@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.idea.psi.java;
+package org.digma.intellij.plugin.idea.psi.discovery.endpoint;
 
 import com.intellij.lang.jvm.annotation.JvmAnnotationAttribute;
 import com.intellij.openapi.diagnostic.Logger;
@@ -12,6 +12,10 @@ import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.util.Query;
 import org.digma.intellij.plugin.common.Retries;
+import org.digma.intellij.plugin.idea.psi.java.JavaAnnotation;
+import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils;
+import org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils;
+import org.digma.intellij.plugin.idea.psi.java.JavaUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.jetbrains.annotations.NotNull;
@@ -25,7 +29,7 @@ import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public class MicronautFramework implements EndpointDiscovery {
+public class MicronautFramework extends EndpointDiscovery {
 
     private static final Logger LOGGER = Logger.getInstance(MicronautFramework.class);
     private static final String CONTROLLER_ANNOTATION_STR = "io.micronaut.http.annotation.Controller";

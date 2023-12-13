@@ -9,10 +9,12 @@
 
         <fileBasedIndex implementation="org.digma.intellij.plugin.idea.psi.java.JavaDocumentInfoIndex"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaSpanNavigationProvider"/>
-        <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaEndpointNavigationProvider"/>
+        <projectService
+                serviceImplementation="org.digma.intellij.plugin.idea.psi.navigation.JavaSpanNavigationProvider"/>
+        <projectService
+                serviceImplementation="org.digma.intellij.plugin.idea.psi.navigation.JavaEndpointNavigationProvider"/>
         <postStartupActivity
-                implementation="org.digma.intellij.plugin.idea.psi.java.JavaSpanNavigationStartupActivity"/>
+                implementation="org.digma.intellij.plugin.idea.psi.navigation.JavaSpanNavigationStartupActivity"/>
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService"/>
 
         <projectService
@@ -42,13 +44,13 @@
 
     <projectListeners>
         <listener
-                class="org.digma.intellij.plugin.idea.psi.java.DocumentsChangeListenerForJavaSpanNavigation"
+                class="org.digma.intellij.plugin.idea.psi.navigation.DocumentsChangeListenerForJavaSpanNavigation"
                 topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
     </projectListeners>
 
     <applicationListeners>
         <listener
-                class="org.digma.intellij.plugin.idea.psi.java.BulkFileChangeListenerForJavaSpanNavigation"
+                class="org.digma.intellij.plugin.idea.psi.navigation.BulkFileChangeListenerForJavaSpanNavigation"
                 topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
     </applicationListeners>
 

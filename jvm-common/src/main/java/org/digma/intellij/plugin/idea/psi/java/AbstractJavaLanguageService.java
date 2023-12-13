@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.idea.jvm;
+package org.digma.intellij.plugin.idea.psi.java;
 
 import com.intellij.codeInsight.codeVision.CodeVisionEntry;
 import com.intellij.lang.Language;
@@ -31,13 +31,8 @@ import org.digma.intellij.plugin.common.Retries;
 import org.digma.intellij.plugin.common.SlowOperationsUtilsKt;
 import org.digma.intellij.plugin.editor.EditorUtils;
 import org.digma.intellij.plugin.idea.psi.AbstractJvmLanguageService;
-import org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService;
-import org.digma.intellij.plugin.idea.psi.java.JavaCodeObjectDiscovery;
-import org.digma.intellij.plugin.idea.psi.java.JavaDocumentInfoIndex;
-import org.digma.intellij.plugin.idea.psi.java.JavaEndpointNavigationProvider;
-import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils;
-import org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils;
-import org.digma.intellij.plugin.idea.psi.java.JavaSpanNavigationProvider;
+import org.digma.intellij.plugin.idea.psi.navigation.JavaEndpointNavigationProvider;
+import org.digma.intellij.plugin.idea.psi.navigation.JavaSpanNavigationProvider;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;

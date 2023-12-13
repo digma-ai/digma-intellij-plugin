@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.idea.psi.java;
+package org.digma.intellij.plugin.idea.psi.navigation;
 
 import com.intellij.lang.java.JavaLanguage;
 import com.intellij.openapi.Disposable;
@@ -29,6 +29,9 @@ import org.digma.intellij.plugin.common.ReadActions;
 import org.digma.intellij.plugin.common.Retries;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.idea.psi.discovery.MicrometerTracingFramework;
+import org.digma.intellij.plugin.idea.psi.java.Constants;
+import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils;
+import org.digma.intellij.plugin.idea.psi.java.JavaSpanDiscoveryUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.SpanInfo;
 import org.digma.intellij.plugin.ui.service.ErrorsViewService;

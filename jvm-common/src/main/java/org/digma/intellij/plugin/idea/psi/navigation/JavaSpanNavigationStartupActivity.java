@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.idea.psi.java;
+package org.digma.intellij.plugin.idea.psi.navigation;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.startup.StartupActivity;

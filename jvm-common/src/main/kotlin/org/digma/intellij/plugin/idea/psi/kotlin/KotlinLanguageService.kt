@@ -28,8 +28,8 @@ import org.digma.intellij.plugin.common.allowSlowOperation
 import org.digma.intellij.plugin.editor.EditorUtils
 import org.digma.intellij.plugin.idea.psi.AbstractJvmLanguageService
 import org.digma.intellij.plugin.idea.psi.createMethodCodeObjectId
-import org.digma.intellij.plugin.idea.psi.java.JavaEndpointNavigationProvider
-import org.digma.intellij.plugin.idea.psi.java.JavaSpanNavigationProvider
+import org.digma.intellij.plugin.idea.psi.navigation.JavaEndpointNavigationProvider
+import org.digma.intellij.plugin.idea.psi.navigation.JavaSpanNavigationProvider
 import org.digma.intellij.plugin.instrumentation.CanInstrumentMethodResult
 import org.digma.intellij.plugin.instrumentation.JvmCanInstrumentMethodResult
 import org.digma.intellij.plugin.log.Log

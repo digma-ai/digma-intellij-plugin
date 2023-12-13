@@ -206,6 +206,9 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
         } catch (AnalyticsServiceException e) {
             Log.warnWithException(LOGGER, project, e, "Error getCodeLocations: {}", e.getMessage());
         }
+        catch (Exception e){
+            Log.error(LOGGER, project, e, "unhandled error while getCodeLocations: {}", e.getMessage());
+        }
         finally {
             SetCodeLocations(codeLocations);
         }

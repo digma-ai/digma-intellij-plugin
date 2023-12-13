@@ -13,6 +13,7 @@ import com.intellij.psi.PsiFile;
 import kotlin.Pair;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.document.DocumentInfoService;
+import org.digma.intellij.plugin.instrumentation.CanInstrumentMethodResult;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
@@ -283,15 +284,17 @@ public interface LanguageService extends Disposable {
 
     @NotNull List<Pair<TextRange, CodeVisionEntry>> getCodeLens(@NotNull PsiFile psiFile);
 
-    default CanInstrumentMethodResult canInstrumentMethod(@NotNull Project project, String methodId) {
-        return CanInstrumentMethodResult.Failure();
+    @NotNull
+    default CanInstrumentMethodResult canInstrumentMethod(@NotNull Project project, @Nullable String methodId) {
+        return CanInstrumentMethodResult.failure();
     }
 
     default boolean instrumentMethod(@NotNull CanInstrumentMethodResult result) {
         return false;
     }
 
-    // addDependencyToOtelLib so could manually instrument (so canInstrumentMethod would return true)
     default void addDependencyToOtelLib(@NotNull Project project, @NotNull String methodId) {
+        //only relevant for jvm languages
+        //todo: maybe throw non supported operation ?
     }
 }

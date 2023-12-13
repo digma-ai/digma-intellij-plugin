@@ -4,7 +4,7 @@
     <depends>org.jetbrains.plugins.gradle</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.kotlin.KotlinLanguageService"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.jvm.KotlinLanguageService"/>
     </extensions>
 
 </idea-plugin>

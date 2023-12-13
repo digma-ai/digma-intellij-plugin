@@ -16,6 +16,7 @@ import com.intellij.psi.PsiManager;
 import com.intellij.util.Alarm;
 import com.intellij.util.AlarmFactory;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
+import org.digma.intellij.plugin.idea.jvm.JavaLanguageService;
 import org.digma.intellij.plugin.log.Log;
 import org.jetbrains.annotations.NotNull;
 

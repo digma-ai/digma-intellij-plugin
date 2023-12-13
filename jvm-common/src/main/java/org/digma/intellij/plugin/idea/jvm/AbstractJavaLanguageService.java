@@ -1,32 +1,22 @@
-package org.digma.intellij.plugin.idea.psi.java;
+package org.digma.intellij.plugin.idea.jvm;
 
-import com.google.common.collect.ImmutableMap;
-import com.intellij.buildsystem.model.unified.UnifiedCoordinates;
-import com.intellij.buildsystem.model.unified.UnifiedDependency;
 import com.intellij.codeInsight.codeVision.CodeVisionEntry;
-import com.intellij.externalSystem.DependencyModifierService;
 import com.intellij.lang.Language;
 import com.intellij.lang.java.JavaLanguage;
 import com.intellij.openapi.application.ReadAction;
-import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.progress.EmptyProgressIndicator;
-import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiElementFactory;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiJavaFile;
 import com.intellij.psi.PsiManager;
@@ -40,61 +30,59 @@ import org.digma.intellij.plugin.common.ReadActions;
 import org.digma.intellij.plugin.common.Retries;
 import org.digma.intellij.plugin.common.SlowOperationsUtilsKt;
 import org.digma.intellij.plugin.editor.EditorUtils;
-import org.digma.intellij.plugin.idea.buildsystem.BuildSystemChecker;
-import org.digma.intellij.plugin.idea.buildsystem.JavaBuildSystem;
-import org.digma.intellij.plugin.idea.deps.ModulesDepsService;
-import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService;
-import org.digma.intellij.plugin.idea.psi.discovery.MicrometerTracingFramework;
+import org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService;
+import org.digma.intellij.plugin.idea.psi.java.JavaCodeObjectDiscovery;
+import org.digma.intellij.plugin.idea.psi.java.JavaDocumentInfoIndex;
+import org.digma.intellij.plugin.idea.psi.java.JavaEndpointNavigationProvider;
+import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils;
+import org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils;
+import org.digma.intellij.plugin.idea.psi.java.JavaSpanNavigationProvider;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
-import org.digma.intellij.plugin.psi.CanInstrumentMethodResult;
-import org.digma.intellij.plugin.psi.LanguageService;
-import org.digma.intellij.plugin.psi.PsiFileNotFountException;
 import org.digma.intellij.plugin.psi.PsiUtils;
 import org.digma.intellij.plugin.ui.CaretContextService;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-public class JavaLanguageService implements LanguageService {
+//todo: move everything to JavaLanguageService
+public abstract class AbstractJavaLanguageService extends AbstractJvmLanguageService {
 
-    private static final Logger LOGGER = Logger.getInstance(JavaLanguageService.class);
+    private static final Logger LOGGER = Logger.getInstance(AbstractJavaLanguageService.class);
 
 
     private final Project project;
 
     private final ProjectFileIndex projectFileIndex;
 
-    private static final String OtelDependencyVersion = "1.26.0";
-    private static final UnifiedCoordinates OtelCoordinates = new UnifiedCoordinates("io.opentelemetry.instrumentation", "opentelemetry-instrumentation-annotations", OtelDependencyVersion);
-    private static final ImmutableMap<JavaBuildSystem, UnifiedDependency> MapBuildSystem2Dependency;
-
-    static {
-        var builder = new ImmutableMap.Builder<JavaBuildSystem, UnifiedDependency>();
-        builder.put(JavaBuildSystem.UNKNOWN, new UnifiedDependency(OtelCoordinates, "compile"));
-        builder.put(JavaBuildSystem.MAVEN, new UnifiedDependency(OtelCoordinates, null));
-        builder.put(JavaBuildSystem.GRADLE, new UnifiedDependency(OtelCoordinates, "implementation"));
-        MapBuildSystem2Dependency = builder.build();
-    }
+//    private static final String OtelDependencyVersion = "1.26.0";
+//    private static final UnifiedCoordinates OtelCoordinates = new UnifiedCoordinates("io.opentelemetry.instrumentation", "opentelemetry-instrumentation-annotations", OtelDependencyVersion);
+//    private static final ImmutableMap<JavaBuildSystem, UnifiedDependency> MapBuildSystem2Dependency;
+//
+//    static {
+//        var builder = new ImmutableMap.Builder<JavaBuildSystem, UnifiedDependency>();
+//        builder.put(JavaBuildSystem.UNKNOWN, new UnifiedDependency(OtelCoordinates, "compile"));
+//        builder.put(JavaBuildSystem.MAVEN, new UnifiedDependency(OtelCoordinates, null));
+//        builder.put(JavaBuildSystem.GRADLE, new UnifiedDependency(OtelCoordinates, "implementation"));
+//        MapBuildSystem2Dependency = builder.build();
+//    }
 
     /*
     It's better, as much as possible, in language services especially, not to initialize service dependencies in the constructor but use
     a getInstance for services when they are first needed. that will minimize the possibility for cyclic dependencies.
      */
-    public JavaLanguageService(Project project) {
+    public AbstractJavaLanguageService(Project project) {
+        super(project);
         this.project = project;
         this.projectFileIndex = project.getService(ProjectFileIndex.class);
-
     }
 
 
@@ -181,33 +169,6 @@ public class JavaLanguageService implements LanguageService {
 
     }
 
-    @Override
-    public @Nullable String detectMethodBySpan(@NotNull Project project, String spanCodeObjectId) {
-        var urisForSpanIds = JavaSpanNavigationProvider.getInstance(project).getUrisForSpanIds(Arrays.asList(spanCodeObjectId));
-        if(!urisForSpanIds.containsKey(spanCodeObjectId)) return null;
-        var pair = urisForSpanIds.get(spanCodeObjectId);
-        String fileUri = pair.getFirst();
-        Integer offset = pair.getSecond();
-
-        try {
-            var psiFile = PsiUtils.uriToPsiFile(fileUri, project);
-            PsiElement elm = psiFile.findElementAt(offset);
-            if (elm == null) {
-                return null;
-            }
-            PsiMethod psiMethod = PsiTreeUtil.getParentOfType(elm, PsiMethod.class);
-            if (psiMethod == null) {
-                return null;
-            }
-            return JavaLanguageUtils.createJavaMethodCodeObjectId(psiMethod);
-
-        } catch (PsiFileNotFountException e) {
-            return null;
-        }
-
-
-    }
-
     private String safelyTryGetClassName(PsiElement element) {
         PsiClass psiClass = PsiTreeUtil.getParentOfType(element, PsiClass.class);
         if (psiClass != null) {
@@ -217,192 +178,38 @@ public class JavaLanguageService implements LanguageService {
         return "";
     }
 
-    protected boolean isSpringBootAndMicrometer(@NotNull Module module) {
-        var modulesDepsService = ModulesDepsService.getInstance(project);
-        var springBootMicrometerConfigureDepsService = SpringBootMicrometerConfigureDepsService.getInstance(project);
 
-        return (modulesDepsService.isSpringBootModule(module)
-                && springBootMicrometerConfigureDepsService.isSpringBootWithMicrometer());
-    }
-
-    @NotNull
-    public CanInstrumentMethodResult canInstrumentMethod(@NotNull Project project, @Nullable String methodId) {
-
-        class MyRunnable implements Runnable{
-
-            private final ProgressIndicator progressIndicator= new EmptyProgressIndicator();
-
-            CanInstrumentMethodResult result;
-
-            @Override
-            public void run() {
-
-                var psiMethod = findPsiMethodByMethodCodeObjectId(methodId);
-                if (psiMethod == null) {
-                    Log.log(LOGGER::warn, "Failed to get PsiMethod from method id '{}'", methodId);
-                    result = CanInstrumentMethodResult.Failure();
-                    return;
-                }
-
-                progressIndicator.checkCanceled();
-
-                var psiFile = psiMethod.getContainingFile();
-                if (!(psiFile instanceof PsiJavaFile psiJavaFile)) {
-                    Log.log(LOGGER::warn, "PsiMethod's file is not java file (methodId: {})", methodId);
-                    result = CanInstrumentMethodResult.Failure();
-                    return;
-                }
-
-                progressIndicator.checkCanceled();
-
-                var module = ModuleUtilCore.findModuleForPsiElement(psiMethod);
-                if (module == null) {
-                    Log.log(LOGGER::warn, "Failed to get module from PsiMethod '{}'", methodId);
-                    result = CanInstrumentMethodResult.Failure();
-                    return;
-                }
-
-                progressIndicator.checkCanceled();
-
-                var annotationClassFqn = Constants.WITH_SPAN_FQN;
-                var dependencyCause = Constants.WITH_SPAN_DEPENDENCY_DESCRIPTION;
-                if (isSpringBootAndMicrometer(module)) {
-
-                    progressIndicator.checkCanceled();
-
-                    annotationClassFqn = MicrometerTracingFramework.OBSERVED_FQN;
-                    dependencyCause = MicrometerTracingFramework.OBSERVED_DEPENDENCY_DESCRIPTION;
-
-                    var modulesDepsService = ModulesDepsService.getInstance(project);
-                    var moduleExt = modulesDepsService.getModuleExt(module.getName());
-                    if (moduleExt == null) {
-                        Log.log(LOGGER::warn, "Failed to not lookup module ext by module name='{}'", module.getName());
-                        result = CanInstrumentMethodResult.Failure();
-                        return;
-                    }
-                    boolean hasDeps = modulesDepsService.isModuleHasNeededDependenciesForSpringBootWithMicrometer(moduleExt.getMetadata());
-                    if (!hasDeps) {
-                        result = new CanInstrumentMethodResult(new CanInstrumentMethodResult.MissingDependencyCause(dependencyCause));
-                        return;
-                    }
-                }
-
-                progressIndicator.checkCanceled();
-
-                var annotationPsiClass = JavaPsiFacade.getInstance(project).findClass(annotationClassFqn,
-                        GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module, false));
-                if (annotationPsiClass == null) {
-                    Log.log(LOGGER::warn, "Cannot find WithSpan PsiClass (methodId: {}) (module:{})", methodId, module);
-                    result = new CanInstrumentMethodResult(new CanInstrumentMethodResult.MissingDependencyCause(dependencyCause));
-                    return;
-                }
-
-                result = new JavaCanInstrumentMethodResult(methodId, psiMethod, annotationPsiClass, psiJavaFile);
-            }
-        }
-
-
-
-        return Retries.retryWithResultAndDefault(() -> {
-
-            MyRunnable myRunnable = new MyRunnable();
-            boolean success = ProgressManager.getInstance().runInReadActionWithWriteActionPriority(myRunnable, myRunnable.progressIndicator);
-            if (!success){
-                throw new RuntimeException("canInstrumentMethod read action failed");
-            }
-            return Objects.requireNonNullElseGet(myRunnable.result, CanInstrumentMethodResult::Failure);
-
-        },Throwable.class,50,5,CanInstrumentMethodResult.Failure());
-    }
-
-
-
-    public boolean instrumentMethod(@NotNull CanInstrumentMethodResult result) {
-
-        if (!(result instanceof JavaCanInstrumentMethodResult goodResult)) {
-            Log.log(LOGGER::warn, "instrumentMethod was called with failing result from canInstrumentMethod");
-            return false;
-        }
-
-        var psiJavaFile = goodResult.psiJavaFile;
-        var psiMethod = goodResult.psiMethod;
-        var methodId = goodResult.methodId;
-        var withSpanClass = goodResult.withSpanClass;
-
-        var importList = psiJavaFile.getImportList();
-        if (importList == null) {
-            Log.log(LOGGER::warn, "Failed to get ImportList from PsiFile (methodId: {})", methodId);
-            return false;
-        }
-
-        WriteCommandAction.runWriteCommandAction(project, () -> {
-            var psiFactory = PsiElementFactory.getInstance(project);
-
-            var shortClassNameAnnotation = withSpanClass.getName();
-            if (shortClassNameAnnotation != null) {
-                psiMethod.getModifierList().addAnnotation(shortClassNameAnnotation);
-            }
-
-            var existing = importList.findSingleClassImportStatement(withSpanClass.getQualifiedName());
-            if (existing == null) {
-                var importStatement = psiFactory.createImportStatement(withSpanClass);
-                importList.add(importStatement);
-            }
-        });
-        return true;
-    }
-
-    @Nullable
-    private Module getModuleOfMethodId(String methodCodeObjectId) {
-        var psiMethod = findPsiMethodByMethodCodeObjectId(methodCodeObjectId);
-        if (psiMethod == null) {
-            Log.log(LOGGER::warn, "Failed to get PsiMethod from method id '{}'", methodCodeObjectId);
-            return null;
-        }
-
-        var module = ModuleUtilCore.findModuleForPsiElement(psiMethod);
-        if (module == null) {
-            Log.log(LOGGER::warn, "Failed to get module from PsiMethod '{}'", methodCodeObjectId);
-            return null;
-        }
-
-        return module;
-    }
+//    @Nullable
+//    private Module getModuleOfMethodId(String methodCodeObjectId) {
+//        var psiMethod = findPsiMethodByMethodCodeObjectId(methodCodeObjectId);
+//        if (psiMethod == null) {
+//            Log.log(LOGGER::warn, "Failed to get PsiMethod from method id '{}'", methodCodeObjectId);
+//            return null;
+//        }
+//
+//        var module = ModuleUtilCore.findModuleForPsiElement(psiMethod);
+//        if (module == null) {
+//            Log.log(LOGGER::warn, "Failed to get module from PsiMethod '{}'", methodCodeObjectId);
+//            return null;
+//        }
+//
+//        return module;
+//    }
 
     @SuppressWarnings("UnstableApiUsage")
-    @Override
-    public void addDependencyToOtelLib(@NotNull Project project, @NotNull String methodId) {
-        Module module = getModuleOfMethodId(methodId);
-        if (module == null) {
-            Log.log(LOGGER::warn, "Failed to add dependencies OTEL lib since could not lookup module by methodId='{}'", methodId);
-            return;
-        }
-        if (!isSpringBootAndMicrometer(module)) {
-            JavaBuildSystem moduleBuildSystem = BuildSystemChecker.Companion.determineBuildSystem(module);
-            UnifiedDependency dependencyLib = MapBuildSystem2Dependency.get(moduleBuildSystem);
 
-            var dependencyModifierService = DependencyModifierService.getInstance(project);
 
-            if (dependencyLib != null) {
-                dependencyModifierService.addDependency(module, dependencyLib);
-            }
-            return;
-        }
-        // handling spring boot with micrometer tracing
-        addDepsForSpringBootAndMicrometer(module);
-    }
-
-    protected void addDepsForSpringBootAndMicrometer(@NotNull Module module) {
-        var modulesDepsService = ModulesDepsService.getInstance(project);
-        var moduleExt = modulesDepsService.getModuleExt(module.getName());
-        if (moduleExt == null) {
-            Log.log(LOGGER::warn, "Failed add dependencies of Spring Boot Micrometer since could not lookup module ext by module name='{}'", module.getName());
-            return;
-        }
-        var project = module.getProject();
-        var springBootMicrometerConfigureDepsService = SpringBootMicrometerConfigureDepsService.getInstance(project);
-        springBootMicrometerConfigureDepsService.addMissingDependenciesForSpringBootObservability(moduleExt);
-    }
+//    protected void addDepsForSpringBootAndMicrometer(@NotNull Module module) {
+//        var modulesDepsService = ModulesDepsService.getInstance(project);
+//        var moduleExt = modulesDepsService.getModuleExt(module.getName());
+//        if (moduleExt == null) {
+//            Log.log(LOGGER::warn, "Failed add dependencies of Spring Boot Micrometer since could not lookup module ext by module name='{}'", module.getName());
+//            return;
+//        }
+//        var project = module.getProject();
+//        var springBootMicrometerConfigureDepsService = SpringBootMicrometerConfigureDepsService.getInstance(project);
+//        springBootMicrometerConfigureDepsService.addMissingDependenciesForSpringBootObservability(moduleExt);
+//    }
 
     /**
      * Navigate to any method in the project even if the file is not opened
@@ -499,60 +306,60 @@ public class JavaLanguageService implements LanguageService {
         return workspaceUrls;
     }
 
-    @Override
-    public Map<String, Pair<String, Integer>> findWorkspaceUrisForMethodCodeObjectIds(List<String> methodCodeObjectIds) {
+//    @Override
+//    public Map<String, Pair<String, Integer>> findWorkspaceUrisForMethodCodeObjectIds(List<String> methodCodeObjectIds) {
+//
+//        Map<String, Pair<String, Integer>> workspaceUrls = new HashMap<>();
+//
+//        methodCodeObjectIds.forEach(methodId -> ReadActions.ensureReadAction(() -> SlowOperationsUtilsKt.allowSlowOperation(() -> {
+//            var uMethod = findMethodByMethodCodeObjectId(methodId);
+//            if (uMethod != null) {
+//                String url = PsiUtils.psiFileToUri(uMethod.getContainingFile());
+//                workspaceUrls.put(methodId, new Pair<>(url, uMethod.getTextOffset()));
+//            }
+//        })));
+//
+//        return workspaceUrls;
+//    }
 
-        Map<String, Pair<String, Integer>> workspaceUrls = new HashMap<>();
+//    private @Nullable PsiMethod findPsiMethodByMethodCodeObjectId(@Nullable String methodId) {
+//        if (methodId == null) return null;
+//
+//        if (!methodId.contains("$_$")) {
+//            Log.log(LOGGER::debug, "method id in findWorkspaceUrisForMethodCodeObjectIds does not contain $_$ {}", methodId);
+//            return null;
+//        }
+//
+//        return ReadActions.ensureReadAction(() -> netoFindPsiMethodByMethodCodeObjectId(methodId));
+//
+//    }
 
-        methodCodeObjectIds.forEach(methodId -> ReadActions.ensureReadAction(() -> SlowOperationsUtilsKt.allowSlowOperation(() -> {
-            var psiMethod = findPsiMethodByMethodCodeObjectId(methodId);
-            if (psiMethod != null) {
-                String url = PsiUtils.psiFileToUri(psiMethod.getContainingFile());
-                workspaceUrls.put(methodId, new Pair<>(url, psiMethod.getTextOffset()));
-            }
-        })));
-
-        return workspaceUrls;
-    }
-
-    private @Nullable PsiMethod findPsiMethodByMethodCodeObjectId(@Nullable String methodId) {
-        if (methodId == null) return null;
-
-        if (!methodId.contains("$_$")) {
-            Log.log(LOGGER::debug, "method id in findWorkspaceUrisForMethodCodeObjectIds does not contain $_$ {}", methodId);
-            return null;
-        }
-
-        return ReadActions.ensureReadAction(() -> netoFindPsiMethodByMethodCodeObjectId(methodId));
-
-    }
-
-    private @Nullable PsiMethod netoFindPsiMethodByMethodCodeObjectId(@NotNull String methodId) {
-        if (!methodId.contains("$_$")) {
-            Log.log(LOGGER::debug, "method id in netoFindPsiMethodByMethodCodeObjectId does not contain $_$ {}", methodId);
-            return null;
-        }
-
-        //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
-        var className = methodId.substring(0, methodId.indexOf("$_$")).replace('$', '.');
-
-        return SlowOperationsUtilsKt.allowSlowOperation(() -> {
-            //searching in project scope will find only project classes
-            Collection<PsiClass> psiClasses = JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.projectScope(project));
-            if (!psiClasses.isEmpty()) {
-                //hopefully there is only one class by that name in the project
-                PsiClass psiClass = psiClasses.stream().findAny().get();
-                PsiFile psiFile = PsiTreeUtil.getParentOfType(psiClass, PsiFile.class);
-                for (PsiMethod method : JavaPsiUtils.getMethodsOf(project, psiClass)) {
-                    String javaMethodCodeObjectId = JavaLanguageUtils.createJavaMethodCodeObjectId(method);
-                    if (javaMethodCodeObjectId.equals(methodId) && psiFile != null) {
-                        return method;
-                    }
-                }
-            }
-            return null;
-        });
-    }
+//    private @Nullable PsiMethod netoFindPsiMethodByMethodCodeObjectId(@NotNull String methodId) {
+//        if (!methodId.contains("$_$")) {
+//            Log.log(LOGGER::debug, "method id in netoFindPsiMethodByMethodCodeObjectId does not contain $_$ {}", methodId);
+//            return null;
+//        }
+//
+//        //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
+//        var className = methodId.substring(0, methodId.indexOf("$_$")).replace('$', '.');
+//
+//        return SlowOperationsUtilsKt.allowSlowOperation(() -> {
+//            //searching in project scope will find only project classes
+//            Collection<PsiClass> psiClasses = JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.projectScope(project));
+//            if (!psiClasses.isEmpty()) {
+//                //hopefully there is only one class by that name in the project
+//                PsiClass psiClass = psiClasses.stream().findAny().get();
+//                PsiFile psiFile = PsiTreeUtil.getParentOfType(psiClass, PsiFile.class);
+//                for (PsiMethod method : JavaPsiUtils.getMethodsOf(project, psiClass)) {
+//                    String javaMethodCodeObjectId = JavaLanguageUtils.createJavaMethodCodeObjectId(method);
+//                    if (javaMethodCodeObjectId.equals(methodId) && psiFile != null) {
+//                        return method;
+//                    }
+//                }
+//            }
+//            return null;
+//        });
+//    }
 
     @NotNull
     @Override
@@ -599,7 +406,7 @@ public class JavaLanguageService implements LanguageService {
             return ProgressManager.getInstance().runProcess(() ->
                     Retries.retryWithResult(() -> ReadAction.compute(() ->
                                     JavaCodeObjectDiscovery.buildDocumentInfo(project, psiJavaFile)),
-                    Throwable.class,50,5),new EmptyProgressIndicator());
+                            Throwable.class, 50, 5), new EmptyProgressIndicator());
 
         } else {
             Log.log(LOGGER::debug, "psi file is not java, returning empty DocumentInfo for {}", psiFile);
@@ -661,18 +468,157 @@ public class JavaLanguageService implements LanguageService {
         return JavaCodeLensService.getInstance(project).getCodeLens(psiFile);
     }
 
-    private static final class JavaCanInstrumentMethodResult extends CanInstrumentMethodResult {
-        private final String methodId;
-        private final PsiMethod psiMethod;
-        private final PsiClass withSpanClass;
-        private final PsiJavaFile psiJavaFile;
 
-        private JavaCanInstrumentMethodResult(String methodId, PsiMethod psiMethod, PsiClass withSpanClass,
-                                              PsiJavaFile psiJavaFile) {
-            this.methodId = methodId;
-            this.psiMethod = psiMethod;
-            this.withSpanClass = withSpanClass;
-            this.psiJavaFile = psiJavaFile;
-        }
-    }
+//    @NotNull
+//    public CanInstrumentMethodResult canInstrumentMethod(@NotNull Project project, @Nullable String methodId) {
+//
+//        class MyRunnable implements Runnable {
+//
+//            private final ProgressIndicator progressIndicator = new EmptyProgressIndicator();
+//
+//            CanInstrumentMethodResult result;
+//
+//            @Override
+//            public void run() {
+//
+//                var psiMethod = findPsiMethodByMethodCodeObjectId(methodId);
+//                if (psiMethod == null) {
+//                    Log.log(LOGGER::warn, "Failed to get PsiMethod from method id '{}'", methodId);
+//                    result = CanInstrumentMethodResult.failure();
+//                    return;
+//                }
+//
+//                progressIndicator.checkCanceled();
+//
+//                var psiFile = psiMethod.getContainingFile();
+//                if (!(psiFile instanceof PsiJavaFile psiJavaFile)) {
+//                    Log.log(LOGGER::warn, "PsiMethod's file is not java file (methodId: {})", methodId);
+//                    result = CanInstrumentMethodResult.failure();
+//                    return;
+//                }
+//
+//                progressIndicator.checkCanceled();
+//
+//                var module = ModuleUtilCore.findModuleForPsiElement(psiMethod);
+//                if (module == null) {
+//                    Log.log(LOGGER::warn, "Failed to get module from PsiMethod '{}'", methodId);
+//                    result = CanInstrumentMethodResult.failure();
+//                    return;
+//                }
+//
+//                progressIndicator.checkCanceled();
+//
+//                var annotationClassFqn = Constants.WITH_SPAN_FQN;
+//                var dependencyCause = Constants.WITH_SPAN_DEPENDENCY_DESCRIPTION;
+//                if (isSpringBootAndMicrometer(module)) {
+//
+//                    progressIndicator.checkCanceled();
+//
+//                    annotationClassFqn = MicrometerTracingFramework.OBSERVED_FQN;
+//                    dependencyCause = MicrometerTracingFramework.OBSERVED_DEPENDENCY_DESCRIPTION;
+//
+//                    var modulesDepsService = ModulesDepsService.getInstance(project);
+//                    var moduleExt = modulesDepsService.getModuleExt(module.getName());
+//                    if (moduleExt == null) {
+//                        Log.log(LOGGER::warn, "Failed to not lookup module ext by module name='{}'", module.getName());
+//                        result = CanInstrumentMethodResult.failure();
+//                        return;
+//                    }
+//                    boolean hasDeps = modulesDepsService.isModuleHasNeededDependenciesForSpringBootWithMicrometer(moduleExt.getMetadata());
+//                    if (!hasDeps) {
+//                        result = new CanInstrumentMethodResult(new MissingDependencyCause(dependencyCause));
+//                        return;
+//                    }
+//                }
+//
+//                progressIndicator.checkCanceled();
+//
+//                var annotationPsiClass = JavaPsiFacade.getInstance(project).findClass(
+//                        annotationClassFqn,
+//                        GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module, false)
+//                );
+//                if (annotationPsiClass == null) {
+//                    Log.log(LOGGER::warn, "Cannot find WithSpan PsiClass (methodId: {}) (module:{})", methodId, module);
+//                    result = new CanInstrumentMethodResult(new MissingDependencyCause(dependencyCause));
+//                    return;
+//                }
+//
+//                result = new JavaCanInstrumentMethodResult(methodId, psiMethod, annotationPsiClass, psiJavaFile);
+//            }
+//        }
+//
+//
+//        return Retries.retryWithResultAndDefault(() -> {
+//
+//            MyRunnable myRunnable = new MyRunnable();
+//            boolean success = ProgressManager.getInstance().runInReadActionWithWriteActionPriority(myRunnable, myRunnable.progressIndicator);
+//            if (!success) {
+//                throw new RuntimeException("canInstrumentMethod read action failed");
+//            }
+//            return Objects.requireNonNullElseGet(myRunnable.result, CanInstrumentMethodResult::failure);
+//
+//        }, Throwable.class, 50, 5, CanInstrumentMethodResult.failure());
+//    }
+
+
+//    @Override
+//    public boolean instrumentMethod(@NotNull CanInstrumentMethodResult result)
+//    {
+//
+//        if (!(result instanceof JavaCanInstrumentMethodResult goodResult)) {
+//            Log.log(LOGGER::warn, "instrumentMethod was called with failing result from canInstrumentMethod");
+//            return false;
+//        }
+//
+//        var psiJavaFile = goodResult.getPsiJavaFile();
+//        var psiMethod = goodResult.getPsiMethod();
+//        var methodId = goodResult.getMethodId();
+//        var withSpanClass = goodResult.getWithSpanClass();
+//
+//        var importList = psiJavaFile.getImportList();
+//        if (importList == null) {
+//            Log.log(LOGGER::warn, "Failed to get ImportList from PsiFile (methodId: {})", methodId);
+//            return false;
+//        }
+//
+//        WriteCommandAction.runWriteCommandAction(project, () -> {
+//            var psiFactory = PsiElementFactory.getInstance(project);
+//
+//            var shortClassNameAnnotation = withSpanClass.getName();
+//            if (shortClassNameAnnotation != null) {
+//                psiMethod.getModifierList().addAnnotation(shortClassNameAnnotation);
+//            }
+//
+//            var existing = importList.findSingleClassImportStatement(withSpanClass.getQualifiedName());
+//            if (existing == null) {
+//                var importStatement = psiFactory.createImportStatement(withSpanClass);
+//                importList.add(importStatement);
+//            }
+//        });
+//        return true;
+//    }
+
+
+//    public void addDependencyToOtelLib(@NotNull Project project, @NotNull String methodId)
+//    {
+//        Module module = getModuleOfMethodId (methodId);
+//        if (module == null) {
+//            Log.log(LOGGER::warn, "Failed to add dependencies OTEL lib since could not lookup module by methodId='{}'", methodId);
+//            return;
+//        }
+//        if (!isSpringBootAndMicrometer(module)) {
+//            JavaBuildSystem moduleBuildSystem = BuildSystemChecker.Companion.determineBuildSystem (module);
+//            UnifiedDependency dependencyLib = MapBuildSystem2Dependency . get (moduleBuildSystem);
+//
+//            var dependencyModifierService = DependencyModifierService.getInstance(project);
+//
+//            if (dependencyLib != null) {
+//                dependencyModifierService.addDependency(module, dependencyLib);
+//            }
+//            return;
+//        }
+//        // handling spring boot with micrometer tracing
+//        addDepsForSpringBootAndMicrometer(module);
+//    }
+
 }

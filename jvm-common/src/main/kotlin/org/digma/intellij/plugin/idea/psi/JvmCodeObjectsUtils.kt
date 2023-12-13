@@ -157,6 +157,7 @@ fun getLiteralValue(uLiteralExpression: ULiteralExpression): String? {
 }
 
 
+//todo: move to JvmPsiUtils.kt
 fun findMethodInClass(psiClass: PsiClass, methodName: String, methodPredicate: Predicate<PsiMethod>): PsiMethod? {
     val methods = psiClass.findMethodsByName(methodName)
     for (method in methods) {

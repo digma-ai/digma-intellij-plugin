@@ -7,6 +7,7 @@ import com.intellij.util.Alarm
 import com.intellij.util.AlarmFactory
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.instrumentation.MethodInstrumentationPresenter
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
 import java.time.Instant
 import javax.swing.JLabel

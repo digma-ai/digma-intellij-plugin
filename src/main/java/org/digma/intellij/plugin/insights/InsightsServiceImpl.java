@@ -42,7 +42,7 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshService;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.common.Laf;
-import org.digma.intellij.plugin.ui.common.MethodInstrumentationPresenter;
+import org.digma.intellij.plugin.instrumentation.MethodInstrumentationPresenter;
 import org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt;
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope;
 import org.digma.intellij.plugin.ui.model.DocumentScope;

@@ -25,7 +25,7 @@ public class JavaDocumentInfoIndex extends DocumentInfoIndex {
     public static final ID<Integer, DocumentInfo> JAVA_DOCUMENT_INFO_INDEX_ID =
                                     ID.create("org.digma.intellij.plugin.index.documentInfo.java");
 
-    static final Set<String> namesToExclude = new HashSet<>();
+    public static final Set<String> namesToExclude = new HashSet<>();
 
     static {
         namesToExclude.add("package-info.java");

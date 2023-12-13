@@ -1,9 +1,9 @@
-package org.digma.intellij.plugin.idea.psi.kotlin
+package org.digma.intellij.plugin.idea.jvm
 
 import com.intellij.codeInsight.codeVision.CodeVisionEntry
 import com.intellij.lang.Language
 import com.intellij.openapi.application.ReadAction
-import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -16,6 +16,7 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.util.ThrowableComputable
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.pom.Navigatable
+import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.search.GlobalSearchScope
@@ -28,24 +29,29 @@ import org.digma.intellij.plugin.editor.EditorUtils
 import org.digma.intellij.plugin.idea.psi.createMethodCodeObjectId
 import org.digma.intellij.plugin.idea.psi.java.JavaEndpointNavigationProvider
 import org.digma.intellij.plugin.idea.psi.java.JavaSpanNavigationProvider
+import org.digma.intellij.plugin.idea.psi.kotlin.KotlinCodeObjectDiscovery
+import org.digma.intellij.plugin.instrumentation.CanInstrumentMethodResult
+import org.digma.intellij.plugin.instrumentation.JvmCanInstrumentMethodResult
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
-import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.ui.CaretContextService
 import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
 import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.psi.KtFunction
+import org.jetbrains.kotlin.psi.KtImportDirective
+import org.jetbrains.kotlin.psi.KtPsiFactory
+import org.jetbrains.kotlin.resolve.ImportPath
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.toUElementOfType
 
-class KotlinLanguageService(private val project: Project) : LanguageService {
+class KotlinLanguageService(project: Project) : AbstractJvmLanguageService(project) {
 
-    private val logger: Logger = Logger.getInstance(KotlinLanguageService::class.java)
 
     private val projectFileIndex: ProjectFileIndex = project.getService(ProjectFileIndex::class.java)
 
@@ -66,9 +72,16 @@ class KotlinLanguageService(private val project: Project) : LanguageService {
     }
 
 
-    fun getLanguage(): com.intellij.lang.Language {
+    fun getLanguage(): Language {
         return KotlinLanguage.INSTANCE
     }
+
+
+    override fun findClassByClassName(className: String): UClass? {
+        val classes: Collection<KtClassOrObject> = KotlinFullClassNameIndex.get(className, project, GlobalSearchScope.projectScope(project))
+        return classes.firstOrNull()?.toUElementOfType<UClass>()
+    }
+
 
     override fun getLanguageForMethodCodeObjectId(methodId: String): Language? {
 
@@ -109,7 +122,7 @@ class KotlinLanguageService(private val project: Project) : LanguageService {
 
     override fun detectMethodUnderCaret(project: Project, psiFile: PsiFile, selectedEditor: Editor?, caretOffset: Int): MethodUnderCaret {
 
-        return Retries.retryWithResult<MethodUnderCaret>({
+        return Retries.retryWithResult({
 
             ReadAction.compute<MethodUnderCaret, java.lang.RuntimeException> {
 
@@ -127,10 +140,10 @@ class KotlinLanguageService(private val project: Project) : LanguageService {
 
     override fun navigateToMethod(methodId: String) {
 
-        Log.log(logger::debug, "got navigate to method request {}", methodId);
+        Log.log(logger::debug, "got navigate to method request {}", methodId)
 
         if (methodId.indexOf("\$_$") <= 0) {
-            Log.log(logger::debug, "method id in navigateToMethod does not contain \$_$, can not navigate {}", methodId);
+            Log.log(logger::debug, "method id in navigateToMethod does not contain \$_$, can not navigate {}", methodId)
 
             return
         }
@@ -152,7 +165,7 @@ class KotlinLanguageService(private val project: Project) : LanguageService {
                     for (method in methods) {
                         val id: String = createMethodCodeObjectId(method)
                         if (id == methodId && method.sourcePsi is Navigatable && (method.sourcePsi as Navigatable).canNavigate()) {
-                            Log.log(logger::debug, "navigating to method {}", method);
+                            Log.log(logger::debug, "navigating to method {}", method)
                             EDT.ensureEDT {
                                 (method.sourcePsi as Navigatable).navigate(true)
                             }
@@ -274,7 +287,7 @@ class KotlinLanguageService(private val project: Project) : LanguageService {
         Log.log(logger::debug, "got buildDocumentInfo request for {}", psiFile)
         if (psiFile is KtFile) {
             return ProgressManager.getInstance().runProcess<DocumentInfo>({
-                Retries.retryWithResult<DocumentInfo>(
+                Retries.retryWithResult(
                     {
                         ReadAction.compute(
                             ThrowableComputable<DocumentInfo, RuntimeException> {
@@ -289,7 +302,7 @@ class KotlinLanguageService(private val project: Project) : LanguageService {
             }, EmptyProgressIndicator())
 
         } else {
-            Log.log(logger::debug, "psi file is not kotlin, returning empty DocumentInfo for {}", psiFile);
+            Log.log(logger::debug, "psi file is not kotlin, returning empty DocumentInfo for {}", psiFile)
             return DocumentInfo(PsiUtils.psiFileToUri(psiFile), mutableMapOf())
         }
     }
@@ -334,4 +347,46 @@ class KotlinLanguageService(private val project: Project) : LanguageService {
     override fun getCodeLens(psiFile: PsiFile): MutableList<Pair<TextRange, CodeVisionEntry>> {
         return mutableListOf()
     }
+
+
+    override fun instrumentMethod(result: CanInstrumentMethodResult): Boolean {
+        if (result !is JvmCanInstrumentMethodResult) {
+            Log.log(logger::warn, "instrumentMethod was called with failing result from canInstrumentMethod")
+            return false
+        }
+
+        if (result.containingFile.sourcePsi is KtFile && result.uMethod.sourcePsi is KtFunction) {
+
+            val ktFile: KtFile = result.containingFile.sourcePsi as KtFile
+            val ktFunction: KtFunction = result.uMethod.sourcePsi as KtFunction
+            val methodId: String = result.methodId
+            val withSpanClass: PsiClass = result.withSpanClass
+
+            val importList = ktFile.importList
+            if (importList == null) {
+                Log.log(logger::warn, "Failed to get ImportList from PsiFile (methodId: {})", methodId)
+                return false
+            }
+
+            WriteCommandAction.runWriteCommandAction(project) {
+                val ktPsiFactory = KtPsiFactory(project)
+                val shortClassNameAnnotation = withSpanClass.name
+                if (shortClassNameAnnotation != null) {
+                    ktFunction.addAnnotationEntry(ktPsiFactory.createAnnotationEntry("@$shortClassNameAnnotation"))
+                }
+
+                val existing =
+                    importList.imports.find { ktImportDirective: KtImportDirective? -> ktImportDirective?.importedFqName?.asString() == withSpanClass.qualifiedName }
+                if (existing == null) {
+                    val importStatement = ktPsiFactory.createImportDirective(ImportPath.fromString(withSpanClass.qualifiedName!!))
+                    importList.add(importStatement)
+                }
+            }
+            return true
+        } else {
+            return false
+        }
+
+    }
+
 }

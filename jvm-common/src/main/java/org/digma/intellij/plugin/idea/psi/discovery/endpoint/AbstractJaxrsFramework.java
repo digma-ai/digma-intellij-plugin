@@ -17,7 +17,6 @@ import com.intellij.psi.search.searches.OverridingMethodsSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Query;
 import org.digma.intellij.plugin.common.Retries;
-import org.digma.intellij.plugin.idea.psi.java.JavaAnnotation;
 import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils;
 import org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils;
 import org.digma.intellij.plugin.idea.psi.java.JavaUtils;

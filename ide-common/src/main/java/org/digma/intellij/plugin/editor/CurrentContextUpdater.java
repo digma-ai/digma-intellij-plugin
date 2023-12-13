@@ -37,7 +37,7 @@ public class CurrentContextUpdater implements Disposable {
    keep the latest method under caret that was fired. it helps us to not call contextChange if the caret is on the same
    method as before.
     */
-    private MethodUnderCaret latestMethodUnderCaret;
+    public MethodUnderCaret latestMethodUnderCaret;
 
     public CurrentContextUpdater(Project project) {
         this.project = project;

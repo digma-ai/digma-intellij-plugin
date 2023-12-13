@@ -53,6 +53,7 @@ public class Log {
         error(logger, exception, DIGMA_PROJECT + project.getName() + ": " + msg);
         ErrorReporter.getInstance().reportError(project, "Log.error", exception);
     }
+
     public static void error(Logger logger, Exception exception, String format, Object... args) {
         error(logger, exception, DIGMA + String.format(format.replace("{}", "%s"), args));
     }

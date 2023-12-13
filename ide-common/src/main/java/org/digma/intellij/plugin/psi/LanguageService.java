@@ -236,8 +236,8 @@ public interface LanguageService extends Disposable {
     // getProjectModelId from the selected editor which is the preferred way to find a IPsiSourceFile in resharper. it may be null.
     @NotNull
     MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int caretOffset);
-
-
+    @Nullable
+    String detectMethodBySpan(@NotNull Project project, String spanCodeObjectId);
     /**
      * This method is called from the function list preview tab panel and is meant to navigate
      * to a method of the current opened file. it will not navigate to any method in the project.

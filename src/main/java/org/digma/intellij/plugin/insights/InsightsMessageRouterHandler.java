@@ -18,6 +18,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.EDT;
+import org.digma.intellij.plugin.document.CodeObjectsUtil;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.insights.model.outgoing.InsightsPayload;
 import org.digma.intellij.plugin.insights.model.outgoing.Method;
@@ -154,12 +155,33 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     }
     private void getCodeLocations(JsonNode jsonNode) throws JsonProcessingException, AnalyticsServiceException {
         Log.log(LOGGER::trace, project, "got INSIGHTS/GET_CODE_LOCATIONS message");
-        var spanCodeObjectId = objectMapper.readTree(jsonNode.get("payload").toString()).get("spanCodeObjectId").asText();
+        var spanCodeObjectId = objectMapper.readTree(jsonNode.get("payload").toString()).get("prefixedCodeObjectId").asText();
+        var methodCodeObjectIdNode = objectMapper.readTree(jsonNode.get("payload").toString()).get("methodCodeObjectId");
+        if(methodCodeObjectIdNode != null)
+        {
+            var methodCodeObjectId = methodCodeObjectIdNode.asText();
+            if(methodCodeObjectId != null){
+                var pair = CodeObjectsUtil.getMethodClassAndName(methodCodeObjectId);
+                var classFqn = pair.getFirst();
+                var methodName = pair.getSecond();
+
+
+
+            }
+
+        }
+
 
         CodeObjectNavigation codeObjectNavigation = AnalyticsService.getInstance(project).getCodeObjectNavigation(spanCodeObjectId);
 
 
-        var nav = CodeNavigator.getInstance(project);/*
+        var nav = CodeNavigator.getInstance(project);
+        if(nav.canNavigateToSpan(spanCodeObjectId)){
+
+        }
+
+        /*
+
         codeObjectNavigation.getNavigationEntry()
         List<String> methodIds = nav.buildPotentialMethodIds(codeObjectNavigation);
         if (methodIds.size() == 1) {
@@ -189,7 +211,7 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
         InsightsService.getInstance(project).openHistogram(instrumentationLibrary, name, insightType);
     }
 
-    private void openLiveView(JsonNode jsonNode) throws JsonProcessingException {
+    private void openLiveView(JsonNode jsonNode) throws JsonProcessingException, AnalyticsServiceException {
         Log.log(LOGGER::debug, project, "got INSIGHTS/OPEN_LIVE_VIEW message");
         var prefixedCodeObjectId = objectMapper.readTree(jsonNode.get("payload").toString()).get("prefixedCodeObjectId").asText();
         Log.log(LOGGER::debug, project, "got prefixedCodeObjectId {}", prefixedCodeObjectId);

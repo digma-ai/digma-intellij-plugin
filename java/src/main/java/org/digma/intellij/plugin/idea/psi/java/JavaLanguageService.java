@@ -191,6 +191,11 @@ public class JavaLanguageService implements LanguageService {
 
     }
 
+    @Override
+    public @Nullable String detectMethodBySpan(@NotNull Project project, String spanCodeObjectId) {
+        return null;
+    }
+
     private String safelyTryGetClassName(PsiElement element) {
         PsiClass psiClass = PsiTreeUtil.getParentOfType(element, PsiClass.class);
         if (psiClass != null) {

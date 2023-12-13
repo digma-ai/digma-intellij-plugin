@@ -136,6 +136,11 @@ public class PythonLanguageService implements LanguageService {
         }), Throwable.class, 50, 5);
     }
 
+    @Override
+    public @Nullable String detectMethodBySpan(@NotNull Project project, String spanCodeObjectId) {
+        return null;
+    }
+
 
     /**
      * navigate to a method. this method is meant to be used only to navigate to a method in the current selected editor.

@@ -117,6 +117,11 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     }
 
     @Override
+    public @Nullable String detectMethodBySpan(@NotNull Project project, String spanCodeObjectId) {
+        return null;
+    }
+
+    @Override
     public void navigateToMethod(String methodId) {
 
         Log.log(LOGGER::debug, "got navigate to method request {}", methodId);

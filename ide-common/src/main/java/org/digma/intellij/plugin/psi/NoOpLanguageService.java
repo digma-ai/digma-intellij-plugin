@@ -58,6 +58,11 @@ public class NoOpLanguageService implements LanguageService {
     }
 
     @Override
+    public @Nullable String detectMethodBySpan(@NotNull Project project, String spanCodeObjectId) {
+        return null;
+    }
+
+    @Override
     public void navigateToMethod(String methodId) {
         //nothing to do
     }

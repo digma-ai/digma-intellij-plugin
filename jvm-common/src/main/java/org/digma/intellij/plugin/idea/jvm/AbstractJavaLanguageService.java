@@ -30,6 +30,7 @@ import org.digma.intellij.plugin.common.ReadActions;
 import org.digma.intellij.plugin.common.Retries;
 import org.digma.intellij.plugin.common.SlowOperationsUtilsKt;
 import org.digma.intellij.plugin.editor.EditorUtils;
+import org.digma.intellij.plugin.idea.psi.AbstractJvmLanguageService;
 import org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService;
 import org.digma.intellij.plugin.idea.psi.java.JavaCodeObjectDiscovery;
 import org.digma.intellij.plugin.idea.psi.java.JavaDocumentInfoIndex;

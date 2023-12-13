@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.idea.jvm
+package org.digma.intellij.plugin.idea.psi.kotlin
 
 import com.intellij.codeInsight.codeVision.CodeVisionEntry
 import com.intellij.lang.Language
@@ -26,10 +26,10 @@ import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.Retries
 import org.digma.intellij.plugin.common.allowSlowOperation
 import org.digma.intellij.plugin.editor.EditorUtils
+import org.digma.intellij.plugin.idea.psi.AbstractJvmLanguageService
 import org.digma.intellij.plugin.idea.psi.createMethodCodeObjectId
 import org.digma.intellij.plugin.idea.psi.java.JavaEndpointNavigationProvider
 import org.digma.intellij.plugin.idea.psi.java.JavaSpanNavigationProvider
-import org.digma.intellij.plugin.idea.psi.kotlin.KotlinCodeObjectDiscovery
 import org.digma.intellij.plugin.instrumentation.CanInstrumentMethodResult
 import org.digma.intellij.plugin.instrumentation.JvmCanInstrumentMethodResult
 import org.digma.intellij.plugin.log.Log

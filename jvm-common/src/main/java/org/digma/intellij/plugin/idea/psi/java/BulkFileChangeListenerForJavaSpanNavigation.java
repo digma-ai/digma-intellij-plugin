@@ -6,7 +6,6 @@ import com.intellij.openapi.vfs.newvfs.events.VFileDeleteEvent;
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent;
 import org.digma.intellij.plugin.bulklistener.AbstractBulkFileChangeListener;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
-import org.digma.intellij.plugin.idea.jvm.JavaLanguageService;
 import org.digma.intellij.plugin.log.Log;
 import org.jetbrains.annotations.NotNull;
 

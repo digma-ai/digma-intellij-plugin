@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.idea.jvm
+package org.digma.intellij.plugin.idea.psi
 
 import com.google.common.collect.ImmutableMap
 import com.intellij.buildsystem.model.unified.UnifiedCoordinates
@@ -21,7 +21,6 @@ import org.digma.intellij.plugin.idea.buildsystem.JavaBuildSystem
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.idea.psi.discovery.MicrometerTracingFramework
-import org.digma.intellij.plugin.idea.psi.findMethodInClass
 import org.digma.intellij.plugin.idea.psi.java.Constants
 import org.digma.intellij.plugin.instrumentation.CanInstrumentMethodResult
 import org.digma.intellij.plugin.instrumentation.JvmCanInstrumentMethodResult

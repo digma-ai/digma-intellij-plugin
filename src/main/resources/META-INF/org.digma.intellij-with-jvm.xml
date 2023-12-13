@@ -5,7 +5,7 @@
 
     <extensions defaultExtensionNs="com.intellij">
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.idea.jvm.JavaLanguageService"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaLanguageService"/>
 
         <fileBasedIndex implementation="org.digma.intellij.plugin.idea.psi.java.JavaDocumentInfoIndex"/>
 

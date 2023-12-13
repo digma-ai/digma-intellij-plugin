@@ -1,4 +1,4 @@
-package org.digma.intellij.plugin.idea.jvm
+package org.digma.intellij.plugin.idea.psi.java
 
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.project.Project
@@ -8,6 +8,7 @@ import com.intellij.psi.PsiElementFactory
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.search.GlobalSearchScope
+import org.digma.intellij.plugin.idea.jvm.AbstractJavaLanguageService
 import org.digma.intellij.plugin.instrumentation.CanInstrumentMethodResult
 import org.digma.intellij.plugin.instrumentation.JvmCanInstrumentMethodResult
 import org.digma.intellij.plugin.log.Log

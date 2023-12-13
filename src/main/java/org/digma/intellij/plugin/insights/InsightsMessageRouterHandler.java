@@ -22,6 +22,8 @@ import org.digma.intellij.plugin.document.CodeObjectsUtil;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.insights.model.outgoing.InsightsPayload;
 import org.digma.intellij.plugin.insights.model.outgoing.Method;
+import org.digma.intellij.plugin.insights.model.outgoing.SetCodeLocationData;
+import org.digma.intellij.plugin.insights.model.outgoing.SetCodeLocationMessage;
 import org.digma.intellij.plugin.insights.model.outgoing.SetInsightsDataMessage;
 import org.digma.intellij.plugin.insights.model.outgoing.Span;
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil;
@@ -31,6 +33,7 @@ import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest;
 import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation;
+import org.digma.intellij.plugin.model.rest.navigation.SpanNavigationItem;
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.service.InsightsActionsService;
@@ -42,9 +45,12 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStart;
 import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStop;
+import static org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.serializeAndExecuteWindowPostMessageJavaScript;
 
 class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
@@ -153,48 +159,69 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
         Log.log(LOGGER::trace, project, "got insights types {}", insightTypeList);
         ActivityMonitor.getInstance(project).registerInsightsViewed(insightTypeList);
     }
-    private void getCodeLocations(JsonNode jsonNode) throws JsonProcessingException, AnalyticsServiceException {
+    private void getCodeLocations(JsonNode jsonNode) throws JsonProcessingException {
         Log.log(LOGGER::trace, project, "got INSIGHTS/GET_CODE_LOCATIONS message");
-        var spanCodeObjectId = objectMapper.readTree(jsonNode.get("payload").toString()).get("prefixedCodeObjectId").asText();
+        String spanCodeObjectId = objectMapper.readTree(jsonNode.get("payload").toString()).get("spanCodeObjectId").asText();
         var methodCodeObjectIdNode = objectMapper.readTree(jsonNode.get("payload").toString()).get("methodCodeObjectId");
-        if(methodCodeObjectIdNode != null)
-        {
-            var methodCodeObjectId = methodCodeObjectIdNode.asText();
-            if(methodCodeObjectId != null){
-                var pair = CodeObjectsUtil.getMethodClassAndName(methodCodeObjectId);
-                var classFqn = pair.getFirst();
-                var methodName = pair.getSecond();
 
 
+        List<String> codeLocations = new ArrayList<>();
 
+        try {
+            if(methodCodeObjectIdNode != null)
+            {
+                var methodCodeObjectId = methodCodeObjectIdNode.asText();
+                if(methodCodeObjectId != null && methodCodeObjectId != ""){
+                    codeLocations.add(GetMethodFQL(methodCodeObjectId));
+                    return;
+                }
             }
 
-        }
-
-
-        CodeObjectNavigation codeObjectNavigation = AnalyticsService.getInstance(project).getCodeObjectNavigation(spanCodeObjectId);
-
-
-        var nav = CodeNavigator.getInstance(project);
-        String methodCodeObjectId = nav.findMethodCodeObjectId(spanCodeObjectId);
-
-
-        /*
-
-        codeObjectNavigation.getNavigationEntry()
-        List<String> methodIds = nav.buildPotentialMethodIds(codeObjectNavigation);
-        if (methodIds.size() == 1) {
-            String methodId = methodIds.get(0);
-            if (nav.canNavigateToMethod(methodId)) {
-
+            var codeNavigator = CodeNavigator.getInstance(project);
+            var methodCodeObjectId = codeNavigator.findMethodCodeObjectId(spanCodeObjectId);
+            if (methodCodeObjectId != null) {
+                codeLocations.add(GetMethodFQL(methodCodeObjectId));
+                return;
             }
+
+
+            CodeObjectNavigation codeObjectNavigation = AnalyticsService.getInstance(project).getCodeObjectNavigation(spanCodeObjectId);
+            List<SpanNavigationItem> closestParentSpans = codeObjectNavigation.getNavigationEntry().getClosestParentSpans();
+            var distancedMap = new TreeMap<>(closestParentSpans.stream().collect(Collectors.groupingBy(o -> o.getDistance())));
+            for (var entry : distancedMap.entrySet()) {//exit when code location found sorted by distance.
+                List<SpanNavigationItem> navigationItems = entry.getValue();
+                for (var navigationItem : navigationItems) {
+                    methodCodeObjectId = navigationItem.getMethodCodeObjectId();
+                    if (methodCodeObjectId == null) {//no method code object attached to span, try using client side discovery
+                        methodCodeObjectId = codeNavigator.findMethodCodeObjectId(navigationItem.getSpanCodeObjectId());
+                    }
+                    if (methodCodeObjectId != null) {
+                        codeLocations.add(GetMethodFQL(methodCodeObjectId));
+                    }
+                }
+                if (!codeLocations.isEmpty()) {
+                    return;
+                }
+            }
+        } catch (AnalyticsServiceException e) {
+            Log.warnWithException(LOGGER, project, e, "Error getCodeLocations: {}", e.getMessage());
         }
-        else{
-
-        }*/
-
+        finally {
+            SetCodeLocations(codeLocations);
+        }
     }
 
+    private void SetCodeLocations(List<String> codeLocations) {
+        var message = new SetCodeLocationMessage("digma", "INSIGHTS/SET_CODE_LOCATIONS", new SetCodeLocationData(codeLocations));
+        serializeAndExecuteWindowPostMessageJavaScript( this.jbCefBrowser.getCefBrowser(), message);
+    }
+    private String GetMethodFQL(String methodCodeObjectId){
+        var pair = CodeObjectsUtil.getMethodClassAndName(methodCodeObjectId);
+        var classFqn = pair.getSecond();
+        var methodName = pair.getFirst();
+        return  String.format("%s.%s",classFqn,methodName);
+
+    }
     private void goToInsight(JsonNode jsonNode) throws JsonProcessingException {
         Log.log(LOGGER::debug, project, "got INSIGHTS/GO_TO_ASSET message");
         var spanId = objectMapper.readTree(jsonNode.get("payload").toString()).get("spanCodeObjectId").asText();
@@ -210,7 +237,7 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
         InsightsService.getInstance(project).openHistogram(instrumentationLibrary, name, insightType);
     }
 
-    private void openLiveView(JsonNode jsonNode) throws JsonProcessingException, AnalyticsServiceException {
+    private void openLiveView(JsonNode jsonNode) throws JsonProcessingException {
         Log.log(LOGGER::debug, project, "got INSIGHTS/OPEN_LIVE_VIEW message");
         var prefixedCodeObjectId = objectMapper.readTree(jsonNode.get("payload").toString()).get("prefixedCodeObjectId").asText();
         Log.log(LOGGER::debug, project, "got prefixedCodeObjectId {}", prefixedCodeObjectId);

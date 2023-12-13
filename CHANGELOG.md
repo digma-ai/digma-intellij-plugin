@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.214] - 2023-12-12
+## [2.0.215] - 2023-12-13
+- Update Jaeger UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1480
+- jaeger external browser support by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1484
+- Feature/Support jetty:run as maven plugin by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1485
+
+## 2.0.214 - 2023-12-12
 - Feature/spring boot micrometer tracing - support add env by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1470
 - add environmentType to RECENT_ACTIVITY/REGISTER by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1477
 - search query in quotes and don't send from recent activity Closes #1445 Closes #1443 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1469

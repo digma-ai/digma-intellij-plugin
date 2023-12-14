@@ -17,6 +17,7 @@ import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil
+import org.digma.intellij.plugin.jcef.common.UserRegistrationEvent
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
 import org.digma.intellij.plugin.ui.settings.SettingsChangeListener
@@ -97,11 +98,8 @@ class JCefComponent(
         }, settingsListenerParentDisposable)
 
 
-        project.messageBus.connect(this).subscribe(UserRegistrationEvent.USER_REGISTRATION_TOPIC, object : UserRegistrationEvent() {
-            override fun userRegistered(email: String) {
-                sendUserEmail(jbCefBrowser.cefBrowser, email)
-            }
-        })
+        project.messageBus.connect(this).subscribe(UserRegistrationEvent.USER_REGISTRATION_TOPIC,
+            UserRegistrationEvent { email -> sendUserEmail(jbCefBrowser.cefBrowser, email) })
 
     }
 

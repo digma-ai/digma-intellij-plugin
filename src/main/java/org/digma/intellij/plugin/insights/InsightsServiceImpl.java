@@ -27,6 +27,7 @@ import org.digma.intellij.plugin.insights.model.outgoing.Method;
 import org.digma.intellij.plugin.insights.model.outgoing.Span;
 import org.digma.intellij.plugin.insights.model.outgoing.ViewMode;
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil;
+import org.digma.intellij.plugin.jcef.common.UserRegistrationEvent;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan;
@@ -42,7 +43,6 @@ import org.digma.intellij.plugin.refreshInsightsTask.RefreshService;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.common.Laf;
 import org.digma.intellij.plugin.ui.common.MethodInstrumentationPresenter;
-import org.digma.intellij.plugin.ui.jcef.UserRegistrationEvent;
 import org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt;
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope;
 import org.digma.intellij.plugin.ui.model.DocumentScope;
@@ -163,7 +163,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
             SettingsState.getInstance().addChangeListener(settingsState -> JCefBrowserUtil.sendRequestToChangeTraceButtonEnabled(jbCefBrowser), this);
 
 
-            project.getMessageBus().connect(this).subscribe(UserRegistrationEvent.getUSER_REGISTRATION_TOPIC(), new UserRegistrationEvent() {
+            project.getMessageBus().connect(this).subscribe(UserRegistrationEvent.USER_REGISTRATION_TOPIC, new UserRegistrationEvent() {
                 @Override
                 public void userRegistered(@NotNull String email) {
                     sendUserEmail(jbCefBrowser.getCefBrowser(), email);

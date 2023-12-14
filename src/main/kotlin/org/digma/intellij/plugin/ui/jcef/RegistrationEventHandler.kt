@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
-import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.jcef.common.UserRegistrationEvent
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
@@ -18,7 +17,7 @@ class RegistrationEventHandler(private val project: Project) {
         }
     }
 
-    fun register(jsonNode: JsonNode, browser: CefBrowser) {
+    fun register(jsonNode: JsonNode) {
         val payloadNode = jsonNode.get("payload")
         val map: Map<String, String> =
             payloadNode.fields().asSequence()

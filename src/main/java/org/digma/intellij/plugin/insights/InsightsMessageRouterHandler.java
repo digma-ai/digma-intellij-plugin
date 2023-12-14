@@ -133,7 +133,7 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
                         }
                     }
                     case "INSIGHTS/GET_CODE_LOCATIONS" -> getCodeLocations(jsonNode);
-                    case JCefMessagesUtils.GLOBAL_REGISTER -> RegistrationEventHandler.getInstance(project).register(jsonNode,browser);
+                    case JCefMessagesUtils.GLOBAL_REGISTER -> RegistrationEventHandler.getInstance(project).register(jsonNode);
 
                     default -> throw new IllegalStateException("Unexpected value: " + action);
                 }

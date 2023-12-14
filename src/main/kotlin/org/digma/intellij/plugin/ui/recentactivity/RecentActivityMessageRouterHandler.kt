@@ -147,7 +147,7 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                 }
             }
             JCefMessagesUtils.GLOBAL_REGISTER -> {
-                RegistrationEventHandler.getInstance(project).register(requestJsonNode,browser)
+                RegistrationEventHandler.getInstance(project).register(requestJsonNode)
             }
 
             JCefMessagesUtils.GLOBAL_SET_OBSERVABILITY -> {

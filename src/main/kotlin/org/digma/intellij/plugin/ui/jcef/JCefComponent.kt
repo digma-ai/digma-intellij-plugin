@@ -68,7 +68,7 @@ class JCefComponent(
                     connectionEventAlarm.cancelAllRequests()
                     connectionEventAlarm.addRequest({
                         try {
-                            val status = project.service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionLost()
+                            val status = service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionLost()
                             updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
                         } catch (e: Exception) {
                             ErrorReporter.getInstance().reportError("JCefComponent.connectionLost", e)
@@ -81,7 +81,7 @@ class JCefComponent(
                     connectionEventAlarm.cancelAllRequests()
                     connectionEventAlarm.addRequest({
                         try {
-                            val status = project.service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionGained()
+                            val status = service<DockerService>().getCurrentDigmaInstallationStatusOnConnectionGained()
                             updateDigmaEngineStatus(jbCefBrowser.cefBrowser, status)
                         } catch (e: Exception) {
                             ErrorReporter.getInstance().reportError("JCefComponent.connectionGained", e)
@@ -95,6 +95,14 @@ class JCefComponent(
             val apiUrl = settings.apiUrl
             sendApiUrl(jbCefBrowser.cefBrowser, apiUrl)
         }, settingsListenerParentDisposable)
+
+
+        project.messageBus.connect(this).subscribe(UserRegistrationEvent.USER_REGISTRATION_TOPIC, object : UserRegistrationEvent() {
+            override fun userRegistered(email: String) {
+                sendUserEmail(jbCefBrowser.cefBrowser, email)
+            }
+        })
+
     }
 
 

@@ -1,7 +1,6 @@
 package org.digma.intellij.plugin.ui.jcef
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -20,16 +19,18 @@ class RegistrationEventHandler(private val project: Project) {
 
     fun register(jsonNode: JsonNode, browser: CefBrowser) {
         val payloadNode = jsonNode.get("payload")
-        val map: Map<String, String> = payloadNode.fields().asSequence().associate {
-            Pair(it.key, it.value.toString())
-        }
+        val map: Map<String, String> =
+            payloadNode.fields().asSequence()
+                .associate { mutableEntry: MutableMap.MutableEntry<String, JsonNode> -> Pair(mutableEntry.key, mutableEntry.value.asText()) }
 
-        project.service<ActivityMonitor>().registerUserActionEvent("register user",
-            map)
+        project.service<ActivityMonitor>().registerUserActionEvent("register user", map)
 
         val email = map["email"].toString()
         PersistenceService.getInstance().state.userRegistrationEmail = email
-        sendUserEmail(browser, email)
+
+        val publisher: UserRegistrationEvent = project.messageBus
+            .syncPublisher(UserRegistrationEvent.USER_REGISTRATION_TOPIC)
+        publisher.userRegistered(email)
     }
 
 }

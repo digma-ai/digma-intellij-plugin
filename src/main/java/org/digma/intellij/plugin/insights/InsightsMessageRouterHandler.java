@@ -13,6 +13,7 @@ import com.intellij.ui.jcef.JBCefBrowser;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.callback.CefQueryCallback;
+import org.cef.handler.CefDownloadHandlerAdapter;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
@@ -51,6 +52,7 @@ import java.util.stream.Collectors;
 import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStart;
 import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStop;
 import static org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.serializeAndExecuteWindowPostMessageJavaScript;
+
 
 class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 

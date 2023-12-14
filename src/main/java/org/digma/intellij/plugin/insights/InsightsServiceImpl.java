@@ -11,6 +11,7 @@ import com.intellij.ui.jcef.JBCefBrowser;
 import org.cef.CefApp;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefMessageRouter;
+import org.cef.handler.CefDownloadHandler;
 import org.cef.handler.CefLifeSpanHandlerAdapter;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
@@ -110,6 +111,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
             cefMessageRouter = CefMessageRouter.create();
             messageHandler = new InsightsMessageRouterHandler(project, jbCefBrowser);
             cefMessageRouter.addHandler(messageHandler, true);
+            jbCefClient.getCefClient().addDownloadHandler(new DownloadHandlerAdapter());
             jbCefClient.getCefClient().addMessageRouter(cefMessageRouter);
 
 

@@ -39,6 +39,7 @@ class JCefComponent(
     private val analyticsServiceConnectionEventMessageBusConnection: MessageBusConnection
     private val settingsListenerParentDisposable = Disposer.newDisposable()
     private val connectionEventAlarmParentDisposable = Disposer.newDisposable()
+    private val userRegistrationParentDisposable = Disposer.newDisposable()
 
 
     init {
@@ -98,7 +99,8 @@ class JCefComponent(
         }, settingsListenerParentDisposable)
 
 
-        project.messageBus.connect(this).subscribe(UserRegistrationEvent.USER_REGISTRATION_TOPIC,
+        project.messageBus.connect(userRegistrationParentDisposable).subscribe(
+            UserRegistrationEvent.USER_REGISTRATION_TOPIC,
             UserRegistrationEvent { email -> sendUserEmail(jbCefBrowser.cefBrowser, email) })
 
     }
@@ -109,6 +111,7 @@ class JCefComponent(
             Disposer.dispose(connectionEventAlarmParentDisposable)
             Disposer.dispose(analyticsServiceConnectionEventMessageBusConnection)
             Disposer.dispose(settingsListenerParentDisposable)
+            Disposer.dispose(userRegistrationParentDisposable)
             jbCefBrowser.dispose()
             cefMessageRouter.dispose()
             jbCefBrowser.jbCefClient.removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)

@@ -5,9 +5,19 @@
 
     <extensions defaultExtensionNs="com.intellij">
 
+        <!-- Note about light services:
+               It is possible to declare a service using the @Service annotation instead or
+               registering here, but it will create unnecessary services for different IDEs,
+               for example when the plugin s installed on Rider or Pycharm the java/kotlin
+               services are not necessary , and using @Service will create them.
+               So we need to stick with registering services here.
+               -->
+
+
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaLanguageService"/>
 
         <fileBasedIndex implementation="org.digma.intellij.plugin.idea.psi.java.JavaDocumentInfoIndex"/>
+
 
         <projectService
                 serviceImplementation="org.digma.intellij.plugin.idea.psi.navigation.JavaSpanNavigationProvider"/>
@@ -18,9 +28,9 @@
 
         <projectService
                 serviceImplementation="org.digma.intellij.plugin.idea.runcfg.AutoOtelAgentRunConfigurationWrapper"/>
-
         <applicationService serviceImplementation="org.digma.intellij.plugin.idea.runcfg.OTELJarProvider"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.idea.runcfg.OTELJarProviderStartup"/>
+
 
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.deps.ModulesDepsService"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.idea.deps.ModuleDepsStarter"/>
@@ -35,9 +45,17 @@
         <runConfigurationExtension
                 implementation="org.digma.intellij.plugin.idea.runcfg.OtelRunConfigurationExtension"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.idea.runcfg.RunConfigurationStartupActivity"/>
-
         <projectService
                 serviceImplementation="org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService"/>
+
+
+        <projectService
+                serviceImplementation="org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscoveryService"/>
+
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.kotlin.KotlinCodeLensService"/>
+
     </extensions>
 
 

@@ -15,7 +15,6 @@ import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.toUElementOfType
 
 
-@Service(Service.Level.PROJECT)
 class JavaCodeLensService(project: Project): AbstractCodeLensService(project) {
 
     companion object {

@@ -4,6 +4,7 @@ import com.intellij.codeInsight.codeVision.CodeVisionEntry
 import com.intellij.lang.Language
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -344,8 +345,8 @@ class KotlinLanguageService(project: Project) : AbstractJvmLanguageService(proje
         return true
     }
 
-    override fun getCodeLens(psiFile: PsiFile): MutableList<Pair<TextRange, CodeVisionEntry>> {
-        return mutableListOf()
+    override fun getCodeLens(psiFile: PsiFile): List<Pair<TextRange, CodeVisionEntry>> {
+        return project.service<KotlinCodeLensService>().getCodeLens(psiFile)
     }
 
 

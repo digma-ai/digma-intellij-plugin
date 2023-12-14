@@ -15,7 +15,6 @@
                 serviceImplementation="org.digma.intellij.plugin.idea.psi.navigation.JavaEndpointNavigationProvider"/>
         <postStartupActivity
                 implementation="org.digma.intellij.plugin.idea.psi.navigation.JavaSpanNavigationStartupActivity"/>
-        <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService"/>
 
         <projectService
                 serviceImplementation="org.digma.intellij.plugin.idea.runcfg.AutoOtelAgentRunConfigurationWrapper"/>

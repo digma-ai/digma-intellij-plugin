@@ -19,6 +19,8 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 
+import static org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt.getJaegerUrl;
+
 class InsightsIndexTemplateBuilder {
 
     private final Logger logger = Logger.getInstance(InsightsIndexTemplateBuilder.class);
@@ -28,6 +30,7 @@ class InsightsIndexTemplateBuilder {
     private static final String ENV_VARIABLE_IDE = "ide";
     private static final String USER_EMAIL_VARIABLE = "userEmail";
     private static final String USER_REGISTRATION_EMAIL_VARIABLE = "userRegistrationEmail";
+    private static final String JAEGER_URL_VARIABLE = "jaegerURL";
 
     private static final String IS_OBSERVABILITY_ENABLED_VARIABLE = "isObservabilityEnabled";
     private static final String IS_DOCKER_INSTALLED = "isDockerInstalled";
@@ -59,6 +62,8 @@ class InsightsIndexTemplateBuilder {
             data.put(USER_EMAIL_VARIABLE, userEmail == null ? "" : userEmail);
             var userRegistrationEmail = PersistenceService.getInstance().getState().getUserRegistrationEmail();
             data.put(USER_REGISTRATION_EMAIL_VARIABLE, userRegistrationEmail == null ? "" : userRegistrationEmail);
+            var jaegerUrl = getJaegerUrl();
+            data.put(JAEGER_URL_VARIABLE, jaegerUrl == null ? "" : jaegerUrl);
             data.put(IS_OBSERVABILITY_ENABLED_VARIABLE, PersistenceService.getInstance().getState().isAutoOtel());
             data.put(IS_DIGMA_ENGINE_INSTALLED, ApplicationManager.getApplication().getService(DockerService.class).isEngineInstalled());
             data.put(IS_DIGMA_ENGINE_RUNNING, ApplicationManager.getApplication().getService(DockerService.class).isEngineRunning(project));

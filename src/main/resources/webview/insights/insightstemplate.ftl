@@ -22,6 +22,7 @@
         window.codeFont = "${codeFont}";
         window.isJaegerEnabled= ${isJaegerEnabled?string('true', 'false')};
         window.userEmail = "${userEmail}";
+        window.userRegistrationEmail = "${userRegistrationEmail}";
         window.isObservabilityEnabled = ${isObservabilityEnabled?string('true', 'false')};
         window.isDigmaEngineInstalled = ${isDigmaEngineInstalled?string('true', 'false')};
         window.isDigmaEngineRunning = ${isDigmaEngineRunning?string('true', 'false')};

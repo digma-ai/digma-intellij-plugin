@@ -28,7 +28,7 @@ class RegistrationEventHandler(private val project: Project) {
             map)
 
         val email = map["email"].toString()
-        PersistenceService.getInstance().state.userEmail = email
+        PersistenceService.getInstance().state.userRegistrationEmail = email
         sendUserEmail(browser, email)
     }
 

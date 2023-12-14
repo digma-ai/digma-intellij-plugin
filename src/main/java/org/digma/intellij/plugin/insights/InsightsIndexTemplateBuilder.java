@@ -27,6 +27,8 @@ class InsightsIndexTemplateBuilder {
 
     private static final String ENV_VARIABLE_IDE = "ide";
     private static final String USER_EMAIL_VARIABLE = "userEmail";
+    private static final String USER_REGISTRATION_EMAIL_VARIABLE = "userRegistrationEmail";
+
     private static final String IS_OBSERVABILITY_ENABLED_VARIABLE = "isObservabilityEnabled";
     private static final String IS_DOCKER_INSTALLED = "isDockerInstalled";
     private static final String IS_DOCKER_COMPOSE_INSTALLED = "isDockerComposeInstalled";
@@ -55,6 +57,8 @@ class InsightsIndexTemplateBuilder {
             data.put(IS_JAEGER_ENABLED, JaegerUtilKt.isJaegerButtonEnabled());
             var userEmail = PersistenceService.getInstance().getState().getUserEmail();
             data.put(USER_EMAIL_VARIABLE, userEmail == null ? "" : userEmail);
+            var userRegistrationEmail = PersistenceService.getInstance().getState().getUserRegistrationEmail();
+            data.put(USER_REGISTRATION_EMAIL_VARIABLE, userRegistrationEmail == null ? "" : userRegistrationEmail);
             data.put(IS_OBSERVABILITY_ENABLED_VARIABLE, PersistenceService.getInstance().getState().isAutoOtel());
             data.put(IS_DIGMA_ENGINE_INSTALLED, ApplicationManager.getApplication().getService(DockerService.class).isEngineInstalled());
             data.put(IS_DIGMA_ENGINE_RUNNING, ApplicationManager.getApplication().getService(DockerService.class).isEngineRunning(project));

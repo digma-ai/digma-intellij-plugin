@@ -14,6 +14,7 @@ data class PersistenceData(
     var firstTimeAssetsReceived: Boolean = false,
     var firstTimeRecentActivityReceived: Boolean = false,
     var userEmail: String? = null,
+    var userRegistrationEmail: String? = null,
     var isLocalEngineInstalled: Boolean? = null,
     var isFirstTimePluginLoaded: Boolean = false,
     var userId: String? = null,

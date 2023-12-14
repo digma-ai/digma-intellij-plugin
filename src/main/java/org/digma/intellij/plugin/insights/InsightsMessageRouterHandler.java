@@ -13,7 +13,6 @@ import com.intellij.ui.jcef.JBCefBrowser;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.callback.CefQueryCallback;
-import org.cef.handler.CefDownloadHandlerAdapter;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
@@ -165,18 +164,16 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     }
     private void getCodeLocations(JsonNode jsonNode) throws JsonProcessingException {
         Log.log(LOGGER::trace, project, "got INSIGHTS/GET_CODE_LOCATIONS message");
-        String spanCodeObjectId = objectMapper.readTree(jsonNode.get("payload").toString()).get("spanCodeObjectId").asText();
-        var methodCodeObjectIdNode = objectMapper.readTree(jsonNode.get("payload").toString()).get("methodCodeObjectId");
-
-
-        List<String> codeLocations = new ArrayList<>();
-
+        JsonNode payload = objectMapper.readTree(jsonNode.get("payload").toString());
+        var spanCodeObjectId = payload.get("spanCodeObjectId").asText();
+        var methodCodeObjectIdNode = payload.get("methodCodeObjectId");
+        var codeLocations = new ArrayList<String>();
         try {
             if(methodCodeObjectIdNode != null)
             {
                 var methodCodeObjectId = methodCodeObjectIdNode.asText();
                 if(methodCodeObjectId != null && methodCodeObjectId != ""){
-                    codeLocations.add(GetMethodFQL(methodCodeObjectId));
+                    codeLocations.add(getMethodFQL(methodCodeObjectId));
                     return;
                 }
             }
@@ -184,7 +181,7 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
             var codeNavigator = CodeNavigator.getInstance(project);
             var methodCodeObjectId = codeNavigator.findMethodCodeObjectId(spanCodeObjectId);
             if (methodCodeObjectId != null) {
-                codeLocations.add(GetMethodFQL(methodCodeObjectId));
+                codeLocations.add(getMethodFQL(methodCodeObjectId));
                 return;
             }
 
@@ -200,7 +197,7 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
                         methodCodeObjectId = codeNavigator.findMethodCodeObjectId(navigationItem.getSpanCodeObjectId());
                     }
                     if (methodCodeObjectId != null) {
-                        codeLocations.add(GetMethodFQL(methodCodeObjectId));
+                        codeLocations.add(getMethodFQL(methodCodeObjectId));
                     }
                 }
                 if (!codeLocations.isEmpty()) {
@@ -211,18 +208,18 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
             Log.warnWithException(LOGGER, project, e, "Error getCodeLocations: {}", e.getMessage());
         }
         catch (Exception e){
-            Log.error(LOGGER, project, e, "unhandled error while getCodeLocations: {}", e.getMessage());
+            Log.warnWithException(LOGGER, project, e, "unhandled error while getCodeLocations: {}", e.getMessage());
         }
         finally {
-            SetCodeLocations(codeLocations);
+            setCodeLocations(codeLocations);
         }
     }
 
-    private void SetCodeLocations(List<String> codeLocations) {
+    private void setCodeLocations(List<String> codeLocations) {
         var message = new SetCodeLocationMessage("digma", "INSIGHTS/SET_CODE_LOCATIONS", new SetCodeLocationData(codeLocations));
         serializeAndExecuteWindowPostMessageJavaScript( this.jbCefBrowser.getCefBrowser(), message);
     }
-    private String GetMethodFQL(String methodCodeObjectId){
+    private String getMethodFQL(String methodCodeObjectId){
         var pair = CodeObjectsUtil.getMethodClassAndName(methodCodeObjectId);
         var classFqn = pair.getSecond();
         var methodName = pair.getFirst();

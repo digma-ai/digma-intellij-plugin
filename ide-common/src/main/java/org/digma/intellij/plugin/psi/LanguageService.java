@@ -237,7 +237,9 @@ public interface LanguageService extends Disposable {
     @NotNull
     MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int caretOffset);
     @Nullable
-    String detectMethodBySpan(@NotNull Project project, String spanCodeObjectId);
+    default String detectMethodBySpan(@NotNull Project project, String spanCodeObjectId){
+        return null;
+    }
     /**
      * This method is called from the function list preview tab panel and is meant to navigate
      * to a method of the current opened file. it will not navigate to any method in the project.

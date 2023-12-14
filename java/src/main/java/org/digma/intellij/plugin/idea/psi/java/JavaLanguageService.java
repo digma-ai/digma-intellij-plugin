@@ -202,14 +202,12 @@ public class JavaLanguageService implements LanguageService {
         Integer offset = pair.getSecond();
 
         try {
-            var psiJavaFile = (PsiJavaFile)PsiUtils.uriToPsiFile(fileUri, project);
-            String packageName = psiJavaFile.getPackageName();
-            PsiElement elm = psiJavaFile.findElementAt(offset);
+            var psiFile = PsiUtils.uriToPsiFile(fileUri, project);
+            PsiElement elm = psiFile.findElementAt(offset);
             if (elm == null) {
                 return null;
             }
             PsiMethod psiMethod = PsiTreeUtil.getParentOfType(elm, PsiMethod.class);
-            String className = safelyTryGetClassName(elm);
             if (psiMethod == null) {
                 return null;
             }

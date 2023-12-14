@@ -10,7 +10,7 @@ import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 
 @Service(Service.Level.PROJECT)
-class RegistrationEventHandler(private val project: Project) : Disposable {
+class RegistrationEventHandler(private val project: Project) {
     companion object {
         @JvmStatic
         fun getInstance(project: Project): RegistrationEventHandler {
@@ -32,7 +32,4 @@ class RegistrationEventHandler(private val project: Project) : Disposable {
         sendUserEmail(browser, email)
     }
 
-    override fun dispose() {
-        TODO("Not yet implemented")
-    }
 }

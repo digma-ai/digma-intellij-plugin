@@ -39,6 +39,7 @@ import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.service.InsightsActionsService;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
+import org.digma.intellij.plugin.ui.jcef.RegistrationEventHandler;
 import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest;
 import org.digma.intellij.plugin.ui.service.InsightsService;
 import org.digma.intellij.plugin.ui.settings.Theme;
@@ -133,6 +134,7 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
                         }
                     }
                     case "INSIGHTS/GET_CODE_LOCATIONS" -> getCodeLocations(jsonNode);
+                    case JCefMessagesUtils.GLOBAL_REGISTER -> RegistrationEventHandler.getInstance(project).register(jsonNode,browser);
 
                     default -> throw new IllegalStateException("Unexpected value: " + action);
                 }

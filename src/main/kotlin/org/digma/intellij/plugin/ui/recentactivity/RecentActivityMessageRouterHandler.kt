@@ -11,12 +11,11 @@ import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.ui.common.ObservabilityUtil
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
-import org.digma.intellij.plugin.ui.jcef.sendUserEmail
+import org.digma.intellij.plugin.ui.jcef.RegistrationEventHandler
 import org.digma.intellij.plugin.ui.jcef.tryGetFieldFromPayload
 import org.digma.intellij.plugin.ui.jcef.updateDigmaEngineStatus
 import org.digma.intellij.plugin.ui.list.insights.traceButtonName
@@ -147,34 +146,8 @@ class RecentActivityMessageRouterHandler(project: Project) : BaseMessageRouterHa
                     project.service<RecentActivityUpdater>().updateLatestActivities()
                 }
             }
-            "GLOBAL/REGISTER" -> {
-                var payload = objectMapper.readTree(requestJsonNode.get("payload").toString())
-                /*
-                 {
-                    "payload": {
-                        "key1":"value",
-                        "key2":"value",
-                    }
-                 }
-                *
-                * */
-            }
-
-            "RECENT_ACTIVITY/REGISTER" -> {
-                var payload = objectMapper.readTree(requestJsonNode.get("payload").toString())
-                val email = payload.get("email").asText()
-
-                val fullNameNode = payload.get("fullName")
-                var fullName = if(fullNameNode == null) "" else fullNameNode.asText()
-
-                val environmentTypeNode = payload.get("selectedEnvironmentType")
-                var environmentType = if(environmentTypeNode == null) "" else environmentTypeNode.asText()
-
-
-                project.service<ActivityMonitor>().registerUserActionEvent("register user email in add environment flow",
-                    mapOf("email" to email, "fullName" to fullName, "environmentType" to environmentType))
-                PersistenceService.getInstance().state.userEmail = email
-                sendUserEmail(browser, email)
+            JCefMessagesUtils.GLOBAL_REGISTER -> {
+                RegistrationEventHandler.getInstance(project).register(requestJsonNode,browser)
             }
 
             JCefMessagesUtils.GLOBAL_SET_OBSERVABILITY -> {

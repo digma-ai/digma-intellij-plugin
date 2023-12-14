@@ -7,8 +7,11 @@ import java.beans.ConstructorProperties
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class SpanNPlusEndpoints
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@ConstructorProperties("endpointInfo", "occurrences")
+@ConstructorProperties("endpointInfo", "occurrences", "severity", "impact", "criticality")
 constructor(
         val endpointInfo: EndpointInfo,
-        val occurrences: Number
+        val occurrences: Number,
+        val severity: Double,
+        val impact: Double,
+        val criticality: Double
 )

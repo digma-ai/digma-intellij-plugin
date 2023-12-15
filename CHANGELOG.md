@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.215] - 2023-12-13
+## [2.0.216] - 2023-12-15
+- Jira ticket like by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1489
+
+## 2.0.215 - 2023-12-13
 - Update Jaeger UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1480
 - jaeger external browser support by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1484
 - Feature/Support jetty:run as maven plugin by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1485

@@ -59,7 +59,7 @@ fun sendApiUrl(cefBrowser: CefBrowser, url: String) {
 fun sendUserEmail(cefBrowser: CefBrowser, email: String) {
     val setUserEmailMessage = SetUserEmailMessage(
         JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
-        "GLOBAL/SET_USER_EMAIL", UserEmailPayload(email)
+        "GLOBAL/SET_USER_REGISTRATION_EMAIL", UserEmailPayload(email)
     )
     serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, setUserEmailMessage)
 }

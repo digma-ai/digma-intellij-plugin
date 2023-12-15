@@ -24,7 +24,10 @@ data class SlowestSpansInsight
         "spanInfo",
         "route",
         "serviceName",
-        "spans"
+        "spans",
+        "severity",
+        "impact",
+        "criticality"
 )
 constructor(
         override val codeObjectId: String,
@@ -43,6 +46,9 @@ constructor(
         override var route: String,
         override var serviceName: String,
         val spans: List<SlowSpanInfo>,
+        override val severity: Double,
+        override val impact: Double,
+        override val criticality: Double
 ) : EndpointInsight {
     override val type: InsightType = InsightType.SlowestSpans
 }

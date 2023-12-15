@@ -15,6 +15,8 @@ import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.SupportedLanguages
 import org.digma.intellij.plugin.service.EditorService
 import org.digma.intellij.plugin.ui.ToolWindowShower
+import org.digma.intellij.plugin.ui.service.ErrorsViewService
+import org.digma.intellij.plugin.ui.service.InsightsService
 
 @Service(Service.Level.PROJECT)
 class CodeNavigator(val project: Project) {
@@ -147,6 +149,18 @@ class CodeNavigator(val project: Project) {
 
         return false
     }
+    fun findMethodCodeObjectId(spanCodeObjectId: String): String? {
+        SupportedLanguages.values().forEach { language ->
+            val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
+            if (languageService != null) {
+                val methodCodeObjectId = ReadActions.ensureReadAction<String> {
+                    languageService.detectMethodBySpan(project, CodeObjectsUtil.stripSpanPrefix(spanCodeObjectId))
+                }
+                return methodCodeObjectId;
+            }
+        }
+        return null;
+    }
 
     fun getMethodLocation(methodId: String): Pair<String, Int>? {
 
@@ -230,6 +244,11 @@ class CodeNavigator(val project: Project) {
             project.service<EditorService>().openWorkspaceFileInEditor(fileUri, 1)
         }
     }
-
+    companion object {
+        @JvmStatic
+        fun getInstance(project: Project): CodeNavigator {
+            return project.service<CodeNavigator>()
+        }
+    }
 
 }

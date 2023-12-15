@@ -24,6 +24,9 @@ data class EndpointBreakdownInsight
     "spanInfo",
     "route",
     "serviceName",
+    "severity",
+    "impact",
+    "criticality"
 )
 constructor(
     override val codeObjectId: String,
@@ -41,6 +44,9 @@ constructor(
     override val spanInfo: SpanInfo,
     override var route: String,
     override var serviceName: String,
+    override val severity: Double,
+    override val impact: Double,
+    override val criticality: Double
 ) : EndpointInsight {
     override val type: InsightType = InsightType.EndpointBreakdown
 

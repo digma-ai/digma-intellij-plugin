@@ -27,6 +27,7 @@ import org.digma.intellij.plugin.insights.model.outgoing.Method;
 import org.digma.intellij.plugin.insights.model.outgoing.Span;
 import org.digma.intellij.plugin.insights.model.outgoing.ViewMode;
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil;
+import org.digma.intellij.plugin.jcef.common.UserRegistrationEvent;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan;
@@ -67,6 +68,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
+
+import static org.digma.intellij.plugin.ui.jcef.JCefMessagesUtilsKt.sendUserEmail;
 
 public final class InsightsServiceImpl implements InsightsService, Disposable {
 
@@ -110,6 +113,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
             cefMessageRouter = CefMessageRouter.create();
             messageHandler = new InsightsMessageRouterHandler(project, jbCefBrowser);
             cefMessageRouter.addHandler(messageHandler, true);
+            jbCefClient.getCefClient().addDownloadHandler(new DownloadHandlerAdapter());
             jbCefClient.getCefClient().addMessageRouter(cefMessageRouter);
 
 
@@ -158,6 +162,13 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
             //todo: change to JaegerButtonStateListener().start(project, jCefComponent)
             SettingsState.getInstance().addChangeListener(settingsState -> JCefBrowserUtil.sendRequestToChangeTraceButtonEnabled(jbCefBrowser), this);
 
+
+            project.getMessageBus().connect(this).subscribe(UserRegistrationEvent.USER_REGISTRATION_TOPIC, new UserRegistrationEvent() {
+                @Override
+                public void userRegistered(@NotNull String email) {
+                    sendUserEmail(jbCefBrowser.getCefBrowser(), email);
+                }
+            });
         }
     }
 

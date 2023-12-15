@@ -22,6 +22,7 @@ import java.nio.charset.StandardCharsets
 
 private const val ENV_VARIABLE_IDE = "ide"
 private const val USER_EMAIL_VARIABLE = "userEmail"
+private const val USER_REGISTRATION_EMAIL_VARIABLE = "userRegistrationEmail"
 private const val IS_OBSERVABILITY_ENABLED_VARIABLE = "isObservabilityEnabled"
 private const val IS_DOCKER_INSTALLED = "isDockerInstalled"
 private const val IS_DOCKER_COMPOSE_INSTALLED = "isDockerComposeInstalled"
@@ -55,6 +56,7 @@ abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val 
             data[ENV_VARIABLE_IDE] = ApplicationNamesInfo.getInstance().productName
             data[IS_JAEGER_ENABLED] = isJaegerButtonEnabled()
             data[USER_EMAIL_VARIABLE] = PersistenceService.getInstance().state.userEmail ?: ""
+            data[USER_REGISTRATION_EMAIL_VARIABLE] = PersistenceService.getInstance().state.userRegistrationEmail ?: ""
             data[IS_OBSERVABILITY_ENABLED_VARIABLE] = PersistenceService.getInstance().state.isAutoOtel
             data[IS_DIGMA_ENGINE_INSTALLED] = service<DockerService>().isEngineInstalled()
             data[IS_DIGMA_ENGINE_RUNNING] = service<DockerService>().isEngineRunning(project)

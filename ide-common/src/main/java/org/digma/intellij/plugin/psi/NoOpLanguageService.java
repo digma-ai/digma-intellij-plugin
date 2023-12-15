@@ -56,7 +56,6 @@ public class NoOpLanguageService implements LanguageService {
     public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, Editor selectedEditor, int caretOffset) {
         return MethodUnderCaret.getEMPTY();
     }
-
     @Override
     public void navigateToMethod(String methodId) {
         //nothing to do

@@ -136,7 +136,6 @@ public class PythonLanguageService implements LanguageService {
         }), Throwable.class, 50, 5);
     }
 
-
     /**
      * navigate to a method. this method is meant to be used only to navigate to a method in the current selected editor.
      * it is used from the methods preview list. it will not navigate to any method in the project.

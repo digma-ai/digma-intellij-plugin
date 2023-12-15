@@ -50,11 +50,13 @@ import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
 import org.digma.intellij.plugin.psi.CanInstrumentMethodResult;
 import org.digma.intellij.plugin.psi.LanguageService;
+import org.digma.intellij.plugin.psi.PsiFileNotFountException;
 import org.digma.intellij.plugin.psi.PsiUtils;
 import org.digma.intellij.plugin.ui.CaretContextService;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -188,6 +190,33 @@ public class JavaLanguageService implements LanguageService {
 
             return new MethodUnderCaret("", "", className, packageName, fileUri);
         })), Throwable.class, 50, 5);
+
+    }
+
+    @Override
+    public @Nullable String detectMethodBySpan(@NotNull Project project, String spanCodeObjectId) {
+        var urisForSpanIds = JavaSpanNavigationProvider.getInstance(project).getUrisForSpanIds(Arrays.asList(spanCodeObjectId));
+        if(!urisForSpanIds.containsKey(spanCodeObjectId)) return null;
+        var pair = urisForSpanIds.get(spanCodeObjectId);
+        String fileUri = pair.getFirst();
+        Integer offset = pair.getSecond();
+
+        try {
+            var psiFile = PsiUtils.uriToPsiFile(fileUri, project);
+            PsiElement elm = psiFile.findElementAt(offset);
+            if (elm == null) {
+                return null;
+            }
+            PsiMethod psiMethod = PsiTreeUtil.getParentOfType(elm, PsiMethod.class);
+            if (psiMethod == null) {
+                return null;
+            }
+            return JavaLanguageUtils.createJavaMethodCodeObjectId(psiMethod);
+
+        } catch (PsiFileNotFountException e) {
+            return null;
+        }
+
 
     }
 

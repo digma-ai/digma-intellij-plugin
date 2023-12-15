@@ -254,3 +254,22 @@ fun isJaegerButtonEnabled(): Boolean {
     return settingsState.jaegerLinkMode == LinkMode.Embedded ||
             (!settingsState.jaegerUrl.isNullOrBlank() && CommonUtils.isWelFormedUrl(settingsState.jaegerUrl))
 }
+
+fun getJaegerUrl(): String ?{
+    val settingsState = SettingsState.getInstance()
+    val jaegerBaseUrl = settingsState.jaegerUrl?.trim()?.trimEnd('/')
+    val jaegerQueryUrl = SettingsState.getInstance().jaegerQueryUrl
+
+    return when (settingsState.jaegerLinkMode) {
+
+        LinkMode.Internal -> {
+            jaegerBaseUrl
+        }
+        LinkMode.External -> {
+            jaegerBaseUrl
+        }
+        LinkMode.Embedded -> {
+            jaegerQueryUrl
+        }
+    }
+}

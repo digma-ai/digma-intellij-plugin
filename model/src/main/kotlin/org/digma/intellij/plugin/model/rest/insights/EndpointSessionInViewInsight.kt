@@ -22,7 +22,10 @@ data class EndpointSessionInViewInsight
         "spanInfo",
         "route",
         "serviceName",
-        "spans"
+        "spans",
+        "severity",
+        "impact",
+        "criticality"
 )
 constructor(
     override val codeObjectId: String,
@@ -38,6 +41,9 @@ constructor(
     override var route: String,
     override var serviceName: String,
     val spans: List<SessionInViewSpanInfo>,
+    override val severity: Double,
+    override val impact: Double,
+    override val criticality: Double
 ) : EndpointInsight {
         override val type: InsightType = InsightType.EndpointSessionInView
         override val isRecalculateEnabled: Boolean = true // should remove the setter = true later ...support backward compatibility

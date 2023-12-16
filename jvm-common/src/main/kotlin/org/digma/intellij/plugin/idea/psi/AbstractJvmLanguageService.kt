@@ -25,7 +25,9 @@ import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
+import com.intellij.psi.PsiMethod
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.util.PsiTreeUtil
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.Retries
@@ -48,14 +50,17 @@ import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
 import org.digma.intellij.plugin.psi.LanguageService
+import org.digma.intellij.plugin.psi.PsiFileNotFountException
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.ui.CaretContextService
+import org.jetbrains.kotlin.asJava.namedUnwrappedElement
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.toUElementOfType
+import java.util.Collections
 import java.util.Objects
 import java.util.function.Consumer
 
@@ -254,6 +259,34 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
     }
 
 
+    override fun detectMethodBySpan(project: Project, spanCodeObjectId: String?): String? {
+
+        val urisForSpanIds: Map<String, Pair<String, Int>> =
+            JavaSpanNavigationProvider.getInstance(project).getUrisForSpanIds(Collections.singletonList(spanCodeObjectId))
+
+        val pair = urisForSpanIds[spanCodeObjectId]
+        return pair?.let {
+            val fileUri: String = it.first
+            val offset: Int = it.second
+            try {
+
+                val psiFile = PsiUtils.uriToPsiFile(fileUri, project)
+                val element = psiFile.findElementAt(offset)
+                element?.let {
+                    val psiMethod = PsiTreeUtil.getParentOfType(it, PsiMethod::class.java)
+                    psiMethod?.let {
+                        createPsiMethodCodeObjectId(it)
+                    }
+                }
+
+            } catch (e: PsiFileNotFountException) {
+                null
+            }
+        }
+    }
+
+
+
     fun findMethodByMethodCodeObjectId(methodId: String?): UMethod? {
         if (methodId == null) return null
 
@@ -336,7 +369,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
         val underCaret: PsiElement =
             psiFile.findElementAt(caretOffset) ?: return MethodUnderCaret("", "", "", packageName, fileUri, true)
         val uMethod = findParentMethod(underCaret)
-        val className: String = uMethod?.getParentOfType<UClass>()?.name ?: ""
+        val className: String = uMethod?.getParentOfType<UClass>()?.namedUnwrappedElement?.name ?: ""
         if (uMethod != null) {
             return MethodUnderCaret(
                 createMethodCodeObjectId(uMethod),
@@ -480,10 +513,9 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
     protected fun isSpringBootAndMicrometer(module: Module): Boolean {
         val modulesDepsService = ModulesDepsService.getInstance(project)
-        val springBootMicrometerConfigureDepsService = SpringBootMicrometerConfigureDepsService.getInstance(project)
 
         return (modulesDepsService.isSpringBootModule(module)
-                && springBootMicrometerConfigureDepsService.isSpringBootWithMicrometer())
+                && SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer())
     }
 
 

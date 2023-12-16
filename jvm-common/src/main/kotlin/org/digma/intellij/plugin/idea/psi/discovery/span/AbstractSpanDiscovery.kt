@@ -11,8 +11,8 @@ import com.intellij.psi.SmartPsiElementPointer
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.searches.AnnotatedElementsSearch
 import com.intellij.psi.search.searches.MethodReferencesSearch
-import org.digma.intellij.plugin.idea.psi.SPAN_BUILDER_FQN
-import org.digma.intellij.plugin.idea.psi.WITH_SPAN_ANNOTATION_FQN
+import org.digma.intellij.plugin.SPAN_BUILDER_FQN
+import org.digma.intellij.plugin.WITH_SPAN_ANNOTATION_FQN
 import org.digma.intellij.plugin.idea.psi.discovery.MicrometerTracingFramework
 import org.digma.intellij.plugin.idea.psi.findMethodInClass
 import org.digma.intellij.plugin.model.discovery.SpanInfo

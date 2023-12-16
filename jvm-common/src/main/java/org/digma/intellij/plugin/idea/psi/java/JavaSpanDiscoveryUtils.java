@@ -27,17 +27,21 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import static org.digma.intellij.plugin.DiscoveryConstantsKt.GLOBAL_OPENTELEMETY_FQN;
+import static org.digma.intellij.plugin.DiscoveryConstantsKt.JAKARTA_INJECT_FQN;
+import static org.digma.intellij.plugin.DiscoveryConstantsKt.JAVAX_INJECT_FQN;
+import static org.digma.intellij.plugin.DiscoveryConstantsKt.OPENLIBERTY_MICROPROFILE_INST_LIB;
+import static org.digma.intellij.plugin.DiscoveryConstantsKt.OPENTELEMETY_FQN;
+import static org.digma.intellij.plugin.DiscoveryConstantsKt.SPAN_BUILDER_FQN;
+import static org.digma.intellij.plugin.DiscoveryConstantsKt.TRACER_BUILDER_FQN;
+import static org.digma.intellij.plugin.DiscoveryConstantsKt.TRACER_FQN;
+import static org.digma.intellij.plugin.DiscoveryConstantsKt.WITH_SPAN_ANNOTATION_FQN;
+import static org.digma.intellij.plugin.DiscoveryConstantsKt.WITH_SPAN_INST_LIBRARY_1;
+import static org.digma.intellij.plugin.DiscoveryConstantsKt.WITH_SPAN_INST_LIBRARY_2;
+import static org.digma.intellij.plugin.DiscoveryConstantsKt.WITH_SPAN_INST_LIBRARY_3;
+import static org.digma.intellij.plugin.DiscoveryConstantsKt.WITH_SPAN_INST_LIBRARY_4;
+import static org.digma.intellij.plugin.DiscoveryConstantsKt.WITH_SPAN_INST_LIBRARY_5;
 import static org.digma.intellij.plugin.idea.psi.JvmCodeObjectsUtilsKt.createPsiMethodCodeObjectId;
-import static org.digma.intellij.plugin.idea.psi.java.Constants.GLOBAL_OPENTELEMETY_FQN;
-import static org.digma.intellij.plugin.idea.psi.java.Constants.OPENTELEMETY_FQN;
-import static org.digma.intellij.plugin.idea.psi.java.Constants.SPAN_BUILDER_FQN;
-import static org.digma.intellij.plugin.idea.psi.java.Constants.TRACER_BUILDER_FQN;
-import static org.digma.intellij.plugin.idea.psi.java.Constants.TRACER_FQN;
-import static org.digma.intellij.plugin.idea.psi.java.Constants.WITH_SPAN_INST_LIBRARY_1;
-import static org.digma.intellij.plugin.idea.psi.java.Constants.WITH_SPAN_INST_LIBRARY_2;
-import static org.digma.intellij.plugin.idea.psi.java.Constants.WITH_SPAN_INST_LIBRARY_3;
-import static org.digma.intellij.plugin.idea.psi.java.Constants.WITH_SPAN_INST_LIBRARY_4;
-import static org.digma.intellij.plugin.idea.psi.java.Constants.WITH_SPAN_INST_LIBRARY_5;
 import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.createSpanIdForWithSpanAnnotation;
 import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.createSpanIdFromInstLibraryAndSpanName;
 import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.createSpanNameForWithSpanAnnotation;
@@ -69,7 +73,7 @@ public class JavaSpanDiscoveryUtils {
     @NotNull
     public static List<SpanInfo> getSpanInfoFromWithSpanAnnotatedMethod(@NotNull PsiMethod psiMethod) {
 
-        var withSpanAnnotation = psiMethod.getAnnotation(Constants.WITH_SPAN_FQN);
+        var withSpanAnnotation = psiMethod.getAnnotation(WITH_SPAN_ANNOTATION_FQN);
         var containingClass = psiMethod.getContainingClass();
         PsiFile containingFile = PsiTreeUtil.getParentOfType(psiMethod, PsiFile.class);
 
@@ -284,10 +288,10 @@ public class JavaSpanDiscoveryUtils {
             if (initializer instanceof PsiMethodCallExpression) {
                 return getInstLibraryFromMethodCallExpression(project, (PsiMethodCallExpression) initializer);
             } else {
-                if (tracerVariable.hasAnnotation(Constants.JAKARTA_INJECT_FQN)
-                        || tracerVariable.hasAnnotation(Constants.JAVAX_INJECT_FQN)) {
+                if (tracerVariable.hasAnnotation(JAKARTA_INJECT_FQN)
+                        || tracerVariable.hasAnnotation(JAVAX_INJECT_FQN)) {
                     //TODO: seems that Quarkus also supports this kind of injection, so maybe need to return List<String> (list of inst libs)
-                    return Constants.OPENLIBERTY_MICROPROFILE_INST_LIB;
+                    return OPENLIBERTY_MICROPROFILE_INST_LIB;
                 }
             }
         }

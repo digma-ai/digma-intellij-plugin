@@ -16,11 +16,6 @@ open class CanInstrumentMethodResult(val failureCause: IFailureCause? = null) {
         return failureCause == null
     }
 
-//    fun getFailureCause(): IFailureCause? {
-//        return failureCause
-//    }
-
-
 }
 
 

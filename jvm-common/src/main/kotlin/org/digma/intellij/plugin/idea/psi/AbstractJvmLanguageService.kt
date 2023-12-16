@@ -28,6 +28,8 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
+import org.digma.intellij.plugin.WITH_SPAN_ANNOTATION_FQN
+import org.digma.intellij.plugin.WITH_SPAN_DEPENDENCY_DESCRIPTION
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.Retries
@@ -39,7 +41,6 @@ import org.digma.intellij.plugin.idea.deps.ModulesDepsService
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.idea.psi.discovery.AbstractCodeObjectDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.MicrometerTracingFramework
-import org.digma.intellij.plugin.idea.psi.java.Constants
 import org.digma.intellij.plugin.idea.psi.navigation.JavaEndpointNavigationProvider
 import org.digma.intellij.plugin.idea.psi.navigation.JavaSpanNavigationProvider
 import org.digma.intellij.plugin.instrumentation.CanInstrumentMethodResult
@@ -460,8 +461,8 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
                 progressIndicator.checkCanceled()
 
-                var annotationClassFqn = Constants.WITH_SPAN_FQN
-                var dependencyCause = Constants.WITH_SPAN_DEPENDENCY_DESCRIPTION
+                var annotationClassFqn = WITH_SPAN_ANNOTATION_FQN
+                var dependencyCause = WITH_SPAN_DEPENDENCY_DESCRIPTION
                 if (isSpringBootAndMicrometer(module)) {
                     progressIndicator.checkCanceled()
 

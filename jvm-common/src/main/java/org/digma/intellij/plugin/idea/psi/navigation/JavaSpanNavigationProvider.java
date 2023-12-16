@@ -29,7 +29,6 @@ import org.digma.intellij.plugin.common.ReadActions;
 import org.digma.intellij.plugin.common.Retries;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.idea.psi.discovery.MicrometerTracingFramework;
-import org.digma.intellij.plugin.idea.psi.java.Constants;
 import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils;
 import org.digma.intellij.plugin.idea.psi.java.JavaSpanDiscoveryUtils;
 import org.digma.intellij.plugin.log.Log;
@@ -47,7 +46,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static org.digma.intellij.plugin.idea.psi.java.Constants.SPAN_BUILDER_FQN;
+import static org.digma.intellij.plugin.DiscoveryConstantsKt.SPAN_BUILDER_FQN;
+import static org.digma.intellij.plugin.DiscoveryConstantsKt.WITH_SPAN_ANNOTATION_FQN;
 import static org.digma.intellij.plugin.idea.psi.java.JavaSpanDiscoveryUtils.filterNonRelevantMethodsForSpanDiscovery;
 import static org.digma.intellij.plugin.idea.psi.java.JavaSpanDiscoveryUtils.filterNonRelevantReferencesForSpanDiscovery;
 
@@ -167,7 +167,7 @@ public class JavaSpanNavigationProvider implements Disposable {
         DumbService dumbService = DumbService.getInstance(project);
 
         PsiClass withSpanClass = Retries.retryWithResult(() -> dumbService.runReadActionInSmartMode(() ->
-                        JavaPsiFacade.getInstance(project).findClass(Constants.WITH_SPAN_FQN, GlobalSearchScope.allScope(project))),
+                        JavaPsiFacade.getInstance(project).findClass(WITH_SPAN_ANNOTATION_FQN, GlobalSearchScope.allScope(project))),
                 Throwable.class, 50, 5);
 
 

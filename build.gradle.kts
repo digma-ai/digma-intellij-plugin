@@ -55,15 +55,12 @@ dependencies {
     implementation(project(":analytics-provider"))
     implementation(project(":ide-common"))
     implementation(project(":jvm-common"))
-//    implementation(project(":java"))
-//    implementation(project(":kotlin"))
     implementation(project(":python"))
     implementation(project(":rider"))
 // todo: jetbrains recommend using the instrumented jar but there is a bug.
 // https://github.com/digma-ai/digma-intellij-plugin/issues/1017
 //    implementation(project(":ide-common", "instrumentedJar"))
-//    implementation(project(":java", "instrumentedJar"))
-//    implementation(project(":kotlin", "instrumentedJar"))
+//    implementation(project(":jvm-common", "instrumentedJar"))
 //    implementation(project(":python", "instrumentedJar"))
 //    implementation(project(":rider", "instrumentedJar"))
 

@@ -306,7 +306,7 @@ public class PythonLanguageService implements LanguageService {
             });
         }
 
-        PythonCodeLensService.getInstance(project).environmentChanged(newEnv);
+        PythonCodeLensService.getInstance(project).refreshCodeLens();
     }
 
 

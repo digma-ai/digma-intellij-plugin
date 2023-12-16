@@ -10,7 +10,7 @@ import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.notifications.NotificationUtil
 import org.digma.intellij.plugin.ui.common.Laf
-import org.digma.intellij.plugin.ui.common.MethodInstrumentationPresenter
+import org.digma.intellij.plugin.instrumentation.MethodInstrumentationPresenter
 import org.digma.intellij.plugin.ui.common.OtelDependencyButton
 import org.digma.intellij.plugin.ui.common.Text
 import org.digma.intellij.plugin.ui.common.asHtml

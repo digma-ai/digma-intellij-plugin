@@ -1,5 +1,3 @@
-import common.BuildProfiles
-import common.IdeFlavor
 import common.buildVersion
 import common.dynamicPlatformType
 import common.logBuildProfile
@@ -55,15 +53,14 @@ dependencies {
     implementation(libs.commons.lang3)
     implementation(project(":model"))
     implementation(project(":analytics-provider"))
-
     implementation(project(":ide-common"))
-    implementation(project(":java"))
+    implementation(project(":jvm-common"))
     implementation(project(":python"))
     implementation(project(":rider"))
 // todo: jetbrains recommend using the instrumented jar but there is a bug.
 // https://github.com/digma-ai/digma-intellij-plugin/issues/1017
 //    implementation(project(":ide-common", "instrumentedJar"))
-//    implementation(project(":java", "instrumentedJar"))
+//    implementation(project(":jvm-common", "instrumentedJar"))
 //    implementation(project(":python", "instrumentedJar"))
 //    implementation(project(":rider", "instrumentedJar"))
 
@@ -77,10 +74,19 @@ dependencies {
 
 
 intellij {
+
+    val platformType = properties("platformType")
+    val platformPlugins = project.platformPlugins().split(',').map(String::trim).filter(String::isNotEmpty)
+    val platformVersion = project.platformVersion()
+
+    println("Running with PlatformType: $platformType")
+    println("Running with PlatformPlugins: $platformPlugins")
+    println("Running with PlatformVersion: $platformVersion")
+
     pluginName.set(properties("pluginName"))
-    version.set(project.platformVersion())
-    type.set(properties("platformType"))
-    plugins.set(project.platformPlugins().split(',').map(String::trim).filter(String::isNotEmpty))
+    version.set(platformVersion)
+    type.set(platformType)
+    plugins.set(platformPlugins)
     downloadSources.set(project.shouldDownloadSources())
 
     pluginsRepositories {
@@ -119,7 +125,7 @@ project.afterEvaluate{
     //it can be written with task fqn like buildPlugin.dependsOn(":rider:buildPlugin")
     //but this syntax is not favorite by the gradle developers because it will cause eager initialization of the task.
     val buildPlugin = tasks.named("buildPlugin").get()
-    project(":java").afterEvaluate { buildPlugin.dependsOn(tasks.getByName("buildPlugin")) }
+    project(":jvm-common").afterEvaluate { buildPlugin.dependsOn(tasks.getByName("buildPlugin")) }
     project(":python").afterEvaluate { buildPlugin.dependsOn(tasks.getByName("buildPlugin")) }
     project(":rider").afterEvaluate { buildPlugin.dependsOn(tasks.getByName("buildPlugin")) }
 }

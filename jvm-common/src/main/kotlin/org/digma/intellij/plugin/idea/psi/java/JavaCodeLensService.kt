@@ -14,6 +14,7 @@ import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.toUElementOfType
 
 
+@Suppress("LightServiceMigrationCode")
 class JavaCodeLensService(project: Project): AbstractCodeLensService(project) {
 
 

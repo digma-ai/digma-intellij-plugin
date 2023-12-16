@@ -26,6 +26,7 @@ import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
+@Suppress("LightServiceMigrationCode")
 class QuarkusConfigureDepsService(private val project: Project) : Disposable {
 
     companion object {

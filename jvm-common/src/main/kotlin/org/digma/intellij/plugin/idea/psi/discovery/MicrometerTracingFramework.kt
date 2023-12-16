@@ -28,7 +28,7 @@ class MicrometerTracingFramework {
         const val OBSERVED_FQN = "io.micrometer.observation.annotation.Observed"
         const val OBSERVED_DEPENDENCY_DESCRIPTION = "micrometer.observation"
         const val OBSERVED_INST_LIB = "org.springframework.boot"
-        const val OBSERVED_MAX_LEN_OF_SPAN_NAME = 50
+        private const val OBSERVED_MAX_LEN_OF_SPAN_NAME = 50
 
         /**
          * used for renaming span names based on class name and/or method name.
@@ -37,7 +37,7 @@ class MicrometerTracingFramework {
          * for input of "HelloController" (class name) it will return "hello-controller"
          * for input of "doSomeWork" (method name) it will return "do-some-work"
          */
-        protected fun adjustSpanNamePart(spanNamePart: String): String {
+        private fun adjustSpanNamePart(spanNamePart: String): String {
             val sb = StringBuilder()
             for ((index, currChar) in spanNamePart.iterator().withIndex()) {
                 if (index == 0) {
@@ -54,7 +54,7 @@ class MicrometerTracingFramework {
             return sb.toString()
         }
 
-        protected fun convertSpanNameOfObserved(psiMethod: PsiMethod): String {
+        private fun convertSpanNameOfObserved(psiMethod: PsiMethod): String {
             // a method in java must have a containing class. (psiMethod.getContainingClass may return null because
             // it supports other languages like groovy and kotlin)
             //TODO: not sure how to behave when no class (for example in Kotlin)
@@ -72,7 +72,7 @@ class MicrometerTracingFramework {
             return sb.toString()
         }
 
-        protected fun observedMaxSpanName(spanName: String): String {
+        private fun observedMaxSpanName(spanName: String): String {
             return StringUtils.firstPart(spanName, OBSERVED_MAX_LEN_OF_SPAN_NAME)
         }
     }
@@ -98,7 +98,7 @@ class MicrometerTracingFramework {
         val newSpanClass = JavaPsiFacade.getInstance(project).findClass(NEW_SPAN_FQN, GlobalSearchScope.allScope(project))
         //maybe the annotation is not in the classpath
         if (newSpanClass != null) {
-            var psiMethods = AnnotatedElementsSearch.searchPsiMethods(newSpanClass, GlobalSearchScope.fileScope(psiFile))
+            val psiMethods = AnnotatedElementsSearch.searchPsiMethods(newSpanClass, GlobalSearchScope.fileScope(psiFile))
 //            psiMethods = JavaSpanDiscoveryUtils.filterNonRelevantMethodsForSpanDiscovery(psiMethods)
             for (it in psiMethods) {
                 val spanInfo = getSpanInfoFromNewSpanAnnotatedMethod(it)
@@ -121,7 +121,7 @@ class MicrometerTracingFramework {
         if (observedAnnotationClass != null) {
             // TODO: search for classes/interfaces that are annotated with OBSERVED_FQN and even child classes
 
-            var psiMethods = AnnotatedElementsSearch.searchPsiMethods(observedAnnotationClass, GlobalSearchScope.fileScope(psiFile))
+            val psiMethods = AnnotatedElementsSearch.searchPsiMethods(observedAnnotationClass, GlobalSearchScope.fileScope(psiFile))
 //            psiMethods = JavaSpanDiscoveryUtils.filterNonRelevantMethodsForSpanDiscovery(psiMethods)
             for (it in psiMethods) {
                 val spanInfo = getSpanInfoFromObservedAnnotatedMethod(it)
@@ -134,46 +134,7 @@ class MicrometerTracingFramework {
         return spanInfos
     }
 
-//    fun annotationSpanDiscovery(project: Project, psiFile: PsiFile, documentInfo: DocumentInfo) {
-//        newSpanAnnotationSpanDiscovery(project, psiFile, documentInfo)
-//        observedAnnotationSpanDiscovery(project, psiFile, documentInfo)
-//    }
 
-//    private fun newSpanAnnotationSpanDiscovery(project: Project, psiFile: PsiFile, documentInfo: DocumentInfo) {
-//        val newSpanClass = JavaPsiFacade.getInstance(project).findClass(NEW_SPAN_FQN, GlobalSearchScope.allScope(project))
-//        //maybe the annotation is not in the classpath
-//        if (newSpanClass != null) {
-//            var psiMethods = AnnotatedElementsSearch.searchPsiMethods(newSpanClass, GlobalSearchScope.fileScope(psiFile))
-////            psiMethods = JavaSpanDiscoveryUtils.filterNonRelevantMethodsForSpanDiscovery(psiMethods)
-//            for (it in psiMethods) {
-//                val spanInfo = getSpanInfoFromNewSpanAnnotatedMethod(it)
-//                if (spanInfo != null) {
-//                    Log.log(logger::debug, "Found span info {} for method {}", spanInfo.id, spanInfo.containingMethodId)
-//                    val methodInfo = documentInfo.methods[spanInfo.containingMethodId]
-//                    methodInfo!!.addSpan(spanInfo)
-//                }
-//            }
-//        }
-//    }
-
-//    private fun observedAnnotationSpanDiscovery(project: Project, psiFile: PsiFile, documentInfo: DocumentInfo) {
-//        val observedAnnotationClass = JavaPsiFacade.getInstance(project).findClass(OBSERVED_FQN, GlobalSearchScope.allScope(project))
-//        //maybe the annotation is not in the classpath
-//        if (observedAnnotationClass != null) {
-//            // TODO: search for classes/interfaces that are annotated with OBSERVED_FQN and even child classes
-//
-//            var psiMethods = AnnotatedElementsSearch.searchPsiMethods(observedAnnotationClass, GlobalSearchScope.fileScope(psiFile))
-////            psiMethods = JavaSpanDiscoveryUtils.filterNonRelevantMethodsForSpanDiscovery(psiMethods)
-//            for (it in psiMethods) {
-//                val spanInfo = getSpanInfoFromObservedAnnotatedMethod(it)
-//                if (spanInfo != null) {
-//                    Log.log(logger::debug, "Found span info {} for method {}", spanInfo.id, spanInfo.containingMethodId)
-//                    val methodInfo = documentInfo.methods[spanInfo.containingMethodId]
-//                    methodInfo!!.addSpan(spanInfo)
-//                }
-//            }
-//        }
-//    }
 
     fun getSpanInfoFromNewSpanAnnotatedMethod(psiMethod: PsiMethod): SpanInfo? {
         val newSpanAnnotation = psiMethod.getAnnotation(NEW_SPAN_FQN)

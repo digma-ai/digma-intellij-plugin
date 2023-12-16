@@ -13,6 +13,7 @@ import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.toUElementOfType
 
+@Suppress("LightServiceMigrationCode")
 class KotlinCodeLensService(project: Project) : AbstractCodeLensService(project) {
 
 

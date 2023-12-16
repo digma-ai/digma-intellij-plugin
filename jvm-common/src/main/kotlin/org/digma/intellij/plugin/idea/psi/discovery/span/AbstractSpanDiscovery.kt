@@ -45,7 +45,7 @@ abstract class AbstractSpanDiscovery {
 
 
         val micrometerSpans = micrometerTracingFramework.discoverSpans(project, psiFile)
-        micrometerSpans?.let {
+        micrometerSpans.let {
             spanInfos.addAll(it)
         }
 
@@ -62,7 +62,7 @@ abstract class AbstractSpanDiscovery {
 
             val spanInfos = mutableListOf<SpanInfo>()
 
-            val annotatedMethods: List<UMethod> = findAnnotatedMethods(project, withSpanClass, searchScope)
+            val annotatedMethods: List<UMethod> = findAnnotatedMethods(withSpanClass, searchScope)
 
             annotatedMethods.forEach {
 
@@ -77,7 +77,8 @@ abstract class AbstractSpanDiscovery {
     }
 
 
-    private fun findAnnotatedMethods(project: Project, withSpanClass: PsiClass, searchScope: GlobalSearchScope): List<UMethod> {
+    private fun findAnnotatedMethods(withSpanClass: PsiClass, searchScope: GlobalSearchScope): List<UMethod> {
+        //todo: different search for java/kotlin, for kotlin use KotlinAnnotatedElementsSearcher or KotlinAnnotationsIndex
         val psiMethods = AnnotatedElementsSearch.searchPsiMethods(withSpanClass, searchScope)
         return psiMethods.findAll().map { psiMethod: PsiMethod -> psiMethod.toUElementOfType<UMethod>()!! }
     }
@@ -92,16 +93,16 @@ abstract class AbstractSpanDiscovery {
             val startSpanMethod: PsiMethod? =
                 findMethodInClass(builderClass, "startSpan") { psiMethod: PsiMethod -> psiMethod.parameters.isEmpty() }
 
-            return startSpanMethod?.let {
+            return startSpanMethod?.let { method ->
 
                 val spanInfos = mutableListOf<SpanInfo>()
 
-                val startSpanReferences: Collection<UReferenceExpression> = findStartSpanMethodReferences(project, it, searchScope)
+                val startSpanReferences: Collection<UReferenceExpression> = findStartSpanMethodReferences(method, searchScope)
 
                 startSpanReferences.forEach { uReference ->
                     val spanInfo: SpanInfo? = getSpanInfoFromStartSpanMethodReference(project, uReference)
-                    spanInfo?.let {
-                        spanInfos.add(it)
+                    spanInfo?.let { span ->
+                        spanInfos.add(span)
                     }
 
                 }
@@ -114,12 +115,11 @@ abstract class AbstractSpanDiscovery {
     }
 
     private fun findStartSpanMethodReferences(
-        project: Project,
         startSpanMethod: PsiMethod,
         searchScope: GlobalSearchScope,
     ): Collection<UReferenceExpression> {
 
-        val methodReferences = MethodReferencesSearch.search(startSpanMethod, searchScope, true);
+        val methodReferences = MethodReferencesSearch.search(startSpanMethod, searchScope, true)
         //todo : maybe filter UReferenceExpression
         return methodReferences.findAll().map { psiReference: PsiReference -> psiReference.element.toUElementOfType<UReferenceExpression>()!! }
     }

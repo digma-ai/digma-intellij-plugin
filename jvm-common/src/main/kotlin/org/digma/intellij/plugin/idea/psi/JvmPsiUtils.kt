@@ -11,7 +11,7 @@ import org.jetbrains.uast.toUElementOfType
 
 
 fun findMethodInClass(project: Project, cls: UClass, methodId: String): UMethod? {
-    return getMethodsInClass(project, cls).filter { uMethod: UMethod -> methodId == createMethodCodeObjectId(uMethod) }.firstOrNull()
+    return getMethodsInClass(project, cls).firstOrNull { uMethod: UMethod -> methodId == createMethodCodeObjectId(uMethod) }
 }
 
 fun getMethodsInClass(project: Project, cls: UClass): Collection<UMethod> {

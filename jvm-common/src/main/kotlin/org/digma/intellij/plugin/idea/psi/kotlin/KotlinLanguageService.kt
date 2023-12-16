@@ -32,6 +32,7 @@ import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.toUElementOfType
 
+@Suppress("LightServiceMigrationCode")
 class KotlinLanguageService(project: Project) : AbstractJvmLanguageService(project, project.service<KotlinCodeObjectDiscovery>()) {
 
 

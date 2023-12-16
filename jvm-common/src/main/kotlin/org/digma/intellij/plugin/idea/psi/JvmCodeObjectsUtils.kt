@@ -52,9 +52,6 @@ fun createMethodCodeObjectId(uMethod: UMethod): String {
 }
 
 
-
-
-
 fun createSpanNameForWithSpanAnnotation(uMethod: UMethod, withSpanAnnotation: UAnnotation, containingClass: UClass): String {
 
     //must be called in ReadAction and smart mode
@@ -62,7 +59,7 @@ fun createSpanNameForWithSpanAnnotation(uMethod: UMethod, withSpanAnnotation: UA
     return if (!value.isNullOrBlank()) {
         value
     } else {
-        containingClass.name + "." + uMethod.name
+        containingClass.namedUnwrappedElement?.name + "." + uMethod.name
     }
 }
 
@@ -142,6 +139,7 @@ fun getLiteralValue(uLiteralExpression: ULiteralExpression): String? {
 
 
 //todo: move to JvmPsiUtils.kt
+@Suppress("UnstableApiUsage")
 fun findMethodInClass(psiClass: PsiClass, methodName: String, methodPredicate: Predicate<PsiMethod>): PsiMethod? {
     val methods = psiClass.findMethodsByName(methodName)
     for (method in methods) {

@@ -65,6 +65,7 @@ import java.util.Collections
 import java.util.Objects
 import java.util.function.Consumer
 
+@Suppress("MemberVisibilityCanBePrivate")
 abstract class AbstractJvmLanguageService(protected val project: Project, protected val codeObjectDiscovery: AbstractCodeObjectDiscovery) :
     LanguageService {
 
@@ -86,7 +87,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
 
     companion object {
-        val fileNamesToExclude = mutableSetOf<String>("package-info.java", "MavenWrapperDownloader.java")
+        val fileNamesToExclude = mutableSetOf("package-info.java", "MavenWrapperDownloader.java")
     }
 
 
@@ -272,11 +273,11 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
             try {
 
                 val psiFile = PsiUtils.uriToPsiFile(fileUri, project)
-                val element = psiFile.findElementAt(offset)
-                element?.let {
-                    val psiMethod = PsiTreeUtil.getParentOfType(it, PsiMethod::class.java)
-                    psiMethod?.let {
-                        createPsiMethodCodeObjectId(it)
+                val psiElement = psiFile.findElementAt(offset)
+                psiElement?.let { element ->
+                    val psiMethod = PsiTreeUtil.getParentOfType(element, PsiMethod::class.java)
+                    psiMethod?.let { method ->
+                        createPsiMethodCodeObjectId(method)
                     }
                 }
 
@@ -334,7 +335,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                     val psiFile = it.getContainingUFile()?.sourcePsi
                     psiFile?.let {
                         val url = PsiUtils.psiFileToUri(psiFile)
-                        workspaceUrls.put(methodId, url)
+                        workspaceUrls[methodId] = url
                     }
 
                 }

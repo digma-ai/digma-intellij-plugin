@@ -24,6 +24,7 @@ import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.toUElementOfType
 
+@Suppress("LightServiceMigrationCode")
 class JavaLanguageService(project: Project) : AbstractJvmLanguageService(project, project.service<JavaCodeObjectDiscovery>()) {
 
     override fun isSupportedFile(project: Project, psiFile: PsiFile): Boolean {
@@ -54,46 +55,6 @@ class JavaLanguageService(project: Project) : AbstractJvmLanguageService(project
     override fun findParentMethod(psiElement: PsiElement): UMethod? {
         return PsiTreeUtil.getParentOfType(psiElement, PsiMethod::class.java)?.toUElementOfType<UMethod>()
     }
-
-//    override fun detectMethodUnderCaret(project: Project, psiFile: PsiFile, selectedEditor: Editor?, caretOffset: Int): MethodUnderCaret {
-//        return Retries.retryWithResult({
-//            ReadAction.compute<MethodUnderCaret, RuntimeException> {
-//                allowSlowOperation<MethodUnderCaret> {
-//                    val fileUri = PsiUtils.psiFileToUri(psiFile)
-//                    if (!isSupportedFile(project, psiFile)) {
-//                        return@allowSlowOperation MethodUnderCaret("", "", "", "", fileUri, false)
-//                    }
-//                    val psiJavaFile = psiFile as PsiJavaFile
-//                    val packageName = psiJavaFile.packageName
-//                    val underCaret =
-//                        psiFile.findElementAt(caretOffset) ?: return@allowSlowOperation MethodUnderCaret("", "", "", packageName, fileUri, true)
-//                    val psiMethod = PsiTreeUtil.getParentOfType(underCaret,PsiMethod::class.java)
-//                    val className = safelyTryGetClassName(underCaret)
-//                    if (psiMethod != null) {
-//                        return@allowSlowOperation MethodUnderCaret(
-//                            JavaLanguageUtils.createJavaMethodCodeObjectId(psiMethod),
-//                            psiMethod.name,
-//                            className,
-//                            packageName,
-//                            fileUri
-//                        )
-//                    }
-//                    MethodUnderCaret("", "", className, packageName, fileUri)
-//                }
-//            }
-//        }, Throwable::class.java, 50, 5)
-//    }
-
-
-    private fun safelyTryGetClassName(element: PsiElement): String {
-        val psiClass = PsiTreeUtil.getParentOfType(element, PsiClass::class.java)
-        if (psiClass != null) {
-            val className = psiClass.name
-            if (className != null) return className
-        }
-        return ""
-    }
-
 
 
 

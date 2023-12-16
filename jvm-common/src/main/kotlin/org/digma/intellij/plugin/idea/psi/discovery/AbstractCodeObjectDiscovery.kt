@@ -6,10 +6,12 @@ import org.digma.intellij.plugin.idea.psi.createMethodCodeObjectId
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscoveryService
 import org.digma.intellij.plugin.idea.psi.discovery.span.AbstractSpanDiscovery
+import org.digma.intellij.plugin.idea.psi.getMethodsInClass
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.SpanInfo
 import org.digma.intellij.plugin.psi.PsiUtils
+import org.jetbrains.kotlin.asJava.namedUnwrappedElement
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UMethod
@@ -67,16 +69,15 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
         classes.forEach { uClass ->
             if (isRelevantClassType(uClass)) {
 
-                val methods: Array<UMethod> = getMethodsOf(project, uClass)
+                val methods: Collection<UMethod> = getMethodsInClass(project, uClass)
 
                 methods.forEach { uMethod ->
                     val id: String = createMethodCodeObjectId(uMethod)
                     val name: String = uMethod.name
-                    val containingClassName: String = uClass.qualifiedName ?: uClass.name ?: ""
-                    val containingNamespace = packageName
+                    val containingClassName: String = uClass.qualifiedName ?: uClass.namedUnwrappedElement?.name ?: ""
                     val containingFileUri: String = fileUri
                     val offsetAtFileUri: Int = uMethod.sourcePsi?.textOffset ?: 0
-                    val methodInfo = MethodInfo(id, name, containingClassName, containingNamespace, containingFileUri, offsetAtFileUri)
+                    val methodInfo = MethodInfo(id, name, containingClassName, packageName, containingFileUri, offsetAtFileUri)
 
                     val methodSpans = spans.filter { spanInfo: SpanInfo -> spanInfo.containingMethodId == id }
 
@@ -89,13 +90,6 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
 
             }
         }
-    }
-
-    private fun getMethodsOf(project: Project, uClass: UClass): Array<UMethod> {
-
-        //todo: see org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils.Companion.getMethodsOf,
-        // should we check (psiClass is PsiExtensibleClass) for kotlin
-        return uClass.methods
     }
 
 

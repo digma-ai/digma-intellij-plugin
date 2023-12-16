@@ -1,3 +1,5 @@
+@file:Suppress("UnstableApiUsage")
+
 package org.digma.intellij.plugin.idea.psi.java
 
 import com.intellij.openapi.project.Project
@@ -69,15 +71,15 @@ class JavaSpanDiscovery : AbstractSpanDiscovery() {
         val tracerBuilderClass = JavaPsiFacade.getInstance(project).findClass(SPAN_BUILDER_FQN, GlobalSearchScope.allScope(project))
         if (tracerBuilderClass != null) {
             val startSpanMethod =
-                JavaLanguageUtils.findMethodInClass(tracerBuilderClass, "startSpan") { psiMethod: PsiMethod -> psiMethod.parameters.size == 0 }
+                JavaLanguageUtils.findMethodInClass(tracerBuilderClass, "startSpan") { psiMethod: PsiMethod -> psiMethod.parameters.isEmpty() }
             Objects.requireNonNull(startSpanMethod, "startSpan method must be found in SpanBuilder class")
 
             var startSpanReferences = MethodReferencesSearch.search(startSpanMethod!!, GlobalSearchScope.fileScope(psiFile), true)
             //filter classes that we don't support,which should not happen but just in case. we don't support Annotations,Enums and Records.
             startSpanReferences = JavaSpanDiscoveryUtils.filterNonRelevantReferencesForSpanDiscovery(startSpanReferences)
 
-            startSpanReferences.forEach {
-                val spanInfo = JavaSpanDiscoveryUtils.getSpanInfoFromStartSpanMethodReference(project, it)
+            startSpanReferences.forEach { ref ->
+                val spanInfo = JavaSpanDiscoveryUtils.getSpanInfoFromStartSpanMethodReference(project, ref)
                 spanInfo?.let {
                     spanInfos.add(it)
                 }

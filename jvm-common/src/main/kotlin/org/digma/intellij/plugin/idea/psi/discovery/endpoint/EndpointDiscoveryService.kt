@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.idea.psi.discovery.endpoint
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 
+@Suppress("LightServiceMigrationCode")
 class EndpointDiscoveryService(project: Project) {
 
 

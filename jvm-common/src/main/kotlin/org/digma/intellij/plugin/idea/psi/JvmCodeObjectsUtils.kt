@@ -1,11 +1,8 @@
 package org.digma.intellij.plugin.idea.psi
 
 import com.intellij.psi.PsiClass
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.source.PsiClassReferenceType
-import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
 import org.jetbrains.kotlin.asJava.namedUnwrappedElement
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UClass
@@ -20,7 +17,6 @@ import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.resolveToUElement
-import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.toUElementOfType
 import java.util.function.Predicate
 

@@ -11,8 +11,6 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.digma.intellij.plugin.common.StringUtils
 import org.digma.intellij.plugin.idea.psi.createPsiMethodCodeObjectId
 import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils
-import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.SpanInfo
 import org.digma.intellij.plugin.psi.PsiUtils
 

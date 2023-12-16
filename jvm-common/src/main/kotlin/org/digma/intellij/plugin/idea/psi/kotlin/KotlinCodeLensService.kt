@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.idea.psi.kotlin
 
 import com.intellij.codeInsight.hints.InlayHintsUtils
 import com.intellij.openapi.application.ReadAction
-import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement

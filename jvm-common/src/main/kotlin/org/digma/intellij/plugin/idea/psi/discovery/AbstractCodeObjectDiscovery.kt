@@ -3,9 +3,9 @@ package org.digma.intellij.plugin.idea.psi.discovery
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 import org.digma.intellij.plugin.idea.psi.createMethodCodeObjectId
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscoveryService
 import org.digma.intellij.plugin.idea.psi.discovery.span.AbstractSpanDiscovery
-import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscovery
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.SpanInfo

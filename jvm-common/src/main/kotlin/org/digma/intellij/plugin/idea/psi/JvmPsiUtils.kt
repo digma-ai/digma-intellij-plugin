@@ -2,9 +2,12 @@ package org.digma.intellij.plugin.idea.psi
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
+import com.intellij.pom.Navigatable
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.source.PsiExtensibleClass
+import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils
+import org.digma.intellij.plugin.log.Log
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.toUElementOfType
@@ -31,3 +34,4 @@ fun getMethodsInClass(project: Project, cls: UClass): Collection<UMethod> {
     }
     return cls.methods.asList()
 }
+

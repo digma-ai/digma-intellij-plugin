@@ -1,26 +1,111 @@
 package org.digma.intellij.plugin.idea.psi.java
 
+import com.intellij.codeInsight.codeVision.CodeVisionEntry
+import com.intellij.lang.Language
+import com.intellij.lang.java.JavaLanguage
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.openapi.components.service
+import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.progress.EmptyProgressIndicator
+import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.TextRange
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementFactory
+import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.util.PsiTreeUtil
+import org.digma.intellij.plugin.common.Retries
+import org.digma.intellij.plugin.common.allowSlowOperation
+import org.digma.intellij.plugin.idea.psi.AbstractJvmLanguageService
+import org.digma.intellij.plugin.idea.psi.kotlin.KotlinCodeObjectDiscovery
 import org.digma.intellij.plugin.instrumentation.CanInstrumentMethodResult
 import org.digma.intellij.plugin.instrumentation.JvmCanInstrumentMethodResult
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.discovery.DocumentInfo
+import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
+import org.digma.intellij.plugin.psi.PsiUtils
+import org.jetbrains.kotlin.psi.KtFunction
 import org.jetbrains.uast.UClass
+import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.toUElementOfType
 
-class JavaLanguageService(project: Project) : AbstractJavaLanguageService(project) {
+class JavaLanguageService(project: Project) : AbstractJvmLanguageService(project, project.service<JavaCodeObjectDiscovery>()) {
 
-    override fun findClassByClassName(className: String): UClass? {
-        return JavaPsiFacade.getInstance(project).findClass(className, GlobalSearchScope.projectScope(project))?.toUElementOfType<UClass>()
+    override fun isSupportedFile(project: Project, psiFile: PsiFile): Boolean {
+        return psiFile is PsiJavaFile &&
+                JavaLanguage.INSTANCE == psiFile.viewProvider.baseLanguage &&
+                !psiFile.name.contains("package-info")
+    }
+
+    override fun isServiceFor(language: Language): Boolean {
+        return JavaLanguage::class.java == language.javaClass
+    }
+
+    override fun findClassByClassName(className: String, scope: GlobalSearchScope): UClass? {
+        return JavaPsiFacade.getInstance(project).findClass(className, scope)?.toUElementOfType<UClass>()
 //        val classes:Collection<PsiClass> = JavaFullClassNameIndex.getInstance().get(className, project, GlobalSearchScope.projectScope(project))
 //        return classes.firstOrNull()?.toUElementOfType<UClass>()
     }
+
+    override fun refreshCodeLens() {
+        project.service<JavaCodeLensService>().refreshCodeLens()
+    }
+
+
+    override fun getCodeLens(psiFile: PsiFile): List<Pair<TextRange, CodeVisionEntry>> {
+        return project.service<JavaCodeLensService>().getCodeLens(psiFile)
+    }
+
+    override fun findParentMethod(psiElement: PsiElement): UMethod? {
+        return PsiTreeUtil.getParentOfType(psiElement, PsiMethod::class.java)?.toUElementOfType<UMethod>()
+    }
+
+//    override fun detectMethodUnderCaret(project: Project, psiFile: PsiFile, selectedEditor: Editor?, caretOffset: Int): MethodUnderCaret {
+//        return Retries.retryWithResult({
+//            ReadAction.compute<MethodUnderCaret, RuntimeException> {
+//                allowSlowOperation<MethodUnderCaret> {
+//                    val fileUri = PsiUtils.psiFileToUri(psiFile)
+//                    if (!isSupportedFile(project, psiFile)) {
+//                        return@allowSlowOperation MethodUnderCaret("", "", "", "", fileUri, false)
+//                    }
+//                    val psiJavaFile = psiFile as PsiJavaFile
+//                    val packageName = psiJavaFile.packageName
+//                    val underCaret =
+//                        psiFile.findElementAt(caretOffset) ?: return@allowSlowOperation MethodUnderCaret("", "", "", packageName, fileUri, true)
+//                    val psiMethod = PsiTreeUtil.getParentOfType(underCaret,PsiMethod::class.java)
+//                    val className = safelyTryGetClassName(underCaret)
+//                    if (psiMethod != null) {
+//                        return@allowSlowOperation MethodUnderCaret(
+//                            JavaLanguageUtils.createJavaMethodCodeObjectId(psiMethod),
+//                            psiMethod.name,
+//                            className,
+//                            packageName,
+//                            fileUri
+//                        )
+//                    }
+//                    MethodUnderCaret("", "", className, packageName, fileUri)
+//                }
+//            }
+//        }, Throwable::class.java, 50, 5)
+//    }
+
+
+    private fun safelyTryGetClassName(element: PsiElement): String {
+        val psiClass = PsiTreeUtil.getParentOfType(element, PsiClass::class.java)
+        if (psiClass != null) {
+            val className = psiClass.name
+            if (className != null) return className
+        }
+        return ""
+    }
+
+
 
 
     override fun instrumentMethod(result: CanInstrumentMethodResult): Boolean {
@@ -61,6 +146,5 @@ class JavaLanguageService(project: Project) : AbstractJavaLanguageService(projec
         } else {
             return false
         }
-
     }
 }

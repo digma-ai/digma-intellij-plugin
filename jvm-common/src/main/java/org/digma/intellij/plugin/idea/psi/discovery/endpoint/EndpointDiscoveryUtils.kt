@@ -1,6 +1,6 @@
-package org.digma.intellij.plugin.idea.psi.java
+package org.digma.intellij.plugin.idea.psi.discovery.endpoint
 
-class JavaUtils {
+class EndpointDiscoveryUtils {
 
     companion object {
 

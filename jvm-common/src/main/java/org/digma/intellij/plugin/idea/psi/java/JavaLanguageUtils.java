@@ -35,30 +35,6 @@ public class JavaLanguageUtils {
     private JavaLanguageUtils() {
     }
 
-    @NotNull
-    public static String createJavaMethodCodeObjectId(@NotNull PsiMethod method) {
-
-        //usually these should be not null for java. but the PSI api declares them as null, so we must check.
-        // they can be null for groovy/kotlin
-        if (method.getContainingClass() == null || method.getContainingClass().getQualifiedName() == null) {
-            return method.getName();
-        }
-
-        var packageName = ((PsiJavaFile) method.getContainingFile()).getPackageName();
-
-        var className = "";
-        try {
-            className = method.getContainingClass().getQualifiedName().substring(packageName.length() + 1).replace('.', '$');
-        } catch (NullPointerException e) {
-            //there should not be a NPE for java method because in java a method must have a containing class.
-            // It's only to satisfy intellij warnings.
-            //the methods getContainingClass and getQualifiedName may return null, but it can only happen
-            //for other jvm languages like scala/groovy/kotlin
-        }
-
-        return packageName + "." + className + "$_$" + method.getName();
-    }
-
 
     @NotNull
     public static String createSpanNameForWithSpanAnnotation(@NotNull PsiMethod psiMethod, @NotNull PsiAnnotation withSpanAnnotation, @NotNull PsiClass containingClass) {

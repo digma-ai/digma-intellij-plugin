@@ -16,7 +16,7 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaLanguageService"/>
 
-        <fileBasedIndex implementation="org.digma.intellij.plugin.idea.psi.java.JavaDocumentInfoIndex"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaCodeObjectDiscovery"/>
 
 
         <projectService

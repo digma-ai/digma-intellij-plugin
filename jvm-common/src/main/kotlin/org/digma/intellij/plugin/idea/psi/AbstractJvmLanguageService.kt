@@ -4,37 +4,63 @@ import com.google.common.collect.ImmutableMap
 import com.intellij.buildsystem.model.unified.UnifiedCoordinates
 import com.intellij.buildsystem.model.unified.UnifiedDependency
 import com.intellij.externalSystem.DependencyModifierService
+import com.intellij.lang.Language
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.fileEditor.FileEditor
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.roots.ProjectFileIndex
+import com.intellij.openapi.util.ThrowableComputable
+import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.pom.Navigatable
 import com.intellij.psi.JavaPsiFacade
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiManager
 import com.intellij.psi.search.GlobalSearchScope
+import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.Retries
 import org.digma.intellij.plugin.common.allowSlowOperation
+import org.digma.intellij.plugin.editor.EditorUtils
 import org.digma.intellij.plugin.idea.buildsystem.BuildSystemChecker.Companion.determineBuildSystem
 import org.digma.intellij.plugin.idea.buildsystem.JavaBuildSystem
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
+import org.digma.intellij.plugin.idea.psi.discovery.AbstractCodeObjectDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.MicrometerTracingFramework
 import org.digma.intellij.plugin.idea.psi.java.Constants
+import org.digma.intellij.plugin.idea.psi.navigation.JavaEndpointNavigationProvider
+import org.digma.intellij.plugin.idea.psi.navigation.JavaSpanNavigationProvider
 import org.digma.intellij.plugin.instrumentation.CanInstrumentMethodResult
 import org.digma.intellij.plugin.instrumentation.JvmCanInstrumentMethodResult
 import org.digma.intellij.plugin.instrumentation.MissingDependencyCause
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.discovery.DocumentInfo
+import org.digma.intellij.plugin.model.discovery.EndpointInfo
+import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.PsiUtils
+import org.digma.intellij.plugin.ui.CaretContextService
 import org.jetbrains.uast.UClass
+import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.getContainingUFile
+import org.jetbrains.uast.getParentOfType
+import org.jetbrains.uast.toUElementOfType
 import java.util.Objects
 import java.util.function.Consumer
 
-abstract class AbstractJvmLanguageService(protected val project: Project) : LanguageService {
+abstract class AbstractJvmLanguageService(protected val project: Project, protected val codeObjectDiscovery: AbstractCodeObjectDiscovery) :
+    LanguageService {
 
     protected val logger: Logger = Logger.getInstance(this::class.java)
 
@@ -53,8 +79,160 @@ abstract class AbstractJvmLanguageService(protected val project: Project) : Lang
     }
 
 
+    companion object {
+        val fileNamesToExclude = mutableSetOf<String>("package-info.java", "MavenWrapperDownloader.java")
+    }
+
+
+
     //It's a different search for each jvm language
-    abstract fun findClassByClassName(className: String): UClass?
+    abstract fun findClassByClassName(className: String, scope: GlobalSearchScope): UClass?
+
+    abstract fun refreshCodeLens()
+
+    abstract fun findParentMethod(psiElement: PsiElement): UMethod?
+
+
+    override fun ensureStartupOnEDT(project: Project) {
+        //nothing to do
+    }
+
+    override fun runWhenSmart(task: Runnable) {
+        if (DumbService.isDumb(project)) {
+            DumbService.getInstance(project).runWhenSmart(task)
+        } else {
+            task.run()
+        }
+    }
+
+
+    protected fun findClassByClassName(className: String): UClass? {
+        return findClassByClassName(className, GlobalSearchScope.projectScope(project))
+    }
+
+    override fun buildDocumentInfo(psiFile: PsiFile, selectedTextEditor: FileEditor?): DocumentInfo {
+        return buildDocumentInfo(psiFile)
+    }
+
+    override fun buildDocumentInfo(psiFile: PsiFile): DocumentInfo {
+        Log.log(logger::debug, "got buildDocumentInfo request for {}", psiFile)
+        if (isSupportedFile(project, psiFile)) {
+            return ProgressManager.getInstance().runProcess<DocumentInfo>({
+                Retries.retryWithResult(
+                    {
+                        ReadAction.compute(
+                            ThrowableComputable<DocumentInfo, RuntimeException> {
+                                codeObjectDiscovery.buildDocumentInfo(
+                                    project,
+                                    psiFile
+                                )
+                            })
+                    },
+                    Throwable::class.java, 50, 5
+                )
+            }, EmptyProgressIndicator())
+
+        } else {
+            Log.log(logger::debug, "psi file is not kotlin, returning empty DocumentInfo for {}", psiFile)
+            return DocumentInfo(PsiUtils.psiFileToUri(psiFile), mutableMapOf())
+        }
+    }
+
+
+    override fun isSupportedFile(project: Project, newFile: VirtualFile): Boolean {
+        val psiFile = PsiManager.getInstance(project).findFile(newFile)
+        return psiFile != null && isSupportedFile(project, psiFile)
+    }
+
+
+    override fun environmentChanged(newEnv: String, refreshInsightsView: Boolean) {
+        if (refreshInsightsView) {
+            EDT.ensureEDT {
+                val fileEditor = FileEditorManager.getInstance(project).selectedEditor
+                if (fileEditor != null) {
+                    val file = fileEditor.file
+                    val psiFile = PsiManager.getInstance(project).findFile(file)
+                    if (psiFile != null && isRelevant(psiFile.virtualFile)) {
+                        val selectedTextEditor =
+                            EditorUtils.getSelectedTextEditorForFile(file, FileEditorManager.getInstance(project))
+                        if (selectedTextEditor != null) {
+                            val offset = selectedTextEditor.caretModel.offset
+                            val methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedTextEditor, offset)
+                            CaretContextService.getInstance(project).contextChanged(methodUnderCaret)
+                        }
+                    }
+                }
+            }
+        }
+
+        refreshCodeLens()
+    }
+
+
+    override fun isRelevant(psiFile: PsiFile): Boolean {
+
+        val projectFileIndex: ProjectFileIndex = project.getService(ProjectFileIndex::class.java)
+
+        return allowSlowOperation<Boolean> {
+
+            val isRelevant = psiFile.isWritable &&
+                    projectFileIndex.isInSourceContent(psiFile.virtualFile) &&
+                    !projectFileIndex.isInLibrary(psiFile.virtualFile) &&
+                    !projectFileIndex.isExcluded(psiFile.virtualFile) &&
+                    isSupportedFile(project, psiFile) &&
+                    !fileNamesToExclude.contains(psiFile.virtualFile.name)
+
+            return@allowSlowOperation isRelevant
+        }
+    }
+
+
+    override fun isRelevant(file: VirtualFile): Boolean {
+        return allowSlowOperation<Boolean> {
+            if (file.isDirectory || !file.isValid) {
+                return@allowSlowOperation false
+            }
+            val psiFile = PsiManager.getInstance(project).findFile(file) ?: return@allowSlowOperation false
+            isRelevant(psiFile)
+        }
+    }
+
+    override fun isCodeVisionSupported(): Boolean {
+        return true
+    }
+
+
+    override fun getLanguageForMethodCodeObjectId(methodId: String): Language? {
+
+        //try to parse the methodId as if it is java and try to find the language
+        if (methodId.indexOf("\$_$") <= 0) {
+            Log.log(logger::debug, "method id in getLanguageForMethodCodeObjectId does not contain \$_$ {}", methodId)
+            return null
+        }
+
+        var className = methodId.substring(0, methodId.indexOf("\$_$"))
+        //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
+        className = className.replace('$', '.')
+
+        return ReadAction.compute<Language?, java.lang.RuntimeException> {
+
+
+            val uClass = findClassByClassName(className, GlobalSearchScope.allScope(project))
+
+            return@compute uClass?.let {
+                it.sourcePsi?.language
+            }
+        }
+    }
+
+
+    override fun findWorkspaceUrisForSpanIds(spanIds: List<String>): Map<String, Pair<String, Int>> {
+        return JavaSpanNavigationProvider.getInstance(project).getUrisForSpanIds(spanIds)
+    }
+
+    override fun lookForDiscoveredEndpoints(endpointId: String): Set<EndpointInfo> {
+        return JavaEndpointNavigationProvider.getInstance(project).getEndpointInfos(endpointId)
+    }
 
 
     override fun findWorkspaceUrisForMethodCodeObjectIds(methodCodeObjectIds: List<String>): Map<String, Pair<String, Int>> {
@@ -101,6 +279,112 @@ abstract class AbstractJvmLanguageService(protected val project: Project) : Lang
                 }
             }
         }
+    }
+
+
+    override fun findWorkspaceUrisForCodeObjectIdsForErrorStackTrace(methodCodeObjectIds: List<String>): Map<String, String> {
+
+        val workspaceUrls: MutableMap<String, String> = HashMap()
+
+        methodCodeObjectIds.filter { s: String -> s.contains("\$_$") }.forEach { methodId ->
+
+            var className = methodId.substring(0, methodId.indexOf("\$_$"))
+            //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
+            className = className.replace('$', '.')
+
+            ReadActions.ensureReadAction {
+
+                val uClass = findClassByClassName(className, GlobalSearchScope.allScope(project))
+                uClass?.let {
+
+                    val psiFile = it.getContainingUFile()?.sourcePsi
+                    psiFile?.let {
+                        val url = PsiUtils.psiFileToUri(psiFile)
+                        workspaceUrls.put(methodId, url)
+                    }
+
+                }
+            }
+        }
+
+        return workspaceUrls
+    }
+
+
+    override fun detectMethodUnderCaret(project: Project, psiFile: PsiFile, selectedEditor: Editor?, caretOffset: Int): MethodUnderCaret {
+
+        return Retries.retryWithResult({
+
+            ReadAction.compute<MethodUnderCaret, java.lang.RuntimeException> {
+
+                allowSlowOperation<MethodUnderCaret> {
+
+                    val fileUri = PsiUtils.psiFileToUri(psiFile)
+                    if (!isSupportedFile(project, psiFile)) {
+                        return@allowSlowOperation MethodUnderCaret("", "", "", "", fileUri, false)
+                    }
+                    return@allowSlowOperation detectMethodUnderCaret(psiFile, fileUri, caretOffset)
+                }
+            }
+        }, Throwable::class.java, 50, 5)
+    }
+
+
+    private fun detectMethodUnderCaret(psiFile: PsiFile, fileUri: String, caretOffset: Int): MethodUnderCaret {
+
+        val packageName = psiFile.toUElementOfType<UFile>()?.packageName ?: ""
+        val underCaret: PsiElement =
+            psiFile.findElementAt(caretOffset) ?: return MethodUnderCaret("", "", "", packageName, fileUri, true)
+        val uMethod = findParentMethod(underCaret)
+        val className: String = uMethod?.getParentOfType<UClass>()?.name ?: ""
+        if (uMethod != null) {
+            return MethodUnderCaret(
+                createMethodCodeObjectId(uMethod),
+                uMethod.name,
+                className,
+                packageName,
+                fileUri
+            )
+        }
+        return MethodUnderCaret("", "", className, packageName, fileUri)
+    }
+
+
+    override fun navigateToMethod(methodId: String) {
+
+        Log.log(logger::debug, "got navigate to method request {}", methodId)
+
+        if (methodId.indexOf("\$_$") <= 0) {
+            Log.log(logger::debug, "method id in navigateToMethod does not contain \$_$, can not navigate {}", methodId)
+            return
+        }
+
+        ReadActions.ensureReadAction {
+            allowSlowOperation {
+                var className = methodId.substring(0, methodId.indexOf("\$_$"))
+                //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
+                className = className.replace('$', '.')
+
+                val cls = findClassByClassName(className, GlobalSearchScope.allScope(project))
+                cls?.let {
+
+                    val method = findMethodInClass(project, it, methodId)
+                    if (method?.sourcePsi is Navigatable && (method.sourcePsi as Navigatable).canNavigate()) {
+                        Log.log(logger::debug, "navigating to method {}", method)
+                        EDT.ensureEDT {
+                            (method.sourcePsi as Navigatable).navigate(true)
+                        }
+                        return@allowSlowOperation
+                    }
+                }
+            }
+        }
+    }
+
+
+    override fun refreshMethodUnderCaret(project: Project, psiFile: PsiFile, selectedEditor: Editor?, offset: Int) {
+        val methodUnderCaret = detectMethodUnderCaret(project, psiFile, selectedEditor, offset)
+        CaretContextService.getInstance(project).contextChanged(methodUnderCaret)
     }
 
 

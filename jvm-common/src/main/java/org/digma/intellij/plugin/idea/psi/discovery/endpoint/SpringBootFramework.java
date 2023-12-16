@@ -13,7 +13,6 @@ import com.intellij.util.Query;
 import org.digma.intellij.plugin.common.Retries;
 import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils;
 import org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils;
-import org.digma.intellij.plugin.idea.psi.java.JavaUtils;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,6 +25,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+
+import static org.digma.intellij.plugin.idea.psi.JvmCodeObjectsUtilsKt.createPsiMethodCodeObjectId;
 
 public class SpringBootFramework extends EndpointDiscovery {
 
@@ -113,7 +114,7 @@ public class SpringBootFramework extends EndpointDiscovery {
 
 
                 Retries.simpleRetry(() -> JavaPsiUtils.runInReadAccess(project, () -> {
-                    final String methodId = JavaLanguageUtils.createJavaMethodCodeObjectId(currPsiMethod);
+                    final String methodId = createPsiMethodCodeObjectId(currPsiMethod);
                     final PsiAnnotation mappingPsiAnnotationOnMethod = currPsiMethod.getAnnotation(currAnnotation.getClassNameFqn());
                     if (mappingPsiAnnotationOnMethod == null) {
                         return; // very unlikely
@@ -187,7 +188,7 @@ public class SpringBootFramework extends EndpointDiscovery {
                 // digma part
                 "epHTTP:" + "HTTP " + httpMethod.toUpperCase() + " " +
                 // Spring Web part
-                JavaUtils.combineUri(endpointUriPrefix, endpointUriSuffix);
+                EndpointDiscoveryUtils.combineUri(endpointUriPrefix, endpointUriSuffix);
     }
 
 }

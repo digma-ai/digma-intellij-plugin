@@ -17,14 +17,6 @@ import org.jetbrains.uast.toUElementOfType
 
 class JavaCodeLensService(project: Project): AbstractCodeLensService(project) {
 
-    companion object {
-        @JvmStatic
-        fun getInstance(project: Project): JavaCodeLensService {
-            return project.getService(JavaCodeLensService::class.java)
-        }
-    }
-
-
 
     override fun findMethodsByCodeObjectIds(psiFile: PsiFile, ids: Set<String>): Map<String, Pair<TextRange,PsiElement>> {
 

@@ -19,7 +19,6 @@ import com.intellij.util.Query;
 import org.digma.intellij.plugin.common.Retries;
 import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils;
 import org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils;
-import org.digma.intellij.plugin.idea.psi.java.JavaUtils;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.jetbrains.annotations.NotNull;
 
@@ -32,6 +31,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+
+import static org.digma.intellij.plugin.idea.psi.JvmCodeObjectsUtilsKt.createPsiMethodCodeObjectId;
 
 public abstract class AbstractJaxrsFramework extends EndpointDiscovery {
 
@@ -217,10 +218,10 @@ public abstract class AbstractJaxrsFramework extends EndpointDiscovery {
                 String endpointSuffixUri = combinePaths(controllerPathAnnotation, methodPathAnnotation);
 
                 for (String appPath : appPaths) {
-                    String endpointFullUri = JavaUtils.combineUri(appPath, endpointSuffixUri);
+                    String endpointFullUri = EndpointDiscoveryUtils.combineUri(appPath, endpointSuffixUri);
                     String httpEndpointCodeObjectId = createHttpEndpointCodeObjectId(currExpectedAnnotation, endpointFullUri);
 
-                    EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, JavaLanguageUtils.createJavaMethodCodeObjectId(currPsiMethod), JavaPsiUtils.toFileUri(currPsiMethod), currPsiMethod.getTextOffset());
+                    EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, createPsiMethodCodeObjectId(currPsiMethod), JavaPsiUtils.toFileUri(currPsiMethod), currPsiMethod.getTextOffset());
                     retSet.add(endpointInfo);
                 }
             }
@@ -268,7 +269,7 @@ public abstract class AbstractJaxrsFramework extends EndpointDiscovery {
         if (annotOfSuffix != null) {
             suffixStr = JavaLanguageUtils.getPsiAnnotationAttributeValue(annotOfSuffix, "value");
         }
-        return JavaUtils.combineUri(prefixStr, suffixStr);
+        return EndpointDiscoveryUtils.combineUri(prefixStr, suffixStr);
     }
 
     @NotNull

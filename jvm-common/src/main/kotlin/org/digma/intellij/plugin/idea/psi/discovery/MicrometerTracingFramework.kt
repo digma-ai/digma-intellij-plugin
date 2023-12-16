@@ -9,13 +9,14 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.searches.AnnotatedElementsSearch
 import com.intellij.psi.util.PsiTreeUtil
 import org.digma.intellij.plugin.common.StringUtils
+import org.digma.intellij.plugin.idea.psi.createPsiMethodCodeObjectId
 import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.SpanInfo
 import org.digma.intellij.plugin.psi.PsiUtils
 
-class MicrometerTracingFramework(val project: Project) {
+class MicrometerTracingFramework {
 
     companion object {
         val logger = Logger.getInstance(MicrometerTracingFramework::class.java)
@@ -78,12 +79,24 @@ class MicrometerTracingFramework(val project: Project) {
         }
     }
 
-    fun annotationSpanDiscovery(project: Project, psiFile: PsiFile, documentInfo: DocumentInfo) {
-        newSpanAnnotationSpanDiscovery(project, psiFile, documentInfo)
-        observedAnnotationSpanDiscovery(project, psiFile, documentInfo)
+
+    fun discoverSpans(project: Project, psiFile: PsiFile): Collection<SpanInfo> {
+        val spanInfos = mutableListOf<SpanInfo>()
+
+        val newSpanAnnotationSpans = newSpanAnnotationSpanDiscovery(project, psiFile)
+        spanInfos.addAll(newSpanAnnotationSpans)
+
+        val observedAnnotationSpans = observedAnnotationSpanDiscovery(project, psiFile)
+        spanInfos.addAll(observedAnnotationSpans)
+
+        return spanInfos
     }
 
-    private fun newSpanAnnotationSpanDiscovery(project: Project, psiFile: PsiFile, documentInfo: DocumentInfo) {
+
+    private fun newSpanAnnotationSpanDiscovery(project: Project, psiFile: PsiFile): Collection<SpanInfo> {
+
+        val spanInfos = mutableListOf<SpanInfo>()
+
         val newSpanClass = JavaPsiFacade.getInstance(project).findClass(NEW_SPAN_FQN, GlobalSearchScope.allScope(project))
         //maybe the annotation is not in the classpath
         if (newSpanClass != null) {
@@ -91,16 +104,20 @@ class MicrometerTracingFramework(val project: Project) {
 //            psiMethods = JavaSpanDiscoveryUtils.filterNonRelevantMethodsForSpanDiscovery(psiMethods)
             for (it in psiMethods) {
                 val spanInfo = getSpanInfoFromNewSpanAnnotatedMethod(it)
-                if (spanInfo != null) {
-                    Log.log(logger::debug, "Found span info {} for method {}", spanInfo.id, spanInfo.containingMethodId)
-                    val methodInfo = documentInfo.methods[spanInfo.containingMethodId]
-                    methodInfo!!.addSpan(spanInfo)
+                spanInfo?.let {
+                    spanInfos.add(it)
                 }
             }
         }
+
+        return spanInfos
     }
 
-    private fun observedAnnotationSpanDiscovery(project: Project, psiFile: PsiFile, documentInfo: DocumentInfo) {
+
+    private fun observedAnnotationSpanDiscovery(project: Project, psiFile: PsiFile): Collection<SpanInfo> {
+
+        val spanInfos = mutableListOf<SpanInfo>()
+
         val observedAnnotationClass = JavaPsiFacade.getInstance(project).findClass(OBSERVED_FQN, GlobalSearchScope.allScope(project))
         //maybe the annotation is not in the classpath
         if (observedAnnotationClass != null) {
@@ -110,14 +127,55 @@ class MicrometerTracingFramework(val project: Project) {
 //            psiMethods = JavaSpanDiscoveryUtils.filterNonRelevantMethodsForSpanDiscovery(psiMethods)
             for (it in psiMethods) {
                 val spanInfo = getSpanInfoFromObservedAnnotatedMethod(it)
-                if (spanInfo != null) {
-                    Log.log(logger::debug, "Found span info {} for method {}", spanInfo.id, spanInfo.containingMethodId)
-                    val methodInfo = documentInfo.methods[spanInfo.containingMethodId]
-                    methodInfo!!.addSpan(spanInfo)
+                spanInfo?.let {
+                    spanInfos.add(it)
                 }
             }
         }
+
+        return spanInfos
     }
+
+//    fun annotationSpanDiscovery(project: Project, psiFile: PsiFile, documentInfo: DocumentInfo) {
+//        newSpanAnnotationSpanDiscovery(project, psiFile, documentInfo)
+//        observedAnnotationSpanDiscovery(project, psiFile, documentInfo)
+//    }
+
+//    private fun newSpanAnnotationSpanDiscovery(project: Project, psiFile: PsiFile, documentInfo: DocumentInfo) {
+//        val newSpanClass = JavaPsiFacade.getInstance(project).findClass(NEW_SPAN_FQN, GlobalSearchScope.allScope(project))
+//        //maybe the annotation is not in the classpath
+//        if (newSpanClass != null) {
+//            var psiMethods = AnnotatedElementsSearch.searchPsiMethods(newSpanClass, GlobalSearchScope.fileScope(psiFile))
+////            psiMethods = JavaSpanDiscoveryUtils.filterNonRelevantMethodsForSpanDiscovery(psiMethods)
+//            for (it in psiMethods) {
+//                val spanInfo = getSpanInfoFromNewSpanAnnotatedMethod(it)
+//                if (spanInfo != null) {
+//                    Log.log(logger::debug, "Found span info {} for method {}", spanInfo.id, spanInfo.containingMethodId)
+//                    val methodInfo = documentInfo.methods[spanInfo.containingMethodId]
+//                    methodInfo!!.addSpan(spanInfo)
+//                }
+//            }
+//        }
+//    }
+
+//    private fun observedAnnotationSpanDiscovery(project: Project, psiFile: PsiFile, documentInfo: DocumentInfo) {
+//        val observedAnnotationClass = JavaPsiFacade.getInstance(project).findClass(OBSERVED_FQN, GlobalSearchScope.allScope(project))
+//        //maybe the annotation is not in the classpath
+//        if (observedAnnotationClass != null) {
+//            // TODO: search for classes/interfaces that are annotated with OBSERVED_FQN and even child classes
+//
+//            var psiMethods = AnnotatedElementsSearch.searchPsiMethods(observedAnnotationClass, GlobalSearchScope.fileScope(psiFile))
+////            psiMethods = JavaSpanDiscoveryUtils.filterNonRelevantMethodsForSpanDiscovery(psiMethods)
+//            for (it in psiMethods) {
+//                val spanInfo = getSpanInfoFromObservedAnnotatedMethod(it)
+//                if (spanInfo != null) {
+//                    Log.log(logger::debug, "Found span info {} for method {}", spanInfo.id, spanInfo.containingMethodId)
+//                    val methodInfo = documentInfo.methods[spanInfo.containingMethodId]
+//                    methodInfo!!.addSpan(spanInfo)
+//                }
+//            }
+//        }
+//    }
 
     fun getSpanInfoFromNewSpanAnnotatedMethod(psiMethod: PsiMethod): SpanInfo? {
         val newSpanAnnotation = psiMethod.getAnnotation(NEW_SPAN_FQN)
@@ -128,7 +186,7 @@ class MicrometerTracingFramework(val project: Project) {
         // a method in java must have a containing class. (psiMethod.getContainingClass may return null because
         // it supports other languages like groovy and kotlin)
         if (newSpanAnnotation != null && containingFile != null && containingClass != null) {
-            val methodId = JavaLanguageUtils.createJavaMethodCodeObjectId(psiMethod)
+            val methodId = createPsiMethodCodeObjectId(psiMethod)
             val containingFileUri = PsiUtils.psiFileToUri(containingFile)
 
             val tmpSpanName = JavaLanguageUtils.getValueOfFirstMatchingAnnotationAttribute(newSpanAnnotation, NEW_SPAN_ATTRIBUTES, null)
@@ -150,7 +208,7 @@ class MicrometerTracingFramework(val project: Project) {
 
         // observedAnnotationOnMethod,containingFile must not be null because we found this annotation in a search.
         if (observedAnnotationOnMethod != null && containingFile != null) {
-            val methodId = JavaLanguageUtils.createJavaMethodCodeObjectId(psiMethod)
+            val methodId = createPsiMethodCodeObjectId(psiMethod)
             val containingFileUri = PsiUtils.psiFileToUri(containingFile)
 
             val tmpSpanName = JavaLanguageUtils.getPsiAnnotationAttributeValue(observedAnnotationOnMethod, "contextualName")
@@ -171,5 +229,6 @@ class MicrometerTracingFramework(val project: Project) {
         //if here then we couldn't completely discover the span
         return null
     }
+
 
 }

@@ -14,7 +14,6 @@ import com.intellij.util.Query;
 import org.digma.intellij.plugin.common.Retries;
 import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils;
 import org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils;
-import org.digma.intellij.plugin.idea.psi.java.JavaUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.jetbrains.annotations.NotNull;
@@ -27,6 +26,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+
+import static org.digma.intellij.plugin.idea.psi.JvmCodeObjectsUtilsKt.createPsiMethodCodeObjectId;
 
 public class MicronautFramework extends EndpointDiscovery {
 
@@ -111,7 +112,7 @@ public class MicronautFramework extends EndpointDiscovery {
                     }
                     String endpointUriPrefix = JavaLanguageUtils.getPsiAnnotationAttributeValue(controllerAnnotation, "value");
 
-                    String methodCodeObjectId = JavaLanguageUtils.createJavaMethodCodeObjectId(currPsiMethod);
+                    String methodCodeObjectId = createPsiMethodCodeObjectId(currPsiMethod);
                     String httpEndpointCodeObjectId = createHttpEndpointCodeObjectId(currPsiMethod, currAnnotation, endpointUriPrefix);
                     if (httpEndpointCodeObjectId == null) {
                         return; // skip this method, since endpoint value could not be determined
@@ -155,7 +156,7 @@ public class MicronautFramework extends EndpointDiscovery {
                 // digma part
                 "epHTTP:" + "HTTP " + httpMethodUcase + " " +
                 // Micronaut part
-                httpMethodUcase + " - " + JavaUtils.combineUri(endpointUriPrefix, endpointUriSuffix);
+                httpMethodUcase + " - " + EndpointDiscoveryUtils.combineUri(endpointUriPrefix, endpointUriSuffix);
     }
 
     @NotNull

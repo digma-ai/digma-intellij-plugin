@@ -285,7 +285,7 @@ public class JavaSpanNavigationProvider implements Disposable {
                 return psiMethodsQuery.findAll();
             }), Throwable.class, 50, 5), new EmptyProgressIndicator());
 
-            var micrometerTracingFramework = new MicrometerTracingFramework(project);
+            var micrometerTracingFramework = new MicrometerTracingFramework();
             psiMethods.forEach(psiMethod -> {
 
                 //on exception the current psiReference is skipped

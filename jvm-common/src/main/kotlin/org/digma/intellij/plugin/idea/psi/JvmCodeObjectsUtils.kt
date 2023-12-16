@@ -6,6 +6,7 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.source.PsiClassReferenceType
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
+import org.jetbrains.kotlin.asJava.namedUnwrappedElement
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
@@ -24,6 +25,13 @@ import org.jetbrains.uast.toUElementOfType
 import java.util.function.Predicate
 
 
+fun createPsiMethodCodeObjectId(psiMethod: PsiMethod): String {
+    return psiMethod.toUElementOfType<UMethod>()?.let {
+        createMethodCodeObjectId(it)
+    } ?: psiMethod.name
+}
+
+
 fun createMethodCodeObjectId(uMethod: UMethod): String {
 
     val uClass = uMethod.getParentOfType<UClass>()
@@ -36,39 +44,19 @@ fun createMethodCodeObjectId(uMethod: UMethod): String {
 
     val packageName = uMethod.getParentOfType<UFile>()?.packageName ?: ""
 
-//    var className = ""
-    val className = uClass.name?.replace('.', '$') ?: ""
-//    try {
-//        className = uClass.qualifiedName?.substring(packageName.length + 1)?.replace('.', '$') ?: uClass.name
-//    } catch (e: NullPointerException) {
-//        //there should not be a NPE for java method because in java a method must have a containing class.
-//        // It's only to satisfy intellij warnings.
-//        //the methods getContainingClass and getQualifiedName may return null, but it can only happen
-//        //for other jvm languages like scala/groovy/kotlin
-//    }
+    //considering inner class, for example qualified name can be a.b.c.MyClass.MyInnerClass, the code object id should be
+    // a $ sign between the inner classes
+    val className = if (packageName.isEmpty()) {
+        uClass.qualifiedName?.replace('.', '$') ?: uClass.namedUnwrappedElement?.name
+    } else {
+        uClass.qualifiedName?.substring(packageName.length + 1)?.replace('.', '$') ?: uClass.namedUnwrappedElement?.name
+    }
 
     return packageName + "." + className + "\$_$" + uMethod.name
 }
 
 
-fun detectMethodUnderCaret(psiFile: PsiFile, fileUri: String, caretOffset: Int): MethodUnderCaret {
 
-    val packageName = psiFile.toUElementOfType<UFile>()?.packageName ?: ""
-    val underCaret: PsiElement =
-        psiFile.findElementAt(caretOffset) ?: return MethodUnderCaret("", "", "", packageName, fileUri, true)
-    val psiMethod = underCaret.toUElement()?.getParentOfType<UMethod>()
-    val className: String = psiMethod?.getParentOfType<UClass>()?.name ?: ""
-    if (psiMethod != null) {
-        return MethodUnderCaret(
-            createMethodCodeObjectId(psiMethod),
-            psiMethod.name,
-            className,
-            packageName,
-            fileUri
-        )
-    }
-    return MethodUnderCaret("", "", className, packageName, fileUri)
-}
 
 
 fun createSpanNameForWithSpanAnnotation(uMethod: UMethod, withSpanAnnotation: UAnnotation, containingClass: UClass): String {

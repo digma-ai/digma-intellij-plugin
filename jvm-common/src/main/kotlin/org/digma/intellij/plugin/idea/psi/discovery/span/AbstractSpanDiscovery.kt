@@ -13,6 +13,7 @@ import com.intellij.psi.search.searches.AnnotatedElementsSearch
 import com.intellij.psi.search.searches.MethodReferencesSearch
 import org.digma.intellij.plugin.idea.psi.SPAN_BUILDER_FQN
 import org.digma.intellij.plugin.idea.psi.WITH_SPAN_ANNOTATION_FQN
+import org.digma.intellij.plugin.idea.psi.discovery.MicrometerTracingFramework
 import org.digma.intellij.plugin.idea.psi.findMethodInClass
 import org.digma.intellij.plugin.model.discovery.SpanInfo
 import org.jetbrains.uast.UMethod
@@ -24,8 +25,10 @@ abstract class AbstractSpanDiscovery {
 
     private val psiPointers = PsiPointers()
 
+    protected val micrometerTracingFramework = MicrometerTracingFramework()
 
-    fun discoverSpans(project: Project, psiFile: PsiFile): Collection<SpanInfo> {
+
+    open fun discoverSpans(project: Project, psiFile: PsiFile): Collection<SpanInfo> {
 
         val spanInfos = mutableListOf<SpanInfo>()
 
@@ -39,6 +42,13 @@ abstract class AbstractSpanDiscovery {
         startSpanSpans?.let {
             spanInfos.addAll(it)
         }
+
+
+        val micrometerSpans = micrometerTracingFramework.discoverSpans(project, psiFile)
+        micrometerSpans?.let {
+            spanInfos.addAll(it)
+        }
+
 
         return spanInfos
     }

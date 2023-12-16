@@ -24,6 +24,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
+import static org.digma.intellij.plugin.idea.psi.JvmCodeObjectsUtilsKt.createPsiMethodCodeObjectId;
+
 public class GrpcFramework extends EndpointDiscovery {
     private static final Logger LOGGER = Logger.getInstance(GrpcFramework.class);
 
@@ -91,7 +93,7 @@ public class GrpcFramework extends EndpointDiscovery {
         List<EndpointInfo> retList = new ArrayList<>(16);
         Collection<PsiMethod> psiMethods = JavaPsiUtils.getMethodsOf(project, grpcServerClass);
         for (PsiMethod currPsiMethod : psiMethods) {
-            String methodCodeObjectId = JavaLanguageUtils.createJavaMethodCodeObjectId(currPsiMethod);
+            String methodCodeObjectId = createPsiMethodCodeObjectId(currPsiMethod);
 
             String endpointId = createEndpointId(grpcServiceName, currPsiMethod);
             //PsiParameterList parameterList = currPsiMethod.getParameterList(); //TODO: maybe search for parameters of type io.grpc.stub.StreamObserver

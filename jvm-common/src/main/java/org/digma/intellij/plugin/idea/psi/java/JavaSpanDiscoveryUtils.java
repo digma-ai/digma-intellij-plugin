@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import static org.digma.intellij.plugin.idea.psi.JvmCodeObjectsUtilsKt.createPsiMethodCodeObjectId;
 import static org.digma.intellij.plugin.idea.psi.java.Constants.GLOBAL_OPENTELEMETY_FQN;
 import static org.digma.intellij.plugin.idea.psi.java.Constants.OPENTELEMETY_FQN;
 import static org.digma.intellij.plugin.idea.psi.java.Constants.SPAN_BUILDER_FQN;
@@ -37,7 +38,6 @@ import static org.digma.intellij.plugin.idea.psi.java.Constants.WITH_SPAN_INST_L
 import static org.digma.intellij.plugin.idea.psi.java.Constants.WITH_SPAN_INST_LIBRARY_3;
 import static org.digma.intellij.plugin.idea.psi.java.Constants.WITH_SPAN_INST_LIBRARY_4;
 import static org.digma.intellij.plugin.idea.psi.java.Constants.WITH_SPAN_INST_LIBRARY_5;
-import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.createJavaMethodCodeObjectId;
 import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.createSpanIdForWithSpanAnnotation;
 import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.createSpanIdFromInstLibraryAndSpanName;
 import static org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils.createSpanNameForWithSpanAnnotation;
@@ -78,7 +78,7 @@ public class JavaSpanDiscoveryUtils {
         // it supports other languages like groovy and kotlin)
         if (withSpanAnnotation != null && containingFile != null && containingClass != null) {
 
-            var methodId = createJavaMethodCodeObjectId(psiMethod);
+            var methodId = createPsiMethodCodeObjectId(psiMethod);
             Objects.requireNonNull(methodId, "methodId must not be null here");
             var containingFileUri = PsiUtils.psiFileToUri(containingFile);
             Objects.requireNonNull(containingFileUri, "containingFileUri must not be null here");
@@ -121,7 +121,7 @@ public class JavaSpanDiscoveryUtils {
             PsiFile containingFile = startSpanMethodReference.getElement().getContainingFile();
             //span is not relevant if there is no containing method. one can build a Span as a class member, we don't support that.
             if (containingMethod != null && containingFile != null) {
-                methodId = createJavaMethodCodeObjectId(containingMethod);
+                methodId = createPsiMethodCodeObjectId(containingMethod);
                 Objects.requireNonNull(methodId, "methodId must not be null here");
                 containingFileUri = PsiUtils.psiFileToUri(containingFile);
                 Objects.requireNonNull(containingFileUri, "containingFileUri must not be null here");

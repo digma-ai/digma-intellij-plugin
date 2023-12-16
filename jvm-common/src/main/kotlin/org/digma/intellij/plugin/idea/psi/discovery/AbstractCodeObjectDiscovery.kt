@@ -22,8 +22,7 @@ import java.util.function.Consumer
 abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSpanDiscovery) {
 
 
-
-    fun buildDocumentInfo(project: Project, psiFile: PsiFile): DocumentInfo {
+    open fun buildDocumentInfo(project: Project, psiFile: PsiFile): DocumentInfo {
 
         val fileUri = PsiUtils.psiFileToUri(psiFile)
 
@@ -50,11 +49,6 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
                     documentInfo
                 )
             })
-
-        val micrometerTracingFramework = MicrometerTracingFramework(project)
-        micrometerTracingFramework.annotationSpanDiscovery(project, psiFile, documentInfo)
-
-
 
 
         return documentInfo

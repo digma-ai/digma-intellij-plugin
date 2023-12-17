@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.216] - 2023-12-15
+## [2.0.217] - 2023-12-17
+- Kotlin support Closes #1252 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1491
+- support kotlin run config by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1494
+
+## 2.0.216 - 2023-12-15
 - Jira ticket like by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1489
 
 ## 2.0.215 - 2023-12-13

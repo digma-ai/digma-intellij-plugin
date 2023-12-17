@@ -21,6 +21,7 @@ import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.settings.SpringBootObservabilityMode
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.idea.maven.execution.MavenRunConfiguration
+import org.jetbrains.kotlin.idea.run.KotlinRunConfiguration
 import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
 
 private const val ORG_GRADLE_JAVA_TOOL_OPTIONS = "ORG_GRADLE_JAVA_TOOL_OPTIONS"
@@ -63,12 +64,20 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
 
         when (runConfigType) {
             RunConfigType.JavaTest,
-            RunConfigType.JavaRun, -> {
+            RunConfigType.KotlinRun,
+            RunConfigType.JavaRun,
+            -> {
                 //this also works for: CommonJavaRunConfigurationParameters
                 //params.vmParametersList.addParametersString("-verbose:class -javaagent:/home/shalom/tmp/run-configuration/opentelemetry-javaagent.jar")
                 //params.vmParametersList.addProperty("myprop","myvalue")
                 val javaToolOptions =
-                    buildJavaToolOptions(configuration, project, isSpringBootWithMicrometerTracing, isOtelServiceNameAlreadyDefined(params), runConfigType.isTest)
+                    buildJavaToolOptions(
+                        configuration,
+                        project,
+                        isSpringBootWithMicrometerTracing,
+                        isOtelServiceNameAlreadyDefined(params),
+                        runConfigType.isTest
+                    )
                 javaToolOptions?.let {
                     OtelRunConfigurationExtension.mergeJavaToolOptions(params, it)
                 }
@@ -246,12 +255,17 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
     @NotNull
     private fun evalRunConfigType(configuration: RunConfiguration): RunConfigType {
         if (isJavaConfiguration(configuration)) return RunConfigType.JavaRun
+        if (isKotlinConfiguration(configuration)) return RunConfigType.KotlinRun
         if (isJavaTestConfiguration(configuration)) return RunConfigType.JavaTest
         if (isGradleConfiguration(configuration)) return RunConfigType.GradleRun
         if (isGradleTestConfiguration(configuration)) return RunConfigType.GradleTest
         if (isMavenConfiguration(configuration)) return RunConfigType.MavenRun
         if (isMavenTestConfiguration(configuration)) return RunConfigType.MavenTest
         return RunConfigType.Unknown
+    }
+
+    private fun isKotlinConfiguration(configuration: RunConfiguration): Boolean {
+        return configuration is KotlinRunConfiguration
     }
 
     private fun isJavaConfiguration(configuration: RunConfiguration): Boolean {

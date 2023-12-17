@@ -107,7 +107,6 @@ object BuildProfiles {
 
         Profiles.p223 to BuildProfile(
             profile = Profiles.p223,
-            // platformVersion is Intellij IDEA Community and Ultimate
             platformVersion = "2022.3.3",
             riderVersion = "2022.3.3",
             pycharmVersion = "2022.3.3",
@@ -124,13 +123,12 @@ object BuildProfiles {
 
         Profiles.p231 to BuildProfile(
             profile = Profiles.p231,
-            // platformVersion is Intellij IDEA Community and Ultimate
             platformVersion = "2023.1.5",
             riderVersion = "2023.1.4",
             pycharmVersion = "2023.1.4",
             riderResharperVersion = "2023.1.4",
             riderResharperVersionConstant = "PROFILE_2023_1",
-            pythonPluginVersion = "231.8770.65",
+            pythonPluginVersion = "231.9225.4",
             platformVersionCode = "231",
             pluginSinceBuild = "231",
             pluginUntilBuild = "231.*",
@@ -141,17 +139,16 @@ object BuildProfiles {
 
         Profiles.p232 to BuildProfile(
             profile = Profiles.p232,
-            // platformVersion is Intellij IDEA Community and Ultimate
-            platformVersion = "2023.2.2",
-            riderVersion = "2023.2.1",
-            pycharmVersion = "2023.2.1",
-            riderResharperVersion = "2023.2.0",
+            platformVersion = "2023.2.5",
+            riderVersion = "2023.2.3",
+            pycharmVersion = "2023.2.5",
+            riderResharperVersion = "2023.2.5",
             riderResharperVersionConstant = "PROFILE_2023_2",
             pythonPluginVersion = "232.9559.62",
             platformVersionCode = "232",
             pluginSinceBuild = "232",
             pluginUntilBuild = "232.*",
-            versionToRunPluginVerifier = "2023.2.2",
+            versionToRunPluginVerifier = "2023.2.5",
             kotlinTarget = KotlinVersion.KOTLIN_1_8.version,
             javaVersion = JavaVersion.VERSION_17.majorVersion
         ),
@@ -160,21 +157,39 @@ object BuildProfiles {
         Profiles.p233 to BuildProfile(
 
             profile = Profiles.p233,
-            isEAP = false,
-            // platformVersion is for Intellij IDEA Community and Ultimate
-            platformVersion = "2023.3",
-            riderVersion = "2023.3",
-            pycharmVersion = "2023.3",
-            riderResharperVersion = "2023.3.0",
+            platformVersion = "2023.3.1",
+            riderVersion = "2023.3.1",
+            pycharmVersion = "2023.3.1",
+            riderResharperVersion = "2023.3.1",
             riderResharperVersionConstant = "PROFILE_2023_2",
-            pythonPluginVersion = "233.11799.241",
+            pythonPluginVersion = "233.11799.300",
             platformVersionCode = "233",
             pluginSinceBuild = "233",
             pluginUntilBuild = "233.*",
-            versionToRunPluginVerifier = "2023.3",
+            versionToRunPluginVerifier = "2023.3.1",
             kotlinTarget = KotlinVersion.KOTLIN_1_8.version,
             javaVersion = JavaVersion.VERSION_17.majorVersion
-        )
+        ),
+
+        //next EAP
+//        Profiles.p241 to BuildProfile(
+//
+//            profile = Profiles.p241,
+//            isEAP = true,
+//            // platformVersion is for Intellij IDEA Community and Ultimate
+//            platformVersion = "2023.3.1",
+//            riderVersion = "2023.3.1",
+//            pycharmVersion = "2023.3.1",
+//            riderResharperVersion = "2023.3.1",
+//            riderResharperVersionConstant = "PROFILE_2023_2",
+//            pythonPluginVersion = "233.13135.65",
+//            platformVersionCode = "233",
+//            pluginSinceBuild = "233",
+//            pluginUntilBuild = "233.*",
+//            versionToRunPluginVerifier = "2023.3.1",
+//            kotlinTarget = KotlinVersion.KOTLIN_1_8.version,
+//            javaVersion = JavaVersion.VERSION_17.majorVersion
+//        )
 
 
     )

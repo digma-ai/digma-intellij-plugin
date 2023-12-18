@@ -115,7 +115,7 @@ public class DocumentInfoService {
 
     //called after a document is analyzed for code objects
     public void addCodeObjects(@NotNull PsiFile psiFile, @NotNull DocumentInfo documentInfo) {
-        Log.test(LOGGER::info, "Adding DocumentInfo for {},{}", psiFile.getVirtualFile(), documentInfo);
+        Log.log(LOGGER::debug, "Adding DocumentInfo for {},{}", psiFile.getVirtualFile(), documentInfo);
         DocumentInfoContainer documentInfoContainer = documents.computeIfAbsent(PsiUtils.psiFileToUri(psiFile), file -> new DocumentInfoContainer(psiFile, analyticsService));
         documentInfoContainer.update(documentInfo);
         dominantLanguages.computeIfAbsent(documentInfoContainer.getLanguage().getID(), key -> new MutableInt(0)).increment();
@@ -124,7 +124,6 @@ public class DocumentInfoService {
 
     public void removeDocumentInfo(@NotNull PsiFile psiFile) {
         Log.log(LOGGER::debug, "Removing document for PsiFile {}", psiFile.getVirtualFile());
-        Log.test(LOGGER::info, "Removing document for PsiFile {}", psiFile.getVirtualFile());
         documents.remove(PsiUtils.psiFileToUri(psiFile));
     }
 

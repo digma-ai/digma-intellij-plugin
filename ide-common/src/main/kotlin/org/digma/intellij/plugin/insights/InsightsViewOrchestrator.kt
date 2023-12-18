@@ -219,7 +219,6 @@ class InsightsViewOrchestrator(val project: Project) {
         //todo: this is WIP, currently relying on showing insights by navigating to code locations and relying on caret event.
         // this class should show insights regardless of caret event and navigate to code if possible.
         // we need to separate this two actions , showing insights and navigating to source code.
-        
         project.service<MainToolWindowCardsController>().closeCoveringViewsIfNecessary()
         project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
         ToolWindowShower.getInstance(project).showToolWindow()
@@ -234,7 +233,6 @@ class InsightsViewOrchestrator(val project: Project) {
         val currentCaretLocation: Pair<String, Int>? = project.service<EditorService>().currentCaretLocation
         val methodLocation: Pair<String, Int>? = methodCodeObjectId?.let { project.service<CodeNavigator>().getMethodLocation(methodCodeObjectId) }
         val spanLocation: Pair<String, Int>? = spanCodeObjectId?.let { project.service<CodeNavigator>().getSpanLocation(spanCodeObjectId) }
-        
         //if currentCaretLocation is null maybe there is no file opened
         if (currentCaretLocation == null) {
             return project.service<CodeNavigator>().maybeNavigateToSpanOrMethod(spanCodeObjectId, methodCodeObjectId)
@@ -264,7 +262,7 @@ class InsightsViewOrchestrator(val project: Project) {
             showInsightsForCodelessSpan(spanCodeObjectId)
             return true
         }
-        
+
         return project.service<CodeNavigator>().maybeNavigateToSpanOrMethod(spanCodeObjectId, methodCodeObjectId)
 
     }

@@ -63,7 +63,7 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
 
         documentInfoChangedConnection.subscribe(DocumentInfoChanged.DOCUMENT_INFO_CHANGED_TOPIC,DocumentInfoChanged { psiFile: PsiFile ->
             val psiUri = PsiUtils.psiFileToUri(psiFile)
-            Log.log(logger::debug, "got documentInfoChanged, restarting DaemonCodeAnalyzer for {}", psiUri)
+            Log.log(logger::trace, "got documentInfoChanged, restarting DaemonCodeAnalyzer for {}", psiUri)
             codeLensCache.remove(PsiUtils.psiFileToUri(psiFile))
             //restartFile(psiFile)
             restartAll()

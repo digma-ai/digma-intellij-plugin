@@ -50,7 +50,7 @@ import static org.digma.intellij.plugin.document.CodeObjectsUtil.addSpanTypeToId
 
 public class JaegerUIService {
 
-    private static final Logger logger = Logger.getInstance(JaegerUIService.class);
+    private final Logger logger = Logger.getInstance(JaegerUIService.class);
 
     private final Project project;
 
@@ -74,7 +74,6 @@ public class JaegerUIService {
 
 
     public static JaegerUIService getInstance(Project project) {
-        Log.log(logger::warn, "Getting instance of " + JaegerUIService.class.getSimpleName());
         return project.getService(JaegerUIService.class);
     }
 

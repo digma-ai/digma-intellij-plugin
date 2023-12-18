@@ -219,8 +219,7 @@ class InsightsViewOrchestrator(val project: Project) {
         //todo: this is WIP, currently relying on showing insights by navigating to code locations and relying on caret event.
         // this class should show insights regardless of caret event and navigate to code if possible.
         // we need to separate this two actions , showing insights and navigating to source code.
-
-        Log.test(logger::info, "Got showInsightsForSpanOrMethodAndNavigateToCode spanCodeObjectId: {}, methodCodeObjectId: {}", spanCodeObjectId, methodCodeObjectId)
+        
         project.service<MainToolWindowCardsController>().closeCoveringViewsIfNecessary()
         project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
         ToolWindowShower.getInstance(project).showToolWindow()
@@ -235,23 +234,19 @@ class InsightsViewOrchestrator(val project: Project) {
         val currentCaretLocation: Pair<String, Int>? = project.service<EditorService>().currentCaretLocation
         val methodLocation: Pair<String, Int>? = methodCodeObjectId?.let { project.service<CodeNavigator>().getMethodLocation(methodCodeObjectId) }
         val spanLocation: Pair<String, Int>? = spanCodeObjectId?.let { project.service<CodeNavigator>().getSpanLocation(spanCodeObjectId) }
-
-        Log.test(logger::info, "currentCaretLocation: {}, methodLocation: {}, spanLocation: {}", currentCaretLocation, methodLocation, spanLocation)
+        
         //if currentCaretLocation is null maybe there is no file opened
         if (currentCaretLocation == null) {
-            Log.test(logger::info, "currentCaretLocation is null")
             return project.service<CodeNavigator>().maybeNavigateToSpanOrMethod(spanCodeObjectId, methodCodeObjectId)
         }
 
         //we can navigate to span, it will cause a caret event and show the insights
         if (spanLocation != null && spanLocation != currentCaretLocation) {
-            Log.test(logger::info, "spanLocation is not null and not equals currentCaretLocation")
             return project.service<CodeNavigator>().maybeNavigateToSpan(spanCodeObjectId)
         }
 
         //navigate to method, it will cause a caret event and show the insights
         if (methodLocation != null && methodLocation != currentCaretLocation) {
-            Log.test(logger::info, "methodLocation is not null and not equals currentCaretLocation")
             return project.service<CodeNavigator>().maybeNavigateToMethod(methodCodeObjectId)
         }
         
@@ -259,7 +254,6 @@ class InsightsViewOrchestrator(val project: Project) {
         //methodLocation equals currentCaretLocation, so we have to emulate a caret event to show the method insights
         if (methodLocation != null) {
             Backgroundable.ensurePooledThread {
-                Log.test(logger::info, "about to emulate caret event for methodLocation: {}", methodLocation)
                 emulateCaretEvent(methodCodeObjectId, methodLocation.first)
             }
             return true
@@ -267,12 +261,10 @@ class InsightsViewOrchestrator(val project: Project) {
 
         //todo: not sure about that
         if (spanLocation != null) {
-            Log.test(logger::info, "calling showInsightsForCodelessSpan ")
             showInsightsForCodelessSpan(spanCodeObjectId)
             return true
         }
         
-        Log.test(logger::info, "calling maybeNavigateToSpanOrMethod")
         return project.service<CodeNavigator>().maybeNavigateToSpanOrMethod(spanCodeObjectId, methodCodeObjectId)
 
     }

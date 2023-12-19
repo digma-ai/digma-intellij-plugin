@@ -196,6 +196,8 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
             .plus(" ")
             .plus("-Dotel.metrics.exporter=none")
             .plus(" ")
+            .plus("-Dotel.instrumentation.experimental.span-suppression-strategy=none")
+            .plus(" ")
 
         if (!serviceAlreadyDefined) {
             retVal = retVal
@@ -298,7 +300,13 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
             val hasBootRun = taskNames.any {
                 it.contains(":bootRun") || it.equals("bootRun")
             }
-            if (isMainMethod || hasBootRun) {
+
+            //support for the run task of the java application plugin. https://docs.gradle.org/current/userguide/application_plugin.html
+            val hasRun = taskNames.any {
+                it.contains(":run") || it.equals("run")
+            }
+
+            if (isMainMethod || hasBootRun || hasRun) {
                 return true
             }
 

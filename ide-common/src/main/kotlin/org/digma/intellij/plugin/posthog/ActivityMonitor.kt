@@ -101,6 +101,18 @@ class ActivityMonitor(project: Project) : Disposable {
     }
 
     fun registerCustomEvent(eventName: String, tags: Map<String, Any>?) {
+        if(eventName == "user-action")//handling user-action event from jcef component
+        {
+            val action = tags?.get("action")
+            if(action != null) {
+                postHog?.set(
+                    userId, mapOf(
+                        "last-user-action" to action,
+                        "last-user-action-timestamp" to Instant.now().toString()
+                    )
+                )
+            }
+        }
         capture(eventName, tags ?: mapOf())
     }
 

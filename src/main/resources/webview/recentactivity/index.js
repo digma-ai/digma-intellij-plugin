@@ -198,7 +198,7 @@
   text-overflow: ellipsis;
   overflow: hidden;
   max-width: 110px;
-`},58296:function(e,t,n){"use strict";var r=this&&this.__createBinding||(Object.create?function(e,t,n,r){void 0===r&&(r=n);var o=Object.getOwnPropertyDescriptor(t,n);o&&!("get"in o?!t.__esModule:o.writable||o.configurable)||(o={enumerable:!0,get:function(){return t[n]}}),Object.defineProperty(e,r,o)}:function(e,t,n,r){void 0===r&&(r=n),e[r]=t[n]}),o=this&&this.__setModuleDefault||(Object.create?function(e,t){Object.defineProperty(e,"default",{enumerable:!0,value:t})}:function(e,t){e.default=t}),a=this&&this.__importStar||function(e){if(e&&e.__esModule)return e;var t={};if(null!=e)for(var n in e)"default"!==n&&Object.prototype.hasOwnProperty.call(e,n)&&r(t,e,n);return o(t,e),t},i=this&&this.__importDefault||function(e){return e&&e.__esModule?e:{default:e}};Object.defineProperty(t,"__esModule",{value:!0}),t.EnvironmentPanel=void 0;const s=n(85893),l=n(67294),c=i(n(9701)),u=n(13351),d=n(18515),p=n(41032),m=n(25947),f=n(74667),g=n(53325),h=n(5721),b=n(86720),_=n(65608),y=a(n(74979)),v=!0===window.recentActivityIsEnvironmentManagementEnabled;t.EnvironmentPanel=e=>{const[t,n]=(0,l.useState)(0),r=(0,c.default)(),o=(0,c.default)(),[a,i]=(0,l.useState)(!1);(0,l.useEffect)((()=>{const e=r.entry;e&&n(e.target.scrollLeft)}),[r.entry,o.entry]);const E=t=>{e.onEnvironmentSelect(t)},S=()=>{i(!1)},T=t=>{e.onEnvironmentAdd(t)},w=t=>{e.onEnvironmentDelete(t)},O=e=>{const{entry:t,width:a}=r,{entry:i}=o;if(t&&i){let r=a;"left"===e&&(r*=-1);let o=t.target.scrollLeft+r;const i=t.target.scrollWidth-a;o>=i&&(o=i),o<0&&(o=0),n(o),t.target.scrollLeft=o}},C=e=>{const{entry:n,width:a}=r,{entry:i}=o;if(n&&i){if("left"===e)return 0===t;if("right"===e)return t+a+5>=n.target.scrollWidth}return!1},R=C("left"),A=C("right"),N=o.width-r.width>=5;return(0,s.jsxs)(y.Container,{children:[(0,s.jsx)(y.LogoRotationContainer,{children:(0,s.jsx)(y.LogoContainer,{children:(0,s.jsx)(g.DigmaLogoIcon,{size:20})})}),(0,s.jsx)(y.Divider,{}),(0,s.jsx)(y.CarouselButtonContainer,{children:N&&(0,s.jsx)(y.CarouselButton,{onClick:()=>O("left"),disabled:R,children:(0,s.jsx)(f.ChevronIcon,{direction:h.Direction.LEFT,color:"currentColor"})})},"left"),(0,s.jsx)(y.EnvironmentListContainer,{ref:r.observe,children:(0,s.jsx)(y.EnvironmentList,{ref:o.observe,children:e.environments.map((t=>(0,s.jsx)(_.EnvironmentTab,{environment:t,isSelected:e.selectedEnvironment?.originalName===t.originalName,onClick:E,onEnvironmentDelete:w},t.originalName)))})}),(0,s.jsx)(y.CarouselButtonContainer,{children:N&&(0,s.jsx)(y.CarouselButton,{onClick:()=>O("right"),disabled:A,children:(0,s.jsx)(f.ChevronIcon,{direction:h.Direction.RIGHT,color:"currentColor"})})},"right"),(0,s.jsx)(y.ButtonsContainer,{children:v&&(()=>{const t=document.getElementById(u.RECENT_ACTIVITY_CONTAINER_ID)||void 0;return(0,s.jsx)(p.NewPopover,{boundary:t,placement:"bottom-end",onOpenChange:i,isOpen:a,content:(0,s.jsx)(b.AddEnvironmentDialog,{onClose:S,onEnvironmentAdd:T,environments:e.environments}),children:(0,s.jsx)("div",{children:(0,s.jsx)(d.NewButton,{label:"Add Environment",size:"small",icon:m.PlusIcon})})})})()})]})}},74979:function(e,t,n){"use strict";var r=this&&this.__createBinding||(Object.create?function(e,t,n,r){void 0===r&&(r=n);var o=Object.getOwnPropertyDescriptor(t,n);o&&!("get"in o?!t.__esModule:o.writable||o.configurable)||(o={enumerable:!0,get:function(){return t[n]}}),Object.defineProperty(e,r,o)}:function(e,t,n,r){void 0===r&&(r=n),e[r]=t[n]}),o=this&&this.__setModuleDefault||(Object.create?function(e,t){Object.defineProperty(e,"default",{enumerable:!0,value:t})}:function(e,t){e.default=t}),a=this&&this.__importStar||function(e){if(e&&e.__esModule)return e;var t={};if(null!=e)for(var n in e)"default"!==n&&Object.prototype.hasOwnProperty.call(e,n)&&r(t,e,n);return o(t,e),t};Object.defineProperty(t,"__esModule",{value:!0}),t.ButtonsContainer=t.Divider=t.LogoContainer=t.LogoRotationContainer=t.CarouselButton=t.CarouselButtonContainer=t.EnvironmentList=t.EnvironmentListContainer=t.Container=void 0;const i=a(n(70394));t.Container=i.default.div`
+`},58296:function(e,t,n){"use strict";var r=this&&this.__createBinding||(Object.create?function(e,t,n,r){void 0===r&&(r=n);var o=Object.getOwnPropertyDescriptor(t,n);o&&!("get"in o?!t.__esModule:o.writable||o.configurable)||(o={enumerable:!0,get:function(){return t[n]}}),Object.defineProperty(e,r,o)}:function(e,t,n,r){void 0===r&&(r=n),e[r]=t[n]}),o=this&&this.__setModuleDefault||(Object.create?function(e,t){Object.defineProperty(e,"default",{enumerable:!0,value:t})}:function(e,t){e.default=t}),a=this&&this.__importStar||function(e){if(e&&e.__esModule)return e;var t={};if(null!=e)for(var n in e)"default"!==n&&Object.prototype.hasOwnProperty.call(e,n)&&r(t,e,n);return o(t,e),t},i=this&&this.__importDefault||function(e){return e&&e.__esModule?e:{default:e}};Object.defineProperty(t,"__esModule",{value:!0}),t.EnvironmentPanel=void 0;const s=n(85893),l=n(67294),c=i(n(9701)),u=n(13351),d=n(18515),p=n(41032),m=n(25947),f=n(74667),g=n(53325),h=n(5721),b=n(86720),_=n(65608),y=a(n(74979)),v=!0===window.recentActivityIsEnvironmentManagementEnabled;t.EnvironmentPanel=e=>{const[t,n]=(0,l.useState)(0),r=(0,c.default)(),o=(0,c.default)(),[a,i]=(0,l.useState)(!1);(0,l.useEffect)((()=>{const e=r.entry;e&&n(e.target.scrollLeft)}),[r.entry,o.entry]);const E=t=>{e.onEnvironmentSelect(t)},S=()=>{i(!1)},T=t=>{e.onEnvironmentAdd(t)},w=t=>{e.onEnvironmentDelete(t)},O=e=>{const{entry:t,width:a}=r,{entry:i}=o;if(t&&i){let r=a;"left"===e&&(r*=-1);let o=t.target.scrollLeft+r;const i=t.target.scrollWidth-a;o>=i&&(o=i),o<0&&(o=0),n(o),t.target.scrollLeft=o}},C=e=>{const{entry:n,width:a}=r,{entry:i}=o;if(n&&i){if("left"===e)return 0===t;if("right"===e)return t+a+5>=n.target.scrollWidth}return!1},R=C("left"),A=C("right"),N=o.width-r.width>=5;return(0,s.jsxs)(y.Container,{children:[(0,s.jsx)(y.LogoContainer,{children:(0,s.jsx)(g.DigmaLogoIcon,{size:20})}),(0,s.jsx)(y.Divider,{}),(0,s.jsx)(y.CarouselButtonContainer,{children:N&&(0,s.jsx)(y.CarouselButton,{onClick:()=>O("left"),disabled:R,children:(0,s.jsx)(f.ChevronIcon,{direction:h.Direction.LEFT,color:"currentColor"})})},"left"),(0,s.jsx)(y.EnvironmentListContainer,{ref:r.observe,children:(0,s.jsx)(y.EnvironmentList,{ref:o.observe,children:e.environments.map((t=>(0,s.jsx)(_.EnvironmentTab,{environment:t,isSelected:e.selectedEnvironment?.originalName===t.originalName,onClick:E,onEnvironmentDelete:w},t.originalName)))})}),(0,s.jsx)(y.CarouselButtonContainer,{children:N&&(0,s.jsx)(y.CarouselButton,{onClick:()=>O("right"),disabled:A,children:(0,s.jsx)(f.ChevronIcon,{direction:h.Direction.RIGHT,color:"currentColor"})})},"right"),(0,s.jsx)(y.ButtonsContainer,{children:v&&(()=>{const t=document.getElementById(u.RECENT_ACTIVITY_CONTAINER_ID)||void 0;return(0,s.jsx)(p.NewPopover,{boundary:t,placement:"bottom-end",onOpenChange:i,isOpen:a,content:(0,s.jsx)(b.AddEnvironmentDialog,{onClose:S,onEnvironmentAdd:T,environments:e.environments}),children:(0,s.jsx)("div",{children:(0,s.jsx)(d.NewButton,{label:"Add Environment",size:"small",icon:m.PlusIcon})})})})()})]})}},74979:function(e,t,n){"use strict";var r=this&&this.__importDefault||function(e){return e&&e.__esModule?e:{default:e}};Object.defineProperty(t,"__esModule",{value:!0}),t.ButtonsContainer=t.Divider=t.LogoContainer=t.CarouselButton=t.CarouselButtonContainer=t.EnvironmentList=t.EnvironmentListContainer=t.Container=void 0;const o=r(n(70394));t.Container=o.default.div`
   display: flex;
   align-items: center;
   width: 100%;
@@ -208,21 +208,21 @@
   box-sizing: border-box;
   background: ${({theme:e})=>e.colors.tabPanel.background};
   box-shadow: ${({theme:e})=>{switch(e.mode){case"light":return"0 5px 10px 0 rgb(0 0 0 / 15%)";case"dark":case"dark-jetbrains":return"0 9px 24px 0 rgb(0 0 0 / 30%)"}}};
-`,t.EnvironmentListContainer=i.default.div`
+`,t.EnvironmentListContainer=o.default.div`
   display: flex;
   flex-grow: 1;
   overflow: hidden;
   scroll-behavior: smooth;
   gap: 12px;
   height: 100%;
-`,t.EnvironmentList=i.default.ul`
+`,t.EnvironmentList=o.default.ul`
   display: flex;
   gap: 12px;
   margin: 0;
   padding: 0;
-`,t.CarouselButtonContainer=i.default.div`
+`,t.CarouselButtonContainer=o.default.div`
   width: 12px;
-`,t.CarouselButton=i.default.button`
+`,t.CarouselButton=o.default.button`
   display: flex;
   background: none;
   padding: 0;
@@ -233,21 +233,15 @@
   &:disabled {
     cursor: initial;
   }
-`;const s=i.keyframes`
-  15% { transform: rotateY(-40deg); }
-  45% { transform: rotateY(40deg); }
-  60% { transform: rotateY(0); }
-`;t.LogoRotationContainer=i.default.div`
-  perspective: 25px;
-`,t.LogoContainer=i.default.div`
-  animation: ${s} 6s ease-in-out infinite;
-`,t.Divider=i.default.div`
+`,t.LogoContainer=o.default.div`
+  display: flex;
+`,t.Divider=o.default.div`
   margin: 0 8px;
   border-radius: 1px;
   width: 1px;
   height: 13px;
   background: ${({theme:e})=>e.colors.tabPanel.divider};
-`,t.ButtonsContainer=i.default.div`
+`,t.ButtonsContainer=o.default.div`
   display: flex;
   flex-shrink: 0;
   gap: 4px;

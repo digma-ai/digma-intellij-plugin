@@ -1,6 +1,14 @@
 # Changelog
 
-## [2.0.217] - 2023-12-17
+## [2.0.218] - 2023-12-20
+- update build profiles by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1496
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1505
+- React user action by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1507
+- add traceid and duration to spanNplusEndpoints by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1508
+- show lost data message Closes #1506 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1509
+- LostDataMessageDialog title changes by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1510
+
+## 2.0.217 - 2023-12-17
 - Kotlin support Closes #1252 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1491
 - support kotlin run config by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1494
 

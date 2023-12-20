@@ -33,7 +33,7 @@ class LostDataMessageDialog(project: Project) : DialogWrapper(project) {
 
     init {
         super.init()
-        title = "Your Digma Data Will Be Lost"
+        title = "Digma Updates"
     }
 
     override fun createCenterPanel(): JComponent {

@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.218] - 2023-12-20
+## [2.0.219] - 2023-12-21
+- remove error logging by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1512
+- Slowest spans insight jira ticket by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1513
+
+## 2.0.218 - 2023-12-20
 - update build profiles by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1496
 - Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1505
 - React user action by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1507

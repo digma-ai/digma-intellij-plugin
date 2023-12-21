@@ -7,7 +7,8 @@ import java.beans.ConstructorProperties
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class SlowSpanInfo
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@ConstructorProperties("spanInfo", "probabilityOfBeingBottleneck", "avgDurationWhenBeingBottleneck")
+@ConstructorProperties("spanInfo", "probabilityOfBeingBottleneck", "avgDurationWhenBeingBottleneck","criticality")
 constructor(val spanInfo: SpanInfo,
             val probabilityOfBeingBottleneck: Double,
-            val avgDurationWhenBeingBottleneck: Duration)
+            val avgDurationWhenBeingBottleneck: Duration,
+            val criticality: Double)

@@ -453,7 +453,7 @@ public class AnalyticsService implements Disposable {
         try {
             analyticsProviderProxy.close();
         } catch (Exception e) {
-            Log.error(LOGGER, project, e, "exception while closing AnalyticsProvider {}", e.getMessage());
+            Log.warnWithException(LOGGER, project, e, "exception while closing AnalyticsProvider {}", e.getMessage());
         }
     }
 

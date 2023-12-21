@@ -251,7 +251,7 @@ public class VcsService {
                         }
                     }
                 } catch (VcsException e) {
-                    Log.error(LOGGER, project, e, "Could not compare revision {} with working dir for file {}", requiredRevision, filePath);
+                    Log.warnWithException(LOGGER, project, e, "Could not compare revision {} with working dir for file {}", requiredRevision, filePath);
                 }
 
                 var requiredRevisionContent = vcs.getDiffProvider().createFileContent(requiredRevision, filePath.getVirtualFile());

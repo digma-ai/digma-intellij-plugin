@@ -14,6 +14,7 @@ import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.callback.CefQueryCallback;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
+import org.digma.intellij.plugin.analytics.AnalyticsProviderException;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.common.Backgroundable;
@@ -25,12 +26,15 @@ import org.digma.intellij.plugin.insights.model.outgoing.Method;
 import org.digma.intellij.plugin.insights.model.outgoing.SetCodeLocationData;
 import org.digma.intellij.plugin.insights.model.outgoing.SetCodeLocationMessage;
 import org.digma.intellij.plugin.insights.model.outgoing.SetInsightsDataMessage;
+import org.digma.intellij.plugin.insights.model.outgoing.SetSpanInsightData;
+import org.digma.intellij.plugin.insights.model.outgoing.SetSpanInsightMessage;
 import org.digma.intellij.plugin.insights.model.outgoing.Span;
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil;
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
+import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanResponse;
 import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest;
 import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation;
 import org.digma.intellij.plugin.model.rest.navigation.SpanNavigationItem;
@@ -46,6 +50,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -133,6 +138,7 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
                         }
                     }
                     case "INSIGHTS/GET_CODE_LOCATIONS" -> getCodeLocations(jsonNode);
+                    case "INSIGHTS/GET_SPAN_INSIGHT" -> getInsight(jsonNode);
                     case JCefMessagesUtils.GLOBAL_REGISTER -> RegistrationEventHandler.getInstance(project).register(jsonNode);
 
                     default -> throw new IllegalStateException("Unexpected value: " + action);
@@ -162,6 +168,47 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
         Log.log(LOGGER::trace, project, "got insights types {}", insightTypeList);
         ActivityMonitor.getInstance(project).registerInsightsViewed(insightTypeList);
     }
+
+    private CodeObjectInsight getInsightBySpanTemporary(String spanCodeObjectId, String insightType) throws AnalyticsServiceException {
+        InsightsOfSingleSpanResponse insightBySpan = AnalyticsService.getInstance(project).getInsightsForSingleSpan(spanCodeObjectId);
+        return insightBySpan.getInsights().stream()
+                .filter(o -> o.getType().name().equals(insightType)).findFirst().orElse(null);
+    }
+    private CodeObjectInsight getInsightBySpan(String spanCodeObjectId, String insightType) throws AnalyticsServiceException {
+        try {
+            return AnalyticsService.getInstance(project).getInsightBySpan(spanCodeObjectId, insightType);
+        } catch (AnalyticsServiceException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof AnalyticsProviderException) {
+                if(((AnalyticsProviderException)cause).getResponseCode() == 404)
+                {
+                    return getInsightBySpanTemporary(spanCodeObjectId, insightType);
+                }
+            }
+            throw e;
+        }
+    }
+    private void getInsight(JsonNode jsonNode) throws JsonProcessingException {
+        Log.log(LOGGER::trace, project, "got INSIGHTS/GET_SPAN_INSIGHT message");
+        JsonNode payload = objectMapper.readTree(jsonNode.get("payload").toString());
+        var spanCodeObjectId = payload.get("spanCodeObjectId").asText();
+        var insightType = payload.get("insightType").asText();
+        CodeObjectInsight insight = null;
+        try {
+            insight = getInsightBySpan(spanCodeObjectId, insightType);
+        } catch (AnalyticsServiceException e) {
+            Log.warnWithException(LOGGER, project, e, "Error getInsight: {}", e.getMessage());
+        }
+        catch (Exception e){
+            Log.warnWithException(LOGGER, project, e, "unhandled error while getInsight: {}", e.getMessage());
+        }
+        finally {
+            var message = new SetSpanInsightMessage("digma", "INSIGHTS/SET_SPAN_INSIGHT", new SetSpanInsightData(insight));
+            serializeAndExecuteWindowPostMessageJavaScript(this.jbCefBrowser.getCefBrowser(), message);
+        }
+
+    }
+
     private void getCodeLocations(JsonNode jsonNode) throws JsonProcessingException {
         Log.log(LOGGER::trace, project, "got INSIGHTS/GET_CODE_LOCATIONS message");
         JsonNode payload = objectMapper.readTree(jsonNode.get("payload").toString());

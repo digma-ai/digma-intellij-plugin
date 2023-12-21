@@ -35,8 +35,8 @@ import org.digma.intellij.plugin.model.rest.notifications.SetReadNotificationsRe
 import org.digma.intellij.plugin.model.rest.notifications.UnreadNotificationsCountResponse;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
-import org.digma.intellij.plugin.model.rest.usage.EnvsUsageStatusRequest;
 import org.digma.intellij.plugin.model.rest.usage.EnvUsageStatusResult;
+import org.digma.intellij.plugin.model.rest.usage.EnvsUsageStatusRequest;
 import org.digma.intellij.plugin.model.rest.user.UserUsageStatsRequest;
 import org.digma.intellij.plugin.model.rest.user.UserUsageStatsResponse;
 import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse;
@@ -117,6 +117,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
 
     public InsightsOfSingleSpanResponse getInsightsForSingleSpan(InsightsOfSingleSpanRequest insightsOfSingleSpanRequest) {
         return execute(() -> client.analyticsProvider.getInsightsForSingleSpan(insightsOfSingleSpanRequest));
+    }
+
+    @Override
+    public CodeObjectInsight getInsightBySpan(String environment, String spanCodeObjectId, String insightType) {
+        return execute(() -> client.analyticsProvider.getInsightBySpan(environment, spanCodeObjectId, insightType));
     }
 
     @Override
@@ -442,7 +447,8 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @POST("/CodeAnalytics/codeObjects/insights_of_single")
         Call<InsightsOfSingleSpanResponse> getInsightsForSingleSpan(@Body InsightsOfSingleSpanRequest insightsOfSingleSpanRequest);
-
+        @GET("/CodeAnalytics/codeObjects/insight")
+        Call<CodeObjectInsight> getInsightBySpan(@Query("environment") String environment, @Query("spanCodeObjectId") String spanCodeObjectId, @Query("insightType") String insightType);
 
         @Headers({
                 "Accept: application/+json",

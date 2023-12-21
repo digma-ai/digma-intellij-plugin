@@ -51,7 +51,7 @@ class CodeLensHost(project: Project) : LifetimedProjectComponent(project) {
                 Log.log(logger::debug, "Got codeLens for {}: {}", psiFile.virtualFile, codeLens)
                 installCodeLens(psiFile, codeLens)
             } catch (e: PsiFileNotFountException) {
-                Log.error(logger, project, e, "Could not find psi file {}", psiFileUri)
+                Log.warnWithException(logger, project, e, "Could not find psi file {}", psiFileUri)
             }
         })
     }

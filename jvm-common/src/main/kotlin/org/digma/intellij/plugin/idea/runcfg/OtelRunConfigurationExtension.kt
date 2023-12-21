@@ -170,11 +170,19 @@ class OtelRunConfigurationExtension : RunConfigurationExtension() {
                     configuration as GradleRunConfiguration
                     Log.log(logger::debug, "Cleaning gradle configuration {}", configuration)
                     if (configuration.settings.env.containsKey(ORG_GRADLE_JAVA_TOOL_OPTIONS)) {
+                        val newEnv = mutableMapOf<String, String>()
                         val orgJavaToolOptions = configuration.settings.env[ORG_GRADLE_JAVA_TOOL_OPTIONS]
-                        configuration.settings.env[JAVA_TOOL_OPTIONS] = orgJavaToolOptions
-                        configuration.settings.env.remove(ORG_GRADLE_JAVA_TOOL_OPTIONS)
+                        newEnv.putAll(configuration.settings.env)
+                        if (orgJavaToolOptions != null) {
+                            newEnv[JAVA_TOOL_OPTIONS] = orgJavaToolOptions
+                        }
+                        newEnv.remove(ORG_GRADLE_JAVA_TOOL_OPTIONS)
+                        configuration.settings.env = newEnv
                     } else if (configuration.settings.env.containsKey(JAVA_TOOL_OPTIONS)) {
-                        configuration.settings.env.remove(JAVA_TOOL_OPTIONS)
+                        val newEnv = mutableMapOf<String, String>()
+                        newEnv.putAll(configuration.settings.env)
+                        newEnv.remove(JAVA_TOOL_OPTIONS)
+                        configuration.settings.env = newEnv
                     }
                 }
             })

@@ -1,4 +1,6 @@
 import common.platformVersion
+import org.gradle.initialization.ClassLoaderScopeRegistryListenerManager
+import org.jetbrains.kotlin.com.intellij.openapi.util.registry.Registry
 
 plugins {
     id("plugin-library")

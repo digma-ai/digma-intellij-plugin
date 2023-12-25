@@ -15,6 +15,7 @@ import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.editor.CurrentContextUpdater
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
+import org.digma.intellij.plugin.model.discovery.EndpointFramework
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
@@ -383,7 +384,8 @@ class InsightsViewOrchestrator(val project: Project) {
 
     private fun getFocusedEndpoint(methodUnderCaret: MethodUnderCaret, methodInfo: MethodInfo): EndpointInfo? {
         return methodInfo.endpoints.firstOrNull { endpointInfo: EndpointInfo ->
-            endpointInfo.textRange?.contains(methodUnderCaret.caretOffset) ?: false
+            endpointInfo.textRange?.contains(methodUnderCaret.caretOffset) ?: false &&
+                    endpointInfo.framework == EndpointFramework.Ktor
         }
     }
 

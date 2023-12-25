@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.document;
 
 import kotlin.Pair;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.List;
@@ -92,6 +91,4 @@ public class CodeObjectsUtil {
 
         return new Pair<>(methodName, className);
     }
-
-
 }

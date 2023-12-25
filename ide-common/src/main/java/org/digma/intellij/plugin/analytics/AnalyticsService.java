@@ -277,6 +277,21 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getInsightBySpan(env, spanCodeObjectId, insightType));
 
     }
+
+
+    public InsightsOfMethodsResponse getInsightsForSingleEndpoint(String endpointId) throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        MethodWithCodeObjects methodWithCodeObjects = new MethodWithCodeObjects("", Collections.emptyList(), Collections.singletonList(endpointId));
+        InsightsOfMethodsResponse insightsOfMethodsResponse = executeCatching(() -> analyticsProviderProxy.getInsightsOfMethods(new InsightsOfMethodsRequest(env, Collections.singletonList(methodWithCodeObjects))));
+        if (insightsOfMethodsResponse != null && !insightsOfMethodsResponse.getMethodsWithInsights().isEmpty()) {
+            onInsightReceived(insightsOfMethodsResponse.getMethodsWithInsights());
+        }
+        return insightsOfMethodsResponse;
+
+    }
+
+
+
     public InsightsOfMethodsResponse getInsightsOfMethods(List<MethodInfo> methodInfos) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         Log.log(LOGGER::trace, "Requesting insights for next methodInfos {} and next environment {}", methodInfos, env);

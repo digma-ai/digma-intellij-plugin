@@ -398,9 +398,9 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
         if (documentInfo != null) {
             val methodInfo = documentInfo.getMethodInfo(methodId)
             if (methodInfo != null) {
-                val endpointInfo = methodInfo.endpoints.filter { endpointInfo: EndpointInfo ->
-                    endpointInfo.textRange.contains(caretOffset)
-                }.firstOrNull()
+                val endpointInfo = methodInfo.endpoints.firstOrNull { endpointInfo: EndpointInfo ->
+                    endpointInfo.textRange?.contains(caretOffset) ?: false
+                }
 
                 if (endpointInfo != null) {
                     return endpointInfo.textRange

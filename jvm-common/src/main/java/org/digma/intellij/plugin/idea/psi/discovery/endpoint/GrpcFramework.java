@@ -98,7 +98,7 @@ public class GrpcFramework extends EndpointDiscovery {
 
             String endpointId = createEndpointId(grpcServiceName, currPsiMethod);
             //PsiParameterList parameterList = currPsiMethod.getParameterList(); //TODO: maybe search for parameters of type io.grpc.stub.StreamObserver
-            EndpointInfo endpointInfo = new EndpointInfo(endpointId, methodCodeObjectId, JavaPsiUtils.toFileUri(currPsiMethod), TextRangeUtils.fromJBTextRange(currPsiMethod.getTextRange()), EndpointFramework.Grpc);
+            EndpointInfo endpointInfo = new EndpointInfo(endpointId, methodCodeObjectId, JavaPsiUtils.toFileUri(currPsiMethod), null, EndpointFramework.Grpc);
             retList.add(endpointInfo);
         }
         return retList;

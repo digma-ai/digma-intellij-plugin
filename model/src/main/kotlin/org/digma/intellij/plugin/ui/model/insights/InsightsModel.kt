@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.ui.model.insights
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
 import org.digma.intellij.plugin.ui.model.DocumentScope
 import org.digma.intellij.plugin.ui.model.EmptyScope
+import org.digma.intellij.plugin.ui.model.EndpointScope
 import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.model.PanelModel
 import org.digma.intellij.plugin.ui.model.Scope
@@ -53,6 +54,10 @@ class InsightsModel : PanelModel {
 
     override fun isMethodScope(): Boolean {
         return scope is MethodScope
+    }
+
+    override fun isEndpointScope(): Boolean {
+        return scope is EndpointScope
     }
 
     override fun isDocumentScope(): Boolean {

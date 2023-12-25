@@ -120,7 +120,7 @@ public class MicronautFramework extends EndpointDiscovery {
                         return; // skip this method, since endpoint value could not be determined
                     }
 
-                    EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, methodCodeObjectId, JavaPsiUtils.toFileUri(currPsiMethod), TextRangeUtils.fromJBTextRange(currPsiMethod.getTextRange()), EndpointFramework.Micronaut);
+                    EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, methodCodeObjectId, JavaPsiUtils.toFileUri(currPsiMethod), null, EndpointFramework.Micronaut);
                     Log.log(LOGGER::debug, "Found endpoint info '{}' for method '{}'", endpointInfo.getId(), endpointInfo.getContainingMethodId());
 
                     retList.add(endpointInfo);

@@ -6,6 +6,7 @@ import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
+import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import java.io.InputStream
 import javax.swing.JComponent
@@ -20,6 +21,7 @@ interface InsightsService : Disposable {
     fun buildIndexFromTemplate(path: String): InputStream?
     fun updateInsights(codeLessSpan: CodeLessSpan)
     fun updateInsights(methodInfo: MethodInfo)
+    fun updateInsights(endpointInfo: EndpointInfo)
     fun refreshInsights()
     fun showDocumentPreviewList(documentInfoContainer: DocumentInfoContainer?, fileUri: String)
     fun recalculate(prefixedCodeObjectId: String, insightType: String)

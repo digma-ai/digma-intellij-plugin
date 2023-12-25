@@ -15,6 +15,7 @@ import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.editor.CurrentContextUpdater
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
+import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
 import org.digma.intellij.plugin.navigation.HomeSwitcherService
@@ -60,7 +61,8 @@ class InsightsViewOrchestrator(val project: Project) {
         MethodWithoutNavigation,
         MethodFromBackNavigation,
         DummyMethod,
-        DocumentPreviewList
+        DocumentPreviewList,
+        EndpointFromSourceCode
     }
 
 
@@ -317,24 +319,54 @@ class InsightsViewOrchestrator(val project: Project) {
 
     fun updateInsightsWithMethodFromSource(methodUnderCaret: MethodUnderCaret, methodInfo: MethodInfo) {
 
+        //currently only supports ktor endpoints
+        val endpointInfo = getFocusedEndpoint(methodUnderCaret, methodInfo)
+        if (endpointInfo == null) {
+            currentState.set(ViewState.MethodFromSourceCode)
 
-        currentState.set(ViewState.MethodFromSourceCode)
+            Backgroundable.ensurePooledThread {
+                val documentInfo: DocumentInfoContainer? = project.service<DocumentInfoService>().getDocumentInfo(methodUnderCaret)
+                documentInfo?.let {
 
-        Backgroundable.ensurePooledThread{
-            val documentInfo: DocumentInfoContainer? = project.service<DocumentInfoService>().getDocumentInfo(methodUnderCaret)
-            documentInfo?.let {
+                    project.service<InsightsService>().updateInsights(methodInfo)
 
-                project.service<InsightsService>().updateInsights(methodInfo)
+                    val methodHasNewInsights =
+                        documentInfo.loadInsightsForMethod(methodUnderCaret.id) // might be long call since going to the backend
 
-                val methodHasNewInsights = documentInfo.loadInsightsForMethod(methodUnderCaret.id) // might be long call since going to the backend
+                    //todo: this should be removed soon
+                    project.service<InsightsViewService>().updateInsightsModel(methodInfo)
+                    project.service<ErrorsViewService>().updateErrorsModel(methodInfo)
 
-                //todo: this should be removed soon
-                project.service<InsightsViewService>().updateInsightsModel(methodInfo)
-                project.service<ErrorsViewService>().updateErrorsModel(methodInfo)
+                }
+            }
+        } else {
+            currentState.set(ViewState.EndpointFromSourceCode)
 
+            Backgroundable.ensurePooledThread {
+                val documentInfo: DocumentInfoContainer? = project.service<DocumentInfoService>().getDocumentInfo(methodUnderCaret)
+                documentInfo?.let {
+
+                    project.service<InsightsService>().updateInsights(endpointInfo)
+
+                    val methodHasNewInsights =
+                        documentInfo.loadInsightsForMethod(methodUnderCaret.id) // might be long call since going to the backend
+
+                    //todo: this should be removed soon
+                    project.service<InsightsViewService>().updateInsightsModel(methodInfo, endpointInfo)
+                    project.service<ErrorsViewService>().updateErrorsModel(methodInfo, endpointInfo)
+
+                }
             }
         }
+
     }
+
+    private fun getFocusedEndpoint(methodUnderCaret: MethodUnderCaret, methodInfo: MethodInfo): EndpointInfo? {
+        return methodInfo.endpoints.firstOrNull { endpointInfo: EndpointInfo ->
+            endpointInfo.textRange?.contains(methodUnderCaret.caretOffset) ?: false
+        }
+    }
+
 
     fun updateInsightsWithDummyMethodInfo(methodUnderCaret: MethodUnderCaret, dummyMethodInfo: MethodInfo) {
 

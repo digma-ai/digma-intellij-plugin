@@ -146,7 +146,7 @@ public class SpringBootFramework extends EndpointDiscovery {
 
                     for (String currSuffix : endpointUriSuffixes) {
                         String httpEndpointCodeObjectId = createHttpEndpointCodeObjectId(httpMethodName, endpointUriPrefix, currSuffix);
-                        EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, methodId, JavaPsiUtils.toFileUri(currPsiMethod), TextRangeUtils.fromJBTextRange(currPsiMethod.getTextRange()), EndpointFramework.SpringBoot);
+                        EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, methodId, JavaPsiUtils.toFileUri(currPsiMethod), null, EndpointFramework.SpringBoot);
                         retList.add(endpointInfo);
                     }
                 }), Throwable.class, 50, 5);

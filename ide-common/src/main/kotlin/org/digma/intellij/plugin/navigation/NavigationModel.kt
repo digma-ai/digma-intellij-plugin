@@ -31,6 +31,7 @@ class NavigationModel(private val project: Project) {
             }
 
             MethodFromSourceCode,
+            EndpointFromSourceCode,
             SpanOrMethodWithNavigation,
             DummyMethod,
             -> {

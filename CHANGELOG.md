@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.220] - 2023-12-25
+## [2.0.221] - 2023-12-25
+- N+1 ticket with  commit ids by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1518
+
+## 2.0.220 - 2023-12-25
 - high-number-of-queries-insight by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1515
 - fix KotlinLanguageService index out of bounds Closes #1516 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1517
 

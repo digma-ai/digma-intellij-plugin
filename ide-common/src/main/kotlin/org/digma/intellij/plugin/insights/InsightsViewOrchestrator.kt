@@ -253,7 +253,7 @@ class InsightsViewOrchestrator(val project: Project) {
         //methodLocation equals currentCaretLocation, so we have to emulate a caret event to show the method insights
         if (methodLocation != null) {
             Backgroundable.ensurePooledThread {
-                emulateCaretEvent(methodCodeObjectId, methodLocation.first)
+                emulateCaretEvent(methodCodeObjectId, methodLocation.first, methodLocation.second)
             }
             return true
         }
@@ -268,7 +268,7 @@ class InsightsViewOrchestrator(val project: Project) {
 
     }
 
-    private fun emulateCaretEvent(methodId: String, fileUri: String): Boolean {
+    private fun emulateCaretEvent(methodId: String, fileUri: String, caretOffset: Int): Boolean {
 
         val methodNameAndClass: Pair<String, String> = CodeObjectsUtil.getMethodClassAndName(methodId)
 
@@ -277,7 +277,8 @@ class InsightsViewOrchestrator(val project: Project) {
             methodNameAndClass.first,
             methodNameAndClass.second,
             "",
-            fileUri
+            fileUri,
+            caretOffset
         )
 
         val methodInfo: MethodInfo? = project.service<DocumentInfoService>().getMethodInfo(methodUnderCaret)
@@ -315,6 +316,7 @@ class InsightsViewOrchestrator(val project: Project) {
     }
 
     fun updateInsightsWithMethodFromSource(methodUnderCaret: MethodUnderCaret, methodInfo: MethodInfo) {
+
 
         currentState.set(ViewState.MethodFromSourceCode)
 

@@ -12,9 +12,11 @@ import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.util.Query;
 import org.digma.intellij.plugin.common.Retries;
+import org.digma.intellij.plugin.common.TextRangeUtils;
 import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils;
 import org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.discovery.EndpointFramework;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -118,7 +120,7 @@ public class MicronautFramework extends EndpointDiscovery {
                         return; // skip this method, since endpoint value could not be determined
                     }
 
-                    EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, methodCodeObjectId, JavaPsiUtils.toFileUri(currPsiMethod), currPsiMethod.getTextOffset());
+                    EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, methodCodeObjectId, JavaPsiUtils.toFileUri(currPsiMethod), TextRangeUtils.fromJBTextRange(currPsiMethod.getTextRange()), EndpointFramework.Micronaut);
                     Log.log(LOGGER::debug, "Found endpoint info '{}' for method '{}'", endpointInfo.getId(), endpointInfo.getContainingMethodId());
 
                     retList.add(endpointInfo);

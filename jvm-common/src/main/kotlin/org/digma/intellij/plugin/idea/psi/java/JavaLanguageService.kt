@@ -56,8 +56,6 @@ class JavaLanguageService(project: Project) : AbstractJvmLanguageService(project
         return PsiTreeUtil.getParentOfType(psiElement, PsiMethod::class.java)?.toUElementOfType<UMethod>()
     }
 
-
-
     override fun instrumentMethod(result: CanInstrumentMethodResult): Boolean {
         if (result !is JvmCanInstrumentMethodResult) {
             Log.log(logger::warn, "instrumentMethod was called with failing result from canInstrumentMethod")

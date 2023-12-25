@@ -207,7 +207,7 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
             Log.log(logger::debug, "Found RiderMethodUnderCaret for {} , '{}'", psiFile.virtualFile, riderMethodUnderCaret)
         }
 
-        return riderMethodUnderCaret?.toMethodUnderCaret() ?: MethodUnderCaret("", "", "", "", "")
+        return riderMethodUnderCaret?.toMethodUnderCaret(caretOffset) ?: MethodUnderCaret("", "", "", "", "", caretOffset)
     }
 
 
@@ -327,12 +327,13 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
     }
 
 
-    private fun RiderMethodUnderCaret.toMethodUnderCaret() = MethodUnderCaret(
+    private fun RiderMethodUnderCaret.toMethodUnderCaret(caretOffset: Int) = MethodUnderCaret(
         id = fqn,
         name = name,
         className = className,
         namespace = "",
-        fileUri = normalizeFileUri(fileUri, project)
+        fileUri = normalizeFileUri(fileUri, project),
+        caretOffset = caretOffset
     )
 
 

@@ -11,8 +11,10 @@ import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.util.Query;
 import org.digma.intellij.plugin.common.Retries;
+import org.digma.intellij.plugin.common.TextRangeUtils;
 import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils;
 import org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils;
+import org.digma.intellij.plugin.model.discovery.EndpointFramework;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -144,7 +146,7 @@ public class SpringBootFramework extends EndpointDiscovery {
 
                     for (String currSuffix : endpointUriSuffixes) {
                         String httpEndpointCodeObjectId = createHttpEndpointCodeObjectId(httpMethodName, endpointUriPrefix, currSuffix);
-                        EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, methodId, JavaPsiUtils.toFileUri(currPsiMethod), currPsiMethod.getTextOffset());
+                        EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, methodId, JavaPsiUtils.toFileUri(currPsiMethod), TextRangeUtils.fromJBTextRange(currPsiMethod.getTextRange()), EndpointFramework.SpringBoot);
                         retList.add(endpointInfo);
                     }
                 }), Throwable.class, 50, 5);

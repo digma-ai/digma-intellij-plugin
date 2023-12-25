@@ -24,13 +24,15 @@ class EndpointDiscoveryService(project: Project) {
         val jaxrsJakartaFramework = JaxrsJakartaFramework(project)
         val grpcFramework = GrpcFramework(project)
         val springBootFramework = SpringBootFramework(project)
+        val ktorFramework = KtorFramework(project)
         this.endpointDiscoveryList.addAll(
             listOf(
                 micronautFramework,
                 jaxrsJavaxFramework,
                 jaxrsJakartaFramework,
                 grpcFramework,
-                springBootFramework
+                springBootFramework,
+                ktorFramework
             )
         )
     }

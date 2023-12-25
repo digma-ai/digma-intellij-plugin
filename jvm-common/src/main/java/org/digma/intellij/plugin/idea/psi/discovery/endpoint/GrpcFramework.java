@@ -11,8 +11,10 @@ import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.ClassInheritorsSearch;
 import com.intellij.util.Query;
 import org.digma.intellij.plugin.common.Retries;
+import org.digma.intellij.plugin.common.TextRangeUtils;
 import org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.model.discovery.EndpointFramework;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -96,7 +98,7 @@ public class GrpcFramework extends EndpointDiscovery {
 
             String endpointId = createEndpointId(grpcServiceName, currPsiMethod);
             //PsiParameterList parameterList = currPsiMethod.getParameterList(); //TODO: maybe search for parameters of type io.grpc.stub.StreamObserver
-            EndpointInfo endpointInfo = new EndpointInfo(endpointId, methodCodeObjectId, JavaPsiUtils.toFileUri(currPsiMethod), currPsiMethod.getTextOffset());
+            EndpointInfo endpointInfo = new EndpointInfo(endpointId, methodCodeObjectId, JavaPsiUtils.toFileUri(currPsiMethod), TextRangeUtils.fromJBTextRange(currPsiMethod.getTextRange()), EndpointFramework.Grpc);
             retList.add(endpointInfo);
         }
         return retList;

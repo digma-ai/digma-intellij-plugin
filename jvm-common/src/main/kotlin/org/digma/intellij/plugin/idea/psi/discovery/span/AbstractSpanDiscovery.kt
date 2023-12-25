@@ -127,7 +127,7 @@ abstract class AbstractSpanDiscovery {
 
     //holder for psi elements that are necessary for the lifetime of the project.
     //lazy initialized so that search will happen with read action scope
-    class PsiPointers {
+    private class PsiPointers {
 
         private var withSpanAnnotationClass: SmartPsiElementPointer<PsiClass>? = null
         private var traceBuilderPsiClass: SmartPsiElementPointer<PsiClass>? = null

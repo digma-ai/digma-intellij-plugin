@@ -11,6 +11,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
+import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.idea.psi.AbstractJvmLanguageService
 import org.digma.intellij.plugin.instrumentation.CanInstrumentMethodResult
 import org.digma.intellij.plugin.instrumentation.JvmCanInstrumentMethodResult
@@ -22,6 +23,7 @@ import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtFunction
 import org.jetbrains.kotlin.psi.KtImportDirective
+import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtPsiFactory
 import org.jetbrains.kotlin.resolve.ImportPath
 import org.jetbrains.uast.UClass
@@ -79,9 +81,8 @@ class KotlinLanguageService(project: Project) : AbstractJvmLanguageService(proje
 
 
     override fun findParentMethod(psiElement: PsiElement): UMethod? {
-        return PsiTreeUtil.getParentOfType(psiElement, KtFunction::class.java)?.toUElementOfType<UMethod>()
+        return PsiTreeUtil.getParentOfType(psiElement, KtNamedFunction::class.java)?.toUElementOfType<UMethod>()
     }
-
 
 
     override fun instrumentMethod(result: CanInstrumentMethodResult): Boolean {

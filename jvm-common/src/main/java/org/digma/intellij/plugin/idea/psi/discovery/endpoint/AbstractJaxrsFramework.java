@@ -17,8 +17,10 @@ import com.intellij.psi.search.searches.OverridingMethodsSearch;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.Query;
 import org.digma.intellij.plugin.common.Retries;
+import org.digma.intellij.plugin.common.TextRangeUtils;
 import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils;
 import org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils;
+import org.digma.intellij.plugin.model.discovery.EndpointFramework;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.jetbrains.annotations.NotNull;
 
@@ -39,6 +41,8 @@ public abstract class AbstractJaxrsFramework extends EndpointDiscovery {
     private static final Logger LOGGER = Logger.getInstance(AbstractJaxrsFramework.class);
 
     abstract String getJaxRsPackageName();
+
+    protected abstract EndpointFramework getFramework();
 
     private final List<String> HTTP_METHODS_ANNOTATION_STR_LIST;
 
@@ -221,7 +225,7 @@ public abstract class AbstractJaxrsFramework extends EndpointDiscovery {
                     String endpointFullUri = EndpointDiscoveryUtils.combineUri(appPath, endpointSuffixUri);
                     String httpEndpointCodeObjectId = createHttpEndpointCodeObjectId(currExpectedAnnotation, endpointFullUri);
 
-                    EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, createPsiMethodCodeObjectId(currPsiMethod), JavaPsiUtils.toFileUri(currPsiMethod), currPsiMethod.getTextOffset());
+                    EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, createPsiMethodCodeObjectId(currPsiMethod), JavaPsiUtils.toFileUri(currPsiMethod), TextRangeUtils.fromJBTextRange(currPsiMethod.getTextRange()), getFramework());
                     retSet.add(endpointInfo);
                 }
             }

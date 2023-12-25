@@ -58,6 +58,10 @@ interface CodeObjectInsight {
     val severity: Double
     val impact: Double
     val criticality: Double
+    val firstCommitId: String?
+    val lastCommitId: String?
+    val deactivatedCommitId: String?
+
     fun hasDecorators(): Boolean {
         return !decorators.isNullOrEmpty()
     }

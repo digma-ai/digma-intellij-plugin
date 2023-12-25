@@ -79,7 +79,7 @@ class KotlinLanguageService(project: Project) : AbstractJvmLanguageService(proje
 
         val workspaceUrls = mutableMapOf<String, Pair<String, Int>>()
 
-        methodCodeObjectIds.forEach { methodId ->
+        methodCodeObjectIds.filter { methodId: String -> methodId.contains("\$_$") }.forEach { methodId ->
             ReadActions.ensureReadAction {
                 allowSlowOperation {
                     var className = methodId.substring(0, methodId.indexOf("\$_$"))

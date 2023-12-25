@@ -52,18 +52,26 @@ class KotlinLanguageService(project: Project) : AbstractJvmLanguageService(proje
         return KotlinLanguage::class.java == language.javaClass
     }
 
+
+    //note that this method prefers non compiled classes
     override fun findClassByClassName(className: String, scope: GlobalSearchScope): UClass? {
+
         val classes: Collection<KtClassOrObject> = KotlinFullClassNameIndex.get(className, project, scope)
+
         if (classes.isEmpty()) {
             val files = KotlinFileFacadeFqNameIndex.get(className, project, scope)
             if (files.isNotEmpty()) {
-                val file = files.first()
-                val fileClasses = file.classes.filter { psiClass: PsiClass -> psiClass.qualifiedName == className }
-                return fileClasses.firstOrNull()?.toUElementOfType<UClass>()
+                val file: KtFile? = if (files.any { ktf -> !ktf.isCompiled }) files.firstOrNull { ktf -> !ktf.isCompiled } else files.firstOrNull()
+                val fileClasses = file?.classes?.filter { psiClass: PsiClass -> psiClass.qualifiedName == className }
+                return fileClasses?.firstOrNull()?.toUElementOfType<UClass>()
             } else {
                 return null
             }
         } else {
+            //prefer non compiled class
+            if (classes.any { ktc -> !ktc.containingKtFile.isCompiled }) {
+                return classes.firstOrNull { ktc -> !ktc.containingKtFile.isCompiled }?.toUElementOfType<UClass>()
+            }
             return classes.firstOrNull()?.toUElementOfType<UClass>()
         }
     }

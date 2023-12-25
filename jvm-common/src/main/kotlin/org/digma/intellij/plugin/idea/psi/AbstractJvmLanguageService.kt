@@ -93,8 +93,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
     }
 
 
-
-    //It's a different search for each jvm language
+    //It's a different search for each jvm language.
     abstract fun findClassByClassName(className: String, scope: GlobalSearchScope): UClass?
 
     abstract fun refreshCodeLens()
@@ -114,9 +113,6 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
     }
 
 
-    protected fun findClassByClassName(className: String): UClass? {
-        return findClassByClassName(className, GlobalSearchScope.projectScope(project))
-    }
 
     override fun buildDocumentInfo(psiFile: PsiFile, selectedTextEditor: FileEditor?): DocumentInfo {
         return buildDocumentInfo(psiFile)
@@ -308,7 +304,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
             val className = methodId.substring(0, methodId.indexOf("\$_$")).replace('$', '.')
 
             return@ensureReadAction allowSlowOperation<UMethod?> {
-                val uClass = findClassByClassName(className)
+                val uClass = findClassByClassName(className, GlobalSearchScope.projectScope(project))
 
                 return@allowSlowOperation uClass?.let { cls ->
                     findMethodInClass(project, cls, methodId)
@@ -330,7 +326,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
             ReadActions.ensureReadAction {
 
-                val uClass = findClassByClassName(className, GlobalSearchScope.allScope(project))
+                val uClass = findClassByClassName(className, GlobalSearchScope.projectScope(project))
                 uClass?.let {
 
                     val psiFile = it.getContainingUFile()?.sourcePsi

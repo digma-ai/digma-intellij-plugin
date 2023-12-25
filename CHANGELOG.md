@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.219] - 2023-12-21
+## [2.0.220] - 2023-12-25
+- high-number-of-queries-insight by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1515
+- fix KotlinLanguageService index out of bounds Closes #1516 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1517
+
+## 2.0.219 - 2023-12-21
 - remove error logging by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1512
 - Slowest spans insight jira ticket by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1513
 

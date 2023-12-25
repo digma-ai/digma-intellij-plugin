@@ -58,4 +58,10 @@ constructor(
 
     @JsonProperty("traceId")
     val traceId: String? = null
+
+    @JsonProperty("medianDuration")
+    val medianDuration: Duration? = null
+
+    @JsonProperty("requestFraction")
+    val requestFraction: Double? = null
 }

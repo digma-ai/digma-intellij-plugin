@@ -1,4 +1,3 @@
-
 package org.digma.intellij.plugin.model
 
 
@@ -21,6 +20,7 @@ enum class InsightType {
     EndpointChattyApi,
     EndpointDurationSlowdown,
     EndpointBreakdown,
+    EndpointHighNumberOfQueries,
     SpaNPlusOne,
     Unmapped,
     TopErrorFlows,

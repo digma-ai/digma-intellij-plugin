@@ -6,6 +6,7 @@ import org.digma.intellij.plugin.model.rest.insights.EPNPlusSpansInsight;
 import org.digma.intellij.plugin.model.rest.insights.EndpointBreakdownInsight;
 import org.digma.intellij.plugin.model.rest.insights.EndpointChattyApiInsight;
 import org.digma.intellij.plugin.model.rest.insights.EndpointDurationSlowdownInsight;
+import org.digma.intellij.plugin.model.rest.insights.EndpointHighNumberOfQueriesInsight;
 import org.digma.intellij.plugin.model.rest.insights.EndpointSessionInViewInsight;
 import org.digma.intellij.plugin.model.rest.insights.ErrorInsight;
 import org.digma.intellij.plugin.model.rest.insights.HighUsageInsight;
@@ -90,6 +91,8 @@ public class BuildersHolder {
                 return new GroupListViewItemBuilder<EndpointDurationSlowdownInsight>(InsightGroupType.HttpEndpoint, EndpointDurationSlowdownInsight::getRoute, EndpointDurationSlowdownInsight::endpointSpanName);
             case EndpointBreakdown:
                 return new GroupListViewItemBuilder<EndpointBreakdownInsight>(InsightGroupType.HttpEndpoint, EndpointBreakdownInsight::getRoute, EndpointBreakdownInsight::endpointSpanName);
+            case EndpointHighNumberOfQueries:
+                return new GroupListViewItemBuilder<EndpointHighNumberOfQueriesInsight>(InsightGroupType.HttpEndpoint, EndpointHighNumberOfQueriesInsight::getRoute, EndpointHighNumberOfQueriesInsight::endpointSpanName);
             case Unmapped:
                 return new NoGroupListViewItemBuilder<UnmappedInsight>();
             default:

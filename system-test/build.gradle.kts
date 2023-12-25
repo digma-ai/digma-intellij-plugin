@@ -30,5 +30,6 @@ dependencies {
 
 tasks.test {
     systemProperty("intellij.progress.task.ignoreHeadless", true)
+    systemProperty("browser.jcef.headless.enabled", true)
     useJUnit()
 }

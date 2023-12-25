@@ -1,12 +1,16 @@
 package org.digma.intellij.plugin.idea.psi.discovery.endpoint
 
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiReference
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.SearchScope
 import com.intellij.psi.search.searches.ReferencesSearch
+import org.digma.intellij.plugin.common.Retries
 import org.digma.intellij.plugin.common.TextRangeUtils
 import org.digma.intellij.plugin.idea.psi.createMethodCodeObjectId
 import org.digma.intellij.plugin.idea.psi.getExpressionValue
+import org.digma.intellij.plugin.idea.psi.runInReadAccess
+import org.digma.intellij.plugin.idea.psi.runInReadAccessWithResult
 import org.digma.intellij.plugin.model.discovery.EndpointFramework
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.psi.PsiUtils
@@ -28,9 +32,9 @@ class KtorFramework(private val project: Project) : EndpointDiscovery() {
 //    private val psiPointers = PsiPointers()
 
     companion object {
-        //        const val KTOR_SERVER_RESOURCES_PREFIX = "io.ktor.server.resources"
+
         const val KTOR_SERVER_ROUTING_BUILDER_PREFIX = "io.ktor.server.routing."
-        const val KTOR_SERVER_REGEX_ROUTING_PREFIX = "io.ktor.server.routing."
+        //const val KTOR_SERVER_RESOURCES_PREFIX = "io.ktor.server.resources"
 
         val KTOR_ROUTING_BUILDER_ENDPOINTS = mapOf(
             KTOR_SERVER_ROUTING_BUILDER_PREFIX.plus("get") to "get",
@@ -58,41 +62,56 @@ class KtorFramework(private val project: Project) : EndpointDiscovery() {
 
         KTOR_ROUTING_BUILDER_ENDPOINTS.forEach { (fqName, httpMethod) ->
 
-            //todo: maybe cache the declarations
-            var declarations = KotlinTopLevelFunctionFqnNameIndex.get(fqName, project, GlobalSearchScope.allScope(project))
 
-//            declarations = declarations.filter { ktNamedFunction: KtNamedFunction -> ktNamedFunction.containingKtFile.isCompiled && ktNamedFunction.containingKtFile.name.startsWith("RoutingBuilderKt")  }
-            declarations = declarations.filter { ktNamedFunction: KtNamedFunction -> ktNamedFunction.containingKtFile.isCompiled }
+            val declarations = Retries.retryWithResult({
+                runInReadAccessWithResult<Collection<KtNamedFunction>>(project) {
+                    //todo: maybe cache the declarations
+                    val declarations = KotlinTopLevelFunctionFqnNameIndex.get(fqName, project, GlobalSearchScope.allScope(project))
+                    declarations.filter { ktNamedFunction: KtNamedFunction -> ktNamedFunction.containingKtFile.isCompiled }
+                }
+            }, Throwable::class.java, 50, 5)
+
 
             declarations.forEach { methodDeclarations ->
 
-                val refs = ReferencesSearch.search(methodDeclarations, searchScopeSupplier.get()).findAll()
-                refs.forEach { ref ->
+                val references = Retries.retryWithResult({
+                    runInReadAccessWithResult<Collection<PsiReference>>(project) {
+                        ReferencesSearch.search(methodDeclarations, searchScopeSupplier.get()).findAll()
+                    }
+                }, Throwable::class.java, 50, 5)
 
-                    val methodId = ref.element.toUElementOfType<UReferenceExpression>()?.getContainingUMethod()?.let { uMethod ->
-                        createMethodCodeObjectId(uMethod)
-                    } ?: ""
 
-                    val fileUri = ref.element.toUElementOfType<UReferenceExpression>()?.getContainingUFile()?.let { uFile ->
-                        PsiUtils.psiFileToUri(uFile.sourcePsi)
-                    } ?: ""
+                references.forEach { ref ->
 
-                    val textRange =
-                        TextRangeUtils.fromJBTextRange(ref.element.toUElementOfType<UReferenceExpression>()?.getUCallExpression()?.textRange)
+                    Retries.simpleRetry({
+                        runInReadAccess(project) {
+                            val methodId = ref.element.toUElementOfType<UReferenceExpression>()?.getContainingUMethod()?.let { uMethod ->
+                                createMethodCodeObjectId(uMethod)
+                            } ?: ""
 
-                    ref.element.toUElementOfType<UReferenceExpression>()?.let { uReference ->
+                            val fileUri = ref.element.toUElementOfType<UReferenceExpression>()?.getContainingUFile()?.let { uFile ->
+                                PsiUtils.psiFileToUri(uFile.sourcePsi)
+                            } ?: ""
 
-                        uReference.getUCallExpression()?.let { callExpression ->
+                            val textRange =
+                                TextRangeUtils.fromJBTextRange(ref.element.toUElementOfType<UReferenceExpression>()?.getUCallExpression()?.textRange)
 
-                            getEndpointNameFromCallExpression(callExpression)?.let { endpointName ->
+                            ref.element.toUElementOfType<UReferenceExpression>()?.let { uReference ->
 
-                                val id = "epHTTP:" + "HTTP " + httpMethod.uppercase() + " " + endpointName
+                                uReference.getUCallExpression()?.let { callExpression ->
 
-                                endpoints.add(EndpointInfo(id, methodId, fileUri, textRange, EndpointFramework.Ktor))
+                                    getEndpointNameFromCallExpression(callExpression)?.let { endpointName ->
 
+                                        val id = "epHTTP:" + "HTTP " + httpMethod.uppercase() + " " + endpointName
+
+                                        endpoints.add(EndpointInfo(id, methodId, fileUri, textRange, EndpointFramework.Ktor))
+
+                                    }
+                                }
                             }
                         }
-                    }
+
+                    }, Throwable::class.java, 50, 5)
                 }
             }
         }

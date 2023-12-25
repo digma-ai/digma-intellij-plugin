@@ -8,6 +8,7 @@ import org.digma.intellij.plugin.model.ModelChangeListener
 import org.digma.intellij.plugin.model.nav.MiniScope
 import org.digma.intellij.plugin.model.nav.ScopeType
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
+import org.digma.intellij.plugin.ui.model.EndpointScope
 import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.model.Scope
 import org.digma.intellij.plugin.ui.service.InsightsViewService
@@ -36,13 +37,15 @@ class HistoryScopeNavigation(val project: Project) {
         val newMiniScope = when (scope) {
 
             is CodeLessSpanScope -> {
-                val id = scope.getSpan().spanId
-                MiniScope(ScopeType.Span, id)
+                MiniScope(ScopeType.Span, scope.getSpan())
             }
 
             is MethodScope -> {
-                val id = scope.getMethodInfo().id
-                MiniScope(ScopeType.Method, id)
+                MiniScope(ScopeType.Method, scope.getMethodInfo())
+            }
+
+            is EndpointScope -> {
+                MiniScope(ScopeType.Endpoint, scope.getEndpoint())
             }
 
             else -> null

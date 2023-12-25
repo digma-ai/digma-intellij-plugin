@@ -1,17 +1,14 @@
 package org.digma.intellij.plugin.idea.psi.java
 
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.progress.EmptyProgressIndicator
-import com.intellij.openapi.progress.ProgressManager
-import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.util.Computable
 import com.intellij.psi.PsiAnnotation
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.source.PsiExtensibleClass
 import com.intellij.psi.util.PsiTreeUtil
+import org.digma.intellij.plugin.idea.psi.runInReadAccessWithResult
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.Nullable
@@ -21,21 +18,6 @@ class JavaPsiUtils {
 
     companion object {
         private const val OBJECT_CLASS_FQN = "java.lang.Object"
-
-
-        @JvmStatic
-        fun runInReadAccess(project: Project, runnable: Runnable) {
-            ProgressManager.getInstance().runProcess({
-                DumbService.getInstance(project).runReadActionInSmartMode(runnable)
-            }, EmptyProgressIndicator())
-        }
-
-        @JvmStatic
-        fun <T> runInReadAccessWithResult(project: Project, computable: Computable<T>): T {
-            return ProgressManager.getInstance().runProcess<T>({
-                DumbService.getInstance(project).runReadActionInSmartMode(computable)
-            }, EmptyProgressIndicator())
-        }
 
 
         //must be called with read access

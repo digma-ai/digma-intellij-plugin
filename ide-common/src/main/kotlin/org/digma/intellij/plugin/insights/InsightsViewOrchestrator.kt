@@ -77,16 +77,20 @@ class InsightsViewOrchestrator(val project: Project) {
      * shows insights for a span.
      */
     fun showInsightsForCodelessSpan(spanId: String) {
+        showInsightsForCodelessSpan(CodeLessSpan(spanId))
+    }
+
+    fun showInsightsForCodelessSpan(span: CodeLessSpan) {
 
         currentState.set(ViewState.CodelessSpan)
 
-        Log.log(logger::debug, project, "Got showInsightsForSpan {}", spanId)
+        Log.log(logger::debug, project, "Got showInsightsForCodelessSpan {}", span.spanId)
 
-        Backgroundable.ensurePooledThread{
+        Backgroundable.ensurePooledThread {
 
             val stopWatch = stopWatchStart()
 
-            project.service<InsightsService>().updateInsights(CodeLessSpan(spanId))
+            project.service<InsightsService>().updateInsights(span)
 
             //clear the latest method so that if user clicks on the editor again after watching code less insights the context will change
             project.service<CurrentContextUpdater>().clearLatestMethod()
@@ -101,15 +105,11 @@ class InsightsViewOrchestrator(val project: Project) {
 
 
             //todo: this should be removed soon
-            project.service<InsightsViewService>().updateInsightsModel(
-                CodeLessSpan(spanId)
-            )
+            project.service<InsightsViewService>().updateInsightsModel(span)
 
-            project.service<ErrorsViewService>().updateErrorsModel(
-                CodeLessSpan(spanId)
-            )
+            project.service<ErrorsViewService>().updateErrorsModel(span)
 
-            stopWatchStop(stopWatch){ time -> Log.log(logger::trace, "showInsightsForCodelessSpan took {}",time)}
+            stopWatchStop(stopWatch) { time -> Log.log(logger::trace, "showInsightsForCodelessSpan took {}", time) }
 
         }
     }
@@ -169,41 +169,61 @@ class InsightsViewOrchestrator(val project: Project) {
     }
 
 
-    fun showInsightsForMethodFromBackNavigation(methodId: String) {
+    fun showInsightsForMethodFromBackNavigation(methodInfo: MethodInfo) {
 
         currentState.set(ViewState.MethodFromBackNavigation)
 
-        Log.log(logger::debug, project, "Got showInsightsForMethod {}", methodId)
+        Log.log(logger::debug, project, "Got showInsightsForMethod {}", methodInfo)
 
         Backgroundable.ensurePooledThread {
 
-            val documentInfoService = project.service<DocumentInfoService>()
-            val methodInfo = documentInfoService.findMethodInfo(methodId)
-            if (methodInfo == null) {
-                Log.log(logger::warn, project, "showInsightsForMethod cannot show insights for method '{}' since not found", methodId)
-            }else {
+            project.service<InsightsService>().updateInsights(methodInfo)
 
-                project.service<InsightsService>().updateInsights(methodInfo)
+            EDT.ensureEDT {
+                project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
+                ToolWindowShower.getInstance(project).showToolWindow()
+                project.getService(HomeSwitcherService::class.java).switchToInsights()
+                project.getService(InsightsAndErrorsTabsHelper::class.java).switchToInsightsTab()
+            }
 
-                EDT.ensureEDT {
-                    project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
-                    ToolWindowShower.getInstance(project).showToolWindow()
-                    project.getService(HomeSwitcherService::class.java).switchToInsights()
-                    project.getService(InsightsAndErrorsTabsHelper::class.java).switchToInsightsTab()
-                }
+            //todo: this should be removed soon
+            project.service<InsightsViewService>().updateInsightsModel(
+                methodInfo
+            )
 
+            project.service<ErrorsViewService>().updateErrorsModel(
+                methodInfo
+            )
+        }
+    }
+
+
+    fun showInsightsForEndpointFromBackNavigation(endpointInfo: EndpointInfo) {
+        currentState.set(ViewState.MethodFromBackNavigation)
+
+        Log.log(logger::debug, project, "Got showInsightsForEndpointFromBackNavigation {}", endpointInfo.id)
+
+        Backgroundable.ensurePooledThread {
+
+            project.service<InsightsService>().updateInsights(endpointInfo)
+
+            EDT.ensureEDT {
+                project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
+                ToolWindowShower.getInstance(project).showToolWindow()
+                project.getService(HomeSwitcherService::class.java).switchToInsights()
+                project.getService(InsightsAndErrorsTabsHelper::class.java).switchToInsightsTab()
+            }
+
+            val methodInfo = DocumentInfoService.getInstance(project).findMethodInfo(endpointInfo.containingMethodId)
+            methodInfo?.let {
                 //todo: this should be removed soon
-                project.service<InsightsViewService>().updateInsightsModel(
-                    methodInfo
-                )
+                project.service<InsightsViewService>().updateInsightsModel(it, endpointInfo)
 
-                project.service<ErrorsViewService>().updateErrorsModel(
-                    methodInfo
-                )
-
+                project.service<ErrorsViewService>().updateErrorsModel(it, endpointInfo)
             }
         }
     }
+
 
     /**
      * shows insights for span or method by which ever is non-null, and can be navigated to code.
@@ -381,7 +401,7 @@ class InsightsViewOrchestrator(val project: Project) {
 
         currentState.set(ViewState.DocumentPreviewList)
 
-        Backgroundable.ensurePooledThread{
+        Backgroundable.ensurePooledThread {
             project.service<InsightsService>().showDocumentPreviewList(documentInfoContainer, fileUri)
 
             project.service<InsightsViewService>().showDocumentPreviewList(documentInfoContainer, fileUri)

@@ -4,7 +4,6 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.source.PsiExtensibleClass
-import org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.toUElementOfType
@@ -25,7 +24,7 @@ fun getMethodsInClass(project: Project, cls: UClass): Collection<UMethod> {
         val ownMethods = if (ApplicationManager.getApplication().isReadAccessAllowed) {
             (cls.sourcePsi as PsiExtensibleClass).ownMethods
         } else {
-            JavaPsiUtils.runInReadAccessWithResult(project) { (cls.sourcePsi as PsiExtensibleClass).ownMethods }
+            runInReadAccessWithResult(project) { (cls.sourcePsi as PsiExtensibleClass).ownMethods }
         }
         return ownMethods.map { psiMethod: PsiMethod -> psiMethod.toUElementOfType<UMethod>()!! }
     }

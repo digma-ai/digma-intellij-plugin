@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.221] - 2023-12-25
+## [2.0.222] - 2023-12-26
+- Ktor support Closes #1473 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1519
+- fix high-number-of-queries-insight by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1520
+
+## 2.0.221 - 2023-12-25
 - N+1 ticket with  commit ids by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1518
 
 ## 2.0.220 - 2023-12-25

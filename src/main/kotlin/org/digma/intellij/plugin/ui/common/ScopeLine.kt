@@ -7,6 +7,9 @@ import com.intellij.openapi.project.Project
 import com.intellij.util.Producer
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
+import org.digma.intellij.plugin.model.discovery.CodeLessSpan
+import org.digma.intellij.plugin.model.discovery.EndpointInfo
+import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.nav.ScopeType
 import org.digma.intellij.plugin.navigation.HistoryScopeNavigation
 import org.digma.intellij.plugin.navigation.HomeSwitcherService
@@ -40,11 +43,15 @@ fun scopeLine(
         miniScope?.let {
             when (it.type) {
                 ScopeType.Span -> {
-                    insightViewOrch.showInsightsForCodelessSpan(it.id)
+                    insightViewOrch.showInsightsForCodelessSpan(it.scopeObject as CodeLessSpan)
                 }
 
                 ScopeType.Method -> {
-                    insightViewOrch.showInsightsForMethodFromBackNavigation(it.id)
+                    insightViewOrch.showInsightsForMethodFromBackNavigation(it.scopeObject as MethodInfo)
+                }
+
+                ScopeType.Endpoint -> {
+                    insightViewOrch.showInsightsForEndpointFromBackNavigation(it.scopeObject as EndpointInfo)
                 }
 
                 else -> Unit

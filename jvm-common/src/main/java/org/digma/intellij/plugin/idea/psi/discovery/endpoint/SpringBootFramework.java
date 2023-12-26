@@ -13,6 +13,7 @@ import com.intellij.util.Query;
 import org.digma.intellij.plugin.common.Retries;
 import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils;
 import org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils;
+import org.digma.intellij.plugin.model.discovery.EndpointFramework;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -27,6 +28,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.digma.intellij.plugin.idea.psi.JvmCodeObjectsUtilsKt.createPsiMethodCodeObjectId;
+import static org.digma.intellij.plugin.idea.psi.PsiAccessUtilsKt.runInReadAccess;
+import static org.digma.intellij.plugin.idea.psi.PsiAccessUtilsKt.runInReadAccessWithResult;
 
 public class SpringBootFramework extends EndpointDiscovery {
 
@@ -71,7 +74,7 @@ public class SpringBootFramework extends EndpointDiscovery {
     private void lateInit() {
 
 
-        Retries.simpleRetry(() -> JavaPsiUtils.runInReadAccess(project, () -> {
+        Retries.simpleRetry(() -> runInReadAccess(project, () -> {
             JavaPsiFacade psiFacade = JavaPsiFacade.getInstance(project);
             controllerAnnotationClass = psiFacade.findClass(CONTROLLER_ANNOTATION_STR, GlobalSearchScope.allScope(project));
             initHttpMethodAnnotations(psiFacade);
@@ -104,7 +107,7 @@ public class SpringBootFramework extends EndpointDiscovery {
 
         httpMethodsAnnotations.forEach(currAnnotation -> {
 
-            Collection<PsiMethod> psiMethodsInFile = Retries.retryWithResult(() -> JavaPsiUtils.runInReadAccessWithResult(project, () -> {
+            Collection<PsiMethod> psiMethodsInFile = Retries.retryWithResult(() -> runInReadAccessWithResult(project, () -> {
                 Query<PsiMethod> psiMethods = AnnotatedElementsSearch.searchPsiMethods(currAnnotation.getPsiClass(), searchScopeSupplier.get());
                 return psiMethods.findAll();
             }), Throwable.class, 50, 5);
@@ -113,7 +116,7 @@ public class SpringBootFramework extends EndpointDiscovery {
             for (PsiMethod currPsiMethod : psiMethodsInFile) {
 
 
-                Retries.simpleRetry(() -> JavaPsiUtils.runInReadAccess(project, () -> {
+                Retries.simpleRetry(() -> runInReadAccess(project, () -> {
                     final String methodId = createPsiMethodCodeObjectId(currPsiMethod);
                     final PsiAnnotation mappingPsiAnnotationOnMethod = currPsiMethod.getAnnotation(currAnnotation.getClassNameFqn());
                     if (mappingPsiAnnotationOnMethod == null) {
@@ -144,7 +147,7 @@ public class SpringBootFramework extends EndpointDiscovery {
 
                     for (String currSuffix : endpointUriSuffixes) {
                         String httpEndpointCodeObjectId = createHttpEndpointCodeObjectId(httpMethodName, endpointUriPrefix, currSuffix);
-                        EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, methodId, JavaPsiUtils.toFileUri(currPsiMethod), currPsiMethod.getTextOffset());
+                        EndpointInfo endpointInfo = new EndpointInfo(httpEndpointCodeObjectId, methodId, JavaPsiUtils.toFileUri(currPsiMethod), null, EndpointFramework.SpringBoot);
                         retList.add(endpointInfo);
                     }
                 }), Throwable.class, 50, 5);

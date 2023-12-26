@@ -13,6 +13,7 @@ import org.digma.intellij.plugin.insights.CodelessSpanErrorsContainer
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.InsightType
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
+import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.navigation.InsightsAndErrorsTabsHelper
 import org.digma.intellij.plugin.persistence.PersistenceService
@@ -20,6 +21,7 @@ import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
 import org.digma.intellij.plugin.ui.model.DocumentScope
 import org.digma.intellij.plugin.ui.model.EmptyScope
+import org.digma.intellij.plugin.ui.model.EndpointScope
 import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.model.errors.ErrorDetailsModel
 import org.digma.intellij.plugin.ui.model.errors.ErrorsModel
@@ -126,7 +128,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         try {
             //don't let the refresh task update if it's not the same methodInfo
             if ( model.scope is MethodScope && methodInfo == (model.scope as MethodScope).getMethodInfo()) {
-                updateErrorsModelImpl(methodInfo)
+                updateErrorsModelImpl(methodInfo, null)
             }
         }finally {
             if (lock.isHeldByCurrentThread) {
@@ -136,10 +138,10 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
     }
 
     //todo: quick and dirty prevent race condition with refresh task until we have time to re-write it
-    fun updateErrorsModel(methodInfo: MethodInfo) {
+    fun updateErrorsModel(methodInfo: MethodInfo, endpointInfo: EndpointInfo? = null) {
         lock.lock()
         try {
-            updateErrorsModelImpl(methodInfo)
+            updateErrorsModelImpl(methodInfo, endpointInfo)
         }finally {
             if (lock.isHeldByCurrentThread) {
                 lock.unlock()
@@ -148,13 +150,13 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
     }
 
 
-    private fun updateErrorsModelImpl(methodInfo: MethodInfo) {
+    private fun updateErrorsModelImpl(methodInfo: MethodInfo, endpointInfo: EndpointInfo?) {
 
         val errorsProvider: ErrorsProvider = project.getService(ErrorsProvider::class.java)
-        updateErrorsModelWithErrorsProvider(methodInfo,errorsProvider)
+        updateErrorsModelWithErrorsProvider(methodInfo, errorsProvider, endpointInfo)
     }
 
-    private fun updateErrorsModelWithErrorsProvider(methodInfo: MethodInfo, errorsProvider: ErrorsProvider) {
+    private fun updateErrorsModelWithErrorsProvider(methodInfo: MethodInfo, errorsProvider: ErrorsProvider, endpointInfo: EndpointInfo?) {
         lock.lock()
         Log.log(logger::debug, "Lock acquired for contextChanged to {}. ", methodInfo)
         try {
@@ -164,7 +166,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
 
             model.listViewItems = errorsListContainer.listViewItems ?: listOf()
             model.previewListViewItems = ArrayList()
-            model.scope = MethodScope(methodInfo)
+            model.scope = if (endpointInfo == null) MethodScope(methodInfo) else EndpointScope(endpointInfo)
             model.card = ErrorsTabCard.ERRORS_LIST
             model.errorsCount = errorsListContainer.count
 

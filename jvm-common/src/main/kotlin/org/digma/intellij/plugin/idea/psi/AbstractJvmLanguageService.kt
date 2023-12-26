@@ -34,6 +34,7 @@ import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.Retries
 import org.digma.intellij.plugin.common.allowSlowOperation
+import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.editor.EditorUtils
 import org.digma.intellij.plugin.idea.buildsystem.BuildSystemChecker.Companion.determineBuildSystem
 import org.digma.intellij.plugin.idea.buildsystem.JavaBuildSystem
@@ -50,6 +51,7 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
 import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
+import org.digma.intellij.plugin.model.discovery.TextRange
 import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.PsiFileNotFountException
 import org.digma.intellij.plugin.psi.PsiUtils
@@ -91,14 +93,12 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
     }
 
 
-
-    //It's a different search for each jvm language
+    //It's a different search for each jvm language.
     abstract fun findClassByClassName(className: String, scope: GlobalSearchScope): UClass?
 
     abstract fun refreshCodeLens()
 
     abstract fun findParentMethod(psiElement: PsiElement): UMethod?
-
 
     override fun ensureStartupOnEDT(project: Project) {
         //nothing to do
@@ -113,9 +113,6 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
     }
 
 
-    protected fun findClassByClassName(className: String): UClass? {
-        return findClassByClassName(className, GlobalSearchScope.projectScope(project))
-    }
 
     override fun buildDocumentInfo(psiFile: PsiFile, selectedTextEditor: FileEditor?): DocumentInfo {
         return buildDocumentInfo(psiFile)
@@ -307,7 +304,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
             val className = methodId.substring(0, methodId.indexOf("\$_$")).replace('$', '.')
 
             return@ensureReadAction allowSlowOperation<UMethod?> {
-                val uClass = findClassByClassName(className)
+                val uClass = findClassByClassName(className, GlobalSearchScope.projectScope(project))
 
                 return@allowSlowOperation uClass?.let { cls ->
                     findMethodInClass(project, cls, methodId)
@@ -329,7 +326,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
             ReadActions.ensureReadAction {
 
-                val uClass = findClassByClassName(className, GlobalSearchScope.allScope(project))
+                val uClass = findClassByClassName(className, GlobalSearchScope.projectScope(project))
                 uClass?.let {
 
                     val psiFile = it.getContainingUFile()?.sourcePsi
@@ -356,7 +353,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
                     val fileUri = PsiUtils.psiFileToUri(psiFile)
                     if (!isSupportedFile(project, psiFile)) {
-                        return@allowSlowOperation MethodUnderCaret("", "", "", "", fileUri, false)
+                        return@allowSlowOperation MethodUnderCaret("", "", "", "", fileUri, caretOffset, null, false)
                     }
                     return@allowSlowOperation detectMethodUnderCaret(psiFile, fileUri, caretOffset)
                 }
@@ -369,20 +366,49 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
         val packageName = psiFile.toUElementOfType<UFile>()?.packageName ?: ""
         val underCaret: PsiElement =
-            psiFile.findElementAt(caretOffset) ?: return MethodUnderCaret("", "", "", packageName, fileUri, true)
+            psiFile.findElementAt(caretOffset) ?: return MethodUnderCaret("", "", "", packageName, fileUri, caretOffset)
         val uMethod = findParentMethod(underCaret)
         val className: String = uMethod?.getParentOfType<UClass>()?.namedUnwrappedElement?.name ?: ""
+
         if (uMethod != null) {
+
+            val methodId = createMethodCodeObjectId(uMethod)
+            val endpointTextRange = findEndpointTextRange(fileUri, caretOffset, methodId)
+
             return MethodUnderCaret(
-                createMethodCodeObjectId(uMethod),
+                methodId,
                 uMethod.name,
                 className,
                 packageName,
-                fileUri
+                fileUri,
+                caretOffset,
+                endpointTextRange
             )
         }
-        return MethodUnderCaret("", "", className, packageName, fileUri)
+        return MethodUnderCaret("", "", className, packageName, fileUri, caretOffset)
     }
+
+
+    fun findEndpointTextRange(fileUri: String, caretOffset: Int, methodId: String): TextRange? {
+        val documentInfo = DocumentInfoService.getInstance(project).getDocumentInfo(fileUri)
+        if (documentInfo != null) {
+            val methodInfo = documentInfo.getMethodInfo(methodId)
+            if (methodInfo != null) {
+                val endpointInfo = methodInfo.endpoints.firstOrNull { endpointInfo: EndpointInfo ->
+                    endpointInfo.textRange?.contains(caretOffset) ?: false
+                }
+
+                if (endpointInfo != null) {
+                    return endpointInfo.textRange
+                }
+            }
+        }
+        return null
+    }
+
+
+
+
 
 
     override fun navigateToMethod(methodId: String) {

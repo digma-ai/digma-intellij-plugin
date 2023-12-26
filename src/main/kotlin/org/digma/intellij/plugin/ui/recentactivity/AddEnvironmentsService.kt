@@ -206,7 +206,7 @@ class AddEnvironmentsService {
         return when (config) {
             is CommonProgramRunConfigurationParameters -> {
                 Log.log(logger::info, "adding environment to configuration {}", config.name)
-                config.envs = config.envs.toImmutableMap()
+                config.envs = config.envs.toMutableMap()
                 config.envs[envVarKey] = envVarValue
 
                 true
@@ -214,7 +214,7 @@ class AddEnvironmentsService {
 
             is ExternalSystemRunConfiguration -> {
                 Log.log(logger::info, "adding environment to configuration {}", config.name)
-                config.settings.env = config.settings.env.toImmutableMap()
+                config.settings.env = config.settings.env.toMutableMap()
                 config.settings.env[envVarKey] = envVarValue
 
                 true
@@ -222,7 +222,7 @@ class AddEnvironmentsService {
 
             is AbstractRunConfiguration -> {
                 Log.log(logger::info, "adding environment to configuration {}", config.name)
-                config.envs = config.envs.toImmutableMap()
+                config.envs = config.envs.toMutableMap()
                 config.envs[envVarKey] = envVarValue
 
                 true

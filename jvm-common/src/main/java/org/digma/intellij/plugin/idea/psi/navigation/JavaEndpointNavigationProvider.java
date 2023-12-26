@@ -111,7 +111,9 @@ public class JavaEndpointNavigationProvider implements Disposable {
             try {
 
                 var endpointInfos = endpointDiscovery.lookForEndpoints(searchScopeSupplier);
-                endpointInfos.forEach(this::addToMethodsMap);
+                if (endpointInfos != null) {
+                    endpointInfos.forEach(this::addToMethodsMap);
+                }
 
             } catch (Exception e) {
                 Log.warnWithException(LOGGER, e, "Exception in buildEndpointAnnotations");
@@ -132,7 +134,9 @@ public class JavaEndpointNavigationProvider implements Disposable {
 
             try {
                 var endpointInfos = endpointDiscovery.lookForEndpoints(psiFile);
-                endpointInfos.forEach(this::addToMethodsMap);
+                if (endpointInfos != null) {
+                    endpointInfos.forEach(this::addToMethodsMap);
+                }
 
             } catch (Exception e) {
                 Log.warnWithException(LOGGER, e, "Exception in buildEndpointAnnotations");

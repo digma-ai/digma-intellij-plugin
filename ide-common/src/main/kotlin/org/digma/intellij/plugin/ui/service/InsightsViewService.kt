@@ -14,12 +14,14 @@ import org.digma.intellij.plugin.insights.InsightsProvider
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.ModelChangeListener
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
+import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.rest.insights.InsightStatus
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
 import org.digma.intellij.plugin.ui.model.DocumentScope
 import org.digma.intellij.plugin.ui.model.EmptyScope
+import org.digma.intellij.plugin.ui.model.EndpointScope
 import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.model.UIInsightsStatus
 import org.digma.intellij.plugin.ui.model.insights.InsightsModel
@@ -134,7 +136,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
         try {
             //don't let the refresh task update if it's not the same MethodInfo
             if ( model.scope is MethodScope && methodInfo == (model.scope as MethodScope).getMethodInfo()) {
-                updateInsightsModelImpl(methodInfo)
+                updateInsightsModelImpl(methodInfo, null)
             }
         }finally {
             if (lock.isHeldByCurrentThread) {
@@ -144,10 +146,10 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
     }
 
     //todo: quick and dirty prevent race condition with refresh task until we have time to re-write it
-    fun updateInsightsModel(methodInfo: MethodInfo) {
+    fun updateInsightsModel(methodInfo: MethodInfo, endpointInfo: EndpointInfo? = null) {
         lock.lock()
         try {
-            updateInsightsModelImpl(methodInfo)
+            updateInsightsModelImpl(methodInfo, endpointInfo)
         }finally {
             if (lock.isHeldByCurrentThread) {
                 lock.unlock()
@@ -155,12 +157,12 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
         }
     }
 
-    private fun updateInsightsModelImpl(methodInfo: MethodInfo) {
+    private fun updateInsightsModelImpl(methodInfo: MethodInfo, endpointInfo: EndpointInfo?) {
         val insightsProvider: InsightsProvider = project.getService(InsightsProvider::class.java)
-        updateInsightsModelWithInsightsProvider(methodInfo, insightsProvider)
+        updateInsightsModelWithInsightsProvider(methodInfo, insightsProvider, endpointInfo)
     }
 
-    private fun updateInsightsModelWithInsightsProvider(methodInfo: MethodInfo, insightsProvider: InsightsProvider) {
+    private fun updateInsightsModelWithInsightsProvider(methodInfo: MethodInfo, insightsProvider: InsightsProvider, endpointInfo: EndpointInfo?) {
         lock.lock()
         Log.log(logger::trace, "Lock acquired for updateInsightsModel to {}. ", methodInfo)
         try {
@@ -170,7 +172,7 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
 
             model.listViewItems = insightsListContainer.listViewItems ?: listOf()
             model.previewListViewItems = ArrayList()
-            model.scope = MethodScope(methodInfo)
+            model.scope = if (endpointInfo == null) MethodScope(methodInfo) else EndpointScope(endpointInfo)
             model.insightsCount = insightsListContainer.count
             model.card = InsightsTabCard.INSIGHTS
 

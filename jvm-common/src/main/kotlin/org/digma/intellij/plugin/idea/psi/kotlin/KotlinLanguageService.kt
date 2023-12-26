@@ -11,25 +11,22 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
-import org.digma.intellij.plugin.common.ReadActions
-import org.digma.intellij.plugin.common.allowSlowOperation
 import org.digma.intellij.plugin.idea.psi.AbstractJvmLanguageService
-import org.digma.intellij.plugin.idea.psi.createMethodCodeObjectId
 import org.digma.intellij.plugin.instrumentation.CanInstrumentMethodResult
 import org.digma.intellij.plugin.instrumentation.JvmCanInstrumentMethodResult
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.psi.PsiUtils
 import org.jetbrains.kotlin.idea.KotlinLanguage
+import org.jetbrains.kotlin.idea.stubindex.KotlinFileFacadeFqNameIndex
 import org.jetbrains.kotlin.idea.stubindex.KotlinFullClassNameIndex
 import org.jetbrains.kotlin.psi.KtClassOrObject
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtFunction
 import org.jetbrains.kotlin.psi.KtImportDirective
+import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtPsiFactory
 import org.jetbrains.kotlin.resolve.ImportPath
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UMethod
-import org.jetbrains.uast.getContainingUFile
 import org.jetbrains.uast.toUElementOfType
 
 @Suppress("LightServiceMigrationCode")
@@ -55,9 +52,28 @@ class KotlinLanguageService(project: Project) : AbstractJvmLanguageService(proje
         return KotlinLanguage::class.java == language.javaClass
     }
 
+
+    //note that this method prefers non compiled classes
     override fun findClassByClassName(className: String, scope: GlobalSearchScope): UClass? {
+
         val classes: Collection<KtClassOrObject> = KotlinFullClassNameIndex.get(className, project, scope)
-        return classes.firstOrNull()?.toUElementOfType<UClass>()
+
+        if (classes.isEmpty()) {
+            val files = KotlinFileFacadeFqNameIndex.get(className, project, scope)
+            if (files.isNotEmpty()) {
+                val file: KtFile? = if (files.any { ktf -> !ktf.isCompiled }) files.firstOrNull { ktf -> !ktf.isCompiled } else files.firstOrNull()
+                val fileClasses = file?.classes?.filter { psiClass: PsiClass -> psiClass.qualifiedName == className }
+                return fileClasses?.firstOrNull()?.toUElementOfType<UClass>()
+            } else {
+                return null
+            }
+        } else {
+            //prefer non compiled class
+            if (classes.any { ktc -> !ktc.containingKtFile.isCompiled }) {
+                return classes.firstOrNull { ktc -> !ktc.containingKtFile.isCompiled }?.toUElementOfType<UClass>()
+            }
+            return classes.firstOrNull()?.toUElementOfType<UClass>()
+        }
     }
 
 
@@ -72,60 +88,8 @@ class KotlinLanguageService(project: Project) : AbstractJvmLanguageService(proje
 
 
     override fun findParentMethod(psiElement: PsiElement): UMethod? {
-        return PsiTreeUtil.getParentOfType(psiElement, KtFunction::class.java)?.toUElementOfType<UMethod>()
+        return PsiTreeUtil.getParentOfType(psiElement, KtNamedFunction::class.java)?.toUElementOfType<UMethod>()
     }
-
-    override fun findWorkspaceUrisForMethodCodeObjectIds(methodCodeObjectIds: List<String>): Map<String, Pair<String, Int>> {
-
-        val workspaceUrls = mutableMapOf<String, Pair<String, Int>>()
-
-        methodCodeObjectIds.filter { methodId: String -> methodId.contains("\$_$") }.forEach { methodId ->
-            ReadActions.ensureReadAction {
-                allowSlowOperation {
-                    var className = methodId.substring(0, methodId.indexOf("\$_$"))
-                    //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
-                    className = className.replace('$', '.')
-                    //searching in project scope will find only project classes
-                    val psiClasses: Collection<KtClassOrObject> =
-                        KotlinFullClassNameIndex.get(className, project, GlobalSearchScope.projectScope(project))
-                    if (!psiClasses.isEmpty()) {
-                        //hopefully there is only one class by that name in the project
-                        val psiClassOptional = psiClasses.stream().findAny()
-                        val psiClass: KtClassOrObject = psiClassOptional.get()
-
-                        val uClass = psiClass.toUElementOfType<UClass>()
-
-                        uClass?.let { cls ->
-                            val method = cls.methods.firstOrNull { methodId == createMethodCodeObjectId(it) }
-                            method?.let { uMethod ->
-                                val uFile = cls.getContainingUFile()
-                                uFile?.let {
-                                    val url = PsiUtils.psiFileToUri(it.sourcePsi)
-                                    val offset = uMethod.sourcePsi?.textOffset ?: 0
-                                    workspaceUrls.put(methodId, Pair(url, offset))
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return workspaceUrls
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     override fun instrumentMethod(result: CanInstrumentMethodResult): Boolean {

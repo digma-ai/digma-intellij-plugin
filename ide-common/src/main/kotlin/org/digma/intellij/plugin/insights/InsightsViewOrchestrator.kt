@@ -15,6 +15,8 @@ import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.editor.CurrentContextUpdater
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
+import org.digma.intellij.plugin.model.discovery.EndpointFramework
+import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
 import org.digma.intellij.plugin.navigation.HomeSwitcherService
@@ -60,7 +62,8 @@ class InsightsViewOrchestrator(val project: Project) {
         MethodWithoutNavigation,
         MethodFromBackNavigation,
         DummyMethod,
-        DocumentPreviewList
+        DocumentPreviewList,
+        EndpointFromSourceCode
     }
 
 
@@ -75,16 +78,20 @@ class InsightsViewOrchestrator(val project: Project) {
      * shows insights for a span.
      */
     fun showInsightsForCodelessSpan(spanId: String) {
+        showInsightsForCodelessSpan(CodeLessSpan(spanId))
+    }
+
+    fun showInsightsForCodelessSpan(span: CodeLessSpan) {
 
         currentState.set(ViewState.CodelessSpan)
 
-        Log.log(logger::debug, project, "Got showInsightsForSpan {}", spanId)
+        Log.log(logger::debug, project, "Got showInsightsForCodelessSpan {}", span.spanId)
 
-        Backgroundable.ensurePooledThread{
+        Backgroundable.ensurePooledThread {
 
             val stopWatch = stopWatchStart()
 
-            project.service<InsightsService>().updateInsights(CodeLessSpan(spanId))
+            project.service<InsightsService>().updateInsights(span)
 
             //clear the latest method so that if user clicks on the editor again after watching code less insights the context will change
             project.service<CurrentContextUpdater>().clearLatestMethod()
@@ -99,15 +106,11 @@ class InsightsViewOrchestrator(val project: Project) {
 
 
             //todo: this should be removed soon
-            project.service<InsightsViewService>().updateInsightsModel(
-                CodeLessSpan(spanId)
-            )
+            project.service<InsightsViewService>().updateInsightsModel(span)
 
-            project.service<ErrorsViewService>().updateErrorsModel(
-                CodeLessSpan(spanId)
-            )
+            project.service<ErrorsViewService>().updateErrorsModel(span)
 
-            stopWatchStop(stopWatch){ time -> Log.log(logger::trace, "showInsightsForCodelessSpan took {}",time)}
+            stopWatchStop(stopWatch) { time -> Log.log(logger::trace, "showInsightsForCodelessSpan took {}", time) }
 
         }
     }
@@ -167,41 +170,61 @@ class InsightsViewOrchestrator(val project: Project) {
     }
 
 
-    fun showInsightsForMethodFromBackNavigation(methodId: String) {
+    fun showInsightsForMethodFromBackNavigation(methodInfo: MethodInfo) {
 
         currentState.set(ViewState.MethodFromBackNavigation)
 
-        Log.log(logger::debug, project, "Got showInsightsForMethod {}", methodId)
+        Log.log(logger::debug, project, "Got showInsightsForMethod {}", methodInfo)
 
         Backgroundable.ensurePooledThread {
 
-            val documentInfoService = project.service<DocumentInfoService>()
-            val methodInfo = documentInfoService.findMethodInfo(methodId)
-            if (methodInfo == null) {
-                Log.log(logger::warn, project, "showInsightsForMethod cannot show insights for method '{}' since not found", methodId)
-            }else {
+            project.service<InsightsService>().updateInsights(methodInfo)
 
-                project.service<InsightsService>().updateInsights(methodInfo)
+            EDT.ensureEDT {
+                project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
+                ToolWindowShower.getInstance(project).showToolWindow()
+                project.getService(HomeSwitcherService::class.java).switchToInsights()
+                project.getService(InsightsAndErrorsTabsHelper::class.java).switchToInsightsTab()
+            }
 
-                EDT.ensureEDT {
-                    project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
-                    ToolWindowShower.getInstance(project).showToolWindow()
-                    project.getService(HomeSwitcherService::class.java).switchToInsights()
-                    project.getService(InsightsAndErrorsTabsHelper::class.java).switchToInsightsTab()
-                }
+            //todo: this should be removed soon
+            project.service<InsightsViewService>().updateInsightsModel(
+                methodInfo
+            )
 
+            project.service<ErrorsViewService>().updateErrorsModel(
+                methodInfo
+            )
+        }
+    }
+
+
+    fun showInsightsForEndpointFromBackNavigation(endpointInfo: EndpointInfo) {
+        currentState.set(ViewState.MethodFromBackNavigation)
+
+        Log.log(logger::debug, project, "Got showInsightsForEndpointFromBackNavigation {}", endpointInfo.id)
+
+        Backgroundable.ensurePooledThread {
+
+            project.service<InsightsService>().updateInsights(endpointInfo)
+
+            EDT.ensureEDT {
+                project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
+                ToolWindowShower.getInstance(project).showToolWindow()
+                project.getService(HomeSwitcherService::class.java).switchToInsights()
+                project.getService(InsightsAndErrorsTabsHelper::class.java).switchToInsightsTab()
+            }
+
+            val methodInfo = DocumentInfoService.getInstance(project).findMethodInfo(endpointInfo.containingMethodId)
+            methodInfo?.let {
                 //todo: this should be removed soon
-                project.service<InsightsViewService>().updateInsightsModel(
-                    methodInfo
-                )
+                project.service<InsightsViewService>().updateInsightsModel(it, endpointInfo)
 
-                project.service<ErrorsViewService>().updateErrorsModel(
-                    methodInfo
-                )
-
+                project.service<ErrorsViewService>().updateErrorsModel(it, endpointInfo)
             }
         }
     }
+
 
     /**
      * shows insights for span or method by which ever is non-null, and can be navigated to code.
@@ -253,7 +276,7 @@ class InsightsViewOrchestrator(val project: Project) {
         //methodLocation equals currentCaretLocation, so we have to emulate a caret event to show the method insights
         if (methodLocation != null) {
             Backgroundable.ensurePooledThread {
-                emulateCaretEvent(methodCodeObjectId, methodLocation.first)
+                emulateCaretEvent(methodCodeObjectId, methodLocation.first, methodLocation.second)
             }
             return true
         }
@@ -268,7 +291,7 @@ class InsightsViewOrchestrator(val project: Project) {
 
     }
 
-    private fun emulateCaretEvent(methodId: String, fileUri: String): Boolean {
+    private fun emulateCaretEvent(methodId: String, fileUri: String, caretOffset: Int): Boolean {
 
         val methodNameAndClass: Pair<String, String> = CodeObjectsUtil.getMethodClassAndName(methodId)
 
@@ -277,7 +300,8 @@ class InsightsViewOrchestrator(val project: Project) {
             methodNameAndClass.first,
             methodNameAndClass.second,
             "",
-            fileUri
+            fileUri,
+            caretOffset
         )
 
         val methodInfo: MethodInfo? = project.service<DocumentInfoService>().getMethodInfo(methodUnderCaret)
@@ -316,23 +340,55 @@ class InsightsViewOrchestrator(val project: Project) {
 
     fun updateInsightsWithMethodFromSource(methodUnderCaret: MethodUnderCaret, methodInfo: MethodInfo) {
 
-        currentState.set(ViewState.MethodFromSourceCode)
+        //currently only supports ktor endpoints
+        val endpointInfo = getFocusedEndpoint(methodUnderCaret, methodInfo)
+        if (endpointInfo == null) {
+            currentState.set(ViewState.MethodFromSourceCode)
 
-        Backgroundable.ensurePooledThread{
-            val documentInfo: DocumentInfoContainer? = project.service<DocumentInfoService>().getDocumentInfo(methodUnderCaret)
-            documentInfo?.let {
+            Backgroundable.ensurePooledThread {
+                val documentInfo: DocumentInfoContainer? = project.service<DocumentInfoService>().getDocumentInfo(methodUnderCaret)
+                documentInfo?.let {
 
-                project.service<InsightsService>().updateInsights(methodInfo)
+                    project.service<InsightsService>().updateInsights(methodInfo)
 
-                val methodHasNewInsights = documentInfo.loadInsightsForMethod(methodUnderCaret.id) // might be long call since going to the backend
+                    val methodHasNewInsights =
+                        documentInfo.loadInsightsForMethod(methodUnderCaret.id) // might be long call since going to the backend
 
-                //todo: this should be removed soon
-                project.service<InsightsViewService>().updateInsightsModel(methodInfo)
-                project.service<ErrorsViewService>().updateErrorsModel(methodInfo)
+                    //todo: this should be removed soon
+                    project.service<InsightsViewService>().updateInsightsModel(methodInfo)
+                    project.service<ErrorsViewService>().updateErrorsModel(methodInfo)
 
+                }
+            }
+        } else {
+            currentState.set(ViewState.EndpointFromSourceCode)
+
+            Backgroundable.ensurePooledThread {
+                val documentInfo: DocumentInfoContainer? = project.service<DocumentInfoService>().getDocumentInfo(methodUnderCaret)
+                documentInfo?.let {
+
+                    project.service<InsightsService>().updateInsights(endpointInfo)
+
+                    val methodHasNewInsights =
+                        documentInfo.loadInsightsForMethod(methodUnderCaret.id) // might be long call since going to the backend
+
+                    //todo: this should be removed soon
+                    project.service<InsightsViewService>().updateInsightsModel(methodInfo, endpointInfo)
+                    project.service<ErrorsViewService>().updateErrorsModel(methodInfo, endpointInfo)
+
+                }
             }
         }
+
     }
+
+    private fun getFocusedEndpoint(methodUnderCaret: MethodUnderCaret, methodInfo: MethodInfo): EndpointInfo? {
+        return methodInfo.endpoints.firstOrNull { endpointInfo: EndpointInfo ->
+            endpointInfo.textRange?.contains(methodUnderCaret.caretOffset) ?: false &&
+                    endpointInfo.framework == EndpointFramework.Ktor
+        }
+    }
+
 
     fun updateInsightsWithDummyMethodInfo(methodUnderCaret: MethodUnderCaret, dummyMethodInfo: MethodInfo) {
 
@@ -347,7 +403,7 @@ class InsightsViewOrchestrator(val project: Project) {
 
         currentState.set(ViewState.DocumentPreviewList)
 
-        Backgroundable.ensurePooledThread{
+        Backgroundable.ensurePooledThread {
             project.service<InsightsService>().showDocumentPreviewList(documentInfoContainer, fileUri)
 
             project.service<InsightsViewService>().showDocumentPreviewList(documentInfoContainer, fileUri)

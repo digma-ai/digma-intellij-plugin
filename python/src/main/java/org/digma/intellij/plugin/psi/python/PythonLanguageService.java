@@ -118,11 +118,11 @@ public class PythonLanguageService implements LanguageService {
     public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, Editor selectedEditor, int caretOffset) {
         return Retries.retryWithResult(() -> ReadAction.compute(() -> {
             if (!isSupportedFile(project, psiFile)) {
-                return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), false);
+                return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset, null, false);
             }
             PsiElement underCaret = psiFile.findElementAt(caretOffset);
             if (underCaret == null) {
-                return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), true);
+                return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset, null, true);
             }
             PyFunction pyFunction = PsiTreeUtil.getParentOfType(underCaret, PyFunction.class);
             if (pyFunction != null) {
@@ -130,9 +130,9 @@ public class PythonLanguageService implements LanguageService {
                 var name = pyFunction.getName() == null ? "" : pyFunction.getName();
                 var containingClass = pyFunction.getContainingClass();
                 var className = containingClass == null ? "" : containingClass.getName() + ".";
-                return new MethodUnderCaret(methodId, name, className, "", PsiUtils.psiFileToUri(psiFile));
+                return new MethodUnderCaret(methodId, name, className, "", PsiUtils.psiFileToUri(psiFile), caretOffset);
             }
-            return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), true);
+            return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset);
         }), Throwable.class, 50, 5);
     }
 

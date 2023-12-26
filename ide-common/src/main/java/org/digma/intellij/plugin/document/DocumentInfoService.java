@@ -162,7 +162,7 @@ public class DocumentInfoService {
     }
 
     @Nullable
-    protected DocumentInfoContainer getDocumentInfo(String fileUri) {
+    public DocumentInfoContainer getDocumentInfo(String fileUri) {
         return documents.get(fileUri);
     }
 

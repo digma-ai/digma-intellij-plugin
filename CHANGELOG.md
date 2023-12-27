@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.223] - 2023-12-27
+## [2.0.224] - 2023-12-27
+- fix-possible-npe by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1527
+
+## 2.0.223 - 2023-12-27
 - Bug fix/methodCodeObjectId is nullable by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1522
 - Inject commit hash in run configuration Closes #1468 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1521
 - avoid-data-lost-message-on-new-install by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1525

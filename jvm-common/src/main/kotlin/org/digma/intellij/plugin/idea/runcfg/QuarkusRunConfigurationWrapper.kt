@@ -21,11 +21,9 @@ import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
 // for quarkus, look at https://quarkus.io/guides/opentelemetry
 class QuarkusRunConfigurationWrapper : RunConfigurationWrapper {
 
+    private val logger: Logger = Logger.getInstance(QuarkusRunConfigurationWrapper::class.java)
+
     companion object {
-        val logger: Logger = Logger.getInstance(QuarkusRunConfigurationWrapper::class.java)
-        const val ORG_GRADLE_JAVA_TOOL_OPTIONS = "ORG_GRADLE_JAVA_TOOL_OPTIONS"
-
-
         @JvmStatic
         fun getInstance(project: Project): QuarkusRunConfigurationWrapper {
             return project.getService(QuarkusRunConfigurationWrapper::class.java)
@@ -51,8 +49,7 @@ class QuarkusRunConfigurationWrapper : RunConfigurationWrapper {
         runnerSettings: RunnerSettings?,
         resolvedModule: Module?,
     ) {
-        val runConfigType = evalRunConfigType(configuration, resolvedModule)
-        when (runConfigType) {
+        when (val runConfigType = evalRunConfigType(configuration, resolvedModule)) {
             RunConfigType.GradleRun -> {
                 //when injecting JAVA_TOOL_OPTIONS to GradleRunConfiguration the GradleRunConfiguration will also run with
                 // JAVA_TOOL_OPTIONS which is not ideal. for example, gradle will execute with JAVA_TOOL_OPTIONS and then fork
@@ -66,9 +63,7 @@ class QuarkusRunConfigurationWrapper : RunConfigurationWrapper {
                 // JAVA_TOOL_OPTIONS is not the best as said above, but it works.
                 configuration as GradleRunConfiguration
                 val javaToolOptions = buildJavaToolOptions(runConfigType.isTest)
-                javaToolOptions?.let {
-                    mergeGradleJavaToolOptions(configuration, javaToolOptions)
-                }
+                mergeGradleJavaToolOptions(configuration, javaToolOptions)
             }
 
             RunConfigType.MavenTest,
@@ -76,16 +71,12 @@ class QuarkusRunConfigurationWrapper : RunConfigurationWrapper {
             -> {
                 configuration as MavenRunConfiguration
                 val javaToolOptions = buildJavaToolOptions(runConfigType.isTest)
-                javaToolOptions?.let {
-                    OtelRunConfigurationExtension.mergeJavaToolOptions(params, it)
-                }
+                mergeJavaToolOptions(configuration.project, params, javaToolOptions)
             }
 
             RunConfigType.JavaTest -> {
                 val javaToolOptions = buildJavaToolOptions(runConfigType.isTest)
-                javaToolOptions?.let {
-                    OtelRunConfigurationExtension.mergeJavaToolOptions(params, it)
-                }
+                mergeJavaToolOptions(configuration.project, params, javaToolOptions)
             }
 
             else -> {
@@ -107,6 +98,8 @@ class QuarkusRunConfigurationWrapper : RunConfigurationWrapper {
         }
         newEnv[JAVA_TOOL_OPTIONS] = javaToolOptions
         configuration.settings.env = newEnv
+
+        updateOtelResourceAttribute(configuration)
     }
 
     /**

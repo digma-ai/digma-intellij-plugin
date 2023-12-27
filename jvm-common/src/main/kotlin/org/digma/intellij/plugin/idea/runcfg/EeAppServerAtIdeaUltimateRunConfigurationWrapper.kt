@@ -5,7 +5,6 @@ import com.intellij.execution.configurations.ModuleRunConfiguration
 import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunnerSettings
-import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
@@ -30,13 +29,12 @@ import org.digma.intellij.plugin.settings.SettingsState
  * | GlassfishConfiguration | GlassFish          |
  * |------------------------+--------------------|
  */
-@Service(Service.Level.PROJECT)
 class EeAppServerAtIdeaUltimateRunConfigurationWrapper : RunConfigurationWrapper {
 
 
     private val logger: Logger = Logger.getInstance(this::class.java)
 
-    val SupportedEeAppServerTypeIds: Set<String> = setOf(
+    private val supportedEeAppServerTypeIds: Set<String> = setOf(
         "JBossConfiguration", // also WildFly
         "GlassfishConfiguration",
         "TomeeConfiguration",
@@ -51,7 +49,7 @@ class EeAppServerAtIdeaUltimateRunConfigurationWrapper : RunConfigurationWrapper
 
 
     override fun getRunConfigType(configuration: RunConfiguration, module: Module?): RunConfigType {
-        if (SupportedEeAppServerTypeIds.contains(configuration.type.id)) {
+        if (supportedEeAppServerTypeIds.contains(configuration.type.id)) {
             return RunConfigType.EeAppSeverAtIdeaUltimate
         }
         return RunConfigType.Unknown
@@ -67,7 +65,7 @@ class EeAppServerAtIdeaUltimateRunConfigurationWrapper : RunConfigurationWrapper
         val javaToolOptions =
             buildJavaToolOptions(configuration, isOtelServiceNameAlreadyDefined(params))
         javaToolOptions?.let {
-            OtelRunConfigurationExtension.mergeJavaToolOptions(params, it)
+            mergeJavaToolOptions(configuration.project, params, it)
         }
 
     }
@@ -88,7 +86,7 @@ class EeAppServerAtIdeaUltimateRunConfigurationWrapper : RunConfigurationWrapper
             return null
         }
 
-        if (RunCfgTools.isWsl(configuration)) {
+        if (isWsl(configuration)) {
             otelAgentPath = FileUtils.convertWinToWslPath(otelAgentPath)
             digmaExtensionPath = FileUtils.convertWinToWslPath(digmaExtensionPath)
         }

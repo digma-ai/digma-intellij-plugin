@@ -22,4 +22,6 @@ interface RunConfigurationWrapper {
     )
 
     fun isGradleConfiguration(configuration: RunConfiguration): Boolean
+
+
 }

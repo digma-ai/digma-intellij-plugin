@@ -27,77 +27,72 @@ import org.jetbrains.idea.maven.execution.MavenRunConfiguration
 import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
 import org.jetbrains.plugins.gradle.service.task.GradleTaskManager
 
-class RunCfgTools {
 
-    companion object {
-        private val logger: Logger = Logger.getInstance(RunCfgTools::class.java)
+private val logger: Logger = Logger.getInstance("org.digma.intellij.plugin.idea.runcfg.RunCfgTools")
 
-        @JvmStatic
-        fun <T : RunConfiguration?> tryResolveModule(
-            configuration: T & Any, params: JavaParameters?,
-        ): Module? {
 
-            val runCfgFlavor = evalFlavor(configuration)
-            if (runCfgFlavor == null) {
-                Log.log(
-                    logger::warn, "could not find cfgFlavor for configuration class '{}'",
-                    configuration.javaClass
-                )
-                return null
-            }
+fun <T : RunConfiguration?> tryResolveModule(
+    configuration: T & Any, params: JavaParameters?,
+): Module? {
 
-            val theModule = runCfgFlavor.tryResolveModule(params)
-            return theModule
-        }
-
-        @VisibleForTesting
-        @JvmStatic
-        private fun evalFlavor(runCfg: RunConfiguration?): RunCfgFlavor<*>? {
-            if (runCfg is GradleRunConfiguration) return GradleCfgFlavor(runCfg)
-            if (runCfg is MavenRunConfiguration) return MavenCfgFlavor(runCfg)
-            if (runCfg is JavaRunConfigurationBase) return JavaAppCfgFlavor(runCfg)
-            // no match, need to log warning
-            return null
-        }
-
-        fun extractTasks(configuration: RunConfiguration): List<String> {
-            return when (configuration) {
-                is GradleRunConfiguration -> configuration.settings.taskNames
-                is MavenRunConfiguration -> configuration.runnerParameters.goals
-                else -> listOf()
-            }
-        }
-
-        fun isWsl(configuration: RunConfigurationBase<*>): Boolean {
-            if (!SystemInfo.isWindows)
-                return false
-
-            return isProjectUnderWsl(configuration) ||
-                    isConfigurationTargetWsl(configuration)
-        }
-
-        private fun isConfigurationTargetWsl(configuration: RunConfigurationBase<*>): Boolean {
-            val targets = TargetEnvironmentsManager.getInstance(configuration.project).targets.resolvedConfigs()
-            val targetName = (configuration.state as? RunConfigurationOptions)?.remoteTarget
-            if (targetName == null)
-                return false
-
-            val target = targets.firstOrNull { it.displayName == targetName }
-            if (target == null)
-                return false
-
-            if (target !is WslTargetEnvironmentConfiguration)
-                return false
-
-            return true
-        }
-
-        private fun isProjectUnderWsl(configuration: RunConfiguration): Boolean {
-            return configuration.project.basePath?.startsWith("//wsl$/") == true
-        }
+    val runCfgFlavor = evalFlavor(configuration)
+    if (runCfgFlavor == null) {
+        Log.log(logger::warn, "could not find cfgFlavor for configuration class '{}'", configuration.javaClass)
+        return null
     }
 
+    val theModule = runCfgFlavor.tryResolveModule(params)
+    return theModule
 }
+
+
+@VisibleForTesting
+private fun evalFlavor(runCfg: RunConfiguration?): RunCfgFlavor<*>? {
+    if (runCfg is GradleRunConfiguration) return GradleCfgFlavor(runCfg)
+    if (runCfg is MavenRunConfiguration) return MavenCfgFlavor(runCfg)
+    if (runCfg is JavaRunConfigurationBase) return JavaAppCfgFlavor(runCfg)
+    // no match, need to log warning
+    return null
+}
+
+
+fun extractTasks(configuration: RunConfiguration): List<String> {
+    return when (configuration) {
+        is GradleRunConfiguration -> configuration.settings.taskNames
+        is MavenRunConfiguration -> configuration.runnerParameters.goals
+        else -> listOf()
+    }
+}
+
+fun isWsl(configuration: RunConfigurationBase<*>): Boolean {
+    if (!SystemInfo.isWindows)
+        return false
+
+    return isProjectUnderWsl(configuration) ||
+            isConfigurationTargetWsl(configuration)
+}
+
+
+private fun isConfigurationTargetWsl(configuration: RunConfigurationBase<*>): Boolean {
+    val targets = TargetEnvironmentsManager.getInstance(configuration.project).targets.resolvedConfigs()
+    val targetName = (configuration.state as? RunConfigurationOptions)?.remoteTarget
+    if (targetName == null)
+        return false
+
+    val target = targets.firstOrNull { it.displayName == targetName }
+    if (target == null)
+        return false
+
+    if (target !is WslTargetEnvironmentConfiguration)
+        return false
+
+    return true
+}
+
+private fun isProjectUnderWsl(configuration: RunConfiguration): Boolean {
+    return configuration.project.basePath?.startsWith("//wsl$/") == true
+}
+
 
 private abstract class RunCfgFlavor<T : RunConfiguration>(protected val runCfgBase: T) {
 

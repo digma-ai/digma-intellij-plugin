@@ -5,7 +5,6 @@ import com.intellij.execution.configurations.ModuleRunConfiguration
 import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunnerSettings
-import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.module.Module
@@ -14,7 +13,6 @@ import org.digma.intellij.plugin.common.FileUtils
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.settings.SettingsState
 
-@Service(Service.Level.PROJECT)
 class TomcatRunConfigurationWrapperForIdeaUltimate: RunConfigurationWrapper {
 
 
@@ -45,9 +43,8 @@ class TomcatRunConfigurationWrapperForIdeaUltimate: RunConfigurationWrapper {
         val javaToolOptions =
             buildJavaToolOptions(configuration, isOtelServiceNameAlreadyDefined(params))
         javaToolOptions?.let {
-            OtelRunConfigurationExtension.mergeJavaToolOptions(params, it)
+            mergeJavaToolOptions(configuration.project, params, it)
         }
-
     }
 
 
@@ -67,7 +64,7 @@ class TomcatRunConfigurationWrapperForIdeaUltimate: RunConfigurationWrapper {
             return null
         }
 
-        if(RunCfgTools.isWsl(configuration)){
+        if (isWsl(configuration)) {
             otelAgentPath = FileUtils.convertWinToWslPath(otelAgentPath)
             digmaExtensionPath = FileUtils.convertWinToWslPath(digmaExtensionPath)
         }

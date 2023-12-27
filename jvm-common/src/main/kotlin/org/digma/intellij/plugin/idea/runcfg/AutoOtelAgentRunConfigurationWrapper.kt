@@ -24,14 +24,12 @@ import org.jetbrains.idea.maven.execution.MavenRunConfiguration
 import org.jetbrains.kotlin.idea.run.KotlinRunConfiguration
 import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
 
-private const val ORG_GRADLE_JAVA_TOOL_OPTIONS = "ORG_GRADLE_JAVA_TOOL_OPTIONS"
-
 class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
 
     private val logger: Logger = Logger.getInstance(AutoOtelAgentRunConfigurationWrapper::class.java)
 
     companion object {
-        const val DIGMA_OBSERVABILITY_ENV_VAR_NAME = "DIGMA_OBSERVABILITY"
+        private const val DIGMA_OBSERVABILITY_ENV_VAR_NAME = "DIGMA_OBSERVABILITY"
 
         @JvmStatic
         fun getInstance(project: Project): AutoOtelAgentRunConfigurationWrapper {
@@ -60,9 +58,7 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
 
         val project = configuration.project
         val isSpringBootWithMicrometerTracing = evalSpringBootMicrometerTracing(resolvedModule)
-        val runConfigType = evalRunConfigType(configuration)
-
-        when (runConfigType) {
+        when (val runConfigType = evalRunConfigType(configuration)) {
             RunConfigType.JavaTest,
             RunConfigType.KotlinRun,
             RunConfigType.JavaRun,
@@ -73,18 +69,18 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
                 val javaToolOptions =
                     buildJavaToolOptions(
                         configuration,
-                        project,
                         isSpringBootWithMicrometerTracing,
                         isOtelServiceNameAlreadyDefined(params),
                         runConfigType.isTest
                     )
                 javaToolOptions?.let {
-                    OtelRunConfigurationExtension.mergeJavaToolOptions(params, it)
+                    mergeJavaToolOptions(project, params, it)
                 }
             }
 
             RunConfigType.GradleTest,
-            RunConfigType.GradleRun, -> {
+            RunConfigType.GradleRun,
+            -> {
                 //when injecting JAVA_TOOL_OPTIONS to GradleRunConfiguration the GradleRunConfiguration will also run with
                 // JAVA_TOOL_OPTIONS which is not ideal. for example, gradle will execute with JAVA_TOOL_OPTIONS and then fork
                 // a process for the main method or unit test with JAVA_TOOL_OPTIONS. ideally we want only the forked process
@@ -97,19 +93,30 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
                 // JAVA_TOOL_OPTIONS is not the best as said above, but it works.
                 configuration as GradleRunConfiguration
                 val javaToolOptions =
-                    buildJavaToolOptions(configuration, project, isSpringBootWithMicrometerTracing, isOtelServiceNameAlreadyDefined(configuration), runConfigType.isTest)
+                    buildJavaToolOptions(
+                        configuration,
+                        isSpringBootWithMicrometerTracing,
+                        isOtelServiceNameAlreadyDefined(configuration),
+                        runConfigType.isTest
+                    )
                 javaToolOptions?.let {
-                    OtelRunConfigurationExtension.mergeGradleJavaToolOptions(configuration, javaToolOptions)
+                    mergeGradleJavaToolOptions(configuration, javaToolOptions)
                 }
             }
 
             RunConfigType.MavenTest,
-            RunConfigType.MavenRun, -> {
+            RunConfigType.MavenRun,
+            -> {
                 configuration as MavenRunConfiguration
                 val javaToolOptions =
-                    buildJavaToolOptions(configuration, project, isSpringBootWithMicrometerTracing, isOtelServiceNameAlreadyDefined(params), runConfigType.isTest)
+                    buildJavaToolOptions(
+                        configuration,
+                        isSpringBootWithMicrometerTracing,
+                        isOtelServiceNameAlreadyDefined(params),
+                        runConfigType.isTest
+                    )
                 javaToolOptions?.let {
-                    OtelRunConfigurationExtension.mergeJavaToolOptions(params, it)
+                    mergeJavaToolOptions(project, params, it)
                 }
             }
 
@@ -139,7 +146,6 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
 
     private fun buildJavaToolOptions(
         configuration: RunConfigurationBase<*>,
-        project: Project,
         isSpringBootWithMicrometerTracing: Boolean,
         serviceAlreadyDefined: Boolean,
         isTest: Boolean,
@@ -154,7 +160,7 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
             return null
         }
 
-        if (RunCfgTools.isWsl(configuration)) {
+        if (isWsl(configuration)) {
             otelAgentPath = FileUtils.convertWinToWslPath(otelAgentPath)
             digmaExtensionPath = FileUtils.convertWinToWslPath(digmaExtensionPath)
         }
@@ -182,7 +188,7 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
                 .plus("-Dotel.resource.attributes=\"$envPart\"")
                 .plus(" ")
 
-            var hasMockito = true //currently do not check for mockito since flag is minor and won't affect other cases
+            val hasMockito = true //currently do not check for mockito since flag is minor and won't affect other cases
             if (hasMockito) {
                 // based on git issue https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/8862#issuecomment-1619722050 it seems to help
                 retVal = retVal
@@ -310,7 +316,7 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
                 return true
             }
 
-            val digmaObservabilityEnvVarValue = configuration.settings.env.get(DIGMA_OBSERVABILITY_ENV_VAR_NAME)
+            val digmaObservabilityEnvVarValue = configuration.settings.env[DIGMA_OBSERVABILITY_ENV_VAR_NAME]
             if (digmaObservabilityEnvVarValue != null && evalBoolean(digmaObservabilityEnvVarValue)) {
                 return true
             }

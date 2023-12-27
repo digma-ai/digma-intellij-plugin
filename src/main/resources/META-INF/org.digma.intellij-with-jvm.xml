@@ -26,10 +26,7 @@
         <postStartupActivity
                 implementation="org.digma.intellij.plugin.idea.psi.navigation.JavaSpanNavigationStartupActivity"/>
 
-        <projectService
-                serviceImplementation="org.digma.intellij.plugin.idea.runcfg.AutoOtelAgentRunConfigurationWrapper"/>
-        <applicationService serviceImplementation="org.digma.intellij.plugin.idea.runcfg.OTELJarProvider"/>
-        <postStartupActivity implementation="org.digma.intellij.plugin.idea.runcfg.OTELJarProviderStartup"/>
+
 
 
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.deps.ModulesDepsService"/>
@@ -38,15 +35,26 @@
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.userstats.UserStatsService"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.idea.userstats.UserStatsServiceStarter"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.idea.frameworks.QuarkusConfigureDepsService"/>
-        <projectService serviceImplementation="org.digma.intellij.plugin.idea.runcfg.QuarkusRunConfigurationWrapper"/>
-        <projectService
-                serviceImplementation="org.digma.intellij.plugin.idea.runcfg.OpenLibertyRunConfigurationWrapper"/>
+
         <runConfigurationExtension
                 implementation="org.digma.intellij.plugin.idea.runcfg.OtelRunConfigurationExtension"/>
         <postStartupActivity implementation="org.digma.intellij.plugin.idea.runcfg.RunConfigurationStartupActivity"/>
         <projectService
+                serviceImplementation="org.digma.intellij.plugin.idea.runcfg.AutoOtelAgentRunConfigurationWrapper"/>
+        <projectService
+                serviceImplementation="org.digma.intellij.plugin.idea.runcfg.EeAppServerAtIdeaUltimateRunConfigurationWrapper"/>
+        <projectService
+                serviceImplementation="org.digma.intellij.plugin.idea.runcfg.TomcatRunConfigurationWrapperForIdeaUltimate"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.runcfg.QuarkusRunConfigurationWrapper"/>
+        <projectService
+                serviceImplementation="org.digma.intellij.plugin.idea.runcfg.OpenLibertyRunConfigurationWrapper"/>
+        <applicationService serviceImplementation="org.digma.intellij.plugin.idea.runcfg.OTELJarProvider"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.idea.runcfg.OTELJarProviderStartup"/>
+
+
+        <projectService
                 serviceImplementation="org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.frameworks.QuarkusConfigureDepsService"/>
 
 
         <projectService
@@ -55,6 +63,7 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService"/>
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.kotlin.KotlinCodeLensService"/>
+
 
     </extensions>
 

@@ -18,9 +18,9 @@ import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
 //
 class OpenLibertyRunConfigurationWrapper : RunConfigurationWrapper {
 
-    companion object {
-        val logger: Logger = Logger.getInstance(OpenLibertyRunConfigurationWrapper::class.java)
+    private val logger: Logger = Logger.getInstance(OpenLibertyRunConfigurationWrapper::class.java)
 
+    companion object {
         @JvmStatic
         fun getInstance(project: Project): OpenLibertyRunConfigurationWrapper {
             return project.getService(OpenLibertyRunConfigurationWrapper::class.java)
@@ -46,16 +46,13 @@ class OpenLibertyRunConfigurationWrapper : RunConfigurationWrapper {
         runnerSettings: RunnerSettings?,
         resolvedModule: Module?,
     ) {
-        val runConfigType = evalRunConfigType(configuration, resolvedModule)
-        when (runConfigType) {
+        when (val runConfigType = evalRunConfigType(configuration, resolvedModule)) {
             RunConfigType.MavenTest,
             RunConfigType.MavenRun,
             -> {
                 configuration as MavenRunConfiguration
                 val javaToolOptions = buildJavaToolOptions(runConfigType.isTest)
-                javaToolOptions?.let {
-                    OtelRunConfigurationExtension.mergeJavaToolOptions(params, it)
-                }
+                mergeJavaToolOptions(configuration.project, params, javaToolOptions)
             }
 
             RunConfigType.GradleTest,
@@ -63,10 +60,9 @@ class OpenLibertyRunConfigurationWrapper : RunConfigurationWrapper {
             -> {
                 configuration as GradleRunConfiguration
                 val javaToolOptions = buildJavaToolOptions(runConfigType.isTest)
-                javaToolOptions?.let {
-                    OtelRunConfigurationExtension.mergeGradleJavaToolOptions(configuration, javaToolOptions)
-                }
+                mergeGradleJavaToolOptions(configuration, javaToolOptions)
             }
+
 
             else -> {
                 // do nothing

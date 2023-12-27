@@ -43,9 +43,9 @@ class RunConfigurationStartupActivity : StartupActivity {
 
             val isTemp = isTempRunConfig(config, tempConfigurations)
 
-            val module = RunCfgTools.tryResolveModule(config, null)
-            val runConfigType = OtelRunConfigurationExtension.getWrapperFor(config, module)?.getRunConfigType(config, module)
-            val taskNames = RunCfgTools.extractTasks(config)
+            val module = tryResolveModule(config, null)
+            val runConfigType = getWrapperFor(config, module)?.getRunConfigType(config, module)
+            val taskNames = extractTasks(config)
             val list = if (runConfigType == null) nonSupported else supported
             list.add("${config.name} (type:${config.type.displayName}) (temp:$isTemp) [tasks:${taskNames.joinToString(",")}]".replace("[tasks:]", ""))
         }

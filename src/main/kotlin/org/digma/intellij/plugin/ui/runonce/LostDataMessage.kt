@@ -7,19 +7,25 @@ import com.intellij.openapi.startup.StartupActivity
 import com.intellij.openapi.ui.DialogWrapper
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator
+import org.digma.intellij.plugin.persistence.PersistenceService
 import javax.swing.Action
 import javax.swing.JComponent
 
 class LostDataMessage : StartupActivity {
 
     override fun runActivity(project: Project) {
+
         RunOnceUtil.runOnceForApp("org.digma.runonce.lostdatamessage") {
-            project.getService(DumbService::class.java)
-                .runWhenSmart {
-                    EDT.ensureEDT {
-                        openLostMessageDialog(project)
+
+            //only show if there is data already to avoid showing on new install
+            if (PersistenceService.getInstance().state.firstTimeInsightReceived) {
+                project.getService(DumbService::class.java)
+                    .runWhenSmart {
+                        EDT.ensureEDT {
+                            openLostMessageDialog(project)
+                        }
                     }
-                }
+            }
         }
     }
 

@@ -1,6 +1,12 @@
 # Changelog
 
-## [2.0.222] - 2023-12-26
+## [2.0.223] - 2023-12-27
+- Bug fix/methodCodeObjectId is nullable by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1522
+- Inject commit hash in run configuration Closes #1468 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1521
+- avoid-data-lost-message-on-new-install by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1525
+- remove data lost message by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1526
+
+## 2.0.222 - 2023-12-26
 - Ktor support Closes #1473 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1519
 - fix high-number-of-queries-insight by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1520
 

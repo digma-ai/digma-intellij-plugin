@@ -30,18 +30,17 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
-/**
- * VcsService tries to be abstract and use intellij vcs abstraction.
- * if necessary it may fall back to git, we have git4idea in the classpath and plugin dependency.
- */
 
-public class VcsService {
+//todo: not really base, see VcsService kotlin class.
+// i just want to write kotlin code for new features so changed this one to base class.
+// the right thing to do is move all the methods here to VcsService and convert to kotlin
+public class BaseVcsService {
 
-    private static final Logger LOGGER = Logger.getInstance(VcsService.class);
+    protected final Logger LOGGER = Logger.getInstance(BaseVcsService.class);
 
-    private final Project project;
+    protected final Project project;
 
-    public VcsService(Project project) {
+    public BaseVcsService(Project project) {
         this.project = project;
     }
 
@@ -66,8 +65,16 @@ public class VcsService {
 
                 var filePath = VcsUtil.getFilePath(vcsRoot.getPath());
 
-                //NPE will be caught and reported to posthog
                 return vcs.getVcsHistoryProvider().createSessionFor(filePath).getCurrentRevisionNumber().asString();
+
+//                var vcs = ProjectLevelVcsManager.getInstance(project).getSingleVCS()
+//                var vcsRevisionNumber = GitHistoryUtils.getCurrentRevision(project, filePath, "HEAD");
+//
+//                if (vcsRevisionNumber != null){
+//                    return vcsRevisionNumber.asString();
+//                }else{
+//                    return null;
+//                }
 
             } catch (Exception e) {
                 ErrorReporter.getInstance().reportError(project, "VcsService.getCommitIdForCurrentProject", e);
@@ -82,7 +89,6 @@ public class VcsService {
         }
 
     }
-
 
 
     public boolean isFileUnderVcs(@NotNull VirtualFile workspaceFile) {

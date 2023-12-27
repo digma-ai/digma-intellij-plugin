@@ -84,13 +84,15 @@ fun cleanGradleSettingsOnProcessEnd(configuration: RunConfigurationBase<*>) {
 
 fun updateOtelResourceAttribute(project: Project, params: JavaParameters) {
 
-    val commitId = project.service<VcsService>().commitIdForCurrentProject ?: return
+//    val commitId = project.service<VcsService>().commitIdForCurrentProject ?: return
+    val commitIdLink = project.service<VcsService>().getLinkToRemoteCommitIdForCurrentProject()
+        ?: return
 
     val otelResourceAttributes = if (params.env.containsKey(OTEL_RESOURCE_ATTRIBUTES)) {
         params.env[OTEL_RESOURCE_ATTRIBUTES].plus(",")
     } else {
         ""
-    }.plus("scm.commit.id=$commitId")
+    }.plus("scm.commit.id=$commitIdLink")
 
     params.env[OTEL_RESOURCE_ATTRIBUTES] = otelResourceAttributes
 
@@ -99,7 +101,10 @@ fun updateOtelResourceAttribute(project: Project, params: JavaParameters) {
 
 fun updateOtelResourceAttribute(configuration: GradleRunConfiguration) {
 
-    val commitId = configuration.project.service<VcsService>().commitIdForCurrentProject ?: return
+//    val commitId = configuration.project.service<VcsService>().commitIdForCurrentProject ?: return
+    val commitIdLink = configuration.project.service<VcsService>().getLinkToRemoteCommitIdForCurrentProject()
+        ?: return
+
 
     val newEnv = configuration.settings.env.toMutableMap()
     val otelResourceAttributes = if (configuration.settings.env.containsKey(OTEL_RESOURCE_ATTRIBUTES)) {
@@ -108,7 +113,7 @@ fun updateOtelResourceAttribute(configuration: GradleRunConfiguration) {
         currentOtelResourceAttributes.plus(",")
     } else {
         ""
-    }.plus("scm.commit.id=$commitId")
+    }.plus("scm.commit.id=$commitIdLink")
 
     newEnv[OTEL_RESOURCE_ATTRIBUTES] = otelResourceAttributes
     configuration.settings.env = newEnv

@@ -49,7 +49,7 @@ class ActivityMonitor(project: Project) : Disposable {
 
         val token = "phc_5sy6Kuv1EYJ9GAdWPeGl7gx31RAw7BR7NHnOuLCUQZK"
         postHog = PostHog.Builder(token).build()
-        registerSessionDetails()
+        registerSessionDetails(project)
 
         ConnectionActivityMonitor.loadInstance(project)
         PluginActivityMonitor.loadInstance(project)
@@ -584,13 +584,15 @@ class ActivityMonitor(project: Project) : Disposable {
     }
 
 
-    private fun registerSessionDetails() {
+    private fun registerSessionDetails(project: Project) {
         val osType = System.getProperty("os.name")
         val ideInfo = ApplicationInfo.getInstance()
         val ideName = ideInfo.versionName
         val ideVersion = ideInfo.fullVersion
         val ideBuildNumber = ideInfo.build.asString()
         val pluginVersion = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
+        //todo: getVcsType returns null. why?
+        //val vcsType = project.service<VcsService>().getVcsType()
 
         postHog?.set(
             userId,
@@ -600,7 +602,8 @@ class ActivityMonitor(project: Project) : Disposable {
                 "ide.version" to ideVersion,
                 "ide.build" to ideBuildNumber,
                 "plugin.version" to pluginVersion,
-                "user.type" to if (isDevUser) "internal" else "external"
+                "user.type" to if (isDevUser) "internal" else "external",
+                //"vcs.type" to vcsType
             )
         )
     }

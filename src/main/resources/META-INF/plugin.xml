@@ -130,7 +130,6 @@
         <postStartupActivity implementation="org.digma.intellij.plugin.ui.toolwindow.ToolWindowBadgeChanger"/>
         <postStartupActivity
                 implementation="org.digma.intellij.plugin.posthog.PerformanceMetricsPosthogEventStartupActivity"/>
-        <postStartupActivity implementation="org.digma.intellij.plugin.ui.runonce.LostDataMessage"/>
 
 
         <!-- Code lens providers are used only for some languages, for example java,python.

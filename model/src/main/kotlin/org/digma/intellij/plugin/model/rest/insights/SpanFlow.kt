@@ -23,7 +23,7 @@ constructor(
     constructor(
         val service: String,
         val span: String,
-        val codeObjectId: String,
+        val codeObjectId: String?, // methodCodeObjectId
         val spanCodeObjectId: String
     )
 

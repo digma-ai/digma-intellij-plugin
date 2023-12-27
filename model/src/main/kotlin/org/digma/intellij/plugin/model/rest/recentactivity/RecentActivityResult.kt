@@ -46,7 +46,7 @@ constructor(
         val serviceName: String,
         val scopeId: String,
         val spanCodeObjectId: String,
-        val methodCodeObjectId: String
+        val methodCodeObjectId: String?
 )
 
 data class SlimAggregatedInsight

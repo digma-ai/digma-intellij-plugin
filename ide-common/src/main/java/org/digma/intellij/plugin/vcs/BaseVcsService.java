@@ -45,50 +45,7 @@ public class BaseVcsService {
     }
 
 
-    @Nullable
-    public String getCommitIdForCurrentProject() {
 
-        var future = Backgroundable.executeOnPooledThread(() -> {
-            try {
-                var vcsRoots = ProjectLevelVcsManager.getInstance(project).getAllVcsRoots();
-                if (vcsRoots.length == 0) {
-                    return null;
-                }
-
-                if (vcsRoots.length > 1) {
-                    ActivityMonitor.getInstance(project).registerCustomEvent("Multiple vcs roots detected", Collections.singletonMap("vcsRootsNum", vcsRoots.length));
-                    return null;
-                }
-
-                var vcsRoot = vcsRoots[0];
-                var vcs = vcsRoot.getVcs();
-
-                var filePath = VcsUtil.getFilePath(vcsRoot.getPath());
-
-                return vcs.getVcsHistoryProvider().createSessionFor(filePath).getCurrentRevisionNumber().asString();
-
-//                var vcs = ProjectLevelVcsManager.getInstance(project).getSingleVCS()
-//                var vcsRevisionNumber = GitHistoryUtils.getCurrentRevision(project, filePath, "HEAD");
-//
-//                if (vcsRevisionNumber != null){
-//                    return vcsRevisionNumber.asString();
-//                }else{
-//                    return null;
-//                }
-
-            } catch (Exception e) {
-                ErrorReporter.getInstance().reportError(project, "VcsService.getCommitIdForCurrentProject", e);
-                return null;
-            }
-        });
-
-        try {
-            return future.get(5, TimeUnit.SECONDS);
-        } catch (Exception e) {
-            return null;
-        }
-
-    }
 
 
     public boolean isFileUnderVcs(@NotNull VirtualFile workspaceFile) {

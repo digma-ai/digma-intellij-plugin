@@ -591,8 +591,6 @@ class ActivityMonitor(project: Project) : Disposable {
         val ideVersion = ideInfo.fullVersion
         val ideBuildNumber = ideInfo.build.asString()
         val pluginVersion = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
-        //todo: getVcsType returns null. why?
-        //val vcsType = project.service<VcsService>().getVcsType()
 
         postHog?.set(
             userId,

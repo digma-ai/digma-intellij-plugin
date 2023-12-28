@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.vcs
 
 import com.intellij.collaboration.util.resolveRelative
+import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vcs.ProjectLevelVcsManager
 import com.intellij.vcsUtil.VcsUtil
@@ -13,6 +14,8 @@ import git4idea.repo.GitRepositoryManager
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.posthog.ActivityMonitor
+import java.net.HttpURLConnection
+import java.net.URL
 import java.util.Collections
 import java.util.concurrent.TimeUnit
 
@@ -20,15 +23,61 @@ import java.util.concurrent.TimeUnit
  * VcsService tries to be abstract and use intellij vcs abstraction.
  * if necessary it may fall back to git, we have git4idea in the classpath and plugin dependency.
  */
+@Service(Service.Level.PROJECT)
 class VcsService(project: Project) : BaseVcsService(project) {
 
 
-    fun getVcsType(): String? {
+    fun getVcsType(): String {
         return ProjectLevelVcsManager.getInstance(project).singleVCS?.name ?: "unknown"
     }
 
 
+    /**
+     * return commit id for current project.
+     * should work the same for all vcs
+     */
+    fun getCommitIdForCurrentProject(): String? {
+
+        val future = Backgroundable.executeOnPooledThread<String> {
+            try {
+                val vcsRoots = ProjectLevelVcsManager.getInstance(project).allVcsRoots
+                if (vcsRoots.isEmpty()) {
+                    return@executeOnPooledThread null
+                }
+
+                if (vcsRoots.size > 1) {
+                    ActivityMonitor.getInstance(project).registerCustomEvent(
+                        "Multiple vcs roots detected",
+                        Collections.singletonMap("vcsRootsNum", vcsRoots.size)
+                    )
+                    return@executeOnPooledThread null
+                }
+
+                val vcsRoot = vcsRoots[0]
+                val vcs = vcsRoot.vcs
+
+                val filePath = VcsUtil.getFilePath(vcsRoot.path)
+
+                return@executeOnPooledThread vcs!!.vcsHistoryProvider!!.createSessionFor(filePath)!!.currentRevisionNumber.asString()
+
+            } catch (e: java.lang.Exception) {
+                ErrorReporter.getInstance()
+                    .reportError(project, "VcsService.getCommitIdForCurrentProject", e)
+                return@executeOnPooledThread null
+            }
+        }
+
+        return try {
+            future[5, TimeUnit.SECONDS]
+        } catch (e: java.lang.Exception) {
+            null
+        }
+    }
+
+
+    //todo: currently build link only if github, else returns null. implement for bitbucket , gitlab etc.
     fun getLinkToRemoteCommitIdForCurrentProject(): String? {
+
         val future = Backgroundable.executeOnPooledThread<String> {
             try {
 
@@ -48,12 +97,9 @@ class VcsService(project: Project) : BaseVcsService(project) {
                 val vcsRoot = vcsRoots[0]
                 val vcs = vcsRoot.vcs
 
-
                 if (vcs !is GitVcs) {
                     return@executeOnPooledThread null
                 }
-
-                vcs as GitVcs
 
                 val filePath = VcsUtil.getFilePath(vcsRoot.path)
 
@@ -64,11 +110,27 @@ class VcsService(project: Project) : BaseVcsService(project) {
                 val repository = GitRepositoryManager.getInstance(project).getRepositoryForRootQuick(vcsRoot.path)
                 if (repository !is GitRepository) return@executeOnPooledThread null
 
-                val url = GitUtil.getDefaultRemote(repository.remotes)?.firstUrl ?: return@executeOnPooledThread null
+                val url = GitUtil.getDefaultRemote(repository.remotes)?.firstUrl
+                    ?: return@executeOnPooledThread null
+
+
+                if (!url.startsWith("git@github.com")) {
+                    return@executeOnPooledThread null
+                }
 
                 val uri = GitHostingUrlUtil.getUriFromRemoteUrl(url)
 
-                return@executeOnPooledThread uri?.resolveRelative("commit")?.resolveRelative(commitHash)?.toString()
+                val commitUri = uri?.resolveRelative("commit")?.resolveRelative(commitHash)?.toString()
+
+                val isUrlExists = commitUri?.let {
+                    isCommitUrlExists(it)
+                } ?: false
+                if (!isUrlExists) {
+                    return@executeOnPooledThread null
+                }
+
+
+                return@executeOnPooledThread commitUri
 
             } catch (e: Exception) {
                 ErrorReporter.getInstance().reportError(project, "VcsService.getCommitIdForCurrentProject", e)
@@ -80,6 +142,24 @@ class VcsService(project: Project) : BaseVcsService(project) {
             future[5, TimeUnit.SECONDS]
         } catch (e: Exception) {
             null
+        }
+    }
+
+
+    private fun isCommitUrlExists(commitUrl: String): Boolean {
+        try {
+            val url = URL(commitUrl)
+            val huc: HttpURLConnection = url.openConnection() as HttpURLConnection
+            huc.setRequestMethod("HEAD");
+            val responseCode: Int = huc.getResponseCode()
+
+            return if (responseCode == 200) {
+                true
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            return false
         }
     }
 

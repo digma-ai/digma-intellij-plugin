@@ -7,7 +7,6 @@ import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vcs.AbstractVcs;
 import com.intellij.openapi.vcs.FilePath;
-import com.intellij.openapi.vcs.ProjectLevelVcsManager;
 import com.intellij.openapi.vcs.VcsException;
 import com.intellij.openapi.vcs.changes.Change;
 import com.intellij.openapi.vcs.changes.ChangeListManager;
@@ -18,70 +17,28 @@ import com.intellij.openapi.vcs.history.VcsRevisionNumber;
 import com.intellij.openapi.vcs.vfs.ContentRevisionVirtualFile;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.vcsUtil.VcsUtil;
-import org.digma.intellij.plugin.common.Backgroundable;
-import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
-import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
-/**
- * VcsService tries to be abstract and use intellij vcs abstraction.
- * if necessary it may fall back to git, we have git4idea in the classpath and plugin dependency.
- */
 
-public class VcsService {
+//todo: not really base, see VcsService kotlin class.
+// i just want to write kotlin code for new features so changed this one to base class.
+// the right thing to do is move all the methods here to VcsService and convert to kotlin
+public class BaseVcsService {
 
-    private static final Logger LOGGER = Logger.getInstance(VcsService.class);
+    protected final Logger LOGGER = Logger.getInstance(BaseVcsService.class);
 
-    private final Project project;
+    protected final Project project;
 
-    public VcsService(Project project) {
+    public BaseVcsService(Project project) {
         this.project = project;
     }
 
 
-    @Nullable
-    public String getCommitIdForCurrentProject() {
-
-        var future = Backgroundable.executeOnPooledThread(() -> {
-            try {
-                var vcsRoots = ProjectLevelVcsManager.getInstance(project).getAllVcsRoots();
-                if (vcsRoots.length == 0) {
-                    return null;
-                }
-
-                if (vcsRoots.length > 1) {
-                    ActivityMonitor.getInstance(project).registerCustomEvent("Multiple vcs roots detected", Collections.singletonMap("vcsRootsNum", vcsRoots.length));
-                    return null;
-                }
-
-                var vcsRoot = vcsRoots[0];
-                var vcs = vcsRoot.getVcs();
-
-                var filePath = VcsUtil.getFilePath(vcsRoot.getPath());
-
-                //NPE will be caught and reported to posthog
-                return vcs.getVcsHistoryProvider().createSessionFor(filePath).getCurrentRevisionNumber().asString();
-
-            } catch (Exception e) {
-                ErrorReporter.getInstance().reportError(project, "VcsService.getCommitIdForCurrentProject", e);
-                return null;
-            }
-        });
-
-        try {
-            return future.get(5, TimeUnit.SECONDS);
-        } catch (Exception e) {
-            return null;
-        }
-
-    }
 
 
 

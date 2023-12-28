@@ -70,8 +70,6 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.service.EditorService"/>
 
-        <projectService serviceImplementation="org.digma.intellij.plugin.vcs.VcsService"/>
-
         <projectService serviceImplementation="org.digma.intellij.plugin.common.DumbAwareNotifier"/>
 
         <projectService serviceImplementation="org.digma.intellij.plugin.psi.LanguageServiceLocator"/>

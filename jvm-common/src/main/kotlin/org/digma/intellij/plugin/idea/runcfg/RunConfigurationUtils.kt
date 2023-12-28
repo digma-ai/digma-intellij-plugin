@@ -84,7 +84,8 @@ fun cleanGradleSettingsOnProcessEnd(configuration: RunConfigurationBase<*>) {
 
 fun updateOtelResourceAttribute(project: Project, params: JavaParameters) {
 
-    val commitId = project.service<VcsService>().commitIdForCurrentProject ?: return
+    val commitId = project.service<VcsService>().getCommitIdForCurrentProject()
+        ?: return
 
     val otelResourceAttributes = if (params.env.containsKey(OTEL_RESOURCE_ATTRIBUTES)) {
         params.env[OTEL_RESOURCE_ATTRIBUTES].plus(",")
@@ -99,7 +100,9 @@ fun updateOtelResourceAttribute(project: Project, params: JavaParameters) {
 
 fun updateOtelResourceAttribute(configuration: GradleRunConfiguration) {
 
-    val commitId = configuration.project.service<VcsService>().commitIdForCurrentProject ?: return
+    val commitId = configuration.project.service<VcsService>().getCommitIdForCurrentProject()
+        ?: return
+
 
     val newEnv = configuration.settings.env.toMutableMap()
     val otelResourceAttributes = if (configuration.settings.env.containsKey(OTEL_RESOURCE_ATTRIBUTES)) {

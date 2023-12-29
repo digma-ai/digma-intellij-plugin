@@ -157,16 +157,16 @@ object BuildProfiles {
         Profiles.p233 to BuildProfile(
 
             profile = Profiles.p233,
-            platformVersion = "2023.3.1",
-            riderVersion = "2023.3.1",
-            pycharmVersion = "2023.3.1",
-            riderResharperVersion = "2023.3.1",
+            platformVersion = "2023.3.2",
+            riderVersion = "2023.3.2",
+            pycharmVersion = "2023.3.2",
+            riderResharperVersion = "2023.3.2",
             riderResharperVersionConstant = "PROFILE_2023_2",
-            pythonPluginVersion = "233.11799.300",
+            pythonPluginVersion = "233.13135.103",
             platformVersionCode = "233",
             pluginSinceBuild = "233",
             pluginUntilBuild = "233.*",
-            versionToRunPluginVerifier = "2023.3.1",
+            versionToRunPluginVerifier = "2023.3.2",
             kotlinTarget = KotlinVersion.KOTLIN_1_8.version,
             javaVersion = JavaVersion.VERSION_17.majorVersion
         ),

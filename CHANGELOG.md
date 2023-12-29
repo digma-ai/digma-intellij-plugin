@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.224] - 2023-12-27
+## [2.0.225] - 2023-12-29
+- Commit id git link by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1530
+- catch throwable in findLanguageServiceByName Closes #1531 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1532
+
+## 2.0.224 - 2023-12-27
 - fix-possible-npe by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1527
 
 ## 2.0.223 - 2023-12-27

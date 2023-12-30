@@ -17,6 +17,12 @@ import com.intellij.psi.PsiMethod
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 import org.digma.intellij.plugin.idea.psi.AbstractJvmLanguageService
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscovery
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.GrpcFramework
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJakartaFramework
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJavaxFramework
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.MicronautFramework
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.SpringBootFramework
 import org.digma.intellij.plugin.instrumentation.CanInstrumentMethodResult
 import org.digma.intellij.plugin.instrumentation.JvmCanInstrumentMethodResult
 import org.digma.intellij.plugin.log.Log
@@ -94,5 +100,21 @@ class JavaLanguageService(project: Project) : AbstractJvmLanguageService(project
         } else {
             return false
         }
+    }
+
+    override fun getEndpointFrameworks(project: Project): Collection<EndpointDiscovery> {
+
+        val micronautFramework = MicronautFramework(project)
+        val jaxrsJavaxFramework = JaxrsJavaxFramework(project)
+        val jaxrsJakartaFramework = JaxrsJakartaFramework(project)
+        val grpcFramework = GrpcFramework(project)
+        val springBootFramework = SpringBootFramework(project)
+        return listOf(
+            micronautFramework,
+            jaxrsJavaxFramework,
+            jaxrsJakartaFramework,
+            grpcFramework,
+            springBootFramework
+        )
     }
 }

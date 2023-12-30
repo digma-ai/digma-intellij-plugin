@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.idea.psi
 import com.intellij.psi.PsiClass
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.source.PsiClassReferenceType
-import org.jetbrains.kotlin.asJava.namedUnwrappedElement
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
@@ -42,11 +41,7 @@ fun createMethodCodeObjectId(uMethod: UMethod): String {
 
     //considering inner class, for example qualified name can be a.b.c.MyClass.MyInnerClass, the code object id should be
     // a $ sign between the inner classes
-    val className = if (packageName.isEmpty()) {
-        uClass.qualifiedName?.replace('.', '$') ?: uClass.namedUnwrappedElement?.name
-    } else {
-        uClass.qualifiedName?.substring(packageName.length + 1)?.replace('.', '$') ?: uClass.namedUnwrappedElement?.name
-    }
+    val className = getClassSimpleName(uClass).replace('.', '$')
 
     return packageName + "." + className + "\$_$" + uMethod.name
 }
@@ -59,7 +54,7 @@ fun createSpanNameForWithSpanAnnotation(uMethod: UMethod, withSpanAnnotation: UA
     return if (!value.isNullOrBlank()) {
         value
     } else {
-        containingClass.namedUnwrappedElement?.name + "." + uMethod.name
+        getClassSimpleName(containingClass) + "." + uMethod.name
     }
 }
 

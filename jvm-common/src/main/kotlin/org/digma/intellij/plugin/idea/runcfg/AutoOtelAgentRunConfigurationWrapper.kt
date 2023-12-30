@@ -16,12 +16,12 @@ import org.digma.intellij.plugin.common.FileUtils
 import org.digma.intellij.plugin.common.StringUtils.Companion.evalBoolean
 import org.digma.intellij.plugin.common.buildEnvForLocalTests
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
+import org.digma.intellij.plugin.idea.psi.kotlin.isKotlinRunConfiguration
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.settings.SettingsState
 import org.digma.intellij.plugin.settings.SpringBootObservabilityMode
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.idea.maven.execution.MavenRunConfiguration
-import org.jetbrains.kotlin.idea.run.KotlinRunConfiguration
 import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
 
 class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
@@ -273,7 +273,7 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
     }
 
     private fun isKotlinConfiguration(configuration: RunConfiguration): Boolean {
-        return configuration is KotlinRunConfiguration
+        return isKotlinRunConfiguration(configuration)
     }
 
     private fun isJavaConfiguration(configuration: RunConfiguration): Boolean {

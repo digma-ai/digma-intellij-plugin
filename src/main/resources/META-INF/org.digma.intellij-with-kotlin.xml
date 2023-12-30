@@ -8,6 +8,8 @@
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.kotlin.KotlinCodeObjectDiscovery"/>
         <projectService serviceInterface="org.digma.intellij.plugin.idea.psi.kotlin.KotlinLanguageServiceSupplementary"
                         serviceImplementation="org.digma.intellij.plugin.idea.psi.kotlin.KotlinLanguageServiceSupplementaryImpl"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.kotlin.KotlinCodeLensService"/>
+
     </extensions>
 
 </idea-plugin>

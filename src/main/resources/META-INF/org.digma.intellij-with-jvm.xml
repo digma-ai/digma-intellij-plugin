@@ -62,7 +62,6 @@
 
 
         <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService"/>
-        <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.kotlin.KotlinCodeLensService"/>
 
 
     </extensions>

@@ -106,8 +106,8 @@ class OtelRunConfigurationExtension : RunConfigurationExtension() {
         ) {
             handler.addProcessListener(object : ProcessListener {
 
-                override fun processWillTerminate(event: ProcessEvent, willBeDestroyed: Boolean) {
-                    cleanGradleSettingsOnProcessEnd(configuration)
+                override fun startNotified(event: ProcessEvent) {
+                    cleanGradleSettingsAfterProcessStart(configuration as GradleRunConfiguration)
                 }
             })
         }

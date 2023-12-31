@@ -12,7 +12,6 @@ import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.search.GlobalSearchScope;
-import com.intellij.psi.search.SearchScope;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.Retries;
@@ -31,14 +30,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 //@SuppressWarnings("UnstableApiUsage")
 public class JavaEndpointNavigationProvider implements Disposable {
 
     private static final Logger LOGGER = Logger.getInstance(JavaEndpointNavigationProvider.class);
 
-    private final Map<String, Set<EndpointInfo>> mapEndpointToMethods = new HashMap<>();
+    private final Map<String, Set<EndpointInfo>> endpointsMap = new HashMap<>();
 
     //used to restrict one update thread at a time
     private final ReentrantLock buildEndpointLock = new ReentrantLock();
@@ -60,7 +58,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
 
     @NotNull
     public Set<EndpointInfo> getEndpointInfos(String endpointId) {
-        var endpointInfos = mapEndpointToMethods.get(endpointId);
+        var endpointInfos = endpointsMap.get(endpointId);
         if (endpointInfos == null) {
             return Collections.emptySet();
         }
@@ -80,7 +78,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
             buildEndpointLock.lock();
             Retries.simpleRetry(() -> {
                 Log.log(LOGGER::info, "Building buildEndpointAnnotations");
-                buildEndpointAnnotations(() -> GlobalSearchScope.projectScope(project));
+                buildEndpointNavigationForProject();
             }, Throwable.class, 100, 5);
         } catch (Exception e) {
             Log.warnWithException(LOGGER, e, "Exception in buildSpanNavigation buildWithSpanAnnotation");
@@ -103,14 +101,14 @@ public class JavaEndpointNavigationProvider implements Disposable {
     }
 
 
-    private void buildEndpointAnnotations(@NotNull Supplier<SearchScope> searchScopeSupplier) {
+    private void buildEndpointNavigationForProject() {
 
-        var endpointDiscoveries = EndpointDiscoveryService.getInstance(project).getEndpointDiscoveryList();
+        var endpointDiscoveries = EndpointDiscoveryService.getInstance(project).getAllEndpointDiscovery();
 
         endpointDiscoveries.forEach(endpointDiscovery -> {
             try {
 
-                var endpointInfos = endpointDiscovery.lookForEndpoints(searchScopeSupplier);
+                var endpointInfos = endpointDiscovery.lookForEndpoints(() -> GlobalSearchScope.projectScope(project));
                 if (endpointInfos != null) {
                     endpointInfos.forEach(this::addToMethodsMap);
                 }
@@ -123,12 +121,12 @@ public class JavaEndpointNavigationProvider implements Disposable {
     }
 
 
-    private void buildEndpointAnnotations(@NotNull VirtualFile virtualFile) {
+    private void buildEndpointForFile(@NotNull VirtualFile virtualFile) {
 
         final PsiFile psiFile = ReadAction.compute(() -> PsiManager.getInstance(project).findFile(virtualFile));
         if (psiFile == null) return; // very unlikely
 
-        var endpointDiscoveries = EndpointDiscoveryService.getInstance(project).getEndpointDiscoveryList();
+        var endpointDiscoveries = EndpointDiscoveryService.getInstance(project).getEndpointDiscoveryForLanguage(psiFile);
 
         endpointDiscoveries.forEach(endpointDiscovery -> {
 
@@ -147,7 +145,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
 
 
     private void addToMethodsMap(@NotNull EndpointInfo endpointInfo) {
-        final Set<EndpointInfo> methods = mapEndpointToMethods.computeIfAbsent(endpointInfo.getId(), it -> new HashSet<>());
+        final Set<EndpointInfo> methods = endpointsMap.computeIfAbsent(endpointInfo.getId(), it -> new HashSet<>());
         methods.add(endpointInfo);
     }
 
@@ -195,7 +193,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
                     //if file moved then removeDocumentEndpoints will not remove anything but building endpoint locations will
                     // override the entries anyway
                     removeDocumentEndpoint(virtualFile);
-                    buildEndpointAnnotations(virtualFile);
+                    buildEndpointForFile(virtualFile);
                 }
             } catch (Exception e) {
                 Log.warnWithException(LOGGER, e, "Exception in fileChanged");
@@ -228,7 +226,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
 
     private void removeDocumentEndpoint(@NotNull VirtualFile virtualFile) {
         var filePredicate = new FilePredicate(virtualFile.getUrl());
-        for (Set<EndpointInfo> methods : mapEndpointToMethods.values()) {
+        for (Set<EndpointInfo> methods : endpointsMap.values()) {
             methods.removeIf(filePredicate);
         }
     }

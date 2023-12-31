@@ -33,7 +33,7 @@ import org.jetbrains.uast.toUElementOfType
 @Suppress("LightServiceMigrationCode")
 class JavaLanguageService(project: Project) : AbstractJvmLanguageService(project, project.service<JavaCodeObjectDiscovery>()) {
 
-    override fun isSupportedFile(project: Project, psiFile: PsiFile): Boolean {
+    override fun isSupportedFile(psiFile: PsiFile): Boolean {
         return psiFile is PsiJavaFile &&
                 JavaLanguage.INSTANCE == psiFile.viewProvider.baseLanguage &&
                 !psiFile.name.contains("package-info")
@@ -104,6 +104,9 @@ class JavaLanguageService(project: Project) : AbstractJvmLanguageService(project
 
     override fun getEndpointFrameworks(project: Project): Collection<EndpointDiscovery> {
 
+        //don't need frameworks that are definitely only used in kotlin like ktor.
+        //if someone writes ktor application in java then ktor endpoints will not work but that is probably
+        // a very rare case and maybe even not possible.
         val micronautFramework = MicronautFramework(project)
         val jaxrsJavaxFramework = JaxrsJavaxFramework(project)
         val jaxrsJakartaFramework = JaxrsJakartaFramework(project)

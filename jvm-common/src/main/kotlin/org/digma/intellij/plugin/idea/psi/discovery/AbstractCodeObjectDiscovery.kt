@@ -47,15 +47,13 @@ abstract class AbstractCodeObjectDiscovery(private val spanDiscovery: AbstractSp
 
             val documentInfo = DocumentInfo(fileUri, methodInfoMap)
 
-
-            EndpointDiscoveryService.getInstance(project)
-                .endpointDiscoveryList.forEach(Consumer { it: EndpointDiscovery ->
-                    it.endpointDiscovery(
-                        psiFile,
-                        documentInfo
-                    )
-                })
-
+            val endpointDiscoveryList = EndpointDiscoveryService.getInstance(project).getEndpointDiscoveryForLanguage(psiFile)
+            endpointDiscoveryList.forEach(Consumer { it: EndpointDiscovery ->
+                it.endpointDiscovery(
+                    psiFile,
+                    documentInfo
+                )
+            })
 
             return documentInfo
         } catch (e: Throwable) {

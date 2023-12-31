@@ -105,11 +105,11 @@ public class PythonLanguageService implements LanguageService {
     @Override
     public boolean isSupportedFile(@NotNull Project project, @NotNull VirtualFile newFile) {
         PsiFile psiFile = com.intellij.psi.PsiManager.getInstance(project).findFile(newFile);
-        return psiFile != null && PythonLanguage.INSTANCE.equals(psiFile.getLanguage());
+        return psiFile != null && isSupportedFile(psiFile);
     }
 
     @Override
-    public boolean isSupportedFile(@NotNull Project project, @NotNull PsiFile psiFile) {
+    public boolean isSupportedFile(@NotNull PsiFile psiFile) {
         return PythonLanguage.INSTANCE.equals(psiFile.getLanguage());
     }
 
@@ -117,7 +117,7 @@ public class PythonLanguageService implements LanguageService {
     @NotNull
     public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, Editor selectedEditor, int caretOffset) {
         return Retries.retryWithResult(() -> ReadAction.compute(() -> {
-            if (!isSupportedFile(project, psiFile)) {
+            if (!isSupportedFile(psiFile)) {
                 return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset, null, false);
             }
             PsiElement underCaret = psiFile.findElementAt(caretOffset);
@@ -354,7 +354,7 @@ public class PythonLanguageService implements LanguageService {
                 PythonLanguageUtils.isProjectFile(project, psiFile) &&
                 !projectFileIndex.isInLibrary(psiFile.getVirtualFile()) &&
                 !projectFileIndex.isExcluded(psiFile.getVirtualFile()) &&
-                isSupportedFile(project, psiFile));
+                isSupportedFile(psiFile));
     }
 
     @Override

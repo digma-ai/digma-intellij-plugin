@@ -5,8 +5,23 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.source.PsiExtensibleClass
 import org.jetbrains.uast.UClass
+import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UMethod
+import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.toUElementOfType
+
+
+fun getClassSimpleName(uClass: UClass): String {
+
+    val packageName = uClass.getParentOfType<UFile>()?.packageName ?: ""
+    val packageNameLength = if (packageName.isBlank()) {
+        0
+    } else {
+        packageName.length + 1
+    }
+
+    return uClass.qualifiedName?.substring(packageNameLength) ?: uClass.name ?: ""
+}
 
 
 fun findMethodInClass(project: Project, cls: UClass, methodId: String): UMethod? {

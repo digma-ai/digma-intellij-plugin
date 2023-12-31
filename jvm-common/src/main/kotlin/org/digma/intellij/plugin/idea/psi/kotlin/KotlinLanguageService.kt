@@ -12,6 +12,8 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 import org.digma.intellij.plugin.idea.psi.AbstractJvmLanguageService
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscovery
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.KtorFramework
 import org.digma.intellij.plugin.instrumentation.CanInstrumentMethodResult
 import org.digma.intellij.plugin.instrumentation.JvmCanInstrumentMethodResult
 import org.digma.intellij.plugin.log.Log
@@ -130,6 +132,11 @@ class KotlinLanguageService(project: Project) : AbstractJvmLanguageService(proje
             return false
         }
 
+    }
+
+    override fun getEndpointFrameworks(project: Project): Collection<EndpointDiscovery> {
+        val ktorFramework = KtorFramework(project)
+        return listOf(ktorFramework)
     }
 
 }

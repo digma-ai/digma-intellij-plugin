@@ -56,7 +56,6 @@ import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.PsiFileNotFountException
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.ui.CaretContextService
-import org.jetbrains.kotlin.asJava.namedUnwrappedElement
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UMethod
@@ -69,7 +68,7 @@ import java.util.function.Consumer
 
 @Suppress("MemberVisibilityCanBePrivate")
 abstract class AbstractJvmLanguageService(protected val project: Project, protected val codeObjectDiscovery: AbstractCodeObjectDiscovery) :
-    LanguageService {
+    LanguageService, JvmLanguageService {
 
     protected val logger: Logger = Logger.getInstance(this::class.java)
 
@@ -368,7 +367,9 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
         val underCaret: PsiElement =
             psiFile.findElementAt(caretOffset) ?: return MethodUnderCaret("", "", "", packageName, fileUri, caretOffset)
         val uMethod = findParentMethod(underCaret)
-        val className: String = uMethod?.getParentOfType<UClass>()?.namedUnwrappedElement?.name ?: ""
+        val className: String = uMethod?.getParentOfType<UClass>()?.let {
+            getClassSimpleName(it)
+        } ?: ""
 
         if (uMethod != null) {
 

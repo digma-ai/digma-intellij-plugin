@@ -119,7 +119,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
     override fun buildDocumentInfo(psiFile: PsiFile): DocumentInfo {
         Log.log(logger::debug, "got buildDocumentInfo request for {}", psiFile)
-        if (isSupportedFile(project, psiFile)) {
+        if (isSupportedFile(psiFile)) {
             return ProgressManager.getInstance().runProcess<DocumentInfo>({
                 Retries.retryWithResult(
                     {
@@ -144,7 +144,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
     override fun isSupportedFile(project: Project, newFile: VirtualFile): Boolean {
         val psiFile = PsiManager.getInstance(project).findFile(newFile)
-        return psiFile != null && isSupportedFile(project, psiFile)
+        return psiFile != null && isSupportedFile(psiFile)
     }
 
 
@@ -182,7 +182,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                     projectFileIndex.isInSourceContent(psiFile.virtualFile) &&
                     !projectFileIndex.isInLibrary(psiFile.virtualFile) &&
                     !projectFileIndex.isExcluded(psiFile.virtualFile) &&
-                    isSupportedFile(project, psiFile) &&
+                    isSupportedFile(psiFile) &&
                     !fileNamesToExclude.contains(psiFile.virtualFile.name)
 
             return@allowSlowOperation isRelevant
@@ -351,7 +351,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                 allowSlowOperation<MethodUnderCaret> {
 
                     val fileUri = PsiUtils.psiFileToUri(psiFile)
-                    if (!isSupportedFile(project, psiFile)) {
+                    if (!isSupportedFile(psiFile)) {
                         return@allowSlowOperation MethodUnderCaret("", "", "", "", fileUri, caretOffset, null, false)
                     }
                     return@allowSlowOperation detectMethodUnderCaret(psiFile, fileUri, caretOffset)
@@ -472,7 +472,7 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                 progressIndicator.checkCanceled()
 
                 val psiFile = uMethod.getContainingUFile()
-                if (psiFile == null || !isSupportedFile(project, psiFile.sourcePsi)) {
+                if (psiFile == null || !isSupportedFile(psiFile.sourcePsi)) {
                     Log.log(logger::warn, "Method's file is not supported file (methodId: {})", methodId)
                     result = CanInstrumentMethodResult.failure()
                     return

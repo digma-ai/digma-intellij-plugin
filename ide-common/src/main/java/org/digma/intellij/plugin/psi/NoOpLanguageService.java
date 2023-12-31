@@ -47,7 +47,7 @@ public class NoOpLanguageService implements LanguageService {
     }
 
     @Override
-    public boolean isSupportedFile(Project project, PsiFile psiFile) {
+    public boolean isSupportedFile(PsiFile psiFile) {
         return false;
     }
 

@@ -38,7 +38,7 @@ public class RiderDocumentInfoConsumer implements DocumentInfoChanged {
     @Override
     public void documentInfoChanged(@NotNull PsiFile psiFile) {
         try {
-            if (cSharpLanguageService.isSupportedFile(project, psiFile)) {
+            if (cSharpLanguageService.isSupportedFile(psiFile)) {
                 Log.log(LOGGER::debug, "Got documentInfoChanged for {}", psiFile.getVirtualFile());
                 Set<CodeLens> codeLens = codeLensProvider.provideCodeLens(psiFile);
                 Log.log(LOGGER::debug, "Got codeLens for {}: {}", psiFile.getVirtualFile(), codeLens);

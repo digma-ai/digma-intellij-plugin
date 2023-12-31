@@ -13,7 +13,12 @@ import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
 import org.digma.intellij.plugin.idea.psi.AbstractJvmLanguageService
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscovery
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.GrpcFramework
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJakartaFramework
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.JaxrsJavaxFramework
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.KtorFramework
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.MicronautFramework
+import org.digma.intellij.plugin.idea.psi.discovery.endpoint.SpringBootFramework
 import org.digma.intellij.plugin.instrumentation.CanInstrumentMethodResult
 import org.digma.intellij.plugin.instrumentation.JvmCanInstrumentMethodResult
 import org.digma.intellij.plugin.log.Log
@@ -35,7 +40,7 @@ import org.jetbrains.uast.toUElementOfType
 class KotlinLanguageService(project: Project) : AbstractJvmLanguageService(project, project.service<KotlinCodeObjectDiscovery>()) {
 
 
-    override fun isSupportedFile(project: Project, psiFile: PsiFile): Boolean {
+    override fun isSupportedFile(psiFile: PsiFile): Boolean {
         return psiFile is KtFile &&
                 KotlinLanguage.INSTANCE == psiFile.viewProvider.baseLanguage &&
                 !psiFile.name.contains("package-info")
@@ -135,8 +140,20 @@ class KotlinLanguageService(project: Project) : AbstractJvmLanguageService(proje
     }
 
     override fun getEndpointFrameworks(project: Project): Collection<EndpointDiscovery> {
+        val micronautFramework = MicronautFramework(project)
+        val jaxrsJavaxFramework = JaxrsJavaxFramework(project)
+        val jaxrsJakartaFramework = JaxrsJakartaFramework(project)
+        val grpcFramework = GrpcFramework(project)
+        val springBootFramework = SpringBootFramework(project)
         val ktorFramework = KtorFramework(project)
-        return listOf(ktorFramework)
+        return listOf(
+            micronautFramework,
+            jaxrsJavaxFramework,
+            jaxrsJakartaFramework,
+            grpcFramework,
+            springBootFramework,
+            ktorFramework
+        )
     }
 
 }

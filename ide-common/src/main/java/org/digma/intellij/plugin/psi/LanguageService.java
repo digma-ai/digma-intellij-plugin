@@ -178,6 +178,7 @@ public interface LanguageService extends Disposable {
     }
 
 
+    @Nullable
     static LanguageService findLanguageServiceByName(Project project, String languageServiceClassName) {
         try {
             return (LanguageService) project.getService(Class.forName(languageServiceClassName));
@@ -231,7 +232,7 @@ public interface LanguageService extends Disposable {
     @SuppressWarnings("unused")
     boolean isSupportedFile(Project project, VirtualFile newFile);
 
-    boolean isSupportedFile(Project project, PsiFile psiFile);
+    boolean isSupportedFile(PsiFile psiFile);
 
     //some language services need the editor, for example CSharpLanguageService needs to take
     // getProjectModelId from the selected editor which is the preferred way to find a IPsiSourceFile in resharper. it may be null.

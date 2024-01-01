@@ -1,6 +1,13 @@
 # Changelog
 
-## [2.0.225] - 2023-12-29
+## [2.0.226] - 2024-01-01
+- update-build-profiles-2023.2 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1534
+- support disabled kotlin plugin by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1535
+- build endpoint considering file language Closes #1540 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1541
+- update environment for currently running configuration Closes #1524 Closes #1542 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1544
+- unhandled exceptions Closes #1431 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1548
+
+## 2.0.225 - 2023-12-29
 - Commit id git link by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1530
 - catch throwable in findLanguageServiceByName Closes #1531 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1532
 

@@ -11,6 +11,7 @@ import org.cef.browser.CefFrame;
 import org.cef.callback.CefQueryCallback;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
 import org.digma.intellij.plugin.common.Backgroundable;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.jaegerui.model.incoming.GoToSpanMessage;
 import org.digma.intellij.plugin.jaegerui.model.incoming.SpansMessage;
 import org.digma.intellij.plugin.jaegerui.model.outgoing.SpanData;
@@ -93,8 +94,9 @@ public class JaegerUIMessageRouterHandler extends CefMessageRouterHandlerAdapter
 
                 stopWatchStop(stopWatch, time -> Log.log(LOGGER::trace, "action {} took {}",action, time));
 
-            } catch (JsonProcessingException e) {
+            } catch (Throwable e) {
                 Log.debugWithException(LOGGER,e,"Exception in onQuery "+request);
+                ErrorReporter.getInstance().reportError("JaegerUIMessageRouterHandler.onQuery", e);
             }
         });
 

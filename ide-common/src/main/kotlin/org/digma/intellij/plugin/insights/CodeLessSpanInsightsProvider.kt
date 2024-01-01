@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.document.CodeObjectsUtil
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.errors.ErrorsListContainer
 import org.digma.intellij.plugin.insights.view.BuildersHolder
 import org.digma.intellij.plugin.insights.view.InsightsViewBuilder
@@ -46,7 +47,8 @@ class CodeLessSpanInsightsProvider(private val codeLessSpan: CodeLessSpan, priva
             val insightsContainer = getInsightsListContainer(filterUnmapped(insightsResponse.insights))
             return CodelessSpanInsightsContainer(insightsContainer, insightsResponse)
 
-        } catch (e: AnalyticsServiceException) {
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("CodeLessSpanInsightsProvider.getInsights", e)
             Log.debugWithException(logger, e, "Cannot load insights for {} Because: {}", getObject(), e.message)
             return null
         }
@@ -87,7 +89,8 @@ class CodeLessSpanInsightsProvider(private val codeLessSpan: CodeLessSpan, priva
             val errorsListContainer = getErrorsListContainer(codeObjectErrors)
 
             return CodelessSpanErrorsContainer(errorsListContainer, insightsResponse)
-        } catch (e: AnalyticsServiceException) {
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("CodeLessSpanInsightsProvider.getErrors", e)
             Log.debugWithException(logger, e, "Cannot load errors for {} Because: {}", getObject(), e.message)
             return null
         }

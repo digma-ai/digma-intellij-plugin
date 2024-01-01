@@ -186,44 +186,47 @@ class GoToCodeObjectInsightsAction(
     AnAction("Show Insights") {
     override fun actionPerformed(e: AnActionEvent) {
 
-        Log.log(EventsNotificationsService.logger::info, "GoToCodeObjectInsightsAction action clicked for {}",codeObjectId)
+        try {
+            Log.log(EventsNotificationsService.logger::info, "GoToCodeObjectInsightsAction action clicked for {}", codeObjectId)
 
-        ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.clicked",mapOf())
+            ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.clicked", mapOf())
 
-        val canNavigate = project.service<CodeNavigator>().canNavigateToSpanOrMethod(codeObjectId, methodId)
+            val canNavigate = project.service<CodeNavigator>().canNavigateToSpanOrMethod(codeObjectId, methodId)
 
-        val environmentsSupplier: EnvironmentsSupplier = project.service<AnalyticsService>().environment
+            val environmentsSupplier: EnvironmentsSupplier = project.service<AnalyticsService>().environment
 
-        val runnable = Runnable {
-            MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing()
-            project.service<HomeSwitcherService>().switchToInsights()
-            project.service<InsightsAndErrorsTabsHelper>().switchToInsightsTab()
-            if (canNavigate) {
-                project.service<InsightsViewOrchestrator>()
-                    .showInsightsForSpanOrMethodAndNavigateToCode(codeObjectId, methodId)
-            } else {
-                project.service<InsightsViewOrchestrator>()
-                    .showInsightsForCodelessSpan(codeObjectId)
+            val runnable = Runnable {
+                MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing()
+                project.service<HomeSwitcherService>().switchToInsights()
+                project.service<InsightsAndErrorsTabsHelper>().switchToInsightsTab()
+                if (canNavigate) {
+                    project.service<InsightsViewOrchestrator>()
+                        .showInsightsForSpanOrMethodAndNavigateToCode(codeObjectId, methodId)
+                } else {
+                    project.service<InsightsViewOrchestrator>()
+                        .showInsightsForCodelessSpan(codeObjectId)
+                }
             }
-        }
 
 
-        if (environmentsSupplier.getCurrent() != environment) {
+            if (environmentsSupplier.getCurrent() != environment) {
 
-            environmentsSupplier.setCurrent(environment, false) {
+                environmentsSupplier.setCurrent(environment, false) {
+                    EDT.ensureEDT {
+                        runnable.run()
+                    }
+                }
+
+            } else {
                 EDT.ensureEDT {
                     runnable.run()
                 }
             }
 
-        } else {
-            EDT.ensureEDT {
-                runnable.run()
-            }
+            notification.expire()
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("GoToCodeObjectInsightsAction.actionPerformed", e)
         }
-
-        notification.expire()
-
     }
 
 }

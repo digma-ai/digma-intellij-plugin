@@ -13,6 +13,7 @@ import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.editor.CurrentContextUpdater
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
 import org.digma.intellij.plugin.model.discovery.EndpointFramework
@@ -163,9 +164,11 @@ class InsightsViewOrchestrator(val project: Project) {
                 val methodClassAndName: Pair<String, String> = CodeObjectsUtil.getMethodClassAndName(methodCodeObjectId)
                 MethodInfo(methodCodeObjectId, methodClassAndName.first, methodClassAndName.second, "", "", 0)
             }
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("InsightsViewOrchestrator.tryFindMethodInfo", e)
             val methodClassAndName: Pair<String, String> = CodeObjectsUtil.getMethodClassAndName(methodCodeObjectId)
             MethodInfo(methodCodeObjectId, methodClassAndName.first, methodClassAndName.second, "", "", 0)
+
         }
     }
 

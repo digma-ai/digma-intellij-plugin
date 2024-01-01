@@ -16,6 +16,7 @@ import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.AbstractJvmLanguageService
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.GrpcFramework
@@ -63,41 +64,47 @@ class JavaLanguageService(project: Project) : AbstractJvmLanguageService(project
     }
 
     override fun instrumentMethod(result: CanInstrumentMethodResult): Boolean {
-        if (result !is JvmCanInstrumentMethodResult) {
-            Log.log(logger::warn, "instrumentMethod was called with failing result from canInstrumentMethod")
-            return false
-        }
 
-
-        if (result.containingFile.sourcePsi is PsiJavaFile && result.uMethod.sourcePsi is PsiMethod) {
-
-
-            val psiJavaFile: PsiJavaFile = result.containingFile.sourcePsi as PsiJavaFile
-            val psiMethod: PsiMethod = result.uMethod.sourcePsi as PsiMethod
-            val methodId: String = result.methodId
-            val withSpanClass: PsiClass = result.withSpanClass
-
-            val importList = psiJavaFile.importList
-            if (importList == null) {
-                Log.log(logger::warn, "Failed to get ImportList from PsiFile (methodId: {})", methodId)
+        try {
+            if (result !is JvmCanInstrumentMethodResult) {
+                Log.log(logger::warn, "instrumentMethod was called with failing result from canInstrumentMethod")
                 return false
             }
 
-            WriteCommandAction.runWriteCommandAction(project) {
-                val psiFactory = PsiElementFactory.getInstance(project)
-                val shortClassNameAnnotation = withSpanClass.name
-                if (shortClassNameAnnotation != null) {
-                    psiMethod.modifierList.addAnnotation(shortClassNameAnnotation)
+
+            if (result.containingFile.sourcePsi is PsiJavaFile && result.uMethod.sourcePsi is PsiMethod) {
+
+
+                val psiJavaFile: PsiJavaFile = result.containingFile.sourcePsi as PsiJavaFile
+                val psiMethod: PsiMethod = result.uMethod.sourcePsi as PsiMethod
+                val methodId: String = result.methodId
+                val withSpanClass: PsiClass = result.withSpanClass
+
+                val importList = psiJavaFile.importList
+                if (importList == null) {
+                    Log.log(logger::warn, "Failed to get ImportList from PsiFile (methodId: {})", methodId)
+                    return false
                 }
 
-                val existing = importList.findSingleClassImportStatement(withSpanClass.qualifiedName)
-                if (existing == null) {
-                    val importStatement = psiFactory.createImportStatement(withSpanClass)
-                    importList.add(importStatement)
+                WriteCommandAction.runWriteCommandAction(project) {
+                    val psiFactory = PsiElementFactory.getInstance(project)
+                    val shortClassNameAnnotation = withSpanClass.name
+                    if (shortClassNameAnnotation != null) {
+                        psiMethod.modifierList.addAnnotation(shortClassNameAnnotation)
+                    }
+
+                    val existing = importList.findSingleClassImportStatement(withSpanClass.qualifiedName)
+                    if (existing == null) {
+                        val importStatement = psiFactory.createImportStatement(withSpanClass)
+                        importList.add(importStatement)
+                    }
                 }
+                return true
+            } else {
+                return false
             }
-            return true
-        } else {
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("JavaLanguageService.instrumentMethod", e)
             return false
         }
     }

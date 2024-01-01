@@ -2,7 +2,6 @@ package org.digma.intellij.plugin.idea.runcfg
 
 import com.intellij.execution.configurations.JavaParameters
 import com.intellij.execution.configurations.RunConfiguration
-import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.openapi.components.service
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
@@ -60,8 +59,7 @@ fun mergeGradleJavaToolOptions(configuration: GradleRunConfiguration, myJavaTool
 }
 
 
-fun cleanGradleSettingsOnProcessEnd(configuration: RunConfigurationBase<*>) {
-    configuration as GradleRunConfiguration
+fun cleanGradleSettingsAfterProcessStart(configuration: GradleRunConfiguration) {
     if (configuration.settings.env.containsKey(ORG_GRADLE_JAVA_TOOL_OPTIONS)) {
         val newEnv = mutableMapOf<String, String>()
         val orgJavaToolOptions = configuration.settings.env[ORG_GRADLE_JAVA_TOOL_OPTIONS]
@@ -135,5 +133,9 @@ fun cleanOtelResourceAttributes(configuration: GradleRunConfiguration) {
         newEnv.remove(OTEL_RESOURCE_ATTRIBUTES)
         configuration.settings.env = newEnv
     }
-
 }
+
+
+
+
+

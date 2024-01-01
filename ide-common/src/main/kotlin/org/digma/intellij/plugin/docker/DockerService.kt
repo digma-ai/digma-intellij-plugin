@@ -142,7 +142,8 @@ class DockerService {
                     notifyResult("Failed to download compose file", onCompleted)
                 }
 
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
+                ErrorReporter.getInstance().reportError("DockerService.installEngine", e)
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventError("installEngine", "Failed in installEngine $e")
                 Log.warnWithException(logger, e, "Failed install docker engine {}", e)
                 notifyResult("Failed to install docker engine: $e", onCompleted)
@@ -177,6 +178,7 @@ class DockerService {
                     Log.log(logger::warn, "Failed to download compose file")
                 }
             } catch (e: Exception) {
+                ErrorReporter.getInstance().reportError("DockerService.upgradeEngine", e)
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventError("upgradeEngine", "Failed in upgradeEngine $e")
                 Log.warnWithException(logger, e, "Failed install docker engine {}", e)
             } finally {
@@ -214,7 +216,8 @@ class DockerService {
                     Log.log(logger::warn, "Failed to download compose file")
                     notifyResult("Failed to download compose file", resultTask)
                 }
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
+                ErrorReporter.getInstance().reportError("DockerService.stopEngine", e)
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventError("stopEngine", "Failed in stopEngine $e")
                 Log.warnWithException(logger, e, "Failed to stop docker engine {}", e)
                 notifyResult("Failed to stop docker engine: $e", resultTask)
@@ -267,7 +270,8 @@ class DockerService {
                     Log.log(logger::warn, "Failed to download compose file")
                     notifyResult("Failed to download compose file", resultTask)
                 }
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
+                ErrorReporter.getInstance().reportError("DockerService.startEngine", e)
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventError("startEngine", "Failed in startEngine $e")
                 Log.warnWithException(logger, e, "Failed to start docker engine {}", e)
                 notifyResult("Failed to start docker engine: $e", resultTask)
@@ -318,7 +322,8 @@ class DockerService {
                     Log.log(logger::warn, "Failed to download compose file")
                     notifyResult("Failed to download compose file", resultTask)
                 }
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
+                ErrorReporter.getInstance().reportError("DockerService.removeEngine", e)
                 ActivityMonitor.getInstance(project).registerDigmaEngineEventError("removeEngine", "failed in removeEngine $e")
                 Log.warnWithException(logger, e, "Failed to remove docker engine {}", e)
                 notifyResult("Failed to remove docker engine: $e", resultTask)

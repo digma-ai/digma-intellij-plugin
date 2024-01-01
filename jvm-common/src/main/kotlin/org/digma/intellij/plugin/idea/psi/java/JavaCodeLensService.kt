@@ -9,6 +9,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import org.digma.intellij.plugin.codelens.AbstractCodeLensService
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.createMethodCodeObjectId
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.toUElementOfType
@@ -24,26 +25,32 @@ class JavaCodeLensService(project: Project): AbstractCodeLensService(project) {
             return emptyMap()
         }
 
-        return ReadAction.compute<Map<String, Pair<TextRange, PsiElement>>, Exception> {
-            val methods = mutableMapOf<String, Pair<TextRange, PsiElement>>()
+        try {
 
-            val visitor = object : JavaRecursiveElementWalkingVisitor() {
+            return ReadAction.compute<Map<String, Pair<TextRange, PsiElement>>, Exception> {
+                val methods = mutableMapOf<String, Pair<TextRange, PsiElement>>()
 
-                override fun visitMethod(method: PsiMethod) {
-                    if (method.toUElementOfType<UMethod>() != null) {
-                        val codeObjectId = createMethodCodeObjectId(method.toUElementOfType<UMethod>()!!)
-                        if (ids.contains(codeObjectId)) {
-                            @Suppress("UnstableApiUsage")
-                            val textRange = InlayHintsUtils.getTextRangeWithoutLeadingCommentsAndWhitespaces(method)
-                            methods[codeObjectId] = Pair(textRange, method)
+                val visitor = object : JavaRecursiveElementWalkingVisitor() {
+
+                    override fun visitMethod(method: PsiMethod) {
+                        if (method.toUElementOfType<UMethod>() != null) {
+                            val codeObjectId = createMethodCodeObjectId(method.toUElementOfType<UMethod>()!!)
+                            if (ids.contains(codeObjectId)) {
+                                @Suppress("UnstableApiUsage")
+                                val textRange = InlayHintsUtils.getTextRangeWithoutLeadingCommentsAndWhitespaces(method)
+                                methods[codeObjectId] = Pair(textRange, method)
+                            }
                         }
                     }
                 }
+
+                psiFile.acceptChildren(visitor)
+
+                return@compute methods
             }
-
-            psiFile.acceptChildren(visitor)
-
-            return@compute methods
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("JavaCodeLensService.findMethodsByCodeObjectIds", e)
+            return mapOf()
         }
     }
 }

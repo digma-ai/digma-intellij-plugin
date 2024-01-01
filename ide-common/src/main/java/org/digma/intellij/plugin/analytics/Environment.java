@@ -71,37 +71,41 @@ public class Environment implements EnvironmentsSupplier {
     @Override
     public void setCurrent(@NotNull String newEnv, boolean refreshInsightsView, @Nullable Runnable taskToRunAfterChange) {
 
-        Log.log(LOGGER::debug, "Setting current environment , old={},new={}", this.current, newEnv);
+        try {
+            Log.log(LOGGER::debug, "Setting current environment , old={},new={}", this.current, newEnv);
 
-        if (StringUtils.isEmpty(newEnv)) {
-            Log.log(LOGGER::debug, "setCurrent was called with an empty environment {}", newEnv);
-            return;
+            if (StringUtils.isEmpty(newEnv)) {
+                Log.log(LOGGER::debug, "setCurrent was called with an empty environment {}", newEnv);
+                return;
+            }
+
+            //this setCurrent method is called from RecentActivityService, it may send an env that does not exist in  the
+            // list of environments. so refresh if necessary.
+            Runnable task = () -> {
+                envChangeLock.lock();
+                try {
+                    //run both refreshEnvironments and updateCurrentEnv under same lock
+                    if (environments.isEmpty() || !environments.contains(newEnv)) {
+                        refreshEnvironments();
+                    }
+                    updateCurrentEnv(newEnv, refreshInsightsView);
+                } finally {
+                    if (envChangeLock.isHeldByCurrentThread()) {
+                        envChangeLock.unlock();
+                    }
+                }
+
+                //runs in background but not under lock
+                if (taskToRunAfterChange != null) {
+                    taskToRunAfterChange.run();
+                }
+
+            };
+
+            Backgroundable.ensureBackground(project, "Digma: environment changed " + newEnv, task);
+        } catch (Throwable e) {
+            ErrorReporter.getInstance().reportError("Environment.setCurrent", e);
         }
-
-        //this setCurrent method is called from RecentActivityService, it may send an env that does not exist in  the
-        // list of environments. so refresh if necessary.
-        Runnable task = () -> {
-            envChangeLock.lock();
-            try {
-                //run both refreshEnvironments and updateCurrentEnv under same lock
-                if (environments.isEmpty() || !environments.contains(newEnv)) {
-                    refreshEnvironments();
-                }
-                updateCurrentEnv(newEnv, refreshInsightsView);
-            } finally {
-                if (envChangeLock.isHeldByCurrentThread()) {
-                    envChangeLock.unlock();
-                }
-            }
-
-            //runs in background but not under lock
-            if (taskToRunAfterChange != null) {
-                taskToRunAfterChange.run();
-            }
-
-        };
-
-        Backgroundable.ensureBackground(project, "Digma: environment changed " + newEnv, task);
     }
 
 

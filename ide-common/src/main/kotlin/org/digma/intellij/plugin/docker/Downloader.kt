@@ -3,6 +3,7 @@ package org.digma.intellij.plugin.docker
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.util.SystemProperties
 import org.digma.intellij.plugin.common.Retries
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import java.io.File
 import java.io.FileOutputStream
@@ -41,6 +42,7 @@ class Downloader {
                 Log.log(logger::info, "docker-compose.yml unpacked to {}", downloadDir)
             }
         } catch (e: Exception) {
+            ErrorReporter.getInstance().reportError("Downloader.unpack", e)
             Log.warnWithException(logger, e, "could not unpack docker-compose.yml.")
         }
     }
@@ -75,6 +77,7 @@ class Downloader {
             try {
                 downloadNow()
             } catch (e: Exception) {
+                ErrorReporter.getInstance().reportError("Downloader.tryDownloadLatest", e)
                 Log.warnWithException(logger, e, "could not download latest compose file")
             }
         }
@@ -118,6 +121,7 @@ class Downloader {
             }, Throwable::class.java, 5000, 3)
 
         } catch (e: Exception) {
+            ErrorReporter.getInstance().reportError("Downloader.downloadAndCopyFile", e)
             Log.log(logger::warn, "could not download file {}, {}", url, e)
         } finally {
             tempFile.deleteIfExists()

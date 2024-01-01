@@ -11,6 +11,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.psi.AbstractJvmLanguageService
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscovery
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.GrpcFramework
@@ -63,23 +64,29 @@ class KotlinLanguageService(project: Project) : AbstractJvmLanguageService(proje
     //note that this method prefers non compiled classes
     override fun findClassByClassName(className: String, scope: GlobalSearchScope): UClass? {
 
-        val classes: Collection<KtClassOrObject> = KotlinFullClassNameIndex.get(className, project, scope)
+        try {
+            val classes: Collection<KtClassOrObject> = KotlinFullClassNameIndex.get(className, project, scope)
 
-        if (classes.isEmpty()) {
-            val files = KotlinFileFacadeFqNameIndex.get(className, project, scope)
-            if (files.isNotEmpty()) {
-                val file: KtFile? = if (files.any { ktf -> !ktf.isCompiled }) files.firstOrNull { ktf -> !ktf.isCompiled } else files.firstOrNull()
-                val fileClasses = file?.classes?.filter { psiClass: PsiClass -> psiClass.qualifiedName == className }
-                return fileClasses?.firstOrNull()?.toUElementOfType<UClass>()
+            if (classes.isEmpty()) {
+                val files = KotlinFileFacadeFqNameIndex.get(className, project, scope)
+                if (files.isNotEmpty()) {
+                    val file: KtFile? =
+                        if (files.any { ktf -> !ktf.isCompiled }) files.firstOrNull { ktf -> !ktf.isCompiled } else files.firstOrNull()
+                    val fileClasses = file?.classes?.filter { psiClass: PsiClass -> psiClass.qualifiedName == className }
+                    return fileClasses?.firstOrNull()?.toUElementOfType<UClass>()
+                } else {
+                    return null
+                }
             } else {
-                return null
+                //prefer non compiled class
+                if (classes.any { ktc -> !ktc.containingKtFile.isCompiled }) {
+                    return classes.firstOrNull { ktc -> !ktc.containingKtFile.isCompiled }?.toUElementOfType<UClass>()
+                }
+                return classes.firstOrNull()?.toUElementOfType<UClass>()
             }
-        } else {
-            //prefer non compiled class
-            if (classes.any { ktc -> !ktc.containingKtFile.isCompiled }) {
-                return classes.firstOrNull { ktc -> !ktc.containingKtFile.isCompiled }?.toUElementOfType<UClass>()
-            }
-            return classes.firstOrNull()?.toUElementOfType<UClass>()
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("KotlinLanguageService.findClassByClassName", e)
+            return null
         }
     }
 
@@ -105,35 +112,40 @@ class KotlinLanguageService(project: Project) : AbstractJvmLanguageService(proje
             return false
         }
 
-        if (result.containingFile.sourcePsi is KtFile && result.uMethod.sourcePsi is KtFunction) {
+        try {
+            if (result.containingFile.sourcePsi is KtFile && result.uMethod.sourcePsi is KtFunction) {
 
-            val ktFile: KtFile = result.containingFile.sourcePsi as KtFile
-            val ktFunction: KtFunction = result.uMethod.sourcePsi as KtFunction
-            val methodId: String = result.methodId
-            val withSpanClass: PsiClass = result.withSpanClass
+                val ktFile: KtFile = result.containingFile.sourcePsi as KtFile
+                val ktFunction: KtFunction = result.uMethod.sourcePsi as KtFunction
+                val methodId: String = result.methodId
+                val withSpanClass: PsiClass = result.withSpanClass
 
-            val importList = ktFile.importList
-            if (importList == null) {
-                Log.log(logger::warn, "Failed to get ImportList from PsiFile (methodId: {})", methodId)
+                val importList = ktFile.importList
+                if (importList == null) {
+                    Log.log(logger::warn, "Failed to get ImportList from PsiFile (methodId: {})", methodId)
+                    return false
+                }
+
+                WriteCommandAction.runWriteCommandAction(project) {
+                    val ktPsiFactory = KtPsiFactory(project)
+                    val shortClassNameAnnotation = withSpanClass.name
+                    if (shortClassNameAnnotation != null) {
+                        ktFunction.addAnnotationEntry(ktPsiFactory.createAnnotationEntry("@$shortClassNameAnnotation"))
+                    }
+
+                    val existing =
+                        importList.imports.find { ktImportDirective: KtImportDirective? -> ktImportDirective?.importedFqName?.asString() == withSpanClass.qualifiedName }
+                    if (existing == null) {
+                        val importStatement = ktPsiFactory.createImportDirective(ImportPath.fromString(withSpanClass.qualifiedName!!))
+                        importList.add(importStatement)
+                    }
+                }
+                return true
+            } else {
                 return false
             }
-
-            WriteCommandAction.runWriteCommandAction(project) {
-                val ktPsiFactory = KtPsiFactory(project)
-                val shortClassNameAnnotation = withSpanClass.name
-                if (shortClassNameAnnotation != null) {
-                    ktFunction.addAnnotationEntry(ktPsiFactory.createAnnotationEntry("@$shortClassNameAnnotation"))
-                }
-
-                val existing =
-                    importList.imports.find { ktImportDirective: KtImportDirective? -> ktImportDirective?.importedFqName?.asString() == withSpanClass.qualifiedName }
-                if (existing == null) {
-                    val importStatement = ktPsiFactory.createImportDirective(ImportPath.fromString(withSpanClass.qualifiedName!!))
-                    importList.add(importStatement)
-                }
-            }
-            return true
-        } else {
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("KotlinLanguageService.instrumentMethod", e)
             return false
         }
 

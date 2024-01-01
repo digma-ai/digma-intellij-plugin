@@ -36,6 +36,7 @@ import org.digma.intellij.plugin.common.Retries
 import org.digma.intellij.plugin.common.allowSlowOperation
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.editor.EditorUtils
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.buildsystem.BuildSystemChecker.Companion.determineBuildSystem
 import org.digma.intellij.plugin.idea.buildsystem.JavaBuildSystem
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
@@ -423,21 +424,25 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
         ReadActions.ensureReadAction {
             allowSlowOperation {
-                var className = methodId.substring(0, methodId.indexOf("\$_$"))
-                //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
-                className = className.replace('$', '.')
+                try {
+                    var className = methodId.substring(0, methodId.indexOf("\$_$"))
+                    //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
+                    className = className.replace('$', '.')
 
-                val cls = findClassByClassName(className, GlobalSearchScope.allScope(project))
-                cls?.let {
+                    val cls = findClassByClassName(className, GlobalSearchScope.allScope(project))
+                    cls?.let {
 
-                    val method = findMethodInClass(project, it, methodId)
-                    if (method?.sourcePsi is Navigatable && (method.sourcePsi as Navigatable).canNavigate()) {
-                        Log.log(logger::debug, "navigating to method {}", method)
-                        EDT.ensureEDT {
-                            (method.sourcePsi as Navigatable).navigate(true)
+                        val method = findMethodInClass(project, it, methodId)
+                        if (method?.sourcePsi is Navigatable && (method.sourcePsi as Navigatable).canNavigate()) {
+                            Log.log(logger::debug, "navigating to method {}", method)
+                            EDT.ensureEDT {
+                                (method.sourcePsi as Navigatable).navigate(true)
+                            }
+                            return@allowSlowOperation
                         }
-                        return@allowSlowOperation
                     }
+                } catch (e: Throwable) {
+                    ErrorReporter.getInstance().reportError("AbstractJvmLanguageService.navigateToMethod", e)
                 }
             }
         }
@@ -462,68 +467,72 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
             var result: CanInstrumentMethodResult? = null
 
             override fun run() {
-                val uMethod = findMethodByMethodCodeObjectId(methodId)
-                if (uMethod?.sourcePsi == null) {
-                    Log.log(logger::warn, "Failed to get Method from method id '{}'", methodId)
-                    result = CanInstrumentMethodResult.failure()
-                    return
-                }
-
-                progressIndicator.checkCanceled()
-
-                val psiFile = uMethod.getContainingUFile()
-                if (psiFile == null || !isSupportedFile(psiFile.sourcePsi)) {
-                    Log.log(logger::warn, "Method's file is not supported file (methodId: {})", methodId)
-                    result = CanInstrumentMethodResult.failure()
-                    return
-                }
-
-                progressIndicator.checkCanceled()
-
-                val module = ModuleUtilCore.findModuleForPsiElement(uMethod.sourcePsi!!)
-                if (module == null) {
-                    Log.log(logger::warn, "Failed to get module from PsiMethod '{}'", methodId)
-                    result = CanInstrumentMethodResult.failure()
-                    return
-                }
-
-                progressIndicator.checkCanceled()
-
-                var annotationClassFqn = WITH_SPAN_ANNOTATION_FQN
-                var dependencyCause = WITH_SPAN_DEPENDENCY_DESCRIPTION
-                if (isSpringBootAndMicrometer(module)) {
-                    progressIndicator.checkCanceled()
-
-                    annotationClassFqn = MicrometerTracingFramework.OBSERVED_FQN
-                    dependencyCause = MicrometerTracingFramework.OBSERVED_DEPENDENCY_DESCRIPTION
-
-                    val modulesDepsService = ModulesDepsService.getInstance(project)
-                    val moduleExt = modulesDepsService.getModuleExt(module.name)
-                    if (moduleExt == null) {
-                        Log.log(logger::warn, "Failed to not lookup module ext by module name='{}'", module.name)
+                try {
+                    val uMethod = findMethodByMethodCodeObjectId(methodId)
+                    if (uMethod?.sourcePsi == null) {
+                        Log.log(logger::warn, "Failed to get Method from method id '{}'", methodId)
                         result = CanInstrumentMethodResult.failure()
                         return
                     }
-                    val hasDeps = modulesDepsService.isModuleHasNeededDependenciesForSpringBootWithMicrometer(moduleExt.metadata)
-                    if (!hasDeps) {
+
+                    progressIndicator.checkCanceled()
+
+                    val psiFile = uMethod.getContainingUFile()
+                    if (psiFile == null || !isSupportedFile(psiFile.sourcePsi)) {
+                        Log.log(logger::warn, "Method's file is not supported file (methodId: {})", methodId)
+                        result = CanInstrumentMethodResult.failure()
+                        return
+                    }
+
+                    progressIndicator.checkCanceled()
+
+                    val module = ModuleUtilCore.findModuleForPsiElement(uMethod.sourcePsi!!)
+                    if (module == null) {
+                        Log.log(logger::warn, "Failed to get module from PsiMethod '{}'", methodId)
+                        result = CanInstrumentMethodResult.failure()
+                        return
+                    }
+
+                    progressIndicator.checkCanceled()
+
+                    var annotationClassFqn = WITH_SPAN_ANNOTATION_FQN
+                    var dependencyCause = WITH_SPAN_DEPENDENCY_DESCRIPTION
+                    if (isSpringBootAndMicrometer(module)) {
+                        progressIndicator.checkCanceled()
+
+                        annotationClassFqn = MicrometerTracingFramework.OBSERVED_FQN
+                        dependencyCause = MicrometerTracingFramework.OBSERVED_DEPENDENCY_DESCRIPTION
+
+                        val modulesDepsService = ModulesDepsService.getInstance(project)
+                        val moduleExt = modulesDepsService.getModuleExt(module.name)
+                        if (moduleExt == null) {
+                            Log.log(logger::warn, "Failed to not lookup module ext by module name='{}'", module.name)
+                            result = CanInstrumentMethodResult.failure()
+                            return
+                        }
+                        val hasDeps = modulesDepsService.isModuleHasNeededDependenciesForSpringBootWithMicrometer(moduleExt.metadata)
+                        if (!hasDeps) {
+                            result = CanInstrumentMethodResult(MissingDependencyCause(dependencyCause))
+                            return
+                        }
+                    }
+
+                    progressIndicator.checkCanceled()
+
+                    val annotationPsiClass = JavaPsiFacade.getInstance(project).findClass(
+                        annotationClassFqn,
+                        GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module, false)
+                    )
+                    if (annotationPsiClass == null) {
+                        Log.log(logger::warn, "Cannot find WithSpan PsiClass (methodId: {}) (module:{})", methodId, module)
                         result = CanInstrumentMethodResult(MissingDependencyCause(dependencyCause))
                         return
                     }
+
+                    result = JvmCanInstrumentMethodResult(methodId, uMethod, annotationPsiClass, psiFile)
+                } catch (e: Throwable) {
+                    ErrorReporter.getInstance().reportError("AbstractJvmLanguageService.canInstrumentMethod", e)
                 }
-
-                progressIndicator.checkCanceled()
-
-                val annotationPsiClass = JavaPsiFacade.getInstance(project).findClass(
-                    annotationClassFqn,
-                    GlobalSearchScope.moduleWithDependenciesAndLibrariesScope(module, false)
-                )
-                if (annotationPsiClass == null) {
-                    Log.log(logger::warn, "Cannot find WithSpan PsiClass (methodId: {}) (module:{})", methodId, module)
-                    result = CanInstrumentMethodResult(MissingDependencyCause(dependencyCause))
-                    return
-                }
-
-                result = JvmCanInstrumentMethodResult(methodId, uMethod, annotationPsiClass, psiFile)
             }
         }
 

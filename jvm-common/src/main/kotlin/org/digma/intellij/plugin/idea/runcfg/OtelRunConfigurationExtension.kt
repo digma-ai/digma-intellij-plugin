@@ -13,6 +13,7 @@ import com.intellij.execution.ui.ConsoleViewContentType
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.buildsystem.JavaBuildSystem
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
@@ -43,40 +44,44 @@ class OtelRunConfigurationExtension : RunConfigurationExtension() {
         params: JavaParameters,
         runnerSettings: RunnerSettings?,
     ) {
-        val resolvedModule = tryResolveModule(configuration, params)
+        try {
+            val resolvedModule = tryResolveModule(configuration, params)
 
-        val wrapper = getWrapperFor(configuration, resolvedModule)
-        if (wrapper == null) {
-            reportUnknownTasksToPosthog(configuration)
-            return
+            val wrapper = getWrapperFor(configuration, resolvedModule)
+            if (wrapper == null) {
+                reportUnknownTasksToPosthog(configuration)
+                return
+            }
+
+            val isAutoOtelEnabled = isAutoOtelEnabled()
+            val isConnectedToBackend = isConnectedToBackend(configuration.project)
+
+            Log.log(
+                logger::debug, "updateJavaParameters, project:{}, id:{}, name:{}, type:{}, module: {}",
+                configuration.project, configuration.id, configuration.name, configuration.type, resolvedModule
+            )
+
+            run {
+                val taskNames = extractTasks(configuration)
+                ActivityMonitor.getInstance(configuration.project)
+                    .reportRunConfig(wrapper.getRunConfigType(configuration, resolvedModule).name, taskNames, isAutoOtelEnabled, isConnectedToBackend)
+            }
+
+            //testing if enabled must be done here just before running.
+            if (!isAutoOtelEnabled) {
+                Log.log(logger::debug, "autoInstrumentation is not enabled")
+                return
+            }
+
+            if (!isConnectedToBackend) {
+                Log.log(logger::warn, "No connection to Digma backend. Otel won't be exported")
+                return
+            }
+
+            wrapper.updateJavaParameters(configuration, params, runnerSettings, resolvedModule)
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("OtelRunConfigurationExtension.updateJavaParameters", e)
         }
-
-        val isAutoOtelEnabled = isAutoOtelEnabled()
-        val isConnectedToBackend = isConnectedToBackend(configuration.project)
-
-        Log.log(
-            logger::debug, "updateJavaParameters, project:{}, id:{}, name:{}, type:{}, module: {}",
-            configuration.project, configuration.id, configuration.name, configuration.type, resolvedModule
-        )
-
-        run {
-            val taskNames = extractTasks(configuration)
-            ActivityMonitor.getInstance(configuration.project)
-                .reportRunConfig(wrapper.getRunConfigType(configuration, resolvedModule).name, taskNames, isAutoOtelEnabled, isConnectedToBackend)
-        }
-
-        //testing if enabled must be done here just before running.
-        if (!isAutoOtelEnabled) {
-            Log.log(logger::debug, "autoInstrumentation is not enabled")
-            return
-        }
-
-        if (!isConnectedToBackend) {
-            Log.log(logger::warn, "No connection to Digma backend. Otel won't be exported")
-            return
-        }
-
-        wrapper.updateJavaParameters(configuration, params, runnerSettings, resolvedModule)
     }
 
     override fun decorate(

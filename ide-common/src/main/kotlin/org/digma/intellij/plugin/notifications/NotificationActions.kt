@@ -4,6 +4,7 @@ import com.intellij.notification.Notification
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.Project
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
@@ -16,19 +17,26 @@ class ShowTroubleshootingAction(
     private val notificationName: String
 ) : AnAction("Troubleshooting") {
     override fun actionPerformed(e: AnActionEvent) {
-        Log.log(AppNotificationCenter.logger::info,"in ShowTroubleshootingAction, action clicked")
 
-        ActivityMonitor.getInstance(project).registerCustomEvent("troubleshooting link clicked",
-            mapOf(
-                "origin" to notificationName
-            ))
+        try {
+            Log.log(AppNotificationCenter.logger::info, "in ShowTroubleshootingAction, action clicked")
 
-        ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.clicked",mapOf())
+            ActivityMonitor.getInstance(project).registerCustomEvent(
+                "troubleshooting link clicked",
+                mapOf(
+                    "origin" to notificationName
+                )
+            )
 
-        MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing()
-        ToolWindowShower.getInstance(project).showToolWindow()
-        MainToolWindowCardsController.getInstance(project).showTroubleshooting()
-        notification.expire()
+            ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.clicked", mapOf())
+
+            MainToolWindowCardsController.getInstance(project).closeAllNotificationsIfShowing()
+            ToolWindowShower.getInstance(project).showToolWindow()
+            MainToolWindowCardsController.getInstance(project).showTroubleshooting()
+            notification.expire()
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("ShowTroubleshootingAction.actionPerformed", e)
+        }
     }
 }
 

@@ -47,10 +47,8 @@ class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project)
     // when injecting directly in constructor of other services it needs to load the solution model
     // and that required EDT which is not always the case.
     companion object {
-        private val logger = Logger.getInstance(LanguageServiceHost::class.java)
         @JvmStatic
         fun getInstance(project: Project): LanguageServiceHost {
-            logger.warn("Getting instance of ${LanguageServiceHost::class.simpleName}")
             return project.getService(LanguageServiceHost::class.java)
         }
     }

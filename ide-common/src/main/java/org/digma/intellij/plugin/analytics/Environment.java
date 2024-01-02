@@ -150,7 +150,6 @@ public class Environment implements EnvironmentsSupplier {
         envChangeLock.lock();
 
         try {
-            
             Log.log(LOGGER::trace, "Refreshing Environments list");
             var newEnvironments = analyticsService.getEnvironments();
             var newEnvsWithUsages = getEnvsWithUsages();

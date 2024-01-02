@@ -49,10 +49,8 @@ class InsightsViewService(project: Project) : AbstractViewService(project) {
 
 
     companion object {
-        private val logger = Logger.getInstance(InsightsViewService::class.java)
         @JvmStatic
         fun getInstance(project: Project): InsightsViewService {
-            logger.warn("Getting instance of ${InsightsViewService::class.simpleName}")
             return project.getService(InsightsViewService::class.java)
         }
     }

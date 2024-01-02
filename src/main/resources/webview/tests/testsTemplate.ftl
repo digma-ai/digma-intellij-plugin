@@ -22,7 +22,6 @@
         window.codeFont = "${codeFont}";
         window.isJaegerEnabled= ${isJaegerEnabled?string('true', 'false')};
         window.userEmail = "${userEmail}";
-        window.jaegerURL = "${jaegerURL}";
         window.userRegistrationEmail = "${userRegistrationEmail}";
         window.isObservabilityEnabled = ${isObservabilityEnabled?string('true', 'false')};
         window.isDigmaEngineInstalled = ${isDigmaEngineInstalled?string('true', 'false')};
@@ -30,7 +29,6 @@
         window.isDockerInstalled = ${isDockerInstalled?string('true', 'false')};
         window.isDockerComposeInstalled = ${isDockerComposeInstalled?string('true', 'false')};
 
-        window.insightsRefreshInterval;
     </script>
     <script src="/index.js"></script>
   </body>

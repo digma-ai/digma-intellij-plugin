@@ -24,6 +24,7 @@ import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.dashboard.outgoing.BackendInfoMessage;
 import org.digma.intellij.plugin.emvironment.model.outgoing.EnvironmentChangedMessage;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil;
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils;
 import org.digma.intellij.plugin.log.Log;
@@ -114,8 +115,9 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
                 stopWatchStop(stopWatch, time -> Log.log(LOGGER::trace, "action {} took {}",action, time));
 
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 Log.debugWithException(LOGGER, e, "Exception in onQuery " + request);
+                ErrorReporter.getInstance().reportError("AssetsMessageRouterHandler.onQuery", e);
             }
         });
 

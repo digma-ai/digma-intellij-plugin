@@ -14,6 +14,8 @@ class ScopeLineIconProducer(val model: PanelModel): Producer<Icon> {
             return Laf.Icons.Insight.FILE
         }else if (model.isCodeLessSpanScope()){
             return Laf.Icons.Insight.TELESCOPE
+        } else if (model.isEndpointScope()) {
+            return Laf.Icons.Insight.INTERFACE
         }
         return Laf.Icons.Insight.EMPTY
     }

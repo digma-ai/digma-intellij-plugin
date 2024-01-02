@@ -17,7 +17,7 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshService
 import org.digma.intellij.plugin.ui.common.Laf
-import org.digma.intellij.plugin.ui.common.MethodInstrumentationPresenter
+import org.digma.intellij.plugin.instrumentation.MethodInstrumentationPresenter
 import org.digma.intellij.plugin.ui.common.OtelDependencyButton
 import org.digma.intellij.plugin.ui.common.Text
 import org.digma.intellij.plugin.ui.common.Text.NO_OBSERVABILITY_DETAIL_DESCRIPTION

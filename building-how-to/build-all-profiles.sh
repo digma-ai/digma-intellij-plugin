@@ -6,7 +6,7 @@
 set -e
 ###################   idea community
 
-# there is no need to send the oldest profile, its the default if not sent,its here just as example
+# there is no need to send the oldest profile, its the default if not sent. its here just as example
 
 ## check that profile aliases work
 ./gradlew clean buildPlugin runPluginVerifier -PbuildProfile=lowest

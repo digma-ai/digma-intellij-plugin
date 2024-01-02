@@ -21,7 +21,13 @@ data class HotspotInsight
         "prefixedCodeObjectId",
         "isRecalculateEnabled",
         "shortDisplayInfo",
-        "score"
+        "score",
+        "severity",
+        "impact",
+        "criticality",
+        "firstCommitId",
+        "lastCommitId",
+        "deactivatedCommitId",
 )
 constructor(
         override val codeObjectId: String,
@@ -37,6 +43,12 @@ constructor(
         override val isRecalculateEnabled: Boolean,
         override val shortDisplayInfo: ShortDisplayInfo?,
         val score: Int = 0,
+        override val severity: Double,
+        override val impact: Double,
+        override val criticality: Double,
+        override val firstCommitId: String?,
+        override val lastCommitId: String?,
+        override val deactivatedCommitId: String?,
 ) : CodeObjectInsight {
 
     override val type: InsightType = InsightType.HotSpot

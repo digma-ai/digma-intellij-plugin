@@ -35,6 +35,7 @@ import java.util.Date
 
     JsonSubTypes.Type(value = EndpointDurationSlowdownInsight::class, name = "EndpointDurationSlowdown"),
     JsonSubTypes.Type(value = EndpointBreakdownInsight::class, name = "EndpointBreakdown"),
+    JsonSubTypes.Type(value = EndpointHighNumberOfQueriesInsight::class, name = "EndpointHighNumberOfQueries"),
     JsonSubTypes.Type(value = SpanNPlusOneInsight::class, name = "SpaNPlusOne"),
     JsonSubTypes.Type(value = SlowEndpointInsight::class, name = "SlowEndpoint"),
     JsonSubTypes.Type(value = SpanScalingInsight::class, name = "SpanScaling"),
@@ -54,6 +55,12 @@ interface CodeObjectInsight {
     val prefixedCodeObjectId: String?
     val isRecalculateEnabled: Boolean
     val shortDisplayInfo: ShortDisplayInfo?
+    val severity: Double
+    val impact: Double
+    val criticality: Double
+    val firstCommitId: String?
+    val lastCommitId: String?
+    val deactivatedCommitId: String?
 
     fun hasDecorators(): Boolean {
         return !decorators.isNullOrEmpty()

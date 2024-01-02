@@ -24,7 +24,13 @@ data class ErrorInsight
         "errorCount",
         "unhandledCount",
         "unexpectedCount",
-        "topErrors"
+        "topErrors",
+        "severity",
+        "impact",
+        "criticality",
+        "firstCommitId",
+        "lastCommitId",
+        "deactivatedCommitId",
 )
 constructor(
         override val codeObjectId: String,
@@ -43,6 +49,12 @@ constructor(
         val unhandledCount: Int = 0,
         val unexpectedCount: Int = 0,
         val topErrors: List<ErrorInsightNamedError>,
+        override val severity: Double,
+        override val impact: Double,
+        override val criticality: Double,
+        override val firstCommitId: String?,
+        override val lastCommitId: String?,
+        override val deactivatedCommitId: String?,
 ) : CodeObjectInsight {
 
     override val type: InsightType = InsightType.Errors

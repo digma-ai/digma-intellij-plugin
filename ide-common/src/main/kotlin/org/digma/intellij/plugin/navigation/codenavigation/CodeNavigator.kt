@@ -138,6 +138,7 @@ class CodeNavigator(val project: Project) {
         return false
     }
 
+
     fun canNavigateToSpan(spanCodeObjectId: String?): Boolean {
         if (spanCodeObjectId == null) {
             return false
@@ -164,6 +165,18 @@ class CodeNavigator(val project: Project) {
         }
 
         return false
+    }
+    fun findMethodCodeObjectId(spanCodeObjectId: String): String? {
+        SupportedLanguages.values().forEach { language ->
+            val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
+            if (languageService != null) {
+                val methodCodeObjectId = ReadActions.ensureReadAction<String> {
+                    languageService.detectMethodBySpan(project, CodeObjectsUtil.stripSpanPrefix(spanCodeObjectId))
+                }
+                return methodCodeObjectId;
+            }
+        }
+        return null;
     }
 
     fun getMethodLocation(methodId: String): Pair<String, Int>? {
@@ -261,5 +274,81 @@ class CodeNavigator(val project: Project) {
         }
     }
 
+
+    fun canNavigateToEndpoint(endpointId: String?): Boolean {
+        if (endpointId == null) {
+            return false
+        }
+
+        val endpointIdWithoutType = CodeObjectsUtil.stripEndpointPrefix(endpointId)
+
+        SupportedLanguages.values().forEach { language ->
+            val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
+            if (languageService != null) {
+                val endpointInfos = ReadActions.ensureReadAction<Set<EndpointInfo>> {
+                    languageService.lookForDiscoveredEndpoints(endpointIdWithoutType)
+                }
+                //if code location was found return. no need to check the other language services
+                if (endpointInfos.isNotEmpty()) {
+                    //if code location was found link to it and return. no need to check the other language services
+                    return true
+                }
+            }
+        }
+
+        return false
+    }
+
+
+    fun maybeNavigateToEndpointBySpan(spanId: String): Boolean {
+        val endpointId = convertSpanIdToEndpointId(spanId)
+        return endpointId?.let {
+            tryNavigateToEndpointById(it)
+        } ?: false
+    }
+
+
+    fun tryNavigateToEndpointById(endpointId: String): Boolean {
+
+        val endpointIdWithoutType = CodeObjectsUtil.stripEndpointPrefix(endpointId)
+
+        SupportedLanguages.values().forEach { language ->
+            val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
+            if (languageService != null) {
+                val endpointInfos = ReadActions.ensureReadAction<Set<EndpointInfo>> {
+                    languageService.lookForDiscoveredEndpoints(endpointIdWithoutType)
+                }
+
+                endpointInfos.firstOrNull()?.let { endpointInf ->
+                    if (endpointInf.textRange != null) {
+                        EDT.ensureEDT {
+                            project.service<EditorService>().openWorkspaceFileInEditor(endpointInf.containingFileUri, endpointInf.textRange!!.start)
+                        }
+                        ToolWindowShower.getInstance(project).showToolWindow()
+                        return true
+                    }
+                }
+            }
+        }
+        return false
+    }
+
+
+    private fun convertSpanIdToEndpointId(spanId: String): String? {
+        if (spanId.contains("\$_$")) {
+            val name = spanId.substring(spanId.indexOf("\$_$") + 3)
+            return "epHTTP:$name"
+        }
+        return null
+    }
+
+
+
+    companion object {
+        @JvmStatic
+        fun getInstance(project: Project): CodeNavigator {
+            return project.service<CodeNavigator>()
+        }
+    }
 
 }

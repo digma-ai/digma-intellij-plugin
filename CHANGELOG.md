@@ -1,6 +1,61 @@
 # Changelog
 
-## [2.0.214] - 2023-12-12
+## [2.0.226] - 2024-01-01
+- update-build-profiles-2023.2 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1534
+- support disabled kotlin plugin by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1535
+- build endpoint considering file language Closes #1540 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1541
+- update environment for currently running configuration Closes #1524 Closes #1542 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1544
+- unhandled exceptions Closes #1431 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1548
+
+## 2.0.225 - 2023-12-29
+- Commit id git link by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1530
+- catch throwable in findLanguageServiceByName Closes #1531 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1532
+
+## 2.0.224 - 2023-12-27
+- fix-possible-npe by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1527
+
+## 2.0.223 - 2023-12-27
+- Bug fix/methodCodeObjectId is nullable by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1522
+- Inject commit hash in run configuration Closes #1468 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1521
+- avoid-data-lost-message-on-new-install by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1525
+- remove data lost message by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1526
+
+## 2.0.222 - 2023-12-26
+- Ktor support Closes #1473 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1519
+- fix high-number-of-queries-insight by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1520
+
+## 2.0.221 - 2023-12-25
+- N+1 ticket with  commit ids by @asafchen-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1518
+
+## 2.0.220 - 2023-12-25
+- high-number-of-queries-insight by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1515
+- fix KotlinLanguageService index out of bounds Closes #1516 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1517
+
+## 2.0.219 - 2023-12-21
+- remove error logging by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1512
+- Slowest spans insight jira ticket by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1513
+
+## 2.0.218 - 2023-12-20
+- update build profiles by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1496
+- Update Insights UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1505
+- React user action by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1507
+- add traceid and duration to spanNplusEndpoints by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1508
+- show lost data message Closes #1506 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1509
+- LostDataMessageDialog title changes by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1510
+
+## 2.0.217 - 2023-12-17
+- Kotlin support Closes #1252 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1491
+- support kotlin run config by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1494
+
+## 2.0.216 - 2023-12-15
+- Jira ticket like by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1489
+
+## 2.0.215 - 2023-12-13
+- Update Jaeger UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1480
+- jaeger external browser support by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1484
+- Feature/Support jetty:run as maven plugin by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1485
+
+## 2.0.214 - 2023-12-12
 - Feature/spring boot micrometer tracing - support add env by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1470
 - add environmentType to RECENT_ACTIVITY/REGISTER by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1477
 - search query in quotes and don't send from recent activity Closes #1445 Closes #1443 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1469

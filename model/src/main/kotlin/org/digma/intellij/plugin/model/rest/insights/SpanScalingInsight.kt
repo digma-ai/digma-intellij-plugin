@@ -30,6 +30,12 @@ data class SpanScalingInsight
         "maxDuration",
         "rootCauseSpans",
         "affectedEndpoints",
+        "severity",
+        "impact",
+        "criticality",
+        "firstCommitId",
+        "lastCommitId",
+        "deactivatedCommitId",
 )
 constructor(
         override val codeObjectId: String,
@@ -53,6 +59,12 @@ constructor(
         val maxDuration: Duration,
         val rootCauseSpans: List<RootCauseSpan>?,
         val affectedEndpoints: List<AffectedEndpointInfo>?,
+        override val severity: Double,
+        override val impact: Double,
+        override val criticality: Double,
+        override val firstCommitId: String?,
+        override val lastCommitId: String?,
+        override val deactivatedCommitId: String?,
 ) : SpanInsight {
 
     override val type: InsightType = InsightType.SpanScaling

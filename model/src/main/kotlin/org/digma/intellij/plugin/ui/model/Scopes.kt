@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.ui.model
 
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
+import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.rest.insights.SpanInfo
 import org.jetbrains.annotations.Nullable
@@ -54,6 +55,25 @@ class MethodScope(private val methodInfo: MethodInfo) : Scope {
 
     fun getMethodInfo(): MethodInfo {
         return methodInfo
+    }
+}
+
+
+class EndpointScope(private val endpointInfo: EndpointInfo) : Scope {
+    override fun getScope(): String {
+        return endpointInfo.id.substringAfter(":")
+    }
+
+    override fun getScopeTooltip(): String {
+        return endpointInfo.id.substringAfter(":")
+    }
+
+    override fun getFileUri(): String? {
+        return endpointInfo.containingFileUri
+    }
+
+    fun getEndpoint(): EndpointInfo {
+        return endpointInfo
     }
 }
 

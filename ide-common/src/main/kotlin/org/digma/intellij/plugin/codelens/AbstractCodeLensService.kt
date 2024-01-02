@@ -129,9 +129,8 @@ abstract class AbstractCodeLensService(private val project: Project): Disposable
     abstract fun findMethodsByCodeObjectIds(psiFile: PsiFile, ids: Set<String>): Map<String, Pair<TextRange, PsiElement>>
 
 
-
-    @Suppress("UNUSED_PARAMETER")
-    fun environmentChanged(newEnv: String) {
+    fun refreshCodeLens() {
+        Log.log(logger::debug, "refreshing code lens")
         restartAll()
     }
 

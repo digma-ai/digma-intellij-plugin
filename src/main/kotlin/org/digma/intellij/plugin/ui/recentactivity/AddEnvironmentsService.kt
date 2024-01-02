@@ -14,10 +14,11 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunConfiguration
 import com.intellij.openapi.project.Project
-import kotlinx.collections.immutable.toImmutableMap
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
+import org.digma.intellij.plugin.idea.runcfg.DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE
+import org.digma.intellij.plugin.idea.runcfg.OTEL_RESOURCE_ATTRIBUTES
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.ui.recentactivity.model.AdditionToConfigResult
@@ -147,7 +148,7 @@ class AddEnvironmentsService {
     fun addToCurrentRunConfig(project: Project, environment: String): Boolean {
         val result = try {
             Log.log(logger::info, "addToCurrentRunConfig invoked for environment {}", environment)
-            addToCurrentRunConfigImpl(project, environment)
+            addDigmaEnvironmentToSelectedRunConfiguration(project, environment)
         } catch (e: Exception) {
             Log.warnWithException(logger, e, "failed adding environment {} to current run config", environment)
             service<ErrorReporter>().reportError(project, "AddEnvironmentsService.addToCurrentRunConfig", e)
@@ -169,21 +170,9 @@ class AddEnvironmentsService {
         return result
     }
 
-    private fun isSpringBootWithMicroMeter(project: Project, selectedRunConfig: RunConfiguration): Boolean {
-        if (SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer()) {
-            if (selectedRunConfig is ModuleBasedConfiguration<*, *>) {
-                var isSpringBootModule = false
-                selectedRunConfig.configurationModule.module?.let { module ->
-                    val modulesDepsService = ModulesDepsService.getInstance(project)
-                    isSpringBootModule = modulesDepsService.isSpringBootModule(module)
-                }
-                return isSpringBootModule
-            }
-        }
-        return false
-    }
 
-    private fun addToCurrentRunConfigImpl(project: Project, environment: String): Boolean {
+    //will only work for idea
+    private fun addDigmaEnvironmentToSelectedRunConfiguration(project: Project, environment: String): Boolean {
 
         val selectedConfiguration = RunManager.getInstance(project).selectedConfiguration
         if (selectedConfiguration == null) {
@@ -195,39 +184,84 @@ class AddEnvironmentsService {
 
         Log.log(logger::info, "found selected configuration {} type {}", config.name, config.type)
 
-        var envVarKey = "OTEL_RESOURCE_ATTRIBUTES"
-        var envVarValue = "digma.environment=$environment"
-        if (isSpringBootWithMicroMeter(project, config)) {
-            // note: digma_environment contains underscore on purpose - spring will transform it to digma.environment (underscore becomes dot)
-            envVarKey = "MANAGEMENT_OPENTELEMETRY_RESOURCE-ATTRIBUTES_digma_environment"
-            envVarValue = environment
+        //nested local function
+        fun isSpringBootWithMicroMeter(project: Project, selectedRunConfig: RunConfiguration): Boolean {
+            if (SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer()) {
+                if (selectedRunConfig is ModuleBasedConfiguration<*, *>) {
+                    var isSpringBootModule = false
+                    selectedRunConfig.configurationModule.module?.let { module ->
+                        val modulesDepsService = ModulesDepsService.getInstance(project)
+                        isSpringBootModule = modulesDepsService.isSpringBootModule(module)
+                    }
+                    return isSpringBootModule
+                }
+            }
+            return false
+        }
+
+        //nested local function
+        fun addEnvironmentToOtelResourceAttributes(envVars: MutableMap<String, String>) {
+            if (isSpringBootWithMicroMeter(project, config)) {
+                envVars["MANAGEMENT_OPENTELEMETRY_RESOURCE-ATTRIBUTES_digma_environment"] = environment
+            } else {
+                //maybe OTEL_RESOURCE_ATTRIBUTES  already exists and has values other than digma.environment,
+                // so preserve them
+
+                val existingValue = envVars[OTEL_RESOURCE_ATTRIBUTES]
+
+                if (existingValue != null) {
+                    val valuesMap = try {
+                        existingValue.split(",").associate {
+                            val entry = it.split("=")
+                            var left: String? = null
+                            var right: String? = null
+                            if (entry.size == 1) {
+                                left = entry[0]
+                                right = ""
+                            } else if (entry.size == 2) {
+                                left = entry[0]
+                                right = entry[1]
+                            }
+                            left to right
+                        }.toMutableMap()
+//                    existingValue.split(",").associate {
+//                        val (left, right) = it.split("=")
+//                        left to right
+//                    }.toMutableMap()
+                    } catch (e: Throwable) {
+                        mutableMapOf()
+                    }
+
+                    valuesMap[DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE] = environment
+
+                    envVars[OTEL_RESOURCE_ATTRIBUTES] = valuesMap.entries
+                        .filter { entry -> !entry.key.isNullOrBlank() }.joinToString(separator = ",")
+
+                } else {
+                    envVars[OTEL_RESOURCE_ATTRIBUTES] = "$DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE=$environment"
+                }
+            }
         }
 
         return when (config) {
             is CommonProgramRunConfigurationParameters -> {
                 Log.log(logger::info, "adding environment to configuration {}", config.name)
-                config.envs = config.envs.toImmutableMap()
-                config.envs[envVarKey] = envVarValue
-
+                config.envs = config.envs.toMutableMap()
+                addEnvironmentToOtelResourceAttributes(config.envs)
                 true
             }
-
             is ExternalSystemRunConfiguration -> {
                 Log.log(logger::info, "adding environment to configuration {}", config.name)
-                config.settings.env = config.settings.env.toImmutableMap()
-                config.settings.env[envVarKey] = envVarValue
-
+                config.settings.env = config.settings.env.toMutableMap()
+                addEnvironmentToOtelResourceAttributes(config.settings.env)
                 true
             }
-
             is AbstractRunConfiguration -> {
                 Log.log(logger::info, "adding environment to configuration {}", config.name)
-                config.envs = config.envs.toImmutableMap()
-                config.envs[envVarKey] = envVarValue
-
+                config.envs = config.envs.toMutableMap()
+                addEnvironmentToOtelResourceAttributes(config.envs)
                 true
             }
-
             else -> {
                 Log.log(logger::info, "configuration {} is not supported, not adding environment", config.name)
                 false
@@ -235,8 +269,5 @@ class AddEnvironmentsService {
         }
     }
 
-    private fun addEnvToMap(map: MutableMap<String, String>, environment: String) {
-        map["OTEL_RESOURCE_ATTRIBUTES"] = "digma.environment=$environment"
-    }
 
 }

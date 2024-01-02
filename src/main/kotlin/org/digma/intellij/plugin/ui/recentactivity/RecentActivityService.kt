@@ -12,6 +12,7 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult
+import org.digma.intellij.plugin.navigation.NavigationModel
 import org.digma.intellij.plugin.navigation.codenavigation.CodeNavigator
 import org.digma.intellij.plugin.notifications.NotificationUtil
 import org.digma.intellij.plugin.persistence.PersistenceService
@@ -95,6 +96,9 @@ class RecentActivityService(val project: Project) : Disposable {
                         environmentsSupplier.setCurrent(payload.environment, false) {
                             EDT.ensureEDT {
                                 project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(payload.span.spanCodeObjectId)
+                                if (project.service<CodeNavigator>().maybeNavigateToEndpointBySpan(spanId)) {
+                                    project.service<NavigationModel>().showCodeNavigation.set(false)
+                                }
                             }
                         }
                     }

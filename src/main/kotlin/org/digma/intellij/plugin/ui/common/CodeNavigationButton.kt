@@ -17,6 +17,7 @@ import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan
 import org.digma.intellij.plugin.model.discovery.DocumentInfo
+import org.digma.intellij.plugin.model.discovery.EndpointInfo
 import org.digma.intellij.plugin.model.discovery.MethodInfo
 import org.digma.intellij.plugin.model.rest.navigation.NavItemType
 import org.digma.intellij.plugin.model.rest.navigation.SpanNavigationItem
@@ -26,6 +27,7 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.list.RoundedPanel
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
 import org.digma.intellij.plugin.ui.model.DocumentScope
+import org.digma.intellij.plugin.ui.model.EndpointScope
 import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.service.InsightsViewService
 import java.awt.BorderLayout
@@ -72,46 +74,73 @@ class CodeNavigationButton(val project: Project) : TargetButton(project, true) {
                 return
             }
 
-            val methodInfo = getMethodInfo()
-            if (methodInfo != null) {
+            run {
+                val methodInfo = getMethodInfo()
+                if (methodInfo != null) {
 
-                val methodId = methodInfo.id
-                val codeNavigator = project.service<CodeNavigator>()
-                if (codeNavigator.canNavigateToMethod(methodId)) {
-                    ActivityMonitor.getInstance(project).registerNavigationButtonClicked(true)
-                    codeNavigator.maybeNavigateToMethod(methodInfo.id)
-                } else {
-                    ActivityMonitor.getInstance(project).registerNavigationButtonClicked(false)
-                    EDT.ensureEDT {
-                        HintManager.getInstance().showHint(
-                            JLabel(CODE_NOT_FOUND), RelativePoint.getSouthWestOf(this),
-                            HintManager.HIDE_BY_ESCAPE, 5000
-                        )
+                    val methodId = methodInfo.id
+                    val codeNavigator = project.service<CodeNavigator>()
+                    if (codeNavigator.canNavigateToMethod(methodId)) {
+                        ActivityMonitor.getInstance(project).registerNavigationButtonClicked(true)
+                        codeNavigator.maybeNavigateToMethod(methodInfo.id)
+                    } else {
+                        ActivityMonitor.getInstance(project).registerNavigationButtonClicked(false)
+                        EDT.ensureEDT {
+                            HintManager.getInstance().showHint(
+                                JLabel(CODE_NOT_FOUND), RelativePoint.getSouthWestOf(this),
+                                HintManager.HIDE_BY_ESCAPE, 5000
+                            )
+                        }
                     }
-                }
 
-                return
+                    return
+                }
             }
 
-            val documentInfo = getDocumentInfo()
-            if (documentInfo != null) {
-
-                val fileUri = documentInfo.fileUri
-                val codeNavigator = project.service<CodeNavigator>()
-                if (codeNavigator.canNavigateToFile(fileUri)) {
-                    ActivityMonitor.getInstance(project).registerNavigationButtonClicked(true)
-                    codeNavigator.maybeNavigateToFile(fileUri)
-                } else {
-                    ActivityMonitor.getInstance(project).registerNavigationButtonClicked(false)
-                    EDT.ensureEDT {
-                        HintManager.getInstance().showHint(
-                            JLabel(CODE_NOT_FOUND), RelativePoint.getSouthWestOf(this),
-                            HintManager.HIDE_BY_ESCAPE, 5000
-                        )
+            run {
+                val endpointInfo = getEndpointInfo()
+                if (endpointInfo != null) {
+                    val endpointId = endpointInfo.id
+                    val codeNavigator = project.service<CodeNavigator>()
+                    if (codeNavigator.canNavigateToEndpoint(endpointId)) {
+                        ActivityMonitor.getInstance(project).registerNavigationButtonClicked(true)
+                        codeNavigator.tryNavigateToEndpointById(endpointId)
+                    } else {
+                        ActivityMonitor.getInstance(project).registerNavigationButtonClicked(false)
+                        EDT.ensureEDT {
+                            HintManager.getInstance().showHint(
+                                JLabel(CODE_NOT_FOUND), RelativePoint.getSouthWestOf(this),
+                                HintManager.HIDE_BY_ESCAPE, 5000
+                            )
+                        }
                     }
-                }
 
-                return
+                    return
+                }
+            }
+
+
+            run {
+                val documentInfo = getDocumentInfo()
+                if (documentInfo != null) {
+
+                    val fileUri = documentInfo.fileUri
+                    val codeNavigator = project.service<CodeNavigator>()
+                    if (codeNavigator.canNavigateToFile(fileUri)) {
+                        ActivityMonitor.getInstance(project).registerNavigationButtonClicked(true)
+                        codeNavigator.maybeNavigateToFile(fileUri)
+                    } else {
+                        ActivityMonitor.getInstance(project).registerNavigationButtonClicked(false)
+                        EDT.ensureEDT {
+                            HintManager.getInstance().showHint(
+                                JLabel(CODE_NOT_FOUND), RelativePoint.getSouthWestOf(this),
+                                HintManager.HIDE_BY_ESCAPE, 5000
+                            )
+                        }
+                    }
+
+                    return
+                }
             }
 
 
@@ -155,25 +184,44 @@ class CodeNavigationButton(val project: Project) : TargetButton(project, true) {
     }
 
     private fun tryNavigateToCorrelatedMethods(spanId: String) {
-        val spanCodeObjectId = CodeObjectsUtil.addSpanTypeToId(spanId)
+        val spanIdWithType = CodeObjectsUtil.addSpanTypeToId(spanId)
 
         val codeNavigator = project.service<CodeNavigator>()
-        val codeObjectNavigation = project.service<AnalyticsService>().getCodeObjectNavigation(spanCodeObjectId)
-        val methodIds = codeNavigator.buildPotentialMethodIds(codeObjectNavigation)
+        val codeObjectNavigation = project.service<AnalyticsService>().getCodeObjectNavigation(spanIdWithType)
 
         var managedToNav = false
+
+        val endpointId = codeObjectNavigation.navigationEntry.navEndpointEntry?.endpointCodeObjectId
+        if (endpointId != null) {
+            managedToNav = codeNavigator.tryNavigateToEndpointById(CodeObjectsUtil.stripEndpointPrefix(endpointId))
+        }
+
+        if (!managedToNav) {
+            managedToNav = codeNavigator.maybeNavigateToEndpointBySpan(spanId)
+        }
+
+
+        if (managedToNav) {
+            project.service<NavigationModel>().showCodeNavigation.set(false)
+            return
+        }
+
+        val methodIds = codeNavigator.buildPotentialMethodIds(codeObjectNavigation)
         if (methodIds.size == 1) {
             val methodId = methodIds.first()
 
             if (codeNavigator.canNavigateToMethod(methodId)) {
                 managedToNav = true
                 EDT.ensureEDT {
-                    project.service<InsightsViewOrchestrator>().showInsightsForSpanOrMethodAndNavigateToCode(spanCodeObjectId, methodId)
+                    project.service<InsightsViewOrchestrator>().showInsightsForSpanOrMethodAndNavigateToCode(spanIdWithType, methodId)
                 }
-                Log.log(logger::debug, project, "Navigation to method '{}' succeeded for span {}", methodId, spanCodeObjectId)
+                Log.log(logger::debug, project, "Navigation to method '{}' succeeded for span {}", methodId, spanIdWithType)
             }
             ActivityMonitor.getInstance(project).registerNavigationButtonClicked(true)
         }
+
+
+
 
         if (!managedToNav) {
             val closestParentItems = codeObjectNavigation.navigationEntry.closestParentSpans
@@ -230,6 +278,15 @@ class CodeNavigationButton(val project: Project) : TargetButton(project, true) {
         val panelModel = project.service<InsightsViewService>().model
         return if (panelModel.scope is MethodScope) {
             (panelModel.scope as MethodScope).getMethodInfo()
+        } else {
+            null
+        }
+    }
+
+    private fun getEndpointInfo(): EndpointInfo? {
+        val panelModel = project.service<InsightsViewService>().model
+        return if (panelModel.scope is EndpointScope) {
+            (panelModel.scope as EndpointScope).getEndpoint()
         } else {
             null
         }

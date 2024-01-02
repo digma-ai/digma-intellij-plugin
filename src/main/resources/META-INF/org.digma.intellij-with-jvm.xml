@@ -1,0 +1,83 @@
+<idea-plugin>
+
+    <depends>org.jetbrains.idea.maven</depends>
+    <depends>org.jetbrains.plugins.gradle</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+
+        <!-- Note about light services:
+               It is possible to declare a service using the @Service annotation instead or
+               registering here, but it will create unnecessary services for different IDEs,
+               for example when the plugin s installed on Rider or Pycharm the java/kotlin
+               services are not necessary , and using @Service will create them.
+               So we need to stick with registering services here.
+               -->
+
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaLanguageService"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaCodeObjectDiscovery"/>
+
+
+        <projectService
+                serviceImplementation="org.digma.intellij.plugin.idea.psi.navigation.JavaSpanNavigationProvider"/>
+        <projectService
+                serviceImplementation="org.digma.intellij.plugin.idea.psi.navigation.JavaEndpointNavigationProvider"/>
+        <postStartupActivity
+                implementation="org.digma.intellij.plugin.idea.psi.navigation.JavaSpanNavigationStartupActivity"/>
+
+
+
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.deps.ModulesDepsService"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.idea.deps.ModuleDepsStarter"/>
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.userstats.UserStatsService"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.idea.userstats.UserStatsServiceStarter"/>
+
+
+        <runConfigurationExtension
+                implementation="org.digma.intellij.plugin.idea.runcfg.OtelRunConfigurationExtension"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.idea.runcfg.RunConfigurationStartupActivity"/>
+        <projectService
+                serviceImplementation="org.digma.intellij.plugin.idea.runcfg.AutoOtelAgentRunConfigurationWrapper"/>
+        <projectService
+                serviceImplementation="org.digma.intellij.plugin.idea.runcfg.EeAppServerAtIdeaUltimateRunConfigurationWrapper"/>
+        <projectService
+                serviceImplementation="org.digma.intellij.plugin.idea.runcfg.TomcatRunConfigurationWrapperForIdeaUltimate"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.runcfg.QuarkusRunConfigurationWrapper"/>
+        <projectService
+                serviceImplementation="org.digma.intellij.plugin.idea.runcfg.OpenLibertyRunConfigurationWrapper"/>
+        <applicationService serviceImplementation="org.digma.intellij.plugin.idea.runcfg.OTELJarProvider"/>
+        <postStartupActivity implementation="org.digma.intellij.plugin.idea.runcfg.OTELJarProviderStartup"/>
+
+
+        <projectService
+                serviceImplementation="org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService"/>
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.frameworks.QuarkusConfigureDepsService"/>
+
+
+        <projectService
+                serviceImplementation="org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscoveryService"/>
+
+
+        <projectService serviceImplementation="org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService"/>
+
+
+    </extensions>
+
+
+    <projectListeners>
+        <listener
+                class="org.digma.intellij.plugin.idea.psi.navigation.DocumentsChangeListenerForJavaSpanNavigation"
+                topic="com.intellij.openapi.fileEditor.FileEditorManagerListener"/>
+    </projectListeners>
+
+    <applicationListeners>
+        <listener
+                class="org.digma.intellij.plugin.idea.psi.navigation.BulkFileChangeListenerForJavaSpanNavigation"
+                topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
+    </applicationListeners>
+
+
+</idea-plugin>

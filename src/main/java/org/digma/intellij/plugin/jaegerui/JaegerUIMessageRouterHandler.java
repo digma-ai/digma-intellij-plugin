@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.jaegerui;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.jcef.JBCefBrowser;
@@ -10,11 +11,14 @@ import org.cef.browser.CefFrame;
 import org.cef.callback.CefQueryCallback;
 import org.cef.handler.CefMessageRouterHandlerAdapter;
 import org.digma.intellij.plugin.common.Backgroundable;
+import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.jaegerui.model.incoming.GoToSpanMessage;
 import org.digma.intellij.plugin.jaegerui.model.incoming.SpansMessage;
 import org.digma.intellij.plugin.jaegerui.model.outgoing.SpanData;
 import org.digma.intellij.plugin.jaegerui.model.outgoing.SpansWithResolvedLocationMessage;
+import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils;
 import org.digma.intellij.plugin.log.Log;
+import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest;
 
 import java.util.Collections;
 import java.util.Map;
@@ -44,6 +48,7 @@ public class JaegerUIMessageRouterHandler extends CefMessageRouterHandlerAdapter
 
                 var objectMapper = new ObjectMapper();
                 var jsonNode = objectMapper.readTree(request);
+
                 String action = jsonNode.get("action").asText();
                 switch (action) {
                     case "GET_SPANS_DATA" -> {
@@ -78,13 +83,20 @@ public class JaegerUIMessageRouterHandler extends CefMessageRouterHandlerAdapter
                         GoToSpanMessage goToSpanMessage = objectMapper.treeToValue(jsonNode, GoToSpanMessage.class);
                         JaegerUIService.getInstance(project).goToInsight(goToSpanMessage);
                     }
+                    case JCefMessagesUtils.GLOBAL_OPEN_URL_IN_DEFAULT_BROWSER -> {
+                        OpenInDefaultBrowserRequest openBrowserRequest = JCefMessagesUtils.parseJsonToObject(request, OpenInDefaultBrowserRequest.class);
+                        if (openBrowserRequest != null && openBrowserRequest.getPayload() != null) {
+                            BrowserUtil.browse(openBrowserRequest.getPayload().getUrl());
+                        }
+                    }
                     default -> throw new IllegalStateException("Unexpected value: " + action);
                 }
 
                 stopWatchStop(stopWatch, time -> Log.log(LOGGER::trace, "action {} took {}",action, time));
 
-            } catch (JsonProcessingException e) {
+            } catch (Throwable e) {
                 Log.debugWithException(LOGGER,e,"Exception in onQuery "+request);
+                ErrorReporter.getInstance().reportError("JaegerUIMessageRouterHandler.onQuery", e);
             }
         });
 

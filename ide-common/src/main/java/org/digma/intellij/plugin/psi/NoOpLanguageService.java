@@ -47,7 +47,7 @@ public class NoOpLanguageService implements LanguageService {
     }
 
     @Override
-    public boolean isSupportedFile(Project project, PsiFile psiFile) {
+    public boolean isSupportedFile(PsiFile psiFile) {
         return false;
     }
 
@@ -56,7 +56,6 @@ public class NoOpLanguageService implements LanguageService {
     public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, Editor selectedEditor, int caretOffset) {
         return MethodUnderCaret.getEMPTY();
     }
-
     @Override
     public void navigateToMethod(String methodId) {
         //nothing to do

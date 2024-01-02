@@ -10,19 +10,25 @@ import java.util.Date
 data class EndpointSessionInViewInsight
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
 @ConstructorProperties(
-        "codeObjectId",
-        "environment",
-        "scope",
-        "importance",
-        "decorators",
-        "actualStartTime",
-        "customStartTime",
-        "prefixedCodeObjectId",
-        "shortDisplayInfo",
-        "spanInfo",
-        "route",
-        "serviceName",
-        "spans"
+    "codeObjectId",
+    "environment",
+    "scope",
+    "importance",
+    "decorators",
+    "actualStartTime",
+    "customStartTime",
+    "prefixedCodeObjectId",
+    "shortDisplayInfo",
+    "spanInfo",
+    "route",
+    "serviceName",
+    "spans",
+    "severity",
+    "impact",
+    "criticality",
+    "firstCommitId",
+    "lastCommitId",
+    "deactivatedCommitId",
 )
 constructor(
     override val codeObjectId: String,
@@ -38,9 +44,15 @@ constructor(
     override var route: String,
     override var serviceName: String,
     val spans: List<SessionInViewSpanInfo>,
+    override val severity: Double,
+    override val impact: Double,
+    override val criticality: Double,
+    override val firstCommitId: String?,
+    override val lastCommitId: String?,
+    override val deactivatedCommitId: String?,
 ) : EndpointInsight {
-        override val type: InsightType = InsightType.EndpointSessionInView
-        override val isRecalculateEnabled: Boolean = true // should remove the setter = true later ...support backward compatibility
+    override val type: InsightType = InsightType.EndpointSessionInView
+    override val isRecalculateEnabled: Boolean = true // should remove the setter = true later ...support backward compatibility
 
 }
 

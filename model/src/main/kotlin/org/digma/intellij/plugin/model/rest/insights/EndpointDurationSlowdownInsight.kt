@@ -24,7 +24,13 @@ data class EndpointDurationSlowdownInsight
     "spanInfo",
     "route",
     "serviceName",
-    "durationSlowdownSources"
+    "durationSlowdownSources",
+    "severity",
+    "impact",
+    "criticality",
+    "firstCommitId",
+    "lastCommitId",
+    "deactivatedCommitId",
 )
 constructor(
     override val codeObjectId: String,
@@ -43,6 +49,12 @@ constructor(
     override var route: String,
     override var serviceName: String,
     val durationSlowdownSources: List<DurationSlowdownSource>,
+    override val severity: Double,
+    override val impact: Double,
+    override val criticality: Double,
+    override val firstCommitId: String?,
+    override val lastCommitId: String?,
+    override val deactivatedCommitId: String?,
 ) : EndpointInsight {
     override val type: InsightType = InsightType.EndpointDurationSlowdown
 }

@@ -105,11 +105,11 @@ public class PythonLanguageService implements LanguageService {
     @Override
     public boolean isSupportedFile(@NotNull Project project, @NotNull VirtualFile newFile) {
         PsiFile psiFile = com.intellij.psi.PsiManager.getInstance(project).findFile(newFile);
-        return psiFile != null && PythonLanguage.INSTANCE.equals(psiFile.getLanguage());
+        return psiFile != null && isSupportedFile(psiFile);
     }
 
     @Override
-    public boolean isSupportedFile(@NotNull Project project, @NotNull PsiFile psiFile) {
+    public boolean isSupportedFile(@NotNull PsiFile psiFile) {
         return PythonLanguage.INSTANCE.equals(psiFile.getLanguage());
     }
 
@@ -117,12 +117,12 @@ public class PythonLanguageService implements LanguageService {
     @NotNull
     public MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, Editor selectedEditor, int caretOffset) {
         return Retries.retryWithResult(() -> ReadAction.compute(() -> {
-            if (!isSupportedFile(project, psiFile)) {
-                return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), false);
+            if (!isSupportedFile(psiFile)) {
+                return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset, null, false);
             }
             PsiElement underCaret = psiFile.findElementAt(caretOffset);
             if (underCaret == null) {
-                return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), true);
+                return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset, null, true);
             }
             PyFunction pyFunction = PsiTreeUtil.getParentOfType(underCaret, PyFunction.class);
             if (pyFunction != null) {
@@ -130,12 +130,11 @@ public class PythonLanguageService implements LanguageService {
                 var name = pyFunction.getName() == null ? "" : pyFunction.getName();
                 var containingClass = pyFunction.getContainingClass();
                 var className = containingClass == null ? "" : containingClass.getName() + ".";
-                return new MethodUnderCaret(methodId, name, className, "", PsiUtils.psiFileToUri(psiFile));
+                return new MethodUnderCaret(methodId, name, className, "", PsiUtils.psiFileToUri(psiFile), caretOffset);
             }
-            return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), true);
+            return new MethodUnderCaret("", "", "", "", PsiUtils.psiFileToUri(psiFile), caretOffset);
         }), Throwable.class, 50, 5);
     }
-
 
     /**
      * navigate to a method. this method is meant to be used only to navigate to a method in the current selected editor.
@@ -307,7 +306,7 @@ public class PythonLanguageService implements LanguageService {
             });
         }
 
-        PythonCodeLensService.getInstance(project).environmentChanged(newEnv);
+        PythonCodeLensService.getInstance(project).refreshCodeLens();
     }
 
 
@@ -355,7 +354,7 @@ public class PythonLanguageService implements LanguageService {
                 PythonLanguageUtils.isProjectFile(project, psiFile) &&
                 !projectFileIndex.isInLibrary(psiFile.getVirtualFile()) &&
                 !projectFileIndex.isExcluded(psiFile.getVirtualFile()) &&
-                isSupportedFile(project, psiFile));
+                isSupportedFile(psiFile));
     }
 
     @Override

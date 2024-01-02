@@ -99,11 +99,11 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
         if (psiFile == null) {
             return false;
         }
-        return CSharpLanguageUtil.isCSharpLanguage(psiFile.getLanguage());
+        return isSupportedFile(psiFile);
     }
 
     @Override
-    public boolean isSupportedFile(Project project, PsiFile psiFile) {
+    public boolean isSupportedFile(PsiFile psiFile) {
         return CSharpLanguageUtil.isCSharpLanguage(psiFile.getLanguage());
     }
 
@@ -233,7 +233,7 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     public boolean isRelevant(PsiFile psiFile) {
         return psiFile.isValid() &&
                 psiFile.isWritable() &&
-                isSupportedFile(project, psiFile);
+                isSupportedFile(psiFile);
     }
 
     @Override

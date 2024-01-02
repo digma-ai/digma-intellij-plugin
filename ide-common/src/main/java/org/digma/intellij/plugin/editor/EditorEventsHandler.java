@@ -22,6 +22,7 @@ import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.MethodUnderCaret;
+import org.digma.intellij.plugin.navigation.NavigationModel;
 import org.digma.intellij.plugin.psi.LanguageService;
 import org.digma.intellij.plugin.psi.LanguageServiceLocator;
 import org.digma.intellij.plugin.ui.CaretContextService;
@@ -78,6 +79,9 @@ public class EditorEventsHandler implements FileEditorManagerListener {
     @Override
     public void selectionChanged(@NotNull FileEditorManagerEvent editorManagerEvent) {
         try {
+            //enable code navigation every time editor tab is closed or changed
+            project.getService(NavigationModel.class).getShowCodeNavigation().set(true);
+
             selectionChangedImpl(editorManagerEvent);
         } catch (Exception e) {
             Log.warnWithException(LOGGER, e, "Exception in selectionChanged");

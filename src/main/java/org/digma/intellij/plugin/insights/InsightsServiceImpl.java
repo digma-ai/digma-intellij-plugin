@@ -27,9 +27,11 @@ import org.digma.intellij.plugin.insights.model.outgoing.Method;
 import org.digma.intellij.plugin.insights.model.outgoing.Span;
 import org.digma.intellij.plugin.insights.model.outgoing.ViewMode;
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil;
+import org.digma.intellij.plugin.jcef.common.UserRegistrationEvent;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
 import org.digma.intellij.plugin.model.discovery.CodeLessSpan;
+import org.digma.intellij.plugin.model.discovery.EndpointInfo;
 import org.digma.intellij.plugin.model.discovery.MethodInfo;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsightsStatusResponse;
@@ -41,11 +43,12 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshService;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.common.Laf;
-import org.digma.intellij.plugin.ui.common.MethodInstrumentationPresenter;
+import org.digma.intellij.plugin.instrumentation.MethodInstrumentationPresenter;
 import org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt;
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope;
 import org.digma.intellij.plugin.ui.model.DocumentScope;
 import org.digma.intellij.plugin.ui.model.EmptyScope;
+import org.digma.intellij.plugin.ui.model.EndpointScope;
 import org.digma.intellij.plugin.ui.model.MethodScope;
 import org.digma.intellij.plugin.ui.model.Scope;
 import org.digma.intellij.plugin.ui.model.UIInsightsStatus;
@@ -67,6 +70,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
+
+import static org.digma.intellij.plugin.ui.jcef.JCefMessagesUtilsKt.sendUserEmail;
 
 public final class InsightsServiceImpl implements InsightsService, Disposable {
 
@@ -110,6 +115,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
             cefMessageRouter = CefMessageRouter.create();
             messageHandler = new InsightsMessageRouterHandler(project, jbCefBrowser);
             cefMessageRouter.addHandler(messageHandler, true);
+            jbCefClient.getCefClient().addDownloadHandler(new DownloadHandlerAdapter());
             jbCefClient.getCefClient().addMessageRouter(cefMessageRouter);
 
 
@@ -158,6 +164,13 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
             //todo: change to JaegerButtonStateListener().start(project, jCefComponent)
             SettingsState.getInstance().addChangeListener(settingsState -> JCefBrowserUtil.sendRequestToChangeTraceButtonEnabled(jbCefBrowser), this);
 
+
+            project.getMessageBus().connect(this).subscribe(UserRegistrationEvent.USER_REGISTRATION_TOPIC, new UserRegistrationEvent() {
+                @Override
+                public void userRegistered(@NotNull String email) {
+                    sendUserEmail(jbCefBrowser.getCefBrowser(), email);
+                }
+            });
         }
     }
 
@@ -242,9 +255,46 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
 
     @Override
+    public void updateInsights(@NotNull EndpointInfo endpointInfo) {
+
+        Backgroundable.ensurePooledThread(() -> withUpdateLock(() -> {
+
+            Log.log(logger::debug, "updateInsightsModel to {}. ", endpointInfo);
+
+            model.clearProperties();
+
+            try {
+                var insightsResponse = AnalyticsService.getInstance(project).getInsightsForSingleEndpoint(endpointInfo.idWithType());
+                model.setScope(new EndpointScope(endpointInfo));
+
+                var methodWithInsights = insightsResponse.getMethodsWithInsights().stream().findAny().orElse(null);
+                if (methodWithInsights != null) {
+
+                    var status = UIInsightsStatus.Default.name();
+                    //todo: how to update status for span,AnalyticsService.getCodeObjectInsightStatus is only for method
+//            if (insights.isEmpty()){
+//                Log.log(logger::debug, "No insights for CodeLessSpan {}, Starting background thread to update status.", codeLessSpan.getSpanId());
+//                status = UIInsightsStatus.Loading.name();
+//                updateStatusInBackground();
+//            }
+                    messageHandler.pushInsights(methodWithInsights.getInsights(), Collections.emptyList(), endpointInfo.getId(), EMPTY_SERVICE_NAME,
+                            AnalyticsService.getInstance(project).getEnvironment().getCurrent(), status,
+                            ViewMode.INSIGHTS.name(), Collections.emptyList(), false, false, false);
+                }
+            } catch (AnalyticsServiceException e) {
+                Log.warnWithException(logger, project, e, "Error in getInsightsForSingleSpan");
+                ErrorReporter.getInstance().reportError(project, "InsightsServiceImpl.updateInsights", e);
+                emptyInsights();
+            }
+        }));
+    }
+
+
+    @Override
     public void updateInsights(@NotNull MethodInfo methodInfo) {
         updateInsightsImpl(methodInfo,null);
     }
+
 
     private void updateInsights(@NotNull MethodInfo methodInfo, @Nullable UIInsightsStatus predefinedStatus) {
 
@@ -255,6 +305,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
             }
         }));
     }
+
 
     private void updateInsightsImpl(@NotNull MethodInfo methodInfo,@Nullable UIInsightsStatus predefinedStatus) {
 
@@ -441,6 +492,8 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
                 updateInsights(((MethodScope) scope).getMethodInfo());
             } else if (scope instanceof CodeLessSpanScope) {
                 updateInsights(((CodeLessSpanScope) scope).getSpan());
+            } else if (scope instanceof EndpointScope) {
+                updateInsights(((EndpointScope) scope).getEndpoint());
             } else if (scope instanceof DocumentScope) {
                 //do nothing, keep the view as is, don't empty. todo: maybe refresh the functions list,requires reloading insights
             } else {

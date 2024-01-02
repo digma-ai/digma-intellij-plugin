@@ -22,6 +22,12 @@ data class SpanDurationsInsight
     //  "isRecalculateEnabled",
     "shortDisplayInfo",
     "spanInfo",
+    "severity",
+    "impact",
+    "criticality",
+    "firstCommitId",
+    "lastCommitId",
+    "deactivatedCommitId",
 )
 constructor(
     override val codeObjectId: String,
@@ -34,6 +40,12 @@ constructor(
     override val prefixedCodeObjectId: String?,
     override val shortDisplayInfo: ShortDisplayInfo?,
     override val spanInfo: SpanInfo,
+    override val severity: Double,
+    override val impact: Double,
+    override val criticality: Double,
+    override val firstCommitId: String?,
+    override val lastCommitId: String?,
+    override val deactivatedCommitId: String?,
 ) : SpanInsight {
 
     override val type: InsightType = InsightType.SpanDurations

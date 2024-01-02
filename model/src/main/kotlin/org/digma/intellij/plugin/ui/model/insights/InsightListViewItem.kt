@@ -36,6 +36,7 @@ open class InsightListViewItem<INSIGHT : CodeObjectInsight>(insight: INSIGHT) :
                 InsightType.HighUsage -> 10
                 InsightType.SlowEndpoint -> 20
                 InsightType.EndpointDurationSlowdown -> 25 //??? where it should be ?
+                InsightType.EndpointHighNumberOfQueries -> 26
                 InsightType.EndpointBreakdown -> 5
                 InsightType.Unmapped -> 200
             }

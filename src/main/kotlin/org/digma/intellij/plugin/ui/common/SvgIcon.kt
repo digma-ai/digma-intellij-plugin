@@ -66,7 +66,7 @@ open class SvgIcon constructor(val path: String, val getColor : ColorGetter? = n
                 return IconLoader.findIcon(tmpFile.toURI().toURL())!!
             }
         } catch (e: Exception) {
-            Log.error(LOGGER, e, "Could not colorize vscode icon {}", path)
+            Log.warnWithException(LOGGER, e, "Could not colorize vscode icon {}", path)
             return IconLoader.getIcon(path, javaClass.classLoader)
         }
 

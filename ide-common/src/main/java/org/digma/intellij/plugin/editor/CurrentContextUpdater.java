@@ -100,7 +100,8 @@ public class CurrentContextUpdater implements Disposable {
         MethodUnderCaret methodUnderCaret = DumbService.getInstance(project).runReadActionInSmartMode(() -> languageService.detectMethodUnderCaret(project, psiFile, editor, caretOffset));
 
         Log.log(LOGGER::debug, "found MethodUnderCaret for file: {},'{}", psiFile.getVirtualFile(), methodUnderCaret);
-        //don't call contextChange if the caret is still on the same method
+        //don't call contextChange if the caret is still on the same method or in same lambda scope. when moving between
+        // lambda scope the context will update. this is necessary for some frameworks in kotlin.
         if (methodUnderCaret.equals(latestMethodUnderCaret)) {
             Log.log(LOGGER::debug, "not updating MethodUnderCaret because it is the same as latest, for file: {},'{}", psiFile.getVirtualFile(), methodUnderCaret);
             return;

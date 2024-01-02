@@ -13,6 +13,7 @@ import com.intellij.psi.PsiFile;
 import kotlin.Pair;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.document.DocumentInfoService;
+import org.digma.intellij.plugin.instrumentation.CanInstrumentMethodResult;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
@@ -177,10 +178,11 @@ public interface LanguageService extends Disposable {
     }
 
 
+    @Nullable
     static LanguageService findLanguageServiceByName(Project project, String languageServiceClassName) {
         try {
             return (LanguageService) project.getService(Class.forName(languageServiceClassName));
-        } catch (Exception e) {
+        } catch (Throwable e) {
             return null;
         }
     }
@@ -230,14 +232,16 @@ public interface LanguageService extends Disposable {
     @SuppressWarnings("unused")
     boolean isSupportedFile(Project project, VirtualFile newFile);
 
-    boolean isSupportedFile(Project project, PsiFile psiFile);
+    boolean isSupportedFile(PsiFile psiFile);
 
     //some language services need the editor, for example CSharpLanguageService needs to take
     // getProjectModelId from the selected editor which is the preferred way to find a IPsiSourceFile in resharper. it may be null.
     @NotNull
     MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int caretOffset);
-
-
+    @Nullable
+    default String detectMethodBySpan(@NotNull Project project, String spanCodeObjectId){
+        return null;
+    }
     /**
      * This method is called from the function list preview tab panel and is meant to navigate
      * to a method of the current opened file. it will not navigate to any method in the project.
@@ -281,15 +285,17 @@ public interface LanguageService extends Disposable {
 
     @NotNull List<Pair<TextRange, CodeVisionEntry>> getCodeLens(@NotNull PsiFile psiFile);
 
-    default CanInstrumentMethodResult canInstrumentMethod(@NotNull Project project, String methodId) {
-        return CanInstrumentMethodResult.Failure();
+    @NotNull
+    default CanInstrumentMethodResult canInstrumentMethod(@NotNull Project project, @Nullable String methodId) {
+        return CanInstrumentMethodResult.failure();
     }
 
     default boolean instrumentMethod(@NotNull CanInstrumentMethodResult result) {
         return false;
     }
 
-    // addDependencyToOtelLib so could manually instrument (so canInstrumentMethod would return true)
     default void addDependencyToOtelLib(@NotNull Project project, @NotNull String methodId) {
+        //only relevant for jvm languages
+        //todo: maybe throw non supported operation ?
     }
 }

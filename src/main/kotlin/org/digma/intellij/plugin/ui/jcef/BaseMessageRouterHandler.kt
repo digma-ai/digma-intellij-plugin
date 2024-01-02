@@ -130,7 +130,7 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
                     Log.log(logger::trace, "action {} took {}", action, time)
                 }
 
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 Log.debugWithException(logger, e, "Exception in onQuery {}", request)
                 ErrorReporter.getInstance().reportError(project, "BaseMessageRouterHandler.onQuery", e)
             }

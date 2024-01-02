@@ -8,6 +8,8 @@ interface PanelModel {
 
     fun isMethodScope(): Boolean
 
+    fun isEndpointScope(): Boolean
+
     fun isDocumentScope(): Boolean
 
     fun isCodeLessSpanScope(): Boolean

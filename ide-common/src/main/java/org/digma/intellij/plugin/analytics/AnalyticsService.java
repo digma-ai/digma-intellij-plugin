@@ -47,8 +47,8 @@ import org.digma.intellij.plugin.model.rest.notifications.SetReadNotificationsRe
 import org.digma.intellij.plugin.model.rest.notifications.UnreadNotificationsCountResponse;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
-import org.digma.intellij.plugin.model.rest.usage.EnvsUsageStatusRequest;
 import org.digma.intellij.plugin.model.rest.usage.EnvUsageStatusResult;
+import org.digma.intellij.plugin.model.rest.usage.EnvsUsageStatusRequest;
 import org.digma.intellij.plugin.model.rest.user.UserUsageStatsRequest;
 import org.digma.intellij.plugin.model.rest.user.UserUsageStatsResponse;
 import org.digma.intellij.plugin.model.rest.version.PerformanceMetricsResponse;
@@ -271,6 +271,27 @@ public class AnalyticsService implements Disposable {
     }
 
 
+    public CodeObjectInsight getInsightBySpan(String spanCodeObjectId, String insightType) throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        Log.log(LOGGER::debug, "Requesting insight for span {}", spanCodeObjectId);
+        return executeCatching(() -> analyticsProviderProxy.getInsightBySpan(env, spanCodeObjectId, insightType));
+
+    }
+
+
+    public InsightsOfMethodsResponse getInsightsForSingleEndpoint(String endpointId) throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        MethodWithCodeObjects methodWithCodeObjects = new MethodWithCodeObjects("", Collections.emptyList(), Collections.singletonList(endpointId));
+        InsightsOfMethodsResponse insightsOfMethodsResponse = executeCatching(() -> analyticsProviderProxy.getInsightsOfMethods(new InsightsOfMethodsRequest(env, Collections.singletonList(methodWithCodeObjects))));
+        if (insightsOfMethodsResponse != null && !insightsOfMethodsResponse.getMethodsWithInsights().isEmpty()) {
+            onInsightReceived(insightsOfMethodsResponse.getMethodsWithInsights());
+        }
+        return insightsOfMethodsResponse;
+
+    }
+
+
+
     public InsightsOfMethodsResponse getInsightsOfMethods(List<MethodInfo> methodInfos) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         Log.log(LOGGER::trace, "Requesting insights for next methodInfos {} and next environment {}", methodInfos, env);
@@ -453,7 +474,7 @@ public class AnalyticsService implements Disposable {
         try {
             analyticsProviderProxy.close();
         } catch (Exception e) {
-            Log.error(LOGGER, project, e, "exception while closing AnalyticsProvider {}", e.getMessage());
+            Log.warnWithException(LOGGER, project, e, "exception while closing AnalyticsProvider {}", e.getMessage());
         }
     }
 

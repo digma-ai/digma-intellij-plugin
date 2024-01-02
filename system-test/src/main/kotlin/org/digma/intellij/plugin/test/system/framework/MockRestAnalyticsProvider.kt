@@ -67,7 +67,6 @@ fun mockRestAnalyticsProvider(project: Project): RestAnalyticsProvider {
 
 fun mockGetAbout(mock: RestAnalyticsProvider) {
     `when`(mock.getAbout()).thenAnswer {
-//        Log.test(logger::info, "mock getAbout")
         AboutResult("1.0.0", BackendDeploymentType.Unknown)
     }
 }

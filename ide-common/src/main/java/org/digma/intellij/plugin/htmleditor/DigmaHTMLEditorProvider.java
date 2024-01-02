@@ -39,7 +39,6 @@ public class DigmaHTMLEditorProvider {
     }
 
     public static DigmaHTMLEditorProvider getInstance(Project project){
-        Log.log(LOGGER::warn, "Getting instance of " + DigmaHTMLEditorProvider.class.getSimpleName());
         return project.getService(DigmaHTMLEditorProvider.class);
     }
 

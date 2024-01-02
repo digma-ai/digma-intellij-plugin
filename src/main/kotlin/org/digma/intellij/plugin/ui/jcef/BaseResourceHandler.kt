@@ -24,6 +24,7 @@ abstract class BaseResourceHandler(private val path: String) : CefResourceHandle
 
     abstract fun isIndexHtml(path: String): Boolean
 
+    //todo: probably path is not necessary
     abstract fun buildIndexFromTemplate(path: String): InputStream?
 
 

@@ -11,12 +11,14 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.errors.errorsPanel
 import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import org.digma.intellij.plugin.ui.service.ErrorsViewService
+import org.digma.intellij.plugin.ui.tests.TestsTabPanel
 import javax.swing.BoxLayout
 import javax.swing.JPanel
 
 
 private const val INSIGHTS_TAB_NAME = "Insights"
 private const val ERRORS_TAB_NAME = "Errors"
+private const val TESTS_TAB_NAME = "Tests"
 private const val ERROR_DETAILS_TAB_NAME = "Error Details"
 private const val INSIGHTS_TAB_INDEX = 0
 private const val ERRORS_TAB_INDEX = 1
@@ -52,6 +54,11 @@ class InsightsPanel(private val project: Project) : JPanel() {
         tabbedPane.addTab(ERRORS_TAB_NAME, errorsPanel)
         project.service<InsightsAndErrorsTabsHelper>().setErrorsTabIndex(ERRORS_TAB_INDEX)
 
+        val testsPanel = createTestsPanel(project)
+        testsPanel.border = empty()
+        tabbedPane.addTab(TESTS_TAB_NAME, testsPanel)
+//        project.service<InsightsAndErrorsTabsHelper>().setErrorsTabIndex(ERRORS_TAB_INDEX)
+
 
         tabbedPane.addChangeListener {
 
@@ -82,9 +89,13 @@ class InsightsPanel(private val project: Project) : JPanel() {
 
     private fun createErrorsPanel(project: Project): DigmaTabPanel {
         val errorsPanel = errorsPanel(project)
-        val errorsViewService = project.getService(ErrorsViewService::class.java)
+        val errorsViewService = ErrorsViewService.getInstance(project)
         errorsViewService.panel = errorsPanel
         return errorsPanel
+    }
+
+    private fun createTestsPanel(project: Project): JPanel {
+        return TestsTabPanel(project)
     }
 
 //    private fun createInsightsPanel(project: Project): DigmaTabPanel {

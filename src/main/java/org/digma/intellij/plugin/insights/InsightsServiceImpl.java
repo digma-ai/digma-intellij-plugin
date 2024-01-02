@@ -26,6 +26,7 @@ import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider;
 import org.digma.intellij.plugin.insights.model.outgoing.Method;
 import org.digma.intellij.plugin.insights.model.outgoing.Span;
 import org.digma.intellij.plugin.insights.model.outgoing.ViewMode;
+import org.digma.intellij.plugin.instrumentation.MethodInstrumentationPresenter;
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil;
 import org.digma.intellij.plugin.jcef.common.UserRegistrationEvent;
 import org.digma.intellij.plugin.log.Log;
@@ -43,7 +44,6 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshService;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.common.Laf;
-import org.digma.intellij.plugin.instrumentation.MethodInstrumentationPresenter;
 import org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt;
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope;
 import org.digma.intellij.plugin.ui.model.DocumentScope;
@@ -192,11 +192,11 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
 
     @Override
-    public @Nullable JComponent getComponent() {
+    public @NotNull JComponent getComponent() {
         if (JBCefApp.isSupported()) {
             return jbCefBrowser.getComponent();
         }
-        return null;
+        return new JLabel("JCef not supported");
     }
 
 

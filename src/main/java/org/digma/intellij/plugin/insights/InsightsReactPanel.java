@@ -15,7 +15,7 @@ public class InsightsReactPanel extends JPanel {
     public InsightsReactPanel(Project project) {
         setLayout(new BorderLayout());
         setBorder(JBUI.Borders.empty());
-        add(InsightsService.getInstance(project).getComponent());
+        add(InsightsService.getInstance(project).getComponent(), BorderLayout.CENTER);
         setBackground(listBackground());
     }
 

@@ -13,7 +13,7 @@ import javax.swing.JComponent
 
 interface InsightsService : Disposable {
 
-    fun getComponent(): JComponent?
+    fun getComponent(): JComponent
     fun showInsight(spanId: String)
     fun openHistogram(instrumentationLibrary: String, name: String, insightType: String)
     fun openLiveView(prefixedCodeObjectId: String)

@@ -22,8 +22,7 @@ import java.util.Map;
  * see org.digma.intellij.plugin.editor.EditorEventsHandler#isFileNotChangingContext(com.intellij.openapi.vfs.VirtualFile)
  */
 public class DigmaHTMLEditorProvider {
-
-    private static final Logger LOGGER = Logger.getInstance(DigmaHTMLEditorProvider.class);
+    
 
     private final LinkedHashMap<String,String> ourTitles = new LinkedHashMap<>(){
         @Override

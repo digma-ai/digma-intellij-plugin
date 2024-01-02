@@ -24,7 +24,7 @@ dependencies {
     implementation("org.mockito:mockito-inline:5.2.0")
     implementation(project(":ide-common"))
     implementation(project(":analytics-provider"))
-    implementation(project(":java"))
+    implementation(project(":jvm-common"))
     implementation(project(":rider"))
     implementation(project(":model"))
     implementation(project(":"))

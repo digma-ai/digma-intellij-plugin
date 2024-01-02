@@ -95,7 +95,13 @@ object SingleEnvironmentData {
                 endpointsMedian = Duration(value = 15.0, unit = "ms", raw = 15),
                 endpointsMedianOfMedians = Duration(value = 20.0, unit = "ms", raw = 20),
                 endpointsP75 = Duration(value = 25.0, unit = "ms", raw = 25),
-                median = Duration(value = 15.0, unit = "ms", raw = 15)
+                median = Duration(value = 15.0, unit = "ms", raw = 15),
+                severity = 1.0,
+                criticality = 1.0,
+                impact = 1.0,
+                firstCommitId = null,
+                lastCommitId = null,
+                deactivatedCommitId = null
             )
 
             // Span Duration Insight
@@ -126,7 +132,13 @@ object SingleEnvironmentData {
                     displayName = "methodInsight3",
                     methodCodeObjectId = methodWithCodeObjects.codeObjectId,
                     kind = "my kind"
-                )
+                ),
+                severity = 1.0,
+                criticality = 1.0,
+                impact = 1.0,
+                firstCommitId = null,
+                lastCommitId = null,
+                deactivatedCommitId = null
             )
 
 
@@ -310,7 +322,7 @@ object GoToSpanData {
                 relatedSpansCodeObjectIds = relatedSpansToMethod,
                 relatedEndpointCodeObjectIds = relatedEndPointToMethod
             )
-            
+
             val slowEndpointInsightEnv2 = SlowEndpointInsight(
                 codeObjectId = methodWithCodeObjects.codeObjectId,
                 environment = environmentList[1],
@@ -346,10 +358,16 @@ object GoToSpanData {
                 endpointsMedian = Duration(value = 15.0, unit = "ms", raw = 15),
                 endpointsMedianOfMedians = Duration(value = 20.0, unit = "ms", raw = 20),
                 endpointsP75 = Duration(value = 25.0, unit = "ms", raw = 25),
-                median = Duration(value = 15.0, unit = "ms", raw = 15)
+                median = Duration(value = 15.0, unit = "ms", raw = 15),
+                severity = 1.0,
+                criticality = 1.0,
+                impact = 1.0,
+                firstCommitId = null,
+                lastCommitId = null,
+                deactivatedCommitId = null
             )
-            
-            
+
+
             val methodWithSlowEndPointInsight = MethodWithInsights(
                 methodWithIds = methodWithCodeObjects,
                 insights = listOf(
@@ -410,7 +428,13 @@ object TwoEnvironmentsFirstFileRelatedSingleSpanData {
                         description = "Decorator 1 Span Duration of  $methodName"
                     ),
                 ),
-                spanInfo = spanInfo
+                spanInfo = spanInfo,
+                severity = 1.0,
+                criticality = 1.0,
+                impact = 1.0,
+                firstCommitId = null,
+                lastCommitId = null,
+                deactivatedCommitId = null
             )
 
 
@@ -430,12 +454,12 @@ object TwoEnvironmentSecondFileNavigateToCodeData {
     val expectedMethodUnderCaretAfterNavigationId: String = relatedSpanFromDocument2
     val expectedMethodUnderCaretAfterNavigationName: String = "relatedSpan1"
     val targetMethodOffSet = 204
-    
-    
+
+
     val codeObjectNavigation: CodeObjectNavigation
         get() {
-            
-            
+
+
             val spanInfo = SpanInfo(
                 instrumentationLibrary = "instrumentationLibrary",
                 name = "Span1 - related",
@@ -462,8 +486,8 @@ object TwoEnvironmentSecondFileNavigateToCodeData {
                         )
                     ),
                 )
-                
+
             )
         }
-    
+
 }

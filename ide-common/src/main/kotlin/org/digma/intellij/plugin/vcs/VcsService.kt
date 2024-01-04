@@ -2,6 +2,7 @@ package org.digma.intellij.plugin.vcs
 
 import com.intellij.collaboration.util.resolveRelative
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vcs.ProjectLevelVcsManager
 import com.intellij.openapi.vcs.VcsException
@@ -27,6 +28,14 @@ import java.util.concurrent.TimeUnit
  */
 @Service(Service.Level.PROJECT)
 class VcsService(project: Project) : BaseVcsService(project) {
+
+
+    companion object {
+        @JvmStatic
+        fun getInstance(project: Project): VcsService {
+            return project.service<VcsService>()
+        }
+    }
 
 
     fun getVcsType(): String {

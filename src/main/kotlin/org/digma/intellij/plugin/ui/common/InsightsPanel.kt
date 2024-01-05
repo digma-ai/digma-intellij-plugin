@@ -13,6 +13,8 @@ import org.digma.intellij.plugin.ui.panels.DigmaTabPanel
 import org.digma.intellij.plugin.ui.service.ErrorsViewService
 import javax.swing.BoxLayout
 import javax.swing.JPanel
+import javax.swing.event.AncestorEvent
+import javax.swing.event.AncestorListener
 
 
 private const val INSIGHTS_TAB_NAME = "Insights"
@@ -43,6 +45,22 @@ class InsightsPanel(private val project: Project) : JPanel() {
 
         val insightsNewPanel = createInsightsNewPanel(project)
         insightsNewPanel.border = empty()
+        insightsNewPanel.addAncestorListener(object : AncestorListener {
+            override fun ancestorAdded(event: AncestorEvent) {
+                // Component added somewhere
+            }
+
+            override fun ancestorRemoved(event: AncestorEvent) {
+                // Component removed from container
+                ActivityMonitor.getInstance(project).clearLastInsightsViewed()
+            }
+
+            override fun ancestorMoved(event: AncestorEvent) {
+                // Component container moved
+            }
+        })
+
+        //InsightPanelListener())
         tabbedPane.addTab(INSIGHTS_TAB_NAME, insightsNewPanel)
         project.service<InsightsAndErrorsTabsHelper>().setInsightsTabIndex(INSIGHTS_TAB_INDEX)
 

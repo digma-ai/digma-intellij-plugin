@@ -29,6 +29,7 @@ data class EndpointSessionInViewInsight
     "firstCommitId",
     "lastCommitId",
     "deactivatedCommitId",
+    "reopenCount",
 )
 constructor(
     override val codeObjectId: String,
@@ -50,6 +51,7 @@ constructor(
     override val firstCommitId: String?,
     override val lastCommitId: String?,
     override val deactivatedCommitId: String?,
+    override val reopenCount: Int,
 ) : EndpointInsight {
     override val type: InsightType = InsightType.EndpointSessionInView
     override val isRecalculateEnabled: Boolean = true // should remove the setter = true later ...support backward compatibility

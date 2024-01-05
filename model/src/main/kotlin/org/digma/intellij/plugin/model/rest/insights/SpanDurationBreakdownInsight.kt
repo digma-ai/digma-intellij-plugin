@@ -30,6 +30,7 @@ data class SpanDurationBreakdownInsight
         "firstCommitId",
         "lastCommitId",
         "deactivatedCommitId",
+        "reopenCount",
 )
 constructor(
         override val codeObjectId: String,
@@ -51,6 +52,7 @@ constructor(
         override val firstCommitId: String?,
         override val lastCommitId: String?,
         override val deactivatedCommitId: String?,
+        override val reopenCount: Int,
 ) : SpanInsight {
 
         override val type: InsightType = InsightType.SpanDurationBreakdown

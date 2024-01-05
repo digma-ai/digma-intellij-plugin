@@ -10,6 +10,7 @@ import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.jcef.JBCefBrowser;
+import kotlin.Pair;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.callback.CefQueryCallback;
@@ -50,7 +51,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -161,9 +161,13 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     private void markInsightsViewed(JsonNode jsonNode) throws JsonProcessingException {
         Log.log(LOGGER::trace, project, "got INSIGHTS/MARK_INSIGHT_TYPES_AS_VIEWED message");
         var insightsTypesJasonArray = (ArrayNode) objectMapper.readTree(jsonNode.get("payload").toString()).get("insightTypes");
-        List<InsightType> insightTypeList = new ArrayList<>();
+        List<Pair<InsightType, Integer>> insightTypeList = new ArrayList<>();
         insightsTypesJasonArray.forEach(insightType -> {
-            insightTypeList.add(InsightType.valueOf(insightType.asText()));
+            var type = InsightType.valueOf(insightType.get("type").asText());
+            var reopenCountObject = insightType.get("reopenCount");
+            var reopensCount = (reopenCountObject != null) ? reopenCountObject.asInt() : 0;
+            Pair<InsightType, Integer> insightOpensCount = new Pair<>(type, reopensCount);
+            insightTypeList.add(insightOpensCount);
         });
         Log.log(LOGGER::trace, project, "got insights types {}", insightTypeList);
         ActivityMonitor.getInstance(project).registerInsightsViewed(insightTypeList);

@@ -64,21 +64,22 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
 
                 executeWindowPostMessageJavaScript(browser, objectMapper.writeValueAsString(message))
 
-            } catch (e: AnalyticsServiceException) {
-                Log.warnWithException(logger, e, "error setting tests of span data")
-                val message = SetLatestTestsMessage("digma", "TESTS/SPAN/SET_LATEST_DATA", Payload(null, ErrorPayload(e.getMeaningfulMessage())))
-                Log.log(logger::trace, project, "sending TESTS/SPAN/SET_LATEST_DATA message with error")
-                executeWindowPostMessageJavaScript(browser, objectMapper.writeValueAsString(message))
-                ErrorReporter.getInstance().reportError(project, "TestsMessageRouterHandler.SPAN/SET_LATEST_DATA", e)
             } catch (e: Exception) {
                 Log.warnWithException(logger, e, "error setting tests of span data")
-                val message = SetLatestTestsMessage("digma", "TESTS/SPAN/SET_LATEST_DATA", Payload(null, ErrorPayload(e.toString())))
+                var rethrow = true
+                var errorDescription = e.toString()
+                if (e is AnalyticsServiceException) {
+                    errorDescription = e.getMeaningfulMessage()
+                    rethrow = false
+                }
+                val message = SetLatestTestsMessage("digma", "TESTS/SPAN/SET_LATEST_DATA", Payload(null, ErrorPayload(errorDescription)))
                 Log.log(logger::trace, project, "sending TESTS/SPAN/SET_LATEST_DATA message with error")
                 executeWindowPostMessageJavaScript(browser, objectMapper.writeValueAsString(message))
                 ErrorReporter.getInstance().reportError(project, "TestsMessageRouterHandler.SPAN/SET_LATEST_DATA", e)
-                //let BaseMessageRouterHandler handle the exception too in case it does something meaningful, worst case it will just log
-                // the error again
-                throw e
+                //let BaseMessageRouterHandler handle the exception too in case it does something meaningful, worst case it will just log the error again
+                if (rethrow) {
+                    throw e
+                }
             }
         } // Backgroundable
     }

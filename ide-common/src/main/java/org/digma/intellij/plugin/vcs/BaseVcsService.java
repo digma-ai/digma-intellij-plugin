@@ -28,9 +28,9 @@ import java.util.stream.Stream;
 //todo: not really base, see VcsService kotlin class.
 // i just want to write kotlin code for new features so changed this one to base class.
 // the right thing to do is move all the methods here to VcsService and convert to kotlin
-public class BaseVcsService {
+public abstract class BaseVcsService {
 
-    protected final Logger LOGGER = Logger.getInstance(BaseVcsService.class);
+    protected final Logger LOGGER = Logger.getInstance(this.getClass());
 
     protected final Project project;
 

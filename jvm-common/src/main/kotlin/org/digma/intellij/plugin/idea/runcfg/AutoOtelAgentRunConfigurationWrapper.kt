@@ -58,6 +58,8 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
 
         val project = configuration.project
         val isSpringBootWithMicrometerTracing = evalSpringBootMicrometerTracing(resolvedModule)
+        val isMicronautModule = evalIsMicronautModule(resolvedModule)
+        val useAgent = !(isMicronautModule || isSpringBootWithMicrometerTracing)
         when (val runConfigType = evalRunConfigType(configuration)) {
             RunConfigType.JavaTest,
             RunConfigType.KotlinRun,
@@ -69,6 +71,7 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
                 val javaToolOptions =
                     buildJavaToolOptions(
                         configuration,
+                        useAgent,
                         isSpringBootWithMicrometerTracing,
                         isOtelServiceNameAlreadyDefined(params),
                         runConfigType.isTest
@@ -95,6 +98,7 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
                 val javaToolOptions =
                     buildJavaToolOptions(
                         configuration,
+                        useAgent,
                         isSpringBootWithMicrometerTracing,
                         isOtelServiceNameAlreadyDefined(configuration),
                         runConfigType.isTest
@@ -111,6 +115,7 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
                 val javaToolOptions =
                     buildJavaToolOptions(
                         configuration,
+                        useAgent,
                         isSpringBootWithMicrometerTracing,
                         isOtelServiceNameAlreadyDefined(params),
                         runConfigType.isTest
@@ -144,8 +149,23 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
         return false
     }
 
+    private fun evalIsMicronautModule(module: Module?): Boolean {
+        if (module == null)
+            return false
+
+        val modulesDepsService = ModulesDepsService.getInstance(module.project)
+        val moduleExt = modulesDepsService.getModuleExt(module.name)
+        if (moduleExt != null) {
+            if (moduleExt.metadata.hasMicronaut()) {
+                return true
+            }
+        }
+        return false
+    }
+
     private fun buildJavaToolOptions(
         configuration: RunConfigurationBase<*>,
+        useAgent: Boolean,
         isSpringBootWithMicrometerTracing: Boolean,
         serviceAlreadyDefined: Boolean,
         isTest: Boolean,
@@ -172,7 +192,9 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
                 .plus(" ")
                 .plus("-Dmanagement.tracing.sampling.probability=1.0")
                 .plus(" ")
-        } else {
+        }
+
+        if (useAgent) {
             retVal = retVal
                 .plus("-javaagent:$otelAgentPath")
                 .plus(" ")

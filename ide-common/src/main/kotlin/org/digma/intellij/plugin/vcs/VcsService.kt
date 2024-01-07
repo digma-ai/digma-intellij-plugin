@@ -134,7 +134,7 @@ class VcsService(project: Project) : BaseVcsService(project) {
                 val url = GitUtil.getDefaultRemote(repository.remotes)?.firstUrl
                     ?: return@executeOnPooledThread null
 
-                if (!url.startsWith("git@github.com")) {
+                if (!url.startsWith("git@github.com") && !url.startsWith("https://github.com/")) {
                     return@executeOnPooledThread null
                 }
 

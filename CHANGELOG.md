@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.228] - 2024-01-07
+## [2.0.229] - 2024-01-07
+- Fixed bug where only git@github.com links were supported by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/1568
+
+## 2.0.228 - 2024-01-07
 - addRequestWithErrorReporting Closes #1565 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1567
 
 ## 2.0.227 - 2024-01-07

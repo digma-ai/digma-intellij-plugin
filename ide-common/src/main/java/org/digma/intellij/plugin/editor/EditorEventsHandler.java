@@ -29,6 +29,8 @@ import org.digma.intellij.plugin.ui.CaretContextService;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
 import org.jetbrains.annotations.NotNull;
 
+import static org.digma.intellij.plugin.common.AlarmUtilsKt.addRequestWithErrorReporting;
+
 /**
  * This is the main listener for file open , it will cache a selectionChanged on FileEditorManager and do
  * the necessary actions when file is opened.
@@ -307,18 +309,18 @@ public class EditorEventsHandler implements FileEditorManagerListener {
                     //each language service may do the refresh differently, Rider is different from others.
                     LanguageService languageService = languageServiceLocator.locate(psiFile.getLanguage());
                     Log.log(LOGGER::trace, "calling {}.refreshMethodUnderCaret for {}", languageService, psiFile.getVirtualFile());
-                    contextChangeAlarmAfterFileClosed.addRequest(() -> languageService.refreshMethodUnderCaret(project, psiFile, selectedTextEditor, selectedTextEditor.getCaretModel().getOffset()), 200);
+                    addRequestWithErrorReporting(contextChangeAlarmAfterFileClosed, () -> languageService.refreshMethodUnderCaret(project, psiFile, selectedTextEditor, selectedTextEditor.getCaretModel().getOffset()), 200, "EditorEventsHandler.updateContextAfterFileClosed");
                 } else {
                     Log.log(LOGGER::trace, "updateContextAfterFileClosed no psi file for {}, calling contextEmptyNonSupportedFile", selectedFile);
-                    contextChangeAlarmAfterFileClosed.addRequest(() -> caretContextService.contextEmptyNonSupportedFile(selectedFile.getPath()), 200);
+                    addRequestWithErrorReporting(contextChangeAlarmAfterFileClosed, () -> caretContextService.contextEmptyNonSupportedFile(selectedFile.getPath()), 200, "EditorEventsHandler.updateContextAfterFileClosed");
                 }
             } else {
                 Log.log(LOGGER::trace, "updateContextAfterFileClosed selected file is not relevant {}, calling contextEmptyNonSupportedFile", selectedFile);
-                contextChangeAlarmAfterFileClosed.addRequest(() -> caretContextService.contextEmptyNonSupportedFile(selectedFile.getPath()), 200);
+                addRequestWithErrorReporting(contextChangeAlarmAfterFileClosed, () -> caretContextService.contextEmptyNonSupportedFile(selectedFile.getPath()), 200, "EditorEventsHandler.updateContextAfterFileClosed");
             }
         } else {
             Log.log(LOGGER::trace, "updateContextAfterFileClosed selected no selected editor, calling contextEmpty");
-            contextChangeAlarmAfterFileClosed.addRequest(caretContextService::contextEmpty, 200);
+            addRequestWithErrorReporting(contextChangeAlarmAfterFileClosed, caretContextService::contextEmpty, 200, "EditorEventsHandler.updateContextAfterFileClosed");
         }
     }
 

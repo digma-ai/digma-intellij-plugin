@@ -23,6 +23,7 @@ import org.digma.intellij.plugin.model.rest.insights.SlowSpanInfo;
 import org.digma.intellij.plugin.model.rest.insights.SlowestSpansInsight;
 import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
 import org.digma.intellij.plugin.model.rest.insights.SpanInfo;
+import org.digma.intellij.plugin.model.rest.testing.LatestTestsOfSpanRequest;
 import org.digma.intellij.plugin.model.rest.version.VersionRequest;
 import org.digma.intellij.plugin.model.rest.version.VersionResponse;
 import org.junit.jupiter.api.Test;
@@ -109,6 +110,21 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
         AnalyticsProvider analyticsProvider = new RestAnalyticsProvider("https://localhost:5051");
 
         VersionResponse response = analyticsProvider.getVersions(request);
+
+        System.out.println("response:" + response);
+    }
+
+    //    @Test
+    public void actual_getLatestTestsOfSpan() {
+        final LatestTestsOfSpanRequest request = new LatestTestsOfSpanRequest(
+                "span:io.opentelemetry.opentelemetry-instrumentation-annotations-1.16$_$OwnerValidation.ValidateUserAccess"
+                , List.of()
+                , 1
+                , 10
+        );
+        AnalyticsProvider analyticsProvider = new RestAnalyticsProvider("https://localhost:5051");
+
+        var response = analyticsProvider.getLatestTestsOfSpan(request);
 
         System.out.println("response:" + response);
     }

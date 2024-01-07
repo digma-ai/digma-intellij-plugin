@@ -47,6 +47,7 @@ import org.digma.intellij.plugin.model.rest.notifications.SetReadNotificationsRe
 import org.digma.intellij.plugin.model.rest.notifications.UnreadNotificationsCountResponse;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
+import org.digma.intellij.plugin.model.rest.testing.LatestTestsOfSpanRequest;
 import org.digma.intellij.plugin.model.rest.usage.EnvUsageStatusResult;
 import org.digma.intellij.plugin.model.rest.usage.EnvsUsageStatusRequest;
 import org.digma.intellij.plugin.model.rest.user.UserUsageStatsRequest;
@@ -231,7 +232,6 @@ public class AnalyticsService implements Disposable {
     }
 
 
-
     public LatestCodeObjectEventsResponse getLatestEvents(@NotNull String lastReceivedTime) throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getLatestEvents(new LatestCodeObjectEventsRequest(environment.getEnvironments(), lastReceivedTime)));
     }
@@ -289,7 +289,6 @@ public class AnalyticsService implements Disposable {
         return insightsOfMethodsResponse;
 
     }
-
 
 
     public InsightsOfMethodsResponse getInsightsOfMethods(List<MethodInfo> methodInfos) throws AnalyticsServiceException {
@@ -382,7 +381,6 @@ public class AnalyticsService implements Disposable {
     }
 
 
-
     public String getHtmlGraphForSpanPercentiles(String instrumentationLibrary, String spanName, String backgroundColor) throws AnalyticsServiceException {
         final SpanHistogramQuery spanHistogramQuery = new SpanHistogramQuery(getCurrentEnvironment(), spanName, instrumentationLibrary, JBColor.isBright() ? "light" : "dark", backgroundColor);
         return executeCatching(() -> analyticsProviderProxy.getHtmlGraphForSpanPercentiles(spanHistogramQuery));
@@ -449,6 +447,12 @@ public class AnalyticsService implements Disposable {
     public UnreadNotificationsCountResponse getUnreadNotificationsCount(String notificationsStartDate, String userId) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         return executeCatching(() -> analyticsProviderProxy.getUnreadNotificationsCount(new GetUnreadNotificationsCountRequest(env, userId, notificationsStartDate)));
+    }
+
+
+    public String getLatestTestsOfSpan(String spanCodeObjectId, List<String> environments, int pageNumber, int pageSize) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getLatestTestsOfSpan(
+                new LatestTestsOfSpanRequest(spanCodeObjectId, environments, pageNumber, pageSize)));
     }
 
 

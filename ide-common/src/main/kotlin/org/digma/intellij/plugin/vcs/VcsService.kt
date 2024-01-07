@@ -6,6 +6,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vcs.ProjectLevelVcsManager
 import com.intellij.openapi.vcs.VcsException
+import com.intellij.util.Urls
 import com.intellij.vcsUtil.VcsUtil
 import git4idea.GitUtil
 import git4idea.GitVcs
@@ -134,7 +135,7 @@ class VcsService(project: Project) : BaseVcsService(project) {
                 val url = GitUtil.getDefaultRemote(repository.remotes)?.firstUrl
                     ?: return@executeOnPooledThread null
 
-                if (!url.startsWith("git@github.com") && !url.startsWith("https://github.com/")) {
+                if (!isGithubUrl(url)) {
                     return@executeOnPooledThread null
                 }
 
@@ -255,6 +256,12 @@ class VcsService(project: Project) : BaseVcsService(project) {
         } catch (e: Exception) {
             return false
         }
+    }
+
+
+    private fun isGithubUrl(url: String): Boolean {
+        return Urls.newFromEncoded(url).authority.toString().contains("github.com") ||
+                Urls.newFromEncoded(url).scheme.toString().contains("github.com")
     }
 
 }

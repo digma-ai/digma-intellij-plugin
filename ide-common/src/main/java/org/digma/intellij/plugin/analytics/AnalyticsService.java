@@ -450,9 +450,10 @@ public class AnalyticsService implements Disposable {
     }
 
 
-    public String getLatestTestsOfSpan(String spanCodeObjectId, List<String> environments, int pageNumber, int pageSize) throws AnalyticsServiceException {
+    // return JSON as string (type LatestTestsOfSpanResponse)
+    public String getLatestTestsOfSpan(String spanCodeObjectId, Set<String> environments, int pageNumber, int pageSize) throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getLatestTestsOfSpan(
-                new LatestTestsOfSpanRequest(spanCodeObjectId, environments, pageNumber, pageSize)));
+                new LatestTestsOfSpanRequest(spanCodeObjectId, environments.stream().toList(), pageNumber, pageSize)));
     }
 
 

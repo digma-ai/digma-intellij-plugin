@@ -89,6 +89,6 @@ public class CodeObjectsUtil {
         var className = methodId.substring(0, methodId.indexOf("$_$"));
         var methodName = methodId.substring(methodId.indexOf("$_$") + 3);
 
-        return new Pair<>(methodName, className);
+        return new Pair<>(className, methodName);
     }
 }

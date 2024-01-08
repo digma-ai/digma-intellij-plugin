@@ -9,6 +9,7 @@ import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import kotlin.Pair;
 import org.digma.intellij.plugin.common.EDT;
@@ -298,4 +299,9 @@ public interface LanguageService extends Disposable {
         //only relevant for jvm languages
         //todo: maybe throw non supported operation ?
     }
+
+    @Nullable
+    PsiElement getPsiElementForMethod(@NotNull String methodId);
+
+    boolean executeTestMethod(@NotNull String methodId);
 }

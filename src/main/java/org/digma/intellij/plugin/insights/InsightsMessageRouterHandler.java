@@ -303,8 +303,8 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     }
     private String getMethodFQL(String methodCodeObjectId){
         var pair = CodeObjectsUtil.getMethodClassAndName(methodCodeObjectId);
-        var classFqn = pair.getSecond();
-        var methodName = pair.getFirst();
+        var classFqn = pair.getFirst();
+        var methodName = pair.getSecond();
         return  String.format("%s.%s",classFqn,methodName);
 
     }

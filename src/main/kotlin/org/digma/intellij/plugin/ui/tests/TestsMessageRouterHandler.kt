@@ -48,8 +48,8 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
                 val pageSize: Int = payloadNode.get("pageSize").intValue()
 
                 var environments: Set<String> = Collections.emptySet()
-                val envsNode: JsonNode = payloadNode.get("environments")
-                if (envsNode.isArray() && envsNode.elements().hasNext()) {
+                val envsNode: JsonNode? = payloadNode.get("environments")
+                if (envsNode != null && envsNode.isArray()) {
                     val envsArray = objectMapper.convertValue(envsNode, Array<String>::class.java)
                     environments = envsArray.toSet()
                 }

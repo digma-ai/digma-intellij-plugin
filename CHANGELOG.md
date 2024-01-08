@@ -1,6 +1,17 @@
 # Changelog
 
-## [2.0.226] - 2024-01-01
+## [2.0.229] - 2024-01-07
+- Fixed bug where only git@github.com links were supported by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/1568
+
+## 2.0.228 - 2024-01-07
+- addRequestWithErrorReporting Closes #1565 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1567
+
+## 2.0.227 - 2024-01-07
+- Update Jaeger UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1557
+- Show commit URLs by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1561
+- Feature/do not use OTEL agent when Micronaut module by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1566
+
+## 2.0.226 - 2024-01-01
 - update-build-profiles-2023.2 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1534
 - support disabled kotlin plugin by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1535
 - build endpoint considering file language Closes #1540 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1541

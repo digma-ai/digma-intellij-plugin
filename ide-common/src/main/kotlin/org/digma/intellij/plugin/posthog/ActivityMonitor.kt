@@ -390,8 +390,10 @@ class ActivityMonitor(project: Project) : Disposable {
 
         capture(
             "insights viewed",
-            mapOf("insights" to insightsTypesToRegister)
-        )
+            mapOf(
+                "insights" to insightsTypesToRegister.map { it.first },
+                "insights_v2" to insightsTypesToRegister.map { InsightToReopenCount(it.first, it.second) },
+        ))
     }
 
     fun registerSubDashboardViewed(dashboardType: String) {

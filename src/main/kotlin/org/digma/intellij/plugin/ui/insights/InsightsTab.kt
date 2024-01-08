@@ -78,7 +78,7 @@ fun insightsPanel(project: Project): DigmaTabPanel {
                 .filterIsInstance<InsightGroupListViewItem>()
                 .flatMap { it.modelObject }
                 .filterIsInstance<InsightListViewItem<*>>()
-                .map { it.insightType }
+                .map { Pair(it.insightType, 0) }
                 .distinct()
             if(insightTypes.isNotEmpty()){
                 ActivityMonitor.getInstance(project).registerInsightsViewed(insightTypes)

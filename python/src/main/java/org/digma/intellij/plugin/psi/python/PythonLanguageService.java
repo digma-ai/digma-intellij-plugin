@@ -20,8 +20,10 @@ import com.intellij.psi.PsiManager;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.jetbrains.python.PythonLanguage;
+import com.jetbrains.python.psi.PyClass;
 import com.jetbrains.python.psi.PyFile;
 import com.jetbrains.python.psi.PyFunction;
+import com.jetbrains.python.psi.stubs.PyClassNameIndex;
 import com.jetbrains.python.psi.stubs.PyFunctionNameIndex;
 import kotlin.Pair;
 import org.digma.intellij.plugin.common.EDT;
@@ -99,6 +101,16 @@ public class PythonLanguageService implements LanguageService {
             }
 
             return null;
+        });
+    }
+
+
+    @Override
+    public @Nullable Language getLanguageForClass(@NotNull String className) {
+        return ReadAction.compute(() -> {
+            var classes = PyClassNameIndex.find(className, project, GlobalSearchScope.projectScope(project));
+            var cls = classes.stream().findFirst();
+            return cls.map(PsiElement::getLanguage).orElse(null);
         });
     }
 
@@ -375,13 +387,54 @@ public class PythonLanguageService implements LanguageService {
 
     @Override
     public @Nullable PsiElement getPsiElementForMethod(@NotNull String methodId) {
-        //todo: implement
-        return null;
+        var functionName = PythonLanguageUtils.extractFunctionNameFromCodeObjectId(methodId);
+
+        //try to find a function that produces the same code object id,
+        // if found return its language, else null
+        return ReadAction.compute(() -> {
+            var functions = PyFunctionNameIndex.find(functionName, project, GlobalSearchScope.projectScope(project));
+
+            for (PyFunction function : functions) {
+                var codeObjectId = PythonLanguageUtils.createPythonMethodCodeObjectId(project, function);
+                //python method has multiple ids, we don't know what the backend will send so check with all possible ids
+                List<String> allIds = PythonAdditionalIdsProvider.getAdditionalIdsInclusive(codeObjectId, false);
+                if (allIds.contains(methodId)) {
+                    return function;
+                }
+            }
+
+            return null;
+        });
     }
 
     @Override
-    public boolean executeTestMethod(@NotNull String methodId) {
-        //todo: implement
-        return false;
+    public @Nullable PsiElement getPsiElementForClassByMethodId(@NotNull String methodId) {
+        var functionName = PythonLanguageUtils.extractFunctionNameFromCodeObjectId(methodId);
+
+        //try to find a function that produces the same code object id,
+        // if found return its language, else null
+        return ReadAction.compute(() -> {
+            var functions = PyFunctionNameIndex.find(functionName, project, GlobalSearchScope.projectScope(project));
+
+            for (PyFunction function : functions) {
+                var codeObjectId = PythonLanguageUtils.createPythonMethodCodeObjectId(project, function);
+                //python method has multiple ids, we don't know what the backend will send so check with all possible ids
+                List<String> allIds = PythonAdditionalIdsProvider.getAdditionalIdsInclusive(codeObjectId, false);
+                if (allIds.contains(methodId)) {
+                    return PsiTreeUtil.getParentOfType(function, PyClass.class);
+                }
+            }
+
+            return null;
+        });
+    }
+
+    @Override
+    public @Nullable PsiElement getPsiElementForClassByName(@NotNull String className) {
+        return ReadAction.compute(() -> {
+            var classes = PyClassNameIndex.find(className, project, GlobalSearchScope.projectScope(project));
+            var cls = classes.stream().findFirst();
+            return cls.orElse(null);
+        });
     }
 }

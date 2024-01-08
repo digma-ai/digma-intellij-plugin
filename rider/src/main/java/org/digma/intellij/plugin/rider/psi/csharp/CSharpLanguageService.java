@@ -94,6 +94,16 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
         return null;
     }
 
+    @Nullable
+    @Override
+    public Language getLanguageForClass(@NotNull String className) {
+        //todo: implement
+//        if (LanguageServiceHost.getInstance(project).isCSharpClass(className)) {
+//            return CSharpLanguageUtil.getCSharpLanguageInstanceWithReflection();
+//        }
+        return null;
+    }
+
     @Override
     public boolean isSupportedFile(@NotNull Project project, @NotNull VirtualFile newFile) {
         PsiFile psiFile = com.intellij.psi.PsiManager.getInstance(project).findFile(newFile);
@@ -260,8 +270,12 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     }
 
     @Override
-    public boolean executeTestMethod(@NotNull String methodId) {
-        //todo: implement
-        return false;
+    public @Nullable PsiElement getPsiElementForClassByMethodId(@NotNull String methodId) {
+        return null;
+    }
+
+    @Override
+    public @Nullable PsiElement getPsiElementForClassByName(@NotNull String className) {
+        return null;
     }
 }

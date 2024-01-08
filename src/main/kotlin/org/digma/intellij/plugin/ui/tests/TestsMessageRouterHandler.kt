@@ -12,7 +12,6 @@ import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.executeWindowPostMessageJavaScript
 import org.digma.intellij.plugin.ui.jcef.model.ErrorPayload
 import org.digma.intellij.plugin.ui.jcef.model.Payload
-import org.digma.intellij.plugin.ui.jcef.updateDigmaEngineStatus
 import org.digma.intellij.plugin.ui.tests.model.SetLatestTestsMessage
 import java.util.Collections
 
@@ -27,7 +26,7 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
         Log.log(logger::trace, project, "got action '$action' with message $requestJsonNode")
 
         when (action) {
-            "TESTS/INITIALIZE" -> initialize(project, browser)
+            "TESTS/INITIALIZE" -> initialize(project, browser, requestJsonNode, rawRequest)
             "TESTS/SPAN_GET_LATEST_DATA" -> spanGetLatestData(project, browser, requestJsonNode, rawRequest)
 
             else -> {
@@ -36,8 +35,8 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
         }
     }
 
-    fun initialize(project: Project, browser: CefBrowser) {
-        updateDigmaEngineStatus(project, browser)
+    fun initialize(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String) {
+        Log.log(logger::warn, "initialized'")
     }
 
     fun spanGetLatestData(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String) {

@@ -223,7 +223,6 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
         }
     }
     private void getInsight(JsonNode jsonNode) throws JsonProcessingException {
-
         Log.log(LOGGER::trace, project, "got INSIGHTS/GET_SPAN_INSIGHT message");
         JsonNode payload = objectMapper.readTree(jsonNode.get("payload").toString());
         var spanCodeObjectId = payload.get("spanCodeObjectId").asText();

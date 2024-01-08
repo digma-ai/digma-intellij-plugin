@@ -48,11 +48,11 @@ class InsightsPanel(private val project: Project) : JPanel() {
         insightsNewPanel.addAncestorListener(object : AncestorListener {
             override fun ancestorAdded(event: AncestorEvent) {
                 // Component added somewhere
+                ActivityMonitor.getInstance(project).clearLastInsightsViewed()
             }
 
             override fun ancestorRemoved(event: AncestorEvent) {
                 // Component removed from container
-                ActivityMonitor.getInstance(project).clearLastInsightsViewed()
             }
 
             override fun ancestorMoved(event: AncestorEvent) {

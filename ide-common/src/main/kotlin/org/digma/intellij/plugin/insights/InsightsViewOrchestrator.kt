@@ -162,12 +162,12 @@ class InsightsViewOrchestrator(val project: Project) {
                 documentInfo.methods[methodCodeObjectId]!!
             } else {
                 val methodClassAndName: Pair<String, String> = CodeObjectsUtil.getMethodClassAndName(methodCodeObjectId)
-                MethodInfo(methodCodeObjectId, methodClassAndName.first, methodClassAndName.second, "", "", 0)
+                MethodInfo(methodCodeObjectId, methodClassAndName.second, methodClassAndName.first, "", "", 0)
             }
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError("InsightsViewOrchestrator.tryFindMethodInfo", e)
             val methodClassAndName: Pair<String, String> = CodeObjectsUtil.getMethodClassAndName(methodCodeObjectId)
-            MethodInfo(methodCodeObjectId, methodClassAndName.first, methodClassAndName.second, "", "", 0)
+            MethodInfo(methodCodeObjectId, methodClassAndName.second, methodClassAndName.first, "", "", 0)
 
         }
     }
@@ -300,8 +300,8 @@ class InsightsViewOrchestrator(val project: Project) {
 
         val methodUnderCaret = MethodUnderCaret(
             CodeObjectsUtil.stripMethodPrefix(methodId),
-            methodNameAndClass.first,
             methodNameAndClass.second,
+            methodNameAndClass.first,
             "",
             fileUri,
             caretOffset

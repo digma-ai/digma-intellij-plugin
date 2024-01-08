@@ -373,5 +373,15 @@ public class PythonLanguageService implements LanguageService {
         return PythonCodeLensService.getInstance(project).getCodeLens(psiFile);
     }
 
+    @Override
+    public @Nullable PsiElement getPsiElementForMethod(@NotNull String methodId) {
+        //todo: implement
+        return null;
+    }
 
+    @Override
+    public boolean executeTestMethod(@NotNull String methodId) {
+        //todo: implement
+        return false;
+    }
 }

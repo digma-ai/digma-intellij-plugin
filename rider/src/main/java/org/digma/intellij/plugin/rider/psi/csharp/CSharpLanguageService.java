@@ -11,6 +11,7 @@ import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent;
@@ -250,5 +251,17 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     @Override
     public @NotNull List<Pair<TextRange, CodeVisionEntry>> getCodeLens(@NotNull PsiFile psiFile) {
         throw new UnsupportedOperationException("should not be called for CSharpLanguageService");
+    }
+
+    @Override
+    public @Nullable PsiElement getPsiElementForMethod(@NotNull String methodId) {
+        //todo: implement
+        return null;
+    }
+
+    @Override
+    public boolean executeTestMethod(@NotNull String methodId) {
+        //todo: implement
+        return false;
     }
 }

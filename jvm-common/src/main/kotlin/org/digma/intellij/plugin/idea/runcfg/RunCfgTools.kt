@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.idea.runcfg
 
-import com.google.common.base.Supplier
 import com.intellij.execution.JavaRunConfigurationBase
 import com.intellij.execution.configurations.JavaParameters
 import com.intellij.execution.configurations.ModuleBasedConfiguration
@@ -26,6 +25,7 @@ import org.jetbrains.annotations.VisibleForTesting
 import org.jetbrains.idea.maven.execution.MavenRunConfiguration
 import org.jetbrains.plugins.gradle.service.execution.GradleRunConfiguration
 import org.jetbrains.plugins.gradle.service.task.GradleTaskManager
+import java.util.function.Supplier
 
 
 private val logger: Logger = Logger.getInstance("org.digma.intellij.plugin.idea.runcfg.RunCfgTools")

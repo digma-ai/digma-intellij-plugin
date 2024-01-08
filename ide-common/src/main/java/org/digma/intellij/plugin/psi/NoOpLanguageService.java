@@ -43,6 +43,12 @@ public class NoOpLanguageService implements LanguageService {
     }
 
     @Override
+    public Language getLanguageForClass(@NotNull String methodId) {
+        return new Language("NoLang") {
+        };
+    }
+
+    @Override
     public boolean isSupportedFile(Project project, VirtualFile newFile) {
         return false;
     }
@@ -112,8 +118,13 @@ public class NoOpLanguageService implements LanguageService {
     }
 
     @Override
-    public boolean executeTestMethod(@NotNull String methodId) {
-        return false;
+    public @Nullable PsiElement getPsiElementForClassByMethodId(@NotNull String methodId) {
+        return null;
+    }
+
+    @Override
+    public @Nullable PsiElement getPsiElementForClassByName(@NotNull String className) {
+        return null;
     }
 
     @Override

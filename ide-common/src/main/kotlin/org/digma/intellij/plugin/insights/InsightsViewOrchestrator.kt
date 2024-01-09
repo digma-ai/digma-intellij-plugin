@@ -32,6 +32,7 @@ import org.digma.intellij.plugin.ui.ToolWindowShower
 import org.digma.intellij.plugin.ui.service.ErrorsViewService
 import org.digma.intellij.plugin.ui.service.InsightsService
 import org.digma.intellij.plugin.ui.service.InsightsViewService
+import org.digma.intellij.plugin.ui.service.TestsService
 
 /**
  * the job of this class is to show insights for code objects and navigate to source code if necessary and possible.
@@ -93,6 +94,7 @@ class InsightsViewOrchestrator(val project: Project) {
             val stopWatch = stopWatchStart()
 
             project.service<InsightsService>().updateInsights(span)
+            project.service<TestsService>().refresh()
 
             //clear the latest method so that if user clicks on the editor again after watching code less insights the context will change
             project.service<CurrentContextUpdater>().clearLatestMethod()

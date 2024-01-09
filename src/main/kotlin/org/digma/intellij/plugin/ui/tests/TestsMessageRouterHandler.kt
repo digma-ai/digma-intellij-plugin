@@ -6,12 +6,19 @@ import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.common.Backgroundable
+import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.insights.InsightsModelReactHolder
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.executeWindowPostMessageJavaScript
 import org.digma.intellij.plugin.ui.jcef.model.ErrorPayload
 import org.digma.intellij.plugin.ui.jcef.model.Payload
+import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
+import org.digma.intellij.plugin.ui.model.EndpointScope
+import org.digma.intellij.plugin.ui.model.MethodScope
+import org.digma.intellij.plugin.ui.model.insights.InsightsModelReact
+import org.digma.intellij.plugin.ui.tests.model.ScopeRequest
 import org.digma.intellij.plugin.ui.tests.model.SetLatestTestsMessage
 import java.util.Collections
 
@@ -19,6 +26,10 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
 
     override fun getOriginForTroubleshootingEvent(): String {
         return "tests"
+    }
+
+    private fun model(): InsightsModelReact {
+        return project.service<InsightsModelReactHolder>().model
     }
 
     override fun doOnQuery(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String, action: String) {
@@ -83,4 +94,33 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
         } // Backgroundable
     }
 
+    fun buildScopeRequest(): ScopeRequest? {
+        val scope = model().scope
+
+        val spans: MutableSet<String> = mutableSetOf()
+        var methodCodeObjectId: String? = null
+        var endpointCodeObjectId: String? = null
+
+        when (scope) {
+            is MethodScope -> {
+                val methodInfo = scope.getMethodInfo()
+                if (methodInfo.hasRelatedCodeObjectIds()) {
+                    methodInfo.spans.
+                } else {
+                    methodCodeObjectId = methodInfo.idWithType()
+                }
+            }
+
+            is CodeLessSpanScope -> {
+                spans.add(CodeObjectsUtil.addSpanTypeToId(scope.getSpan().spanId))
+            }
+
+            is EndpointScope -> {
+                endpointCodeObjectId = CodeObjectsUtil.addEndpointTypeToId(scope.getEndpoint().id)
+            }
+            else -> {}
+        }
+    }
+
+    fun toSpans:
 }

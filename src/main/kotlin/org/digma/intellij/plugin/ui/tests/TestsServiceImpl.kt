@@ -60,9 +60,7 @@ class TestsServiceImpl(val project: Project) : TestsService {
                 if (methodInfo.hasRelatedCodeObjectIds()) {
                     spans.addAll(methodInfo.spans.map { it.idWithType() })
 
-                    endpointCodeObjectId = methodInfo.endpoints.firstNotNullOf {
-                        it.idWithType()
-                    }
+                    endpointCodeObjectId = methodInfo.endpoints.firstOrNull()?.idWithType()
                 }
             }
 
@@ -79,7 +77,9 @@ class TestsServiceImpl(val project: Project) : TestsService {
             }
         }
 
-        return ScopeRequest(spans, methodCodeObjectId, endpointCodeObjectId)
+        val scopeRequest = ScopeRequest(spans, methodCodeObjectId, endpointCodeObjectId)
+//        println("DBG: scopeRequest=$scopeRequest")
+        return scopeRequest
     }
 
     // return JSON as string (type LatestTestsOfSpanResponse)

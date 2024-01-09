@@ -1,7 +1,5 @@
 package org.digma.intellij.plugin.ui.tests
 
-import com.intellij.openapi.Disposable
-import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
@@ -9,9 +7,9 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.ui.service.TestsService
 
-@Service(Service.Level.PROJECT)
-class TestsService(val project: Project) : Disposable {
+class TestsServiceImpl(val project: Project) : TestsService {
 
     private val logger = Logger.getInstance(this::class.java)
 

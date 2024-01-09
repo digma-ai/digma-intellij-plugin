@@ -29,6 +29,7 @@
         window.isDockerInstalled = ${isDockerInstalled?string('true', 'false')};
         window.isDockerComposeInstalled = ${isDockerComposeInstalled?string('true', 'false')};
 
+        window.testsRefreshInterval;
     </script>
     <script src="/index.js"></script>
   </body>

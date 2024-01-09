@@ -23,7 +23,7 @@ class TestsService(val project: Project) : Disposable {
     fun getLatestTestsOfSpan(spanCodeObjectId: String, environments: Set<String>, pageNumber: Int, pageSize: Int): String {
         try {
             val json = project.service<AnalyticsService>()
-                .getLatestTestsOfSpan(spanCodeObjectId, environments, pageNumber, pageSize)
+                .getLatestTestsOfSpan(setOf(spanCodeObjectId), environments, pageNumber, pageSize)
             return json
         } catch (e: AnalyticsServiceException) {
             Log.warnWithException(logger, project, e, "exception in getLatestTestsOfSpan")

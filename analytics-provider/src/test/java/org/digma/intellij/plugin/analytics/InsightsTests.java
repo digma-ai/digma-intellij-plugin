@@ -117,7 +117,7 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
     //    @Test
     public void actual_getLatestTestsOfSpan() {
         final LatestTestsOfSpanRequest request = new LatestTestsOfSpanRequest(
-                "span:io.opentelemetry.opentelemetry-instrumentation-annotations-1.16$_$OwnerValidation.ValidateUserAccess"
+                List.of("span:io.opentelemetry.opentelemetry-instrumentation-annotations-1.16$_$OwnerValidation.ValidateUserAccess")
                 , List.of()
                 , 1
                 , 10

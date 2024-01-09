@@ -388,11 +388,13 @@ class ActivityMonitor(project: Project) : Disposable {
             return
         }
 
+        val insightsToReopenCount = insightsTypesToRegister.map { InsightToReopenCount(it.first, it.second) }
         capture(
             "insights viewed",
             mapOf(
                 "insights" to insightsTypesToRegister.map { it.first },
-                "insights_v2" to insightsTypesToRegister.map { InsightToReopenCount(it.first, it.second) },
+                "insights_v2" to insightsToReopenCount,
+                "maxReopenCount" to insightsToReopenCount.maxByOrNull  { it.reopenCount }?.reopenCount.toString()
         ))
     }
 

@@ -93,8 +93,6 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
     static final Long MAX_SECONDS_WAIT_FOR_DEPENDENCY = 6L;
     static final Long WAIT_FOR_DEPENDENCY_INTERVAL_MILLIS = 250L;
 
-    private final InsightsModelReact model = new InsightsModelReact();
-
     private JBCefBrowser jbCefBrowser;
     private CefMessageRouter cefMessageRouter;
     private InsightsMessageRouterHandler messageHandler;
@@ -184,12 +182,15 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
         }
     }
 
+    private InsightsModelReact model() {
+        var modelHolder = project.getService(InsightsModelReactHolder.class);
+        return modelHolder.getModel();
+    }
 
     private void registerAppSchemeHandler(Project project) {
         CefApp.getInstance().registerSchemeHandlerFactory("http", DOMAIN_NAME,
                 new InsightsSchemeHandlerFactory(project));
     }
-
 
     @Override
     public @NotNull JComponent getComponent() {
@@ -226,11 +227,11 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
             Log.log(logger::debug, "updateInsightsModel to {}. ", codeLessSpan);
 
-            model.clearProperties();
+            model().clearProperties();
 
             try {
                 var insightsResponse = AnalyticsService.getInstance(project).getInsightsForSingleSpan(codeLessSpan.getSpanId());
-                model.setScope(new CodeLessSpanScope(codeLessSpan, insightsResponse.getSpanInfo()));
+                model().setScope(new CodeLessSpanScope(codeLessSpan, insightsResponse.getSpanInfo()));
 
                 var insights = insightsResponse.getInsights();
 
@@ -261,11 +262,11 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
             Log.log(logger::debug, "updateInsightsModel to {}. ", endpointInfo);
 
-            model.clearProperties();
+            model().clearProperties();
 
             try {
                 var insightsResponse = AnalyticsService.getInstance(project).getInsightsForSingleEndpoint(endpointInfo.idWithType());
-                model.setScope(new EndpointScope(endpointInfo));
+                model().setScope(new EndpointScope(endpointInfo));
 
                 var methodWithInsights = insightsResponse.getMethodsWithInsights().stream().findAny().orElse(null);
                 if (methodWithInsights != null) {
@@ -292,7 +293,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
     @Override
     public void updateInsights(@NotNull MethodInfo methodInfo) {
-        updateInsightsImpl(methodInfo,null);
+        updateInsightsImpl(methodInfo, null);
     }
 
 
@@ -300,14 +301,14 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
         Backgroundable.ensurePooledThread(() -> withUpdateLock(() -> {
             //check we are still on the same method. while updating the status the scope may already change
-            if (model.getScope() instanceof MethodScope methodScope && methodScope.getMethodInfo().getId().equals(methodInfo.getId())) {
+            if (model().getScope() instanceof MethodScope methodScope && methodScope.getMethodInfo().getId().equals(methodInfo.getId())) {
                 updateInsightsImpl(methodInfo, predefinedStatus);
             }
         }));
     }
 
 
-    private void updateInsightsImpl(@NotNull MethodInfo methodInfo,@Nullable UIInsightsStatus predefinedStatus) {
+    private void updateInsightsImpl(@NotNull MethodInfo methodInfo, @Nullable UIInsightsStatus predefinedStatus) {
 
         Backgroundable.ensurePooledThread(() -> withUpdateLock(() -> {
 
@@ -315,15 +316,15 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
             try {
 
-                model.clearProperties();
+                model().clearProperties();
 
-                model.setScope(new MethodScope(methodInfo));
+                model().setScope(new MethodScope(methodInfo));
 
                 var methodInstrumentationPresenter = new MethodInstrumentationPresenter(project);
                 ApplicationManager.getApplication().runReadAction(() -> methodInstrumentationPresenter.update(methodInfo.getId()));
                 var hasMissingDependency = methodInstrumentationPresenter.getCannotBecauseMissingDependency();
                 var canInstrumentMethod = methodInstrumentationPresenter.getCanInstrumentMethod();
-                model.addProperty(MODEL_PROP_INSTRUMENTATION, methodInstrumentationPresenter);
+                model().addProperty(MODEL_PROP_INSTRUMENTATION, methodInstrumentationPresenter);
 
                 var insights = getInsightsByMethodInfo(methodInfo);
 
@@ -374,8 +375,6 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
     }
 
 
-
-
     private void updateStatusInBackground(@NotNull MethodInfo methodInfo) {
 
         Backgroundable.executeOnPooledThread(() -> {
@@ -384,7 +383,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
             var insightStatus = getInsightStatus(methodInfo);
             Log.log(logger::debug, "Got status from backend {} for method {}", insightStatus, methodInfo.getName());
 
-            UIInsightsStatus status = toUiInsightStatus(insightStatus,methodInfo.hasRelatedCodeObjectIds());
+            UIInsightsStatus status = toUiInsightStatus(insightStatus, methodInfo.hasRelatedCodeObjectIds());
 
             updateInsights(methodInfo, status);
 
@@ -394,10 +393,10 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
     private UIInsightsStatus toUiInsightStatus(InsightStatus status, Boolean methodHasRelatedCodeObjectIds) {
 
-        if (status == InsightStatus.InsightExist || status == InsightStatus.InsightPending){
+        if (status == InsightStatus.InsightExist || status == InsightStatus.InsightPending) {
             return UIInsightsStatus.InsightPending;
         }
-        if (status == InsightStatus.NoSpanData || status == null){
+        if (status == InsightStatus.NoSpanData || status == null) {
             if (Boolean.TRUE.equals(methodHasRelatedCodeObjectIds)) {
                 return UIInsightsStatus.NoSpanData;
             } else {
@@ -429,7 +428,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
     private void emptyInsights() {
         withUpdateLock(() -> {
-            model.clearProperties();
+            model().clearProperties();
             messageHandler.emptyInsights();
         });
     }
@@ -440,13 +439,13 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
         withUpdateLock(() -> {
 
-            model.clearProperties();
+            model().clearProperties();
 
             if (documentInfoContainer == null) {
-                model.setScope(new EmptyScope(fileUri.substring(fileUri.lastIndexOf("/"))));
+                model().setScope(new EmptyScope(fileUri.substring(fileUri.lastIndexOf("/"))));
                 messageHandler.emptyPreview();
             } else {
-                model.setScope(new DocumentScope(documentInfoContainer.getDocumentInfo()));
+                model().setScope(new DocumentScope(documentInfoContainer.getDocumentInfo()));
                 var functionsList = getDocumentPreviewItems(documentInfoContainer);
 
                 var status = UIInsightsStatus.Default;
@@ -486,8 +485,8 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
     public void refreshInsights() {
 
         Backgroundable.ensurePooledThread(() -> withUpdateLock(() -> {
-            Log.log(logger::debug, project, "refreshInsights called, scope is {}", getScopeObject(model.getScope()));
-            var scope = model.getScope();
+            Log.log(logger::debug, project, "refreshInsights called, scope is {}", getScopeObject(model().getScope()));
+            var scope = model().getScope();
             if (scope instanceof MethodScope) {
                 updateInsights(((MethodScope) scope).getMethodInfo());
             } else if (scope instanceof CodeLessSpanScope) {
@@ -527,8 +526,8 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
     @Override
     public void addAnnotation(@NotNull String methodId) {
-        if (model.getScope() instanceof MethodScope methodScope && methodScope.getMethodInfo().getId().equals(methodId)) {
-            MethodInstrumentationPresenter methodInstrumentationPresenter = (MethodInstrumentationPresenter) model.getProperty(MODEL_PROP_INSTRUMENTATION);
+        if (model().getScope() instanceof MethodScope methodScope && methodScope.getMethodInfo().getId().equals(methodId)) {
+            MethodInstrumentationPresenter methodInstrumentationPresenter = (MethodInstrumentationPresenter) model().getProperty(MODEL_PROP_INSTRUMENTATION);
             if (methodInstrumentationPresenter != null) {
                 EDT.ensureEDT(() -> {
                     var succeeded = WriteAction.compute(methodInstrumentationPresenter::instrumentMethod);
@@ -544,8 +543,8 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
     @Override
     public void fixMissingDependencies(@NotNull String methodId) {
-        if (model.getScope() instanceof MethodScope methodScope && methodScope.getMethodInfo().getId().equals(methodId)) {
-            MethodInstrumentationPresenter methodInstrumentationPresenter = (MethodInstrumentationPresenter) model.getProperty(MODEL_PROP_INSTRUMENTATION);
+        if (model().getScope() instanceof MethodScope methodScope && methodScope.getMethodInfo().getId().equals(methodId)) {
+            MethodInstrumentationPresenter methodInstrumentationPresenter = (MethodInstrumentationPresenter) model().getProperty(MODEL_PROP_INSTRUMENTATION);
             if (methodInstrumentationPresenter != null) {
 
                 EDT.ensureEDT(() -> WriteAction.run(methodInstrumentationPresenter::addDependencyToOtelLibAndRefresh));
@@ -631,7 +630,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
                         DigmaHTMLEditorProvider.openEditor(project, "Scaling Graph of Span " + spanName, htmlContent);
                     }
                 }
-            }catch ( IllegalArgumentException e){
+            } catch (IllegalArgumentException e) {
                 //fallback for span type that is not in the enum
                 String htmlContent = AnalyticsService.getInstance(project).getHtmlGraphForSpanScaling(instrumentationLibrary, spanName, Laf.INSTANCE.getColorHex(Laf.Colors.getPLUGIN_BACKGROUND()));
                 DigmaHTMLEditorProvider.openEditor(project, "Scaling Graph of Span " + spanName, htmlContent);
@@ -681,15 +680,14 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
     }
 
 
-
     private Object getScopeObject(Scope scope) {
-        if (scope instanceof CodeLessSpanScope codeLessSpanScope){
+        if (scope instanceof CodeLessSpanScope codeLessSpanScope) {
             return codeLessSpanScope.getSpan();
         }
-        if (scope instanceof MethodScope methodScope){
+        if (scope instanceof MethodScope methodScope) {
             return methodScope.getMethodInfo();
         }
-        if (scope instanceof DocumentScope documentScope){
+        if (scope instanceof DocumentScope documentScope) {
             return documentScope.getDocumentInfo().getFileUri();
         }
         return scope;

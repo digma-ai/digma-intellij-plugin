@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -117,8 +118,9 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
     //    @Test
     public void actual_getLatestTestsOfSpan() {
         final LatestTestsOfSpanRequest request = new LatestTestsOfSpanRequest(
-                List.of("span:io.opentelemetry.opentelemetry-instrumentation-annotations-1.16$_$OwnerValidation.ValidateUserAccess")
-                , List.of()
+                Set.of("span:io.opentelemetry.opentelemetry-instrumentation-annotations-1.16$_$OwnerValidation.ValidateUserAccess")
+                , null, null
+                , Set.of()
                 , 1
                 , 10
         );

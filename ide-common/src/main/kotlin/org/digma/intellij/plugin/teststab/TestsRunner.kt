@@ -56,12 +56,12 @@ class TestsRunner(val project: Project) {
     }
 
 
-    fun executeTestClassByClassName(methodId: String): Boolean {
+    fun executeTestClassByClassName(className: String): Boolean {
 
         return ReadAction.nonBlocking<Boolean> {
             try {
-                val languageService = LanguageService.findLanguageServiceByClassName(project, methodId)
-                val psiElement = languageService.getPsiElementForClassByName(methodId)
+                val languageService = LanguageService.findLanguageServiceByClassName(project, className)
+                val psiElement = languageService.getPsiElementForClassByName(className)
                 psiElement?.let {
                     runTestAction(it)
                 } ?: false

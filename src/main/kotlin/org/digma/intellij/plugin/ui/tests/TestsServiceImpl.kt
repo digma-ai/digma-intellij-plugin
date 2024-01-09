@@ -7,6 +7,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.ui.service.ScopeRequest
 import org.digma.intellij.plugin.ui.service.TestsService
 
 class TestsServiceImpl(val project: Project) : TestsService {
@@ -18,10 +19,10 @@ class TestsServiceImpl(val project: Project) : TestsService {
     }
 
     // return JSON as string (type LatestTestsOfSpanResponse)
-    override fun getLatestTestsOfSpan(spanCodeObjectId: String, environments: Set<String>, pageNumber: Int, pageSize: Int): String {
+    override fun getLatestTestsOfSpan(scopeRequest: ScopeRequest, environments: Set<String>, pageNumber: Int, pageSize: Int): String {
         try {
             val json = project.service<AnalyticsService>()
-                .getLatestTestsOfSpan(setOf(spanCodeObjectId), environments, pageNumber, pageSize)
+                .getLatestTestsOfSpan(scopeRequest.spanCodeObjectIds, environments, pageNumber, pageSize)
             return json
         } catch (e: AnalyticsServiceException) {
             Log.warnWithException(logger, project, e, "exception in getLatestTestsOfSpan")

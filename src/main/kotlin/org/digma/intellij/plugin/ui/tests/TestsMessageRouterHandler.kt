@@ -18,7 +18,8 @@ import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
 import org.digma.intellij.plugin.ui.model.EndpointScope
 import org.digma.intellij.plugin.ui.model.MethodScope
 import org.digma.intellij.plugin.ui.model.insights.InsightsModelReact
-import org.digma.intellij.plugin.ui.tests.model.ScopeRequest
+import org.digma.intellij.plugin.ui.service.ScopeRequest
+import org.digma.intellij.plugin.ui.service.TestsService
 import org.digma.intellij.plugin.ui.tests.model.SetLatestTestsMessage
 import java.util.Collections
 
@@ -51,10 +52,13 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
     }
 
     fun spanGetLatestData(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String) {
+        val scopeRequest = buildScopeRequest()
+        println("scopeRequest = $scopeRequest")
+        if (scopeRequest == null) return
+
         Backgroundable.executeOnPooledThread {
             try {
                 val payloadNode: JsonNode = objectMapper.readTree(requestJsonNode.get("payload").toString())
-                val spanCodeObjectId: String = payloadNode.get("spanCodeObjectId").textValue()
                 val pageNumber: Int = payloadNode.get("pageNumber").intValue()
                 val pageSize: Int = payloadNode.get("pageSize").intValue()
 
@@ -65,7 +69,7 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
                     environments = envsArray.toSet()
                 }
 
-                val testsOfSpanJson = project.service<TestsService>().getLatestTestsOfSpan(spanCodeObjectId, environments, pageNumber, pageSize)
+                val testsOfSpanJson = project.service<TestsService>().getLatestTestsOfSpan(scopeRequest, environments, pageNumber, pageSize)
 
                 Log.log(logger::trace, project, "got tests of span {}", testsOfSpanJson)
                 val payload = objectMapper.readTree(testsOfSpanJson)
@@ -104,10 +108,13 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
         when (scope) {
             is MethodScope -> {
                 val methodInfo = scope.getMethodInfo()
+                methodCodeObjectId = methodInfo.idWithType()
                 if (methodInfo.hasRelatedCodeObjectIds()) {
-                    methodInfo.spans.
-                } else {
-                    methodCodeObjectId = methodInfo.idWithType()
+                    spans.addAll(methodInfo.spans.map { it.idWithType() })
+
+                    endpointCodeObjectId = methodInfo.endpoints.firstNotNullOf {
+                        it.idWithType()
+                    }
                 }
             }
 
@@ -118,9 +125,13 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
             is EndpointScope -> {
                 endpointCodeObjectId = CodeObjectsUtil.addEndpointTypeToId(scope.getEndpoint().id)
             }
-            else -> {}
+
+            else -> {
+                return null
+            }
         }
+
+        return ScopeRequest(spans, methodCodeObjectId, endpointCodeObjectId)
     }
 
-    fun toSpans:
 }

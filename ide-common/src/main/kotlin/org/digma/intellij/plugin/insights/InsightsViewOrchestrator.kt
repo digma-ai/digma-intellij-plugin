@@ -133,6 +133,7 @@ class InsightsViewOrchestrator(val project: Project) {
             val methodInfo: MethodInfo = tryFindMethodInfo(CodeObjectsUtil.stripMethodPrefix(methodCodeObjectId))
 
             project.service<InsightsService>().updateInsights(methodInfo)
+            project.service<TestsService>().refresh()
 
             EDT.ensureEDT {
                 project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
@@ -184,6 +185,7 @@ class InsightsViewOrchestrator(val project: Project) {
         Backgroundable.ensurePooledThread {
 
             project.service<InsightsService>().updateInsights(methodInfo)
+            project.service<TestsService>().refresh()
 
             EDT.ensureEDT {
                 project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
@@ -212,6 +214,7 @@ class InsightsViewOrchestrator(val project: Project) {
         Backgroundable.ensurePooledThread {
 
             project.service<InsightsService>().updateInsights(endpointInfo)
+            project.service<TestsService>().refresh()
 
             EDT.ensureEDT {
                 project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
@@ -355,6 +358,7 @@ class InsightsViewOrchestrator(val project: Project) {
                 documentInfo?.let {
 
                     project.service<InsightsService>().updateInsights(methodInfo)
+                    project.service<TestsService>().refresh()
 
                     val methodHasNewInsights =
                         documentInfo.loadInsightsForMethod(methodUnderCaret.id) // might be long call since going to the backend
@@ -373,6 +377,7 @@ class InsightsViewOrchestrator(val project: Project) {
                 documentInfo?.let {
 
                     project.service<InsightsService>().updateInsights(endpointInfo)
+                    project.service<TestsService>().refresh()
 
                     val methodHasNewInsights =
                         documentInfo.loadInsightsForMethod(methodUnderCaret.id) // might be long call since going to the backend

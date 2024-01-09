@@ -85,9 +85,7 @@ class TestsServiceImpl(val project: Project) : TestsService {
     // return JSON as string (type LatestTestsOfSpanResponse)
     override fun getLatestTestsOfSpan(scopeRequest: ScopeRequest, filter: FilterForLatestTests): String {
         try {
-            val json = project.service<AnalyticsService>().getLatestTestsOfSpan(
-                scopeRequest.spanCodeObjectIds, filter.environments, filter.pageNumber, filter.pageSize
-            )
+            val json = project.service<AnalyticsService>().getLatestTestsOfSpan(scopeRequest, filter)
             return json
         } catch (e: AnalyticsServiceException) {
             Log.warnWithException(logger, project, e, "exception in getLatestTestsOfSpan")

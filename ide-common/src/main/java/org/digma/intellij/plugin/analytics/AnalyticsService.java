@@ -60,6 +60,8 @@ import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
+import org.digma.intellij.plugin.ui.service.FilterForLatestTests;
+import org.digma.intellij.plugin.ui.service.ScopeRequest;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
@@ -451,9 +453,10 @@ public class AnalyticsService implements Disposable {
 
 
     // return JSON as string (type LatestTestsOfSpanResponse)
-    public String getLatestTestsOfSpan(Set<String> spanCodeObjectIds, Set<String> environments, int pageNumber, int pageSize) throws AnalyticsServiceException {
+    public String getLatestTestsOfSpan(ScopeRequest req, FilterForLatestTests filter) throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getLatestTestsOfSpan(
-                new LatestTestsOfSpanRequest(spanCodeObjectIds, null, null, environments, pageNumber, pageSize)));
+                new LatestTestsOfSpanRequest(req.getSpanCodeObjectIds(), req.getMethodCodeObjectId(), req.getEndpointCodeObjectId(),
+                        filter.getEnvironments(), filter.getPageNumber(), filter.getPageSize())));
     }
 
 

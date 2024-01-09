@@ -18,7 +18,7 @@ class TestsServiceImpl(val project: Project) : TestsService {
     }
 
     // return JSON as string (type LatestTestsOfSpanResponse)
-    fun getLatestTestsOfSpan(spanCodeObjectId: String, environments: Set<String>, pageNumber: Int, pageSize: Int): String {
+    override fun getLatestTestsOfSpan(spanCodeObjectId: String, environments: Set<String>, pageNumber: Int, pageSize: Int): String {
         try {
             val json = project.service<AnalyticsService>()
                 .getLatestTestsOfSpan(setOf(spanCodeObjectId), environments, pageNumber, pageSize)

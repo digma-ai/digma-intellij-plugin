@@ -50,7 +50,7 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
 
     private fun buildFilterForLatestTests(requestJsonNode: JsonNode): FilterForLatestTests {
         val payloadNode: JsonNode = objectMapper.readTree(requestJsonNode.get("payload").toString())
-        val pageNumber: Int = payloadNode.get("page").intValue()
+        val pageNumber: Int = payloadNode.get("pageNumber").intValue()
         val pageSize: Int = payloadNode.get("pageSize").intValue()
 
         var environments: Set<String> = Collections.emptySet()

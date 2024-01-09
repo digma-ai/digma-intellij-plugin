@@ -394,7 +394,7 @@ class ActivityMonitor(project: Project) : Disposable {
             mapOf(
                 "insights" to insightsTypesToRegister.map { it.first },
                 "insights_v2" to insightsToReopenCount,
-                "maxReopenCount" to (insightsToReopenCount.maxByOrNull  { it.reopenCount })?.reopenCount.toString()
+                "maxReopenCount" to insightsToReopenCount.maxByOrNull  { it.reopenCount }?.reopenCount.toString()
         ))
     }
 

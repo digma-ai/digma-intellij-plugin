@@ -22,7 +22,6 @@ import kotlin.Triple;
 import org.apache.commons.io.IOUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.notifications.NotificationUtil;
-import org.digma.intellij.plugin.ui.CaretContextService;
 import org.digma.intellij.plugin.vcs.VcsService;
 import org.digma.intellij.plugin.vf.DigmaStackTraceVirtualFile;
 import org.jetbrains.annotations.NotNull;

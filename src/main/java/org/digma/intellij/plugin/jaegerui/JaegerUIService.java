@@ -9,7 +9,6 @@ import freemarker.template.TemplateExceptionHandler;
 import org.apache.commons.collections.CollectionUtils;
 import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
-import org.digma.intellij.plugin.assets.AssetsService;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.ReadActions;
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator;

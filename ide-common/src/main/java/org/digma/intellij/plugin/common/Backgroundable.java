@@ -23,6 +23,7 @@ public class Backgroundable {
     public static void ensureBackground(Project project, String name, Runnable task) {
 
         Log.log(LOGGER::trace, "Request to call task '{}'", name);
+
         if (EDT.isEdt()) {
             Log.log(LOGGER::trace, "Executing task '{}' in background thread", name);
             new Task.Backgroundable(project, name) {

@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("UnstableApiUsage")
 public class IDEUtilsService {
-    
+
     private final IsRider isRider;
     private final IsIdea isIdea;
 

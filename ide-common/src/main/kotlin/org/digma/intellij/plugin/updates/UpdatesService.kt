@@ -23,7 +23,6 @@ import org.digma.intellij.plugin.model.rest.version.VersionRequest
 import org.digma.intellij.plugin.model.rest.version.VersionResponse
 import org.digma.intellij.plugin.semanticversion.SemanticVersionUtil
 import org.digma.intellij.plugin.ui.panels.DigmaResettablePanel
-import org.digma.intellij.plugin.ui.settings.ApplicationUISettingsChangeNotifier
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.annotations.VisibleForTesting
 import java.time.LocalDateTime

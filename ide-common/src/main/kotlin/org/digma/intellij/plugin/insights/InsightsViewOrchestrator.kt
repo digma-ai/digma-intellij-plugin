@@ -245,6 +245,7 @@ class InsightsViewOrchestrator(val project: Project) {
         //todo: this is WIP, currently relying on showing insights by navigating to code locations and relying on caret event.
         // this class should show insights regardless of caret event and navigate to code if possible.
         // we need to separate this two actions , showing insights and navigating to source code.
+
         project.service<MainToolWindowCardsController>().closeCoveringViewsIfNecessary()
         project.service<ErrorsViewOrchestrator>().closeErrorDetailsBackButton()
         ToolWindowShower.getInstance(project).showToolWindow()

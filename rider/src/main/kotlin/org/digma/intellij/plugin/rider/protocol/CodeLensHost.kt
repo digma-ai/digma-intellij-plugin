@@ -13,7 +13,6 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.lens.CodeLens
 import org.digma.intellij.plugin.psi.PsiFileNotFountException
 import org.digma.intellij.plugin.psi.PsiUtils
-import org.digma.intellij.plugin.ui.service.InsightsViewService
 import org.jetbrains.annotations.NotNull
 import java.util.function.Consumer
 

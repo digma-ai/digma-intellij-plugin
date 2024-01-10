@@ -230,7 +230,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
             try {
                 var insightsResponse = AnalyticsService.getInstance(project).getInsightsForSingleSpan(codeLessSpan.getSpanId());
-                model.setScope(new CodeLessSpanScope(codeLessSpan,  insightsResponse.getSpanInfo()));
+                model.setScope(new CodeLessSpanScope(codeLessSpan, insightsResponse.getSpanInfo()));
 
                 var insights = insightsResponse.getInsights();
 

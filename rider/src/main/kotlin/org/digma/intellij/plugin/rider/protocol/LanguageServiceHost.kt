@@ -29,7 +29,6 @@ import org.digma.intellij.plugin.psi.LanguageServiceLocator
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.rider.psi.csharp.CSharpLanguageUtil
 import org.digma.intellij.plugin.ui.CaretContextService
-import org.digma.intellij.plugin.ui.service.InsightsViewService
 import kotlin.random.Random
 
 class LanguageServiceHost(project: Project) : LifetimedProjectComponent(project) {

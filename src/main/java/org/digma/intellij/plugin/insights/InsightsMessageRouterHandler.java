@@ -30,6 +30,7 @@ import org.digma.intellij.plugin.insights.model.outgoing.SetCodeLocationMessage;
 import org.digma.intellij.plugin.insights.model.outgoing.SetCommitInfoData;
 import org.digma.intellij.plugin.insights.model.outgoing.SetCommitInfoMessage;
 import org.digma.intellij.plugin.insights.model.outgoing.SetInsightsDataMessage;
+import org.digma.intellij.plugin.insights.model.outgoing.SetLinkUnlinkResponseMessage;
 import org.digma.intellij.plugin.insights.model.outgoing.SetSpanInsightData;
 import org.digma.intellij.plugin.insights.model.outgoing.SetSpanInsightMessage;
 import org.digma.intellij.plugin.insights.model.outgoing.Span;
@@ -126,6 +127,10 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
                     case "INSIGHTS/MARK_INSIGHT_TYPES_AS_VIEWED" -> markInsightsViewed(jsonNode);
 
+                    case "INSIGHTS/LINK_TICKET" -> linkTicket(jsonNode);
+
+                    case "INSIGHTS/UNLINK_TICKET" -> unlinkTicket(jsonNode);
+
                     case JCefMessagesUtils.GLOBAL_OPEN_TROUBLESHOOTING_GUIDE ->
                             EDT.ensureEDT(() -> MainToolWindowCardsController.getInstance(project).showTroubleshooting());
 
@@ -201,6 +206,27 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
         });
         Log.log(LOGGER::trace, project, "got insights types {}", insightTypeList);
         ActivityMonitor.getInstance(project).registerInsightsViewed(insightTypeList);
+    }
+
+    private void linkTicket(JsonNode jsonNode) throws JsonProcessingException, AnalyticsServiceException {
+        Log.log(LOGGER::trace, project, "got INSIGHTS/LINK_TICKET message");
+        var payload = objectMapper.readTree(jsonNode.get("payload").toString());
+        var codeObjectId = payload.get("codeObjectId").asText();
+        var insightType = payload.get("insightType").asText();
+        var ticketLink = payload.get("ticketLink").asText();
+        var linkTicketResponse = AnalyticsService.getInstance(project).linkTicket(codeObjectId, insightType, ticketLink);
+        var message = new SetLinkUnlinkResponseMessage("digma", "INSIGHTS/SET_TICKET_LINK", linkTicketResponse);
+        serializeAndExecuteWindowPostMessageJavaScript(this.jbCefBrowser.getCefBrowser(), message);
+    }
+
+    private void unlinkTicket(JsonNode jsonNode) throws JsonProcessingException, AnalyticsServiceException {
+        Log.log(LOGGER::trace, project, "got INSIGHTS/UNLINK_TICKET message");
+        var payload = objectMapper.readTree(jsonNode.get("payload").toString());
+        var codeObjectId = payload.get("codeObjectId").asText();
+        var insightType = payload.get("insightType").asText();
+        var unlinkTicketResponse = AnalyticsService.getInstance(project).unlinkTicket(codeObjectId, insightType);
+        var message = new SetLinkUnlinkResponseMessage("digma", "INSIGHTS/SET_TICKET_LINK", unlinkTicketResponse);
+        serializeAndExecuteWindowPostMessageJavaScript(this.jbCefBrowser.getCefBrowser(), message);
     }
 
     private CodeObjectInsight getInsightBySpanTemporary(String spanCodeObjectId, String insightType) throws AnalyticsServiceException {

@@ -35,6 +35,7 @@ class SpanNPlusOneInsight
         "lastCommitId",
         "deactivatedCommitId",
         "reopenCount",
+        "ticketLink"
 )
 constructor(
         override val codeObjectId: String,
@@ -63,6 +64,7 @@ constructor(
         override val lastCommitId: String?,
         override val deactivatedCommitId: String?,
         override val reopenCount: Int,
+        override val ticketLink: String?,
 ) : SpanInsight {
     override val type: InsightType = InsightType.SpaNPlusOne
 }

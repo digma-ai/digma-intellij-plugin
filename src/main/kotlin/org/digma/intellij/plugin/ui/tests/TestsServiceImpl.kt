@@ -6,6 +6,7 @@ import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
+import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.insights.InsightsModelReactHolder
@@ -40,9 +41,11 @@ class TestsServiceImpl(val project: Project) : TestsService {
     }
 
     override fun refresh() {
-        val scopeRequest = getScopeRequest()
-        scopeRequest?.let {
-            fillerOfLatestTests!!.fillDataOfTests(cefBrowser!!, it)
+        Backgroundable.ensurePooledThread {
+            val scopeRequest = getScopeRequest()
+            scopeRequest?.let {
+                fillerOfLatestTests!!.fillDataOfTests(cefBrowser!!, it)
+            }
         }
     }
 
@@ -78,7 +81,7 @@ class TestsServiceImpl(val project: Project) : TestsService {
         }
 
         val scopeRequest = ScopeRequest(spans, methodCodeObjectId, endpointCodeObjectId)
-//        println("DBG: scopeRequest=$scopeRequest")
+        println("DBG: scopeRequest=$scopeRequest")
         return scopeRequest
     }
 

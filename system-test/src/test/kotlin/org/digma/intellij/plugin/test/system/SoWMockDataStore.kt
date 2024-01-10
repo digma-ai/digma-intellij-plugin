@@ -101,7 +101,8 @@ object SingleEnvironmentData {
                 impact = 1.0,
                 firstCommitId = null,
                 lastCommitId = null,
-                deactivatedCommitId = null
+                deactivatedCommitId = null,
+                reopenCount = 0,
             )
 
             // Span Duration Insight
@@ -138,7 +139,8 @@ object SingleEnvironmentData {
                 impact = 1.0,
                 firstCommitId = null,
                 lastCommitId = null,
-                deactivatedCommitId = null
+                deactivatedCommitId = null,
+                reopenCount = 0,
             )
 
 
@@ -364,7 +366,8 @@ object GoToSpanData {
                 impact = 1.0,
                 firstCommitId = null,
                 lastCommitId = null,
-                deactivatedCommitId = null
+                deactivatedCommitId = null,
+                reopenCount = 0,
             )
 
 
@@ -434,7 +437,8 @@ object TwoEnvironmentsFirstFileRelatedSingleSpanData {
                 impact = 1.0,
                 firstCommitId = null,
                 lastCommitId = null,
-                deactivatedCommitId = null
+                deactivatedCommitId = null,
+                reopenCount = 0,
             )
 
 

@@ -3,15 +3,17 @@ package org.digma.intellij.plugin.idea.runcfg
 import com.intellij.execution.JavaTestConfigurationBase
 import com.intellij.execution.application.ApplicationConfiguration
 import com.intellij.execution.configurations.JavaParameters
-import com.intellij.execution.configurations.ModuleRunConfiguration
+import com.intellij.execution.configurations.ModuleRunProfile
 import com.intellij.execution.configurations.ParametersList
 import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.execution.configurations.RunConfigurationBase
 import com.intellij.execution.configurations.RunnerSettings
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunConfiguration
 import com.intellij.openapi.module.Module
 import com.intellij.openapi.project.Project
+import com.intellij.util.PathUtil
 import org.digma.intellij.plugin.common.FileUtils
 import org.digma.intellij.plugin.common.StringUtils.Companion.evalBoolean
 import org.digma.intellij.plugin.common.buildEnvForLocalTests
@@ -266,12 +268,27 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
     }
 
     private fun evalServiceName(configuration: RunConfigurationBase<*>): String {
-        return if (configuration is ModuleRunConfiguration && configuration.modules.isNotEmpty()) {
-            val moduleName = configuration.modules.first().name
-            moduleName.replace(" ", "").trim()
-        } else {
-            configuration.project.name.replace(" ", "").trim()
+
+        val serviceName: String = when (configuration) {
+            //order matters,because MavenRunConfiguration is also ModuleRunProfile but modules will be empty
+            is MavenRunConfiguration -> PathUtil.getFileName(configuration.runnerParameters.workingDirPath)
+            is ExternalSystemRunConfiguration -> PathUtil.getFileName(configuration.settings.externalProjectPath)
+            is ModuleRunProfile -> configuration.modules.firstOrNull()?.name ?: configuration.project.name
+            else -> configuration.project.name
         }
+
+        if (serviceName.isBlank()) {
+            return configuration.project.name.replace(" ", "").trim()
+        }
+
+        return serviceName.replace(" ", "").trim()
+
+//        return if (configuration is ModuleRunConfiguration && configuration.modules.isNotEmpty()) {
+//            val moduleName = configuration.modules.first().name
+//            moduleName.replace(" ", "").trim()
+//        } else {
+//            configuration.project.name.replace(" ", "").trim()
+//        }
     }
 
     private fun getExporterUrl(): String {

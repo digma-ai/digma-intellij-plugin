@@ -11,7 +11,7 @@ intellij {
     pluginName.set("system-test-plugin")
     version.set(platformVersion())
     type.set("IC")
-    plugins.set(listOf("com.intellij.java", "org.jetbrains.idea.maven", "org.jetbrains.plugins.gradle"))
+    plugins.set(listOf("com.intellij.java", "org.jetbrains.kotlin", "org.jetbrains.idea.maven", "org.jetbrains.plugins.gradle"))
 
     pluginsRepositories {
         marketplace()

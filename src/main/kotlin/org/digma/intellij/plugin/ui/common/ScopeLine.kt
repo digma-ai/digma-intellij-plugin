@@ -65,15 +65,15 @@ fun scopeLine(
 
 
     val scopeIcon = JLabel(scopeIconProducer.produce())
-    val scopeLabel = JLabel(scopeNameProducer.produce())
-    scopeLabel.toolTipText = scopeTooltipProducer.produce()
+    val scopeLabel = JLabel(scopeNameProducer.produce().trim())
+    scopeLabel.toolTipText = scopeTooltipProducer.produce().trim()
 
 
     val mainPanel = object : DigmaResettablePanel() {
         override fun reset() {
             scopeIcon.icon = scopeIconProducer.produce()
-            scopeLabel.text = scopeNameProducer.produce()
-            scopeLabel.toolTipText = scopeTooltipProducer.produce()
+            scopeLabel.text = scopeNameProducer.produce().trim()
+            scopeLabel.toolTipText = scopeTooltipProducer.produce().trim()
         }
     }
 

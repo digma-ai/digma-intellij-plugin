@@ -367,27 +367,35 @@ class ActivityMonitor(project: Project) : Disposable {
         )
     }
 
+    fun clearLastInsightsViewed()
+    {
+        lastInsightsViewed.clear()
+    }
 
-    fun registerInsightsViewed(insightTypes: List<InsightType>) {
+    fun registerInsightsViewed(insightsAndCounts: List<Pair<InsightType, Int>>) {
 
-        val insightsTypesToRegister = mutableListOf<InsightType>()
+        val insightsTypesToRegister = mutableListOf<Pair<InsightType, Int>>()
 
-        insightTypes.forEach {
-            if (!lastInsightsViewed.contains(it)) {
-                insightsTypesToRegister.add(it)
+        insightsAndCounts.forEach { (insightType, reopenCount) ->
+            if (!lastInsightsViewed.contains(insightType)) {
+                insightsTypesToRegister.add(insightType to reopenCount)
             }
         }
 
-        lastInsightsViewed.addAll(insightTypes)
+        lastInsightsViewed.addAll(insightsAndCounts.map { it.first })
 
         if (insightsTypesToRegister.isEmpty()) {
             return
         }
 
+        val insightsToReopenCount = insightsTypesToRegister.map { InsightToReopenCount(it.first, it.second) }
         capture(
             "insights viewed",
-            mapOf("insights" to insightsTypesToRegister)
-        )
+            mapOf(
+                "insights" to insightsTypesToRegister.map { it.first },
+                "insights_v2" to insightsToReopenCount,
+                "maxReopenCount" to insightsToReopenCount.maxByOrNull  { it.reopenCount }?.reopenCount.toString()
+        ))
     }
 
     fun registerSubDashboardViewed(dashboardType: String) {

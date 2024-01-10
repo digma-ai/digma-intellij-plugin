@@ -10,7 +10,7 @@ import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.jcef.JBCefBrowser;
-import kotlin.reflect.jvm.internal.ReflectProperties;
+import kotlin.Pair;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.callback.CefQueryCallback;
@@ -22,10 +22,13 @@ import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.document.CodeObjectsUtil;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
+import org.digma.intellij.plugin.insights.model.outgoing.CommitInfo;
 import org.digma.intellij.plugin.insights.model.outgoing.InsightsPayload;
 import org.digma.intellij.plugin.insights.model.outgoing.Method;
 import org.digma.intellij.plugin.insights.model.outgoing.SetCodeLocationData;
 import org.digma.intellij.plugin.insights.model.outgoing.SetCodeLocationMessage;
+import org.digma.intellij.plugin.insights.model.outgoing.SetCommitInfoData;
+import org.digma.intellij.plugin.insights.model.outgoing.SetCommitInfoMessage;
 import org.digma.intellij.plugin.insights.model.outgoing.SetInsightsDataMessage;
 import org.digma.intellij.plugin.insights.model.outgoing.SetSpanInsightData;
 import org.digma.intellij.plugin.insights.model.outgoing.SetSpanInsightMessage;
@@ -47,11 +50,12 @@ import org.digma.intellij.plugin.ui.jcef.RegistrationEventHandler;
 import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest;
 import org.digma.intellij.plugin.ui.service.InsightsService;
 import org.digma.intellij.plugin.ui.settings.Theme;
+import org.digma.intellij.plugin.vcs.VcsService;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -75,14 +79,14 @@ public class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter
         this.jbCefBrowser = jbCefBrowser;
         objectMapper = new ObjectMapper();
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        objectMapper.setDateFormat(new StdDateFormat());
+        objectMapper.setDateFormat( new StdDateFormat());
     }
 
 
     @Override
     public boolean onQuery(CefBrowser browser, CefFrame frame, long queryId, String request, boolean persistent, CefQueryCallback callback) {
 
-        Backgroundable.executeOnPooledThread(() -> {
+        Backgroundable.executeOnPooledThread( () -> {
             try {
 
                 var stopWatch = stopWatchStart();
@@ -139,13 +143,17 @@ public class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter
                         }
                     }
                     case "INSIGHTS/GET_CODE_LOCATIONS" -> getCodeLocations(jsonNode);
+
                     case "INSIGHTS/GET_SPAN_INSIGHT" -> getInsight(jsonNode);
+
+                    case "INSIGHTS/GET_COMMIT_INFO" -> getCommitInfo(jsonNode);
+
                     case JCefMessagesUtils.GLOBAL_REGISTER -> RegistrationEventHandler.getInstance(project).register(jsonNode);
 
                     default -> throw new IllegalStateException("Unexpected value: " + action);
                 }
 
-                stopWatchStop(stopWatch, time -> Log.log(LOGGER::trace, "action {} took {}", action, time));
+                stopWatchStop(stopWatch, time -> Log.log(LOGGER::trace, "action {} took {}",action, time));
 
             } catch (Exception e) {
                 Log.debugWithException(LOGGER, e, "Exception in onQuery " + request);
@@ -158,13 +166,38 @@ public class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter
         return true;
     }
 
+    private void getCommitInfo(JsonNode jsonNode) throws JsonProcessingException {
+
+        var commits = (ArrayNode) objectMapper.readTree(jsonNode.get("payload").toString()).get("commits");
+
+        if (commits == null || commits.isEmpty()) return;
+
+        var commitInfos = new HashMap<String, CommitInfo>();
+        commits.forEach(commit -> {
+            var commitStr = commit.asText();
+            var url = VcsService.getInstance(project).buildRemoteLinkToCommit(commitStr);
+            if (url != null) {
+                commitInfos.put(commitStr, new CommitInfo(commitStr, url));
+            }
+        });
+
+
+        var message = new SetCommitInfoMessage("digma", "INSIGHTS/SET_COMMIT_INFO", new SetCommitInfoData(commitInfos));
+        serializeAndExecuteWindowPostMessageJavaScript(this.jbCefBrowser.getCefBrowser(), message);
+
+    }
+
 
     private void markInsightsViewed(JsonNode jsonNode) throws JsonProcessingException {
         Log.log(LOGGER::trace, project, "got INSIGHTS/MARK_INSIGHT_TYPES_AS_VIEWED message");
         var insightsTypesJasonArray = (ArrayNode) objectMapper.readTree(jsonNode.get("payload").toString()).get("insightTypes");
-        List<InsightType> insightTypeList = new ArrayList<>();
+        List<Pair<InsightType, Integer>> insightTypeList = new ArrayList<>();
         insightsTypesJasonArray.forEach(insightType -> {
-            insightTypeList.add(InsightType.valueOf(insightType.asText()));
+            var type = InsightType.valueOf(insightType.get("type").asText());
+            var reopenCountObject = insightType.get("reopenCount");
+            var reopensCount = (reopenCountObject != null) ? reopenCountObject.asInt() : 0;
+            Pair<InsightType, Integer> insightOpensCount = new Pair<>(type, reopensCount);
+            insightTypeList.add(insightOpensCount);
         });
         Log.log(LOGGER::trace, project, "got insights types {}", insightTypeList);
         ActivityMonitor.getInstance(project).registerInsightsViewed(insightTypeList);
@@ -190,6 +223,7 @@ public class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter
         }
     }
     private void getInsight(JsonNode jsonNode) throws JsonProcessingException {
+
         Log.log(LOGGER::trace, project, "got INSIGHTS/GET_SPAN_INSIGHT message");
         JsonNode payload = objectMapper.readTree(jsonNode.get("payload").toString());
         var spanCodeObjectId = payload.get("spanCodeObjectId").asText();
@@ -380,7 +414,7 @@ public class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter
                       boolean hasMissingDependency,
                       boolean canInstrumentMethod,
                       boolean needsObservabilityFix) {
-        
+
 
         var payload = new InsightsPayload(insights, spans, assetId, serviceName, environment, uiInsightsStatus, viewMode, methods, hasMissingDependency, canInstrumentMethod, needsObservabilityFix);
 

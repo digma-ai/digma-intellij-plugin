@@ -17,6 +17,7 @@ import com.intellij.util.PathUtil
 import org.digma.intellij.plugin.common.FileUtils
 import org.digma.intellij.plugin.common.StringUtils.Companion.evalBoolean
 import org.digma.intellij.plugin.common.buildEnvForLocalTests
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
 import org.digma.intellij.plugin.idea.psi.kotlin.isKotlinRunConfiguration
 import org.digma.intellij.plugin.log.Log
@@ -269,26 +270,25 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
 
     private fun evalServiceName(configuration: RunConfigurationBase<*>): String {
 
-        val serviceName: String = when (configuration) {
-            //order matters,because MavenRunConfiguration is also ModuleRunProfile but modules will be empty
-            is MavenRunConfiguration -> PathUtil.getFileName(configuration.runnerParameters.workingDirPath)
-            is ExternalSystemRunConfiguration -> PathUtil.getFileName(configuration.settings.externalProjectPath)
-            is ModuleRunProfile -> configuration.modules.firstOrNull()?.name ?: configuration.project.name
-            else -> configuration.project.name
+        return try {
+            val serviceName: String = when (configuration) {
+                //order matters,because MavenRunConfiguration is also ModuleRunProfile but modules will be empty
+                is MavenRunConfiguration -> PathUtil.getFileName(configuration.runnerParameters.workingDirPath)
+                is ExternalSystemRunConfiguration -> PathUtil.getFileName(configuration.settings.externalProjectPath)
+                is ModuleRunProfile -> configuration.modules.firstOrNull()?.name ?: configuration.project.name
+                else -> configuration.project.name
+            }
+
+            return if (serviceName.isBlank()) {
+                configuration.project.name.replace(" ", "").trim()
+            } else {
+                serviceName.replace(" ", "").trim()
+            }
+
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("AutoOtelAgentRunConfigurationWrapper.evalServiceName", e)
+            configuration.project.name.replace(" ", "").trim()
         }
-
-        if (serviceName.isBlank()) {
-            return configuration.project.name.replace(" ", "").trim()
-        }
-
-        return serviceName.replace(" ", "").trim()
-
-//        return if (configuration is ModuleRunConfiguration && configuration.modules.isNotEmpty()) {
-//            val moduleName = configuration.modules.first().name
-//            moduleName.replace(" ", "").trim()
-//        } else {
-//            configuration.project.name.replace(" ", "").trim()
-//        }
     }
 
     private fun getExporterUrl(): String {

@@ -6,8 +6,10 @@ import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.common.Backgroundable
+import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.teststab.TestsRunner
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.executeWindowPostMessageJavaScript
 import org.digma.intellij.plugin.ui.jcef.model.ErrorPayload
@@ -34,6 +36,8 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
         when (action) {
             "TESTS/INITIALIZE" -> handleQueryInitialize(project, browser, requestJsonNode, rawRequest)
             "TESTS/SPAN_GET_LATEST_DATA" -> handleQuerySpanGetLatestData(project, browser, requestJsonNode, rawRequest)
+            "TESTS/RUN_TEST" -> handleRunTest(project, browser, requestJsonNode, rawRequest)
+            "TESTS/GO_TO_TRACE" -> handleGoToTrace(project, browser, requestJsonNode, rawRequest)
 
             else -> {
                 Log.log(logger::warn, "got unexpected action='$action'")
@@ -102,4 +106,15 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
         } // Backgroundable
     }
 
+    private fun handleRunTest(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String) {
+        val payloadNode: JsonNode = objectMapper.readTree(requestJsonNode.get("payload").toString())
+        val methodCodeObjectId = payloadNode.get("methodCodeObjectId").textValue()
+        val methodId = CodeObjectsUtil.stripMethodPrefix(methodCodeObjectId)
+
+        project.service<TestsRunner>().executeTestMethod(methodId)
+    }
+
+    private fun handleGoToTrace(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String) {
+        //TODO: impl
+    }
 }

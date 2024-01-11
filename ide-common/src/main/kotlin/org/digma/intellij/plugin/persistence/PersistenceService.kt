@@ -74,5 +74,8 @@ open class PersistenceService : PersistentStateComponent<PersistenceData> {
         state.noInsightsYetNotificationPassed = true
     }
 
+    fun hasEmail(): Boolean{
+        return state.userEmail != null || state.userRegistrationEmail != null
+    }
 
 }

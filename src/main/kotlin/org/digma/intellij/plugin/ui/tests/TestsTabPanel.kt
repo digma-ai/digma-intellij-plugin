@@ -17,8 +17,11 @@ import javax.swing.JLabel
 
 class TestsTabPanel(project: Project) : DisposablePanel() {
 
-    private var jCefComponent: JCefComponent? = null
+    companion object {
+        const val RunTestButtonName: String = "run-test"
+    }
 
+    private var jCefComponent: JCefComponent? = null
 
     init {
         layout = BorderLayout()

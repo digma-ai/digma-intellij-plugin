@@ -9,15 +9,19 @@ import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.posthog.ActivityMonitor
+import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.teststab.TestsRunner
 import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.executeWindowPostMessageJavaScript
 import org.digma.intellij.plugin.ui.jcef.model.ErrorPayload
 import org.digma.intellij.plugin.ui.jcef.model.Payload
+import org.digma.intellij.plugin.ui.list.insights.traceButtonName
 import org.digma.intellij.plugin.ui.service.FillerOfLatestTests
 import org.digma.intellij.plugin.ui.service.FilterForLatestTests
 import org.digma.intellij.plugin.ui.service.ScopeRequest
 import org.digma.intellij.plugin.ui.service.TestsService
+import org.digma.intellij.plugin.ui.tests.TestsTabPanel.Companion.RunTestButtonName
 import org.digma.intellij.plugin.ui.tests.model.SetLatestTestsMessage
 import java.util.Collections
 
@@ -107,6 +111,7 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
     }
 
     private fun handleRunTest(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String) {
+        project.service<ActivityMonitor>().registerButtonClicked(MonitoredPanel.Tests, RunTestButtonName)
         val payloadNode: JsonNode = objectMapper.readTree(requestJsonNode.get("payload").toString())
         val methodCodeObjectId = payloadNode.get("methodCodeObjectId").textValue()
         val methodId = CodeObjectsUtil.stripMethodPrefix(methodCodeObjectId)
@@ -116,5 +121,7 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
 
     private fun handleGoToTrace(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String) {
         //TODO: impl
+        project.service<ActivityMonitor>().registerButtonClicked(MonitoredPanel.Tests, traceButtonName)
+
     }
 }

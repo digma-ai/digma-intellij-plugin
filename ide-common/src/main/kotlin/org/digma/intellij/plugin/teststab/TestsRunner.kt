@@ -9,12 +9,13 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.actionSystem.PlatformCoreDataKeys
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.components.Service
-import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiElement
-import com.intellij.util.concurrency.NonUrgentExecutor
+import org.digma.intellij.plugin.common.EDT
+import org.digma.intellij.plugin.common.ReadActions
+import org.digma.intellij.plugin.common.Retries
+import org.digma.intellij.plugin.common.allowSlowOperation
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.psi.LanguageService
 
@@ -23,66 +24,92 @@ class TestsRunner(val project: Project) {
 
     fun executeTestMethod(methodId: String): Boolean {
 
-        return ReadAction.nonBlocking<Boolean> {
-            try {
-                val languageService = LanguageService.findLanguageServiceByMethodCodeObjectId(project, methodId)
-                val psiElement = languageService.getPsiElementForMethod(methodId)
-                psiElement?.let {
-                    runTestAction(it)
-                } ?: false
+        return try {
 
-            } catch (e: Throwable) {
-                ErrorReporter.getInstance().reportError("TestsRunner.executeTestMethod", e)
-                false
-            }
-        }.submit(NonUrgentExecutor.getInstance()).get()
+            val psiLocation = Retries.retryWithResult({
+                ReadActions.ensureReadAction<PsiLocation<PsiElement>?> {
+                    val languageService = LanguageService.findLanguageServiceByMethodCodeObjectId(project, methodId)
+                    val methodElement = languageService.getPsiElementForMethod(methodId)
+                    methodElement?.let {
+                        PsiLocation(it)
+                    }
+
+                }
+            }, Throwable::class.java, 50, 5)
+
+
+            psiLocation?.let {
+                runTestAction(it)
+            } ?: false
+
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("TestsRunner.executeTestMethod", e)
+            false
+        }
     }
 
     fun executeTestClassByMethodId(methodId: String): Boolean {
 
-        return ReadAction.nonBlocking<Boolean> {
-            try {
-                val languageService = LanguageService.findLanguageServiceByMethodCodeObjectId(project, methodId)
-                val psiElement = languageService.getPsiElementForClassByMethodId(methodId)
-                psiElement?.let {
-                    runTestAction(it)
-                } ?: false
+        return try {
 
-            } catch (e: Throwable) {
-                ErrorReporter.getInstance().reportError("TestsRunner.executeTestClassByMethodId", e)
-                false
-            }
-        }.submit(NonUrgentExecutor.getInstance()).get()
+            val psiLocation = Retries.retryWithResult({
+                ReadActions.ensureReadAction<PsiLocation<PsiElement>?> {
+                    val languageService = LanguageService.findLanguageServiceByMethodCodeObjectId(project, methodId)
+                    val classElement = languageService.getPsiElementForClassByMethodId(methodId)
+                    classElement?.let {
+                        PsiLocation(it)
+                    }
+
+                }
+            }, Throwable::class.java, 50, 5)
+
+
+            psiLocation?.let {
+                runTestAction(it)
+            } ?: false
+
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("TestsRunner.executeTestClassByMethodId", e)
+            false
+        }
     }
 
 
     fun executeTestClassByClassName(className: String): Boolean {
 
-        return ReadAction.nonBlocking<Boolean> {
-            try {
-                val languageService = LanguageService.findLanguageServiceByClassName(project, className)
-                val psiElement = languageService.getPsiElementForClassByName(className)
-                psiElement?.let {
-                    runTestAction(it)
-                } ?: false
+        return try {
 
-            } catch (e: Throwable) {
-                ErrorReporter.getInstance().reportError("TestsRunner.executeTestClassByClassName", e)
-                false
-            }
-        }.submit(NonUrgentExecutor.getInstance()).get()
+            val psiLocation = Retries.retryWithResult({
+                ReadActions.ensureReadAction<PsiLocation<PsiElement>?> {
+                    val languageService = LanguageService.findLanguageServiceByClassName(project, className)
+                    val classElement = languageService.getPsiElementForClassByName(className)
+                    classElement?.let {
+                        PsiLocation(it)
+                    }
+
+                }
+            }, Throwable::class.java, 50, 5)
+
+
+            psiLocation?.let {
+                runTestAction(it)
+            } ?: false
+
+        } catch (e: Throwable) {
+            ErrorReporter.getInstance().reportError("TestsRunner.executeTestClassByClassName", e)
+            false
+        }
     }
 
 
-    private fun runTestAction(psiElement: PsiElement): Boolean {
+    private fun runTestAction(psiLocation: PsiLocation<PsiElement>): Boolean {
 
         try {
 
-            val module = ModuleUtilCore.findModuleForPsiElement(psiElement)
             val runContextAction = RunContextAction(DefaultRunExecutor())
             val dataContext = SimpleDataContext.builder()
-                .add(PlatformCoreDataKeys.MODULE, module)
-                .add(Location.DATA_KEY, PsiLocation(psiElement))
+                .add(Location.DATA_KEY, psiLocation)
+                .add(PlatformCoreDataKeys.MODULE, psiLocation.module)
                 .add(CommonDataKeys.PROJECT, project)
                 .build()
 
@@ -96,13 +123,39 @@ class TestsRunner(val project: Project) {
                 /* isContextMenuAction = */ true,
                 /* isActionToolbar = */ false
             )
-            runContextAction.actionPerformed(event)
+
+
+
+            EDT.ensureEDT {
+                allowSlowOperation {
+                    runContextAction.actionPerformed(event)
+                }
+            }
+
+            //that doesn't mean the execution succeeded , only that there was no exception un to this line
             return true
         } catch (e: Throwable) {
             ErrorReporter.getInstance().reportError("TestsRunner.runTestAction", e)
             return false
         }
     }
+
+//    fun test() {
+//
+//        executeTestMethod("org.springframework.samples.petclinic.owner.PetControllerTest\$_\$testInitCreationForm")
+//        executeTestMethod("org.springframework.samples.petclinic.owner.PetControllerTests\$_\$testInitCreationForm")
+//
+//        Thread.sleep(30000)
+//
+//        executeTestClassByMethodId("org.springframework.samples.petclinic.owner.PetControllerTest\$_\$testInitCreationForm")
+//        executeTestClassByMethodId("org.springframework.samples.petclinic.owner.PetControllerTests\$_\$testInitCreationForm")
+//
+//        Thread.sleep(30000)
+//
+//        executeTestClassByClassName("org.springframework.samples.petclinic.owner.PetControllerTest")
+//        executeTestClassByClassName("org.springframework.samples.petclinic.owner.PetControllerTests")
+//
+//    }
 
 
 }

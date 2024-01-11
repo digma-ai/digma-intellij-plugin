@@ -154,12 +154,12 @@ public class MicronautFramework extends EndpointDiscovery {
 
         String httpMethodUcase = getHttpMethod(httpMethodAnnotation).toUpperCase();
 
-        // value for example : 'epHTTP:HTTP GET GET - /books/get'
+        // value for example : 'epHTTP:HTTP GET - /books/get'
         return "" +
                 // digma part
                 "epHTTP:" + "HTTP " + httpMethodUcase + " " +
                 // Micronaut part
-                httpMethodUcase + " - " + EndpointDiscoveryUtils.combineUri(endpointUriPrefix, endpointUriSuffix);
+                EndpointDiscoveryUtils.combineUri(endpointUriPrefix, endpointUriSuffix);
     }
 
     @NotNull

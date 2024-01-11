@@ -1,6 +1,17 @@
 # Changelog
 
-## [2.0.229] - 2024-01-07
+## [2.0.231] - 2024-01-11
+- allowSlowOperation-isRelevantFile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1579
+- fixes backend issue ##1537 by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1583
+
+## 2.0.230 - 2024-01-10
+- is github url by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1569
+- Reopen count for insights view posthog event by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/1560
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1575
+- Added max reopen count by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/1576
+- trancate-scope-text Closes #872 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1573
+
+## 2.0.229 - 2024-01-07
 - Fixed bug where only git@github.com links were supported by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/1568
 
 ## 2.0.228 - 2024-01-07

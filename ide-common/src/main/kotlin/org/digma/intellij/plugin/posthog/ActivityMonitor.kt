@@ -34,7 +34,7 @@ class ActivityMonitor(project: Project) : Disposable {
             return project.getService(ActivityMonitor::class.java)
         }
     }
-
+    private val installStatusPropertyName: String = "install status"
     private val userId: String = UserId.userId
     private val isDevUser: Boolean = UserId.isDevUser
     private val latestUnknownRunConfigTasks = mutableMapOf<String, Instant>()
@@ -490,11 +490,27 @@ class ActivityMonitor(project: Project) : Disposable {
 
     fun registerPluginUninstalled(): String {
         postHog?.capture(userId, "plugin uninstalled")
+        if(PersistenceService.getInstance().hasEmail()){
+            postHog?.capture(userId, "registered user uninstalled")
+        }
+        postHog?.set(
+            userId, mapOf(
+                installStatusPropertyName to "Uninstalled"
+            )
+        )
         return userId
     }
 
     fun registerPluginDisabled(): String {
         postHog?.capture(userId, "plugin disabled")
+        if(PersistenceService.getInstance().hasEmail()){
+            postHog?.capture(userId, "registered user disabled")
+        }
+        postHog?.set(
+            userId, mapOf(
+                installStatusPropertyName to "Disabled"
+            )
+        )
         return userId
     }
 
@@ -607,7 +623,8 @@ class ActivityMonitor(project: Project) : Disposable {
                 "ide.version" to ideVersion,
                 "ide.build" to ideBuildNumber,
                 "plugin.version" to pluginVersion,
-                "user.type" to if (isDevUser) "internal" else "external"
+                "user.type" to if (isDevUser) "internal" else "external",
+                installStatusPropertyName to "Active"
             )
         )
     }

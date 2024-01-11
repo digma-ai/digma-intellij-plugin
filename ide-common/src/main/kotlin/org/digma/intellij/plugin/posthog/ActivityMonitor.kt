@@ -475,6 +475,26 @@ class ActivityMonitor(project: Project) : Disposable {
         registerUserAction("Clicked on view dashboard")
     }
 
+    fun linkClicked(insightType: String) {
+        capture(
+            "Link ticket button-clicked",
+            mapOf(
+                "insight" to insightType
+            )
+        )
+        registerUserAction("Clicked on link ticket")
+    }
+
+    fun unlinkClicked(insightType: String) {
+        capture(
+            "Unlink ticket button-clicked",
+            mapOf(
+                "insight" to insightType
+            )
+        )
+        registerUserAction("Clicked on unlink ticket")
+    }
+
 
     //todo: remove at some point
     fun registerFirstTimePluginLoaded() {

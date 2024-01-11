@@ -217,6 +217,7 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
         var linkTicketResponse = AnalyticsService.getInstance(project).linkTicket(codeObjectId, insightType, ticketLink);
         var message = new SetLinkUnlinkResponseMessage("digma", "INSIGHTS/SET_TICKET_LINK", linkTicketResponse);
         serializeAndExecuteWindowPostMessageJavaScript(this.jbCefBrowser.getCefBrowser(), message);
+        ActivityMonitor.getInstance(project).linkClicked(insightType);
     }
 
     private void unlinkTicket(JsonNode jsonNode) throws JsonProcessingException, AnalyticsServiceException {
@@ -227,6 +228,7 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
         var unlinkTicketResponse = AnalyticsService.getInstance(project).unlinkTicket(codeObjectId, insightType);
         var message = new SetLinkUnlinkResponseMessage("digma", "INSIGHTS/SET_TICKET_LINK", unlinkTicketResponse);
         serializeAndExecuteWindowPostMessageJavaScript(this.jbCefBrowser.getCefBrowser(), message);
+        ActivityMonitor.getInstance(project).unlinkClicked(insightType);
     }
 
     private CodeObjectInsight getInsightBySpanTemporary(String spanCodeObjectId, String insightType) throws AnalyticsServiceException {

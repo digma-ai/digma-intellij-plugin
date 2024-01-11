@@ -4,10 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
+import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
@@ -18,6 +20,7 @@ import org.digma.intellij.plugin.ui.jcef.model.ErrorPayload
 import org.digma.intellij.plugin.ui.jcef.model.Payload
 import org.digma.intellij.plugin.ui.list.insights.openJaegerFromRecentActivity
 import org.digma.intellij.plugin.ui.list.insights.traceButtonName
+import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
 import org.digma.intellij.plugin.ui.service.FillerOfLatestTests
 import org.digma.intellij.plugin.ui.service.FilterForLatestTests
 import org.digma.intellij.plugin.ui.service.ScopeRequest
@@ -43,6 +46,7 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
             "TESTS/SPAN_GET_LATEST_DATA" -> handleQuerySpanGetLatestData(project, browser, requestJsonNode, rawRequest)
             "TESTS/RUN_TEST" -> handleRunTest(project, browser, requestJsonNode, rawRequest)
             "TESTS/GO_TO_TRACE" -> handleGoToTrace(project, browser, requestJsonNode, rawRequest)
+            "TESTS/GO_TO_SPAN_OF_TEST" -> handleGoToSpanOfTest(project, browser, requestJsonNode, rawRequest)
 
             else -> {
                 Log.log(logger::warn, "got unexpected action='$action'")
@@ -118,6 +122,23 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
         val methodId = CodeObjectsUtil.stripMethodPrefix(methodCodeObjectId)
 
         project.service<TestsRunner>().executeTestMethod(methodId)
+    }
+
+    private fun handleGoToSpanOfTest(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String) {
+        println("DBG: handleGoToSpanOfTest")
+        val payloadNode: JsonNode = objectMapper.readTree(requestJsonNode.get("payload").toString())
+        val environment = payloadNode.get("environment").textValue()
+        val spanCodeObjectId = payloadNode.get("spanCodeObjectId").textValue()
+//        val methodCodeObjectId = payloadNode.get("methodCodeObjectId").textValue()
+
+        Backgroundable.ensurePooledThread {
+            val spanId = CodeObjectsUtil.stripSpanPrefix(spanCodeObjectId)
+
+            val environmentsSupplier: EnvironmentsSupplier = project.service<AnalyticsService>().environment
+            environmentsSupplier.setCurrent(environment, false) {
+                project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanId)
+            }
+        }
     }
 
     private fun handleGoToTrace(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String) {

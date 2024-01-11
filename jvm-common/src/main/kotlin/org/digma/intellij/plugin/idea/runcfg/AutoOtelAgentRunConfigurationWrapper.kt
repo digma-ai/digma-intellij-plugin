@@ -15,6 +15,7 @@ import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.common.FileUtils
 import org.digma.intellij.plugin.common.StringUtils.Companion.evalBoolean
 import org.digma.intellij.plugin.common.buildEnvForLocalTests
+import org.digma.intellij.plugin.idea.deps.ModuleMetadata
 import org.digma.intellij.plugin.idea.deps.ModulesDepsService
 import org.digma.intellij.plugin.idea.psi.kotlin.isKotlinRunConfiguration
 import org.digma.intellij.plugin.log.Log
@@ -138,10 +139,9 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
         if (module == null)
             return !useAgentForSpringBoot
 
-        val modulesDepsService = ModulesDepsService.getInstance(module.project)
-        val moduleExt = modulesDepsService.getModuleExt(module.name)
-        if (moduleExt != null) {
-            if (moduleExt.metadata.hasSpringBoot() && !useAgentForSpringBoot) {
+        val moduleMetadata = getModuleMetadata(module)
+        if (moduleMetadata != null) {
+            if (moduleMetadata.hasSpringBoot() && !useAgentForSpringBoot) {
                 // use Micrometer tracing, instead of OtelAgent
                 return true
             }
@@ -150,17 +150,20 @@ class AutoOtelAgentRunConfigurationWrapper : RunConfigurationWrapper {
     }
 
     private fun evalIsMicronautModule(module: Module?): Boolean {
+        val moduleMetadata = getModuleMetadata(module)
+        return moduleMetadata?.hasMicronaut() ?: false
+    }
+
+    private fun getModuleMetadata(module: Module?): ModuleMetadata? {
         if (module == null)
-            return false
+            return null
 
         val modulesDepsService = ModulesDepsService.getInstance(module.project)
         val moduleExt = modulesDepsService.getModuleExt(module.name)
-        if (moduleExt != null) {
-            if (moduleExt.metadata.hasMicronaut()) {
-                return true
-            }
+        if (moduleExt == null) {
+            return null
         }
-        return false
+        return moduleExt.metadata
     }
 
     private fun buildJavaToolOptions(

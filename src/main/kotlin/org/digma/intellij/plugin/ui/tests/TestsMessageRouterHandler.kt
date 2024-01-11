@@ -16,6 +16,7 @@ import org.digma.intellij.plugin.ui.jcef.BaseMessageRouterHandler
 import org.digma.intellij.plugin.ui.jcef.executeWindowPostMessageJavaScript
 import org.digma.intellij.plugin.ui.jcef.model.ErrorPayload
 import org.digma.intellij.plugin.ui.jcef.model.Payload
+import org.digma.intellij.plugin.ui.list.insights.openJaegerFromRecentActivity
 import org.digma.intellij.plugin.ui.list.insights.traceButtonName
 import org.digma.intellij.plugin.ui.service.FillerOfLatestTests
 import org.digma.intellij.plugin.ui.service.FilterForLatestTests
@@ -120,8 +121,13 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
     }
 
     private fun handleGoToTrace(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String) {
-        //TODO: impl
         project.service<ActivityMonitor>().registerButtonClicked(MonitoredPanel.Tests, traceButtonName)
 
+        val payloadNode: JsonNode = objectMapper.readTree(requestJsonNode.get("payload").toString())
+        val traceId = payloadNode.get("traceId").textValue().orEmpty()
+        val displayName = payloadNode.get("displayName").textValue().orEmpty()
+        val spanCodeObjectId = payloadNode.get("spanCodeObjectId").textValue().orEmpty()
+
+        openJaegerFromRecentActivity(project, traceId, displayName, spanCodeObjectId)
     }
 }

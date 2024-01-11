@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.231] - 2024-01-11
+## [2.0.232] - 2024-01-11
+- Feature/build Modules Metadata on the fly - in order to avoid race condition by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1584
+
+## 2.0.231 - 2024-01-11
 - allowSlowOperation-isRelevantFile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1579
 - fixes backend issue ##1537 by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1583
 

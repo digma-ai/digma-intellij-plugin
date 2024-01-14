@@ -10,6 +10,7 @@ import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
+import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils.REQUEST_MESSAGE_TYPE
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
@@ -92,7 +93,7 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
 
                 Log.log(logger::trace, project, "got tests of span {}", testsOfSpanJson)
                 val payload = objectMapper.readTree(testsOfSpanJson)
-                val message = SetLatestTestsMessage("digma", "TESTS/SPAN_SET_LATEST_DATA", Payload(payload))
+                val message = SetLatestTestsMessage(REQUEST_MESSAGE_TYPE, "TESTS/SPAN_SET_LATEST_DATA", Payload(payload))
                 Log.log(logger::trace, project, "sending TESTS/SPAN_SET_LATEST_DATA message")
 
                 executeWindowPostMessageJavaScript(cefBrowser, objectMapper.writeValueAsString(message))
@@ -104,7 +105,7 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
                     errorDescription = e.getMeaningfulMessage()
                     rethrow = false
                 }
-                val message = SetLatestTestsMessage("digma", "TESTS/SPAN_SET_LATEST_DATA", Payload(null, ErrorPayload(errorDescription)))
+                val message = SetLatestTestsMessage(REQUEST_MESSAGE_TYPE, "TESTS/SPAN_SET_LATEST_DATA", Payload(null, ErrorPayload(errorDescription)))
                 Log.log(logger::trace, project, "sending TESTS/SPAN_SET_LATEST_DATA message with error")
                 executeWindowPostMessageJavaScript(cefBrowser, objectMapper.writeValueAsString(message))
                 ErrorReporter.getInstance().reportError(project, "TestsMessageRouterHandler.SPAN/SET_LATEST_DATA", e)

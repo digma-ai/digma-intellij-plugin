@@ -2,7 +2,10 @@ package org.digma.intellij.plugin.idea.psi.discovery.endpoint;
 
 import com.intellij.lang.jvm.annotation.JvmAnnotationAttribute;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.roots.LibraryOrderEntry;
+import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
@@ -11,7 +14,9 @@ import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.SearchScope;
 import com.intellij.psi.search.searches.AnnotatedElementsSearch;
 import com.intellij.util.Query;
+import com.intellij.util.text.VersionComparatorUtil;
 import org.digma.intellij.plugin.common.Retries;
+import org.digma.intellij.plugin.idea.deps.ModulesDepsService;
 import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils;
 import org.digma.intellij.plugin.idea.psi.java.JavaPsiUtils;
 import org.digma.intellij.plugin.log.Log;
@@ -21,6 +26,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -133,7 +139,7 @@ public class MicronautFramework extends EndpointDiscovery {
     }
 
     @Nullable
-    protected static String createHttpEndpointCodeObjectId(PsiMethod psiMethod, JavaAnnotation httpMethodAnnotation, String endpointUriPrefix) {
+    private String createHttpEndpointCodeObjectId(PsiMethod psiMethod, JavaAnnotation httpMethodAnnotation, String endpointUriPrefix) {
         PsiAnnotation httpPsiAnnotation = psiMethod.getAnnotation(httpMethodAnnotation.getClassNameFqn());
         List<JvmAnnotationAttribute> annotationAttributes = httpPsiAnnotation.getAttributes();
 
@@ -155,11 +161,58 @@ public class MicronautFramework extends EndpointDiscovery {
         String httpMethodUcase = getHttpMethod(httpMethodAnnotation).toUpperCase();
 
         // value for example : 'epHTTP:HTTP GET - /books/get'
-        return "" +
+        var endpointId =
                 // digma part
-                "epHTTP:" + "HTTP " + httpMethodUcase + " " +
-                // Micronaut part
-                EndpointDiscoveryUtils.combineUri(endpointUriPrefix, endpointUriSuffix);
+                "epHTTP:" + "HTTP " + httpMethodUcase + " ";
+        // Micronaut part
+        if (isMicronaut376OrBellow(psiMethod)) {
+            //fix for micronaut 3.7.6 and bellow where the endpoint id should contain double GET GET
+            endpointId = endpointId + httpMethodUcase + " - " + EndpointDiscoveryUtils.combineUri(endpointUriPrefix, endpointUriSuffix);
+        } else {
+            endpointId = endpointId + EndpointDiscoveryUtils.combineUri(endpointUriPrefix, endpointUriSuffix);
+        }
+
+        return endpointId;
+    }
+
+    private boolean isMicronaut376OrBellow(PsiMethod psiMethod) {
+
+        var module = ModuleUtilCore.findModuleForPsiElement(psiMethod);
+        if (module == null) {
+            return false;
+        }
+
+        var moduleRootManager = ModuleRootManager.getInstance(module);
+        var orderEntries = moduleRootManager.getOrderEntries();
+
+        var micronautLib = Arrays.stream(orderEntries)
+                .filter(orderEntry -> orderEntry instanceof LibraryOrderEntry &&
+                        ((LibraryOrderEntry) orderEntry).getLibraryName() != null &&
+                        ((LibraryOrderEntry) orderEntry).getLibraryName().contains("io.micronaut:micronaut-core"))
+                .findFirst().orElse(null);
+
+        if (micronautLib == null) {
+            return false;
+        }
+
+        var micronautVersion = ModulesDepsService.toUnifiedCoordinates((LibraryOrderEntry) micronautLib).getVersion();
+        return VersionComparatorUtil.compare("3.7.6", micronautVersion) >= 0;
+
+
+        //todo:can use ModulesDepsService but it does not update if configuration changes, for example library added or version changed
+        //        var module =  ModuleUtilCore.findModuleForPsiElement(psiMethod);
+        //        if (module == null){
+        //            return false;
+        //        }
+        //        var modulesDepsService = ModulesDepsService.getInstance(project);
+        //        var moduleExt = modulesDepsService.getModuleExt(module.getName());
+        //        if (moduleExt == null) {
+        //            return false;
+        //        }
+        //
+        //        var micronautVersion = moduleExt.getMetadata().getMicronautVersion();
+        //        return VersionComparatorUtil.compare("3.7.6", micronautVersion) >= 0;
+
     }
 
     @NotNull

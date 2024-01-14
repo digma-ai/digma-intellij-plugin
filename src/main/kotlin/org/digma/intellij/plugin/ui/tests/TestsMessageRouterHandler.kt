@@ -58,6 +58,7 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
         Log.log(logger::info, "initializing'")
         val testsService = project.service<TestsService>()
         testsService.initWith(browser, this)
+        testsService.sendOperativeEnvironments()
         Log.log(logger::warn, "initialized'")
     }
 

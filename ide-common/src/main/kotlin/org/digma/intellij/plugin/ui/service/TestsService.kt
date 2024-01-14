@@ -9,7 +9,11 @@ interface TestsService : Disposable {
 
     fun getLatestTestsOfSpan(scopeRequest: ScopeRequest, filter: FilterForLatestTests): String
 
+    // refresh the view of current tests view
     fun refresh()
+
+    // handles request of GLOBAL/SET_ENVIRONMENTS
+    fun sendOperativeEnvironments()
 }
 
 data class ScopeRequest(

@@ -7,10 +7,18 @@ import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.common.Backgroundable
+import org.digma.intellij.plugin.common.CommonUtils
+import org.digma.intellij.plugin.common.LOCAL_ENV
+import org.digma.intellij.plugin.common.LOCAL_TESTS_ENV
+import org.digma.intellij.plugin.common.isEnvironmentLocal
+import org.digma.intellij.plugin.common.isEnvironmentLocalTests
+import org.digma.intellij.plugin.common.isLocalEnvironmentMine
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.insights.InsightsModelReactHolder
+import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope
 import org.digma.intellij.plugin.ui.model.EndpointScope
 import org.digma.intellij.plugin.ui.model.MethodScope
@@ -19,6 +27,9 @@ import org.digma.intellij.plugin.ui.service.FillerOfLatestTests
 import org.digma.intellij.plugin.ui.service.FilterForLatestTests
 import org.digma.intellij.plugin.ui.service.ScopeRequest
 import org.digma.intellij.plugin.ui.service.TestsService
+import org.digma.intellij.plugin.ui.tests.model.EnvironmentEntity
+import org.digma.intellij.plugin.ui.tests.model.SetEnvironmentsMessage
+import org.digma.intellij.plugin.ui.tests.model.SetEnvironmentsMessagePayload
 
 class TestsServiceImpl(val project: Project) : TestsService {
 
@@ -83,6 +94,41 @@ class TestsServiceImpl(val project: Project) : TestsService {
         val scopeRequest = ScopeRequest(spans, methodCodeObjectId, endpointCodeObjectId)
         println("DBG: scopeRequest=$scopeRequest")
         return scopeRequest
+    }
+
+    // return JSON as string (type SetEnvironmentsMessage)
+    override fun sendOperativeEnvironments() {
+        val envs = getOperativeEnvironmentEntities()
+
+        val setEnvironmentsMessage = SetEnvironmentsMessage(
+            JCefMessagesUtils.REQUEST_MESSAGE_TYPE,
+            JCefMessagesUtils.GLOBAL_SET_ENVIRONMENTS,
+            SetEnvironmentsMessagePayload(
+                envs
+            )
+        )
+
+        serializeAndExecuteWindowPostMessageJavaScript(cefBrowser!!, setEnvironmentsMessage)
+    }
+
+    private fun getOperativeEnvironmentEntities(): List<EnvironmentEntity> {
+        val environmentsHolder = project.service<AnalyticsService>().environment
+        val environments = environmentsHolder.getEnvironments()
+
+        val hostname = CommonUtils.getLocalHostname()
+
+        val list = environments.map { env ->
+            val displayName = if (isEnvironmentLocal(env) && isLocalEnvironmentMine(env, hostname)) {
+                LOCAL_ENV
+            } else if (isEnvironmentLocalTests(env) && isLocalEnvironmentMine(env, hostname)) {
+                LOCAL_TESTS_ENV
+            } else {
+                env
+            }
+
+            EnvironmentEntity(displayName, env)
+        }.toList()
+        return list
     }
 
     // return JSON as string (type LatestTestsOfSpanResponse)

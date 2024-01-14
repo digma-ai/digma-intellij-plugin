@@ -107,7 +107,7 @@ class TestsServiceImpl(val project: Project) : TestsService {
         }
 
         val scopeRequest = ScopeRequest(spans, methodCodeObjectId, endpointCodeObjectId)
-        println("DBG: scopeRequest=$scopeRequest")
+        //println("DBG: scopeRequest=$scopeRequest")
         return scopeRequest
     }
 

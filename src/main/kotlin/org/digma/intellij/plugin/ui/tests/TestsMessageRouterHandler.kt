@@ -127,7 +127,6 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
     }
 
     private fun handleGoToSpanOfTest(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String) {
-        println("DBG: handleGoToSpanOfTest")
         val payloadNode: JsonNode = objectMapper.readTree(requestJsonNode.get("payload").toString())
         val environment = payloadNode.get("environment").textValue()
         val spanCodeObjectId = payloadNode.get("spanCodeObjectId").textValue()

@@ -139,14 +139,12 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
         }
 
         Backgroundable.ensurePooledThread {
-            val spanId = CodeObjectsUtil.stripSpanPrefix(spanCodeObjectId)
-
             val environmentsSupplier: EnvironmentsSupplier = project.service<AnalyticsService>().environment
             environmentsSupplier.setCurrent(environment, false) {
                 if (methodCodeObjectId != null) {
                     project.service<InsightsViewOrchestrator>().showInsightsForMethod(methodCodeObjectId)
                 } else {
-                    project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanId)
+                    project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanCodeObjectId)
                 }
             }
         }

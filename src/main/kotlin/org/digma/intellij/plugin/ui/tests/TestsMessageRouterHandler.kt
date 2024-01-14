@@ -131,14 +131,23 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
         val payloadNode: JsonNode = objectMapper.readTree(requestJsonNode.get("payload").toString())
         val environment = payloadNode.get("environment").textValue()
         val spanCodeObjectId = payloadNode.get("spanCodeObjectId").textValue()
-//        val methodCodeObjectId = payloadNode.get("methodCodeObjectId").textValue()
+        val methodCodeObjectIdNode = payloadNode.get("methodCodeObjectId")
+
+        var methodCodeObjectId: String? = null
+        if (methodCodeObjectIdNode != null && !methodCodeObjectIdNode.isNull) {
+            methodCodeObjectId = methodCodeObjectIdNode.textValue()
+        }
 
         Backgroundable.ensurePooledThread {
             val spanId = CodeObjectsUtil.stripSpanPrefix(spanCodeObjectId)
 
             val environmentsSupplier: EnvironmentsSupplier = project.service<AnalyticsService>().environment
             environmentsSupplier.setCurrent(environment, false) {
-                project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanId)
+                if (methodCodeObjectId != null) {
+                    project.service<InsightsViewOrchestrator>().showInsightsForMethod(methodCodeObjectId)
+                } else {
+                    project.service<InsightsViewOrchestrator>().showInsightsForCodelessSpan(spanId)
+                }
             }
         }
     }

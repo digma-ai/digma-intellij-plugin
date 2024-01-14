@@ -6,6 +6,7 @@ import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
+import org.digma.intellij.plugin.analytics.EnvironmentChanged
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.common.LOCAL_ENV
@@ -37,6 +38,20 @@ class TestsServiceImpl(val project: Project) : TestsService {
 
     private var cefBrowser: CefBrowser? = null
     private var fillerOfLatestTests: FillerOfLatestTests? = null
+
+    init {
+
+        project.messageBus.connect(this).subscribe(EnvironmentChanged.ENVIRONMENT_CHANGED_TOPIC, object : EnvironmentChanged {
+            override fun environmentChanged(newEnv: String?, refreshInsightsView: Boolean) {
+                // dp nothing
+            }
+
+            override fun environmentsListChanged(newEnvironments: MutableList<String>?) {
+                sendOperativeEnvironments()
+            }
+        })
+
+    }
 
     override fun dispose() {
         //nothing to do
@@ -98,6 +113,8 @@ class TestsServiceImpl(val project: Project) : TestsService {
 
     // return JSON as string (type SetEnvironmentsMessage)
     override fun sendOperativeEnvironments() {
+        if (cefBrowser == null) return
+
         val envs = getOperativeEnvironmentEntities()
 
         val setEnvironmentsMessage = SetEnvironmentsMessage(

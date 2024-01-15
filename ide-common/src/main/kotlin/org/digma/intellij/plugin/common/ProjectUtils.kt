@@ -13,9 +13,6 @@ fun findActiveProject(): Project? {
     var project = ProjectUtil.getActiveProject()
     if (project == null || project.isDisposed) {
         project = IdeFocusManager.getGlobalInstance().lastFocusedFrame?.project
-        if (project != null && !project.isDisposed) {
-            (IdeFocusManager.getGlobalInstance().lastFocusedFrame as? Window)?.toFront()
-        }
     }
 
     if (project == null || project.isDisposed) {

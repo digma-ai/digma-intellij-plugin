@@ -163,7 +163,7 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
 
         SlowSpanInfo slowSpanInfo = new SlowSpanInfo(
                 createSpanInfo("SomeSpan", "Sample.MoneyTransfer.API.MoneyTransferDomainService$_$Error"),
-                0.10970134022722634, new Duration(3.44D, "ms", 3441700L), 0);
+                0.10970134022722634, new Duration(3.44D, "ms", 3441700L), 0, null);
 
         String expectedSlowestSpansInsightCodeObjectId = "Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$TransferFunds";
         SlowestSpansInsight expectedSlowestSpansInsight = new SlowestSpansInsight(expectedSlowestSpansInsightCodeObjectId, ENV_1, SCOPE_1, IMPORTANCE_3, null,
@@ -326,7 +326,7 @@ class InsightsTests extends AbstractAnalyticsProviderTest {
 
         SlowSpanInfo slowSpanInfo = new SlowSpanInfo(
                 createSpanInfo("SomeSpan", "Sample.MoneyTransfer.API.MoneyTransferDomainService$_$Error"),
-                0.10970134022722634, new Duration(3.44D, "ms", 3441700L), 0);
+                0.10970134022722634, new Duration(3.44D, "ms", 3441700L), 0, null);
 
         String expectedSlowestSpansInsightCodeObjectId = "Sample.MoneyTransfer.API.Domain.Services.MoneyTransferDomainService$_$TransferFunds";
         SlowestSpansInsight expectedSlowestSpansInsight = new SlowestSpansInsight(expectedSlowestSpansInsightCodeObjectId, ENV_1, SCOPE_1, IMPORTANCE_3, null,

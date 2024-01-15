@@ -22,8 +22,9 @@ class DigmaErrorReportSubmitter : ErrorReportSubmitter() {
         return "Report to Digma"
     }
 
-    override fun getPrivacyNoticeText(): String? {
-        return "ask rony for privacy text"
+    override fun getPrivacyNoticeText(): String {
+        return "I agree to product information, and the error details shown above being used by Digma INC." +
+                " to let Digma improve its products in accordance with the privacy policy here <a href=\"https://digma.ai/privacy-policy/\">DIGMA PRIVACY POLICY</a>."
     }
 
     override fun submit(
@@ -73,7 +74,7 @@ class DigmaErrorReportSubmitter : ErrorReportSubmitter() {
 
         if (event.data is AbstractMessage) {
             val data = event.data as AbstractMessage
-            details["data.date"] = data.date.toString()
+            details["event.date"] = data.date.toString()
         }
 
         if (event.data is LogMessage) {
@@ -81,7 +82,7 @@ class DigmaErrorReportSubmitter : ErrorReportSubmitter() {
             val attachments = data.includedAttachments
 
             attachments.forEach {
-                details["data.attachment.${it.name}.displayText"] = it.displayText
+                details["event.attachment.${it.name}.displayText"] = it.displayText
             }
         }
 

@@ -56,17 +56,21 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
     }
 
     fun handleQueryInitialize(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String) {
-        Log.log(logger::info, "initializing'")
+        Log.log(logger::info, "initializing")
+
+        val payloadNode: JsonNode = objectMapper.readTree(requestJsonNode.get("payload").toString())
+        val pageSize: Int = payloadNode.get("pageSize").intValue()
+
         val testsService = project.service<TestsService>()
-        testsService.initWith(browser, this)
+        testsService.initWith(browser, this, pageSize)
         testsService.sendOperativeEnvironments()
-        Log.log(logger::warn, "initialized'")
+
+        Log.log(logger::info, "initialized with pageSize=$pageSize")
     }
 
     private fun buildFilterForLatestTests(requestJsonNode: JsonNode): FilterForLatestTests {
         val payloadNode: JsonNode = objectMapper.readTree(requestJsonNode.get("payload").toString())
         val pageNumber: Int = payloadNode.get("pageNumber").intValue()
-        val pageSize: Int = payloadNode.get("pageSize").intValue()
 
         var environments: Set<String> = Collections.emptySet()
         val envsNode: JsonNode? = payloadNode.get("environments")
@@ -74,7 +78,7 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
             val envsArray = objectMapper.convertValue(envsNode, Array<String>::class.java)
             environments = envsArray.toSet()
         }
-        return FilterForLatestTests(environments, pageNumber, pageSize)
+        return FilterForLatestTests(environments, pageNumber)
     }
 
     private fun handleQuerySpanGetLatestData(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String) {

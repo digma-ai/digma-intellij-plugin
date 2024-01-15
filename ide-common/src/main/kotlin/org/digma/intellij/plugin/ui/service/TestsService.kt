@@ -4,7 +4,7 @@ import com.intellij.openapi.Disposable
 import org.cef.browser.CefBrowser
 
 interface TestsService : Disposable {
-    fun initWith(cefBrowser: CefBrowser, fillerOfLatestTests: FillerOfLatestTests)
+    fun initWith(cefBrowser: CefBrowser, fillerOfLatestTests: FillerOfLatestTests, pageSize: Int)
     fun getScopeRequest(): ScopeRequest?
 
     fun getLatestTestsOfSpan(scopeRequest: ScopeRequest, filter: FilterForLatestTests): String
@@ -30,5 +30,4 @@ interface FillerOfLatestTests {
 data class FilterForLatestTests(
     var environments: Set<String>,
     var pageNumber: Int = 1,
-    var pageSize: Int = 20,
 )

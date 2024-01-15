@@ -38,6 +38,7 @@ class TestsServiceImpl(val project: Project) : TestsService {
 
     private var cefBrowser: CefBrowser? = null
     private var fillerOfLatestTests: FillerOfLatestTests? = null
+    private var pageSize: Int = 20
 
     init {
 
@@ -57,9 +58,10 @@ class TestsServiceImpl(val project: Project) : TestsService {
         //nothing to do
     }
 
-    override fun initWith(cefBrowser: CefBrowser, fillerOfLatestTests: FillerOfLatestTests) {
+    override fun initWith(cefBrowser: CefBrowser, fillerOfLatestTests: FillerOfLatestTests, pageSize: Int) {
         this.cefBrowser = cefBrowser
         this.fillerOfLatestTests = fillerOfLatestTests
+        this.pageSize = pageSize
     }
 
     private fun scope(): Scope {
@@ -151,7 +153,7 @@ class TestsServiceImpl(val project: Project) : TestsService {
     // return JSON as string (type LatestTestsOfSpanResponse)
     override fun getLatestTestsOfSpan(scopeRequest: ScopeRequest, filter: FilterForLatestTests): String {
         try {
-            val json = project.service<AnalyticsService>().getLatestTestsOfSpan(scopeRequest, filter)
+            val json = project.service<AnalyticsService>().getLatestTestsOfSpan(scopeRequest, filter, pageSize)
             return json
         } catch (e: AnalyticsServiceException) {
             Log.warnWithException(logger, project, e, "exception in getLatestTestsOfSpan")

@@ -151,6 +151,8 @@
         <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.codelens.providers.CodeLensMethodInsightsProvider10"/>
 
 
+        <errorHandler implementation="org.digma.intellij.plugin.ui.reports.DigmaErrorReportSubmitter"/>
+
     </extensions>
 
 

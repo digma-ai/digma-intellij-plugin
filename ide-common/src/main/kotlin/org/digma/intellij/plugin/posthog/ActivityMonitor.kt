@@ -245,6 +245,14 @@ class ActivityMonitor(project: Project) : Disposable {
     }
 
 
+    fun registerFatalError(details: MutableMap<String, String>) {
+        capture(
+            "fatal error",
+            details
+        )
+    }
+
+
     fun registerAnalyticsServiceError(exception: Throwable, message: String, methodName: String, isConnectionException: Boolean) {
 
         try {

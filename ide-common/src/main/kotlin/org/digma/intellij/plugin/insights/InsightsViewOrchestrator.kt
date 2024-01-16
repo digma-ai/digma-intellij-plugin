@@ -260,6 +260,7 @@ class InsightsViewOrchestrator(val project: Project) {
         val currentCaretLocation: Pair<String, Int>? = project.service<EditorService>().currentCaretLocation
         val methodLocation: Pair<String, Int>? = methodCodeObjectId?.let { project.service<CodeNavigator>().getMethodLocation(methodCodeObjectId) }
         val spanLocation: Pair<String, Int>? = spanCodeObjectId?.let { project.service<CodeNavigator>().getSpanLocation(spanCodeObjectId) }
+
         //if currentCaretLocation is null maybe there is no file opened
         if (currentCaretLocation == null) {
             return project.service<CodeNavigator>().maybeNavigateToSpanOrMethod(spanCodeObjectId, methodCodeObjectId)
@@ -274,7 +275,6 @@ class InsightsViewOrchestrator(val project: Project) {
         if (methodLocation != null && methodLocation != currentCaretLocation) {
             return project.service<CodeNavigator>().maybeNavigateToMethod(methodCodeObjectId)
         }
-        
 
         //methodLocation equals currentCaretLocation, so we have to emulate a caret event to show the method insights
         if (methodLocation != null) {

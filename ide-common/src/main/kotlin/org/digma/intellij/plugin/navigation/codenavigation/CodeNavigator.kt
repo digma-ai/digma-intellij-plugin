@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.navigation.codenavigation
 
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
@@ -110,7 +109,6 @@ class CodeNavigator(val project: Project) {
 
         val methodIdWithoutType = CodeObjectsUtil.stripMethodPrefix(methodCodeObjectId)
 
-
         SupportedLanguages.values().forEach { language ->
             val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
             if (languageService != null) {
@@ -215,10 +213,6 @@ class CodeNavigator(val project: Project) {
             val endpointId = CodeObjectsUtil.stripEndpointPrefix(it)
 
             SupportedLanguages.values().forEach { language ->
-                // in unit test mode, the call to LanguageService.findLanguageServiceByName with language CSHARP, crashes the plugin.
-                if (ApplicationManager.getApplication().isUnitTestMode && language == SupportedLanguages.CSHARP) {
-                    return@forEach
-                }
                 val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
                 if (languageService != null) {
                     val endpointInfos = ReadActions.ensureReadAction<Set<EndpointInfo>> {

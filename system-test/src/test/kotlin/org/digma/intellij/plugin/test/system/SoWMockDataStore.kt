@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.test.system
 
-import com.intellij.openapi.diagnostic.Logger
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectDecorator
 import org.digma.intellij.plugin.model.rest.insights.Duration
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse

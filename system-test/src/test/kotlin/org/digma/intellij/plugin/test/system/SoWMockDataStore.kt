@@ -23,8 +23,6 @@ import org.digma.intellij.plugin.ui.recentactivity.model.RecentActivityEntrySpan
 import java.util.Date
 
 
-val logger = Logger.getInstance("SoWMockDataStore")
-
 
 fun createDigmaCodeObjectId(className: String, methodName: String): String {
     return "$className\$_\$$methodName"

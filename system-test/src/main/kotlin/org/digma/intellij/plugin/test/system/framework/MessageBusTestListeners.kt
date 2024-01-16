@@ -1,18 +1,15 @@
 package org.digma.intellij.plugin.test.system.framework
 
-import com.intellij.openapi.Disposable
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.psi.PsiFile
 import com.intellij.util.messages.MessageBus
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
-import org.digma.intellij.plugin.analytics.TabsChanged
 import org.digma.intellij.plugin.document.DocumentInfoChanged
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.model.ModelChangeListener
-import org.digma.intellij.plugin.ui.model.PanelModel
 
 
+//example class to test the message bus events
 class MessageBusTestListeners(private val messageBus: MessageBus) {
 
     private val logger = Logger.getInstance(MessageBusTestListeners::class.java)

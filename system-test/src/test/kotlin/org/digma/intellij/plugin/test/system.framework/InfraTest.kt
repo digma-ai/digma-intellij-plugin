@@ -1,33 +1,20 @@
 package org.digma.intellij.plugin.test.system.framework
 
-import com.intellij.codeInsight.codeVision.ui.model.ClickableTextCodeVisionEntry
-import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiDocumentManager
-import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.testFramework.EditorTestUtil
 import com.intellij.testFramework.PlatformTestUtil
 import junit.framework.TestCase
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import org.digma.intellij.plugin.document.DocumentInfoContainer
 import org.digma.intellij.plugin.document.DocumentInfoService
-import org.digma.intellij.plugin.editor.CurrentContextUpdater
-import org.digma.intellij.plugin.idea.psi.java.JavaCodeLensService
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
-import org.digma.intellij.plugin.navigation.HomeSwitcherService
 import org.digma.intellij.plugin.test.system.SingleEnvironmentData
 import org.digma.intellij.plugin.test.system.DigmaTestCase
 import org.digma.intellij.plugin.test.system.TwoEnvironmentSecondFileNavigateToCodeData
 import org.digma.intellij.plugin.test.system.TwoEnvironmentsFirstFileRelatedSingleSpanData
-import org.junit.Ignore
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
-import java.awt.event.MouseEvent
-import java.lang.reflect.Field
-import kotlin.test.assertNotEquals
 
 
 class InfraTest : DigmaTestCase() {
@@ -140,7 +127,7 @@ class InfraTest : DigmaTestCase() {
             }
         }
         waitFor(1000, "caret event in ${psiFile.name}")
-        Log.test(logger::info, "selected method = ${project.getService(CurrentContextUpdater::class.java).latestMethodUnderCaret}")
+        Log.test(logger::info, "selected method = ${getMethodUnderCaret()}")
 
     }
 

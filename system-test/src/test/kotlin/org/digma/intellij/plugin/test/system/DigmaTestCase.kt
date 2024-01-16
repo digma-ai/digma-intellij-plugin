@@ -15,8 +15,10 @@ import org.cef.browser.CefBrowser
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.RestAnalyticsProvider
 import org.digma.intellij.plugin.document.DocumentInfoService
+import org.digma.intellij.plugin.editor.CurrentContextUpdater
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.discovery.MethodUnderCaret
 import org.digma.intellij.plugin.test.system.framework.BrowserPushEventCollector
 import org.digma.intellij.plugin.test.system.framework.MessageBusTestListeners
 import org.digma.intellij.plugin.test.system.framework.mockRestAnalyticsProvider
@@ -190,5 +192,12 @@ abstract class DigmaTestCase : LightJavaCodeInsightFixtureTestCase() {
 
 
         }
+    }
+    
+    fun getMethodUnderCaret(): MethodUnderCaret? {
+        var contextUpdater = project.getService(CurrentContextUpdater::class.java)
+        var methodUnderCaretField = contextUpdater.javaClass.getDeclaredField("latestMethodUnderCaret")
+        methodUnderCaretField.isAccessible = true
+        return methodUnderCaretField.get(contextUpdater) as MethodUnderCaret?
     }
 }

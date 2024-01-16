@@ -1,6 +1,4 @@
 import common.platformVersion
-import org.gradle.initialization.ClassLoaderScopeRegistryListenerManager
-import org.jetbrains.kotlin.com.intellij.openapi.util.registry.Registry
 
 plugins {
     id("plugin-library")
@@ -31,6 +29,7 @@ dependencies {
 }
 
 tasks.test {
+    // this insures that the async tasks of the IDE run in an asynchronous way. by default, the headless mode runs EDT task on the main thread in a synchronous way.
     systemProperty("intellij.progress.task.ignoreHeadless", true)
     useJUnit()
 }

@@ -62,6 +62,8 @@ public class Log {
         logger.error(DIGMA + msg, exception);
     }
 
+    // Logging function for tests only. 
+    // would not log in production.
     public static void test(Consumer<String> consumer, String format, Object... args) {
         if (!ApplicationManager.getApplication().isUnitTestMode()) return;
         StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();

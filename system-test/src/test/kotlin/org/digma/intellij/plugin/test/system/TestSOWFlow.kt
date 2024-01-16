@@ -11,7 +11,6 @@ import com.intellij.testFramework.EditorTestUtil
 import com.intellij.ui.jcef.JBCefBrowser
 import junit.framework.TestCase
 import org.digma.intellij.plugin.document.DocumentInfoService
-import org.digma.intellij.plugin.editor.CurrentContextUpdater
 import org.digma.intellij.plugin.insights.InsightsMessageRouterHandler
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight
@@ -99,16 +98,16 @@ class TestSOWFlow : DigmaTestCase() {
         setCaretToTargetMethodAndDispatchIdeEventQueue(targetMethod, firstFile)
 
         // test that latest method under caret is method 1
-        var methodUnderCaret = project.getService(CurrentContextUpdater::class.java).latestMethodUnderCaret
+        var methodUnderCaret = getMethodUnderCaret()
 
         // asserting all the current information about method one and the method under caret
-        assertEquals(targetMethod?.name, methodUnderCaret.name)
-        assertEquals(targetMethod?.containingClass?.name, methodUnderCaret.className)
-        assertEquals(SingleEnvironmentData.methodCodeObjectId, methodUnderCaret.id)
+        assertEquals(targetMethod?.name, methodUnderCaret?.name)
+        assertEquals(targetMethod?.containingClass?.name, methodUnderCaret?.className)
+        assertEquals(SingleEnvironmentData.methodCodeObjectId, methodUnderCaret?.id)
 
         //see that the insights of method1 are present
 
-        val methodInfoOfMethodUnderCaret = project.service<DocumentInfoService>().findMethodInfo(methodUnderCaret.id)
+        val methodInfoOfMethodUnderCaret = project.service<DocumentInfoService>().findMethodInfo(methodUnderCaret?.id)
 
         //checking the insights of method1
         val cachedInsights = project.service<DocumentInfoService>().getCachedMethodInsights(methodInfoOfMethodUnderCaret!!)
@@ -189,9 +188,9 @@ class TestSOWFlow : DigmaTestCase() {
         assertEquals(TwoEnvironmentsData.environmentList[1], analyticsService.environment.getCurrent())
         // assert that the caret moved to the span in the code
 
-        methodUnderCaret = project.getService(CurrentContextUpdater::class.java).latestMethodUnderCaret
-        assertEquals(methodUnderCaret.id, GoToSpanData.goToSpanRequestPayload.span.methodCodeObjectId)
-        assertEquals(targetMethod?.name, methodUnderCaret.name) //todo: not sure about that
+        methodUnderCaret = getMethodUnderCaret()
+        assertEquals(methodUnderCaret?.id, GoToSpanData.goToSpanRequestPayload.span.methodCodeObjectId)
+        assertEquals(targetMethod?.name, methodUnderCaret?.name)
 
         assertQueueOfActionWithinTimeout("INSIGHTS/SET_DATA", 5000, this::assertJsonForTwoEnvironmentNewInsightsData)
 
@@ -236,7 +235,7 @@ class TestSOWFlow : DigmaTestCase() {
         
 
 
-        methodUnderCaret = project.getService(CurrentContextUpdater::class.java).latestMethodUnderCaret
+        methodUnderCaret = getMethodUnderCaret()
         FileEditorManager.getInstance(project).selectedTextEditor?.let {
             PsiDocumentManager.getInstance(project)
             Log.test(logger::info, "selected text editor: {}", it.javaClass.name)

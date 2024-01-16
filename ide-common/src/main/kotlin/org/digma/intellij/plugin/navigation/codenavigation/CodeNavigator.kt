@@ -42,10 +42,6 @@ class CodeNavigator(val project: Project) {
         val spanIdWithoutType = CodeObjectsUtil.stripSpanPrefix(spanId)
 
         SupportedLanguages.values().forEach { language ->
-            // in unit test mode, the call to LanguageService.findLanguageServiceByName with language CSHARP, crashes the plugin.
-            if (ApplicationManager.getApplication().isUnitTestMode && language == SupportedLanguages.CSHARP) {
-                return@forEach
-            }
             val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
             if (languageService != null) {
                 val spanWorkspaceUris = ReadActions.ensureReadAction<Map<String, Pair<String, Int>>> {
@@ -79,10 +75,6 @@ class CodeNavigator(val project: Project) {
         val methodIdWithoutType = CodeObjectsUtil.stripMethodPrefix(methodId)
 
         SupportedLanguages.values().forEach { language ->
-            // in unit test mode, the call to LanguageService.findLanguageServiceByName with language CSHARP, crashes the plugin.
-            if (ApplicationManager.getApplication().isUnitTestMode && language == SupportedLanguages.CSHARP) {
-                return@forEach
-            }
             val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
             if (languageService != null) {
                 val methodWorkspaceUris = ReadActions.ensureReadAction<Map<String, Pair<String, Int>>> {
@@ -120,10 +112,6 @@ class CodeNavigator(val project: Project) {
 
 
         SupportedLanguages.values().forEach { language ->
-            // in unit test mode, the call to LanguageService.findLanguageServiceByName with language CSHARP, crashes the plugin.
-            if (ApplicationManager.getApplication().isUnitTestMode && language == SupportedLanguages.CSHARP) {
-                return@forEach
-            }
             val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
             if (languageService != null) {
                 val methodWorkspaceUris = ReadActions.ensureReadAction<Map<String, Pair<String, Int>>> {
@@ -147,10 +135,6 @@ class CodeNavigator(val project: Project) {
         val spanIdWithoutType = CodeObjectsUtil.stripSpanPrefix(spanCodeObjectId)
 
         SupportedLanguages.values().forEach { language ->
-            // in unit test mode, the call to LanguageService.findLanguageServiceByName with language CSHARP, crashes the plugin.
-            if (ApplicationManager.getApplication().isUnitTestMode && language == SupportedLanguages.CSHARP) {
-                return@forEach
-            }
             val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
             if (languageService != null) {
                 val spanWorkspaceUris = ReadActions.ensureReadAction<Map<String, Pair<String, Int>>> {
@@ -184,10 +168,6 @@ class CodeNavigator(val project: Project) {
         val methodIdWithoutType = CodeObjectsUtil.stripMethodPrefix(methodId)
 
         SupportedLanguages.values().forEach { language ->
-            // in unit test mode, the call to LanguageService.findLanguageServiceByName with language CSHARP, crashes the plugin.
-            if (ApplicationManager.getApplication().isUnitTestMode && language == SupportedLanguages.CSHARP) {
-                return@forEach
-            }
             val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
             if (languageService != null) {
                 val methodWorkspaceUris = ReadActions.ensureReadAction<Map<String, Pair<String, Int>>> {
@@ -208,10 +188,6 @@ class CodeNavigator(val project: Project) {
         val spanIdWithoutType = CodeObjectsUtil.stripSpanPrefix(spanId)
 
         SupportedLanguages.values().forEach { language ->
-            // in unit test mode, the call to LanguageService.findLanguageServiceByName with language CSHARP, crashes the plugin.
-            if (ApplicationManager.getApplication().isUnitTestMode && language == SupportedLanguages.CSHARP) {
-                return@forEach
-            }
             val languageService = LanguageService.findLanguageServiceByName(project, language.languageServiceClassName)
             if (languageService != null) {
                 val spanWorkspaceUris = ReadActions.ensureReadAction<Map<String, Pair<String, Int>>> {

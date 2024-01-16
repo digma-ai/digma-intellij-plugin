@@ -63,8 +63,8 @@ import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStart;
 import static org.digma.intellij.plugin.common.StopWatchUtilsKt.stopWatchStop;
 import static org.digma.intellij.plugin.ui.jcef.JCefBrowserUtilsKt.serializeAndExecuteWindowPostMessageJavaScript;
 
-
-class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
+//the class is public for system-test to have access to the jbCefBrowser for mocking purposes
+public class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
     private static final Logger LOGGER = Logger.getInstance(InsightsMessageRouterHandler.class);
 

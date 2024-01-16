@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.log;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
@@ -61,6 +62,15 @@ public class Log {
         logger.error(DIGMA + msg, exception);
     }
 
-
-
+    // Logging function for tests only. 
+    // would not log in production.
+    public static void test(Consumer<String> consumer, String format, Object... args) {
+        if (!ApplicationManager.getApplication().isUnitTestMode()) return;
+        StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+        String callingMethodName = stackTraceElements[2].getMethodName();
+        String lineNumber = String.valueOf(stackTraceElements[2].getLineNumber());
+        String threadName = Thread.currentThread().getName();
+        String header = String.format("%s:%s - %s", callingMethodName, lineNumber, threadName);
+        consumer.accept(header + " - " + String.format(format.replace("{}", "%s"), args));
+    }
 }

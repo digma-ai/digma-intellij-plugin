@@ -591,6 +591,8 @@ public class AnalyticsService implements Disposable {
                     PersistenceService.getInstance().setFirstTimeConnectionEstablished();
                 }
 
+                PersistenceService.getInstance().updateLastConnectionTimestamp();
+
                 //if we are here then the call to the underlying analytics api succeeded, we can reset the status
                 // and notify connectionGained if necessary.
                 //it is not perfect, there is still a race condition, we may report connection lost while actually the

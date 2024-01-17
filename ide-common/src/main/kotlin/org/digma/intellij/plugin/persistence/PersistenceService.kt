@@ -62,91 +62,75 @@ class PersistenceService {
     }
 
     fun isFirstTimeAssetsReceived(): Boolean {
-        //todo: Jan 17 2024: state.firstTimeAssetsReceived is backwards compatibility, for users that installed before
-        // it was changed to FirstTime object. after some period when all users updated and have the
-        // version with FirstTime object we can remove state.firstTimeAssetsReceived
-        // this condition will be true after user updated the plugin to the version with FirstTime object and has
-        // state.firstTimeAssetsReceived=true
-        if (state.firstTimeAssetsReceived && state.firstAsset == null) {
-            state.firstAsset = FirstTime(Instant.now())
+        //todo: backwards compatibility, remove state.firstTimeAssetsReceived on May 2024
+        if (state.firstTimeAssetsReceived && state.firstTimeAssetsReceivedTimestamp == null) {
+            state.firstTimeAssetsReceivedTimestamp = Instant.now()
         }
 
-        return state.firstAsset?.firstTime ?: false
+        return state.firstTimeAssetsReceivedTimestamp != null
     }
 
     fun setFirstTimeAssetsReceived() {
-        state.firstAsset = FirstTime(Instant.now())
+        state.firstTimeAssetsReceivedTimestamp = Instant.now()
     }
 
 
     fun isFirstTimePluginLoaded(): Boolean {
-        //todo: Jan 17 2024: state.isFirstTimePluginLoaded is backwards compatibility, for users that installed before
-        // it was changed to FirstTime object. after some period when all users updated and have the
-        // version with FirstTime object we can remove state.isFirstTimePluginLoaded
-        // this condition will be true after user updated the plugin to the version with FirstTime object and has
-        // state.isFirstTimePluginLoaded=true
-        if (state.isFirstTimePluginLoaded && state.firstTimeLoaded == null) {
-            state.firstTimeLoaded = FirstTime(Instant.now())
+        //todo: backwards compatibility, remove state.isFirstTimePluginLoaded on May 2024
+        if (state.isFirstTimePluginLoaded && state.firstTimePluginLoadedTimestamp == null) {
+            state.firstTimePluginLoadedTimestamp = Instant.now()
         }
 
-        return state.firstTimeLoaded?.firstTime ?: false
+        return state.firstTimePluginLoadedTimestamp != null
     }
 
     fun setFirstTimePluginLoaded() {
-        state.firstTimeLoaded = FirstTime(Instant.now())
+        state.firstTimePluginLoadedTimestamp = Instant.now()
+    }
+
+    fun getFirstTimePluginLoadedTimestamp(): Instant? {
+        return state.firstTimePluginLoadedTimestamp
     }
 
     fun isFirstTimePerformanceMetrics(): Boolean {
-        //todo: Jan 17 2024: state.firstTimePerformanceMetrics is backwards compatibility, for users that installed before
-        // it was changed to FirstTime object. after some period when all users updated and have the
-        // version with FirstTime object we can remove state.firstTimePerformanceMetrics
-        // this condition will be true after user updated the plugin to the version with FirstTime object and has
-        // state.firstTimePerformanceMetrics=true
-        if (state.firstTimePerformanceMetrics && state.firstPerformanceMetrics == null) {
-            state.firstPerformanceMetrics = FirstTime(Instant.now())
+        //todo: backwards compatibility, remove state.firstTimePerformanceMetrics on May 2024
+        if (state.firstTimePerformanceMetrics && state.firstTimePerformanceMetricsTimestamp == null) {
+            state.firstTimePerformanceMetricsTimestamp = Instant.now()
         }
 
-        return state.firstPerformanceMetrics?.firstTime ?: false
+        return state.firstTimePerformanceMetricsTimestamp != null
     }
 
     fun setFirstTimePerformanceMetrics() {
-        state.firstPerformanceMetrics = FirstTime(Instant.now())
+        state.firstTimePerformanceMetricsTimestamp = Instant.now()
     }
 
 
     fun isFirstTimeInsightReceived(): Boolean {
-        //todo: Jan 17 2024: state.firstTimeInsightReceived is backwards compatibility, for users that installed before
-        // it was changed to FirstTime object. after some period when all users updated and have the
-        // version with FirstTime object we can remove state.firstTimeInsightReceived
-        // this condition will be true after user updated the plugin to the version with FirstTime object and has
-        // state.firstTimeInsightReceived=true
-        if (state.firstTimeInsightReceived && state.firstInsight == null) {
-            state.firstInsight = FirstTime(Instant.now())
+        //todo: backwards compatibility, remove state.firstTimeInsightReceived on May 2024
+        if (state.firstTimeInsightReceived && state.firstTimeInsightReceivedTimestamp == null) {
+            state.firstTimeInsightReceivedTimestamp = Instant.now()
         }
 
-        return state.firstInsight?.firstTime ?: false
+        return state.firstTimeInsightReceivedTimestamp != null
     }
 
     fun setFirstTimeInsightReceived() {
-        state.firstInsight = FirstTime(Instant.now())
+        state.firstTimeInsightReceivedTimestamp = Instant.now()
     }
 
 
     fun isFirstTimeRecentActivityReceived(): Boolean {
-        //todo: Jan 17 2024: state.firstTimeRecentActivityReceived is backwards compatibility, for users that installed before
-        // it was changed to FirstTime object. after some period when all users updated and have the
-        // version with FirstTime object we can remove state.firstTimeRecentActivityReceived
-        // this condition will be true after user updated the plugin to the version with FirstTime object and has
-        // state.firstTimeRecentActivityReceived=true
-        if (state.firstTimeRecentActivityReceived && state.firstRecentActivity == null) {
-            state.firstRecentActivity = FirstTime(Instant.now())
+        //todo: backwards compatibility, remove state.firstTimeRecentActivityReceived on May 2024
+        if (state.firstTimeRecentActivityReceived && state.firstTimeRecentActivityReceivedTimestamp == null) {
+            state.firstTimeRecentActivityReceivedTimestamp = Instant.now()
         }
 
-        return state.firstRecentActivity?.firstTime ?: false
+        return state.firstTimeRecentActivityReceivedTimestamp != null
     }
 
     fun setFirstTimeRecentActivityReceived() {
-        state.firstRecentActivity = FirstTime(Instant.now())
+        state.firstTimeRecentActivityReceivedTimestamp = Instant.now()
     }
 
 
@@ -192,27 +176,24 @@ class PersistenceService {
 
 
     fun isFirstTimeConnectionEstablished(): Boolean {
-        //todo: Jan 17 2024: state.firstTimeConnectionEstablished is backwards compatibility, for users that installed before
-        // it was changed to FirstTime object. after some period when all users updated and have the
-        // version with FirstTime object we can remove state.firstTimeConnectionEstablished and state.firstTimeConnectionEstablishedTimestamp
-        // this condition will be true after user updated the plugin to the version with FirstTime object and has
-        // state.firstTimeConnectionEstablished=true
-        if (state.firstTimeConnectionEstablished && state.firstConnection == null) {
+        //todo: backwards compatibility, remove state.firstTimeConnectionEstablished and
+        // state.firstTimeConnectionEstablishedTimestamp on May 2024
+        if (state.firstTimeConnectionEstablished && state.firstTimeConnectionEstablishedTimestampNew == null) {
             val instant = state.firstTimeConnectionEstablishedTimestamp?.let {
                 DatesUtils.Instants.stringToInstant(it)
             } ?: Instant.now()
-            state.firstConnection = FirstTime(instant)
+            state.firstTimeConnectionEstablishedTimestampNew = instant
         }
 
-        return state.firstConnection?.firstTime ?: false
+        return state.firstTimeConnectionEstablishedTimestampNew != null
     }
 
     fun setFirstTimeConnectionEstablished() {
-        state.firstConnection = FirstTime(Instant.now())
+        state.firstTimeConnectionEstablishedTimestampNew = Instant.now()
     }
 
     fun getFirstTimeConnectionEstablishedTimestamp(): Instant? {
-        return state.firstConnection?.timestamp
+        return state.firstTimeConnectionEstablishedTimestampNew
     }
 
 
@@ -283,6 +264,22 @@ class PersistenceService {
 
     fun setSelectedServices(selectedServices: MutableMap<String, Array<String>>) {
         state.selectedServices = selectedServices
+    }
+
+    fun updateLastConnectionTimestamp() {
+        state.lastConnectionTimestamp = Instant.now()
+    }
+
+    fun getLastConnectionTimestamp(): Instant? {
+        return state.lastConnectionTimestamp
+    }
+
+    fun setLastUserActionTimestamp() {
+        state.lastUserActionTimestamp = Instant.now()
+    }
+
+    fun getLastUserActionTimestamp(): Instant? {
+        return state.lastUserActionTimestamp
     }
 
 

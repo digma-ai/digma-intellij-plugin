@@ -30,6 +30,10 @@ class AppNotificationCenter: Disposable {
     init {
         Log.log(logger::info,"Starting notification center")
         startNoInsightsYetNotificationTimer()
+
+        //todo: things to test:
+        // open multi0le projects and check that the coroutine doesn't start more then once
+        startIdleUserTimers(this)
     }
 
     private fun startNoInsightsYetNotificationTimer() {
@@ -39,6 +43,7 @@ class AppNotificationCenter: Disposable {
             return
         }
 
+        //todo: probably not necessary because AppNotificationCenter is an application service
         if (noInsightsYetNotificationTimerStarted.get()){
             return
         }
@@ -47,6 +52,7 @@ class AppNotificationCenter: Disposable {
 
         Log.log(logger::info,"maybe starting NoInsightsReminderNotificationTimer")
         startNoInsightsYetNotificationTimer(this)
+
     }
 
 

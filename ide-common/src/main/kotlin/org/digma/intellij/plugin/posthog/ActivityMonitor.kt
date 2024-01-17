@@ -662,6 +662,9 @@ class ActivityMonitor(project: Project) : Disposable {
     }
 
     fun registerUserAction(action: String) {
+
+        PersistenceService.getInstance().setLastUserActionTimestamp()
+
         capture(
             "user-action",
             mapOf("action" to action)

@@ -11,7 +11,6 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.ToolWindowShower
-import java.util.concurrent.atomic.AtomicBoolean
 
 @Service(Service.Level.APP)
 class AppNotificationCenter: Disposable {
@@ -21,8 +20,6 @@ class AppNotificationCenter: Disposable {
     }
 
 
-    private val noInsightsYetNotificationTimerStarted: AtomicBoolean = AtomicBoolean(false)
-
     override fun dispose() {
         //nothing to do , used as parent disposable
     }
@@ -31,8 +28,6 @@ class AppNotificationCenter: Disposable {
         Log.log(logger::info,"Starting notification center")
         startNoInsightsYetNotificationTimer()
 
-        //todo: things to test:
-        // open multi0le projects and check that the coroutine doesn't start more then once
         startIdleUserTimers(this)
     }
 
@@ -42,13 +37,6 @@ class AppNotificationCenter: Disposable {
             Log.log(logger::info,"noInsightsYetNotificationPassed already passed")
             return
         }
-
-        //todo: probably not necessary because AppNotificationCenter is an application service
-        if (noInsightsYetNotificationTimerStarted.get()){
-            return
-        }
-
-        noInsightsYetNotificationTimerStarted.set(true)
 
         Log.log(logger::info,"maybe starting NoInsightsReminderNotificationTimer")
         startNoInsightsYetNotificationTimer(this)

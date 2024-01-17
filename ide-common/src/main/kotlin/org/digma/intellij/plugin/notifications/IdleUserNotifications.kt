@@ -30,39 +30,44 @@ const val HASNT_BEEN_ACTIVATED_FORM = "HASNT_BEEN_ACTIVATED_FORM"
 
 fun startIdleUserTimers(parentDisposable: Disposable) {
 
+    Log.log(AppNotificationCenter.logger::info, "starting startIdleUserTimers")
 
     @Suppress("UnstableApiUsage")
     parentDisposable.disposingScope().launch {
 
         while (isActive) {
 
-            //todo: temp, change to hour
-            delay(10 * 1000)
+            try {
+
+                //todo: temp, change to hour
+                delay(10 * 1000)
 //            delay(60 * 1000 * 60)
 
-            //only show one message at a time
-            if (PersistenceService.getInstance().isFirstTimeAssetsReceived() &&
-                backendIdleDays() > 3 &&
-                backendHasntBeenRunningLastNotified() > 7
-            ) {
-                service<IdleNotificationsPersistenceState>().state.backendHasntBeenRunningForAWhileLastNotified = Instant.now()
-                showDigmaHasntBeenRunningForAWhile()
-            } else if (PersistenceService.getInstance().isFirstTimeAssetsReceived() &&
-                backendIdleDays() <= 1 &&
-                userActionIdleDays() > 3 &&
-                hasntBeenOpenedForAWhileLastNotified() > 7
-            ) {
-                service<IdleNotificationsPersistenceState>().state.hasntBeenOpenedForAWhileLastNotified = Instant.now()
-                showDigmaHasntBeenOpenedForAWhile()
-            } else if (PersistenceService.getInstance().isFirstTimeConnectionEstablished() &&
-                !PersistenceService.getInstance().isFirstTimeAssetsReceived() &&
-                pluginInstalledDays() > 7 &&
-                hasntBeenActivatedLastNotified() > 7
-            ) {
-                service<IdleNotificationsPersistenceState>().state.hasntBeenActivatedLastNotified = Instant.now()
-                showDigmaHasntBeenActivated()
+                //only show one message at a time
+                if (PersistenceService.getInstance().isFirstTimeAssetsReceived() &&
+                    backendIdleDays() > 3 &&
+                    backendHasntBeenRunningLastNotified() > 7
+                ) {
+                    service<IdleNotificationsPersistenceState>().state.backendHasntBeenRunningForAWhileLastNotified = Instant.now()
+                    showDigmaHasntBeenRunningForAWhile()
+                } else if (PersistenceService.getInstance().isFirstTimeAssetsReceived() &&
+                    backendIdleDays() <= 1 &&
+                    userActionIdleDays() > 3 &&
+                    hasntBeenOpenedForAWhileLastNotified() > 7
+                ) {
+                    service<IdleNotificationsPersistenceState>().state.hasntBeenOpenedForAWhileLastNotified = Instant.now()
+                    showDigmaHasntBeenOpenedForAWhile()
+                } else if (PersistenceService.getInstance().isFirstTimeConnectionEstablished() &&
+                    !PersistenceService.getInstance().isFirstTimeAssetsReceived() &&
+                    pluginInstalledDays() > 7 &&
+                    hasntBeenActivatedLastNotified() > 7
+                ) {
+                    service<IdleNotificationsPersistenceState>().state.hasntBeenActivatedLastNotified = Instant.now()
+                    showDigmaHasntBeenActivated()
+                }
+            } catch (e: Throwable) {
+                ErrorReporter.getInstance().reportError("AppNotificationCenter.startIdleUserTimers", e)
             }
-
         }
     }
 
@@ -72,7 +77,7 @@ fun startIdleUserTimers(parentDisposable: Disposable) {
 private fun showDigmaHasntBeenRunningForAWhile() {
     showNotification(
         "DigmaHasntBeenRunningForAWhile",
-        "Hi! Just checking up :) We noticed that Digma hasn't been running for a while. Did you run into any issue?",
+        asHtml("Hi! Just checking up :)<br>We noticed that Digma hasn't been running for a while. Did you run into any issue?"),
         BACKEND_HASNT_BEEN_RUNNING_FORM
     )
 }
@@ -80,7 +85,7 @@ private fun showDigmaHasntBeenRunningForAWhile() {
 private fun showDigmaHasntBeenOpenedForAWhile() {
     showNotification(
         "DigmaHasntBeenOpenedForAWhile",
-        "Hey :) Is Digma working ok?\nHi! Just checking up :) We noticed that Digma hasn't been opened for a while. Did you run into any issue?",
+        asHtml("Hey :) Is Digma working ok?<br>Hi! Just checking up :) We noticed that Digma hasn't been opened for a while.<br>Did you run into any issue?"),
         HASNT_BEEN_OPENED_FORM
     )
 }
@@ -88,7 +93,7 @@ private fun showDigmaHasntBeenOpenedForAWhile() {
 private fun showDigmaHasntBeenActivated() {
     showNotification(
         "HasntBeenActivated",
-        "Not a lot's been going on\nHi! Just checking up :) We noticed that Digma was never activated. Is there something we can do to improve our support?",
+        asHtml("Not a lot's been going on<br>Hi! Just checking up :) We noticed that Digma was never activated.<br>Is there something we can do to improve our support?"),
         HASNT_BEEN_ACTIVATED_FORM
     )
 }
@@ -172,13 +177,12 @@ class ShowTypeformAction(
             openTypeform(project, formName)
             notification.expire()
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("ShowTroubleshootingAction.actionPerformed", e)
+            ErrorReporter.getInstance().reportError("ShowTypeformAction.actionPerformed", e)
         }
     }
 
     private fun openTypeform(project: Project, formName: String) {
         val url = getUrlByName(formName)
-//        BrowserUtil.open(url)
         DigmaHTMLEditorProvider.openEditorWithUrl(project, notificationName, url)
     }
 
@@ -213,7 +217,12 @@ class GoAwayAction(
             ActivityMonitor.getInstance(project).registerNotificationCenterEvent("$notificationName.clicked", mapOf())
             notification.expire()
         } catch (e: Throwable) {
-            ErrorReporter.getInstance().reportError("ShowTroubleshootingAction.actionPerformed", e)
+            ErrorReporter.getInstance().reportError("GoAwayAction.actionPerformed", e)
         }
     }
+}
+
+
+private fun asHtml(content: String?): String {
+    return "<html><body>${content.orEmpty()}</body>"
 }

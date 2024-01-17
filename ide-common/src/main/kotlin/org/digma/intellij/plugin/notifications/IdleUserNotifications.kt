@@ -39,9 +39,7 @@ fun startIdleUserTimers(parentDisposable: Disposable) {
 
             try {
 
-                //todo: temp, change to hour
-                delay(10 * 1000)
-//            delay(60 * 1000 * 60)
+                delay(60 * 1000 * 60)
 
                 //only show one message at a time
                 if (PersistenceService.getInstance().isFirstTimeAssetsReceived() &&

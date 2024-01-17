@@ -75,7 +75,7 @@ fun startIdleUserTimers(parentDisposable: Disposable) {
 private fun showDigmaHasntBeenRunningForAWhile() {
     showNotification(
         "DigmaHasntBeenRunningForAWhile",
-        asHtml("Hi! Just checking up :)<br>We noticed that Digma hasn't been running for a while. Did you run into any issue?"),
+        asHtml("Is this thing on?<br>Hi! Just checking up :) We noticed that Digma hasn't been running for a while...<br>Did you run into any issue?"),
         BACKEND_HASNT_BEEN_RUNNING_FORM
     )
 }
@@ -83,7 +83,7 @@ private fun showDigmaHasntBeenRunningForAWhile() {
 private fun showDigmaHasntBeenOpenedForAWhile() {
     showNotification(
         "DigmaHasntBeenOpenedForAWhile",
-        asHtml("Hey :) Is Digma working ok?<br>Hi! Just checking up :) We noticed that Digma hasn't been opened for a while.<br>Did you run into any issue?"),
+        asHtml("Hey :) Is Digma working ok?<br>Hi! Just checking up :) We noticed that Digma hasn't been opened for a while...<br>Did you run into any issue?"),
         HASNT_BEEN_OPENED_FORM
     )
 }

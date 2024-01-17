@@ -55,9 +55,9 @@ abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val 
             JCefTemplateUtils.addCommonEnvVariables(data)
             data[ENV_VARIABLE_IDE] = ApplicationNamesInfo.getInstance().productName
             data[IS_JAEGER_ENABLED] = isJaegerButtonEnabled()
-            data[USER_EMAIL_VARIABLE] = PersistenceService.getInstance().state.userEmail ?: ""
-            data[USER_REGISTRATION_EMAIL_VARIABLE] = PersistenceService.getInstance().state.userRegistrationEmail ?: ""
-            data[IS_OBSERVABILITY_ENABLED_VARIABLE] = PersistenceService.getInstance().state.isAutoOtel
+            data[USER_EMAIL_VARIABLE] = PersistenceService.getInstance().getUserEmail() ?: ""
+            data[USER_REGISTRATION_EMAIL_VARIABLE] = PersistenceService.getInstance().getUserRegistrationEmail() ?: ""
+            data[IS_OBSERVABILITY_ENABLED_VARIABLE] = PersistenceService.getInstance().isAutoOtel()
             data[IS_DIGMA_ENGINE_INSTALLED] = service<DockerService>().isEngineInstalled()
             data[IS_DIGMA_ENGINE_RUNNING] = service<DockerService>().isEngineRunning(project)
             data[IS_DOCKER_INSTALLED] = service<DockerService>().isDockerInstalled()

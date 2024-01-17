@@ -244,10 +244,10 @@ fun bottomPanel(project: Project,errorsModel: ErrorsModel, framesList: Scrollabl
                     isOpaque = false
                     isContentAreaFilled = false
                     isBorderPainted = false
-                    isSelected = PersistenceService.getInstance().state.isWorkspaceOnly
+                    isSelected = PersistenceService.getInstance().isWorkspaceOnly()
                     addActionListener {
                         errorsModel.errorDetails.flowStacks.isWorkspaceOnly = isSelected
-                        PersistenceService.getInstance().state.isWorkspaceOnly = isSelected
+                        PersistenceService.getInstance().setWorkspaceOnly(isSelected)
                         framesList.getModel().setListData(errorsModel.errorDetails.flowStacks.getCurrentStack())
                         ActivityMonitor.getInstance(project).registerButtonClicked(MonitoredPanel.ErrorDetails, "error-frame-workspace-only")
                     }

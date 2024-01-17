@@ -27,7 +27,7 @@ class RegistrationEventHandler(private val project: Project) {
 
         val email = map["email"].toString()
         project.service<ActivityMonitor>().registerEmail(email)//override the onboarding email
-        PersistenceService.getInstance().state.userRegistrationEmail = email
+        PersistenceService.getInstance().setUserRegistrationEmail(email)
 
         val publisher: UserRegistrationEvent = project.messageBus
             .syncPublisher(UserRegistrationEvent.USER_REGISTRATION_TOPIC)

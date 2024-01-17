@@ -202,7 +202,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
         Log.log(logger::debug, "showDocumentPreviewList for {}. ", uid)
 
         val errorDetails = errorsProvider.getErrorDetails(uid)
-        errorDetails.flowStacks.isWorkspaceOnly = PersistenceService.getInstance().state.isWorkspaceOnly
+        errorDetails.flowStacks.isWorkspaceOnly = PersistenceService.getInstance().isWorkspaceOnly()
         model.errorDetails = errorDetails
         model.card = ErrorsTabCard.ERROR_DETAILS
 
@@ -313,7 +313,7 @@ class ErrorsViewService(project: Project) : AbstractViewService(project) {
 
     private fun createEmptyErrorDetails(): ErrorDetailsModel {
         val emptyErrorDetails = ErrorDetailsModel()
-        emptyErrorDetails.flowStacks.isWorkspaceOnly = PersistenceService.getInstance().state.isWorkspaceOnly
+        emptyErrorDetails.flowStacks.isWorkspaceOnly = PersistenceService.getInstance().isWorkspaceOnly()
         return emptyErrorDetails
     }
 

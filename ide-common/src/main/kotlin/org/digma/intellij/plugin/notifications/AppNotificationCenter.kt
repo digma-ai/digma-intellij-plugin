@@ -34,7 +34,7 @@ class AppNotificationCenter: Disposable {
 
     private fun startNoInsightsYetNotificationTimer() {
 
-        if (service<PersistenceService>().state.noInsightsYetNotificationPassed){
+        if (service<PersistenceService>().isNoInsightsYetNotificationPassed()) {
             Log.log(logger::info,"noInsightsYetNotificationPassed already passed")
             return
         }

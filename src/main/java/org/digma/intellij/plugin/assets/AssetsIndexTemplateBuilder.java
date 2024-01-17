@@ -54,22 +54,22 @@ class AssetsIndexTemplateBuilder {
             var data = new HashMap<String, Object>();
             JCefTemplateUtils.addCommonEnvVariables(data);
 
-            var curEnv = PersistenceService.getInstance().getState().getCurrentEnv();
+            var curEnv = PersistenceService.getInstance().getCurrentEnv();
             var assetSearchEnabledForLinux = VersionComparatorUtil.compare(ApplicationInfo.getInstance().getMajorVersion(),"2023") >= 0;
             data.put(ASSET_SEARCH_ENV_NAME, SystemInfo.isLinux ? String.valueOf(assetSearchEnabledForLinux) : "true");
 
             data.put(ENV_VARIABLE_IDE, ApplicationNamesInfo.getInstance().getProductName());
             data.put(IS_JAEGER_ENABLED, JaegerUtilKt.isJaegerButtonEnabled());
-            var userEmail = PersistenceService.getInstance().getState().getUserEmail();
+            var userEmail = PersistenceService.getInstance().getUserEmail();
             data.put(USER_EMAIL_VARIABLE, userEmail == null ? "" : userEmail);
-            data.put(IS_OBSERVABILITY_ENABLED_VARIABLE, PersistenceService.getInstance().getState().isAutoOtel());
+            data.put(IS_OBSERVABILITY_ENABLED_VARIABLE, PersistenceService.getInstance().isAutoOtel());
             data.put(IS_DIGMA_ENGINE_INSTALLED, ApplicationManager.getApplication().getService(DockerService.class).isEngineInstalled());
             data.put(IS_DIGMA_ENGINE_RUNNING, ApplicationManager.getApplication().getService(DockerService.class).isEngineRunning(project));
             data.put(IS_DOCKER_INSTALLED, ApplicationManager.getApplication().getService(DockerService.class).isDockerInstalled());
             data.put(IS_DOCKER_COMPOSE_INSTALLED, ApplicationManager.getApplication().getService(DockerService.class).isDockerInstalled());
             data.put(ENVIRONMENT, curEnv == null ? "" : curEnv);
 
-            var selectedServices = PersistenceService.getInstance().getState().getSelectedServices().get(project.getName());
+            var selectedServices = PersistenceService.getInstance().getSelectedServices().get(project.getName());
             if(selectedServices != null && selectedServices.length > 0) {
                 data.put(SELECTED_SERVICES_VARIABLE, "['" + String.join("','", selectedServices) + "']");
             }

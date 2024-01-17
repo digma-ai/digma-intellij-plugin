@@ -8,7 +8,6 @@ import com.intellij.openapi.components.service
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.PluginId
-import org.digma.intellij.plugin.common.DatesUtils
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
@@ -21,7 +20,7 @@ const val FADING_REMINDERS_NOTIFICATION_GROUP = "Digma fading Reminders Group"
 
 fun startNoInsightsYetNotificationTimer(parentDisposable: Disposable) {
 
-    if (service<PersistenceService>().state.firstTimeInsightReceived) {
+    if (service<PersistenceService>().isFirstTimeInsightReceived()) {
         return
     }
 
@@ -31,11 +30,13 @@ fun startNoInsightsYetNotificationTimer(parentDisposable: Disposable) {
 
         Log.log(AppNotificationCenter.logger::info, "Starting tNoInsightsYetNotificationTimer")
 
-        while (service<PersistenceService>().state.firstTimeConnectionEstablishedTimestamp == null) {
+        var firstConnectionTime = service<PersistenceService>().getFirstTimeConnectionEstablishedTimestamp()
+        while (firstConnectionTime == null) {
             delay(60000)
+            firstConnectionTime = service<PersistenceService>().getFirstTimeConnectionEstablishedTimestamp()
         }
 
-        val firstConnectionTime = DatesUtils.Instants.stringToInstant(service<PersistenceService>().state.firstTimeConnectionEstablishedTimestamp)
+
         Log.log(AppNotificationCenter.logger::info, "in NoInsightsYetNotificationTimer, got firstConnectionTime {}", firstConnectionTime)
 
         val after30Minutes = firstConnectionTime.plus(30, ChronoUnit.MINUTES)
@@ -50,7 +51,7 @@ fun startNoInsightsYetNotificationTimer(parentDisposable: Disposable) {
         }
 
 
-        if (!service<PersistenceService>().state.firstTimeInsightReceived) {
+        if (!service<PersistenceService>().isFirstTimeInsightReceived()) {
             Log.log(AppNotificationCenter.logger::info, "in NoInsightsYetNotificationTimer, showing notification")
             showNoInsightsYetNotification()
         } else {

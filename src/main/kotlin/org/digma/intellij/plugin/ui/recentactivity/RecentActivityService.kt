@@ -44,8 +44,8 @@ class RecentActivityService(val project: Project) : Disposable {
 
             val recentActivityData = project.service<AnalyticsService>().getRecentActivity(environments)
 
-            if (recentActivityData.entries.isNotEmpty() && !service<PersistenceService>().state.firstTimeRecentActivityReceived) {
-                service<PersistenceService>().state.firstTimeRecentActivityReceived = true
+            if (recentActivityData.entries.isNotEmpty() && !service<PersistenceService>().isFirstTimeRecentActivityReceived()) {
+                service<PersistenceService>().setFirstTimeRecentActivityReceived()
                 project.service<ActivityMonitor>().registerFirstTimeRecentActivityReceived()
             }
 

@@ -14,10 +14,10 @@ object UserId {
             userId = hostname
             isDevUser = true
         } else {
-            if (service<PersistenceService>().state.userId == null) {
-                service<PersistenceService>().state.userId = Integer.toHexString(hostname.hashCode())
+            if (service<PersistenceService>().getUserId() == null) {
+                service<PersistenceService>().setUserId(Integer.toHexString(hostname.hashCode()))
             }
-            userId = service<PersistenceService>().state.userId!!
+            userId = service<PersistenceService>().getUserId()!!
             isDevUser = false
         }
     }

@@ -13,12 +13,22 @@ import com.intellij.util.Consumer
 import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.findActiveProject
+import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import java.awt.Component
 
 
 class DigmaErrorReportSubmitter : ErrorReportSubmitter() {
+
+
     override fun getReportActionText(): String {
+
+        //getReportActionText is called every time before the error dialog opens, so use it as a hook to
+        // send an event. it's an indication that user opened the error dialog on our error.
+        findActiveProject()?.let {
+            ActivityMonitor.getInstance(it).registerCustomEvent("prepare ErrorReportSubmitter", mapOf())
+        }
+
         return "Report to Digma"
     }
 
@@ -46,6 +56,7 @@ class DigmaErrorReportSubmitter : ErrorReportSubmitter() {
                     consumer.consume(SubmittedReportInfo(SubmittedReportInfo.SubmissionStatus.NEW_ISSUE))
                 }
             } catch (e: Throwable) {
+                ErrorReporter.getInstance().reportError("DigmaErrorReportSubmitter.submit", e)
                 EDT.ensureEDT {
                     consumer.consume(SubmittedReportInfo(SubmittedReportInfo.SubmissionStatus.FAILED))
                 }

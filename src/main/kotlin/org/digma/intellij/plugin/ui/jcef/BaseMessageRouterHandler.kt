@@ -63,7 +63,9 @@ abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouter
 
                 //do common messages for all apps, or call doOnQuery
                 when (action) {
-
+                    JCefMessagesUtils.GLOBAL_REGISTER ->{
+                        project.service<RegistrationEventHandler>().register(requestJsonNode);
+                    }
                     JCefMessagesUtils.GLOBAL_OPEN_TROUBLESHOOTING_GUIDE -> {
                         project.service<ActivityMonitor>()
                             .registerCustomEvent("troubleshooting link clicked", mapOf("origin" to getOriginForTroubleshootingEvent()))

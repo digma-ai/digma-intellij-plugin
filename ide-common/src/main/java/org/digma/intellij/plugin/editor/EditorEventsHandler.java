@@ -244,7 +244,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
     public void fileClosed(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
         try {
             fileClosedImpl(source, file);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             Log.warnWithException(LOGGER, e, "Exception in fileClosed");
             ErrorReporter.getInstance().reportError(project, "EditorEventsHandler.fileClosed", e);
         }

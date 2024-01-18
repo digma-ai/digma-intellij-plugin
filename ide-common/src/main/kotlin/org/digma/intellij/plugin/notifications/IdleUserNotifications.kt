@@ -75,7 +75,7 @@ fun startIdleUserTimers(parentDisposable: Disposable) {
 private fun showDigmaHasntBeenRunningForAWhile() {
     showNotification(
         "DigmaHasntBeenRunningForAWhile",
-        asHtml("Is this thing on?<br>Hi! Just checking up :) We noticed that Digma hasn't been running for a while...<br>Did you run into any issue?"),
+        asHtml("Is this thing on?<br>Hi! Just checking in :) We noticed that Digma hasn't been running for a while...<br>Did you run into any issue?"),
         BACKEND_HASNT_BEEN_RUNNING_FORM
     )
 }
@@ -83,15 +83,15 @@ private fun showDigmaHasntBeenRunningForAWhile() {
 private fun showDigmaHasntBeenOpenedForAWhile() {
     showNotification(
         "DigmaHasntBeenOpenedForAWhile",
-        asHtml("Hey :) Is Digma working ok?<br>Hi! Just checking up :) We noticed that Digma hasn't been opened for a while...<br>Did you run into any issue?"),
+        asHtml("Hey :) Is Digma working ok?<br>Hi! Just checking in :) We noticed that Digma hasn't been opened for a while...<br>Did you run into any issue?"),
         HASNT_BEEN_OPENED_FORM
     )
 }
 
 private fun showDigmaHasntBeenActivated() {
     showNotification(
-        "HasntBeenActivated",
-        asHtml("Not a lot's been going on<br>Hi! Just checking up :) We noticed that Digma was never activated.<br>Is there something we can do to improve our support?"),
+        "DigmaHasntBeenActivated",
+        asHtml("Not a lot's been going on<br>Hi! Just checking in :) We noticed that Digma was never activated.<br>Is there something we can do to improve our support?"),
         HASNT_BEEN_ACTIVATED_FORM
     )
 }
@@ -110,7 +110,7 @@ private fun showNotification(name: String, text: String, formName: String) {
         notification.addAction(GoAwayAction(project, notification, name))
 
         notification.whenExpired {
-            Log.log(AppNotificationCenter.logger::info, "in $name, notification expired")
+            Log.log(AppNotificationCenter.logger::debug, "in $name, notification expired")
         }
         notification.setImportant(true)
         notification.setToolWindowId(PluginId.TOOL_WINDOW_ID)
@@ -187,8 +187,8 @@ class ShowTypeformAction(
     private fun getUrlByName(formName: String): String {
         return when (formName) {
             BACKEND_HASNT_BEEN_RUNNING_FORM -> "https://digma-ai.typeform.com/to/VvjuMn9D"
-            HASNT_BEEN_OPENED_FORM -> "https://digma-ai.typeform.com/to/VvjuMn9D"
-            HASNT_BEEN_ACTIVATED_FORM -> "https://digma-ai.typeform.com/to/VvjuMn9D"
+            HASNT_BEEN_OPENED_FORM -> "https://digma-ai.typeform.com/to/mk6WAYPW"
+            HASNT_BEEN_ACTIVATED_FORM -> "https://digma-ai.typeform.com/to/bRzcynub"
             else -> "https://digma.ai/"
         }
     }

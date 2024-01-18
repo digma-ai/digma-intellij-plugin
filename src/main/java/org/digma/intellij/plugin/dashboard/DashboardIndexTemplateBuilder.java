@@ -54,9 +54,9 @@ public class DashboardIndexTemplateBuilder {
 
             data.put(ENV_VARIABLE_IDE, ApplicationNamesInfo.getInstance().getProductName());
             data.put(IS_JAEGER_ENABLED, JaegerUtilKt.isJaegerButtonEnabled());
-            var userEmail = PersistenceService.getInstance().getState().getUserEmail();
+            var userEmail = PersistenceService.getInstance().getUserEmail();
             data.put(USER_EMAIL_VARIABLE, userEmail == null ? "" : userEmail);
-            data.put(IS_OBSERVABILITY_ENABLED_VARIABLE, PersistenceService.getInstance().getState().isAutoOtel());
+            data.put(IS_OBSERVABILITY_ENABLED_VARIABLE, PersistenceService.getInstance().isAutoOtel());
             data.put(IS_DIGMA_ENGINE_INSTALLED, ApplicationManager.getApplication().getService(DockerService.class).isEngineInstalled());
             data.put(IS_DIGMA_ENGINE_RUNNING, ApplicationManager.getApplication().getService(DockerService.class).isEngineRunning(project));
             data.put(IS_DOCKER_INSTALLED, ApplicationManager.getApplication().getService(DockerService.class).isDockerInstalled());
@@ -64,7 +64,7 @@ public class DashboardIndexTemplateBuilder {
             data.put(DIGMA_API_URL, SettingsState.getInstance().apiUrl);
 
             data.put(DASHBOARD_REFRESH_INTERVAL, 10*1000);
-            data.put(DASHBOARD_ENVIRONMENT, PersistenceService.getInstance().getState().getCurrentEnv());
+            data.put(DASHBOARD_ENVIRONMENT, PersistenceService.getInstance().getCurrentEnv());
 
             Template template = freemarketConfiguration.getTemplate(INDEX_TEMPLATE_NAME);
             StringWriter stringWriter = new StringWriter();

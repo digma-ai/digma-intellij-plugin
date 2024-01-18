@@ -114,7 +114,7 @@
 
         <applicationService serviceImplementation="org.digma.intellij.plugin.settings.SettingsState"/>
 
-        <applicationService serviceImplementation="org.digma.intellij.plugin.persistence.PersistenceService"/>
+        <applicationService serviceImplementation="org.digma.intellij.plugin.persistence.PersistenceState"/>
 
         <editorNotificationProvider implementation="org.digma.intellij.plugin.notifications.DigmaEditorNotificationProvider"
                                     id="org.digma.intellij.plugin.notifications.DigmaEditorNotificationProvider"/>

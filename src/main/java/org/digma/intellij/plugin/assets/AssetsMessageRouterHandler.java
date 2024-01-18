@@ -29,11 +29,11 @@ import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil;
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.rest.AboutResult;
-import org.digma.intellij.plugin.persistence.PersistenceService;
-import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest;
 import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest;
+import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
+import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest;
 import org.digma.intellij.plugin.ui.settings.Theme;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -190,7 +190,7 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
             }
         });
 
-        backendQueryParams.put("environment",PersistenceService.getInstance().getState().getCurrentEnv());
+        backendQueryParams.put("environment", PersistenceService.getInstance().getCurrentEnv());
         var services = getServices(objectMapper, jsonNode);
 
         Log.log(LOGGER::trace, project, "pushAssets called");
@@ -235,7 +235,7 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     void pushGlobalEnvironmentChange() throws JsonProcessingException {
         EDT.assertNonDispatchThread();
 
-        var curEnv = PersistenceService.getInstance().getState().getCurrentEnv();
+        var curEnv = PersistenceService.getInstance().getCurrentEnv();
         JsonNode jsonNode = JsonNodeFactory.instance.objectNode();
         ((ObjectNode) jsonNode).put("environment", curEnv);
         var message = new EnvironmentChangedMessage(

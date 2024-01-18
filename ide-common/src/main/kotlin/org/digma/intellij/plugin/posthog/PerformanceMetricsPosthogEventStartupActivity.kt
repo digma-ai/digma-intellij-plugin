@@ -65,7 +65,7 @@ class ContinuousPerformanceMetricsReporter : Disposable {
 
     private suspend fun waitForFirstTime(coroutineScope: CoroutineScope) {
 
-        while (!PersistenceService.getInstance().state.firstTimePerformanceMetrics && coroutineScope.isActive) {
+        while (!PersistenceService.getInstance().isFirstTimePerformanceMetrics() && coroutineScope.isActive) {
             try {
 
                 delay(30000)
@@ -80,7 +80,7 @@ class ContinuousPerformanceMetricsReporter : Disposable {
                         getActivityMonitor()?.let { activityMonitor ->
                             Log.log(logger::info, "registering first time performance metrics")
                             activityMonitor.registerPerformanceMetrics(result, true)
-                            PersistenceService.getInstance().state.firstTimePerformanceMetrics = true
+                            PersistenceService.getInstance().setFirstTimePerformanceMetrics()
 
                         }
                     }

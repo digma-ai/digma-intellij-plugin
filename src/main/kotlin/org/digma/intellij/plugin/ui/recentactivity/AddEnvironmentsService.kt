@@ -115,7 +115,7 @@ class AddEnvironmentsService {
         try {
             Log.log(logger::info, "flushing environments {}", pendingEnvironments)
             val asJson = objectMapper.writeValueAsString(pendingEnvironments)
-            service<PersistenceService>().state.pendingEnvironment = asJson
+            service<PersistenceService>().setPendingEnvironment(asJson)
         } catch (e: Exception) {
             Log.warnWithException(logger, e, "Error flushing pending environments")
             service<ErrorReporter>().reportError("AddEnvironmentsService.flush", e)
@@ -127,7 +127,7 @@ class AddEnvironmentsService {
 
             Log.log(logger::info, "loading environments from persistence")
 
-            val asJson = service<PersistenceService>().state.pendingEnvironment
+            val asJson = service<PersistenceService>().getPendingEnvironment()
             asJson?.let {
                 val jsonObject: ArrayNode = objectMapper.readTree(it) as ArrayNode
                 jsonObject.forEach { jsonNode ->

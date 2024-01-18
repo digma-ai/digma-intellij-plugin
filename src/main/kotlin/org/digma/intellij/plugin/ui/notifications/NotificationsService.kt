@@ -46,7 +46,7 @@ class NotificationsService(val project: Project) : Disposable {
 
         return try {
             val unreadResponse = project.service<AnalyticsService>()
-                .getUnreadNotificationsCount(service<PersistenceService>().state.notificationsStartDate, UserId.userId)
+                .getUnreadNotificationsCount(service<PersistenceService>().getNotificationsStartDate(), UserId.userId)
             unreadResponse.unreadCount > 0
         } catch (e: NoSelectedEnvironmentException) {
             //just log, it may happen a lot
@@ -107,7 +107,7 @@ class NotificationsService(val project: Project) : Disposable {
         //exceptions should be handled in place where calling this method, don't return empty string
         try {
             val notifications = project.service<AnalyticsService>()
-                .getNotifications(service<PersistenceService>().state.notificationsStartDate, UserId.userId, pageNumber, pageSize, isRead)
+                .getNotifications(service<PersistenceService>().getNotificationsStartDate(), UserId.userId, pageNumber, pageSize, isRead)
             updateLatestNotificationTime(notifications)
             return notifications
         } catch (e: NoSelectedEnvironmentException) {
@@ -143,9 +143,10 @@ class NotificationsService(val project: Project) : Disposable {
     }
 
     private fun updateStartTimeIfNecessary() {
-        if (service<PersistenceService>().state.notificationsStartDate == null) {
-            service<PersistenceService>().state.notificationsStartDate =
+        if (service<PersistenceService>().getNotificationsStartDate() == null) {
+            service<PersistenceService>().setNotificationsStartDate(
                 ZonedDateTime.now().minus(1, ChronoUnit.DAYS).withZoneSameInstant(ZoneOffset.UTC).toString()
+            )
         }
     }
 

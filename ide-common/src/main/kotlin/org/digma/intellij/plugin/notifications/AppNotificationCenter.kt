@@ -11,7 +11,6 @@ import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.ToolWindowShower
-import java.util.concurrent.atomic.AtomicBoolean
 
 @Service(Service.Level.APP)
 class AppNotificationCenter: Disposable {
@@ -21,8 +20,6 @@ class AppNotificationCenter: Disposable {
     }
 
 
-    private val noInsightsYetNotificationTimerStarted: AtomicBoolean = AtomicBoolean(false)
-
     override fun dispose() {
         //nothing to do , used as parent disposable
     }
@@ -30,23 +27,20 @@ class AppNotificationCenter: Disposable {
     init {
         Log.log(logger::info,"Starting notification center")
         startNoInsightsYetNotificationTimer()
+
+        startIdleUserTimers(this)
     }
 
     private fun startNoInsightsYetNotificationTimer() {
 
-        if (service<PersistenceService>().state.noInsightsYetNotificationPassed){
+        if (service<PersistenceService>().isNoInsightsYetNotificationPassed()) {
             Log.log(logger::info,"noInsightsYetNotificationPassed already passed")
             return
         }
 
-        if (noInsightsYetNotificationTimerStarted.get()){
-            return
-        }
-
-        noInsightsYetNotificationTimerStarted.set(true)
-
         Log.log(logger::info,"maybe starting NoInsightsReminderNotificationTimer")
         startNoInsightsYetNotificationTimer(this)
+
     }
 
 

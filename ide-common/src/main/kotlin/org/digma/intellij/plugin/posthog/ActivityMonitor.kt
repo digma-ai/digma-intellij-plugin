@@ -73,9 +73,9 @@ class ActivityMonitor(project: Project) : Disposable {
         val mutableDetails: MutableMap<String, Any> = mutableMapOf()
         mutableDetails.putAll(details)
 
-        mutableDetails["firstTimeInsightReceived"] = PersistenceService.getInstance().state.firstTimeInsightReceived
-        mutableDetails["firstTimeAssetsReceived"] = PersistenceService.getInstance().state.firstTimeAssetsReceived
-        mutableDetails["firstTimeRecentActivityReceived"] = PersistenceService.getInstance().state.firstTimeRecentActivityReceived
+        mutableDetails["firstTimeInsightReceived"] = PersistenceService.getInstance().isFirstTimeInsightReceived()
+        mutableDetails["firstTimeAssetsReceived"] = PersistenceService.getInstance().isFirstTimeAssetsReceived()
+        mutableDetails["firstTimeRecentActivityReceived"] = PersistenceService.getInstance().isFirstTimeRecentActivityReceived()
 
         postHog?.capture(
             userId,
@@ -661,6 +661,9 @@ class ActivityMonitor(project: Project) : Disposable {
     }
 
     fun registerUserAction(action: String) {
+
+        PersistenceService.getInstance().setLastUserActionTimestamp()
+
         capture(
             "user-action",
             mapOf("action" to action)

@@ -59,7 +59,7 @@ class EventsNotificationsService(val project: Project) : Disposable {
 
                 try {
 
-                    var lastEventTime = service<PersistenceService>().state.lastInsightsEventTime
+                    var lastEventTime = service<PersistenceService>().getLastInsightsEventTime()
                     if (lastEventTime == null) {
                         lastEventTime = ZonedDateTime.now().minus(7, ChronoUnit.DAYS).withZoneSameInstant(ZoneOffset.UTC).toString()
                     }
@@ -94,8 +94,8 @@ class EventsNotificationsService(val project: Project) : Disposable {
 
         val latest = events.events.maxByOrNull { codeObjectEvent: CodeObjectEvent -> codeObjectEvent.eventRecognitionTime }
         latest?.let {
-            service<PersistenceService>().state.lastInsightsEventTime = it.eventRecognitionTime.withZoneSameInstant(ZoneOffset.UTC).toString()
-            Log.log(logger::info, "latest event time updated to {}",service<PersistenceService>().state.lastInsightsEventTime)
+            service<PersistenceService>().setLastInsightsEventTime(it.eventRecognitionTime.withZoneSameInstant(ZoneOffset.UTC).toString())
+            Log.log(logger::info, "latest event time updated to {}", service<PersistenceService>().getLastInsightsEventTime())
         }
     }
 

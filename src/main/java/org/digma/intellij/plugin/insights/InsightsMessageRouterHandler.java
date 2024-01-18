@@ -20,6 +20,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsService;
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.EDT;
+import org.digma.intellij.plugin.dashboard.outgoing.BackendInfoMessage;
 import org.digma.intellij.plugin.document.CodeObjectsUtil;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.insights.model.outgoing.CommitInfo;
@@ -38,6 +39,7 @@ import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil;
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
+import org.digma.intellij.plugin.model.rest.AboutResult;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanResponse;
 import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest;
@@ -97,8 +99,7 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
                 String action = jsonNode.get("action").asText();
                 switch (action) {
 
-                    case "INSIGHTS/INITIALIZE" -> {
-                    }
+                    case "INSIGHTS/INITIALIZE" -> onInitialize(browser);
 
                     case "INSIGHTS/GET_DATA" -> pushInsightsFromGetData();
 
@@ -421,6 +422,20 @@ class InsightsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     private void pushInsightsFromGetData() {
         Log.log(LOGGER::debug, project, "got INSIGHTS/GET_DATA message");
         InsightsService.getInstance(project).refreshInsights();
+    }
+
+    private void onInitialize(CefBrowser browser) {
+        try {
+            AboutResult about = AnalyticsService.getInstance(project).getAbout();
+            var message = new BackendInfoMessage(
+                    JCefMessagesUtils.REQUEST_MESSAGE_TYPE, JCefMessagesUtils.GLOBAL_SET_BACKEND_INFO,
+                    about);
+
+            Log.log(LOGGER::trace, project, "sending {} message",JCefMessagesUtils.GLOBAL_SET_BACKEND_INFO);
+            serializeAndExecuteWindowPostMessageJavaScript(browser, message);
+        } catch (AnalyticsServiceException e) {
+            Log.warnWithException(LOGGER, e, "error getting backend info");
+        }
     }
 
 

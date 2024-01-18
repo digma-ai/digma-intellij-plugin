@@ -16,7 +16,10 @@ import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanRequest;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanResponse;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
+import org.digma.intellij.plugin.model.rest.insights.LinkTicketRequest;
+import org.digma.intellij.plugin.model.rest.insights.LinkUnlinkTicketResponse;
 import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
+import org.digma.intellij.plugin.model.rest.insights.UnlinkTicketRequest;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveDataRequest;
 import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation;
@@ -102,4 +105,8 @@ public interface AnalyticsProvider extends Closeable {
 
     // queryParams: (limit, 5), (pageSize, 5) etc
     String getDashboard(Map<String, String> queryParams);
+
+    LinkUnlinkTicketResponse linkTicket(LinkTicketRequest linkRequest);
+
+    LinkUnlinkTicketResponse unlinkTicket(UnlinkTicketRequest linkRequest);
 }

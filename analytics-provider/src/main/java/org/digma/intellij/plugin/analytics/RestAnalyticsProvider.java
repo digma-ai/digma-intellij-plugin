@@ -24,7 +24,10 @@ import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanRequest;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanResponse;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
+import org.digma.intellij.plugin.model.rest.insights.LinkTicketRequest;
+import org.digma.intellij.plugin.model.rest.insights.LinkUnlinkTicketResponse;
 import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
+import org.digma.intellij.plugin.model.rest.insights.UnlinkTicketRequest;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveDataRequest;
 import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation;
@@ -239,6 +242,18 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     @Override
     public DeleteEnvironmentResponse deleteEnvironment(DeleteEnvironmentRequest deleteEnvironmentRequest) {
         return execute(() -> client.analyticsProvider.deleteEnvironment(deleteEnvironmentRequest));
+    }
+
+    @Override
+    public LinkUnlinkTicketResponse linkTicket(LinkTicketRequest linkRequest)
+    {
+        return execute(() -> client.analyticsProvider.linkTicket(linkRequest));
+    }
+
+    @Override
+    public LinkUnlinkTicketResponse unlinkTicket(UnlinkTicketRequest unlinkRequest)
+    {
+        return execute(() -> client.analyticsProvider.unlinkTicket(unlinkRequest));
     }
 
     @Override
@@ -624,6 +639,20 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @GET("/dashboard/getDashboard")
         Call<String> getDashboard(@QueryMap Map<String, String> fields);
+
+        @Headers({
+                "Accept: text/plain",
+                "Content-Type:application/json"
+        })
+        @PUT("/insightsActions/link-ticket")
+        Call<LinkUnlinkTicketResponse> linkTicket(@Body LinkTicketRequest linkRequest);
+
+        @Headers({
+                "Accept: text/plain",
+                "Content-Type:application/json"
+        })
+        @PUT("/insightsActions/unlink-ticket")
+        Call<LinkUnlinkTicketResponse> unlinkTicket(@Body UnlinkTicketRequest linkRequest);
     }
 
 }

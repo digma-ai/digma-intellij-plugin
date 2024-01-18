@@ -34,8 +34,11 @@ import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanRequest;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanResponse;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
+import org.digma.intellij.plugin.model.rest.insights.LinkTicketRequest;
+import org.digma.intellij.plugin.model.rest.insights.LinkUnlinkTicketResponse;
 import org.digma.intellij.plugin.model.rest.insights.MethodWithCodeObjects;
 import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
+import org.digma.intellij.plugin.model.rest.insights.UnlinkTicketRequest;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveDataRequest;
 import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation;
@@ -289,6 +292,19 @@ public class AnalyticsService implements Disposable {
 
     }
 
+    public LinkUnlinkTicketResponse linkTicket(String codeObjectId, String insightType, String ticketLink) throws AnalyticsServiceException{
+        var env = getCurrentEnvironment();
+        var linkRequest = new LinkTicketRequest(env, codeObjectId, insightType, ticketLink);
+        return executeCatching(() -> analyticsProviderProxy.linkTicket(linkRequest));
+    }
+
+    public LinkUnlinkTicketResponse unlinkTicket(String codeObjectId, String insightType) throws AnalyticsServiceException{
+        var env = getCurrentEnvironment();
+        var unlinkRequest = new UnlinkTicketRequest(env, codeObjectId, insightType);
+        return executeCatching(() -> analyticsProviderProxy.unlinkTicket(unlinkRequest));
+    }
+
+
 
 
     public InsightsOfMethodsResponse getInsightsOfMethods(List<MethodInfo> methodInfos) throws AnalyticsServiceException {
@@ -510,7 +526,6 @@ public class AnalyticsService implements Disposable {
                 new Class[]{AnalyticsProvider.class, Closeable.class},
                 new AnalyticsInvocationHandler(obj));
     }
-
 
     /**
      * A proxy for cross-cutting concerns across all api methods.

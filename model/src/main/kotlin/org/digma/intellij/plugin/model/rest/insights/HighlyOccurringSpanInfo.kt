@@ -7,7 +7,7 @@ import java.beans.ConstructorProperties
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class HighlyOccurringSpanInfo
 @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-@ConstructorProperties("occurrences", "internalSpan", "clientSpan", "traceId", "duration", "fraction", "severity", "impact", "criticality")
+@ConstructorProperties("occurrences", "internalSpan", "clientSpan", "traceId", "duration", "fraction", "severity", "impact", "criticality", "ticketLink")
 constructor(
         val occurrences: Double,
         val internalSpan: SpanInfo?,
@@ -17,6 +17,7 @@ constructor(
         val fraction: Double,
         val severity: Double,
         val impact: Double,
-        val criticality: Double
+        val criticality: Double,
+        var ticketLink: String?,
 )
 

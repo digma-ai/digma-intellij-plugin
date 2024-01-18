@@ -483,7 +483,6 @@ class ActivityMonitor(project: Project) : Disposable {
         registerUserAction("Clicked on view dashboard")
     }
 
-
     //todo: remove at some point
     fun registerFirstTimePluginLoaded() {
         postHog?.capture(userId, "plugin first-loaded")

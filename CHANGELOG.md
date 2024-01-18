@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.233] - 2024-01-15
+## [2.0.234] - 2024-01-18
+- Notification for idle users Closes #1600 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1603
+- Feature/link ticket by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/1585
+- Hide ticket link input based on backend version by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/1607
+
+## 2.0.233 - 2024-01-15
 - remove idea move to front Closes #1360 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1598
 - Micronaut discovery Closes #1581 Closes #1589 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1597
 - error report submitter Closes #138 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1599

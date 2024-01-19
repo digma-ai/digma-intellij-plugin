@@ -13,6 +13,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.digma.intellij.plugin.PluginId
+import org.digma.intellij.plugin.common.UserId
 import org.digma.intellij.plugin.common.findActiveProject
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider
@@ -186,9 +187,9 @@ class ShowTypeformAction(
 
     private fun getUrlByName(formName: String): String {
         return when (formName) {
-            BACKEND_HASNT_BEEN_RUNNING_FORM -> "https://digma-ai.typeform.com/to/VvjuMn9D"
-            HASNT_BEEN_OPENED_FORM -> "https://digma-ai.typeform.com/to/mk6WAYPW"
-            HASNT_BEEN_ACTIVATED_FORM -> "https://digma-ai.typeform.com/to/bRzcynub"
+            BACKEND_HASNT_BEEN_RUNNING_FORM -> "https://digma-ai.typeform.com/to/VvjuMn9D?u=${UserId.userId}"
+            HASNT_BEEN_OPENED_FORM -> "https://digma-ai.typeform.com/to/mk6WAYPW?u=${UserId.userId}"
+            HASNT_BEEN_ACTIVATED_FORM -> "https://digma-ai.typeform.com/to/bRzcynub?u=${UserId.userId}"
             else -> "https://digma.ai/"
         }
     }

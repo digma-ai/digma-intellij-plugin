@@ -42,6 +42,7 @@ import java.util.Date
     JsonSubTypes.Type(value = SpanDurationsInsight::class, name = "SpanDurations"),
     JsonSubTypes.Type(value = SpanSlowEndpointsInsight::class, name = "SpanEndpointBottleneck"),
     JsonSubTypes.Type(value = SpanDurationBreakdownInsight::class, name = "SpanDurationBreakdown"),
+    JsonSubTypes.Type(value = SpanNexusInsight::class, name = "SpanNexus"),
 )
 interface CodeObjectInsight {
     val type: InsightType

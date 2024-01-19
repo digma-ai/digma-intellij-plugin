@@ -84,6 +84,8 @@ public interface AnalyticsProvider extends Closeable {
 
     String getAssetCategories(String environment, String[] services);
 
+    String getAssetFilters(Map<String, String> queryParams);
+
     String insightExists(String environment);
 
     String getAssets(Map<String, String> queryParams, String[] services);

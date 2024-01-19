@@ -435,6 +435,12 @@ public class AnalyticsService implements Disposable {
         }
     }
 
+    public String getAssetFilters(@NotNull Map<String, String> queryParams) throws AnalyticsServiceException {
+        var env = getCurrentEnvironment();
+        return executeCatching(() ->
+                analyticsProviderProxy.getAssetFilters(queryParams));
+    }
+
     public String getAssets(@NotNull Map<String, String> queryParams, String[] services) throws AnalyticsServiceException {
         return executeCatching(() ->
                 analyticsProviderProxy.getAssets(queryParams, services));

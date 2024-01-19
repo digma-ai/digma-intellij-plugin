@@ -195,6 +195,25 @@ public final class AssetsService implements Disposable {
 
     }
 
+    public String getAssetFilters(@NotNull Map<String,String> queryParams) {
+        EDT.assertNonDispatchThread();
+
+        try {
+            Log.log(logger::trace, project, "got get asset filters request");
+            String assetFilters = AnalyticsService.getInstance(project).getAssetFilters(queryParams);
+            AnalyticsService.getInstance(project).checkInsightExists();
+            Log.log(logger::trace, project, "got asset filters [{}]", assetFilters);
+            return assetFilters;
+        } catch (NoSelectedEnvironmentException e) {
+            Log.log(logger::debug, project, "no environment when calling getAssetFilters {}", e.getMessage());
+            return "";
+        } catch (AnalyticsServiceException e) {
+            Log.warnWithException(logger, project, e, "Error loading asset filters {}", e.getMessage());
+            return "";
+        }
+    }
+
+
     public String getAssets(@NotNull Map<String,String> queryParams, String[] services) {
 
         EDT.assertNonDispatchThread();

@@ -201,6 +201,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     }
 
     @Override
+    public String getAssetFilters(Map<String, String> queryParams) {
+        return execute(() -> client.analyticsProvider.getAssetFilters(queryParams));
+    }
+
+    @Override
     public String getAssets(Map<String, String> queryParams, String[] services) {
         return execute(() -> client.analyticsProvider.getAssets(queryParams, services));
     }
@@ -586,6 +591,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @GET("/CodeAnalytics/codeObjects/getAssets")
         Call<String> getAssets(@QueryMap Map<String, String> fields, @Query("services") String[] services);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @GET("/assets/getFilter")
+        Call<String> getAssetFilters(@QueryMap Map<String, String> fields);
 
         @GET("/services/getServices")
         Call<String> getServices(@Query("environment") String environment);

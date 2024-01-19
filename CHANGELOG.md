@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.234] - 2024-01-18
+## [2.0.235] - 2024-01-19
+- send prepare ErrorReportSubmitter by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1609
+- typeform links and fix text by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1610
+- catch-throwable-in-file-closed by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1611
+
+## 2.0.234 - 2024-01-18
 - Notification for idle users Closes #1600 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1603
 - Feature/link ticket by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/1585
 - Hide ticket link input based on backend version by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/1607

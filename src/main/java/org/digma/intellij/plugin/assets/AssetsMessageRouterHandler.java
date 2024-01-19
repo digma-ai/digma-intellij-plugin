@@ -84,6 +84,8 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
                     case "ASSETS/GET_DATA" -> pushAssetsFromGetData(browser, jsonNode);
 
+                    case "ASSETS/GET_ASSET_FILTERS_DATA" -> pushAssetFilters(browser, objectMapper, jsonNode);
+
                     case "ASSETS/GO_TO_ASSET" -> goToAsset(jsonNode);
 
                     case "ASSETS/GET_SERVICES" -> pushServices(browser);
@@ -197,6 +199,31 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
         var payload = objectMapper.readTree(AssetsService.getInstance(project).getAssets(backendQueryParams, services));
         var message = new SetAssetsDataMessage("digma", "ASSETS/SET_DATA", payload);
         Log.log(LOGGER::trace, project, "sending ASSETS/SET_DATA message");
+        browser.executeJavaScript(
+                "window.postMessage(" + objectMapper.writeValueAsString(message) + ");",
+                jbCefBrowser.getCefBrowser().getURL(),
+                0);
+    }
+
+    private void pushAssetFilters(CefBrowser browser, ObjectMapper objectMapper, JsonNode jsonNode) throws JsonProcessingException {
+        EDT.assertNonDispatchThread();
+
+        Map<String, Object> mapRequest = objectMapper.convertValue(jsonNode, Map.class);
+        Map<String, Object> requestPayload = (Map<String, Object>) mapRequest.get("payload");
+
+        Map<String,String> backendQueryParams = new HashMap<>();
+        // query parameters
+        Map<String, Object> payloadQueryParams = (Map<String, Object>) requestPayload.get("query");
+        payloadQueryParams.forEach((paramKey, paramValue) -> {
+            backendQueryParams.put(paramKey, paramValue.toString());
+        });
+
+        backendQueryParams.put("environment", PersistenceService.getInstance().getCurrentEnv());
+
+        Log.log(LOGGER::trace, project, "pushAssetsFilters called");
+        var payload = objectMapper.readTree(AssetsService.getInstance(project).getAssetFilters(backendQueryParams));
+        var message = new SetAssetsDataMessage("digma", "ASSETS/SET_ASSET_FILTERS_DATA", payload);
+        Log.log(LOGGER::trace, project, "sending ASSETS/SET_ASSET_FILTERS_DATA message");
         browser.executeJavaScript(
                 "window.postMessage(" + objectMapper.writeValueAsString(message) + ");",
                 jbCefBrowser.getCefBrowser().getURL(),

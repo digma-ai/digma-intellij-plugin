@@ -1,6 +1,12 @@
 # Changelog
 
-## [2.0.235] - 2024-01-19
+## [2.0.236] - 2024-01-20
+- Update with many queries P95 support by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1606
+- add userid to typeforms by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1614
+- catch-exception-in-RunConfigurationStartupActivity by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1615
+- @opoliarush made their first contribution in https://github.com/digma-ai/digma-intellij-plugin/pull/1606
+
+## 2.0.235 - 2024-01-19
 - send prepare ErrorReportSubmitter by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1609
 - typeform links and fix text by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1610
 - catch-throwable-in-file-closed by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1611

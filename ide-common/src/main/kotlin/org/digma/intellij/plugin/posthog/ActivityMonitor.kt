@@ -6,6 +6,7 @@ import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
 import com.posthog.java.PostHog
+import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.JsonUtils
 import org.digma.intellij.plugin.common.UserId
@@ -26,7 +27,7 @@ import java.time.LocalDateTime
 
 
 @Service(Service.Level.PROJECT)
-class ActivityMonitor(project: Project) : Disposable {
+class ActivityMonitor(private val project: Project) : Disposable {
 
     companion object {
         @JvmStatic
@@ -101,19 +102,16 @@ class ActivityMonitor(project: Project) : Disposable {
     }
 
     fun registerCustomEvent(eventName: String, tags: Map<String, Any>?) {
-        if(eventName == "user-action")//handling user-action event from jcef component
+
+        if (eventName == "user-action" && tags != null)//handling user-action event from jcef component
         {
-            val action = tags?.get("action")
-            if(action != null) {
-                postHog?.set(
-                    userId, mapOf(
-                        "last-user-action" to action,
-                        "last-user-action-timestamp" to Instant.now().toString()
-                    )
-                )
+            tags["action"]?.let {
+                registerUserAction(it.toString(), tags)
             }
+        } else {
+            capture(eventName, tags ?: mapOf())
         }
-        capture(eventName, tags ?: mapOf())
+
     }
 
     fun registerLensClicked(lens: String) {
@@ -140,6 +138,7 @@ class ActivityMonitor(project: Project) : Disposable {
 
     fun registerSidePanelClosed() {
         capture("side-panel closed")
+        registerUserAction("Closed side panel")
     }
 
     fun registerObservabilityPanelOpened() {
@@ -660,20 +659,47 @@ class ActivityMonitor(project: Project) : Disposable {
         registerUserAction(event)
     }
 
+
     fun registerUserAction(action: String) {
 
-        PersistenceService.getInstance().setLastUserActionTimestamp()
+        registerUserAction(action, mapOf())
+    }
+
+    fun registerUserAction(action: String, details: Map<String, Any>) {
+
+        val lastUserActionTimestamp = PersistenceService.getInstance().setLastUserActionTimestamp()
+
+        val detailsMap = details.toMutableMap()
+        detailsMap["action"] = action
 
         capture(
             "user-action",
-            mapOf("action" to action)
+            detailsMap
         )
         postHog?.set(
             userId, mapOf(
                 "last-user-action" to action,
-                "last-user-action-timestamp" to Instant.now().toString()
+                "last-user-action-timestamp" to lastUserActionTimestamp.toString()
             )
         )
+
+        registerOnlineOfflineUserAction(details)
+    }
+
+    private fun registerOnlineOfflineUserAction(details: Map<String, Any>) {
+
+        val eventName =
+            if (PersistenceService.getInstance().isFirstTimeAssetsReceived() && BackendConnectionMonitor.getInstance(project).isConnectionOk()) {
+                "online-user-action"
+            } else {
+                "offline-user-action"
+            }
+
+        capture(
+            eventName,
+            details
+        )
+
     }
 
 

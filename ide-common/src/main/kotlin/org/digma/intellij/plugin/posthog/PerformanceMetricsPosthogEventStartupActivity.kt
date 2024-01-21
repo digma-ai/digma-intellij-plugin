@@ -80,7 +80,10 @@ class ContinuousPerformanceMetricsReporter : Disposable {
                         getActivityMonitor()?.let { activityMonitor ->
                             Log.log(logger::info, "registering first time performance metrics")
                             activityMonitor.registerPerformanceMetrics(result, true)
-                            PersistenceService.getInstance().setFirstTimePerformanceMetrics()
+                            if (!PersistenceService.getInstance().isFirstTimePerformanceMetrics()) {
+                                PersistenceService.getInstance().setFirstTimePerformanceMetrics()
+                            }
+
 
                         }
                     }

@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.237] - 2024-01-21
+## [2.0.238] - 2024-01-21
+- online offline user action Closes #1612 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1621
+
+## 2.0.237 - 2024-01-21
 - fix dashboard title Closes #1441 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1618
 - Feature/testing - wire backend and UI by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1563
 

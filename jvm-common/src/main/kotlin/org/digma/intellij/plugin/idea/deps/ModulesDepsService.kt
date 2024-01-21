@@ -331,8 +331,29 @@ class ModulesDepsService(private val project: Project) : Disposable {
     }
 
     fun getModuleExt(moduleName: String): ModuleExt? {
-        val mExt = mapName2Module.get(moduleName)
+        var mExt = mapName2Module.get(moduleName)
+        if (mExt == null) {
+//            println("DBG: module '${moduleName}' - metadata not built yet, building it...")
+            //try to build MD for this entry
+            mExt = tryBuildAndStoreModuleExt(moduleName)
+        } else {
+//            println("DBG: module '${moduleName}' - metadata already built")
+        }
         return mExt
+    }
+
+    private fun tryBuildAndStoreModuleExt(moduleName: String): ModuleExt? {
+        val moduleManager = ModuleManager.getInstance(project)
+        val module = moduleManager.findModuleByName(moduleName)
+        if (module == null) {
+            return null
+        }
+
+        val moduleMetadata = buildMetadata(module)
+        val moduleExt = ModuleExt(module, moduleMetadata)
+        mapName2Module.put(moduleName, moduleExt)
+//        println("DBG: module '${moduleName}' - built moduleExt = $moduleExt")
+        return moduleExt
     }
 
     fun getQuarkusModulesWithoutOpenTelemetry(): Set<ModuleExt> {

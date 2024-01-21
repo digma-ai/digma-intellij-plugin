@@ -118,7 +118,7 @@
 
         <applicationService serviceImplementation="org.digma.intellij.plugin.settings.SettingsState"/>
 
-        <applicationService serviceImplementation="org.digma.intellij.plugin.persistence.PersistenceService"/>
+        <applicationService serviceImplementation="org.digma.intellij.plugin.persistence.PersistenceState"/>
 
         <editorNotificationProvider implementation="org.digma.intellij.plugin.notifications.DigmaEditorNotificationProvider"
                                     id="org.digma.intellij.plugin.notifications.DigmaEditorNotificationProvider"/>
@@ -154,6 +154,8 @@
         <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.codelens.providers.CodeLensMethodInsightsProvider9"/>
         <codeInsight.daemonBoundCodeVisionProvider implementation="org.digma.intellij.plugin.codelens.providers.CodeLensMethodInsightsProvider10"/>
 
+
+        <errorHandler implementation="org.digma.intellij.plugin.ui.reports.DigmaErrorReportSubmitter"/>
 
     </extensions>
 

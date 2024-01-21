@@ -10,7 +10,6 @@ import com.intellij.ui.JBColor;
 import com.intellij.util.Alarm;
 import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.CommonUtils;
-import org.digma.intellij.plugin.common.DatesUtils;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.ExceptionUtils;
 import org.digma.intellij.plugin.document.CodeObjectsUtil;
@@ -36,8 +35,11 @@ import org.digma.intellij.plugin.model.rest.insights.InsightsOfMethodsResponse;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanRequest;
 import org.digma.intellij.plugin.model.rest.insights.InsightsOfSingleSpanResponse;
 import org.digma.intellij.plugin.model.rest.insights.InsightsRequest;
+import org.digma.intellij.plugin.model.rest.insights.LinkTicketRequest;
+import org.digma.intellij.plugin.model.rest.insights.LinkUnlinkTicketResponse;
 import org.digma.intellij.plugin.model.rest.insights.MethodWithCodeObjects;
 import org.digma.intellij.plugin.model.rest.insights.SpanHistogramQuery;
+import org.digma.intellij.plugin.model.rest.insights.UnlinkTicketRequest;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveData;
 import org.digma.intellij.plugin.model.rest.livedata.DurationLiveDataRequest;
 import org.digma.intellij.plugin.model.rest.navigation.CodeObjectNavigation;
@@ -260,9 +262,9 @@ public class AnalyticsService implements Disposable {
     private <TInsight> void onInsightReceived(List<TInsight> insightsOrMethodsWithInsights) {
         if (insightsOrMethodsWithInsights != null &&
                 !insightsOrMethodsWithInsights.isEmpty() &&
-                !PersistenceService.getInstance().getState().getFirstTimeInsightReceived()) {
+                !PersistenceService.getInstance().isFirstTimeInsightReceived()) {
             ActivityMonitor.getInstance(project).registerFirstInsightReceived();
-            PersistenceService.getInstance().getState().setFirstTimeInsightReceived(true);
+            PersistenceService.getInstance().setFirstTimeInsightReceived();
         }
     }
 
@@ -292,6 +294,19 @@ public class AnalyticsService implements Disposable {
         return insightsOfMethodsResponse;
 
     }
+
+    public LinkUnlinkTicketResponse linkTicket(String codeObjectId, String insightType, String ticketLink) throws AnalyticsServiceException{
+        var env = getCurrentEnvironment();
+        var linkRequest = new LinkTicketRequest(env, codeObjectId, insightType, ticketLink);
+        return executeCatching(() -> analyticsProviderProxy.linkTicket(linkRequest));
+    }
+
+    public LinkUnlinkTicketResponse unlinkTicket(String codeObjectId, String insightType) throws AnalyticsServiceException{
+        var env = getCurrentEnvironment();
+        var unlinkRequest = new UnlinkTicketRequest(env, codeObjectId, insightType);
+        return executeCatching(() -> analyticsProviderProxy.unlinkTicket(unlinkRequest));
+    }
+
 
 
     public InsightsOfMethodsResponse getInsightsOfMethods(List<MethodInfo> methodInfos) throws AnalyticsServiceException {
@@ -406,13 +421,13 @@ public class AnalyticsService implements Disposable {
                 analyticsProviderProxy.insightExists(env));
 
         try {
-            if (!PersistenceService.getInstance().getState().getFirstTimeAssetsReceived()) {
+            if (!PersistenceService.getInstance().isFirstTimeAssetsReceived()) {
                 var objectMapper = new ObjectMapper();
                 var payload = objectMapper.readTree(response);
                 if (!payload.isMissingNode() &&
                         payload.get("insightExists").asBoolean()) {
                     ActivityMonitor.getInstance(project).registerFirstAssetsReceived();
-                    PersistenceService.getInstance().getState().setFirstTimeAssetsReceived(true);
+                    PersistenceService.getInstance().setFirstTimeAssetsReceived();
                 }
             }
         } catch (Exception e) {
@@ -521,7 +536,6 @@ public class AnalyticsService implements Disposable {
                 new AnalyticsInvocationHandler(obj));
     }
 
-
     /**
      * A proxy for cross-cutting concerns across all api methods.
      * In a proxy it's easier to log events, we have the method name, parameters etc.
@@ -596,11 +610,12 @@ public class AnalyticsService implements Disposable {
 
 
                 //todo: not thread safe so the block may be invoked more then once
-                if (!PersistenceService.getInstance().getState().getFirstTimeConnectionEstablished()) {
+                if (!PersistenceService.getInstance().isFirstTimeConnectionEstablished()) {
                     ActivityMonitor.getInstance(project).registerFirstConnectionEstablished();
-                    PersistenceService.getInstance().getState().setFirstTimeConnectionEstablished(true);
-                    PersistenceService.getInstance().getState().setFirstTimeConnectionEstablishedTimestamp(DatesUtils.Instants.instantToString(Instant.now()));
+                    PersistenceService.getInstance().setFirstTimeConnectionEstablished();
                 }
+
+                PersistenceService.getInstance().updateLastConnectionTimestamp();
 
                 //if we are here then the call to the underlying analytics api succeeded, we can reset the status
                 // and notify connectionGained if necessary.

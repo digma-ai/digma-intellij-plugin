@@ -27,7 +27,7 @@ class OtelRunConfigurationExtension : RunConfigurationExtension() {
 
 
     private fun isAutoOtelEnabled(): Boolean {
-        return PersistenceService.getInstance().state.isAutoOtel
+        return PersistenceService.getInstance().isAutoOtel()
     }
 
     private fun isConnectedToBackend(project: Project): Boolean {

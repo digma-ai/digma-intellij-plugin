@@ -129,7 +129,7 @@ public class Environment implements EnvironmentsSupplier {
             try {
                 //run both refreshEnvironments and updateCurrentEnv under same lock
                 refreshEnvironments();
-                updateCurrentEnv(PersistenceService.getInstance().getState().getCurrentEnv(), true);
+                updateCurrentEnv(PersistenceService.getInstance().getCurrentEnv(), true);
             } catch (Exception e) {
                 Log.warnWithException(LOGGER, e, "Exception in refreshNowOnBackground");
                 ErrorReporter.getInstance().reportError(project, "Environment.refreshNowOnBackground", e);
@@ -206,7 +206,7 @@ public class Environment implements EnvironmentsSupplier {
         if (current != null) {
             //don't update the persistent data with null,null will happen on connection lost,
             //so when connection is back the current env can be restored to the last one.
-            PersistenceService.getInstance().getState().setCurrentEnv(current);
+            PersistenceService.getInstance().setCurrentEnv(current);
         }
 
         if (!Objects.equals(oldEnv, current)) {

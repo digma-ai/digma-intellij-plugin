@@ -1,6 +1,41 @@
 # Changelog
 
-## [2.0.229] - 2024-01-07
+## [2.0.236] - 2024-01-20
+- Update with many queries P95 support by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1606
+- add userid to typeforms by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1614
+- catch-exception-in-RunConfigurationStartupActivity by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1615
+- @opoliarush made their first contribution in https://github.com/digma-ai/digma-intellij-plugin/pull/1606
+
+## 2.0.235 - 2024-01-19
+- send prepare ErrorReportSubmitter by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1609
+- typeform links and fix text by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1610
+- catch-throwable-in-file-closed by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1611
+
+## 2.0.234 - 2024-01-18
+- Notification for idle users Closes #1600 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1603
+- Feature/link ticket by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/1585
+- Hide ticket link input based on backend version by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/1607
+
+## 2.0.233 - 2024-01-15
+- remove idea move to front Closes #1360 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1598
+- Micronaut discovery Closes #1581 Closes #1589 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1597
+- error report submitter Closes #138 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1599
+
+## 2.0.232 - 2024-01-11
+- Feature/build Modules Metadata on the fly - in order to avoid race condition by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1584
+
+## 2.0.231 - 2024-01-11
+- allowSlowOperation-isRelevantFile by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1579
+- fixes backend issue ##1537 by @shaykeren in https://github.com/digma-ai/digma-intellij-plugin/pull/1583
+
+## 2.0.230 - 2024-01-10
+- is github url by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1569
+- Reopen count for insights view posthog event by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/1560
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1575
+- Added max reopen count by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/1576
+- trancate-scope-text Closes #872 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1573
+
+## 2.0.229 - 2024-01-07
 - Fixed bug where only git@github.com links were supported by @doppleware in https://github.com/digma-ai/digma-intellij-plugin/pull/1568
 
 ## 2.0.228 - 2024-01-07

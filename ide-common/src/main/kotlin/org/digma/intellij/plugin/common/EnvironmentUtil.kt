@@ -25,3 +25,16 @@ fun buildEnvForLocalTests(localHostname: String): String {
 fun buildEnvForLocalTests(): String {
     return buildEnvForLocalTests(CommonUtils.getLocalHostname())
 }
+
+fun adjustEnvironmentDisplayName(envName: String): String {
+
+    val hostname = CommonUtils.getLocalHostname()
+
+    return if (isEnvironmentLocal(envName) && isLocalEnvironmentMine(envName, hostname)) {
+        LOCAL_ENV
+    } else if (isEnvironmentLocalTests(envName) && isLocalEnvironmentMine(envName, hostname)) {
+        LOCAL_TESTS_ENV
+    } else {
+        envName
+    }
+}

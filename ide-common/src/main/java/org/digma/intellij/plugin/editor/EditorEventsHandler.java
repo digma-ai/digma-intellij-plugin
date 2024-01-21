@@ -17,6 +17,7 @@ import com.intellij.util.AlarmFactory;
 import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.FileUtils;
+import org.digma.intellij.plugin.common.SlowOperationsUtilsKt;
 import org.digma.intellij.plugin.document.DocumentInfoService;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
@@ -243,7 +244,7 @@ public class EditorEventsHandler implements FileEditorManagerListener {
     public void fileClosed(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
         try {
             fileClosedImpl(source, file);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             Log.warnWithException(LOGGER, e, "Exception in fileClosed");
             ErrorReporter.getInstance().reportError(project, "EditorEventsHandler.fileClosed", e);
         }
@@ -331,7 +332,9 @@ public class EditorEventsHandler implements FileEditorManagerListener {
             return false;
         }
 
-        PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
+        PsiFile psiFile = SlowOperationsUtilsKt.allowSlowOperation(() -> PsiManager.getInstance(project).findFile(file));
+
+
         if (psiFile == null) {
             return false;
         }

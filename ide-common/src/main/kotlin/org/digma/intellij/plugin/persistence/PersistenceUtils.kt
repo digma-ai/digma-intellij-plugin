@@ -8,16 +8,16 @@ import org.digma.intellij.plugin.common.IDEUtilsService
  */
 fun updateInstallationWizardFlag() {
     if (IDEUtilsService.isIdeaIDE()) {
-        if (!PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForIdeaIDE) {
-            PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForIdeaIDE = true
+        if (!PersistenceService.getInstance().isAlreadyPassedTheInstallationWizardForIdeaIDE()) {
+            PersistenceService.getInstance().setAlreadyPassedTheInstallationWizardForIdeaIDE()
         }
     } else if (IDEUtilsService.isRiderIDE()) {
-        if (!PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForRiderIDE) {
-            PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForRiderIDE = true
+        if (!PersistenceService.getInstance().isAlreadyPassedTheInstallationWizardForRiderIDE()) {
+            PersistenceService.getInstance().setAlreadyPassedTheInstallationWizardForRiderIDE()
         }
     } else if (IDEUtilsService.isPyCharmIDE()) {
-        if (!PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForPyCharmIDE) {
-            PersistenceService.getInstance().state.alreadyPassedTheInstallationWizardForPyCharmIDE = true
+        if (!PersistenceService.getInstance().isAlreadyPassedTheInstallationWizardForPyCharmIDE()) {
+            PersistenceService.getInstance().setAlreadyPassedTheInstallationWizardForPyCharmIDE()
         }
     }
 }

@@ -683,10 +683,10 @@ class ActivityMonitor(private val project: Project) : Disposable {
             )
         )
 
-        registerOnlineOfflineUserAction(action)
+        registerOnlineOfflineUserAction(details)
     }
 
-    private fun registerOnlineOfflineUserAction(action: String) {
+    private fun registerOnlineOfflineUserAction(details: Map<String, Any>) {
 
         val eventName =
             if (PersistenceService.getInstance().isFirstTimeAssetsReceived() && BackendConnectionMonitor.getInstance(project).isConnectionOk()) {
@@ -697,7 +697,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
 
         capture(
             eventName,
-            mapOf("action" to action)
+            details
         )
 
     }

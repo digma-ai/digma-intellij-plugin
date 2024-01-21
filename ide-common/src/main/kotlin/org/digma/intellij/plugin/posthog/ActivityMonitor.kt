@@ -102,19 +102,16 @@ class ActivityMonitor(private val project: Project) : Disposable {
     }
 
     fun registerCustomEvent(eventName: String, tags: Map<String, Any>?) {
-        if(eventName == "user-action")//handling user-action event from jcef component
+
+        if (eventName == "user-action" && tags != null)//handling user-action event from jcef component
         {
-            val action = tags?.get("action")
-            if(action != null) {
-                postHog?.set(
-                    userId, mapOf(
-                        "last-user-action" to action,
-                        "last-user-action-timestamp" to Instant.now().toString()
-                    )
-                )
+            tags["action"]?.let {
+                registerUserAction(it.toString(), tags)
             }
+        } else {
+            capture(eventName, tags ?: mapOf())
         }
-        capture(eventName, tags ?: mapOf())
+
     }
 
     fun registerLensClicked(lens: String) {
@@ -662,13 +659,22 @@ class ActivityMonitor(private val project: Project) : Disposable {
         registerUserAction(event)
     }
 
+
     fun registerUserAction(action: String) {
+
+        registerUserAction(action, mapOf())
+    }
+
+    fun registerUserAction(action: String, details: Map<String, Any>) {
 
         val lastUserActionTimestamp = PersistenceService.getInstance().setLastUserActionTimestamp()
 
+        val detailsMap = details.toMutableMap()
+        detailsMap["action"] = action
+
         capture(
             "user-action",
-            mapOf("action" to action)
+            detailsMap
         )
         postHog?.set(
             userId, mapOf(

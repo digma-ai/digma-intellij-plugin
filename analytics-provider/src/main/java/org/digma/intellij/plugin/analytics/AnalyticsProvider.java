@@ -30,6 +30,7 @@ import org.digma.intellij.plugin.model.rest.notifications.SetReadNotificationsRe
 import org.digma.intellij.plugin.model.rest.notifications.UnreadNotificationsCountResponse;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
+import org.digma.intellij.plugin.model.rest.testing.LatestTestsOfSpanRequest;
 import org.digma.intellij.plugin.model.rest.usage.EnvUsageStatusResult;
 import org.digma.intellij.plugin.model.rest.usage.EnvsUsageStatusRequest;
 import org.digma.intellij.plugin.model.rest.user.UserUsageStatsRequest;
@@ -94,6 +95,9 @@ public interface AnalyticsProvider extends Closeable {
     void setReadNotificationsTime(SetReadNotificationsRequest setReadNotificationsRequest);
 
     UnreadNotificationsCountResponse getUnreadNotificationsCount(GetUnreadNotificationsCountRequest getUnreadNotificationsCountRequest);
+
+    //Testing
+    String getLatestTestsOfSpan(LatestTestsOfSpanRequest request);
 
     VersionResponse getVersions(VersionRequest request);
 

@@ -28,12 +28,14 @@ import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.PsiTreeUtil
+import com.intellij.testFramework.PlatformTestUtil
 import org.digma.intellij.plugin.WITH_SPAN_ANNOTATION_FQN
 import org.digma.intellij.plugin.WITH_SPAN_DEPENDENCY_DESCRIPTION
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.Retries
 import org.digma.intellij.plugin.common.allowSlowOperation
+import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.document.DocumentInfoService
 import org.digma.intellij.plugin.editor.EditorUtils
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
@@ -57,6 +59,7 @@ import org.digma.intellij.plugin.psi.LanguageService
 import org.digma.intellij.plugin.psi.PsiFileNotFountException
 import org.digma.intellij.plugin.psi.PsiUtils
 import org.digma.intellij.plugin.ui.CaretContextService
+import org.jetbrains.plugins.gradle.execution.test.runner.TestMethodGradleConfigurationProducer
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UMethod
@@ -66,6 +69,7 @@ import org.jetbrains.uast.toUElementOfType
 import java.util.Collections
 import java.util.Objects
 import java.util.function.Consumer
+import java.util.function.Supplier
 
 @Suppress("MemberVisibilityCanBePrivate")
 abstract class AbstractJvmLanguageService(protected val project: Project, protected val codeObjectDiscovery: AbstractCodeObjectDiscovery) :
@@ -222,6 +226,21 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
 
 
             val uClass = findClassByClassName(className, GlobalSearchScope.allScope(project))
+
+            return@compute uClass?.let {
+                it.sourcePsi?.language
+            }
+        }
+    }
+
+    override fun getLanguageForClass(className: String): Language? {
+
+        //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
+        val classNameToFind = className.replace('$', '.')
+
+        return ReadAction.compute<Language?, java.lang.RuntimeException> {
+
+            val uClass = findClassByClassName(classNameToFind, GlobalSearchScope.allScope(project))
 
             return@compute uClass?.let {
                 it.sourcePsi?.language
@@ -446,6 +465,75 @@ abstract class AbstractJvmLanguageService(protected val project: Project, protec
                 }
             }
         }
+    }
+
+
+    override fun getPsiElementForMethod(methodId: String): PsiElement? {
+
+        Log.log(logger::debug, "got getPsiElementForMethod request {}", methodId)
+
+        if (methodId.indexOf("\$_$") <= 0) {
+            Log.log(logger::debug, "method id in getPsiElementForMethod does not contain \$_$, can not navigate {}", methodId)
+            return null
+        }
+
+
+        return ReadActions.ensureReadAction(Supplier {
+
+            return@Supplier allowSlowOperation<PsiElement?> {
+
+                return@allowSlowOperation try {
+
+                    val methodAndClass: Pair<String, String> = CodeObjectsUtil.getMethodClassAndName(methodId)
+                    //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
+                    val className = methodAndClass.first.replace('$', '.')
+                    val cls = findClassByClassName(className, GlobalSearchScope.allScope(project))
+                    cls?.let {
+                        val method = findMethodInClass(project, it, methodId)
+                        method?.sourcePsi
+                    }
+                } catch (e: Exception) {
+                    ErrorReporter.getInstance().reportError("AbstractJvmLanguageService.getPsiElementForMethod", e)
+                    null
+                }
+            }
+        })
+    }
+
+    override fun getPsiElementForClassByMethodId(methodId: String): PsiElement? {
+
+        Log.log(logger::debug, "got getPsiElementForClassByMethodId request {}", methodId)
+
+        if (methodId.indexOf("\$_$") <= 0) {
+            Log.log(logger::debug, "method id in getPsiElementForClassByMethodId does not contain \$_$, can not navigate {}", methodId)
+            return null
+        }
+
+        val methodAndClass: Pair<String, String> = CodeObjectsUtil.getMethodClassAndName(methodId)
+        return getPsiElementForClassByName(methodAndClass.first)
+    }
+
+
+    override fun getPsiElementForClassByName(className: String): PsiElement? {
+
+        Log.log(logger::debug, "got getPsiElementForClassByName request {}", className)
+
+        return ReadActions.ensureReadAction(Supplier {
+
+            return@Supplier allowSlowOperation<PsiElement?> {
+
+                return@allowSlowOperation try {
+
+                    //the code object id for inner classes separates inner classes name with $, but intellij index them with a dot
+                    val classNameToFind = className.replace('$', '.')
+                    val uClass = findClassByClassName(classNameToFind, GlobalSearchScope.allScope(project))
+                    return@allowSlowOperation uClass?.sourcePsi
+                } catch (e: Exception) {
+                    ErrorReporter.getInstance().reportError("AbstractJvmLanguageService.getPsiElementForClassByName", e)
+                    null
+                }
+            }
+        })
     }
 
 

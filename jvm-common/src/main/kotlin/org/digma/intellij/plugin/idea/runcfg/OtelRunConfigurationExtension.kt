@@ -106,15 +106,18 @@ class OtelRunConfigurationExtension : RunConfigurationExtension() {
     ) {
         //we need to clean gradle configuration from our JAVA_TOOL_OPTIONS
         if (isAutoOtelEnabled() &&
-            isConnectedToBackend(configuration.project) &&
             getWrapperFor(configuration)?.isGradleConfiguration(configuration) == true
         ) {
             handler.addProcessListener(object : ProcessListener {
-
                 override fun startNotified(event: ProcessEvent) {
                     cleanGradleSettingsAfterProcessStart(configuration as GradleRunConfiguration)
                 }
+
+                override fun processWillTerminate(event: ProcessEvent, willBeDestroyed: Boolean) {
+                    cleanGradleSettingsAfterProcessStart(configuration as GradleRunConfiguration)
+                }
             })
+
         }
     }
 

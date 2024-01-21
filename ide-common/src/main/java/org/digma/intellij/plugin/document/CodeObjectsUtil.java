@@ -29,6 +29,10 @@ public class CodeObjectsUtil {
         return spanId.startsWith("span:") ? spanId : "span:" + spanId;
     }
 
+    public static String addEndpointTypeToId(@NotNull String endpointId) {
+        return endpointId.startsWith("endpointId:") ? endpointId : "endpointId:" + endpointId;
+    }
+
     public static List<String> addSpanTypeToIds(@NotNull Collection<String> spanIds) {
         return spanIds.stream().map(id -> id.startsWith("span:") ? id : "span:" + id).toList();
     }
@@ -89,6 +93,6 @@ public class CodeObjectsUtil {
         var className = methodId.substring(0, methodId.indexOf("$_$"));
         var methodName = methodId.substring(methodId.indexOf("$_$") + 3);
 
-        return new Pair<>(methodName, className);
+        return new Pair<>(className, methodName);
     }
 }

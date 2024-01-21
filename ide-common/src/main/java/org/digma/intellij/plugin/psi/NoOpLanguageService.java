@@ -7,6 +7,7 @@ import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import kotlin.Pair;
 import org.digma.intellij.plugin.model.discovery.DocumentInfo;
@@ -37,6 +38,12 @@ public class NoOpLanguageService implements LanguageService {
 
     @Override
     public Language getLanguageForMethodCodeObjectId(@NotNull String methodId) {
+        return new Language("NoLang") {
+        };
+    }
+
+    @Override
+    public Language getLanguageForClass(@NotNull String methodId) {
         return new Language("NoLang") {
         };
     }
@@ -104,6 +111,21 @@ public class NoOpLanguageService implements LanguageService {
         throw new UnsupportedOperationException("should not be called");
     }
 
+
+    @Override
+    public @Nullable PsiElement getPsiElementForMethod(@NotNull String methodId) {
+        return null;
+    }
+
+    @Override
+    public @Nullable PsiElement getPsiElementForClassByMethodId(@NotNull String methodId) {
+        return null;
+    }
+
+    @Override
+    public @Nullable PsiElement getPsiElementForClassByName(@NotNull String className) {
+        return null;
+    }
 
     @Override
     public boolean isRelevant(VirtualFile file) {

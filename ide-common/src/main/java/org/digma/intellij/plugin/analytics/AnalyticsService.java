@@ -12,6 +12,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.digma.intellij.plugin.common.CommonUtils;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.ExceptionUtils;
+import org.digma.intellij.plugin.document.CodeObjectsUtil;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.InsightType;
@@ -49,6 +50,7 @@ import org.digma.intellij.plugin.model.rest.notifications.SetReadNotificationsRe
 import org.digma.intellij.plugin.model.rest.notifications.UnreadNotificationsCountResponse;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
+import org.digma.intellij.plugin.model.rest.testing.LatestTestsOfSpanRequest;
 import org.digma.intellij.plugin.model.rest.usage.EnvUsageStatusResult;
 import org.digma.intellij.plugin.model.rest.usage.EnvsUsageStatusRequest;
 import org.digma.intellij.plugin.model.rest.user.UserUsageStatsRequest;
@@ -61,6 +63,8 @@ import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
+import org.digma.intellij.plugin.ui.service.FilterForLatestTests;
+import org.digma.intellij.plugin.ui.service.ScopeRequest;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
@@ -233,7 +237,6 @@ public class AnalyticsService implements Disposable {
     }
 
 
-
     public LatestCodeObjectEventsResponse getLatestEvents(@NotNull String lastReceivedTime) throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getLatestEvents(new LatestCodeObjectEventsRequest(environment.getEnvironments(), lastReceivedTime)));
     }
@@ -269,7 +272,7 @@ public class AnalyticsService implements Disposable {
     public InsightsOfSingleSpanResponse getInsightsForSingleSpan(String spanId) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         Log.log(LOGGER::debug, "Requesting insights for span {}", spanId);
-        return executeCatching(() -> analyticsProviderProxy.getInsightsForSingleSpan(new InsightsOfSingleSpanRequest(env, spanId)));
+        return executeCatching(() -> analyticsProviderProxy.getInsightsForSingleSpan(new InsightsOfSingleSpanRequest(env, CodeObjectsUtil.addSpanTypeToId(spanId))));
     }
 
 
@@ -303,7 +306,6 @@ public class AnalyticsService implements Disposable {
         var unlinkRequest = new UnlinkTicketRequest(env, codeObjectId, insightType);
         return executeCatching(() -> analyticsProviderProxy.unlinkTicket(unlinkRequest));
     }
-
 
 
 
@@ -397,7 +399,6 @@ public class AnalyticsService implements Disposable {
     }
 
 
-
     public String getHtmlGraphForSpanPercentiles(String instrumentationLibrary, String spanName, String backgroundColor) throws AnalyticsServiceException {
         final SpanHistogramQuery spanHistogramQuery = new SpanHistogramQuery(getCurrentEnvironment(), spanName, instrumentationLibrary, JBColor.isBright() ? "light" : "dark", backgroundColor);
         return executeCatching(() -> analyticsProviderProxy.getHtmlGraphForSpanPercentiles(spanHistogramQuery));
@@ -464,6 +465,14 @@ public class AnalyticsService implements Disposable {
     public UnreadNotificationsCountResponse getUnreadNotificationsCount(String notificationsStartDate, String userId) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         return executeCatching(() -> analyticsProviderProxy.getUnreadNotificationsCount(new GetUnreadNotificationsCountRequest(env, userId, notificationsStartDate)));
+    }
+
+
+    // return JSON as string (type LatestTestsOfSpanResponse)
+    public String getLatestTestsOfSpan(ScopeRequest req, FilterForLatestTests filter, int pageSize) throws AnalyticsServiceException {
+        return executeCatching(() -> analyticsProviderProxy.getLatestTestsOfSpan(
+                new LatestTestsOfSpanRequest(req.getSpanCodeObjectIds(), req.getMethodCodeObjectId(), req.getEndpointCodeObjectId(),
+                        filter.getEnvironments(), filter.getPageNumber(), pageSize)));
     }
 
 

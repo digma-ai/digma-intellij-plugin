@@ -38,6 +38,7 @@ import org.digma.intellij.plugin.model.rest.notifications.SetReadNotificationsRe
 import org.digma.intellij.plugin.model.rest.notifications.UnreadNotificationsCountResponse;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
+import org.digma.intellij.plugin.model.rest.testing.LatestTestsOfSpanRequest;
 import org.digma.intellij.plugin.model.rest.usage.EnvUsageStatusResult;
 import org.digma.intellij.plugin.model.rest.usage.EnvsUsageStatusRequest;
 import org.digma.intellij.plugin.model.rest.user.UserUsageStatsRequest;
@@ -222,6 +223,11 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
     @Override
     public UnreadNotificationsCountResponse getUnreadNotificationsCount(GetUnreadNotificationsCountRequest getUnreadNotificationsCountRequest) {
         return execute(() -> client.analyticsProvider.getUnreadNotificationsCount(getUnreadNotificationsCountRequest));
+    }
+
+    @Override
+    public String getLatestTestsOfSpan(LatestTestsOfSpanRequest request) {
+        return execute(() -> client.analyticsProvider.getLatestTestsOfSpan(request));
     }
 
     @Override
@@ -462,6 +468,7 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @POST("/CodeAnalytics/codeObjects/insights_of_single")
         Call<InsightsOfSingleSpanResponse> getInsightsForSingleSpan(@Body InsightsOfSingleSpanRequest insightsOfSingleSpanRequest);
+
         @GET("/CodeAnalytics/codeObjects/insight")
         Call<CodeObjectInsight> getInsightBySpan(@Query("environment") String environment, @Query("spanCodeObjectId") String spanCodeObjectId, @Query("insightType") String insightType);
 
@@ -603,6 +610,13 @@ public class RestAnalyticsProvider implements AnalyticsProvider, Closeable {
         })
         @POST("/Notifications/counts")
         Call<UnreadNotificationsCountResponse> getUnreadNotificationsCount(@Body GetUnreadNotificationsCountRequest getUnreadNotificationsCountRequest);
+
+        @Headers({
+                "Accept: application/+json",
+                "Content-Type:application/json"
+        })
+        @POST("/Testing/get_latest_tests_of_span")
+        Call<String> getLatestTestsOfSpan(@Body LatestTestsOfSpanRequest request);
 
         @Headers({
                 "Accept: application/+json",

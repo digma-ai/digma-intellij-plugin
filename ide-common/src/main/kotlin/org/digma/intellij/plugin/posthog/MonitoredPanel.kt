@@ -7,6 +7,7 @@ enum class MonitoredPanel{
     RecentActivity,
     Jaeger,
     ErrorDetails,
+    Tests,
     NoConnection,
     NoObservability,
     Scope,

@@ -80,9 +80,13 @@
 
         <projectService serviceImplementation="org.digma.intellij.plugin.htmleditor.DigmaHTMLEditorProvider"/>
 
+        <projectService serviceImplementation="org.digma.intellij.plugin.insights.InsightsModelReactHolder"/>
+
         <projectService serviceInterface="org.digma.intellij.plugin.ui.service.InsightsService"
                         serviceImplementation="org.digma.intellij.plugin.insights.InsightsServiceImpl"/>
 
+        <projectService serviceInterface="org.digma.intellij.plugin.ui.service.TestsService"
+                        serviceImplementation="org.digma.intellij.plugin.ui.tests.TestsServiceImpl"/>
 
         <notificationGroup id="Digma Hidden Notification Group"
                            displayType="NONE"

@@ -11,6 +11,7 @@ import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.jetbrains.rdclient.util.idea.LifetimedProjectComponent;
@@ -90,6 +91,16 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
         if (LanguageServiceHost.getInstance(project).isCSharpMethod(methodId)) {
             return CSharpLanguageUtil.getCSharpLanguageInstanceWithReflection();
         }
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public Language getLanguageForClass(@NotNull String className) {
+        //todo: implement
+//        if (LanguageServiceHost.getInstance(project).isCSharpClass(className)) {
+//            return CSharpLanguageUtil.getCSharpLanguageInstanceWithReflection();
+//        }
         return null;
     }
 
@@ -250,5 +261,21 @@ public class CSharpLanguageService extends LifetimedProjectComponent implements 
     @Override
     public @NotNull List<Pair<TextRange, CodeVisionEntry>> getCodeLens(@NotNull PsiFile psiFile) {
         throw new UnsupportedOperationException("should not be called for CSharpLanguageService");
+    }
+
+    @Override
+    public @Nullable PsiElement getPsiElementForMethod(@NotNull String methodId) {
+        //todo: implement
+        return null;
+    }
+
+    @Override
+    public @Nullable PsiElement getPsiElementForClassByMethodId(@NotNull String methodId) {
+        return null;
+    }
+
+    @Override
+    public @Nullable PsiElement getPsiElementForClassByName(@NotNull String className) {
+        return null;
     }
 }

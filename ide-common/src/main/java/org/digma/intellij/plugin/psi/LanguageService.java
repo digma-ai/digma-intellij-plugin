@@ -9,6 +9,7 @@ import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import kotlin.Pair;
 import org.digma.intellij.plugin.common.EDT;
@@ -177,6 +178,17 @@ public interface LanguageService extends Disposable {
         return project.getService(LanguageServiceLocator.class).locate(language);
     }
 
+    @NotNull
+    static LanguageService findLanguageServiceByClassName(@NotNull Project project, @NotNull String className) {
+
+        var language = LanguageService.findLanguageByClassName(project, className);
+        if (language == null) {
+            return NoOpLanguageService.INSTANCE;
+        }
+
+        return project.getService(LanguageServiceLocator.class).locate(language);
+    }
+
 
     @Nullable
     static LanguageService findLanguageServiceByName(Project project, String languageServiceClassName) {
@@ -217,6 +229,31 @@ public interface LanguageService extends Disposable {
 
     }
 
+    @Nullable
+    private static Language findLanguageByClassName(@NotNull Project project, @NotNull String className) {
+
+        for (SupportedLanguages value : SupportedLanguages.values()) {
+
+            try {
+                Class<? extends LanguageService> clazz = (Class<? extends LanguageService>) Class.forName(value.getLanguageServiceClassName());
+                LanguageService languageService = project.getService(clazz);
+                Language language = languageService.getLanguageForClass(className);
+                if (language != null) {
+                    return language;
+                }
+            } catch (Throwable e) {
+                //catch Throwable because there may be errors.
+                //ignore: some classes will fail to load , for example the CSharpLanguageService
+                //will fail to load if it's not rider because it depends on rider classes.
+                //JavaLanguageService will fail to load on rider, etc.
+                //don't log, it will happen too many times
+            }
+        }
+
+        return null;
+
+    }
+
 
     /**
      * This method should be a last resort to find language as it is slow and not reliable.
@@ -228,6 +265,9 @@ public interface LanguageService extends Disposable {
     @Nullable
     Language getLanguageForMethodCodeObjectId(@NotNull String methodId);
 
+    @Nullable
+    Language getLanguageForClass(@NotNull String className);
+
 
     @SuppressWarnings("unused")
     boolean isSupportedFile(Project project, VirtualFile newFile);
@@ -238,10 +278,12 @@ public interface LanguageService extends Disposable {
     // getProjectModelId from the selected editor which is the preferred way to find a IPsiSourceFile in resharper. it may be null.
     @NotNull
     MethodUnderCaret detectMethodUnderCaret(@NotNull Project project, @NotNull PsiFile psiFile, @Nullable Editor selectedEditor, int caretOffset);
+
     @Nullable
-    default String detectMethodBySpan(@NotNull Project project, String spanCodeObjectId){
+    default String detectMethodBySpan(@NotNull Project project, String spanCodeObjectId) {
         return null;
     }
+
     /**
      * This method is called from the function list preview tab panel and is meant to navigate
      * to a method of the current opened file. it will not navigate to any method in the project.
@@ -298,4 +340,14 @@ public interface LanguageService extends Disposable {
         //only relevant for jvm languages
         //todo: maybe throw non supported operation ?
     }
+
+    @Nullable
+    PsiElement getPsiElementForMethod(@NotNull String methodId);
+
+    @Nullable
+    PsiElement getPsiElementForClassByMethodId(@NotNull String methodId);
+
+    @Nullable
+    PsiElement getPsiElementForClassByName(@NotNull String className);
+
 }

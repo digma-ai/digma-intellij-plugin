@@ -16,6 +16,7 @@ import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.jcef.common.JCefBrowserUtil
 import org.digma.intellij.plugin.jcef.common.UserRegistrationEvent
 import org.digma.intellij.plugin.settings.SettingsState
@@ -96,6 +97,7 @@ class JCefComponent(
         SettingsState.getInstance().addChangeListener({ settings ->
             val apiUrl = settings.apiUrl
             sendApiUrl(jbCefBrowser.cefBrowser, apiUrl)
+            sendIsMicrometerProject(jbCefBrowser.cefBrowser, SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer())
         }, settingsListenerParentDisposable)
 
 
@@ -112,9 +114,9 @@ class JCefComponent(
             Disposer.dispose(analyticsServiceConnectionEventMessageBusConnection)
             Disposer.dispose(settingsListenerParentDisposable)
             Disposer.dispose(userRegistrationParentDisposable)
+            jbCefBrowser.jbCefClient.removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
             jbCefBrowser.dispose()
             cefMessageRouter.dispose()
-            jbCefBrowser.jbCefClient.removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
             ApplicationUISettingsChangeNotifier.getInstance(project).removeSettingsChangeListener(settingsChangeListener)
         } catch (e: Exception) {
             ErrorReporter.getInstance().reportError(project, "JCefComponent.dispose", e)

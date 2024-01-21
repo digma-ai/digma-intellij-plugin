@@ -10,7 +10,9 @@ import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.ui.jcef.model.ApiUrlPayload
 import org.digma.intellij.plugin.ui.jcef.model.DigmaEngineStatusMessage
+import org.digma.intellij.plugin.ui.jcef.model.IsMicrometerPayload
 import org.digma.intellij.plugin.ui.jcef.model.SetApiUrlMessage
+import org.digma.intellij.plugin.ui.jcef.model.SetIsMicrometerMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetUserEmailMessage
 import org.digma.intellij.plugin.ui.jcef.model.UserEmailPayload
 
@@ -55,6 +57,15 @@ fun sendApiUrl(cefBrowser: CefBrowser, url: String) {
     )
     serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, setDigmaApiUrlMessage)
 }
+
+
+fun sendIsMicrometerProject(cefBrowser: CefBrowser, isMicrometer: Boolean) {
+    serializeAndExecuteWindowPostMessageJavaScript(
+        cefBrowser,
+        SetIsMicrometerMessage(IsMicrometerPayload(isMicrometer))
+    )
+}
+
 
 fun sendUserEmail(cefBrowser: CefBrowser, email: String) {
     val setUserEmailMessage = SetUserEmailMessage(

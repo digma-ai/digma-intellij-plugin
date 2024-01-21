@@ -12,13 +12,10 @@ import org.digma.intellij.plugin.PluginId
 import org.digma.intellij.plugin.analytics.AnalyticsService
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
 import org.digma.intellij.plugin.common.Backgroundable
-import org.digma.intellij.plugin.common.CommonUtils
 import org.digma.intellij.plugin.common.EDT
 import org.digma.intellij.plugin.common.LOCAL_ENV
 import org.digma.intellij.plugin.common.LOCAL_TESTS_ENV
-import org.digma.intellij.plugin.common.isEnvironmentLocal
-import org.digma.intellij.plugin.common.isEnvironmentLocalTests
-import org.digma.intellij.plugin.common.isLocalEnvironmentMine
+import org.digma.intellij.plugin.common.adjustEnvironmentDisplayName
 import org.digma.intellij.plugin.icons.AppIcons
 import org.digma.intellij.plugin.jcef.common.IsObservabilityEnabledMessageRequest
 import org.digma.intellij.plugin.jcef.common.IsObservabilityEnabledPayload
@@ -200,17 +197,9 @@ class RecentActivityUpdater(val project: Project) : Disposable {
 
     private fun buildRecentActivityEnvs(environments: List<String>): List<RecentActivityEnvironment> {
 
-        val hostname = CommonUtils.getLocalHostname()
-
         val transformEnvToRecentActivityEnvironment: (String) -> RecentActivityEnvironment = { env ->
 
-            val displayName = if (isEnvironmentLocal(env) && isLocalEnvironmentMine(env, hostname)) {
-                LOCAL_ENV
-            } else if (isEnvironmentLocalTests(env) && isLocalEnvironmentMine(env, hostname)) {
-                LOCAL_TESTS_ENV
-            } else {
-                env
-            }
+            val displayName = adjustEnvironmentDisplayName(env)
 
             val type: EnvironmentType =
                 if (displayName == LOCAL_ENV || displayName == LOCAL_TESTS_ENV) EnvironmentType.local else EnvironmentType.shared

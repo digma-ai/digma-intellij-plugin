@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.analytics.EnvironmentChanged
+import org.digma.intellij.plugin.common.adjustEnvironmentDisplayName
 import org.digma.intellij.plugin.dashboard.DashboardService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
@@ -62,7 +63,11 @@ class DashboardButton(val project: Project) : JButton() {
 
         try {
 
-            DashboardService.getInstance(project).openDashboard("Dashboard Panel - " + PersistenceService.getInstance().getCurrentEnv());
+            val envName = PersistenceService.getInstance().getCurrentEnv()?.let {
+                adjustEnvironmentDisplayName(it)
+            } ?: "No Environment"
+
+            DashboardService.getInstance(project).openDashboard("Dashboard Panel - $envName");
 
         } catch (e: Exception) {
             Log.warnWithException(logger, project, e, "Error in doActionListener")

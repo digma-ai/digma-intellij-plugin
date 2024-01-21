@@ -274,8 +274,10 @@ class PersistenceService {
         return state.lastConnectionTimestamp
     }
 
-    fun setLastUserActionTimestamp() {
-        state.lastUserActionTimestamp = Instant.now()
+    fun setLastUserActionTimestamp(): Instant {
+        val now = Instant.now()
+        state.lastUserActionTimestamp = now
+        return now
     }
 
     fun getLastUserActionTimestamp(): Instant? {

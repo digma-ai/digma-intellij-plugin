@@ -6,6 +6,7 @@ import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
 import com.posthog.java.PostHog
+import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.ExceptionUtils
 import org.digma.intellij.plugin.common.JsonUtils
 import org.digma.intellij.plugin.common.UserId
@@ -26,7 +27,7 @@ import java.time.LocalDateTime
 
 
 @Service(Service.Level.PROJECT)
-class ActivityMonitor(project: Project) : Disposable {
+class ActivityMonitor(private val project: Project) : Disposable {
 
     companion object {
         @JvmStatic
@@ -140,6 +141,7 @@ class ActivityMonitor(project: Project) : Disposable {
 
     fun registerSidePanelClosed() {
         capture("side-panel closed")
+        registerUserAction("Closed side panel")
     }
 
     fun registerObservabilityPanelOpened() {
@@ -662,7 +664,7 @@ class ActivityMonitor(project: Project) : Disposable {
 
     fun registerUserAction(action: String) {
 
-        PersistenceService.getInstance().setLastUserActionTimestamp()
+        val lastUserActionTimestamp = PersistenceService.getInstance().setLastUserActionTimestamp()
 
         capture(
             "user-action",
@@ -671,9 +673,27 @@ class ActivityMonitor(project: Project) : Disposable {
         postHog?.set(
             userId, mapOf(
                 "last-user-action" to action,
-                "last-user-action-timestamp" to Instant.now().toString()
+                "last-user-action-timestamp" to lastUserActionTimestamp.toString()
             )
         )
+
+        registerOnlineOfflineUserAction(action)
+    }
+
+    private fun registerOnlineOfflineUserAction(action: String) {
+
+        val eventName =
+            if (PersistenceService.getInstance().isFirstTimeAssetsReceived() && BackendConnectionMonitor.getInstance(project).isConnectionOk()) {
+                "online-user-action"
+            } else {
+                "offline-user-action"
+            }
+
+        capture(
+            eventName,
+            mapOf("action" to action)
+        )
+
     }
 
 

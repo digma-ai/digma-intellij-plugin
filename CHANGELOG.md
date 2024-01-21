@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.236] - 2024-01-20
+## [2.0.237] - 2024-01-21
+- fix dashboard title Closes #1441 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1618
+- Feature/testing - wire backend and UI by @arik-dig in https://github.com/digma-ai/digma-intellij-plugin/pull/1563
+
+## 2.0.236 - 2024-01-20
 - Update with many queries P95 support by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1606
 - add userid to typeforms by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1614
 - catch-exception-in-RunConfigurationStartupActivity by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1615

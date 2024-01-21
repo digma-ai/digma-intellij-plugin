@@ -102,15 +102,9 @@ class TestsServiceImpl(val project: Project) : TestsService {
             is EndpointScope -> {
                 endpointCodeObjectId = CodeObjectsUtil.addEndpointTypeToId(scope.getEndpoint().id)
             }
-
-            else -> {
-                return null
-            }
         }
 
-        val scopeRequest = ScopeRequest(spans, methodCodeObjectId, endpointCodeObjectId)
-        //println("DBG: scopeRequest=$scopeRequest")
-        return scopeRequest
+        return ScopeRequest(spans, methodCodeObjectId, endpointCodeObjectId)
     }
 
     // return JSON as string (type SetEnvironmentsMessage)

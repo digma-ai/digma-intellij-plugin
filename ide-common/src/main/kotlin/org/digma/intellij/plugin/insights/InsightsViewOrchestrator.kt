@@ -415,9 +415,10 @@ class InsightsViewOrchestrator(val project: Project) {
 
         Backgroundable.ensurePooledThread {
             project.service<InsightsService>().showDocumentPreviewList(documentInfoContainer, fileUri)
-
+            project.service<TestsService>().refresh()
             project.service<InsightsViewService>().showDocumentPreviewList(documentInfoContainer, fileUri)
             project.service<ErrorsViewService>().showDocumentPreviewList(documentInfoContainer, fileUri)
+
         }
     }
 

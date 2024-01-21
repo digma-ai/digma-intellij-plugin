@@ -91,34 +91,32 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
     }
 
     override fun fillDataOfTests(cefBrowser: CefBrowser, scopeRequest: ScopeRequest) {
-        Backgroundable.executeOnPooledThread {
-            try {
-                val testsOfSpanJson = project.service<TestsService>().getLatestTestsOfSpan(scopeRequest, lastKnownFilterForLatestTests)
+        try {
+            //should check if scopeRequest.isEmpty() and return json represents empty state in case of Document scope, no need to call the backend
+            val testsOfSpanJson = project.service<TestsService>().getLatestTestsOfSpan(scopeRequest, lastKnownFilterForLatestTests)
+            Log.log(logger::trace, project, "got tests of span {}", testsOfSpanJson)
+            val payload = objectMapper.readTree(testsOfSpanJson)
+            val message = SetLatestTestsMessage(REQUEST_MESSAGE_TYPE, "TESTS/SPAN_SET_LATEST_DATA", Payload(payload))
+            Log.log(logger::trace, project, "sending TESTS/SPAN_SET_LATEST_DATA message")
 
-                Log.log(logger::trace, project, "got tests of span {}", testsOfSpanJson)
-                val payload = objectMapper.readTree(testsOfSpanJson)
-                val message = SetLatestTestsMessage(REQUEST_MESSAGE_TYPE, "TESTS/SPAN_SET_LATEST_DATA", Payload(payload))
-                Log.log(logger::trace, project, "sending TESTS/SPAN_SET_LATEST_DATA message")
-
-                executeWindowPostMessageJavaScript(cefBrowser, objectMapper.writeValueAsString(message))
-            } catch (e: Exception) {
-                Log.warnWithException(logger, e, "error setting tests of span data")
-                var rethrow = true
-                var errorDescription = e.toString()
-                if (e is AnalyticsServiceException) {
-                    errorDescription = e.getMeaningfulMessage()
-                    rethrow = false
-                }
-                val message = SetLatestTestsMessage(REQUEST_MESSAGE_TYPE, "TESTS/SPAN_SET_LATEST_DATA", Payload(null, ErrorPayload(errorDescription)))
-                Log.log(logger::trace, project, "sending TESTS/SPAN_SET_LATEST_DATA message with error")
-                executeWindowPostMessageJavaScript(cefBrowser, objectMapper.writeValueAsString(message))
-                ErrorReporter.getInstance().reportError(project, "TestsMessageRouterHandler.SPAN/SET_LATEST_DATA", e)
-                //let BaseMessageRouterHandler handle the exception too in case it does something meaningful, worst case it will just log the error again
-                if (rethrow) {
-                    throw e
-                }
+            executeWindowPostMessageJavaScript(cefBrowser, objectMapper.writeValueAsString(message))
+        } catch (e: Exception) {
+            Log.warnWithException(logger, e, "error setting tests of span data")
+            var rethrow = true
+            var errorDescription = e.toString()
+            if (e is AnalyticsServiceException) {
+                errorDescription = e.getMeaningfulMessage()
+                rethrow = false
             }
-        } // Backgroundable
+            val message = SetLatestTestsMessage(REQUEST_MESSAGE_TYPE, "TESTS/SPAN_SET_LATEST_DATA", Payload(null, ErrorPayload(errorDescription)))
+            Log.log(logger::trace, project, "sending TESTS/SPAN_SET_LATEST_DATA message with error")
+            executeWindowPostMessageJavaScript(cefBrowser, objectMapper.writeValueAsString(message))
+            ErrorReporter.getInstance().reportError(project, "TestsMessageRouterHandler.SPAN/SET_LATEST_DATA", e)
+            //let BaseMessageRouterHandler handle the exception too in case it does something meaningful, worst case it will just log the error again
+            if (rethrow) {
+                throw e
+            }
+        }
     }
 
     private fun handleRunTest(project: Project, browser: CefBrowser, requestJsonNode: JsonNode, rawRequest: String) {

@@ -11,6 +11,7 @@ import com.intellij.util.messages.MessageBusConnection
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefMessageRouter
+import org.cef.handler.CefDownloadHandler
 import org.cef.handler.CefLifeSpanHandlerAdapter
 import org.digma.intellij.plugin.analytics.AnalyticsServiceConnectionEvent
 import org.digma.intellij.plugin.common.JBCefBrowserBuilderCreator
@@ -135,6 +136,7 @@ class JCefComponentBuilder(val project: Project) {
     private var messageRouterHandler: BaseMessageRouterHandler? = null
     private var schemeHandlerFactory: BaseSchemeHandlerFactory? = null
     private var parentDisposable: Disposable? = null
+    private var downloadAdapter: CefDownloadHandler? =null;
 
 
     fun build(): JCefComponent {
@@ -161,7 +163,6 @@ class JCefComponentBuilder(val project: Project) {
 
         jbCefBrowser.jbCefClient.addLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
 
-
         val jCefComponent = JCefComponent(project, jbCefBrowser, cefMessageRouter, messageRouterHandler, schemeHandlerFactory, lifeSpanHandler)
 
         parentDisposable?.let {
@@ -169,6 +170,10 @@ class JCefComponentBuilder(val project: Project) {
                 jbCefBrowser.jbCefClient.removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
                 jCefComponent.dispose()
             }
+        }
+
+        downloadAdapter?.let {
+            jbCefClient.cefClient.addDownloadHandler(it);
         }
 
         return jCefComponent
@@ -205,4 +210,8 @@ class JCefComponentBuilder(val project: Project) {
         return this
     }
 
+    fun withDownloadAdapter(adapter: CefDownloadHandler): JCefComponentBuilder {
+        this.downloadAdapter = adapter
+        return this;
+    }
 }

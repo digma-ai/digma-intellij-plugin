@@ -1,6 +1,13 @@
 # Changelog
 
-## [2.0.238] - 2024-01-21
+## [2.0.239] - 2024-01-22
+- Added SpanNexusInsight by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1613
+- Add is micrometer to react apps Closes #1514 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1639
+- enable-dev-tools-with-jvm-property Closes #1641 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1642
+- Update Tests UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1644
+- dont-clean-gradle-settings-on-process-end by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1645
+
+## 2.0.238 - 2024-01-21
 - online offline user action Closes #1612 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1621
 
 ## 2.0.237 - 2024-01-21

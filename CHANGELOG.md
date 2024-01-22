@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.239] - 2024-01-22
+## [2.0.240] - 2024-01-22
+- Added scope filed to asset view by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1640
+- fix-empty-states by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1647
+
+## 2.0.239 - 2024-01-22
 - Added SpanNexusInsight by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1613
 - Add is micrometer to react apps Closes #1514 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1639
 - enable-dev-tools-with-jvm-property Closes #1641 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1642

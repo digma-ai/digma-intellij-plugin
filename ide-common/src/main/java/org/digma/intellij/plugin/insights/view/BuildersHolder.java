@@ -1,6 +1,7 @@
 package org.digma.intellij.plugin.insights.view;
 
 import org.digma.intellij.plugin.model.InsightType;
+import org.digma.intellij.plugin.model.rest.insights.SpanNexusInsight;
 import org.digma.intellij.plugin.model.rest.insights.CodeObjectInsight;
 import org.digma.intellij.plugin.model.rest.insights.EPNPlusSpansInsight;
 import org.digma.intellij.plugin.model.rest.insights.EndpointBreakdownInsight;
@@ -67,6 +68,8 @@ public class BuildersHolder {
                 return new GroupListViewItemBuilder<SpanSlowEndpointsInsight>(InsightGroupType.Span, null, insight -> insight.getSpanDisplayName());
             case SpaNPlusOne:
                 return new GroupListViewItemBuilder<SpanNPlusOneInsight>(InsightGroupType.Span, null, insight -> insight.getSpanDisplayName());
+            case SpanNexus:
+                return new GroupListViewItemBuilder<SpanNexusInsight>(InsightGroupType.Span, null, SpanNexusInsight::getSpanDisplayName);
             case SlowestSpans:
                 return new GroupListViewItemBuilder<SlowestSpansInsight>(InsightGroupType.HttpEndpoint, SlowestSpansInsight::getRoute, SlowestSpansInsight::endpointSpanName);
             case LowUsage:
@@ -79,14 +82,10 @@ public class BuildersHolder {
                 return new GroupListViewItemBuilder<SlowEndpointInsight>(InsightGroupType.HttpEndpoint, SlowEndpointInsight::getRoute, SlowEndpointInsight::endpointSpanName);
             case EndpointSpaNPlusOne:
                 return new GroupListViewItemBuilder<EPNPlusSpansInsight>(InsightGroupType.HttpEndpoint, EPNPlusSpansInsight::getRoute, EPNPlusSpansInsight::endpointSpanName);
-
             case EndpointChattyApi:
                 return new GroupListViewItemBuilder<EndpointChattyApiInsight>(InsightGroupType.HttpEndpoint, EndpointChattyApiInsight::getRoute, EndpointChattyApiInsight::endpointSpanName);
-
-
             case EndpointSessionInView:
                 return new GroupListViewItemBuilder<EndpointSessionInViewInsight>(InsightGroupType.HttpEndpoint, EndpointSessionInViewInsight::getRoute, EndpointSessionInViewInsight::endpointSpanName);
-
             case EndpointDurationSlowdown:
                 return new GroupListViewItemBuilder<EndpointDurationSlowdownInsight>(InsightGroupType.HttpEndpoint, EndpointDurationSlowdownInsight::getRoute, EndpointDurationSlowdownInsight::endpointSpanName);
             case EndpointBreakdown:

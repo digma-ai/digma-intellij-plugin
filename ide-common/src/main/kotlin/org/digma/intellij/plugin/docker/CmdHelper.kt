@@ -13,21 +13,27 @@ const val DOCKER_COMPOSE_COMMAND = "docker-compose"
 private val logger = Logger.getInstance("org.digma.intellij.plugin.docker.CmdHelper")
 
 fun getCommand(program: String): String? {
+
+    Log.log(logger::debug, "getCommand invoked for {}", program)
+
     val cmd = GeneralCommandLine(WHICH_COMMAND, program)
         .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
 
     try {
         val result = ExecUtil.execAndReadLine(cmd)
-        Log.log(logger::info, "getExecPath: {} result with: {}", cmd.commandLineString, result)
+        Log.log(logger::debug, "getCommand.getExecPath: {} result with: {}", cmd.commandLineString, result)
         return result
     } catch (ex: Exception) {
-        Log.warnWithException(logger, ex, "Failed to run '{}'", cmd.commandLineString)
+        Log.warnWithException(logger, ex, "getCommand Failed to run '{}'", cmd.commandLineString)
     }
     return null
 }
 
 
 fun getDockerCommand(): String? {
+
+    Log.log(logger::debug, "getDockerCommand invoked")
+
     var dockerCmd = getCommand(DOCKER_COMMAND)
     if (dockerCmd != null) {
         if (SystemInfo.isWindows && !dockerCmd.endsWith("exe", true)) {
@@ -40,6 +46,9 @@ fun getDockerCommand(): String? {
 
 
 fun getDockerComposeCommand(): List<String>? {
+
+    Log.log(logger::debug, "getDockerComposeCommand invoked")
+
     var dockerComposeCmd = getCommand(DOCKER_COMPOSE_COMMAND)
     if (dockerComposeCmd != null) {
         if (SystemInfo.isWindows && !dockerComposeCmd.endsWith("exe", true)) {
@@ -60,15 +69,18 @@ fun getDockerComposeCommand(): List<String>? {
 
 
 fun isInstalled(program: String): Boolean {
+
+    Log.log(logger::debug, "isInstalled invoked for {}", program)
+
     val cmd = GeneralCommandLine(WHICH_COMMAND, program)
         .withParentEnvironmentType(GeneralCommandLine.ParentEnvironmentType.CONSOLE)
 
     try {
         val result = ExecUtil.execAndReadLine(cmd)
-        Log.log(logger::info, "getExecPath: {} result with: {}", cmd.commandLineString, result)
+        Log.log(logger::debug, "isInstalled.getExecPath: {} result with: {}", cmd.commandLineString, result)
         return result != null
     } catch (ex: Exception) {
-        Log.warnWithException(logger, ex, "Failed to run '{}'", cmd.commandLineString)
+        Log.warnWithException(logger, ex, "isInstalled Failed to run '{}'", cmd.commandLineString)
     }
     return false
 }

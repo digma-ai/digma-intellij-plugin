@@ -109,15 +109,13 @@ class OtelRunConfigurationExtension : RunConfigurationExtension() {
             getWrapperFor(configuration)?.isGradleConfiguration(configuration) == true
         ) {
             handler.addProcessListener(object : ProcessListener {
+                //clean the settings after the process starts.
+                //NOTE: do not clean when process ends because if user adds the variables while the process is running
+                // it will remove the variables.
                 override fun startNotified(event: ProcessEvent) {
                     cleanGradleSettingsAfterProcessStart(configuration as GradleRunConfiguration)
                 }
-
-                override fun processWillTerminate(event: ProcessEvent, willBeDestroyed: Boolean) {
-                    cleanGradleSettingsAfterProcessStart(configuration as GradleRunConfiguration)
-                }
             })
-
         }
     }
 

@@ -81,7 +81,7 @@ class VcsService(project: Project) : BaseVcsService(project) {
         }
 
         return try {
-            future[5, TimeUnit.SECONDS]
+            future.get(5, TimeUnit.SECONDS)
         } catch (e: java.lang.Exception) {
             ErrorReporter.getInstance()
                 .reportError(project, "VcsService.getCommitIdForCurrentProject", e)
@@ -160,7 +160,7 @@ class VcsService(project: Project) : BaseVcsService(project) {
         }
 
         return try {
-            future[5, TimeUnit.SECONDS]
+            future.get(5, TimeUnit.SECONDS)
         } catch (e: Exception) {
             Log.warnWithException(LOGGER, project, e, "error in buildRemoteLinkToCommit for {}", commitHash)
             ErrorReporter.getInstance().reportError(project, "VcsService.buildRemoteLinkToCommit", e)
@@ -236,7 +236,7 @@ class VcsService(project: Project) : BaseVcsService(project) {
         }
 
         return try {
-            future[5, TimeUnit.SECONDS]
+            future.get(5, TimeUnit.SECONDS)
         } catch (e: Exception) {
             Log.warnWithException(LOGGER, project, e, "error in getLinkToRemoteCommitIdForCurrentProject")
             ErrorReporter.getInstance().reportError(project, "VcsService.getLinkToRemoteCommitIdForCurrentProject", e)

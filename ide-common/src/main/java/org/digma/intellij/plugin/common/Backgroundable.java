@@ -65,6 +65,8 @@ public class Backgroundable {
         return ApplicationManager.getApplication().executeOnPooledThread(() -> runWithErrorReporting(action));
     }
 
+
+    //when calling this method make sure to catch errors when calling future.get
     public static <T> Future<T> executeOnPooledThread(@NotNull Callable<T> action) {
         return ApplicationManager.getApplication().executeOnPooledThread(() -> {
             try {
@@ -95,6 +97,5 @@ public class Backgroundable {
             ErrorReporter.getInstance().reportError("Backgroundable.runWithErrorReporting", e);
         }
     }
-
 
 }

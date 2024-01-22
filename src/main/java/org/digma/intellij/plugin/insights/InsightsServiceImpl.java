@@ -235,15 +235,14 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
                 var insights = insightsResponse.getInsights();
 
-                var status = UIInsightsStatus.Default.name();
-                //todo: how to update status for span,AnalyticsService.getCodeObjectInsightStatus is only for method
-//            if (insights.isEmpty()){
-//                Log.log(logger::debug, "No insights for CodeLessSpan {}, Starting background thread to update status.", codeLessSpan.getSpanId());
-//                status = UIInsightsStatus.Loading.name();
-//                updateStatusInBackground();
-//            }
+                var status = UIInsightsStatus.Default;
+                if (insights == null || insights.isEmpty()) {
+                    status = UIInsightsStatus.InsightPending;
+                    updateInTwoSeconds(codeLessSpan);
+                }
+
                 messageHandler.pushInsights(insights, Collections.emptyList(), codeLessSpan.getSpanId(), EMPTY_SERVICE_NAME,
-                        AnalyticsService.getInstance(project).getEnvironment().getCurrent(), status,
+                        AnalyticsService.getInstance(project).getEnvironment().getCurrent(), status.name(),
                         ViewMode.INSIGHTS.name(), Collections.emptyList(), false, false, false);
 
             } catch (AnalyticsServiceException e) {
@@ -252,6 +251,17 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
                 emptyInsights();
             }
         }));
+    }
+
+    private void updateInTwoSeconds(CodeLessSpan codeLessSpan) {
+        Backgroundable.executeOnPooledThread(() -> {
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException ignored) {
+            }
+
+            updateInsights(codeLessSpan);
+        });
     }
 
 
@@ -271,19 +281,20 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
                 var methodWithInsights = insightsResponse.getMethodsWithInsights().stream().findAny().orElse(null);
                 if (methodWithInsights != null) {
 
-                    var status = UIInsightsStatus.Default.name();
-                    //todo: how to update status for span,AnalyticsService.getCodeObjectInsightStatus is only for method
-//            if (insights.isEmpty()){
-//                Log.log(logger::debug, "No insights for CodeLessSpan {}, Starting background thread to update status.", codeLessSpan.getSpanId());
-//                status = UIInsightsStatus.Loading.name();
-//                updateStatusInBackground();
-//            }
+                    var status = UIInsightsStatus.Default;
+                    if (methodWithInsights.getInsights().isEmpty()) {
+                        //todo: update the endpoint status if there are no insights, currently AnalyticsService.getInstance(project).getCodeObjectInsightStatus
+                        // doesn't work for endpoints
+                        //Log.log(logger::debug, "No insights for endpoint {}, Starting background thread to update status.", endpointInfo.getId());
+                        status = UIInsightsStatus.NoInsights;
+                        //updateStatusInBackground(endpointInfo);
+                    }
                     messageHandler.pushInsights(methodWithInsights.getInsights(), Collections.emptyList(), endpointInfo.getId(), EMPTY_SERVICE_NAME,
-                            AnalyticsService.getInstance(project).getEnvironment().getCurrent(), status,
+                            AnalyticsService.getInstance(project).getEnvironment().getCurrent(), status.name(),
                             ViewMode.INSIGHTS.name(), Collections.emptyList(), false, false, false);
                 }
             } catch (AnalyticsServiceException e) {
-                Log.warnWithException(logger, project, e, "Error in getInsightsForSingleSpan");
+                Log.warnWithException(logger, project, e, "Error in getInsightsForSingleEndpoint");
                 ErrorReporter.getInstance().reportError(project, "InsightsServiceImpl.updateInsights", e);
                 emptyInsights();
             }

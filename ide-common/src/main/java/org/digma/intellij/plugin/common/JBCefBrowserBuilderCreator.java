@@ -10,7 +10,10 @@ public class JBCefBrowserBuilderCreator {
         if (SystemInfo.isLinux) {
             jbCefBrowserBuilder.setOffScreenRendering(true); // setting it to false may cause focus issues on some linux os
         }
-        jbCefBrowserBuilder.setEnableOpenDevToolsMenuItem(true);
+
+        var enableDevTools = Boolean.getBoolean("org.digma.plugin.enable.devtools");
+
+        jbCefBrowserBuilder.setEnableOpenDevToolsMenuItem(enableDevTools);
         return jbCefBrowserBuilder;
     }
 }

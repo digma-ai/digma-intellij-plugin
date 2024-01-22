@@ -6,6 +6,7 @@ import common.platformVersion
 import common.properties
 import common.shouldDownloadSources
 import common.withCurrentProfile
+import org.apache.tools.ant.filters.ReplaceTokens
 import org.jetbrains.changelog.date
 import org.jetbrains.changelog.exceptions.MissingVersionException
 import org.jetbrains.changelog.markdownToHTML
@@ -299,5 +300,27 @@ tasks {
     }
     processResources{
         finalizedBy(injectPosthogTokenUrlTask)
+
+        exclude("**/webview/global-env-vars.txt")
+
+        val globalEnvVarsFilePath = "src/main/resources/webview/global-env-vars.txt"
+        val globalEnvVarsFile = layout.projectDirectory.file(globalEnvVarsFilePath).asFile
+
+        inputs.file(globalEnvVarsFile.canonicalPath)
+
+        val globalEnvVars = globalEnvVarsFile.readText()
+        val tokens = mutableMapOf<String, String>()
+        tokens["GLOBAL_ENV_VARS"] = globalEnvVars
+
+        //todo: add all templates
+        filesMatching(
+            listOf(
+                "webview/recentactivity/recentActivityTemplate.ftl",
+                "webview/notifications/notificationstemplate.ftl"
+            )
+        ) {
+            filter<ReplaceTokens>("tokens" to tokens)
+        }
+
     }
 }

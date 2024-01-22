@@ -9,6 +9,7 @@ import freemarker.template.Template
 import freemarker.template.TemplateExceptionHandler
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.jcef.common.JCefTemplateUtils
 import org.digma.intellij.plugin.log.Log
 import org.digma.intellij.plugin.persistence.PersistenceService
@@ -21,15 +22,16 @@ import java.nio.charset.StandardCharsets
 
 
 private const val ENV_VARIABLE_IDE = "ide"
+private const val IS_JAEGER_ENABLED = "isJaegerEnabled"
 private const val USER_EMAIL_VARIABLE = "userEmail"
 private const val USER_REGISTRATION_EMAIL_VARIABLE = "userRegistrationEmail"
 private const val IS_OBSERVABILITY_ENABLED_VARIABLE = "isObservabilityEnabled"
-private const val IS_DOCKER_INSTALLED = "isDockerInstalled"
-private const val IS_DOCKER_COMPOSE_INSTALLED = "isDockerComposeInstalled"
 private const val IS_DIGMA_ENGINE_INSTALLED = "isDigmaEngineInstalled"
 private const val IS_DIGMA_ENGINE_RUNNING = "isDigmaEngineRunning"
-private const val IS_JAEGER_ENABLED = "isJaegerEnabled"
+private const val IS_DOCKER_INSTALLED = "isDockerInstalled"
+private const val IS_DOCKER_COMPOSE_INSTALLED = "isDockerComposeInstalled"
 private const val DIGMA_API_URL = "digmaApiUrl"
+private const val IS_MICROMETER_PROJECT = "isMicrometerProject"
 
 
 abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val indexTemplateName: String) {
@@ -63,6 +65,7 @@ abstract class BaseIndexTemplateBuilder(resourceFolderName: String, private val 
             data[IS_DOCKER_INSTALLED] = service<DockerService>().isDockerInstalled()
             data[IS_DOCKER_COMPOSE_INSTALLED] = service<DockerService>().isDockerInstalled()
             data[DIGMA_API_URL] = SettingsState.getInstance().apiUrl
+            data[IS_MICROMETER_PROJECT] = SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer()
 
             addAppSpecificEnvVariable(project, data)
 

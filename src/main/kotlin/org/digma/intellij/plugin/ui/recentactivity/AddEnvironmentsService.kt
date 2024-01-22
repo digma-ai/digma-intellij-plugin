@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.util.StdDateFormat
 import com.intellij.execution.CommonProgramRunConfigurationParameters
 import com.intellij.execution.RunManager
 import com.intellij.execution.configuration.AbstractRunConfiguration
-import com.intellij.execution.configurations.ModuleBasedConfiguration
 import com.intellij.execution.configurations.RunConfiguration
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -15,7 +14,6 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.service.execution.ExternalSystemRunConfiguration
 import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
-import org.digma.intellij.plugin.idea.deps.ModulesDepsService
 import org.digma.intellij.plugin.idea.frameworks.SpringBootMicrometerConfigureDepsService
 import org.digma.intellij.plugin.idea.runcfg.DIGMA_ENVIRONMENT_RESOURCE_ATTRIBUTE
 import org.digma.intellij.plugin.idea.runcfg.OTEL_RESOURCE_ATTRIBUTES
@@ -187,14 +185,16 @@ class AddEnvironmentsService {
         //nested local function
         fun isSpringBootWithMicroMeter(project: Project, selectedRunConfig: RunConfiguration): Boolean {
             if (SpringBootMicrometerConfigureDepsService.isSpringBootWithMicrometer()) {
-                if (selectedRunConfig is ModuleBasedConfiguration<*, *>) {
-                    var isSpringBootModule = false
-                    selectedRunConfig.configurationModule.module?.let { module ->
-                        val modulesDepsService = ModulesDepsService.getInstance(project)
-                        isSpringBootModule = modulesDepsService.isSpringBootModule(module)
-                    }
-                    return isSpringBootModule
-                }
+                return true
+                //todo: check if its really a spring boot module
+//                if (selectedRunConfig is ModuleBasedConfiguration<*, *>) {
+//                    var isSpringBootModule = false
+//                    selectedRunConfig.configurationModule.module?.let { module ->
+//                        val modulesDepsService = ModulesDepsService.getInstance(project)
+//                        isSpringBootModule = modulesDepsService.isSpringBootModule(module)
+//                    }
+//                    return isSpringBootModule
+//                }
             }
             return false
         }

@@ -1,6 +1,9 @@
 # Changelog
 
-## [2.0.241] - 2024-01-23
+## [2.0.242] - 2024-01-23
+- ph-events-in-tests-runner by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1653
+
+## 2.0.241 - 2024-01-23
 - Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1650
 - Added first detected field for "New" badge by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1652
 

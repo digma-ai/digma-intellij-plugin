@@ -17,12 +17,15 @@ import org.digma.intellij.plugin.common.ReadActions
 import org.digma.intellij.plugin.common.Retries
 import org.digma.intellij.plugin.common.allowSlowOperation
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
+import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.psi.LanguageService
 
 @Service(Service.Level.PROJECT)
 class TestsRunner(val project: Project) {
 
     fun executeTestMethod(methodId: String): Boolean {
+
+        ActivityMonitor.getInstance(project).registerUserAction("executeTestMethod", mapOf("methodId" to methodId))
 
         return try {
 
@@ -50,6 +53,8 @@ class TestsRunner(val project: Project) {
 
     fun executeTestClassByMethodId(methodId: String): Boolean {
 
+        ActivityMonitor.getInstance(project).registerUserAction("executeTestClassByMethodId", mapOf("methodId" to methodId))
+
         return try {
 
             val psiLocation = Retries.retryWithResult({
@@ -76,6 +81,8 @@ class TestsRunner(val project: Project) {
 
 
     fun executeTestClassByClassName(className: String): Boolean {
+
+        ActivityMonitor.getInstance(project).registerUserAction("executeTestClassByClassName", mapOf("className" to className))
 
         return try {
 

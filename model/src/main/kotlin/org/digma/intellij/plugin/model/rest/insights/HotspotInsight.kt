@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.model.rest.insights
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -29,6 +30,7 @@ data class HotspotInsight
         "lastCommitId",
         "deactivatedCommitId",
         "reopenCount",
+        "firstDetected",
         "ticketLink"
 )
 constructor(
@@ -52,6 +54,7 @@ constructor(
         override val lastCommitId: String?,
         override val deactivatedCommitId: String?,
         override val reopenCount: Int,
+        override val firstDetected: Date?,
         override val ticketLink: String?,
 ) : CodeObjectInsight {
 

@@ -32,7 +32,7 @@ internal class EndpointSchemaTest {
         val codeObjectId = "123"
         val normalUsageInsight = NormalUsageInsight(codeObjectId, "env1", "scope1", 3, null, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(codeObjectId), false,null,
                 createSpanInfo("endpointSpan1"), "get /yes", "myService",
-                3,0.0,0.0,0.0, null, null, null, 0, null)
+                3,0.0,0.0,0.0, null, null, null, 0, null,null)
         adjustHttpRouteIfNeeded(normalUsageInsight)
         assertEquals("get /yes", normalUsageInsight.route)
     }
@@ -42,7 +42,7 @@ internal class EndpointSchemaTest {
         val codeObjectId = "456"
         val normalUsageInsight = NormalUsageInsight(codeObjectId, "env2", "scope2", 2, null, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(codeObjectId), false,null,
                 createSpanInfo("endpointSpan1"), "epHTTP:post /letsgo", "myService",
-                8,0.0,0.0,0.0, null, null, null, 0, null)
+                8,0.0,0.0,0.0, null, null, null, 0, null, null)
         adjustHttpRouteIfNeeded(normalUsageInsight)
         assertEquals("epHTTP:post /letsgo", normalUsageInsight.route)
     }
@@ -52,7 +52,7 @@ internal class EndpointSchemaTest {
         val codeObjectId = "789"
         val normalUsageInsight = NormalUsageInsight(codeObjectId, "env3", "scope3", 5, null, actualStartTimeNow, customStartTimeFiveDaysBefore, addPrefixToCodeObjectId(codeObjectId), false,null,
                 createSpanInfo("endpointSpan3"), "epRPC:serviceA.methodB", "MyService",
-                4,0.0,0.0,0.0, null, null, null, 0, null)
+                4,0.0,0.0,0.0, null, null, null, 0, null,null)
         adjustHttpRouteIfNeeded(normalUsageInsight)
         assertEquals("epRPC:serviceA.methodB", normalUsageInsight.route)
     }

@@ -29,7 +29,8 @@ data class UnmappedInsight
         "lastCommitId",
         "deactivatedCommitId",
         "reopenCount",
-        "ticketLink"
+        "ticketLink",
+        "firstDetected"
 )
 constructor(
         override val codeObjectId: String,
@@ -54,6 +55,7 @@ constructor(
         override val deactivatedCommitId: String?,
         override val reopenCount: Int,
         override val ticketLink: String?,
+        override val firstDetected: Date?,
 ) : CodeObjectInsight {
 
     override val type: InsightType = InsightType.Unmapped

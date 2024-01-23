@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.240] - 2024-01-22
+## [2.0.241] - 2024-01-23
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1650
+- Added first detected field for "New" badge by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1652
+
+## 2.0.240 - 2024-01-22
 - Added scope filed to asset view by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1640
 - fix-empty-states by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1647
 

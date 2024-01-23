@@ -53,6 +53,7 @@ interface CodeObjectInsight {
     val decorators: List<CodeObjectDecorator>?
     val actualStartTime: Date?
     val customStartTime: Date?
+    val firstDetected: Date?
     val prefixedCodeObjectId: String?
     val isRecalculateEnabled: Boolean
     val shortDisplayInfo: ShortDisplayInfo?

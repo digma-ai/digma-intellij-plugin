@@ -656,7 +656,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
             event,
             eventDetails
         )
-        registerUserAction(event)
+        registerUserAction(event, eventDetails)
     }
 
 

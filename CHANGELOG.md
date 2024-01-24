@@ -1,6 +1,10 @@
 # Changelog
 
-## [2.0.244] - 2024-01-24
+## [2.0.245] - 2024-01-24
+- fix NPE in tests service Closes #1664 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1668
+- check-valid-in-file-closed Closes #1669 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1670
+
+## 2.0.244 - 2024-01-24
 - Fix update insights by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1661
 - Code nexus styles by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1659
 - Added quantile by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1662

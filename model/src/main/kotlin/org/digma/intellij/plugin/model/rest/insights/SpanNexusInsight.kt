@@ -22,7 +22,6 @@ data class SpanNexusInsight
     "isRecalculateEnabled",
     "shortDisplayInfo",
     "spanInfo",
-    "flows",
     "severity",
     "impact",
     "criticality",

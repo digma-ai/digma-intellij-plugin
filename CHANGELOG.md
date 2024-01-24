@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.243] - 2024-01-24
+## [2.0.244] - 2024-01-24
+- Fix update insights by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1661
+- Code nexus styles by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1659
+- Added quantile by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1662
+
+## 2.0.243 - 2024-01-24
 - smart merge for java tool options Closes #1651 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1655
 - Add download for traces. by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1646
 - fix-online-offline-user-action Closes #1656 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1658

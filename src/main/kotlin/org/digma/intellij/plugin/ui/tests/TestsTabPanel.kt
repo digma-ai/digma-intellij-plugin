@@ -19,7 +19,7 @@ import javax.swing.JLabel
 class TestsTabPanel(project: Project) : DisposablePanel() {
 
     companion object {
-        const val RunTestButtonName: String = "run-test"
+        const val RUN_TEST_BUTTON_NAME: String = "run-test"
     }
 
     private var jCefComponent: JCefComponent? = null
@@ -49,6 +49,10 @@ class TestsTabPanel(project: Project) : DisposablePanel() {
 
         } else {
             null
+        }
+
+        jCefComponent?.let {
+            project.service<TestsUpdater>().setJCefComponent(it)
         }
 
         return jCefComponent?.getComponent() ?: JLabel("JCef is not supported")

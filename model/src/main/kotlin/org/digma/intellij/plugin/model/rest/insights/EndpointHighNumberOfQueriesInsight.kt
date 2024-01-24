@@ -76,4 +76,8 @@ constructor(
 
     @JsonProperty("requestFraction")
     val requestFraction: Double? = null
+
+    @JsonProperty("quantile")
+    val quantile: Double? = null
+
 }

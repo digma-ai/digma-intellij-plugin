@@ -5,6 +5,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.util.ui.JBUI
+import org.digma.intellij.plugin.ui.jcef.DownloadHandlerAdapter
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.jcef.JCefComponentBuilder
 import org.digma.intellij.plugin.ui.list.listBackground
@@ -43,6 +44,7 @@ class TestsTabPanel(project: Project) : DisposablePanel() {
                 .messageRouterHandler(TestsMessageRouterHandler(project))
                 .schemeHandlerFactory(TestsSchemeHandlerFactory(project))
                 .withParentDisposable(project.service<TestsService>())
+                .withDownloadAdapter(DownloadHandlerAdapter())
                 .build()
 
         } else {

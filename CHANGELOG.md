@@ -1,6 +1,11 @@
 # Changelog
 
-## [2.0.242] - 2024-01-23
+## [2.0.243] - 2024-01-24
+- smart merge for java tool options Closes #1651 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1655
+- Add download for traces. by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1646
+- fix-online-offline-user-action Closes #1656 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1658
+
+## 2.0.242 - 2024-01-23
 - ph-events-in-tests-runner by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1653
 
 ## 2.0.241 - 2024-01-23

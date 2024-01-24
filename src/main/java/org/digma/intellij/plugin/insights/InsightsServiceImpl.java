@@ -238,8 +238,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
                 var status = UIInsightsStatus.Default;
                 if (insights == null || insights.isEmpty()) {
-                    status = UIInsightsStatus.InsightPending;
-                    updateInTwoSeconds(codeLessSpan);
+                    status = UIInsightsStatus.NoInsights;
                 }
 
                 messageHandler.pushInsights(insights, Collections.emptyList(), codeLessSpan.getSpanId(), EMPTY_SERVICE_NAME,

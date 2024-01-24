@@ -1,19 +1,12 @@
 package org.digma.intellij.plugin.ui.service
 
 import com.intellij.openapi.Disposable
-import org.cef.browser.CefBrowser
 
 interface TestsService : Disposable {
-    fun initWith(cefBrowser: CefBrowser, fillerOfLatestTests: FillerOfLatestTests, pageSize: Int)
-    fun getScopeRequest(): ScopeRequest?
-
+    fun getScopeRequest(): ScopeRequest
     fun getLatestTestsOfSpan(scopeRequest: ScopeRequest, filter: FilterForLatestTests): String
-
-    // refresh the view of current tests view
     fun refresh()
-
-    // handles request of GLOBAL/SET_ENVIRONMENTS
-    fun sendOperativeEnvironments()
+    fun setPageSize(pageSize: Int)
 }
 
 data class ScopeRequest(
@@ -25,11 +18,6 @@ data class ScopeRequest(
     fun isEmpty(): Boolean{
         return spanCodeObjectIds.isEmpty() && methodCodeObjectId.isNullOrBlank() && endpointCodeObjectId.isNullOrBlank()
     }
-}
-
-interface FillerOfLatestTests {
-
-    fun fillDataOfTests(cefBrowser: CefBrowser, scopeRequest: ScopeRequest)
 }
 
 data class FilterForLatestTests(

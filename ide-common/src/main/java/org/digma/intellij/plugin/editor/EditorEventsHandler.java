@@ -243,7 +243,11 @@ public class EditorEventsHandler implements FileEditorManagerListener {
     @Override
     public void fileClosed(@NotNull FileEditorManager source, @NotNull VirtualFile file) {
         try {
-            fileClosedImpl(source, file);
+            if (file.isValid()) {
+                fileClosedImpl(source, file);
+            } else {
+                Log.log(LOGGER::warn, "got invalid file in EditorEventsHandler.fileClosed");
+            }
         } catch (Throwable e) {
             Log.warnWithException(LOGGER, e, "Exception in fileClosed");
             ErrorReporter.getInstance().reportError(project, "EditorEventsHandler.fileClosed", e);
@@ -256,20 +260,14 @@ public class EditorEventsHandler implements FileEditorManagerListener {
         Log.log(LOGGER::trace, "fileClosed: file:{}", file);
 
         PsiFile psiFile = PsiManager.getInstance(project).findFile(file);
-        if (psiFile != null && !FileUtils.isVcsFile(file)) {
+        if (psiFile != null && !FileUtils.isVcsFile(file) && isRelevantFile(file)) {
 
             Log.log(LOGGER::trace, "found psi file for fileClosed {}", file);
-            //this PsiFile may be anything, it may be a supported language file or a non-supported file.
-            // in any case try to remove from documentInfoService.
 
             documentInfoService.removeDocumentInfo(psiFile);
-
-            if (isRelevantFile(file)) {
-                Log.log(LOGGER::trace, "psi file is relevant for fileClosed {}", file);
-                caretListener.removeCaretListener(file);
-                documentChangeListener.removeDocumentListener(file);
-            }
-
+            Log.log(LOGGER::trace, "psi file is relevant for fileClosed {}", file);
+            caretListener.removeCaretListener(file);
+            documentChangeListener.removeDocumentListener(file);
         }
 
         if (!source.hasOpenFiles()) {

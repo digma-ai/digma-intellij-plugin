@@ -22,7 +22,6 @@ data class SpanNexusInsight
     "isRecalculateEnabled",
     "shortDisplayInfo",
     "spanInfo",
-    "flows",
     "severity",
     "impact",
     "criticality",
@@ -67,4 +66,13 @@ constructor(
 
     @JsonProperty("entries")
     val entries: Int = 0
+
+    @JsonProperty("isEntriesHigh")
+    val isEntriesHigh : Boolean = false
+
+    @JsonProperty("isFlowsHigh")
+    val isFlowsHigh : Boolean =false
+
+    @JsonProperty("isServicesHigh")
+    val isServicesHigh : Boolean = false
 }

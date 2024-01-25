@@ -1,6 +1,13 @@
 # Changelog
 
-## [2.0.245] - 2024-01-24
+## [2.0.246] - 2024-01-25
+- Fixed duplicated icons by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1675
+- fix-late-init-jcefcomponent Closes #1673 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1674
+- fix-ensureFileBelongsToIndexableFilter Closes #1672 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1676
+- fix invalid file Closes #1678 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1679
+- Added QueryOptimizationInsight by @ohrebeniuk in https://github.com/digma-ai/digma-intellij-plugin/pull/1654
+
+## 2.0.245 - 2024-01-24
 - fix NPE in tests service Closes #1664 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1668
 - check-valid-in-file-closed Closes #1669 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1670
 

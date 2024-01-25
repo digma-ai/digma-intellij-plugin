@@ -38,3 +38,20 @@ fun adjustEnvironmentDisplayName(envName: String): String {
         envName
     }
 }
+
+
+fun getEnvironmentEntities(environments: List<String>): List<EnvironmentEntity> {
+    return environments.map { env ->
+        val displayName = adjustEnvironmentDisplayName(env)
+        EnvironmentEntity(displayName, env)
+    }.toList()
+}
+
+
+data class EnvironmentEntity(
+    val name: String,
+    val originalName: String,
+)
+
+
+

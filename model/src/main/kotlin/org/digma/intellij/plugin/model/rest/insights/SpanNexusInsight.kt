@@ -22,7 +22,6 @@ data class SpanNexusInsight
     "isRecalculateEnabled",
     "shortDisplayInfo",
     "spanInfo",
-    "flows",
     "severity",
     "impact",
     "criticality",
@@ -30,7 +29,8 @@ data class SpanNexusInsight
     "lastCommitId",
     "deactivatedCommitId",
     "reopenCount",
-    "ticketLink"
+    "ticketLink",
+    "firstDetected"
 )
 constructor(
     override val codeObjectId: String,
@@ -54,6 +54,7 @@ constructor(
     override val deactivatedCommitId: String?,
     override val reopenCount: Int,
     override val ticketLink: String?,
+    override val firstDetected: Date?,
 ) : SpanInsight {
     override val type: InsightType = InsightType.SpanNexus
 
@@ -65,4 +66,13 @@ constructor(
 
     @JsonProperty("entries")
     val entries: Int = 0
+
+    @JsonProperty("isEntriesHigh")
+    val isEntriesHigh : Boolean = false
+
+    @JsonProperty("isFlowsHigh")
+    val isFlowsHigh : Boolean =false
+
+    @JsonProperty("isServicesHigh")
+    val isServicesHigh : Boolean = false
 }

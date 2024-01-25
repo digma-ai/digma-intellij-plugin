@@ -2,8 +2,6 @@ package org.digma.intellij.plugin.ui.jcef
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.databind.util.StdDateFormat
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
@@ -20,25 +18,18 @@ import org.digma.intellij.plugin.common.stopWatchStop
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
 import org.digma.intellij.plugin.log.Log
-import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest
 import org.digma.intellij.plugin.model.rest.jcef.common.SendTrackingEventRequest
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController
 import org.digma.intellij.plugin.ui.ToolWindowShower
+import org.digma.intellij.plugin.ui.jcef.model.OpenInDefaultBrowserRequest
 import org.digma.intellij.plugin.ui.jcef.model.OpenInInternalBrowserRequest
 
 abstract class BaseMessageRouterHandler(val project: Project) : CefMessageRouterHandlerAdapter() {
 
     val logger = Logger.getInstance(this::class.java)
 
-
-    val objectMapper: ObjectMapper = ObjectMapper()
-
-    init {
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        objectMapper.setDateFormat(StdDateFormat())
-    }
-
+    val objectMapper: ObjectMapper = createObjectMapper()
 
     override fun onQuery(
         browser: CefBrowser,

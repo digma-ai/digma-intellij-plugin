@@ -46,7 +46,7 @@ class EndpointDiscoveryService(private val project: Project) {
 
         val endpointDiscoveryList = mutableListOf<EndpointDiscovery>()
         SupportedJvmLanguages.values().forEach { lang ->
-            val languageService = LanguageService.findLanguageServiceByName(project, lang.languages.languageServiceClassName)
+            val languageService = LanguageService.findLanguageServiceByName(project, lang.language.languageServiceClassName)
             if (languageService != null &&
                 languageService is JvmLanguageService &&
                 languageService.isSupportedFile(psiFile)

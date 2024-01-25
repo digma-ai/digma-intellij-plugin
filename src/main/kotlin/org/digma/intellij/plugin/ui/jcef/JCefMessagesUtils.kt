@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import org.cef.browser.CefBrowser
+import org.digma.intellij.plugin.common.getEnvironmentEntities
 import org.digma.intellij.plugin.docker.DigmaInstallationStatus
 import org.digma.intellij.plugin.docker.DockerService
 import org.digma.intellij.plugin.jcef.common.JCefMessagesUtils
@@ -12,6 +13,8 @@ import org.digma.intellij.plugin.ui.jcef.model.ApiUrlPayload
 import org.digma.intellij.plugin.ui.jcef.model.DigmaEngineStatusMessage
 import org.digma.intellij.plugin.ui.jcef.model.IsMicrometerPayload
 import org.digma.intellij.plugin.ui.jcef.model.SetApiUrlMessage
+import org.digma.intellij.plugin.ui.jcef.model.SetEnvironmentsMessage
+import org.digma.intellij.plugin.ui.jcef.model.SetEnvironmentsMessagePayload
 import org.digma.intellij.plugin.ui.jcef.model.SetIsMicrometerMessage
 import org.digma.intellij.plugin.ui.jcef.model.SetUserEmailMessage
 import org.digma.intellij.plugin.ui.jcef.model.UserEmailPayload
@@ -73,4 +76,13 @@ fun sendUserEmail(cefBrowser: CefBrowser, email: String) {
         "GLOBAL/SET_USER_REGISTRATION_EMAIL", UserEmailPayload(email)
     )
     serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, setUserEmailMessage)
+}
+
+fun sendEnvironmentEntities(cefBrowser: CefBrowser, environments: List<String>) {
+    val environmentEntities = getEnvironmentEntities(environments)
+    serializeAndExecuteWindowPostMessageJavaScript(
+        cefBrowser,
+        SetEnvironmentsMessage(SetEnvironmentsMessagePayload(environmentEntities))
+    )
+
 }

@@ -71,7 +71,7 @@ class RecentActivityUpdater(val project: Project) : Disposable {
     @Synchronized
     fun updateLatestActivities() {
         Log.log(logger::trace, "updateLatestActivities called")
-        val environments = project.service<AnalyticsService>().environments
+        val environments = AnalyticsService.getInstance(project).environments
         if (environments != null) {
             Log.log(logger::trace, "got environments from backend {}", environments)
             updateLatestActivities(environments)
@@ -217,7 +217,7 @@ class RecentActivityUpdater(val project: Project) : Disposable {
                 val pendingEnvironment = service<AddEnvironmentsService>().getPendingEnvironment(env)
                 service<AddEnvironmentsService>().removeEnvironment(env)
                 val type = pendingEnvironment?.type?.name ?: "unknown"
-                project.service<ActivityMonitor>().registerCustomEvent(
+                ActivityMonitor.getInstance(project).registerCustomEvent(
                     "first time data received for user created environment",
                     mapOf(
                         "environment" to env,

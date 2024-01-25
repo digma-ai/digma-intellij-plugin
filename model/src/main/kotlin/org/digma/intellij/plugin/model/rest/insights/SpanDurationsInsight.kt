@@ -29,7 +29,8 @@ data class SpanDurationsInsight
     "lastCommitId",
     "deactivatedCommitId",
     "reopenCount",
-    "ticketLink"
+    "ticketLink",
+    "firstDetected"
 )
 constructor(
     override val codeObjectId: String,
@@ -50,6 +51,7 @@ constructor(
     override val deactivatedCommitId: String?,
     override val reopenCount: Int,
     override val ticketLink: String?,
+    override val firstDetected: Date?,
 ) : SpanInsight {
 
     override val type: InsightType = InsightType.SpanDurations

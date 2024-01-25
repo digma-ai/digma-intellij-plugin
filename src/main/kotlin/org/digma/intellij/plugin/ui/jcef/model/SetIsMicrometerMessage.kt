@@ -7,7 +7,7 @@ data class SetIsMicrometerMessage(
     val payload: IsMicrometerPayload,
 ) {
     val type = JCefMessagesUtils.REQUEST_MESSAGE_TYPE
-    val action = "GLOBAL/SET_IS_MICROMETER_PROJECT"
+    val action = JCefMessagesUtils.GLOBAL_SET_IS_MICROMETER_PROJECT
 }
 
 data class IsMicrometerPayload(

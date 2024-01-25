@@ -6,7 +6,7 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.util.ui.JBUI
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
-import org.digma.intellij.plugin.ui.jcef.JCefComponentBuilder
+import org.digma.intellij.plugin.ui.jcef.JCefComponent.JCefComponentBuilder
 import org.digma.intellij.plugin.ui.jcef.JaegerButtonStateListener
 import org.digma.intellij.plugin.ui.list.listBackground
 import org.digma.intellij.plugin.ui.panels.DisposablePanel
@@ -14,46 +14,49 @@ import java.awt.BorderLayout
 import javax.swing.JComponent
 import javax.swing.JLabel
 
-class RecentActivityPanel(val project: Project) : DisposablePanel() {
+class RecentActivityPanel(private val project: Project) : DisposablePanel() {
 
+    private var jCefComponent: JCefComponent?
 
-    private lateinit var jCefComponent: JCefComponent
 
     init {
+
+        jCefComponent = createJcefComponent()
+
+        val jcefUiComponent: JComponent = jCefComponent?.getComponent() ?: JLabel("JCEF not supported")
+
         layout = BorderLayout()
         border = JBUI.Borders.empty()
         background = listBackground()
-        add(createComponent(), BorderLayout.CENTER)
+        add(jcefUiComponent, BorderLayout.CENTER)
 
         Disposer.register(project.service<RecentActivityService>()) {
             dispose()
         }
 
-        JaegerButtonStateListener().start(project.service<RecentActivityService>(), jCefComponent)
+        jCefComponent?.let {
+            JaegerButtonStateListener().start(project.service<RecentActivityService>(), it)
 
-        project.service<RecentActivityUpdater>().setJcefComponent(jCefComponent)
-        project.service<LiveViewUpdater>().setJcefComponent(jCefComponent)
-    }
-
-    private fun createComponent(): JComponent {
-
-        return if (JBCefApp.isSupported()) {
-
-            jCefComponent = JCefComponentBuilder(project)
-                .url(RECENT_ACTIVITY_URL)
-                .messageRouterHandler(RecentActivityMessageRouterHandler(project))
-                .schemeHandlerFactory(RecentActivitySchemeHandlerFactory(project))
-                .withParentDisposable(project.service<RecentActivityService>())
-                .build()
-
-            jCefComponent.getComponent()
-
-        } else {
-            JLabel("JCEF not supported")
+            project.service<RecentActivityUpdater>().setJcefComponent(it)
+            project.service<LiveViewUpdater>().setJcefComponent(it)
         }
     }
 
+
+    private fun createJcefComponent(): JCefComponent? {
+        return if (JBCefApp.isSupported()) {
+            JCefComponentBuilder(project, project.service<RecentActivityService>())
+                .url(RECENT_ACTIVITY_URL)
+                .messageRouterHandler(RecentActivityMessageRouterHandler(project))
+                .schemeHandlerFactory(RecentActivitySchemeHandlerFactory(project))
+                .build()
+        } else {
+            null
+        }
+    }
+
+
     override fun dispose() {
-        jCefComponent.dispose()
+        jCefComponent?.dispose()
     }
 }

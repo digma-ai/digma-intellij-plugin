@@ -1,6 +1,27 @@
 # Changelog
 
-## [2.0.240] - 2024-01-22
+## [2.0.245] - 2024-01-24
+- fix NPE in tests service Closes #1664 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1668
+- check-valid-in-file-closed Closes #1669 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1670
+
+## 2.0.244 - 2024-01-24
+- Fix update insights by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1661
+- Code nexus styles by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1659
+- Added quantile by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1662
+
+## 2.0.243 - 2024-01-24
+- smart merge for java tool options Closes #1651 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1655
+- Add download for traces. by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1646
+- fix-online-offline-user-action Closes #1656 by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1658
+
+## 2.0.242 - 2024-01-23
+- ph-events-in-tests-runner by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1653
+
+## 2.0.241 - 2024-01-23
+- Update UI by @kshmidt-digma in https://github.com/digma-ai/digma-intellij-plugin/pull/1650
+- Added first detected field for "New" badge by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1652
+
+## 2.0.240 - 2024-01-22
 - Added scope filed to asset view by @opoliarush in https://github.com/digma-ai/digma-intellij-plugin/pull/1640
 - fix-empty-states by @shalom938 in https://github.com/digma-ai/digma-intellij-plugin/pull/1647
 

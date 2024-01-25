@@ -44,6 +44,7 @@ import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.refreshInsightsTask.RefreshService;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.common.Laf;
+import org.digma.intellij.plugin.ui.jcef.DownloadHandlerAdapter;
 import org.digma.intellij.plugin.ui.list.insights.JaegerUtilKt;
 import org.digma.intellij.plugin.ui.model.CodeLessSpanScope;
 import org.digma.intellij.plugin.ui.model.DocumentScope;
@@ -237,8 +238,7 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
                 var status = UIInsightsStatus.Default;
                 if (insights == null || insights.isEmpty()) {
-                    status = UIInsightsStatus.InsightPending;
-                    updateInTwoSeconds(codeLessSpan);
+                    status = UIInsightsStatus.NoInsights;
                 }
 
                 messageHandler.pushInsights(insights, Collections.emptyList(), codeLessSpan.getSpanId(), EMPTY_SERVICE_NAME,
@@ -253,16 +253,6 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
         }));
     }
 
-    private void updateInTwoSeconds(CodeLessSpan codeLessSpan) {
-        Backgroundable.executeOnPooledThread(() -> {
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException ignored) {
-            }
-
-            updateInsights(codeLessSpan);
-        });
-    }
 
 
     @Override
@@ -280,19 +270,16 @@ public final class InsightsServiceImpl implements InsightsService, Disposable {
 
                 var methodWithInsights = insightsResponse.getMethodsWithInsights().stream().findAny().orElse(null);
                 if (methodWithInsights != null) {
-
                     var status = UIInsightsStatus.Default;
                     if (methodWithInsights.getInsights().isEmpty()) {
-                        //todo: update the endpoint status if there are no insights, currently AnalyticsService.getInstance(project).getCodeObjectInsightStatus
-                        // doesn't work for endpoints
-                        //Log.log(logger::debug, "No insights for endpoint {}, Starting background thread to update status.", endpointInfo.getId());
                         status = UIInsightsStatus.NoInsights;
-                        //updateStatusInBackground(endpointInfo);
                     }
+
                     messageHandler.pushInsights(methodWithInsights.getInsights(), Collections.emptyList(), endpointInfo.getId(), EMPTY_SERVICE_NAME,
                             AnalyticsService.getInstance(project).getEnvironment().getCurrent(), status.name(),
                             ViewMode.INSIGHTS.name(), Collections.emptyList(), false, false, false);
                 }
+
             } catch (AnalyticsServiceException e) {
                 Log.warnWithException(logger, project, e, "Error in getInsightsForSingleEndpoint");
                 ErrorReporter.getInstance().reportError(project, "InsightsServiceImpl.updateInsights", e);

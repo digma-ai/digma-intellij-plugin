@@ -32,6 +32,7 @@ data class EndpointBreakdownInsight
     "deactivatedCommitId",
     "reopenCount",
     "ticketLink",
+    "firstDetected"
 )
 constructor(
     override val codeObjectId: String,
@@ -57,6 +58,7 @@ constructor(
     override val deactivatedCommitId: String?,
     override val reopenCount: Int,
     override val ticketLink: String?,
+    override val firstDetected: Date?,
 ) : EndpointInsight {
     override val type: InsightType = InsightType.EndpointBreakdown
 

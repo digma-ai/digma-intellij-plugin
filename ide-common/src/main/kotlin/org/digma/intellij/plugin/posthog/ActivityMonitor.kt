@@ -656,7 +656,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
             event,
             eventDetails
         )
-        registerUserAction(event)
+        registerUserAction(event, eventDetails)
     }
 
 
@@ -683,7 +683,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
             )
         )
 
-        registerOnlineOfflineUserAction(details)
+        registerOnlineOfflineUserAction(detailsMap)
     }
 
     private fun registerOnlineOfflineUserAction(details: Map<String, Any>) {

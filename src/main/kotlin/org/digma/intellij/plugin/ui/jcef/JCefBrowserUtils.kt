@@ -1,16 +1,10 @@
 package org.digma.intellij.plugin.ui.jcef
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.cef.browser.CefBrowser
 
 
 private object CommonObjectMapper {
-    var objectMapper = ObjectMapper()
-
-    init {
-        objectMapper.disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        objectMapper.setDateFormat(com.fasterxml.jackson.databind.util.StdDateFormat())
-    }
+    var objectMapper = createObjectMapper()
 }
 
 

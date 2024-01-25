@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.idea.psi.navigation;
 
-import com.intellij.lang.java.JavaLanguage;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.diagnostic.Logger;
@@ -28,6 +27,7 @@ import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.ReadActions;
 import org.digma.intellij.plugin.common.Retries;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
+import org.digma.intellij.plugin.idea.psi.JvmPsiUtilsKt;
 import org.digma.intellij.plugin.idea.psi.discovery.MicrometerTracingFramework;
 import org.digma.intellij.plugin.idea.psi.java.JavaLanguageUtils;
 import org.digma.intellij.plugin.idea.psi.java.JavaSpanDiscoveryUtils;
@@ -220,6 +220,10 @@ public class JavaSpanNavigationProvider implements Disposable {
     //the search scope is lastly created. so it will be created inside a read action, file search scope must be created in side read access
     private void buildStartSpanMethodCall(@NotNull Supplier<SearchScope> searchScope) {
 
+        if (project.isDisposed() || project.isDefault()) {
+            return;
+        }
+
         DumbService dumbService = DumbService.getInstance(project);
 
         PsiClass tracerBuilderClass = Retries.retryWithResult(() -> dumbService.runReadActionInSmartMode(() ->
@@ -272,6 +276,10 @@ public class JavaSpanNavigationProvider implements Disposable {
     //callers to this method should be ready for ProcessCanceledException.
     //the search scope is lastly created. so it will be created inside a read action, file search scope must be created in side read access
     private void buildObservedAnnotation(@NotNull Supplier<SearchScope> searchScope) {
+
+        if (project.isDisposed() || project.isDefault()) {
+            return;
+        }
 
         DumbService dumbService = DumbService.getInstance(project);
 
@@ -333,7 +341,7 @@ public class JavaSpanNavigationProvider implements Disposable {
 
             var psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
             if (psiFile == null || !psiFile.isValid() ||
-                    !JavaLanguage.INSTANCE.equals(psiFile.getLanguage())) {
+                    !JvmPsiUtilsKt.isJvmSupportedLanguage(psiFile.getLanguage())) {
                 return;
             }
 
@@ -352,7 +360,7 @@ public class JavaSpanNavigationProvider implements Disposable {
      */
     public void fileChanged(VirtualFile virtualFile) {
 
-        if (project.isDisposed()) {
+        if (project.isDisposed() || virtualFile == null || !virtualFile.isValid()) {
             return;
         }
 

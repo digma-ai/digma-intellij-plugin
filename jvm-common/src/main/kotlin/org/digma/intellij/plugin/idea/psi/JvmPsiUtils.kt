@@ -1,5 +1,6 @@
 package org.digma.intellij.plugin.idea.psi
 
+import com.intellij.lang.Language
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiMethod
@@ -9,6 +10,14 @@ import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.toUElementOfType
+
+
+fun isJvmSupportedLanguage(language: Language): Boolean {
+    SupportedJvmLanguages.values().forEach {
+        return it.languageInstance == language
+    }
+    return false
+}
 
 
 fun getClassSimpleName(uClass: UClass): String {

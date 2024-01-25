@@ -1,6 +1,5 @@
 package org.digma.intellij.plugin.idea.psi.navigation;
 
-import com.intellij.lang.java.JavaLanguage;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.diagnostic.Logger;
@@ -16,6 +15,7 @@ import org.digma.intellij.plugin.common.Backgroundable;
 import org.digma.intellij.plugin.common.EDT;
 import org.digma.intellij.plugin.common.Retries;
 import org.digma.intellij.plugin.errorreporting.ErrorReporter;
+import org.digma.intellij.plugin.idea.psi.JvmPsiUtilsKt;
 import org.digma.intellij.plugin.idea.psi.discovery.endpoint.EndpointDiscoveryService;
 import org.digma.intellij.plugin.log.Log;
 import org.digma.intellij.plugin.model.discovery.EndpointInfo;
@@ -123,6 +123,10 @@ public class JavaEndpointNavigationProvider implements Disposable {
 
     private void buildEndpointForFile(@NotNull VirtualFile virtualFile) {
 
+        if (project.isDisposed() || !virtualFile.isValid()) {
+            return;
+        }
+
         final PsiFile psiFile = ReadAction.compute(() -> PsiManager.getInstance(project).findFile(virtualFile));
         if (psiFile == null) return; // very unlikely
 
@@ -163,7 +167,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
 
             var psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
             if (psiFile == null || !psiFile.isValid() ||
-                    !JavaLanguage.INSTANCE.equals(psiFile.getLanguage())) {
+                    !JvmPsiUtilsKt.isJvmSupportedLanguage(psiFile.getLanguage())) {
                 return;
             }
 
@@ -182,7 +186,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
      */
     public void fileChanged(VirtualFile virtualFile) {
 
-        if (project.isDisposed()) {
+        if (project.isDisposed() || virtualFile == null || !virtualFile.isValid()) {
             return;
         }
 
@@ -207,12 +211,12 @@ public class JavaEndpointNavigationProvider implements Disposable {
 
     public void fileDeleted(VirtualFile virtualFile) {
 
-        if (project.isDisposed()) {
+        if (project.isDisposed() || virtualFile == null || !virtualFile.isValid()) {
             return;
         }
 
         Backgroundable.executeOnPooledThread(() -> {
-            if (virtualFile != null) {
+            if (virtualFile != null && virtualFile.isValid()) {
                 buildEndpointLock.lock();
                 try {
                     removeDocumentEndpoint(virtualFile);

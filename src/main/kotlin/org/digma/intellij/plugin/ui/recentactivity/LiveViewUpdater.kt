@@ -3,7 +3,6 @@ package org.digma.intellij.plugin.ui.recentactivity
 import com.intellij.collaboration.async.disposingScope
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.Service
-import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
@@ -90,7 +89,7 @@ class LiveViewUpdater(val project: Project) : Disposable {
 
             while (isActive) {
                 try {
-                    val durationData = project.service<AnalyticsService>().getDurationLiveData(codeObjectId)
+                    val durationData = AnalyticsService.getInstance(project).getDurationLiveData(codeObjectId)
                     Log.log(logger::trace, project, "live view timer got live data for {},{}", codeObjectId, durationData)
                     if (!isActive) {
                         break

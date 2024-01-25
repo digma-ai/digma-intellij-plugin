@@ -164,6 +164,11 @@ public class JavaSpanNavigationProvider implements Disposable {
     //the search scope is lastly created. so it will be created inside a read action, file search scope must be created in side read access
     private void buildWithSpanAnnotation(@NotNull Supplier<SearchScope> searchScope) {
 
+        if (project.isDisposed() || project.isDefault()) {
+            return;
+        }
+
+
         DumbService dumbService = DumbService.getInstance(project);
 
         PsiClass withSpanClass = Retries.retryWithResult(() -> dumbService.runReadActionInSmartMode(() ->

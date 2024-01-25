@@ -29,7 +29,8 @@ import org.digma.intellij.plugin.ui.settings.Theme
 import java.util.Objects
 import javax.swing.JComponent
 
-class JCefComponent(
+class JCefComponent
+private constructor(
     val project: Project,
     val jbCefBrowser: JBCefBrowser,
     val cefMessageRouter: CefMessageRouter,
@@ -146,91 +147,86 @@ class JCefComponent(
     fun getComponent(): JComponent {
         return jbCefBrowser.component
     }
-}
 
 
-class JCefComponentBuilder(val project: Project) {
+    //must provide a parentDisposable that is not the project
+    class JCefComponentBuilder(private val project: Project, private var parentDisposable: Disposable) {
 
-    private var url: String? = null
-    private var messageRouterHandler: BaseMessageRouterHandler? = null
-    private var schemeHandlerFactory: BaseSchemeHandlerFactory? = null
-    private var parentDisposable: Disposable? = null
-    private var downloadAdapter: CefDownloadHandler? =null;
+        private var url: String? = null
+        private var messageRouterHandler: BaseMessageRouterHandler? = null
+        private var schemeHandlerFactory: BaseSchemeHandlerFactory? = null
+        private var downloadAdapter: CefDownloadHandler? = null;
 
 
-    fun build(): JCefComponent {
+        fun build(): JCefComponent {
 
-        Objects.requireNonNull(url, "url must not be null")
-        Objects.requireNonNull(messageRouterHandler, "messageRouterHandler must not be null")
-        Objects.requireNonNull(schemeHandlerFactory, "schemeHandlerFactory must not be null")
+            Objects.requireNonNull(url, "url must not be null")
+            Objects.requireNonNull(messageRouterHandler, "messageRouterHandler must not be null")
+            Objects.requireNonNull(schemeHandlerFactory, "schemeHandlerFactory must not be null")
 
-        //todo: move the code from JBCefBrowserBuilderCreator to here when all apps use the same infrastructure
-        val jbCefBrowser = JBCefBrowserBuilderCreator.create()
-            .setUrl(url)
-            .build()
+            //todo: move the code from JBCefBrowserBuilderCreator to here when all apps use the same infrastructure
+            val jbCefBrowser = JBCefBrowserBuilderCreator.create()
+                .setUrl(url)
+                .build()
 
-        val jbCefClient = jbCefBrowser.jbCefClient
-        val cefMessageRouter = CefMessageRouter.create()
-        cefMessageRouter.addHandler(messageRouterHandler, true)
-        jbCefClient.cefClient.addMessageRouter(cefMessageRouter)
+            val jbCefClient = jbCefBrowser.jbCefClient
+            val cefMessageRouter = CefMessageRouter.create()
+            cefMessageRouter.addHandler(messageRouterHandler, true)
+            jbCefClient.cefClient.addMessageRouter(cefMessageRouter)
 
-        val lifeSpanHandler: CefLifeSpanHandlerAdapter = object : CefLifeSpanHandlerAdapter() {
-            override fun onAfterCreated(browser: CefBrowser) {
-                registerAppSchemeHandler(schemeHandlerFactory)
+            val lifeSpanHandler: CefLifeSpanHandlerAdapter = object : CefLifeSpanHandlerAdapter() {
+                override fun onAfterCreated(browser: CefBrowser) {
+                    registerAppSchemeHandler(schemeHandlerFactory)
+                }
             }
-        }
 
-        jbCefBrowser.jbCefClient.addLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
+            jbCefBrowser.jbCefClient.addLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
 
-        val jCefComponent = JCefComponent(project, jbCefBrowser, cefMessageRouter, messageRouterHandler, schemeHandlerFactory, lifeSpanHandler)
+            val jCefComponent = JCefComponent(project, jbCefBrowser, cefMessageRouter, messageRouterHandler, schemeHandlerFactory, lifeSpanHandler)
 
-        parentDisposable?.let {
-            Disposer.register(it) {
-                jbCefBrowser.jbCefClient.removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
-                jCefComponent.dispose()
+            parentDisposable.let {
+                Disposer.register(it) {
+                    jbCefBrowser.jbCefClient.removeLifeSpanHandler(lifeSpanHandler, jbCefBrowser.cefBrowser)
+                    jCefComponent.dispose()
+                }
             }
+
+            downloadAdapter?.let {
+                jbCefClient.cefClient.addDownloadHandler(it);
+            }
+
+            return jCefComponent
         }
 
-        downloadAdapter?.let {
-            jbCefClient.cefClient.addDownloadHandler(it);
+
+        private fun registerAppSchemeHandler(schemeHandlerFactory: BaseSchemeHandlerFactory?) {
+
+            Objects.requireNonNull(schemeHandlerFactory, "schemeHandlerFactory must not be null")
+
+            CefApp.getInstance().registerSchemeHandlerFactory(
+                schemeHandlerFactory!!.getSchema(), schemeHandlerFactory.getDomain(), schemeHandlerFactory
+            )
         }
 
-        return jCefComponent
-    }
 
+        fun url(url: String): JCefComponentBuilder {
+            this.url = url
+            return this
+        }
 
-    private fun registerAppSchemeHandler(schemeHandlerFactory: BaseSchemeHandlerFactory?) {
+        fun messageRouterHandler(messageRouterHandler: BaseMessageRouterHandler): JCefComponentBuilder {
+            this.messageRouterHandler = messageRouterHandler
+            return this
+        }
 
-        Objects.requireNonNull(schemeHandlerFactory, "schemeHandlerFactory must not be null")
+        fun schemeHandlerFactory(schemeHandlerFactory: BaseSchemeHandlerFactory): JCefComponentBuilder {
+            this.schemeHandlerFactory = schemeHandlerFactory
+            return this
+        }
 
-        CefApp.getInstance().registerSchemeHandlerFactory(
-            schemeHandlerFactory!!.getSchema(), schemeHandlerFactory.getDomain(), schemeHandlerFactory
-        )
-    }
-
-
-    fun url(url: String): JCefComponentBuilder {
-        this.url = url
-        return this
-    }
-
-    fun messageRouterHandler(messageRouterHandler: BaseMessageRouterHandler): JCefComponentBuilder {
-        this.messageRouterHandler = messageRouterHandler
-        return this
-    }
-
-    fun schemeHandlerFactory(schemeHandlerFactory: BaseSchemeHandlerFactory): JCefComponentBuilder {
-        this.schemeHandlerFactory = schemeHandlerFactory
-        return this
-    }
-
-    fun withParentDisposable(parentDisposable: Disposable): JCefComponentBuilder {
-        this.parentDisposable = parentDisposable
-        return this
-    }
-
-    fun withDownloadAdapter(adapter: CefDownloadHandler): JCefComponentBuilder {
-        this.downloadAdapter = adapter
-        return this;
+        fun withDownloadAdapter(adapter: CefDownloadHandler): JCefComponentBuilder {
+            this.downloadAdapter = adapter
+            return this;
+        }
     }
 }

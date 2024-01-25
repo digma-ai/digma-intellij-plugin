@@ -409,10 +409,9 @@ public class AnalyticsService implements Disposable {
         return executeCatching(() -> analyticsProviderProxy.getHtmlGraphForSpanScaling(spanHistogramQuery));
     }
 
-    public String getAssetCategories(String[] services) throws AnalyticsServiceException {
-        var env = getCurrentEnvironment();
+    public String getAssetCategories(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
         return executeCatching(() ->
-                analyticsProviderProxy.getAssetCategories(env, services));
+                analyticsProviderProxy.getAssetCategories(queryParams));
     }
 
     public void checkInsightExists() throws AnalyticsServiceException {
@@ -435,15 +434,15 @@ public class AnalyticsService implements Disposable {
         }
     }
 
-    public String getAssetFilters(@NotNull Map<String, String> queryParams) throws AnalyticsServiceException {
+    public String getAssetFilters(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
         var env = getCurrentEnvironment();
         return executeCatching(() ->
                 analyticsProviderProxy.getAssetFilters(queryParams));
     }
 
-    public String getAssets(@NotNull Map<String, String> queryParams, String[] services) throws AnalyticsServiceException {
+    public String getAssets(@NotNull Map<String, Object> queryParams) throws AnalyticsServiceException {
         return executeCatching(() ->
-                analyticsProviderProxy.getAssets(queryParams, services));
+                analyticsProviderProxy.getAssets(queryParams));
     }
 
     public String getServices() throws AnalyticsServiceException {

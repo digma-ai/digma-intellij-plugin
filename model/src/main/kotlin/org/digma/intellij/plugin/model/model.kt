@@ -29,7 +29,8 @@ enum class InsightType {
     SpanDurationBreakdown,
     SpanScaling,
     SpanScalingRootCause,
-    SpanNexus
+    SpanNexus,
+    SpanQueryOptimization
     ;
 }
 

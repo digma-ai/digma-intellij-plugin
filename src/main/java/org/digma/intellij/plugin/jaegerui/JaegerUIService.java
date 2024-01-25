@@ -293,7 +293,7 @@ public class JaegerUIService {
 
     private void addInsightsToSpanData(SpanData spanData, String spanId, String methodId, Map<String, List<Insight>> allInsights) {
 
-        List<Insight> spanInsights = new ArrayList<>();
+        List<Insight> spanInsights = new ArrayList<>(spanData.insights());
         if (allInsights.get(spanId) != null) {
             spanInsights.addAll(allInsights.get(spanId));
         }
@@ -301,6 +301,7 @@ public class JaegerUIService {
             spanInsights.addAll(allInsights.get(methodId));
         }
         spanInsights = distinctByType(spanInsights);
+        spanData.insights().clear();
         spanData.insights().addAll(spanInsights);
     }
 
@@ -325,7 +326,6 @@ public class JaegerUIService {
 
         return insightList;
     }
-
 
     @NotNull
     private Map<String, List<Insight>> getInsights(@NotNull List<String> spanIds, @NotNull List<String> methodIds) {

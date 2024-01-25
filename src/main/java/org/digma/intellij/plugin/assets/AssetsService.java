@@ -161,12 +161,12 @@ public final class AssetsService implements Disposable {
         return new AssetsIndexTemplateBuilder().build(project);
     }
 
-    public String getAssetCategories(String[] services) {
+    public String getAssetCategories(@NotNull Map<String,Object> queryParams) {
         EDT.assertNonDispatchThread();
 
         try {
             Log.log(logger::trace, project, "got get categories request");
-            String categories = AnalyticsService.getInstance(project).getAssetCategories(services);
+            String categories = AnalyticsService.getInstance(project).getAssetCategories(queryParams);
             AnalyticsService.getInstance(project).checkInsightExists();
             Log.log(logger::trace, project, "got categories [{}]", categories);
             return categories;
@@ -195,7 +195,7 @@ public final class AssetsService implements Disposable {
 
     }
 
-    public String getAssetFilters(@NotNull Map<String,String> queryParams) {
+    public String getAssetFilters(@NotNull Map<String,Object> queryParams) {
         EDT.assertNonDispatchThread();
 
         try {
@@ -214,13 +214,13 @@ public final class AssetsService implements Disposable {
     }
 
 
-    public String getAssets(@NotNull Map<String,String> queryParams, String[] services) {
+    public String getAssets(@NotNull Map<String,Object> queryParams) {
 
         EDT.assertNonDispatchThread();
 
         try {
             Log.log(logger::trace, project, "got get assets request");
-            String assets = AnalyticsService.getInstance(project).getAssets(queryParams, services);
+            String assets = AnalyticsService.getInstance(project).getAssets(queryParams);
             Log.log(logger::trace, project, "got assets [{}]", assets);
             return assets;
         } catch (NoSelectedEnvironmentException e) {

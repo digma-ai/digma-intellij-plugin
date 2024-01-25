@@ -38,6 +38,7 @@ import org.digma.intellij.plugin.ui.settings.Theme;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -143,11 +144,11 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
         EDT.assertNonDispatchThread();
 
+        var backendQueryParams = GetQueryMapFromPayload(objectMapper, jsonNode);
+
         Log.log(LOGGER::trace, project, "pushCategories called");
 
-        String[] services = getServices(objectMapper, jsonNode);
-
-        var payload = objectMapper.readTree(AssetsService.getInstance(project).getAssetCategories(services));
+        var payload = objectMapper.readTree(AssetsService.getInstance(project).getAssetCategories(backendQueryParams));
         var message = new SetCategoriesDataMessage("digma", "ASSETS/SET_CATEGORIES_DATA", payload);
         Log.log(LOGGER::trace, project, "sending ASSETS/SET_CATEGORIES_DATA message");
         browser.executeJavaScript(
@@ -180,23 +181,10 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
 
         EDT.assertNonDispatchThread();
 
-        Map<String, Object> mapRequest = objectMapper.convertValue(jsonNode, Map.class);
-        Map<String, Object> requestPayload = (Map<String, Object>) mapRequest.get("payload");
-
-        Map<String,String> backendQueryParams = new HashMap<>();
-        // query parameters
-        Map<String, Object> payloadQueryParams = (Map<String, Object>) requestPayload.get("query");
-        payloadQueryParams.forEach((paramKey, paramValue) -> {
-            if(!Objects.equals(paramKey, "services")) {
-                backendQueryParams.put(paramKey, paramValue.toString());
-            }
-        });
-
-        backendQueryParams.put("environment", PersistenceService.getInstance().getCurrentEnv());
-        var services = getServices(objectMapper, jsonNode);
+        var backendQueryParams = GetQueryMapFromPayload(objectMapper, jsonNode);
 
         Log.log(LOGGER::trace, project, "pushAssets called");
-        var payload = objectMapper.readTree(AssetsService.getInstance(project).getAssets(backendQueryParams, services));
+        var payload = objectMapper.readTree(AssetsService.getInstance(project).getAssets(backendQueryParams));
         var message = new SetAssetsDataMessage("digma", "ASSETS/SET_DATA", payload);
         Log.log(LOGGER::trace, project, "sending ASSETS/SET_DATA message");
         browser.executeJavaScript(
@@ -208,17 +196,7 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
     private void pushAssetFilters(CefBrowser browser, ObjectMapper objectMapper, JsonNode jsonNode) throws JsonProcessingException {
         EDT.assertNonDispatchThread();
 
-        Map<String, Object> mapRequest = objectMapper.convertValue(jsonNode, Map.class);
-        Map<String, Object> requestPayload = (Map<String, Object>) mapRequest.get("payload");
-
-        Map<String,String> backendQueryParams = new HashMap<>();
-        // query parameters
-        Map<String, Object> payloadQueryParams = (Map<String, Object>) requestPayload.get("query");
-        payloadQueryParams.forEach((paramKey, paramValue) -> {
-            backendQueryParams.put(paramKey, paramValue.toString());
-        });
-
-        backendQueryParams.put("environment", PersistenceService.getInstance().getCurrentEnv());
+        var backendQueryParams = GetQueryMapFromPayload(objectMapper, jsonNode);
 
         Log.log(LOGGER::trace, project, "pushAssetsFilters called");
         var payload = objectMapper.readTree(AssetsService.getInstance(project).getAssetFilters(backendQueryParams));
@@ -228,6 +206,27 @@ class AssetsMessageRouterHandler extends CefMessageRouterHandlerAdapter {
                 "window.postMessage(" + objectMapper.writeValueAsString(message) + ");",
                 jbCefBrowser.getCefBrowser().getURL(),
                 0);
+    }
+
+    private Map<String, Object> GetQueryMapFromPayload(ObjectMapper objectMapper, JsonNode jsonNode){
+        Map<String, Object> mapRequest = objectMapper.convertValue(jsonNode, Map.class);
+        Map<String, Object> requestPayload = (Map<String, Object>) mapRequest.get("payload");
+
+        Map<String,Object> backendQueryParams = new HashMap<>();
+        // query parameters
+        Map<String, Object> payloadQueryParams = (Map<String, Object>) requestPayload.get("query");
+        if (payloadQueryParams != null) {
+            payloadQueryParams.forEach((paramKey, paramValue) -> {
+                if (paramValue instanceof ArrayList<?>)
+                    backendQueryParams.put(paramKey, String.join(",", (ArrayList<String>)paramValue));
+                else
+                    backendQueryParams.put(paramKey, paramValue.toString());
+            });
+        }
+
+        backendQueryParams.put("environment", PersistenceService.getInstance().getCurrentEnv());
+
+        return backendQueryParams;
     }
 
     private void pushAssetsFromGetData(CefBrowser browser, JsonNode jsonNode) throws JsonProcessingException {

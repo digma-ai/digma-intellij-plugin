@@ -10,7 +10,6 @@ import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.jcef.JCefComponent.JCefComponentBuilder
 import org.digma.intellij.plugin.ui.list.listBackground
 import org.digma.intellij.plugin.ui.panels.DisposablePanel
-import org.digma.intellij.plugin.ui.service.TestsService
 import java.awt.BorderLayout
 import java.awt.Insets
 import javax.swing.JComponent

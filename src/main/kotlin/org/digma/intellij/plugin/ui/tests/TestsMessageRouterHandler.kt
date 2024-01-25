@@ -9,6 +9,7 @@ import org.digma.intellij.plugin.common.Backgroundable
 import org.digma.intellij.plugin.document.CodeObjectsUtil
 import org.digma.intellij.plugin.insights.InsightsViewOrchestrator
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.rest.tests.FilterForLatestTests
 import org.digma.intellij.plugin.posthog.ActivityMonitor
 import org.digma.intellij.plugin.posthog.MonitoredPanel
 import org.digma.intellij.plugin.teststab.TestsRunner
@@ -17,14 +18,10 @@ import org.digma.intellij.plugin.ui.jcef.sendEnvironmentEntities
 import org.digma.intellij.plugin.ui.list.insights.openJaegerFromRecentActivity
 import org.digma.intellij.plugin.ui.list.insights.traceButtonName
 import org.digma.intellij.plugin.ui.model.environment.EnvironmentsSupplier
-import org.digma.intellij.plugin.ui.service.FilterForLatestTests
-import org.digma.intellij.plugin.ui.service.TestsService
 import org.digma.intellij.plugin.ui.tests.TestsTabPanel.Companion.RUN_TEST_BUTTON_NAME
 import java.util.Collections
 
 class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(project) {
-
-    private var lastKnownFilterForLatestTests: FilterForLatestTests = FilterForLatestTests(emptySet())
 
     override fun getOriginForTroubleshootingEvent(): String {
         return "tests"
@@ -48,15 +45,8 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
     }
 
     private fun initialize(project: Project, browser: CefBrowser, requestJsonNode: JsonNode) {
-
         Log.log(logger::info, "got TESTS/INITIALIZE")
-
         sendEnvironmentEntities(browser, AnalyticsService.getInstance(project).environment.getEnvironments())
-
-        val payloadNode: JsonNode = objectMapper.readTree(requestJsonNode.get("payload").toString())
-        val pageSize: Int = payloadNode.get("pageSize").intValue()
-
-        project.service<TestsService>().setPageSize(pageSize)
     }
 
     private fun handleQuerySpanGetLatestData(project: Project, requestJsonNode: JsonNode) {
@@ -75,9 +65,9 @@ class TestsMessageRouterHandler(project: Project) : BaseMessageRouterHandler(pro
             return FilterForLatestTests(environments, pageNumber)
         }
 
-        lastKnownFilterForLatestTests = buildFilterForLatestTests(requestJsonNode)
+        val filter = buildFilterForLatestTests(requestJsonNode)
         val scopeRequest = project.service<TestsService>().getScopeRequest()
-        project.service<TestsUpdater>().updateTestsData(scopeRequest, lastKnownFilterForLatestTests)
+        project.service<TestsUpdater>().updateTestsData(scopeRequest, filter)
     }
 
     private fun handleRunTest(project: Project, requestJsonNode: JsonNode) {

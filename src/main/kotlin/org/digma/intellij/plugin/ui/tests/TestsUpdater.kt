@@ -8,14 +8,13 @@ import com.intellij.openapi.project.Project
 import org.digma.intellij.plugin.analytics.AnalyticsServiceException
 import org.digma.intellij.plugin.errorreporting.ErrorReporter
 import org.digma.intellij.plugin.log.Log
+import org.digma.intellij.plugin.model.rest.tests.FilterForLatestTests
+import org.digma.intellij.plugin.model.rest.tests.TestsScopeRequest
 import org.digma.intellij.plugin.ui.jcef.JCefComponent
 import org.digma.intellij.plugin.ui.jcef.createObjectMapper
 import org.digma.intellij.plugin.ui.jcef.model.ErrorPayload
 import org.digma.intellij.plugin.ui.jcef.model.Payload
 import org.digma.intellij.plugin.ui.jcef.serializeAndExecuteWindowPostMessageJavaScript
-import org.digma.intellij.plugin.ui.service.FilterForLatestTests
-import org.digma.intellij.plugin.ui.service.ScopeRequest
-import org.digma.intellij.plugin.ui.service.TestsService
 import org.digma.intellij.plugin.ui.tests.model.SET_LATEST_TESTS_MESSAGE_NAME
 import org.digma.intellij.plugin.ui.tests.model.SetLatestTestsMessage
 
@@ -36,11 +35,14 @@ class TestsUpdater(private val project: Project) {
         this.jCefComponent = jCefComponent
     }
 
-    fun updateTestsData(scopeRequest: ScopeRequest) {
+    fun updateTestsData(scopeRequest: TestsScopeRequest) {
+        //This method is called from outside, when the scope is changed,
+        // so need to reset pageNumber to 1
+        lastKnownFilterForLatestTests.pageNumber = 1
         updateTestsData(scopeRequest, lastKnownFilterForLatestTests)
     }
 
-    fun updateTestsData(scopeRequest: ScopeRequest, filter: FilterForLatestTests) {
+    fun updateTestsData(scopeRequest: TestsScopeRequest, filter: FilterForLatestTests) {
         //keep the last filter for next use when calling updateTestsData(scopeRequest: ScopeRequest)
         this.lastKnownFilterForLatestTests = filter
 
@@ -61,7 +63,7 @@ class TestsUpdater(private val project: Project) {
 
             serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, message)
 
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             Log.warnWithException(logger, e, "error setting tests of span data")
             var errorDescription = e.toString()
             if (e is AnalyticsServiceException) {
@@ -73,8 +75,6 @@ class TestsUpdater(private val project: Project) {
             Log.log(logger::trace, project, "sending {} message with error", SET_LATEST_TESTS_MESSAGE_NAME)
             serializeAndExecuteWindowPostMessageJavaScript(cefBrowser, message)
             ErrorReporter.getInstance().reportError(project, "TestsUpdater.updateTestsData", e)
-            //todo: should rethrow? its called from TestsMessageRouterHandler or InsightsViewOrchestrator
-            //throw e
         }
     }
 }

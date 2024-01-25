@@ -51,6 +51,8 @@ import org.digma.intellij.plugin.model.rest.notifications.UnreadNotificationsCou
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityRequest;
 import org.digma.intellij.plugin.model.rest.recentactivity.RecentActivityResult;
 import org.digma.intellij.plugin.model.rest.testing.LatestTestsOfSpanRequest;
+import org.digma.intellij.plugin.model.rest.tests.FilterForLatestTests;
+import org.digma.intellij.plugin.model.rest.tests.TestsScopeRequest;
 import org.digma.intellij.plugin.model.rest.usage.EnvUsageStatusResult;
 import org.digma.intellij.plugin.model.rest.usage.EnvsUsageStatusRequest;
 import org.digma.intellij.plugin.model.rest.user.UserUsageStatsRequest;
@@ -63,8 +65,6 @@ import org.digma.intellij.plugin.persistence.PersistenceService;
 import org.digma.intellij.plugin.posthog.ActivityMonitor;
 import org.digma.intellij.plugin.settings.SettingsState;
 import org.digma.intellij.plugin.ui.MainToolWindowCardsController;
-import org.digma.intellij.plugin.ui.service.FilterForLatestTests;
-import org.digma.intellij.plugin.ui.service.ScopeRequest;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
@@ -469,7 +469,7 @@ public class AnalyticsService implements Disposable {
 
 
     // return JSON as string (type LatestTestsOfSpanResponse)
-    public String getLatestTestsOfSpan(ScopeRequest req, FilterForLatestTests filter, int pageSize) throws AnalyticsServiceException {
+    public String getLatestTestsOfSpan(TestsScopeRequest req, FilterForLatestTests filter, int pageSize) throws AnalyticsServiceException {
         return executeCatching(() -> analyticsProviderProxy.getLatestTestsOfSpan(
                 new LatestTestsOfSpanRequest(req.getSpanCodeObjectIds(), req.getMethodCodeObjectId(), req.getEndpointCodeObjectId(),
                         filter.getEnvironments(), filter.getPageNumber(), pageSize)));

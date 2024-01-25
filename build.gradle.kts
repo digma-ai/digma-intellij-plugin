@@ -318,6 +318,7 @@ tasks {
         filesMatching(
             listOf(
                 "webview/recentactivity/recentActivityTemplate.ftl",
+                "webview/tests/testsTemplate.ftl",
                 "webview/notifications/notificationstemplate.ftl"
             )
         ) {

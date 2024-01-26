@@ -224,6 +224,9 @@ tasks {
     runIde {
         dependsOn(deleteLog)
 
+        //to disable the splash screen on startup because it may interrupt when debugging.
+        //args(listOf("nosplash"))
+
         maxHeapSize = "2g"
         // Rider's backend doesn't support dynamic plugins. It might be possible to work with auto-reload of the frontend
         // part of a plugin, but there are dangers about keeping plugins in sync

@@ -51,7 +51,6 @@ import static org.digma.intellij.plugin.DiscoveryConstantsKt.WITH_SPAN_ANNOTATIO
 import static org.digma.intellij.plugin.idea.psi.java.JavaSpanDiscoveryUtils.filterNonRelevantMethodsForSpanDiscovery;
 import static org.digma.intellij.plugin.idea.psi.java.JavaSpanDiscoveryUtils.filterNonRelevantReferencesForSpanDiscovery;
 
-@SuppressWarnings("UnstableApiUsage")
 public class JavaSpanNavigationProvider implements Disposable {
 
     private static final Logger LOGGER = Logger.getInstance(JavaSpanNavigationProvider.class);
@@ -106,7 +105,7 @@ public class JavaSpanNavigationProvider implements Disposable {
                 Log.log(LOGGER::info, "Building buildWithSpanAnnotation");
                 buildWithSpanAnnotation(() -> GlobalSearchScope.projectScope(project));
             }, Throwable.class, 100, 5);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             Log.warnWithException(LOGGER, e, "Exception in buildSpanNavigation buildWithSpanAnnotation");
             ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.buildSpanNavigation.buildWithSpanAnnotation", e);
         } finally {
@@ -122,7 +121,7 @@ public class JavaSpanNavigationProvider implements Disposable {
                 Log.log(LOGGER::info, "Building buildStartSpanMethodCall");
                 buildStartSpanMethodCall(() -> GlobalSearchScope.projectScope(project));
             }, Throwable.class, 100, 5);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             Log.warnWithException(LOGGER, e, "Exception in buildSpanNavigation buildStartSpanMethodCall");
             ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.buildSpanNavigation.buildStartSpanMethodCall", e);
         } finally {
@@ -138,7 +137,7 @@ public class JavaSpanNavigationProvider implements Disposable {
                 Log.log(LOGGER::info, "Building buildObservedAnnotation");
                 buildObservedAnnotation(() -> GlobalSearchScope.projectScope(project));
             }, Throwable.class, 100, 5);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             Log.warnWithException(LOGGER, e, "Exception in buildSpanNavigation buildObservedAnnotation");
             ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.buildSpanNavigation.buildObservedAnnotation", e);
         } finally {
@@ -207,7 +206,7 @@ public class JavaSpanNavigationProvider implements Disposable {
                             spanLocations.put(spanInfo.getId(), location);
                         }));
                     }
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     Log.warnWithException(LOGGER, project, e, "error building span info for method {}", psiMethod.getName());
                     ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.buildSpanNavigation.buildWithSpanAnnotation", e);
                 }
@@ -264,7 +263,7 @@ public class JavaSpanNavigationProvider implements Disposable {
                             spanLocations.put(spanInfo.getId(), location);
                         });
                     }
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     Log.warnWithException(LOGGER, project, e, "error building span info for psiReference");
                     ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.buildSpanNavigation.buildStartSpanMethodCall", e);
                 }
@@ -318,7 +317,7 @@ public class JavaSpanNavigationProvider implements Disposable {
                             spanLocations.put(spanInfo.getId(), location);
                         });
                     }
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     Log.warnWithException(LOGGER, project, e, "error building span info for psiMethod {}", psiMethod.getName());
                     ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.buildSpanNavigation.buildObservedAnnotation", e);
                 }

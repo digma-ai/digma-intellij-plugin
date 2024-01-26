@@ -5,6 +5,7 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
+import com.intellij.ui.jcef.JBCefApp
 import com.posthog.java.PostHog
 import org.digma.intellij.plugin.analytics.BackendConnectionMonitor
 import org.digma.intellij.plugin.common.ExceptionUtils
@@ -621,6 +622,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
         val ideVersion = ideInfo.fullVersion
         val ideBuildNumber = ideInfo.build.asString()
         val pluginVersion = SemanticVersionUtil.getPluginVersionWithoutBuildNumberAndPreRelease("unknown")
+        val isJcefSupported = JBCefApp.isSupported()
 
         postHog?.set(
             userId,
@@ -631,6 +633,7 @@ class ActivityMonitor(private val project: Project) : Disposable {
                 "ide.build" to ideBuildNumber,
                 "plugin.version" to pluginVersion,
                 "user.type" to if (isDevUser) "internal" else "external",
+                "jcef.supported" to isJcefSupported,
                 installStatusPropertyName to "Active"
             )
         )

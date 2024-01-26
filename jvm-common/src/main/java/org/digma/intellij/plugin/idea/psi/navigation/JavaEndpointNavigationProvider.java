@@ -80,7 +80,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
                 Log.log(LOGGER::info, "Building buildEndpointAnnotations");
                 buildEndpointNavigationForProject();
             }, Throwable.class, 100, 5);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             Log.warnWithException(LOGGER, e, "Exception in buildSpanNavigation buildWithSpanAnnotation");
             ErrorReporter.getInstance().reportError(project, "JavaEndpointNavigationProvider.buildEndpointNavigation.buildEndpointAnnotations", e);
         } finally {
@@ -103,6 +103,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
 
     private void buildEndpointNavigationForProject() {
 
+        //some frameworks may fail. for example ktor will fail if kotlin plugin is disabled
         var endpointDiscoveries = EndpointDiscoveryService.getInstance(project).getAllEndpointDiscovery();
 
         endpointDiscoveries.forEach(endpointDiscovery -> {
@@ -113,7 +114,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
                     endpointInfos.forEach(this::addToMethodsMap);
                 }
 
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 Log.warnWithException(LOGGER, e, "Exception in buildEndpointAnnotations");
                 ErrorReporter.getInstance().reportError(project, "JavaEndpointNavigationProvider.buildEndpointAnnotations", e);
             }
@@ -140,7 +141,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
                     endpointInfos.forEach(this::addToMethodsMap);
                 }
 
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 Log.warnWithException(LOGGER, e, "Exception in buildEndpointAnnotations");
                 ErrorReporter.getInstance().reportError(project, "JavaEndpointNavigationProvider.buildEndpointAnnotations", e);
             }
@@ -167,7 +168,7 @@ public class JavaEndpointNavigationProvider implements Disposable {
 
             var psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
             if (psiFile == null || !psiFile.isValid() ||
-                    !JvmPsiUtilsKt.isJvmSupportedLanguage(psiFile.getLanguage())) {
+                    !JvmPsiUtilsKt.isJvmSupportedFile(project, psiFile)) {
                 return;
             }
 

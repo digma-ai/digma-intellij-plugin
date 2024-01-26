@@ -1,10 +1,11 @@
 package org.digma.intellij.plugin.idea.psi
 
-import com.intellij.lang.Language
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
+import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.source.PsiExtensibleClass
+import org.digma.intellij.plugin.psi.LanguageService
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UFile
 import org.jetbrains.uast.UMethod
@@ -12,9 +13,16 @@ import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.toUElementOfType
 
 
-fun isJvmSupportedLanguage(language: Language): Boolean {
+fun isJvmSupportedFile(project: Project, psiFile: PsiFile): Boolean {
     SupportedJvmLanguages.values().forEach {
-        return it.languageInstance == language
+        val languageService = LanguageService.findLanguageServiceByName(project, it.language.languageServiceClassName)
+        if (languageService != null &&
+            languageService is JvmLanguageService &&
+            languageService.isSupportedFile(psiFile)
+        ) {
+
+            return true
+        }
     }
     return false
 }

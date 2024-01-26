@@ -341,13 +341,13 @@ public class JavaSpanNavigationProvider implements Disposable {
 
             var psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
             if (psiFile == null || !psiFile.isValid() ||
-                    !JvmPsiUtilsKt.isJvmSupportedLanguage(psiFile.getLanguage())) {
+                    !JvmPsiUtilsKt.isJvmSupportedFile(project, psiFile)) {
                 return;
             }
 
             var virtualFile = FileDocumentManager.getInstance().getFile(document);
             fileChanged(virtualFile);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             Log.warnWithException(LOGGER, e, "Exception in documentChanged");
             ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.documentChanged", e);
         }
@@ -376,7 +376,7 @@ public class JavaSpanNavigationProvider implements Disposable {
                     buildStartSpanMethodCall(() -> GlobalSearchScope.fileScope(project, virtualFile));
                     buildObservedAnnotation(() -> GlobalSearchScope.fileScope(project, virtualFile));
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 Log.warnWithException(LOGGER, e, "Exception in fileChanged");
                 ErrorReporter.getInstance().reportError(project, "JavaSpanNavigationProvider.fileChanged", e);
             } finally {
